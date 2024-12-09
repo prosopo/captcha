@@ -59,7 +59,7 @@ export const CaptchaWidget = ({
 				display: "flex",
 				flexDirection: "row",
 				flexWrap: "wrap",
-				justifyContent: 'space-between',
+				justifyContent: "space-between",
 				paddingBottom: halfSpacing,
 				paddingRight: halfSpacing,
 			}}
@@ -92,60 +92,59 @@ export const CaptchaWidget = ({
 							}}
 							onClick={() => onClick(hash)}
 						>
-							
-								<img
+							<img
+								style={{
+									width: "100%", // image should be full width / height of the item
+									backgroundColor: theme.palette.grey[300], // colour of the bands when letterboxing and image
+									display: "block", // removes whitespace below imgs
+									objectFit: "contain", // contain the entire image in the img tag
+									aspectRatio: "1/1", // force AR to be 1, letterboxing images with different aspect ratios
+									height: "auto", // make the img tag responsive to its container
+								}}
+								src={item.data}
+								// biome-ignore lint/a11y/noRedundantAlt: has to contain image
+								alt={`Captcha image ${index + 1}`}
+							/>
+							<div
+								style={{
+									position: "absolute",
+									top: 0,
+									left: 0,
+									bottom: 0,
+									right: 0,
+									height: "100%",
+									width: "100%",
+									// display overlays in center
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									// make bg half opacity, i.e. shadowing the item's img
+									backgroundColor: "rgba(0,0,0,0.5)",
+									visibility: solution.includes(hash) ? "visible" : "hidden",
+								}}
+							>
+								<svg
 									style={{
-										width: "100%", // image should be full width / height of the item
-										backgroundColor: theme.palette.grey[300], // colour of the bands when letterboxing and image
-										display: "block", // removes whitespace below imgs
-										objectFit: "contain", // contain the entire image in the img tag
-										aspectRatio: "1/1", // force AR to be 1, letterboxing images with different aspect ratios
-										height: "auto", // make the img tag responsive to its container
+										backgroundColor: "transparent",
+										// img must be displayed as block otherwise gets a bottom whitespace border
+										display: "block",
+										// how big the overlay icon is
+										width: "35%",
+										height: "35%",
+										transition: "fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+										userSelect: "none",
+										fill: "currentcolor",
 									}}
-									src={item.data}
-									// biome-ignore lint/a11y/noRedundantAlt: has to contain image
-									alt={`Captcha image ${index + 1}`}
-								/>
-								<div
-									style={{
-										position: "absolute",
-										top: 0,
-										left: 0,
-										bottom: 0,
-										right: 0,
-										height: "100%",
-										width: "100%",
-										// display overlays in center
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										// make bg half opacity, i.e. shadowing the item's img
-										backgroundColor: "rgba(0,0,0,0.5)",
-										visibility: solution.includes(hash) ? "visible" : "hidden",
-									}}
+									focusable="false"
+									color="#fff"
+									aria-hidden="true"
+									viewBox="0 0 24 24"
+									data-testid="CheckIcon"
+									aria-label="Check icon"
 								>
-									<svg
-										style={{
-											backgroundColor: "transparent",
-											// img must be displayed as block otherwise gets a bottom whitespace border
-											display: "block",
-											// how big the overlay icon is
-											width: "35%",
-											height: "35%",
-											transition: "fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-											userSelect: "none",
-											fill: "currentcolor",
-										}}
-										focusable="false"
-										color="#fff"
-										aria-hidden="true"
-										viewBox="0 0 24 24"
-										data-testid="CheckIcon"
-										aria-label="Check icon"
-									>
-										<path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-									</svg>
-								</div>
+									<path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+								</svg>
+							</div>
 						</div>
 					</div>
 				);

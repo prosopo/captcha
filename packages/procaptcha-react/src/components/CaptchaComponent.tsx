@@ -126,10 +126,13 @@ const CaptchaComponent = ({
 							</div>
 						</div>
 					</div>
-					<div {...addDataAttr({ dev: { cy: `captcha-${index}` } })} style={{
-						paddingRight: halfSpacing,
-						paddingLeft: halfSpacing,
-					}}>
+					<div
+						{...addDataAttr({ dev: { cy: `captcha-${index}` } })}
+						style={{
+							paddingRight: halfSpacing,
+							paddingLeft: halfSpacing,
+						}}
+					>
 						{captcha && (
 							<CaptchaWidget
 								challenge={captcha}
