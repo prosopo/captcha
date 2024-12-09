@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
             <html>
                 <head>
                     <title>Procaptcha</title>
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
                     <script type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
                 </head>
                 <body>
