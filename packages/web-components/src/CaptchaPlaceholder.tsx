@@ -101,7 +101,6 @@ export const ProcaptchaPlaceholder = ({
 										href={WIDGET_URL}
 										target="_blank"
 										aria-label={WIDGET_URL_TEXT}
-										rel="noreferrer"
 									>
 										<div style={{ flex: 1 }}>
 											<Logo themeColor={themeColor} aria-label="Prosopo logo" />
