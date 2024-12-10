@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto/address";
-import { ProsopoApiError, type Logger } from "@prosopo/common";
+import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
 	type IUserSettings,
@@ -191,7 +191,7 @@ export class ClientTaskManager {
 				},
 			);
 		} catch (e: unknown) {
-			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {	
+			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
 				context: { error: e },
 				logger: this.logger,
 			});
