@@ -77,7 +77,8 @@
 		"SOLUTION_FLAG_FAILED": "Error al marcar la solución como procesada",
 		"TABLES_UNDEFINED": "Tablas indefinidas",
 		"CONNECTION_UNDEFINED": "Conexión indefinida",
-		"COMMITMENT_FLAG_FAILED": "Error al marcar el compromiso como procesado"
+		"COMMITMENT_FLAG_FAILED": "Error al marcar el compromiso como procesado",
+		"UNKNOWN": "Error desconocido de base de datos"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Error al analizar el captcha",

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto/address";
-import type { Logger } from "@prosopo/common";
+import { ProsopoApiError, type Logger } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
 	type IUserSettings,
@@ -191,7 +191,11 @@ export class ClientTaskManager {
 				},
 			);
 		} catch (e: unknown) {
-			this.logger.error(e);
+			const getClientListError = new ProsopoApiError("GENERAL.GET_CLIENT_LIST_ERROR", {	
+				context: { error: e },
+				logger: this.logger,
+			});
+			this.logger.error(getClientListError, { context: { error: e } });
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
