@@ -29,7 +29,18 @@ export const getWindowCallback = (callbackName: string) => {
 	return fn;
 };
 
-export const getDefaultCallbacks = (element: Element) => ({
+export interface Callbacks {
+	onHuman: (token: ProcaptchaToken) => void;
+	onChallengeExpired: () => void;
+	onExpired: () => void;
+	onError: (error: Error) => void;
+	onClose: () => void;
+	onOpen: () => void;
+	onFailed: () => void;
+	onReset: () => void;
+}
+
+export const getDefaultCallbacks = (element: Element): Callbacks => ({
 	onHuman: (token: ProcaptchaToken) => handleOnHuman(element, token),
 	onChallengeExpired: () => {
 		removeProcaptchaResponse();
@@ -60,16 +71,7 @@ export const getDefaultCallbacks = (element: Element) => ({
 
 export function setUserCallbacks(
 	renderOptions: ProcaptchaRenderOptions | undefined,
-	callbacks: {
-		onHuman: (token: ProcaptchaToken) => void;
-		onChallengeExpired: () => void;
-		onExpired: () => void;
-		onError: (error: Error) => void;
-		onClose: () => void;
-		onOpen: () => void;
-		onFailed: () => void;
-		onReset: () => void;
-	},
+	callbacks: Callbacks,
 	element: Element,
 ) {
 	if (typeof renderOptions?.callback === "function") {
