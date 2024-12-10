@@ -182,8 +182,8 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	}
 }
 
-export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
-	const code = "code" in err ? err.code : 400;
+export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
+	const code = "code" in err ? (err.code as number) : 400;
 	let message = i18next.t(err.message);
 	let jsonError: ApiJsonError = { code, message };
 	let statusMessage = err.message;
@@ -215,8 +215,8 @@ export const unwrapError = (err: ProsopoApiError | SyntaxError | ZodError) => {
 	return { code, statusMessage, jsonError };
 };
 
-export function isZodError(err: unknown): err is ZodError {
+export const isZodError = (err: unknown): err is ZodError => {
 	return Boolean(
 		err && (err instanceof ZodError || (err as ZodError).name === "ZodError"),
 	);
-}
+};
