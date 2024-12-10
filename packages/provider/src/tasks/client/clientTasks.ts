@@ -191,7 +191,7 @@ export class ClientTaskManager {
 				},
 			);
 		} catch (e: unknown) {
-			const getClientListError = new ProsopoApiError("GENERAL.GET_CLIENT_LIST_ERROR", {	
+			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {	
 				context: { error: e },
 				logger: this.logger,
 			});
