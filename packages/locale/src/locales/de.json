@@ -77,7 +77,8 @@
 		"SOLUTION_FLAG_FAILED": "Lösung konnte nicht als verarbeitet markiert werden",
 		"TABLES_UNDEFINED": "Tabellen undefiniert",
 		"CONNECTION_UNDEFINED": "Verbindung undefiniert",
-		"COMMITMENT_FLAG_FAILED": "Verpflichtung konnte nicht als verarbeitet markiert werden"
+		"COMMITMENT_FLAG_FAILED": "Verpflichtung konnte nicht als verarbeitet markiert werden",
+		"UNKNOWN": "Unbekannter Datenbankfehler"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Fehler beim Parsen des Captchas",

@@ -77,7 +77,8 @@
 		"SOLUTION_FLAG_FAILED": "Échec du marquage de la solution comme traitée",
 		"TABLES_UNDEFINED": "Tables non définies",
 		"CONNECTION_UNDEFINED": "Connexion non définie",
-		"COMMITMENT_FLAG_FAILED": "Échec du marquage de l'engagement comme traité"
+		"COMMITMENT_FLAG_FAILED": "Échec du marquage de l'engagement comme traité",
+		"UNKNOWN": "Erreur de base de données inconnue"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Erreur d'analyse du captcha",

@@ -77,7 +77,8 @@
 		"SOLUTION_FLAG_FAILED": "Impossibile contrassegnare la soluzione come elaborata",
 		"TABLES_UNDEFINED": "Tabelle indefinite",
 		"CONNECTION_UNDEFINED": "Connessione indefinita",
-		"COMMITMENT_FLAG_FAILED": "Impossibile contrassegnare l'impegno come elaborato"
+		"COMMITMENT_FLAG_FAILED": "Impossibile contrassegnare l'impegno come elaborato",
+		"UNKNOWN": "Errore database sconosciuto"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Errore nell'analisi del captcha",
