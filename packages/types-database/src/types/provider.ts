@@ -59,6 +59,7 @@ export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
+const TEN_MINUTES = 60 * 10;
 const ONE_DAY = 60 * 60 * 24;
 const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
@@ -358,7 +359,7 @@ export type SessionRecord = mongoose.Document & Session;
 export const SessionRecordSchema = new Schema<SessionRecord>(
 	{
 		sessionId: { type: String, required: true, unique: true },
-		createdAt: { type: Date, required: true },
+		createdAt: { type: Date, required: true, expires: TEN_MINUTES },
 		tokenId: {
 			type: mongoose.Schema.Types.ObjectId,
 		},
