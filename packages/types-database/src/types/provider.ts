@@ -169,32 +169,29 @@ export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
-export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
-	{
-		challenge: { type: String, required: true },
-		dappAccount: { type: String, required: true },
-		userAccount: { type: String, required: true },
-		requestedAtTimestamp: { type: Number, required: true },
-		lastUpdatedTimestamp: { type: Number, required: false },
-		result: {
-			status: { type: String, enum: CaptchaStatus, required: true },
-			reason: {
-				type: String,
-				enum: TranslationKeysSchema.options,
-				required: false,
-			},
-			error: { type: String, required: false },
+export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
+	challenge: { type: String, required: true },
+	dappAccount: { type: String, required: true },
+	userAccount: { type: String, required: true },
+	requestedAtTimestamp: { type: Number, required: true },
+	lastUpdatedTimestamp: { type: Number, required: false },
+	result: {
+		status: { type: String, enum: CaptchaStatus, required: true },
+		reason: {
+			type: String,
+			enum: TranslationKeysSchema.options,
+			required: false,
 		},
-		difficulty: { type: Number, required: true },
-		ipAddress: { type: BigInt, required: true },
-		headers: { type: Object, required: true },
-		userSignature: { type: String, required: false },
-		userSubmitted: { type: Boolean, required: true },
-		serverChecked: { type: Boolean, required: true },
-		storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
-
+		error: { type: String, required: false },
 	},
-);
+	difficulty: { type: Number, required: true },
+	ipAddress: { type: BigInt, required: true },
+	headers: { type: Object, required: true },
+	userSignature: { type: String, required: false },
+	userSubmitted: { type: Boolean, required: true },
+	serverChecked: { type: Boolean, required: true },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+});
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
@@ -277,19 +274,23 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-export const PendingRecordSchema = new Schema<PendingCaptchaRequest>(
-	{
-		accountId: { type: String, required: true },
-		pending: { type: Boolean, required: true },
-		salt: { type: String, required: true },
-		requestHash: { type: String, required: true },
-		deadlineTimestamp: { type: Number, required: true }, // unix timestamp
-		requestedAtTimestamp: { type: Number, required: true }, // unix timestamp
-		ipAddress: { type: BigInt, required: true },
-		headers: { type: Object, required: true },
-	},
-	{ expireAfterSeconds: ONE_WEEK },
-);
+type PendingCaptchaRequestMongoose = Omit<
+	PendingCaptchaRequest,
+	"requestedAtTimestamp"
+> & {
+	requestedAtTimestamp: Date;
+};
+
+export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
+	accountId: { type: String, required: true },
+	pending: { type: Boolean, required: true },
+	salt: { type: String, required: true },
+	requestHash: { type: String, required: true },
+	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
+	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
+	ipAddress: { type: BigInt, required: true },
+	headers: { type: Object, required: true },
+});
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
 
@@ -308,26 +309,26 @@ export type ScheduledTask = zInfer<typeof ScheduledTaskSchema>;
 
 export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
-type ScheduledTaskMongoose = Omit<ScheduledTaskRecord, "datetime"> & { datetime: Date };
+type ScheduledTaskMongoose = Omit<ScheduledTaskRecord, "datetime"> & {
+	datetime: Date;
+};
 
-export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>(
-	{
-		processName: { type: String, enum: ScheduledTaskNames, required: true },
-		datetime: { type: Date, required: true, expires: ONE_WEEK },
-		updated: { type: Number, required: false },
-		status: { type: String, enum: ScheduledTaskStatus, required: true },
-		result: {
-			type: new Schema<ScheduledTaskResult>(
-				{
-					error: { type: String, required: false },
-					data: { type: Object, required: false },
-				},
-				{ _id: false },
-			),
-			required: false,
-		},
+export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
+	processName: { type: String, enum: ScheduledTaskNames, required: true },
+	datetime: { type: Date, required: true, expires: ONE_WEEK },
+	updated: { type: Number, required: false },
+	status: { type: String, enum: ScheduledTaskStatus, required: true },
+	result: {
+		type: new Schema<ScheduledTaskResult>(
+			{
+				error: { type: String, required: false },
+				data: { type: Object, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
 	},
-);
+});
 
 export type FrictionlessToken = {
 	token: string;
@@ -337,15 +338,17 @@ export type FrictionlessToken = {
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
 
+type FrictionlessTokenMongoose = FrictionlessTokenRecord & {
+	createdAt: Date;
+};
+
 export const FrictionlessTokenRecordSchema =
-	new Schema<FrictionlessTokenRecord>(
-		{
-			token: { type: String, required: true, unique: true },
-			score: { type: Number, required: true },
-			threshold: { type: Number, required: true },
-		},
-		{ expireAfterSeconds: ONE_DAY,  },
-	);
+	new Schema<FrictionlessTokenMongoose>({
+		token: { type: String, required: true, unique: true },
+		score: { type: Number, required: true },
+		threshold: { type: Number, required: true },
+		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
+	});
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
 
@@ -357,15 +360,13 @@ export type Session = {
 
 export type SessionRecord = mongoose.Document & Session;
 
-export const SessionRecordSchema = new Schema<SessionRecord>(
-	{
-		sessionId: { type: String, required: true, unique: true },
-		createdAt: { type: Date, required: true, expires: TEN_MINUTES },
-		tokenId: {
-			type: mongoose.Schema.Types.ObjectId,
-		},
+export const SessionRecordSchema = new Schema<SessionRecord>({
+	sessionId: { type: String, required: true, unique: true },
+	createdAt: { type: Date, required: true, expires: TEN_MINUTES },
+	tokenId: {
+		type: mongoose.Schema.Types.ObjectId,
 	},
-);
+});
 
 type BlockRule = {
 	global: boolean;
