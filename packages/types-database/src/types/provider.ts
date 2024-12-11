@@ -311,7 +311,7 @@ export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 	{
 		processName: { type: String, enum: ScheduledTaskNames, required: true },
-		datetime: { type: Number, required: true },
+		datetime: { type: Number, required: true, expires: ONE_WEEK },
 		updated: { type: Number, required: false },
 		status: { type: String, enum: ScheduledTaskStatus, required: true },
 		result: {
@@ -325,7 +325,6 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
 			required: false,
 		},
 	},
-	{ expireAfterSeconds: ONE_WEEK },
 );
 
 export type FrictionlessToken = {
@@ -343,7 +342,7 @@ export const FrictionlessTokenRecordSchema =
 			score: { type: Number, required: true },
 			threshold: { type: Number, required: true },
 		},
-		{ expireAfterSeconds: ONE_DAY },
+		{ expireAfterSeconds: ONE_DAY,  },
 	);
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
