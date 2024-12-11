@@ -42,6 +42,7 @@ import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
+const TEN_MINUTES = 60 * 10;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -441,7 +442,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const botScore = (await getBotScore(token)) + lScore;
+				const { baseBotScore, timestamp } = await getBotScore(token);
+
+				// If the timestamp is older than 10 minutes, send an image captcha
+				if (timestamp < Date.now() - TEN_MINUTES) {
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+				}
+
+				const botScore = baseBotScore + lScore;
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
 					clientConfig?.settings?.frictionlessThreshold ||

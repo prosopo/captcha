@@ -191,9 +191,9 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
 		userSignature: { type: String, required: false },
 		userSubmitted: { type: Boolean, required: true },
 		serverChecked: { type: Boolean, required: true },
-		storedAtTimestamp: { type: Number, required: false },
+		storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+
 	},
-	{ expireAfterSeconds: ONE_MONTH },
 );
 
 // Set an index on the captchaId field, ascending
@@ -308,10 +308,12 @@ export type ScheduledTask = zInfer<typeof ScheduledTaskSchema>;
 
 export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
-export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
+type ScheduledTaskMongoose = Omit<ScheduledTaskRecord, "datetime"> & { datetime: Date };
+
+export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>(
 	{
 		processName: { type: String, enum: ScheduledTaskNames, required: true },
-		datetime: { type: Number, required: true, expires: ONE_WEEK },
+		datetime: { type: Date, required: true, expires: ONE_WEEK },
 		updated: { type: Number, required: false },
 		status: { type: String, enum: ScheduledTaskStatus, required: true },
 		result: {
@@ -363,7 +365,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>(
 			type: mongoose.Schema.Types.ObjectId,
 		},
 	},
-	{ expireAfterSeconds: ONE_DAY },
 );
 
 type BlockRule = {
