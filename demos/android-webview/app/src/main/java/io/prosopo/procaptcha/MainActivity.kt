@@ -2,14 +2,13 @@ package io.prosopo.procaptcha
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Message
 import android.util.Base64
 import android.util.Log
 import android.webkit.ConsoleMessage
-import android.webkit.JsResult
+import android.webkit.CookieManager
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -17,7 +16,6 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 const val namespace = "procaptcha";
@@ -119,33 +117,14 @@ class MainActivity : AppCompatActivity() {
         webView.settings.domStorageEnabled = true
         webView.settings.databaseEnabled = true
         webView.settings.allowFileAccess = true
+
         webView.webViewClient = ProcaptchaWebViewClient()
         webView.webChromeClient = ProcaptchaWebChromeClient()
-        val encodedHtml = generateEncodedHtml()
-        webView.loadData(encodedHtml, "text/html", "base64")
-    }
 
-    private fun generateEncodedHtml(): String {
-        val html = """
-            <html>
-                <head>
-                    <title>Procaptcha</title>
-                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                    <script type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
-                </head>
-                <body>
-                    <form action="" method="POST">
-                        <a href="https://prosopo.io">Link</a>
-                        <input type="text" name="email" placeholder="Email" />
-                        <input type="password" name="password" placeholder="Password" />
-                        <p>image</p>
-                        <div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC" data-captcha-type="image"></div>
-                        <br />
-                        <input type="submit" value="Submit" />
-                    </form>
-                </body>
-            </html>
-        """.trimIndent()
-        return Base64.encodeToString(html.toByteArray(), Base64.NO_PADDING)
+        // Enable cookies
+        val cookieManager: CookieManager = CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+        webView.loadUrl("file:///android_asset/procaptcha.html")
+
     }
 }
