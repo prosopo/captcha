@@ -447,13 +447,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					clientConfig?.settings?.frictionlessThreshold ||
 					DEFAULT_FRICTIONLESS_THRESHOLD;
 
-				// Store the token
-				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
-					token,
-					score: botScore,
-					threshold: botThreshold,
-				});
-
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 				const isIpBlocked = await tasks.frictionlessManager.checkIpRules(
@@ -475,8 +468,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				if (Number(botScore) > botThreshold)
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
+				// Store the token
+				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
+					token,
+					score: botScore,
+					threshold: botThreshold,
+				});
+
 				const response =
 					await tasks.frictionlessManager.sendPowCaptcha(tokenId);
+
 				return res.json(response);
 			} catch (err) {
 				console.error("Error in frictionless captcha challenge:", err);
