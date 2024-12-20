@@ -1,4 +1,3 @@
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +11,24 @@ import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import getBotScoreFromPayload from "./decodePayload.js";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 
-export const getBotScore = async (payload: string) => {
-	const logger = getLogger(LogLevel.enum.info, "provider.get_bot_score");
-	try {
-		const result = await getBotScoreFromPayload(payload);
-		const baseBotScore: number = result[0];
-		const timestamp: number = result[1];
+export const checkLangRules = (
+	config: ProsopoConfigOutput,
+	acceptLanguage: string,
+): number => {
+	const lConfig = config.lRules;
+	let lScore = 0;
+	if (lConfig) {
+		const languages = acceptLanguage
+			.split(",")
+			.map((lang) => lang.trim().split(";")[0]);
 
-		if (baseBotScore === undefined) {
-			return { baseBotScore: 1, timestamp: 0 };
+		for (const lang of languages) {
+			if (lang && lConfig[lang]) {
+				lScore += lConfig[lang];
+			}
 		}
-
-		return { baseBotScore, timestamp };
-	} catch (error) {
-		logger.error(error);
-		return { baseBotScore: 1, timestamp: 0 };
 	}
+	return lScore;
 };

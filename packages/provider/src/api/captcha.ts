@@ -42,6 +42,7 @@ import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
+const TEN_MINUTES = 60 * 10;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -61,6 +62,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ApiPaths.GetImageCaptchaChallenge, async (req, res, next) => {
 		let parsed: CaptchaRequestBodyTypeOutput;
+
+		if (!req.ip) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400, error: "IP address not found" },
+				}),
+			);
+		}
+
+		const ipAddress = getIPAddress(req.ip || "");
+
 		try {
 			parsed = CaptchaRequestBody.parse(req.body);
 		} catch (err) {
@@ -96,12 +108,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			const captchaConfig = await tasks.imgCaptchaManager.getCaptchaConfig(
+				ipAddress,
+				user,
+				dapp,
+			);
+
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 					datasetId,
 					user,
-					getIPAddress(req.ip || ""),
+					ipAddress,
 					flatten(req.headers),
+					captchaConfig,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
@@ -441,7 +460,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const botScore = (await getBotScore(token)) + lScore;
+				const { baseBotScore, timestamp } = await getBotScore(token);
+
+				// If the timestamp is older than 10 minutes, send an image captcha
+				if (timestamp < Date.now() - TEN_MINUTES) {
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+				}
+
+				const botScore = baseBotScore + lScore;
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
 					clientConfig?.settings?.frictionlessThreshold ||

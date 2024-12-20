@@ -60,7 +60,7 @@ export class Tasks {
 			this.db,
 			this.pair,
 			this.logger,
-			this.captchaConfig,
+			this.config,
 		);
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
