@@ -11,15 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, isHex } from "@polkadot/util";
-import { validateAddress } from "@polkadot/util-crypto/address";
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+
+import { getLoggerDefault } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
-import { Address6 } from "ip-address";
+import { checkIpRules } from "../rules/ip.js";
+import { checkUserRules } from "../rules/user.js";
 import { getIPAddress } from "../util.js";
+
+const logger = getLoggerDefault();
 
 export const blockMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
@@ -32,7 +33,7 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 
 			// if no IP block
 			if (!req.ip) {
-				console.log("No IP", req.ip);
+				logger.info("No IP", req.ip);
 				return res.status(401).json({ error: "Unauthorized" });
 			}
 
@@ -41,47 +42,32 @@ export const blockMiddleware = (env: ProviderEnvironment) => {
 			const ipAddress = getIPAddress(req.ip || "");
 			const userAccount = req.headers["Prosopo-User"] || req.body.user;
 			const dappAccount = req.headers["Prosopo-Site-Key"] || req.body.dapp;
-			const rule = await env.getDb().getIPBlockRuleRecord(ipAddress.bigInt());
-			if (rule && BigInt(rule.ip) === ipAddress.bigInt()) {
-				// block by IP address globally
-				if (rule.global && rule.hardBlock) {
-					return res.status(401).json({ error: "Unauthorized" });
-				}
 
-				if (dappAccount) {
-					const dappRule = await env
-						.getDb()
-						.getIPBlockRuleRecord(ipAddress.bigInt(), dappAccount);
-					if (
-						dappRule?.hardBlock &&
-						dappRule.dappAccount === dappAccount &&
-						BigInt(dappRule.ip) === ipAddress.bigInt()
-					) {
-						return res.status(401).json({ error: "Unauthorized" });
-					}
-				}
+			// get matching IP rules
+			const rule = await checkIpRules(env.getDb(), ipAddress, dappAccount);
+
+			// block if hard block
+			if (rule?.hardBlock) {
+				return res.status(401).json({ error: "Unauthorized" });
 			}
 
-			if (userAccount && dappAccount) {
-				const rule = await env
-					.getDb()
-					.getUserBlockRuleRecord(userAccount, dappAccount);
+			// get matching user rules
+			const userRule = await checkUserRules(
+				env.getDb(),
+				userAccount,
+				dappAccount,
+			);
 
-				if (
-					rule &&
-					rule.userAccount === userAccount &&
-					rule.dappAccount === dappAccount &&
-					rule.hardBlock
-				) {
-					return res.status(401).json({ error: "Unauthorized" });
-				}
+			// block if hard block
+			if (userRule?.hardBlock) {
+				return res.status(401).json({ error: "Unauthorized" });
 			}
 
 			next();
 			return;
 		} catch (err) {
-			console.error("Block Middleware Error:", err);
-			res.status(401).json({ error: "Unauthorized", message: err });
+			logger.error("Block Middleware Error:", err);
+			res.status(401).json({ error: "Unauthorized" });
 			return;
 		}
 	};

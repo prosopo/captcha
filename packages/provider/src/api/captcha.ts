@@ -62,6 +62,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ApiPaths.GetImageCaptchaChallenge, async (req, res, next) => {
 		let parsed: CaptchaRequestBodyTypeOutput;
+
+		if (!req.ip) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400, error: "IP address not found" },
+				}),
+			);
+		}
+
+		const ipAddress = getIPAddress(req.ip || "");
+
 		try {
 			parsed = CaptchaRequestBody.parse(req.body);
 		} catch (err) {
@@ -97,12 +108,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			const captchaConfig = await tasks.imgCaptchaManager.getCaptchaConfig(
+				ipAddress,
+				user,
+				dapp,
+			);
+
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 					datasetId,
 					user,
-					getIPAddress(req.ip || ""),
+					ipAddress,
 					flatten(req.headers),
+					captchaConfig,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",

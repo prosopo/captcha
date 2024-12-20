@@ -736,8 +736,10 @@ export class ProviderDatabase
 		const docs = await this.tables?.commitment
 			.find({
 				$or: [
-					{ storedStatus: { $ne: StoredStatusNames.stored } },
-					{ storedStatus: { $exists: false } },
+					{ $storedAtTimestamp: { $exists: false } },
+					{
+						$expr: { $lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"] },
+					},
 				],
 			})
 			.sort({ _id: 1 }) // Consistent ordering is important for pagination
@@ -791,8 +793,10 @@ export class ProviderDatabase
 		const docs = await this.tables?.powcaptcha
 			.find<PoWCaptchaRecord[]>({
 				$or: [
-					{ storedStatus: { $ne: StoredStatusNames.stored } },
-					{ storedStatus: { $exists: false } },
+					{ $storedAtTimestamp: { $exists: false } },
+					{
+						$expr: { $lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"] },
+					},
 				],
 			})
 			.sort({ _id: 1 }) // Consistent ordering is important for pagination
