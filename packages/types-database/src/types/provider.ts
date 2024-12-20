@@ -15,6 +15,7 @@
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
 	type Captcha,
+	type CaptchaConfig,
 	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaSolutionSchema,
@@ -265,6 +266,8 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 );
 // Set an index on the captchaId field, ascending
 UserSolutionRecordSchema.index({ captchaId: 1 });
+// Set an index on the commitment id field, descending
+UserSolutionRecordSchema.index({ commitmentId: -1 });
 
 export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
 	captchas: array(UserSolutionSchema),
@@ -368,10 +371,11 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 });
 
-type BlockRule = {
+export type BlockRule = {
 	global: boolean;
 	type: BlockRuleType;
 	hardBlock: boolean;
+	captchaConfig?: CaptchaConfig;
 };
 
 export enum BlockRuleType {
@@ -404,6 +408,10 @@ export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
 	type: { type: String, enum: BlockRuleType, required: true },
 	dappAccount: { type: String, required: false },
 	hardBlock: { type: Boolean, required: false },
+	captchaConfig: {
+		solved: { count: { type: Number, required: false } },
+		unsolved: { count: { type: Number, required: false } },
+	},
 });
 
 IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
@@ -416,6 +424,10 @@ export const UserAccountBlockRuleSchema =
 		global: { type: Boolean, required: true },
 		hardBlock: { type: Boolean, required: false },
 		type: { type: String, enum: BlockRuleType, required: true },
+		captchaConfig: {
+			solved: { count: { type: Number, required: false } },
+			unsolved: { count: { type: Number, required: false } },
+		},
 	});
 
 UserAccountBlockRuleSchema.index({ userAccount: 1 }, { unique: true });
