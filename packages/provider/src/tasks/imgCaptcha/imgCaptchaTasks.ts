@@ -120,6 +120,7 @@ export class ImgCaptchaManager {
 		}
 
 		const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount);
+		console.log("solved", solved);
 		let unsolved: Captcha[] = [];
 		if (unsolvedCount) {
 			unsolved = await this.getCaptchaWithProof(

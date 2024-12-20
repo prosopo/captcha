@@ -58,6 +58,81 @@ vi.mock("../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js", () => ({
 	buildTreeAndGetCommitmentId: vi.fn(),
 }));
 
+const mockCaptchas = [
+	{
+		captchaId: "captcha1",
+		solution: "solution1",
+		question: "question1",
+		options: ["option1"],
+		datasetId: "datasetId",
+		solved: true,
+	},
+	{
+		captchaId: "captcha2",
+		solution: "solution2",
+		question: "question2",
+		options: ["option2"],
+		datasetId: "datasetId",
+		solved: true,
+	},
+	{
+		captchaId: "captcha3",
+		solution: "solution3",
+		question: "question3",
+		options: ["option3"],
+		datasetId: "datasetId",
+		solved: true,
+	},
+	{
+		captchaId: "captcha4",
+		solution: "solution4",
+		question: "question4",
+		options: ["option4"],
+		datasetId: "datasetId",
+		solved: true,
+	},
+	{
+		captchaId: "captcha5",
+		solution: "solution5",
+		question: "question5",
+		options: ["option5"],
+		datasetId: "datasetId",
+		solved: true,
+	},
+	{
+		captchaId: "captcha6",
+		solution: "solution6",
+		question: "question6",
+		options: ["option6"],
+		datasetId: "datasetId",
+		solved: false,
+	},
+	{
+		captchaId: "captcha7",
+		solution: "solution7",
+		question: "question7",
+		options: ["option7"],
+		datasetId: "datasetId",
+		solved: false,
+	},
+	{
+		captchaId: "captcha8",
+		solution: "solution8",
+		question: "question8",
+		options: ["option8"],
+		datasetId: "datasetId",
+		solved: false,
+	},
+	{
+		captchaId: "captcha9",
+		solution: "solution9",
+		question: "question9",
+		options: ["option9"],
+		datasetId: "datasetId",
+		solved: false,
+	},
+] as unknown as Captcha[];
+
 describe("ImgCaptchaManager", () => {
 	let db: IProviderDatabase;
 	let pair: KeyringPair;
@@ -67,7 +142,17 @@ describe("ImgCaptchaManager", () => {
 
 	beforeEach(() => {
 		db = {
-			getRandomCaptcha: vi.fn(),
+			getRandomCaptcha: vi.fn(
+				(solved: boolean, datasetId: string, size: number) => {
+					console.log("solved", solved, "datasetId", datasetId, "size", size);
+					return mockCaptchas
+						.filter(
+							(captcha) =>
+								captcha.solved === solved && captcha.datasetId === datasetId,
+						)
+						.splice(0, size);
+				},
+			),
 			getDatasetDetails: vi.fn(),
 			storeDappUserPending: vi.fn(),
 			getDappUserPending: vi.fn(),
@@ -91,7 +176,7 @@ describe("ImgCaptchaManager", () => {
 
 		captchaConfig = {
 			solved: { count: 5 },
-			unsolved: { count: 5 },
+			unsolved: { count: 4 },
 		};
 
 		imgCaptchaManager = new ImgCaptchaManager(db, pair, logger, captchaConfig);
@@ -147,6 +232,27 @@ describe("ImgCaptchaManager", () => {
 				}),
 			);
 		});
+
+		it("should get random captchas and request hash of specific size", async () => {
+			const datasetId = "datasetId";
+			const size = 3;
+
+			const solvedResult = await imgCaptchaManager.getCaptchaWithProof(
+				datasetId,
+				true,
+				size,
+			);
+
+			expect(solvedResult.length).toBe(size);
+
+			const unsolvedResult = await imgCaptchaManager.getCaptchaWithProof(
+				datasetId,
+				false,
+				size,
+			);
+
+			expect(unsolvedResult.length).toBe(size);
+		});
 	});
 
 	describe("getRandomCaptchasAndRequestHash", () => {
@@ -170,7 +276,7 @@ describe("ImgCaptchaManager", () => {
 				userAccount,
 				ipAddress,
 				headers,
-				{ solved: { count: 1 }, unsolved: { count: 1 } },
+				captchaConfig,
 			);
 
 			expect(result).toEqual({

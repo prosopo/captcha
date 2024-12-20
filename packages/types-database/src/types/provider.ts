@@ -265,6 +265,8 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 );
 // Set an index on the captchaId field, ascending
 UserSolutionRecordSchema.index({ captchaId: 1 });
+// Set an index on the commitment id field, descending
+UserSolutionRecordSchema.index({ commitmentId: -1 });
 
 export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
 	captchas: array(UserSolutionSchema),
