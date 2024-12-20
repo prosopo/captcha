@@ -368,10 +368,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 });
 
-type BlockRule = {
+export type BlockRule = {
 	global: boolean;
 	type: BlockRuleType;
 	hardBlock: boolean;
+	imageRounds?: {
+		solved: number;
+		unsolved: number;
+	};
 };
 
 export enum BlockRuleType {
@@ -404,6 +408,10 @@ export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
 	type: { type: String, enum: BlockRuleType, required: true },
 	dappAccount: { type: String, required: false },
 	hardBlock: { type: Boolean, required: false },
+	imageRounds: {
+		solved: { type: Number, required: false },
+		unsolved: { type: Number, required: false },
+	},
 });
 
 IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
@@ -416,6 +424,10 @@ export const UserAccountBlockRuleSchema =
 		global: { type: Boolean, required: true },
 		hardBlock: { type: Boolean, required: false },
 		type: { type: String, enum: BlockRuleType, required: true },
+		imageRounds: {
+			solved: { type: Number, required: false },
+			unsolved: { type: Number, required: false },
+		},
 	});
 
 UserAccountBlockRuleSchema.index({ userAccount: 1 }, { unique: true });
