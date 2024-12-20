@@ -16,7 +16,7 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import type { CaptchaConfig, ProsopoConfigOutput } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import * as z from "zod";
 import { loadJSONFile } from "../files.js";
@@ -61,18 +61,42 @@ export default (
 					demandOption: true,
 					default: false,
 					desc: "Hardblock stops requests, softblock informs frictionless",
+				} as const)
+				.option("solved", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "The number of solved captchas",
+				} as const)
+				.option("unsolved", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "The number of unsolved captchas",
 				} as const),
+
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
 				const tasks = new Tasks(env);
+				let captchaConfig: CaptchaConfig | undefined;
+				if (argv.solved && argv.unsolved) {
+					captchaConfig = {
+						solved: {
+							count: argv.solved as unknown as number,
+						},
+						unsolved: {
+							count: argv.unsolved as unknown as number,
+						},
+					};
+				}
+
 				if (argv.ips) {
 					await tasks.clientTaskManager.addIPBlockRules(
 						argv.ips as unknown as string[],
 						argv.global as boolean,
 						argv.hardBlock as boolean,
 						argv.dapp as unknown as string,
+						captchaConfig,
 					);
 				}
 				if (argv.users) {
@@ -81,6 +105,7 @@ export default (
 						argv.hardBlock as boolean,
 						argv.global as boolean,
 						argv.dapp as unknown as string,
+						captchaConfig,
 					);
 				}
 				logger.info("IP Block rules added");
