@@ -15,6 +15,7 @@
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
 	type Captcha,
+	type CaptchaConfig,
 	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaSolutionSchema,
@@ -374,10 +375,7 @@ export type BlockRule = {
 	global: boolean;
 	type: BlockRuleType;
 	hardBlock: boolean;
-	imageRounds?: {
-		solved: number;
-		unsolved: number;
-	};
+	captchaConfig?: CaptchaConfig;
 };
 
 export enum BlockRuleType {
@@ -410,9 +408,9 @@ export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
 	type: { type: String, enum: BlockRuleType, required: true },
 	dappAccount: { type: String, required: false },
 	hardBlock: { type: Boolean, required: false },
-	imageRounds: {
-		solved: { type: Number, required: false },
-		unsolved: { type: Number, required: false },
+	captchaConfig: {
+		solved: { count: { type: Number, required: false } },
+		unsolved: { count: { type: Number, required: false } },
 	},
 });
 
@@ -426,9 +424,9 @@ export const UserAccountBlockRuleSchema =
 		global: { type: Boolean, required: true },
 		hardBlock: { type: Boolean, required: false },
 		type: { type: String, enum: BlockRuleType, required: true },
-		imageRounds: {
-			solved: { type: Number, required: false },
-			unsolved: { type: Number, required: false },
+		captchaConfig: {
+			solved: { count: { type: Number, required: false } },
+			unsolved: { count: { type: Number, required: false } },
 		},
 	});
 

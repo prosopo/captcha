@@ -16,6 +16,7 @@ import { validateAddress } from "@polkadot/util-crypto/address";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	type CaptchaConfig,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -221,6 +222,7 @@ export class ClientTaskManager {
 		global: boolean,
 		hardBlock: boolean,
 		dappAccount?: string,
+		captchaConfig?: CaptchaConfig,
 	): Promise<void> {
 		const rules: IPAddressBlockRule[] = ips.map((ip) => {
 			return {
@@ -229,6 +231,7 @@ export class ClientTaskManager {
 				type: BlockRuleType.ipAddress,
 				dappAccount,
 				hardBlock,
+				...(captchaConfig && { captchaConfig }),
 			};
 		});
 		await this.providerDB.storeIPBlockRuleRecords(rules);
@@ -239,6 +242,7 @@ export class ClientTaskManager {
 		hardBlock: boolean,
 		global: boolean,
 		dappAccount?: string,
+		captchaConfig?: CaptchaConfig,
 	): Promise<void> {
 		validateAddress(dappAccount, false, 42);
 		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
@@ -249,6 +253,7 @@ export class ClientTaskManager {
 				type: BlockRuleType.userAccount,
 				global,
 				hardBlock,
+				...(captchaConfig && { captchaConfig }),
 			};
 		});
 		await this.providerDB.storeUserBlockRuleRecords(rules);

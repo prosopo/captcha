@@ -473,15 +473,15 @@ export class ImgCaptchaManager {
 		const ipRule = await checkIpRules(this.db, ipAddress, dapp);
 		if (ipRule) {
 			return {
-				solved: { count: ipRule?.imageRounds?.solved || 0 },
-				unsolved: { count: ipRule?.imageRounds?.unsolved || 0 },
+				solved: { count: ipRule?.captchaConfig?.solved.count || 0 },
+				unsolved: { count: ipRule?.captchaConfig?.unsolved.count || 0 },
 			};
 		}
 		const userRule = await checkUserRules(this.db, user, dapp);
 		if (userRule) {
 			return {
-				solved: { count: userRule?.imageRounds?.solved || 0 },
-				unsolved: { count: userRule?.imageRounds?.unsolved || 0 },
+				solved: { count: userRule?.captchaConfig?.solved.count || 0 },
+				unsolved: { count: userRule?.captchaConfig?.unsolved.count || 0 },
 			};
 		}
 		return this.config.captchas;
