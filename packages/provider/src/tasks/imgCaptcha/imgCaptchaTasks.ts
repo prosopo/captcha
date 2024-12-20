@@ -473,15 +473,31 @@ export class ImgCaptchaManager {
 		const ipRule = await checkIpRules(this.db, ipAddress, dapp);
 		if (ipRule) {
 			return {
-				solved: { count: ipRule?.captchaConfig?.solved.count || 0 },
-				unsolved: { count: ipRule?.captchaConfig?.unsolved.count || 0 },
+				solved: {
+					count:
+						ipRule?.captchaConfig?.solved.count ||
+						this.config.captchas.solved.count,
+				},
+				unsolved: {
+					count:
+						ipRule?.captchaConfig?.unsolved.count ||
+						this.config.captchas.unsolved.count,
+				},
 			};
 		}
 		const userRule = await checkUserRules(this.db, user, dapp);
 		if (userRule) {
 			return {
-				solved: { count: userRule?.captchaConfig?.solved.count || 0 },
-				unsolved: { count: userRule?.captchaConfig?.unsolved.count || 0 },
+				solved: {
+					count:
+						userRule?.captchaConfig?.solved.count ||
+						this.config.captchas.solved.count,
+				},
+				unsolved: {
+					count:
+						userRule?.captchaConfig?.unsolved.count ||
+						this.config.captchas.unsolved.count,
+				},
 			};
 		}
 		return this.config.captchas;
