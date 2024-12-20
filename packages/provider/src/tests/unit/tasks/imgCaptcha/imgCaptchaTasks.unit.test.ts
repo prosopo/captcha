@@ -233,7 +233,7 @@ describe("ImgCaptchaManager", () => {
 			);
 		});
 
-		it("should get random captchas and request hash of specific size", async () => {
+		it("should getCaptchaWithProof of specific size", async () => {
 			const datasetId = "datasetId";
 			const size = 3;
 
