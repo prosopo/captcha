@@ -37,6 +37,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
+import { getCaptchaConfig } from "../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
@@ -108,7 +109,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const captchaConfig = await tasks.imgCaptchaManager.getCaptchaConfig(
+			const captchaConfig = await getCaptchaConfig(
+				tasks.db,
+				env.config,
 				ipAddress,
 				user,
 				dapp,

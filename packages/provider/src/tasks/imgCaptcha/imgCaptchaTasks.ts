@@ -465,28 +465,6 @@ export class ImgCaptchaManager {
 		};
 	}
 
-	async getCaptchaConfig(
-		ipAddress: Address4 | Address6,
-		user: string,
-		dapp: string,
-	): Promise<CaptchaConfig> {
-		const ipRule = await checkIpRules(this.db, ipAddress, dapp);
-		if (ipRule) {
-			return {
-				solved: { count: ipRule?.captchaConfig?.solved.count || 0 },
-				unsolved: { count: ipRule?.captchaConfig?.unsolved.count || 0 },
-			};
-		}
-		const userRule = await checkUserRules(this.db, user, dapp);
-		if (userRule) {
-			return {
-				solved: { count: userRule?.captchaConfig?.solved.count || 0 },
-				unsolved: { count: userRule?.captchaConfig?.unsolved.count || 0 },
-			};
-		}
-		return this.config.captchas;
-	}
-
 	checkLangRules(acceptLanguage: string): number {
 		return checkLangRules(this.config, acceptLanguage);
 	}

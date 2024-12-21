@@ -19,7 +19,6 @@ import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { handleErrors } from "./errorHandler.js";
 
-const NO_IP_ADDRESS = "NO_IP_ADDRESS" as const;
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
 /**
