@@ -196,6 +196,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
+PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
+PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -223,6 +225,12 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
+UserCommitmentRecordSchema.index({ storedAtTimestamp: 1 });
+UserCommitmentRecordSchema.index({
+	storedAtTimestamp: 1,
+	lastUpdatedTimestamp: 1,
+});
+UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
@@ -332,6 +340,9 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
 		required: false,
 	},
 });
+ScheduledTaskRecordSchema.index({ processName: 1 });
+ScheduledTaskRecordSchema.index({ processName: 1, status: 1 });
+ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
 
 export type FrictionlessToken = {
 	token: string;
@@ -370,6 +381,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 	},
 });
+
+SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 
 export type BlockRule = {
 	global: boolean;
