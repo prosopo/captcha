@@ -736,7 +736,7 @@ export class ProviderDatabase
 		const docs = await this.tables?.commitment
 			.find({
 				$or: [
-					{ $storedAtTimestamp: { $exists: false } },
+					{ storedAtTimestamp: { $exists: false } },
 					{
 						$expr: { $lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"] },
 					},
@@ -793,7 +793,7 @@ export class ProviderDatabase
 		const docs = await this.tables?.powcaptcha
 			.find<PoWCaptchaRecord[]>({
 				$or: [
-					{ $storedAtTimestamp: { $exists: false } },
+					{ storedAtTimestamp: { $exists: false } },
 					{
 						$expr: { $lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"] },
 					},
@@ -1285,7 +1285,7 @@ export class ProviderDatabase
 	): Promise<ScheduledTaskRecord | undefined> {
 		const cursor: ScheduledTaskRecord | undefined | null =
 			await this.tables?.scheduler
-				?.findOne({ taskId: taskId, status: status })
+				?.findOne({ _id: taskId, status: status })
 				.lean<ScheduledTaskRecord>();
 		return cursor ? cursor : undefined;
 	}

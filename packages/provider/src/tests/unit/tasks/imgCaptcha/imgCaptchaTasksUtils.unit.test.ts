@@ -17,8 +17,21 @@ import {
 	computeCaptchaSolutionHash,
 } from "@prosopo/datasets";
 import type { CaptchaSolution } from "@prosopo/types";
+import {
+	BlockRuleType,
+	type IPAddressBlockRule,
+	type IProviderDatabase,
+	type UserAccountBlockRule,
+	type UserAccountBlockRuleRecord,
+} from "@prosopo/types-database";
+import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
+import { checkIpRules } from "../../../../rules/ip.js";
+import { checkUserRules } from "../../../../rules/user.js";
+import {
+	buildTreeAndGetCommitmentId,
+	getCaptchaConfig,
+} from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 
 vi.mock("@prosopo/datasets", () => ({
 	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({
@@ -27,6 +40,18 @@ vi.mock("@prosopo/datasets", () => ({
 	})),
 	computeCaptchaSolutionHash: vi.fn(),
 }));
+
+vi.mock("../../../../rules/ip.js", () => {
+	return {
+		checkIpRules: vi.fn(),
+	};
+});
+
+vi.mock("../../../../rules/user.js", () => {
+	return {
+		checkUserRules: vi.fn(),
+	};
+});
 
 describe("buildTreeAndGetCommitmentId", () => {
 	const mockCaptchaSolutions = [
@@ -77,5 +102,100 @@ describe("buildTreeAndGetCommitmentId", () => {
 				},
 			),
 		);
+	});
+});
+
+describe("getCaptchaConfig", () => {
+	it("should return the default captcha config if no rules are found", async () => {
+		const db = {
+			getIPBlockRuleRecord: vi.fn().mockResolvedValue(null),
+			getUserBlockRuleRecord: vi.fn().mockResolvedValue(null),
+		} as unknown as IProviderDatabase;
+		const config = {
+			captchas: {
+				solved: { count: 1 },
+				unsolved: { count: 2 },
+			},
+		};
+		const ipAddress = new Address4("1.1.1.1");
+		const user = "mockedUser";
+		const dapp = "mockedDapp";
+
+		// @ts-ignore
+		const result = await getCaptchaConfig(db, config, ipAddress, user, dapp);
+
+		expect(result).toEqual({
+			solved: { count: 1 },
+			unsolved: { count: 2 },
+		});
+	});
+	it("should return the users config if there is one specified against the user's ip address", async () => {
+		const ipRule: IPAddressBlockRule = {
+			ip: 16843009, // 1.1.1.1
+			global: false,
+			hardBlock: false,
+			type: BlockRuleType.ipAddress,
+			captchaConfig: {
+				solved: { count: 3 },
+				unsolved: { count: 4 },
+			},
+		};
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		(checkIpRules as any).mockReturnValue(ipRule);
+		const db = {
+			getIPBlockRuleRecord: vi.fn().mockResolvedValue(ipRule),
+			getUserBlockRuleRecord: vi.fn().mockResolvedValue(null),
+		} as unknown as IProviderDatabase;
+		const config = {
+			captchas: {
+				solved: { count: 1 },
+				unsolved: { count: 2 },
+			},
+		};
+		const ipAddress = new Address4("1.1.1.1"); // 16843009
+		const user = "mockedUser";
+		const dapp = "mockedDapp";
+		// @ts-ignore
+		const result = await getCaptchaConfig(db, config, ipAddress, user, dapp);
+		expect(result).toEqual({
+			solved: { count: 3 },
+			unsolved: { count: 4 },
+		});
+	});
+	it("should return the user's config if there is one specified against the user's account", async () => {
+		const userRule: UserAccountBlockRule = {
+			userAccount: "mockedUser",
+			dappAccount: "mockedDapp",
+			global: false,
+			hardBlock: false,
+			type: BlockRuleType.userAccount,
+			captchaConfig: {
+				solved: { count: 5 },
+				unsolved: { count: 6 },
+			},
+		};
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		(checkIpRules as any).mockReturnValue(null);
+		const db = {
+			getIPBlockRuleRecord: vi.fn().mockResolvedValue(null),
+			getUserBlockRuleRecord: vi.fn().mockResolvedValue(userRule),
+		} as unknown as IProviderDatabase;
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		(checkUserRules as any).mockReturnValue(userRule);
+		const config = {
+			captchas: {
+				solved: { count: 1 },
+				unsolved: { count: 2 },
+			},
+		};
+		const ipAddress = new Address4("1.1.1.1");
+		const user = "mockedUser";
+		const dapp = "mockedDapp";
+		// @ts-ignore
+		const result = await getCaptchaConfig(db, config, ipAddress, user, dapp);
+		expect(result).toEqual({
+			solved: { count: 5 },
+			unsolved: { count: 6 },
+		});
 	});
 });
