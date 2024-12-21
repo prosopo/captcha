@@ -140,7 +140,8 @@ describe("getCaptchaConfig", () => {
 				unsolved: { count: 4 },
 			},
 		};
-		(checkIpRules as any).mockReturnValue(ipRule); // biome-ignore lint/suspicious/noExplicitAny: tests
+		// biome-ignore lint/suspicious/noExplicitAny: tests
+		(checkIpRules as any).mockReturnValue(ipRule);
 		const db = {
 			getIPBlockRuleRecord: vi.fn().mockResolvedValue(ipRule),
 			getUserBlockRuleRecord: vi.fn().mockResolvedValue(null),
@@ -173,11 +174,13 @@ describe("getCaptchaConfig", () => {
 				unsolved: { count: 6 },
 			},
 		};
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		(checkIpRules as any).mockReturnValue(null);
 		const db = {
 			getIPBlockRuleRecord: vi.fn().mockResolvedValue(null),
 			getUserBlockRuleRecord: vi.fn().mockResolvedValue(userRule),
 		} as unknown as IProviderDatabase;
+		// biome-ignore lint/suspicious/noExplicitAny: tests
 		(checkUserRules as any).mockReturnValue(userRule);
 		const config = {
 			captchas: {
