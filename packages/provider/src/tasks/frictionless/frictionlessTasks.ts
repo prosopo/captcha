@@ -53,11 +53,13 @@ export class FrictionlessManager {
 		ipAddress: Address4 | Address6,
 		dapp: string,
 	): Promise<boolean> {
-		return !!(await checkIpRules(this.db, ipAddress, dapp));
+		const rule = await checkIpRules(this.db, ipAddress, dapp);
+		return !!rule;
 	}
 
 	async checkUserRules(user: string, dapp: string): Promise<boolean> {
-		return !!(await checkUserRules(this.db, user, dapp));
+		const rule = await checkUserRules(this.db, user, dapp);
+		return !!rule;
 	}
 
 	checkLangRules(acceptLanguage: string): number {

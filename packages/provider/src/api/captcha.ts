@@ -43,7 +43,7 @@ import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
-const TEN_MINUTES = 60 * 10;
+const TEN_MINUTES = 60 * 10 * 1000;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -456,6 +456,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the token has already been used
 				const isTokenUsed = await tasks.db.checkFrictionlessTokenRecord(token);
 				if (isTokenUsed) {
+					tasks.logger.info("Token has already been used");
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 				}
 
@@ -467,6 +468,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the timestamp is older than 10 minutes, send an image captcha
 				if (timestamp < Date.now() - TEN_MINUTES) {
+					tasks.logger.info(
+						"Timestamp is older than 10 minutes",
+						new Date(timestamp),
+					);
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 				}
 
