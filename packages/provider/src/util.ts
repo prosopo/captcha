@@ -19,6 +19,7 @@ import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
+import type { ObjectId } from "mongoose";
 
 export function encodeStringAddress(address: string) {
 	try {
@@ -58,7 +59,7 @@ export async function checkIfTaskIsRunning(
 	);
 	if (runningTask) {
 		const completedTask = await db.getScheduledTaskStatus(
-			runningTask.id,
+			runningTask._id as ObjectId,
 			ScheduledTaskStatus.Completed,
 		);
 		return !completedTask;

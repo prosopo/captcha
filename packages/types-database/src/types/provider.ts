@@ -532,18 +532,6 @@ export interface IProviderDatabase extends IDatabase {
 		reason?: TranslationKey,
 	): Promise<void>;
 
-	removeProcessedDappUserSolutions(
-		commitmentIds: Hash[],
-	): Promise<DeleteResult | undefined>;
-
-	removeProcessedDappUserCommitments(
-		commitmentIds: Hash[],
-	): Promise<DeleteResult | undefined>;
-
-	getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>;
-
-	getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
-
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
 	getUnstoredDappUserCommitments(
