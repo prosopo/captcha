@@ -79,13 +79,13 @@ export default (
 				await env.isReady();
 				const tasks = new Tasks(env);
 				let captchaConfig: CaptchaConfig | undefined;
-				if (argv.solved && argv.unsolved) {
+				if (argv.solved) {
 					captchaConfig = {
 						solved: {
 							count: argv.solved as unknown as number,
 						},
 						unsolved: {
-							count: argv.unsolved as unknown as number,
+							count: (argv.unsolved as unknown as number) || 0,
 						},
 					};
 				}
