@@ -733,19 +733,42 @@ export class ProviderDatabase
 		limit = 1000,
 		skip = 0,
 	): Promise<UserCommitmentRecord[]> {
-		const docs = await this.tables?.commitment
-			.find({
-				$or: [
-					{ storedAtTimestamp: { $exists: false } },
-					{
-						$expr: { $lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"] },
-					},
-				],
-			})
-			.sort({ _id: 1 }) // Consistent ordering is important for pagination
-			.skip(skip)
-			.limit(limit)
-			.lean<UserCommitmentRecord[]>();
+		const docs = await this.tables?.commitment.aggregate<UserCommitmentRecord>([
+			{
+				$match: {
+					$or: [
+						{ storedAtTimestamp: { $exists: false } },
+						{
+							$expr: {
+								$lt: [
+									{
+										$convert: {
+											input: "$storedAtTimestamp",
+											to: "date",
+										},
+									},
+									{
+										$convert: {
+											input: "$lastUpdatedTimestamp",
+											to: "date",
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+			{
+				$sort: { _id: 1 },
+			},
+			{
+				$skip: skip,
+			},
+			{
+				$limit: limit,
+			},
+		]);
 		return docs || [];
 	}
 
@@ -790,20 +813,42 @@ export class ProviderDatabase
 		limit = 1000,
 		skip = 0,
 	): Promise<PoWCaptchaRecord[]> {
-		const docs = await this.tables?.powcaptcha
-			.find<PoWCaptchaRecord[]>({
-				$or: [
-					{ storedAtTimestamp: { $exists: false } },
-					{
-						$expr: { $lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"] },
-					},
-				],
-			})
-			.sort({ _id: 1 }) // Consistent ordering is important for pagination
-			.skip(skip)
-			.limit(limit)
-			.lean<PoWCaptchaRecord[]>();
-
+		const docs = await this.tables?.powcaptcha.aggregate<PoWCaptchaRecord>([
+			{
+				$match: {
+					$or: [
+						{ storedAtTimestamp: { $exists: false } },
+						{
+							$expr: {
+								$lt: [
+									{
+										$convert: {
+											input: "$storedAtTimestamp",
+											to: "date",
+										},
+									},
+									{
+										$convert: {
+											input: "$lastUpdatedTimestamp",
+											to: "date",
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+			{
+				$sort: { _id: 1 },
+			},
+			{
+				$skip: skip,
+			},
+			{
+				$limit: limit,
+			},
+		]);
 		return docs || [];
 	}
 

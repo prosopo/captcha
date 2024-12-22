@@ -79,6 +79,7 @@ export class ClientTaskManager {
 
 			// Process image commitments with cursor
 			let processedCommitments = 0;
+
 			await this.processBatchesWithCursor(
 				async (skip: number) =>
 					await this.providerDB.getUnstoredDappUserCommitments(
