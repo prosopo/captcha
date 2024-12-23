@@ -16,10 +16,13 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
-import type { CaptchaConfig, ProsopoConfigOutput } from "@prosopo/types";
+import {
+	AddBlockRulesIPSpec,
+	AddBlockRulesUserSpec,
+	type ProsopoCaptchaCountConfigSchemaOutput,
+	type ProsopoConfigOutput,
+} from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
-import * as z from "zod";
-import { loadJSONFile } from "../files.js";
 
 export default (
 	pair: KeyringPair,
@@ -78,7 +81,7 @@ export default (
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
 				const tasks = new Tasks(env);
-				let captchaConfig: CaptchaConfig | undefined;
+				let captchaConfig: ProsopoCaptchaCountConfigSchemaOutput | undefined;
 				if (argv.solved) {
 					captchaConfig = {
 						solved: {
@@ -92,23 +95,28 @@ export default (
 
 				if (argv.ips) {
 					await tasks.clientTaskManager.addIPBlockRules(
-						argv.ips as unknown as string[],
-						argv.global as boolean,
-						argv.hardBlock as boolean,
-						argv.dapp as unknown as string,
-						captchaConfig,
+						AddBlockRulesIPSpec.parse({
+							ips: argv.ips,
+							global: argv.global,
+							hardBlock: argv.hardBlock,
+							dapp: argv.dapp,
+							captchaConfig,
+						}),
 					);
+					logger.info("IP Block rules added");
 				}
 				if (argv.users) {
 					await tasks.clientTaskManager.addUserBlockRules(
-						argv.users as unknown as string[],
-						argv.hardBlock as boolean,
-						argv.global as boolean,
-						argv.dapp as unknown as string,
-						captchaConfig,
+						AddBlockRulesUserSpec.parse({
+							users: argv.users,
+							global: argv.global,
+							hardBlock: argv.hardBlock,
+							dapp: argv.dapp,
+							captchaConfig,
+						}),
 					);
+					logger.info("User Block rules added");
 				}
-				logger.info("IP Block rules added");
 			} catch (err) {
 				logger.error(err);
 			}
