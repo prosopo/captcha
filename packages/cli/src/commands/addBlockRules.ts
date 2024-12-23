@@ -95,25 +95,29 @@ export default (
 
 				if (argv.ips) {
 					await tasks.clientTaskManager.addIPBlockRules(
-						AddBlockRulesIPSpec.parse({
-							ips: argv.ips,
-							global: argv.global,
-							hardBlock: argv.hardBlock,
-							dapp: argv.dapp,
-							captchaConfig,
-						}),
+						AddBlockRulesIPSpec.parse([
+							{
+								ips: argv.ips,
+								global: argv.global,
+								hardBlock: argv.hardBlock,
+								dapp: argv.dapp,
+								captchaConfig,
+							},
+						]),
 					);
 					logger.info("IP Block rules added");
 				}
 				if (argv.users) {
 					await tasks.clientTaskManager.addUserBlockRules(
-						AddBlockRulesUserSpec.parse({
-							users: argv.users,
-							global: argv.global,
-							hardBlock: argv.hardBlock,
-							dapp: argv.dapp,
-							captchaConfig,
-						}),
+						AddBlockRulesUserSpec.parse([
+							{
+								users: argv.users,
+								global: argv.global,
+								hardBlock: argv.hardBlock,
+								dapp: argv.dapp,
+								captchaConfig,
+							},
+						]),
 					);
 					logger.info("User Block rules added");
 				}
