@@ -223,20 +223,24 @@ export class ClientTaskManager {
 
 	/**
 	 * @description Add IP block rules to the database. Allows specifying mutiple IPs for a single configuration
-	 * @param {AddBlockRulesIP} opts
+	 * @param {AddBlockRulesIP} rulesets
 	 */
-	async addIPBlockRules(opts: AddBlockRulesIP): Promise<void> {
-		const rules: IPAddressBlockRule[] = opts.ips.map((ip) => {
-			return {
-				ip: Number(getIPAddress(ip).bigInt()),
-				global: opts.global,
-				type: BlockRuleType.ipAddress,
-				dappAccount: opts.dappAccount,
-				hardBlock: opts.hardBlock,
-				...(opts.captchaConfig && { captchaConfig: opts.captchaConfig }),
-			};
-		});
-		await this.providerDB.storeIPBlockRuleRecords(rules);
+	async addIPBlockRules(rulesets: AddBlockRulesIP): Promise<void> {
+		for (const ruleset of rulesets) {
+			const rules: IPAddressBlockRule[] = ruleset.ips.map((ip) => {
+				return {
+					ip: Number(getIPAddress(ip).bigInt()),
+					global: ruleset.global,
+					type: BlockRuleType.ipAddress,
+					dappAccount: ruleset.dappAccount,
+					hardBlock: ruleset.hardBlock,
+					...(ruleset.captchaConfig && {
+						captchaConfig: ruleset.captchaConfig,
+					}),
+				};
+			});
+			await this.providerDB.storeIPBlockRuleRecords(rules);
+		}
 	}
 
 	/**
@@ -252,22 +256,26 @@ export class ClientTaskManager {
 
 	/**
 	 * @description Add user block rules to the database. Allows specifying multiple users for a single configuration
-	 * @param {AddBlockRulesUser} opts
+	 * @param {AddBlockRulesUser} rulesets
 	 */
-	async addUserBlockRules(opts: AddBlockRulesUser): Promise<void> {
-		validateAddress(opts.dappAccount, false, 42);
-		const rules: UserAccountBlockRule[] = opts.users.map((userAccount) => {
-			validateAddress(userAccount, false, 42);
-			return {
-				dappAccount: opts.dappAccount,
-				userAccount,
-				type: BlockRuleType.userAccount,
-				global: opts.global,
-				hardBlock: opts.hardBlock,
-				...(opts.captchaConfig && { captchaConfig: opts.captchaConfig }),
-			};
-		});
-		await this.providerDB.storeUserBlockRuleRecords(rules);
+	async addUserBlockRules(rulesets: AddBlockRulesUser): Promise<void> {
+		for (const ruleset of rulesets) {
+			validateAddress(ruleset.dappAccount, false, 42);
+			const rules: UserAccountBlockRule[] = ruleset.users.map((userAccount) => {
+				validateAddress(userAccount, false, 42);
+				return {
+					dappAccount: ruleset.dappAccount,
+					userAccount,
+					type: BlockRuleType.userAccount,
+					global: ruleset.global,
+					hardBlock: ruleset.hardBlock,
+					...(ruleset.captchaConfig && {
+						captchaConfig: ruleset.captchaConfig,
+					}),
+				};
+			});
+			await this.providerDB.storeUserBlockRuleRecords(rules);
+		}
 	}
 
 	/**
