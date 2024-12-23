@@ -13,12 +13,10 @@
 // limitations under the License.
 import { getLoggerDefault } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { BlockMiddleware } from "./block/blockMiddleware.js";
+import { BlacklistInspector } from "./blacklistInspector.js";
 
-export const blockMiddleware = (env: ProviderEnvironment) => {
+export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	const logger = getLoggerDefault();
 
-	const blockMiddlewareInstance = new BlockMiddleware(env, logger);
-
-	return blockMiddlewareInstance.processRequest.bind(blockMiddlewareInstance);
+	return BlacklistInspector.createMiddleware(providerEnvironment, logger);
 };
