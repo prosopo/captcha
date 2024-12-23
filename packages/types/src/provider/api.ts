@@ -32,7 +32,6 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import { ProsopoCaptchaCountConfigSchema } from "../config/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -349,6 +348,27 @@ export const RegisterSitekeyBody = object({
 		[ApiParams.powDifficulty]: number(),
 	}).optional(),
 });
+
+export const ProsopoCaptchaCountConfigSchema = object({
+	solved: object({
+		count: number().positive(),
+	})
+		.optional()
+		.default({ count: 1 }),
+	unsolved: object({
+		count: number().nonnegative(),
+	})
+		.optional()
+		.default({ count: 0 }),
+});
+
+export type ProsopoCaptchaCountConfigSchemaInput = input<
+	typeof ProsopoCaptchaCountConfigSchema
+>;
+
+export type ProsopoCaptchaCountConfigSchemaOutput = output<
+	typeof ProsopoCaptchaCountConfigSchema
+>;
 
 export enum BlockRuleType {
 	ipAddress = "ipAddress",
