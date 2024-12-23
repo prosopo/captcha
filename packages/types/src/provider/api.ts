@@ -387,10 +387,12 @@ export const BlockRuleSpec = object({
 
 export type BlockRule = zInfer<typeof BlockRuleSpec>;
 
-export const AddBlockRulesIPSpec = BlockRuleSpec.merge(
-	object({
-		ips: array(string()),
-	}),
+export const AddBlockRulesIPSpec = array(
+	BlockRuleSpec.merge(
+		object({
+			ips: array(string()),
+		}),
+	),
 );
 
 export type AddBlockRulesIP = zInfer<typeof AddBlockRulesIPSpec>;
@@ -404,10 +406,12 @@ export type RemoveBlockRulesIP = zInfer<typeof RemoveBlockRulesIPSpec>;
 
 export const BlockRuleIPAddBody = array(AddBlockRulesIPSpec);
 
-export const AddBlockRulesUserSpec = BlockRuleSpec.merge(
-	object({
-		users: array(string()),
-	}),
+export const AddBlockRulesUserSpec = array(
+	BlockRuleSpec.merge(
+		object({
+			users: array(string()),
+		}),
+	),
 );
 
 export type AddBlockRulesUser = zInfer<typeof AddBlockRulesUserSpec>;
