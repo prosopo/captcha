@@ -11,10 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./utils.js";
-export * from "./error.js";
-export * from "./logger.js";
-export * from "./array.js";
-export * from "./hash.js";
-export * from "./string.js";
-export * from "./types.js";
+import type { ProsopoConfigOutput } from "@prosopo/types";
+
+export const checkLangRules = (
+	config: ProsopoConfigOutput,
+	acceptLanguage: string,
+): number => {
+	const lConfig = config.lRules;
+	let lScore = 0;
+	if (lConfig) {
+		const languages = acceptLanguage
+			.split(",")
+			.map((lang) => lang.trim().split(";")[0]);
+
+		for (const lang of languages) {
+			if (lang && lConfig[lang]) {
+				lScore += lConfig[lang];
+			}
+		}
+	}
+	return lScore;
+};

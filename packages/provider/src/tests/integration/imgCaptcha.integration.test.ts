@@ -61,8 +61,8 @@ describe("Image Captcha Integration Tests", () => {
 					"Prosopo-User": userAccount,
 				},
 			});
-
 			expect(response.status).toBe(200);
+
 			const data = await response.json();
 			expect(data).toHaveProperty("captchas");
 		});

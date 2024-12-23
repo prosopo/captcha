@@ -13,9 +13,10 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto/address";
-import type { Logger } from "@prosopo/common";
+import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	type CaptchaConfig,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -78,6 +79,7 @@ export class ClientTaskManager {
 
 			// Process image commitments with cursor
 			let processedCommitments = 0;
+
 			await this.processBatchesWithCursor(
 				async (skip: number) =>
 					await this.providerDB.getUnstoredDappUserCommitments(
@@ -191,7 +193,11 @@ export class ClientTaskManager {
 				},
 			);
 		} catch (e: unknown) {
-			this.logger.error(e);
+			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
+				context: { error: e },
+				logger: this.logger,
+			});
+			this.logger.error(getClientListError, { context: { error: e } });
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
@@ -217,6 +223,7 @@ export class ClientTaskManager {
 		global: boolean,
 		hardBlock: boolean,
 		dappAccount?: string,
+		captchaConfig?: CaptchaConfig,
 	): Promise<void> {
 		const rules: IPAddressBlockRule[] = ips.map((ip) => {
 			return {
@@ -225,6 +232,7 @@ export class ClientTaskManager {
 				type: BlockRuleType.ipAddress,
 				dappAccount,
 				hardBlock,
+				...(captchaConfig && { captchaConfig }),
 			};
 		});
 		await this.providerDB.storeIPBlockRuleRecords(rules);
@@ -235,6 +243,7 @@ export class ClientTaskManager {
 		hardBlock: boolean,
 		global: boolean,
 		dappAccount?: string,
+		captchaConfig?: CaptchaConfig,
 	): Promise<void> {
 		validateAddress(dappAccount, false, 42);
 		const rules: UserAccountBlockRule[] = userAccounts.map((userAccount) => {
@@ -245,6 +254,7 @@ export class ClientTaskManager {
 				type: BlockRuleType.userAccount,
 				global,
 				hardBlock,
+				...(captchaConfig && { captchaConfig }),
 			};
 		});
 		await this.providerDB.storeUserBlockRuleRecords(rules);
