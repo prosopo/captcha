@@ -103,6 +103,7 @@ export default (
 							captchaConfig,
 						}),
 					);
+					logger.info("IP Block rules added");
 				}
 				if (argv.users) {
 					await tasks.clientTaskManager.addUserBlockRules(
@@ -114,8 +115,8 @@ export default (
 							captchaConfig,
 						}),
 					);
+					logger.info("User Block rules added");
 				}
-				logger.info("IP Block rules added");
 			} catch (err) {
 				logger.error(err);
 			}

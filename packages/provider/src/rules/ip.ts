@@ -1,4 +1,3 @@
-import type { BlockRule, IPAddress } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@ import type { BlockRule, IPAddress } from "@prosopo/types";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { BlockRule, IPAddress } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 
 export const checkIpRules = async (
