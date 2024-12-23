@@ -20,8 +20,10 @@ import {
 	type ZodObject,
 	type ZodOptional,
 	array,
+	boolean,
 	coerce,
 	type input,
+	nativeEnum,
 	number,
 	object,
 	type output,
@@ -30,6 +32,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
+import { ProsopoCaptchaCountConfigSchema } from "../config/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -74,14 +77,12 @@ export type TGetImageCaptchaChallengePathAndParams =
 export type TGetImageCaptchaChallengeURL =
 	`${string}${TGetImageCaptchaChallengePathAndParams}`;
 
-export type TGetPowCaptchaChallengeURL =
-	`${string}${ApiPaths.GetPowCaptchaChallenge}`;
-
-export type TSubmitPowCaptchaSolutionURL =
-	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
-
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
+	BlockRuleIPAdd = "/v1/prosopo/provider/admin/blockrule/ip/add",
+	BlockRuleIPRemove = "/v1/prosopo/provider/admin/blockrule/ip/remove",
+	BlocKRuleUserAdd = "/v1/prosopo/provider/admin/blockrule/user/add",
+	BlockRuleUserRemove = "/v1/prosopo/provider/admin/blockrule/user/remove",
 }
 
 export type CombinedApiPaths = ApiPaths | AdminApiPaths;
@@ -98,6 +99,10 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlockRuleIPAdd]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlockRuleIPRemove]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlocKRuleUserAdd]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlockRuleUserRemove]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -344,6 +349,55 @@ export const RegisterSitekeyBody = object({
 		[ApiParams.powDifficulty]: number(),
 	}).optional(),
 });
+
+export enum BlockRuleType {
+	ipAddress = "ipAddress",
+	userAccount = "userAccount",
+}
+
+const BlockRuleTypeSpec = nativeEnum(BlockRuleType);
+
+export const BlockRuleSpec = object({
+	global: boolean(),
+	hardBlock: boolean(),
+	type: BlockRuleTypeSpec,
+	dappAccount: string().optional(),
+	captchaConfig: ProsopoCaptchaCountConfigSchema.optional(),
+});
+
+export type BlockRule = zInfer<typeof BlockRuleSpec>;
+
+export const AddBlockRulesIPSpec = BlockRuleSpec.merge(
+	object({
+		ips: array(string()),
+	}),
+);
+
+export type AddBlockRulesIP = zInfer<typeof AddBlockRulesIPSpec>;
+
+export const RemoveBlockRulesIPSpec = object({
+	ips: array(string()),
+	dappAccount: string().optional(),
+});
+
+export type RemoveBlockRulesIP = zInfer<typeof RemoveBlockRulesIPSpec>;
+
+export const BlockRuleIPAddBody = array(AddBlockRulesIPSpec);
+
+export const AddBlockRulesUserSpec = BlockRuleSpec.merge(
+	object({
+		users: array(string()),
+	}),
+);
+
+export type AddBlockRulesUser = zInfer<typeof AddBlockRulesUserSpec>;
+
+export const RemoveBlockRulesUserSpec = object({
+	users: array(string()),
+	dappAccount: string().optional(),
+});
+
+export type RemoveBlockRulesUser = zInfer<typeof RemoveBlockRulesUserSpec>;
 
 export const DappDomainRequestBody = object({
 	[ApiParams.dapp]: string(),

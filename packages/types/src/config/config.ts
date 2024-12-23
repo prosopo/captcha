@@ -125,7 +125,7 @@ export const ProsopoCaptchaCountConfigSchema = object({
 		count: number().nonnegative(),
 	})
 		.optional()
-		.default({ count: 1 }),
+		.default({ count: 0 }),
 });
 
 export type ProsopoCaptchaCountConfigSchemaInput = input<
