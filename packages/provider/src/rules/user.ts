@@ -11,10 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./utils.js";
-export * from "./error.js";
-export * from "./logger.js";
-export * from "./array.js";
-export * from "./hash.js";
-export * from "./string.js";
-export * from "./types.js";
+import type { BlockRule, IProviderDatabase } from "@prosopo/types-database";
+
+export const checkUserRules = async (
+	db: IProviderDatabase,
+	user: string,
+	dapp: string,
+): Promise<BlockRule | undefined> => {
+	const userRule = await db.getUserBlockRuleRecord(user, dapp);
+
+	if (
+		userRule &&
+		userRule.userAccount === user &&
+		userRule.dappAccount === dapp
+	) {
+		return userRule;
+	}
+	return undefined;
+};

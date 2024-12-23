@@ -30,9 +30,9 @@ import { at, verifyRecency } from "@prosopo/util";
 import type { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-
-const logger = getLoggerDefault();
-const DEFAULT_POW_DIFFICULTY = 4;
+import { checkIpRules } from "../../rules/ip.js";
+import { checkLangRules } from "../../rules/lang.js";
+import { checkUserRules } from "../../rules/user.js";
 
 export class FrictionlessManager {
 	config: ProsopoConfigOutput;
@@ -53,57 +53,17 @@ export class FrictionlessManager {
 		ipAddress: Address4 | Address6,
 		dapp: string,
 	): Promise<boolean> {
-		const rule = await this.db.getIPBlockRuleRecord(ipAddress.bigInt());
-
-		if (rule && BigInt(rule.ip) === ipAddress.bigInt()) {
-			// block by IP address globally
-			if (rule.global) {
-				return true;
-			}
-
-			const dappRule = await this.db.getIPBlockRuleRecord(
-				ipAddress.bigInt(),
-				dapp,
-			);
-			if (
-				dappRule &&
-				dappRule.dappAccount === dapp &&
-				BigInt(dappRule.ip) === ipAddress.bigInt()
-			) {
-				return true;
-			}
-		}
-		return false;
+		const rule = await checkIpRules(this.db, ipAddress, dapp);
+		return !!rule;
 	}
 
 	async checkUserRules(user: string, dapp: string): Promise<boolean> {
-		const userRule = await this.db.getUserBlockRuleRecord(user, dapp);
-
-		if (
-			userRule &&
-			userRule.userAccount === user &&
-			userRule.dappAccount === dapp
-		) {
-			return true;
-		}
-		return false;
+		const rule = await checkUserRules(this.db, user, dapp);
+		return !!rule;
 	}
 
 	checkLangRules(acceptLanguage: string): number {
-		const lConfig = this.config.lRules;
-		let lScore = 0;
-		if (lConfig) {
-			const languages = acceptLanguage
-				.split(",")
-				.map((lang) => lang.trim().split(";")[0]);
-
-			for (const lang of languages) {
-				if (lang && lConfig[lang]) {
-					lScore += lConfig[lang];
-				}
-			}
-		}
-		return lScore;
+		return checkLangRules(this.config, acceptLanguage);
 	}
 
 	sendImageCaptcha(): GetFrictionlessCaptchaResponse {

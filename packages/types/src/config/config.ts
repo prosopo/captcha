@@ -132,6 +132,10 @@ export type ProsopoCaptchaCountConfigSchemaInput = input<
 	typeof ProsopoCaptchaCountConfigSchema
 >;
 
+export type ProsopoCaptchaCountConfigSchemaOutput = output<
+	typeof ProsopoCaptchaCountConfigSchema
+>;
+
 export const ProsopoImageServerConfigSchema = object({
 	baseURL: string().url(),
 	port: number().optional().default(9229),
