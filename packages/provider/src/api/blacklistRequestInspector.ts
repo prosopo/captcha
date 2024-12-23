@@ -20,7 +20,7 @@ import { checkUserRules } from "../rules/user.js";
 import { getIPAddress } from "../util.js";
 import type { IProviderDatabase } from "@prosopo/types-database";
 
-class BlacklistInspector {
+class BlacklistRequestInspector {
 	public constructor(
 		private readonly providerEnvironment: ProviderEnvironment,
 		private readonly logger: Logger,
@@ -30,7 +30,7 @@ class BlacklistInspector {
 		providerEnvironment: ProviderEnvironment,
 		logger: Logger,
 	) {
-		const blacklistInspector = new BlacklistInspector(
+		const blacklistInspector = new BlacklistRequestInspector(
 			providerEnvironment,
 			logger,
 		);
@@ -148,4 +148,4 @@ class BlacklistInspector {
 	}
 }
 
-export { BlacklistInspector };
+export { BlacklistRequestInspector };
