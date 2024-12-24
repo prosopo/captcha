@@ -17,12 +17,12 @@ import {
 	computeCaptchaSolutionHash,
 } from "@prosopo/datasets";
 import type {
-	CaptchaConfig,
 	CaptchaSolution,
+	IPAddress,
+	ProsopoCaptchaCountConfigSchemaOutput,
 	ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import type { Address4, Address6 } from "ip-address";
 import { checkIpRules } from "../../rules/ip.js";
 import { checkUserRules } from "../../rules/user.js";
 
@@ -67,10 +67,10 @@ export const buildTreeAndGetCommitmentId = (
 export const getCaptchaConfig = async (
 	db: IProviderDatabase,
 	config: ProsopoConfigOutput,
-	ipAddress: Address4 | Address6,
+	ipAddress: IPAddress,
 	user: string,
 	dapp: string,
-): Promise<CaptchaConfig> => {
+): Promise<ProsopoCaptchaCountConfigSchemaOutput> => {
 	const ipRule = await checkIpRules(db, ipAddress, dapp);
 	if (ipRule) {
 		return {
