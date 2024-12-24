@@ -61,6 +61,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 					maxWidth: WIDGET_MAX_WIDTH,
 					maxHeight: "100%",
 					overflowX: "auto",
+					...theme.font,
 				}}
 			>
 				<Modal show={state.showModal}>
