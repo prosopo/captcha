@@ -7,14 +7,14 @@ import { type UserIp, userIpRecordSchema } from "./userIp.js";
 
 interface UserAccessRule extends Document {
 	userIp: UserIp;
-	isForbidden: boolean;
+	isUserBlocked: boolean;
 	clientAccountId?: string;
 	config?: UserAccessConfig;
 }
 
 const userAccessRuleSchema = new Schema<UserAccessRule>({
 	userIp: { type: userIpRecordSchema, required: true },
-	isForbidden: { type: Boolean, required: true },
+	isUserBlocked: { type: Boolean, required: true },
 	clientAccountId: { type: String, required: false, default: null },
 	config: {
 		type: userAccessConfigSchema,
