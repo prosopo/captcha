@@ -23,7 +23,9 @@ const userAccessRuleSchema = new Schema<UserAccessRule>({
 	},
 });
 
-// 1. unique constraint when mask is defined
+//// 1. Unique constrains
+
+// 1.1) when mask is defined
 userAccessRuleSchema.index(
 	{
 		"userIp.numeric": 1,
@@ -38,7 +40,7 @@ userAccessRuleSchema.index(
 	},
 );
 
-// 2. unique constraint when mask is null
+// 1.2) when mask is null
 userAccessRuleSchema.index(
 	{
 		"userIp.numeric": 1,
@@ -52,12 +54,19 @@ userAccessRuleSchema.index(
 	},
 );
 
-// 3. for "userIp.numeric=x" query part
+// 2. performance indexes
+
+// 2.1) for "userIp.version=x" query part
+userAccessRuleSchema.index({
+	"userIp.version": 1,
+});
+
+// 2.2) for "userIp.numeric=x" query part
 userAccessRuleSchema.index({
 	"userIp.numeric": 1,
 });
 
-// 4. for "givenIp >= userIp.mask.rangeMin and givenIp <= userIp.mask.rangeMax" query part
+// 2.3) for "givenIp >= userIp.mask.rangeMin and givenIp <= userIp.mask.rangeMax" query part
 userAccessRuleSchema.index(
 	{
 		"userIp.mask.rangeMin": 1,
@@ -71,7 +80,7 @@ userAccessRuleSchema.index(
 	},
 );
 
-// 5. for "clientAccount is given" query part
+// 2.4) for "clientAccount is given" query part
 userAccessRuleSchema.index(
 	{
 		clientAccountId: 1,
