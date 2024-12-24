@@ -19,6 +19,7 @@ import {
 	type CaptchaResult,
 	CaptchaStatus,
 	type GetFrictionlessCaptchaResponse,
+	type IPAddress,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -49,10 +50,7 @@ export class FrictionlessManager {
 		this.db = db;
 	}
 
-	async checkIpRules(
-		ipAddress: Address4 | Address6,
-		dapp: string,
-	): Promise<boolean> {
+	async checkIpRules(ipAddress: IPAddress, dapp: string): Promise<boolean> {
 		const rule = await checkIpRules(this.db, ipAddress, dapp);
 		return !!rule;
 	}

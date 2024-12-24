@@ -22,6 +22,7 @@ import {
 	ApiParams,
 	type CaptchaResult,
 	CaptchaStatus,
+	type IPAddress,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -29,7 +30,6 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
-import type { Address4, Address6 } from "ip-address";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 const logger = getLoggerDefault();
@@ -95,7 +95,7 @@ export class PowCaptchaManager {
 		nonce: number,
 		timeout: number,
 		userTimestampSignature: string,
-		ipAddress: Address4 | Address6,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections

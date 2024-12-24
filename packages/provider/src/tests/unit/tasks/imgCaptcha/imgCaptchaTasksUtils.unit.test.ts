@@ -16,13 +16,11 @@ import {
 	CaptchaMerkleTree,
 	computeCaptchaSolutionHash,
 } from "@prosopo/datasets";
-import type { CaptchaSolution } from "@prosopo/types";
-import {
-	BlockRuleType,
-	type IPAddressBlockRule,
-	type IProviderDatabase,
-	type UserAccountBlockRule,
-	type UserAccountBlockRuleRecord,
+import { BlockRuleType, type CaptchaSolution } from "@prosopo/types";
+import type {
+	IPAddressBlockRule,
+	IProviderDatabase,
+	UserAccountBlockRule,
 } from "@prosopo/types-database";
 import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";

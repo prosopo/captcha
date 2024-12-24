@@ -15,8 +15,8 @@
 import type { Logger } from "@prosopo/common";
 import { parseCaptchaDataset } from "@prosopo/datasets";
 import type {
-	CaptchaConfig,
 	DatasetRaw,
+	ProsopoCaptchaCountConfigSchemaOutput,
 	ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskResult,
@@ -52,7 +52,7 @@ type TestScheduledTaskRecord = Pick<
 describe("DatasetManager", () => {
 	let config: ProsopoConfigOutput;
 	let logger: Logger;
-	let captchaConfig: CaptchaConfig;
+	let captchaConfig: ProsopoCaptchaCountConfigSchemaOutput;
 	let providerDB: IProviderDatabase;
 	let datasetManager: DatasetManager;
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -74,7 +74,7 @@ describe("DatasetManager", () => {
 		captchaConfig = {
 			solved: { count: 5 },
 			unsolved: { count: 5 },
-		} as CaptchaConfig;
+		} as ProsopoCaptchaCountConfigSchemaOutput;
 
 		collections.schedulers = {} as {
 			records: Record<string, TestScheduledTaskRecord>;
