@@ -79,6 +79,7 @@ import type {
 import type { DeleteResult } from "mongodb";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
+import { userAccessRuleSchema } from "@prosopo/types-database";
 
 enum TableNames {
 	captcha = "captcha",
@@ -94,6 +95,7 @@ enum TableNames {
 	session = "session",
 	ipblockrules = "ipblockrules",
 	userblockrules = "userblockrules",
+	userAccessRules = "userAccessRules",
 }
 
 const PROVIDER_TABLES = [
@@ -161,6 +163,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.userblockrules,
 		modelName: "UserAccountBlockRules",
 		schema: UserAccountBlockRuleSchema,
+	},
+	{
+		collectionName: TableNames.userAccessRules,
+		modelName: "UserAccessRules",
+		schema: userAccessRuleSchema,
 	},
 ];
 

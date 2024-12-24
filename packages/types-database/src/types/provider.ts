@@ -57,6 +57,8 @@ import {
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
 
+export * from "./provider/export.js";
+
 export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
 
 export type ClientRecord = IUserDataSlim & Document;

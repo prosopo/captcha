@@ -15,7 +15,10 @@ Client-side (browser):
 
 Server-side (node.js):
 
-* **provider** - API Endpoints vendor for the captcha widget
+* **provider** - API Endpoints provider for the captcha widget
+* **database** - Mongo DB Query builder
+* inner:
+    - types-database - declaration of interfaces and types used in the Query builder
 
 ### 2. Code Quality & Style
 
