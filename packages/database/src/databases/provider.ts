@@ -81,7 +81,7 @@ import type { DeleteResult } from "mongodb";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import { userAccessRuleSchema } from "@prosopo/types-database";
-import { UserAccessRules } from "./provider/userAccessRulesDatabase.js";
+import { UserAccessRules } from "./provider/userAccessRules.js";
 
 enum TableNames {
 	captcha = "captcha",
