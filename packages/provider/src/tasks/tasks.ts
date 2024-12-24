@@ -13,7 +13,10 @@ import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { CaptchaConfig, ProsopoConfigOutput } from "@prosopo/types";
+import type {
+	ProsopoCaptchaCountConfigSchemaOutput,
+	ProsopoConfigOutput,
+} from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { ClientTaskManager } from "./client/clientTasks.js";
@@ -27,7 +30,7 @@ import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
  */
 export class Tasks {
 	db: IProviderDatabase;
-	captchaConfig: CaptchaConfig;
+	captchaConfig: ProsopoCaptchaCountConfigSchemaOutput;
 	logger: Logger;
 	config: ProsopoConfigOutput;
 	pair: KeyringPair;
