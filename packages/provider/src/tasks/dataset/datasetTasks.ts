@@ -14,8 +14,8 @@ import type { Logger } from "@prosopo/common";
 // limitations under the License.
 import { parseCaptchaDataset } from "@prosopo/datasets";
 import type {
-	CaptchaConfig,
 	DatasetRaw,
+	ProsopoCaptchaCountConfigSchemaOutput,
 	ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -24,13 +24,13 @@ import { providerValidateDataset } from "./datasetTasksUtils.js";
 export class DatasetManager {
 	config: ProsopoConfigOutput;
 	logger: Logger;
-	captchaConfig: CaptchaConfig;
+	captchaConfig: ProsopoCaptchaCountConfigSchemaOutput;
 	db: IProviderDatabase;
 
 	constructor(
 		config: ProsopoConfigOutput,
 		logger: Logger,
-		captchaConfig: CaptchaConfig,
+		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		db: IProviderDatabase,
 	) {
 		this.config = config;

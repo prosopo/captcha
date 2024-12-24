@@ -15,7 +15,11 @@ import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
-import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
+import {
+	type IPAddress,
+	type ScheduledTaskNames,
+	ScheduledTaskStatus,
+} from "@prosopo/types";
 import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
@@ -67,7 +71,7 @@ export async function checkIfTaskIsRunning(
 	return false;
 }
 
-export const getIPAddress = (ipAddressString: string): Address4 | Address6 => {
+export const getIPAddress = (ipAddressString: string): IPAddress => {
 	try {
 		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
 			return new Address4(ipAddressString);
