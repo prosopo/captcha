@@ -177,7 +177,11 @@ export class ClientTaskManager {
 				this.logger,
 			);
 
-			const updatedAtTimestamp = 0;
+			// Get updated client records within a ten minute window of the last completed task
+			const tenMinuteWindow = new Date().getTime() - 10 * 60 * 1000;
+			const updatedAtTimestamp = lastTask?.updated
+				? lastTask.updated - tenMinuteWindow || 0
+				: 0;
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
@@ -191,7 +195,7 @@ export class ClientTaskManager {
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
-						clientRecords: newClientRecords.map((c: ClientRecord) => c.account),
+						clientRecords: newClientRecords.length,
 					},
 				},
 			);
