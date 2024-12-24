@@ -31,4 +31,4 @@ const userIpRecordSchema = new Schema<UserIp>(
 	{ _id: false },
 );
 
-export { type UserIp, userIpRecordSchema };
+export { type UserIp, UserIpVersion, userIpRecordSchema };
