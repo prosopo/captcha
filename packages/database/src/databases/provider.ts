@@ -63,6 +63,7 @@ import {
 	StoredStatusNames,
 	type Tables,
 	type UserAccessRule,
+	type UserAccessRules,
 	type UserAccountBlockRule,
 	type UserAccountBlockRuleRecord,
 	UserAccountBlockRuleSchema,
@@ -81,7 +82,7 @@ import type { DeleteResult } from "mongodb";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import { userAccessRuleSchema } from "@prosopo/types-database";
-import { UserAccessRules } from "./provider/userAccessRules.js";
+import { MongoUserAccessRules } from "./provider/userAccessRules.js";
 
 enum TableNames {
 	captcha = "captcha",
@@ -178,7 +179,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private readonly userAccessRules: UserAccessRules;
+	private readonly userAccessRules: MongoUserAccessRules;
 
 	constructor(
 		url: string,
@@ -189,7 +190,7 @@ export class ProviderDatabase
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRules = new UserAccessRules();
+		this.userAccessRules = new MongoUserAccessRules(null);
 	}
 
 	override async connect(): Promise<void> {
