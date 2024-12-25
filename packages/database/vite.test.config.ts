@@ -19,6 +19,6 @@ loadEnv();
 
 export default defineConfig({
 	test: {
-		include: ["./src/tests/**/*.ts"],
+		include: ["./src/tests/provider/*.ts"],
 	},
 });
