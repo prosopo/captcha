@@ -27,8 +27,8 @@ describe("MongoUserAccessRules", async () => {
 	> = [
 		//WithIpV4,
 		WithIpV6, // fixme ipv6 can't be stored as Decimal128 cause it supports only 34 significant digits, while IPV6 is 38.
-		// fixme https://www.mongodb.com/docs/manual/reference/bson-types/
-		// fixme idea - store as string, and add leading zeros (39 is a total). https://character.construction/numbers
+		// fixme idea #1 - add 'point' prefix after 34 digits.
+		// fixme idea #2 - store as string, and add leading zeros (38 is a total).  https://www.mongodb.com/docs/manual/reference/bson-types/ https://character.construction/numbers
 		//WithIpV4AndClientAccountId,
 	//	WithIpV6AndClientAccountId,
 	];
