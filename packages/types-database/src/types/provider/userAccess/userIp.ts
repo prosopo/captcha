@@ -1,5 +1,6 @@
 import { Schema } from "mongoose";
 import { type UserIpMask, userIpMaskRecordSchema } from "./userIpMask.js";
+import type {Decimal128} from "mongodb";
 
 enum UserIpVersion {
 	v4 = "v4",
@@ -8,9 +9,9 @@ enum UserIpVersion {
 
 interface UserIp {
 	// ipV6 takes 128bits, so we can't use Number, which is only 54 bits
-	numeric: bigint;
+	numericPresentation: Decimal128;
 	// for presentation only purposes
-	string: string;
+	stringPresentation: string;
 	version: UserIpVersion;
 	mask?: UserIpMask;
 }
@@ -18,9 +19,9 @@ interface UserIp {
 const userIpRecordSchema = new Schema<UserIp>(
 	{
 		// ipV6 takes 128bits, so we can't use Number, which is only 54 bits
-		numeric: { type: Schema.Types.Decimal128, required: true },
+		numericPresentation: { type: Schema.Types.Decimal128, required: true },
 		// for presentation only purposes
-		string: { type: String, required: true },
+		stringPresentation: { type: String, required: true },
 		version: { type: String, required: true },
 		mask: {
 			type: userIpMaskRecordSchema,
