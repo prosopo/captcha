@@ -1,12 +1,16 @@
 import { Address4, type Address6 } from "ip-address";
-import { type UserAccessRule, UserIpVersion } from "@prosopo/types-database";
+import {
+	type UserAccessRules,
+	type UserAccessRule,
+	UserIpVersion,
+} from "@prosopo/types-database";
 import type { Model } from "mongoose";
 
-class UserAccessRules {
+class MongoUserAccessRules implements UserAccessRules {
 	private model: Model<UserAccessRule> | null;
 
-	constructor() {
-		this.model = null;
+	constructor(model: Model<UserAccessRule> | null) {
+		this.model = model;
 	}
 
 	public async getByUserIp(
@@ -57,4 +61,4 @@ class UserAccessRules {
 	}
 }
 
-export { UserAccessRules };
+export { MongoUserAccessRules };
