@@ -1,10 +1,12 @@
-import type { Address4, Address6 } from "ip-address";
 import type { UserAccessRule } from "./userAccessRule.js";
+import type { Decimal128 } from "mongodb";
+import type {UserIpVersion} from "./userIp.js";
 
 interface UserAccessRules {
 	getByUserIp(
-		userIp: Address4 | Address6,
-		clientAccountId: string | null,
+		userIpVersion: UserIpVersion,
+		userNumericIp: Decimal128,
+		clientAccountId?: string | null,
 	): Promise<UserAccessRule[]>;
 }
 
