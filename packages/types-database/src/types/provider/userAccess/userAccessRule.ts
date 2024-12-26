@@ -4,8 +4,8 @@ import {
 	userAccessConfigSchema,
 } from "./userAccessConfig.js";
 import { type UserIp, userIpRecordSchema } from "./ip/userIp.js";
-import { ruleRestrictionIndexes } from "./ruleRestrictionIndexes.js";
-import { rulePerformanceIndexes } from "./rulePerformanceIndexes.js";
+import { uniqueIndexes } from "./dbIndexes/unique/uniqueIndexes.js";
+import { performanceIndexes } from "./dbIndexes/performance/performanceIndexes.js";
 
 interface UserAccessRule extends Document {
 	userIp: UserIp;
@@ -25,7 +25,7 @@ const userAccessRuleSchema = new Schema<UserAccessRule>({
 	},
 });
 
-ruleRestrictionIndexes.setup(userAccessRuleSchema);
-rulePerformanceIndexes.setup(userAccessRuleSchema);
+uniqueIndexes.setup(userAccessRuleSchema);
+performanceIndexes.setup(userAccessRuleSchema);
 
 export { type UserAccessRule, userAccessRuleSchema };

@@ -6,15 +6,13 @@ abstract class TestsBase {
 		method: () => Promise<void>;
 	}[];
 
-	protected abstract getTestName(): string;
+	public abstract getName(): string;
 
 	public async runAll(): Promise<void> {
 		const tests = this.getTests();
 
-		const testName = this.getTestName();
-
 		for (const test of tests) {
-			it(`test${testName} : ${test.name}`, async () => {
+			it(test.name, async () => {
 				await test.method();
 			});
 		}
