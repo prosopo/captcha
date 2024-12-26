@@ -1,41 +1,15 @@
-import {
-	type UserAccessRule,
-	type UserAccessRules,
-	userAccessRuleSchema,
-} from "@prosopo/types-database";
-import type { Model, Mongoose } from "mongoose";
-import { it } from "vitest";
+import type { UserAccessRule, UserAccessRules } from "@prosopo/types-database";
+import type { Model } from "mongoose";
 import { MongoUserAccessRules } from "../../../databases/provider/mongoUserAccessRules.js";
+import { TestsBase } from "../../testsBase.js";
 
-abstract class MongoUserAccessRuleTests {
-	protected model: Model<UserAccessRule>;
+abstract class MongoUserAccessRuleTests extends TestsBase {
 	protected userAccessRules: UserAccessRules;
 
-	public constructor(mongoConnection: Mongoose) {
-		this.model = mongoConnection.model("UserAccessRules", userAccessRuleSchema);
+	public constructor(protected model: Model<UserAccessRule>) {
+		super();
 
 		this.userAccessRules = new MongoUserAccessRules(this.model);
-
-		this.runAllTests();
-	}
-
-	protected abstract getTests(): {
-		name: string;
-		method: () => Promise<void>;
-	}[];
-
-	protected abstract getTestName(): string;
-
-	protected runAllTests(): void {
-		const tests = this.getTests();
-
-		const testName = this.getTestName();
-
-		for (const test of tests) {
-			it(`test${testName} : ${test.name}`, async () => {
-				await test.method();
-			});
-		}
 	}
 }
 
