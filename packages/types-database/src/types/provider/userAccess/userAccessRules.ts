@@ -1,9 +1,8 @@
 import type { UserAccessRule } from "./userAccessRule.js";
-import type { Int32 } from "mongodb";
 
 interface UserAccessRules {
 	findByUserIpV4(
-		userIpAsNumeric: Int32,
+		userIpAsNumeric: bigint,
 		clientAccountId?: string | null,
 	): Promise<UserAccessRule[]>;
 

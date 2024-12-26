@@ -5,7 +5,7 @@ import {
 } from "@prosopo/types-database";
 import type { Model, Mongoose } from "mongoose";
 import { it } from "vitest";
-import {MongoUserAccessRules} from "../../../databases/provider/mongoUserAccessRules.js";
+import { MongoUserAccessRules } from "../../../databases/provider/mongoUserAccessRules.js";
 
 abstract class MongoUserAccessRuleTests {
 	protected model: Model<UserAccessRule>;
@@ -24,15 +24,15 @@ abstract class MongoUserAccessRuleTests {
 		method: () => Promise<void>;
 	}[];
 
-	protected abstract getTestPrefixes(): string[];
+	protected abstract getTestName(): string;
 
 	protected runAllTests(): void {
 		const tests = this.getTests();
 
-		const testPrefix = this.getTestPrefixes().join(" : ");
+		const testName = this.getTestName();
 
 		for (const test of tests) {
-			it(`test${testPrefix} : ${test.name}`, async () => {
+			it(`test${testName} : ${test.name}`, async () => {
 				await test.method();
 			});
 		}

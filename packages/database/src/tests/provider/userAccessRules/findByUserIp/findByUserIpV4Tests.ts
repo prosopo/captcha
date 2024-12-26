@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 import { MongoUserAccessRuleTests } from "../mongoUserAccessRuleTests.js";
 import { Address4 } from "ip-address";
-import { Int32 } from "mongodb";
+import { Int32, Long } from "mongodb";
 
 class FindByUserIpV4Tests extends MongoUserAccessRuleTests {
 	protected getFirstUserIp(): string {
@@ -12,18 +12,18 @@ class FindByUserIpV4Tests extends MongoUserAccessRuleTests {
 		return "127.0.0.1";
 	}
 
-	protected convertUserIpToNumeric(userIp: string): Int32 {
+	protected convertUserIpToNumeric(userIp: string): bigint {
 		const address = new Address4(userIp);
 
 		if (!address.isCorrect()) {
 			throw new Error(`Invalid IP: ${userIp}`);
 		}
 
-		return Int32.fromString(address.bigInt().toString());
+		return address.bigInt();
 	}
 
-	protected getTestPrefixes(): string[] {
-		return ["findByUserIpV4"];
+	protected getTestName(): string {
+		return "FindByUserIpV4";
 	}
 
 	protected override getTests(): {
@@ -44,12 +44,12 @@ class FindByUserIpV4Tests extends MongoUserAccessRuleTests {
 				method: async () => this.findsGlobalAndClientRecords(),
 			},
 			{
-				name: "ignoresGlobalRecordWithWrongIp",
-				method: async () => this.ignoresGlobalRecordWithWrongIp(),
+				name: "ignoresGlobalRecordWithDifferentIp",
+				method: async () => this.ignoresGlobalRecordWithDifferentIp(),
 			},
 			{
-				name: "ignoresClientRecordWithWrongIp",
-				method: async () => this.ignoresClientRecordWithWrongIp(),
+				name: "ignoresClientRecordWithDifferentIp",
+				method: async () => this.ignoresClientRecordWithDifferentIp(),
 			},
 		];
 	}
@@ -141,7 +141,7 @@ class FindByUserIpV4Tests extends MongoUserAccessRuleTests {
 		expect(rules[1]?.id).toBe(globalRecord.id);
 	}
 
-	protected async ignoresGlobalRecordWithWrongIp(): Promise<void> {
+	protected async ignoresGlobalRecordWithDifferentIp(): Promise<void> {
 		// given
 		const firstUserIp = this.getFirstUserIp();
 
@@ -166,7 +166,7 @@ class FindByUserIpV4Tests extends MongoUserAccessRuleTests {
 		expect(rules.length).toBe(0);
 	}
 
-	protected async ignoresClientRecordWithWrongIp(): Promise<void> {
+	protected async ignoresClientRecordWithDifferentIp(): Promise<void> {
 		// given
 		const firstUserIp = this.getFirstUserIp();
 
