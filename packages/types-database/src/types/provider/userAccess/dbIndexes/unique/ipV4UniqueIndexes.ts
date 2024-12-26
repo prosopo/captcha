@@ -1,7 +1,8 @@
 import type { Schema } from "mongoose";
-import type { UserAccessRule } from "./userAccessRule.js";
+import type { UserAccessRule } from "../../userAccessRule.js";
+import type { AccessRuleDbIndexes } from "../accessRuleDbIndexes.js";
 
-class RuleRestrictionIndexes {
+class IpV4UniqueIndexes implements AccessRuleDbIndexes {
 	public setup(schema: Schema<UserAccessRule>): void {
 		this.singleGlobalIp(schema);
 		this.singleIpPerClient(schema);
@@ -9,9 +10,7 @@ class RuleRestrictionIndexes {
 		this.singleIpMaskPerClient(schema);
 	}
 
-	protected singleGlobalIp(
-		schema: Schema<UserAccessRule>,
-	): void {
+	protected singleGlobalIp(schema: Schema<UserAccessRule>): void {
 		schema.index(
 			{
 				"userIp.v4.asNumeric": 1,
@@ -19,17 +18,15 @@ class RuleRestrictionIndexes {
 			{
 				unique: true,
 				partialFilterExpression: {
-					clientAccountId: { $exists: false },
+					clientAccountId: null,
 					"userIp.v4.asNumeric": { $exists: true },
-					"userIp.v4.mask.asNumeric": { $exists: false },
+					"userIp.v4.mask.asNumeric": null,
 				},
 			},
 		);
 	}
 
-	protected singleIpPerClient(
-		schema: Schema<UserAccessRule>,
-	): void {
+	protected singleIpPerClient(schema: Schema<UserAccessRule>): void {
 		schema.index(
 			{
 				clientAccountId: 1,
@@ -40,15 +37,13 @@ class RuleRestrictionIndexes {
 				partialFilterExpression: {
 					clientAccountId: { $exists: true },
 					"userIp.v4.asNumeric": { $exists: true },
-					"userIp.v4.mask.asNumeric": { $exists: false },
+					"userIp.v4.mask.asNumeric": null,
 				},
 			},
 		);
 	}
 
-	protected singleGlobalIpMask(
-		schema: Schema<UserAccessRule>,
-	): void {
+	protected singleGlobalIpMask(schema: Schema<UserAccessRule>): void {
 		schema.index(
 			{
 				"userIp.v4.asNumeric": 1,
@@ -57,7 +52,7 @@ class RuleRestrictionIndexes {
 			{
 				unique: true,
 				partialFilterExpression: {
-					clientAccountId: { $exists: false },
+					clientAccountId: null,
 					"userIp.v4.asNumeric": { $exists: true },
 					"userIp.v4.mask.asNumeric": { $exists: true },
 				},
@@ -65,9 +60,7 @@ class RuleRestrictionIndexes {
 		);
 	}
 
-	protected singleIpMaskPerClient(
-		schema: Schema<UserAccessRule>,
-	): void {
+	protected singleIpMaskPerClient(schema: Schema<UserAccessRule>): void {
 		schema.index(
 			{
 				clientAccountId: 1,
@@ -86,6 +79,6 @@ class RuleRestrictionIndexes {
 	}
 }
 
-const ruleRestrictionIndexes = new RuleRestrictionIndexes();
+const ipV4UniqueIndexes = new IpV4UniqueIndexes();
 
-export { ruleRestrictionIndexes };
+export { ipV4UniqueIndexes };

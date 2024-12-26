@@ -21,7 +21,7 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 		return address.bigInt().toString();
 	}
 
-	protected getTestName(): string {
+	public getName(): string {
 		return "FindByUserIpV6";
 	}
 

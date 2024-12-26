@@ -22,7 +22,7 @@ class FindByUserIpV4Tests extends MongoUserAccessRuleTests {
 		return address.bigInt();
 	}
 
-	protected getTestName(): string {
+	public getName(): string {
 		return "FindByUserIpV4";
 	}
 
