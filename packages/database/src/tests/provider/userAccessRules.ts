@@ -1,11 +1,8 @@
-import { describe, beforeEach, afterAll } from "vitest";
+import { describe, beforeEach, afterAll, it, expect } from "vitest";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import type { MongoUserAccessRuleTests } from "./userAccessRules/mongoUserAccessRuleTests.js";
-import { WithIpV4 } from "./userAccessRules/getByUserIp/withIpV4.js";
-import { WithIpV6 } from "./userAccessRules/getByUserIp/withIpV6.js";
-import { WithIpV4AndClientAccountId } from "./userAccessRules/getByUserIp/withIpV4AndClientAccountId.js";
-import { WithIpV6AndClientAccountId } from "./userAccessRules/getByUserIp/withIpV6AndClientAccountId.js";
+import { FindByUserIpV4Tests } from "./userAccessRules/findByUserIp/findByUserIpV4Tests.js";
 
 describe("MongoUserAccessRules", async () => {
 	const mongoServer = await MongoMemoryServer.create();
@@ -25,12 +22,8 @@ describe("MongoUserAccessRules", async () => {
 			connection: typeof mongoose,
 		) => MongoUserAccessRuleTests
 	> = [
-		//WithIpV4,
-		WithIpV6, // fixme ipv6 can't be stored as Decimal128 cause it supports only 34 significant digits, while IPV6 is 38.
-		// fixme idea #1 - add 'point' prefix after 34 digits.
-		// fixme idea #2 - store as string, and add leading zeros (38 is a total).  https://www.mongodb.com/docs/manual/reference/bson-types/ https://character.construction/numbers
-		//WithIpV4AndClientAccountId,
-	//	WithIpV6AndClientAccountId,
+		FindByUserIpV4Tests,
+		// fixme v6
 	];
 
 	for (const testClass of testClasses) {

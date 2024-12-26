@@ -78,11 +78,10 @@ import type {
 	FrictionlessTokenRecord,
 	IPBlockRuleMongo,
 } from "@prosopo/types-database";
-import type { DeleteResult } from "mongodb";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import { userAccessRuleSchema } from "@prosopo/types-database";
-import { MongoUserAccessRules } from "./provider/userAccessRules.js";
+import { MongoUserAccessRules } from "./provider/mongoUserAccessRules.js";
 
 enum TableNames {
 	captcha = "captcha",

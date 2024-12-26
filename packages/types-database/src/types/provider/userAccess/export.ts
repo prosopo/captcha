@@ -1,6 +1,5 @@
-export * from "./imageCaptchaAccessRule.js";
-export * from "./userAccessConfig.js";
-export * from "./userAccessRule.js";
-export * from "./userIp.js";
-export * from "./userIpMask.js";
-export * from "./userAccessRules.js";
+export * from "./ip/export.js";
+export type { ImageCaptchaAccessRule } from "./imageCaptchaAccessRule.js";
+export type { UserAccessConfig } from "./userAccessConfig.js";
+export { type UserAccessRule, userAccessRuleSchema } from "./userAccessRule.js";
+export type { UserAccessRules } from "./userAccessRules.js";
