@@ -1,24 +1,29 @@
-import type { UserIpVersion } from "@prosopo/types-database";
 import { expect } from "vitest";
-import { GetByUserIp } from "../getByUserIp.js";
-import type { Decimal128 } from "mongodb";
+import { MongoUserAccessRuleTests } from "../mongoUserAccessRuleTests.js";
+import { Address4 } from "ip-address";
+import { Int32 } from "mongodb";
 
-abstract class WithIp extends GetByUserIp {
-	protected abstract getUserIpVersion(): UserIpVersion;
-
-	protected abstract getFirstUserIp(): string;
-
-	protected abstract getSecondUserIp(): string;
-
-	protected getNumericPresentationForIp(userIp: string): Decimal128 {
-		return this.getNumericPresentationForUserIp(
-			userIp,
-			this.getUserIpVersion(),
-		);
+class FindByUserIpV4Tests extends MongoUserAccessRuleTests {
+	protected getFirstUserIp(): string {
+		return "192.168.1.1";
 	}
 
-	protected override getTestPrefixes(): string[] {
-		return super.getTestPrefixes().concat(["withIp"]);
+	protected getSecondUserIp(): string {
+		return "127.0.0.1";
+	}
+
+	protected convertUserIpToNumeric(userIp: string): Int32 {
+		const address = new Address4(userIp);
+
+		if (!address.isCorrect()) {
+			throw new Error(`Invalid IP: ${userIp}`);
+		}
+
+		return Int32.fromString(address.bigInt().toString());
+	}
+
+	protected getTestPrefixes(): string[] {
+		return ["findByUserIpV4"];
 	}
 
 	protected override getTests(): {
@@ -56,16 +61,16 @@ abstract class WithIp extends GetByUserIp {
 		const record = await this.model.create({
 			isUserBlocked: true,
 			userIp: {
-				numericPresentation: this.getNumericPresentationForIp(userIp),
-				stringPresentation: userIp,
-				version: this.getUserIpVersion(),
+				v4: {
+					asNumeric: this.convertUserIpToNumeric(userIp),
+					asString: userIp,
+				},
 			},
 		});
 
 		// when
-		const rules = await this.userAccessRules.getByUserIp(
-			this.getUserIpVersion(),
-			this.getNumericPresentationForIp(userIp),
+		const rules = await this.userAccessRules.findByUserIpV4(
+			this.convertUserIpToNumeric(userIp),
 		);
 
 		// then
@@ -80,17 +85,17 @@ abstract class WithIp extends GetByUserIp {
 		const clientRecord = await this.model.create({
 			isUserBlocked: true,
 			userIp: {
-				numericPresentation: this.getNumericPresentationForIp(userIp),
-				stringPresentation: userIp,
-				version: this.getUserIpVersion(),
+				v4: {
+					asNumeric: this.convertUserIpToNumeric(userIp),
+					asString: userIp,
+				},
 			},
 			clientAccountId: "client",
 		});
 
 		// when
-		const rules = await this.userAccessRules.getByUserIp(
-			this.getUserIpVersion(),
-			this.getNumericPresentationForIp(userIp),
+		const rules = await this.userAccessRules.findByUserIpV4(
+			this.convertUserIpToNumeric(userIp),
 			"client",
 		);
 
@@ -106,9 +111,10 @@ abstract class WithIp extends GetByUserIp {
 		const clientRecord = await this.model.create({
 			isUserBlocked: true,
 			userIp: {
-				numericPresentation: this.getNumericPresentationForIp(userIp),
-				stringPresentation: userIp,
-				version: this.getUserIpVersion(),
+				v4: {
+					asNumeric: this.convertUserIpToNumeric(userIp),
+					asString: userIp,
+				},
 			},
 			clientAccountId: "client",
 		});
@@ -116,16 +122,16 @@ abstract class WithIp extends GetByUserIp {
 		const globalRecord = await this.model.create({
 			isUserBlocked: true,
 			userIp: {
-				numericPresentation: this.getNumericPresentationForIp(userIp),
-				stringPresentation: userIp,
-				version: this.getUserIpVersion(),
+				v4: {
+					asNumeric: this.convertUserIpToNumeric(userIp),
+					asString: userIp,
+				},
 			},
 		});
 
 		// when
-		const rules = await this.userAccessRules.getByUserIp(
-			this.getUserIpVersion(),
-			this.getNumericPresentationForIp(userIp),
+		const rules = await this.userAccessRules.findByUserIpV4(
+			this.convertUserIpToNumeric(userIp),
 			"client",
 		);
 
@@ -144,16 +150,16 @@ abstract class WithIp extends GetByUserIp {
 		await this.model.create({
 			isUserBlocked: true,
 			userIp: {
-				numericPresentation: this.getNumericPresentationForIp(firstUserIp),
-				stringPresentation: firstUserIp,
-				version: this.getUserIpVersion(),
+				v4: {
+					asNumeric: this.convertUserIpToNumeric(firstUserIp),
+					asString: firstUserIp,
+				},
 			},
 		});
 
 		// when
-		const rules = await this.userAccessRules.getByUserIp(
-			this.getUserIpVersion(),
-			this.getNumericPresentationForIp(secondUserIp),
+		const rules = await this.userAccessRules.findByUserIpV4(
+			this.convertUserIpToNumeric(secondUserIp),
 		);
 
 		// then
@@ -169,17 +175,18 @@ abstract class WithIp extends GetByUserIp {
 		await this.model.create({
 			isUserBlocked: true,
 			userIp: {
-				numericPresentation: this.getNumericPresentationForIp(firstUserIp),
-				stringPresentation: firstUserIp,
-				version: this.getUserIpVersion(),
+				v4: {
+					asNumeric: this.convertUserIpToNumeric(firstUserIp),
+					asString: firstUserIp,
+				},
 			},
 			clientAccountId: "client",
 		});
 
 		// when
-		const rules = await this.userAccessRules.getByUserIp(
-			this.getUserIpVersion(),
-			this.getNumericPresentationForIp(secondUserIp),
+		const rules = await this.userAccessRules.findByUserIpV4(
+			this.convertUserIpToNumeric(secondUserIp),
+			"client",
 		);
 
 		// then
@@ -187,4 +194,4 @@ abstract class WithIp extends GetByUserIp {
 	}
 }
 
-export { WithIp };
+export { FindByUserIpV4Tests };
