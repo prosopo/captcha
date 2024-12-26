@@ -1,6 +1,6 @@
 import type { UserAccessRule, UserAccessRules } from "@prosopo/types-database";
 import type { Model } from "mongoose";
-import { MongoUserAccessRules } from "../../../databases/provider/mongoUserAccessRules.js";
+import { MongoUserAccessRules } from "../../../databases/provider/userAccessRules/mongoUserAccessRules.js";
 import { TestsBase } from "../../testsBase.js";
 
 abstract class MongoUserAccessRuleTests extends TestsBase {

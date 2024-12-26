@@ -1,1 +1,1 @@
-export * from "./userAccess/export.js";
+export * from "./userAccessRules/export.js";

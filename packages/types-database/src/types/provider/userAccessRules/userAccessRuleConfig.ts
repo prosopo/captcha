@@ -4,11 +4,11 @@ import {
 	imageCaptchaAccessRuleSchema,
 } from "./imageCaptchaAccessRule.js";
 
-interface UserAccessConfig {
+interface UserAccessRuleConfig {
 	imageCaptcha?: ImageCaptchaAccessRule;
 }
 
-const userAccessConfigSchema = new Schema<UserAccessConfig>(
+const userAccessRuleConfigRecordSchema = new Schema<UserAccessRuleConfig>(
 	{
 		imageCaptcha: {
 			type: imageCaptchaAccessRuleSchema,
@@ -19,4 +19,4 @@ const userAccessConfigSchema = new Schema<UserAccessConfig>(
 	{ _id: false },
 );
 
-export { type UserAccessConfig, userAccessConfigSchema };
+export { type UserAccessRuleConfig, userAccessRuleConfigRecordSchema };
