@@ -1,6 +1,5 @@
 import type { UserAccessRule, UserAccessRules } from "@prosopo/types-database";
 import type { Model } from "mongoose";
-import type { Int32 } from "mongodb";
 
 class MongoUserAccessRules implements UserAccessRules {
 	private model: Model<UserAccessRule> | null;
@@ -10,7 +9,7 @@ class MongoUserAccessRules implements UserAccessRules {
 	}
 
 	public async findByUserIpV4(
-		userIpAsNumeric: Int32,
+		userIpAsNumeric: bigint,
 		clientAccountId: string | null = null,
 	): Promise<UserAccessRule[]> {
 		if (!this.model) {

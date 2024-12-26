@@ -15,12 +15,12 @@ interface UserIpV6Mask {
 
 const userIpV6MaskRecordSchema = new Schema<UserIpV6Mask>(
     {
-        // 1. Type choice:
+        // 1. Type choice note:
         /**
-         * ipV6 takes 128bits (38 digits), so we can't use Number, and can't even Decimal128,
+         * ipV6 takes 128bits (38 digits), so we can't use Mongo's Long (Int64), and can't even Decimal128,
          * cause it supports only 34 digits https://www.mongodb.com/docs/manual/reference/bson-types/
          */
-        // 2. String comparison
+        // 2. String comparison note
         /**
          * Mongo compares strings by unicode codes of each letter, so it works for us,
          * as long we make sure both strings have the exact same length:

@@ -1,7 +1,6 @@
 import { expect } from "vitest";
 import { MongoUserAccessRuleTests } from "../mongoUserAccessRuleTests.js";
-import { Address4 } from "ip-address";
-import { Int32 } from "mongodb";
+import { Address6 } from "ip-address";
 
 class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 	protected getFirstUserIp(): string {
@@ -9,11 +8,11 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 	}
 
 	protected getSecondUserIp(): string {
-		return "2001:db8:3333:4444:CCCC:DDDD:EEEE:FFFF";
+		return "1002:db8:3333:4444:5555:6666:7777:8888";
 	}
 
 	protected convertUserIpToNumericString(userIp: string): string {
-		const address = new Address4(userIp);
+		const address = new Address6(userIp);
 
 		if (!address.isCorrect()) {
 			throw new Error(`Invalid IP: ${userIp}`);
@@ -22,8 +21,8 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 		return address.bigInt().toString();
 	}
 
-	protected getTestPrefixes(): string[] {
-		return ["findByUserIpV6"];
+	protected getTestName(): string {
+		return "FindByUserIpV6";
 	}
 
 	protected override getTests(): {
@@ -44,12 +43,12 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 				method: async () => this.findsGlobalAndClientRecords(),
 			},
 			{
-				name: "ignoresGlobalRecordWithWrongIp",
-				method: async () => this.ignoresGlobalRecordWithWrongIp(),
+				name: "ignoresGlobalRecordWithDifferentIp",
+				method: async () => this.ignoresGlobalRecordWithDifferentIp(),
 			},
 			{
-				name: "ignoresClientRecordWithWrongIp",
-				method: async () => this.ignoresClientRecordWithWrongIp(),
+				name: "ignoresClientRecordWithDifferentIp",
+				method: async () => this.ignoresClientRecordWithDifferentIp(),
 			},
 		];
 	}
@@ -141,7 +140,7 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 		expect(rules[1]?.id).toBe(globalRecord.id);
 	}
 
-	protected async ignoresGlobalRecordWithWrongIp(): Promise<void> {
+	protected async ignoresGlobalRecordWithDifferentIp(): Promise<void> {
 		// given
 		const firstUserIp = this.getFirstUserIp();
 
@@ -166,7 +165,7 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 		expect(rules.length).toBe(0);
 	}
 
-	protected async ignoresClientRecordWithWrongIp(): Promise<void> {
+	protected async ignoresClientRecordWithDifferentIp(): Promise<void> {
 		// given
 		const firstUserIp = this.getFirstUserIp();
 
