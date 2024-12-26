@@ -47,8 +47,21 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 				method: async () => this.ignoresGlobalRecordWithDifferentIp(),
 			},
 			{
+				name: "ignoresGlobalRecordWithSameIpInDifferentVersion",
+				method: async () =>
+					this.ignoresGlobalRecordWithSameIpInDifferentVersion(),
+			},
+			{
 				name: "ignoresClientRecordWithDifferentIp",
 				method: async () => this.ignoresClientRecordWithDifferentIp(),
+			},
+			{
+				name: "ignoresDifferentClientRecordWithSameIp",
+				method: async () => this.ignoresDifferentClientRecordWithSameIp(),
+			},
+			{
+				name: "ignoresClientRecordWithSameIpDifferentVersion",
+				method: async () => this.ignoresClientRecordWithSameIpDifferentVersion(),
 			},
 		];
 	}
@@ -56,12 +69,13 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 	protected async findsGlobalRecord(): Promise<void> {
 		// given
 		const userIp = this.getFirstUserIp();
+		const userIpAsNumericString = this.convertUserIpToNumericString(userIp);
 
 		const record = await this.model.create({
 			isUserBlocked: true,
 			userIp: {
 				v6: {
-					asNumericString: this.convertUserIpToNumericString(userIp),
+					asNumericString: userIpAsNumericString,
 					asString: userIp,
 				},
 			},
@@ -69,7 +83,7 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIpV6(
-			this.convertUserIpToNumericString(userIp),
+			userIpAsNumericString,
 		);
 
 		// then
@@ -80,12 +94,13 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 	protected async findsClientRecord(): Promise<void> {
 		// given
 		const userIp = this.getFirstUserIp();
+		const userIpAsNumericString = this.convertUserIpToNumericString(userIp);
 
 		const clientRecord = await this.model.create({
 			isUserBlocked: true,
 			userIp: {
 				v6: {
-					asNumericString: this.convertUserIpToNumericString(userIp),
+					asNumericString: userIpAsNumericString,
 					asString: userIp,
 				},
 			},
@@ -94,7 +109,7 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIpV6(
-			this.convertUserIpToNumericString(userIp),
+			userIpAsNumericString,
 			"client",
 		);
 
@@ -106,12 +121,13 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 	protected async findsGlobalAndClientRecords(): Promise<void> {
 		// given
 		const userIp = this.getFirstUserIp();
+		const userIpAsNumericString = this.convertUserIpToNumericString(userIp);
 
 		const clientRecord = await this.model.create({
 			isUserBlocked: true,
 			userIp: {
 				v6: {
-					asNumericString: this.convertUserIpToNumericString(userIp),
+					asNumericString: userIpAsNumericString,
 					asString: userIp,
 				},
 			},
@@ -122,7 +138,7 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 			isUserBlocked: true,
 			userIp: {
 				v6: {
-					asNumericString: this.convertUserIpToNumericString(userIp),
+					asNumericString: userIpAsNumericString,
 					asString: userIp,
 				},
 			},
@@ -130,7 +146,7 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIpV6(
-			this.convertUserIpToNumericString(userIp),
+			userIpAsNumericString,
 			"client",
 		);
 
@@ -143,14 +159,18 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 	protected async ignoresGlobalRecordWithDifferentIp(): Promise<void> {
 		// given
 		const firstUserIp = this.getFirstUserIp();
+		const firstUserIpAsNumericString =
+			this.convertUserIpToNumericString(firstUserIp);
 
 		const secondUserIp = this.getSecondUserIp();
+		const secondUserIpAsNumericString =
+			this.convertUserIpToNumericString(secondUserIp);
 
 		await this.model.create({
 			isUserBlocked: true,
 			userIp: {
 				v6: {
-					asNumericString: this.convertUserIpToNumericString(firstUserIp),
+					asNumericString: firstUserIpAsNumericString,
 					asString: firstUserIp,
 				},
 			},
@@ -158,7 +178,31 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIpV6(
-			this.convertUserIpToNumericString(secondUserIp),
+			secondUserIpAsNumericString,
+		);
+
+		// then
+		expect(rules.length).toBe(0);
+	}
+
+	protected async ignoresGlobalRecordWithSameIpInDifferentVersion(): Promise<void> {
+		// given
+		const userIp = this.getFirstUserIp();
+		const userIpAsNumericString = this.convertUserIpToNumericString(userIp);
+
+		await this.model.create({
+			isUserBlocked: true,
+			userIp: {
+				v4: {
+					asNumeric: Number.parseInt(userIpAsNumericString),
+					asString: userIp,
+				},
+			},
+		});
+
+		// when
+		const rules = await this.userAccessRules.findByUserIpV6(
+			userIpAsNumericString,
 		);
 
 		// then
@@ -168,14 +212,18 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 	protected async ignoresClientRecordWithDifferentIp(): Promise<void> {
 		// given
 		const firstUserIp = this.getFirstUserIp();
+		const firstUserIpAsNumericString =
+			this.convertUserIpToNumericString(firstUserIp);
 
 		const secondUserIp = this.getSecondUserIp();
+		const secondUserIpAsNumericString =
+			this.convertUserIpToNumericString(secondUserIp);
 
 		await this.model.create({
 			isUserBlocked: true,
 			userIp: {
 				v6: {
-					asNumericString: this.convertUserIpToNumericString(firstUserIp),
+					asNumericString: firstUserIpAsNumericString,
 					asString: firstUserIp,
 				},
 			},
@@ -184,7 +232,59 @@ class FindByUserIpV6Tests extends MongoUserAccessRuleTests {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIpV6(
-			this.convertUserIpToNumericString(secondUserIp),
+			secondUserIpAsNumericString,
+			"client",
+		);
+
+		// then
+		expect(rules.length).toBe(0);
+	}
+
+	protected async ignoresDifferentClientRecordWithSameIp(): Promise<void> {
+		// given
+		const userIp = this.getFirstUserIp();
+		const userIpAsNumericString = this.convertUserIpToNumericString(userIp);
+
+		await this.model.create({
+			isUserBlocked: true,
+			userIp: {
+				v6: {
+					asNumericString: userIpAsNumericString,
+					asString: userIp,
+				},
+			},
+			clientAccountId: "client",
+		});
+
+		// when
+		const rules = await this.userAccessRules.findByUserIpV6(
+			userIpAsNumericString,
+			"another",
+		);
+
+		// then
+		expect(rules.length).toBe(0);
+	}
+
+	protected async ignoresClientRecordWithSameIpDifferentVersion(): Promise<void> {
+		// given
+		const userIp = this.getFirstUserIp();
+		const userIpAsNumericString = this.convertUserIpToNumericString(userIp);
+
+		await this.model.create({
+			isUserBlocked: true,
+			userIp: {
+				v4: {
+					asNumeric: Number.parseInt(userIpAsNumericString),
+					asString: userIpAsNumericString,
+				},
+			},
+			clientAccountId: "client",
+		});
+
+		// when
+		const rules = await this.userAccessRules.findByUserIpV6(
+			userIpAsNumericString,
 			"client",
 		);
 
