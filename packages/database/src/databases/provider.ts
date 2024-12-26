@@ -80,8 +80,8 @@ import type {
 } from "@prosopo/types-database";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
-import { userAccessRuleSchema } from "@prosopo/types-database";
-import { MongoUserAccessRules } from "./provider/mongoUserAccessRules.js";
+import { MongoUserAccessRules } from "./provider/userAccessRules/mongoUserAccessRules.js";
+import { getUserAccessRulesDbSchema } from "./provider/userAccessRules/dbSchema.js";
 
 enum TableNames {
 	captcha = "captcha",
@@ -169,7 +169,7 @@ const PROVIDER_TABLES = [
 	{
 		collectionName: TableNames.userAccessRules,
 		modelName: "UserAccessRules",
-		schema: userAccessRuleSchema,
+		schema: getUserAccessRulesDbSchema(),
 	},
 ];
 

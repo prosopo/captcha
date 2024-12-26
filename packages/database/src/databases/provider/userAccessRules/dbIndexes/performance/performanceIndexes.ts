@@ -1,8 +1,8 @@
 import type { Schema } from "mongoose";
-import type { UserAccessRule } from "../../userAccessRule.js";
 import { ipV6PerformanceIndexes } from "./ipV6PerformanceIndexes.js";
 import { ipV4PerformanceIndexes } from "./ipV4PerformanceIndexes.js";
 import type { AccessRuleDbIndexes } from "../accessRuleDbIndexes.js";
+import type { UserAccessRule } from "@prosopo/types-database";
 
 class PerformanceIndexes implements AccessRuleDbIndexes {
 	public setup(schema: Schema<UserAccessRule>): void {

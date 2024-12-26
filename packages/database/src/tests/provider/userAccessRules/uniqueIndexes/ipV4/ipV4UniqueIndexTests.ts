@@ -1,7 +1,7 @@
 import type { Model } from "mongoose";
 import { Address4 } from "ip-address";
 import { expect } from "vitest";
-import { TestsBase } from "../../../testsBase.js";
+import { TestsBase } from "../../../../testsBase.js";
 import type { UserAccessRule } from "@prosopo/types-database";
 
 class IpV4UniqueIndexTests extends TestsBase {
@@ -25,25 +25,25 @@ class IpV4UniqueIndexTests extends TestsBase {
 	}[] {
 		return [
 			{
-				name: "singleGlobalIpAcceptsUnique",
-				method: async () => this.singleGlobalIpAcceptsUnique(),
+				name: "globalIpAcceptsUnique",
+				method: async () => this.globalIpAcceptsUnique(),
 			},
 			{
-				name: "singleGlobalIpRejectsDuplicate",
-				method: async () => this.singleGlobalIpRejectsDuplicate(),
+				name: "globalIpRejectsDuplicate",
+				method: async () => this.globalIpRejectsDuplicate(),
 			},
 			{
-				name: "singleIpPerClientAcceptsUnique",
-				method: async () => this.singleIpPerClientAcceptsUnique(),
+				name: "clientsIpAcceptsUnique",
+				method: async () => this.clientsIpAcceptsUnique(),
 			},
 			{
-				name: "singleIpPerClientRejectsDuplicate",
-				method: async () => this.singleIpPerClientRejectsDuplicate(),
+				name: "clientsIpRejectsDuplicate",
+				method: async () => this.clientsIpRejectsDuplicate(),
 			},
 		];
 	}
 
-	protected async singleGlobalIpAcceptsUnique(): Promise<void> {
+	protected async globalIpAcceptsUnique(): Promise<void> {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
@@ -70,7 +70,7 @@ class IpV4UniqueIndexTests extends TestsBase {
 		expect(anotherRecord).not.toBeNull();
 	}
 
-	protected async singleGlobalIpRejectsDuplicate(): Promise<void> {
+	protected async globalIpRejectsDuplicate(): Promise<void> {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
@@ -98,7 +98,7 @@ class IpV4UniqueIndexTests extends TestsBase {
 		expect(insertDuplicate()).rejects.toThrow();
 	}
 
-	protected async singleIpPerClientAcceptsUnique(): Promise<void> {
+	protected async clientsIpAcceptsUnique(): Promise<void> {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
@@ -127,7 +127,7 @@ class IpV4UniqueIndexTests extends TestsBase {
 		expect(anotherRecord).not.toBeNull();
 	}
 
-	protected async singleIpPerClientRejectsDuplicate(): Promise<void> {
+	protected async clientsIpRejectsDuplicate(): Promise<void> {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
@@ -157,7 +157,7 @@ class IpV4UniqueIndexTests extends TestsBase {
 		expect(insertDuplicate()).rejects.toThrow();
 	}
 
-	// fixme for masks as well
+	// fixme globalIpCanBeSameAsClientsIp
 }
 
 export { IpV4UniqueIndexTests };

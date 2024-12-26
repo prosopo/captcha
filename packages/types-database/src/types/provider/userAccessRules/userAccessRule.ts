@@ -1,17 +1,15 @@
 import { Schema, type Document } from "mongoose";
 import {
-	type UserAccessConfig,
-	userAccessConfigSchema,
-} from "./userAccessConfig.js";
-import { type UserIp, userIpRecordSchema } from "./ip/userIp.js";
-import { uniqueIndexes } from "./dbIndexes/unique/uniqueIndexes.js";
-import { performanceIndexes } from "./dbIndexes/performance/performanceIndexes.js";
+	type UserAccessRuleConfig,
+	userAccessRuleConfigRecordSchema,
+} from "./userAccessRuleConfig.js";
+import { type UserIp, userIpRecordSchema } from "./userIp/userIp.js";
 
 interface UserAccessRule extends Document {
 	userIp: UserIp;
 	isUserBlocked: boolean;
 	clientAccountId?: string;
-	config?: UserAccessConfig;
+	config?: UserAccessRuleConfig;
 }
 
 const userAccessRuleSchema = new Schema<UserAccessRule>({
@@ -19,13 +17,10 @@ const userAccessRuleSchema = new Schema<UserAccessRule>({
 	isUserBlocked: { type: Boolean, required: true },
 	clientAccountId: { type: String, required: false, default: null },
 	config: {
-		type: userAccessConfigSchema,
+		type: userAccessRuleConfigRecordSchema,
 		required: false,
 		default: null,
 	},
 });
-
-uniqueIndexes.setup(userAccessRuleSchema);
-performanceIndexes.setup(userAccessRuleSchema);
 
 export { type UserAccessRule, userAccessRuleSchema };
