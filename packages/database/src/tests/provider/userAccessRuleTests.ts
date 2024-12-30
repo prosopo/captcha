@@ -23,7 +23,7 @@ import { FindByShortUserIpMaskV6Tests } from "./userAccessRules/findByUserIp/v6/
 import { FindByShortUserIpMaskV6RangeMinTests } from "./userAccessRules/findByUserIp/v6/maskRange/short/findByShortUserIpMaskV6RangeMinTests.js";
 import { FindByShortUserIpMaskV6RangeMaxTests } from "./userAccessRules/findByUserIp/v6/maskRange/short/findByShortUserIpMaskV6RangeMaxTests.js";
 
-class MongoUserAccessRules {
+class UserAccessRuleTests {
 	public async run(): Promise<void> {
 		const mongoServer = await MongoMemoryServer.create();
 		const mongoConnection = await mongoose.connect(mongoServer.getUri());
@@ -88,4 +88,4 @@ class MongoUserAccessRules {
 	}
 }
 
-await new MongoUserAccessRules().run();
+await new UserAccessRuleTests().run();

@@ -1,8 +1,8 @@
 import { expect } from "vitest";
-import { MongoUserAccessRuleTests } from "../mongoUserAccessRuleTests.js";
+import { UserAccessRuleTestsBase } from "../userAccessRuleTestsBase.js";
 import { USER_IP_V6_LENGTH } from "@prosopo/types-database";
 
-class IpV6FormattingTests extends MongoUserAccessRuleTests {
+class IpV6FormattingTests extends UserAccessRuleTestsBase {
 	public getName(): string {
 		return "IpV6Formatting";
 	}
