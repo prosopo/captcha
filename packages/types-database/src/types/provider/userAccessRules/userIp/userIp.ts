@@ -3,8 +3,13 @@ import { type UserIpV4, userIpV4RecordSchema } from "./userIpV4.js";
 import { type UserIpV6, userIpV6RecordSchema } from "./userIpV6.js";
 
 interface UserIp {
-	v4: UserIpV4;
-	v6: UserIpV6;
+	v4?: UserIpV4;
+	v6?: UserIpV6;
+}
+
+enum UserIpVersion {
+	v4 = "v4",
+	v6 = "v6",
 }
 
 const userIpRecordSchema = new Schema<UserIp>(
@@ -15,4 +20,4 @@ const userIpRecordSchema = new Schema<UserIp>(
 	{ _id: false },
 );
 
-export { type UserIp, userIpRecordSchema };
+export { type UserIp, userIpRecordSchema, UserIpVersion };

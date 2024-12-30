@@ -1,4 +1,8 @@
-import type { UserAccessRule, UserAccessRules } from "@prosopo/types-database";
+import {
+	type UserAccessRule,
+	type UserAccessRules,
+	UserIpVersion,
+} from "@prosopo/types-database";
 import type { Model } from "mongoose";
 
 class MongoUserAccessRules implements UserAccessRules {
@@ -8,66 +12,20 @@ class MongoUserAccessRules implements UserAccessRules {
 		this.model = model;
 	}
 
-	public async findByUserIpV4(
-		userIpAsNumeric: bigint,
+	public async findByUserIp(
+		userIpVersion: UserIpVersion,
+		userIpAsNumeric: bigint | string,
 		clientAccountId: string | null = null,
 	): Promise<UserAccessRule[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
 
-		const query = {
-			$and: [
-				{
-					...this.createQueryConditionForClientAccountId(clientAccountId),
-				},
-				{
-					$or: [
-						{ "userIp.v4.asNumeric": userIpAsNumeric },
-						{
-							"userIp.v4.mask.rangeMinAsNumeric": {
-								$lte: userIpAsNumeric,
-							},
-							"userIp.v4.mask.rangeMaxAsNumeric": {
-								$gte: userIpAsNumeric,
-							},
-						},
-					],
-				},
-			],
-		};
-
-		return this.model.find(query).exec();
-	}
-
-	public async findByUserIpV6(
-		userIpAsNumericString: string,
-		clientAccountId: string | null = null,
-	): Promise<UserAccessRule[]> {
-		if (!this.model) {
-			throw new Error("Model is not set");
-		}
-
-		const query = {
-			$and: [
-				{
-					...this.createQueryConditionForClientAccountId(clientAccountId),
-				},
-				{
-					$or: [
-						{ "userIp.v6.asNumericString": userIpAsNumericString },
-						{
-							"userIp.v6.mask.rangeMinAsNumericString": {
-								$lte: userIpAsNumericString,
-							},
-							"userIp.v6.mask.rangeMaxAsNumericString": {
-								$gte: userIpAsNumericString,
-							},
-						},
-					],
-				},
-			],
-		};
+		const query = this.createFindByUserIpQuery(
+			userIpVersion,
+			userIpAsNumeric,
+			clientAccountId,
+		);
 
 		return this.model.find(query).exec();
 	}
@@ -76,10 +34,25 @@ class MongoUserAccessRules implements UserAccessRules {
 		this.model = model;
 	}
 
-	protected createQueryConditionForClientAccountId(
-		clientAccountId: string | null,
+	protected createFindByUserIpQuery(
+		userIpVersion: UserIpVersion,
+		userIpAsNumeric: bigint | string,
+		clientAccountId: string | null = null,
 	): object {
-		return clientAccountId
+		const userIpKey =
+			userIpVersion === UserIpVersion.v4
+				? "userIp.v4.asNumeric"
+				: "userIp.v6.asNumericString";
+		const rangeMinKey =
+			userIpVersion === UserIpVersion.v4
+				? "userIp.v4.mask.rangeMinAsNumeric"
+				: "userIp.v6.mask.rangeMinAsNumericString";
+		const rangeMaxKey =
+			userIpVersion === UserIpVersion.v4
+				? "userIp.v4.mask.rangeMaxAsNumeric"
+				: "userIp.v6.mask.rangeMaxAsNumericString";
+
+		const clientAccountCondition = clientAccountId
 			? {
 					$or: [
 						{ clientAccountId: clientAccountId },
@@ -89,6 +62,27 @@ class MongoUserAccessRules implements UserAccessRules {
 			: {
 					clientAccountId: null,
 				};
+
+		return {
+			$and: [
+				{
+					...clientAccountCondition,
+				},
+				{
+					$or: [
+						{ [userIpKey]: userIpAsNumeric },
+						{
+							[rangeMinKey]: {
+								$lte: userIpAsNumeric,
+							},
+							[rangeMaxKey]: {
+								$gte: userIpAsNumeric,
+							},
+						},
+					],
+				},
+			],
+		};
 	}
 }
 
