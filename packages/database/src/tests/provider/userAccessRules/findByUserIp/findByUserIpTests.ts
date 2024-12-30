@@ -5,13 +5,13 @@ import type { UserIp, UserIpVersion } from "@prosopo/types-database";
 abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 	protected abstract getUserIpVersion(): UserIpVersion;
 
-	protected abstract getFirstUserIpObject(): UserIp;
+	protected abstract getUserIpObject(): UserIp;
 
-	protected abstract getFirstUserIp(): bigint | string;
+	protected abstract getUserIp(): bigint | string;
 
-	protected abstract getSecondUserIp(): bigint | string;
+	protected abstract getAnotherUserIp(): bigint | string;
 
-	protected abstract getFirstUserIpObjectInAnotherVersion(): UserIp;
+	protected abstract getUserIpObjectInAnotherVersion(): UserIp;
 
 	protected override getTests(): {
 		name: string;
@@ -64,13 +64,13 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		const record = await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObject(),
+			userIp: this.getUserIpObject(),
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getFirstUserIp(),
+			this.getUserIp(),
 		);
 
 		// then
@@ -82,14 +82,14 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		const clientRecord = await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObject(),
+			userIp: this.getUserIpObject(),
 			clientAccountId: "client",
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getFirstUserIp(),
+			this.getUserIp(),
 			"client",
 		);
 
@@ -102,19 +102,19 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		const clientRecord = await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObject(),
+			userIp: this.getUserIpObject(),
 			clientAccountId: "client",
 		});
 
 		const globalRecord = await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObject(),
+			userIp: this.getUserIpObject(),
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getFirstUserIp(),
+			this.getUserIp(),
 			"client",
 		);
 
@@ -128,13 +128,13 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObject(),
+			userIp: this.getUserIpObject(),
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getSecondUserIp(),
+			this.getAnotherUserIp(),
 		);
 
 		// then
@@ -145,13 +145,13 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObjectInAnotherVersion(),
+			userIp: this.getUserIpObjectInAnotherVersion(),
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getFirstUserIp(),
+			this.getUserIp(),
 		);
 
 		// then
@@ -162,14 +162,14 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObject(),
+			userIp: this.getUserIpObject(),
 			clientAccountId: "client",
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getSecondUserIp(),
+			this.getAnotherUserIp(),
 			"client",
 		);
 
@@ -181,14 +181,14 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObject(),
+			userIp: this.getUserIpObject(),
 			clientAccountId: "client",
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getFirstUserIp(),
+			this.getUserIp(),
 			"another",
 		);
 
@@ -200,14 +200,14 @@ abstract class FindByUserIpTests extends MongoUserAccessRuleTests {
 		// given
 		await this.model.create({
 			isUserBlocked: true,
-			userIp: this.getFirstUserIpObjectInAnotherVersion(),
+			userIp: this.getUserIpObjectInAnotherVersion(),
 			clientAccountId: "client",
 		});
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
 			this.getUserIpVersion(),
-			this.getFirstUserIp(),
+			this.getUserIp(),
 			"client",
 		);
 
