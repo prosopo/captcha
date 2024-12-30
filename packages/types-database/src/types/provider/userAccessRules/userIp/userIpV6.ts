@@ -1,11 +1,11 @@
 import { Schema } from "mongoose";
-import { type UserIpV4Mask, userIpV4MaskRecordSchema } from "./userIpV4Mask.js";
+import { type UserIpV6Mask, userIpV6MaskRecordSchema } from "./userIpV6Mask.js";
 
 interface UserIpV6 {
 	asNumericString: string;
 	// for presentation only purposes
 	asString: string;
-	mask?: UserIpV4Mask;
+	mask?: UserIpV6Mask;
 }
 
 const USER_IP_V6_LENGTH = 38;
@@ -31,7 +31,7 @@ const userIpV6RecordSchema = new Schema<UserIpV6>(
 		},
 		asString: { type: String, required: true },
 		mask: {
-			type: userIpV4MaskRecordSchema,
+			type: userIpV6MaskRecordSchema,
 			required: false,
 			default: null,
 		},
