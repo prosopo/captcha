@@ -3,37 +3,37 @@ import { FindByUserIpTests } from "../findByUserIpTests.js";
 import { type UserIp, UserIpVersion } from "@prosopo/types-database";
 
 class FindByUserIpV6Tests extends FindByUserIpTests {
-	protected readonly firstUserIp: string =
+	protected readonly userIp: string =
 		"2001:db8:3333:4444:5555:6666:7777:8888";
-	protected readonly secondUserIp: string =
+	protected readonly anotherUserIp: string =
 		"1002:db8:3333:4444:5555:6666:7777:8888";
 
 	protected getUserIpVersion(): UserIpVersion {
 		return UserIpVersion.v6;
 	}
 
-	protected getFirstUserIpObject(): UserIp {
+	protected getUserIpObject(): UserIp {
 		return {
 			v6: {
-				asNumericString: this.convertUserIpToNumericString(this.firstUserIp),
-				asString: this.firstUserIp,
+				asNumericString: this.convertUserIpToNumericString(this.userIp),
+				asString: this.userIp,
 			},
 		};
 	}
 
-	protected getFirstUserIp(): bigint | string {
-		return this.convertUserIpToNumericString(this.firstUserIp);
+	protected getUserIp(): bigint | string {
+		return this.convertUserIpToNumericString(this.userIp);
 	}
 
-	protected getSecondUserIp(): bigint | string {
-		return this.convertUserIpToNumericString(this.secondUserIp);
+	protected getAnotherUserIp(): bigint | string {
+		return this.convertUserIpToNumericString(this.anotherUserIp);
 	}
 
-	protected getFirstUserIpObjectInAnotherVersion(): UserIp {
+	protected getUserIpObjectInAnotherVersion(): UserIp {
 		return {
 			v4: {
-				asNumeric: BigInt(this.convertUserIpToNumericString(this.firstUserIp)),
-				asString: this.firstUserIp,
+				asNumeric: BigInt(this.convertUserIpToNumericString(this.userIp)),
+				asString: this.userIp,
 			},
 		};
 	}

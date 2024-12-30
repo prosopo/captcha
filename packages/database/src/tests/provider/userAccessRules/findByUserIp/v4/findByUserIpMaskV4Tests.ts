@@ -2,14 +2,14 @@ import type { UserIp } from "@prosopo/types-database";
 import { FindByUserIpV4Tests } from "./findByUserIpV4Tests.js";
 
 class FindByUserIpMaskV4Tests extends FindByUserIpV4Tests {
-	private baseIpAsString = "192.168.0.0";
-	private rangeMinIpAsString = "192.168.0.0";
-	private rangeMaxIpAsString = "192.168.0.255";
+	protected baseIpAsString = "192.168.0.0";
+	protected rangeMinIpAsString = "192.168.0.0";
+	protected rangeMaxIpAsString = "192.168.0.255";
 
-	protected override readonly firstUserIp: string = "192.168.0.15";
-	protected override readonly secondUserIp: string = "127.0.1.15";
+	protected override readonly userIp: string = "192.168.0.15";
+	protected override readonly anotherUserIp: string = "127.0.1.0";
 
-	protected override getFirstUserIpObject(): UserIp {
+	protected override getUserIpObject(): UserIp {
 		return {
 			v4: {
 				asNumeric: this.convertUserIpToNumeric(this.baseIpAsString),
@@ -27,7 +27,7 @@ class FindByUserIpMaskV4Tests extends FindByUserIpV4Tests {
 		};
 	}
 
-	protected override getFirstUserIpObjectInAnotherVersion(): UserIp {
+	protected override getUserIpObjectInAnotherVersion(): UserIp {
 		return {
 			v6: {
 				asNumericString: this.convertUserIpToNumeric(
@@ -50,8 +50,6 @@ class FindByUserIpMaskV4Tests extends FindByUserIpV4Tests {
 	public override getName(): string {
 		return "FindByUserIpMaskV4";
 	}
-
-	// fixme finds on borderMin, and on borderMax
 }
 
 export { FindByUserIpMaskV4Tests };
