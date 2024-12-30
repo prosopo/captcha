@@ -3,7 +3,7 @@ import type { Model } from "mongoose";
 import { MongoUserAccessRules } from "../../../databases/provider/userAccessRules/mongoUserAccessRules.js";
 import { TestsBase } from "../../testsBase.js";
 
-abstract class MongoUserAccessRuleTests extends TestsBase {
+abstract class UserAccessRuleTestsBase extends TestsBase {
 	protected userAccessRules: UserAccessRules;
 
 	public constructor(protected model: Model<UserAccessRule>) {
@@ -13,4 +13,4 @@ abstract class MongoUserAccessRuleTests extends TestsBase {
 	}
 }
 
-export { MongoUserAccessRuleTests };
+export { UserAccessRuleTestsBase };

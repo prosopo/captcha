@@ -1,8 +1,8 @@
 import { expect } from "vitest";
 import type { UserIp } from "@prosopo/types-database";
-import { MongoUserAccessRuleTests } from "../mongoUserAccessRuleTests.js";
+import { UserAccessRuleTestsBase } from "../userAccessRuleTestsBase.js";
 
-abstract class IpUniqueIndexTests extends MongoUserAccessRuleTests {
+abstract class IpUniqueIndexTests extends UserAccessRuleTestsBase {
 	protected abstract getFirstUserIpObject(): UserIp;
 
 	protected abstract getSecondUserIpObject(): UserIp;

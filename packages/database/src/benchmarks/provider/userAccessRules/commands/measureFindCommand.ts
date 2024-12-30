@@ -1,0 +1,81 @@
+import { Command } from "./command.js";
+import { MongoUserAccessRules } from "../../../../databases/provider/userAccessRules/mongoUserAccessRules.js";
+import { UserIpVersion } from "@prosopo/types-database";
+import * as util from "node:util";
+import { Address4, Address6 } from "ip-address";
+
+class MeasureFindCommand extends Command {
+	getName(): string {
+		return "measure-find";
+	}
+
+	override async process(args: object): Promise<void> {
+		const model = await this.createModelByArgs(args);
+		const userAccessRules = new MongoUserAccessRules(model);
+
+		const targetIpV4AsString =
+			"target-ipv4" in args && "string" === typeof args["target-ipv4"]
+				? args["target-ipv4"]
+				: "";
+		const targetIpV6AsString =
+			"target-ipv6" in args && "string" === typeof args["target-ipv6"]
+				? args["target-ipv6"]
+				: "";
+
+		if (!targetIpV4AsString) {
+			throw new Error("Target ipv4 is not set");
+		}
+
+		if (!targetIpV6AsString) {
+			throw new Error("Target ipv6 is not set");
+		}
+
+		const targetIpV4 = new Address4(targetIpV4AsString);
+		const targetIpV6 = new Address6(targetIpV6AsString);
+
+		const totalRulesCount = await model.countDocuments().exec();
+
+		await this.measureRuleFindTime(
+			userAccessRules,
+			targetIpV4,
+			totalRulesCount,
+		);
+		await this.measureRuleFindTime(
+			userAccessRules,
+			targetIpV6,
+			totalRulesCount,
+		);
+	}
+
+	protected async measureRuleFindTime(
+		userAccessRules: MongoUserAccessRules,
+		targetIp: Address4 | Address6,
+		totalRulesCount: number,
+	): Promise<void> {
+		const startTime = Date.now();
+		const ipVersion =
+			targetIp instanceof Address4 ? UserIpVersion.v4 : UserIpVersion.v6;
+
+		const foundRules = await userAccessRules.findByUserIp(
+			ipVersion,
+			targetIp.bigInt().toString(),
+		);
+
+		const endTime = Date.now();
+
+		console.log(
+			`ip${ipVersion} measure`,
+			util.inspect(
+				{
+					target: targetIp.address,
+					foundRules: foundRules,
+					spendTimeMs: endTime - startTime,
+					totalRulesCount: totalRulesCount,
+				},
+				{ depth: null, colors: true },
+			),
+		);
+	}
+}
+
+export { MeasureFindCommand };

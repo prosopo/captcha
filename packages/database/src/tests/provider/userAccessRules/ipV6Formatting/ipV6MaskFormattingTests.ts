@@ -1,11 +1,11 @@
 import { expect } from "vitest";
-import { MongoUserAccessRuleTests } from "../mongoUserAccessRuleTests.js";
+import { UserAccessRuleTestsBase } from "../userAccessRuleTestsBase.js";
 import { Address4 } from "ip-address";
 import { Int32, Long } from "mongodb";
 import exp from "node:constants";
 import { USER_IP_V6_LENGTH } from "@prosopo/types-database";
 
-class IpV6MaskFormattingTests extends MongoUserAccessRuleTests {
+class IpV6MaskFormattingTests extends UserAccessRuleTestsBase {
 	public getName(): string {
 		return "IpV6MaskFormatting";
 	}
