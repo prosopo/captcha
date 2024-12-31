@@ -1,8 +1,8 @@
-import { FindByUserIpV6Tests } from "./findByUserIpV6Tests.js";
+import { FindRuleByUserIpV6Tests } from "./findRuleByUserIpV6Tests.js";
 import type { UserIp } from "@prosopo/types-database";
 import { Address6 } from "ip-address";
 
-class FindByUserIpMaskV6Tests extends FindByUserIpV6Tests {
+class FindRuleByUserIpMaskV6Tests extends FindRuleByUserIpV6Tests {
 	protected baseIpAsString = "2001:db8:3333:4444:5555:6666:7777:8888";
 	protected rangeMinIpAsString = "2001:db8:3333:4444:5555:6666:7777:8888";
 	protected rangeMaxIpAsString = "2001:db8:3333:4444:5555:6666:7777:ffff";
@@ -11,6 +11,10 @@ class FindByUserIpMaskV6Tests extends FindByUserIpV6Tests {
 		"2001:db8:3333:4444:5555:6666:7777:aaaa";
 	protected override readonly anotherUserIp: string =
 		"2001:db8:3333:4444:5555:6666:8888:1111";
+
+	public override getName(): string {
+		return "FindRuleByUserIpMaskV6";
+	}
 
 	protected override getUserIpObject(): UserIp {
 		return {
@@ -30,7 +34,7 @@ class FindByUserIpMaskV6Tests extends FindByUserIpV6Tests {
 		};
 	}
 
-	protected override getUserIpObjectInAnotherVersion(): UserIp {
+	protected override getUserIpObjectInOtherVersion(): UserIp {
 		return {
 			v4: {
 				asNumeric: new Address6(this.baseIpAsString).bigInt(),
@@ -43,10 +47,6 @@ class FindByUserIpMaskV6Tests extends FindByUserIpV6Tests {
 			},
 		};
 	}
-
-	public override getName(): string {
-		return "FindByUserIpMaskV6";
-	}
 }
 
-export { FindByUserIpMaskV6Tests };
+export { FindRuleByUserIpMaskV6Tests };

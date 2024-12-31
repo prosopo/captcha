@@ -1,6 +1,6 @@
-import { FindByUserIpMaskV6Tests } from "../findByUserIpMaskV6Tests.js";
+import { FindRuleByUserIpMaskV6Tests } from "../findRuleByUserIpMaskV6Tests.js";
 
-class FindByUserIpMaskV6RangeMaxTests extends FindByUserIpMaskV6Tests {
+class FindRuleByUserIpMaskV6RangeMinTests extends FindRuleByUserIpMaskV6Tests {
 	protected override baseIpAsString = "2001:db8:3333:4444:5555:6666:7777:8888";
 	protected override rangeMinIpAsString =
 		"2001:db8:3333:4444:5555:6666:7777:8888";
@@ -8,13 +8,13 @@ class FindByUserIpMaskV6RangeMaxTests extends FindByUserIpMaskV6Tests {
 		"2001:db8:3333:4444:5555:6666:7777:ffff";
 
 	protected override readonly userIp: string =
-		"2001:db8:3333:4444:5555:6666:7777:ffff";
+		"2001:db8:3333:4444:5555:6666:7777:8888";
 	protected override readonly anotherUserIp: string =
-		"2001:db8:3333:4444:5555:6666:8888:1111";
+		"2001:db8:3333:4444:5555:6666:7777:7777";
 
 	public override getName(): string {
-		return "FindByUserIpMaskV6";
+		return "FindRuleByUserIpMaskV6RangeMin";
 	}
 }
 
-export { FindByUserIpMaskV6RangeMaxTests };
+export { FindRuleByUserIpMaskV6RangeMinTests };

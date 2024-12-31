@@ -1,11 +1,15 @@
 import { Address6 } from "ip-address";
-import { FindByIpTests } from "../findByIpTests.js";
+import { FindRuleByUserIpTests } from "../findRuleByUserIpTests.js";
 import type { UserIp } from "@prosopo/types-database";
 
-class FindByUserIpV6Tests extends FindByIpTests {
+class FindRuleByUserIpV6Tests extends FindRuleByUserIpTests {
 	protected readonly userIp: string = "2001:db8:3333:4444:5555:6666:7777:8888";
 	protected readonly anotherUserIp: string =
 		"1002:db8:3333:4444:5555:6666:7777:8888";
+
+	public getName(): string {
+		return "FindRuleByUserIpV6";
+	}
 
 	protected getUserIpObject(): UserIp {
 		return {
@@ -20,11 +24,11 @@ class FindByUserIpV6Tests extends FindByIpTests {
 		return new Address6(this.userIp);
 	}
 
-	protected getAnotherUserIpAddress(): Address6 {
+	protected getOtherUserIpAddress(): Address6 {
 		return new Address6(this.anotherUserIp);
 	}
 
-	protected getUserIpObjectInAnotherVersion(): UserIp {
+	protected getUserIpObjectInOtherVersion(): UserIp {
 		return {
 			v4: {
 				asNumeric: new Address6(this.userIp).bigInt(),
@@ -32,10 +36,6 @@ class FindByUserIpV6Tests extends FindByIpTests {
 			},
 		};
 	}
-
-	public getName(): string {
-		return "FindByUserIpV6";
-	}
 }
 
-export { FindByUserIpV6Tests };
+export { FindRuleByUserIpV6Tests };

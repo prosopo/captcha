@@ -1,6 +1,6 @@
-import { FindByUserIpMaskV4Tests } from "../findByUserIpMaskV4Tests.js";
+import { FindRuleByUserIpMaskV4Tests } from "../findRuleByUserIpMaskV4Tests.js";
 
-class FindByUserIpMaskV4RangeMinTests extends FindByUserIpMaskV4Tests {
+class FindRuleByUserIpMaskV4RangeMinTests extends FindRuleByUserIpMaskV4Tests {
 	protected override baseIpAsString = "192.168.1.0";
 	protected override rangeMinIpAsString = "192.168.1.0";
 	protected override rangeMaxIpAsString = "192.168.1.255";
@@ -9,8 +9,8 @@ class FindByUserIpMaskV4RangeMinTests extends FindByUserIpMaskV4Tests {
 	protected override readonly anotherUserIp: string = "127.0.0.255";
 
 	override getName(): string {
-		return "FindByUserIpMaskV4RangeMin";
+		return "FindRuleByUserIpMaskV4RangeMin";
 	}
 }
 
-export { FindByUserIpMaskV4RangeMinTests };
+export { FindRuleByUserIpMaskV4RangeMinTests };
