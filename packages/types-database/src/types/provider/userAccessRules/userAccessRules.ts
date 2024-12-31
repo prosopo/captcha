@@ -1,12 +1,14 @@
 import type { UserAccessRule } from "./userAccessRule.js";
-import type { UserIpVersion } from "./userIp/userIp.js";
+import type { Address4, Address6 } from "ip-address";
 
-interface UserAccessRules {
-	findByUserIp(
-		userIpVersion: UserIpVersion,
-		userIpAsNumeric: bigint | string,
-		clientAccountId?: string | null,
-	): Promise<UserAccessRule[]>;
+interface RuleFilters {
+	userIpAddress?: Address4 | Address6 | null;
+	userId?: string | null;
+	clientAccountId?: string | null;
 }
 
-export type { UserAccessRules };
+interface UserAccessRules {
+	findByFilters(filters: RuleFilters): Promise<UserAccessRule[]>;
+}
+
+export type { UserAccessRules, RuleFilters };

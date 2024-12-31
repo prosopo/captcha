@@ -1,15 +1,14 @@
 import { expect } from "vitest";
 import { UserAccessRuleTestsBase } from "../userAccessRuleTestsBase.js";
-import type { UserIp, UserIpVersion } from "@prosopo/types-database";
+import type { UserIp } from "@prosopo/types-database";
+import type { Address4, Address6 } from "ip-address";
 
 abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
-	protected abstract getUserIpVersion(): UserIpVersion;
-
 	protected abstract getUserIpObject(): UserIp;
 
-	protected abstract getUserIp(): bigint | string;
+	protected abstract getUserIpAddress(): Address4 | Address6;
 
-	protected abstract getAnotherUserIp(): bigint | string;
+	protected abstract getAnotherUserIpAddress(): Address4 | Address6;
 
 	protected abstract getUserIpObjectInAnotherVersion(): UserIp;
 
@@ -69,8 +68,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getUserIp(),
+			this.getUserIpAddress(),
 		);
 
 		// then
@@ -88,8 +86,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getUserIp(),
+			this.getUserIpAddress(),
 			"client",
 		);
 
@@ -113,8 +110,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getUserIp(),
+			this.getUserIpAddress(),
 			"client",
 		);
 
@@ -133,8 +129,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getAnotherUserIp(),
+			this.getAnotherUserIpAddress(),
 		);
 
 		// then
@@ -150,8 +145,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getUserIp(),
+			this.getUserIpAddress(),
 		);
 
 		// then
@@ -168,8 +162,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getAnotherUserIp(),
+			this.getAnotherUserIpAddress(),
 			"client",
 		);
 
@@ -187,8 +180,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getUserIp(),
+			this.getUserIpAddress(),
 			"another",
 		);
 
@@ -206,8 +198,7 @@ abstract class FindByUserIpTests extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.findByUserIp(
-			this.getUserIpVersion(),
-			this.getUserIp(),
+			this.getUserIpAddress(),
 			"client",
 		);
 

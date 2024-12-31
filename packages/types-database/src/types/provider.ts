@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
 	type BlockRule,
@@ -56,6 +55,7 @@ import {
 } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
+import type { UserAccessRules } from "./provider/export.js";
 
 export * from "./provider/export.js";
 
@@ -626,4 +626,6 @@ export interface IProviderDatabase extends IDatabase {
 		users: string[],
 		dappAccount?: string,
 	): Promise<void>;
+
+	getUserAccessRules(): UserAccessRules;
 }
