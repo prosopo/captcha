@@ -484,9 +484,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
-				const accessRules = await tasks.db
-					.getUserAccessRules()
-					.findByUserIp(ipAddress, dapp);
+				const accessRules = await tasks.db.getUserAccessRules().find(
+					dapp,
+					{
+						userId: user,
+						userIpAddress: ipAddress,
+					},
+					{
+						includeRecordsWithPartialFilterMatches: true,
+						includeRecordsWithoutClientId: true,
+					},
+				);
 
 				if (accessRules.length > 0)
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());

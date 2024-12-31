@@ -7,8 +7,8 @@ interface RuleFilters {
 }
 
 interface RuleFilterSettings {
-	includeWithoutClientId?: boolean | null;
-	includePartialFilterMatches?: boolean | null;
+	includeRecordsWithoutClientId?: boolean | null;
+	includeRecordsWithPartialFilterMatches?: boolean | null;
 }
 
 interface UserAccessRules {
