@@ -39,19 +39,19 @@ class MongoUserAccessRules implements UserAccessRules {
 		filters: RuleFilters | null,
 		filterSettings: RuleFilterSettings | null,
 	): object {
-		const includeWithoutClientId =
-			filterSettings?.includeWithoutClientId || false;
-		const includePartialFilterMatches =
-			filterSettings?.includePartialFilterMatches || false;
+		const includeRecordsWithoutClientId =
+			filterSettings?.includeRecordsWithoutClientId || false;
+		const includeRecordsWithPartialFilterMatches =
+			filterSettings?.includeRecordsWithPartialFilterMatches || false;
 
 		let queryParts = [
-			this.getFilterByClientAccountId(clientAccountId, includeWithoutClientId),
+			this.getFilterByClientAccountId(clientAccountId, includeRecordsWithoutClientId),
 		];
 
 		if (null !== filters) {
 			const queryFilters = this.getQueryFilters(
 				filters,
-				includePartialFilterMatches,
+				includeRecordsWithPartialFilterMatches,
 			);
 
 			queryParts = queryParts.concat(queryFilters);
@@ -64,7 +64,7 @@ class MongoUserAccessRules implements UserAccessRules {
 
 	protected getQueryFilters(
 		filters: RuleFilters,
-		includePartialFilterMatches: boolean,
+		includeRecordsWithPartialFilterMatches: boolean,
 	): object[] {
 		const queryFilters = [];
 
@@ -76,20 +76,20 @@ class MongoUserAccessRules implements UserAccessRules {
 			queryFilters.push(this.getFilterByUserIp(filters.userIpAddress));
 		}
 
-		return includePartialFilterMatches && queryFilters.length > 1
+		return includeRecordsWithPartialFilterMatches && queryFilters.length > 1
 			? [{ $or: queryFilters }]
 			: queryFilters;
 	}
 
 	protected getFilterByClientAccountId(
 		clientAccountId: string | null,
-		includeWithoutClientId: boolean,
+		includeRecordsWithoutClientId: boolean,
 	): object {
 		const clientAccountIdFilter = {
 			clientAccountId: clientAccountId,
 		};
 
-		return includeWithoutClientId
+		return includeRecordsWithoutClientId
 			? {
 					$or: [clientAccountIdFilter, { clientAccountId: null }],
 				}
