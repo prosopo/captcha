@@ -1,14 +1,18 @@
 import type { UserIp } from "@prosopo/types-database";
-import { FindByUserIpV4Tests } from "./findByUserIpV4Tests.js";
-import { Address4, Address6 } from "ip-address";
+import { FindRuleByUserIpV4Tests } from "./findRuleByUserIpV4Tests.js";
+import { Address4 } from "ip-address";
 
-class FindByUserIpMaskV4Tests extends FindByUserIpV4Tests {
+class FindRuleByUserIpMaskV4Tests extends FindRuleByUserIpV4Tests {
 	protected baseIpAsString = "192.168.0.0";
 	protected rangeMinIpAsString = "192.168.0.0";
 	protected rangeMaxIpAsString = "192.168.0.255";
 
 	protected override readonly userIp: string = "192.168.0.15";
 	protected override readonly anotherUserIp: string = "127.0.1.0";
+
+	public override getName(): string {
+		return "FindRuleByUserIpMaskV4";
+	}
 
 	protected override getUserIpObject(): UserIp {
 		return {
@@ -24,7 +28,7 @@ class FindByUserIpMaskV4Tests extends FindByUserIpV4Tests {
 		};
 	}
 
-	protected override getUserIpObjectInAnotherVersion(): UserIp {
+	protected override getUserIpObjectInOtherVersion(): UserIp {
 		return {
 			v6: {
 				asNumericString: new Address4(this.baseIpAsString).bigInt().toString(),
@@ -41,10 +45,6 @@ class FindByUserIpMaskV4Tests extends FindByUserIpV4Tests {
 			},
 		};
 	}
-
-	public override getName(): string {
-		return "FindByUserIpMaskV4";
-	}
 }
 
-export { FindByUserIpMaskV4Tests };
+export { FindRuleByUserIpMaskV4Tests };

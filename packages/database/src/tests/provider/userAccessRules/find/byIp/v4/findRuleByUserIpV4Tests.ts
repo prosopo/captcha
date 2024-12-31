@@ -1,10 +1,14 @@
 import { Address4 } from "ip-address";
-import { FindByIpTests } from "../findByIpTests.js";
-import { type UserIp, UserIpVersion } from "@prosopo/types-database";
+import { FindRuleByUserIpTests } from "../findRuleByUserIpTests.js";
+import type { UserIp } from "@prosopo/types-database";
 
-class FindByUserIpV4Tests extends FindByIpTests {
+class FindRuleByUserIpV4Tests extends FindRuleByUserIpTests {
 	protected readonly userIp: string = "192.168.1.1";
 	protected readonly anotherUserIp: string = "127.0.0.1";
+
+	public getName(): string {
+		return "FindRuleByUserIpV4";
+	}
 
 	protected getUserIpObject(): UserIp {
 		return {
@@ -19,11 +23,11 @@ class FindByUserIpV4Tests extends FindByIpTests {
 		return new Address4(this.userIp);
 	}
 
-	protected getAnotherUserIpAddress(): Address4 {
+	protected getOtherUserIpAddress(): Address4 {
 		return new Address4(this.anotherUserIp);
 	}
 
-	protected getUserIpObjectInAnotherVersion(): UserIp {
+	protected getUserIpObjectInOtherVersion(): UserIp {
 		return {
 			v6: {
 				asNumericString: new Address4(this.userIp).bigInt().toString(),
@@ -31,10 +35,6 @@ class FindByUserIpV4Tests extends FindByIpTests {
 			},
 		};
 	}
-
-	public getName(): string {
-		return "FindByUserIpV4";
-	}
 }
 
-export { FindByUserIpV4Tests };
+export { FindRuleByUserIpV4Tests };
