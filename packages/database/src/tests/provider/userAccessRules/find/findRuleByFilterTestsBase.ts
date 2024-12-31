@@ -3,7 +3,7 @@ import { expect } from "vitest";
 import { Address4 } from "ip-address";
 import type { RuleFilters, UserAccessRule } from "@prosopo/types-database";
 
-abstract class FindRuleTestsBase extends UserAccessRuleTestsBase {
+abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 	protected abstract getClientAccountId(): string | null;
 
 	protected abstract getOtherClientAccountId(): string | null;
@@ -90,4 +90,4 @@ abstract class FindRuleTestsBase extends UserAccessRuleTestsBase {
 	}
 }
 
-export { FindRuleTestsBase };
+export { FindRuleByFilterTestsBase };

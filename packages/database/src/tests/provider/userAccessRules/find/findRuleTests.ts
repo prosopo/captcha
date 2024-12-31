@@ -1,9 +1,9 @@
-import { FindRuleTestsBase } from "./findRuleTestsBase.js";
+import { FindRuleByFilterTestsBase } from "./findRuleByFilterTestsBase.js";
 import type { RuleFilters, UserAccessRule } from "@prosopo/types-database";
 import { Address4 } from "ip-address";
 import { expect } from "vitest";
 
-class FindRuleTests extends FindRuleTestsBase {
+class FindRuleTests extends FindRuleByFilterTestsBase {
 	private readonly userIp: Address4 = new Address4("192.168.1.1");
 	private readonly otherUserIp: Address4 = new Address4("192.168.1.2");
 	private readonly userId: string = "userId";
@@ -75,6 +75,15 @@ class FindRuleTests extends FindRuleTestsBase {
 				name: "includesPartialFilterMatchesWhenFlagIsSet",
 				method: () => this.includesPartialFilterMatchesWhenFlagIsSet(),
 			},
+			{
+				name: "ignoresRecordsWithoutClientAccountIdWhenFlagIsNotSet",
+				method: () =>
+					this.ignoresRecordsWithoutClientAccountIdWhenFlagIsNotSet(),
+			},
+			{
+				name: "includesRecordsWithoutClientAccountIdWhenFlagIsSet",
+				method: () => this.includesRecordsWithoutClientAccountIdWhenFlagIsSet(),
+			},
 		]);
 	}
 
@@ -102,6 +111,41 @@ class FindRuleTests extends FindRuleTestsBase {
 			this.getPartialMatchRecordFilters(),
 			{
 				includePartialFilterMatches: true,
+			},
+		);
+
+		// then
+		expect(rules.length).toBe(1);
+		expect(rules[0]?.id).toBe(record.id);
+	}
+
+	protected async ignoresRecordsWithoutClientAccountIdWhenFlagIsNotSet(): Promise<void> {
+		// given
+		await this.model.create({
+			...this.getRecord(),
+			clientAccountId: null,
+		});
+
+		// when
+		const rules = await this.userAccessRules.find(this.getClientAccountId());
+
+		// then
+		expect(rules.length).toBe(0);
+	}
+
+	protected async includesRecordsWithoutClientAccountIdWhenFlagIsSet(): Promise<void> {
+		// given
+		const record = await this.model.create({
+			...this.getRecord(),
+			clientAccountId: null,
+		});
+
+		// when
+		const rules = await this.userAccessRules.find(
+			this.getClientAccountId(),
+			null,
+			{
+				includeWithoutClientId: true,
 			},
 		);
 
