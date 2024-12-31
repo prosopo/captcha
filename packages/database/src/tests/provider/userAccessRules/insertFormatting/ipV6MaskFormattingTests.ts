@@ -59,7 +59,7 @@ class IpV6MaskFormattingTests extends UserAccessRuleTestsBase {
 		});
 
 		// then
-		expect(record.userIp.v6?.mask?.rangeMinAsNumericString).toBe(
+		expect(record.userIp?.v6?.mask?.rangeMinAsNumericString).toBe(
 			fullLengthRangeMinNumericString,
 		);
 	}
@@ -85,7 +85,7 @@ class IpV6MaskFormattingTests extends UserAccessRuleTestsBase {
 		});
 
 		// then
-		expect(record.userIp.v6?.mask?.rangeMinAsNumericString).toBe(
+		expect(record.userIp?.v6?.mask?.rangeMinAsNumericString).toBe(
 			rangeMinAsNumericString,
 		);
 	}
@@ -115,7 +115,7 @@ class IpV6MaskFormattingTests extends UserAccessRuleTestsBase {
 		});
 
 		// then
-		expect(record.userIp.v6?.mask?.rangeMaxAsNumericString).toBe(
+		expect(record.userIp?.v6?.mask?.rangeMaxAsNumericString).toBe(
 			fullLengthRangeMaxNumericString,
 		);
 	}
@@ -141,7 +141,7 @@ class IpV6MaskFormattingTests extends UserAccessRuleTestsBase {
 		});
 
 		// then
-		expect(record.userIp.v6?.mask?.rangeMaxAsNumericString).toBe(
+		expect(record.userIp?.v6?.mask?.rangeMaxAsNumericString).toBe(
 			rangeMaxAsNumericString,
 		);
 	}

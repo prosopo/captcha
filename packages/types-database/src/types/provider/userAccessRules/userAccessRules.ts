@@ -4,11 +4,19 @@ import type { Address4, Address6 } from "ip-address";
 interface RuleFilters {
 	userIpAddress?: Address4 | Address6 | null;
 	userId?: string | null;
-	clientAccountId?: string | null;
+}
+
+interface RuleFilterSettings {
+	includeWithoutClientId?: boolean | null;
+	includePartialFilterMatches?: boolean | null;
 }
 
 interface UserAccessRules {
-	findByFilters(filters: RuleFilters): Promise<UserAccessRule[]>;
+	find(
+		clientAccountId: string | null,
+		filters?: RuleFilters | null,
+		filterSettings?: RuleFilterSettings | null,
+	): Promise<UserAccessRule[]>;
 }
 
-export type { UserAccessRules, RuleFilters };
+export type { UserAccessRules, RuleFilters, RuleFilterSettings };
