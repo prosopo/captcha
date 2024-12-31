@@ -15,6 +15,7 @@
 import type { BlockRule } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 
+// fixme _remove
 export const checkUserRules = async (
 	db: IProviderDatabase,
 	user: string,
