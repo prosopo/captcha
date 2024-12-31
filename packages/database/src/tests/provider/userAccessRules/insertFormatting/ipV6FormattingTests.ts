@@ -41,7 +41,7 @@ class IpV6FormattingTests extends UserAccessRuleTestsBase {
 		});
 
 		// then
-		expect(record.userIp.v6?.asNumericString).toBe(fullLengthNumericIpV6String);
+		expect(record.userIp?.v6?.asNumericString).toBe(fullLengthNumericIpV6String);
 	}
 
 	protected async insertDoesNotAddZerosToFullIp(): Promise<void> {
@@ -61,7 +61,7 @@ class IpV6FormattingTests extends UserAccessRuleTestsBase {
 		});
 
 		// then
-		expect(record.userIp.v6?.asNumericString).toBe(ipV6AsNumericString);
+		expect(record.userIp?.v6?.asNumericString).toBe(ipV6AsNumericString);
 	}
 }
 

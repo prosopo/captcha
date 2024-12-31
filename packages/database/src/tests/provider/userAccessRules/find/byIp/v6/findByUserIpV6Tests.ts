@@ -1,8 +1,8 @@
 import { Address6 } from "ip-address";
-import { FindByUserIpTests } from "../findByUserIpTests.js";
+import { FindByIpTests } from "../findByIpTests.js";
 import type { UserIp } from "@prosopo/types-database";
 
-class FindByUserIpV6Tests extends FindByUserIpTests {
+class FindByUserIpV6Tests extends FindByIpTests {
 	protected readonly userIp: string = "2001:db8:3333:4444:5555:6666:7777:8888";
 	protected readonly anotherUserIp: string =
 		"1002:db8:3333:4444:5555:6666:7777:8888";
