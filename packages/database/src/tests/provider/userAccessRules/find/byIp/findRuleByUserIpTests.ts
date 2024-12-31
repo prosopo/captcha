@@ -5,9 +5,9 @@ import type {
 	UserIp,
 } from "@prosopo/types-database";
 import type { Address4, Address6 } from "ip-address";
-import { FindRuleTestsBase } from "../findRuleTestsBase.js";
+import { FindRuleByFilterTestsBase } from "../findRuleByFilterTestsBase.js";
 
-abstract class FindRuleByUserIpTests extends FindRuleTestsBase {
+abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 	protected abstract getUserIpObject(): UserIp;
 
 	protected abstract getUserIpAddress(): Address4 | Address6;
