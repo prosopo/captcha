@@ -50,6 +50,7 @@ export class FrictionlessManager {
 		this.db = db;
 	}
 
+	// fixme _remove
 	async checkIpRules(ipAddress: IPAddress, dapp: string): Promise<boolean> {
 		const rule = await checkIpRules(this.db, ipAddress, dapp);
 		return !!rule;

@@ -1,5 +1,6 @@
 import { FindByUserIpV6Tests } from "./findByUserIpV6Tests.js";
 import type { UserIp } from "@prosopo/types-database";
+import { Address6 } from "ip-address";
 
 class FindByUserIpMaskV6Tests extends FindByUserIpV6Tests {
 	protected baseIpAsString = "2001:db8:3333:4444:5555:6666:7777:8888";
@@ -14,15 +15,15 @@ class FindByUserIpMaskV6Tests extends FindByUserIpV6Tests {
 	protected override getUserIpObject(): UserIp {
 		return {
 			v6: {
-				asNumericString: this.convertUserIpToNumericString(this.baseIpAsString),
+				asNumericString: new Address6(this.baseIpAsString).bigInt().toString(),
 				asString: this.baseIpAsString,
 				mask: {
-					rangeMinAsNumericString: this.convertUserIpToNumericString(
-						this.rangeMinIpAsString,
-					),
-					rangeMaxAsNumericString: this.convertUserIpToNumericString(
-						this.rangeMaxIpAsString,
-					),
+					rangeMinAsNumericString: new Address6(this.rangeMinIpAsString)
+						.bigInt()
+						.toString(),
+					rangeMaxAsNumericString: new Address6(this.rangeMaxIpAsString)
+						.bigInt()
+						.toString(),
 					asNumeric: 24,
 				},
 			},
@@ -32,17 +33,11 @@ class FindByUserIpMaskV6Tests extends FindByUserIpV6Tests {
 	protected override getUserIpObjectInAnotherVersion(): UserIp {
 		return {
 			v4: {
-				asNumeric: BigInt(
-					this.convertUserIpToNumericString(this.baseIpAsString),
-				),
+				asNumeric: new Address6(this.baseIpAsString).bigInt(),
 				asString: this.baseIpAsString,
 				mask: {
-					rangeMinAsNumeric: BigInt(
-						this.convertUserIpToNumericString(this.rangeMinIpAsString),
-					),
-					rangeMaxAsNumeric: BigInt(
-						this.convertUserIpToNumericString(this.rangeMaxIpAsString),
-					),
+					rangeMinAsNumeric: new Address6(this.rangeMinIpAsString).bigInt(),
+					rangeMaxAsNumeric: new Address6(this.rangeMaxIpAsString).bigInt(),
 					asNumeric: 24,
 				},
 			},

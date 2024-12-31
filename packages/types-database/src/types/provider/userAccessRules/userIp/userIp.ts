@@ -14,8 +14,28 @@ enum UserIpVersion {
 
 const userIpRecordSchema = new Schema<UserIp>(
 	{
-		v4: { type: userIpV4RecordSchema, required: false },
-		v6: { type: userIpV6RecordSchema, required: false },
+		v4: {
+			type: userIpV4RecordSchema,
+			required: [
+				function () {
+					const isV6Unset = "object" !== typeof this.v6 || null === this.v6;
+
+					return isV6Unset;
+				},
+				"v4 is required when v6 is not set",
+			],
+		},
+		v6: {
+			type: userIpV6RecordSchema,
+			required: [
+				function () {
+					const isV4Unset = "object" !== typeof this.v4 || null === this.v4;
+
+					return isV4Unset;
+				},
+				"v6 is required when v4 is not set",
+			],
+		},
 	},
 	{ _id: false },
 );

@@ -22,6 +22,9 @@ import { FindByUserIpMaskV6RangeMaxTests } from "./userAccessRules/findByUserIp/
 import { FindByShortUserIpMaskV6Tests } from "./userAccessRules/findByUserIp/v6/short/findByShortUserIpMaskV6Tests.js";
 import { FindByShortUserIpMaskV6RangeMinTests } from "./userAccessRules/findByUserIp/v6/maskRange/short/findByShortUserIpMaskV6RangeMinTests.js";
 import { FindByShortUserIpMaskV6RangeMaxTests } from "./userAccessRules/findByUserIp/v6/maskRange/short/findByShortUserIpMaskV6RangeMaxTests.js";
+import { UserIpRequiredValidationTests } from "./userAccessRules/schemaValidation/userIpRequiredValidationTests.js";
+import { UserIdRequiredValidationTests } from "./userAccessRules/schemaValidation/userIdRequiredValidationTests.js";
+import { UserIpVersionRequiredValidationTests } from "./userAccessRules/schemaValidation/userIpVersionRequiredValidationTests.js";
 
 class UserAccessRuleTests {
 	public async run(): Promise<void> {
@@ -42,6 +45,7 @@ class UserAccessRuleTests {
 		});
 
 		const testsList: TestsBase[] = [
+			...this.getSchemaValidationTests(model),
 			...this.getIpV4Tests(model),
 			...this.getIpV6Tests(model),
 			...this.getShortIpV6Tests(model),
@@ -52,6 +56,16 @@ class UserAccessRuleTests {
 				await testsClass.runAll();
 			});
 		}
+	}
+
+	protected getSchemaValidationTests(
+		model: Model<UserAccessRule>,
+	): TestsBase[] {
+		return [
+			new UserIpRequiredValidationTests(model),
+			new UserIdRequiredValidationTests(model),
+			new UserIpVersionRequiredValidationTests(model),
+		];
 	}
 
 	protected getIpV4Tests(model: Model<UserAccessRule>): TestsBase[] {

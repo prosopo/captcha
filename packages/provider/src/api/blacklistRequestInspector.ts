@@ -15,10 +15,10 @@ import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
-import { checkIpRules } from "../rules/ip.js";
 import { checkUserRules } from "../rules/user.js";
 import { getIPAddress } from "../util.js";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import type { Address4, Address6 } from "ip-address";
 
 class BlacklistRequestInspector {
 	public constructor(
@@ -75,7 +75,9 @@ class BlacklistRequestInspector {
 		}
 
 		try {
-			return await this.isRequestFromBlacklisted(rawIp, request);
+			const ipAddress = getIPAddress(rawIp);
+
+			return await this.isRequestFromBlacklisted(ipAddress, request);
 		} catch (err) {
 			this.logger.error("Block Middleware Error:", err);
 
@@ -84,14 +86,15 @@ class BlacklistRequestInspector {
 	}
 
 	protected async isRequestFromBlacklisted(
-		rawIp: string,
+		ipAddress: Address4 | Address6,
 		request: Request,
 	): Promise<boolean> {
 		const { userAccount, dappAccount } = this.extractIdsFromRequest(request);
+		const clientAccountId = dappAccount ? dappAccount : null;
 		const db = this.providerEnvironment.getDb();
 
 		const blacklistChecks = [
-			async () => await this.isIpInBlacklist(db, rawIp, dappAccount),
+			async () => await this.isIpInBlacklist(db, ipAddress, clientAccountId),
 			async () => await this.isUserInBlacklist(db, userAccount, dappAccount),
 		];
 
@@ -121,15 +124,21 @@ class BlacklistRequestInspector {
 
 	protected async isIpInBlacklist(
 		db: IProviderDatabase,
-		rawIp: string,
-		dappAccount: string,
+		ipAddress: Address4 | Address6,
+		clientAccountId: string | null,
 	): Promise<boolean> {
-		const ipAddress = getIPAddress(rawIp);
+		const userAccessRules = db.getUserAccessRules();
 
-		// get matching IP rules
-		const ipBlacklistRule = await checkIpRules(db, ipAddress, dappAccount);
+		const accessRules = await userAccessRules.findByUserIp(
+			ipAddress,
+			clientAccountId,
+		);
 
-		return ipBlacklistRule?.hardBlock ?? false;
+		const blockingRules = accessRules.filter(
+			(accessRule) => accessRule.isUserBlocked,
+		);
+
+		return blockingRules.length > 0;
 	}
 
 	protected async isUserInBlacklist(

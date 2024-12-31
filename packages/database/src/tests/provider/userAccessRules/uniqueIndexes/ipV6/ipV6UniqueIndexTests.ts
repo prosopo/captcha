@@ -1,8 +1,5 @@
-import type { Model } from "mongoose";
-import { Address4, Address6 } from "ip-address";
-import { expect } from "vitest";
-import { TestsBase } from "../../../../testsBase.js";
-import type { UserAccessRule, UserIp } from "@prosopo/types-database";
+import { Address6 } from "ip-address";
+import type { UserIp } from "@prosopo/types-database";
 import { IpUniqueIndexTests } from "../ipUniqueIndexTests.js";
 
 class IpV6UniqueIndexTests extends IpUniqueIndexTests {

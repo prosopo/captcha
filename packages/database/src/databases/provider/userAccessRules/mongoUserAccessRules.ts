@@ -1,9 +1,11 @@
 import {
+	type RuleFilters,
 	type UserAccessRule,
 	type UserAccessRules,
 	UserIpVersion,
 } from "@prosopo/types-database";
 import type { Model } from "mongoose";
+import { Address4, type Address6 } from "ip-address";
 
 class MongoUserAccessRules implements UserAccessRules {
 	private model: Model<UserAccessRule> | null;
@@ -12,20 +14,26 @@ class MongoUserAccessRules implements UserAccessRules {
 		this.model = model;
 	}
 
-	public async findByUserIp(
-		userIpVersion: UserIpVersion,
-		userIpAsNumeric: bigint | string,
-		clientAccountId: string | null = null,
-	): Promise<UserAccessRule[]> {
+	public async findByFilters(filters: RuleFilters): Promise<UserAccessRule[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
 
-		const query = this.createFindByUserIpQuery(
-			userIpVersion,
-			userIpAsNumeric,
-			clientAccountId,
-		);
+		const userId = filters.userId || null;
+		const userIpAddress = filters.userIpAddress || null;
+		const clientAccountId = filters.clientAccountId || null;
+
+		const queryFilters = [this.getFilterByClientAccountId(clientAccountId)];
+
+		if (null !== userIpAddress) {
+			const filterByUserIp = this.getFilterByUserIp(userIpAddress);
+
+			queryFilters.push(filterByUserIp);
+		}
+
+		const query = {
+			$and: queryFilters,
+		};
 
 		return this.model.find(query).exec();
 	}
@@ -34,11 +42,28 @@ class MongoUserAccessRules implements UserAccessRules {
 		this.model = model;
 	}
 
-	protected createFindByUserIpQuery(
-		userIpVersion: UserIpVersion,
-		userIpAsNumeric: bigint | string,
-		clientAccountId: string | null = null,
-	): object {
+	protected getFilterByClientAccountId(clientAccountId: string | null): object {
+		return clientAccountId
+			? {
+					$or: [
+						{ clientAccountId: clientAccountId },
+						{ clientAccountId: null },
+					],
+				}
+			: {
+					clientAccountId: null,
+				};
+	}
+
+	protected getFilterByUserIp(userIpAddress: Address4 | Address6): object {
+		const isIpV4 = userIpAddress instanceof Address4;
+
+		const userIpVersion = isIpV4 ? UserIpVersion.v4 : UserIpVersion.v6;
+
+		const userIpAsNumeric = isIpV4
+			? userIpAddress.bigInt()
+			: userIpAddress.bigInt().toString();
+
 		const userIpKey =
 			userIpVersion === UserIpVersion.v4
 				? "userIp.v4.asNumeric"
@@ -52,34 +77,16 @@ class MongoUserAccessRules implements UserAccessRules {
 				? "userIp.v4.mask.rangeMaxAsNumeric"
 				: "userIp.v6.mask.rangeMaxAsNumericString";
 
-		const clientAccountCondition = clientAccountId
-			? {
-					$or: [
-						{ clientAccountId: clientAccountId },
-						{ clientAccountId: null },
-					],
-				}
-			: {
-					clientAccountId: null,
-				};
-
 		return {
-			$and: [
+			$or: [
+				{ [userIpKey]: userIpAsNumeric },
 				{
-					...clientAccountCondition,
-				},
-				{
-					$or: [
-						{ [userIpKey]: userIpAsNumeric },
-						{
-							[rangeMinKey]: {
-								$lte: userIpAsNumeric,
-							},
-							[rangeMaxKey]: {
-								$gte: userIpAsNumeric,
-							},
-						},
-					],
+					[rangeMinKey]: {
+						$lte: userIpAsNumeric,
+					},
+					[rangeMaxKey]: {
+						$gte: userIpAsNumeric,
+					},
 				},
 			],
 		};
