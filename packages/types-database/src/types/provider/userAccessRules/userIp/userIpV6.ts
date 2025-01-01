@@ -33,7 +33,6 @@ const userIpV6RecordSchema = new Schema<UserIpV6>(
 		mask: {
 			type: userIpV6MaskRecordSchema,
 			required: false,
-			default: null,
 		},
 	},
 	{ _id: false },

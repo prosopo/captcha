@@ -88,35 +88,34 @@ class BlacklistRequestInspector {
 		ipAddress: Address4 | Address6,
 		request: Request,
 	): Promise<boolean> {
-		const { userId, clientAccountId } = this.extractIdsFromRequest(request);
+		const { userId, clientId } = this.extractIdsFromRequest(request);
 		const db = this.providerEnvironment.getDb();
 
 		await this.providerEnvironment.isReady();
 
-		return await this.isUserBlocked(db, clientAccountId, ipAddress, userId);
+		return await this.isUserBlocked(db, clientId, ipAddress, userId);
 	}
 
 	protected extractIdsFromRequest(request: Request): {
 		userId: string;
-		clientAccountId: string;
+		clientId: string;
 	} {
 		return {
 			userId: request.headers["Prosopo-User"] || request.body.user || "",
-			clientAccountId:
-				request.headers["Prosopo-Site-Key"] || request.body.dapp || "",
+			clientId: request.headers["Prosopo-Site-Key"] || request.body.dapp || "",
 		};
 	}
 
 	protected async isUserBlocked(
 		db: IProviderDatabase,
-		clientAccountId: string,
+		clientId: string,
 		ipAddress: Address4 | Address6,
 		userId: string,
 	): Promise<boolean> {
-		const userAccessRules = db.getUserAccessRules();
+		const userAccessRulesStorage = db.getUserAccessRulesStorage();
 
-		const accessRules = await userAccessRules.find(
-			clientAccountId,
+		const accessRules = await userAccessRulesStorage.find(
+			clientId,
 			{
 				userIpAddress: ipAddress,
 				userId: userId,

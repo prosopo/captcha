@@ -1,5 +1,5 @@
 import { CommandBase } from "./commandBase.js";
-import { MongoUserAccessRules } from "../../../../databases/provider/userAccessRules/mongoUserAccessRules.js";
+import { UserAccessRulesDbStorage } from "../../../../databases/provider/userAccessRules/userAccessRulesDbStorage.js";
 import {
 	type UserAccessRule,
 	type UserAccessRules,
@@ -33,7 +33,7 @@ class MeasureFindCommand extends CommandBase {
 		}
 
 		const model = await this.createModelByArgs(args);
-		const userAccessRules = new MongoUserAccessRules(model);
+		const userAccessRules = new UserAccessRulesDbStorage(model);
 
 		await this.measureFind(
 			targetIpV4AsString,

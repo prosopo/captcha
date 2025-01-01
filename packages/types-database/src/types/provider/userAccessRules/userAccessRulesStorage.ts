@@ -2,16 +2,16 @@ import type { UserAccessRule } from "./userAccessRule.js";
 import type { Address4, Address6 } from "ip-address";
 
 interface RuleFilters {
-	userIpAddress?: Address4 | Address6 | null;
-	userId?: string | null;
+	userIpAddress?: Address4 | Address6;
+	userId?: string;
 }
 
 interface RuleFilterSettings {
-	includeRecordsWithoutClientId?: boolean | null;
-	includeRecordsWithPartialFilterMatches?: boolean | null;
+	includeRecordsWithoutClientId?: boolean;
+	includeRecordsWithPartialFilterMatches?: boolean;
 }
 
-interface UserAccessRules {
+interface UserAccessRulesStorage {
 	find(
 		clientId: string | null,
 		filters?: RuleFilters | null,
@@ -19,4 +19,4 @@ interface UserAccessRules {
 	): Promise<UserAccessRule[]>;
 }
 
-export type { UserAccessRules, RuleFilters, RuleFilterSettings };
+export type { UserAccessRulesStorage, RuleFilters, RuleFilterSettings };

@@ -77,8 +77,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 			},
 			{
 				name: "ignoresRecordsWithoutClientIdWhenFlagIsNotSet",
-				method: () =>
-					this.ignoresRecordsWithoutClientIdWhenFlagIsNotSet(),
+				method: () => this.ignoresRecordsWithoutClientIdWhenFlagIsNotSet(),
 			},
 			{
 				name: "includesRecordsWithoutClientIdWhenFlagIsSet",
@@ -135,23 +134,20 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 	protected async includesRecordsWithoutClientIdWhenFlagIsSet(): Promise<void> {
 		// given
-		const record = await this.model.create({
-			...this.getRecord(),
-			clientId: null,
-		});
+		const recordData = this.getRecord();
+
+		const { clientId, ...recordDataWithoutClientId } = recordData;
+
+		const recordWithoutClientId = await this.model.create(recordDataWithoutClientId);
 
 		// when
-		const rules = await this.userAccessRules.find(
-			this.getClientId(),
-			null,
-			{
-				includeRecordsWithoutClientId: true,
-			},
-		);
+		const rules = await this.userAccessRules.find(this.getClientId(), null, {
+			includeRecordsWithoutClientId: true,
+		});
 
 		// then
 		expect(rules.length).toBe(1);
-		expect(rules[0]?.id).toBe(record.id);
+		expect(rules[0]?.id).toBe(recordWithoutClientId.id);
 	}
 }
 
