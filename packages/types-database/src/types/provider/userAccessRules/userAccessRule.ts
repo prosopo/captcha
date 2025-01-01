@@ -7,19 +7,19 @@ import { type UserIp, userIpRecordSchema } from "./userIp/userIp.js";
 
 interface UserAccessRule extends Document {
 	isUserBlocked: boolean;
+	clientId?: string;
 	description?: string;
 	userIp?: UserIp;
 	userId?: string;
-	clientId?: string;
 	config?: UserAccessRuleConfig;
 }
 
 const userAccessRuleSchema = new Schema<UserAccessRule>({
 	isUserBlocked: { type: Boolean, required: true },
-	description: { type: String, required: false, default: null },
+	clientId: { type: String, required: false },
+	description: { type: String, required: false },
 	userIp: {
 		type: userIpRecordSchema,
-		default: null,
 		required: [
 			function () {
 				const isUserIdUnset = "string" !== typeof this.userId;
@@ -31,7 +31,6 @@ const userAccessRuleSchema = new Schema<UserAccessRule>({
 	},
 	userId: {
 		type: String,
-		default: null,
 		required: [
 			function () {
 				const isUserIpUnset =
@@ -42,11 +41,9 @@ const userAccessRuleSchema = new Schema<UserAccessRule>({
 			"userId is required when userIp is not set",
 		],
 	},
-	clientId: { type: String, required: false, default: null },
 	config: {
 		type: userAccessRuleConfigRecordSchema,
 		required: false,
-		default: null,
 	},
 });
 

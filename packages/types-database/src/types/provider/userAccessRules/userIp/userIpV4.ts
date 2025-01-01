@@ -17,7 +17,6 @@ const userIpV4RecordSchema = new Schema<UserIpV4>(
 		mask: {
 			type: userIpV4MaskRecordSchema,
 			required: false,
-			default: null,
 		},
 	},
 	{ _id: false },

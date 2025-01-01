@@ -37,13 +37,15 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
-import { getCaptchaConfig } from "../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
+import { ImageCaptchaConfigResolver } from "../tasks/imgCaptcha/imageCaptchaConfigResolver.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 const TEN_MINUTES = 60 * 10 * 1000;
+
+const imageCaptchaConfigResolver = new ImageCaptchaConfigResolver();
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -109,8 +111,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const captchaConfig = await getCaptchaConfig(
-				tasks.db,
+			const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
+				tasks.db.getUserAccessRulesStorage(),
 				env.config,
 				ipAddress,
 				user,
@@ -484,7 +486,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
-				const accessRules = await tasks.db.getUserAccessRules().find(
+				const userAccessRules = await tasks.db.getUserAccessRulesStorage().find(
 					dapp,
 					{
 						userId: user,
@@ -496,15 +498,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					},
 				);
 
-				if (accessRules.length > 0)
-					return res.json(tasks.frictionlessManager.sendImageCaptcha());
-
-				// Check if the user is blocked
-				const isUserBlocked = await tasks.frictionlessManager.checkUserRules(
-					user,
-					dapp,
-				);
-				if (isUserBlocked)
+				if (userAccessRules.length > 0)
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
 				// If the bot score is greater than the threshold, send an image captcha

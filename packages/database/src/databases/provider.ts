@@ -63,7 +63,7 @@ import {
 	StoredStatusNames,
 	type Tables,
 	type UserAccessRule,
-	type UserAccessRules,
+	type UserAccessRulesStorage,
 	type UserAccountBlockRule,
 	type UserAccountBlockRuleRecord,
 	UserAccountBlockRuleSchema,
@@ -80,8 +80,8 @@ import type {
 } from "@prosopo/types-database";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
-import { MongoUserAccessRules } from "./provider/userAccessRules/mongoUserAccessRules.js";
 import { getUserAccessRulesDbSchema } from "./provider/userAccessRules/dbSchema.js";
+import {UserAccessRulesDbStorage} from "./provider/userAccessRules/userAccessRulesDbStorage.js";
 
 enum TableNames {
 	captcha = "captcha",
@@ -178,7 +178,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private readonly userAccessRules: MongoUserAccessRules;
+	private readonly userAccessRulesDbStorage: UserAccessRulesDbStorage;
 
 	constructor(
 		url: string,
@@ -189,7 +189,7 @@ export class ProviderDatabase
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRules = new MongoUserAccessRules(null);
+		this.userAccessRulesDbStorage = new UserAccessRulesDbStorage(null);
 	}
 
 	override async connect(): Promise<void> {
@@ -197,7 +197,7 @@ export class ProviderDatabase
 
 		this.loadTables();
 
-		this.userAccessRules.setModel(
+		this.userAccessRulesDbStorage.setModel(
 			<Model<UserAccessRule>>this.tables.userAccessRules,
 		);
 	}
@@ -222,8 +222,8 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
-	public getUserAccessRules(): UserAccessRules {
-		return this.userAccessRules;
+	public getUserAccessRulesStorage(): UserAccessRulesStorage {
+		return this.userAccessRulesDbStorage;
 	}
 
 	/**

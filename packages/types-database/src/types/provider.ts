@@ -55,7 +55,7 @@ import {
 } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
-import type { UserAccessRules } from "./provider/export.js";
+import type { UserAccessRulesStorage } from "./provider/export.js";
 
 export * from "./provider/export.js";
 
@@ -627,5 +627,5 @@ export interface IProviderDatabase extends IDatabase {
 		dappAccount?: string,
 	): Promise<void>;
 
-	getUserAccessRules(): UserAccessRules;
+	getUserAccessRulesStorage(): UserAccessRulesStorage;
 }

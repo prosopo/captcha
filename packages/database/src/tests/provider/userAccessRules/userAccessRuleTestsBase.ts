@@ -1,6 +1,6 @@
 import type { UserAccessRule, UserAccessRules } from "@prosopo/types-database";
 import type { Model } from "mongoose";
-import { MongoUserAccessRules } from "../../../databases/provider/userAccessRules/mongoUserAccessRules.js";
+import { UserAccessRulesDbStorage } from "../../../databases/provider/userAccessRules/userAccessRulesDbStorage.js";
 import { TestsBase } from "../../testsBase.js";
 
 abstract class UserAccessRuleTestsBase extends TestsBase {
@@ -9,7 +9,7 @@ abstract class UserAccessRuleTestsBase extends TestsBase {
 	public constructor(protected model: Model<UserAccessRule>) {
 		super();
 
-		this.userAccessRules = new MongoUserAccessRules(this.model);
+		this.userAccessRules = new UserAccessRulesDbStorage(this.model);
 	}
 }
 

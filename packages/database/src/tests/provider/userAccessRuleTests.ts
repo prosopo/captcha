@@ -27,6 +27,7 @@ import { UserIdRequiredValidationTests } from "./userAccessRules/schemaValidatio
 import { UserIpVersionRequiredValidationTests } from "./userAccessRules/schemaValidation/userIpVersionRequiredValidationTests.js";
 import { FindRuleTests } from "./userAccessRules/find/findRuleTests.js";
 import { FindRuleByUserIdTests } from "./userAccessRules/find/findRuleByUserIdTests.js";
+import { OptionalFieldTests } from "./userAccessRules/schemaValidation/optionalFieldTests.js";
 
 class UserAccessRuleTests {
 	public async run(): Promise<void> {
@@ -64,6 +65,7 @@ class UserAccessRuleTests {
 		model: Model<UserAccessRule>,
 	): TestsBase[] {
 		return [
+			new OptionalFieldTests(model),
 			new UserIpRequiredValidationTests(model),
 			new UserIdRequiredValidationTests(model),
 			new UserIpVersionRequiredValidationTests(model),

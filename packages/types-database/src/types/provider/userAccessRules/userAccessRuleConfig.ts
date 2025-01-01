@@ -13,7 +13,6 @@ const userAccessRuleConfigRecordSchema = new Schema<UserAccessRuleConfig>(
 		imageCaptcha: {
 			type: imageCaptchaAccessRuleSchema,
 			required: false,
-			default: null,
 		},
 	},
 	{ _id: false },

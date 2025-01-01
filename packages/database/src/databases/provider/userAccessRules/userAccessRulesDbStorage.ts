@@ -2,14 +2,13 @@ import {
 	type RuleFilters,
 	type RuleFilterSettings,
 	type UserAccessRule,
-	type UserAccessRules,
+	type UserAccessRulesStorage,
 	UserIpVersion,
 } from "@prosopo/types-database";
 import type { Model } from "mongoose";
 import { Address4, type Address6 } from "ip-address";
-import * as util from "node:util";
 
-class MongoUserAccessRules implements UserAccessRules {
+class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 	private model: Model<UserAccessRule> | null;
 
 	constructor(model: Model<UserAccessRule> | null) {
@@ -85,13 +84,15 @@ class MongoUserAccessRules implements UserAccessRules {
 		clientId: string | null,
 		includeRecordsWithoutClientId: boolean,
 	): object {
+		const clientIdValue = null === clientId ? { $exists: false } : clientId;
+
 		const clientIdFilter = {
-			clientId: clientId,
+			clientId: clientIdValue,
 		};
 
 		return includeRecordsWithoutClientId
 			? {
-					$or: [clientIdFilter, { clientId: null }],
+					$or: [clientIdFilter, { clientId: { $exists: false } }],
 				}
 			: clientIdFilter;
 	}
@@ -144,4 +145,4 @@ class MongoUserAccessRules implements UserAccessRules {
 	}
 }
 
-export { MongoUserAccessRules };
+export { UserAccessRulesDbStorage };

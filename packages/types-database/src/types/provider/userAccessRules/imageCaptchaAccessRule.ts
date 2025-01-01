@@ -10,12 +10,10 @@ const imageCaptchaAccessRuleSchema = new Schema<ImageCaptchaAccessRule>(
 		solvedCount: {
 			type: Number,
 			required: false,
-			default: null,
 		},
 		unsolvedCount: {
 			type: Number,
 			required: false,
-			default: null,
 		},
 	},
 	{ _id: false },
