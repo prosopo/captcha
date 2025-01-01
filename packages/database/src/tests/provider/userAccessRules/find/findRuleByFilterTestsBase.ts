@@ -4,9 +4,9 @@ import { Address4 } from "ip-address";
 import type { RuleFilters, UserAccessRule } from "@prosopo/types-database";
 
 abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
-	protected abstract getClientAccountId(): string | null;
+	protected abstract getClientId(): string | null;
 
-	protected abstract getOtherClientAccountId(): string | null;
+	protected abstract getOtherClientId(): string | null;
 
 	protected abstract getRecord(): Partial<UserAccessRule>;
 
@@ -21,8 +21,8 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 				method: () => this.findsRecord(),
 			},
 			{
-				name: "ignoresRecordWithDifferentClientAccountId",
-				method: () => this.ignoresRecordWithDifferentClientAccountId(),
+				name: "ignoresRecordWithDifferentClientId",
+				method: () => this.ignoresRecordWithDifferentClientId(),
 			},
 			{
 				name: "findsRecordByFilters",
@@ -40,20 +40,20 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 		const record = await this.model.create(this.getRecord());
 
 		// when
-		const rules = await this.userAccessRules.find(this.getClientAccountId());
+		const rules = await this.userAccessRules.find(this.getClientId());
 
 		// then
 		expect(rules.length).toBe(1);
 		expect(rules[0]?.id).toBe(record.id);
 	}
 
-	protected async ignoresRecordWithDifferentClientAccountId(): Promise<void> {
+	protected async ignoresRecordWithDifferentClientId(): Promise<void> {
 		// given
 		await this.model.create(this.getRecord());
 
 		// when
 		const rules = await this.userAccessRules.find(
-			this.getOtherClientAccountId(),
+			this.getOtherClientId(),
 		);
 
 		// then
@@ -66,7 +66,7 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.find(
-			this.getClientAccountId(),
+			this.getClientId(),
 			this.getRecordFilters(),
 		);
 
@@ -81,7 +81,7 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.find(
-			this.getClientAccountId(),
+			this.getClientId(),
 			this.getOtherRecordFilters(),
 		);
 

@@ -16,24 +16,24 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 
 	protected abstract getUserIpObjectInOtherVersion(): UserIp;
 
-	protected override getClientAccountId(): string | null {
+	protected override getClientId(): string | null {
 		return "client";
 	}
 
-	protected override getOtherClientAccountId(): string | null {
+	protected override getOtherClientId(): string | null {
 		return "otherClient";
 	}
 
 	protected override getRecord(): Partial<UserAccessRule> {
-		const clientAccountId = this.getClientAccountId();
+		const clientId = this.getClientId();
 
 		const record: Partial<UserAccessRule> = {
 			isUserBlocked: false,
 			userIp: this.getUserIpObject(),
 		};
 
-		if (null !== clientAccountId) {
-			record.clientAccountId = clientAccountId;
+		if (null !== clientId) {
+			record.clientId = clientId;
 		}
 
 		return record;
@@ -72,7 +72,7 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.find(
-			this.getClientAccountId(),
+			this.getClientId(),
 			this.getRecordFilters(),
 		);
 

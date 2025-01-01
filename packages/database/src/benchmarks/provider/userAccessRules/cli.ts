@@ -1,5 +1,5 @@
 import { CliInputParser } from "./cliInputParser.js";
-import type { Command } from "./commands/command.js";
+import type { CommandBase } from "./commands/commandBase.js";
 import { PopulateCommand } from "./commands/populateCommand.js";
 import mongoose from "mongoose";
 import { MeasureFindCommand } from "./commands/measureFindCommand.js";
@@ -30,11 +30,11 @@ class Cli {
 		);
 	}
 
-	protected getCommands(): Command[] {
+	protected getCommands(): CommandBase[] {
 		return [new PopulateCommand(), new MeasureFindCommand()];
 	}
 
-	protected getCommand(commandName: string): Command | null {
+	protected getCommand(commandName: string): CommandBase | null {
 		const commands = this.getCommands();
 
 		const command = commands.find(

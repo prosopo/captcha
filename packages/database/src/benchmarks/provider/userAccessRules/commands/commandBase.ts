@@ -2,7 +2,7 @@ import mongoose, { type Model } from "mongoose";
 import { getUserAccessRulesDbSchema } from "../../../../databases/provider/userAccessRules/dbSchema.js";
 import type { UserAccessRule } from "@prosopo/types-database";
 
-abstract class Command {
+abstract class CommandBase {
 	public abstract getName(): string;
 
 	public abstract process(args: object): Promise<void>;
@@ -29,4 +29,4 @@ abstract class Command {
 	}
 }
 
-export { Command };
+export { CommandBase };

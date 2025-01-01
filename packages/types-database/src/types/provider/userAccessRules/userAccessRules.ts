@@ -13,7 +13,7 @@ interface RuleFilterSettings {
 
 interface UserAccessRules {
 	find(
-		clientAccountId: string | null,
+		clientId: string | null,
 		filters?: RuleFilters | null,
 		filterSettings?: RuleFilterSettings | null,
 	): Promise<UserAccessRule[]>;
