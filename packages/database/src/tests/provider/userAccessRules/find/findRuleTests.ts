@@ -13,16 +13,16 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		return "FindRuleTests";
 	}
 
-	protected getClientAccountId(): string | null {
+	protected getClientId(): string | null {
 		return "client";
 	}
 
-	protected getOtherClientAccountId(): string | null {
+	protected getOtherClientId(): string | null {
 		return "other";
 	}
 
 	protected getRecord(): Partial<UserAccessRule> {
-		const clientAccountId = this.getClientAccountId();
+		const clientId = this.getClientId();
 
 		const record: Partial<UserAccessRule> = {
 			isUserBlocked: false,
@@ -35,8 +35,8 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 			},
 		};
 
-		if (null !== clientAccountId) {
-			record.clientAccountId = clientAccountId;
+		if (null !== clientId) {
+			record.clientId = clientId;
 		}
 
 		return record;
@@ -76,13 +76,13 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 				method: () => this.includesPartialFilterMatchesWhenFlagIsSet(),
 			},
 			{
-				name: "ignoresRecordsWithoutClientAccountIdWhenFlagIsNotSet",
+				name: "ignoresRecordsWithoutClientIdWhenFlagIsNotSet",
 				method: () =>
-					this.ignoresRecordsWithoutClientAccountIdWhenFlagIsNotSet(),
+					this.ignoresRecordsWithoutClientIdWhenFlagIsNotSet(),
 			},
 			{
-				name: "includesRecordsWithoutClientAccountIdWhenFlagIsSet",
-				method: () => this.includesRecordsWithoutClientAccountIdWhenFlagIsSet(),
+				name: "includesRecordsWithoutClientIdWhenFlagIsSet",
+				method: () => this.includesRecordsWithoutClientIdWhenFlagIsSet(),
 			},
 		]);
 	}
@@ -93,7 +93,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.find(
-			this.getClientAccountId(),
+			this.getClientId(),
 			this.getPartialMatchRecordFilters(),
 		);
 
@@ -107,10 +107,10 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 		// when
 		const rules = await this.userAccessRules.find(
-			this.getClientAccountId(),
+			this.getClientId(),
 			this.getPartialMatchRecordFilters(),
 			{
-				includePartialFilterMatches: true,
+				includeRecordsWithPartialFilterMatches: true,
 			},
 		);
 
@@ -119,33 +119,33 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		expect(rules[0]?.id).toBe(record.id);
 	}
 
-	protected async ignoresRecordsWithoutClientAccountIdWhenFlagIsNotSet(): Promise<void> {
+	protected async ignoresRecordsWithoutClientIdWhenFlagIsNotSet(): Promise<void> {
 		// given
 		await this.model.create({
 			...this.getRecord(),
-			clientAccountId: null,
+			clientId: null,
 		});
 
 		// when
-		const rules = await this.userAccessRules.find(this.getClientAccountId());
+		const rules = await this.userAccessRules.find(this.getClientId());
 
 		// then
 		expect(rules.length).toBe(0);
 	}
 
-	protected async includesRecordsWithoutClientAccountIdWhenFlagIsSet(): Promise<void> {
+	protected async includesRecordsWithoutClientIdWhenFlagIsSet(): Promise<void> {
 		// given
 		const record = await this.model.create({
 			...this.getRecord(),
-			clientAccountId: null,
+			clientId: null,
 		});
 
 		// when
 		const rules = await this.userAccessRules.find(
-			this.getClientAccountId(),
+			this.getClientId(),
 			null,
 			{
-				includeWithoutClientId: true,
+				includeRecordsWithoutClientId: true,
 			},
 		);
 

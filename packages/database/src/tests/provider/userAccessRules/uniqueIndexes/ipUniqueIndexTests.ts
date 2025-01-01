@@ -75,14 +75,14 @@ abstract class IpUniqueIndexTests extends UserAccessRuleTestsBase {
 		await this.model.create({
 			isUserBlocked: true,
 			userIp: this.getFirstUserIpObject(),
-			clientAccountId: "client",
+			clientId: "client",
 		});
 
 		// when
 		const anotherRecord = await this.model.create({
 			isUserBlocked: true,
 			userIp: this.getSecondUserIpObject(),
-			clientAccountId: "client",
+			clientId: "client",
 		});
 
 		// then
@@ -94,7 +94,7 @@ abstract class IpUniqueIndexTests extends UserAccessRuleTestsBase {
 		await this.model.create({
 			isUserBlocked: true,
 			userIp: this.getFirstUserIpObject(),
-			clientAccountId: "client",
+			clientId: "client",
 		});
 
 		// when
@@ -102,7 +102,7 @@ abstract class IpUniqueIndexTests extends UserAccessRuleTestsBase {
 			await this.model.create({
 				isUserBlocked: true,
 				userIp: this.getFirstUserIpObject(),
-				clientAccountId: "client",
+				clientId: "client",
 			});
 
 		// then
@@ -114,7 +114,7 @@ abstract class IpUniqueIndexTests extends UserAccessRuleTestsBase {
 		const userRecord = await this.model.create({
 			isUserBlocked: true,
 			userIp: this.getFirstUserIpObject(),
-			clientAccountId: "client",
+			clientId: "client",
 		});
 
 		// when

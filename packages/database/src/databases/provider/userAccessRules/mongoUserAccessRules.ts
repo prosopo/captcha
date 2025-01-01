@@ -17,7 +17,7 @@ class MongoUserAccessRules implements UserAccessRules {
 	}
 
 	public async find(
-		clientAccountId: string | null,
+		clientId: string | null,
 		filters: RuleFilters | null = null,
 		filterSettings: RuleFilterSettings | null = null,
 	): Promise<UserAccessRule[]> {
@@ -25,7 +25,7 @@ class MongoUserAccessRules implements UserAccessRules {
 			throw new Error("Model is not set");
 		}
 
-		const query = this.createQuery(clientAccountId, filters, filterSettings);
+		const query = this.createQuery(clientId, filters, filterSettings);
 
 		return this.model.find(query).exec();
 	}
@@ -35,7 +35,7 @@ class MongoUserAccessRules implements UserAccessRules {
 	}
 
 	protected createQuery(
-		clientAccountId: string | null,
+		clientId: string | null,
 		filters: RuleFilters | null,
 		filterSettings: RuleFilterSettings | null,
 	): object {
@@ -45,7 +45,7 @@ class MongoUserAccessRules implements UserAccessRules {
 			filterSettings?.includeRecordsWithPartialFilterMatches || false;
 
 		let queryParts = [
-			this.getFilterByClientAccountId(clientAccountId, includeRecordsWithoutClientId),
+			this.getFilterByClientId(clientId, includeRecordsWithoutClientId),
 		];
 
 		if (null !== filters) {
@@ -81,19 +81,19 @@ class MongoUserAccessRules implements UserAccessRules {
 			: queryFilters;
 	}
 
-	protected getFilterByClientAccountId(
-		clientAccountId: string | null,
+	protected getFilterByClientId(
+		clientId: string | null,
 		includeRecordsWithoutClientId: boolean,
 	): object {
-		const clientAccountIdFilter = {
-			clientAccountId: clientAccountId,
+		const clientIdFilter = {
+			clientId: clientId,
 		};
 
 		return includeRecordsWithoutClientId
 			? {
-					$or: [clientAccountIdFilter, { clientAccountId: null }],
+					$or: [clientIdFilter, { clientId: null }],
 				}
-			: clientAccountIdFilter;
+			: clientIdFilter;
 	}
 
 	protected getFilterByUserIp(

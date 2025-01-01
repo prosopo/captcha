@@ -6,20 +6,34 @@ import type { UserAccessRule } from "@prosopo/types-database";
 
 class PerformanceIndexes implements AccessRuleDbIndexes {
 	public setup(schema: Schema<UserAccessRule>): void {
-		this.clientAccountId(schema);
+		this.clientId(schema);
+		this.userId(schema);
 
 		ipV4PerformanceIndexes.setup(schema);
 		ipV6PerformanceIndexes.setup(schema);
 	}
 
-	protected clientAccountId(schema: Schema<UserAccessRule>): void {
+	protected clientId(schema: Schema<UserAccessRule>): void {
 		schema.index(
 			{
-				clientAccountId: 1,
+				clientId: 1,
 			},
 			{
 				partialFilterExpression: {
-					clientAccountId: { $exists: true },
+					clientId: { $exists: true },
+				},
+			},
+		);
+	}
+
+	protected userId(schema: Schema<UserAccessRule>): void {
+		schema.index(
+			{
+				userId: 1,
+			},
+			{
+				partialFilterExpression: {
+					userId: { $exists: true },
 				},
 			},
 		);

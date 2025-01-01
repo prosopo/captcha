@@ -16,7 +16,7 @@ class IpV6UniqueIndexes implements AccessRuleDbIndexes {
 			{
 				unique: true,
 				partialFilterExpression: {
-					clientAccountId: null,
+					clientId: null,
 					"userIp.v6.asNumericString": { $exists: true },
 					"userIp.v6.mask.asNumeric": null,
 				},
@@ -27,13 +27,13 @@ class IpV6UniqueIndexes implements AccessRuleDbIndexes {
 	protected ipPerClient(schema: Schema<UserAccessRule>): void {
 		schema.index(
 			{
-				clientAccountId: 1,
+				clientId: 1,
 				"userIp.v6.asNumericString": 1,
 			},
 			{
 				unique: true,
 				partialFilterExpression: {
-					clientAccountId: { $exists: true },
+					clientId: { $exists: true },
 					"userIp.v6.asNumericString": { $exists: true },
 					"userIp.v6.mask.asNumeric": null,
 				},

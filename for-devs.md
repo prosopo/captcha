@@ -100,3 +100,8 @@ NODE_ENV=test npm run start:bundle
 ```
 NODE_ENV=test npm -w @prosopo/cypress-shared run cypress:open:client-bundle-example
 ```
+
+### 6. Names in code
+
+* `dapp`, `dappAccount` = `clientId` = `siteKey` in the portal
+* `user`, `userAccount` = `userId`

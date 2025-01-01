@@ -4,35 +4,35 @@ import { FindRuleByFilterTestsBase } from "./findRuleByFilterTestsBase.js";
 class FindRuleByUserIdTests extends FindRuleByFilterTestsBase {
 	private readonly userId: string = "userId";
 	private readonly otherUserId: string = "otherUserId";
-	private readonly clientAccountId: string = "client";
-	private readonly otherClientAccountId: string = "another";
+	private readonly clientId: string = "client";
+	private readonly otherClientId: string = "another";
 
 	getName(): string {
 		return "FindRuleByUserId";
 	}
 
 	protected getRecord(): Partial<UserAccessRule> {
-		const clientAccountId = this.getClientAccountId();
+		const clientId = this.getClientId();
 
 		const record: Partial<UserAccessRule> = {
 			isUserBlocked: false,
 			userId: this.userId,
-			clientAccountId: this.clientAccountId,
+			clientId: this.clientId,
 		};
 
-		if (null !== clientAccountId) {
-			record.clientAccountId = clientAccountId;
+		if (null !== clientId) {
+			record.clientId = clientId;
 		}
 
 		return record;
 	}
 
-	protected getClientAccountId(): string | null {
-		return this.clientAccountId;
+	protected getClientId(): string | null {
+		return this.clientId;
 	}
 
-	protected getOtherClientAccountId(): string | null {
-		return this.otherClientAccountId;
+	protected getOtherClientId(): string | null {
+		return this.otherClientId;
 	}
 
 	protected getRecordFilters(): RuleFilters {

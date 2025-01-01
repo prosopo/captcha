@@ -1,18 +1,20 @@
-import { Command } from "./command.js";
+import { CommandBase } from "./commandBase.js";
 import { MongoUserAccessRules } from "../../../../databases/provider/userAccessRules/mongoUserAccessRules.js";
-import { UserIpVersion } from "@prosopo/types-database";
+import {
+	type UserAccessRule,
+	type UserAccessRules,
+	UserIpVersion,
+} from "@prosopo/types-database";
 import * as util from "node:util";
 import { Address4, Address6 } from "ip-address";
+import type { Model } from "mongoose";
 
-class MeasureFindCommand extends Command {
+class MeasureFindCommand extends CommandBase {
 	getName(): string {
 		return "measure-find";
 	}
 
 	override async process(args: object): Promise<void> {
-		const model = await this.createModelByArgs(args);
-		const userAccessRules = new MongoUserAccessRules(model);
-
 		const targetIpV4AsString =
 			"target-ipv4" in args && "string" === typeof args["target-ipv4"]
 				? args["target-ipv4"]
@@ -30,6 +32,23 @@ class MeasureFindCommand extends Command {
 			throw new Error("Target ipv6 is not set");
 		}
 
+		const model = await this.createModelByArgs(args);
+		const userAccessRules = new MongoUserAccessRules(model);
+
+		await this.measureFind(
+			targetIpV4AsString,
+			targetIpV6AsString,
+			model,
+			userAccessRules,
+		);
+	}
+
+	protected async measureFind(
+		targetIpV4AsString: string,
+		targetIpV6AsString: string,
+		model: Model<UserAccessRule>,
+		userAccessRules: UserAccessRules,
+	): Promise<void> {
 		const targetIpV4 = new Address4(targetIpV4AsString);
 		const targetIpV6 = new Address6(targetIpV6AsString);
 
@@ -48,7 +67,7 @@ class MeasureFindCommand extends Command {
 	}
 
 	protected async measureRuleFindTime(
-		userAccessRules: MongoUserAccessRules,
+		userAccessRules: UserAccessRules,
 		targetIp: Address4 | Address6,
 		totalRulesCount: number,
 	): Promise<void> {
@@ -56,10 +75,9 @@ class MeasureFindCommand extends Command {
 		const ipVersion =
 			targetIp instanceof Address4 ? UserIpVersion.v4 : UserIpVersion.v6;
 
-		const foundRules = await userAccessRules.findByUserIp(
-			ipVersion,
-			targetIp.bigInt().toString(),
-		);
+		const foundRules = await userAccessRules.find(null, {
+			userIpAddress: targetIp,
+		});
 
 		const endTime = Date.now();
 

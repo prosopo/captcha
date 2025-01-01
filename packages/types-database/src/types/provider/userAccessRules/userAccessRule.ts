@@ -10,7 +10,7 @@ interface UserAccessRule extends Document {
 	description?: string;
 	userIp?: UserIp;
 	userId?: string;
-	clientAccountId?: string;
+	clientId?: string;
 	config?: UserAccessRuleConfig;
 }
 
@@ -42,7 +42,7 @@ const userAccessRuleSchema = new Schema<UserAccessRule>({
 			"userId is required when userIp is not set",
 		],
 	},
-	clientAccountId: { type: String, required: false, default: null },
+	clientId: { type: String, required: false, default: null },
 	config: {
 		type: userAccessRuleConfigRecordSchema,
 		required: false,
