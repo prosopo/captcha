@@ -24,10 +24,10 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 		return "otherClient";
 	}
 
-	protected override getRecord(): Partial<UserAccessRule> {
+	protected override getRule(): UserAccessRule {
 		const clientId = this.getClientId();
 
-		const record: Partial<UserAccessRule> = {
+		const record: UserAccessRule = {
 			isUserBlocked: false,
 			userIp: this.getUserIpObject(),
 		};
@@ -66,7 +66,7 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 	protected async ignoresRecordWithSameIpInDifferentVersion(): Promise<void> {
 		// given
 		await this.model.create({
-			...this.getRecord(),
+			...this.getRule(),
 			userIp: this.getUserIpObjectInOtherVersion(),
 		});
 

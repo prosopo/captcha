@@ -1,19 +1,17 @@
 import type {
 	ImageCaptchaAccessRule,
-	IProviderDatabase,
 	UserAccessRule,
 	UserAccessRulesStorage,
 } from "@prosopo/types-database";
 import type {
 	IPAddress,
 	ProsopoCaptchaCountConfigSchemaOutput,
-	ProsopoConfigOutput,
 } from "@prosopo/types";
 
 class ImageCaptchaConfigResolver {
 	public async resolveConfig(
 		userAccessRulesStorage: UserAccessRulesStorage,
-		defaultConfig: ProsopoConfigOutput,
+		defaults: ProsopoCaptchaCountConfigSchemaOutput,
 		userIpAddress: IPAddress,
 		userId: string,
 		clientId: string,
@@ -26,12 +24,12 @@ class ImageCaptchaConfigResolver {
 		);
 
 		if (null === accessRule) {
-			return defaultConfig.captchas;
+			return defaults;
 		}
 
 		const imageCaptchaAccessRule = accessRule.config?.imageCaptcha || {};
 
-		return this.getImageCaptchaConfig(defaultConfig, imageCaptchaAccessRule);
+		return this.getImageCaptchaConfig(defaults, imageCaptchaAccessRule);
 	}
 
 	protected async fetchUserAccessRule(
@@ -86,18 +84,15 @@ class ImageCaptchaConfigResolver {
 	}
 
 	protected getImageCaptchaConfig(
-		defaultConfig: ProsopoConfigOutput,
+		defaults: ProsopoCaptchaCountConfigSchemaOutput,
 		imageCaptchaAccessRule: ImageCaptchaAccessRule,
 	): ProsopoCaptchaCountConfigSchemaOutput {
-		const defaultSolvedCount = defaultConfig.captchas.solved.count;
-		const defaultUnsolvedCount = defaultConfig.captchas.unsolved.count;
-
 		return {
 			solved: {
-				count: imageCaptchaAccessRule.solvedCount || defaultSolvedCount,
+				count: imageCaptchaAccessRule.solvedCount || defaults.solved.count,
 			},
 			unsolved: {
-				count: imageCaptchaAccessRule.unsolvedCount || defaultUnsolvedCount,
+				count: imageCaptchaAccessRule.unsolvedCount || defaults.unsolved.count,
 			},
 		};
 	}

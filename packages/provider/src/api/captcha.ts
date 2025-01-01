@@ -113,7 +113,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
 				tasks.db.getUserAccessRulesStorage(),
-				env.config,
+				env.config.captchas,
 				ipAddress,
 				user,
 				dapp,

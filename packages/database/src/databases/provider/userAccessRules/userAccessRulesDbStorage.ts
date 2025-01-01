@@ -2,6 +2,7 @@ import {
 	type RuleFilters,
 	type RuleFilterSettings,
 	type UserAccessRule,
+	type UserAccessRuleRecord,
 	type UserAccessRulesStorage,
 	UserIpVersion,
 } from "@prosopo/types-database";
@@ -19,7 +20,7 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 		clientId: string | null,
 		filters: RuleFilters | null = null,
 		filterSettings: RuleFilterSettings | null = null,
-	): Promise<UserAccessRule[]> {
+	): Promise<UserAccessRuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}

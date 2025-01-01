@@ -8,7 +8,7 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 
 	protected abstract getOtherClientId(): string | null;
 
-	protected abstract getRecord(): Partial<UserAccessRule>;
+	protected abstract getRule(): UserAccessRule;
 
 	protected abstract getRecordFilters(): RuleFilters;
 
@@ -37,7 +37,7 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 
 	protected async findsRecord(): Promise<void> {
 		// given
-		const record = await this.model.create(this.getRecord());
+		const record = await this.model.create(this.getRule());
 
 		// when
 		const rules = await this.userAccessRules.find(this.getClientId());
@@ -49,7 +49,7 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 
 	protected async ignoresRecordWithDifferentClientId(): Promise<void> {
 		// given
-		await this.model.create(this.getRecord());
+		await this.model.create(this.getRule());
 
 		// when
 		const rules = await this.userAccessRules.find(
@@ -62,7 +62,7 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 
 	protected async findsRecordByFilters(): Promise<void> {
 		// given
-		const record = await this.model.create(this.getRecord());
+		const record = await this.model.create(this.getRule());
 
 		// when
 		const rules = await this.userAccessRules.find(
@@ -77,7 +77,7 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 
 	protected async ignoresRecordWithDifferentValues(): Promise<void> {
 		// given
-		await this.model.create(this.getRecord());
+		await this.model.create(this.getRule());
 
 		// when
 		const rules = await this.userAccessRules.find(

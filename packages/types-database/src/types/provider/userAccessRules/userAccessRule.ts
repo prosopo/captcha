@@ -5,13 +5,17 @@ import {
 } from "./userAccessRuleConfig.js";
 import { type UserIp, userIpRecordSchema } from "./userIp/userIp.js";
 
-interface UserAccessRule extends Document {
+interface UserAccessRule {
 	isUserBlocked: boolean;
 	clientId?: string;
 	description?: string;
 	userIp?: UserIp;
 	userId?: string;
 	config?: UserAccessRuleConfig;
+}
+
+interface UserAccessRuleRecord extends UserAccessRule {
+	_id: string;
 }
 
 const userAccessRuleSchema = new Schema<UserAccessRule>({
@@ -47,4 +51,4 @@ const userAccessRuleSchema = new Schema<UserAccessRule>({
 	},
 });
 
-export { type UserAccessRule, userAccessRuleSchema };
+export { type UserAccessRule, type UserAccessRuleRecord, userAccessRuleSchema };
