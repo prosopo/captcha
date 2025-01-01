@@ -13,62 +13,58 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
-import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { getIPAddress } from "../util.js";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type { UserAccessRulesStorage } from "@prosopo/types-database";
 import type { Address4, Address6 } from "ip-address";
 
 class BlacklistRequestInspector {
 	public constructor(
-		private readonly providerEnvironment: ProviderEnvironment,
-		private readonly logger: Logger,
+		private readonly userAccessRulesStorage: UserAccessRulesStorage,
+		private readonly environmentReadinessWaiter: () => Promise<void>,
+		private readonly logger: Logger | null,
 	) {}
-
-	public static createMiddleware(
-		providerEnvironment: ProviderEnvironment,
-		logger: Logger,
-	) {
-		const blacklistInspector = new BlacklistRequestInspector(
-			providerEnvironment,
-			logger,
-		);
-
-		return blacklistInspector.abortRequestForBlockedUsers.bind(
-			blacklistInspector,
-		);
-	}
 
 	public async abortRequestForBlockedUsers(
 		request: Request,
 		res: Response,
 		next: NextFunction,
 	): Promise<void> {
-		// Run this middleware only on non-api routes like /json /favicon.ico etc
-		if (this.isApiRoute(request.url)) {
-			const rawIp = request.ip || "";
-			const shouldAbortRequest = await this.shouldAbortRequest(rawIp, request);
+		const rawIp = request.ip || "";
 
-			if (shouldAbortRequest) {
-				res.status(401).json({ error: "Unauthorized" });
-				return;
-			}
+		const shouldAbortRequest = await this.shouldAbortRequest(
+			request.url,
+			rawIp,
+			request.headers,
+			request.body,
+		);
+
+		if (shouldAbortRequest) {
+			res.status(401).json({ error: "Unauthorized" });
+			return;
 		}
 
 		next();
 	}
 
-	protected isApiRoute(url: string): boolean {
-		return -1 !== url.indexOf(ApiPrefix);
-	}
-
-	protected async shouldAbortRequest(
+	public async shouldAbortRequest(
+		requestedRoute: string,
 		rawIp: string,
-		request: Request,
+		requestHeaders: Record<string, unknown>,
+		requestBody: Record<string, unknown>,
 	): Promise<boolean> {
-		// if no IP block
+		// Skip this middleware for non-api routes like /json /favicon.ico etc
+		if (this.isApiUnrelatedRoute(requestedRoute)) {
+			return false;
+		}
+
+		// block if no IP is present
 		if (!rawIp) {
-			this.logger.info("No IP");
+			this.logger?.info("Request without IP", {
+				requestedRoute: requestedRoute,
+				requestHeaders: requestHeaders,
+				requestBody: requestBody,
+			});
 
 			return true;
 		}
@@ -76,45 +72,72 @@ class BlacklistRequestInspector {
 		try {
 			const ipAddress = getIPAddress(rawIp);
 
-			return await this.isRequestFromBlockedUser(ipAddress, request);
+			return await this.isRequestFromBlockedUser(
+				ipAddress,
+				requestHeaders,
+				requestBody,
+			);
 		} catch (err) {
-			this.logger.error("Block Middleware Error:", err);
+			this.logger?.error("Block Middleware Error:", err);
 
 			return true;
 		}
 	}
 
-	protected async isRequestFromBlockedUser(
-		ipAddress: Address4 | Address6,
-		request: Request,
-	): Promise<boolean> {
-		const { userId, clientId } = this.extractIdsFromRequest(request);
-		const db = this.providerEnvironment.getDb();
-
-		await this.providerEnvironment.isReady();
-
-		return await this.isUserBlocked(db, clientId, ipAddress, userId);
+	protected isApiUnrelatedRoute(url: string): boolean {
+		return -1 === url.indexOf(ApiPrefix);
 	}
 
-	protected extractIdsFromRequest(request: Request): {
+	protected async isRequestFromBlockedUser(
+		ipAddress: Address4 | Address6,
+		requestHeaders: Record<string, unknown>,
+		requestBody: Record<string, unknown>,
+	): Promise<boolean> {
+		const { userId, clientId } = this.extractIdsFromRequest(
+			requestHeaders,
+			requestBody,
+		);
+
+		await this.environmentReadinessWaiter();
+
+		return await this.isUserBlocked(clientId, ipAddress, userId);
+	}
+
+	protected extractIdsFromRequest(
+		requestHeaders: Record<string, unknown>,
+		requestBody: Record<string, unknown>,
+	): {
 		userId: string;
 		clientId: string;
 	} {
+		const userId =
+			this.getObjectValue(requestHeaders, "Prosopo-User") ||
+			this.getObjectValue(requestBody, "user") ||
+			"";
+		const clientId =
+			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
+			this.getObjectValue(requestBody, "dapp") ||
+			"";
+
 		return {
-			userId: request.headers["Prosopo-User"] || request.body.user || "",
-			clientId: request.headers["Prosopo-Site-Key"] || request.body.dapp || "",
+			userId: "string" === typeof userId ? userId : "",
+			clientId: "string" === typeof clientId ? clientId : "",
 		};
 	}
 
+	protected getObjectValue(
+		object: Record<string, unknown>,
+		key: string,
+	): unknown {
+		return object[key];
+	}
+
 	protected async isUserBlocked(
-		db: IProviderDatabase,
 		clientId: string,
 		ipAddress: Address4 | Address6,
 		userId: string,
 	): Promise<boolean> {
-		const userAccessRulesStorage = db.getUserAccessRulesStorage();
-
-		const accessRules = await userAccessRulesStorage.find(
+		const accessRules = await this.userAccessRulesStorage.find(
 			clientId,
 			{
 				userIpAddress: ipAddress,

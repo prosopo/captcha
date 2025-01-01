@@ -11,7 +11,7 @@ import { Address4 } from "ip-address";
 class ImageCaptchaConfigResolverTester {
 	constructor(private readonly resolver: ImageCaptchaConfigResolver) {}
 
-	public async test(): Promise<void> {
+	public test(): void {
 		const tests = this.getTests();
 
 		for (const test of tests) {

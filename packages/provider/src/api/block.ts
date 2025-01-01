@@ -18,5 +18,20 @@ import { BlacklistRequestInspector } from "./blacklistRequestInspector.js";
 export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	const logger = getLoggerDefault();
 
-	return BlacklistRequestInspector.createMiddleware(providerEnvironment, logger);
+	const userAccessRulesStorage = providerEnvironment
+		.getDb()
+		.getUserAccessRulesStorage();
+
+	const environmentReadinessWaiter =
+		providerEnvironment.isReady.bind(providerEnvironment);
+
+	const blacklistRequestInspector = new BlacklistRequestInspector(
+		userAccessRulesStorage,
+		environmentReadinessWaiter,
+		logger,
+	);
+
+	return blacklistRequestInspector.abortRequestForBlockedUsers.bind(
+		blacklistRequestInspector,
+	);
 };
