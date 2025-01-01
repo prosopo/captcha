@@ -21,10 +21,10 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		return "other";
 	}
 
-	protected getRecord(): Partial<UserAccessRule> {
+	protected getRule(): UserAccessRule {
 		const clientId = this.getClientId();
 
-		const record: Partial<UserAccessRule> = {
+		const record: UserAccessRule = {
 			isUserBlocked: false,
 			userId: this.userId,
 			userIp: {
@@ -88,7 +88,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 	protected async ignoresPartialFilterMatchesWhenFlagIsNotSet(): Promise<void> {
 		// given
-		await this.model.create(this.getRecord());
+		await this.model.create(this.getRule());
 
 		// when
 		const rules = await this.userAccessRules.find(
@@ -102,7 +102,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 	protected async includesPartialFilterMatchesWhenFlagIsSet(): Promise<void> {
 		// given
-		const record = await this.model.create(this.getRecord());
+		const record = await this.model.create(this.getRule());
 
 		// when
 		const rules = await this.userAccessRules.find(
@@ -121,7 +121,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 	protected async ignoresRecordsWithoutClientIdWhenFlagIsNotSet(): Promise<void> {
 		// given
 		await this.model.create({
-			...this.getRecord(),
+			...this.getRule(),
 			clientId: null,
 		});
 
@@ -134,7 +134,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 	protected async includesRecordsWithoutClientIdWhenFlagIsSet(): Promise<void> {
 		// given
-		const recordData = this.getRecord();
+		const recordData = this.getRule();
 
 		const { clientId, ...recordDataWithoutClientId } = recordData;
 

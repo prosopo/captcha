@@ -11,10 +11,10 @@ class FindRuleByUserIdTests extends FindRuleByFilterTestsBase {
 		return "FindRuleByUserId";
 	}
 
-	protected getRecord(): Partial<UserAccessRule> {
+	protected getRule(): UserAccessRule {
 		const clientId = this.getClientId();
 
-		const record: Partial<UserAccessRule> = {
+		const record: UserAccessRule = {
 			isUserBlocked: false,
 			userId: this.userId,
 			clientId: this.clientId,
