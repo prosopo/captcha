@@ -1,22 +1,22 @@
 import { Router } from "express";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { RoutesProvider } from "../../api/routesProvider.js";
-import type { RoutesRegistrar } from "./routesRegistrar.js";
+import type { RoutesExpressRegistrar } from "./routesExpressRegistrar.js";
+import type {RoutesProvider} from "../definition/route/routesProvider.js";
 
-class RouterFactory {
+class RouterExpressFactory {
 	public createRouter(
 		providerEnvironment: ProviderEnvironment,
 		routersProvider: RoutesProvider,
-		routesRegistrar: RoutesRegistrar,
+		routesExpressRegistrar: RoutesExpressRegistrar,
 	): Router {
 		const apiRoutes = routersProvider.getRoutes(providerEnvironment);
 
 		const router = Router();
 
-		routesRegistrar.registerRoutes(router, apiRoutes);
+		routesExpressRegistrar.registerRoutes(router, apiRoutes);
 
 		return router;
 	}
 }
 
-export { RouterFactory };
+export { RouterExpressFactory };

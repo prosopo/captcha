@@ -1,0 +1,1 @@
+export {createExpressAdminRouter} from "./expressAdminRouter.js";

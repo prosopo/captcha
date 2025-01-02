@@ -20,13 +20,12 @@ import { i18nMiddleware } from "@prosopo/locale";
 import {
 	domainMiddleware,
 	getClientList,
-	handleErrors,
 	headerCheckMiddleware,
 	prosopoRouter,
 	prosopoVerifyRouter,
 	publicRouter,
 	storeCaptchasExternally,
-	expressApi
+	api
 } from "@prosopo/provider";
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
@@ -62,7 +61,7 @@ function startApi(
 	apiApp.use(publicRouter(env));
 
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
-	apiApp.use(expressApi.admin.createAdminRouter(env));
+	apiApp.use(api.admin.createExpressAdminRouter(env));
 
 	// Rate limiting
 	const rateLimits = env.config.rateLimits;

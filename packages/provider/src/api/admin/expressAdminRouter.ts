@@ -14,12 +14,12 @@
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { Router } from "express";
 import { getLogger } from "@prosopo/common";
-import { AdminEndpointAdapter } from "./adminEndpointAdapter.js";
-import { AdminRoutesProvider } from "../../api/admin/adminRoutesProvider.js";
-import { RouterFactory } from "../router/routerFactory.js";
-import { RoutesRegistrar } from "../router/routesRegistrar.js";
+import {EndpointExpressAdminAdapter} from "./endpointExpressAdminAdapter.js";
+import {RouterExpressFactory} from "../express/routerExpressFactory.js";
+import {RoutesAdminProvider} from "./routesAdminProvider.js";
+import {RoutesExpressRegistrar} from "../express/routesExpressRegistrar.js";
 
-export function createAdminRouter(
+export function createExpressAdminRouter(
 	providerEnvironment: ProviderEnvironment,
 ): Router {
 	const logger = getLogger(
@@ -27,13 +27,13 @@ export function createAdminRouter(
 		"AdminEndpointAdapter",
 	);
 
-	const adminEndpointAdapter = new AdminEndpointAdapter(logger);
+	const adminEndpointExpressAdapter = new EndpointExpressAdminAdapter(logger);
 
-	const routerFactory = new RouterFactory();
+	const expressRouterFactory = new RouterExpressFactory();
 
-	return routerFactory.createRouter(
+	return expressRouterFactory.createRouter(
 		providerEnvironment,
-		new AdminRoutesProvider(),
-		new RoutesRegistrar(adminEndpointAdapter),
+		new RoutesAdminProvider(),
+		new RoutesExpressRegistrar(adminEndpointExpressAdapter),
 	);
 }

@@ -1,21 +1,21 @@
 import type { Request, Response } from "express";
 import type { Logger } from "@prosopo/common";
 import type { ZodType } from "zod";
-import type { Endpoint } from "../../api/endpoint.js";
-import type { EndpointAdapter } from "../endpointAdapter.js";
+import type {EndpointExpressAdapter} from "../definition/endpoint/endpointExpressAdapter.js";
+import type {Endpoint} from "../definition/endpoint/endpoint.js";
 
-class AdminEndpointAdapter implements EndpointAdapter {
+class EndpointExpressAdminAdapter implements EndpointExpressAdapter {
 	public constructor(private readonly logger: Logger | null) {}
 
 	public async handleRequest(
-		apiEndpoint: Endpoint<ZodType | undefined>,
+		endpoint: Endpoint<ZodType | undefined>,
 		request: Request,
 		response: Response,
 	): Promise<void> {
 		try {
-			const args = apiEndpoint.getRequestArgsSchema()?.parse(request.body);
+			const args = endpoint.getRequestArgsSchema()?.parse(request.body);
 
-			const apiResponse = await apiEndpoint.processRequest(args);
+			const apiResponse = await endpoint.processRequest(args);
 
 			response.json(apiResponse);
 		} catch (error) {
@@ -26,4 +26,4 @@ class AdminEndpointAdapter implements EndpointAdapter {
 	}
 }
 
-export { AdminEndpointAdapter };
+export { EndpointExpressAdminAdapter };
