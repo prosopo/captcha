@@ -1,5 +1,5 @@
 import type {ZodType} from "zod";
-import type {ApiEndpoint} from "../apiEndpoint/apiEndpoint.js";
+import type {ApiEndpoint} from "../endpoint/apiEndpoint.js";
 
 interface ApiRoute {
 	path: string;

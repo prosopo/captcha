@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { ApiRoutesProvider } from "../route/apiRoutesProvider.js";
 import { ApiRoutesExpressRegistrar } from "./apiRoutesExpressRegistrar.js";
-import type { ApiEndpointExpressAdapter } from "../apiEndpoint/apiEndpointExpressAdapter.js";
+import type { ApiEndpointExpressAdapter } from "../endpoint/apiEndpointExpressAdapter.js";
 
 class ApiExpressRouterFactory {
 	public constructor(
