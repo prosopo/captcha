@@ -11,105 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { getLogger } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { Router } from "express";
-import { RouterFactory } from "./route/routerFactory.js";
-import { AdminRoutesProvider } from "./admin/adminRoutesProvider.js";
-
-const routerFactory = new RouterFactory();
-const adminRoutesProvider = new AdminRoutesProvider();
+import { ApiExpressRouterFactory } from "./router/apiExpressRouterFactory.js";
+import { AdminApiRoutesProvider } from "./admin/adminApiRoutesProvider.js";
+import { AdminApiEndpointExpressAdapter } from "./admin/adminApiEndpointExpressAdapter.js";
+import { getLogger } from "@prosopo/common";
 
 export function prosopoAdminRouter(
 	providerEnvironment: ProviderEnvironment,
 ): Router {
-	const logger = getLogger(providerEnvironment.config.logLevel, "AdminRouter");
-
-	return routerFactory.createRouter(
-		providerEnvironment,
-		adminRoutesProvider,
-		logger,
+	const logger = getLogger(
+		providerEnvironment.config.logLevel,
+		"AdminApiRouter",
 	);
 
-	/*fixme remove const router = Router();
-	const tasks = new Tasks(env);
+	const apiExpressRouterFactory = new ApiExpressRouterFactory();
 
-	router.post(AdminApiPaths.SiteKeyRegister, async (req, res, next) => {
-		try {
-			tasks.logger.info("Registering site key, request body:");
-			tasks.logger.info(req.body);
-			const { siteKey, settings } = RegisterSitekeyBody.parse(req.body);
-			const temp = settings || {};
-			await tasks.clientTaskManager.registerSiteKey(siteKey, temp);
-			const response: ApiResponse = {
-				status: "success",
-			};
-			res.json(response);
-		} catch (err) {
-			logError(err, tasks.logger);
-			res.status(500).send("An internal server error occurred.");
-		}
-	});
-
-	router.post(AdminApiPaths.BlockRuleIPAdd, async (req, res, next) => {
-		try {
-			tasks.logger.info("Adding block rules");
-			const parsed = AddBlockRulesIPSpec.parse(req.body);
-			await tasks.clientTaskManager.addIPBlockRules(parsed);
-			const response: ApiResponse = {
-				status: "success",
-			};
-			res.json(response);
-		} catch (err) {
-			logError(err, tasks.logger);
-			res.status(400).send("An internal server error occurred.");
-		}
-	});
-
-	router.post(AdminApiPaths.BlockRuleIPRemove, async (req, res, next) => {
-		try {
-			tasks.logger.info("Removing block rules");
-			const parsed = RemoveBlockRulesIPSpec.parse(req.body);
-			await tasks.clientTaskManager.removeIPBlockRules(parsed);
-			const response: ApiResponse = {
-				status: "success",
-			};
-			res.json(response);
-		} catch (err) {
-			logError(err, tasks.logger);
-			res.status(400).send("An internal server error occurred.");
-		}
-	});
-
-	router.post(AdminApiPaths.BlocKRuleUserAdd, async (req, res, next) => {
-		try {
-			tasks.logger.info("Adding block rules");
-			const parsed = AddBlockRulesUserSpec.parse(req.body);
-			await tasks.clientTaskManager.addUserBlockRules(parsed);
-			const response: ApiResponse = {
-				status: "success",
-			};
-			res.json(response);
-		} catch (err) {
-			logError(err, tasks.logger);
-			res.status(400).send("An internal server error occurred.");
-		}
-	});
-
-	router.post(AdminApiPaths.BlockRuleUserRemove, async (req, res, next) => {
-		try {
-			tasks.logger.info("Removing block rules");
-			const parsed = RemoveBlockRulesUserSpec.parse(req.body);
-			await tasks.clientTaskManager.removeUserBlockRules(parsed);
-			const response: ApiResponse = {
-				status: "success",
-			};
-			res.json(response);
-		} catch (err) {
-			logError(err, tasks.logger);
-			res.status(400).send("An internal server error occurred.");
-		}
-	});
-
-	return router;*/
+	return apiExpressRouterFactory.createRouter(
+		providerEnvironment,
+		new AdminApiRoutesProvider(),
+		new AdminApiEndpointExpressAdapter(logger),
+	);
 }
