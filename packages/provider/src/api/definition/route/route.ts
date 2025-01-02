@@ -1,5 +1,5 @@
 import type {ZodType} from "zod";
-import type {Endpoint} from "../endpoint.js";
+import type {Endpoint} from "../endpoint/endpoint.js";
 
 interface Route {
 	path: string;
