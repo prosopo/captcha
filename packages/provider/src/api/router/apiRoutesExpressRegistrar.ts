@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response, Router } from "express";
 import type { ApiRoute } from "../route/apiRoute.js";
-import type { ApiEndpointExpressAdapter } from "../apiEndpoint/apiEndpointExpressAdapter.js";
+import type { ApiEndpointExpressAdapter } from "../endpoint/apiEndpointExpressAdapter.js";
 
 class ApiRoutesExpressRegistrar {
 	public registerRoutes(
