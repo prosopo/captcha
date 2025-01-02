@@ -78,6 +78,7 @@ export type TGetImageCaptchaChallengeURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
+	// todo userAccessRule
 	BlockRuleIPAdd = "/v1/prosopo/provider/admin/blockrule/ip/add",
 	BlockRuleIPRemove = "/v1/prosopo/provider/admin/blockrule/ip/remove",
 	BlocKRuleUserAdd = "/v1/prosopo/provider/admin/blockrule/user/add",

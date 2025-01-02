@@ -25,28 +25,28 @@ class BlacklistRequestInspectorTester {
 	}[] {
 		return [
 			{
-				name: "abortsRequestWhenUserAccessRuleRecordContainsBlockedFlag",
+				name: "shouldAbortRequestWhenUserAccessRuleRecordContainsBlockedFlag",
 				method: () =>
-					this.abortsRequestWhenUserAccessRuleRecordContainsBlockedFlag(),
+					this.shouldAbortRequestWhenUserAccessRuleRecordContainsBlockedFlag(),
 			},
 			{
-				name: "abortsRequestWhenAnyRuleFromUserAccessRuleRecordsContainsBlockedFlag",
+				name: "shouldAbortRequestWhenAnyRuleFromUserAccessRuleRecordsContainsBlockedFlag",
 				method: () =>
-					this.abortsRequestWhenAnyRuleFromUserAccessRuleRecordsContainsBlockedFlag(),
+					this.shouldAbortRequestWhenAnyRuleFromUserAccessRuleRecordsContainsBlockedFlag(),
 			},
 			{
-				name: "continuesRequestWhenUserAccessRuleRecordsDoNotContainBlockedFlag",
+				name: "shouldNotAbortRequestWhenUserAccessRuleRecordsDoNotContainBlockedFlag",
 				method: () =>
-					this.continuesRequestWhenUserAccessRuleRecordsDoNotContainBlockedFlag(),
+					this.shouldNotAbortRequestWhenUserAccessRuleRecordsDoNotContainBlockedFlag(),
 			},
 			{
-				name: "continuesRequestWhenUserAccessRuleRecordsMissing",
-				method: () => this.continuesRequestWhenUserAccessRuleRecordsMissing(),
+				name: "shouldNotAbortRequestWhenUserAccessRuleRecordsMissing",
+				method: () => this.shouldNotAbortRequestWhenUserAccessRuleRecordsMissing(),
 			},
 		];
 	}
 
-	protected async abortsRequestWhenUserAccessRuleRecordContainsBlockedFlag(): Promise<void> {
+	protected async shouldAbortRequestWhenUserAccessRuleRecordContainsBlockedFlag(): Promise<void> {
 		// given
 		const apiRoute = `${ApiPrefix}/route`;
 		const accessRuleRecord: UserAccessRuleRecord = {
@@ -64,16 +64,68 @@ class BlacklistRequestInspectorTester {
 		expect(await shouldAbortRequest()).toBe(true);
 	}
 
-	protected async abortsRequestWhenAnyRuleFromUserAccessRuleRecordsContainsBlockedFlag(): Promise<void> {
-		// todo
+	protected async shouldAbortRequestWhenAnyRuleFromUserAccessRuleRecordsContainsBlockedFlag(): Promise<void> {
+		// given
+		const apiRoute = `${ApiPrefix}/route`;
+		const accessRuleRecordWithoutBlock: UserAccessRuleRecord = {
+			isUserBlocked: false,
+			_id: "0",
+		};
+		const accessRuleRecordWithBlock: UserAccessRuleRecord = {
+			isUserBlocked: true,
+			_id: "1",
+		};
+
+		// when
+		const inspector = this.createInspector([
+			accessRuleRecordWithoutBlock,
+			accessRuleRecordWithBlock,
+		]);
+
+		const shouldAbortRequest = () =>
+			inspector.shouldAbortRequest(apiRoute, "127.0.0.1", {}, {});
+
+		// then
+		expect(await shouldAbortRequest()).toBe(true);
 	}
 
-	protected async continuesRequestWhenUserAccessRuleRecordsDoNotContainBlockedFlag(): Promise<void> {
-		// todo
+	protected async shouldNotAbortRequestWhenUserAccessRuleRecordsDoNotContainBlockedFlag(): Promise<void> {
+		// given
+		const apiRoute = `${ApiPrefix}/route`;
+		const accessRuleRecordWithoutBlock: UserAccessRuleRecord = {
+			isUserBlocked: false,
+			_id: "0",
+		};
+		const accessRuleRecordWithBlock: UserAccessRuleRecord = {
+			isUserBlocked: false,
+			_id: "1",
+		};
+
+		// when
+		const inspector = this.createInspector([
+			accessRuleRecordWithoutBlock,
+			accessRuleRecordWithBlock,
+		]);
+
+		const shouldAbortRequest = () =>
+			inspector.shouldAbortRequest(apiRoute, "127.0.0.1", {}, {});
+
+		// then
+		expect(await shouldAbortRequest()).toBe(false);
 	}
 
-	protected async continuesRequestWhenUserAccessRuleRecordsMissing(): Promise<void> {
-		// todo
+	protected async shouldNotAbortRequestWhenUserAccessRuleRecordsMissing(): Promise<void> {
+		// given
+		const apiRoute = `${ApiPrefix}/route`;
+
+		// when
+		const inspector = this.createInspector([]);
+
+		const shouldAbortRequest = () =>
+			inspector.shouldAbortRequest(apiRoute, "127.0.0.1", {}, {});
+
+		// then
+		expect(await shouldAbortRequest()).toBe(false);
 	}
 
 	protected createInspector(
