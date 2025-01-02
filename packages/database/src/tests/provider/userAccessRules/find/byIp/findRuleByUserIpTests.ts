@@ -71,7 +71,7 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 		});
 
 		// when
-		const rules = await this.userAccessRules.find(
+		const rules = await this.userAccessRulesStorage.find(
 			this.getClientId(),
 			this.getRecordFilters(),
 		);

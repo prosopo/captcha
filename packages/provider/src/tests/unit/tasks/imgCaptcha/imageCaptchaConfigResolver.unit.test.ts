@@ -8,6 +8,7 @@ import type {
 } from "@prosopo/types-database";
 import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
 import { Address4 } from "ip-address";
+import { Types } from "mongoose";
 class ImageCaptchaConfigResolverTester {
 	constructor(private readonly resolver: ImageCaptchaConfigResolver) {}
 
@@ -52,7 +53,7 @@ class ImageCaptchaConfigResolverTester {
 					unsolvedCount: 11,
 				},
 			},
-			_id: "0",
+			_id: new Types.ObjectId(0),
 		};
 
 		const userAccessRulesStorage = this.mockUserAccessRulesStorage([
@@ -92,7 +93,7 @@ class ImageCaptchaConfigResolverTester {
 					unsolvedCount: 21,
 				},
 			},
-			_id: "1",
+			_id: new Types.ObjectId(0),
 		};
 		const clientUserAccessRuleRecord: UserAccessRuleRecord = {
 			isUserBlocked: false,
@@ -103,7 +104,7 @@ class ImageCaptchaConfigResolverTester {
 					unsolvedCount: 11,
 				},
 			},
-			_id: "2",
+			_id: new Types.ObjectId(1),
 		};
 
 		const userAccessRulesStorage = this.mockUserAccessRulesStorage([

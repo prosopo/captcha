@@ -91,7 +91,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		await this.model.create(this.getRule());
 
 		// when
-		const rules = await this.userAccessRules.find(
+		const rules = await this.userAccessRulesStorage.find(
 			this.getClientId(),
 			this.getPartialMatchRecordFilters(),
 		);
@@ -105,7 +105,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		const record = await this.model.create(this.getRule());
 
 		// when
-		const rules = await this.userAccessRules.find(
+		const rules = await this.userAccessRulesStorage.find(
 			this.getClientId(),
 			this.getPartialMatchRecordFilters(),
 			{
@@ -115,7 +115,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 		// then
 		expect(rules.length).toBe(1);
-		expect(rules[0]?.id).toBe(record.id);
+		expect(rules[0]?._id.toString()).toBe(record.id.toString());
 	}
 
 	protected async ignoresRecordsWithoutClientIdWhenFlagIsNotSet(): Promise<void> {
@@ -126,7 +126,7 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		});
 
 		// when
-		const rules = await this.userAccessRules.find(this.getClientId());
+		const rules = await this.userAccessRulesStorage.find(this.getClientId());
 
 		// then
 		expect(rules.length).toBe(0);
@@ -141,13 +141,13 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		const recordWithoutClientId = await this.model.create(recordDataWithoutClientId);
 
 		// when
-		const rules = await this.userAccessRules.find(this.getClientId(), null, {
+		const rules = await this.userAccessRulesStorage.find(this.getClientId(), null, {
 			includeRecordsWithoutClientId: true,
 		});
 
 		// then
 		expect(rules.length).toBe(1);
-		expect(rules[0]?.id).toBe(recordWithoutClientId.id);
+		expect(rules[0]?._id.toString()).toBe(recordWithoutClientId.id.toString());
 	}
 }
 

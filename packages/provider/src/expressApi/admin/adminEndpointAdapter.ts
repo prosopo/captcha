@@ -1,14 +1,14 @@
 import type { Request, Response } from "express";
 import type { Logger } from "@prosopo/common";
 import type { ZodType } from "zod";
-import type { ApiEndpoint } from "../endpoint/apiEndpoint.js";
-import type { ApiEndpointExpressAdapter } from "../endpoint/apiEndpointExpressAdapter.js";
+import type { Endpoint } from "../../api/endpoint.js";
+import type { EndpointAdapter } from "../endpointAdapter.js";
 
-class AdminApiEndpointExpressAdapter implements ApiEndpointExpressAdapter {
+class AdminEndpointAdapter implements EndpointAdapter {
 	public constructor(private readonly logger: Logger | null) {}
 
 	public async handleRequest(
-		apiEndpoint: ApiEndpoint<ZodType | undefined>,
+		apiEndpoint: Endpoint<ZodType | undefined>,
 		request: Request,
 		response: Response,
 	): Promise<void> {
@@ -26,4 +26,4 @@ class AdminApiEndpointExpressAdapter implements ApiEndpointExpressAdapter {
 	}
 }
 
-export { AdminApiEndpointExpressAdapter };
+export { AdminEndpointAdapter };
