@@ -1,14 +1,14 @@
 import { type ApiResponse, RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../../tasks/client/clientTasks.js";
-import type { RouteEndpoint } from "../../route/routeEndpoint.js";
+import type {ApiEndpoint} from "../../apiEndpoint/apiEndpoint.js";
 
-class RegisterSiteKeyEndpoint
-	implements RouteEndpoint<typeof RegisterSitekeyBody>
+class RegisterSiteKeyApiEndpoint
+	implements ApiEndpoint<typeof RegisterSitekeyBody>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
-	async handleRequest(
+	async processRequest(
 		args: z.infer<typeof RegisterSitekeyBody>,
 	): Promise<ApiResponse> {
 		const { siteKey, settings } = args;
@@ -27,4 +27,4 @@ class RegisterSiteKeyEndpoint
 	}
 }
 
-export { RegisterSiteKeyEndpoint };
+export { RegisterSiteKeyApiEndpoint };
