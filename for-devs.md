@@ -5,20 +5,23 @@ with it.
 
 ## 1. Packages
 
+Common:
+
+* `types` - Declarations of interfaces and constants, used in different packages.
+
 Client-side (browser):
 
-* **procaptcha-bundle** - Displaying captcha widget
-* inner:
-    - procaptcha-frictionless
-    - procaptcha-react (image)
-    - procaptcha-pow
+* `procaptcha-bundle` - Displaying captcha widget
+    - `procaptcha-frictionless`
+    - `procaptcha-react` (image)
+    - `procaptcha-pow`
 
 Server-side (node.js):
 
-* **provider** - API Endpoints provider for the captcha widget
-* **database** - Mongo DB Query builder
-* inner:
-    - types-database - declaration of interfaces and types used in the Query builder
+* `provider` - API Endpoints for the captcha widget
+    - `cli` - CLI wrapper for the `provider`, that starts `Express`
+* `database` - Mongo DB Query builder
+    - `types-database` - declaration of interfaces and types used in the Query builder
 
 ## 2. Code Quality & Style
 

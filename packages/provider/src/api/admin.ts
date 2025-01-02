@@ -1,4 +1,3 @@
-import { Logger, logError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,22 +11,27 @@ import { Logger, logError } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-	AddBlockRulesIPSpec,
-	AddBlockRulesUserSpec,
-	AdminApiPaths,
-	type ApiResponse,
-	BlockRuleIPAddBody,
-	RegisterSitekeyBody,
-	RemoveBlockRulesIPSpec,
-	RemoveBlockRulesUserSpec,
-} from "@prosopo/types";
+import { getLogger } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { Router } from "express";
-import { Tasks } from "../index.js";
+import type { Router } from "express";
+import { RouterFactory } from "./route/routerFactory.js";
+import { AdminRoutesProvider } from "./admin/adminRoutesProvider.js";
 
-export function prosopoAdminRouter(env: ProviderEnvironment): Router {
-	const router = Router();
+const routerFactory = new RouterFactory();
+const adminRoutesProvider = new AdminRoutesProvider();
+
+export function prosopoAdminRouter(
+	providerEnvironment: ProviderEnvironment,
+): Router {
+	const logger = getLogger(providerEnvironment.config.logLevel, "AdminRouter");
+
+	return routerFactory.createRouter(
+		providerEnvironment,
+		adminRoutesProvider,
+		logger,
+	);
+
+	/*fixme remove const router = Router();
 	const tasks = new Tasks(env);
 
 	router.post(AdminApiPaths.SiteKeyRegister, async (req, res, next) => {
@@ -107,5 +111,5 @@ export function prosopoAdminRouter(env: ProviderEnvironment): Router {
 		}
 	});
 
-	return router;
+	return router;*/
 }
