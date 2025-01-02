@@ -1,0 +1,12 @@
+api:
+  purpose: Processing API requests
+actors:
+  endpoint:
+    - Defines request arguments schema
+    - Implements request processing logic
+  route:
+    - Relates api path and "endpoint"
+  routesProvider:
+    - Defines set of "route" items
+notes:
+  - Uses Zod for argument schemas and parsing

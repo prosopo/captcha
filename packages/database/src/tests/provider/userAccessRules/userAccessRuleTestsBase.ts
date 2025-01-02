@@ -1,15 +1,15 @@
-import type { UserAccessRule, UserAccessRules } from "@prosopo/types-database";
+import type { UserAccessRule, UserAccessRulesStorage } from "@prosopo/types-database";
 import type { Model } from "mongoose";
 import { UserAccessRulesDbStorage } from "../../../databases/provider/userAccessRules/userAccessRulesDbStorage.js";
 import { TestsBase } from "../../testsBase.js";
 
 abstract class UserAccessRuleTestsBase extends TestsBase {
-	protected userAccessRules: UserAccessRules;
+	protected userAccessRulesStorage: UserAccessRulesStorage;
 
 	public constructor(protected model: Model<UserAccessRule>) {
 		super();
 
-		this.userAccessRules = new UserAccessRulesDbStorage(this.model);
+		this.userAccessRulesStorage = new UserAccessRulesDbStorage(this.model);
 	}
 }
 

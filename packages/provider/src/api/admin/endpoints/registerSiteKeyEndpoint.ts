@@ -1,10 +1,10 @@
 import { type ApiResponse, RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../../tasks/client/clientTasks.js";
-import type {ApiEndpoint} from "../../endpoint/apiEndpoint.js";
+import type {Endpoint} from "../../endpoint.js";
 
-class RegisterSiteKeyApiEndpoint
-	implements ApiEndpoint<typeof RegisterSitekeyBody>
+class RegisterSiteKeyEndpoint
+	implements Endpoint<typeof RegisterSitekeyBody>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
@@ -27,4 +27,4 @@ class RegisterSiteKeyApiEndpoint
 	}
 }
 
-export { RegisterSiteKeyApiEndpoint };
+export { RegisterSiteKeyEndpoint };

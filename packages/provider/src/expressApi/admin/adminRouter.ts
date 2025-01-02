@@ -13,24 +13,27 @@
 // limitations under the License.
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { Router } from "express";
-import { ApiExpressRouterFactory } from "./router/apiExpressRouterFactory.js";
-import { AdminApiRoutesProvider } from "./admin/adminApiRoutesProvider.js";
-import { AdminApiEndpointExpressAdapter } from "./admin/adminApiEndpointExpressAdapter.js";
 import { getLogger } from "@prosopo/common";
+import { AdminEndpointAdapter } from "./adminEndpointAdapter.js";
+import { AdminRoutesProvider } from "../../api/admin/adminRoutesProvider.js";
+import { RouterFactory } from "../router/routerFactory.js";
+import { RoutesRegistrar } from "../router/routesRegistrar.js";
 
-export function prosopoAdminRouter(
+export function createAdminRouter(
 	providerEnvironment: ProviderEnvironment,
 ): Router {
 	const logger = getLogger(
 		providerEnvironment.config.logLevel,
-		"AdminApiRouter",
+		"AdminEndpointAdapter",
 	);
 
-	const apiExpressRouterFactory = new ApiExpressRouterFactory();
+	const adminEndpointAdapter = new AdminEndpointAdapter(logger);
 
-	return apiExpressRouterFactory.createRouter(
+	const routerFactory = new RouterFactory();
+
+	return routerFactory.createRouter(
 		providerEnvironment,
-		new AdminApiRoutesProvider(),
-		new AdminApiEndpointExpressAdapter(logger),
+		new AdminRoutesProvider(),
+		new RoutesRegistrar(adminEndpointAdapter),
 	);
 }

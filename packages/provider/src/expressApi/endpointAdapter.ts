@@ -1,14 +1,14 @@
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
-import type { ApiEndpoint } from "./apiEndpoint.js";
+import type { Endpoint } from "../api/endpoint.js";
 
-interface ApiEndpointExpressAdapter {
+interface EndpointAdapter {
 	handleRequest(
-		apiEndpoint: ApiEndpoint<ZodType | undefined>,
+		apiEndpoint: Endpoint<ZodType | undefined>,
 		request: Request,
 		response: Response,
 		next: NextFunction,
 	): Promise<void>;
 }
 
-export type { ApiEndpointExpressAdapter };
+export type { EndpointAdapter };

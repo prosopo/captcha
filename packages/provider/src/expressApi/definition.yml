@@ -1,0 +1,28 @@
+expressApi:
+  purpose: Processing HTTP API requests using the "Express" web server and given "api.endpoint" items
+  dependencies: "express", "api"
+  workflow:
+    - Create "express.Router"
+    - Register router endpoints
+  actions:
+    endpointRequest:
+      in: express.Request
+      out: json
+      workflow:
+        - Extract arguments from the given "express.request"
+        - Call the target "api.endpoint" with the arguments
+        - Convert "api.endpoint" response to json
+        - Send to the client
+actors:
+  endpointAdapter:
+    - Adapts given "express.Request/Response" to "api.endpoint"
+  router:
+    routesRegistrar:
+      - Registers given "api.endpoint" items on "express.Router" using "endpointAdapter"
+    routerFactory:
+      - Gets "api.route" items from the given "api.routesProvider"
+      - Creates "express.Router"
+      - Registers the "api.route" items on the "express.Router" using the given "routesRegistrar"
+notes:
+  - Expects request arguments in the request body in the json format
+  - Responds HTTP 400 for requests with wrong arguments

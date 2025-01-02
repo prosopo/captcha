@@ -7,6 +7,7 @@ import type {
 	UserAccessRulesStorage,
 } from "@prosopo/types-database";
 import { ApiPrefix } from "@prosopo/types";
+import { Types } from "mongoose";
 
 class BlacklistRequestInspectorTester {
 	public test(): void {
@@ -41,7 +42,8 @@ class BlacklistRequestInspectorTester {
 			},
 			{
 				name: "shouldNotAbortRequestWhenUserAccessRuleRecordsMissing",
-				method: () => this.shouldNotAbortRequestWhenUserAccessRuleRecordsMissing(),
+				method: () =>
+					this.shouldNotAbortRequestWhenUserAccessRuleRecordsMissing(),
 			},
 		];
 	}
@@ -51,7 +53,7 @@ class BlacklistRequestInspectorTester {
 		const apiRoute = `${ApiPrefix}/route`;
 		const accessRuleRecord: UserAccessRuleRecord = {
 			isUserBlocked: true,
-			_id: "0",
+			_id: new Types.ObjectId(0),
 		};
 
 		// when
@@ -69,11 +71,11 @@ class BlacklistRequestInspectorTester {
 		const apiRoute = `${ApiPrefix}/route`;
 		const accessRuleRecordWithoutBlock: UserAccessRuleRecord = {
 			isUserBlocked: false,
-			_id: "0",
+			_id: new Types.ObjectId(0),
 		};
 		const accessRuleRecordWithBlock: UserAccessRuleRecord = {
 			isUserBlocked: true,
-			_id: "1",
+			_id: new Types.ObjectId(1),
 		};
 
 		// when
@@ -94,11 +96,11 @@ class BlacklistRequestInspectorTester {
 		const apiRoute = `${ApiPrefix}/route`;
 		const accessRuleRecordWithoutBlock: UserAccessRuleRecord = {
 			isUserBlocked: false,
-			_id: "0",
+			_id: new Types.ObjectId(0),
 		};
 		const accessRuleRecordWithBlock: UserAccessRuleRecord = {
 			isUserBlocked: false,
-			_id: "1",
+			_id: new Types.ObjectId(1),
 		};
 
 		// when

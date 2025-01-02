@@ -2,7 +2,7 @@ import { CommandBase } from "./commandBase.js";
 import { UserAccessRulesDbStorage } from "../../../../databases/provider/userAccessRules/userAccessRulesDbStorage.js";
 import {
 	type UserAccessRule,
-	type UserAccessRules,
+	type UserAccessRulesStorage,
 	UserIpVersion,
 } from "@prosopo/types-database";
 import * as util from "node:util";
@@ -47,7 +47,7 @@ class MeasureFindCommand extends CommandBase {
 		targetIpV4AsString: string,
 		targetIpV6AsString: string,
 		model: Model<UserAccessRule>,
-		userAccessRules: UserAccessRules,
+		userAccessRulesStorage: UserAccessRulesStorage,
 	): Promise<void> {
 		const targetIpV4 = new Address4(targetIpV4AsString);
 		const targetIpV6 = new Address6(targetIpV6AsString);
@@ -55,19 +55,19 @@ class MeasureFindCommand extends CommandBase {
 		const totalRulesCount = await model.countDocuments().exec();
 
 		await this.measureRuleFindTime(
-			userAccessRules,
+			userAccessRulesStorage,
 			targetIpV4,
 			totalRulesCount,
 		);
 		await this.measureRuleFindTime(
-			userAccessRules,
+			userAccessRulesStorage,
 			targetIpV6,
 			totalRulesCount,
 		);
 	}
 
 	protected async measureRuleFindTime(
-		userAccessRules: UserAccessRules,
+		userAccessRulesStorage: UserAccessRulesStorage,
 		targetIp: Address4 | Address6,
 		totalRulesCount: number,
 	): Promise<void> {
@@ -75,7 +75,7 @@ class MeasureFindCommand extends CommandBase {
 		const ipVersion =
 			targetIp instanceof Address4 ? UserIpVersion.v4 : UserIpVersion.v6;
 
-		const foundRules = await userAccessRules.find(null, {
+		const foundRules = await userAccessRulesStorage.find(null, {
 			userIpAddress: targetIp,
 		});
 

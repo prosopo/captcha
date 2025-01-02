@@ -1,7 +1,7 @@
 import type { ApiResponse } from "@prosopo/types";
 import type { z, ZodType } from "zod";
 
-interface ApiEndpoint<T extends ZodType | undefined> {
+interface Endpoint<T extends ZodType | undefined> {
 	processRequest: T extends ZodType
 		? (args: z.infer<T>) => Promise<ApiResponse>
 		: () => Promise<ApiResponse>;
@@ -9,4 +9,4 @@ interface ApiEndpoint<T extends ZodType | undefined> {
 	getRequestArgsSchema(): T;
 }
 
-export type { ApiEndpoint };
+export type { Endpoint };

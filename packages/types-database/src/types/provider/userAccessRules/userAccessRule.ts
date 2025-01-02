@@ -1,4 +1,4 @@
-import { Schema, type Document } from "mongoose";
+import { Schema, type Types } from "mongoose";
 import {
 	type UserAccessRuleConfig,
 	userAccessRuleConfigRecordSchema,
@@ -15,7 +15,7 @@ interface UserAccessRule {
 }
 
 interface UserAccessRuleRecord extends UserAccessRule {
-	_id: string;
+	_id: Types.ObjectId;
 }
 
 const userAccessRuleSchema = new Schema<UserAccessRule>({
