@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import type { Logger } from "@prosopo/common";
 import type { ZodType } from "zod";
-import type {EndpointExpressAdapter} from "../definition/endpoint/endpointExpressAdapter.js";
-import type {Endpoint} from "../definition/endpoint/endpoint.js";
+import type {EndpointExpressAdapter} from "../interfaces/endpoint/endpointExpressAdapter.js";
+import type {Endpoint} from "../interfaces/endpoint/endpoint.js";
 
 class EndpointExpressAdminAdapter implements EndpointExpressAdapter {
 	public constructor(private readonly logger: Logger | null) {}

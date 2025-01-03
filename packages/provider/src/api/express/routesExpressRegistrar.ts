@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response, Router } from "express";
-import type { EndpointExpressAdapter } from "../definition/endpoint/endpointExpressAdapter.js";
-import type { Route } from "../definition/route/route.js";
+import type { EndpointExpressAdapter } from "../interfaces/endpoint/endpointExpressAdapter.js";
+import type { Route } from "../interfaces/route/route.js";
 
 class RoutesExpressRegistrar {
 	public constructor(

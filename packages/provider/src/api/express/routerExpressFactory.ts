@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { RoutesExpressRegistrar } from "./routesExpressRegistrar.js";
-import type {RoutesProvider} from "../definition/route/routesProvider.js";
+import type {RoutesProvider} from "../interfaces/route/routesProvider.js";
 
 class RouterExpressFactory {
 	public createRouter(
