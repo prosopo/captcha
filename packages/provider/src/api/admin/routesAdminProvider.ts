@@ -1,8 +1,8 @@
 import { AdminApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Tasks } from "../../tasks/index.js";
-import type {RoutesProvider} from "../definition/route/routesProvider.js";
-import type {Route} from "../definition/route/route.js";
+import type {RoutesProvider} from "../interfaces/route/routesProvider.js";
+import type {Route} from "../interfaces/route/route.js";
 import {RegisterSiteKeyEndpoint} from "./endpoints/registerSiteKeyEndpoint.js";
 
 class RoutesAdminProvider implements RoutesProvider {
