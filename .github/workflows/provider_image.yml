@@ -31,22 +31,11 @@ jobs:
         runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
         steps:
-            - name: Print contexts
-              uses: ./.github/actions/print_contexts@${{ github.ref_name }}
-
-            - uses: actions/checkout@v4
+            - name: Setup
+              uses: ./.github/setup@${{ github.ref_name }}
               with:
-                  submodules: "recursive"
-
-            - name: Restore npm cache
-              uses: ./.github/actions/restore_npm_cache@${{ github.ref_name }}
-
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: 'package.json'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
-
-            - run: npm ci
+                cache: true
+                install: true
 
             # build the packages
             - name: Build packages
