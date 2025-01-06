@@ -84,6 +84,8 @@ jobs:
             # install cypress so we don't have to do that every time
             - run: npx cypress install
 
+            - run: NODE_ENV=test npm run build:all
+
             - name: Save npm cache
               uses: actions/cache/save@v4
               if: always()
@@ -91,7 +93,8 @@ jobs:
                   path: |
                     ~/.npm
                     ~/.cache/Cypress
-                  key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                    node_modules
+                  key: npm-${{ hashFiles('**/package-lock.json') }}-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             - name: Cleanup npm caches
               if: always()
