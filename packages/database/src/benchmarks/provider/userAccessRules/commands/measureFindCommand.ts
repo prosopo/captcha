@@ -27,8 +27,8 @@ class MeasureFindCommand extends CommandBase implements CommandModule {
 	public command = "measure-find";
 	public describe = "Measure find";
 
-	public builder(yargs: Argv): Argv {
-		return yargs
+	public builder = (yargs: Argv): Argv =>
+		yargs
 			.option("target-ip-v4", {
 				type: "string" as const,
 				describe: "Target ipV4",
@@ -39,9 +39,8 @@ class MeasureFindCommand extends CommandBase implements CommandModule {
 				describe: "Target ipV6",
 				demandOption: true,
 			});
-	}
 
-	public async handler(args: ArgumentsCamelCase): Promise<void> {
+	public handler = async (args: ArgumentsCamelCase): Promise<void> => {
 		const targetIpV4AsString =
 			"string" === typeof args.targetIpV4 ? args.targetIpV4 : "";
 		const targetIpV6AsString =
@@ -66,7 +65,7 @@ class MeasureFindCommand extends CommandBase implements CommandModule {
 		);
 
 		await this.disconnectMongoose();
-	}
+	};
 
 	protected async measureFind(
 		targetIpV4AsString: string,
