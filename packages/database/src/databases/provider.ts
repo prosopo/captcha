@@ -1462,18 +1462,6 @@ export class ProviderDatabase
 		return doc ? doc : undefined;
 	}
 
-	/**
-	 * @description Check if a request has a blocking rule associated with it
-	 */
-	async getIPBlockRuleRecord(
-		ipAddress: bigint,
-	): Promise<IPBlockRuleMongo | undefined> {
-		const filter: Pick<IPBlockRuleRecord, "ip"> = { ip: Number(ipAddress) };
-		const doc = await this.tables?.ipblockrules
-			.findOne(filter)
-			.lean<IPBlockRuleMongo>();
-		return doc ? doc : undefined;
-	}
 	async getAllIpBlockRules(): Promise<IPBlockRuleRecord[]> {
 		if (!this.tables) {
 			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
