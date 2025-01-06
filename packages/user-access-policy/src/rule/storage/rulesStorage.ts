@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type Rule from "../rule.js";
-import type RuleRecord from "../ruleRecord.js";
+import type RuleRecord from "./ruleRecord.js";
 import type DeleteRuleFilters from "./filters/deleteRuleFilters.js";
 import type SearchRuleFilters from "./filters/search/searchRuleFilters.js";
 import type SearchRuleFilterSettings from "./filters/search/searchRuleFilterSettings.js";
