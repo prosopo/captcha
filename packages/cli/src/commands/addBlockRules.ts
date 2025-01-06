@@ -16,10 +16,13 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import {
+	AddBlockRulesIPSpec,
+	AddBlockRulesUserSpec,
+	type ProsopoCaptchaCountConfigSchemaOutput,
+	type ProsopoConfigOutput,
+} from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
-import * as z from "zod";
-import { loadJSONFile } from "../files.js";
 
 export default (
 	pair: KeyringPair,
@@ -61,29 +64,63 @@ export default (
 					demandOption: true,
 					default: false,
 					desc: "Hardblock stops requests, softblock informs frictionless",
+				} as const)
+				.option("solved", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "The number of solved captchas",
+				} as const)
+				.option("unsolved", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "The number of unsolved captchas",
 				} as const),
+
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
 				const tasks = new Tasks(env);
+				let captchaConfig: ProsopoCaptchaCountConfigSchemaOutput | undefined;
+				if (argv.solved) {
+					captchaConfig = {
+						solved: {
+							count: argv.solved as unknown as number,
+						},
+						unsolved: {
+							count: (argv.unsolved as unknown as number) || 0,
+						},
+					};
+				}
+
 				if (argv.ips) {
 					await tasks.clientTaskManager.addIPBlockRules(
-						argv.ips as unknown as string[],
-						argv.global as boolean,
-						argv.hardBlock as boolean,
-						argv.dapp as unknown as string,
+						AddBlockRulesIPSpec.parse([
+							{
+								ips: argv.ips,
+								global: argv.global,
+								hardBlock: argv.hardBlock,
+								dapp: argv.dapp,
+								captchaConfig,
+							},
+						]),
 					);
+					logger.info("IP Block rules added");
 				}
 				if (argv.users) {
 					await tasks.clientTaskManager.addUserBlockRules(
-						argv.users as unknown as string[],
-						argv.hardBlock as boolean,
-						argv.global as boolean,
-						argv.dapp as unknown as string,
+						AddBlockRulesUserSpec.parse([
+							{
+								users: argv.users,
+								global: argv.global,
+								hardBlock: argv.hardBlock,
+								dapp: argv.dapp,
+								captchaConfig,
+							},
+						]),
 					);
+					logger.info("User Block rules added");
 				}
-				logger.info("IP Block rules added");
 			} catch (err) {
 				logger.error(err);
 			}

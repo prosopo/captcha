@@ -54,6 +54,8 @@ export interface IUserData {
 	stripeTierNextAt?: number; // the time the user will move to the next tier, if any
 	stripeTierCancelAt?: number; // the time the user's subscription will be cancelled (e.g. if cancelling at end of billing period)
 	stripeUpdatedAt?: number; // the time the user's stripe details were last updated (needed for webhook ordering)
+	pendingCheckoutTier?: Tier; // the pending checkout tier, if any
+	pendingCheckoutTierRequestQuota?: number; // the pending checkout tier request quota, if any
 }
 
 export interface IUserSettings {

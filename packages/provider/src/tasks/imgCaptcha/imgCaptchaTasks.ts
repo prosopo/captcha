@@ -23,14 +23,16 @@ import {
 } from "@prosopo/datasets";
 import {
 	type Captcha,
-	type CaptchaConfig,
 	type CaptchaSolution,
 	CaptchaStatus,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
 	type Hash,
+	type IPAddress,
 	type ImageVerificationResponse,
 	type PendingCaptchaRequest,
+	type ProsopoCaptchaCountConfigSchemaOutput,
+	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
@@ -39,6 +41,9 @@ import type {
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import type { Address4, Address6 } from "ip-address";
+import { checkIpRules } from "../../rules/ip.js";
+import { checkLangRules } from "../../rules/lang.js";
+import { checkUserRules } from "../../rules/user.js";
 import { shuffleArray } from "../../util.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
@@ -46,18 +51,18 @@ export class ImgCaptchaManager {
 	db: IProviderDatabase;
 	pair: KeyringPair;
 	logger: Logger;
-	captchaConfig: CaptchaConfig;
+	config: ProsopoConfigOutput;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		logger: Logger,
-		captchaConfig: CaptchaConfig,
+		config: ProsopoConfigOutput,
 	) {
 		this.db = db;
 		this.pair = pair;
 		this.logger = logger;
-		this.captchaConfig = captchaConfig;
+		this.config = config;
 	}
 
 	async getCaptchaWithProof(
@@ -83,8 +88,9 @@ export class ImgCaptchaManager {
 	async getRandomCaptchasAndRequestHash(
 		datasetId: Hash,
 		userAccount: string,
-		ipAddress: Address4 | Address6,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -103,10 +109,10 @@ export class ImgCaptchaManager {
 		}
 
 		const unsolvedCount: number = Math.abs(
-			Math.trunc(this.captchaConfig.unsolved.count),
+			Math.trunc(captchaConfig.unsolved.count),
 		);
 		const solvedCount: number = Math.abs(
-			Math.trunc(this.captchaConfig.solved.count),
+			Math.trunc(captchaConfig.solved.count),
 		);
 
 		if (!solvedCount) {
@@ -114,6 +120,7 @@ export class ImgCaptchaManager {
 		}
 
 		const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount);
+		console.log("solved", solved);
 		let unsolved: Captcha[] = [];
 		if (unsolvedCount) {
 			unsolved = await this.getCaptchaWithProof(
@@ -141,7 +148,7 @@ export class ImgCaptchaManager {
 			.map((captcha) => captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
 			.reduce((a, b) => a + b, 0);
 		const deadlineTs = timeLimit + currentTime;
-		const currentBlockNumber = 0; //TEMP
+
 		await this.db.storeDappUserPending(
 			userAccount,
 			requestHash,
@@ -456,5 +463,9 @@ export class ImgCaptchaManager {
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 		};
+	}
+
+	checkLangRules(acceptLanguage: string): number {
+		return checkLangRules(this.config, acceptLanguage);
 	}
 }

@@ -46,10 +46,11 @@ struct WebView: UIViewRepresentable {
         
         let webView = WKWebView(frame: .zero, configuration: webViewConfiguration)
         webView.navigationDelegate = context.coordinator
-        //webView.isInspectable = true
+        webView.isInspectable = true
         
         //DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
-            webView.loadHTMLString(htmlString, baseURL: nil)
+        // baseURL must be set for localstorage to work. If localstorage is not required, it can be set to nil. Localstorage errors appear like "SecurityError: The operation is insecure."
+            webView.loadHTMLString(htmlString, baseURL: URL(string: "https://prosopo.io"))
         //}
         
         return webView
@@ -99,7 +100,8 @@ struct ContentView: View {
 <form action="" method="POST">
 <input type="text" name="email" placeholder="Email" />
 <input type="password" name="password" placeholder="Password" />
-<div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC"></div>
+<p>image</p>
+<div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC" data-captcha-type="image"></div>
 <br />
 <input type="submit" value="Submit" />
 </form>

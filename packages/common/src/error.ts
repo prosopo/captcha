@@ -13,7 +13,9 @@
 // limitations under the License.
 
 import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
+import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
+import type { ApiJsonError } from "./types.js";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
@@ -70,6 +72,9 @@ export abstract class ProsopoBaseError<
 	private logError(logger: Logger, logLevel: LogLevel, errorName?: string) {
 		const errorParams = { error: this.message, context: this.context };
 		const errorMessage = { errorType: errorName || this.name, errorParams };
+		if (logLevel === "debug") {
+			logger.debug(this.stack);
+		}
 		logger[logLevel](errorMessage);
 	}
 }
@@ -176,3 +181,42 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 		this.code = code;
 	}
 }
+
+export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
+	const code = "code" in err ? (err.code as number) : 400;
+	let message = i18next.t(err.message);
+	let jsonError: ApiJsonError = { code, message };
+	let statusMessage = err.message;
+	jsonError.message = message;
+	// unwrap the errors to get the actual error message
+	while (err instanceof ProsopoBaseError && err.context) {
+		// base error will not have a translation key
+		jsonError.key =
+			err.context.translationKey || err.translationKey || "API.UNKNOWN";
+		jsonError.message = err.message;
+		if (err.context.error) {
+			err = err.context.error;
+		} else {
+			break;
+		}
+	}
+
+	if (isZodError(err)) {
+		message = i18next.t("API.PARSE_ERROR");
+		statusMessage = message;
+		if (typeof err.message === "object") {
+			jsonError = err.message;
+		} else {
+			jsonError.message = JSON.parse(err.message);
+		}
+	}
+
+	jsonError.code = jsonError.code || code;
+	return { code, statusMessage, jsonError };
+};
+
+export const isZodError = (err: unknown): err is ZodError => {
+	return Boolean(
+		err && (err instanceof ZodError || (err as ZodError).name === "ZodError"),
+	);
+};
