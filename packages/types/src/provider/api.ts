@@ -97,8 +97,14 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UserAccessPolicyInsertManyRules]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UserAccessPolicyDeleteManyRules]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.UserAccessPolicyInsertManyRules]: {
+		windowMs: 60000,
+		limit: 5,
+	},
+	[AdminApiPaths.UserAccessPolicyDeleteManyRules]: {
+		windowMs: 60000,
+		limit: 5,
+	},
 };
 
 type RateLimit = {

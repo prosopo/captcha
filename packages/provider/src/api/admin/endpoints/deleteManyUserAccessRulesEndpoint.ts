@@ -29,7 +29,6 @@ class DeleteManyUserAccessRulesEndpoint
 	async processRequest(
 		args: z.infer<typeof UserAccessPolicyDeleteManyRulesBody>,
 	): Promise<ApiResponse> {
-
 		await this.userAccessRulesStorage.deleteMany(args);
 
 		return {

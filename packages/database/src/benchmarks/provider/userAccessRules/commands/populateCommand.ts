@@ -1,3 +1,7 @@
+import type { UserAccessRule } from "@prosopo/types-database";
+import { Address4, Address6 } from "ip-address";
+import type { Model } from "mongoose";
+import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +16,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CommandBase } from "./commandBase.js";
-import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
-import type { UserAccessRule } from "@prosopo/types-database";
-import { Address4, Address6 } from "ip-address";
-import type { Model } from "mongoose";
 
 class PopulateCommand extends CommandBase implements CommandModule {
 	public command = "populate";
