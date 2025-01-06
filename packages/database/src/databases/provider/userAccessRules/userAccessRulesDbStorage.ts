@@ -16,6 +16,14 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 		this.model = model;
 	}
 
+	public async add(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
+		if (!this.model) {
+			throw new Error("Model is not set");
+		}
+
+		return await this.model.insertMany(records);
+	}
+
 	public async find(
 		clientId: string | null,
 		filters: RuleFilters | null = null,
@@ -27,7 +35,7 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 
 		const query = this.createQuery(clientId, filters, filterSettings);
 
-		return this.model.find(query).exec();
+		return await this.model.find(query).exec();
 	}
 
 	public setModel(model: Model<UserAccessRule>): void {

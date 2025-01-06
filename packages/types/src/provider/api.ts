@@ -30,6 +30,7 @@ import {
 	string,
 	union,
 	type infer as zInfer,
+	bigint,
 } from "zod";
 import { ApiParams } from "../api/params.js";
 import {
@@ -78,8 +79,8 @@ export type TGetImageCaptchaChallengeURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
-	UserAccessPolicyAddRule='/v1/prosopo/provider/user-access-policy/rule/add',
-	UserAccessPolicyRemoveRule='/v1/prosopo/provider/user-access-policy/rule/remove',
+	UserAccessPolicyAddRule = "/v1/prosopo/provider/user-access-policy/rule/add",
+	UserAccessPolicyRemoveRule = "/v1/prosopo/provider/user-access-policy/rule/remove",
 }
 
 export type CombinedApiPaths = ApiPaths | AdminApiPaths;
@@ -343,6 +344,45 @@ export const RegisterSitekeyBody = object({
 		[ApiParams.frictionlessThreshold]: number(),
 		[ApiParams.powDifficulty]: number(),
 	}).optional(),
+});
+
+export const UserAccessPolicyAddRuleBody = array(
+	object({
+		isUserBlocked: boolean(),
+		clientId: string().optional(),
+		description: string().optional(),
+		userIp: object({
+			v4: object({
+				asNumeric: bigint(),
+				asString: string(),
+				mask: object({
+					rangeMinAsNumeric: bigint(),
+					rangeMaxAsNumeric: bigint(),
+					asNumeric: number(),
+				}).optional(),
+			}).optional(),
+			v6: object({
+				asNumericString: string(),
+				asString: string(),
+				mask: object({
+					rangeMinAsNumericString: string(),
+					rangeMaxAsNumericString: string(),
+					asNumeric: number(),
+				}).optional(),
+			}).optional(),
+		}).optional(),
+		userId: string().optional(),
+		config: object({
+			imageCaptcha: object({
+				solvedCount: number().optional(),
+				unsolvedCount: number().optional(),
+			}).optional(),
+		}).optional(),
+	}),
+);
+
+export const UserAccessPolicyRemoveRuleBody = object({
+	// todo
 });
 
 export const ProsopoCaptchaCountConfigSchema = object({
