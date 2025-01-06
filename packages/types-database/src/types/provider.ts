@@ -32,7 +32,6 @@ import {
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
-	ProsopoCaptchaCountConfigSchema,
 	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -605,27 +604,6 @@ export interface IProviderDatabase extends IDatabase {
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
-
-	getIPBlockRuleRecord(
-		ipAddress: bigint,
-		dappAccount?: string,
-	): Promise<IPBlockRuleMongo | undefined>;
-
-	storeIPBlockRuleRecords(rules: IPAddressBlockRule[]): Promise<void>;
-
-	removeIPBlockRuleRecords(ips: bigint[], dappAccount?: string): Promise<void>;
-
-	getUserBlockRuleRecord(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserAccountBlockRuleRecord | undefined>;
-
-	storeUserBlockRuleRecords(rules: UserAccountBlockRule[]): Promise<void>;
-
-	removeUserBlockRuleRecords(
-		users: string[],
-		dappAccount?: string,
-	): Promise<void>;
 
 	getUserAccessRulesStorage(): UserAccessRulesStorage;
 }
