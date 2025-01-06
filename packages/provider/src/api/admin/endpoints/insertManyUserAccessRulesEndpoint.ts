@@ -11,20 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type ApiResponse, UserAccessPolicyAddRuleBody } from "@prosopo/types";
+import { type ApiResponse, UserAccessPolicyInsertManyRulesBody } from "@prosopo/types";
 import type { UserAccessRulesStorage } from "@prosopo/types-database";
 import type { z } from "zod";
 import type { Endpoint } from "../../interfaces/endpoint/endpoint.js";
 
-class AddUserAccessRuleEndpoint
-	implements Endpoint<typeof UserAccessPolicyAddRuleBody>
+class InsertManyUserAccessRulesEndpoint
+	implements Endpoint<typeof UserAccessPolicyInsertManyRulesBody>
 {
 	public constructor(
 		private readonly userAccessRulesStorage: UserAccessRulesStorage,
 	) {}
 
 	async processRequest(
-		args: z.infer<typeof UserAccessPolicyAddRuleBody>,
+		args: z.infer<typeof UserAccessPolicyInsertManyRulesBody>,
 	): Promise<ApiResponse> {
 		await this.userAccessRulesStorage.insertMany(args);
 
@@ -33,9 +33,9 @@ class AddUserAccessRuleEndpoint
 		};
 	}
 
-	public getRequestArgsSchema(): typeof UserAccessPolicyAddRuleBody {
-		return UserAccessPolicyAddRuleBody;
+	public getRequestArgsSchema(): typeof UserAccessPolicyInsertManyRulesBody {
+		return UserAccessPolicyInsertManyRulesBody;
 	}
 }
 
-export { AddUserAccessRuleEndpoint };
+export { InsertManyUserAccessRulesEndpoint };

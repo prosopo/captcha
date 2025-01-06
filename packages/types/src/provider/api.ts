@@ -79,8 +79,8 @@ export type TGetImageCaptchaChallengeURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
-	UserAccessPolicyAddRule = "/v1/prosopo/provider/user-access-policy/rule/add",
-	UserAccessPolicyRemoveRule = "/v1/prosopo/provider/user-access-policy/rule/remove",
+	UserAccessPolicyInsertManyRules = "/v1/prosopo/provider/user-access-policy/rules/insert-many",
+	UserAccessPolicyDeleteManyRules = "/v1/prosopo/provider/user-access-policy/rules/delete-many",
 }
 
 export type CombinedApiPaths = ApiPaths | AdminApiPaths;
@@ -97,8 +97,8 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UserAccessPolicyAddRule]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UserAccessPolicyRemoveRule]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.UserAccessPolicyInsertManyRules]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.UserAccessPolicyDeleteManyRules]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -386,7 +386,7 @@ const userAccessPolicyConfig = object({
 	imageCaptcha: userAccessPolicyImageCaptchaConfig.optional(),
 });
 
-export const UserAccessPolicyAddRuleBody = array(
+export const UserAccessPolicyInsertManyRulesBody = array(
 	object({
 		isUserBlocked: boolean(),
 		clientId: string().optional(),
@@ -397,7 +397,7 @@ export const UserAccessPolicyAddRuleBody = array(
 	}),
 );
 
-export const UserAccessPolicyRemoveRuleBody = array(
+export const UserAccessPolicyDeleteManyRulesBody = array(
 	object({
 		clientId: string().optional(),
 		userIp: userAccessPolicyIp.optional(),

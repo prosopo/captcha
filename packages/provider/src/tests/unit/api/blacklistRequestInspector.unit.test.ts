@@ -1,4 +1,3 @@
-
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +15,8 @@ import { describe, expect, it } from "vitest";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
 import { ApiPrefix } from "@prosopo/types";
 import type {
-	RuleFilterSettings,
+	DeleteRuleFilters,
+	SearchRuleFilterSettings,
 	SearchRuleFilters,
 	UserAccessRule,
 	UserAccessRuleRecord,
@@ -170,9 +170,12 @@ class BlacklistRequestInspectorTester {
 			},
 			find(
 				filters?: SearchRuleFilters | null,
-				filterSettings?: RuleFilterSettings | null,
+				filterSettings?: SearchRuleFilterSettings | null,
 			): Promise<UserAccessRuleRecord[]> {
 				return Promise.resolve(userAccessRuleRecords);
+			},
+			deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void> {
+				return Promise.resolve();
 			},
 		};
 	}

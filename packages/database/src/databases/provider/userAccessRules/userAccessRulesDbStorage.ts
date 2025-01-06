@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-	type RuleFilterSettings,
+	type SearchRuleFilterSettings,
 	type SearchRuleFilters,
 	type UserAccessRule,
 	type UserAccessRuleRecord,
@@ -29,7 +29,9 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 		this.model = model;
 	}
 
-	public async insertMany(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
+	public async insertMany(
+		records: UserAccessRule[],
+	): Promise<UserAccessRuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
@@ -39,7 +41,7 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 
 	public async find(
 		filters: SearchRuleFilters,
-		filterSettings?: RuleFilterSettings,
+		filterSettings?: SearchRuleFilterSettings,
 	): Promise<UserAccessRuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
@@ -50,13 +52,23 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 		return await this.model.find(query).exec();
 	}
 
+	public async deleteMany(recordFilters: SearchRuleFilters[]): Promise<void> {
+		if (!this.model) {
+			throw new Error("Model is not set");
+		}
+
+		for (const recordFilter of recordFilters) {
+			await this.model.deleteOne(recordFilter).exec();
+		}
+	}
+
 	public setModel(model: Model<UserAccessRule>): void {
 		this.model = model;
 	}
 
 	protected createQuery(
 		filters: SearchRuleFilters,
-		filterSettings?: RuleFilterSettings,
+		filterSettings?: SearchRuleFilterSettings,
 	): object {
 		const includeRecordsWithoutClientId =
 			filterSettings?.includeRecordsWithoutClientId || false;
