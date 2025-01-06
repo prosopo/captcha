@@ -61,6 +61,7 @@ jobs:
 
             - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
+            - run: mkdir -p node_modules
 
             - name: Restore npm cache
               if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
@@ -75,7 +76,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      npm-${{ runner.os }}-${{ runner.arch }}-
+                      npm-${{ hashFiles('**/package-lock.json') }}-${{ runner.os }}-${{ runner.arch }}-
 
             - uses: actions/checkout@v4
               with:
