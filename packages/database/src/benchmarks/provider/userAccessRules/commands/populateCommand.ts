@@ -1,6 +1,3 @@
-import type { UserAccessRule } from "@prosopo/types-database";
-import { Address4, Address6 } from "ip-address";
-import type { Model } from "mongoose";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +12,26 @@ import type { Model } from "mongoose";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CommandBase } from "./commandBase.js";
+import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
+import type { UserAccessRule } from "@prosopo/types-database";
+import { Address4, Address6 } from "ip-address";
+import type { Model } from "mongoose";
 
-class PopulateCommand extends CommandBase {
-	public getName(): string {
-		return "populate";
+class PopulateCommand extends CommandBase implements CommandModule {
+	public command = "populate";
+	public describe = "Populate the database with a bunch of records";
+
+	public builder(yargs: Argv): Argv {
+		return yargs.option("entities-count-per-type", {
+			type: "string" as const,
+			describe: "Entities count per type",
+		});
 	}
 
-	public async process(args: object): Promise<void> {
+	public async handler(args: ArgumentsCamelCase): Promise<void> {
 		const entitiesCountPerTypeAsString =
-			"entities-count-per-type" in args &&
-			"string" === typeof args["entities-count-per-type"]
-				? args["entities-count-per-type"]
+			"string" === typeof args.entitiesCountPerType
+				? args.entitiesCountPerType
 				: "10";
 
 		const model = await this.createModelByArgs(args);
@@ -33,6 +39,8 @@ class PopulateCommand extends CommandBase {
 		const entitiesCountPerType = Number.parseInt(entitiesCountPerTypeAsString);
 
 		await this.createRecords(entitiesCountPerType, model);
+
+		await this.disconnectMongoose();
 	}
 
 	protected async createRecords(
