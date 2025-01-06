@@ -1,14 +1,16 @@
-import { type ApiResponse, RegisterSitekeyBody } from "@prosopo/types";
+import {type ApiResponse, UserAccessPolicyAddRuleBody} from "@prosopo/types";
 import type { z } from "zod";
 import type {Endpoint} from "../../interfaces/endpoint/endpoint.js";
 
 class AddUserAccessRuleEndpoint
-    implements Endpoint<typeof RegisterSitekeyBody>
+    implements Endpoint<typeof UserAccessPolicyAddRuleBody>
 {
 
     async processRequest(
-        args: z.infer<typeof RegisterSitekeyBody>,
+        args: z.infer<typeof UserAccessPolicyAddRuleBody>,
     ): Promise<ApiResponse> {
+
+        // todo
 
 
         return {
@@ -16,8 +18,8 @@ class AddUserAccessRuleEndpoint
         };
     }
 
-    public getRequestArgsSchema(): typeof RegisterSitekeyBody {
-        return RegisterSitekeyBody;
+    public getRequestArgsSchema(): typeof UserAccessPolicyAddRuleBody {
+        return UserAccessPolicyAddRuleBody;
     }
 }
 

@@ -1,4 +1,4 @@
-import type { UserAccessRuleRecord } from "./userAccessRule.js";
+import type { UserAccessRule, UserAccessRuleRecord } from "./userAccessRule.js";
 import type { Address4, Address6 } from "ip-address";
 
 interface RuleFilters {
@@ -12,6 +12,8 @@ interface RuleFilterSettings {
 }
 
 interface UserAccessRulesStorage {
+	add(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]>;
+
 	find(
 		clientId: string | null,
 		filters?: RuleFilters | null,
