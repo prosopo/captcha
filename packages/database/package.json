@@ -19,8 +19,9 @@
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"benchmark:provider:userAccessRules:populate": "npx tsx src/benchmarks/provider/userAccessRules/cli.ts populate --db=localhost:27017 --entities-count-per-type=100000",
-		"benchmark:provider:userAccessRules:measure-find": "npx tsx src/benchmarks/provider/userAccessRules/cli.ts measure-find --db=localhost:27017 --target-ipv4=0.0.136.184 --target-ipv6=0000:0000:0000:0000:0000:0000:0000:7530"
+		"benchmark": "npx tsx ./src/benchmarks/provider/userAccessRules/cli.ts",
+		"benchmark:populate": "npm run benchmark -- populate --db=localhost:27017 --entities-count-per-type=100000",
+		"benchmark:measure-find": "npm run benchmark -- measure-find --db=localhost:27017 --target-ip-v4=0.0.136.184 --target-ip-v6=0000:0000:0000:0000:0000:0000:0000:7530"
 	},
 	"repository": {
 		"type": "git",

@@ -21,14 +21,14 @@ class PopulateCommand extends CommandBase implements CommandModule {
 	public command = "populate";
 	public describe = "Populate the database with a bunch of records";
 
-	public builder(yargs: Argv): Argv {
+	public builder = (yargs: Argv): Argv => {
 		return yargs.option("entities-count-per-type", {
 			type: "string" as const,
 			describe: "Entities count per type",
 		});
-	}
+	};
 
-	public async handler(args: ArgumentsCamelCase): Promise<void> {
+	public handler = async (args: ArgumentsCamelCase): Promise<void> => {
 		const entitiesCountPerTypeAsString =
 			"string" === typeof args.entitiesCountPerType
 				? args.entitiesCountPerType
@@ -41,7 +41,7 @@ class PopulateCommand extends CommandBase implements CommandModule {
 		await this.createRecords(entitiesCountPerType, model);
 
 		await this.disconnectMongoose();
-	}
+	};
 
 	protected async createRecords(
 		entitiesCountPerType: number,
