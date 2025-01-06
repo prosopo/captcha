@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,53 +11,37 @@ import mongoose from "mongoose";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CliInputParser } from "./cliInputParser.js";
-import type { CommandBase } from "./commands/commandBase.js";
 import { MeasureFindCommand } from "./commands/measureFindCommand.js";
 import { PopulateCommand } from "./commands/populateCommand.js";
+import yargs, { type CommandModule } from "yargs";
+import { hideBin } from "yargs/helpers";
 
 class Cli {
-	private cliInputParser: CliInputParser;
+	public async processInput() {
+		const commandManager = yargs(hideBin(process.argv)).usage(
+			"Usage: $0 [global options] <command> [options]",
+		);
 
-	constructor() {
-		this.cliInputParser = new CliInputParser();
-	}
-	public async processCommand() {
-		const cliInput = this.cliInputParser.parse(process.argv.slice(2));
+		const commands = this.getCommands();
 
-		const command = this.getCommand(cliInput.command);
-
-		if (!command) {
-			throw new Error(`Unknown command: ${cliInput.command}`);
+		for (const command of commands) {
+			commandManager.command(command);
 		}
 
 		const startTimestamp = Date.now();
 
-		await command.process(cliInput.args);
+		await commandManager.parse();
 
 		const endTimestamp = Date.now();
 
-		console.log(
-			`Command ${cliInput.command} took ${endTimestamp - startTimestamp}ms`,
-		);
+		console.log(`Execution took ${endTimestamp - startTimestamp}ms`);
 	}
 
-	protected getCommands(): CommandBase[] {
+	protected getCommands(): CommandModule[] {
 		return [new PopulateCommand(), new MeasureFindCommand()];
-	}
-
-	protected getCommand(commandName: string): CommandBase | null {
-		const commands = this.getCommands();
-
-		const command = commands.find(
-			(command) => command.getName() === commandName,
-		);
-
-		return command ?? null;
 	}
 }
 
 const cli = new Cli();
 
-await cli.processCommand();
-await mongoose.disconnect();
+await cli.processInput();

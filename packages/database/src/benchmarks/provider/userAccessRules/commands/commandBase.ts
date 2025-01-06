@@ -1,4 +1,3 @@
-import type { UserAccessRule } from "@prosopo/types-database";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +13,9 @@ import type { UserAccessRule } from "@prosopo/types-database";
 // limitations under the License.
 import mongoose, { type Model } from "mongoose";
 import { getUserAccessRulesDbSchema } from "../../../../databases/provider/userAccessRules/dbSchema.js";
+import type { UserAccessRule } from "@prosopo/types-database";
 
 abstract class CommandBase {
-	public abstract getName(): string;
-
-	public abstract process(args: object): Promise<void>;
-
 	protected async createModelByArgs(
 		args: object,
 	): Promise<Model<UserAccessRule>> {
@@ -39,6 +35,10 @@ abstract class CommandBase {
 			"UserAccessRules",
 			getUserAccessRulesDbSchema(),
 		);
+	}
+
+	protected async disconnectMongoose(): Promise<void> {
+		await mongoose.disconnect();
 	}
 }
 

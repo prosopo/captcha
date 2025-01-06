@@ -1,12 +1,3 @@
-import * as util from "node:util";
-import {
-	type UserAccessRule,
-	type UserAccessRulesStorage,
-	UserIpVersion,
-} from "@prosopo/types-database";
-import { Address4, Address6 } from "ip-address";
-import type { Model } from "mongoose";
-import { UserAccessRulesDbStorage } from "../../../../databases/provider/userAccessRules/userAccessRulesDbStorage.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +12,40 @@ import { UserAccessRulesDbStorage } from "../../../../databases/provider/userAcc
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CommandBase } from "./commandBase.js";
+import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
+import * as util from "node:util";
+import {
+	type UserAccessRule,
+	type UserAccessRulesStorage,
+	UserIpVersion,
+} from "@prosopo/types-database";
+import { Address4, Address6 } from "ip-address";
+import type { Model } from "mongoose";
+import { UserAccessRulesDbStorage } from "../../../../databases/provider/userAccessRules/userAccessRulesDbStorage.js";
 
-class MeasureFindCommand extends CommandBase {
-	getName(): string {
-		return "measure-find";
+class MeasureFindCommand extends CommandBase implements CommandModule {
+	public command = "measure-find";
+	public describe = "Measure find";
+
+	public builder(yargs: Argv): Argv {
+		return yargs
+			.option("target-ip-v4", {
+				type: "string" as const,
+				describe: "Target ipV4",
+				demandOption: true,
+			})
+			.option("target-ip-v6", {
+				type: "string" as const,
+				describe: "Target ipV6",
+				demandOption: true,
+			});
 	}
 
-	override async process(args: object): Promise<void> {
+	public async handler(args: ArgumentsCamelCase): Promise<void> {
 		const targetIpV4AsString =
-			"target-ipv4" in args && "string" === typeof args["target-ipv4"]
-				? args["target-ipv4"]
-				: "";
+			"string" === typeof args.targetIpV4 ? args.targetIpV4 : "";
 		const targetIpV6AsString =
-			"target-ipv6" in args && "string" === typeof args["target-ipv6"]
-				? args["target-ipv6"]
-				: "";
+			"string" === typeof args.targetIpV6 ? args.targetIpV6 : "";
 
 		if (!targetIpV4AsString) {
 			throw new Error("Target ipv4 is not set");
@@ -54,6 +64,8 @@ class MeasureFindCommand extends CommandBase {
 			model,
 			userAccessRules,
 		);
+
+		await this.disconnectMongoose();
 	}
 
 	protected async measureFind(
