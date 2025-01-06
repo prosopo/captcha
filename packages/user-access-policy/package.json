@@ -1,0 +1,23 @@
+{
+  "name": "@prosopo/user-access-policy",
+  "version": "1.0.0",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": "20",
+    "npm": ">=9"
+  },
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo/captcha/issues"
+  },
+  "homepage": "https://github.com/prosopo/captcha#readme",
+  "sideEffects": false,
+  "devDependencies": {
+    "vite": "6.0.7"
+  }
+}

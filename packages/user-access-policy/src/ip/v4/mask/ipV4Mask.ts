@@ -1,4 +1,4 @@
-interface UserIpV4Mask {
+interface IpV4Mask {
 	rangeMinAsNumeric: bigint;
 	rangeMaxAsNumeric: bigint;
 	// CIDR prefix https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing - 198.51.100.14/{24}
@@ -6,4 +6,4 @@ interface UserIpV4Mask {
 	asNumeric: number;
 }
 
-export default UserIpV4Mask;
+export default IpV4Mask;

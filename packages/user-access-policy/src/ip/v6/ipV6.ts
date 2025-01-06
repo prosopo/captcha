@@ -1,4 +1,4 @@
-import type IpV6Mask from "../ipV6Mask/ipV6Mask.js";
+import type IpV6Mask from "./mask/ipV6Mask.js";
 
 interface IpV6 {
     asNumericString: string;

@@ -1,4 +1,4 @@
-import type IpV4Mask from "../ipV4Mask/ipV4Mask.js";
+import type IpV4Mask from "./mask/ipV4Mask.js";
 
 interface IpV4 {
 	asNumeric: bigint;
