@@ -59,11 +59,11 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
 		},
-		[AdminApiPaths.UserAccessPolicyAddRule]: {
+		[AdminApiPaths.UserAccessPolicyInsertManyRules]: {
 			windowMs: process.env.PROSOPO_USER_ACCESS_POLICY_ADD_RULE_WINDOW,
 			limit: process.env.PROSOPO_USER_ACCESS_POLICY_ADD_RULE_LIMIT,
 		},
-		[AdminApiPaths.UserAccessPolicyRemoveRule]: {
+		[AdminApiPaths.UserAccessPolicyDeleteManyRules]: {
 			windowMs: process.env.PROSOPO_USER_ACCESS_POLICY_REMOVE_RULE_WINDOW,
 			limit: process.env.PROSOPO_USER_ACCESS_POLICY_REMOVE_RULE_LIMIT,
 		},

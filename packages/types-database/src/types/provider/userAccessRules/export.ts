@@ -22,5 +22,6 @@ export {
 export type {
 	UserAccessRulesStorage,
 	SearchRuleFilters,
-	RuleFilterSettings,
+	SearchRuleFilterSettings,
+	DeleteRuleFilters,
 } from "./userAccessRulesStorage.js";

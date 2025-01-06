@@ -13,32 +13,33 @@
 // limitations under the License.
 import {
 	type ApiResponse,
-	UserAccessPolicyRemoveRuleBody,
+	UserAccessPolicyDeleteManyRulesBody,
 } from "@prosopo/types";
 import type { UserAccessRulesStorage } from "@prosopo/types-database";
 import type { z } from "zod";
 import type { Endpoint } from "../../interfaces/endpoint/endpoint.js";
 
-class RemoveUserAccessRuleEndpoint
-	implements Endpoint<typeof UserAccessPolicyRemoveRuleBody>
+class DeleteManyUserAccessRulesEndpoint
+	implements Endpoint<typeof UserAccessPolicyDeleteManyRulesBody>
 {
 	public constructor(
 		private readonly userAccessRulesStorage: UserAccessRulesStorage,
 	) {}
 
 	async processRequest(
-		args: z.infer<typeof UserAccessPolicyRemoveRuleBody>,
+		args: z.infer<typeof UserAccessPolicyDeleteManyRulesBody>,
 	): Promise<ApiResponse> {
-		// todo
+
+		await this.userAccessRulesStorage.deleteMany(args);
 
 		return {
 			status: "success",
 		};
 	}
 
-	public getRequestArgsSchema(): typeof UserAccessPolicyRemoveRuleBody {
-		return UserAccessPolicyRemoveRuleBody;
+	public getRequestArgsSchema(): typeof UserAccessPolicyDeleteManyRulesBody {
+		return UserAccessPolicyDeleteManyRulesBody;
 	}
 }
 
-export { RemoveUserAccessRuleEndpoint };
+export { DeleteManyUserAccessRulesEndpoint };

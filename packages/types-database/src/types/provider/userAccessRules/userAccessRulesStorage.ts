@@ -21,9 +21,15 @@ interface SearchRuleFilters {
 	clientId?: string;
 }
 
-interface RuleFilterSettings {
+interface SearchRuleFilterSettings {
 	includeRecordsWithoutClientId?: boolean;
 	includeRecordsWithPartialFilterMatches?: boolean;
+}
+
+interface DeleteRuleFilters {
+	clientId?: string;
+	userIp?: UserIp;
+	userId?: string;
 }
 
 interface UserAccessRulesStorage {
@@ -31,14 +37,15 @@ interface UserAccessRulesStorage {
 
 	find(
 		filters: SearchRuleFilters,
-		filterSettings?: RuleFilterSettings,
+		filterSettings?: SearchRuleFilterSettings,
 	): Promise<UserAccessRuleRecord[]>;
 
-	// todo
-	/*remove(
-		clientId: string | null,
-		userIp?: UserIp,
-	): Promise<UserAccessRuleRecord[]>;*/
+	deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void>;
 }
 
-export type { UserAccessRulesStorage, SearchRuleFilters, RuleFilterSettings };
+export type {
+	UserAccessRulesStorage,
+	SearchRuleFilters,
+	SearchRuleFilterSettings,
+	DeleteRuleFilters,
+};

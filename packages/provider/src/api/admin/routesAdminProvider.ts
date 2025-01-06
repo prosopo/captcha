@@ -16,9 +16,9 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Tasks } from "../../tasks/index.js";
 import type { Route } from "../interfaces/route/route.js";
 import type { RoutesProvider } from "../interfaces/route/routesProvider.js";
-import { AddUserAccessRuleEndpoint } from "./endpoints/addUserAccessRuleEndpoint.js";
+import { InsertManyUserAccessRulesEndpoint } from "./endpoints/insertManyUserAccessRulesEndpoint.js";
 import { RegisterSiteKeyEndpoint } from "./endpoints/registerSiteKeyEndpoint.js";
-import { RemoveUserAccessRuleEndpoint } from "./endpoints/removeUserAccessRuleEndpoint.js";
+import { DeleteManyUserAccessRulesEndpoint } from "./endpoints/deleteManyUserAccessRulesEndpoint.js";
 
 class RoutesAdminProvider implements RoutesProvider {
 	public getRoutes(providerEnvironment: ProviderEnvironment): Route[] {
@@ -33,12 +33,12 @@ class RoutesAdminProvider implements RoutesProvider {
 				endpoint: new RegisterSiteKeyEndpoint(tasks.clientTaskManager),
 			},
 			{
-				path: AdminApiPaths.UserAccessPolicyAddRule,
-				endpoint: new AddUserAccessRuleEndpoint(userAccessRulesStorage),
+				path: AdminApiPaths.UserAccessPolicyInsertManyRules,
+				endpoint: new InsertManyUserAccessRulesEndpoint(userAccessRulesStorage),
 			},
 			{
-				path: AdminApiPaths.UserAccessPolicyRemoveRule,
-				endpoint: new RemoveUserAccessRuleEndpoint(userAccessRulesStorage),
+				path: AdminApiPaths.UserAccessPolicyDeleteManyRules,
+				endpoint: new DeleteManyUserAccessRulesEndpoint(userAccessRulesStorage),
 			},
 		];
 	}
