@@ -88,7 +88,7 @@ class MeasureFindCommand extends CommandBase {
 		const ipVersion =
 			targetIp instanceof Address4 ? UserIpVersion.v4 : UserIpVersion.v6;
 
-		const foundRules = await userAccessRulesStorage.find(null, {
+		const foundRules = await userAccessRulesStorage.find({
 			userIpAddress: targetIp,
 		});
 

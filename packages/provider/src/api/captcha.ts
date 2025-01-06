@@ -487,8 +487,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const ipAddress = getIPAddress(req.ip || "");
 
 				const userAccessRules = await tasks.db.getUserAccessRulesStorage().find(
-					dapp,
 					{
+						clientId: dapp,
 						userId: user,
 						userIpAddress: ipAddress,
 					},

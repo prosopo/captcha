@@ -68,8 +68,8 @@ class ImageCaptchaConfigResolver {
 		clientId: string,
 	): Promise<UserAccessRule[]> {
 		return await userAccessRulesStorage.find(
-			clientId,
 			{
+				clientId: clientId,
 				userId: user,
 				userIpAddress: ipAddress,
 			},

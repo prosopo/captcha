@@ -13,7 +13,7 @@
 // limitations under the License.
 import {
 	type RuleFilterSettings,
-	type RuleFilters,
+	type SearchRuleFilters,
 	type UserAccessRule,
 	type UserAccessRuleRecord,
 	type UserAccessRulesStorage,
@@ -29,7 +29,7 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 		this.model = model;
 	}
 
-	public async add(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
+	public async insertMany(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
@@ -38,15 +38,14 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 	}
 
 	public async find(
-		clientId: string | null,
-		filters: RuleFilters | null = null,
-		filterSettings: RuleFilterSettings | null = null,
+		filters: SearchRuleFilters,
+		filterSettings?: RuleFilterSettings,
 	): Promise<UserAccessRuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
 
-		const query = this.createQuery(clientId, filters, filterSettings);
+		const query = this.createQuery(filters, filterSettings);
 
 		return await this.model.find(query).exec();
 	}
@@ -56,9 +55,8 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 	}
 
 	protected createQuery(
-		clientId: string | null,
-		filters: RuleFilters | null,
-		filterSettings: RuleFilterSettings | null,
+		filters: SearchRuleFilters,
+		filterSettings?: RuleFilterSettings,
 	): object {
 		const includeRecordsWithoutClientId =
 			filterSettings?.includeRecordsWithoutClientId || false;
@@ -66,17 +64,15 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 			filterSettings?.includeRecordsWithPartialFilterMatches || false;
 
 		let queryParts = [
-			this.getFilterByClientId(clientId, includeRecordsWithoutClientId),
+			this.getFilterByClientId(includeRecordsWithoutClientId, filters.clientId),
 		];
 
-		if (null !== filters) {
-			const queryFilters = this.getQueryFilters(
-				filters,
-				includeRecordsWithPartialFilterMatches,
-			);
+		const queryFilters = this.getQueryFilters(
+			filters,
+			includeRecordsWithPartialFilterMatches,
+		);
 
-			queryParts = queryParts.concat(queryFilters);
-		}
+		queryParts = queryParts.concat(queryFilters);
 
 		return {
 			$and: queryParts,
@@ -84,7 +80,7 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 	}
 
 	protected getQueryFilters(
-		filters: RuleFilters,
+		filters: SearchRuleFilters,
 		includeRecordsWithPartialFilterMatches: boolean,
 	): object[] {
 		const queryFilters = [];
@@ -103,10 +99,11 @@ class UserAccessRulesDbStorage implements UserAccessRulesStorage {
 	}
 
 	protected getFilterByClientId(
-		clientId: string | null,
 		includeRecordsWithoutClientId: boolean,
+		clientId?: string,
 	): object {
-		const clientIdValue = null === clientId ? { $exists: false } : clientId;
+		const clientIdValue =
+			undefined === clientId ? { $exists: false } : clientId;
 
 		const clientIdFilter = {
 			clientId: clientIdValue,

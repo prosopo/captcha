@@ -1,12 +1,4 @@
-import { ApiPrefix } from "@prosopo/types";
-import type {
-	RuleFilterSettings,
-	RuleFilters,
-	UserAccessRule,
-	UserAccessRuleRecord,
-	UserAccessRulesStorage,
-} from "@prosopo/types-database";
-import { Types } from "mongoose";
+
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +14,15 @@ import { Types } from "mongoose";
 // limitations under the License.
 import { describe, expect, it } from "vitest";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
+import { ApiPrefix } from "@prosopo/types";
+import type {
+	RuleFilterSettings,
+	SearchRuleFilters,
+	UserAccessRule,
+	UserAccessRuleRecord,
+	UserAccessRulesStorage,
+} from "@prosopo/types-database";
+import { Types } from "mongoose";
 
 class BlacklistRequestInspectorTester {
 	public test(): void {
@@ -164,12 +165,11 @@ class BlacklistRequestInspectorTester {
 		userAccessRuleRecords: UserAccessRuleRecord[],
 	): UserAccessRulesStorage {
 		return {
-			add(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
+			insertMany(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
 				return Promise.resolve(userAccessRuleRecords);
 			},
 			find(
-				clientId: string | null,
-				filters?: RuleFilters | null,
+				filters?: SearchRuleFilters | null,
 				filterSettings?: RuleFilterSettings | null,
 			): Promise<UserAccessRuleRecord[]> {
 				return Promise.resolve(userAccessRuleRecords);

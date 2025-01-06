@@ -1,6 +1,3 @@
-import type { RuleFilters, UserAccessRule } from "@prosopo/types-database";
-import { Address4 } from "ip-address";
-import { expect } from "vitest";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +12,9 @@ import { expect } from "vitest";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { FindRuleByFilterTestsBase } from "./findRuleByFilterTestsBase.js";
+import type { SearchRuleFilters, UserAccessRule } from "@prosopo/types-database";
+import { Address4 } from "ip-address";
+import { expect } from "vitest";
 
 class FindRuleTests extends FindRuleByFilterTestsBase {
 	private readonly userIp: Address4 = new Address4("192.168.1.1");
@@ -26,11 +26,11 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		return "FindRuleTests";
 	}
 
-	protected getClientId(): string | null {
+	protected getClientId(): string | undefined {
 		return "client";
 	}
 
-	protected getOtherClientId(): string | null {
+	protected getOtherClientId(): string | undefined {
 		return "other";
 	}
 
@@ -55,20 +55,20 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		return record;
 	}
 
-	protected getRecordFilters(): RuleFilters {
+	protected getRecordFilters(): SearchRuleFilters {
 		return {
 			userId: this.userId,
 			userIpAddress: this.userIp,
 		};
 	}
 
-	protected getOtherRecordFilters(): RuleFilters {
+	protected getOtherRecordFilters(): SearchRuleFilters {
 		return {
 			userId: this.otherUserId,
 		};
 	}
 
-	protected getPartialMatchRecordFilters(): RuleFilters {
+	protected getPartialMatchRecordFilters(): SearchRuleFilters {
 		return {
 			userId: this.userId,
 			userIpAddress: this.otherUserIp,
@@ -104,10 +104,10 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		await this.model.create(this.getRule());
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(
-			this.getClientId(),
-			this.getPartialMatchRecordFilters(),
-		);
+		const rules = await this.userAccessRulesStorage.find({
+			clientId: this.getClientId(),
+			...this.getPartialMatchRecordFilters(),
+		});
 
 		// then
 		expect(rules.length).toBe(0);
@@ -119,8 +119,10 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 		// when
 		const rules = await this.userAccessRulesStorage.find(
-			this.getClientId(),
-			this.getPartialMatchRecordFilters(),
+			{
+				clientId: this.getClientId(),
+				...this.getPartialMatchRecordFilters(),
+			},
 			{
 				includeRecordsWithPartialFilterMatches: true,
 			},
@@ -139,7 +141,9 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 		});
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(this.getClientId());
+		const rules = await this.userAccessRulesStorage.find({
+			clientId: this.getClientId(),
+		});
 
 		// then
 		expect(rules.length).toBe(0);
@@ -157,8 +161,9 @@ class FindRuleTests extends FindRuleByFilterTestsBase {
 
 		// when
 		const rules = await this.userAccessRulesStorage.find(
-			this.getClientId(),
-			null,
+			{
+				clientId: this.getClientId(),
+			},
 			{
 				includeRecordsWithoutClientId: true,
 			},
