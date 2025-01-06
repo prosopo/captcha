@@ -1,9 +1,3 @@
-import type {
-	RuleFilters,
-	UserAccessRule,
-	UserIp,
-} from "@prosopo/types-database";
-import type { Address4, Address6 } from "ip-address";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +13,12 @@ import type { Address4, Address6 } from "ip-address";
 // limitations under the License.
 import { expect } from "vitest";
 import { FindRuleByFilterTestsBase } from "../findRuleByFilterTestsBase.js";
+import type {
+	SearchRuleFilters,
+	UserAccessRule,
+	UserIp,
+} from "@prosopo/types-database";
+import type { Address4, Address6 } from "ip-address";
 
 abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 	protected abstract getUserIpObject(): UserIp;
@@ -29,11 +29,11 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 
 	protected abstract getUserIpObjectInOtherVersion(): UserIp;
 
-	protected override getClientId(): string | null {
+	protected override getClientId(): string | undefined {
 		return "client";
 	}
 
-	protected override getOtherClientId(): string | null {
+	protected override getOtherClientId(): string | undefined {
 		return "otherClient";
 	}
 
@@ -52,13 +52,13 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 		return record;
 	}
 
-	protected override getRecordFilters(): RuleFilters {
+	protected override getRecordFilters(): SearchRuleFilters {
 		return {
 			userIpAddress: this.getUserIpAddress(),
 		};
 	}
 
-	protected override getOtherRecordFilters(): RuleFilters {
+	protected override getOtherRecordFilters(): SearchRuleFilters {
 		return {
 			userIpAddress: this.getOtherUserIpAddress(),
 		};
@@ -84,10 +84,10 @@ abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 		});
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(
-			this.getClientId(),
-			this.getRecordFilters(),
-		);
+		const rules = await this.userAccessRulesStorage.find({
+			clientId: this.getClientId(),
+			...this.getRecordFilters(),
+		});
 
 		// then
 		expect(rules.length).toBe(0);

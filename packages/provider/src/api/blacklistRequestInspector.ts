@@ -138,8 +138,8 @@ class BlacklistRequestInspector {
 		userId: string,
 	): Promise<boolean> {
 		const accessRules = await this.userAccessRulesStorage.find(
-			clientId,
 			{
+				clientId: clientId,
 				userIpAddress: ipAddress,
 				userId: userId,
 			},

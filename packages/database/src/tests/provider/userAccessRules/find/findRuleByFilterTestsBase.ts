@@ -1,6 +1,3 @@
-import type { RuleFilters, UserAccessRule } from "@prosopo/types-database";
-import { Address4 } from "ip-address";
-import { expect } from "vitest";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +11,20 @@ import { expect } from "vitest";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { expect } from "vitest";
 import { UserAccessRuleTestsBase } from "../userAccessRuleTestsBase.js";
+import type { SearchRuleFilters, UserAccessRule } from "@prosopo/types-database";
 
 abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
-	protected abstract getClientId(): string | null;
+	protected abstract getClientId(): string | undefined;
 
-	protected abstract getOtherClientId(): string | null;
+	protected abstract getOtherClientId(): string | undefined;
 
 	protected abstract getRule(): UserAccessRule;
 
-	protected abstract getRecordFilters(): RuleFilters;
+	protected abstract getRecordFilters(): SearchRuleFilters;
 
-	protected abstract getOtherRecordFilters(): RuleFilters;
+	protected abstract getOtherRecordFilters(): SearchRuleFilters;
 
 	protected getTests(): { name: string; method: () => Promise<void> }[] {
 		return [
@@ -53,7 +52,9 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 		const record = await this.model.create(this.getRule());
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(this.getClientId());
+		const rules = await this.userAccessRulesStorage.find({
+			clientId: this.getClientId(),
+		});
 
 		// then
 		expect(rules.length).toBe(1);
@@ -65,9 +66,9 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 		await this.model.create(this.getRule());
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(
-			this.getOtherClientId(),
-		);
+		const rules = await this.userAccessRulesStorage.find({
+			clientId: this.getOtherClientId(),
+		});
 
 		// then
 		expect(rules.length).toBe(0);
@@ -78,10 +79,10 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 		const record = await this.model.create(this.getRule());
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(
-			this.getClientId(),
-			this.getRecordFilters(),
-		);
+		const rules = await this.userAccessRulesStorage.find({
+			clientId: this.getClientId(),
+			...this.getRecordFilters(),
+		});
 
 		// then
 		expect(rules.length).toBe(1);
@@ -93,10 +94,10 @@ abstract class FindRuleByFilterTestsBase extends UserAccessRuleTestsBase {
 		await this.model.create(this.getRule());
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(
-			this.getClientId(),
-			this.getOtherRecordFilters(),
-		);
+		const rules = await this.userAccessRulesStorage.find({
+			clientId: this.getClientId(),
+			...this.getOtherRecordFilters(),
+		});
 
 		// then
 		expect(rules.length).toBe(0);

@@ -26,7 +26,7 @@ class AddUserAccessRuleEndpoint
 	async processRequest(
 		args: z.infer<typeof UserAccessPolicyAddRuleBody>,
 	): Promise<ApiResponse> {
-		await this.userAccessRulesStorage.add(args);
+		await this.userAccessRulesStorage.insertMany(args);
 
 		return {
 			status: "success",

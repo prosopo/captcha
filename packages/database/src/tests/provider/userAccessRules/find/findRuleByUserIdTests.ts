@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { RuleFilters, UserAccessRule } from "@prosopo/types-database";
+import type { SearchRuleFilters, UserAccessRule } from "@prosopo/types-database";
 import { FindRuleByFilterTestsBase } from "./findRuleByFilterTestsBase.js";
 
 class FindRuleByUserIdTests extends FindRuleByFilterTestsBase {
@@ -40,21 +40,21 @@ class FindRuleByUserIdTests extends FindRuleByFilterTestsBase {
 		return record;
 	}
 
-	protected getClientId(): string | null {
+	protected getClientId(): string | undefined {
 		return this.clientId;
 	}
 
-	protected getOtherClientId(): string | null {
+	protected getOtherClientId(): string | undefined {
 		return this.otherClientId;
 	}
 
-	protected getRecordFilters(): RuleFilters {
+	protected getRecordFilters(): SearchRuleFilters {
 		return {
 			userId: this.userId,
 		};
 	}
 
-	protected getOtherRecordFilters(): RuleFilters {
+	protected getOtherRecordFilters(): SearchRuleFilters {
 		return {
 			userId: this.otherUserId,
 		};

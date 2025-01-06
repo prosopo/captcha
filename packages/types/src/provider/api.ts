@@ -369,7 +369,7 @@ const userAccessPolicyIpV6Mask = object({
 const userAccessPolicyIpV6 = object({
 	asNumericString: string(),
 	asString: string(),
-	mask: userAccessPolicyIpV6Mask,
+	mask: userAccessPolicyIpV6Mask.optional(),
 });
 
 const userAccessPolicyIp = object({
@@ -397,9 +397,13 @@ export const UserAccessPolicyAddRuleBody = array(
 	}),
 );
 
-export const UserAccessPolicyRemoveRuleBody = object({
-	// todo
-});
+export const UserAccessPolicyRemoveRuleBody = array(
+	object({
+		clientId: string().optional(),
+		userIp: userAccessPolicyIp.optional(),
+		userId: string().optional(),
+	}),
+);
 
 //// userAccessPolicy END
 

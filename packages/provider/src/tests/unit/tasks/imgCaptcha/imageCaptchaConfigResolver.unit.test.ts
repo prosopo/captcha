@@ -1,7 +1,7 @@
 import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
 import type {
 	RuleFilterSettings,
-	RuleFilters,
+	SearchRuleFilters,
 	UserAccessRule,
 	UserAccessRuleRecord,
 	UserAccessRulesStorage,
@@ -176,12 +176,11 @@ class ImageCaptchaConfigResolverTester {
 		ruleRecords: UserAccessRuleRecord[],
 	): UserAccessRulesStorage {
 		return {
-			add(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
+			insertMany(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
 				return Promise.resolve(ruleRecords);
 			},
 			find(
-				clientId: string | null,
-				filters?: RuleFilters | null,
+				filters?: SearchRuleFilters | null,
 				filterSettings?: RuleFilterSettings | null,
 			): Promise<UserAccessRuleRecord[]> {
 				return Promise.resolve(ruleRecords);
