@@ -18,9 +18,7 @@ import {
 } from "@prosopo/datasets";
 import type { CaptchaSolution } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	buildTreeAndGetCommitmentId,
-} from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
+import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 
 vi.mock("@prosopo/datasets", () => ({
 	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({

@@ -18,6 +18,7 @@ import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
+	api,
 	domainMiddleware,
 	getClientList,
 	headerCheckMiddleware,
@@ -25,7 +26,6 @@ import {
 	prosopoVerifyRouter,
 	publicRouter,
 	storeCaptchasExternally,
-	api
 } from "@prosopo/provider";
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";

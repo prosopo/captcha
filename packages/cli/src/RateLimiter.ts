@@ -59,21 +59,13 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
 		},
-		[AdminApiPaths.BlockRuleIPAdd]: {
-			windowMs: process.env.PROSOPO_BLOCK_RULE_IP_ADD_WINDOW,
-			limit: process.env.PROSOPO_BLOCK_RULE_IP_ADD_LIMIT,
+		[AdminApiPaths.UserAccessPolicyAddRule]: {
+			windowMs: process.env.PROSOPO_USER_ACCESS_POLICY_ADD_RULE_WINDOW,
+			limit: process.env.PROSOPO_USER_ACCESS_POLICY_ADD_RULE_LIMIT,
 		},
-		[AdminApiPaths.BlockRuleIPRemove]: {
-			windowMs: process.env.PROSOPO_BLOCK_RULE_IP_REMOVE_WINDOW,
-			limit: process.env.PROSOPO_BLOCK_RULE_IP_REMOVE_LIMIT,
-		},
-		[AdminApiPaths.BlocKRuleUserAdd]: {
-			windowMs: process.env.PROSOPO_BLOCK_RULE_USER_ADD_WINDOW,
-			limit: process.env.PROSOPO_BLOCK_RULE_USER_ADD_LIMIT,
-		},
-		[AdminApiPaths.BlockRuleUserRemove]: {
-			windowMs: process.env.PROSOPO_BLOCK_RULE_USER_REMOVE_WINDOW,
-			limit: process.env.PROSOPO_BLOCK_RULE_USER_REMOVE_LIMIT,
+		[AdminApiPaths.UserAccessPolicyRemoveRule]: {
+			windowMs: process.env.PROSOPO_USER_ACCESS_POLICY_REMOVE_RULE_WINDOW,
+			limit: process.env.PROSOPO_USER_ACCESS_POLICY_REMOVE_RULE_LIMIT,
 		},
 	};
 };

@@ -20,6 +20,7 @@ import {
 	type ZodObject,
 	type ZodOptional,
 	array,
+	bigint,
 	boolean,
 	coerce,
 	type input,
@@ -30,7 +31,6 @@ import {
 	string,
 	union,
 	type infer as zInfer,
-	bigint,
 } from "zod";
 import { ApiParams } from "../api/params.js";
 import {
@@ -346,44 +346,62 @@ export const RegisterSitekeyBody = object({
 	}).optional(),
 });
 
+//// userAccessPolicy START
+
+const userAccessPolicyIpV4Mask = object({
+	rangeMinAsNumeric: bigint(),
+	rangeMaxAsNumeric: bigint(),
+	asNumeric: number(),
+});
+
+const userAccessPolicyIpV4 = object({
+	asNumeric: bigint(),
+	asString: string(),
+	mask: userAccessPolicyIpV4Mask.optional(),
+});
+
+const userAccessPolicyIpV6Mask = object({
+	rangeMinAsNumericString: string(),
+	rangeMaxAsNumericString: string(),
+	asNumeric: number(),
+});
+
+const userAccessPolicyIpV6 = object({
+	asNumericString: string(),
+	asString: string(),
+	mask: userAccessPolicyIpV6Mask,
+});
+
+const userAccessPolicyIp = object({
+	v4: userAccessPolicyIpV4.optional(),
+	v6: userAccessPolicyIpV6.optional(),
+});
+
+const userAccessPolicyImageCaptchaConfig = object({
+	solvedCount: number().optional(),
+	unsolvedCount: number().optional(),
+});
+
+const userAccessPolicyConfig = object({
+	imageCaptcha: userAccessPolicyImageCaptchaConfig.optional(),
+});
+
 export const UserAccessPolicyAddRuleBody = array(
 	object({
 		isUserBlocked: boolean(),
 		clientId: string().optional(),
 		description: string().optional(),
-		userIp: object({
-			v4: object({
-				asNumeric: bigint(),
-				asString: string(),
-				mask: object({
-					rangeMinAsNumeric: bigint(),
-					rangeMaxAsNumeric: bigint(),
-					asNumeric: number(),
-				}).optional(),
-			}).optional(),
-			v6: object({
-				asNumericString: string(),
-				asString: string(),
-				mask: object({
-					rangeMinAsNumericString: string(),
-					rangeMaxAsNumericString: string(),
-					asNumeric: number(),
-				}).optional(),
-			}).optional(),
-		}).optional(),
+		userIp: userAccessPolicyIp.optional(),
 		userId: string().optional(),
-		config: object({
-			imageCaptcha: object({
-				solvedCount: number().optional(),
-				unsolvedCount: number().optional(),
-			}).optional(),
-		}).optional(),
+		config: userAccessPolicyConfig.optional(),
 	}),
 );
 
 export const UserAccessPolicyRemoveRuleBody = object({
 	// todo
 });
+
+//// userAccessPolicy END
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({

@@ -1,13 +1,27 @@
-import { describe, expect, it } from "vitest";
-import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
+import { ApiPrefix } from "@prosopo/types";
 import type {
-	RuleFilters,
 	RuleFilterSettings,
+	RuleFilters,
+	UserAccessRule,
 	UserAccessRuleRecord,
 	UserAccessRulesStorage,
 } from "@prosopo/types-database";
-import { ApiPrefix } from "@prosopo/types";
 import { Types } from "mongoose";
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { describe, expect, it } from "vitest";
+import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
 
 class BlacklistRequestInspectorTester {
 	public test(): void {
@@ -150,6 +164,9 @@ class BlacklistRequestInspectorTester {
 		userAccessRuleRecords: UserAccessRuleRecord[],
 	): UserAccessRulesStorage {
 		return {
+			add(records: UserAccessRule[]): Promise<UserAccessRuleRecord[]> {
+				return Promise.resolve(userAccessRuleRecords);
+			},
 			find(
 				clientId: string | null,
 				filters?: RuleFilters | null,

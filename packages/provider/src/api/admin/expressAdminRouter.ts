@@ -1,3 +1,4 @@
+import { getLogger } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +14,10 @@
 // limitations under the License.
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { Router } from "express";
-import { getLogger } from "@prosopo/common";
-import {EndpointExpressAdminAdapter} from "./endpointExpressAdminAdapter.js";
-import {RouterExpressFactory} from "../express/routerExpressFactory.js";
-import {RoutesAdminProvider} from "./routesAdminProvider.js";
-import {RoutesExpressRegistrar} from "../express/routesExpressRegistrar.js";
+import { RouterExpressFactory } from "../express/routerExpressFactory.js";
+import { RoutesExpressRegistrar } from "../express/routesExpressRegistrar.js";
+import { EndpointExpressAdminAdapter } from "./endpointExpressAdminAdapter.js";
+import { RoutesAdminProvider } from "./routesAdminProvider.js";
 
 export function createExpressAdminRouter(
 	providerEnvironment: ProviderEnvironment,

@@ -1,33 +1,46 @@
-import { describe, beforeEach, afterAll } from "vitest";
+import type { UserAccessRule } from "@prosopo/types-database";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { type Model } from "mongoose";
-import { FindRuleByUserIpV4Tests } from "./userAccessRules/find/byIp/v4/findRuleByUserIpV4Tests.js";
-import { FindRuleByUserIpV6Tests } from "./userAccessRules/find/byIp/v6/findRuleByUserIpV6Tests.js";
-import type { TestsBase } from "../testsBase.js";
-import { IpV4UniqueIndexTests } from "./userAccessRules/uniqueIndexes/ipV4/ipV4UniqueIndexTests.js";
-import { IpV6UniqueIndexTests } from "./userAccessRules/uniqueIndexes/ipV6/ipV6UniqueIndexTests.js";
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { afterAll, beforeEach, describe } from "vitest";
 import { getUserAccessRulesDbSchema } from "../../databases/provider/userAccessRules/dbSchema.js";
-import { IpV4MaskUniqueIndexTest } from "./userAccessRules/uniqueIndexes/ipV4/ipV4MaskUniqueIndexTest.js";
-import { IpV6MaskUniqueIndexTest } from "./userAccessRules/uniqueIndexes/ipV6/ipV6MaskUniqueIndexTest.js";
+import type { TestsBase } from "../testsBase.js";
+import { FindRuleByUserIpMaskV4Tests } from "./userAccessRules/find/byIp/v4/findRuleByUserIpMaskV4Tests.js";
+import { FindRuleByUserIpV4Tests } from "./userAccessRules/find/byIp/v4/findRuleByUserIpV4Tests.js";
+import { FindRuleByUserIpMaskV4RangeMaxTests } from "./userAccessRules/find/byIp/v4/maskRange/findRuleByUserIpMaskV4RangeMaxTests.js";
+import { FindRuleByUserIpMaskV4RangeMinTests } from "./userAccessRules/find/byIp/v4/maskRange/findRuleByUserIpMaskV4RangeMinTests.js";
+import { FindRuleByUserIpMaskV6Tests } from "./userAccessRules/find/byIp/v6/findRuleByUserIpMaskV6Tests.js";
+import { FindRuleByUserIpV6Tests } from "./userAccessRules/find/byIp/v6/findRuleByUserIpV6Tests.js";
+import { FindRuleByUserIpMaskV6RangeMaxTests } from "./userAccessRules/find/byIp/v6/maskRange/findRuleByUserIpMaskV6RangeMaxTests.js";
+import { FindRuleByUserIpMaskV6RangeMinTests } from "./userAccessRules/find/byIp/v6/maskRange/findRuleByUserIpMaskV6RangeMinTests.js";
+import { FindRuleByUserIpMaskV6ShortTests } from "./userAccessRules/find/byIp/v6Short/findRuleByUserIpMaskV6ShortTests.js";
+import { FindRuleByUserIpV6ShortTests } from "./userAccessRules/find/byIp/v6Short/findRuleByUserIpV6ShortTests.js";
+import { FindRuleByUserIpMaskV6ShortRangeMaxTests } from "./userAccessRules/find/byIp/v6Short/maskRange/findRuleByUserIpMaskV6ShortRangeMaxTests.js";
+import { FindRuleByUserIpMaskV6ShortRangeMinTests } from "./userAccessRules/find/byIp/v6Short/maskRange/findRuleByUserIpMaskV6ShortRangeMinTests.js";
+import { FindRuleByUserIdTests } from "./userAccessRules/find/findRuleByUserIdTests.js";
+import { FindRuleTests } from "./userAccessRules/find/findRuleTests.js";
 import { IpV6FormattingTests } from "./userAccessRules/insertFormatting/ipV6FormattingTests.js";
 import { IpV6MaskFormattingTests } from "./userAccessRules/insertFormatting/ipV6MaskFormattingTests.js";
-import type { UserAccessRule } from "@prosopo/types-database";
-import { FindRuleByUserIpMaskV4Tests } from "./userAccessRules/find/byIp/v4/findRuleByUserIpMaskV4Tests.js";
-import { FindRuleByUserIpMaskV4RangeMinTests } from "./userAccessRules/find/byIp/v4/maskRange/findRuleByUserIpMaskV4RangeMinTests.js";
-import { FindRuleByUserIpMaskV4RangeMaxTests } from "./userAccessRules/find/byIp/v4/maskRange/findRuleByUserIpMaskV4RangeMaxTests.js";
-import { FindRuleByUserIpMaskV6Tests } from "./userAccessRules/find/byIp/v6/findRuleByUserIpMaskV6Tests.js";
-import { FindRuleByUserIpMaskV6RangeMinTests } from "./userAccessRules/find/byIp/v6/maskRange/findRuleByUserIpMaskV6RangeMinTests.js";
-import { FindRuleByUserIpMaskV6RangeMaxTests } from "./userAccessRules/find/byIp/v6/maskRange/findRuleByUserIpMaskV6RangeMaxTests.js";
-import { FindRuleByUserIpV6ShortTests } from "./userAccessRules/find/byIp/v6Short/findRuleByUserIpV6ShortTests.js";
-import { FindRuleByUserIpMaskV6ShortTests } from "./userAccessRules/find/byIp/v6Short/findRuleByUserIpMaskV6ShortTests.js";
-import { FindRuleByUserIpMaskV6ShortRangeMinTests } from "./userAccessRules/find/byIp/v6Short/maskRange/findRuleByUserIpMaskV6ShortRangeMinTests.js";
-import { FindRuleByUserIpMaskV6ShortRangeMaxTests } from "./userAccessRules/find/byIp/v6Short/maskRange/findRuleByUserIpMaskV6ShortRangeMaxTests.js";
-import { UserIpRequiredValidationTests } from "./userAccessRules/schemaValidation/userIpRequiredValidationTests.js";
-import { UserIdRequiredValidationTests } from "./userAccessRules/schemaValidation/userIdRequiredValidationTests.js";
-import { UserIpVersionRequiredValidationTests } from "./userAccessRules/schemaValidation/userIpVersionRequiredValidationTests.js";
-import { FindRuleTests } from "./userAccessRules/find/findRuleTests.js";
-import { FindRuleByUserIdTests } from "./userAccessRules/find/findRuleByUserIdTests.js";
 import { OptionalFieldTests } from "./userAccessRules/schemaValidation/optionalFieldTests.js";
+import { UserIdRequiredValidationTests } from "./userAccessRules/schemaValidation/userIdRequiredValidationTests.js";
+import { UserIpRequiredValidationTests } from "./userAccessRules/schemaValidation/userIpRequiredValidationTests.js";
+import { UserIpVersionRequiredValidationTests } from "./userAccessRules/schemaValidation/userIpVersionRequiredValidationTests.js";
+import { IpV4MaskUniqueIndexTest } from "./userAccessRules/uniqueIndexes/ipV4/ipV4MaskUniqueIndexTest.js";
+import { IpV4UniqueIndexTests } from "./userAccessRules/uniqueIndexes/ipV4/ipV4UniqueIndexTests.js";
+import { IpV6MaskUniqueIndexTest } from "./userAccessRules/uniqueIndexes/ipV6/ipV6MaskUniqueIndexTest.js";
+import { IpV6UniqueIndexTests } from "./userAccessRules/uniqueIndexes/ipV6/ipV6UniqueIndexTests.js";
 
 class UserAccessRuleTests {
 	public async run(): Promise<void> {
