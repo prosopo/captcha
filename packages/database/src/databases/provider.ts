@@ -81,7 +81,7 @@ import type {
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import { getUserAccessRulesDbSchema } from "./provider/userAccessRules/dbSchema.js";
-import {UserAccessRulesDbStorage} from "./provider/userAccessRules/userAccessRulesDbStorage.js";
+import { UserAccessRulesDbStorage } from "./provider/userAccessRules/userAccessRulesDbStorage.js";
 
 enum TableNames {
 	captcha = "captcha",
