@@ -25,24 +25,11 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - name: Print contexts
-              uses: ./.github/actions/print_contexts@${{ github.ref_name }}
-
-            - uses: actions/checkout@v4
+            - name: Setup
+              uses: ./.github/setup@${{ github.ref_name }}
               with:
-                  submodules: "recursive"
+                cache: true
 
-            # make cache dirs, these must exist before doing cache stuff
-            - run: mkdir -p ~/.npm
-            - run: mkdir -p ~/.cache/Cypress
-
-            # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
-            - run: npm cache clean --force
-
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: 'package.json'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci
 

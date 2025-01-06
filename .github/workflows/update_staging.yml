@@ -21,18 +21,8 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Print contexts
-              uses: ./.github/actions/print_contexts@${{ github.ref_name }}
-
-            - uses: actions/checkout@v4
-              with:
-                  submodules: "recursive"
-
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: 'package.json'
-                  
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+            - name: Setup
+              uses: ./.github/setup@${{ github.ref_name }}
 
             - name: PR main into staging
               run: |

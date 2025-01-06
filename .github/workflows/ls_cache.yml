@@ -23,15 +23,10 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - name: Print contexts
-              uses: ./.github/actions/print_contexts@${{ github.ref_name }}
-
-            - uses: actions/checkout@v4
+            - name: Setup
+              uses: ./.github/setup@${{ github.ref_name }}
               with:
-                  submodules: "recursive"
-
-            - name: Restore npm cache
-              uses: ./.github/actions/restore_npm_cache@${{ github.ref_name }}
+                cache: true
 
             - run: ls -la ~/.cache/Cypress || true
             - run: ls -la ~/.npm || true

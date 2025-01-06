@@ -21,15 +21,11 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Print contexts
-              uses: ./.github/actions/print_contexts@${{ github.ref_name }}
-
-            - name: Restore npm cache
-              uses: ./.github/actions/restore_npm_cache@${{ github.ref_name }}
-
-            - uses: actions/checkout@v4
+            - name: Setup
+              uses: ./.github/setup@${{ github.ref_name }}
               with:
-                  submodules: "recursive"
+                cache: true
+                install: true
 
             - name: Detect env
               id: env
@@ -82,13 +78,6 @@ jobs:
                     echo "cannot deploy from branch ${{ github.ref }}"
                     exit 1
                 fi
-
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: 'package.json'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
-
-            - run: npm ci
 
             # check everything builds
             - run: npm run build:all
