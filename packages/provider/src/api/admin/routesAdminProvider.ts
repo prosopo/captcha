@@ -16,9 +16,9 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Tasks } from "../../tasks/index.js";
 import type { Route } from "../interfaces/route/route.js";
 import type { RoutesProvider } from "../interfaces/route/routesProvider.js";
+import { DeleteManyUserAccessRulesEndpoint } from "./endpoints/deleteManyUserAccessRulesEndpoint.js";
 import { InsertManyUserAccessRulesEndpoint } from "./endpoints/insertManyUserAccessRulesEndpoint.js";
 import { RegisterSiteKeyEndpoint } from "./endpoints/registerSiteKeyEndpoint.js";
-import { DeleteManyUserAccessRulesEndpoint } from "./endpoints/deleteManyUserAccessRulesEndpoint.js";
 
 class RoutesAdminProvider implements RoutesProvider {
 	public getRoutes(providerEnvironment: ProviderEnvironment): Route[] {

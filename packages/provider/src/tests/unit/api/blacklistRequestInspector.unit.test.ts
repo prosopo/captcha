@@ -1,3 +1,13 @@
+import { ApiPrefix } from "@prosopo/types";
+import type {
+	DeleteRuleFilters,
+	SearchRuleFilterSettings,
+	SearchRuleFilters,
+	UserAccessRule,
+	UserAccessRuleRecord,
+	UserAccessRulesStorage,
+} from "@prosopo/types-database";
+import { Types } from "mongoose";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +23,6 @@
 // limitations under the License.
 import { describe, expect, it } from "vitest";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
-import { ApiPrefix } from "@prosopo/types";
-import type {
-	DeleteRuleFilters,
-	SearchRuleFilterSettings,
-	SearchRuleFilters,
-	UserAccessRule,
-	UserAccessRuleRecord,
-	UserAccessRulesStorage,
-} from "@prosopo/types-database";
-import { Types } from "mongoose";
 
 class BlacklistRequestInspectorTester {
 	public test(): void {

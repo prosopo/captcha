@@ -1,3 +1,9 @@
+import type {
+	SearchRuleFilters,
+	UserAccessRule,
+	UserIp,
+} from "@prosopo/types-database";
+import type { Address4, Address6 } from "ip-address";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +19,6 @@
 // limitations under the License.
 import { expect } from "vitest";
 import { FindRuleByFilterTestsBase } from "../findRuleByFilterTestsBase.js";
-import type {
-	SearchRuleFilters,
-	UserAccessRule,
-	UserIp,
-} from "@prosopo/types-database";
-import type { Address4, Address6 } from "ip-address";
 
 abstract class FindRuleByUserIpTests extends FindRuleByFilterTestsBase {
 	protected abstract getUserIpObject(): UserIp;

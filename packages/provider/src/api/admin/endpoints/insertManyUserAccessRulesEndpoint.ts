@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type ApiResponse, UserAccessPolicyInsertManyRulesBody } from "@prosopo/types";
+import {
+	type ApiResponse,
+	UserAccessPolicyInsertManyRulesBody,
+} from "@prosopo/types";
 import type { UserAccessRulesStorage } from "@prosopo/types-database";
 import type { z } from "zod";
 import type { Endpoint } from "../../interfaces/endpoint/endpoint.js";

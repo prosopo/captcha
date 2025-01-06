@@ -606,4 +606,8 @@ export interface IProviderDatabase extends IDatabase {
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
 	getUserAccessRulesStorage(): UserAccessRulesStorage;
+
+	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
+
+	getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]>;
 }

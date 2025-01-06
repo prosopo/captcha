@@ -1,3 +1,5 @@
+import yargs, { type CommandModule } from "yargs";
+import { hideBin } from "yargs/helpers";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +15,6 @@
 // limitations under the License.
 import { MeasureFindCommand } from "./commands/measureFindCommand.js";
 import { PopulateCommand } from "./commands/populateCommand.js";
-import yargs, { type CommandModule } from "yargs";
-import { hideBin } from "yargs/helpers";
 
 class Cli {
 	public async processInput() {

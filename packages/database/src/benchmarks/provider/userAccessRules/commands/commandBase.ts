@@ -1,3 +1,4 @@
+import type { UserAccessRule } from "@prosopo/types-database";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 // limitations under the License.
 import mongoose, { type Model } from "mongoose";
 import { getUserAccessRulesDbSchema } from "../../../../databases/provider/userAccessRules/dbSchema.js";
-import type { UserAccessRule } from "@prosopo/types-database";
 
 abstract class CommandBase {
 	protected async createModelByArgs(
