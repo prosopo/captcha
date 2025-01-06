@@ -1,0 +1,42 @@
+name: "setup"
+inputs:
+    cache:
+        description: "restore npm cache"
+        required: false
+        default: false
+    fetch-depth:
+        description: "fetch depth"
+        required: false
+        default: 1 # Fetch only the latest commit for the branch by default
+    install:
+        description: "run npm ci"
+        required: false
+        default: false
+runs:
+    using: "composite"
+    steps:
+
+      - name: Print contexts
+        uses: ./.github/actions/print_contexts@${{ github.ref_name }}
+    
+      - name: Clone
+        uses: actions/checkout@v4
+        with:
+            submodules: "recursive"
+            fetch-depth: ${{ inputs.fetch-depth }}
+
+      - name: Restore npm cache
+        if: ${{ inputs.cache }}
+        uses: ./.github/actions/restore_npm_cache@${{ github.ref_name }}
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+            node-version-file: 'package.json'
+
+      - name: Install npm
+        run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+
+      - name: Install project
+        if: ${{ inputs.install }}
+        run: npm ci
