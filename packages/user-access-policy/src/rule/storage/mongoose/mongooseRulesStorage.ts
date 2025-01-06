@@ -13,12 +13,12 @@
 // limitations under the License.
 import { Address4, type Address6 } from "ip-address";
 import type { Model } from "mongoose";
-import type RulesStorage from "./rulesStorage.js";
-import type Rule from "../rule.js";
-import type RuleRecord from "../mongoose/mongooseRuleRecord.js";
-import type SearchRuleFilters from "./filters/search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "./filters/search/searchRuleFilterSettings.js";
-import IpVersion from "../../ip/ipVersion.js";
+import type RulesStorage from "../rulesStorage.js";
+import type Rule from "../../rule.js";
+import type SearchRuleFilters from "../filters/search/searchRuleFilters.js";
+import type SearchRuleFilterSettings from "../filters/search/searchRuleFilterSettings.js";
+import IpVersion from "../../../ip/ipVersion.js";
+import type MongooseRuleRecord from "../mongoose/mongooseRuleRecord.js";
 
 class MongooseRulesStorage implements RulesStorage {
 	private model: Model<Rule> | null;
@@ -27,7 +27,7 @@ class MongooseRulesStorage implements RulesStorage {
 		this.model = model;
 	}
 
-	public async insertMany(records: Rule[]): Promise<RuleRecord[]> {
+	public async insertMany(records: Rule[]): Promise<MongooseRuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
@@ -38,7 +38,7 @@ class MongooseRulesStorage implements RulesStorage {
 	public async find(
 		filters: SearchRuleFilters,
 		filterSettings?: SearchRuleFilterSettings,
-	): Promise<RuleRecord[]> {
+	): Promise<MongooseRuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
