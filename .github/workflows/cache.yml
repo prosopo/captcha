@@ -27,9 +27,11 @@ jobs:
         steps:
             - name: Setup
               uses: ./.github/setup@${{ github.ref_name }}
-              with:
-                cache: true
 
+            # clean the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
+            - run: rm -rf ~/.npm node_modules ~/.cache/Cypress
+            # ensure the cache directories exist
+            - run: mkdir -p ~/.npm node_modules ~/.cache/Cypress
 
             - run: npm ci
 
