@@ -1,7 +1,7 @@
+import type Rule from "../../rule.js";
 import type { Types } from "mongoose";
-import type RuleRecord from "../ruleRecord";
 
-interface MongooseRuleRecord extends RuleRecord {
+interface MongooseRuleRecord extends Rule {
 	_id: Types.ObjectId;
 }
 

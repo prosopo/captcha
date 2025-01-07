@@ -1,7 +1,7 @@
 import {Schema} from "mongoose";
 import type Rule from "../../rule.js";
-import mongooseIp from "../../../ip/mongooseIp.js";
-import mongooseConfig from "../../../config/mongooseConfig.js";
+import mongooseIp from "../../../ip/schema/mongooseIp.js";
+import mongooseConfig from "../../../config/schema/mongooseConfig.js";
 
 const mongooseRule = new Schema<Rule>({
     isUserBlocked: { type: Boolean, required: true },

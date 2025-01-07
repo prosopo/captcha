@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
-import type Ip from "./ip.js";
-import mongooseIpV4Mask from "./v4/mask/mongooseIpV4Mask.js";
-import mongooseIpV6Mask from "./v6/mask/mongooseIpV6Mask.js";
+import type Ip from "../ip.js";
+import mongooseIpV4Mask from "../v4/mask/schema/mongooseIpV4Mask.js";
+import mongooseIpV6Mask from "../v6/mask/schema/mongooseIpV6Mask.js";
 
 const mongooseIp = new Schema<Ip>(
 	{

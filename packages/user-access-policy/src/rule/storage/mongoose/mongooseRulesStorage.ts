@@ -18,7 +18,8 @@ import type Rule from "../../rule.js";
 import type SearchRuleFilters from "../filters/search/searchRuleFilters.js";
 import type SearchRuleFilterSettings from "../filters/search/searchRuleFilterSettings.js";
 import IpVersion from "../../../ip/ipVersion.js";
-import type MongooseRuleRecord from "../mongoose/mongooseRuleRecord.js";
+import type RuleRecord from "../ruleRecord.js";
+import type MongooseRuleRecord from "./mongooseRuleRecord.js";
 
 class MongooseRulesStorage implements RulesStorage {
 	private model: Model<Rule> | null;
@@ -27,25 +28,35 @@ class MongooseRulesStorage implements RulesStorage {
 		this.model = model;
 	}
 
-	public async insertMany(records: Rule[]): Promise<MongooseRuleRecord[]> {
+	public async insertMany(records: Rule[]): Promise<RuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
 
-		return await this.model.insertMany(records);
+		const mongooseRecords = await this.model.insertMany(records);
+
+		const ruleRecords =
+			this.convertMongooseRecordsToRuleRecords(mongooseRecords);
+
+		return ruleRecords;
 	}
 
 	public async find(
 		filters: SearchRuleFilters,
 		filterSettings?: SearchRuleFilterSettings,
-	): Promise<MongooseRuleRecord[]> {
+	): Promise<RuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
 
 		const query = this.createQuery(filters, filterSettings);
 
-		return await this.model.find(query).exec();
+		const mongooseRecords = await this.model.find(query).lean().exec();
+
+		const ruleRecords =
+			this.convertMongooseRecordsToRuleRecords(mongooseRecords);
+
+		return ruleRecords;
 	}
 
 	public async deleteMany(recordFilters: SearchRuleFilters[]): Promise<void> {
@@ -169,6 +180,27 @@ class MongooseRulesStorage implements RulesStorage {
 				},
 			],
 		};
+	}
+
+	protected convertMongooseRecordsToRuleRecords(
+		records: MongooseRuleRecord[],
+	): RuleRecord[] {
+		const ruleRecords = records.map((record) =>
+			this.convertMongooseRecordToRuleRecord(record),
+		);
+
+		return ruleRecords;
+	}
+
+	protected convertMongooseRecordToRuleRecord(
+		record: MongooseRuleRecord,
+	): RuleRecord {
+		const ruleRecord = {
+			...record,
+			_id: record._id.toString(),
+		};
+
+		return ruleRecord;
 	}
 }
 
