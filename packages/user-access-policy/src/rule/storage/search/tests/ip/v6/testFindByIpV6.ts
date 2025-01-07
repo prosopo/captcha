@@ -1,5 +1,5 @@
 import { Address6 } from "ip-address";
-import { TestFindByIpBase } from "../testFindByIpBase.js";
+import TestFindByIpBase from "../testFindByIpBase.js";
 import type Ip from "../../../../../../ip/ip.js";
 
 class TestFindByIpV6 extends TestFindByIpBase {

@@ -1,5 +1,5 @@
 import { bigint, object, string } from "zod";
-import zodIpV4Mask from "../mask/schema/zodIpV4Mask.js";
+import zodIpV4Mask from "./mask/zodIpV4Mask.js";
 
 const zodIpV4 = object({
 	asNumeric: bigint(),

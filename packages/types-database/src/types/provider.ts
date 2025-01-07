@@ -54,9 +54,7 @@ import {
 } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
-import type { UserAccessRulesStorage } from "./provider/export.js";
-
-export * from "./provider/export.js";
+import type {RulesStorage} from "@prosopo/user-access-policy";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
 
@@ -605,7 +603,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
-	getUserAccessRulesStorage(): UserAccessRulesStorage;
+	getUserAccessRulesStorage(): RulesStorage;
 
 	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
 

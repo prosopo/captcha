@@ -22,3 +22,5 @@ class ApiRuleRoutesProvider implements ApiRoutesProvider {
 		];
 	}
 }
+
+export default ApiRuleRoutesProvider;

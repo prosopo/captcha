@@ -11,11 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {
-	SearchRuleFilters,
-	UserAccessRule,
-} from "@prosopo/types-database";
 import TestFindRuleBase from "../testFindRuleBase.js";
+import type Rule from "../../../../rule.js";
+import type SearchRuleFilters from "../../searchRuleFilters.js";
 
 class TestFindRuleByUserId extends TestFindRuleBase {
 	private readonly userId: string = "userId";
@@ -23,10 +21,10 @@ class TestFindRuleByUserId extends TestFindRuleBase {
 	private readonly clientId: string = "client";
 	private readonly otherClientId: string = "another";
 
-	protected getRule(): UserAccessRule {
+	protected getRule(): Rule {
 		const clientId = this.getClientId();
 
-		const record: UserAccessRule = {
+		const record: Rule = {
 			isUserBlocked: false,
 			userId: this.userId,
 			clientId: this.clientId,

@@ -15,7 +15,7 @@
 		}
 	},
 	"scripts": {
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build",
@@ -38,6 +38,7 @@
 		"@prosopo/config": "2.2.3",
 		"@prosopo/types": "2.2.3",
 		"@prosopo/types-database": "2.2.3",
+		"@prosopo/user-access-policy": "1.0.0",
 		"express": "4.21.1",
 		"mongodb": "6.9.0",
 		"mongodb-memory-server": "10.0.0",

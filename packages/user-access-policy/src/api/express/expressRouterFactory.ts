@@ -11,24 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AdminApiPaths } from "@prosopo/types";
+import { Router } from "express";
+import type ExpressRoutesRegistrar from "./expressRoutesRegistrar.js";
+import type ApiRoutesProvider from "../route/apiRoutesProvider.js";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { Tasks } from "../../tasks/index.js";
-import type { Route } from "../interfaces/route/route.js";
-import type { RoutesProvider } from "../interfaces/route/routesProvider.js";
-import { RegisterSiteKeyEndpoint } from "./endpoints/registerSiteKeyEndpoint.js";
 
-class RoutesAdminProvider implements RoutesProvider {
-	public getRoutes(providerEnvironment: ProviderEnvironment): Route[] {
-		const tasks = new Tasks(providerEnvironment);
+class ExpressRouterFactory {
+	public createRouter(
+		providerEnvironment: ProviderEnvironment,
+		routersProvider: ApiRoutesProvider,
+		routesExpressRegistrar: ExpressRoutesRegistrar,
+	): Router {
+		const apiRoutes = routersProvider.getRoutes(providerEnvironment);
 
-		return [
-			{
-				path: AdminApiPaths.SiteKeyRegister,
-				endpoint: new RegisterSiteKeyEndpoint(tasks.clientTaskManager),
-			},
-		];
+		const router = Router();
+
+		routesExpressRegistrar.registerRoutes(router, apiRoutes);
+
+		return router;
 	}
 }
 
-export { RoutesAdminProvider };
+export default ExpressRouterFactory;

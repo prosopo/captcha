@@ -1,6 +1,6 @@
 import { array, boolean, object, string } from "zod";
-import zodIp from "../../../ip/schema/zodIp.js";
-import zodConfig from "../../../config/schema/zodConfig.js";
+import zodIp from "../../../ip/zodIp.js";
+import zodConfig from "../../../config/zodConfig.js";
 
 const zodInsertManyRulesSchema = array(
 	object({

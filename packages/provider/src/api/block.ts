@@ -14,6 +14,7 @@
 import { getLoggerDefault } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { BlacklistRequestInspector } from "./blacklistRequestInspector.js";
+import { RequestRulesInspector } from "@prosopo/user-access-policy";
 
 export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	const logger = getLoggerDefault();
@@ -26,7 +27,7 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 		providerEnvironment.isReady.bind(providerEnvironment);
 
 	const blacklistRequestInspector = new BlacklistRequestInspector(
-		userAccessRulesStorage,
+		new RequestRulesInspector(userAccessRulesStorage),
 		environmentReadinessWaiter,
 		logger,
 	);

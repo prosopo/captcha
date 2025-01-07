@@ -62,9 +62,6 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
-	type UserAccessRule,
-	type UserAccessRulesStorage,
-	type UserAccountBlockRule,
 	type UserAccountBlockRuleRecord,
 	UserAccountBlockRuleSchema,
 	type UserCommitment,
@@ -74,14 +71,15 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type {
-	FrictionlessTokenRecord,
-	IPBlockRuleMongo,
-} from "@prosopo/types-database";
+import type { FrictionlessTokenRecord } from "@prosopo/types-database";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
-import { getUserAccessRulesDbSchema } from "./provider/userAccessRules/dbSchema.js";
-import { UserAccessRulesDbStorage } from "./provider/userAccessRules/userAccessRulesDbStorage.js";
+import {
+	type Rule,
+	type RulesStorage,
+	MongooseRulesStorage,
+	mongooseRuleRecordSchema,
+} from "@prosopo/user-access-policy";
 
 enum TableNames {
 	captcha = "captcha",
@@ -169,7 +167,7 @@ const PROVIDER_TABLES = [
 	{
 		collectionName: TableNames.userAccessRules,
 		modelName: "UserAccessRules",
-		schema: getUserAccessRulesDbSchema(),
+		schema: mongooseRuleRecordSchema,
 	},
 ];
 
@@ -178,7 +176,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private readonly userAccessRulesDbStorage: UserAccessRulesDbStorage;
+	private readonly userAccessRulesDbStorage: MongooseRulesStorage;
 
 	constructor(
 		url: string,
@@ -189,7 +187,7 @@ export class ProviderDatabase
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRulesDbStorage = new UserAccessRulesDbStorage(null);
+		this.userAccessRulesDbStorage = new MongooseRulesStorage(null);
 	}
 
 	override async connect(): Promise<void> {
@@ -197,8 +195,8 @@ export class ProviderDatabase
 
 		this.loadTables();
 
-		this.userAccessRulesDbStorage.setModel(
-			<Model<UserAccessRule>>this.tables.userAccessRules,
+		this.userAccessRulesDbStorage.setReadingModel(
+			<Model<Rule>>this.tables.userAccessRules,
 		);
 	}
 
@@ -222,7 +220,7 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
-	public getUserAccessRulesStorage(): UserAccessRulesStorage {
+	public getUserAccessRulesStorage(): RulesStorage {
 		return this.userAccessRulesDbStorage;
 	}
 

@@ -37,10 +37,10 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
-import { ImageCaptchaConfigResolver } from "../tasks/imgCaptcha/imageCaptchaConfigResolver.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
+import {ImageCaptchaConfigResolver} from "@prosopo/user-access-policy";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 const TEN_MINUTES = 60 * 10 * 1000;

@@ -33,6 +33,7 @@
 	"dependencies": {
 		"@prosopo/common": "2.2.3",
 		"@prosopo/types": "2.2.3",
+		"@prosopo/user-access-policy": "1.0.0",
 		"express": "4.21.1",
 		"mongodb": "6.9.0",
 		"mongoose": "8.6.2",

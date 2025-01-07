@@ -79,4 +79,4 @@ abstract class TestFindByIpBase extends TestFindRuleBase {
 	}
 }
 
-export { TestFindByIpBase };
+export default TestFindByIpBase;

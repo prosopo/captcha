@@ -13,14 +13,13 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
-import type { UserAccessRulesStorage } from "@prosopo/types-database";
 import type { NextFunction, Request, Response } from "express";
-import type { Address4, Address6 } from "ip-address";
 import { getIPAddress } from "../util.js";
+import type { RequestRulesInspector } from "@prosopo/user-access-policy";
 
 class BlacklistRequestInspector {
 	public constructor(
-		private readonly userAccessRulesStorage: UserAccessRulesStorage,
+		private readonly requestRulesInspector: RequestRulesInspector,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 		private readonly logger: Logger | null,
 	) {}
@@ -69,10 +68,12 @@ class BlacklistRequestInspector {
 			return true;
 		}
 
+		await this.environmentReadinessWaiter();
+
 		try {
 			const ipAddress = getIPAddress(rawIp);
 
-			return await this.isRequestFromBlockedUser(
+			return await this.requestRulesInspector.shouldAbortRequest(
 				ipAddress,
 				requestHeaders,
 				requestBody,
@@ -86,74 +87,6 @@ class BlacklistRequestInspector {
 
 	protected isApiUnrelatedRoute(url: string): boolean {
 		return -1 === url.indexOf(ApiPrefix);
-	}
-
-	protected async isRequestFromBlockedUser(
-		ipAddress: Address4 | Address6,
-		requestHeaders: Record<string, unknown>,
-		requestBody: Record<string, unknown>,
-	): Promise<boolean> {
-		const { userId, clientId } = this.extractIdsFromRequest(
-			requestHeaders,
-			requestBody,
-		);
-
-		await this.environmentReadinessWaiter();
-
-		return await this.isUserBlocked(clientId, ipAddress, userId);
-	}
-
-	protected extractIdsFromRequest(
-		requestHeaders: Record<string, unknown>,
-		requestBody: Record<string, unknown>,
-	): {
-		userId: string;
-		clientId: string;
-	} {
-		const userId =
-			this.getObjectValue(requestHeaders, "Prosopo-User") ||
-			this.getObjectValue(requestBody, "user") ||
-			"";
-		const clientId =
-			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
-			this.getObjectValue(requestBody, "dapp") ||
-			"";
-
-		return {
-			userId: "string" === typeof userId ? userId : "",
-			clientId: "string" === typeof clientId ? clientId : "",
-		};
-	}
-
-	protected getObjectValue(
-		object: Record<string, unknown>,
-		key: string,
-	): unknown {
-		return object[key];
-	}
-
-	protected async isUserBlocked(
-		clientId: string,
-		ipAddress: Address4 | Address6,
-		userId: string,
-	): Promise<boolean> {
-		const accessRules = await this.userAccessRulesStorage.find(
-			{
-				clientId: clientId,
-				userIpAddress: ipAddress,
-				userId: userId,
-			},
-			{
-				includeRecordsWithPartialFilterMatches: true,
-				includeRecordsWithoutClientId: true,
-			},
-		);
-
-		const blockingRules = accessRules.filter(
-			(accessRule) => accessRule.isUserBlocked,
-		);
-
-		return blockingRules.length > 0;
 	}
 }
 

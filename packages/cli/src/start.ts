@@ -34,6 +34,7 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+import {expressRuleRouterFactory} from "@prosopo/user-access-policy";
 
 function startApi(
 	env: ProviderEnvironment,
@@ -62,6 +63,7 @@ function startApi(
 
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
 	apiApp.use(api.admin.createExpressAdminRouter(env));
+	apiApp.use(expressRuleRouterFactory(env));
 
 	// Rate limiting
 	const rateLimits = env.config.rateLimits;

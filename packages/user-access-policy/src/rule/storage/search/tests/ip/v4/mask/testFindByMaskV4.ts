@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { UserIp } from "@prosopo/types-database";
 import { Address4 } from "ip-address";
 import TestFindByIpV4 from "../testFindByIpV4.js";
+import type Ip from "../../../../../../../ip/ip.js";
 
 class TestFindByMaskV4 extends TestFindByIpV4 {
 	protected baseIpAsString = "192.168.0.0";
@@ -23,7 +23,7 @@ class TestFindByMaskV4 extends TestFindByIpV4 {
 	protected override readonly userIp: string = "192.168.0.15";
 	protected override readonly anotherUserIp: string = "127.0.1.0";
 
-	protected override getUserIpObject(): UserIp {
+	protected override getUserIpObject(): Ip {
 		return {
 			v4: {
 				asNumeric: new Address4(this.baseIpAsString).bigInt(),
@@ -37,7 +37,7 @@ class TestFindByMaskV4 extends TestFindByIpV4 {
 		};
 	}
 
-	protected override getUserIpObjectInOtherVersion(): UserIp {
+	protected override getUserIpObjectInOtherVersion(): Ip {
 		return {
 			v6: {
 				asNumericString: new Address4(this.baseIpAsString).bigInt().toString(),
