@@ -1,11 +1,12 @@
-import {describe} from "vitest";
+import { describe } from "vitest";
 import TestOptionalFieldsValidation from "./testOptionalFieldsValidation.js";
-import TestMongooseRulesStorage from "../../../../test/testMongooseRulesStorage.js";
+import MongooseRulesStorage from "../../../../mongooseRulesStorage.js";
+import testMongooseRuleModel from "../../../../test/testMongooseRuleModel.js";
 
 describe("MongooseOptionalFieldsValidation", async () => {
-    const mongooseRulesStorage = new TestMongooseRulesStorage();
-    await mongooseRulesStorage.setup();
+	const testModel = await testMongooseRuleModel();
+	const storage = new MongooseRulesStorage(testModel);
+	const tests = new TestOptionalFieldsValidation(storage);
 
-    const tests = new TestOptionalFieldsValidation(mongooseRulesStorage);
-    tests.runAll();
+	tests.runAll();
 });

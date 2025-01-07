@@ -13,19 +13,15 @@
 // limitations under the License.
 import type { UserIp } from "@prosopo/types-database";
 import { Address4 } from "ip-address";
-import { FindRuleByUserIpV4Tests } from "./findRuleByUserIpV4Tests.js";
+import TestFindByIpV4 from "./testFindByIpV4.js";
 
-class FindRuleByUserIpMaskV4Tests extends FindRuleByUserIpV4Tests {
+class TestFindByMaskV4 extends TestFindByIpV4 {
 	protected baseIpAsString = "192.168.0.0";
 	protected rangeMinIpAsString = "192.168.0.0";
 	protected rangeMaxIpAsString = "192.168.0.255";
 
 	protected override readonly userIp: string = "192.168.0.15";
 	protected override readonly anotherUserIp: string = "127.0.1.0";
-
-	public override getName(): string {
-		return "FindRuleByUserIpMaskV4";
-	}
 
 	protected override getUserIpObject(): UserIp {
 		return {
@@ -60,4 +56,4 @@ class FindRuleByUserIpMaskV4Tests extends FindRuleByUserIpV4Tests {
 	}
 }
 
-export { FindRuleByUserIpMaskV4Tests };
+export default TestFindByMaskV4;

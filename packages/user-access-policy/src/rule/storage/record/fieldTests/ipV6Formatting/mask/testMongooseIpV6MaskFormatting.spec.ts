@@ -1,11 +1,12 @@
 import { describe } from "vitest";
 import TestIpV6MaskFormatting from "./testIpV6MaskFormatting.js";
-import TestMongooseRulesStorage from "../../../../test/testMongooseRulesStorage.js";
+import testMongooseRuleModel from "../../../../test/testMongooseRuleModel.js";
+import MongooseRulesStorage from "../../../../mongooseRulesStorage.js";
 
 describe("MongooseIpV6MaskFormatting", async () => {
-	const mongooseRulesStorage = new TestMongooseRulesStorage();
-	await mongooseRulesStorage.setup();
+	const testModel = await testMongooseRuleModel();
+	const storage = new MongooseRulesStorage(testModel);
+	const tests = new TestIpV6MaskFormatting(storage);
 
-	const tests = new TestIpV6MaskFormatting(mongooseRulesStorage);
 	tests.runAll();
 });

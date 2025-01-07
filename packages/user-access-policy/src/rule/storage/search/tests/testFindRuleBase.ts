@@ -1,9 +1,9 @@
 import { expect } from "vitest";
-import TestRulesBase from "../../test/testRulesBase.js";
+import TestRulesStorageBase from "../../test/testRulesStorageBase.js";
 import type Rule from "../../../rule.js";
 import type SearchRuleFilters from "../searchRuleFilters.js";
 
-abstract class TestFindRuleByFilterBase extends TestRulesBase {
+abstract class TestFindRuleBase extends TestRulesStorageBase {
 	protected abstract getClientId(): string | undefined;
 
 	protected abstract getOtherClientId(): string | undefined;
@@ -37,7 +37,7 @@ abstract class TestFindRuleByFilterBase extends TestRulesBase {
 
 	protected async findsRecord(): Promise<void> {
 		// given
-		const record = await this.model.create(this.getRule());
+		const record = await this.rulesStorage.insert(this.getRule());
 
 		// when
 		const rules = await this.rulesStorage.find({
@@ -51,7 +51,7 @@ abstract class TestFindRuleByFilterBase extends TestRulesBase {
 
 	protected async ignoresRecordWithDifferentClientId(): Promise<void> {
 		// given
-		await this.model.create(this.getRule());
+		await this.rulesStorage.insert(this.getRule());
 
 		// when
 		const rules = await this.rulesStorage.find({
@@ -64,7 +64,7 @@ abstract class TestFindRuleByFilterBase extends TestRulesBase {
 
 	protected async findsRecordByFilters(): Promise<void> {
 		// given
-		const record = await this.model.create(this.getRule());
+		const record = await this.rulesStorage.insert(this.getRule());
 
 		// when
 		const rules = await this.rulesStorage.find({
@@ -79,7 +79,7 @@ abstract class TestFindRuleByFilterBase extends TestRulesBase {
 
 	protected async ignoresRecordWithDifferentValues(): Promise<void> {
 		// given
-		await this.model.create(this.getRule());
+		await this.rulesStorage.insert(this.getRule());
 
 		// when
 		const rules = await this.rulesStorage.find({
@@ -92,4 +92,4 @@ abstract class TestFindRuleByFilterBase extends TestRulesBase {
 	}
 }
 
-export default TestFindRuleByFilterBase;
+export default TestFindRuleBase;

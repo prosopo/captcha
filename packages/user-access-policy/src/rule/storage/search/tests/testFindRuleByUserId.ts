@@ -15,17 +15,13 @@ import type {
 	SearchRuleFilters,
 	UserAccessRule,
 } from "@prosopo/types-database";
-import { TestFindRuleByFilterBase } from "./testFindRuleByFilterBase.js";
+import TestFindRuleBase from "./testFindRuleBase.js";
 
-class FindRuleByUserIdTests extends TestFindRuleByFilterBase {
+class TestFindRuleByUserId extends TestFindRuleBase {
 	private readonly userId: string = "userId";
 	private readonly otherUserId: string = "otherUserId";
 	private readonly clientId: string = "client";
 	private readonly otherClientId: string = "another";
-
-	getName(): string {
-		return "FindRuleByUserId";
-	}
 
 	protected getRule(): UserAccessRule {
 		const clientId = this.getClientId();
@@ -64,4 +60,4 @@ class FindRuleByUserIdTests extends TestFindRuleByFilterBase {
 	}
 }
 
-export { FindRuleByUserIdTests };
+export default TestFindRuleByUserId;

@@ -13,19 +13,21 @@
 // limitations under the License.
 import type Rule from "../rule.js";
 import type RuleRecord from "./record/ruleRecord.js";
-import type DeleteRuleFilters from "./filters/deleteRuleFilters.js";
-import type SearchRuleFilters from "./filters/search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "./filters/search/searchRuleFilterSettings.js";
+import type SearchRuleFilters from "./search/searchRuleFilters.js";
+import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
+import type DeleteRuleFilters from "./delete/deleteRuleFilters.js";
 
 interface RulesStorage {
-    insertMany(records: Rule[]): Promise<RuleRecord[]>;
+	insert(record: Rule): Promise<RuleRecord>;
 
-    find(
-        filters: SearchRuleFilters,
-        filterSettings?: SearchRuleFilterSettings,
-    ): Promise<RuleRecord[]>;
+	insertMany(records: Rule[]): Promise<RuleRecord[]>;
 
-    deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void>;
+	find(
+		filters: SearchRuleFilters,
+		filterSettings?: SearchRuleFilterSettings,
+	): Promise<RuleRecord[]>;
+
+	deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void>;
 }
 
 export default RulesStorage;

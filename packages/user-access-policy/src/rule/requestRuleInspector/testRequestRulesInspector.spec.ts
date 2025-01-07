@@ -119,6 +119,13 @@ class TestRequestRulesInspector extends TestsBase {
 
 	protected mockRulesStorage(ruleRecords: RuleRecord[]): RulesStorage {
 		return {
+			async insert(record: Rule): Promise<RuleRecord> {
+				return Promise.resolve({
+					isUserBlocked: false,
+					_id: "none",
+				});
+			},
+
 			async insertMany(records: Rule[]): Promise<RuleRecord[]> {
 				return Promise.resolve(ruleRecords);
 			},

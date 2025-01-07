@@ -1,7 +1,7 @@
 import {expect} from "vitest";
-import TestRulesBase from "../../../../test/testRulesBase.js";
+import TestRulesStorageBase from "../../../../test/testRulesStorageBase.js";
 
-class TestUserIpValidation extends TestRulesBase {
+class TestUserIpValidation extends TestRulesStorageBase {
 	protected getTests(): { name: string; method: () => Promise<void> }[] {
 		return [
 			{

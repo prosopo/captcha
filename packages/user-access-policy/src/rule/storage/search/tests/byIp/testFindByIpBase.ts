@@ -1,33 +1,18 @@
-import type {
-	SearchRuleFilters,
-	UserAccessRule,
-	UserIp,
-} from "@prosopo/types-database";
 import type { Address4, Address6 } from "ip-address";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 import { expect } from "vitest";
-import { TestFindRuleByFilterBase } from "../testFindRuleByFilterBase.js";
+import TestFindRuleBase from "../testFindRuleBase.js";
+import type Ip from "../../../../../ip/ip.js";
+import type Rule from "../../../../rule.js";
+import type SearchRuleFilters from "../../searchRuleFilters.js";
 
-abstract class FindRuleByUserIpTests extends TestFindRuleByFilterBase {
-	protected abstract getUserIpObject(): UserIp;
+abstract class TestFindByIpBase extends TestFindRuleBase {
+	protected abstract getUserIpObject(): Ip;
 
 	protected abstract getUserIpAddress(): Address4 | Address6;
 
 	protected abstract getOtherUserIpAddress(): Address4 | Address6;
 
-	protected abstract getUserIpObjectInOtherVersion(): UserIp;
+	protected abstract getUserIpObjectInOtherVersion(): Ip;
 
 	protected override getClientId(): string | undefined {
 		return "client";
@@ -37,10 +22,10 @@ abstract class FindRuleByUserIpTests extends TestFindRuleByFilterBase {
 		return "otherClient";
 	}
 
-	protected override getRule(): UserAccessRule {
+	protected override getRule(): Rule {
 		const clientId = this.getClientId();
 
-		const record: UserAccessRule = {
+		const record: Rule = {
 			isUserBlocked: false,
 			userIp: this.getUserIpObject(),
 		};
@@ -78,13 +63,13 @@ abstract class FindRuleByUserIpTests extends TestFindRuleByFilterBase {
 
 	protected async ignoresRecordWithSameIpInDifferentVersion(): Promise<void> {
 		// given
-		await this.model.create({
+		await this.rulesStorage.insert({
 			...this.getRule(),
 			userIp: this.getUserIpObjectInOtherVersion(),
 		});
 
 		// when
-		const rules = await this.userAccessRulesStorage.find({
+		const rules = await this.rulesStorage.find({
 			clientId: this.getClientId(),
 			...this.getRecordFilters(),
 		});
@@ -94,4 +79,4 @@ abstract class FindRuleByUserIpTests extends TestFindRuleByFilterBase {
 	}
 }
 
-export { FindRuleByUserIpTests };
+export { TestFindByIpBase };

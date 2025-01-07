@@ -1,8 +1,8 @@
 import { expect } from "vitest";
 import type Ip from "../../../../ip/ip.js";
-import TestRulesBase from "../../test/testRulesBase.js";
+import TestRulesStorageBase from "../../test/testRulesStorageBase.js";
 
-abstract class TestUniqueIndexBase extends TestRulesBase {
+abstract class TestUniqueIndexBase extends TestRulesStorageBase {
 	protected abstract getFirstUserIpObject(): Ip;
 
 	protected abstract getSecondUserIpObject(): Ip;

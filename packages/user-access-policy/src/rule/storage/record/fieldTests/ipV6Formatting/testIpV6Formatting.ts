@@ -1,8 +1,8 @@
 import { expect } from "vitest";
-import TestRulesBase from "../../../test/testRulesBase.js";
+import TestRulesStorageBase from "../../../test/testRulesStorageBase.js";
 import IPV6_NUMERIC_MAX_LENGTH from "../../../../../ip/v6/ipV6NumericMaxLength.js";
 
-class TestIpV6Formatting extends TestRulesBase {
+class TestIpV6Formatting extends TestRulesStorageBase {
 	protected override getTests(): {
 		name: string;
 		method: () => Promise<void>;

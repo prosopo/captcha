@@ -1,34 +1,14 @@
-import type {
-	SearchRuleFilters,
-	UserAccessRule,
-} from "@prosopo/types-database";
 import { Address4 } from "ip-address";
 import { expect } from "vitest";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-import { TestFindRuleByFilterBase } from "./testFindRuleByFilterBase.js";
-import TestRulesBase from "../../test/testRulesBase.js";
+import TestFindRuleBase from "./testFindRuleBase.js";
+import type Rule from "../../../rule.js";
+import type SearchRuleFilters from "../searchRuleFilters.js";
 
-class TestSearchRulesBase extends TestRulesBase {
+class TestFindRule extends TestFindRuleBase {
 	private readonly userIp: Address4 = new Address4("192.168.1.1");
 	private readonly otherUserIp: Address4 = new Address4("192.168.1.2");
 	private readonly userId: string = "userId";
 	private readonly otherUserId: string = "otherUserId";
-
-	getName(): string {
-		return "FindRuleTests";
-	}
 
 	protected getClientId(): string | undefined {
 		return "client";
@@ -38,10 +18,10 @@ class TestSearchRulesBase extends TestRulesBase {
 		return "other";
 	}
 
-	protected getRule(): UserAccessRule {
+	protected getRule(): Rule {
 		const clientId = this.getClientId();
 
-		const record: UserAccessRule = {
+		const record: Rule = {
 			isUserBlocked: false,
 			userId: this.userId,
 			userIp: {
@@ -105,10 +85,10 @@ class TestSearchRulesBase extends TestRulesBase {
 
 	protected async ignoresPartialFilterMatchesWhenFlagIsNotSet(): Promise<void> {
 		// given
-		await this.model.create(this.getRule());
+		await this.rulesStorage.insert(this.getRule());
 
 		// when
-		const rules = await this.userAccessRulesStorage.find({
+		const rules = await this.rulesStorage.find({
 			clientId: this.getClientId(),
 			...this.getPartialMatchRecordFilters(),
 		});
@@ -119,10 +99,10 @@ class TestSearchRulesBase extends TestRulesBase {
 
 	protected async includesPartialFilterMatchesWhenFlagIsSet(): Promise<void> {
 		// given
-		const record = await this.model.create(this.getRule());
+		const record = await this.rulesStorage.insert(this.getRule());
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(
+		const rules = await this.rulesStorage.find(
 			{
 				clientId: this.getClientId(),
 				...this.getPartialMatchRecordFilters(),
@@ -134,18 +114,18 @@ class TestSearchRulesBase extends TestRulesBase {
 
 		// then
 		expect(rules.length).toBe(1);
-		expect(rules[0]?._id.toString()).toBe(record.id.toString());
+		expect(rules[0]?._id).toBe(record._id);
 	}
 
 	protected async ignoresRecordsWithoutClientIdWhenFlagIsNotSet(): Promise<void> {
 		// given
-		await this.model.create({
+		await this.rulesStorage.insert({
 			...this.getRule(),
-			clientId: null,
+			clientId: undefined,
 		});
 
 		// when
-		const rules = await this.userAccessRulesStorage.find({
+		const rules = await this.rulesStorage.find({
 			clientId: this.getClientId(),
 		});
 
@@ -159,12 +139,12 @@ class TestSearchRulesBase extends TestRulesBase {
 
 		const { clientId, ...recordDataWithoutClientId } = recordData;
 
-		const recordWithoutClientId = await this.model.create(
+		const recordWithoutClientId = await this.rulesStorage.insert(
 			recordDataWithoutClientId,
 		);
 
 		// when
-		const rules = await this.userAccessRulesStorage.find(
+		const rules = await this.rulesStorage.find(
 			{
 				clientId: this.getClientId(),
 			},
@@ -175,8 +155,8 @@ class TestSearchRulesBase extends TestRulesBase {
 
 		// then
 		expect(rules.length).toBe(1);
-		expect(rules[0]?._id.toString()).toBe(recordWithoutClientId.id.toString());
+		expect(rules[0]?._id).toBe(recordWithoutClientId._id);
 	}
 }
 
-export { TestSearchRulesBase };
+export default TestFindRule;

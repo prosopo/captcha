@@ -1,11 +1,12 @@
 import { describe } from "vitest";
-import TestMongooseRulesStorage from "../../../../test/testMongooseRulesStorage.js";
 import TestUserIpValidation from "./testUserIpValidation.js";
+import testMongooseRuleModel from "../../../../test/testMongooseRuleModel.js";
+import MongooseRulesStorage from "../../../../mongooseRulesStorage.js";
 
 describe("MongooseUserIPValidation", async () => {
-    const mongooseRulesStorage = new TestMongooseRulesStorage();
-    await mongooseRulesStorage.setup();
+    const testModel = await testMongooseRuleModel();
+    const storage = new MongooseRulesStorage(testModel);
+    const tests = new TestUserIpValidation(storage);
 
-    const tests = new TestUserIpValidation(mongooseRulesStorage);
     tests.runAll();
 });

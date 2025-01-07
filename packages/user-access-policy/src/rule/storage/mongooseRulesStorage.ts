@@ -28,15 +28,30 @@ class MongooseRulesStorage implements RulesStorage {
 		this.model = model;
 	}
 
+	public async insert(record: Rule): Promise<RuleRecord> {
+		if (!this.model) {
+			throw new Error("Model is not set");
+		}
+
+		const document = await this.model.create(record);
+
+		const ruleRecord = this.convertMongooseRecordToRuleRecord(
+			document.toObject(),
+		);
+
+		return ruleRecord;
+	}
+
 	public async insertMany(records: Rule[]): Promise<RuleRecord[]> {
 		if (!this.model) {
 			throw new Error("Model is not set");
 		}
 
-		const mongooseRecords = await this.model.insertMany(records);
+		const documents = await this.model.insertMany(records);
+		const objectDocuments = documents.map((document) => document.toObject());
 
 		const ruleRecords =
-			this.convertMongooseRecordsToRuleRecords(mongooseRecords);
+			this.convertMongooseRecordsToRuleRecords(objectDocuments);
 
 		return ruleRecords;
 	}
@@ -183,21 +198,21 @@ class MongooseRulesStorage implements RulesStorage {
 	}
 
 	protected convertMongooseRecordsToRuleRecords(
-		records: MongooseRuleRecord[],
+		mongooseRecords: MongooseRuleRecord[],
 	): RuleRecord[] {
-		const ruleRecords = records.map((record) =>
-			this.convertMongooseRecordToRuleRecord(record),
+		const ruleRecords = mongooseRecords.map((mongooseRecord) =>
+			this.convertMongooseRecordToRuleRecord(mongooseRecord),
 		);
 
 		return ruleRecords;
 	}
 
 	protected convertMongooseRecordToRuleRecord(
-		record: MongooseRuleRecord,
+		mongooseRecord: MongooseRuleRecord,
 	): RuleRecord {
 		const ruleRecord = {
-			...record,
-			_id: record._id.toString(),
+			...mongooseRecord,
+			_id: mongooseRecord._id.toString(),
 		};
 
 		return ruleRecord;

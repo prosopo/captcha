@@ -11,19 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { FindRuleByUserIpMaskV6Tests } from "../v6/findRuleByUserIpMaskV6Tests.js";
+import TestFindByIpMaskV6  from "../../v6/testFindByIpMaskV6.js";
 
-class FindRuleByUserIpMaskV6ShortTests extends FindRuleByUserIpMaskV6Tests {
+class TestFindByIpMaskV6ShortRangeMax extends TestFindByIpMaskV6 {
 	protected override baseIpAsString = "::1";
 	protected override rangeMinIpAsString = "::1";
 	protected override rangeMaxIpAsString = "::3";
 
-	protected override readonly userIp: string = "::2";
+	protected override readonly userIp: string = "::3";
 	protected override readonly anotherUserIp: string = "::4";
-
-	public override getName(): string {
-		return "FindRuleByUserIpMaskV6Short";
-	}
 }
 
-export { FindRuleByUserIpMaskV6ShortTests };
+export { TestFindByIpMaskV6ShortRangeMax };

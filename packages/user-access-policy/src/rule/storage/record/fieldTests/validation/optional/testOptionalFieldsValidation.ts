@@ -1,7 +1,7 @@
 import { expect } from "vitest";
-import TestRulesBase from "../../../../test/testRulesBase.js";
+import TestRulesStorageBase from "../../../../test/testRulesStorageBase.js";
 
-class TestOptionalFieldsValidation extends TestRulesBase {
+class TestOptionalFieldsValidation extends TestRulesStorageBase {
 	protected getTests(): { name: string; method: () => Promise<void> }[] {
 		return [
 			{
@@ -19,10 +19,10 @@ class TestOptionalFieldsValidation extends TestRulesBase {
 		};
 
 		// when
-		const record = await this.rulesStorage.insert(recordData);
+		const insertedRule = await this.rulesStorage.insert(recordData);
 
 		// when, then
-		expect(undefined === record.userIp).toBeTruthy();
+		expect(undefined === insertedRule?.userIp).toBeTruthy();
 	}
 }
 
