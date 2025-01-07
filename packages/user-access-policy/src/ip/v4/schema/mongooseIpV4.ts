@@ -1,6 +1,6 @@
 import { Schema } from "mongoose";
-import type IpV4 from "./ipV4.js";
-import mongooseIpV4Mask from "./mask/mongooseIpV4Mask.js";
+import type IpV4 from "../ipV4.js";
+import mongooseIpV4Mask from "../mask/schema/mongooseIpV4Mask.js";
 
 const mongooseIpV4 = new Schema<IpV4>(
 	{
