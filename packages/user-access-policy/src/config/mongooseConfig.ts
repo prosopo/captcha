@@ -1,6 +1,6 @@
 import { Schema } from "mongoose";
-import type Config from "../config.js";
-import MongooseImageCaptchaConfig from "../imageCaptcha/schema/mongooseImageCaptchaConfig.js";
+import type Config from "./config.js";
+import MongooseImageCaptchaConfig from "./imageCaptcha/mongooseImageCaptchaConfig.js";
 
 const mongooseConfig = new Schema<Config>(
 	{

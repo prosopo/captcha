@@ -1,4 +1,4 @@
-import type MongooseIndex from "./mongooseIndex.js";
+import type MongooseIndex from "../mongooseIndex.js";
 
 const globalIpIndexes: MongooseIndex[] = [
 	{

@@ -1,8 +1,9 @@
 import { Schema } from "mongoose";
-import type IpV6Mask from "../ipV6Mask.js";
-import IPV6_NUMERIC_MAX_LENGTH from "../../ipV6NumericMaxLength.js";
+import type IpV6 from "./ipV6.js";
+import MongooseIpV6Mask from "./mask/mongooseIpV6Mask.js";
+import IPV6_NUMERIC_MAX_LENGTH from "./ipV6NumericMaxLength.js";
 
-const mongooseIpV6Mask = new Schema<IpV6Mask>(
+const mongooseIpV6 = new Schema<IpV6>(
 	{
 		// 1. Type choice note:
 		/**
@@ -15,21 +16,19 @@ const mongooseIpV6Mask = new Schema<IpV6Mask>(
 		 * as long we make sure both strings have the exact same length:
 		 * so '10' and '02', never '10' and '2'.
 		 */
-		rangeMinAsNumericString: {
+		asNumericString: {
 			type: String,
 			required: true,
 			// we must have the exact same string length to guarantee the right comparison.
 			set: (value: string): string => value.padStart(IPV6_NUMERIC_MAX_LENGTH, "0"),
 		},
-		rangeMaxAsNumericString: {
-			type: String,
-			required: true,
-			// we must have the exact same string length to guarantee the right comparison.
-			set: (value: string): string => value.padStart(IPV6_NUMERIC_MAX_LENGTH, "0"),
+		asString: { type: String, required: true },
+		mask: {
+			type: MongooseIpV6Mask,
+			required: false,
 		},
-		asNumeric: { type: Number, required: true },
 	},
 	{ _id: false },
 );
 
-export default mongooseIpV6Mask;
+export default mongooseIpV6;
