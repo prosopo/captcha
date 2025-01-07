@@ -13,7 +13,7 @@
 // limitations under the License.
 import type { UserIp } from "@prosopo/types-database";
 import { Address4 } from "ip-address";
-import TestFindByIpV4 from "./testFindByIpV4.js";
+import TestFindByIpV4 from "../testFindByIpV4.js";
 
 class TestFindByMaskV4 extends TestFindByIpV4 {
 	protected baseIpAsString = "192.168.0.0";

@@ -22,18 +22,21 @@ import type SearchRuleFilters from "./search/searchRuleFilters.js";
 import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
 
 class MongooseRulesStorage implements RulesStorage {
-	private model: Model<Rule> | null;
-
-	constructor(model: Model<Rule> | null) {
-		this.model = model;
+	constructor(
+		private readingModel: Model<Rule> | null,
+		private writingModel: Model<Rule> | null = null,
+	) {
+		if (null === this.writingModel) {
+			this.writingModel = this.readingModel;
+		}
 	}
 
 	public async insert(record: Rule): Promise<RuleRecord> {
-		if (!this.model) {
+		if (!this.writingModel) {
 			throw new Error("Model is not set");
 		}
 
-		const document = await this.model.create(record);
+		const document = await this.writingModel.create(record);
 
 		const ruleRecord = this.convertMongooseRecordToRuleRecord(
 			document.toObject(),
@@ -43,11 +46,11 @@ class MongooseRulesStorage implements RulesStorage {
 	}
 
 	public async insertMany(records: Rule[]): Promise<RuleRecord[]> {
-		if (!this.model) {
+		if (!this.writingModel) {
 			throw new Error("Model is not set");
 		}
 
-		const documents = await this.model.insertMany(records);
+		const documents = await this.writingModel.insertMany(records);
 		const objectDocuments = documents.map((document) => document.toObject());
 
 		const ruleRecords =
@@ -60,13 +63,13 @@ class MongooseRulesStorage implements RulesStorage {
 		filters: SearchRuleFilters,
 		filterSettings?: SearchRuleFilterSettings,
 	): Promise<RuleRecord[]> {
-		if (!this.model) {
+		if (!this.readingModel) {
 			throw new Error("Model is not set");
 		}
 
 		const query = this.createQuery(filters, filterSettings);
 
-		const mongooseRecords = await this.model.find(query).lean().exec();
+		const mongooseRecords = await this.readingModel.find(query).lean().exec();
 
 		const ruleRecords =
 			this.convertMongooseRecordsToRuleRecords(mongooseRecords);
@@ -75,17 +78,25 @@ class MongooseRulesStorage implements RulesStorage {
 	}
 
 	public async deleteMany(recordFilters: SearchRuleFilters[]): Promise<void> {
-		if (!this.model) {
+		if (!this.writingModel) {
 			throw new Error("Model is not set");
 		}
 
 		for (const recordFilter of recordFilters) {
-			await this.model.deleteOne(recordFilter).exec();
+			await this.writingModel.deleteOne(recordFilter).exec();
 		}
 	}
 
-	public setModel(model: Model<Rule>): void {
-		this.model = model;
+	public setReadingModel(readingModel: Model<Rule>): void {
+		this.readingModel = readingModel;
+
+		if (null === this.writingModel) {
+			this.setWritingModel(readingModel);
+		}
+	}
+
+	public setWritingModel(writingModel: Model<Rule>): void {
+		this.writingModel = writingModel;
 	}
 
 	protected createQuery(

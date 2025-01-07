@@ -15,7 +15,7 @@ import type {
 	SearchRuleFilters,
 	UserAccessRule,
 } from "@prosopo/types-database";
-import TestFindRuleBase from "./testFindRuleBase.js";
+import TestFindRuleBase from "../testFindRuleBase.js";
 
 class TestFindRuleByUserId extends TestFindRuleBase {
 	private readonly userId: string = "userId";

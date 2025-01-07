@@ -1,4 +1,4 @@
-import TestFindByMaskV4 from "../testFindByMaskV4.js";
+import TestFindByMaskV4 from "../../testFindByMaskV4.js";
 
 class TestFindByMaskV4RangeMin extends TestFindByMaskV4 {
 	protected override baseIpAsString = "192.168.1.0";

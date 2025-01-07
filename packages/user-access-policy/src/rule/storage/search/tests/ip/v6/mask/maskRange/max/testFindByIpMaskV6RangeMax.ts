@@ -1,4 +1,4 @@
-import TestFindByIpMaskV6 from "../testFindByIpMaskV6.js";
+import TestFindByIpMaskV6 from "../../testFindByIpMaskV6.js";
 
 class TestFindByIpMaskV6RangeMax extends TestFindByIpMaskV6 {
 	protected override baseIpAsString = "2001:db8:3333:4444:5555:6666:7777:8888";
