@@ -13,21 +13,21 @@
 // limitations under the License.
 import { it } from "vitest";
 
-abstract class VitestTesterBase {
-    protected abstract getTests(): {
-        name: string;
-        method: () => Promise<void>;
-    }[];
+abstract class TestsBase {
+	protected abstract getTests(): {
+		name: string;
+		method: () => Promise<void>;
+	}[];
 
-    public async runAll(): Promise<void> {
-        const tests = this.getTests();
+	public runAll(): void {
+		const tests = this.getTests();
 
-        for (const test of tests) {
-            it(test.name, async () => {
-                await test.method();
-            });
-        }
-    }
+		for (const test of tests) {
+			it(test.name, async () => {
+				await test.method();
+			});
+		}
+	}
 }
 
-export { VitestTesterBase };
+export { TestsBase };

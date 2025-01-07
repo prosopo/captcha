@@ -1,6 +1,5 @@
 import { describe, expect } from "vitest";
-import { VitestTesterBase } from "../../vitestTesterBase.js";
-import type RuleRecord from "../storage/ruleRecord.js";
+import { TestsBase } from "../../testsBase.js";
 import RequestRulesInspector from "./requestRulesInspector.js";
 import type RulesStorage from "../storage/rulesStorage.js";
 import type Rule from "../rule.js";
@@ -8,8 +7,9 @@ import type SearchRuleFilters from "../storage/filters/search/searchRuleFilters.
 import type SearchRuleFilterSettings from "../storage/filters/search/searchRuleFilterSettings.js";
 import type DeleteRuleFilters from "../storage/filters/deleteRuleFilters.js";
 import { Address4 } from "ip-address";
+import type RuleRecord from "../storage/record/ruleRecord.js";
 
-class TestRequestRulesInspector extends VitestTesterBase {
+class TestRequestRulesInspector extends TestsBase {
 	protected getTests(): {
 		name: string;
 		method: () => Promise<void>;
