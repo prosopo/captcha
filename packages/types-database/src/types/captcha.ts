@@ -18,6 +18,7 @@ import type {
 	UserCommitment,
 	UserCommitmentRecord,
 } from "./provider.js";
+import { RootFilterQuery } from "mongoose";
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
@@ -25,9 +26,12 @@ export interface ICaptchaDatabase extends IDatabase {
 		powCaptchaEvents: PoWCaptchaRecord[],
 	): Promise<void>;
 	getCaptchas(
-		filter: CaptchaProperties,
+		filter: RootFilterQuery<CaptchaProperties>,
 		limit: number,
-	): Promise<(PoWCaptchaRecord | UserCommitmentRecord)[]>;
+	): Promise<{
+		userCommitmentRecords: UserCommitmentRecord[];
+		powCaptchaRecords: PoWCaptchaRecord[];
+	}>;
 }
 
 export interface CaptchaProperties

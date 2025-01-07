@@ -18,11 +18,14 @@ import {
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	PoWCaptchaStored,
 	type Tables,
+	UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import { MongoDatabase } from "../base/index.js";
+import { RootFilterQuery } from "mongoose";
 const logger = getLoggerDefault();
 
 enum TableNames {
@@ -34,7 +37,7 @@ const CAPTCHA_TABLES = [
 	{
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
-		schema: PoWCaptchaRecordSchema,
+		schema: PoWCaptchaRecordSchema
 	},
 	{
 		collectionName: TableNames.commitment,
@@ -117,23 +120,29 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async getCaptchas(
-		filter: CaptchaProperties = {},
+		filter: RootFilterQuery<CaptchaProperties> = {},
 		limit = 100,
-	): Promise<(PoWCaptchaRecord | UserCommitmentRecord)[]> {
+	): Promise<{
+		userCommitmentRecords: UserCommitmentRecord[];
+		powCaptchaRecords: PoWCaptchaRecord[];
+	}> {
 		await this.connect();
 
 		try {
 			const commitmentResults = (await this.tables.commitment
 				.find(filter)
 				.limit(limit)
-				.lean()) as UserCommitmentRecord[];
+				.lean<UserCommitmentRecord[]>());
 
 			const powCaptchaResults = (await this.tables.powcaptcha
 				.find(filter)
 				.limit(limit)
-				.lean()) as PoWCaptchaRecord[];
+				.lean<PoWCaptchaRecord[]>());
 
-			return [...commitmentResults, ...powCaptchaResults];
+			return {
+				userCommitmentRecords: commitmentResults,
+				powCaptchaRecords: powCaptchaResults,
+			};
 		} catch (error) {
 			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {
 				context: {
