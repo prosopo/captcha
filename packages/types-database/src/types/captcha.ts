@@ -11,12 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { PoWCaptcha } from "@prosopo/types";
 import type { IDatabase } from "./mongo.js";
-import type { PoWCaptchaRecord, UserCommitmentRecord } from "./provider.js";
+import type {
+	PoWCaptchaRecord,
+	UserCommitment,
+	UserCommitmentRecord,
+} from "./provider.js";
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	): Promise<void>;
+	getCaptchas(
+		filter: CaptchaProperties,
+		limit: number,
+	): Promise<(PoWCaptchaRecord | UserCommitmentRecord)[]>;
 }
+
+export interface CaptchaProperties
+	extends Partial<UserCommitment & PoWCaptcha> {}

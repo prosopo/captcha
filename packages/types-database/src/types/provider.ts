@@ -98,6 +98,8 @@ export interface StoredCaptcha {
 	headers: RequestHeaders;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	geolocation?: string;
+	vpn?: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 }

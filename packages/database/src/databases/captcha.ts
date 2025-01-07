@@ -14,6 +14,7 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
+	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
@@ -113,5 +114,38 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		}
 
 		await this.close();
+	}
+
+	async getCaptchas(
+		filter: CaptchaProperties = {},
+		limit = 100,
+	): Promise<(PoWCaptchaRecord | UserCommitmentRecord)[]> {
+		await this.connect();
+
+		try {
+			const commitmentResults = (await this.tables.commitment
+				.find(filter)
+				.limit(limit)
+				.lean()) as UserCommitmentRecord[];
+
+			const powCaptchaResults = (await this.tables.powcaptcha
+				.find(filter)
+				.limit(limit)
+				.lean()) as PoWCaptchaRecord[];
+
+			return [...commitmentResults, ...powCaptchaResults];
+		} catch (error) {
+			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {
+				context: {
+					error,
+					filter,
+					limit,
+					failedFuncName: this.getCaptchas.name,
+				},
+				logger: this.logger,
+			});
+		} finally {
+			await this.close();
+		}
 	}
 }
