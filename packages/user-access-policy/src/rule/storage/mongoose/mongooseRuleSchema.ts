@@ -1,6 +1,6 @@
-import mongooseRule from "./mongooseRule.js";
 import PerformanceRuleIndexes from "./indexes/performanceRuleIndexes.js";
 import UniqueRuleIndexes from "./indexes/uniqueRuleIndexes.js";
+import mongooseRule from "./mongooseRule.js";
 
 const ruleIndexes = [...PerformanceRuleIndexes, ...UniqueRuleIndexes];
 

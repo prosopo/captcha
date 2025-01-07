@@ -76,8 +76,8 @@ class ImageCaptchaConfigResolverTester {
 		]);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
-			solved: { count: 2 },
-			unsolved: { count: 3 },
+			solvedCount: 2,
+			unsolvedCount: 3,
 		};
 
 		// when
@@ -90,10 +90,10 @@ class ImageCaptchaConfigResolverTester {
 		);
 
 		// then
-		expect(resolvedConfig.solved.count).toBe(
+		expect(resolvedConfig.solvedCount).toBe(
 			userAccessRuleRecord.config?.imageCaptcha?.solvedCount,
 		);
-		expect(resolvedConfig.unsolved.count).toBe(
+		expect(resolvedConfig.unsolvedCount).toBe(
 			userAccessRuleRecord.config?.imageCaptcha?.unsolvedCount,
 		);
 	}
@@ -128,8 +128,8 @@ class ImageCaptchaConfigResolverTester {
 		]);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
-			solved: { count: 2 },
-			unsolved: { count: 3 },
+			solvedCount: 2,
+			unsolvedCount: 3,
 		};
 
 		// when
@@ -142,10 +142,10 @@ class ImageCaptchaConfigResolverTester {
 		);
 
 		// then
-		expect(resolvedConfig.solved.count).toBe(
+		expect(resolvedConfig.solvedCount).toBe(
 			clientUserAccessRuleRecord.config?.imageCaptcha?.solvedCount,
 		);
-		expect(resolvedConfig.unsolved.count).toBe(
+		expect(resolvedConfig.unsolvedCount).toBe(
 			clientUserAccessRuleRecord.config?.imageCaptcha?.unsolvedCount,
 		);
 	}
@@ -155,8 +155,8 @@ class ImageCaptchaConfigResolverTester {
 		const userAccessRulesStorage = this.mockUserAccessRulesStorage([]);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
-			solved: { count: 2 },
-			unsolved: { count: 3 },
+			solvedCount: 2,
+			unsolvedCount: 3,
 		};
 
 		// when
@@ -169,8 +169,8 @@ class ImageCaptchaConfigResolverTester {
 		);
 
 		// then
-		expect(resolvedConfig.solved.count).toBe(defaultConfig.solved.count);
-		expect(resolvedConfig.unsolved.count).toBe(defaultConfig.unsolved.count);
+		expect(resolvedConfig.solvedCount).toBe(defaultConfig.solvedCount);
+		expect(resolvedConfig.unsolvedCount).toBe(defaultConfig.unsolvedCount);
 	}
 
 	protected mockUserAccessRulesStorage(

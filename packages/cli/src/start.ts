@@ -88,8 +88,8 @@ export async function start(
 
 		const secret = getSecret();
 		const config = getConfig(undefined, {
-			solved: { count: 2 },
-			unsolved: { count: 0 },
+			solvedCount: 2,
+			unsolvedCount: 0,
 		});
 
 		const pair = await getPairAsync(secret);

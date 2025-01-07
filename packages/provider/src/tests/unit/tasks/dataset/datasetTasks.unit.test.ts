@@ -72,8 +72,8 @@ describe("DatasetManager", () => {
 		} as unknown as Logger;
 
 		captchaConfig = {
-			solved: { count: 5 },
-			unsolved: { count: 5 },
+			solvedCount: 5,
+			unsolvedCount: 5,
 		} as ProsopoCaptchaCountConfigSchemaOutput;
 
 		collections.schedulers = {} as {
@@ -164,8 +164,8 @@ describe("DatasetManager", () => {
 		expect(parseCaptchaDataset).toHaveBeenCalledWith(mockFile);
 		expect(datasetTasksUtils.providerValidateDataset).toHaveBeenCalledWith(
 			mockDatasetRaw,
-			captchaConfig.solved.count,
-			captchaConfig.unsolved.count,
+			captchaConfig.solvedCount,
+			captchaConfig.unsolvedCount,
 		);
 		expect(providerDB.storeDataset).toHaveBeenCalledWith(mockValidatedDataset);
 	});

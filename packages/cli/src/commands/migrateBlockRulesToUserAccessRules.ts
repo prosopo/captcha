@@ -109,8 +109,8 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 		if (undefined !== blockRule.captchaConfig) {
 			userAccessRule.config = {
 				imageCaptcha: {
-					solvedCount: blockRule.captchaConfig.solved.count,
-					unsolvedCount: blockRule.captchaConfig.unsolved.count,
+					solvedCount: blockRule.captchaConfig.solvedCount,
+					unsolvedCount: blockRule.captchaConfig.unsolvedCount,
 				},
 			};
 		}

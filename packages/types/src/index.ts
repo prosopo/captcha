@@ -20,3 +20,4 @@ export * from "./provider/index.js";
 export * from "./procaptcha/index.js";
 export * from "./procaptcha-bundle/index.js";
 export * from "./procaptcha-frictionless/index.js";
+export * from "./user-access-policy/index.js";

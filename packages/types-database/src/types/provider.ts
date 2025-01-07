@@ -33,6 +33,7 @@ import {
 	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type RequestHeaders,
+	type Rule,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
@@ -607,7 +608,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	getUserAccessRulesStorage(): UserAccessRulesStorage;
 
-	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
+	getAllIpBlockRules(): Promise<Rule[]>;
 
-	getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]>;
+	getAllUserAccountBlockRules(): Promise<Rule[]>;
 }

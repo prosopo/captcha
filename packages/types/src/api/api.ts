@@ -11,9 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { CaptchaSolution } from "../datasets/index.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
+	ApiResponse,
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
 	GetPowCaptchaResponse,
@@ -23,6 +25,7 @@ import type {
 	ProviderRegistered,
 	RandomProvider,
 	UpdateProviderClientsResponse,
+	UserAccessPolicyInsertManyRulesBody,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {
@@ -62,4 +65,9 @@ export interface ProviderApiInterface {
 	): Promise<UpdateProviderClientsResponse>;
 	getProviderStatus(): Promise<ProviderRegistered>;
 	getProviderDetails(): Promise<Provider>;
+	addBlockRulesIP(
+		blockRules: typeof UserAccessPolicyInsertManyRulesBody,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse>;
 }

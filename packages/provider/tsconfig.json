@@ -35,6 +35,9 @@
 			"path": "../types-env"
 		},
 		{
+			"path": "../user-access-policy"
+		},
+		{
 			"path": "../util"
 		}
 	]

@@ -30,6 +30,7 @@ import {
 	type output,
 	string,
 	union,
+	z,
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
@@ -76,6 +77,12 @@ export type TGetImageCaptchaChallengePathAndParams =
 
 export type TGetImageCaptchaChallengeURL =
 	`${string}${TGetImageCaptchaChallengePathAndParams}`;
+
+export type TGetPowCaptchaChallengeURL =
+	`${string}${ApiPaths.GetPowCaptchaChallenge}`;
+
+export type TSubmitPowCaptchaSolutionURL =
+	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
@@ -383,13 +390,13 @@ const userAccessPolicyIp = object({
 	v6: userAccessPolicyIpV6.optional(),
 });
 
-const userAccessPolicyImageCaptchaConfig = object({
-	solvedCount: number().optional(),
-	unsolvedCount: number().optional(),
+export const userAccessPolicyImageCaptchaConfigSchema = object({
+	solvedCount: number().optional().default(2),
+	unsolvedCount: number().optional().default(0),
 });
 
 const userAccessPolicyConfig = object({
-	imageCaptcha: userAccessPolicyImageCaptchaConfig.optional(),
+	imageCaptcha: userAccessPolicyImageCaptchaConfigSchema.optional(),
 });
 
 export const UserAccessPolicyInsertManyRulesBody = array(
@@ -403,6 +410,10 @@ export const UserAccessPolicyInsertManyRulesBody = array(
 	}),
 );
 
+export type UserAccessPolicyInsertManyRulesBodyOutput = output<
+	typeof UserAccessPolicyInsertManyRulesBody
+>;
+
 export const UserAccessPolicyDeleteManyRulesBody = array(
 	object({
 		clientId: string().optional(),
@@ -413,18 +424,8 @@ export const UserAccessPolicyDeleteManyRulesBody = array(
 
 //// userAccessPolicy END
 
-export const ProsopoCaptchaCountConfigSchema = object({
-	solved: object({
-		count: number().positive(),
-	})
-		.optional()
-		.default({ count: 1 }),
-	unsolved: object({
-		count: number().nonnegative(),
-	})
-		.optional()
-		.default({ count: 0 }),
-});
+export const ProsopoCaptchaCountConfigSchema =
+	userAccessPolicyImageCaptchaConfigSchema;
 
 export type ProsopoCaptchaCountConfigSchemaInput = input<
 	typeof ProsopoCaptchaCountConfigSchema
@@ -450,6 +451,42 @@ export const BlockRuleSpec = object({
 });
 
 export type BlockRule = zInfer<typeof BlockRuleSpec>;
+
+export const AddBlockRulesIPSpec = array(
+	BlockRuleSpec.merge(
+		object({
+			ips: array(string()),
+		}),
+	),
+);
+
+export type AddBlockRulesIP = zInfer<typeof AddBlockRulesIPSpec>;
+
+export const RemoveBlockRulesIPSpec = object({
+	ips: array(string()),
+	dappAccount: string().optional(),
+});
+
+export type RemoveBlockRulesIP = zInfer<typeof RemoveBlockRulesIPSpec>;
+
+export const BlockRuleIPAddBody = array(AddBlockRulesIPSpec);
+
+export const AddBlockRulesUserSpec = array(
+	BlockRuleSpec.merge(
+		object({
+			users: array(string()),
+		}),
+	),
+);
+
+export type AddBlockRulesUser = zInfer<typeof AddBlockRulesUserSpec>;
+
+export const RemoveBlockRulesUserSpec = object({
+	users: array(string()),
+	dappAccount: string().optional(),
+});
+
+export type RemoveBlockRulesUser = zInfer<typeof RemoveBlockRulesUserSpec>;
 
 export const DappDomainRequestBody = object({
 	[ApiParams.dapp]: string(),
