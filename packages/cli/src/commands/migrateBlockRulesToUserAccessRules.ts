@@ -1,11 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { ProviderEnvironment } from "@prosopo/env";
-import type { BlockRule, ProsopoConfigOutput } from "@prosopo/types";
-import type {
-	IPBlockRuleRecord,
-	UserAccessRule,
-	UserAccountBlockRuleRecord,
-} from "@prosopo/types-database";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +12,14 @@ import type {
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { CommandModule } from "yargs";
+import type {Rule} from "@prosopo/user-access-policy";
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { ProviderEnvironment } from "@prosopo/env";
+import type { BlockRule, ProsopoConfigOutput } from "@prosopo/types";
+import type {
+	IPBlockRuleRecord,
+	UserAccountBlockRuleRecord,
+} from "@prosopo/types-database";
 
 class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 	implements CommandModule
@@ -58,7 +58,7 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 
 	protected convertIpBlockRulesToUserAccessRules(
 		ipBlockRules: IPBlockRuleRecord[],
-	): UserAccessRule[] {
+	): Rule[] {
 		return ipBlockRules.map((ipBlockRule) =>
 			this.convertIpBlockRuleToUserAccessRule(ipBlockRule),
 		);
@@ -66,7 +66,7 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 
 	protected convertUserAccountBlockRulesToUserAccessRules(
 		userAccountBlockRules: UserAccountBlockRuleRecord[],
-	): UserAccessRule[] {
+	): Rule[] {
 		return userAccountBlockRules.map((userAccountBlockRule) =>
 			this.convertUserAccountBlockRuleToUserAccessRule(userAccountBlockRule),
 		);
@@ -74,7 +74,7 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 
 	protected convertIpBlockRuleToUserAccessRule(
 		ipBlockRule: IPBlockRuleRecord,
-	): UserAccessRule {
+	): Rule {
 		const userAccessRule = this.convertBlockRuleToUserAccessRule(ipBlockRule);
 
 		userAccessRule.userIp = {
@@ -89,7 +89,7 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 
 	protected convertUserAccountBlockRuleToUserAccessRule(
 		userAccountBlockRule: UserAccountBlockRuleRecord,
-	): UserAccessRule {
+	): Rule {
 		const userAccessRule =
 			this.convertBlockRuleToUserAccessRule(userAccountBlockRule);
 
@@ -100,8 +100,8 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 
 	protected convertBlockRuleToUserAccessRule(
 		blockRule: BlockRule,
-	): UserAccessRule {
-		const userAccessRule: UserAccessRule = {
+	): Rule {
+		const userAccessRule: Rule = {
 			isUserBlocked: blockRule.hardBlock,
 			clientId: blockRule.dappAccount,
 		};
