@@ -4,7 +4,7 @@ import { afterAll, beforeEach } from "vitest";
 import type TestRulesStorage from "./testRulesStorage.js";
 import type Rule from "../../rule.js";
 import type RuleRecord from "../record/ruleRecord.js";
-import mongooseRuleSchema from "../../mongooseRuleSchema.js";
+import MongooseRuleRecordSchema from "../record/mongooseRuleRecordSchema.js";
 
 class TestMongooseRulesStorage implements TestRulesStorage {
 	private model: Model<Rule> | null = null;
@@ -18,9 +18,11 @@ class TestMongooseRulesStorage implements TestRulesStorage {
 
 		const ruleDocument = await model.create(rule);
 
+		const ruleDocumentObject = ruleDocument.toObject();
+
 		const ruleRecord = {
-			...ruleDocument,
-			_id: ruleDocument._id.toString(),
+			...ruleDocumentObject,
+			_id: ruleDocumentObject._id.toString(),
 		};
 
 		return ruleRecord;
@@ -40,7 +42,7 @@ class TestMongooseRulesStorage implements TestRulesStorage {
 
 		const model = mongoConnection.model(
 			"UserAccessPolicyRules",
-			mongooseRuleSchema,
+			MongooseRuleRecordSchema,
 		);
 
 		await model.syncIndexes();

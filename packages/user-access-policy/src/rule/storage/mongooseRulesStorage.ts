@@ -15,11 +15,11 @@ import { Address4, type Address6 } from "ip-address";
 import type { Model } from "mongoose";
 import type RulesStorage from "./rulesStorage.js";
 import type Rule from "../rule.js";
-import type SearchRuleFilters from "./filters/search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "./filters/search/searchRuleFilterSettings.js";
 import IpVersion from "../../ip/ipVersion.js";
 import type RuleRecord from "./record/ruleRecord.js";
 import type MongooseRuleRecord from "./record/mongooseRuleRecord.js";
+import type SearchRuleFilters from "./search/searchRuleFilters.js";
+import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
 
 class MongooseRulesStorage implements RulesStorage {
 	private model: Model<Rule> | null;

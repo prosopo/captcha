@@ -1,6 +1,6 @@
-import mongooseRule from "./mongooseRule.js";
-import MongooseUniqueRuleIndexes from "./storage/indexes/unique/mongooseUniqueRuleIndexes.js";
-import MongoosePerformanceRuleIndexes from "./storage/indexes/performance/mongoosePerformanceRuleIndexes.js";
+import mongooseRule from "../../mongooseRule.js";
+import MongooseUniqueRuleIndexes from "../indexes/unique/mongooseUniqueRuleIndexes.js";
+import MongoosePerformanceRuleIndexes from "../indexes/performance/mongoosePerformanceRuleIndexes.js";
 
 const mongooseRuleIndexes = [
 	...MongooseUniqueRuleIndexes,

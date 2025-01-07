@@ -4,9 +4,9 @@ import TestIpV6UniqueIndex from "./testIpV6UniqueIndex.js";
 
 describe("MongooseIpV6UniqueIndex", async () => {
 	const mongooseRulesStorage = new TestMongooseRulesStorage();
-	const tests = new TestIpV6UniqueIndex(mongooseRulesStorage);
 
 	await mongooseRulesStorage.setup();
 
+	const tests = new TestIpV6UniqueIndex(mongooseRulesStorage);
 	tests.runAll();
 });

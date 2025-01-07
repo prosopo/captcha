@@ -6,11 +6,12 @@ const globalIpIndexes: MongooseIndex[] = [
 			"userIp.v4.asNumeric": 1,
 		},
 		options: {
+			name: "globalIpV4",
 			unique: true,
 			partialFilterExpression: {
-				clientId: { $exists: false },
+				clientId: null,
 				"userIp.v4.asNumeric": { $exists: true },
-				"userIp.v4.mask.asNumeric": { $exists: false },
+				"userIp.v4.mask.asNumeric": null,
 			},
 		},
 	},
@@ -19,11 +20,12 @@ const globalIpIndexes: MongooseIndex[] = [
 			"userIp.v6.asNumericString": 1,
 		},
 		options: {
+			name: "globalIpV6",
 			unique: true,
 			partialFilterExpression: {
-				clientId: { $exists: false },
+				clientId: null,
 				"userIp.v6.asNumericString": { $exists: true },
-				"userIp.v6.mask.asNumeric": { $exists: false },
+				"userIp.v6.mask.asNumeric": null,
 			},
 		},
 	},
@@ -36,9 +38,10 @@ const globalIpMaskIndexes: MongooseIndex[] = [
 			"userIp.v4.mask.asNumeric": 1,
 		},
 		options: {
+			name: "globalIpMaskV4",
 			unique: true,
 			partialFilterExpression: {
-				clientId: { $exists: false },
+				clientId: null,
 				"userIp.v4.asNumeric": { $exists: true },
 				"userIp.v4.mask.asNumeric": { $exists: true },
 			},
@@ -50,42 +53,10 @@ const globalIpMaskIndexes: MongooseIndex[] = [
 			"userIp.v6.mask.asNumeric": 1,
 		},
 		options: {
+			name: "globalIpMaskV6",
 			unique: true,
 			partialFilterExpression: {
-				clientId: { $exists: false },
-				"userIp.v6.asNumericString": { $exists: true },
-				"userIp.v6.mask.asNumeric": { $exists: true },
-			},
-		},
-	},
-];
-
-const ipMaskPerClientIndexes: MongooseIndex[] = [
-	{
-		definition: {
-			clientId: 1,
-			"userIp.v4.asNumeric": 1,
-			"userIp.v4.mask.asNumeric": 1,
-		},
-		options: {
-			unique: true,
-			partialFilterExpression: {
-				clientId: { $exists: true },
-				"userIp.v4.asNumeric": { $exists: true },
-				"userIp.v4.mask.asNumeric": { $exists: true },
-			},
-		},
-	},
-	{
-		definition: {
-			clientId: 1,
-			"userIp.v6.asNumericString": 1,
-			"userIp.v6.mask.asNumeric": 1,
-		},
-		options: {
-			unique: true,
-			partialFilterExpression: {
-				clientId: { $exists: true },
+				clientId: null,
 				"userIp.v6.asNumericString": { $exists: true },
 				"userIp.v6.mask.asNumeric": { $exists: true },
 			},
@@ -100,11 +71,12 @@ const ipPerClientIndexes: MongooseIndex[] = [
 			"userIp.v4.asNumeric": 1,
 		},
 		options: {
+			name: "clientIpV4",
 			unique: true,
 			partialFilterExpression: {
 				clientId: { $exists: true },
 				"userIp.v4.asNumeric": { $exists: true },
-				"userIp.v4.mask.asNumeric": { $exists: false },
+				"userIp.v4.mask.asNumeric": null,
 			},
 		},
 	},
@@ -114,11 +86,47 @@ const ipPerClientIndexes: MongooseIndex[] = [
 			"userIp.v6.asNumericString": 1,
 		},
 		options: {
+			name: "clientIpV6",
 			unique: true,
 			partialFilterExpression: {
 				clientId: { $exists: true },
 				"userIp.v6.asNumericString": { $exists: true },
-				"userIp.v6.mask.asNumeric": { $exists: false },
+				"userIp.v6.mask.asNumeric": null,
+			},
+		},
+	},
+];
+
+const ipMaskPerClientIndexes: MongooseIndex[] = [
+	{
+		definition: {
+			clientId: 1,
+			"userIp.v4.asNumeric": 1,
+			"userIp.v4.mask.asNumeric": 1,
+		},
+		options: {
+			name: "clientIpV4Mask",
+			unique: true,
+			partialFilterExpression: {
+				clientId: { $exists: true },
+				"userIp.v4.asNumeric": { $exists: true },
+				"userIp.v4.mask.asNumeric": { $exists: true },
+			},
+		},
+	},
+	{
+		definition: {
+			clientId: 1,
+			"userIp.v6.asNumericString": 1,
+			"userIp.v6.mask.asNumeric": 1,
+		},
+		options: {
+			name: "clientIpV6Mask",
+			unique: true,
+			partialFilterExpression: {
+				clientId: { $exists: true },
+				"userIp.v6.asNumericString": { $exists: true },
+				"userIp.v6.mask.asNumeric": { $exists: true },
 			},
 		},
 	},

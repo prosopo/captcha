@@ -1,16 +1,11 @@
 import { expect } from "vitest";
-import { TestsBase } from "../../../../testsBase.js";
-import type TestRulesStorage from "../../test/testRulesStorage.js";
 import type Ip from "../../../../ip/ip.js";
+import TestRulesBase from "../../test/testRulesBase.js";
 
-abstract class TestUniqueIndexBase extends TestsBase {
+abstract class TestUniqueIndexBase extends TestRulesBase {
 	protected abstract getFirstUserIpObject(): Ip;
 
 	protected abstract getSecondUserIpObject(): Ip;
-
-	public constructor(private readonly rulesStorage: TestRulesStorage) {
-		super();
-	}
 
 	protected override getTests(): {
 		name: string;
@@ -21,18 +16,18 @@ abstract class TestUniqueIndexBase extends TestsBase {
 				name: "globalRuleAcceptsUniqueIp",
 				method: async () => this.globalRuleAcceptsUniqueIp(),
 			},
-			 {
+			{
 				name: "globalRuleRejectsNotUniqueIp",
 				method: async () => this.globalRuleRejectsNotUniqueIp(),
 			},
-			 {
+			{
 				name: "clientRuleAcceptsUniqueIp",
 				method: async () => this.clientRuleAcceptsUniqueIp(),
 			},
-			/*fixme {
+			{
 				name: "clientRuleRejectsNotUniqueIp",
 				method: async () => this.clientRuleRejectsNotUniqueIp(),
-			},*/
+			},
 			{
 				name: "globalAndClientRulesCanHaveSameIp",
 				method: async () => this.globalAndClientRulesCanHaveSameIp(),

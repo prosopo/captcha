@@ -3,11 +3,11 @@ import { TestsBase } from "../../testsBase.js";
 import RequestRulesInspector from "./requestRulesInspector.js";
 import type RulesStorage from "../storage/rulesStorage.js";
 import type Rule from "../rule.js";
-import type SearchRuleFilters from "../storage/filters/search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "../storage/filters/search/searchRuleFilterSettings.js";
-import type DeleteRuleFilters from "../storage/filters/deleteRuleFilters.js";
 import { Address4 } from "ip-address";
 import type RuleRecord from "../storage/record/ruleRecord.js";
+import type SearchRuleFilters from "../storage/search/searchRuleFilters.js";
+import type SearchRuleFilterSettings from "../storage/search/searchRuleFilterSettings.js";
+import type DeleteRuleFilters from "../storage/delete/deleteRuleFilters.js";
 
 class TestRequestRulesInspector extends TestsBase {
 	protected getTests(): {

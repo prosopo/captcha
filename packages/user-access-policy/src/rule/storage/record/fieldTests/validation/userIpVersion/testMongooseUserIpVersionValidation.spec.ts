@@ -1,11 +1,11 @@
 import { describe } from "vitest";
-import TestIpV4UniqueIndex from "./testIpV4UniqueIndex.js";
+import TestUserIpVersionValidation from "./testUserIpVersionValidation.js";
 import TestMongooseRulesStorage from "../../../../test/testMongooseRulesStorage.js";
 
-describe("MongooseIpV4UniqueIndex", async () => {
+describe("MongooseUserIpVersionValidation", async () => {
 	const mongooseRulesStorage = new TestMongooseRulesStorage();
 	await mongooseRulesStorage.setup();
 
-	const tests = new TestIpV4UniqueIndex(mongooseRulesStorage);
+	const tests = new TestUserIpVersionValidation(mongooseRulesStorage);
 	tests.runAll();
 });

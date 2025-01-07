@@ -1,11 +1,11 @@
 import { describe } from "vitest";
-import TestIpV4UniqueIndex from "./testIpV4UniqueIndex.js";
+import TestIpV6MaskFormatting from "./testIpV6MaskFormatting.js";
 import TestMongooseRulesStorage from "../../../../test/testMongooseRulesStorage.js";
 
-describe("MongooseIpV4UniqueIndex", async () => {
+describe("MongooseIpV6MaskFormatting", async () => {
 	const mongooseRulesStorage = new TestMongooseRulesStorage();
 	await mongooseRulesStorage.setup();
 
-	const tests = new TestIpV4UniqueIndex(mongooseRulesStorage);
+	const tests = new TestIpV6MaskFormatting(mongooseRulesStorage);
 	tests.runAll();
 });

@@ -4,9 +4,8 @@ import TestIpV4MaskUniqueIndex from "./testIpV4MaskUniqueIndex.js";
 
 describe("MongooseIpV4MaskUniqueIndex", async () => {
     const mongooseRulesStorage = new TestMongooseRulesStorage();
-    const tests = new TestIpV4MaskUniqueIndex(mongooseRulesStorage);
-
     await mongooseRulesStorage.setup();
 
+    const tests = new TestIpV4MaskUniqueIndex(mongooseRulesStorage);
     tests.runAll();
 });
