@@ -20,7 +20,7 @@ import {
 	type ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
@@ -71,12 +71,16 @@ export async function checkIfTaskIsRunning(
 	return false;
 }
 
-export const getIPAddress = (ipAddressString: string): IPAddress => {
+export const getIPAddress = (ipAddress: string | bigint): IPAddress => {
 	try {
-		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
-			return new Address4(ipAddressString);
+		if (typeof ipAddress === "bigint") {
+			return Address4.fromBigInt(ipAddress);
 		}
-		return new Address6(ipAddressString);
+
+		if (ipAddress.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
+			return new Address4(ipAddress);
+		}
+		return new Address6(ipAddress);
 	} catch (e) {
 		throw new ProsopoEnvError("API.INVALID_IP");
 	}

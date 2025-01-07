@@ -17,7 +17,6 @@ import {
 	ApiPaths,
 	type ApiResponse,
 	type CaptchaRequestBodyType,
-	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
@@ -37,6 +36,7 @@ import {
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type UpdateProviderClientsResponse,
+	type UserAccessPolicyInsertManyRulesBody,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
@@ -255,6 +255,24 @@ export default class ProviderApi
 		return this.post(
 			AdminApiPaths.SiteKeyRegister,
 			{ siteKey, settings },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
+
+	public addBlockRulesIP(
+		blockRules: typeof UserAccessPolicyInsertManyRulesBody,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.UserAccessPolicyInsertManyRules,
+			blockRules,
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

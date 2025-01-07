@@ -11,14 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { Rule } from "@prosopo/types";
 import { Address4, type Address6 } from "ip-address";
 import type { Model } from "mongoose";
-import type RulesStorage from "../rulesStorage.js";
-import type Rule from "../../rule.js";
-import type SearchRuleFilters from "../filters/search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "../filters/search/searchRuleFilterSettings.js";
 import IpVersion from "../../../ip/ipVersion.js";
+import type SearchRuleFilterSettings from "../filters/search/searchRuleFilterSettings.js";
+import type SearchRuleFilters from "../filters/search/searchRuleFilters.js";
 import type RuleRecord from "../ruleRecord.js";
+import type RulesStorage from "../rulesStorage.js";
 import type MongooseRuleRecord from "./mongooseRuleRecord.js";
 
 class MongooseRulesStorage implements RulesStorage {

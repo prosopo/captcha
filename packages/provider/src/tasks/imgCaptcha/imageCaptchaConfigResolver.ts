@@ -1,6 +1,7 @@
-import type {
-	IPAddress,
-	ProsopoCaptchaCountConfigSchemaOutput,
+import {
+	type IPAddress,
+	type ProsopoCaptchaCountConfigSchemaOutput,
+	userAccessPolicyImageCaptchaConfigSchema,
 } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
@@ -40,7 +41,9 @@ class ImageCaptchaConfigResolver {
 			return defaults;
 		}
 
-		const imageCaptchaAccessRule = accessRule.config?.imageCaptcha || {};
+		const imageCaptchaAccessRule =
+			accessRule.config?.imageCaptcha ||
+			userAccessPolicyImageCaptchaConfigSchema.parse({});
 
 		return this.getImageCaptchaConfig(defaults, imageCaptchaAccessRule);
 	}
@@ -101,12 +104,10 @@ class ImageCaptchaConfigResolver {
 		imageCaptchaAccessRule: ImageCaptchaAccessRule,
 	): ProsopoCaptchaCountConfigSchemaOutput {
 		return {
-			solved: {
-				count: imageCaptchaAccessRule.solvedCount || defaults.solved.count,
-			},
-			unsolved: {
-				count: imageCaptchaAccessRule.unsolvedCount || defaults.unsolved.count,
-			},
+			solvedCount: imageCaptchaAccessRule.solvedCount || defaults.solvedCount,
+
+			unsolvedCount:
+				imageCaptchaAccessRule.unsolvedCount || defaults.unsolvedCount,
 		};
 	}
 }

@@ -52,8 +52,8 @@ export class DatasetManager {
 	async providerSetDataset(datasetRaw: DatasetRaw): Promise<void> {
 		const dataset = await providerValidateDataset(
 			datasetRaw,
-			this.captchaConfig.solved.count,
-			this.captchaConfig.unsolved.count,
+			this.captchaConfig.solvedCount,
+			this.captchaConfig.unsolvedCount,
 		);
 
 		await this.db?.storeDataset(dataset);

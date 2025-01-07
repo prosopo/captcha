@@ -28,8 +28,8 @@ async function main() {
 
 	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
 	const config: ProsopoConfigOutput = getConfig(undefined, {
-		solved: { count: 2 },
-		unsolved: { count: 0 },
+		solvedCount: 2,
+		unsolvedCount: 0,
 	});
 
 	if (config.devOnlyWatchEvents) {

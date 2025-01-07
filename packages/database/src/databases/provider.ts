@@ -64,8 +64,6 @@ import {
 	type Tables,
 	type UserAccessRule,
 	type UserAccessRulesStorage,
-	type UserAccountBlockRule,
-	type UserAccountBlockRuleRecord,
 	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
@@ -74,10 +72,7 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type {
-	FrictionlessTokenRecord,
-	IPBlockRuleMongo,
-} from "@prosopo/types-database";
+import type { FrictionlessTokenRecord } from "@prosopo/types-database";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import { getUserAccessRulesDbSchema } from "./provider/userAccessRules/dbSchema.js";

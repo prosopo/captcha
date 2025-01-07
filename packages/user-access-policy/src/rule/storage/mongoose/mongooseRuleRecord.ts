@@ -1,4 +1,4 @@
-import type Rule from "../../rule.js";
+import type { Rule } from "@prosopo/types";
 import type { Types } from "mongoose";
 
 interface MongooseRuleRecord extends Rule {

@@ -106,11 +106,9 @@ export class ImgCaptchaManager {
 		}
 
 		const unsolvedCount: number = Math.abs(
-			Math.trunc(captchaConfig.unsolved.count),
+			Math.trunc(captchaConfig.unsolvedCount),
 		);
-		const solvedCount: number = Math.abs(
-			Math.trunc(captchaConfig.solved.count),
-		);
+		const solvedCount: number = Math.abs(Math.trunc(captchaConfig.solvedCount));
 
 		if (!solvedCount) {
 			throw new ProsopoEnvError("CONFIG.INVALID_CAPTCHA_NUMBER");

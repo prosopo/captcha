@@ -39,6 +39,9 @@
 			"path": "../types-env/tsconfig.cjs.json"
 		},
 		{
+			"path": "../user-access-policy/tsconfig.cjs.json"
+		},
+		{
 			"path": "../util/tsconfig.cjs.json"
 		}
 	]

@@ -14,6 +14,7 @@
 import {
 	type ApiResponse,
 	UserAccessPolicyInsertManyRulesBody,
+	type UserAccessPolicyInsertManyRulesBodyOutput,
 } from "@prosopo/types";
 import type { UserAccessRulesStorage } from "@prosopo/types-database";
 import type { z } from "zod";
@@ -27,7 +28,7 @@ class InsertManyUserAccessRulesEndpoint
 	) {}
 
 	async processRequest(
-		args: z.infer<typeof UserAccessPolicyInsertManyRulesBody>,
+		args: UserAccessPolicyInsertManyRulesBodyOutput,
 	): Promise<ApiResponse> {
 		await this.userAccessRulesStorage.insertMany(args);
 
