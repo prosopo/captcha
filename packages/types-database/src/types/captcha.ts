@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { PoWCaptcha } from "@prosopo/types";
+import type { RootFilterQuery } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import type {
 	PoWCaptchaRecord,
 	UserCommitment,
 	UserCommitmentRecord,
 } from "./provider.js";
-import { RootFilterQuery } from "mongoose";
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(

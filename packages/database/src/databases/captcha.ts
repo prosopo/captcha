@@ -24,8 +24,8 @@ import {
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
+import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
-import { RootFilterQuery } from "mongoose";
 const logger = getLoggerDefault();
 
 enum TableNames {
@@ -37,7 +37,7 @@ const CAPTCHA_TABLES = [
 	{
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
-		schema: PoWCaptchaRecordSchema
+		schema: PoWCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.commitment,
@@ -129,15 +129,15 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		await this.connect();
 
 		try {
-			const commitmentResults = (await this.tables.commitment
+			const commitmentResults = await this.tables.commitment
 				.find(filter)
 				.limit(limit)
-				.lean<UserCommitmentRecord[]>());
+				.lean<UserCommitmentRecord[]>();
 
-			const powCaptchaResults = (await this.tables.powcaptcha
+			const powCaptchaResults = await this.tables.powcaptcha
 				.find(filter)
 				.limit(limit)
-				.lean<PoWCaptchaRecord[]>());
+				.lean<PoWCaptchaRecord[]>();
 
 			return {
 				userCommitmentRecords: commitmentResults,
