@@ -45,9 +45,10 @@ describe("checkIfTaskIsRunning", () => {
 	it("should return true if the task is running and not completed", async () => {
 		const taskName = ScheduledTaskNames.StoreCommitmentsExternal;
 		const db = {
-			getLastScheduledTaskStatus: vi
-				.fn()
-				.mockResolvedValue({ _id: "123" } as Pick<ScheduledTaskRecord, "_id">),
+			getLastScheduledTaskStatus: vi.fn().mockResolvedValue({
+				_id: "123",
+				datetime: new Date().getTime(),
+			} as Pick<ScheduledTaskRecord, "_id">),
 			getScheduledTaskStatus: vi.fn().mockResolvedValue(null),
 		} as unknown as IProviderDatabase;
 		const result = await checkIfTaskIsRunning(taskName, db);
