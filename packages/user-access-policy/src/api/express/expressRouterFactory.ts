@@ -14,15 +14,15 @@
 import { Router } from "express";
 import type ExpressRoutesRegistrar from "./expressRoutesRegistrar.js";
 import type ApiRoutesProvider from "../route/apiRoutesProvider.js";
-import type { ProviderEnvironment } from "@prosopo/types-env";
+import type RulesStorage from "../../rule/storage/rulesStorage.js";
 
 class ExpressRouterFactory {
 	public createRouter(
-		providerEnvironment: ProviderEnvironment,
+		rulesStorage: RulesStorage,
 		routersProvider: ApiRoutesProvider,
 		routesExpressRegistrar: ExpressRoutesRegistrar,
 	): Router {
-		const apiRoutes = routersProvider.getRoutes(providerEnvironment);
+		const apiRoutes = routersProvider.getRoutes(rulesStorage);
 
 		const router = Router();
 

@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Address4, Address6 } from "ip-address";
-import type RulesStorage from "../storage/rulesStorage.js";
+import type RulesStorage from "../rule/storage/rulesStorage.js";
+import type RequestInspector from "./requestInspector.js";
 
-class RequestRulesInspector {
-	public constructor(
-		private readonly rulesStorage: RulesStorage
-	) {}
+class RequestRulesInspector implements RequestInspector {
+	public constructor(private readonly rulesStorage: RulesStorage) {}
 
 	public async shouldAbortRequest(
 		ipAddress: Address4 | Address6,
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 	): Promise<boolean> {
-			return await this.isRequestFromBlockedUser(
-				ipAddress,
-				requestHeaders,
-				requestBody,
-			);
+		return await this.isRequestFromBlockedUser(
+			ipAddress,
+			requestHeaders,
+			requestBody,
+		);
 	}
 
 	protected async isRequestFromBlockedUser(

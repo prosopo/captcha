@@ -77,7 +77,7 @@ import { MongoDatabase } from "../base/mongo.js";
 import {
 	type Rule,
 	type RulesStorage,
-	MongooseRulesStorage,
+	createMongooseRulesStorage,
 	mongooseRuleRecordSchema,
 } from "@prosopo/user-access-policy";
 
@@ -176,7 +176,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private readonly userAccessRulesDbStorage: MongooseRulesStorage;
+	private userAccessRulesDbStorage: RulesStorage | null;
 
 	constructor(
 		url: string,
@@ -187,7 +187,7 @@ export class ProviderDatabase
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRulesDbStorage = new MongooseRulesStorage(null);
+		this.userAccessRulesDbStorage = null;
 	}
 
 	override async connect(): Promise<void> {
@@ -195,7 +195,7 @@ export class ProviderDatabase
 
 		this.loadTables();
 
-		this.userAccessRulesDbStorage.setReadingModel(
+		this.userAccessRulesDbStorage = createMongooseRulesStorage(
 			<Model<Rule>>this.tables.userAccessRules,
 		);
 	}
@@ -221,6 +221,10 @@ export class ProviderDatabase
 	}
 
 	public getUserAccessRulesStorage(): RulesStorage {
+		if (null === this.userAccessRulesDbStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED", {});
+		}
+
 		return this.userAccessRulesDbStorage;
 	}
 

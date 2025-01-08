@@ -40,12 +40,12 @@ import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
-import {ImageCaptchaConfigResolver} from "@prosopo/user-access-policy";
+import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 const TEN_MINUTES = 60 * 10 * 1000;
 
-const imageCaptchaConfigResolver = new ImageCaptchaConfigResolver();
+const imageCaptchaConfigResolver = createImageCaptchaConfigResolver();
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

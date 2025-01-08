@@ -15,11 +15,11 @@ import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
 import { getIPAddress } from "../util.js";
-import type { RequestRulesInspector } from "@prosopo/user-access-policy";
+import type { RequestInspector } from "@prosopo/user-access-policy";
 
 class BlacklistRequestInspector {
 	public constructor(
-		private readonly requestRulesInspector: RequestRulesInspector,
+		private readonly requestInspector: RequestInspector,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 		private readonly logger: Logger | null,
 	) {}
@@ -73,7 +73,7 @@ class BlacklistRequestInspector {
 		try {
 			const ipAddress = getIPAddress(rawIp);
 
-			return await this.requestRulesInspector.shouldAbortRequest(
+			return await this.requestInspector.shouldAbortRequest(
 				ipAddress,
 				requestHeaders,
 				requestBody,
@@ -90,4 +90,4 @@ class BlacklistRequestInspector {
 	}
 }
 
-export { BlacklistRequestInspector };
+export default BlacklistRequestInspector;

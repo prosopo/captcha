@@ -1,13 +1,13 @@
 import { describe, expect } from "vitest";
-import { TestsBase } from "../../testsBase.js";
+import { TestsBase } from "../testsBase.js";
 import RequestRulesInspector from "./requestRulesInspector.js";
-import type RulesStorage from "../storage/rulesStorage.js";
-import type Rule from "../rule.js";
+import type RulesStorage from "../rule/storage/rulesStorage.js";
+import type Rule from "../rule/rule.js";
 import { Address4 } from "ip-address";
-import type RuleRecord from "../storage/record/ruleRecord.js";
-import type SearchRuleFilters from "../storage/search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "../storage/search/searchRuleFilterSettings.js";
-import type DeleteRuleFilters from "../storage/delete/deleteRuleFilters.js";
+import type RuleRecord from "../rule/storage/record/ruleRecord.js";
+import type SearchRuleFilters from "../rule/storage/search/searchRuleFilters.js";
+import type SearchRuleFilterSettings from "../rule/storage/search/searchRuleFilterSettings.js";
+import type DeleteRuleFilters from "../rule/storage/delete/deleteRuleFilters.js";
 
 class TestRequestRulesInspector extends TestsBase {
 	protected getTests(): {

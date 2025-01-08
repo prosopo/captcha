@@ -87,18 +87,6 @@ class MongooseRulesStorage implements RulesStorage {
 		}
 	}
 
-	public setReadingModel(readingModel: Model<Rule>): void {
-		this.readingModel = readingModel;
-
-		if (null === this.writingModel) {
-			this.setWritingModel(readingModel);
-		}
-	}
-
-	public setWritingModel(writingModel: Model<Rule>): void {
-		this.writingModel = writingModel;
-	}
-
 	protected createQuery(
 		filters: SearchRuleFilters,
 		filterSettings?: SearchRuleFilterSettings,

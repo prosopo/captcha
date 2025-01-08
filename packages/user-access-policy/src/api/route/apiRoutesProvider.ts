@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { ProviderEnvironment } from "@prosopo/types-env";
 import type ApiRoute from "./apiRoute.js";
+import type RulesStorage from "../../rule/storage/rulesStorage.js";
 
 interface ApiRoutesProvider {
-	getRoutes(providerEnvironment: ProviderEnvironment): ApiRoute[];
+	getRoutes(rulesStorage: RulesStorage): ApiRoute[];
 }
 
 export default ApiRoutesProvider;

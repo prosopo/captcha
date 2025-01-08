@@ -18,8 +18,9 @@ import type {
 import type RulesStorage from "../../../rule/storage/rulesStorage.js";
 import type Rule from "../../../rule/rule.js";
 import type ImageCaptchaConfig from "../imageCaptchaConfig.js";
+import type CaptchaConfigResolver from "./captchaConfigResolver.js";
 
-class ImageCaptchaConfigResolver {
+class ImageCaptchaConfigResolver implements CaptchaConfigResolver {
 	public async resolveConfig(
 		rulesStorage: RulesStorage,
 		defaults: ProsopoCaptchaCountConfigSchemaOutput,
