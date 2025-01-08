@@ -86,7 +86,7 @@ class BlacklistRequestInspector {
 	}
 
 	protected isApiUnrelatedRoute(url: string): boolean {
-		return -1 === url.indexOf(ApiPrefix);
+		return !url.includes(ApiPrefix);
 	}
 }
 

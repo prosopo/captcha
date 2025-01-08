@@ -45,8 +45,6 @@ import { handleErrors } from "./errorHandler.js";
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 const TEN_MINUTES = 60 * 10 * 1000;
 
-const imageCaptchaConfigResolver = createImageCaptchaConfigResolver();
-
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
@@ -56,6 +54,7 @@ const imageCaptchaConfigResolver = createImageCaptchaConfigResolver();
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 	const tasks = new Tasks(env);
+	const imageCaptchaConfigResolver = createImageCaptchaConfigResolver();
 
 	/**
 	 * Provides a Captcha puzzle to a Dapp User

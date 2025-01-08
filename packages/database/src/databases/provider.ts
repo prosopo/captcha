@@ -222,7 +222,7 @@ export class ProviderDatabase
 
 	public getUserAccessRulesStorage(): RulesStorage {
 		if (null === this.userAccessRulesDbStorage) {
-			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED", {});
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED");
 		}
 
 		return this.userAccessRulesDbStorage;
