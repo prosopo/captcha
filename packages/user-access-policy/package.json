@@ -30,6 +30,7 @@
 		"zod": "3.24.1"
 	},
 	"devDependencies": {
+		"mongodb": "6.12.0",
 		"mongodb-memory-server": "10.1.3",
 		"vite": "6.0.7",
 		"yargs": "17.7.2"
