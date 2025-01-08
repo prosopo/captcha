@@ -13,9 +13,9 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
+import type { RequestInspector } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getIPAddress } from "../util.js";
-import type { RequestInspector } from "@prosopo/user-access-policy";
 
 class BlacklistRequestInspector {
 	public constructor(

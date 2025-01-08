@@ -1,3 +1,11 @@
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { ProviderEnvironment } from "@prosopo/env";
+import type { BlockRule, ProsopoConfigOutput } from "@prosopo/types";
+import type {
+	IPBlockRuleRecord,
+	UserAccountBlockRuleRecord,
+} from "@prosopo/types-database";
+import type { Rule } from "@prosopo/user-access-policy";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +20,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { CommandModule } from "yargs";
-import type {Rule} from "@prosopo/user-access-policy";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { ProviderEnvironment } from "@prosopo/env";
-import type { BlockRule, ProsopoConfigOutput } from "@prosopo/types";
-import type {
-	IPBlockRuleRecord,
-	UserAccountBlockRuleRecord,
-} from "@prosopo/types-database";
 
 class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 	implements CommandModule
@@ -98,9 +98,7 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 		return userAccessRule;
 	}
 
-	protected convertBlockRuleToUserAccessRule(
-		blockRule: BlockRule,
-	): Rule {
+	protected convertBlockRuleToUserAccessRule(blockRule: BlockRule): Rule {
 		const userAccessRule: Rule = {
 			isUserBlocked: blockRule.hardBlock,
 			clientId: blockRule.dappAccount,

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type Rule from "../rule.js";
-import type RuleRecord from "./record/ruleRecord.js";
-import type SearchRuleFilters from "./search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
 import type DeleteRuleFilters from "./delete/deleteRuleFilters.js";
+import type RuleRecord from "./record/ruleRecord.js";
+import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
+import type SearchRuleFilters from "./search/searchRuleFilters.js";
 
 interface RulesStorage {
 	insert(record: Rule): Promise<RuleRecord>;

@@ -13,10 +13,10 @@
 // limitations under the License.
 import type { z } from "zod";
 import type ApiEndpoint from "../../../api/apiEndpoint.js";
-import zodInsertManyRulesSchema from "./zodInsertManyRulesSchema.js";
 import type ApiResponse from "../../../api/response/apiResponse.js";
 import ApiResponseStatus from "../../../api/response/apiResponseStatus.js";
 import type RulesStorage from "../../storage/rulesStorage.js";
+import zodInsertManyRulesSchema from "./zodInsertManyRulesSchema.js";
 
 class InsertManyRulesEndpoint
 	implements ApiEndpoint<typeof zodInsertManyRulesSchema>

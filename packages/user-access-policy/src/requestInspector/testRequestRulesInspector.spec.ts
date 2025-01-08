@@ -1,13 +1,26 @@
+import { Address4 } from "ip-address";
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 import { describe, expect } from "vitest";
+import type Rule from "../rule/rule.js";
+import type DeleteRuleFilters from "../rule/storage/delete/deleteRuleFilters.js";
+import type RuleRecord from "../rule/storage/record/ruleRecord.js";
+import type RulesStorage from "../rule/storage/rulesStorage.js";
+import type SearchRuleFilterSettings from "../rule/storage/search/searchRuleFilterSettings.js";
+import type SearchRuleFilters from "../rule/storage/search/searchRuleFilters.js";
 import { TestsBase } from "../testsBase.js";
 import RequestRulesInspector from "./requestRulesInspector.js";
-import type RulesStorage from "../rule/storage/rulesStorage.js";
-import type Rule from "../rule/rule.js";
-import { Address4 } from "ip-address";
-import type RuleRecord from "../rule/storage/record/ruleRecord.js";
-import type SearchRuleFilters from "../rule/storage/search/searchRuleFilters.js";
-import type SearchRuleFilterSettings from "../rule/storage/search/searchRuleFilterSettings.js";
-import type DeleteRuleFilters from "../rule/storage/delete/deleteRuleFilters.js";
 
 class TestRequestRulesInspector extends TestsBase {
 	protected getTests(): {
@@ -139,6 +152,10 @@ class TestRequestRulesInspector extends TestsBase {
 
 			async deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void> {
 				return Promise.resolve();
+			},
+
+			async countRecords(): Promise<number> {
+				return Promise.resolve(ruleRecords.length);
 			},
 		};
 	}

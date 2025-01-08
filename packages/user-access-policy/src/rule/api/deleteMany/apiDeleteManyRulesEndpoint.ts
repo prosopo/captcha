@@ -13,9 +13,9 @@
 // limitations under the License.
 import type { z } from "zod";
 import type ApiEndpoint from "../../../api/apiEndpoint.js";
-import type RulesStorage from "../../storage/rulesStorage.js";
 import type ApiResponse from "../../../api/response/apiResponse.js";
 import ApiResponseStatus from "../../../api/response/apiResponseStatus.js";
+import type RulesStorage from "../../storage/rulesStorage.js";
 import DeleteManyRulesApiSchema from "./zodDeleteManyRulesSchema.js";
 
 class ApiDeleteManyRulesEndpoint

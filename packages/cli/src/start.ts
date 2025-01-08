@@ -29,15 +29,15 @@ import {
 } from "@prosopo/provider";
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
+import {
+	createExpressRuleRouter,
+	getExpressApiRuleRateLimits,
+} from "@prosopo/user-access-policy";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
-import {
-	createExpressRuleRouter,
-	getExpressApiRuleRateLimits,
-} from "@prosopo/user-access-policy";
 
 function startApi(
 	env: ProviderEnvironment,

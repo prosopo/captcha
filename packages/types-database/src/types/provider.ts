@@ -39,6 +39,7 @@ import {
 	type Timestamp,
 	TimestampSchema,
 } from "@prosopo/types";
+import type { RulesStorage } from "@prosopo/user-access-policy";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
@@ -54,7 +55,6 @@ import {
 } from "zod";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
-import type {RulesStorage} from "@prosopo/user-access-policy";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
 

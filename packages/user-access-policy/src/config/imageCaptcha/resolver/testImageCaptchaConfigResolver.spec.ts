@@ -14,14 +14,14 @@
 import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
-import ImageCaptchaConfigResolver from "./imageCaptchaConfigResolver.js";
-import { TestsBase } from "../../../testsBase.js";
+import type Rule from "../../../rule/rule.js";
+import type DeleteRuleFilters from "../../../rule/storage/delete/deleteRuleFilters.js";
 import type RuleRecord from "../../../rule/storage/record/ruleRecord.js";
 import type RulesStorage from "../../../rule/storage/rulesStorage.js";
-import type SearchRuleFilters from "../../../rule/storage/search/searchRuleFilters.js";
 import type SearchRuleFilterSettings from "../../../rule/storage/search/searchRuleFilterSettings.js";
-import type DeleteRuleFilters from "../../../rule/storage/delete/deleteRuleFilters.js";
-import type Rule from "../../../rule/rule.js";
+import type SearchRuleFilters from "../../../rule/storage/search/searchRuleFilters.js";
+import { TestsBase } from "../../../testsBase.js";
+import ImageCaptchaConfigResolver from "./imageCaptchaConfigResolver.js";
 
 class TestImageCaptchaConfigResolver extends TestsBase {
 	constructor(private readonly resolver: ImageCaptchaConfigResolver) {
@@ -185,6 +185,9 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 			},
 			deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void> {
 				return Promise.resolve();
+			},
+			countRecords(): Promise<number> {
+				return Promise.resolve(ruleRecords.length);
 			},
 		};
 	}

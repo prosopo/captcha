@@ -72,14 +72,14 @@ import {
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
 import type { FrictionlessTokenRecord } from "@prosopo/types-database";
-import type { Model, ObjectId } from "mongoose";
-import { MongoDatabase } from "../base/mongo.js";
 import {
 	type Rule,
 	type RulesStorage,
 	createMongooseRulesStorage,
 	getMongooseRuleRecordSchema,
 } from "@prosopo/user-access-policy";
+import type { Model, ObjectId } from "mongoose";
+import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
 	captcha = "captcha",
