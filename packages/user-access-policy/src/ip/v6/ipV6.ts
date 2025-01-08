@@ -11,13 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type IpV6Mask from "./mask/ipV6Mask.js";
+import type { z } from "zod";
+import type zodIpV6 from "./zodIpV6.js";
 
-interface IpV6 {
-	asNumericString: string;
-	// for presentation only purposes
-	asString: string;
-	mask?: IpV6Mask;
-}
+type IpV6 = z.infer<typeof zodIpV6>;
 
 export default IpV6;

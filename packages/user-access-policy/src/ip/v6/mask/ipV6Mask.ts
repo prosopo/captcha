@@ -11,12 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-interface IpV6Mask {
-	rangeMinAsNumericString: string;
-	rangeMaxAsNumericString: string;
-	// CIDR prefix https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing - 2001:db8:abcd:0012:ffff:ffff:ffff:ffff/{128}
-	// for presentation only purposes
-	asNumeric: number;
-}
+import type { z } from "zod";
+import type zodIpV6Mask from "./zodIpV6Mask.js";
+
+type IpV6Mask = z.infer<typeof zodIpV6Mask>;
 
 export default IpV6Mask;

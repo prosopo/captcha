@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Address4, Address6 } from "ip-address";
+import type {IPAddress} from "@prosopo/types";
 
 interface SearchRuleFilters {
-	userIpAddress?: Address4 | Address6;
+	userIpAddress?: IPAddress;
 	userId?: string;
 	clientId?: string;
 }

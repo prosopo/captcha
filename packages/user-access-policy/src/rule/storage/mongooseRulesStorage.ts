@@ -20,6 +20,7 @@ import type RuleRecord from "./record/ruleRecord.js";
 import type RulesStorage from "./rulesStorage.js";
 import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
 import type SearchRuleFilters from "./search/searchRuleFilters.js";
+import type { IPAddress } from "@prosopo/types";
 
 class MongooseRulesStorage implements RulesStorage {
 	constructor(
@@ -159,17 +160,13 @@ class MongooseRulesStorage implements RulesStorage {
 			: clientIdFilter;
 	}
 
-	protected getFilterByUserIp(
-		userIpAddress: Address4 | Address6 | null,
-	): object {
+	protected getFilterByUserIp(userIpAddress: IPAddress | null): object {
 		return null !== userIpAddress
 			? this.getFilterByUserIpAddress(userIpAddress)
 			: { userIp: null };
 	}
 
-	protected getFilterByUserIpAddress(
-		userIpAddress: Address4 | Address6,
-	): object {
+	protected getFilterByUserIpAddress(userIpAddress: IPAddress): object {
 		const isIpV4 = userIpAddress instanceof Address4;
 
 		const userIpVersion = isIpV4 ? IpVersion.v4 : IpVersion.v6;

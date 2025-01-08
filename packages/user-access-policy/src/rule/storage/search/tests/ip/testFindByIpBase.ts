@@ -11,19 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Address4, Address6 } from "ip-address";
 import { expect } from "vitest";
 import type Ip from "../../../../../ip/ip.js";
 import type Rule from "../../../../rule.js";
 import type SearchRuleFilters from "../../searchRuleFilters.js";
 import TestFindRuleBase from "../testFindRuleBase.js";
+import type {IPAddress} from "@prosopo/types";
 
 abstract class TestFindByIpBase extends TestFindRuleBase {
 	protected abstract getUserIpObject(): Ip;
 
-	protected abstract getUserIpAddress(): Address4 | Address6;
+	protected abstract getUserIpAddress(): IPAddress;
 
-	protected abstract getOtherUserIpAddress(): Address4 | Address6;
+	protected abstract getOtherUserIpAddress(): IPAddress;
 
 	protected abstract getUserIpObjectInOtherVersion(): Ip;
 

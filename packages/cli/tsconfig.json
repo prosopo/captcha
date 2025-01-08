@@ -36,6 +36,9 @@
 		},
 		{
 			"path": "../../dev/config"
+		},
+		{
+			"path": "../user-access-policy"
 		}
 	]
 }

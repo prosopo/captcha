@@ -11,12 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type IpV4 from "./v4/ipV4.js";
-import type IpV6 from "./v6/ipV6.js";
+import type { z } from "zod";
+import type zodIp from "./zodIp.js";
 
-interface Ip {
-	v4?: IpV4;
-	v6?: IpV6;
-}
+type Ip = z.infer<typeof zodIp>;
 
 export default Ip;

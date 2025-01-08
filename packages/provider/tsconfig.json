@@ -36,6 +36,9 @@
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../user-access-policy"
 		}
 	]
 }

@@ -16,6 +16,7 @@ import type RulesStorage from "../../rulesStorage.js";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import CommandBase from "./commandBase.js";
+import type {IPAddress} from "@prosopo/types";
 
 class MeasureFindCommand extends CommandBase {
 	public command = "measure-find";
@@ -76,7 +77,7 @@ class MeasureFindCommand extends CommandBase {
 
 	protected async measureRuleFindTime(
 		rulesStorage: RulesStorage,
-		targetIp: Address4 | Address6,
+		targetIp: IPAddress,
 		totalRulesCount: number,
 	): Promise<void> {
 		const startTime = Date.now();

@@ -11,13 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type IpV4Mask from "./mask/ipV4Mask.js";
+import type { z } from "zod";
+import type zodIpV4 from "./zodIpV4.js";
 
-interface IpV4 {
-	asNumeric: bigint;
-	// for presentation only purposes
-	asString: string;
-	mask?: IpV4Mask;
-}
+type IpV4 = z.infer<typeof zodIpV4>;
 
 export default IpV4;

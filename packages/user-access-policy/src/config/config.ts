@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type ImageCaptchaConfig from "./imageCaptcha/imageCaptchaConfig.js";
+import type { z } from "zod";
+import type zodConfig from "./zodConfig.js";
 
-interface Config {
-	imageCaptcha?: ImageCaptchaConfig;
-}
+type Config = z.infer<typeof zodConfig>;
 
 export default Config;

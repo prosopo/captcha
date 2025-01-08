@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Address4, Address6 } from "ip-address";
+import type { IPAddress } from "@prosopo/types";
 
 interface RequestInspector {
 	shouldAbortRequest(
-		ipAddress: Address4 | Address6,
+		ipAddress: IPAddress,
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 	): Promise<boolean>;

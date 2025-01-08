@@ -11,12 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-interface IpV4Mask {
-	rangeMinAsNumeric: bigint;
-	rangeMaxAsNumeric: bigint;
-	// CIDR prefix https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing - 198.51.100.14/{24}
-	// for presentation only purposes
-	asNumeric: number;
-}
+import type { z } from "zod";
+import type zodIpV4Mask from "./zodIpV4Mask.js";
+
+type IpV4Mask = z.infer<typeof zodIpV4Mask>;
 
 export default IpV4Mask;
