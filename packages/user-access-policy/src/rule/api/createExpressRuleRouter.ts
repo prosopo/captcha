@@ -1,3 +1,6 @@
+import type { Logger } from "@prosopo/common";
+import type { Router } from "express";
+import { ExpressEndpointAdapter } from "../../api/express/expressEndpointAdapter.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +18,6 @@ import { ExpressRouterFactory } from "../../api/express/expressRouterFactory.js"
 import { ExpressRoutesRegistrar } from "../../api/express/expressRoutesRegistrar.js";
 import type { RulesStorage } from "../storage/rulesStorage.js";
 import { ApiRuleRoutesProvider } from "./apiRuleRoutesProvider.js";
-import type { Logger } from "@prosopo/common";
-import type { Router } from "express";
-import { ExpressEndpointAdapter } from "../../api/express/expressEndpointAdapter.js";
 
 const createExpressRuleRouter = (
 	rulesStorage: RulesStorage,

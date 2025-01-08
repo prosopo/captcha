@@ -13,9 +13,9 @@
 // limitations under the License.
 import { Address4 } from "ip-address";
 import { expect } from "vitest";
-import type {Rule} from "../../../../rule.js";
-import type {SearchRuleFilters} from "../../searchRuleFilters.js";
-import {TestFindRuleBase} from "../testFindRuleBase.js";
+import type { Rule } from "../../../../rule.js";
+import type { SearchRuleFilters } from "../../searchRuleFilters.js";
+import { TestFindRuleBase } from "../testFindRuleBase.js";
 
 class TestFindRule extends TestFindRuleBase {
 	private readonly userIp: Address4 = new Address4("192.168.1.1");

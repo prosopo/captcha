@@ -1,3 +1,4 @@
+import type { Config } from "../config/config.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {Ip} from "../ip/ip.js";
-import type {Config} from "../config/config.js";
+import type { Ip } from "../ip/ip.js";
 
 interface Rule {
 	isUserBlocked: boolean;
@@ -23,4 +23,4 @@ interface Rule {
 	config?: Config;
 }
 
-export  type {Rule};
+export type { Rule };

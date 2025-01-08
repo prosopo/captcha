@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Request, Response, Router } from "express";
-import type {ApiRoute} from "../route/apiRoute.js";
+import type { ApiRoute } from "../route/apiRoute.js";
 import type { ExpressEndpointAdapter } from "./expressEndpointAdapter.js";
 
 class ExpressRoutesRegistrar {

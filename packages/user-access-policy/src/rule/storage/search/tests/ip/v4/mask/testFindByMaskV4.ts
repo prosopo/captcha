@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Address4 } from "ip-address";
-import type {Ip} from "../../../../../../../ip/ip.js";
-import {TestFindByIpV4} from "../testFindByIpV4.js";
+import type { Ip } from "../../../../../../../ip/ip.js";
+import { TestFindByIpV4 } from "../testFindByIpV4.js";
 
 class TestFindByMaskV4 extends TestFindByIpV4 {
 	protected baseIpAsString = "192.168.0.0";
@@ -56,4 +56,4 @@ class TestFindByMaskV4 extends TestFindByIpV4 {
 	}
 }
 
-export { TestFindByMaskV4};
+export { TestFindByMaskV4 };

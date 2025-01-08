@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe } from "vitest";
-import {MongooseRulesStorage} from "../../../../mongooseRulesStorage.js";
-import {testMongooseRuleModel} from "../../../../test/testMongooseRuleModel.js";
-import {TestFindByIpV6} from "./testFindByIpV6.js";
+import { MongooseRulesStorage } from "../../../../mongooseRulesStorage.js";
+import { createTestMongooseRuleModel } from "../../../../test/createTestMongooseRuleModel.js";
+import { TestFindByIpV6 } from "./testFindByIpV6.js";
 
 describe("MongooseFindByIpV6", async () => {
-	const testModel = await testMongooseRuleModel();
+	const testModel = await createTestMongooseRuleModel();
 	const storage = new MongooseRulesStorage(testModel);
 	const tests = new TestFindByIpV6(storage);
 

@@ -17,7 +17,7 @@ import { afterAll, beforeEach } from "vitest";
 import type { Rule } from "../../rule.js";
 import { getMongooseRuleRecordSchema } from "../record/getMongooseRuleRecordSchema.js";
 
-const testMongooseRuleModel = async (): Promise<Model<Rule>> => {
+const createTestMongooseRuleModel = async (): Promise<Model<Rule>> => {
 	const mongoServer = await MongoMemoryServer.create();
 	const mongoConnection = await mongoose.connect(mongoServer.getUri());
 
@@ -40,4 +40,4 @@ const testMongooseRuleModel = async (): Promise<Model<Rule>> => {
 	return model;
 };
 
-export { testMongooseRuleModel };
+export { createTestMongooseRuleModel };

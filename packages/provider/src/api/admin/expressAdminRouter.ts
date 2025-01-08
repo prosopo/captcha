@@ -19,9 +19,9 @@ import { RoutesExpressRegistrar } from "../express/routesExpressRegistrar.js";
 import { EndpointExpressAdminAdapter } from "./endpointExpressAdminAdapter.js";
 import { RoutesAdminProvider } from "./routesAdminProvider.js";
 
-export function createExpressAdminRouter(
+const createExpressAdminRouter = (
 	providerEnvironment: ProviderEnvironment,
-): Router {
+): Router => {
 	const logger = getLogger(
 		providerEnvironment.config.logLevel,
 		"AdminEndpointAdapter",
@@ -36,4 +36,6 @@ export function createExpressAdminRouter(
 		new RoutesAdminProvider(),
 		new RoutesExpressRegistrar(adminEndpointExpressAdapter),
 	);
-}
+};
+
+export { createExpressAdminRouter };

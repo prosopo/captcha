@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Router } from "express";
-import type {RulesStorage} from "../../rule/storage/rulesStorage.js";
-import type {ApiRoutesProvider} from "../route/apiRoutesProvider.js";
+import type { RulesStorage } from "../../rule/storage/rulesStorage.js";
+import type { ApiRoutesProvider } from "../route/apiRoutesProvider.js";
 import type { ExpressRoutesRegistrar } from "./expressRoutesRegistrar.js";
 
 class ExpressRouterFactory {

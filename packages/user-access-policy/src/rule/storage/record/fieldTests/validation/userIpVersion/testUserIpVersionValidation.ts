@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { expect } from "vitest";
-import {TestRulesStorageBase} from "../../../../test/testRulesStorageBase.js";
+import { TestRulesStorageBase } from "../../../../test/testRulesStorageBase.js";
 
 class TestUserIpVersionValidation extends TestRulesStorageBase {
 	protected getTests(): { name: string; method: () => Promise<void> }[] {
@@ -85,4 +85,4 @@ class TestUserIpVersionValidation extends TestRulesStorageBase {
 	}
 }
 
-export {TestUserIpVersionValidation};
+export { TestUserIpVersionValidation };

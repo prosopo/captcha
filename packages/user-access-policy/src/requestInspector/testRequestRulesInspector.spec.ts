@@ -1,3 +1,4 @@
+import { Address4 } from "ip-address";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect } from "vitest";
-import type {Rule} from "../rule/rule.js";
-import type {DeleteRuleFilters} from "../rule/storage/delete/deleteRuleFilters.js";
-import type {RuleRecord} from "../rule/storage/record/ruleRecord.js";
-import type {RulesStorage} from "../rule/storage/rulesStorage.js";
-import type {SearchRuleFilterSettings} from "../rule/storage/search/searchRuleFilterSettings.js";
-import type {SearchRuleFilters} from "../rule/storage/search/searchRuleFilters.js";
+import type { Rule } from "../rule/rule.js";
+import type { DeleteRuleFilters } from "../rule/storage/delete/deleteRuleFilters.js";
+import type { RuleRecord } from "../rule/storage/record/ruleRecord.js";
+import type { RulesStorage } from "../rule/storage/rulesStorage.js";
+import type { SearchRuleFilterSettings } from "../rule/storage/search/searchRuleFilterSettings.js";
+import type { SearchRuleFilters } from "../rule/storage/search/searchRuleFilters.js";
 import { TestsBase } from "../testsBase.js";
 import { RequestRulesInspector } from "./requestRulesInspector.js";
-import { Address4 } from "ip-address";
 
 class TestRequestRulesInspector extends TestsBase {
 	protected getTests(): {

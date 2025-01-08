@@ -16,4 +16,4 @@ interface ConnectionCleaner {
 	cleanConnection(): Promise<void>;
 }
 
-export type{ ConnectionCleaner};
+export type { ConnectionCleaner };

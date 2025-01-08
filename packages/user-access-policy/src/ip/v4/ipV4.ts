@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { z } from "zod";
-import type {zodIpV4} from "./zodIpV4.js";
+import type { zodIpV4 } from "./zodIpV4.js";
 
 type IpV4 = z.infer<typeof zodIpV4>;
 
-export type { IpV4};
+export type { IpV4 };

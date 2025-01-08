@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { TestsBase } from "../../../testsBase.js";
-import type { RulesStorage} from "../rulesStorage.js";
+import type { RulesStorage } from "../rulesStorage.js";
 
 abstract class TestRulesStorageBase extends TestsBase {
 	public constructor(protected rulesStorage: RulesStorage) {
@@ -20,4 +20,4 @@ abstract class TestRulesStorageBase extends TestsBase {
 	}
 }
 
-export { TestRulesStorageBase};
+export { TestRulesStorageBase };

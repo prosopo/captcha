@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {TestFindByIpMaskV6} from "../../../../mask/testFindByIpMaskV6.js";
+import { TestFindByIpMaskV6 } from "../../../../mask/testFindByIpMaskV6.js";
 
 class TestFindByIpMaskV6ShortRangeMax extends TestFindByIpMaskV6 {
 	protected override baseIpAsString = "::1";

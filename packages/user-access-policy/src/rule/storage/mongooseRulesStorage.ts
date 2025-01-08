@@ -1,3 +1,4 @@
+import type { IPAddress } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +21,6 @@ import type { RuleRecord } from "./record/ruleRecord.js";
 import type { RulesStorage } from "./rulesStorage.js";
 import type { SearchRuleFilterSettings } from "./search/searchRuleFilterSettings.js";
 import type { SearchRuleFilters } from "./search/searchRuleFilters.js";
-import type { IPAddress } from "@prosopo/types";
 
 class MongooseRulesStorage implements RulesStorage {
 	constructor(

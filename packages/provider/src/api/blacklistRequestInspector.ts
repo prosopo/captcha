@@ -90,4 +90,4 @@ class BlacklistRequestInspector {
 	}
 }
 
-export default BlacklistRequestInspector;
+export { BlacklistRequestInspector };

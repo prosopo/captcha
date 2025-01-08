@@ -1,3 +1,5 @@
+import yargs, { type CommandModule } from "yargs";
+import { hideBin } from "yargs/helpers";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +17,6 @@ import { MeasureFindCommand } from "./commands/measureFindCommand.js";
 import { PopulateCommand } from "./commands/populateCommand.js";
 import type { ConnectionCleaner } from "./connectionCleaner/connectionCleaner.js";
 import type { RulesStorageFactory } from "./storageFactory/rulesStorageFactory.js";
-import yargs, { type CommandModule } from "yargs";
-import { hideBin } from "yargs/helpers";
 
 class RulesStorageBenchmark {
 	constructor(
