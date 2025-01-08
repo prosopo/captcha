@@ -35,7 +35,7 @@
 		"@prosopo/config": "2.2.3",
 		"@prosopo/types": "2.2.3",
 		"@prosopo/types-database": "2.2.3",
-		"@prosopo/user-access-policy": "1.0.0",
+		"@prosopo/user-access-policy": "2.2.3",
 		"express": "4.21.1",
 		"mongodb": "6.9.0",
 		"mongodb-memory-server": "10.0.0",

@@ -38,7 +38,7 @@
 		"@prosopo/locale": "2.2.3",
 		"@prosopo/provider": "2.2.3",
 		"@prosopo/types": "2.2.3",
-		"@prosopo/user-access-policy": "1.0.0",
+		"@prosopo/user-access-policy": "2.2.3",
 		"@prosopo/util": "2.2.3",
 		"cors": "2.8.5",
 		"cron-parser": "4.9.0",
