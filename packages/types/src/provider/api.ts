@@ -76,6 +76,12 @@ export type TGetImageCaptchaChallengePathAndParams =
 export type TGetImageCaptchaChallengeURL =
 	`${string}${TGetImageCaptchaChallengePathAndParams}`;
 
+export type TGetPowCaptchaChallengeURL =
+	`${string}${ApiPaths.GetPowCaptchaChallenge}`;
+
+export type TSubmitPowCaptchaSolutionURL =
+	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
+
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	BlockRuleIPAdd = "/v1/prosopo/provider/admin/blockrule/ip/add",
