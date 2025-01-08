@@ -78,7 +78,7 @@ import {
 	type Rule,
 	type RulesStorage,
 	createMongooseRulesStorage,
-	mongooseRuleRecordSchema,
+	getMongooseRuleRecordSchema,
 } from "@prosopo/user-access-policy";
 
 enum TableNames {
@@ -167,7 +167,7 @@ const PROVIDER_TABLES = [
 	{
 		collectionName: TableNames.userAccessRules,
 		modelName: "UserAccessRules",
-		schema: mongooseRuleRecordSchema,
+		schema: getMongooseRuleRecordSchema(),
 	},
 ];
 

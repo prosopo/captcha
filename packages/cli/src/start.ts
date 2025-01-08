@@ -36,7 +36,7 @@ import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 import {
 	createExpressRuleRouter,
-	expressApiRuleRateLimits,
+	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy";
 
 function startApi(
@@ -75,7 +75,7 @@ function startApi(
 
 	// Rate limiting
 	const configRateLimits = env.config.rateLimits;
-	const rateLimits = { ...configRateLimits, ...expressApiRuleRateLimits };
+	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
 
 	for (const [path, limit] of Object.entries(rateLimits)) {
 		const enumPath = path as CombinedApiPaths;

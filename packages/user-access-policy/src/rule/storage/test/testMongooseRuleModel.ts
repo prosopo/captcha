@@ -2,7 +2,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { type Model } from "mongoose";
 import { afterAll, beforeEach } from "vitest";
 import type Rule from "../../rule.js";
-import MongooseRuleRecordSchema from "../record/mongooseRuleRecordSchema.js";
+import getMongooseRuleRecordSchema from "../record/getMongooseRuleRecordSchema.js";
 
 export default async function (): Promise<Model<Rule>> {
 	const mongoServer = await MongoMemoryServer.create();
@@ -10,7 +10,7 @@ export default async function (): Promise<Model<Rule>> {
 
 	const model = mongoConnection.model(
 		"UserAccessPolicyRules",
-		MongooseRuleRecordSchema,
+		getMongooseRuleRecordSchema(),
 	);
 
 	await model.syncIndexes();

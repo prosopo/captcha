@@ -5,8 +5,8 @@ import createMongooseRulesStorage from "./rule/storage/createMongooseRulesStorag
 import createRequestInspector from "./requestInspector/createRequestInspector.js";
 import createExpressRuleRouter from "./rule/api/createExpressRuleRouter.js";
 import createImageCaptchaConfigResolver from "./config/imageCaptcha/resolver/createImageCaptchaConfigResolver.js";
-import mongooseRuleRecordSchema from "./rule/storage/record/mongooseRuleRecordSchema.js";
-import expressApiRuleRateLimits from "./rule/api/expressApiRuleRateLimits.js";
+import getMongooseRuleRecordSchema from "./rule/storage/record/getMongooseRuleRecordSchema.js";
+import getExpressApiRuleRateLimits from "./rule/api/getExpressApiRuleRateLimits.js";
 
 export {
 	type Rule,
@@ -16,6 +16,6 @@ export {
 	createImageCaptchaConfigResolver,
 	createRequestInspector,
 	createExpressRuleRouter,
-	mongooseRuleRecordSchema,
-	expressApiRuleRateLimits,
+	getMongooseRuleRecordSchema,
+	getExpressApiRuleRateLimits,
 };
