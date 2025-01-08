@@ -17,9 +17,13 @@ import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { AdminApiPaths, type Captcha } from "@prosopo/types";
+import {
+	AdminApiPaths,
+	type Captcha,
+	type IUserSettings,
+} from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { checkboxClass } from "../support/commands.js";
+import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 describe("Captchas", () => {
 	before(async () => {
@@ -27,6 +31,12 @@ describe("Captchas", () => {
 		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
 		const signature = u8aToHex(pair.sign(timestamp.toString()));
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		const settings: IUserSettings = {
+			captchaType: "pow",
+			domains: ["0.0.0.0"],
+			frictionlessThreshold: 0.5,
+			powDifficulty: 2,
+		};
 		await fetch(adminSiteKeyURL, {
 			method: "POST",
 			headers: {
@@ -36,6 +46,7 @@ describe("Captchas", () => {
 			},
 			body: JSON.stringify({
 				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+				settings,
 			}),
 		});
 	});
@@ -58,7 +69,7 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(Cypress.env("default_page")).then(() => {
-			cy.get(checkboxClass).should("be.visible");
+			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
 		});

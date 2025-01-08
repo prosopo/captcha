@@ -1,11 +1,11 @@
 {
 	"name": "@prosopo/util",
-	"version": "2.1.4",
+	"version": "2.2.3",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
-		"node": ">=20",
+		"node": "20",
 		"npm": ">=9"
 	},
 	"scripts": {
@@ -32,8 +32,9 @@
 	"types": "./dist/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "1.5.0",
-		"@prosopo/config": "2.1.4",
+		"@prosopo/config": "2.2.3",
 		"dotenv": "16.4.5",
+		"express": "4.21.1",
 		"lodash": "4.17.21",
 		"seedrandom": "3.0.5"
 	},
@@ -42,8 +43,8 @@
 		"@types/seedrandom": "3.0.8",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
-		"npm-run-all": "4.1.5",
-		"rimraf": "6.0.1",
+		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",

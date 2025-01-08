@@ -37,10 +37,22 @@ function getMongoURI(): string {
 	return mongoURI;
 }
 
+const getLRules = () => {
+	if (!process.env.L_RULES) {
+		return {};
+	}
+	try {
+		return JSON.parse(process.env.L_RULES);
+	} catch (e) {
+		return {};
+	}
+};
+
 export default function getConfig(
 	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
 	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
 	who = "PROVIDER",
+	admin = "ADMIN",
 ): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
 		logLevel: getLogLevel(),
@@ -95,6 +107,12 @@ export default function getConfig(
 			clientListScheduler: {
 				schedule: process.env.CLIENT_LIST_SCHEDULE,
 			},
+		},
+		lRules: getLRules(),
+		authAccount: {
+			address: getAddress(admin),
+			password: getPassword(admin),
+			secret: getSecret(admin),
 		},
 	} as ProsopoConfigInput);
 }

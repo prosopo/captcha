@@ -17,8 +17,10 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+	commandAddBlockRules,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
+	commandSiteKeyRegisterApi,
 	commandStoreCaptchasExternally,
 	commandVersion,
 } from "./commands/index.js";
@@ -33,6 +35,7 @@ export type AwaitedProcessedArgs = {
 export function processArgs(
 	args: string[],
 	pair: KeyringPair,
+	authAccount: KeyringPair,
 	config: ProsopoConfigOutput,
 ) {
 	const logger = getLogger(LogLevel.enum.info, "CLI");
@@ -44,9 +47,11 @@ export function processArgs(
 			default: false,
 			type: "boolean",
 		} as const)
+		.command(commandAddBlockRules(pair, config, { logger }))
 		.command(commandProviderSetDataset(pair, config, { logger }))
 		.command(commandStoreCaptchasExternally(pair, config, { logger }))
 		.command(commandSiteKeyRegister(pair, config, { logger }))
+		.command(commandSiteKeyRegisterApi(pair, authAccount, config, { logger }))
 		.command(commandVersion(pair, config, { logger }))
 		.parse();
 }

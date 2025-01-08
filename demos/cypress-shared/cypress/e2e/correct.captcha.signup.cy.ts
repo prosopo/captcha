@@ -17,8 +17,12 @@ import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { AdminApiPaths, type Captcha } from "@prosopo/types";
-import { checkboxClass } from "../support/commands.js";
+import {
+	AdminApiPaths,
+	type Captcha,
+	type IUserSettings,
+} from "@prosopo/types";
+import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 describe("Captchas", () => {
 	before(async () => {
@@ -26,6 +30,12 @@ describe("Captchas", () => {
 		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
 		const signature = u8aToHex(pair.sign(timestamp.toString()));
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		const settings: IUserSettings = {
+			captchaType: "pow",
+			domains: ["0.0.0.0"],
+			frictionlessThreshold: 0.5,
+			powDifficulty: 2,
+		};
 		await fetch(adminSiteKeyURL, {
 			method: "POST",
 			headers: {
@@ -35,6 +45,7 @@ describe("Captchas", () => {
 			},
 			body: JSON.stringify({
 				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+				settings,
 			}),
 		});
 	});
@@ -58,7 +69,7 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(Cypress.env("default_page")).then(() => {
-			cy.get(checkboxClass).should("be.visible");
+			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
 		});
@@ -89,7 +100,10 @@ describe("Captchas", () => {
 				cy.wait("@postSolution");
 
 				// Get checked checkboxes
-				cy.get("input[type='checkbox']:checked").should("have.length.gte", 1);
+				getWidgetElement(`${checkboxClass}:checked`).should(
+					"have.length.gte",
+					1,
+				);
 
 				const uniqueId = `test${Cypress._.random(0, 1e6)}`;
 				cy.get('input[type="password"]').type("password");
@@ -98,7 +112,7 @@ describe("Captchas", () => {
 
 				cy.intercept("POST", "/signup").as("signup");
 
-				cy.get('button[type="button"]').first().click();
+				cy.get('button[data-cy="submit-button"]').first().click();
 
 				cy.wait("@signup").then((interception) => {
 					const body = interception.response?.body;

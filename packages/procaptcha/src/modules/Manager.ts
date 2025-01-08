@@ -32,6 +32,7 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
+	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -69,6 +70,7 @@ export function Manager(
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
+	frictionlessState?: FrictionlessState,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -315,6 +317,17 @@ export function Manager(
 		events.onClose();
 	};
 
+	const reload = async () => {
+		// disable the time limit
+		clearTimeout();
+		// abandon the captcha process
+		resetState();
+		// trigger the onClose event
+		events.onClose();
+		// start the captcha process again
+		await start();
+	};
+
 	/**
 	 * (De)Select an image from the solution for the current round. If the hash is already in the solutions list, it will be removed (deselected) and if not it will be added (selected).
 	 * @param hash the hash of the image
@@ -375,7 +388,7 @@ export function Manager(
 
 	const clearTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.timeout);
+		window.clearTimeout(Number(state.timeout));
 		// then clear the timeout from the state
 		updateState({ timeout: undefined });
 	};
@@ -412,8 +425,16 @@ export function Manager(
 		}
 
 		// check if account exists in extension
-		const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
-		const account = await ext.getAccount(config);
+		const selectAccount = async () => {
+			if (frictionlessState) {
+				return frictionlessState.userAccount;
+			}
+			const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+			return await ext.getAccount(config);
+		};
+
+		const account = await selectAccount();
+
 		// Store the account in local storage
 		storage.setAccount(account.account.address);
 
@@ -458,5 +479,6 @@ export function Manager(
 		submit,
 		select,
 		nextRound,
+		reload,
 	};
 }

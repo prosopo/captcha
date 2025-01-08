@@ -26,6 +26,7 @@ export interface ProsopoEnvironment {
 	assetsResolver: AssetsResolver | undefined;
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
+	authAccount: KeyringPair | undefined;
 	getDb(): IProviderDatabase;
 	isReady(): Promise<void>;
 	importDatabase(): Promise<void>;

@@ -62,6 +62,8 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress

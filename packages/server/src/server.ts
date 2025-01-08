@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Keyring } from "@polkadot/keyring";
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { isHex, u8aToHex } from "@polkadot/util";
+import { u8aToHex } from "@polkadot/util";
 import { ProviderApi } from "@prosopo/api";
 import {
 	type LogLevel,
@@ -27,8 +27,10 @@ import {
 	ProcaptchaOutputSchema,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
+	type VerificationResponse,
+	decodeProcaptchaOutput,
 } from "@prosopo/types";
-import { decodeProcaptchaOutput } from "@prosopo/types";
+import i18n from "i18next";
 
 export class ProsopoServer {
 	config: ProsopoServerConfigOutput;
@@ -63,6 +65,7 @@ export class ProsopoServer {
 	 * @param timeouts
 	 * @param providerUrl
 	 * @param timestamp
+	 * @param user
 	 * @param challenge
 	 */
 	public async verifyProvider(
@@ -70,8 +73,9 @@ export class ProsopoServer {
 		timeouts: CaptchaTimeoutOutput,
 		providerUrl: string,
 		timestamp: number,
+		user: string,
 		challenge?: string,
-	) {
+	): Promise<VerificationResponse> {
 		this.logger.info("Verifying with provider.");
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
@@ -87,27 +91,33 @@ export class ProsopoServer {
 			const recent = timestamp ? Date.now() - timestamp < powTimeout : false;
 			if (!recent) {
 				this.logger.error("PoW captcha is not recent");
-				return false;
+				return {
+					verified: false,
+					status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+				};
 			}
-			const result = await providerApi.submitPowCaptchaVerify(
+			return await providerApi.submitPowCaptchaVerify(
 				token,
 				signatureHex,
 				timeouts.pow.cachedTimeout,
+				user,
 			);
-			return result.verified;
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
 		const recent = timestamp ? Date.now() - timestamp < imageTimeout : false;
 		if (!recent) {
 			this.logger.error("Image captcha is not recent");
-			return false;
+			return {
+				verified: false,
+				status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+			};
 		}
-		const result = await providerApi.verifyDappUser(
+		return await providerApi.verifyDappUser(
 			token,
 			signatureHex,
+			user,
 			timeouts.image.cachedTimeout,
 		);
-		return result.verified;
 	}
 
 	/**
@@ -115,29 +125,35 @@ export class ProsopoServer {
 	 * @returns
 	 * @param token
 	 */
-	public async isVerified(token: ProcaptchaToken): Promise<boolean> {
-		if (!isHex(token)) {
-			this.logger.error("Invalid token - not hex", token);
-			return false;
+	public async isVerified(
+		token: ProcaptchaToken,
+	): Promise<VerificationResponse> {
+		try {
+			const payload = decodeProcaptchaOutput(token);
+
+			const { providerUrl, challenge, timestamp, user } =
+				ProcaptchaOutputSchema.parse(payload);
+
+			if (providerUrl) {
+				return await this.verifyProvider(
+					token,
+					this.config.timeouts,
+					providerUrl,
+					Number(timestamp),
+					user,
+					challenge,
+				);
+			}
+			this.logger.error("No provider URL found in user token");
+			return {
+				verified: false,
+				status: i18n.t("API.USER_NOT_VERIFIED"),
+			};
+		} catch (err) {
+			this.logger.error({ err, token });
+			throw new ProsopoApiError("API.BAD_REQUEST", {
+				context: { code: 500, token },
+			});
 		}
-
-		const payload = decodeProcaptchaOutput(token);
-
-		const { providerUrl, challenge, timestamp } =
-			ProcaptchaOutputSchema.parse(payload);
-
-		if (providerUrl) {
-			return await this.verifyProvider(
-				token,
-				this.config.timeouts,
-				providerUrl,
-				Number(timestamp),
-				challenge,
-			);
-		}
-		// If we don't have a providerURL, something has gone deeply wrong
-		throw new ProsopoApiError("API.BAD_REQUEST", {
-			context: { message: "No provider URL" },
-		});
 	}
 }

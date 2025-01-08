@@ -11,17 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { ApiJsonError } from "@prosopo/common";
+import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
 	type ZodNumber,
 	type ZodObject,
 	type ZodOptional,
 	array,
+	boolean,
+	coerce,
 	type input,
+	nativeEnum,
 	number,
 	object,
 	type output,
 	string,
+	union,
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
@@ -48,18 +55,19 @@ import {
 
 export const ApiPrefix = "/v1/prosopo" as const;
 
+export type IPAddress = Address4 | Address6;
+
 export enum ApiPaths {
-	GetImageCaptchaChallenge = "/v1/prosopo/provider/captcha/image",
-	GetPowCaptchaChallenge = "/v1/prosopo/provider/captcha/pow",
-	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/captcha/frictionless",
-	SubmitImageCaptchaSolution = "/v1/prosopo/provider/solution",
-	SubmitPowCaptchaSolution = "/v1/prosopo/provider/pow/solution",
-	VerifyPowCaptchaSolution = "/v1/prosopo/provider/pow/verify",
-	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/image/dapp/verify",
-	GetProviderStatus = "/v1/prosopo/provider/status",
-	GetProviderDetails = "/v1/prosopo/provider/details",
-	UpdateProviderClients = "/v1/prosopo/provider/clients",
-	SubmitUserEvents = "/v1/prosopo/provider/events",
+	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
+	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
+	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
+	SubmitImageCaptchaSolution = "/v1/prosopo/provider/client/solution",
+	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
+	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
+	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
+	GetProviderStatus = "/v1/prosopo/provider/client/status",
+	GetProviderDetails = "/v1/prosopo/provider/public/details",
+	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 }
 
 export type TGetImageCaptchaChallengePathAndParams =
@@ -75,10 +83,11 @@ export type TSubmitPowCaptchaSolutionURL =
 	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
-	UpdateDataset = "/v1/prosopo/provider/admin/dataset",
-	ProviderDeregister = "/v1/prosopo/provider/admin/deregister",
-	ProviderUpdate = "/v1/prosopo/provider/admin/update",
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
+	BlockRuleIPAdd = "/v1/prosopo/provider/admin/blockrule/ip/add",
+	BlockRuleIPRemove = "/v1/prosopo/provider/admin/blockrule/ip/remove",
+	BlocKRuleUserAdd = "/v1/prosopo/provider/admin/blockrule/user/add",
+	BlockRuleUserRemove = "/v1/prosopo/provider/admin/blockrule/user/remove",
 }
 
 export type CombinedApiPaths = ApiPaths | AdminApiPaths;
@@ -94,11 +103,11 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.UpdateProviderClients]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UpdateDataset]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.ProviderDeregister]: { windowMs: 60000, limit: 1 },
-	[AdminApiPaths.ProviderUpdate]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlockRuleIPAdd]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlockRuleIPRemove]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlocKRuleUserAdd]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.BlockRuleUserRemove]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -119,7 +128,7 @@ export type Provider = {
 
 export type FrontendProvider = {
 	url: string;
-	datasetId: Hash;
+	datasetId: string;
 };
 
 export type RandomProvider = {
@@ -141,8 +150,8 @@ const createRateLimitSchemaWithDefaults = (
 			(schemas, [path, defaults]) => {
 				const enumPath = path as CombinedApiPaths;
 				schemas[enumPath] = object({
-					windowMs: number().optional().default(defaults.windowMs),
-					limit: number().optional().default(defaults.limit),
+					windowMs: coerce.number().optional().default(defaults.windowMs),
+					limit: coerce.number().optional().default(defaults.limit),
 				});
 
 				return schemas;
@@ -173,7 +182,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
-	[ApiParams.datasetId]: string(),
+	[ApiParams.datasetId]: union([string(), array(number())]),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -220,7 +229,7 @@ export interface PendingCaptchaRequest {
 	[ApiParams.requestHash]: string;
 	deadlineTimestamp: number; // unix timestamp
 	requestedAtTimestamp: number; // unix timestamp
-	ipAddress: string;
+	ipAddress: bigint;
 	headers: RequestHeaders;
 }
 
@@ -231,11 +240,6 @@ export interface UpdateProviderClientsResponse extends ApiResponse {
 export interface ProviderRegistered {
 	status: "Registered" | "Unregistered";
 }
-
-export type ApiJsonError = {
-	message: string;
-	code: number;
-};
 
 export interface ApiResponse {
 	[ApiParams.status]: string;
@@ -331,6 +335,7 @@ export type SubmitPowCaptchaSolutionBodyType = zInfer<
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.token]: string(),
+	[ApiParams.user]: string(),
 });
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
@@ -344,5 +349,86 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.settings]: object({
 		[ApiParams.captchaType]: string(),
+		[ApiParams.domains]: array(string()),
+		[ApiParams.frictionlessThreshold]: number(),
+		[ApiParams.powDifficulty]: number(),
 	}).optional(),
+});
+
+export const ProsopoCaptchaCountConfigSchema = object({
+	solved: object({
+		count: number().positive(),
+	})
+		.optional()
+		.default({ count: 1 }),
+	unsolved: object({
+		count: number().nonnegative(),
+	})
+		.optional()
+		.default({ count: 0 }),
+});
+
+export type ProsopoCaptchaCountConfigSchemaInput = input<
+	typeof ProsopoCaptchaCountConfigSchema
+>;
+
+export type ProsopoCaptchaCountConfigSchemaOutput = output<
+	typeof ProsopoCaptchaCountConfigSchema
+>;
+
+export enum BlockRuleType {
+	ipAddress = "ipAddress",
+	userAccount = "userAccount",
+}
+
+const BlockRuleTypeSpec = nativeEnum(BlockRuleType);
+
+export const BlockRuleSpec = object({
+	global: boolean(),
+	hardBlock: boolean(),
+	type: BlockRuleTypeSpec,
+	dappAccount: string().optional(),
+	captchaConfig: ProsopoCaptchaCountConfigSchema.optional(),
+});
+
+export type BlockRule = zInfer<typeof BlockRuleSpec>;
+
+export const AddBlockRulesIPSpec = array(
+	BlockRuleSpec.merge(
+		object({
+			ips: array(string()),
+		}),
+	),
+);
+
+export type AddBlockRulesIP = zInfer<typeof AddBlockRulesIPSpec>;
+
+export const RemoveBlockRulesIPSpec = object({
+	ips: array(string()),
+	dappAccount: string().optional(),
+});
+
+export type RemoveBlockRulesIP = zInfer<typeof RemoveBlockRulesIPSpec>;
+
+export const BlockRuleIPAddBody = array(AddBlockRulesIPSpec);
+
+export const AddBlockRulesUserSpec = array(
+	BlockRuleSpec.merge(
+		object({
+			users: array(string()),
+		}),
+	),
+);
+
+export type AddBlockRulesUser = zInfer<typeof AddBlockRulesUserSpec>;
+
+export const RemoveBlockRulesUserSpec = object({
+	users: array(string()),
+	dappAccount: string().optional(),
+});
+
+export type RemoveBlockRulesUser = zInfer<typeof RemoveBlockRulesUserSpec>;
+
+export const DappDomainRequestBody = object({
+	[ApiParams.dapp]: string(),
 });

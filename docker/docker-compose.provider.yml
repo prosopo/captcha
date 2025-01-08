@@ -1,5 +1,6 @@
 services:
     provider-dev:
+        container_name: provider
         profiles:
             - development
         build:
@@ -10,8 +11,9 @@ services:
         ports:
             - '9229:9229'
         networks:
-            - internal
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.2
         logging:
             driver: 'json-file'
             options:
@@ -24,12 +26,12 @@ services:
             start_period: 30s
             timeout: 10s
     provider:
+        container_name: provider
         profiles:
             - production
             - staging
         image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -39,8 +41,9 @@ services:
         ports:
             - '9229:9229'
         networks:
-            - internal
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.3
         logging:
             driver: 'json-file'
             options:
@@ -53,6 +56,7 @@ services:
             start_period: 30s
             timeout: 10s
     database-dev:
+        container_name: database
         profiles:
             - development
         image: mongo:6.0.17
@@ -63,7 +67,8 @@ services:
         env_file:
             - ../dev/scripts/.env.development
         networks:
-            - internal
+            internal:
+                ipv4_address: 172.18.0.4
         logging:
             driver: 'json-file'
             options:
@@ -76,12 +81,12 @@ services:
             start_period: 30s
             timeout: 10s
     database:
+        container_name: database
         profiles:
             - production
             - staging
         image: mongo:6.0.17
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.mongo=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -92,7 +97,9 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         networks:
-            - internal
+            external:
+            internal:
+                ipv4_address: 172.18.0.5
         logging:
             driver: 'json-file'
             options:
@@ -105,14 +112,14 @@ services:
             start_period: 30s
             timeout: 10s
     caddy:
+        container_name: caddy
         profiles:
             - production
             - staging
-        image: caddy:2
+        image: prosopo/caddy:latest
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -125,7 +132,9 @@ services:
             - caddy_data:/data
             - caddy_config:/config
         networks:
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.6
         logging:
             driver: 'json-file'
             options:
@@ -138,13 +147,13 @@ services:
             start_period: 30s
             timeout: 10s
     watchtower:
+        container_name: watchtower
         profiles:
             - production
             - staging
         image: containrrr/watchtower
-        command: ["watchtower", "--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--label-enable", "--interval", "30"]
+        command: ["--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30", "--include-restarting"]
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
             - "vector.watchtower=true" # enable logging as a watchtower
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
@@ -158,6 +167,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
     vector:
+        container_name: vector
         profiles:
             - production
             - staging
@@ -165,11 +175,9 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true" # only services with this tag will be updated by watchtower
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
-            - ./provider.vector.toml:/etc/vector/vector.toml
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
         networks:
             - internal
@@ -189,8 +197,22 @@ networks:
     internal:
         name: internal
         internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
     external:
         name: external
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.19.0.0/16
+                  gateway: 172.19.0.1
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
 volumes:
     caddy_data:
     caddy_config:

@@ -11,7 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevels as ConsolaLogLevels, createConsola } from "consola/browser";
+import consola, {
+	LogLevels as ConsolaLogLevels,
+	createConsola,
+	type ConsolaOptions,
+	type LogObject,
+} from "consola/browser";
 import { enum as zEnum, type infer as zInfer } from "zod";
 import { ProsopoEnvError } from "./error.js";
 
@@ -47,8 +52,26 @@ export function getLoggerDefault(): Logger {
 	return defaultLogger;
 }
 
+const JSONReporter = (
+	message: LogObject,
+	context: {
+		options: ConsolaOptions;
+	},
+) => {
+	if (context.options.level === ConsolaLogLevels.error) {
+		process.stderr.write(`${JSON.stringify(message)}\n`);
+	} else {
+		process.stdout.write(`${JSON.stringify(message)}\n`);
+	}
+};
+
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
 	const logger = createConsola({
+		reporters: [
+			{
+				log: JSONReporter,
+			},
+		],
 		formatOptions: { colors: true, date: true },
 	}).withTag(scope);
 	let currentLevel = logLevel;

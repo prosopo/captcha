@@ -77,7 +77,8 @@
 		"SOLUTION_FLAG_FAILED": "Error al marcar la solución como procesada",
 		"TABLES_UNDEFINED": "Tablas indefinidas",
 		"CONNECTION_UNDEFINED": "Conexión indefinida",
-		"COMMITMENT_FLAG_FAILED": "Error al marcar el compromiso como procesado"
+		"COMMITMENT_FLAG_FAILED": "Error al marcar el compromiso como procesado",
+		"UNKNOWN": "Error desconocido de base de datos"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Error al analizar el captcha",
@@ -106,7 +107,12 @@
 		"UNKNOWN": "Error desconocido en el API",
 		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada",
 		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
-		"INVALID_SITE_KEY": "Clave de sitio no válida"
+		"UNAUTHORIZED_ORIGIN_URL": "URL de origen no autorizada",
+		"INVALID_SITE_KEY": "Clave de sitio no válida",
+		"INVALID_IP": "IP no válida",
+		"INVALID_URL": "URL inválida",
+		"INVALID_BODY": "Cuerpo inválido",
+		"PARSE_ERROR": "Error al analizar la respuesta"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parámetro inválido"

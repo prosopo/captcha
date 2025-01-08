@@ -13,11 +13,16 @@
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
+import {
+	ProsopoApiError,
+	ProsopoEnvError,
+	getLoggerDefault,
+} from "@prosopo/common";
 import {
 	ApiParams,
 	type CaptchaResult,
 	CaptchaStatus,
+	type IPAddress,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
@@ -55,11 +60,13 @@ export class PowCaptchaManager {
 		powDifficulty?: number,
 	): Promise<PoWCaptcha> {
 		const difficulty = powDifficulty || DEFAULT_POW_DIFFICULTY;
-
 		const requestedAtTimestamp = Date.now();
 
+		// Create nonce for the challenge
+		const nonce = Math.floor(Math.random() * 1000000);
+
 		// Use blockhash, userAccount and dappAccount for string for challenge
-		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}`;
+		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
 		const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
 		return {
 			challenge,
@@ -88,7 +95,7 @@ export class PowCaptchaManager {
 		nonce: number,
 		timeout: number,
 		userTimestampSignature: string,
-		ipAddress: string,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
@@ -126,8 +133,8 @@ export class PowCaptchaManager {
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_TIMESTAMP",
 				},
-				false,
-				true,
+				false, //serverchecked
+				true, // usersubmitted
 				userTimestampSignature,
 			);
 			return false;
@@ -171,6 +178,15 @@ export class PowCaptchaManager {
 
 		if (!challengeRecord) {
 			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
+				context: {
+					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
+					challenge,
+				},
+			});
+		}
+
+		if (challengeRecord.result.status !== CaptchaStatus.approved) {
+			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
 				context: {
 					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
 					challenge,

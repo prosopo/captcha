@@ -17,15 +17,20 @@ import getBotScoreFromPayload from "./decodePayload.js";
 export const getBotScore = async (payload: string) => {
 	const logger = getLogger(LogLevel.enum.info, "provider.get_bot_score");
 	try {
-		const botScore = await getBotScoreFromPayload(payload);
+		const result = (await getBotScoreFromPayload(payload)) as {
+			score: number;
+			timestamp: number;
+		};
+		const baseBotScore: number = result.score;
+		const timestamp: number = result.timestamp;
 
-		if (botScore === undefined) {
-			return 1;
+		if (baseBotScore === undefined) {
+			return { baseBotScore: 1, timestamp: 0 };
 		}
 
-		return botScore;
+		return { baseBotScore, timestamp };
 	} catch (error) {
 		logger.error(error);
-		return 1;
+		return { baseBotScore: 1, timestamp: 0 };
 	}
 };

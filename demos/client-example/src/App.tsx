@@ -241,6 +241,7 @@ function App(props: AppProps) {
 													onClick={onActionHandler}
 													aria-label={isLogin ? "Login" : "Sign up"}
 													disabled={!procaptchaToken}
+													data-cy="submit-button"
 												>
 													{isLogin ? "Login" : "Sign up"}
 												</Button>

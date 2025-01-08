@@ -64,6 +64,8 @@ jobs:
                   echo "******************************"
 
             - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             # make cache dirs, these must exist before doing cache stuff
             - run: mkdir -p ~/.npm
@@ -74,7 +76,7 @@ jobs:
 
             - uses: actions/setup-node@v4
               with:
-                  node-version-file: '.nvmrc'
+                  node-version-file: 'package.json'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci

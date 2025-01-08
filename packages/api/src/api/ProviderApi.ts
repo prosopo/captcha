@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+	AdminApiPaths,
 	ApiParams,
 	ApiPaths,
+	type ApiResponse,
+	type CaptchaRequestBodyType,
+	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
@@ -21,6 +25,7 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	type IUserSettings,
 	type ImageVerificationResponse,
 	type PowCaptchaSolutionResponse,
 	type ProcaptchaToken,
@@ -31,7 +36,6 @@ import {
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
-	type TGetImageCaptchaChallengePathAndParams,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -58,10 +62,17 @@ export default class ProviderApi
 	): Promise<CaptchaResponseBody> {
 		const { provider } = randomProvider;
 		const dappAccount = this.account;
-		const url: TGetImageCaptchaChallengePathAndParams = `${ApiPaths.GetImageCaptchaChallenge}/${
-			provider.datasetId
-		}/${userAccount}/${dappAccount}`;
-		return this.fetch(url);
+		const body: CaptchaRequestBodyType = {
+			[ApiParams.dapp]: dappAccount,
+			[ApiParams.user]: userAccount,
+			[ApiParams.datasetId]: provider.datasetId,
+		};
+		return this.post(ApiPaths.GetImageCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
 	}
 
 	public submitCaptchaSolution(
@@ -87,12 +98,18 @@ export default class ProviderApi
 				},
 			},
 		};
-		return this.post(ApiPaths.SubmitImageCaptchaSolution, body);
+		return this.post(ApiPaths.SubmitImageCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
 	}
 
 	public verifyDappUser(
 		token: ProcaptchaToken,
 		signature: string,
+		userAccount: string,
 		maxVerifiedTime?: number,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
@@ -103,7 +120,12 @@ export default class ProviderApi
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
 		}
 
-		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload);
+		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
 	}
 
 	public getPowCaptchaChallenge(
@@ -116,7 +138,12 @@ export default class ProviderApi
 			[ApiParams.dapp]: dapp.toString(),
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
-		return this.post(ApiPaths.GetPowCaptchaChallenge, body);
+		return this.post(ApiPaths.GetPowCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
 	}
 
 	public submitPowCaptchaSolution(
@@ -143,49 +170,98 @@ export default class ProviderApi
 				},
 			},
 		});
-		return this.post(ApiPaths.SubmitPowCaptchaSolution, body);
+		return this.post(ApiPaths.SubmitPowCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
 	}
 
 	public getFrictionlessCaptcha(
 		token: string,
 		dapp: string,
+		user: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body = {
 			[ApiParams.token]: token,
 			[ApiParams.dapp]: dapp,
+			[ApiParams.user]: user,
 		};
-		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body);
+		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
 	}
 
 	public submitUserEvents(
 		events: StoredEvents,
 		string: string,
 	): Promise<UpdateProviderClientsResponse> {
-		return this.post(ApiPaths.SubmitUserEvents, { events, string });
+		return this.post(
+			ApiPaths.SubmitUserEvents,
+			{ events, string },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+				},
+			},
+		);
 	}
 
 	public getProviderStatus(): Promise<ProviderRegistered> {
-		return this.fetch(ApiPaths.GetProviderStatus);
+		return this.fetch(ApiPaths.GetProviderStatus, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+			},
+		});
 	}
 
 	public getProviderDetails(): Promise<Provider> {
-		return this.fetch(ApiPaths.GetProviderDetails);
-	}
-
-	public updateProviderClients(): Promise<UpdateProviderClientsResponse> {
-		return this.post(ApiPaths.UpdateProviderClients, {});
+		return this.fetch(ApiPaths.GetProviderDetails, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+			},
+		});
 	}
 
 	public submitPowCaptchaVerify(
 		token: string,
 		signatureHex: string,
 		recencyLimit: number,
+		user: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signatureHex,
 			[ApiParams.verifiedTimeout]: recencyLimit,
 		};
-		return this.post(ApiPaths.VerifyPowCaptchaSolution, body);
+		return this.post(ApiPaths.VerifyPowCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public registerSiteKey(
+		siteKey: string,
+		settings: IUserSettings,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.SiteKeyRegister,
+			{ siteKey, settings },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
 	}
 }
