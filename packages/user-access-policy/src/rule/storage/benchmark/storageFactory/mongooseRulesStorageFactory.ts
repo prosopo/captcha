@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import mongoose, { type Model } from "mongoose";
-import type Rule from "../../../rule.js";
-import MongooseRulesStorage from "../../mongooseRulesStorage.js";
-import getMongooseRuleRecordSchema from "../../record/getMongooseRuleRecordSchema.js";
-import type RulesStorage from "../../rulesStorage.js";
-import type RulesStorageFactory from "./rulesStorageFactory.js";
+import type {Rule} from "../../../rule.js";
+import {MongooseRulesStorage} from "../../mongooseRulesStorage.js";
+import {getMongooseRuleRecordSchema} from "../../record/getMongooseRuleRecordSchema.js";
+import type { RulesStorage } from "../../rulesStorage.js";
+import type {RulesStorageFactory} from "./rulesStorageFactory.js";
 
 class MongooseRulesStorageFactory implements RulesStorageFactory {
 	async createRulesStorage(dbUrl: string): Promise<RulesStorage> {
@@ -35,4 +35,4 @@ class MongooseRulesStorageFactory implements RulesStorageFactory {
 	}
 }
 
-export default MongooseRulesStorageFactory;
+export { MongooseRulesStorageFactory };

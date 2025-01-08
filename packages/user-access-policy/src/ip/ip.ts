@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { z } from "zod";
-import type zodIp from "./zodIp.js";
+import type {zodIp} from "./zodIp.js";
 
 type Ip = z.infer<typeof zodIp>;
 
-export default Ip;
+export type { Ip };

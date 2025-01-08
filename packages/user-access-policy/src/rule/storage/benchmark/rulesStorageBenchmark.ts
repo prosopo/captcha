@@ -1,5 +1,3 @@
-import yargs, { type CommandModule } from "yargs";
-import { hideBin } from "yargs/helpers";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +11,12 @@ import { hideBin } from "yargs/helpers";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import MeasureFindCommand from "./commands/measureFindCommand.js";
-import PopulateCommand from "./commands/populateCommand.js";
-import type ConnectionCleaner from "./connectionCleaner/connectionCleaner.js";
-import type RulesStorageFactory from "./storageFactory/rulesStorageFactory.js";
+import { MeasureFindCommand } from "./commands/measureFindCommand.js";
+import { PopulateCommand } from "./commands/populateCommand.js";
+import type { ConnectionCleaner } from "./connectionCleaner/connectionCleaner.js";
+import type { RulesStorageFactory } from "./storageFactory/rulesStorageFactory.js";
+import yargs, { type CommandModule } from "yargs";
+import { hideBin } from "yargs/helpers";
 
 class RulesStorageBenchmark {
 	constructor(
@@ -54,4 +54,4 @@ class RulesStorageBenchmark {
 	}
 }
 
-export default RulesStorageBenchmark;
+export { RulesStorageBenchmark };

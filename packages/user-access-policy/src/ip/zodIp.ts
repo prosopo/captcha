@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { object } from "zod";
-import zodIpV4 from "./v4/zodIpV4.js";
-import zodIpV6 from "./v6/zodIpV6.js";
+import { zodIpV4 } from "./v4/zodIpV4.js";
+import { zodIpV6 } from "./v6/zodIpV6.js";
 
 const zodIp = object({
 	v4: zodIpV4.optional(),
 	v6: zodIpV6.optional(),
 });
 
-export default zodIp;
+export { zodIp };

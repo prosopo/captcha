@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { bigint, object, string } from "zod";
-import zodIpV4Mask from "./mask/zodIpV4Mask.js";
+import {zodIpV4Mask} from "./mask/zodIpV4Mask.js";
 
 const zodIpV4 = object({
 	asNumeric: bigint(),
@@ -20,4 +20,4 @@ const zodIpV4 = object({
 	mask: zodIpV4Mask.optional(),
 });
 
-export default zodIpV4;
+export { zodIpV4};

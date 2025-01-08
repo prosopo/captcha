@@ -18,4 +18,4 @@ const zodImageCaptchaConfig = object({
 	unsolvedCount: number().optional(),
 });
 
-export default zodImageCaptchaConfig;
+export { zodImageCaptchaConfig };

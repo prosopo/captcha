@@ -1,4 +1,3 @@
-import type { IPAddress } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +11,16 @@ import type { IPAddress } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Address4, type Address6 } from "ip-address";
+import { Address4 } from "ip-address";
 import type { Model } from "mongoose";
-import IpVersion from "../../ip/ipVersion.js";
-import type Rule from "../rule.js";
-import type MongooseRuleRecord from "./record/mongooseRuleRecord.js";
-import type RuleRecord from "./record/ruleRecord.js";
-import type RulesStorage from "./rulesStorage.js";
-import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
-import type SearchRuleFilters from "./search/searchRuleFilters.js";
+import { IpVersion } from "../../ip/ipVersion.js";
+import type { Rule } from "../rule.js";
+import type { MongooseRuleRecord } from "./record/mongooseRuleRecord.js";
+import type { RuleRecord } from "./record/ruleRecord.js";
+import type { RulesStorage } from "./rulesStorage.js";
+import type { SearchRuleFilterSettings } from "./search/searchRuleFilterSettings.js";
+import type { SearchRuleFilters } from "./search/searchRuleFilters.js";
+import type { IPAddress } from "@prosopo/types";
 
 class MongooseRulesStorage implements RulesStorage {
 	constructor(
@@ -68,7 +68,7 @@ class MongooseRulesStorage implements RulesStorage {
 			throw new Error("Model is not set");
 		}
 
-		const query = this.createQuery(filters, filterSettings);
+		const query = this.createSearchQuery(filters, filterSettings);
 
 		const mongooseRecords = await this.readingModel.find(query).lean().exec();
 
@@ -98,7 +98,7 @@ class MongooseRulesStorage implements RulesStorage {
 		return count;
 	}
 
-	protected createQuery(
+	protected createSearchQuery(
 		filters: SearchRuleFilters,
 		filterSettings?: SearchRuleFilterSettings,
 	): object {
@@ -111,7 +111,7 @@ class MongooseRulesStorage implements RulesStorage {
 			this.getFilterByClientId(includeRecordsWithoutClientId, filters.clientId),
 		];
 
-		const queryFilters = this.getQueryFilters(
+		const queryFilters = this.getSearchQueryFilters(
 			filters,
 			includeRecordsWithPartialFilterMatches,
 		);
@@ -123,7 +123,7 @@ class MongooseRulesStorage implements RulesStorage {
 		};
 	}
 
-	protected getQueryFilters(
+	protected getSearchQueryFilters(
 		filters: SearchRuleFilters,
 		includeRecordsWithPartialFilterMatches: boolean,
 	): object[] {
@@ -225,4 +225,4 @@ class MongooseRulesStorage implements RulesStorage {
 	}
 }
 
-export default MongooseRulesStorage;
+export { MongooseRulesStorage };

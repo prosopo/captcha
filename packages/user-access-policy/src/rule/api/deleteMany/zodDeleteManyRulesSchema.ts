@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, object, string } from "zod";
-import zodIp from "../../../ip/zodIp.js";
+import { zodIp } from "../../../ip/zodIp.js";
 
 const zodDeleteManyRulesSchema = array(
 	object({
@@ -22,4 +22,4 @@ const zodDeleteManyRulesSchema = array(
 	}),
 );
 
-export default zodDeleteManyRulesSchema;
+export { zodDeleteManyRulesSchema };

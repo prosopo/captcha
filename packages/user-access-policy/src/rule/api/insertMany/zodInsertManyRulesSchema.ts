@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, object, string } from "zod";
-import zodConfig from "../../../config/zodConfig.js";
-import zodIp from "../../../ip/zodIp.js";
+import { zodConfig } from "../../../config/zodConfig.js";
+import { zodIp } from "../../../ip/zodIp.js";
 
 const zodInsertManyRulesSchema = array(
 	object({
@@ -26,4 +26,4 @@ const zodInsertManyRulesSchema = array(
 	}),
 );
 
-export default zodInsertManyRulesSchema;
+export { zodInsertManyRulesSchema };

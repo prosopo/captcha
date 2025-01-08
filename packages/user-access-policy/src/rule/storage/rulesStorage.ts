@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type Rule from "../rule.js";
-import type DeleteRuleFilters from "./delete/deleteRuleFilters.js";
-import type RuleRecord from "./record/ruleRecord.js";
-import type SearchRuleFilterSettings from "./search/searchRuleFilterSettings.js";
-import type SearchRuleFilters from "./search/searchRuleFilters.js";
+import type { Rule } from "../rule.js";
+import type { DeleteRuleFilters } from "./delete/deleteRuleFilters.js";
+import type { RuleRecord } from "./record/ruleRecord.js";
+import type { SearchRuleFilterSettings } from "./search/searchRuleFilterSettings.js";
+import type { SearchRuleFilters } from "./search/searchRuleFilters.js";
 
 interface RulesStorage {
 	insert(record: Rule): Promise<RuleRecord>;
@@ -32,4 +32,4 @@ interface RulesStorage {
 	countRecords(): Promise<number>;
 }
 
-export default RulesStorage;
+export type { RulesStorage };

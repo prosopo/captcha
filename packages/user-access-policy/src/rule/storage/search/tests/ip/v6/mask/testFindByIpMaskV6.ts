@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Address6 } from "ip-address";
-import type Ip from "../../../../../../../ip/ip.js";
-import TestFindByIpV6 from "../testFindByIpV6.js";
+import type {Ip} from "../../../../../../../ip/ip.js";
+import {TestFindByIpV6} from "../testFindByIpV6.js";
 
 class TestFindByIpMaskV6 extends TestFindByIpV6 {
 	protected baseIpAsString = "2001:db8:3333:4444:5555:6666:7777:8888";
@@ -58,4 +58,4 @@ class TestFindByIpMaskV6 extends TestFindByIpV6 {
 	}
 }
 
-export default TestFindByIpMaskV6;
+export { TestFindByIpMaskV6};

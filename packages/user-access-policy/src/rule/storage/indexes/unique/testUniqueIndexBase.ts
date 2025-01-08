@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { expect } from "vitest";
-import type Ip from "../../../../ip/ip.js";
-import TestRulesStorageBase from "../../test/testRulesStorageBase.js";
+import type {Ip} from "../../../../ip/ip.js";
+import {TestRulesStorageBase} from "../../test/testRulesStorageBase.js";
 
 abstract class TestUniqueIndexBase extends TestRulesStorageBase {
 	protected abstract getFirstUserIpObject(): Ip;
@@ -142,4 +142,4 @@ abstract class TestUniqueIndexBase extends TestRulesStorageBase {
 	}
 }
 
-export default TestUniqueIndexBase;
+export { TestUniqueIndexBase};

@@ -1,4 +1,3 @@
-import type { Schema } from "mongoose";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +11,16 @@ import type { Schema } from "mongoose";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import mongooseRule from "../../mongooseRule.js";
-import type Rule from "../../rule.js";
-import MongoosePerformanceRuleIndexes from "../indexes/performance/mongoosePerformanceRuleIndexes.js";
-import MongooseUniqueRuleIndexes from "../indexes/unique/mongooseUniqueRuleIndexes.js";
+import {mongooseRule} from "../../mongooseRule.js";
+import type { Rule } from "../../rule.js";
+import { mongoosePerformanceRuleIndexes } from "../indexes/performance/mongoosePerformanceRuleIndexes.js";
+import { mongooseUniqueRuleIndexes } from "../indexes/unique/mongooseUniqueRuleIndexes.js";
+import type { Schema } from "mongoose";
 
-export default function (): Schema<Rule> {
+const getMongooseRuleRecordSchema = (): Schema<Rule> => {
 	const mongooseRuleIndexes = [
-		...MongooseUniqueRuleIndexes,
-		...MongoosePerformanceRuleIndexes,
+		...mongoosePerformanceRuleIndexes,
+		...mongooseUniqueRuleIndexes,
 	];
 
 	for (const mongooseRuleIndex of mongooseRuleIndexes) {
@@ -28,4 +28,6 @@ export default function (): Schema<Rule> {
 	}
 
 	return mongooseRule;
-}
+};
+
+export { getMongooseRuleRecordSchema };

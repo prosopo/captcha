@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { object, string } from "zod";
-import zodIpV6Mask from "./mask/zodIpV6Mask.js";
+import { zodIpV6Mask } from "./mask/zodIpV6Mask.js";
 
 const zodIpV6 = object({
 	asNumericString: string(),
@@ -20,4 +20,4 @@ const zodIpV6 = object({
 	mask: zodIpV6Mask.optional(),
 });
 
-export default zodIpV6;
+export { zodIpV6 };

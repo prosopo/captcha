@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import type IpV4 from "./ipV4.js";
-import mongooseIpV4Mask from "./mask/mongooseIpV4Mask.js";
+import type {IpV4} from "./ipV4.js";
+import {mongooseIpV4Mask} from "./mask/mongooseIpV4Mask.js";
 
 const mongooseIpV4 = new Schema<IpV4>(
 	{
@@ -29,4 +29,4 @@ const mongooseIpV4 = new Schema<IpV4>(
 	{ _id: false },
 );
 
-export default mongooseIpV4;
+export { mongooseIpV4};

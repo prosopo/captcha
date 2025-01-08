@@ -1,5 +1,3 @@
-import type Rule from "../../../../rule.js";
-import type SearchRuleFilters from "../../searchRuleFilters.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +11,9 @@ import type SearchRuleFilters from "../../searchRuleFilters.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import TestFindRuleBase from "../testFindRuleBase.js";
+import {TestFindRuleBase} from "../testFindRuleBase.js";
+import type {Rule} from "../../../../rule.js";
+import type {SearchRuleFilters} from "../../searchRuleFilters.js";
 
 class TestFindRuleByUserId extends TestFindRuleBase {
 	private readonly userId: string = "userId";
@@ -58,4 +58,4 @@ class TestFindRuleByUserId extends TestFindRuleBase {
 	}
 }
 
-export default TestFindRuleByUserId;
+export { TestFindRuleByUserId };

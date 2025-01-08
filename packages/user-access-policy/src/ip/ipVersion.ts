@@ -16,4 +16,4 @@ enum IpVersion {
 	v6 = "v6",
 }
 
-export default IpVersion;
+export { IpVersion };

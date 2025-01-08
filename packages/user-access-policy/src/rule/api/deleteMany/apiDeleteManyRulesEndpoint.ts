@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { z } from "zod";
-import type ApiEndpoint from "../../../api/apiEndpoint.js";
-import type ApiResponse from "../../../api/response/apiResponse.js";
-import ApiResponseStatus from "../../../api/response/apiResponseStatus.js";
-import type RulesStorage from "../../storage/rulesStorage.js";
-import DeleteManyRulesApiSchema from "./zodDeleteManyRulesSchema.js";
+import type { ApiEndpoint } from "../../../api/apiEndpoint.js";
+import type { ApiResponse } from "../../../api/response/apiResponse.js";
+import { ApiResponseStatus } from "../../../api/response/apiResponseStatus.js";
+import type { RulesStorage } from "../../storage/rulesStorage.js";
+import { zodDeleteManyRulesSchema } from "./zodDeleteManyRulesSchema.js";
 
 class ApiDeleteManyRulesEndpoint
-	implements ApiEndpoint<typeof DeleteManyRulesApiSchema>
+	implements ApiEndpoint<typeof zodDeleteManyRulesSchema>
 {
 	public constructor(private readonly rulesStorage: RulesStorage) {}
 
 	async processRequest(
-		args: z.infer<typeof DeleteManyRulesApiSchema>,
+		args: z.infer<typeof zodDeleteManyRulesSchema>,
 	): Promise<ApiResponse> {
 		await this.rulesStorage.deleteMany(args);
 
@@ -33,9 +33,9 @@ class ApiDeleteManyRulesEndpoint
 		};
 	}
 
-	public getRequestArgsSchema(): typeof DeleteManyRulesApiSchema {
-		return DeleteManyRulesApiSchema;
+	public getRequestArgsSchema(): typeof zodDeleteManyRulesSchema {
+		return zodDeleteManyRulesSchema;
 	}
 }
 
-export default ApiDeleteManyRulesEndpoint;
+export { ApiDeleteManyRulesEndpoint };

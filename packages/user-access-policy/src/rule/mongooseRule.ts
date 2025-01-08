@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import mongooseConfig from "../config/mongooseConfig.js";
-import mongooseIp from "../ip/mongooseIp.js";
-import type Rule from "./rule.js";
+import { mongooseConfig } from "../config/mongooseConfig.js";
+import { mongooseIp } from "../ip/mongooseIp.js";
+import type { Rule } from "./rule.js";
 
 const mongooseRule = new Schema<Rule>({
 	isUserBlocked: { type: Boolean, required: true },
@@ -49,4 +49,4 @@ const mongooseRule = new Schema<Rule>({
 	},
 });
 
-export default mongooseRule;
+export { mongooseRule };

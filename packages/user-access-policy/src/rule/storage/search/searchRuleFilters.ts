@@ -19,4 +19,4 @@ interface SearchRuleFilters {
 	clientId?: string;
 }
 
-export default SearchRuleFilters;
+export type { SearchRuleFilters};

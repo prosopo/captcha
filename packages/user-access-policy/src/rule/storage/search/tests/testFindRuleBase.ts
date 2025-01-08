@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { expect } from "vitest";
-import type Rule from "../../../rule.js";
-import TestRulesStorageBase from "../../test/testRulesStorageBase.js";
-import type SearchRuleFilters from "../searchRuleFilters.js";
+import type {Rule} from "../../../rule.js";
+import {TestRulesStorageBase} from "../../test/testRulesStorageBase.js";
+import type {SearchRuleFilters} from "../searchRuleFilters.js";
 
 abstract class TestFindRuleBase extends TestRulesStorageBase {
 	protected abstract getClientId(): string | undefined;
@@ -105,4 +105,4 @@ abstract class TestFindRuleBase extends TestRulesStorageBase {
 	}
 }
 
-export default TestFindRuleBase;
+export { TestFindRuleBase};

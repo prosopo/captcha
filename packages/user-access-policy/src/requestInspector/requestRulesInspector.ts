@@ -1,4 +1,3 @@
-import type { IPAddress } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +11,9 @@ import type { IPAddress } from "@prosopo/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type RulesStorage from "../rule/storage/rulesStorage.js";
-import type RequestInspector from "./requestInspector.js";
+import type {RulesStorage} from "../rule/storage/rulesStorage.js";
+import type { RequestInspector } from "./requestInspector.js";
+import type { IPAddress } from "@prosopo/types";
 
 class RequestRulesInspector implements RequestInspector {
 	public constructor(private readonly rulesStorage: RulesStorage) {}
@@ -97,4 +97,4 @@ class RequestRulesInspector implements RequestInspector {
 	}
 }
 
-export default RequestRulesInspector;
+export { RequestRulesInspector };

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
-import type RulesStorage from "../../rulesStorage.js";
-import type rulesStorageFactory from "../storageFactory/rulesStorageFactory.js";
+import type { RulesStorage } from "../../rulesStorage.js";
+import type { RulesStorageFactory } from "../storageFactory/rulesStorageFactory.js";
 
 abstract class CommandBase implements CommandModule {
 	abstract command: string;
 	abstract describe: string;
 
-	public constructor(private readonly storageFactory: rulesStorageFactory) {}
+	public constructor(private readonly storageFactory: RulesStorageFactory) {}
 
 	public builder(yargs: Argv): Argv {
 		return yargs.option("dbUrl", {
@@ -44,4 +44,4 @@ abstract class CommandBase implements CommandModule {
 	}
 }
 
-export default CommandBase;
+export { CommandBase };

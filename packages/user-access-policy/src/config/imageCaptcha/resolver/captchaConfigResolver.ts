@@ -1,7 +1,3 @@
-import type {
-	IPAddress,
-	ProsopoCaptchaCountConfigSchemaOutput,
-} from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +11,11 @@ import type {
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type RulesStorage from "../../../rule/storage/rulesStorage.js";
+import type {RulesStorage} from "../../../rule/storage/rulesStorage.js";
+import type {
+	IPAddress,
+	ProsopoCaptchaCountConfigSchemaOutput,
+} from "@prosopo/types";
 
 interface CaptchaConfigResolver {
 	resolveConfig(
@@ -27,4 +27,4 @@ interface CaptchaConfigResolver {
 	): Promise<ProsopoCaptchaCountConfigSchemaOutput>;
 }
 
-export default CaptchaConfigResolver;
+export type { CaptchaConfigResolver };

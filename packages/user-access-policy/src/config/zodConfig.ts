@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { object } from "zod";
-import zodImageCaptchaConfig from "./imageCaptcha/zodImageCaptchaConfig.js";
+import { zodImageCaptchaConfig } from "./imageCaptcha/zodImageCaptchaConfig.js";
 
 const zodConfig = object({
 	imageCaptcha: zodImageCaptchaConfig.optional(),
 });
 
-export default zodConfig;
+export { zodConfig };

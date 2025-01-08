@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import type Ip from "./ip.js";
-import mongooseIpV4 from "./v4/mongooseIpV4.js";
-import mongooseIpV6 from "./v6/mongooseIpV6.js";
+import type { Ip } from "./ip.js";
+import { mongooseIpV4 } from "./v4/mongooseIpV4.js";
+import { mongooseIpV6 } from "./v6/mongooseIpV6.js";
 
 const mongooseIp = new Schema<Ip>(
 	{
@@ -44,4 +44,4 @@ const mongooseIp = new Schema<Ip>(
 	{ _id: false },
 );
 
-export default mongooseIp;
+export { mongooseIp };

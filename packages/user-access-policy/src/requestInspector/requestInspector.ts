@@ -21,4 +21,4 @@ interface RequestInspector {
 	): Promise<boolean>;
 }
 
-export default RequestInspector;
+export type { RequestInspector };

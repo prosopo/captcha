@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import apiRulePaths from "./apiRulePaths.js";
+import { apiRulePaths } from "./apiRulePaths.js";
 
-export default function () {
+const getExpressApiRuleRateLimits = () => {
 	const defaultWindowsMs = 60000;
 	const defaultLimit = 5;
 
@@ -35,4 +35,6 @@ export default function () {
 				defaultLimit,
 		},
 	};
-}
+};
+
+export { getExpressApiRuleRateLimits };

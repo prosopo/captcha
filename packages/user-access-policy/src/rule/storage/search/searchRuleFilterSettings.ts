@@ -16,4 +16,4 @@ interface SearchRuleFilterSettings {
 	includeRecordsWithPartialFilterMatches?: boolean;
 }
 
-export default SearchRuleFilterSettings;
+export type{ SearchRuleFilterSettings};

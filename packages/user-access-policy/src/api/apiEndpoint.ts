@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ZodType, z } from "zod";
-import type ApiResponse from "./response/apiResponse.js";
+import type { ApiResponse } from "./response/apiResponse.js";
 
 interface ApiEndpoint<T extends ZodType | undefined> {
 	processRequest: T extends ZodType
@@ -22,4 +22,4 @@ interface ApiEndpoint<T extends ZodType | undefined> {
 	getRequestArgsSchema(): T;
 }
 
-export default ApiEndpoint;
+export type { ApiEndpoint };

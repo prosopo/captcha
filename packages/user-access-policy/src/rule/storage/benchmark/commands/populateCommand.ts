@@ -13,8 +13,8 @@
 // limitations under the License.
 import { Address4, Address6 } from "ip-address";
 import type { ArgumentsCamelCase, Argv } from "yargs";
-import type RulesStorage from "../../rulesStorage.js";
-import CommandBase from "./commandBase.js";
+import type {RulesStorage} from "../../rulesStorage.js";
+import {CommandBase} from "./commandBase.js";
 
 class PopulateCommand extends CommandBase {
 	public command = "populate";
@@ -140,4 +140,4 @@ class PopulateCommand extends CommandBase {
 	}
 }
 
-export default PopulateCommand;
+export { PopulateCommand};

@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import type Config from "./config.js";
-import MongooseImageCaptchaConfig from "./imageCaptcha/mongooseImageCaptchaConfig.js";
+import type { Config } from "./config.js";
+import { mongooseImageCaptchaConfig } from "./imageCaptcha/mongooseImageCaptchaConfig.js";
 
 const mongooseConfig = new Schema<Config>(
 	{
 		imageCaptcha: {
-			type: MongooseImageCaptchaConfig,
+			type: mongooseImageCaptchaConfig,
 			required: false,
 		},
 	},
 	{ _id: false },
 );
 
-export default mongooseConfig;
+export { mongooseConfig };

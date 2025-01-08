@@ -18,4 +18,4 @@ interface MongooseIndex {
 	options: IndexOptions;
 }
 
-export default MongooseIndex;
+export type { MongooseIndex };

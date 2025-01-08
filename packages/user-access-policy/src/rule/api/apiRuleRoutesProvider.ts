@@ -1,4 +1,3 @@
-import type ApiRoute from "../../api/route/apiRoute.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,12 @@ import type ApiRoute from "../../api/route/apiRoute.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type ApiRoutesProvider from "../../api/route/apiRoutesProvider.js";
-import type RulesStorage from "../storage/rulesStorage.js";
-import apiRulePaths from "./apiRulePaths.js";
-import ApiDeleteManyRulesEndpoint from "./deleteMany/apiDeleteManyRulesEndpoint.js";
-import InsertManyRulesEndpoint from "./insertMany/insertManyRulesEndpoint.js";
+import type { ApiRoutesProvider } from "../../api/route/apiRoutesProvider.js";
+import type {RulesStorage} from "../storage/rulesStorage.js";
+import { apiRulePaths } from "./apiRulePaths.js";
+import { ApiDeleteManyRulesEndpoint } from "./deleteMany/apiDeleteManyRulesEndpoint.js";
+import { InsertManyRulesEndpoint } from "./insertMany/insertManyRulesEndpoint.js";
+import type { ApiRoute } from "../../api/route/apiRoute.js";
 
 class ApiRuleRoutesProvider implements ApiRoutesProvider {
 	public getRoutes(rulesStorage: RulesStorage): ApiRoute[] {
@@ -33,4 +33,4 @@ class ApiRuleRoutesProvider implements ApiRoutesProvider {
 	}
 }
 
-export default ApiRuleRoutesProvider;
+export { ApiRuleRoutesProvider };

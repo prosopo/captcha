@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import TestFindByIpV6 from "../testFindByIpV6.js";
+import {TestFindByIpV6 } from "../testFindByIpV6.js";
 
 class TestFindByIpV6Short extends TestFindByIpV6 {
 	protected override readonly userIp: string = "::1";
 	protected override readonly anotherUserIp: string = "::2";
 }
 
-export default TestFindByIpV6Short;
+export { TestFindByIpV6Short};

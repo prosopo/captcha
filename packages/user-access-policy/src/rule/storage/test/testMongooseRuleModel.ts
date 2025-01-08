@@ -14,10 +14,10 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { type Model } from "mongoose";
 import { afterAll, beforeEach } from "vitest";
-import type Rule from "../../rule.js";
-import getMongooseRuleRecordSchema from "../record/getMongooseRuleRecordSchema.js";
+import type { Rule } from "../../rule.js";
+import { getMongooseRuleRecordSchema } from "../record/getMongooseRuleRecordSchema.js";
 
-export default async function (): Promise<Model<Rule>> {
+const testMongooseRuleModel = async (): Promise<Model<Rule>> => {
 	const mongoServer = await MongoMemoryServer.create();
 	const mongoConnection = await mongoose.connect(mongoServer.getUri());
 
@@ -38,4 +38,6 @@ export default async function (): Promise<Model<Rule>> {
 	});
 
 	return model;
-}
+};
+
+export { testMongooseRuleModel };

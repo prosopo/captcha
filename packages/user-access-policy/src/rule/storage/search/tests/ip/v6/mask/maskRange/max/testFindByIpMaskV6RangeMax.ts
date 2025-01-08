@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import TestFindByIpMaskV6 from "../../testFindByIpMaskV6.js";
+import {TestFindByIpMaskV6} from "../../testFindByIpMaskV6.js";
 
 class TestFindByIpMaskV6RangeMax extends TestFindByIpMaskV6 {
 	protected override baseIpAsString = "2001:db8:3333:4444:5555:6666:7777:8888";
@@ -26,4 +26,4 @@ class TestFindByIpMaskV6RangeMax extends TestFindByIpMaskV6 {
 		"2001:db8:3333:4444:5555:6666:8888:1111";
 }
 
-export default TestFindByIpMaskV6RangeMax;
+export { TestFindByIpMaskV6RangeMax};

@@ -16,4 +16,4 @@ enum ApiResponseStatus {
 	FAIL = "FAIL",
 }
 
-export default ApiResponseStatus;
+export { ApiResponseStatus };

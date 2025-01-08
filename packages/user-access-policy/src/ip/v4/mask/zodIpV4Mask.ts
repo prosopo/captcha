@@ -19,4 +19,4 @@ const zodIpV4Mask = object({
 	asNumeric: number(),
 });
 
-export default zodIpV4Mask;
+export { zodIpV4Mask};

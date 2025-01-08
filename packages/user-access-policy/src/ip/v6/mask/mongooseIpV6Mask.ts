@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import IPV6_NUMERIC_MAX_LENGTH from "../ipV6NumericMaxLength.js";
-import type IpV6Mask from "./ipV6Mask.js";
+import {IPV6_NUMERIC_MAX_LENGTH} from "../ipV6NumericMaxLength.js";
+import type { IpV6Mask} from "./ipV6Mask.js";
 
 const mongooseIpV6Mask = new Schema<IpV6Mask>(
 	{
@@ -47,4 +47,4 @@ const mongooseIpV6Mask = new Schema<IpV6Mask>(
 	{ _id: false },
 );
 
-export default mongooseIpV6Mask;
+export { mongooseIpV6Mask};

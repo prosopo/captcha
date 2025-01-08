@@ -13,4 +13,4 @@
 // limitations under the License.
 const IPV6_NUMERIC_MAX_LENGTH = 38;
 
-export default IPV6_NUMERIC_MAX_LENGTH;
+export { IPV6_NUMERIC_MAX_LENGTH };

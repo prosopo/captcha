@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Address4 } from "ip-address";
-import type Ip from "../../../../../../../ip/ip.js";
-import TestUniqueIndexBase from "../../../testUniqueIndexBase.js";
+import type {Ip} from "../../../../../../../ip/ip.js";
+import {TestUniqueIndexBase} from "../../../testUniqueIndexBase.js";
 
 class TestIpV4MaskUniqueIndex extends TestUniqueIndexBase {
 	private readonly ipAsNumeric: bigint = new Address4("192.168.1.1").bigInt();
@@ -49,4 +49,4 @@ class TestIpV4MaskUniqueIndex extends TestUniqueIndexBase {
 	}
 }
 
-export default TestIpV4MaskUniqueIndex;
+export { TestIpV4MaskUniqueIndex};

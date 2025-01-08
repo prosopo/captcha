@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +11,8 @@ import mongoose from "mongoose";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type ConnectionCleaner from "./connectionCleaner.js";
+import type {ConnectionCleaner} from "./connectionCleaner.js";
+import mongoose from "mongoose";
 
 class MongooseConnectionCleaner implements ConnectionCleaner {
 	public async cleanConnection(): Promise<void> {
@@ -20,4 +20,4 @@ class MongooseConnectionCleaner implements ConnectionCleaner {
 	}
 }
 
-export default MongooseConnectionCleaner;
+export { MongooseConnectionCleaner};

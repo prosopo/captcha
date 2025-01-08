@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Address6 } from "ip-address";
-import type Ip from "../../../../../../../ip/ip.js";
-import TestUniqueIndexBase from "../../../testUniqueIndexBase.js";
+import type {Ip} from "../../../../../../../ip/ip.js";
+import {TestUniqueIndexBase} from "../../../testUniqueIndexBase.js";
 
 class TestIpV6MaskUniqueIndex extends TestUniqueIndexBase {
 	private readonly ipAsNumericString: string = new Address6(

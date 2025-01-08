@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type RulesStorage from "../../rulesStorage.js";
+import type {RulesStorage} from "../../rulesStorage.js";
 
 interface RulesStorageFactory {
 	createRulesStorage(dbUrl: string): Promise<RulesStorage>;
 }
 
-export default RulesStorageFactory;
+export type { RulesStorageFactory };

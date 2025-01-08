@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import type ImageCaptchaConfig from "./imageCaptchaConfig.js";
+import type { ImageCaptchaConfig } from "./imageCaptchaConfig.js";
 
 const mongooseImageCaptchaConfig = new Schema<ImageCaptchaConfig>(
 	{
@@ -28,4 +28,4 @@ const mongooseImageCaptchaConfig = new Schema<ImageCaptchaConfig>(
 	{ _id: false },
 );
 
-export default mongooseImageCaptchaConfig;
+export { mongooseImageCaptchaConfig };

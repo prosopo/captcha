@@ -1,6 +1,3 @@
-import type { Model } from "mongoose";
-import type Rule from "../rule.js";
-import MongooseRulesStorage from "./mongooseRulesStorage.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +11,16 @@ import MongooseRulesStorage from "./mongooseRulesStorage.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type RulesStorage from "./rulesStorage.js";
+import type { RulesStorage } from "./rulesStorage.js";
+import type { Model } from "mongoose";
+import type {Rule} from "../rule.js";
+import {MongooseRulesStorage} from "./mongooseRulesStorage.js";
 
-export default function (
+const createMongooseRulesStorage = (
 	readingModel: Model<Rule> | null,
 	writingModel: Model<Rule> | null = null,
-): RulesStorage {
+): RulesStorage => {
 	return new MongooseRulesStorage(readingModel, writingModel);
-}
+};
+
+export { createMongooseRulesStorage };

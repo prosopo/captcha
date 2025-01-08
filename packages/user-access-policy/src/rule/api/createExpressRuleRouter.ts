@@ -1,6 +1,3 @@
-import type { Logger } from "@prosopo/common";
-import type { Router } from "express";
-import ExpressEndpointAdapter from "../../api/express/expressEndpointAdapter.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +11,18 @@ import ExpressEndpointAdapter from "../../api/express/expressEndpointAdapter.js"
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import ExpressRouterFactory from "../../api/express/expressRouterFactory.js";
-import ExpressRoutesRegistrar from "../../api/express/expressRoutesRegistrar.js";
-import type RulesStorage from "../storage/rulesStorage.js";
-import ApiRuleRoutesProvider from "./apiRuleRoutesProvider.js";
+import { ExpressRouterFactory } from "../../api/express/expressRouterFactory.js";
+import { ExpressRoutesRegistrar } from "../../api/express/expressRoutesRegistrar.js";
+import type { RulesStorage } from "../storage/rulesStorage.js";
+import { ApiRuleRoutesProvider } from "./apiRuleRoutesProvider.js";
+import type { Logger } from "@prosopo/common";
+import type { Router } from "express";
+import { ExpressEndpointAdapter } from "../../api/express/expressEndpointAdapter.js";
 
-export default function (rulesStorage: RulesStorage, logger: Logger): Router {
+const createExpressRuleRouter = (
+	rulesStorage: RulesStorage,
+	logger: Logger,
+): Router => {
 	const expressEndpointAdapter = new ExpressEndpointAdapter(logger);
 	const expressRouterFactory = new ExpressRouterFactory();
 
@@ -28,4 +31,6 @@ export default function (rulesStorage: RulesStorage, logger: Logger): Router {
 		new ApiRuleRoutesProvider(),
 		new ExpressRoutesRegistrar(expressEndpointAdapter),
 	);
-}
+};
+
+export { createExpressRuleRouter };
