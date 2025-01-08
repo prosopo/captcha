@@ -1,4 +1,5 @@
 import * as util from "node:util";
+import type { IPAddress } from "@prosopo/types";
 import { Address4, Address6 } from "ip-address";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import type RulesStorage from "../../rulesStorage.js";
@@ -16,7 +17,6 @@ import type RulesStorage from "../../rulesStorage.js";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import CommandBase from "./commandBase.js";
-import type {IPAddress} from "@prosopo/types";
 
 class MeasureFindCommand extends CommandBase {
 	public command = "measure-find";

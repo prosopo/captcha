@@ -1,3 +1,4 @@
+import type { IPAddress } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +17,6 @@ import type Ip from "../../../../../ip/ip.js";
 import type Rule from "../../../../rule.js";
 import type SearchRuleFilters from "../../searchRuleFilters.js";
 import TestFindRuleBase from "../testFindRuleBase.js";
-import type {IPAddress} from "@prosopo/types";
 
 abstract class TestFindByIpBase extends TestFindRuleBase {
 	protected abstract getUserIpObject(): Ip;
