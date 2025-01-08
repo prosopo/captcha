@@ -28,6 +28,8 @@ interface RulesStorage {
 	): Promise<RuleRecord[]>;
 
 	deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void>;
+
+	countRecords(): Promise<number>;
 }
 
 export default RulesStorage;

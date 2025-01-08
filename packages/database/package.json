@@ -18,10 +18,7 @@
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"benchmark": "npx tsx ./src/benchmarks/provider/userAccessRules/cli.ts",
-		"benchmark:populate": "npm run benchmark -- populate --db=localhost:27017 --entities-count-per-type=100000",
-		"benchmark:measure-find": "npm run benchmark -- measure-find --db=localhost:27017 --target-ip-v4=0.0.136.184 --target-ip-v6=0000:0000:0000:0000:0000:0000:0000:7530"
+		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
 	"repository": {
 		"type": "git",

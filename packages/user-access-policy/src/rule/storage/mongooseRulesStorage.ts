@@ -87,6 +87,16 @@ class MongooseRulesStorage implements RulesStorage {
 		}
 	}
 
+	public async countRecords(): Promise<number> {
+		if (!this.readingModel) {
+			throw new Error("Model is not set");
+		}
+
+		const count = await this.readingModel.countDocuments().exec();
+
+		return count;
+	}
+
 	protected createQuery(
 		filters: SearchRuleFilters,
 		filterSettings?: SearchRuleFilterSettings,
