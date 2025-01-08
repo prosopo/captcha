@@ -13,7 +13,14 @@
 // limitations under the License.
 
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
-import type { ProcaptchaCallbacks } from "./manager.js";
+import type { RandomProvider } from "../provider/api.js";
+import type { Account, ProcaptchaCallbacks } from "./manager.js";
+
+export type FrictionlessState = {
+	provider: RandomProvider;
+	userAccount: Account;
+	sessionId?: string;
+};
 
 /**
  * The props for the Procaptcha component.
@@ -23,4 +30,5 @@ export interface ProcaptchaProps {
 	config: ProcaptchaClientConfigInput;
 	// optional set of callbacks for various captcha events
 	callbacks?: Partial<ProcaptchaCallbacks>;
+	frictionlessState?: FrictionlessState;
 }

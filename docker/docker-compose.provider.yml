@@ -1,7 +1,8 @@
 services:
     provider-dev:
+        container_name: provider
         profiles:
-            - development-x86_64
+            - development
         build:
             context: ..
             dockerfile: ./docker/images/provider.dockerfile
@@ -10,31 +11,9 @@ services:
         ports:
             - '9229:9229'
         networks:
-            - internal
-            - external
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-    provider:
-        profiles:
-            - production-arm64
-            - production-x86_64
-            - staging-arm64
-            - staging-x86_64
-        image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
-        labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
-        pull_policy: always
-        env_file:
-            - ../.env.${NODE_ENV}
-        ports:
-            - '9229:9229'
-        networks:
-            - internal
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.2
         logging:
             driver: 'json-file'
             options:
@@ -46,10 +25,41 @@ services:
             retries: 3
             start_period: 30s
             timeout: 10s
-    database-dev:
+    provider:
+        container_name: provider
         profiles:
-            - development-x86_64
-        image: mongo:5.0.4
+            - production
+            - staging
+        image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        labels:
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
+        env_file:
+            - ../.env.${NODE_ENV}
+        ports:
+            - '9229:9229'
+        networks:
+            external:
+            internal:
+                ipv4_address: 172.18.0.3
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details"]  # ping the details endpoint
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+    database-dev:
+        container_name: database
+        profiles:
+            - development
+        image: mongo:6.0.17
         # volumes:
         #   - ./db:/data/db
         ports:
@@ -57,28 +67,8 @@ services:
         env_file:
             - ../dev/scripts/.env.development
         networks:
-            - internal
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-    database-arm64:
-        profiles:
-            - production-arm64
-            - staging-arm64
-        image: prosopo/mongodb-rpi4:6.0.14  # https://github.com/themattman/mongodb-raspberrypi-docker?tab=readme-ov-file
-        labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
-        volumes:
-            - /data/db:/data/db
-        ports:
-            - '27017:27017'
-        env_file:
-            - ../.env.${NODE_ENV}
-        networks:
-            - internal
+            internal:
+                ipv4_address: 172.18.0.4
         logging:
             driver: 'json-file'
             options:
@@ -86,17 +76,19 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
-    database-x86_64:
+    database:
+        container_name: database
         profiles:
-            - production-x86_64
-            - staging-x86_64
-        image: mongo:5.0.4
+            - production
+            - staging
+        image: mongo:6.0.17
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.mongo=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
@@ -105,7 +97,9 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         networks:
-            - internal
+            external:
+            internal:
+                ipv4_address: 172.18.0.5
         logging:
             driver: 'json-file'
             options:
@@ -113,21 +107,21 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
     caddy:
+        container_name: caddy
         profiles:
-            - production-x86_64
-            - production-arm64
-            - staging-x86_64
-            - staging-arm64
-        image: caddy:2
+            - production
+            - staging
+        image: prosopo/caddy:latest
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.caddy=true" # enable logging as caddy
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
@@ -138,7 +132,9 @@ services:
             - caddy_data:/data
             - caddy_config:/config
         networks:
-            - external
+            external:
+            internal:
+                ipv4_address: 172.18.0.6
         logging:
             driver: 'json-file'
             options:
@@ -146,19 +142,20 @@ services:
                 max-file: '1'
         healthcheck:
             test: ["CMD", "curl", "--fail", "localhost:2019/metrics"]  # ping the caddy admin api
-            interval: 30s
+            interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
     watchtower:
+        container_name: watchtower
         profiles:
-            - production-x86_64
-            - production-arm64
-            - staging-x86_64
-            - staging-arm64
+            - production
+            - staging
         image: containrrr/watchtower
+        command: ["--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30", "--include-restarting"]
         labels:
-            - "com.centurylinklabs.watchtower.enable=true"  # only services with this tag will be updated by watchtower
+            - "vector.watchtower=true" # enable logging as a watchtower
+            - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         env_file:
             - ../.env.${NODE_ENV}
@@ -169,12 +166,53 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+    vector:
+        container_name: vector
+        profiles:
+            - production
+            - staging
+        image: prosopo/vector:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+        networks:
+            - internal
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:8686/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 1
+            start_period: 10s
 networks:
     internal:
         name: internal
         internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
     external:
         name: external
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.19.0.0/16
+                  gateway: 172.19.0.1
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
 volumes:
     caddy_data:
     caddy_config:

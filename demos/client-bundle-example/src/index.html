@@ -1,53 +1,168 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
-        <title>Procaptcha demo: Simple page</title>
-        <script id="procaptchaScript" type="module" src="./assets/procaptcha.bundle.js" async defer></script>
-    </head>
-    <body>
-        <div class="mui-container">
-            <form action="?" class="mui-form">
-                <legend>Login</legend>
-                <div class="mui-textfield mui-textfield--float-label">
-                    <label>Email Address</label>
-                    <input type="email" required />
-                </div>
-                <div class="mui-textfield mui-textfield--float-label">
-                    <label>Password</label>
-                    <input type="password" required />
-                </div>
-                <div class="mui-textfield mui-textfield--float-label">
-                    <div id="procaptcha-container"></div>
-                </div>
-                <div class="mui-textfield mui-textfield--float-label">
-                    <!-- Dev sitekey -->
-                    <div
-                        class="procaptcha"
-                        data-theme="light"
-                        data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
-                    ></div>
-                </div>
-                <input type="submit" class="mui-btn mui-btn--raised" />
-            </form>
-        </div>
-        <script type="module">
-            // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-            import { render } from './assets/procaptcha.bundle.js'
+<head>
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha demo: Simple page</title>
+    <script id="procaptchaScript" type="module" src="./assets/procaptcha.bundle.js" async defer></script>
+    <script type="text/javascript">
+        window.onCaptchaFailed = function () {
+            console.log('The user failed the captcha')
+        }
+    </script>
+    <script type="module">
+        window.addEventListener('load', () => {
 
-            // Define a callback function to be called when the CAPTCHA is verified
-            function onCaptchaVerified(output) {
-                console.log('Captcha verified, output: ' + JSON.stringify(output))
+            window.setIsError = (isError) => {
+                const messageContainer = document.getElementById('messageContainer');
+                messageContainer.style.color = isError ? 'red' : 'black';
+                messageContainer.style.display = 'block';
+            };
+
+            window.setMessage = (message) => {
+                document.getElementById('message').innerText = message;
+            };
+
+            window.onLoggedIn = (token) => {
+                const url = new URL("/private", config.serverUrl).href;
+                console.log("getting private resource with token ", token, "at", url);
+                fetch(url, {
+                    method: "GET",
+                    headers: {
+                        Origin: "http://localhost:9232", // TODO: change this to env var
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                    .then(async (res) => {
+                        try {
+                            const jsonRes = await res.json();
+                            if (res.status === 200) {
+                                setMessage(jsonRes.message);
+                            }
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            };
+
+            window.onActionHandler = () => {
+
+                const procaptchaElements = document.getElementsByName('procaptcha-response');
+
+                if (!procaptchaElements.length) {
+                    alert("Must complete captcha");
+                    return
+                }
+
+                const procaptchaToken = procaptchaElements[0].value;
+
+                const payload = {
+                    email: document.getElementById('email').value,
+                    name: document.getElementById('name').value,
+                    password: document.getElementById('password').value,
+                    "procaptcha-response": procaptchaToken,
+                };
+                const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;
+                console.log("posting to", url, "with payload", payload);
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                    contentType: "application/json",
+                }).then((response) => {
+                    return new Promise((resolve) => response.json()
+                        .then((json) => resolve({
+                            status: response.status,
+                            ok: response.ok,
+                            json,
+                        })))
+                })
+                .then(async ({status, json, ok}) => {
+                    console.log("status", status, "json", json.message, "ok", ok);
+                    console.log("json", json)
+                    try {
+                        if (status !== 200) {
+                            setIsError(true);
+                            setMessage(json.message);
+                        } else {
+                            setIsError(false);
+                            setMessage(json.message);
+                        }
+                    } catch (err) {
+                        console.log(err);
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                    setIsError(true);
+                    setMessage("Error: " + err);
+                });
+                };
+                console.log("here")
             }
+        )
+            ;
+    </script>
 
-            // Get the Element using elementId
-            const captchaContainer = document.getElementById('procaptcha-container')
-            // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
-            render(captchaContainer, {
-                siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
-                theme: 'dark',
-                callback: onCaptchaVerified,
-            })
-        </script>
-    </body>
+</head>
+<body>
+
+<div class="mui-container">
+    <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
+        <h1>Example Login Form</h1>
+        <div class="mui-textfield mui-textfield--float-label">
+            <label for="name">Name</label>
+            <input id="name" type="text" name="name" required/>
+        </div>
+        <div class="mui-textfield mui-textfield--float-label">
+            <label for="email">Email Address</label>
+            <input id="email" type="email" name="email" required/>
+        </div>
+        <div class="mui-textfield mui-textfield--float-label">
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" required/>
+        </div>
+        <div class="mui-textfield mui-textfield--float-label">
+            <div id="procaptcha-container"></div>
+        </div>
+        <div class="mui-textfield mui-textfield--float-label">
+            <!-- Dev sitekey -->
+            <div
+                    class="procaptcha"
+                    data-theme="light"
+                    data-sitekey="%PROSOPO_SITE_KEY%"
+                    data-failed-callback="onCaptchaFailed"
+            ></div>
+        </div>
+        <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
+               <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
+    </form>
+</div>
+<script type="module">
+    // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
+    import {render} from './assets/procaptcha.bundle.js'
+
+    // Define a callback function to be called when the CAPTCHA is verified
+    function onCaptchaVerified(output) {
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
+    }
+
+    // Get the Element using elementId
+    const captchaContainer = document.getElementById('procaptcha-container')
+    // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
+    render(captchaContainer, {
+        siteKey: import.meta.env.PROSOPO_SITE_KEY,
+        theme: 'dark',
+        callback: onCaptchaVerified,
+        "failed-callback": function () {
+            console.log('The user failed the captcha')
+        }
+    })
+</script>
+</body>
 </html>

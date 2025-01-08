@@ -51,6 +51,8 @@ export interface ProcaptchaEvents {
 	onFailed: () => void;
 	onOpen: () => void;
 	onClose: () => void;
+	onReload: () => void;
+	onReset: () => void;
 }
 
 /**

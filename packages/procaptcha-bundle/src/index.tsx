@@ -12,31 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
-import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import { Procaptcha } from "@prosopo/procaptcha-react";
-import type {
-	ProcaptchaClientConfigOutput,
-	ProcaptchaRenderOptions,
-} from "@prosopo/types";
+import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { createRoot } from "react-dom/client";
+import type { Root } from "react-dom/client";
 import { getCaptchaType } from "./util/captchaType.js";
 import {
 	extractParams,
 	getConfig,
 	getProcaptchaScript,
 } from "./util/config.js";
-import {
-	getDefaultCallbacks,
-	getWindowCallback,
-	setUserCallbacks,
-} from "./util/defaultCallbacks.js";
-import { setLanguage } from "./util/language.js";
-import { setTheme } from "./util/theme.js";
-import { setValidChallengeLength } from "./util/timeout.js";
+import { getWindowCallback } from "./util/defaultCallbacks.js";
+import { renderLogic } from "./util/renderLogic.js";
 
 const BUNDLE_NAME = "procaptcha.bundle.js";
+let procaptchaRoots: Root[] = [];
 
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = () => {
@@ -54,40 +43,12 @@ const implicitRender = () => {
 		}
 		const captchaType = getCaptchaType(elements);
 
-		renderLogic(elements, getConfig(siteKey), { captchaType, siteKey });
-	}
-};
+		const root = renderLogic(elements, getConfig(siteKey), {
+			captchaType,
+			siteKey,
+		});
 
-const renderLogic = (
-	elements: Element[],
-	config: ProcaptchaClientConfigOutput,
-	renderOptions?: ProcaptchaRenderOptions,
-) => {
-	for (const element of elements) {
-		const callbacks = getDefaultCallbacks(element);
-
-		setUserCallbacks(renderOptions, callbacks, element);
-		setTheme(renderOptions, element, config);
-		setValidChallengeLength(renderOptions, element, config);
-		setLanguage(renderOptions, element, config);
-
-		switch (renderOptions?.captchaType) {
-			case "pow":
-				createRoot(element).render(
-					<ProcaptchaPow config={config} callbacks={callbacks} />,
-				);
-				break;
-			case "frictionless":
-				createRoot(element).render(
-					<ProcaptchaFrictionless config={config} callbacks={callbacks} />,
-				);
-				break;
-			default:
-				createRoot(element).render(
-					<Procaptcha config={config} callbacks={callbacks} />,
-				);
-				break;
-		}
+		procaptchaRoots.push(...root);
 	}
 };
 
@@ -98,7 +59,9 @@ export const render = (
 ) => {
 	const siteKey = renderOptions.siteKey;
 
-	renderLogic([element], getConfig(siteKey), renderOptions);
+	const roots = renderLogic([element], getConfig(siteKey), renderOptions);
+
+	procaptchaRoots.push(...roots);
 };
 
 export default function ready(fn: () => void) {
@@ -114,26 +77,49 @@ export default function ready(fn: () => void) {
 // extend the global Window interface to include the procaptcha object
 declare global {
 	interface Window {
-		procaptcha: { ready: typeof ready; render: typeof render };
+		procaptcha: {
+			ready: typeof ready;
+			render: typeof render;
+			reset: typeof reset;
+		};
 	}
 }
 
+const start = () => {
+	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
+	// onRenderExplicit takes values of either explicit or implicit
+	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME);
+
+	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
+	if (renderExplicit !== "explicit") {
+		ready(implicitRender);
+	}
+
+	if (onloadUrlCallback) {
+		const onloadCallback = getWindowCallback(onloadUrlCallback);
+		let readyCalled = false;
+		// Add event listener to the script tag to call the callback function when the script is loaded
+		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+			ready(onloadCallback);
+			readyCalled = true;
+		});
+		// or if the document has already loaded, call the callback function
+		if (document.readyState === "complete" && !readyCalled) {
+			ready(onloadCallback);
+		}
+	}
+};
+
+export const reset = () => {
+	for (const root of procaptchaRoots) {
+		root.unmount();
+	}
+	procaptchaRoots = [];
+
+	start();
+};
+
 // set the procaptcha attribute on the window
-window.procaptcha = { ready, render };
+window.procaptcha = { ready, render, reset };
 
-// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
-// onRenderExplicit takes values of either explicit or implicit
-const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME);
-
-// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
-if (renderExplicit !== "explicit") {
-	ready(implicitRender);
-}
-
-if (onloadUrlCallback) {
-	const onloadCallback = getWindowCallback(onloadUrlCallback);
-	// Add event listener to the script tag to call the callback function when the script is loaded
-	getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
-		ready(onloadCallback);
-	});
-}
+start();

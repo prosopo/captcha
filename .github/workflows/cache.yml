@@ -63,17 +63,20 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
             # make cache dirs, these must exist before doing cache stuff
             - run: mkdir -p ~/.npm
             - run: mkdir -p ~/.cache/Cypress
 
             # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
+            - run: npm cache clean --force
 
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               with:
-                  node-version-file: '.nvmrc'
+                  node-version-file: 'package.json'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: npm ci
@@ -82,7 +85,7 @@ jobs:
             - run: npx cypress install
 
             - name: Save npm cache
-              uses: actions/cache/save@v3
+              uses: actions/cache/save@v4
               if: always()
               with:
                   path: |

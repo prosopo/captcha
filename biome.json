@@ -19,7 +19,11 @@
 			"**/*.jsonc",
 			"**/*.css"
 		],
-		"ignore": ["./packages/detector/src/index.js", "*.bundle.js"]
+		"ignore": [
+			"./packages/detector/src/index.js",
+			"*.bundle.js",
+			"./packages/provider/src/tasks/detection/decodePayload.js"
+		]
 	},
 	"linter": {
 		"rules": {

@@ -15,7 +15,7 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../detector/tsconfig.cjs.json"
+			"path": "../fingerprint/tsconfig.cjs.json"
 		},
 		{
 			"path": "../types/tsconfig.cjs.json"

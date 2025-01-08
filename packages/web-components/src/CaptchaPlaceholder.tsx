@@ -100,9 +100,9 @@ export const ProcaptchaPlaceholder = ({
 								>
 									<a
 										href={WIDGET_URL}
+										// biome-ignore lint/a11y/noBlankTarget: Biome incorrect edge case
 										target="_blank"
 										aria-label={WIDGET_URL_TEXT}
-										rel="noreferrer"
 									>
 										<div style={{ flex: 1 }}>
 											<Logo themeColor={themeColor} aria-label="Prosopo logo" />

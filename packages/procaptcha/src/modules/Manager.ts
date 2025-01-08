@@ -21,7 +21,6 @@ import {
 	ProsopoEnvError,
 	ProsopoError,
 } from "@prosopo/common";
-import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	buildUpdateState,
 	getDefaultEvents,
@@ -33,6 +32,7 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
+	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -43,7 +43,7 @@ import {
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { at, hashToHex } from "@prosopo/util";
-import { sleep } from "../utils/utils.js";
+import { sleep } from "@prosopo/util";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
 import storage from "./storage.js";
 
@@ -70,6 +70,7 @@ export function Manager(
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
+	frictionlessState?: FrictionlessState,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -150,7 +151,7 @@ export function Manager(
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: challenge.error,
+						error: challenge.error.message,
 					});
 				} else {
 					if (challenge.captchas.length <= 0) {
@@ -245,16 +246,16 @@ export function Manager(
 					});
 				}
 
-				const userRequestHashSignature = await signer.signRaw({
+				const userTimestampSignature = await signer.signRaw({
 					address: account.account.address,
-					data: stringToHex(challenge.requestHash),
+					data: stringToHex(challenge[ApiParams.timestamp]),
 					type: "bytes",
 				});
 
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
-						userRequestHashSignature.signature,
+						userTimestampSignature.signature,
 						challenge.requestHash,
 						captchaSolution,
 						challenge.timestamp,
@@ -263,11 +264,6 @@ export function Manager(
 
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;
-
-				if (!isHuman) {
-					// user failed the captcha for some reason according to the provider
-					events.onFailed();
-				}
 
 				// update the state with the result of the submission
 				updateState({
@@ -295,12 +291,14 @@ export function Manager(
 										challenge.signature.provider.requestHash,
 								},
 								[ApiParams.user]: {
-									[ApiParams.requestHash]: userRequestHashSignature.signature,
+									[ApiParams.timestamp]: userTimestampSignature.signature,
 								},
 							},
 						}),
 					);
 					setValidChallengeTimeout();
+				} else {
+					events.onFailed();
 				}
 			},
 			start,
@@ -317,6 +315,17 @@ export function Manager(
 		resetState();
 		// trigger the onClose event
 		events.onClose();
+	};
+
+	const reload = async () => {
+		// disable the time limit
+		clearTimeout();
+		// abandon the captcha process
+		resetState();
+		// trigger the onClose event
+		events.onClose();
+		// start the captcha process again
+		await start();
 	};
 
 	/**
@@ -379,7 +388,7 @@ export function Manager(
 
 	const clearTimeout = () => {
 		// clear the timeout
-		window.clearTimeout(state.timeout);
+		window.clearTimeout(Number(state.timeout));
 		// then clear the timeout from the state
 		updateState({ timeout: undefined });
 	};
@@ -400,6 +409,7 @@ export function Manager(
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
 		updateState(defaultState());
+		events.onReset();
 	};
 
 	/**
@@ -415,8 +425,16 @@ export function Manager(
 		}
 
 		// check if account exists in extension
-		const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
-		const account = await ext.getAccount(config);
+		const selectAccount = async () => {
+			if (frictionlessState) {
+				return frictionlessState.userAccount;
+			}
+			const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
+			return await ext.getAccount(config);
+		};
+
+		const account = await selectAccount();
+
 		// Store the account in local storage
 		storage.setAccount(account.account.address);
 
@@ -461,5 +479,6 @@ export function Manager(
 		submit,
 		select,
 		nextRound,
+		reload,
 	};
 }

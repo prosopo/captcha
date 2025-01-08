@@ -26,21 +26,32 @@ describe("handleErrors", () => {
 		const mockRequest = {} as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
 			end: vi.fn(),
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
-		const error = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT");
+		const error = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
+			context: { code: 400 },
+		});
+		console.log(error);
 
 		handleErrors(error, mockRequest, mockResponse, mockNext);
 
-		expect(mockResponse.writeHead).toHaveBeenCalledWith(
-			500,
-			JSON.stringify("Invalid data format"),
-			{
-				"content-type": "application/json",
-			},
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
 		);
+		expect(mockResponse.send).toHaveBeenCalledWith({
+			error: {
+				code: 400,
+				key: "CONTRACT.INVALID_DATA_FORMAT",
+				message: "Invalid data format",
+			},
+		});
+		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
 
@@ -48,26 +59,30 @@ describe("handleErrors", () => {
 		const mockRequest = {} as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
 			end: vi.fn(),
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
 		const [len, max] = [100, 50];
-		const error = new SyntaxError(
-			`Input length: ${len}, exceeds maximum allowed length: ${max}`,
-		);
+		const message = `Input length: ${len}, exceeds maximum allowed length: ${max}`;
+		const error = new SyntaxError(message);
 
 		handleErrors(error, mockRequest, mockResponse, mockNext);
 
-		expect(mockResponse.writeHead).toHaveBeenCalledWith(
-			400,
-			JSON.stringify(
-				`Input length: ${len}, exceeds maximum allowed length: ${max}`,
-			),
-			{
-				"content-type": "application/json",
-			},
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
 		);
+		expect(mockResponse.status).toHaveBeenCalledWith(400);
+		expect(mockResponse.send).toHaveBeenCalledWith({
+			error: {
+				message,
+				code: 400,
+			},
+		});
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
 
@@ -75,16 +90,29 @@ describe("handleErrors", () => {
 		const mockRequest = {} as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
 			end: vi.fn(),
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
-		const error = new ZodError([]);
+		const zodError = {
+			code: "custom" as const,
+			message: "Invalid input",
+			path: ["some", "variable"],
+		};
+		const error = new ZodError([zodError]);
 
 		handleErrors(error, mockRequest, mockResponse, mockNext);
 
-		expect(mockResponse.writeHead).toHaveBeenCalledWith(400, `\"[]\"`, {
-			"content-type": "application/json",
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
+		);
+		expect(mockResponse.status).toHaveBeenCalledWith(400);
+		expect(mockResponse.send).toHaveBeenCalledWith({
+			error: { code: 400, message: [zodError] },
 		});
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
@@ -93,6 +121,9 @@ describe("handleErrors", () => {
 		const mockRequest = {} as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
 			end: vi.fn(),
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
@@ -102,13 +133,18 @@ describe("handleErrors", () => {
 
 		handleErrors(apiError, mockRequest, mockResponse, mockNext);
 
-		expect(mockResponse.writeHead).toHaveBeenCalledWith(
-			500,
-			JSON.stringify("Environment not ready"),
-			{
-				"content-type": "application/json",
-			},
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
 		);
+		expect(mockResponse.status).toHaveBeenCalledWith(500);
+		expect(mockResponse.send).toHaveBeenCalledWith({
+			error: {
+				code: 500,
+				key: "GENERAL.ENVIRONMENT_NOT_READY",
+				message: "Environment not ready",
+			},
+		});
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
 });

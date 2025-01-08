@@ -9,7 +9,7 @@
                 // Get the Element using elementId
                 const captchaContainer = document.getElementById('procaptcha-container')
                 render(captchaContainer, {
-                    siteKey: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
+                    siteKey: import.meta.env.PROSOPO_SITE_KEY,
                     theme: 'dark',
                     callback: onCaptchaVerified,
                     captchaType: 'frictionless',

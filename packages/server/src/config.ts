@@ -15,7 +15,7 @@ import { ProsopoServerConfigSchema } from "@prosopo/types";
 
 export const getServerConfig = () =>
 	ProsopoServerConfigSchema.parse({
-		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT, // enviromental variables
+		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT, // environmental variables
 		serverUrl: getServerUrl(),
 		dappName: process.env.PROSOPO_DAPP_NAME || "client-example-server",
 		account: {

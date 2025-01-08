@@ -40,13 +40,27 @@ export interface IUserData {
 	createdAt: Timestamp;
 	activated: boolean;
 	tier: Tier;
+	tierRequestQuota: number; // how many requests the user is entitled to in this tier (note this may vary for the same tier, e.g. pro @ 100k, pro @ 200k, etc)
 	marketingPreferences: boolean;
 	originUrl: string;
 	settings?: IUserSettings;
 	updatedAtTimestamp?: Timestamp;
+	tierCheckoutId?: string; // prosopo (not stripe!) checkout session id / lock
+	stripeCustomerId?: string; // stripe customer id
+	stripeTierCheckoutId?: string; // stripe checkout session id
+	stripeTierSubscriptionId?: string; // stripe subscription id
+	stripeTierPriceId?: string; // stripe price id for the subscription
+	stripeTierNext?: string; // the next tier the user is moving to, if any
+	stripeTierNextAt?: number; // the time the user will move to the next tier, if any
+	stripeTierCancelAt?: number; // the time the user's subscription will be cancelled (e.g. if cancelling at end of billing period)
+	stripeUpdatedAt?: number; // the time the user's stripe details were last updated (needed for webhook ordering)
+	pendingCheckoutTier?: Tier; // the pending checkout tier, if any
+	pendingCheckoutTierRequestQuota?: number; // the pending checkout tier request quota, if any
 }
 
 export interface IUserSettings {
-	threshold: number;
-	domains: string[];
+	frictionlessThreshold?: number;
+	powDifficulty?: number;
+	domains?: string[];
+	captchaType?: "image" | "pow" | "frictionless";
 }

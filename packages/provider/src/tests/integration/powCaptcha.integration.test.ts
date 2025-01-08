@@ -14,7 +14,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { u8aToHex } from "@polkadot/util/u8a";
-import { getPairAsync } from "@prosopo/contract";
+import { generateMnemonic, getPairAsync } from "@prosopo/contract";
 import {
 	ApiParams,
 	ApiPaths,
@@ -96,6 +96,8 @@ describe("PoW Integration Tests", () => {
 					Connection: "close",
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 				body: JSON.stringify(body),
 			});
@@ -103,6 +105,8 @@ describe("PoW Integration Tests", () => {
 			expect(response.status).toBe(200);
 
 			const data = await response.json();
+
+			console.log("\n ---- \n data \n ---- \n", data);
 
 			expect(data).toHaveProperty("challenge");
 			expect(data).toHaveProperty("difficulty");
@@ -115,11 +119,31 @@ describe("PoW Integration Tests", () => {
 				headers: {
 					Connection: "close",
 					"Content-Type": "application/json",
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
 			});
 
 			expect(response.status).toBe(400);
+		});
+
+		it("should return an error if origin header is not valid", async () => {
+			const origin = "http://notallowed.com";
+			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
+				},
+				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+			});
+
+			expect(response.status).toBe(400);
+			expect(response.statusText).toBe("Unauthorized origin URL");
 		});
 	});
 	describe("SubmitPowCaptchaSolution", () => {
@@ -154,6 +178,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(requestBody),
 				},
@@ -191,6 +217,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(submitBody),
 				},
@@ -222,6 +250,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
 				},
@@ -260,6 +290,9 @@ describe("PoW Integration Tests", () => {
 					headers: {
 						Connection: "close",
 						"Content-Type": "application/json",
+						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(body),
 				},
@@ -273,6 +306,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return an error for an unregistered site key", async () => {
+			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
 			const userPair = await getPairAsync(
 				dummyUserAccount.seed,
 				undefined,
@@ -290,53 +324,49 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": unregisteredAccount,
+						"Prosopo-User": userAccount,
 					},
-					body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+					body: JSON.stringify({
+						user: userAccount,
+						dapp: unregisteredAccount,
+					}),
 				},
 			);
 
-			const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+			const data = (await captchaRes.json()) as GetPowCaptchaResponse;
 
-			const challenge = challengeBody.challenge;
-			const difficulty = challengeBody.difficulty;
-			const signature = challengeBody.signature;
-			const nonce = failPoW(challenge, difficulty);
-			const verifiedTimeout = 120000;
-
-			const dapp = "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y";
-			const body: SubmitPowCaptchaSolutionBodyType = {
-				challenge,
-				difficulty,
-				[ApiParams.signature]: {
-					[ApiParams.provider]: signature[ApiParams.provider],
-					[ApiParams.user]: {
-						[ApiParams.timestamp]: u8aToHex(
-							userPair.sign(challengeBody[ApiParams.timestamp].toString()),
-						),
-					},
-				},
-				nonce,
-				verifiedTimeout,
-				user: userPair.address,
-				dapp,
-			};
-			const response = await fetch(
-				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
-				{
-					method: "POST",
-					headers: {
-						Connection: "close",
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(body),
-				},
-			);
-
-			expect(response.status).toBe(200);
-
-			const data = (await response.json()) as PowCaptchaSolutionResponse;
 			expect(data).toHaveProperty("error");
-			expect(data.error).toBe("Site key not registered");
+			expect(data.error?.message).toBe("Site key not registered");
 		});
+	});
+
+	it("should return an error for an invalid site key", async () => {
+		const userPair = await getPairAsync(
+			dummyUserAccount.seed,
+			undefined,
+			"sr25519",
+			42,
+		);
+		const userAccount = userPair.address;
+		const origin = "http://localhost";
+		const invalidSiteKey = "junk";
+
+		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			method: "POST",
+			headers: {
+				Connection: "close",
+				"Content-Type": "application/json",
+				Origin: origin,
+				"Prosopo-Site-Key": invalidSiteKey,
+				"Prosopo-User": userAccount,
+			},
+			body: JSON.stringify({ user: userAccount, dapp: invalidSiteKey }),
+		});
+
+		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+
+		expect(challengeBody).toHaveProperty("error");
+		expect(challengeBody.error?.message).toBe("Invalid site key");
 	});
 });

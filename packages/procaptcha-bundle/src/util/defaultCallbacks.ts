@@ -29,7 +29,18 @@ export const getWindowCallback = (callbackName: string) => {
 	return fn;
 };
 
-export const getDefaultCallbacks = (element: Element) => ({
+export interface Callbacks {
+	onHuman: (token: ProcaptchaToken) => void;
+	onChallengeExpired: () => void;
+	onExpired: () => void;
+	onError: (error: Error) => void;
+	onClose: () => void;
+	onOpen: () => void;
+	onFailed: () => void;
+	onReset: () => void;
+}
+
+export const getDefaultCallbacks = (element: Element): Callbacks => ({
 	onHuman: (token: ProcaptchaToken) => handleOnHuman(element, token),
 	onChallengeExpired: () => {
 		removeProcaptchaResponse();
@@ -37,7 +48,6 @@ export const getDefaultCallbacks = (element: Element) => ({
 	},
 	onExpired: () => {
 		removeProcaptchaResponse();
-		alert("Completed challenge has expired, please try again");
 	},
 	onError: (error: Error) => {
 		removeProcaptchaResponse();
@@ -49,18 +59,19 @@ export const getDefaultCallbacks = (element: Element) => ({
 	onOpen: () => {
 		console.log("Challenge opened");
 	},
+	onFailed: () => {
+		alert("Captcha challenge failed. Please try again");
+		console.log("Challenge failed");
+	},
+	onReset: () => {
+		removeProcaptchaResponse();
+		console.log("Captcha widget reset");
+	},
 });
 
 export function setUserCallbacks(
 	renderOptions: ProcaptchaRenderOptions | undefined,
-	callbacks: {
-		onHuman: (token: ProcaptchaToken) => void;
-		onChallengeExpired: () => void;
-		onExpired: () => void;
-		onError: (error: Error) => void;
-		onClose: () => void;
-		onOpen: () => void;
-	},
+	callbacks: Callbacks,
 	element: Element,
 ) {
 	if (typeof renderOptions?.callback === "function") {
@@ -170,6 +181,32 @@ export function setUserCallbacks(
 					: element.getAttribute("data-open-callback");
 			if (onOpenCallbackName)
 				callbacks.onOpen = getWindowCallback(onOpenCallbackName);
+		}
+	}
+
+	if (renderOptions?.["failed-callback"]) {
+		if (typeof renderOptions["failed-callback"] === "function") {
+			callbacks.onFailed = renderOptions["failed-callback"];
+		} else {
+			const onFailedCallbackName =
+				typeof renderOptions?.["failed-callback"] === "string"
+					? renderOptions?.["failed-callback"]
+					: element.getAttribute("data-failed-callback");
+			if (onFailedCallbackName)
+				callbacks.onFailed = getWindowCallback(onFailedCallbackName);
+		}
+	}
+	// reset callback
+	if (renderOptions?.["reset-callback"]) {
+		if (typeof renderOptions["reset-callback"] === "function") {
+			callbacks.onReset = renderOptions["reset-callback"];
+		} else {
+			const onResetCallbackName =
+				typeof renderOptions?.["reset-callback"] === "string"
+					? renderOptions?.["reset-callback"]
+					: element.getAttribute("data-reset-callback");
+			if (onResetCallbackName)
+				callbacks.onReset = getWindowCallback(onResetCallbackName);
 		}
 	}
 }

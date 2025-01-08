@@ -81,11 +81,14 @@ jobs:
                   echo "inputs:" "$INPUTS_CONTEXT"
                   echo "******************************"
 
-            - uses: actions/checkout@v3
-
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v4
               with:
-                  node-version-file: '.nvmrc'
+                  submodules: "recursive"
+                  fetch-depth: 0  # Fetch all history for all branches
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: 'package.json'
             - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
 
             - run: mkdir -p ~/.npm
@@ -93,7 +96,7 @@ jobs:
 
             - name: Restore npm cache
               if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
-              uses: actions/cache/restore@v3
+              uses: actions/cache/restore@v4
               with:
                   # must restore all cache dirs, and they must exist ahead of this!
                   path: |
@@ -114,6 +117,14 @@ jobs:
                 git config user.name "prosoponator[bot]"
                 git config user.email "dev@prosopo.io"
 
+                # check the source branch (e.g. staging) is up-to-date with the dest branch (e.g. main)
+                if [ "$(git rev-list --count origin/${{ github.event.inputs.src }}..origin/${{ github.event.inputs.dest }})" -ne 0 ]; then
+                    echo "Source branch ${{ github.event.inputs.src }} is not up-to-date with destination branch ${{ github.event.inputs.dest }}. PR destination branch into the source branch and try again."
+                    exit 1
+                else
+                    echo "Source branch ${{ github.event.inputs.src }} is up-to-date with destination branch ${{ github.event.inputs.dest }}"
+                fi
+
                 # checkout the src branch
                 git checkout ${{ github.event.inputs.src }}
 
@@ -124,25 +135,28 @@ jobs:
                 # make a new branch for the version changes
                 git switch -c $INTERIM
 
-                pkgJsons=$(npm run --silent ws:pkg)
-                pkgNames=$(npm run --silent ws:ls)
-                for pkgJson in $pkgJsons; do
+                pkgJsons=$(find "${{ github.workspace }}" -type f -name "package.json" -not -path "**/node_modules/**" -not -path "**/.next/**" | xargs -I "{}"  echo {} | sed s/\"//g)
+                echo $pkgJsons
+                # get the package "name" out of each pkgJson
+                pkgNames=$(xargs -I % sh -c "jq -r '.name' %" <<< "$pkgJsons")
+                echo $pkgNames
+                while IFS= read -r pkgJson; do
                     echo "Bumping version in $pkgJson"
                     # for each package in the workspace, set the version number
                     cat $pkgJson | jq ".version = \"${{ github.event.inputs.version }}\"" > tmp
                     mv tmp $pkgJson
-                    for pkgName in $pkgNames; do
+                    while IFS= read -r pkgName; do
                         # for each package in the workspace, check whether it is in the dependencies of the current package
                         # if so, bump the version number in the dependencies
                         cat $pkgJson | jq "if .dependencies[\"$pkgName\"] then .dependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
                         mv tmp $pkgJson
                         cat $pkgJson | jq "if .devDependencies[\"$pkgName\"] then .devDependencies[\"$pkgName\"] = \"${{ github.event.inputs.version }}\" else . end" > tmp
                         mv tmp $pkgJson 
-                    done
-                done
+                    done <<< "$pkgNames"
+                done <<< "$pkgJsons"
 
                 # need to bump the PROSOPO_PACKAGE_VERSION variable in env files
-                envFiles=$(find . -iregex ".*\/\.?env\.[^js][^ts][^.d.ts]\w+" -not -path "./node_modules/**")
+                envFiles=$(find . -iregex ".*\/\.?env\.\w+" -not -iname "*\.js" -not -iname "*\.ts" -not -path "./node_modules/**")
                 echo "Bumping version in env files: $envFiles"
                 for envFile in $envFiles; do
                     sed -i "s/PROSOPO_PACKAGE_VERSION=.*/PROSOPO_PACKAGE_VERSION=${{ github.event.inputs.version }}/g" $envFile
@@ -151,6 +165,7 @@ jobs:
                 # the json may be poorly formatted now, so we need to fix it
                 npm i
                 npm run -w @prosopo/scripts build
+                npm run -w @prosopo/lint build
                 npm run lint-fix
 
                 # commit the version changes

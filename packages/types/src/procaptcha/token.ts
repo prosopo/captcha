@@ -28,6 +28,12 @@ export const ChallengeSignatureSchema = object({
 
 export type ChallengeSignature = zInfer<typeof ChallengeSignatureSchema>;
 
+export const TimestampSignatureSchema = object({
+	[ApiParams.timestamp]: string(),
+});
+
+export type TimestampSignature = zInfer<typeof TimestampSignatureSchema>;
+
 export const SignatureTypesSchema = object({
 	[ApiParams.challenge]: string().optional(),
 	[ApiParams.requestHash]: string().optional(),

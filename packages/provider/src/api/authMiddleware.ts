@@ -14,26 +14,42 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
-import type { Tasks } from "../index.js";
 
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const { signature, timestamp } = extractHeaders(req);
-
-			if (!env.pair) {
-				throw new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR");
+			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
+			if (req.url.indexOf(ApiPrefix) === -1) {
+				next();
+				return;
 			}
 
-			verifyEnvironmentKeyPair(env);
-			verifySignature(signature, timestamp, env.pair);
+			const { signature, timestamp } = extractHeaders(req);
 
-			next();
+			if (env.authAccount) {
+				verifySignature(signature, timestamp, env.authAccount);
+				next();
+				return;
+			}
+
+			if (env.pair) {
+				verifySignature(signature, timestamp, env.pair);
+				next();
+				return;
+			}
+
+			res.status(401).json({
+				error: "Unauthorized",
+				message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
+			});
+			return;
 		} catch (err) {
-			console.error("Auth Middleware Error:", err);
+			env.logger.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
+			return;
 		}
 	};
 };
@@ -42,9 +58,15 @@ const extractHeaders = (req: Request) => {
 	const signature = req.headers.signature as string;
 	const timestamp = req.headers.timestamp as string;
 
-	if (!signature || !timestamp) {
-		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
-			context: { error: "Missing signature or block number", code: 400 },
+	if (!timestamp) {
+		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
+			context: { error: "Missing timestamp", code: 400 },
+		});
+	}
+
+	if (!signature) {
+		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+			context: { error: "Missing signature", code: 400 },
 		});
 	}
 
@@ -60,7 +82,8 @@ const extractHeaders = (req: Request) => {
 
 	// check if timestamp is from the last 5 minutes
 	const now = new Date().getTime();
-	const ts = Number.parseInt(timestamp, 10);
+	const ts = Number.parseInt(timestamp);
+
 	if (now - ts > 300000) {
 		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
 			context: { error: "Timestamp is too old", code: 400 },
@@ -68,12 +91,6 @@ const extractHeaders = (req: Request) => {
 	}
 
 	return { signature, timestamp };
-};
-
-const verifyEnvironmentKeyPair = (env: ProviderEnvironment) => {
-	if (!env.pair) {
-		throw new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR");
-	}
 };
 
 export const verifySignature = (
@@ -85,7 +102,11 @@ export const verifySignature = (
 
 	if (!pair.verify(timestamp, u8Sig, pair.publicKey)) {
 		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
-			context: { error: "Signature verification failed", code: 401 },
+			context: {
+				error: "Signature verification failed",
+				code: 401,
+				account: pair.publicKey,
+			},
 		});
 	}
 };

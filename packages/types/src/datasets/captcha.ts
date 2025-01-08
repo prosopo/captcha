@@ -128,7 +128,7 @@ export const PowChallengeIdSchema = custom<PoWChallengeId>((val: any) => {
 	const valSplit = val.split(POW_SEPARATOR);
 	try {
 		Number.parseInt(valSplit[0]);
-		return valSplit.length === 3;
+		return valSplit.length === 4;
 	} catch (e) {
 		return false;
 	}
@@ -159,21 +159,6 @@ export interface PoWCaptchaUser extends PoWCaptcha {
 	userAccount: UserAccount;
 	dappAccount: DappAccount;
 }
-
-export type CaptchaConfig = {
-	solved: {
-		count: number;
-	};
-	unsolved: {
-		count: number;
-	};
-};
-
-export type CaptchaSolutionConfig = {
-	requiredNumberOfSolutions: number;
-	solutionWinningPercentage: number;
-	captchaBlockRecency: number;
-};
 
 export const CaptchaSchema = object({
 	captchaId: union([string(), zUndefined()]),

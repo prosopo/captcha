@@ -66,12 +66,17 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 			}
 
 			// convert https/http to match page
-			for (const captcha of captchaChallenge.captchas) {
-				for (const item of captcha.items) {
-					if (item.data) {
-						// drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
-						// https://stackoverflow.com/a/18320348/7215926
-						item.data = item.data.replace(/^http(s)*:\/\//, "//");
+			if (
+				window.location.protocol === "https:" ||
+				window.location.protocol === "http:"
+			) {
+				for (const captcha of captchaChallenge.captchas) {
+					for (const item of captcha.items) {
+						if (item.data) {
+							// drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
+							// https://stackoverflow.com/a/18320348/7215926
+							item.data = item.data.replace(/^http(s)*:\/\//, "//");
+						}
 					}
 				}
 			}
@@ -85,7 +90,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 	}
 
 	public async submitCaptchaSolution(
-		userRequestHashSignature: string,
+		userTimestampSignature: string,
 		requestHash: string,
 		solutions: CaptchaSolution[],
 		timestamp: string,
@@ -118,7 +123,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 				this.userAccount,
 				timestamp,
 				providerRequestHashSignature,
-				userRequestHashSignature,
+				userTimestampSignature,
 			);
 		} catch (error) {
 			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {

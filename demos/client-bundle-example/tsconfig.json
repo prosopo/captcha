@@ -8,5 +8,9 @@
 		"sourceMap": false
 	},
 	"include": ["**/*.ts"],
-	"references": []
+	"references": [
+		{
+			"path": "../../packages/dotenv"
+		}
+	]
 }

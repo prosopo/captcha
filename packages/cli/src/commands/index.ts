@@ -11,7 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+export { default as commandAddBlockRules } from "./addBlockRules.js";
 export { default as commandProviderSetDataset } from "./providerSetDataset.js";
 export { default as commandStoreCaptchasExternally } from "./storeCaptchasExternally.js";
 export { default as commandVersion } from "./version.js";
 export { default as commandSiteKeyRegister } from "./siteKeyRegister.js";
+export { default as commandSiteKeyRegisterApi } from "./siteKeyRegisterApi.js";

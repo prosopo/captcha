@@ -77,7 +77,8 @@
 		"SOLUTION_FLAG_FAILED": "Échec du marquage de la solution comme traitée",
 		"TABLES_UNDEFINED": "Tables non définies",
 		"CONNECTION_UNDEFINED": "Connexion non définie",
-		"COMMITMENT_FLAG_FAILED": "Échec du marquage de l'engagement comme traité"
+		"COMMITMENT_FLAG_FAILED": "Échec du marquage de l'engagement comme traité",
+		"UNKNOWN": "Erreur de base de données inconnue"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Erreur d'analyse du captcha",
@@ -104,7 +105,14 @@
 		"USER_NOT_VERIFIED_NO_SOLUTION": "Utilisateur non vérifié. Aucune solution captcha trouvée.",
 		"USER_ALREADY_VERIFIED": "Cette solution a déjà été vérifiée. L'utilisateur doit compléter un nouveau captcha.",
 		"UNKNOWN": "Erreur API inconnue",
-		"SITE_KEY_NOT_REGISTERED": "Clé du site non enregistrée"
+		"SITE_KEY_NOT_REGISTERED": "Clé du site non enregistrée",
+		"INCORRECT_CAPTCHA_TYPE": "Type de CAPTCHA incorrect",
+		"UNAUTHORIZED_ORIGIN_URL": "URL d'origine non autorisée",
+		"INVALID_SITE_KEY": "Clé de site non valide",
+		"INVALID_IP": "IP invalide",
+		"INVALID_URL": "URL inválida",
+		"INVALID_BODY": "Cuerpo inválido",
+		"PARSE_ERROR": "Erreur d'analyse de la demande"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Paramètre invalide"

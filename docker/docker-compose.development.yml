@@ -1,6 +1,6 @@
 services:
     database:
-        image: mongo:5.0.4
+        image: mongo:6.0.17
         # volumes:
         #   - ./db:/data/db
         ports:

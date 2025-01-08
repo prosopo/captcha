@@ -38,24 +38,28 @@ export function Captcha(props: CaptchProps) {
 		props.setProcaptchaToken(procaptchaToken);
 	};
 
+	const onFailed = () => {
+		console.log("The user failed the captcha");
+	};
+
 	return (
 		<div>
 			{props.captchaType === "frictionless" ? (
 				<ProcaptchaFrictionless
 					config={config}
-					callbacks={{ onError, onHuman, onExpired }}
+					callbacks={{ onError, onHuman, onExpired, onFailed }}
 					aria-label="Frictionless captcha"
 				/>
 			) : props.captchaType === "pow" ? (
 				<ProcaptchaPow
 					config={config}
-					callbacks={{ onError, onHuman, onExpired }}
+					callbacks={{ onError, onHuman, onExpired, onFailed }}
 					aria-label="PoW captcha"
 				/>
 			) : (
 				<Procaptcha
 					config={config}
-					callbacks={{ onError, onHuman, onExpired }}
+					callbacks={{ onError, onHuman, onExpired, onFailed }}
 					aria-label="Image captcha"
 				/>
 			)}

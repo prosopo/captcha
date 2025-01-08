@@ -8,10 +8,10 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../../packages/provider"
+			"path": "../../packages/common"
 		},
 		{
-			"path": "../../packages/common"
+			"path": "../../packages/provider"
 		},
 		{
 			"path": "../../packages/types"

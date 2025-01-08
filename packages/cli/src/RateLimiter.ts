@@ -39,10 +39,6 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_LIMIT,
 		},
-		[ApiPaths.VerifyImageCaptchaSolutionUser]: {
-			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_USER_WINDOW,
-			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_USER_LIMIT,
-		},
 		[ApiPaths.GetProviderStatus]: {
 			windowMs: process.env.PROSOPO_GET_PROVIDER_STATUS_WINDOW,
 			limit: process.env.PROSOPO_GET_PROVIDER_STATUS_LIMIT,
@@ -55,21 +51,29 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SUBMIT_USER_EVENTS_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_USER_EVENTS_LIMIT,
 		},
-		[AdminApiPaths.UpdateDataset]: {
-			windowMs: process.env.PROSOPO_UPDATE_DATASET_WINDOW,
-			limit: process.env.PROSOPO_UPDATE_DATASET_LIMIT,
-		},
 		[AdminApiPaths.SiteKeyRegister]: {
 			windowMs: process.env.PROSOPO_SITE_KEY_REGISTER_WINDOW,
 			limit: process.env.PROSOPO_SITE_KEY_REGISTER_LIMIT,
 		},
-		[AdminApiPaths.ProviderDeregister]: {
-			windowMs: process.env.PROSOPO_PROVIDER_DEREGISTER_WINDOW,
-			limit: process.env.PROSOPO_PROVIDER_DEREGISTER_LIMIT,
+		[ApiPaths.GetFrictionlessCaptchaChallenge]: {
+			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
+			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
 		},
-		[AdminApiPaths.ProviderUpdate]: {
-			windowMs: process.env.PROSOPO_PROVIDER_UPDATE_WINDOW,
-			limit: process.env.PROSOPO_PROVIDER_UPDATE_LIMIT,
+		[AdminApiPaths.BlockRuleIPAdd]: {
+			windowMs: process.env.PROSOPO_BLOCK_RULE_IP_ADD_WINDOW,
+			limit: process.env.PROSOPO_BLOCK_RULE_IP_ADD_LIMIT,
+		},
+		[AdminApiPaths.BlockRuleIPRemove]: {
+			windowMs: process.env.PROSOPO_BLOCK_RULE_IP_REMOVE_WINDOW,
+			limit: process.env.PROSOPO_BLOCK_RULE_IP_REMOVE_LIMIT,
+		},
+		[AdminApiPaths.BlocKRuleUserAdd]: {
+			windowMs: process.env.PROSOPO_BLOCK_RULE_USER_ADD_WINDOW,
+			limit: process.env.PROSOPO_BLOCK_RULE_USER_ADD_LIMIT,
+		},
+		[AdminApiPaths.BlockRuleUserRemove]: {
+			windowMs: process.env.PROSOPO_BLOCK_RULE_USER_REMOVE_WINDOW,
+			limit: process.env.PROSOPO_BLOCK_RULE_USER_REMOVE_LIMIT,
 		},
 	};
 };

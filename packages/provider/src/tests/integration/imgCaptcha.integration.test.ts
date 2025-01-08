@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { stringToU8a, u8aToHex } from "@polkadot/util";
-import { getPairAsync } from "@prosopo/contract";
+import { generateMnemonic, getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import {
 	ApiParams,
 	ApiPaths,
 	type Captcha,
+	type CaptchaRequestBodyType,
+	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	IUserSettings,
 	type TGetImageCaptchaChallengeURL,
 } from "@prosopo/types";
 import fetch from "node-fetch";
@@ -32,29 +35,6 @@ const solutions = datasetWithSolutionHashes;
 const baseUrl = "http://localhost:9229";
 const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
-const unRegisteredDappAccount =
-	"5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL";
-
-const getSolvedCaptchas = (
-	captchas: Captcha[],
-	solutions: typeof datasetWithSolutionHashes.captchas,
-) =>
-	captchas.map((captcha) => {
-		const solvedCaptcha = solutions.find(
-			(solvedCaptcha) =>
-				solvedCaptcha.captchaContentId === captcha.captchaContentId,
-		);
-		if (!solvedCaptcha || !solvedCaptcha.solution) {
-			throw new Error("Solution not found for captcha");
-		}
-
-		return {
-			captchaContentId: captcha.captchaContentId,
-			captchaId: captcha.captchaId,
-			salt: solvedCaptcha.salt,
-			solution: solvedCaptcha.solution,
-		};
-	});
 
 describe("Image Captcha Integration Tests", () => {
 	describe("GetImageCaptchaChallenge", () => {
@@ -64,50 +44,104 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
-
 			expect(response.status).toBe(200);
+
 			const data = await response.json();
 			expect(data).toHaveProperty("captchas");
 		});
 
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${unRegisteredDappAccount}`;
+			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: unregisteredAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(body),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
-				},
-			});
-
-			expect(response.status).toBe(200);
-			const data = (await response.json()) as CaptchaResponseBody;
-			expect(data).toHaveProperty("error");
-			expect(data.error).toBe("Site key not registered");
-		});
-
-		it("should fail if datasetID is incorrect", async () => {
-			const datasetId = "thewrongdsetId";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${datasetId}/${userAccount}/${dappAccount}`;
-			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
-				headers: {
-					"Content-Type": "application/json",
+					"Prosopo-Site-Key": unregisteredAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
 			expect(response.status).toBe(400);
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(data).toHaveProperty("error");
+			expect(data.error?.message).toBe("Site key not registered");
+		});
+
+		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
+			const invalidSiteKey = "junk";
+			const origin = "http://localhost";
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: invalidSiteKey,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
+
+			const response = await fetch(getImageCaptchaURL, {
+				method: "POST",
+				body: JSON.stringify(body),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": invalidSiteKey,
+					"Prosopo-User": userAccount,
+				},
+			});
+
+			expect(response.status).toBe(400);
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(data).toHaveProperty("error");
+			expect(data.error?.message).toBe("Invalid site key");
+		});
+
+		it("should fail if datasetID is incorrect", async () => {
+			const datasetId = "thewrongdsetId";
+			const origin = "http://localhost";
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: datasetId,
+			};
+			const response = await fetch(getImageCaptchaURL, {
+				method: "POST",
+				body: JSON.stringify(body),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
+				},
+			});
+
+			expect(response.status).toBe(500);
 		});
 	});
 	describe("SubmitImageCaptchaSolution", () => {
@@ -121,12 +155,20 @@ describe("Image Captcha Integration Tests", () => {
 
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -161,14 +203,14 @@ describe("Image Captcha Integration Tests", () => {
 				};
 			});
 
-			const body: CaptchaSolutionBodyType = {
+			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
 				[ApiParams.captchas]: temp,
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.requestHash]: data.requestHash,
 				[ApiParams.signature]: {
 					[ApiParams.user]: {
-						[ApiParams.requestHash]: u8aToHex(
-							pair.sign(stringToU8a(data.requestHash)),
+						[ApiParams.timestamp]: u8aToHex(
+							pair.sign(stringToU8a(data.timestamp)),
 						),
 					},
 					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
@@ -184,8 +226,10 @@ describe("Image Captcha Integration Tests", () => {
 					headers: {
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
-					body: JSON.stringify(body),
+					body: JSON.stringify(solveImgCaptchaBody),
 				},
 			);
 			const jsonRes = await solveThatCaptcha.json();

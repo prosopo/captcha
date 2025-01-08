@@ -74,6 +74,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 							onCancel={manager.cancel}
 							onClick={manager.select}
 							onNext={manager.nextRound}
+							onReload={manager.reload}
 							themeColor={config.theme ?? "light"}
 						/>
 					) : (
@@ -119,30 +120,24 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 										>
 											<div
 												style={{
-													display:
-														!state.loading && !state.error ? "flex" : "none",
+													display: "flex",
 												}}
 											>
-												<Checkbox
-													themeColor={themeColor}
-													onChange={manager.start}
-													checked={state.isHuman}
-													labelText={t("WIDGET.I_AM_HUMAN")}
-													error={state.error}
-													aria-label="human checkbox"
-												/>
-											</div>
-											<div
-												style={{
-													display: state.loading ? "flex" : "none",
-												}}
-											>
-												<div style={{ display: "inline-flex" }}>
+												{state.loading ? (
 													<LoadingSpinner
 														themeColor={themeColor}
 														aria-label="Loading spinner"
 													/>
-												</div>
+												) : (
+													<Checkbox
+														themeColor={themeColor}
+														onChange={manager.start}
+														checked={state.isHuman}
+														labelText={t("WIDGET.I_AM_HUMAN")}
+														error={state.error}
+														aria-label="human checkbox"
+													/>
+												)}
 											</div>
 										</div>
 									</div>
@@ -152,9 +147,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 								>
 									<a
 										href={WIDGET_URL}
+										// biome-ignore lint/a11y/noBlankTarget: Biome incorrect edge case
 										target="_blank"
 										aria-label={WIDGET_URL_TEXT}
-										rel="noreferrer"
 									>
 										<div style={{ flex: 1 }}>
 											<Logo themeColor={themeColor} aria-label="Prosopo logo" />

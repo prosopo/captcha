@@ -21,7 +21,9 @@ import type { ClientRecord, Tables } from "./provider.js";
 export type UserDataRecord = mongoose.Document & IUserData;
 
 export const UserSettingsSchema = new Schema({
-	botThreshold: Number,
+	captchaType: String,
+	frictionlessThreshold: Number,
+	powDifficulty: Number,
 	domains: [String],
 });
 

@@ -23,13 +23,16 @@ import {
 } from "@prosopo/datasets";
 import {
 	type Captcha,
-	type CaptchaConfig,
 	type CaptchaSolution,
 	CaptchaStatus,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
 	type Hash,
+	type IPAddress,
+	type ImageVerificationResponse,
 	type PendingCaptchaRequest,
+	type ProsopoCaptchaCountConfigSchemaOutput,
+	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
@@ -37,6 +40,10 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
+import type { Address4, Address6 } from "ip-address";
+import { checkIpRules } from "../../rules/ip.js";
+import { checkLangRules } from "../../rules/lang.js";
+import { checkUserRules } from "../../rules/user.js";
 import { shuffleArray } from "../../util.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
@@ -44,18 +51,18 @@ export class ImgCaptchaManager {
 	db: IProviderDatabase;
 	pair: KeyringPair;
 	logger: Logger;
-	captchaConfig: CaptchaConfig;
+	config: ProsopoConfigOutput;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		logger: Logger,
-		captchaConfig: CaptchaConfig,
+		config: ProsopoConfigOutput,
 	) {
 		this.db = db;
 		this.pair = pair;
 		this.logger = logger;
-		this.captchaConfig = captchaConfig;
+		this.config = config;
 	}
 
 	async getCaptchaWithProof(
@@ -79,10 +86,11 @@ export class ImgCaptchaManager {
 	}
 
 	async getRandomCaptchasAndRequestHash(
-		datasetId: string,
+		datasetId: Hash,
 		userAccount: string,
-		ipAddress: string,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -101,10 +109,10 @@ export class ImgCaptchaManager {
 		}
 
 		const unsolvedCount: number = Math.abs(
-			Math.trunc(this.captchaConfig.unsolved.count),
+			Math.trunc(captchaConfig.unsolved.count),
 		);
 		const solvedCount: number = Math.abs(
-			Math.trunc(this.captchaConfig.solved.count),
+			Math.trunc(captchaConfig.solved.count),
 		);
 
 		if (!solvedCount) {
@@ -112,6 +120,7 @@ export class ImgCaptchaManager {
 		}
 
 		const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount);
+		console.log("solved", solved);
 		let unsolved: Captcha[] = [];
 		if (unsolvedCount) {
 			unsolved = await this.getCaptchaWithProof(
@@ -139,14 +148,14 @@ export class ImgCaptchaManager {
 			.map((captcha) => captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
 			.reduce((a, b) => a + b, 0);
 		const deadlineTs = timeLimit + currentTime;
-		const currentBlockNumber = 0; //TEMP
+
 		await this.db.storeDappUserPending(
 			userAccount,
 			requestHash,
 			salt,
 			deadlineTs,
 			currentTime,
-			ipAddress,
+			ipAddress.bigInt(),
 			headers,
 		);
 		return {
@@ -175,27 +184,27 @@ export class ImgCaptchaManager {
 		dappAccount: string,
 		requestHash: string,
 		captchas: CaptchaSolution[],
-		userRequestHashSignature: string, // the signature to indicate ownership of account
+		userTimestampSignature: string, // the signature to indicate ownership of account
 		timestamp: number,
 		providerRequestHashSignature: string,
-		ipAddress: string,
+		ipAddress: bigint,
 		headers: RequestHeaders,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
-			stringToHex(requestHash),
-			userRequestHashSignature,
+			stringToHex(timestamp.toString()),
+			userTimestampSignature,
 			userAccount,
 		);
 		if (!verification.isValid) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-			this.logger.info("Invalid user requestHash signature");
+			this.logger.info("Invalid user timestamp signature");
 			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: { failedFuncName: this.dappUserSolution.name, userAccount },
 			});
 		}
 
-		// check that the timestamp signature is valid and signed by the provider
+		// check that the requestHash signature is valid and signed by the provider
 		const providerRequestHashSignatureVerify = signatureVerify(
 			stringToHex(requestHash.toString()),
 			providerRequestHashSignature,
@@ -253,7 +262,7 @@ export class ImgCaptchaManager {
 				providerAccount: this.pair.address,
 				datasetId,
 				result: { status: CaptchaStatus.pending },
-				userSignature: userRequestHashSignature,
+				userSignature: userTimestampSignature,
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: timestamp,
@@ -402,5 +411,61 @@ export class ImgCaptchaManager {
 			}
 		}
 		return undefined;
+	}
+
+	async verifyImageCaptchaSolution(
+		user: string,
+		dapp: string,
+		commitmentId: string | undefined,
+		maxVerifiedTime?: number,
+	): Promise<ImageVerificationResponse> {
+		const solution = await (commitmentId
+			? this.getDappUserCommitmentById(commitmentId)
+			: this.getDappUserCommitmentByAccount(user, dapp));
+
+		// No solution exists
+		if (!solution) {
+			this.logger.debug("Not verified - no solution found");
+			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
+		}
+
+		if (solution.serverChecked) {
+			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
+		}
+		// Mark solution as checked
+		await this.db.markDappUserCommitmentsChecked([solution.id]);
+
+		// A solution exists but is disapproved
+		if (solution.result.status === CaptchaStatus.disapproved) {
+			return { status: "API.USER_NOT_VERIFIED", verified: false };
+		}
+
+		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
+
+		// Check if solution was completed recently
+		if (maxVerifiedTime) {
+			const currentTime = Date.now();
+			const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
+
+			// A solution exists but has timed out
+			if (timeSinceCompletion > maxVerifiedTime) {
+				this.logger.debug("Not verified - timed out");
+				return {
+					status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
+					verified: false,
+				};
+			}
+		}
+
+		const isApproved = solution.result.status === CaptchaStatus.approved;
+		return {
+			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
+			verified: isApproved,
+			commitmentId: solution.id.toString(),
+		};
+	}
+
+	checkLangRules(acceptLanguage: string): number {
+		return checkLangRules(this.config, acceptLanguage);
 	}
 }

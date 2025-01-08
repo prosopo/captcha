@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { CaptchaSolution } from "../datasets/index.js";
-import type { StoredEvents } from "../procaptcha/index.js";
+import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
@@ -22,6 +22,7 @@ import type {
 	Provider,
 	ProviderRegistered,
 	RandomProvider,
+	UpdateProviderClientsResponse,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {
@@ -38,19 +39,9 @@ export interface ProviderApiInterface {
 		userRequestHashSignature: string,
 	): Promise<CaptchaSolutionResponse>;
 	verifyDappUser(
-		dapp: string,
+		token: ProcaptchaToken,
+		signature: string,
 		userAccount: string,
-		blockNumber: number,
-		dappUserSignature: string,
-		commitmentId?: string,
-		maxVerifiedTime?: number,
-	): Promise<ImageVerificationResponse>;
-	verifyUser(
-		dapp: string,
-		userAccount: string,
-		blockNumber: number,
-		dappUserSignature: string,
-		commitmentId?: string,
 		maxVerifiedTime?: number,
 	): Promise<ImageVerificationResponse>;
 	getPowCaptchaChallenge(
@@ -65,7 +56,10 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse>;
-	submitUserEvents(events: StoredEvents, string: string): Promise<unknown>;
+	submitUserEvents(
+		events: StoredEvents,
+		string: string,
+	): Promise<UpdateProviderClientsResponse>;
 	getProviderStatus(): Promise<ProviderRegistered>;
 	getProviderDetails(): Promise<Provider>;
 }
