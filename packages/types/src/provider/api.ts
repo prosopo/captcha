@@ -79,8 +79,6 @@ export type TGetImageCaptchaChallengeURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
-	UserAccessPolicyInsertManyRules = "/v1/prosopo/provider/user-access-policy/rules/insert-many",
-	UserAccessPolicyDeleteManyRules = "/v1/prosopo/provider/user-access-policy/rules/delete-many",
 }
 
 export type CombinedApiPaths = ApiPaths | AdminApiPaths;
@@ -97,14 +95,6 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UserAccessPolicyInsertManyRules]: {
-		windowMs: 60000,
-		limit: 5,
-	},
-	[AdminApiPaths.UserAccessPolicyDeleteManyRules]: {
-		windowMs: 60000,
-		limit: 5,
-	},
 };
 
 type RateLimit = {
@@ -351,67 +341,6 @@ export const RegisterSitekeyBody = object({
 		[ApiParams.powDifficulty]: number(),
 	}).optional(),
 });
-
-//// userAccessPolicy START
-
-const userAccessPolicyIpV4Mask = object({
-	rangeMinAsNumeric: bigint(),
-	rangeMaxAsNumeric: bigint(),
-	asNumeric: number(),
-});
-
-const userAccessPolicyIpV4 = object({
-	asNumeric: bigint(),
-	asString: string(),
-	mask: userAccessPolicyIpV4Mask.optional(),
-});
-
-const userAccessPolicyIpV6Mask = object({
-	rangeMinAsNumericString: string(),
-	rangeMaxAsNumericString: string(),
-	asNumeric: number(),
-});
-
-const userAccessPolicyIpV6 = object({
-	asNumericString: string(),
-	asString: string(),
-	mask: userAccessPolicyIpV6Mask.optional(),
-});
-
-const userAccessPolicyIp = object({
-	v4: userAccessPolicyIpV4.optional(),
-	v6: userAccessPolicyIpV6.optional(),
-});
-
-const userAccessPolicyImageCaptchaConfig = object({
-	solvedCount: number().optional(),
-	unsolvedCount: number().optional(),
-});
-
-const userAccessPolicyConfig = object({
-	imageCaptcha: userAccessPolicyImageCaptchaConfig.optional(),
-});
-
-export const UserAccessPolicyInsertManyRulesBody = array(
-	object({
-		isUserBlocked: boolean(),
-		clientId: string().optional(),
-		description: string().optional(),
-		userIp: userAccessPolicyIp.optional(),
-		userId: string().optional(),
-		config: userAccessPolicyConfig.optional(),
-	}),
-);
-
-export const UserAccessPolicyDeleteManyRulesBody = array(
-	object({
-		clientId: string().optional(),
-		userIp: userAccessPolicyIp.optional(),
-		userId: string().optional(),
-	}),
-);
-
-//// userAccessPolicy END
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({

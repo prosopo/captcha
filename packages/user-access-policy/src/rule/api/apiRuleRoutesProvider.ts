@@ -3,16 +3,17 @@ import type ApiRoute from "../../api/route/apiRoute.js";
 import ApiDeleteManyRulesEndpoint from "./deleteMany/apiDeleteManyRulesEndpoint.js";
 import InsertManyRulesEndpoint from "./insertMany/insertManyRulesEndpoint.js";
 import type RulesStorage from "../storage/rulesStorage.js";
+import apiRulePaths from "./apiRulePaths.js";
 
 class ApiRuleRoutesProvider implements ApiRoutesProvider {
 	public getRoutes(rulesStorage: RulesStorage): ApiRoute[] {
 		return [
 			{
-				path: "/v1/prosopo/user-access-policy/rule/insert-many",
+				path: apiRulePaths.INSERT_MANY,
 				endpoint: new InsertManyRulesEndpoint(rulesStorage),
 			},
 			{
-				path: "/v1/prosopo/user-access-policy/rule/delete-many",
+				path: apiRulePaths.DELETE_MANY,
 				endpoint: new ApiDeleteManyRulesEndpoint(rulesStorage),
 			},
 		];

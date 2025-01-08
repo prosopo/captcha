@@ -34,7 +34,10 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
-import {createExpressRuleRouter} from "@prosopo/user-access-policy";
+import {
+	createExpressRuleRouter,
+	expressApiRuleRateLimits,
+} from "@prosopo/user-access-policy";
 
 function startApi(
 	env: ProviderEnvironment,
@@ -63,11 +66,17 @@ function startApi(
 
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
 	apiApp.use(api.admin.createExpressAdminRouter(env));
-	// fixme
-	apiApp.use(createExpressRuleRouter(env.getDb().getUserAccessRulesStorage(),evn.logger));
+	apiApp.use(
+		createExpressRuleRouter(
+			env.getDb().getUserAccessRulesStorage(),
+			env.logger,
+		),
+	);
 
 	// Rate limiting
-	const rateLimits = env.config.rateLimits;
+	const configRateLimits = env.config.rateLimits;
+	const rateLimits = { ...configRateLimits, ...expressApiRuleRateLimits };
+
 	for (const [path, limit] of Object.entries(rateLimits)) {
 		const enumPath = path as CombinedApiPaths;
 		apiApp.use(enumPath, rateLimit(limit));
