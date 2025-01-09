@@ -20,7 +20,7 @@ class RequestRulesInspector implements RequestInspector {
 
 	public async shouldAbortRequest(
 		ipAddress: IPAddress,
-		requestHeaders: Record<string, unknown>,
+		requestHeaders: Record<string, string>,
 		requestBody: Record<string, unknown>,
 	): Promise<boolean> {
 		return await this.isRequestFromBlockedUser(
@@ -32,7 +32,7 @@ class RequestRulesInspector implements RequestInspector {
 
 	protected async isRequestFromBlockedUser(
 		ipAddress: IPAddress,
-		requestHeaders: Record<string, unknown>,
+		requestHeaders: Record<string, string>,
 		requestBody: Record<string, unknown>,
 	): Promise<boolean> {
 		const { userId, clientId } = this.extractIdsFromRequest(
@@ -44,7 +44,7 @@ class RequestRulesInspector implements RequestInspector {
 	}
 
 	protected extractIdsFromRequest(
-		requestHeaders: Record<string, unknown>,
+		requestHeaders: Record<string, string>,
 		requestBody: Record<string, unknown>,
 	): {
 		userId: string;

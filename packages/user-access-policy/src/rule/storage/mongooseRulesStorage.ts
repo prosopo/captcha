@@ -1,3 +1,4 @@
+import { ProsopoError } from "@prosopo/common";
 import type { IPAddress } from "@prosopo/types";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
@@ -34,7 +35,7 @@ class MongooseRulesStorage implements RulesStorage {
 
 	public async insert(record: Rule): Promise<RuleRecord> {
 		if (!this.writingModel) {
-			throw new Error("Model is not set");
+			throw this.modelNotSetProsopoError();
 		}
 
 		const document = await this.writingModel.create(record);
@@ -48,7 +49,7 @@ class MongooseRulesStorage implements RulesStorage {
 
 	public async insertMany(records: Rule[]): Promise<RuleRecord[]> {
 		if (!this.writingModel) {
-			throw new Error("Model is not set");
+			throw this.modelNotSetProsopoError();
 		}
 
 		const documents = await this.writingModel.insertMany(records);
@@ -65,7 +66,7 @@ class MongooseRulesStorage implements RulesStorage {
 		filterSettings?: SearchRuleFilterSettings,
 	): Promise<RuleRecord[]> {
 		if (!this.readingModel) {
-			throw new Error("Model is not set");
+			throw this.modelNotSetProsopoError();
 		}
 
 		const query = this.createSearchQuery(filters, filterSettings);
@@ -80,7 +81,7 @@ class MongooseRulesStorage implements RulesStorage {
 
 	public async deleteMany(recordFilters: SearchRuleFilters[]): Promise<void> {
 		if (!this.writingModel) {
-			throw new Error("Model is not set");
+			throw this.modelNotSetProsopoError();
 		}
 
 		for (const recordFilter of recordFilters) {
@@ -90,12 +91,16 @@ class MongooseRulesStorage implements RulesStorage {
 
 	public async countRecords(): Promise<number> {
 		if (!this.readingModel) {
-			throw new Error("Model is not set");
+			throw this.modelNotSetProsopoError();
 		}
 
 		const count = await this.readingModel.countDocuments().exec();
 
 		return count;
+	}
+
+	protected modelNotSetProsopoError(): ProsopoError {
+		return new ProsopoError("USER_ACCESS_POLICY.MONGOOSE_RULE_MODEL_NOT_SET");
 	}
 
 	protected createSearchQuery(
@@ -107,7 +112,7 @@ class MongooseRulesStorage implements RulesStorage {
 		const includeRecordsWithPartialFilterMatches =
 			filterSettings?.includeRecordsWithPartialFilterMatches || false;
 
-		let queryParts = [
+		const queryParts = [
 			this.getFilterByClientId(includeRecordsWithoutClientId, filters.clientId),
 		];
 
@@ -116,10 +121,8 @@ class MongooseRulesStorage implements RulesStorage {
 			includeRecordsWithPartialFilterMatches,
 		);
 
-		queryParts = queryParts.concat(queryFilters);
-
 		return {
-			$and: queryParts,
+			$and: queryParts.concat(queryFilters),
 		};
 	}
 
