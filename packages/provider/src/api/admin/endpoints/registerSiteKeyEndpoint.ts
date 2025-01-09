@@ -11,8 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type ApiResponse, RegisterSitekeyBody } from "@prosopo/types";
-import type { z } from "zod";
+import {
+	type ApiResponse,
+	RegisterSitekeyBody,
+	type RegisterSitekeyBodyTypeOutput,
+} from "@prosopo/types";
 import type { ClientTaskManager } from "../../../tasks/client/clientTasks.js";
 import type { Endpoint } from "../../interfaces/endpoint/endpoint.js";
 
@@ -20,7 +23,7 @@ class RegisterSiteKeyEndpoint implements Endpoint<typeof RegisterSitekeyBody> {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
-		args: z.infer<typeof RegisterSitekeyBody>,
+		args: RegisterSitekeyBodyTypeOutput,
 	): Promise<ApiResponse> {
 		const { siteKey, settings } = args;
 

@@ -342,6 +342,8 @@ export const RegisterSitekeyBody = object({
 	}).optional(),
 });
 
+export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
+
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({
 		count: number().positive(),
