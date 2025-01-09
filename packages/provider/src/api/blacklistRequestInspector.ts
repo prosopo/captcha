@@ -21,7 +21,7 @@ class BlacklistRequestInspector {
 	public constructor(
 		private readonly requestInspector: RequestInspector,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
-		private readonly logger: Logger | null,
+		private readonly logger: Logger,
 	) {}
 
 	public async abortRequestForBlockedUsers(
@@ -59,7 +59,7 @@ class BlacklistRequestInspector {
 
 		// block if no IP is present
 		if (!rawIp) {
-			this.logger?.info("Request without IP", {
+			this.logger.info("Request without IP", {
 				requestedRoute: requestedRoute,
 				requestHeaders: requestHeaders,
 				requestBody: requestBody,
@@ -79,7 +79,7 @@ class BlacklistRequestInspector {
 				requestBody,
 			);
 		} catch (err) {
-			this.logger?.error("Block Middleware Error:", err);
+			this.logger.error("Block Middleware Error:", err);
 
 			return true;
 		}
