@@ -22,9 +22,7 @@ const mongooseIp = new Schema<Ip>(
 			type: mongooseIpV4,
 			required: [
 				function () {
-					const isV6Unset = "object" !== typeof this.v6 || null === this.v6;
-
-					return isV6Unset;
+					return !this.v6;
 				},
 				"v4 is required when v6 is not set",
 			],
@@ -33,9 +31,7 @@ const mongooseIp = new Schema<Ip>(
 			type: mongooseIpV6,
 			required: [
 				function () {
-					const isV4Unset = "object" !== typeof this.v4 || null === this.v4;
-
-					return isV4Unset;
+					return !this.v4;
 				},
 				"v6 is required when v4 is not set",
 			],

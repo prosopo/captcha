@@ -18,7 +18,7 @@ import type { Endpoint } from "../interfaces/endpoint/endpoint.js";
 import type { EndpointExpressAdapter } from "../interfaces/endpoint/endpointExpressAdapter.js";
 
 class EndpointExpressAdminAdapter implements EndpointExpressAdapter {
-	public constructor(private readonly logger: Logger | null) {}
+	public constructor(private readonly logger: Logger) {}
 
 	public async handleRequest(
 		endpoint: Endpoint<ZodType | undefined>,
@@ -32,7 +32,7 @@ class EndpointExpressAdminAdapter implements EndpointExpressAdapter {
 
 			response.json(apiResponse);
 		} catch (error) {
-			this.logger?.error(error);
+			this.logger.error(error);
 
 			response.status(400).send("An internal server error occurred.");
 		}

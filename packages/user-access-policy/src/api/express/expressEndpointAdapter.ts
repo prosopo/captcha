@@ -17,7 +17,7 @@ import type { ZodType } from "zod";
 import type { ApiEndpoint } from "../apiEndpoint.js";
 
 class ExpressEndpointAdapter {
-	public constructor(private readonly logger: Logger | null) {}
+	public constructor(private readonly logger: Logger) {}
 
 	public async handleRequest(
 		endpoint: ApiEndpoint<ZodType | undefined>,
@@ -31,7 +31,7 @@ class ExpressEndpointAdapter {
 
 			response.json(apiResponse);
 		} catch (error) {
-			this.logger?.error(error);
+			this.logger.error(error);
 
 			response.status(400).send("An internal server error occurred.");
 		}
