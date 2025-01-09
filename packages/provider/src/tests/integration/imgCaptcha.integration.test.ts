@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { stringToU8a, u8aToHex } from "@polkadot/util";
-import { generateMnemonic, getPairAsync } from "@prosopo/contract";
+import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import {
 	ApiParams,

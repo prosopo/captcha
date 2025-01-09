@@ -14,9 +14,7 @@
 		{
 			"path": "../common/tsconfig.cjs.json"
 		},
-		{
-			"path": "../contract/tsconfig.cjs.json"
-		},
+
 		{
 			"path": "../../dev/config/tsconfig.cjs.json"
 		},

@@ -2,21 +2,19 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"lib": ["es6", "dom"],
+		"allowJs": true,
+		"jsxImportSource": "@emotion/react"
 	},
 	"include": ["src", "src/**/*.json"],
+
 	"references": [
 		{
 			"path": "../common"
 		},
 		{
 			"path": "../types"
-		},
-		{
-			"path": "../tx"
-		},
-		{
-			"path": "../util"
 		}
 	]
 }

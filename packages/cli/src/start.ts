@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import type { Server } from "node:net";
-import { getPairAsync } from "@prosopo/contract";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
+import { getPairAsync } from "@prosopo/keyring";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
 	domainMiddleware,
