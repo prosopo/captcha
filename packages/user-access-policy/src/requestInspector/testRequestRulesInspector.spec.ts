@@ -19,6 +19,7 @@ import type { RuleRecord } from "../rule/storage/record/ruleRecord.js";
 import type { RulesStorage } from "../rule/storage/rulesStorage.js";
 import type { SearchRuleFilterSettings } from "../rule/storage/search/searchRuleFilterSettings.js";
 import type { SearchRuleFilters } from "../rule/storage/search/searchRuleFilters.js";
+import { TestRulesStorage } from "../rule/storage/testRulesStorage.js";
 import { TestsBase } from "../testsBase.js";
 import { RequestRulesInspector } from "./requestRulesInspector.js";
 
@@ -125,39 +126,9 @@ class TestRequestRulesInspector extends TestsBase {
 	}
 
 	protected createInspector(ruleRecords: RuleRecord[]): RequestRulesInspector {
-		const userAccessRulesStorage = this.mockRulesStorage(ruleRecords);
+		const userAccessRulesStorage = new TestRulesStorage(ruleRecords);
 
 		return new RequestRulesInspector(userAccessRulesStorage);
-	}
-
-	protected mockRulesStorage(ruleRecords: RuleRecord[]): RulesStorage {
-		return {
-			async insert(record: Rule): Promise<RuleRecord> {
-				return Promise.resolve({
-					isUserBlocked: false,
-					_id: "none",
-				});
-			},
-
-			async insertMany(records: Rule[]): Promise<RuleRecord[]> {
-				return Promise.resolve(ruleRecords);
-			},
-
-			async find(
-				filters: SearchRuleFilters,
-				filterSettings?: SearchRuleFilterSettings,
-			): Promise<RuleRecord[]> {
-				return Promise.resolve(ruleRecords);
-			},
-
-			async deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void> {
-				return Promise.resolve();
-			},
-
-			async countRecords(): Promise<number> {
-				return Promise.resolve(ruleRecords.length);
-			},
-		};
 	}
 }
 

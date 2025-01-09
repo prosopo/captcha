@@ -20,6 +20,7 @@ import type { RuleRecord } from "../../../rule/storage/record/ruleRecord.js";
 import type { RulesStorage } from "../../../rule/storage/rulesStorage.js";
 import type { SearchRuleFilterSettings } from "../../../rule/storage/search/searchRuleFilterSettings.js";
 import type { SearchRuleFilters } from "../../../rule/storage/search/searchRuleFilters.js";
+import { TestRulesStorage } from "../../../rule/storage/testRulesStorage.js";
 import { TestsBase } from "../../../testsBase.js";
 import { ImageCaptchaConfigResolver } from "./imageCaptchaConfigResolver.js";
 
@@ -62,9 +63,7 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 			_id: "0",
 		};
 
-		const userAccessRulesStorage = this.mockUserAccessRulesStorage([
-			userAccessRuleRecord,
-		]);
+		const userAccessRulesStorage = new TestRulesStorage([userAccessRuleRecord]);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 			solved: { count: 2 },
@@ -113,7 +112,7 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 			_id: "1",
 		};
 
-		const userAccessRulesStorage = this.mockUserAccessRulesStorage([
+		const userAccessRulesStorage = new TestRulesStorage([
 			globalUserAccessRuleRecord,
 			clientUserAccessRuleRecord,
 		]);
@@ -143,7 +142,7 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 
 	protected async resolvesDefaultWhenNoUserAccessRulesFound(): Promise<void> {
 		// given
-		const userAccessRulesStorage = this.mockUserAccessRulesStorage([]);
+		const userAccessRulesStorage = new TestRulesStorage([]);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 			solved: { count: 2 },
@@ -162,34 +161,6 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 		// then
 		expect(resolvedConfig.solved.count).toBe(defaultConfig.solved.count);
 		expect(resolvedConfig.unsolved.count).toBe(defaultConfig.unsolved.count);
-	}
-
-	protected mockUserAccessRulesStorage(
-		ruleRecords: RuleRecord[],
-	): RulesStorage {
-		return {
-			insert(record: Rule): Promise<RuleRecord> {
-				return Promise.resolve({
-					isUserBlocked: false,
-					_id: "none",
-				});
-			},
-			insertMany(records: Rule[]): Promise<RuleRecord[]> {
-				return Promise.resolve(ruleRecords);
-			},
-			find(
-				filters?: SearchRuleFilters | null,
-				filterSettings?: SearchRuleFilterSettings | null,
-			): Promise<RuleRecord[]> {
-				return Promise.resolve(ruleRecords);
-			},
-			deleteMany(recordFilters: DeleteRuleFilters[]): Promise<void> {
-				return Promise.resolve();
-			},
-			countRecords(): Promise<number> {
-				return Promise.resolve(ruleRecords.length);
-			},
-		};
 	}
 }
 
