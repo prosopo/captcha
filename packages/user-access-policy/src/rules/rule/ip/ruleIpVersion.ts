@@ -11,12 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { bigint, number, object } from "zod";
+enum RuleIpVersion {
+	v4 = "v4",
+	v6 = "v6",
+}
 
-const ipV4MaskApiSchema = object({
-	rangeMinAsNumeric: bigint(),
-	rangeMaxAsNumeric: bigint(),
-	asNumeric: number(),
-});
-
-export { ipV4MaskApiSchema };
+export { RuleIpVersion };

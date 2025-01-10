@@ -11,9 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { z } from "zod";
-import type {ipV6ApiSchema} from "@rules/api/schemas/record/ip/v6/ipV6ApiSchema.js";
+import { array, boolean, object, string } from "zod";
+import {ruleIpSchema} from "@rules/rule/ip/ruleIpSchema.js";
+import {ruleConfigSchema} from "@rules/rule/config/ruleConfigSchema.js";
 
-type IpV6 = z.infer<typeof ipV6ApiSchema>;
+const insertManyRulesApiSchema = array(
+	object({
+		isUserBlocked: boolean(),
+		clientId: string().optional(),
+		description: string().optional(),
+		userIp: ruleIpSchema.optional(),
+		userId: string().optional(),
+		config: ruleConfigSchema.optional(),
+	}),
+);
 
-export type { IpV6 };
+export { insertManyRulesApiSchema };

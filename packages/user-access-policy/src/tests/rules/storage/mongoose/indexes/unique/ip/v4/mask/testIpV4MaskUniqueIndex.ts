@@ -13,14 +13,14 @@
 // limitations under the License.
 import { Address4 } from "ip-address";
 import {TestUniqueIndexBase} from "@tests/rules/storage/mongoose/indexes/unique/testUniqueIndexBase.js";
-import type {Ip} from "@rules/rule/ip/ip.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
 
 class TestIpV4MaskUniqueIndex extends TestUniqueIndexBase {
 	private readonly ipAsNumeric: bigint = new Address4("192.168.1.1").bigInt();
 	private readonly firstMaskAsNumeric: number = 10;
 	private readonly secondMaskAsNumeric: number = 29;
 
-	protected override getFirstUserIpObject(): Ip {
+	protected override getFirstUserIpObject(): RuleIp {
 		return {
 			v4: {
 				asNumeric: this.ipAsNumeric,
@@ -34,7 +34,7 @@ class TestIpV4MaskUniqueIndex extends TestUniqueIndexBase {
 		};
 	}
 
-	protected override getSecondUserIpObject(): Ip {
+	protected override getSecondUserIpObject(): RuleIp {
 		return {
 			v4: {
 				asNumeric: this.ipAsNumeric,

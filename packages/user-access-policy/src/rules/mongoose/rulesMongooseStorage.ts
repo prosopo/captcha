@@ -19,7 +19,7 @@ import type {RulesStorage} from "@rules/storage/rulesStorage.js";
 import type {Rule} from "@rules/rule/rule.js";
 import type {SearchRuleFilters} from "@rules/storage/filters/search/searchRuleFilters.js";
 import type {SearchRuleFilterSettings} from "@rules/storage/filters/search/searchRuleFilterSettings.js";
-import {IpVersion} from "@rules/rule/ip/ipVersion.js";
+import {RuleIpVersion} from "@rules/rule/ip/ruleIpVersion.js";
 import type {RuleMongooseRecord} from "@rules/mongoose/ruleMongooseRecord.js";
 import type {RuleRecord} from "@rules/storage/ruleRecord.js";
 
@@ -172,22 +172,22 @@ class RulesMongooseStorage implements RulesStorage {
 	protected getFilterByUserIpAddress(userIpAddress: IPAddress): object {
 		const isIpV4 = userIpAddress instanceof Address4;
 
-		const userIpVersion = isIpV4 ? IpVersion.v4 : IpVersion.v6;
+		const userIpVersion = isIpV4 ? RuleIpVersion.v4 : RuleIpVersion.v6;
 
 		const userIpAsNumeric = isIpV4
 			? userIpAddress.bigInt()
 			: userIpAddress.bigInt().toString();
 
 		const userIpKey =
-			userIpVersion === IpVersion.v4
+			userIpVersion === RuleIpVersion.v4
 				? "userIp.v4.asNumeric"
 				: "userIp.v6.asNumericString";
 		const rangeMinKey =
-			userIpVersion === IpVersion.v4
+			userIpVersion === RuleIpVersion.v4
 				? "userIp.v4.mask.rangeMinAsNumeric"
 				: "userIp.v6.mask.rangeMinAsNumericString";
 		const rangeMaxKey =
-			userIpVersion === IpVersion.v4
+			userIpVersion === RuleIpVersion.v4
 				? "userIp.v4.mask.rangeMaxAsNumeric"
 				: "userIp.v6.mask.rangeMaxAsNumericString";
 

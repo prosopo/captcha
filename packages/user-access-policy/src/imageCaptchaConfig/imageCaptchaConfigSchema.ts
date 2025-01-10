@@ -14,8 +14,8 @@
 import { number, object } from "zod";
 
 const imageCaptchaConfigSchema = object({
-	solvedCount: number().optional(),
-	unsolvedCount: number().optional(),
+    solvedCount: number().optional(),
+    unsolvedCount: number().optional(),
 });
 
 export { imageCaptchaConfigSchema };

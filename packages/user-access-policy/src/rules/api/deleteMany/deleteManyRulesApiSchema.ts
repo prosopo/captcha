@@ -11,19 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { array, boolean, object, string } from "zod";
-import {ipApiSchema} from "@rules/api/schemas/record/ip/ipApiSchema.js";
-import {configApiSchema} from "@rules/api/schemas/record/configApiSchema.js";
+import { array, object, string } from "zod";
+import {ruleIpSchema} from "@rules/rule/ip/ruleIpSchema.js";
 
-const insertManyRulesApiSchema = array(
+const deleteManyRulesApiSchema = array(
 	object({
-		isUserBlocked: boolean(),
 		clientId: string().optional(),
-		description: string().optional(),
-		userIp: ipApiSchema.optional(),
+		userIp: ruleIpSchema.optional(),
 		userId: string().optional(),
-		config: configApiSchema.optional(),
 	}),
 );
 
-export { insertManyRulesApiSchema };
+export { deleteManyRulesApiSchema };

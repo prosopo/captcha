@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { z } from "zod";
-import type {ipV4ApiSchema} from "@rules/api/schemas/record/ip/v4/ipV4ApiSchema.js";
+import type {ruleIpV6MaskSchema} from "@rules/rule/ip/v6/mask/ruleIpV6MaskSchema.js";
 
-type IpV4 = z.infer<typeof ipV4ApiSchema>;
+type RuleIpV6 = z.infer<typeof ruleIpV6MaskSchema>;
 
-export type { IpV4 };
+export type { RuleIpV6 };

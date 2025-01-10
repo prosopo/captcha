@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import type {Ip} from "@rules/rule/ip/ip.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
 import {ipV6MongooseSchema} from "@rules/mongoose/schemas/ip/v6/ipV6MongooseSchema.js";
 import {ipV4MongooseSchema} from "@rules/mongoose/schemas/ip/v4/ipV4MongooseSchema.js";
 
-const ipMongooseSchema = new Schema<Ip>(
+const ipMongooseSchema = new Schema<RuleIp>(
 	{
 		v4: {
 			type: ipV4MongooseSchema,

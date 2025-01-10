@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {Ip} from "@rules/rule/ip/ip.js";
-import type {Config} from "@rules/rule/config.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
+import type {RuleConfig} from "@rules/rule/config/ruleConfig.js";
 
 interface Rule {
 	isUserBlocked: boolean;
 	clientId?: string;
 	description?: string;
-	userIp?: Ip;
+	userIp?: RuleIp;
 	userId?: string;
-	config?: Config;
+	config?: RuleConfig;
 }
 
 export type { Rule };

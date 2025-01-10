@@ -11,13 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { object, string } from "zod";
-import {ipV6MaskApiSchema} from "@rules/api/schemas/record/ip/v6/ipV6MaskApiSchema.js";
+import type { z } from "zod";
+import type {ruleIpV4Schema} from "@rules/rule/ip/v4/ruleIpV4Schema.js";
 
-const ipV6ApiSchema = object({
-	asNumericString: string(),
-	asString: string(),
-	mask: ipV6MaskApiSchema.optional(),
-});
+type RuleIpV4 = z.infer<typeof ruleIpV4Schema>;
 
-export { ipV6ApiSchema };
+export type { RuleIpV4 };

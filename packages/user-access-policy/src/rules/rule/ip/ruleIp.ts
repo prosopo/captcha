@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { z } from "zod";
-import type {configApiSchema} from "@rules/api/schemas/record/configApiSchema.js";
+import type {ruleIpSchema} from "@rules/rule/ip/ruleIpSchema.js";
 
-type Config = z.infer<typeof configApiSchema>;
+type RuleIp = z.infer<typeof ruleIpSchema>;
 
-export type { Config };
+export type { RuleIp };

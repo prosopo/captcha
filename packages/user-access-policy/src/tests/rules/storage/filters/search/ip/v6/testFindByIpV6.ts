@@ -13,14 +13,14 @@
 // limitations under the License.
 import { Address6 } from "ip-address";
 import {TestFindByIpBase} from "@tests/rules/storage/filters/search/ip/testFindByIpBase.js";
-import type {Ip} from "@rules/rule/ip/ip.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
 
 class TestFindByIpV6 extends TestFindByIpBase {
 	protected readonly userIp: string = "2001:db8:3333:4444:5555:6666:7777:8888";
 	protected readonly anotherUserIp: string =
 		"1002:db8:3333:4444:5555:6666:7777:8888";
 
-	protected getUserIpObject(): Ip {
+	protected getUserIpObject(): RuleIp {
 		return {
 			v6: {
 				asNumericString: new Address6(this.userIp).bigInt().toString(),
@@ -37,7 +37,7 @@ class TestFindByIpV6 extends TestFindByIpBase {
 		return new Address6(this.anotherUserIp);
 	}
 
-	protected getUserIpObjectInOtherVersion(): Ip {
+	protected getUserIpObjectInOtherVersion(): RuleIp {
 		return {
 			v4: {
 				asNumeric: new Address6(this.userIp).bigInt(),

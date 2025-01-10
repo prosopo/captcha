@@ -11,9 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { z } from "zod";
-import type {ipV4MaskApiSchema} from "@rules/api/schemas/record/ip/v4/ipV4MaskApiSchema.js";
+import { bigint, number, object } from "zod";
 
-type IpV4Mask = z.infer<typeof ipV4MaskApiSchema>;
+const ruleIpV4MaskSchema = object({
+	rangeMinAsNumeric: bigint(),
+	rangeMaxAsNumeric: bigint(),
+	asNumeric: number(),
+});
 
-export type { IpV4Mask };
+export { ruleIpV4MaskSchema };

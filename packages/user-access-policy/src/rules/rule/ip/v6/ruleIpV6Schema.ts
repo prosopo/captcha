@@ -11,15 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { array, object, string } from "zod";
-import {ipApiSchema} from "@rules/api/schemas/record/ip/ipApiSchema.js";
+import { object, string } from "zod";
+import {ruleIpV6MaskSchema} from "@rules/rule/ip/v6/mask/ruleIpV6MaskSchema.js";
 
-const deleteManyRulesApiSchema = array(
-	object({
-		clientId: string().optional(),
-		userIp: ipApiSchema.optional(),
-		userId: string().optional(),
-	}),
-);
+const ruleIpV6Schema = object({
+	asNumericString: string(),
+	asString: string(),
+	mask: ruleIpV6MaskSchema.optional(),
+});
 
-export { deleteManyRulesApiSchema };
+export { ruleIpV6Schema };

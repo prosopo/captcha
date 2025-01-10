@@ -11,6 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-const IPV6_NUMERIC_MAX_LENGTH = 38;
+import { number, object, string } from "zod";
 
-export { IPV6_NUMERIC_MAX_LENGTH };
+const ruleIpV6MaskSchema = object({
+	rangeMinAsNumericString: string(),
+	rangeMaxAsNumericString: string(),
+	asNumeric: number(),
+});
+
+export { ruleIpV6MaskSchema };

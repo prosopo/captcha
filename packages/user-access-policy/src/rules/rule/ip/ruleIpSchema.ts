@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { bigint, object, string } from "zod";
-import {ipV4MaskApiSchema} from "@rules/api/schemas/record/ip/v4/ipV4MaskApiSchema.js";
+import { object } from "zod";
+import {ruleIpV4Schema} from "@rules/rule/ip/v4/ruleIpV4Schema.js";
+import {ruleIpV6Schema} from "@rules/rule/ip/v6/ruleIpV6Schema.js";
 
-const ipV4ApiSchema = object({
-	asNumeric: bigint(),
-	asString: string(),
-	mask: ipV4MaskApiSchema.optional(),
+const ruleIpSchema = object({
+	v4: ruleIpV4Schema.optional(),
+	v6: ruleIpV6Schema.optional(),
 });
 
-export { ipV4ApiSchema };
+export { ruleIpSchema };

@@ -11,11 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { object } from "zod";
-import {imageCaptchaConfigSchema} from "@imageCaptchaConfig/imageCaptchaConfigSchema.js";
+import type { z } from "zod";
+import type {ruleIpV6MaskSchema} from "@rules/rule/ip/v6/mask/ruleIpV6MaskSchema.js";
 
-const configApiSchema = object({
-	imageCaptcha: imageCaptchaConfigSchema.optional(),
-});
+type RuleIpV6Mask = z.infer<typeof ruleIpV6MaskSchema>;
 
-export { configApiSchema };
+export type { RuleIpV6Mask };

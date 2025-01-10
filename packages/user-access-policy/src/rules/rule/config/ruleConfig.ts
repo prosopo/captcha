@@ -11,12 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { number, object, string } from "zod";
+import type { z } from "zod";
+import type {ruleConfigSchema} from "@rules/rule/config/ruleConfigSchema.js";
 
-const ipV6MaskApiSchema = object({
-	rangeMinAsNumericString: string(),
-	rangeMaxAsNumericString: string(),
-	asNumeric: number(),
-});
+type RuleConfig = z.infer<typeof ruleConfigSchema>;
 
-export { ipV6MaskApiSchema };
+export type { RuleConfig };

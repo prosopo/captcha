@@ -11,13 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { object } from "zod";
-import {ipV4ApiSchema} from "@rules/api/schemas/record/ip/v4/ipV4ApiSchema.js";
-import {ipV6ApiSchema} from "@rules/api/schemas/record/ip/v6/ipV6ApiSchema.js";
+const RULE_IPV6_NUMERIC_MAX_LENGTH = 38;
 
-const ipApiSchema = object({
-	v4: ipV4ApiSchema.optional(),
-	v6: ipV6ApiSchema.optional(),
-});
-
-export { ipApiSchema };
+export { RULE_IPV6_NUMERIC_MAX_LENGTH };

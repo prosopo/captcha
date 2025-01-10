@@ -15,8 +15,8 @@ import type {ApiRoute} from "@api/route/apiRoute.js";
 import {ruleApiPaths} from "@rules/api/ruleApiPaths.js";
 import type {RulesStorage} from "@rules/storage/rulesStorage.js";
 import type {ApiRoutesProvider} from "@api/route/apiRoutesProvider.js";
-import {DeleteManyRulesApiEndpoint} from "@rules/api/endpoints/deleteManyRulesApiEndpoint.js";
-import {InsertManyRulesApiEndpoint} from "@rules/api/endpoints/insertManyRulesApiEndpoint.js";
+import {DeleteManyRulesApiEndpoint} from "@rules/api/deleteMany/deleteManyRulesApiEndpoint.js";
+import {InsertManyRulesApiEndpoint} from "@rules/api/insertMany/insertManyRulesApiEndpoint.js";
 
 class RuleApiRoutesProvider implements ApiRoutesProvider {
 	public getRoutes(rulesStorage: RulesStorage): ApiRoute[] {

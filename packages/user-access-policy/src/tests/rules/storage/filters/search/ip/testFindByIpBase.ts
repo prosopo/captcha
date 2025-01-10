@@ -14,18 +14,18 @@
 import { expect } from "vitest";
 import type { IPAddress } from "@prosopo/types";
 import {TestFindRuleBase} from "@tests/rules/storage/filters/search/testFindRuleBase.js";
-import type {Ip} from "@rules/rule/ip/ip.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
 import type {Rule} from "@rules/rule/rule.js";
 import type {SearchRuleFilters} from "@rules/storage/filters/search/searchRuleFilters.js";
 
 abstract class TestFindByIpBase extends TestFindRuleBase {
-	protected abstract getUserIpObject(): Ip;
+	protected abstract getUserIpObject(): RuleIp;
 
 	protected abstract getUserIpAddress(): IPAddress;
 
 	protected abstract getOtherUserIpAddress(): IPAddress;
 
-	protected abstract getUserIpObjectInOtherVersion(): Ip;
+	protected abstract getUserIpObjectInOtherVersion(): RuleIp;
 
 	protected override getClientId(): string | undefined {
 		return "client";

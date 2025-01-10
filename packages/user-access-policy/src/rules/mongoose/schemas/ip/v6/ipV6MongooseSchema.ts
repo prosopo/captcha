@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import {IPV6_NUMERIC_MAX_LENGTH} from "@rules/rule/ip/v6/ipV6NumericMaxLength.js";
+import {RULE_IPV6_NUMERIC_MAX_LENGTH} from "@rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
 import {ipV6MaskMongooseSchema} from "@rules/mongoose/schemas/ip/v6/ipV6MaskMongooseSchema.js";
-import type {IpV6} from "@rules/rule/ip/v6/ipV6.js";
+import type {RuleIpV6} from "@rules/rule/ip/v6/ruleIpV6.js";
 
-const ipV6MongooseSchema = new Schema<IpV6>(
+const ipV6MongooseSchema = new Schema<RuleIpV6>(
 	{
 		// 1. Type choice note:
 		/**
@@ -34,7 +34,7 @@ const ipV6MongooseSchema = new Schema<IpV6>(
 			required: true,
 			// we must have the exact same string length to guarantee the right comparison.
 			set: (value: string): string =>
-				value.padStart(IPV6_NUMERIC_MAX_LENGTH, "0"),
+				value.padStart(RULE_IPV6_NUMERIC_MAX_LENGTH, "0"),
 		},
 		asString: { type: String, required: true },
 		mask: {

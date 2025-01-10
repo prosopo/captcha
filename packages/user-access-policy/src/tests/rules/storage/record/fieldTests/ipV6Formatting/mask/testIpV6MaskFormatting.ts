@@ -13,7 +13,7 @@
 // limitations under the License.
 import { expect } from "vitest";
 import {TestRulesStorageBase} from "@tests/rules/storage/testRulesStorageBase.js";
-import {IPV6_NUMERIC_MAX_LENGTH} from "@rules/rule/ip/v6/ipV6NumericMaxLength.js";
+import {RULE_IPV6_NUMERIC_MAX_LENGTH} from "@rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
 
 class TestIpV6MaskFormatting extends TestRulesStorageBase {
 	protected override getTests(): {
@@ -44,7 +44,7 @@ class TestIpV6MaskFormatting extends TestRulesStorageBase {
 		// given
 		const rangeMinAsNumericString = "1";
 		const fullLengthRangeMinNumericString = "1".padStart(
-			IPV6_NUMERIC_MAX_LENGTH,
+			RULE_IPV6_NUMERIC_MAX_LENGTH,
 			"0",
 		);
 
@@ -100,7 +100,7 @@ class TestIpV6MaskFormatting extends TestRulesStorageBase {
 		// given
 		const rangeMaxAsNumericString = "1";
 		const fullLengthRangeMaxNumericString = "1".padStart(
-			IPV6_NUMERIC_MAX_LENGTH,
+			RULE_IPV6_NUMERIC_MAX_LENGTH,
 			"0",
 		);
 

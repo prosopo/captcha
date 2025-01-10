@@ -16,26 +16,26 @@ import type {ApiEndpoint} from "@api/apiEndpoint.js";
 import type {RulesStorage} from "@rules/storage/rulesStorage.js";
 import type {ApiResponse} from "@api/response/apiResponse.js";
 import {ApiResponseStatus} from "@api/response/apiResponseStatus.js";
-import {insertManyRulesApiSchema} from "@rules/api/schemas/insertManyRulesApiSchema.js";
+import {deleteManyRulesApiSchema} from "@rules/api/deleteMany/deleteManyRulesApiSchema.js";
 
-class InsertManyRulesApiEndpoint
-	implements ApiEndpoint<typeof insertManyRulesApiSchema>
+class DeleteManyRulesApiEndpoint
+	implements ApiEndpoint<typeof deleteManyRulesApiSchema>
 {
 	public constructor(private readonly rulesStorage: RulesStorage) {}
 
 	async processRequest(
-		args: z.infer<typeof insertManyRulesApiSchema>,
+		args: z.infer<typeof deleteManyRulesApiSchema>,
 	): Promise<ApiResponse> {
-		await this.rulesStorage.insertMany(args);
+		await this.rulesStorage.deleteMany(args);
 
 		return {
 			status: ApiResponseStatus.SUCCESS,
 		};
 	}
 
-	public getRequestArgsSchema(): typeof insertManyRulesApiSchema {
-		return insertManyRulesApiSchema;
+	public getRequestArgsSchema(): typeof deleteManyRulesApiSchema {
+		return deleteManyRulesApiSchema;
 	}
 }
 
-export { InsertManyRulesApiEndpoint };
+export { DeleteManyRulesApiEndpoint };

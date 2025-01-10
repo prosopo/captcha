@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Address6 } from "ip-address";
-import type {Ip} from "@rules/rule/ip/ip.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
 import {TestFindByIpV6} from "@tests/rules/storage/filters/search/ip/v6/testFindByIpV6.js";
 
 class TestFindByIpMaskV6 extends TestFindByIpV6 {
@@ -25,7 +25,7 @@ class TestFindByIpMaskV6 extends TestFindByIpV6 {
 	protected override readonly anotherUserIp: string =
 		"2001:db8:3333:4444:5555:6666:8888:1111";
 
-	protected override getUserIpObject(): Ip {
+	protected override getUserIpObject(): RuleIp {
 		return {
 			v6: {
 				asNumericString: new Address6(this.baseIpAsString).bigInt().toString(),
@@ -43,7 +43,7 @@ class TestFindByIpMaskV6 extends TestFindByIpV6 {
 		};
 	}
 
-	protected override getUserIpObjectInOtherVersion(): Ip {
+	protected override getUserIpObjectInOtherVersion(): RuleIp {
 		return {
 			v4: {
 				asNumeric: new Address6(this.baseIpAsString).bigInt(),

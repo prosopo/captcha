@@ -13,12 +13,12 @@
 // limitations under the License.
 import { expect } from "vitest";
 import {TestRulesStorageBase} from "@tests/rules/storage/testRulesStorageBase.js";
-import type {Ip} from "@rules/rule/ip/ip.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
 
 abstract class TestUniqueIndexBase extends TestRulesStorageBase {
-	protected abstract getFirstUserIpObject(): Ip;
+	protected abstract getFirstUserIpObject(): RuleIp;
 
-	protected abstract getSecondUserIpObject(): Ip;
+	protected abstract getSecondUserIpObject(): RuleIp;
 
 	protected override getTests(): {
 		name: string;

@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Address4 } from "ip-address";
 import {TestFindByIpV4} from "@tests/rules/storage/filters/search/ip/v4/testFindByIpV4.js";
-import type {Ip} from "@rules/rule/ip/ip.js";
+import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
 
 class TestFindByMaskV4 extends TestFindByIpV4 {
 	protected baseIpAsString = "192.168.0.0";
@@ -23,7 +23,7 @@ class TestFindByMaskV4 extends TestFindByIpV4 {
 	protected override readonly userIp: string = "192.168.0.15";
 	protected override readonly anotherUserIp: string = "127.0.1.0";
 
-	protected override getUserIpObject(): Ip {
+	protected override getUserIpObject(): RuleIp {
 		return {
 			v4: {
 				asNumeric: new Address4(this.baseIpAsString).bigInt(),
@@ -37,7 +37,7 @@ class TestFindByMaskV4 extends TestFindByIpV4 {
 		};
 	}
 
-	protected override getUserIpObjectInOtherVersion(): Ip {
+	protected override getUserIpObjectInOtherVersion(): RuleIp {
 		return {
 			v6: {
 				asNumericString: new Address4(this.baseIpAsString).bigInt().toString(),

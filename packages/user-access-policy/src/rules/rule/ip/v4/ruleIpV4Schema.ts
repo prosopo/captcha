@@ -11,9 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-enum IpVersion {
-	v4 = "v4",
-	v6 = "v6",
-}
+import { bigint, object, string } from "zod";
+import {ruleIpV4MaskSchema} from "@rules/rule/ip/v4/mask/ruleIpV4MaskSchema.js";
 
-export { IpVersion };
+const ruleIpV4Schema = object({
+	asNumeric: bigint(),
+	asString: string(),
+	mask: ruleIpV4MaskSchema.optional(),
+});
+
+export { ruleIpV4Schema };
