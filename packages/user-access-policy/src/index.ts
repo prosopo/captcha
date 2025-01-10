@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { createImageCaptchaConfigResolver } from "@captchaConfig/image/resolver/createImageCaptchaConfigResolver.js";
 import { createRequestInspector } from "@blacklist/inspector/createRequestInspector.js";
 import type { RequestInspector } from "@blacklist/inspector/requestInspector.js";
 import { createExpressRuleRouter } from "@rules/api/createExpressRuleRouter.js";
 import { getExpressApiRuleRateLimits } from "@rules/api/getExpressApiRuleRateLimits.js";
 import type { Rule } from "@rules/rule/rule.js";
-import { createMongooseRulesStorage } from "@rules/storage/createMongooseRulesStorage.js";
-import { getMongooseRuleRecordSchema } from "@rules/storage/record/getMongooseRuleRecordSchema.js";
+import { createMongooseRulesStorage } from "@rules/mongoose/createMongooseRulesStorage.js";
+import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import {createImageCaptchaConfigResolver} from "@imageCaptchaConfig/resolver/createImageCaptchaConfigResolver.js";
 
 export {
 	type Rule,
@@ -29,6 +29,6 @@ export {
 	createImageCaptchaConfigResolver,
 	createRequestInspector,
 	createExpressRuleRouter,
-	getMongooseRuleRecordSchema,
+	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
 };

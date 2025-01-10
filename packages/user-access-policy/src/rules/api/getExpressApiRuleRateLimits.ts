@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {apiRulePaths} from "@rules/api/apiRulePaths.js";
+import {ruleApiPaths} from "@rules/api/ruleApiPaths.js";
 
 const getExpressApiRuleRateLimits = () => {
 	const defaultWindowsMs = 60000;
 	const defaultLimit = 5;
 
 	return {
-		[apiRulePaths.INSERT_MANY]: {
+		[ruleApiPaths.INSERT_MANY]: {
 			windowMs:
 				process.env.PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_WINDOW ||
 				defaultWindowsMs,
@@ -26,7 +26,7 @@ const getExpressApiRuleRateLimits = () => {
 				process.env.PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_LIMIT ||
 				defaultLimit,
 		},
-		[apiRulePaths.DELETE_MANY]: {
+		[ruleApiPaths.DELETE_MANY]: {
 			windowMs:
 				process.env.PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_WINDOW ||
 				defaultWindowsMs,

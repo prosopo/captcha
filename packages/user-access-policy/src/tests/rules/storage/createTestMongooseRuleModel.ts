@@ -15,7 +15,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { type Model } from "mongoose";
 import { afterAll, beforeEach } from "vitest";
 import type {Rule} from "@rules/rule/rule.js";
-import {getMongooseRuleRecordSchema} from "@rules/storage/record/getMongooseRuleRecordSchema.js";
+import {getRuleMongooseSchema} from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
 
 const createTestMongooseRuleModel = async (): Promise<Model<Rule>> => {
 	const mongoServer = await MongoMemoryServer.create();
@@ -23,7 +23,7 @@ const createTestMongooseRuleModel = async (): Promise<Model<Rule>> => {
 
 	const model = mongoConnection.model(
 		"UserAccessPolicyRules",
-		getMongooseRuleRecordSchema(),
+		getRuleMongooseSchema(),
 	);
 
 	await model.syncIndexes();

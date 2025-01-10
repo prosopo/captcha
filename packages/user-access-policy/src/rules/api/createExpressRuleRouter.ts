@@ -15,7 +15,7 @@ import type { Logger } from "@prosopo/common";
 import type { Router } from "express";
 import type {RulesStorage} from "@rules/storage/rulesStorage.js";
 import {ExpressRouterFactory} from "@api/express/expressRouterFactory.js";
-import {ApiRuleRoutesProvider} from "@rules/api/apiRuleRoutesProvider.js";
+import {RuleApiRoutesProvider} from "@rules/api/ruleApiRoutesProvider.js";
 import {ExpressRoutesRegistrar} from "@api/express/expressRoutesRegistrar.js";
 import {ExpressEndpointAdapter} from "@api/express/expressEndpointAdapter.js";
 
@@ -28,7 +28,7 @@ const createExpressRuleRouter = (
 
 	return expressRouterFactory.createRouter(
 		rulesStorage,
-		new ApiRuleRoutesProvider(),
+		new RuleApiRoutesProvider(),
 		new ExpressRoutesRegistrar(expressEndpointAdapter),
 	);
 };

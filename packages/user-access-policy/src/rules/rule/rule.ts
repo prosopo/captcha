@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {Config} from "@captchaConfig/config.js";
 import type {Ip} from "@rules/rule/ip/ip.js";
+import type {Config} from "@rules/rule/config.js";
 
 interface Rule {
 	isUserBlocked: boolean;

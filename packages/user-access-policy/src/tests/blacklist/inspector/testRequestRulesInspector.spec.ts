@@ -13,10 +13,10 @@
 // limitations under the License.
 import { describe, expect } from "vitest";
 import { Address4 } from "ip-address";
-import type {RuleRecord} from "@rules/storage/record/ruleRecord.js";
 import {RequestRulesInspector} from "@blacklist/inspector/requestRulesInspector.js";
 import {TestsBase} from "@tests/testsBase.js";
 import {TestRulesStorage} from "@tests/rules/storage/testRulesStorage.js";
+import type {RuleRecord} from "@rules/storage/ruleRecord.js";
 
 class TestRequestRulesInspector extends TestsBase {
 	protected getTests(): {

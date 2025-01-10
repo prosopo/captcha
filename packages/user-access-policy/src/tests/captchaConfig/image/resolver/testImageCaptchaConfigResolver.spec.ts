@@ -15,9 +15,9 @@ import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { describe, expect } from "vitest";
 import {TestsBase} from "@tests/testsBase.js";
-import {ImageCaptchaConfigResolver} from "@captchaConfig/image/resolver/imageCaptchaConfigResolver.js";
-import type {RuleRecord} from "@rules/storage/record/ruleRecord.js";
 import {TestRulesStorage} from "@tests/rules/storage/testRulesStorage.js";
+import {ImageCaptchaConfigResolver} from "@imageCaptchaConfig/resolver/imageCaptchaConfigResolver.js";
+import type {RuleRecord} from "@rules/storage/ruleRecord.js";
 
 class TestImageCaptchaConfigResolver extends TestsBase {
 	constructor(private readonly resolver: ImageCaptchaConfigResolver) {

@@ -14,11 +14,11 @@
 import { describe } from "vitest";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
 import {TestFindRule} from "@tests/rules/storage/filters/search/generic/testFindRule.js";
-import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
+import {RulesMongooseStorage} from "@rules/mongoose/rulesMongooseStorage.js";
 
 describe("MongooseFindRule", async () => {
 	const testModel = await createTestMongooseRuleModel();
-	const storage = new MongooseRulesStorage(testModel);
+	const storage = new RulesMongooseStorage(testModel);
 	const tests = new TestFindRule(storage);
 
 	tests.runAll();

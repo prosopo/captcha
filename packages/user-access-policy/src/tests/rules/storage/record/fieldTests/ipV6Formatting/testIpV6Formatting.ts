@@ -13,7 +13,7 @@
 // limitations under the License.
 import { expect } from "vitest";
 import {TestRulesStorageBase} from "@tests/rules/storage/testRulesStorageBase.js";
-import {IPV6_NUMERIC_MAX_LENGTH} from "@rules/rule/ip/v6/single/ipV6NumericMaxLength.js";
+import {IPV6_NUMERIC_MAX_LENGTH} from "@rules/rule/ip/v6/ipV6NumericMaxLength.js";
 
 class TestIpV6Formatting extends TestRulesStorageBase {
 	protected override getTests(): {

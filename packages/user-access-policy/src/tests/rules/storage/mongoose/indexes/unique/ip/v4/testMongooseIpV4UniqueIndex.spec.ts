@@ -14,11 +14,11 @@
 import { describe } from "vitest";
 import {TestIpV4UniqueIndex} from "@tests/rules/storage/mongoose/indexes/unique/ip/v4/testIpV4UniqueIndex.js";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
-import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
+import {RulesMongooseStorage} from "@rules/mongoose/rulesMongooseStorage.js";
 
 describe("MongooseIpV4UniqueIndex", async () => {
 	const testModel = await createTestMongooseRuleModel();
-	const storage = new MongooseRulesStorage(testModel);
+	const storage = new RulesMongooseStorage(testModel);
 	const tests = new TestIpV4UniqueIndex(storage);
 
 	tests.runAll();

@@ -15,14 +15,14 @@ import mongoose, { type Model } from "mongoose";
 import type {RulesStorageFactory} from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 import type {RulesStorage} from "@rules/storage/rulesStorage.js";
 import type {Rule} from "@rules/rule/rule.js";
-import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
-import {getMongooseRuleRecordSchema} from "@rules/storage/record/getMongooseRuleRecordSchema.js";
+import {RulesMongooseStorage} from "@rules/mongoose/rulesMongooseStorage.js";
+import {getRuleMongooseSchema} from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
 
 class MongooseRulesStorageFactory implements RulesStorageFactory {
 	async createRulesStorage(dbUrl: string): Promise<RulesStorage> {
 		const model = await this.createModel(dbUrl);
 
-		return new MongooseRulesStorage(model);
+		return new RulesMongooseStorage(model);
 	}
 
 	protected async createModel(db: string): Promise<Model<Rule>> {
@@ -30,7 +30,7 @@ class MongooseRulesStorageFactory implements RulesStorageFactory {
 
 		return mongoConnection.model(
 			"UserAccessPolicyRules",
-			getMongooseRuleRecordSchema(),
+			getRuleMongooseSchema(),
 		);
 	}
 }

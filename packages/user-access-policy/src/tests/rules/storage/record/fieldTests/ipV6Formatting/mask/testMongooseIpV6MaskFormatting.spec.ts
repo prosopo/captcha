@@ -16,11 +16,11 @@ import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongoo
 import {
 	TestIpV6MaskFormatting
 } from "@tests/rules/storage/record/fieldTests/ipV6Formatting/mask/testIpV6MaskFormatting.js";
-import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
+import {RulesMongooseStorage} from "@rules/mongoose/rulesMongooseStorage.js";
 
 describe("MongooseIpV6MaskFormatting", async () => {
 	const testModel = await createTestMongooseRuleModel();
-	const storage = new MongooseRulesStorage(testModel);
+	const storage = new RulesMongooseStorage(testModel);
 	const tests = new TestIpV6MaskFormatting(storage);
 
 	tests.runAll();

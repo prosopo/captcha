@@ -16,11 +16,11 @@ import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongoo
 import {
 	TestFindByIpMaskV6RangeMin
 } from "@tests/rules/storage/filters/search/ip/v6/mask/maskRange/min/testFindByIpMaskV6RangeMin.js";
-import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
+import {RulesMongooseStorage} from "@rules/mongoose/rulesMongooseStorage.js";
 
 describe("MongooseFindByIpMaskV6RangeMin", async () => {
 	const testModel = await createTestMongooseRuleModel();
-	const storage = new MongooseRulesStorage(testModel);
+	const storage = new RulesMongooseStorage(testModel);
 	const tests = new TestFindByIpMaskV6RangeMin(storage);
 
 	tests.runAll();

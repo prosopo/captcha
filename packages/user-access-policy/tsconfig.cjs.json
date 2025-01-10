@@ -6,7 +6,7 @@
 		"paths": {
 			"@api/*": ["./src/api/*"],
 			"@blacklist/*": ["./src/blacklist/*"],
-			"@captchaConfig/*": ["./src/captchaConfig/*"],
+			"@imageCaptchaConfig/*": ["./src/imageCaptchaConfig/*"],
 			"@rules/*": ["./src/rules/*"],
 			"@tests/*": ["./src/tests/*"]
 		}

@@ -16,11 +16,11 @@ import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongoo
 import {
 	TestUserIpVersionValidation
 } from "@tests/rules/storage/record/fieldTests/validation/userIpVersion/testUserIpVersionValidation.js";
-import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
+import {RulesMongooseStorage} from "@rules/mongoose/rulesMongooseStorage.js";
 
 describe("MongooseUserIpVersionValidation", async () => {
 	const testModel = await createTestMongooseRuleModel();
-	const storage = new MongooseRulesStorage(testModel);
+	const storage = new RulesMongooseStorage(testModel);
 	const tests = new TestUserIpVersionValidation(storage);
 
 	tests.runAll();
