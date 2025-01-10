@@ -17,8 +17,8 @@ import type { RequestInspector } from "@blacklist/inspector/requestInspector.js"
 import { createExpressRuleRouter } from "@rules/api/createExpressRuleRouter.js";
 import { getExpressApiRuleRateLimits } from "@rules/api/getExpressApiRuleRateLimits.js";
 import type { Rule } from "@rules/rule/rule.js";
-import { createMongooseRulesStorage } from "@rules/storage/mongoose/createMongooseRulesStorage.js";
-import { getMongooseRuleRecordSchema } from "@rules/storage/mongoose/getMongooseRuleRecordSchema.js";
+import { createMongooseRulesStorage } from "@rules/storage/createMongooseRulesStorage.js";
+import { getMongooseRuleRecordSchema } from "@rules/storage/record/getMongooseRuleRecordSchema.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 
 export {

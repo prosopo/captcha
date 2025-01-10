@@ -13,8 +13,8 @@
 // limitations under the License.
 import { describe } from "vitest";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import {TestIpV6UniqueIndex} from "@tests/rules/storage/mongoose/indexes/unique/ip/v6/testIpV6UniqueIndex.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 describe("MongooseIpV6UniqueIndex", async () => {
 	const testModel = await createTestMongooseRuleModel();

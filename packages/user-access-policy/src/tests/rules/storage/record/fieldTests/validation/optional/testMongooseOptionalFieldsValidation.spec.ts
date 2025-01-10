@@ -13,10 +13,10 @@
 // limitations under the License.
 import { describe } from "vitest";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import {
 	TestOptionalFieldsValidation
 } from "@tests/rules/storage/record/fieldTests/validation/optional/testOptionalFieldsValidation.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 describe("MongooseOptionalFieldsValidation", async () => {
 	const testModel = await createTestMongooseRuleModel();

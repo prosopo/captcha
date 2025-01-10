@@ -13,8 +13,8 @@
 // limitations under the License.
 import type { Model } from "mongoose";
 import type {Rule} from "@rules/rule/rule.js";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import type {RulesStorage} from "@rules/storage/rulesStorage.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 const createMongooseRulesStorage = (
 	readingModel: Model<Rule> | null,

@@ -13,8 +13,8 @@
 // limitations under the License.
 import { describe } from "vitest";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import {TestUserIdValidation} from "@tests/rules/storage/record/fieldTests/validation/userId/testUserIdValidation.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 describe("MongooseUserIdValidation", async () => {
 	const testModel = await createTestMongooseRuleModel();

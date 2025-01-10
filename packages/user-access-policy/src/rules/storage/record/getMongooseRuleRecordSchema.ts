@@ -13,8 +13,8 @@
 // limitations under the License.
 import type { Schema } from "mongoose";
 import type {Rule} from "@rules/rule/rule.js";
-import {mongoosePerformanceRuleIndexes} from "@rules/storage/mongoose/indexes/mongoosePerformanceRuleIndexes.js";
-import {mongooseUniqueRuleIndexes} from "@rules/storage/mongoose/indexes/mongooseUniqueRuleIndexes.js";
+import {mongoosePerformanceRuleIndexes} from "@rules/storage/record/indexes/performance/mongoosePerformanceRuleIndexes.js";
+import {mongooseUniqueRuleIndexes} from "@rules/storage/record/indexes/unique/mongooseUniqueRuleIndexes.js";
 import {mongooseRule} from "@rules/rule/mongooseRule.js";
 
 const getMongooseRuleRecordSchema = (): Schema<Rule> => {

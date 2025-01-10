@@ -13,8 +13,8 @@
 // limitations under the License.
 import { describe } from "vitest";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import {TestIpV6Formatting} from "@tests/rules/storage/record/fieldTests/ipV6Formatting/testIpV6Formatting.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 describe("MongooseIpV6Formatting", async () => {
 	const testModel = await createTestMongooseRuleModel();

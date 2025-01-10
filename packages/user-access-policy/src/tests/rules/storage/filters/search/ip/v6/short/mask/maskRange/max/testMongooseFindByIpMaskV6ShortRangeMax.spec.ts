@@ -15,8 +15,8 @@ import { describe } from "vitest";
 import {
 	TestFindByIpMaskV6ShortRangeMax
 } from "@tests/rules/storage/filters/search/ip/v6/short/mask/maskRange/max/testFindByIpMaskV6ShortRangeMax.js";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 describe("MongooseFindByIpV6MaskV6ShortRangeMax", async () => {
 	const testModel = await createTestMongooseRuleModel();

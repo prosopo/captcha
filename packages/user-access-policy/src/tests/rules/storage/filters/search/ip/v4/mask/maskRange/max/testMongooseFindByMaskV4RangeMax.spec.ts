@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe } from "vitest";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import {
 	TestFindByMaskV4RangeMax
 } from "@tests/rules/storage/filters/search/ip/v4/mask/maskRange/max/testFindByMaskV4RangeMax.js";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 describe("MongooseFindByMaskV4RangeMax", async () => {
 	const testModel = await createTestMongooseRuleModel();

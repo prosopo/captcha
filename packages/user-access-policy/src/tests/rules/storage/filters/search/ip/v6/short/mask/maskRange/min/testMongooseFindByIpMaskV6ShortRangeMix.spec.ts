@@ -13,10 +13,10 @@
 // limitations under the License.
 import { describe } from "vitest";
 import {createTestMongooseRuleModel} from "@tests/rules/storage/createTestMongooseRuleModel.js";
-import {MongooseRulesStorage} from "@rules/storage/mongoose/mongooseRulesStorage.js";
 import {
 	TestFindByIpMaskV6ShortRangeMin
 } from "@tests/rules/storage/filters/search/ip/v6/short/mask/maskRange/min/testFindByIpMaskV6ShortRangeMin.js";
+import {MongooseRulesStorage} from "@rules/storage/mongooseRulesStorage.js";
 
 describe("MongooseFindByIpMaskV6ShortRangeMin", async () => {
 	const testModel = await createTestMongooseRuleModel();
