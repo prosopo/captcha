@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +12,17 @@ import path from "node:path";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ViteCommonJSConfig } from "@prosopo/config";
+import path from "node:path";
+import {aliases} from "./aliases.js";
 
 export default function () {
-	return ViteCommonJSConfig(
-		"user-access-policy",
-		path.resolve("./tsconfig.cjs.json"),
-	);
+	return {
+		...ViteCommonJSConfig(
+			"user-access-policy",
+			path.resolve("./tsconfig.cjs.json"),
+		),
+		resolve: {
+			alias: aliases,
+		},
+	};
 }

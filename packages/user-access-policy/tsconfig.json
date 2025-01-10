@@ -2,7 +2,14 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"paths": {
+			"@api/*": ["./src/api/*"],
+			"@blacklist/*": ["./src/blacklist/*"],
+			"@captchaConfig/*": ["./src/captchaConfig/*"],
+			"@rules/*": ["./src/rules/*"],
+			"@tests/*": ["./src/tests/*"]
+		}
 	},
 	"include": ["./src"],
 	"references": [

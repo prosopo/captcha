@@ -2,9 +2,16 @@
 	"extends": "../../tsconfig.cjs.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist/cjs"
+		"outDir": "./dist/cjs",
+		"paths": {
+			"@api/*": ["./src/api/*"],
+			"@blacklist/*": ["./src/blacklist/*"],
+			"@captchaConfig/*": ["./src/captchaConfig/*"],
+			"@rules/*": ["./src/rules/*"],
+			"@tests/*": ["./src/tests/*"]
+		}
 	},
-	"include": ["./src/**/*.ts"],
+	"include": ["./src"],
 	"references": [
 		{
 			"path": "../common/tsconfig.cjs.json"

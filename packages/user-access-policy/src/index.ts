@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { createImageCaptchaConfigResolver } from "./config/imageCaptcha/resolver/createImageCaptchaConfigResolver.js";
-import { createRequestInspector } from "./requestInspector/createRequestInspector.js";
-import type { RequestInspector } from "./requestInspector/requestInspector.js";
-import { createExpressRuleRouter } from "./rule/api/createExpressRuleRouter.js";
-import { getExpressApiRuleRateLimits } from "./rule/api/getExpressApiRuleRateLimits.js";
-import type { Rule } from "./rule/rule.js";
-import { createMongooseRulesStorage } from "./rule/storage/createMongooseRulesStorage.js";
-import { getMongooseRuleRecordSchema } from "./rule/storage/record/getMongooseRuleRecordSchema.js";
-import type { RulesStorage } from "./rule/storage/rulesStorage.js";
+import { createImageCaptchaConfigResolver } from "@captchaConfig/image/resolver/createImageCaptchaConfigResolver.js";
+import { createRequestInspector } from "@blacklist/inspector/createRequestInspector.js";
+import type { RequestInspector } from "@blacklist/inspector/requestInspector.js";
+import { createExpressRuleRouter } from "@rules/api/createExpressRuleRouter.js";
+import { getExpressApiRuleRateLimits } from "@rules/api/getExpressApiRuleRateLimits.js";
+import type { Rule } from "@rules/rule/rule.js";
+import { createMongooseRulesStorage } from "@rules/storage/mongoose/createMongooseRulesStorage.js";
+import { getMongooseRuleRecordSchema } from "@rules/storage/mongoose/getMongooseRuleRecordSchema.js";
+import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 
 export {
 	type Rule,
