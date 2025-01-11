@@ -41,7 +41,7 @@ vi.mock("@prosopo/datasets", () => ({
 	compareCaptchaSolutions: vi.fn(),
 	parseAndSortCaptchaSolutions: vi.fn(),
 }));
-vi.mock("@prosopo/util-crypto", () => ({
+vi.mock("@polkadot/util-crypto", () => ({
 	randomAsHex: vi.fn(),
 	signatureVerify: vi.fn(),
 }));
