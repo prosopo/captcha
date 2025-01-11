@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { default as Signer } from "@polkadot/extension-base/page/Signer";
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
-import { Keyring } from "@polkadot/keyring";
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { cryptoWaitReady } from "@polkadot/util-crypto";
-import { entropyToMnemonic } from "@polkadot/util-crypto/mnemonic/bip39";
 import type { KeypairType } from "@polkadot/util-crypto/types";
 import { stringToU8a } from "@polkadot/util/string";
 import { u8aToHex } from "@polkadot/util/u8a";
 import { hexHash } from "@prosopo/common";
 import { getFingerprint } from "@prosopo/fingerprint";
 import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
-import { picassoCanvas } from "@prosopo/util";
 import { version } from "@prosopo/util";
 import { Extension } from "./Extension.js";
+
+const SignerLoader = async () =>
+	(await import("@polkadot/extension-base/page/Signer")).default;
+const KeyringLoader = async () => (await import("@polkadot/keyring")).Keyring;
+const EntropyToMnemonicLoader = async () =>
+	(await import("@polkadot/util-crypto/mnemonic/bip39")).entropyToMnemonic;
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair };
 
@@ -50,6 +51,7 @@ export class ExtensionWeb2 extends Extension {
 	private async createExtension(
 		account: AccountWithKeyPair,
 	): Promise<InjectedExtension> {
+		const Signer = await SignerLoader();
 		const signer = new Signer(async () => {
 			return;
 		});
@@ -85,28 +87,11 @@ export class ExtensionWeb2 extends Extension {
 	private async createAccount(
 		config: ProcaptchaClientConfigOutput,
 	): Promise<AccountWithKeyPair> {
-		await cryptoWaitReady();
-		const params = {
-			area: { width: 300, height: 300 },
-			offsetParameter: 2001000001,
-			multiplier: 15000,
-			fontSizeFactor: 1.5,
-			maxShadowBlur: 50,
-			numberOfRounds: 5,
-			seed: 42,
-		};
-
+		const Keyring = await KeyringLoader();
 		const browserEntropy = await getFingerprint();
-		const canvasEntropy = picassoCanvas(
-			params.numberOfRounds,
-			params.seed,
-			params,
-		);
-		const entropy = hexHash(
-			[canvasEntropy, browserEntropy].join(""),
-			128,
-		).slice(2);
+		const entropy = hexHash(browserEntropy, 128).slice(2);
 		const u8Entropy = stringToU8a(entropy);
+		const entropyToMnemonic = await EntropyToMnemonicLoader();
 		const mnemonic = entropyToMnemonic(u8Entropy);
 		const type: KeypairType = "sr25519";
 		const keyring = new Keyring({

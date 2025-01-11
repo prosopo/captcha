@@ -13,7 +13,9 @@
 		{
 			"path": "../common"
 		},
-
+		{
+			"path": "../keyring"
+		},
 		{
 			"path": "../types"
 		}

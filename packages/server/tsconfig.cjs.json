@@ -18,7 +18,9 @@
 		{
 			"path": "../common/tsconfig.cjs.json"
 		},
-
+		{
+			"path": "../keyring/tsconfig.cjs.json"
+		},
 		{
 			"path": "../types/tsconfig.cjs.json"
 		}

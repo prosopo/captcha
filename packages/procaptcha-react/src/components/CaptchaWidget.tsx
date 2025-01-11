@@ -19,6 +19,7 @@ import { useMemo } from "react";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	solution: string[];
 	onClick: (hash: string) => void;
 	themeColor: "light" | "dark";

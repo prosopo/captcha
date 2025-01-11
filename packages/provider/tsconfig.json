@@ -24,6 +24,9 @@
 			"path": "../env"
 		},
 		{
+			"path": "../keyring"
+		},
+		{
 			"path": "../types"
 		},
 		{

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
@@ -40,7 +41,7 @@ vi.mock("@prosopo/datasets", () => ({
 	compareCaptchaSolutions: vi.fn(),
 	parseAndSortCaptchaSolutions: vi.fn(),
 }));
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	randomAsHex: vi.fn(),
 	signatureVerify: vi.fn(),
 }));
