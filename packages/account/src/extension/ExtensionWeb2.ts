@@ -15,6 +15,7 @@
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
 import type { KeyringPair } from "@polkadot/keyring/types";
+import { cryptoWaitReady } from "@polkadot/util-crypto";
 import type { KeypairType } from "@polkadot/util-crypto/types";
 import { stringToU8a } from "@polkadot/util/string";
 import { u8aToHex } from "@polkadot/util/u8a";
@@ -87,6 +88,7 @@ export class ExtensionWeb2 extends Extension {
 	private async createAccount(
 		config: ProcaptchaClientConfigOutput,
 	): Promise<AccountWithKeyPair> {
+		await cryptoWaitReady();
 		const Keyring = await KeyringLoader();
 		const browserEntropy = await getFingerprint();
 		const entropy = hexHash(browserEntropy, 128).slice(2);
