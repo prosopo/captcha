@@ -153,6 +153,7 @@ export interface PoWCaptcha {
 	providerSignature: string;
 	requestedAtTimestamp: number;
 	userSignature?: string;
+	score?: number;
 }
 
 export interface PoWCaptchaUser extends PoWCaptcha {

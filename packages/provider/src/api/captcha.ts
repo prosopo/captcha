@@ -24,6 +24,7 @@ import {
 	CaptchaSolutionBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	CaptchaType,
 	type DappUserSolutionResult,
 	GetFrictionlessCaptchaChallengeRequestBody,
 	GetPowCaptchaChallengeRequestBody,
@@ -36,6 +37,7 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
+import type { ObjectId } from "mongoose";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { getCaptchaConfig } from "../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
@@ -84,7 +86,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			);
 		}
 
-		const { datasetId, user, dapp } = parsed;
+		const { datasetId, user, dapp, sessionId } = parsed;
 
 		try {
 			validateAddress(dapp, false, 42);
@@ -117,6 +119,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				dapp,
 			);
 
+			let score: number | undefined;
+
+			if (sessionId) {
+				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
+				if (sessionRecord) {
+					const tokenRecord =
+						await tasks.db.getFrictionlessTokenRecordByTokenId(
+							sessionRecord.tokenId,
+						);
+					score = tokenRecord?.score;
+				}
+			}
+
 			const taskData =
 				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 					datasetId,
@@ -124,6 +139,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					ipAddress,
 					flatten(req.headers),
 					captchaConfig,
+					score,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
@@ -276,9 +292,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			let score: number | undefined;
+
 			if (sessionId) {
 				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
-				if (!sessionRecord) {
+				if (
+					!sessionRecord ||
+					(sessionRecord && sessionRecord.captchaType !== CaptchaType.pow)
+				) {
 					return next(
 						new ProsopoApiError("API.BAD_REQUEST", {
 							context: {
@@ -290,6 +311,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
+				const tokenRecord = await tasks.db.getFrictionlessTokenRecordByTokenId(
+					sessionRecord.tokenId,
+				);
+				score = tokenRecord?.score;
 			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
 				// Throw an error
 				return next(
@@ -332,6 +357,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				challenge.providerSignature,
 				getIPAddress(req.ip || "").bigInt(),
 				flatten(req.headers),
+				score,
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
@@ -454,10 +480,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 				// Check if the token has already been used
-				const isTokenUsed = await tasks.db.checkFrictionlessTokenRecord(token);
-				if (isTokenUsed) {
+				const existingToken =
+					await tasks.db.getFrictionlessTokenRecordByToken(token);
+
+				if (existingToken) {
 					tasks.logger.info("Token has already been used");
-					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(
+							existingToken._id as ObjectId,
+						),
+					);
 				}
 
 				const lScore = tasks.frictionlessManager.checkLangRules(
@@ -466,20 +498,31 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				const { baseBotScore, timestamp } = await getBotScore(token);
 
+				const botScore = baseBotScore + lScore;
+
+				const clientConfig = await tasks.db.getClientRecord(dapp);
+				const botThreshold =
+					clientConfig?.settings?.frictionlessThreshold ||
+					DEFAULT_FRICTIONLESS_THRESHOLD;
+
+				// Store the token
+				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
+					token,
+					score: botScore,
+					threshold: botThreshold,
+					...(lScore && { lScore }),
+				});
+
 				// If the timestamp is older than 10 minutes, send an image captcha
 				if (timestamp < Date.now() - TEN_MINUTES) {
 					tasks.logger.info(
 						"Timestamp is older than 10 minutes",
 						new Date(timestamp),
 					);
-					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+					);
 				}
-
-				const botScore = baseBotScore + lScore;
-				const clientConfig = await tasks.db.getClientRecord(dapp);
-				const botThreshold =
-					clientConfig?.settings?.frictionlessThreshold ||
-					DEFAULT_FRICTIONLESS_THRESHOLD;
 
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
@@ -487,27 +530,29 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					ipAddress,
 					dapp,
 				);
-				if (isIpBlocked)
-					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+				if (isIpBlocked) {
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+					);
+				}
 
 				// Check if the user is blocked
 				const isUserBlocked = await tasks.frictionlessManager.checkUserRules(
 					user,
 					dapp,
 				);
-				if (isUserBlocked)
-					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+				if (isUserBlocked) {
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+					);
+				}
 
 				// If the bot score is greater than the threshold, send an image captcha
-				if (Number(botScore) > botThreshold)
-					return res.json(tasks.frictionlessManager.sendImageCaptcha());
-
-				// Store the token
-				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
-					token,
-					score: botScore,
-					threshold: botThreshold,
-				});
+				if (Number(botScore) > botThreshold) {
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+					);
+				}
 
 				const response =
 					await tasks.frictionlessManager.sendPowCaptcha(tokenId);

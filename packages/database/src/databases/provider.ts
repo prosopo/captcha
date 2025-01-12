@@ -46,6 +46,7 @@ import {
 	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
+	type PendingCaptchaRequestMongoose,
 	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
@@ -78,6 +79,7 @@ import type {
 } from "@prosopo/types-database";
 import type { DeleteResult } from "mongodb";
 import type { ObjectId } from "mongoose";
+import { bigint, string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -493,7 +495,7 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's captcha solution commitment
 	 */
-	async storeDappUserSolution(
+	async storeUserImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void> {
@@ -539,6 +541,8 @@ export class ProviderDatabase
 	 * @param difficulty
 	 * @param providerSignature
 	 * @param ipAddress
+	 * @param headers
+	 * @param score
 	 * @param serverChecked
 	 * @param userSubmitted
 	 * @param storedStatus
@@ -552,6 +556,7 @@ export class ProviderDatabase
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		score?: number,
 		serverChecked = false,
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -571,6 +576,7 @@ export class ProviderDatabase
 			providerSignature,
 			userSignature,
 			lastUpdatedTimestamp: Date.now(),
+			score,
 		};
 
 		try {
@@ -911,17 +917,31 @@ export class ProviderDatabase
 		return doc._id;
 	}
 
+	/** Get a frictionless token record */
+	async getFrictionlessTokenRecordByTokenId(
+		tokenId: ObjectId,
+	): Promise<FrictionlessTokenRecord | undefined> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		const doc =
+			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
+				filter,
+			);
+		return doc ? doc : undefined;
+	}
+
 	/**
 	 * Check if a frictionless token record exists.
 	 * Used to ensure that a token is not used more than once.
 	 */
-	async checkFrictionlessTokenRecord(token: string): Promise<boolean> {
+	async getFrictionlessTokenRecordByToken(
+		token: string,
+	): Promise<FrictionlessTokenRecord | undefined> {
 		const filter: Pick<FrictionlessTokenRecord, "token"> = { token };
 		const record =
 			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
 				filter,
 			);
-		return !!record;
+		return record || undefined;
 	}
 
 	/**
@@ -962,30 +982,34 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's pending record
 	 */
-	async storeDappUserPending(
+	async storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		headers: RequestHeaders,
+		score?: number,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.storeDappUserPending.name,
+					failedFuncName: this.storePendingImageCommitment.name,
 					requestHash,
 				},
 			});
 		}
-		const pendingRecord = {
+		const pendingRecord: PendingCaptchaRequestMongoose = {
 			accountId: userAccount,
 			pending: true,
 			salt,
 			requestHash,
 			deadlineTimestamp,
-			requestedAtTimestamp,
+			requestedAtTimestamp: new Date(requestedAtTimestamp),
+			headers,
 			ipAddress,
+			score,
 		};
 		await this.tables?.pending.updateOne(
 			{ requestHash: requestHash },
@@ -997,12 +1021,15 @@ export class ProviderDatabase
 	/**
 	 * @description Get a Dapp user's pending record
 	 */
-	async getDappUserPending(
+	async getPendingImageCommitment(
 		requestHash: string,
 	): Promise<PendingCaptchaRequest> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
-				context: { failedFuncName: this.getDappUserPending.name, requestHash },
+				context: {
+					failedFuncName: this.getPendingImageCommitment.name,
+					requestHash,
+				},
 			});
 		}
 		// @ts-ignore
@@ -1018,18 +1045,21 @@ export class ProviderDatabase
 		}
 
 		throw new ProsopoEnvError("DATABASE.PENDING_RECORD_NOT_FOUND", {
-			context: { failedFuncName: this.getDappUserPending.name, requestHash },
+			context: {
+				failedFuncName: this.getPendingImageCommitment.name,
+				requestHash,
+			},
 		});
 	}
 
 	/**
 	 * @description Mark a pending request as used
 	 */
-	async updateDappUserPendingStatus(requestHash: string): Promise<void> {
+	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.updateDappUserPendingStatus.name,
+					failedFuncName: this.updatePendingImageCommitmentStatus.name,
 					requestHash,
 				},
 			});
