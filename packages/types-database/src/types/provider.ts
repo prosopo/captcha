@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
+import { CaptchaType } from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaConfig,
@@ -39,7 +40,6 @@ import {
 	type Timestamp,
 	TimestampSchema,
 } from "@prosopo/types";
-import type { DeleteResult } from "mongodb";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
@@ -49,6 +49,7 @@ import {
 	bigint,
 	boolean,
 	nativeEnum,
+	number,
 	object,
 	string,
 	type infer as zInfer,
@@ -99,6 +100,7 @@ export interface StoredCaptcha {
 	serverChecked: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
+	score?: number;
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -128,6 +130,7 @@ export const UserCommitmentSchema = object({
 	storedAtTimestamp: TimestampSchema.optional(),
 	requestedAtTimestamp: TimestampSchema,
 	lastUpdatedTimestamp: TimestampSchema.optional(),
+	score: number().optional(),
 }) satisfies ZodType<UserCommitment>;
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -285,7 +288,7 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-type PendingCaptchaRequestMongoose = Omit<
+export type PendingCaptchaRequestMongoose = Omit<
 	PendingCaptchaRequest,
 	"requestedAtTimestamp"
 > & {
@@ -301,6 +304,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
 	ipAddress: { type: BigInt, required: true },
 	headers: { type: Object, required: true },
+	score: { type: Number, required: false },
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -348,6 +352,7 @@ export type FrictionlessToken = {
 	token: string;
 	score: number;
 	threshold: number;
+	lScore?: number;
 };
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
@@ -361,6 +366,7 @@ export const FrictionlessTokenRecordSchema =
 		token: { type: String, required: true, unique: true },
 		score: { type: Number, required: true },
 		threshold: { type: Number, required: true },
+		lScore: { type: Number, required: false },
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 	});
 
@@ -370,6 +376,7 @@ export type Session = {
 	sessionId: string;
 	createdAt: Date;
 	tokenId: ObjectId;
+	captchaType: CaptchaType;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -380,6 +387,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	tokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 	},
+	captchaType: { type: String, enum: CaptchaType, required: true },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
@@ -475,12 +483,12 @@ export interface IProviderDatabase extends IDatabase {
 		datasetId: Hash | string | Uint8Array,
 	): Promise<DatasetBase>;
 
-	storeDappUserSolution(
+	storeUserImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void>;
 
-	storeDappUserPending(
+	storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
@@ -488,11 +496,14 @@ export interface IProviderDatabase extends IDatabase {
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		score?: number,
 	): Promise<void>;
 
-	getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>;
+	getPendingImageCommitment(
+		requestHash: string,
+	): Promise<PendingCaptchaRequest>;
 
-	updateDappUserPendingStatus(requestHash: string): Promise<void>;
+	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
 
 	getAllCaptchasByDatasetId(
 		datasetId: string,
@@ -584,6 +595,7 @@ export interface IProviderDatabase extends IDatabase {
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		score?: number,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,
@@ -609,7 +621,13 @@ export interface IProviderDatabase extends IDatabase {
 		tokenRecord: FrictionlessToken,
 	): Promise<ObjectId>;
 
-	checkFrictionlessTokenRecord(token: string): Promise<boolean>;
+	getFrictionlessTokenRecordByTokenId(
+		tokenId: ObjectId,
+	): Promise<FrictionlessTokenRecord | undefined>;
+
+	getFrictionlessTokenRecordByToken(
+		token: string,
+	): Promise<FrictionlessTokenRecord | undefined>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 

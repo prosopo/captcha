@@ -173,6 +173,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.datasetId]: union([string(), array(number())]),
+	[ApiParams.sessionId]: string().optional(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -221,6 +222,7 @@ export interface PendingCaptchaRequest {
 	requestedAtTimestamp: number; // unix timestamp
 	ipAddress: bigint;
 	headers: RequestHeaders;
+	score?: number;
 }
 
 export interface UpdateProviderClientsResponse extends ApiResponse {

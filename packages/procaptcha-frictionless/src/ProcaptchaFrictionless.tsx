@@ -52,6 +52,7 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 		userAccount.account.address,
 	);
+	console.log("captcha", captcha);
 
 	return {
 		captchaType: captcha.captchaType,
@@ -83,6 +84,8 @@ export const ProcaptchaFrictionless = ({
 					sessionId: result.sessionId,
 					userAccount: result.userAccount,
 				};
+
+				console.log("frictionlessState", frictionlessState);
 
 				if (result.captchaType === "image") {
 					setComponentToRender(

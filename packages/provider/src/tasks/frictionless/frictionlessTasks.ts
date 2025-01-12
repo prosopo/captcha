@@ -12,21 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
+import { CaptchaType } from "@prosopo/types";
 import {
 	ApiParams,
-	type CaptchaResult,
-	CaptchaStatus,
 	type GetFrictionlessCaptchaResponse,
-	POW_SEPARATOR,
-	type PoWCaptcha,
-	type PoWChallengeId,
 	type ProsopoConfigOutput,
-	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase, Session } from "@prosopo/types-database";
-import { at, verifyRecency } from "@prosopo/util";
 import type { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
@@ -66,9 +58,28 @@ export class FrictionlessManager {
 		return checkLangRules(this.config, acceptLanguage);
 	}
 
-	sendImageCaptcha(): GetFrictionlessCaptchaResponse {
+	async createSession(
+		tokenId: ObjectId,
+		captchaType: CaptchaType,
+	): Promise<Session> {
+		const sessionRecord: Session = {
+			sessionId: uuidv4(),
+			createdAt: new Date(),
+			tokenId: tokenId,
+			captchaType,
+		};
+
+		await this.db.storeSessionRecord(sessionRecord);
+		return sessionRecord;
+	}
+
+	async sendImageCaptcha(
+		tokenId: ObjectId,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		const sessionRecord = await this.createSession(tokenId, CaptchaType.image);
 		return {
-			[ApiParams.captchaType]: "image",
+			[ApiParams.captchaType]: CaptchaType.image,
+			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};
 	}
@@ -76,16 +87,9 @@ export class FrictionlessManager {
 	async sendPowCaptcha(
 		tokenId: ObjectId,
 	): Promise<GetFrictionlessCaptchaResponse> {
-		const sessionRecord: Session = {
-			sessionId: uuidv4(),
-			createdAt: new Date(),
-			tokenId: tokenId,
-		};
-
-		await this.db.storeSessionRecord(sessionRecord);
-
+		const sessionRecord = await this.createSession(tokenId, CaptchaType.pow);
 		return {
-			[ApiParams.captchaType]: "pow",
+			[ApiParams.captchaType]: CaptchaType.pow,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};

@@ -91,11 +91,13 @@ export class ImgCaptchaManager {
 		ipAddress: Address4 | Address6,
 		headers: RequestHeaders,
 		captchaConfig: CaptchaConfig,
+		score?: number,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
 		timestamp: number;
 		signedRequestHash: string;
+		score?: number;
 	}> {
 		const dataset = await this.db.getDatasetDetails(datasetId);
 		if (!dataset) {
@@ -120,7 +122,7 @@ export class ImgCaptchaManager {
 		}
 
 		const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount);
-		console.log("solved", solved);
+
 		let unsolved: Captcha[] = [];
 		if (unsolvedCount) {
 			unsolved = await this.getCaptchaWithProof(
@@ -149,7 +151,7 @@ export class ImgCaptchaManager {
 			.reduce((a, b) => a + b, 0);
 		const deadlineTs = timeLimit + currentTime;
 
-		await this.db.storeDappUserPending(
+		await this.db.storePendingImageCommitment(
 			userAccount,
 			requestHash,
 			salt,
@@ -157,6 +159,7 @@ export class ImgCaptchaManager {
 			currentTime,
 			ipAddress.bigInt(),
 			headers,
+			score,
 		);
 		return {
 			captchas,
@@ -228,7 +231,7 @@ export class ImgCaptchaManager {
 			verified: false,
 		};
 
-		const pendingRecord = await this.db.getDappUserPending(requestHash);
+		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
 
 		const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
 		const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
@@ -254,7 +257,7 @@ export class ImgCaptchaManager {
 
 			// Only do stuff if the request is in the local DB
 			// prevent this request hash from being used twice
-			await this.db.updateDappUserPendingStatus(requestHash);
+			await this.db.updatePendingImageCommitmentStatus(requestHash);
 			const commit: UserCommitment = {
 				id: commitmentId,
 				userAccount: userAccount,
@@ -268,8 +271,9 @@ export class ImgCaptchaManager {
 				requestedAtTimestamp: timestamp,
 				ipAddress,
 				headers,
+				score: pendingRecord.score,
 			};
-			await this.db.storeDappUserSolution(receivedCaptchas, commit);
+			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
 			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
 				response = {
