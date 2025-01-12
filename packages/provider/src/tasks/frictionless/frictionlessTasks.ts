@@ -16,10 +16,10 @@ import { CaptchaType } from "@prosopo/types";
 import {
 	ApiParams,
 	type GetFrictionlessCaptchaResponse,
+	type IPAddress,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase, Session } from "@prosopo/types-database";
-import type { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { checkIpRules } from "../../rules/ip.js";
@@ -41,10 +41,7 @@ export class FrictionlessManager {
 		this.db = db;
 	}
 
-	async checkIpRules(
-		ipAddress: Address4 | Address6,
-		dapp: string,
-	): Promise<boolean> {
+	async checkIpRules(ipAddress: IPAddress, dapp: string): Promise<boolean> {
 		const rule = await checkIpRules(this.db, ipAddress, dapp);
 		return !!rule;
 	}

@@ -24,6 +24,7 @@ import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import {
 	ApiPathRateLimits,
+	ProsopoCaptchaCountConfigSchema,
 	ProviderDefaultRateLimits,
 } from "../provider/index.js";
 import {
@@ -114,27 +115,6 @@ export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
 
 export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>;
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>;
-
-export const ProsopoCaptchaCountConfigSchema = object({
-	solved: object({
-		count: number().positive(),
-	})
-		.optional()
-		.default({ count: 1 }),
-	unsolved: object({
-		count: number().nonnegative(),
-	})
-		.optional()
-		.default({ count: 1 }),
-});
-
-export type ProsopoCaptchaCountConfigSchemaInput = input<
-	typeof ProsopoCaptchaCountConfigSchema
->;
-
-export type ProsopoCaptchaCountConfigSchemaOutput = output<
-	typeof ProsopoCaptchaCountConfigSchema
->;
 
 export const ProsopoImageServerConfigSchema = object({
 	baseURL: string().url(),

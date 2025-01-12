@@ -1485,7 +1485,7 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Check if a request has a blocking rule associated with it
+	 * @description Store IP blocking rule records
 	 */
 	async storeIPBlockRuleRecords(rules: IPBlockRuleRecord[]) {
 		await this.tables?.ipblockrules.bulkWrite(
@@ -1497,6 +1497,21 @@ export class ProviderDatabase
 				},
 			})),
 		);
+	}
+
+	/**
+	 * @description Remove IP blocking rule records
+	 */
+	async removeIPBlockRuleRecords(ipAddresses: bigint[], dappAccount?: string) {
+		const filter: {
+			[key in keyof Pick<IPBlockRuleRecord, "ip">]: { $in: number[] };
+		} & {
+			[key in keyof Pick<IPBlockRuleRecord, "dappAccount">]?: string; // Optional `dappAccount` key
+		} = { ip: { $in: ipAddresses.map(Number) } };
+		if (dappAccount) {
+			filter.dappAccount = dappAccount;
+		}
+		await this.tables?.ipblockrules.deleteMany(filter);
 	}
 
 	/**
@@ -1532,5 +1547,25 @@ export class ProviderDatabase
 				},
 			})),
 		);
+	}
+
+	/**
+	 * @description Remove user blocking rule records
+	 */
+	async removeUserBlockRuleRecords(
+		userAccounts: string[],
+		dappAccount?: string,
+	) {
+		const filter: {
+			[key in keyof Pick<UserAccountBlockRule, "userAccount">]: {
+				$in: string[];
+			};
+		} & {
+			[key in keyof Pick<UserAccountBlockRule, "dappAccount">]?: string; // Optional `dappAccount` key
+		} = { userAccount: { $in: userAccounts } };
+		if (dappAccount) {
+			filter.dappAccount = dappAccount;
+		}
+		await this.tables?.userblockrules.deleteMany(filter);
 	}
 }

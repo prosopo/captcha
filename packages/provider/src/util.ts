@@ -15,7 +15,11 @@ import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
-import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
+import {
+	type IPAddress,
+	type ScheduledTaskNames,
+	ScheduledTaskStatus,
+} from "@prosopo/types";
 import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
@@ -57,7 +61,7 @@ export async function checkIfTaskIsRunning(
 		taskName,
 		ScheduledTaskStatus.Running,
 	);
-	const twoMinutesAgo = new Date().getTime() - 1000 * 60 * 2
+	const twoMinutesAgo = new Date().getTime() - 1000 * 60 * 2;
 	// If the task is running and the task was started within the last 2 minutes
 	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
 	if (runningTask && runningTask.datetime > twoMinutesAgo) {
@@ -70,7 +74,7 @@ export async function checkIfTaskIsRunning(
 	return false;
 }
 
-export const getIPAddress = (ipAddressString: string): Address4 | Address6 => {
+export const getIPAddress = (ipAddressString: string): IPAddress => {
 	try {
 		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
 			return new Address4(ipAddressString);

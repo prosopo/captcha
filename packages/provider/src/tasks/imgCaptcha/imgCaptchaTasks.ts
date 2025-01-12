@@ -23,12 +23,12 @@ import {
 } from "@prosopo/datasets";
 import {
 	type Captcha,
-	type CaptchaConfig,
 	type CaptchaSolution,
 	CaptchaStatus,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
 	type Hash,
+	type IPAddress,
 	type ImageVerificationResponse,
 	type PendingCaptchaRequest,
 	type ProsopoCaptchaCountConfigSchemaOutput,
@@ -88,9 +88,9 @@ export class ImgCaptchaManager {
 	async getRandomCaptchasAndRequestHash(
 		datasetId: Hash,
 		userAccount: string,
-		ipAddress: Address4 | Address6,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
-		captchaConfig: CaptchaConfig,
+		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		score?: number,
 	): Promise<{
 		captchas: Captcha[];
