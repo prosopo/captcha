@@ -41,6 +41,9 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
 
 # listen to docker events for containers starting+ending
 [sources.docker]
@@ -100,6 +103,9 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
 
 [sources.caddy]
 type = "docker_logs"
@@ -135,6 +141,9 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
 
 [sources.watchtower]
 type = "docker_logs"
@@ -163,3 +172,6 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch

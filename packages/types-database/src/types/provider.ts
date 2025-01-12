@@ -15,8 +15,9 @@
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import { CaptchaType } from "@prosopo/types";
 import {
+	type BlockRule,
+	BlockRuleType,
 	type Captcha,
-	type CaptchaConfig,
 	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaSolutionSchema,
@@ -33,6 +34,7 @@ import {
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
+	ProsopoCaptchaCountConfigSchema,
 	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -392,18 +394,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 
-export type BlockRule = {
-	global: boolean;
-	type: BlockRuleType;
-	hardBlock: boolean;
-	captchaConfig?: CaptchaConfig;
-};
-
-export enum BlockRuleType {
-	ipAddress = "ipAddress",
-	userAccount = "userAccount",
-}
-
 export interface IPAddressBlockRule extends BlockRule {
 	ip: number;
 	dappAccount?: string;
@@ -640,10 +630,17 @@ export interface IProviderDatabase extends IDatabase {
 
 	storeIPBlockRuleRecords(rules: IPAddressBlockRule[]): Promise<void>;
 
+	removeIPBlockRuleRecords(ips: bigint[], dappAccount?: string): Promise<void>;
+
 	getUserBlockRuleRecord(
 		userAccount: string,
 		dappAccount: string,
 	): Promise<UserAccountBlockRuleRecord | undefined>;
 
 	storeUserBlockRuleRecords(rules: UserAccountBlockRule[]): Promise<void>;
+
+	removeUserBlockRuleRecords(
+		users: string[],
+		dappAccount?: string,
+	): Promise<void>;
 }

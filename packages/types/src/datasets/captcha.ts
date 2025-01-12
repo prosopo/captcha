@@ -161,21 +161,6 @@ export interface PoWCaptchaUser extends PoWCaptcha {
 	dappAccount: DappAccount;
 }
 
-export type CaptchaConfig = {
-	solved: {
-		count: number;
-	};
-	unsolved: {
-		count: number;
-	};
-};
-
-export type CaptchaSolutionConfig = {
-	requiredNumberOfSolutions: number;
-	solutionWinningPercentage: number;
-	captchaBlockRecency: number;
-};
-
 export const CaptchaSchema = object({
 	captchaId: union([string(), zUndefined()]),
 	captchaContentId: union([string(), zUndefined()]),

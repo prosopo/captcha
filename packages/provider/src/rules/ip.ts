@@ -11,12 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { BlockRule, IProviderDatabase } from "@prosopo/types-database";
-import type { Address4, Address6 } from "ip-address";
+
+import type { BlockRule, IPAddress } from "@prosopo/types";
+import type { IProviderDatabase } from "@prosopo/types-database";
 
 export const checkIpRules = async (
 	db: IProviderDatabase,
-	ipAddress: Address4 | Address6,
+	ipAddress: IPAddress,
 	dapp: string,
 ): Promise<BlockRule | undefined> => {
 	const rule = await db.getIPBlockRuleRecord(ipAddress.bigInt());
