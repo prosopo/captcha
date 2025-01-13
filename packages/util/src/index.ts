@@ -15,7 +15,6 @@ export * from "./util.js";
 export * from "./ofLen.js";
 export * from "./lodash.js";
 export * from "./isMain.js";
-export * from "./canvas.js";
 export * from "./solverService.js";
 export * from "./table.js";
 export * from "./url.js";

@@ -16,9 +16,9 @@ import path from "node:path";
 import { BN } from "@polkadot/util";
 import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
-import { generateMnemonic, getPairAsync } from "@prosopo/contract";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
+import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	type IDappAccount,
 	type IProviderAccount,

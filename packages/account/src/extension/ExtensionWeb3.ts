@@ -1,6 +1,3 @@
-import { web3Enable } from "@polkadot/extension-dapp";
-import type { InjectedExtension } from "@polkadot/extension-inject/types";
-import { ProsopoError } from "@prosopo/common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +11,14 @@ import { ProsopoError } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { InjectedExtension } from "@polkadot/extension-inject/types";
+import { ProsopoError } from "@prosopo/common";
 import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { Extension } from "./Extension.js";
+
+const web3Loader = async () =>
+	(await import("@polkadot/extension-dapp")).web3Enable;
 
 /**
  * Class for interfacing with web3 accounts.
@@ -33,6 +36,7 @@ export class ExtensionWeb3 extends Extension {
 		}
 
 		// enable access to all extensions
+		const web3Enable = await web3Loader();
 		const extensions: InjectedExtension[] = await web3Enable(dappName);
 		if (extensions.length === 0) {
 			throw new ProsopoError("WIDGET.NO_EXTENSION_FOUND");

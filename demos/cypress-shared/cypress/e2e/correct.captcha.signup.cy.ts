@@ -15,8 +15,8 @@
 import "@cypress/xpath";
 import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,

@@ -1,8 +1,8 @@
 {
-	"name": "@prosopo/server",
+	"name": "@prosopo/keyring",
 	"version": "2.2.3",
-	"description": "NodeJS package for server side communication with the prosopo captcha client",
-	"main": "./dist/index.js",
+	"description": "Keypair generator for Prosopo",
+	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -22,23 +22,20 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/prosopo/captcha.git"
+		"url": "git+ssh://git@github.com/prosopo/types.git"
 	},
-	"author": "PROSOPO LIMITED",
+	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false,
 	"dependencies": {
 		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
-		"@prosopo/api": "2.2.3",
+		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/common": "2.2.3",
-		"@prosopo/keyring": "2.2.3",
-		"@prosopo/types": "2.2.3",
-		"express": "4.21.1"
+		"@prosopo/types": "2.2.3"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.2.3",
@@ -51,5 +48,6 @@
 		"typescript": "5.6.2",
 		"vite": "5.4.6",
 		"vitest": "2.1.1"
-	}
+	},
+	"sideEffects": false
 }
