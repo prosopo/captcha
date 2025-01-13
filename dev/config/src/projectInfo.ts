@@ -57,8 +57,6 @@ export const getCliPkgDir = () => `${getPackagesDir()}/cli`;
 
 export const getCommonPkgDir = () => `${getPackagesDir()}/common`;
 
-export const getContractPkgDir = () => `${getPackagesDir()}/contract`;
-
 export const getDatabasePkgDir = () => `${getPackagesDir()}/database`;
 
 export const getDatasetsPkgDir = () => `${getPackagesDir()}/datasets`;
@@ -91,8 +89,6 @@ export const getProcaptchaReactPkgDir = () =>
 export const getProviderPkgDir = () => `${getPackagesDir()}/provider`;
 
 export const getServerPkgDir = () => `${getPackagesDir()}/server`;
-
-export const getTxPkgDir = () => `${getPackagesDir()}/tx`;
 
 export const getTypesPkgDir = () => `${getPackagesDir()}/types`;
 
