@@ -11,9 +11,6 @@
 			"path": "../../packages/common"
 		},
 		{
-			"path": "../../packages/contract"
-		},
-		{
 			"path": "../../packages/dotenv"
 		},
 		{
