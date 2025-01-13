@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
@@ -61,7 +62,10 @@ export async function checkIfTaskIsRunning(
 		taskName,
 		ScheduledTaskStatus.Running,
 	);
-	if (runningTask) {
+	const twoMinutesAgo = new Date().getTime() - 1000 * 60 * 2;
+	// If the task is running and the task was started within the last 2 minutes
+	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
+	if (runningTask && runningTask.datetime > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
 			runningTask._id as ObjectId,
 			ScheduledTaskStatus.Completed,

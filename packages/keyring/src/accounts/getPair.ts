@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiPromise } from "@polkadot/api/promise/Api";
 import { Keyring } from "@polkadot/keyring";
 import type { KeyringPair, KeyringPair$Json } from "@polkadot/keyring/types";
-import type { AccountId } from "@polkadot/types/interfaces";
 import { cryptoWaitReady } from "@polkadot/util-crypto";
 import { mnemonicValidate } from "@polkadot/util-crypto/mnemonic";
 import type { KeypairType } from "@polkadot/util-crypto/types";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoEnvError } from "@prosopo/common";
-import { NetworkPairTypeSchema, type PolkadotSecretJSON } from "@prosopo/types";
+import type { PolkadotSecretJSON } from "@prosopo/types";
 
 export async function getPairAsync(
 	secret?: string | KeyringPair$Json | PolkadotSecretJSON,
@@ -73,24 +71,4 @@ export function getPair(
 	} else {
 		throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED");
 	}
-}
-
-export function getReadOnlyPair(
-	api: ApiPromise,
-	userAccount?: string,
-): KeyringPair {
-	// 5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM is the all zero address
-	return getPair(
-		undefined,
-		userAccount || getZeroAddress(api).toHex(),
-		NetworkPairTypeSchema.parse("sr25519"),
-		api.registry.chainSS58,
-	);
-}
-
-export function getZeroAddress(api: ApiPromise): AccountId {
-	return api.registry.createType(
-		"AccountId",
-		new Uint8Array(new Array(32).fill(0)),
-	);
 }

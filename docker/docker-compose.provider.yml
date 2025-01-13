@@ -146,26 +146,6 @@ services:
             retries: 3
             start_period: 30s
             timeout: 10s
-    watchtower:
-        container_name: watchtower
-        profiles:
-            - production
-            - staging
-        image: containrrr/watchtower
-        command: ["--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30", "--include-restarting"]
-        labels:
-            - "vector.watchtower=true" # enable logging as a watchtower
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
-        env_file:
-            - ../.env.${NODE_ENV}
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
     vector:
         container_name: vector
         profiles:
