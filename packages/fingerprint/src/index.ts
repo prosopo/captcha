@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import FingerprintJS from "@fingerprintjs/fingerprintjs";
+const FingerprintJSImport = async () =>
+	(await import("@fingerprintjs/fingerprintjs")).default;
 
 export const getFingerprint = async () => {
+	const FingerprintJS = await FingerprintJSImport();
 	const fp = await FingerprintJS.load();
 	const result = await fp.get();
 	return result.visitorId;
