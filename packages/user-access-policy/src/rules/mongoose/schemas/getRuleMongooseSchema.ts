@@ -1,5 +1,5 @@
-import { rulePerformanceMongooseIndexes } from "@rules/mongoose/indexes/performance/rulePerformanceMongooseIndexes.js";
-import { ruleUniqueMongooseIndexes } from "@rules/mongoose/indexes/unique/ruleUniqueMongooseIndexes.js";
+import { rulePerformanceMongooseIndexes } from "@rules/mongoose/indexes/rulePerformanceMongooseIndexes.js";
+import { ruleUniqueMongooseIndexes } from "@rules/mongoose/indexes/ruleUniqueMongooseIndexes.js";
 import { ruleMongooseSchema } from "@rules/mongoose/schemas/ruleMongooseSchema.js";
 import type { Rule } from "@rules/rule/rule.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
