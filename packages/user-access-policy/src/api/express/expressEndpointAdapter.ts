@@ -33,7 +33,7 @@ class ExpressEndpointAdapter {
 		} catch (error) {
 			this.logger.error(error);
 
-			response.status(400).send("An internal server error occurred.");
+			response.status(500).send("An internal server error occurred.");
 		}
 	}
 }
