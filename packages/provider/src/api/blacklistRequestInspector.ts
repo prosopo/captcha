@@ -13,13 +13,13 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
-import type { RequestInspector } from "@prosopo/user-access-policy";
+import type { BlacklistInspector } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getIPAddress } from "../util.js";
 
 class BlacklistRequestInspector {
 	public constructor(
-		private readonly requestInspector: RequestInspector,
+		private readonly blacklistInspector: BlacklistInspector,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 		private readonly logger: Logger,
 	) {}
@@ -71,12 +71,17 @@ class BlacklistRequestInspector {
 		await this.environmentReadinessWaiter();
 
 		try {
-			const ipAddress = getIPAddress(rawIp);
+			const userIpAddress = getIPAddress(rawIp);
 
-			return await this.requestInspector.shouldAbortRequest(
-				ipAddress,
+			const { userId, clientId } = this.extractIdsFromRequest(
 				requestHeaders,
 				requestBody,
+			);
+
+			return await this.blacklistInspector.isUserBlacklisted(
+				clientId,
+				userIpAddress,
+				userId,
 			);
 		} catch (err) {
 			this.logger.error("Block Middleware Error:", err);
@@ -87,6 +92,35 @@ class BlacklistRequestInspector {
 
 	protected isApiUnrelatedRoute(url: string): boolean {
 		return !url.includes(ApiPrefix);
+	}
+
+	protected extractIdsFromRequest(
+		requestHeaders: Record<string, unknown>,
+		requestBody: Record<string, unknown>,
+	): {
+		userId: string;
+		clientId: string;
+	} {
+		const userId =
+			this.getObjectValue(requestHeaders, "Prosopo-User") ||
+			this.getObjectValue(requestBody, "user") ||
+			"";
+		const clientId =
+			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
+			this.getObjectValue(requestBody, "dapp") ||
+			"";
+
+		return {
+			userId: "string" === typeof userId ? userId : "",
+			clientId: "string" === typeof clientId ? clientId : "",
+		};
+	}
+
+	protected getObjectValue(
+		object: Record<string, unknown>,
+		key: string,
+	): unknown {
+		return object[key];
 	}
 }
 

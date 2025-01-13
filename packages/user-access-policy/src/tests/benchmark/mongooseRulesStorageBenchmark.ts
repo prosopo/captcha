@@ -1,3 +1,4 @@
+import { MongooseConnectionCleaner } from "./connectionCleaner/mongooseConnectionCleaner.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 // limitations under the License.
 import { RulesStorageBenchmark } from "./rulesStorageBenchmark.js";
 import { MongooseRulesStorageFactory } from "./storageFactory/mongooseRulesStorageFactory.js";
-import { MongooseConnectionCleaner } from "./connectionCleaner/mongooseConnectionCleaner.js";
 
 const rulesStorageFactory = new MongooseRulesStorageFactory();
 const connectionCleaner = new MongooseConnectionCleaner();

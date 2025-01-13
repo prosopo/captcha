@@ -13,7 +13,7 @@
 // limitations under the License.
 import { getLoggerDefault } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { createRequestInspector } from "@prosopo/user-access-policy";
+import { createBlacklistInspector } from "@prosopo/user-access-policy";
 import { BlacklistRequestInspector } from "./blacklistRequestInspector.js";
 
 export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
@@ -26,10 +26,10 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	const environmentReadinessWaiter =
 		providerEnvironment.isReady.bind(providerEnvironment);
 
-	const requestInspector = createRequestInspector(userAccessRulesStorage);
+	const blacklistInspector = createBlacklistInspector(userAccessRulesStorage);
 
 	const blacklistRequestInspector = new BlacklistRequestInspector(
-		requestInspector,
+		blacklistInspector,
 		environmentReadinessWaiter,
 		logger,
 	);

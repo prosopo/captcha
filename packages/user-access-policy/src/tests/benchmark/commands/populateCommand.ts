@@ -1,3 +1,5 @@
+import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import { CommandBase } from "@tests/benchmark/commands/commandBase.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +15,6 @@
 // limitations under the License.
 import { Address4, Address6 } from "ip-address";
 import type { ArgumentsCamelCase, Argv } from "yargs";
-import {CommandBase} from "@tests/benchmark/commands/commandBase.js";
-import type {RulesStorage} from "@rules/storage/rulesStorage.js";
 
 class PopulateCommand extends CommandBase {
 	public command = "populate";

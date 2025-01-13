@@ -1,3 +1,7 @@
+import { BlacklistRulesInspector } from "@rules/blacklistRulesInspector.js";
+import type { RuleRecord } from "@rules/storage/ruleRecord.js";
+import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
+import { Address4 } from "ip-address";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +16,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { Address4 } from "ip-address";
-import {RequestRulesInspector} from "@blacklist/inspector/requestRulesInspector.js";
-import {TestRulesStorage} from "@tests/rules/storage/testRulesStorage.js";
-import type {RuleRecord} from "@rules/storage/ruleRecord.js";
+import type { BlacklistInspector } from "../../blacklistInspector.js";
 
-describe("RequestRulesInspector", () => {
-	function createInspector(ruleRecords: RuleRecord[]): RequestRulesInspector {
+describe("BlacklistRulesInspector", () => {
+	function createInspector(ruleRecords: RuleRecord[]): BlacklistInspector {
 		const userAccessRulesStorage = new TestRulesStorage(ruleRecords);
-		return new RequestRulesInspector(userAccessRulesStorage);
+		return new BlacklistRulesInspector(userAccessRulesStorage);
 	}
 
-	it("shouldAbortRequestWhenRuleRecordContainsBlockedFlag", async () => {
+	it("blacklistedWhenRuleRecordContainsBlockedFlag", async () => {
 		// given
 		const accessRuleRecord: RuleRecord = {
 			isUserBlocked: true,
@@ -33,13 +34,13 @@ describe("RequestRulesInspector", () => {
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.shouldAbortRequest(new Address4("127.0.0.1"), {}, {});
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(true);
 	});
 
-	it("shouldAbortRequestWhenAnyRuleFromRuleRecordsContainsBlockedFlag", async () => {
+	it("blacklistedWhenAnyRuleFromRuleRecordsContainsBlockedFlag", async () => {
 		// given
 		const accessRuleRecordWithoutBlock: RuleRecord = {
 			isUserBlocked: false,
@@ -56,13 +57,13 @@ describe("RequestRulesInspector", () => {
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.shouldAbortRequest(new Address4("127.0.0.1"), {}, {});
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(true);
 	});
 
-	it("shouldNotAbortRequestWhenRuleRecordsDoNotContainBlockedFlag", async () => {
+	it("notBlacklistedWhenRuleRecordsDoNotContainBlockedFlag", async () => {
 		// given
 		const accessRuleRecordWithoutBlock: RuleRecord = {
 			isUserBlocked: false,
@@ -79,19 +80,19 @@ describe("RequestRulesInspector", () => {
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.shouldAbortRequest(new Address4("127.0.0.1"), {}, {});
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(false);
 	});
 
-	it("shouldNotAbortRequestWhenRuleRecordsMissing", async () => {
+	it("otBlacklistedWhenRuleRecordsMissing", async () => {
 		// given
 		const inspector = createInspector([]);
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.shouldAbortRequest(new Address4("127.0.0.1"), {}, {});
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(false);

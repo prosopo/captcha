@@ -1,3 +1,4 @@
+import { ruleIpV4MaskSchema } from "@rules/rule/ip/v4/mask/ruleIpV4MaskSchema.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { bigint, object, string } from "zod";
-import {ruleIpV4MaskSchema} from "@rules/rule/ip/v4/mask/ruleIpV4MaskSchema.js";
 
 const ruleIpV4Schema = object({
 	asNumeric: bigint(),

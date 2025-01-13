@@ -11,12 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { IPAddress } from "@prosopo/types";
 
-import {ImageCaptchaConfigResolver} from "@imageCaptchaConfig/resolver/imageCaptchaConfigResolver.js";
-import type {CaptchaConfigResolver} from "@imageCaptchaConfig/resolver/captchaConfigResolver.js";
+interface BlacklistInspector {
+	isUserBlacklisted(
+		clientId: string,
+		userIpAddress: IPAddress,
+		userId: string,
+	): Promise<boolean>;
+}
 
-const createImageCaptchaConfigResolver = (): CaptchaConfigResolver => {
-	return new ImageCaptchaConfigResolver();
-};
-
-export { createImageCaptchaConfigResolver };
+export type { BlacklistInspector };

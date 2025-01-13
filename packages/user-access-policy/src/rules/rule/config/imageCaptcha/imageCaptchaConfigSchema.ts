@@ -11,14 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { IPAddress } from "@prosopo/types";
+import { number, object } from "zod";
 
-interface RequestInspector {
-	shouldAbortRequest(
-		ipAddress: IPAddress,
-		requestHeaders: Record<string, unknown>,
-		requestBody: Record<string, unknown>,
-	): Promise<boolean>;
-}
+const imageCaptchaConfigSchema = object({
+	solvedCount: number().optional(),
+	unsolvedCount: number().optional(),
+});
 
-export type { RequestInspector };
+export { imageCaptchaConfigSchema };

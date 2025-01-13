@@ -11,23 +11,35 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { createRequestInspector } from "@blacklist/inspector/createRequestInspector.js";
-import type { RequestInspector } from "@blacklist/inspector/requestInspector.js";
 import { createExpressRuleRouter } from "@rules/api/createExpressRuleRouter.js";
 import { getExpressApiRuleRateLimits } from "@rules/api/getExpressApiRuleRateLimits.js";
-import type { Rule } from "@rules/rule/rule.js";
+import { BlacklistRulesInspector } from "@rules/blacklistRulesInspector.js";
+import { ImageCaptchaConfigRulesResolver } from "@rules/imageCaptchaConfigRulesResolver.js";
 import { createMongooseRulesStorage } from "@rules/mongoose/createMongooseRulesStorage.js";
 import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
+import type { Rule } from "@rules/rule/rule.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import {createImageCaptchaConfigResolver} from "@imageCaptchaConfig/resolver/createImageCaptchaConfigResolver.js";
+import type { BlacklistInspector } from "./blacklistInspector.js";
+
+const createBlacklistInspector = (
+	rulesStorage: RulesStorage,
+): BlacklistInspector => {
+	return new BlacklistRulesInspector(rulesStorage);
+};
+
+const createImageCaptchaConfigResolver = (
+	rulesStorage: RulesStorage,
+): ImageCaptchaConfigRulesResolver => {
+	return new ImageCaptchaConfigRulesResolver(rulesStorage);
+};
 
 export {
 	type Rule,
 	type RulesStorage,
-	type RequestInspector,
+	type BlacklistInspector,
 	createMongooseRulesStorage,
 	createImageCaptchaConfigResolver,
-	createRequestInspector,
+	createBlacklistInspector,
 	createExpressRuleRouter,
 	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,

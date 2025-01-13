@@ -1,3 +1,8 @@
+import { RulesMongooseStorage } from "@rules/mongoose/rulesMongooseStorage.js";
+import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
+import type { Rule } from "@rules/rule/rule.js";
+import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +17,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import mongoose, { type Model } from "mongoose";
-import type {RulesStorageFactory} from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
-import type {RulesStorage} from "@rules/storage/rulesStorage.js";
-import type {Rule} from "@rules/rule/rule.js";
-import {RulesMongooseStorage} from "@rules/mongoose/rulesMongooseStorage.js";
-import {getRuleMongooseSchema} from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
 
 class MongooseRulesStorageFactory implements RulesStorageFactory {
 	async createRulesStorage(dbUrl: string): Promise<RulesStorage> {

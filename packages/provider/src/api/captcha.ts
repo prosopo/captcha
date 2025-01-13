@@ -54,7 +54,11 @@ const TEN_MINUTES = 60 * 10 * 1000;
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 	const tasks = new Tasks(env);
-	const imageCaptchaConfigResolver = createImageCaptchaConfigResolver();
+
+	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
+	const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
+		userAccessRulesStorage,
+	);
 
 	/**
 	 * Provides a Captcha puzzle to a Dapp User
@@ -111,7 +115,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			}
 
 			const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
-				tasks.db.getUserAccessRulesStorage(),
 				env.config.captchas,
 				ipAddress,
 				user,

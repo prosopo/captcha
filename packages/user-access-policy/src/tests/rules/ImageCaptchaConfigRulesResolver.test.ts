@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
+import { ImageCaptchaConfigRulesResolver } from "@rules/imageCaptchaConfigRulesResolver.js";
+import type { RuleRecord } from "@rules/storage/ruleRecord.js";
+import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
 import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
-import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
-import { ImageCaptchaConfigResolver } from "@imageCaptchaConfig/resolver/imageCaptchaConfigResolver.js";
-import type { RuleRecord } from "@rules/storage/ruleRecord.js";
 
 describe("ImageCaptchaConfigResolver", () => {
-	const resolver = new ImageCaptchaConfigResolver();
-
 	it("resolvesFromUserAccessRule", async () => {
 		// given
 		const userAccessRuleRecord: RuleRecord = {
@@ -35,6 +33,9 @@ describe("ImageCaptchaConfigResolver", () => {
 		};
 
 		const userAccessRulesStorage = new TestRulesStorage([userAccessRuleRecord]);
+		const resolver = new ImageCaptchaConfigRulesResolver(
+			userAccessRulesStorage,
+		);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 			solved: { count: 2 },
@@ -43,7 +44,6 @@ describe("ImageCaptchaConfigResolver", () => {
 
 		// when
 		const resolvedConfig = await resolver.resolveConfig(
-			userAccessRulesStorage,
 			defaultConfig,
 			new Address4("127.0.0.1"),
 			"userId",
@@ -87,6 +87,9 @@ describe("ImageCaptchaConfigResolver", () => {
 			globalUserAccessRuleRecord,
 			clientUserAccessRuleRecord,
 		]);
+		const resolver = new ImageCaptchaConfigRulesResolver(
+			userAccessRulesStorage,
+		);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 			solved: { count: 2 },
@@ -95,7 +98,6 @@ describe("ImageCaptchaConfigResolver", () => {
 
 		// when
 		const resolvedConfig = await resolver.resolveConfig(
-			userAccessRulesStorage,
 			defaultConfig,
 			new Address4("127.0.0.1"),
 			"userId",
@@ -114,6 +116,9 @@ describe("ImageCaptchaConfigResolver", () => {
 	it("resolvesDefaultWhenNoUserAccessRulesFound", async () => {
 		// given
 		const userAccessRulesStorage = new TestRulesStorage([]);
+		const resolver = new ImageCaptchaConfigRulesResolver(
+			userAccessRulesStorage,
+		);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 			solved: { count: 2 },
@@ -122,7 +127,6 @@ describe("ImageCaptchaConfigResolver", () => {
 
 		// when
 		const resolvedConfig = await resolver.resolveConfig(
-			userAccessRulesStorage,
 			defaultConfig,
 			new Address4("127.0.0.1"),
 			"userId",

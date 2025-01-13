@@ -1,3 +1,4 @@
+import type { ApiEndpoint } from "@api/apiEndpoint.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,6 @@
 import type { Logger } from "@prosopo/common";
 import type { Request, Response } from "express";
 import type { ZodType } from "zod";
-import type {ApiEndpoint} from "@api/apiEndpoint.js";
 
 class ExpressEndpointAdapter {
 	public constructor(private readonly logger: Logger) {}

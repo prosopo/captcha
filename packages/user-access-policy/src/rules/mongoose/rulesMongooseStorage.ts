@@ -1,3 +1,12 @@
+import { ProsopoError } from "@prosopo/common";
+import type { IPAddress } from "@prosopo/types";
+import type { RuleMongooseRecord } from "@rules/mongoose/ruleMongooseRecord.js";
+import { RuleIpVersion } from "@rules/rule/ip/ruleIpVersion.js";
+import type { Rule } from "@rules/rule/rule.js";
+import type { SearchRuleFilterSettings } from "@rules/storage/filters/search/searchRuleFilterSettings.js";
+import type { SearchRuleFilters } from "@rules/storage/filters/search/searchRuleFilters.js";
+import type { RuleRecord } from "@rules/storage/ruleRecord.js";
+import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,15 +22,6 @@
 // limitations under the License.
 import { Address4 } from "ip-address";
 import type { Model } from "mongoose";
-import { ProsopoError } from "@prosopo/common";
-import type { IPAddress } from "@prosopo/types";
-import type {RulesStorage} from "@rules/storage/rulesStorage.js";
-import type {Rule} from "@rules/rule/rule.js";
-import type {SearchRuleFilters} from "@rules/storage/filters/search/searchRuleFilters.js";
-import type {SearchRuleFilterSettings} from "@rules/storage/filters/search/searchRuleFilterSettings.js";
-import {RuleIpVersion} from "@rules/rule/ip/ruleIpVersion.js";
-import type {RuleMongooseRecord} from "@rules/mongoose/ruleMongooseRecord.js";
-import type {RuleRecord} from "@rules/storage/ruleRecord.js";
 
 class RulesMongooseStorage implements RulesStorage {
 	constructor(

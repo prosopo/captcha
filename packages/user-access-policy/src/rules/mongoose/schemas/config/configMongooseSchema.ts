@@ -1,3 +1,5 @@
+import { imageCaptchaConfigMongooseSchema } from "@rules/mongoose/schemas/config/imageCaptchaConfigMongooseSchema.js";
+import type { RuleConfig } from "@rules/rule/config/ruleConfig.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import {imageCaptchaConfigMongooseSchema} from "@rules/mongoose/schemas/config/imageCaptchaConfigMongooseSchema.js";
-import type {RuleConfig} from "@rules/rule/config/ruleConfig.js";
 
 const configMongooseSchema = new Schema<RuleConfig>(
 	{

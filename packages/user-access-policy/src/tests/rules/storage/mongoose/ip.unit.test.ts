@@ -1,3 +1,12 @@
+import type { IPAddress } from "@prosopo/types";
+import { RulesMongooseStorage } from "@rules/mongoose/rulesMongooseStorage.js";
+import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
+import { RuleIpVersion } from "@rules/rule/ip/ruleIpVersion.js";
+import type { Rule } from "@rules/rule/rule.js";
+import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import { Address4, Address6 } from "ip-address";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose, { type Connection, type Model, type Mongoose } from "mongoose";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,16 +20,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, it, expect, beforeEach, afterAll, beforeAll } from "vitest";
-import { Address4, Address6 } from "ip-address";
-import type { Rule } from "@rules/rule/rule.js";
-import { RulesMongooseStorage } from "@rules/mongoose/rulesMongooseStorage.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose, { type Connection, type Model, type Mongoose } from "mongoose";
-import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
-import type { IPAddress } from "@prosopo/types";
-import { RuleIpVersion } from "@rules/rule/ip/ruleIpVersion.js";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe.each([
 	// ipV4

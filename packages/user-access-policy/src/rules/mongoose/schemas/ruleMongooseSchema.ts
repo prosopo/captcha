@@ -1,3 +1,6 @@
+import { configMongooseSchema } from "@rules/mongoose/schemas/config/configMongooseSchema.js";
+import { ipMongooseSchema } from "@rules/mongoose/schemas/ip/ipMongooseSchema.js";
+import type { Rule } from "@rules/rule/rule.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import type {Rule} from "@rules/rule/rule.js";
-import {ipMongooseSchema} from "@rules/mongoose/schemas/ip/ipMongooseSchema.js";
-import {configMongooseSchema} from "@rules/mongoose/schemas/config/configMongooseSchema.js";
 
 const ruleMongooseSchema = new Schema<Rule>({
 	isUserBlocked: { type: Boolean, required: true },

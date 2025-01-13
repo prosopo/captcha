@@ -1,3 +1,8 @@
+import type { ApiEndpoint } from "@api/apiEndpoint.js";
+import type { ApiResponse } from "@api/response/apiResponse.js";
+import { ApiResponseStatus } from "@api/response/apiResponseStatus.js";
+import { insertManyRulesApiSchema } from "@rules/api/insertMany/insertManyRulesApiSchema.js";
+import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +17,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { z } from "zod";
-import type {ApiEndpoint} from "@api/apiEndpoint.js";
-import type {RulesStorage} from "@rules/storage/rulesStorage.js";
-import type {ApiResponse} from "@api/response/apiResponse.js";
-import {ApiResponseStatus} from "@api/response/apiResponseStatus.js";
-import {insertManyRulesApiSchema} from "@rules/api/insertMany/insertManyRulesApiSchema.js";
 
 class InsertManyRulesApiEndpoint
 	implements ApiEndpoint<typeof insertManyRulesApiSchema>

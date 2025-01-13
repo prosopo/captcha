@@ -76,7 +76,7 @@ import {
 	type Rule,
 	type RulesStorage,
 	createMongooseRulesStorage,
-	getMongooseRuleRecordSchema,
+	getRuleMongooseSchema,
 } from "@prosopo/user-access-policy";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
@@ -167,7 +167,7 @@ const PROVIDER_TABLES = [
 	{
 		collectionName: TableNames.userAccessRules,
 		modelName: "UserAccessRules",
-		schema: getMongooseRuleRecordSchema(),
+		schema: getRuleMongooseSchema(),
 	},
 ];
 

@@ -1,3 +1,4 @@
+import type { ApiResponse } from "@api/response/apiResponse.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ZodType, z } from "zod";
-import type {ApiResponse} from "@api/response/apiResponse.js";
 
 interface ApiEndpoint<T extends ZodType | undefined> {
 	processRequest: T extends ZodType

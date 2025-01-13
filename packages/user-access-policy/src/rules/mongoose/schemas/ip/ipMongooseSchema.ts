@@ -1,3 +1,6 @@
+import { ipV4MongooseSchema } from "@rules/mongoose/schemas/ip/v4/ipV4MongooseSchema.js";
+import { ipV6MongooseSchema } from "@rules/mongoose/schemas/ip/v6/ipV6MongooseSchema.js";
+import type { RuleIp } from "@rules/rule/ip/ruleIp.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Schema } from "mongoose";
-import type {RuleIp} from "@rules/rule/ip/ruleIp.js";
-import {ipV6MongooseSchema} from "@rules/mongoose/schemas/ip/v6/ipV6MongooseSchema.js";
-import {ipV4MongooseSchema} from "@rules/mongoose/schemas/ip/v4/ipV4MongooseSchema.js";
 
 const ipMongooseSchema = new Schema<RuleIp>(
 	{

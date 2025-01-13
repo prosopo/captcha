@@ -1,3 +1,5 @@
+import { ruleIpV4Schema } from "@rules/rule/ip/v4/ruleIpV4Schema.js";
+import { ruleIpV6Schema } from "@rules/rule/ip/v6/ruleIpV6Schema.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { object } from "zod";
-import {ruleIpV4Schema} from "@rules/rule/ip/v4/ruleIpV4Schema.js";
-import {ruleIpV6Schema} from "@rules/rule/ip/v6/ruleIpV6Schema.js";
 
 const ruleIpSchema = object({
 	v4: ruleIpV4Schema.optional(),
