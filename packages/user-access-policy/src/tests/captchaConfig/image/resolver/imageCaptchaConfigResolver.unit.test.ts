@@ -13,39 +13,15 @@
 // limitations under the License.
 import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
 import { Address4 } from "ip-address";
-import { describe, expect } from "vitest";
-import {TestsBase} from "@tests/testsBase.js";
-import {TestRulesStorage} from "@tests/rules/storage/testRulesStorage.js";
-import {ImageCaptchaConfigResolver} from "@imageCaptchaConfig/resolver/imageCaptchaConfigResolver.js";
-import type {RuleRecord} from "@rules/storage/ruleRecord.js";
+import { describe, expect, it } from "vitest";
+import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
+import { ImageCaptchaConfigResolver } from "@imageCaptchaConfig/resolver/imageCaptchaConfigResolver.js";
+import type { RuleRecord } from "@rules/storage/ruleRecord.js";
 
-class TestImageCaptchaConfigResolver extends TestsBase {
-	constructor(private readonly resolver: ImageCaptchaConfigResolver) {
-		super();
-	}
+describe("ImageCaptchaConfigResolver", () => {
+	const resolver = new ImageCaptchaConfigResolver();
 
-	protected getTests(): {
-		name: string;
-		method: () => Promise<void>;
-	}[] {
-		return [
-			{
-				name: "resolvesFromUserAccessRule",
-				method: () => this.resolvesFromUserAccessRule(),
-			},
-			{
-				name: "resolvesFromClientUserAccessRuleWhenBothClientAndGlobalRulesFound",
-				method: () =>
-					this.resolvesFromClientUserAccessRuleWhenBothClientAndGlobalRulesFound(),
-			},
-			{
-				name: "resolvesDefaultWhenNoUserAccessRulesFound",
-				method: () => this.resolvesDefaultWhenNoUserAccessRulesFound(),
-			},
-		];
-	}
-
-	protected async resolvesFromUserAccessRule(): Promise<void> {
+	it("resolvesFromUserAccessRule", async () => {
 		// given
 		const userAccessRuleRecord: RuleRecord = {
 			isUserBlocked: false,
@@ -66,7 +42,7 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 		};
 
 		// when
-		const resolvedConfig = await this.resolver.resolveConfig(
+		const resolvedConfig = await resolver.resolveConfig(
 			userAccessRulesStorage,
 			defaultConfig,
 			new Address4("127.0.0.1"),
@@ -81,9 +57,9 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 		expect(resolvedConfig.unsolved.count).toBe(
 			userAccessRuleRecord.config?.imageCaptcha?.unsolvedCount,
 		);
-	}
+	});
 
-	protected async resolvesFromClientUserAccessRuleWhenBothClientAndGlobalRulesFound(): Promise<void> {
+	it("resolvesFromClientUserAccessRuleWhenBothClientAndGlobalRulesFound", async () => {
 		// given
 		const globalUserAccessRuleRecord: RuleRecord = {
 			isUserBlocked: false,
@@ -118,7 +94,7 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 		};
 
 		// when
-		const resolvedConfig = await this.resolver.resolveConfig(
+		const resolvedConfig = await resolver.resolveConfig(
 			userAccessRulesStorage,
 			defaultConfig,
 			new Address4("127.0.0.1"),
@@ -133,9 +109,9 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 		expect(resolvedConfig.unsolved.count).toBe(
 			clientUserAccessRuleRecord.config?.imageCaptcha?.unsolvedCount,
 		);
-	}
+	});
 
-	protected async resolvesDefaultWhenNoUserAccessRulesFound(): Promise<void> {
+	it("resolvesDefaultWhenNoUserAccessRulesFound", async () => {
 		// given
 		const userAccessRulesStorage = new TestRulesStorage([]);
 
@@ -145,7 +121,7 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 		};
 
 		// when
-		const resolvedConfig = await this.resolver.resolveConfig(
+		const resolvedConfig = await resolver.resolveConfig(
 			userAccessRulesStorage,
 			defaultConfig,
 			new Address4("127.0.0.1"),
@@ -156,13 +132,5 @@ class TestImageCaptchaConfigResolver extends TestsBase {
 		// then
 		expect(resolvedConfig.solved.count).toBe(defaultConfig.solved.count);
 		expect(resolvedConfig.unsolved.count).toBe(defaultConfig.unsolved.count);
-	}
-}
-
-describe("ImageCaptchaConfigResolver", () => {
-	const imageCaptchaConfigResolverTester = new TestImageCaptchaConfigResolver(
-		new ImageCaptchaConfigResolver(),
-	);
-
-	imageCaptchaConfigResolverTester.runAll();
+	});
 });

@@ -11,48 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Address4 } from "ip-address";
 import {RequestRulesInspector} from "@blacklist/inspector/requestRulesInspector.js";
-import {TestsBase} from "@tests/testsBase.js";
 import {TestRulesStorage} from "@tests/rules/storage/testRulesStorage.js";
 import type {RuleRecord} from "@rules/storage/ruleRecord.js";
 
-class TestRequestRulesInspector extends TestsBase {
-	protected getTests(): {
-		name: string;
-		method: () => Promise<void>;
-	}[] {
-		return [
-			{
-				name: "shouldAbortRequestWhenRuleRecordContainsBlockedFlag",
-				method: () =>
-					this.shouldAbortRequestWhenRuleRecordContainsBlockedFlag(),
-			},
-			{
-				name: "shouldAbortRequestWhenAnyRuleFromRuleRecordsContainsBlockedFlag",
-				method: () =>
-					this.shouldAbortRequestWhenAnyRuleFromRuleRecordsContainsBlockedFlag(),
-			},
-			{
-				name: "shouldNotAbortRequestWhenRuleRecordsDoNotContainBlockedFlag",
-				method: () =>
-					this.shouldNotAbortRequestWhenRuleRecordsDoNotContainBlockedFlag(),
-			},
-			{
-				name: "shouldNotAbortRequestWhenRuleRecordsMissing",
-				method: () => this.shouldNotAbortRequestWhenRuleRecordsMissing(),
-			},
-		];
+describe("RequestRulesInspector", () => {
+	function createInspector(ruleRecords: RuleRecord[]): RequestRulesInspector {
+		const userAccessRulesStorage = new TestRulesStorage(ruleRecords);
+		return new RequestRulesInspector(userAccessRulesStorage);
 	}
 
-	protected async shouldAbortRequestWhenRuleRecordContainsBlockedFlag(): Promise<void> {
+	it("shouldAbortRequestWhenRuleRecordContainsBlockedFlag", async () => {
 		// given
 		const accessRuleRecord: RuleRecord = {
 			isUserBlocked: true,
 			_id: "0",
 		};
-		const inspector = this.createInspector([accessRuleRecord]);
+		const inspector = createInspector([accessRuleRecord]);
 
 		// when
 		const shouldAbortRequest = () =>
@@ -60,9 +37,9 @@ class TestRequestRulesInspector extends TestsBase {
 
 		// then
 		expect(await shouldAbortRequest()).toBe(true);
-	}
+	});
 
-	protected async shouldAbortRequestWhenAnyRuleFromRuleRecordsContainsBlockedFlag(): Promise<void> {
+	it("shouldAbortRequestWhenAnyRuleFromRuleRecordsContainsBlockedFlag", async () => {
 		// given
 		const accessRuleRecordWithoutBlock: RuleRecord = {
 			isUserBlocked: false,
@@ -72,7 +49,7 @@ class TestRequestRulesInspector extends TestsBase {
 			isUserBlocked: true,
 			_id: "1",
 		};
-		const inspector = this.createInspector([
+		const inspector = createInspector([
 			accessRuleRecordWithoutBlock,
 			accessRuleRecordWithBlock,
 		]);
@@ -83,9 +60,9 @@ class TestRequestRulesInspector extends TestsBase {
 
 		// then
 		expect(await shouldAbortRequest()).toBe(true);
-	}
+	});
 
-	protected async shouldNotAbortRequestWhenRuleRecordsDoNotContainBlockedFlag(): Promise<void> {
+	it("shouldNotAbortRequestWhenRuleRecordsDoNotContainBlockedFlag", async () => {
 		// given
 		const accessRuleRecordWithoutBlock: RuleRecord = {
 			isUserBlocked: false,
@@ -95,7 +72,7 @@ class TestRequestRulesInspector extends TestsBase {
 			isUserBlocked: false,
 			_id: "1",
 		};
-		const inspector = this.createInspector([
+		const inspector = createInspector([
 			accessRuleRecordWithoutBlock,
 			accessRuleRecordWithBlock,
 		]);
@@ -106,11 +83,11 @@ class TestRequestRulesInspector extends TestsBase {
 
 		// then
 		expect(await shouldAbortRequest()).toBe(false);
-	}
+	});
 
-	protected async shouldNotAbortRequestWhenRuleRecordsMissing(): Promise<void> {
+	it("shouldNotAbortRequestWhenRuleRecordsMissing", async () => {
 		// given
-		const inspector = this.createInspector([]);
+		const inspector = createInspector([]);
 
 		// when
 		const shouldAbortRequest = () =>
@@ -118,17 +95,5 @@ class TestRequestRulesInspector extends TestsBase {
 
 		// then
 		expect(await shouldAbortRequest()).toBe(false);
-	}
-
-	protected createInspector(ruleRecords: RuleRecord[]): RequestRulesInspector {
-		const userAccessRulesStorage = new TestRulesStorage(ruleRecords);
-
-		return new RequestRulesInspector(userAccessRulesStorage);
-	}
-}
-
-describe("RequestRulesInspector", () => {
-	const tests = new TestRequestRulesInspector();
-
-	tests.runAll();
+	});
 });
