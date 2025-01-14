@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ipV6MaskMongooseSchema } from "@rules/mongoose/schemas/ip/v6/ipV6MaskMongooseSchema.js";
-import type { RuleIpV6 } from "@rules/rule/ip/v6/ruleIpV6.js";
-import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "@rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
 import { Schema } from "mongoose";
+import type { RuleIpV6 } from "../../../../rule/ip/v6/ruleIpV6.js";
+import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "../../../../rule/ip/v6/ruleIpV6NumericMaxLength.js";
+import { ipV6MaskMongooseSchema } from "./ipV6MaskMongooseSchema.js";
 
 const ipV6MongooseSchema = new Schema<RuleIpV6>(
 	{

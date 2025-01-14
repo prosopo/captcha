@@ -16,10 +16,10 @@ import type {
 	IPAddress,
 	ProsopoCaptchaCountConfigSchemaOutput,
 } from "@prosopo/types";
-import type { ImageCaptchaConfig } from "@rules/rule/config/imageCaptcha/imageCaptchaConfig.js";
-import type { Rule } from "@rules/rule/rule.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { ImageCaptchaConfigResolver } from "../imageCaptchaConfigResolver.js";
+import type { ImageCaptchaConfig } from "./rule/config/imageCaptcha/imageCaptchaConfig.js";
+import type { Rule } from "./rule/rule.js";
+import type { RulesStorage } from "./storage/rulesStorage.js";
 
 class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 	public constructor(private readonly rulesStorage: RulesStorage) {}

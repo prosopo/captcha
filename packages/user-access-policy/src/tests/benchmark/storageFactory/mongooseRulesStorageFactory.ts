@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { RulesMongooseStorage } from "@rules/mongoose/rulesMongooseStorage.js";
-import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
-import type { Rule } from "@rules/rule/rule.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 import mongoose, { type Model } from "mongoose";
+import { RulesMongooseStorage } from "../../../rules/mongoose/rulesMongooseStorage.js";
+import { getRuleMongooseSchema } from "../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
+import type { Rule } from "../../../rules/rule/rule.js";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
+import type { RulesStorageFactory } from "./rulesStorageFactory.js";
 
 class MongooseRulesStorageFactory implements RulesStorageFactory {
 	async createRulesStorage(dbUrl: string): Promise<RulesStorage> {

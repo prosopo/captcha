@@ -14,16 +14,16 @@
 
 import { ProsopoError } from "@prosopo/common";
 import type { IPAddress } from "@prosopo/types";
-import type { RuleMongooseRecord } from "@rules/mongoose/ruleMongooseRecord.js";
-import { RuleIpVersion } from "@rules/rule/ip/ruleIpVersion.js";
-import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "@rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
-import type { Rule } from "@rules/rule/rule.js";
-import type { SearchRuleFilterSettings } from "@rules/storage/filters/search/searchRuleFilterSettings.js";
-import type { SearchRuleFilters } from "@rules/storage/filters/search/searchRuleFilters.js";
-import type { RuleRecord } from "@rules/storage/ruleRecord.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import { Address4 } from "ip-address";
 import type { Model } from "mongoose";
+import { RuleIpVersion } from "../rule/ip/ruleIpVersion.js";
+import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "../rule/ip/v6/ruleIpV6NumericMaxLength.js";
+import type { Rule } from "../rule/rule.js";
+import type { SearchRuleFilterSettings } from "../storage/filters/search/searchRuleFilterSettings.js";
+import type { SearchRuleFilters } from "../storage/filters/search/searchRuleFilters.js";
+import type { RuleRecord } from "../storage/ruleRecord.js";
+import type { RulesStorage } from "../storage/rulesStorage.js";
+import type { RuleMongooseRecord } from "./ruleMongooseRecord.js";
 
 class RulesMongooseStorage implements RulesStorage {
 	constructor(

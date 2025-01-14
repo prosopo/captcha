@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { RulesMongooseStorage } from "@rules/mongoose/rulesMongooseStorage.js";
-import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
-import type { Rule } from "@rules/rule/rule.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import { Address4 } from "ip-address";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { RulesMongooseStorage } from "../../../rules/mongoose/rulesMongooseStorage.js";
+import { getRuleMongooseSchema } from "../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
+import type { Rule } from "../../../rules/rule/rule.js";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
 
 describe("RulesMongooseStorage", async () => {
 	const mongoServer = await MongoMemoryServer.create();

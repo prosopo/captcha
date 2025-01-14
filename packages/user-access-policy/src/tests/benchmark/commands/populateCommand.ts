@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import { CommandBase } from "@tests/benchmark/commands/commandBase.js";
 import { Address4, Address6 } from "ip-address";
 import type { ArgumentsCamelCase, Argv } from "yargs";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
+import { CommandBase } from "./commandBase.js";
 
 class PopulateCommand extends CommandBase {
 	public command = "populate";

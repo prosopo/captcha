@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ruleConfigSchema } from "@rules/rule/config/ruleConfigSchema.js";
 import type { z } from "zod";
+import type { ruleConfigSchema } from "./ruleConfigSchema.js";
 
 type RuleConfig = z.infer<typeof ruleConfigSchema>;
 

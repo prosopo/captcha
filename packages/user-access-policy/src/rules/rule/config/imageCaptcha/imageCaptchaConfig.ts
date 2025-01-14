@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { imageCaptchaConfigSchema } from "@rules/rule/config/imageCaptcha/imageCaptchaConfigSchema.js";
 import type { z } from "zod";
+import type { imageCaptchaConfigSchema } from "./imageCaptchaConfigSchema.js";
 
 type ImageCaptchaConfig = z.infer<typeof imageCaptchaConfigSchema>;
 

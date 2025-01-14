@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RuleIp } from "@rules/rule/ip/ruleIp.js";
+import type { RuleIp } from "../../rule/ip/ruleIp.js";
 
 interface DeleteRuleFilters {
 	clientId?: string;

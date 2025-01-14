@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
-import { apiRulePaths } from "@rules/api/apiRulePaths.js";
-import { ApiDeleteManyRulesEndpoint } from "@rules/api/deleteMany/apiDeleteManyRulesEndpoint.js";
-import { ApiInsertManyRulesEndpoint } from "@rules/api/insertMany/apiInsertManyRulesEndpoint.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import type { RulesStorage } from "../storage/rulesStorage.js";
+import { apiRulePaths } from "./apiRulePaths.js";
+import { ApiDeleteManyRulesEndpoint } from "./deleteMany/apiDeleteManyRulesEndpoint.js";
+import { ApiInsertManyRulesEndpoint } from "./insertMany/apiInsertManyRulesEndpoint.js";
 
 class ApiRuleRoutesProvider implements ApiRoutesProvider {
 	public constructor(private readonly rulesStorage: RulesStorage) {}

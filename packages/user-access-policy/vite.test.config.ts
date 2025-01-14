@@ -13,12 +13,5 @@
 // limitations under the License.
 
 import { ViteTestConfig } from "@prosopo/config";
-import { defineConfig } from "vite";
-import { aliases } from "./aliases.js";
 
-export default defineConfig({
-	...ViteTestConfig,
-	resolve: {
-		alias: aliases,
-	},
-});
+export default ViteTestConfig;

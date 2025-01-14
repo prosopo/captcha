@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { RulesMongooseStorage } from "@rules/mongoose/rulesMongooseStorage.js";
-import type { Rule } from "@rules/rule/rule.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { Model } from "mongoose";
+import type { Rule } from "../rule/rule.js";
+import type { RulesStorage } from "../storage/rulesStorage.js";
+import { RulesMongooseStorage } from "./rulesMongooseStorage.js";
 
 const createMongooseRulesStorage = (
 	readingModel: Model<Rule> | null,

@@ -14,7 +14,6 @@
 
 import path from "node:path";
 import { ViteCommonJSConfig } from "@prosopo/config";
-import { aliases } from "./aliases.js";
 
 export default function () {
 	return {
@@ -22,8 +21,5 @@ export default function () {
 			"user-access-policy",
 			path.resolve("./tsconfig.cjs.json"),
 		),
-		resolve: {
-			alias: aliases,
-		},
 	};
 }

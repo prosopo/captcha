@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
 
 interface RulesStorageFactory {
 	createRulesStorage(dbUrl: string): Promise<RulesStorage>;

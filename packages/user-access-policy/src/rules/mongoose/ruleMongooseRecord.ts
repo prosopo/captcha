@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Rule } from "@rules/rule/rule.js";
 import type { Types } from "mongoose";
+import type { Rule } from "../rule/rule.js";
 
 interface RuleMongooseRecord extends Rule {
 	_id: Types.ObjectId;

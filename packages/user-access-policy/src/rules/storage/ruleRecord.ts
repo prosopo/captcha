@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Rule } from "@rules/rule/rule.js";
+import type { Rule } from "../rule/rule.js";
 
 interface RuleRecord extends Rule {
 	_id: string;

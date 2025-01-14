@@ -15,9 +15,9 @@
 import * as util from "node:util";
 import { ProsopoError } from "@prosopo/common";
 import type { IPAddress } from "@prosopo/types";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import { Address4, Address6 } from "ip-address";
 import type { ArgumentsCamelCase, Argv } from "yargs";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
 import { CommandBase } from "./commandBase.js";
 
 class MeasureFindCommand extends CommandBase {

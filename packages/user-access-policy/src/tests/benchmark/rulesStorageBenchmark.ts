@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MeasureFindCommand } from "@tests/benchmark/commands/measureFindCommand.js";
-import { PopulateCommand } from "@tests/benchmark/commands/populateCommand.js";
-import type { ConnectionCleaner } from "@tests/benchmark/connectionCleaner/connectionCleaner.js";
-import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 import yargs, { type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
+import { MeasureFindCommand } from "./commands/measureFindCommand.js";
+import { PopulateCommand } from "./commands/populateCommand.js";
+import type { ConnectionCleaner } from "./connectionCleaner/connectionCleaner.js";
+import type { RulesStorageFactory } from "./storageFactory/rulesStorageFactory.js";
 
 class RulesStorageBenchmark {
 	constructor(

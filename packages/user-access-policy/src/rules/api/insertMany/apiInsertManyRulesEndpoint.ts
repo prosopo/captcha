@@ -17,13 +17,13 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import type { z } from "zod";
+import type { Rule } from "../../rule/rule.js";
+import type { RulesStorage } from "../../storage/rulesStorage.js";
 import {
 	type ApiInsertManyRulesArgsSchema,
 	apiInsertManyRulesArgsSchema,
-} from "@rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
-import type { Rule } from "@rules/rule/rule.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import type { z } from "zod";
+} from "./apiInsertManyRulesArgsSchema.js";
 
 class ApiInsertManyRulesEndpoint
 	implements ApiEndpoint<ApiInsertManyRulesArgsSchema>

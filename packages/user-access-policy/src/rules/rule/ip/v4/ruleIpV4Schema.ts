@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ruleIpV4MaskSchema } from "@rules/rule/ip/v4/mask/ruleIpV4MaskSchema.js";
 import { bigint, object, string } from "zod";
+import { ruleIpV4MaskSchema } from "./mask/ruleIpV4MaskSchema.js";
 
 const ruleIpV4Schema = object({
 	asNumeric: bigint(),

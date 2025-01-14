@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { imageCaptchaConfigMongooseSchema } from "@rules/mongoose/schemas/config/imageCaptchaConfigMongooseSchema.js";
-import type { RuleConfig } from "@rules/rule/config/ruleConfig.js";
 import { Schema } from "mongoose";
+import type { RuleConfig } from "../../../rule/config/ruleConfig.js";
+import { imageCaptchaConfigMongooseSchema } from "./imageCaptchaConfigMongooseSchema.js";
 
 const configMongooseSchema = new Schema<RuleConfig>(
 	{

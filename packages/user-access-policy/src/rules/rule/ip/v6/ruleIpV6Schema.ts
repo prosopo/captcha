@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ruleIpV6MaskSchema } from "@rules/rule/ip/v6/mask/ruleIpV6MaskSchema.js";
 import { object, string } from "zod";
+import { ruleIpV6MaskSchema } from "./mask/ruleIpV6MaskSchema.js";
 
 const ruleIpV6Schema = object({
 	asNumericString: string(),

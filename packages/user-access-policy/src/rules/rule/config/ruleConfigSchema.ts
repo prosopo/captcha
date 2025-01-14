@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { imageCaptchaConfigSchema } from "@rules/rule/config/imageCaptcha/imageCaptchaConfigSchema.js";
 import { object } from "zod";
+import { imageCaptchaConfigSchema } from "./imageCaptcha/imageCaptchaConfigSchema.js";
 
 const ruleConfigSchema = object({
 	imageCaptcha: imageCaptchaConfigSchema.optional(),

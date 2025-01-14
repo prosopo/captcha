@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
 import { array, object, string } from "zod";
+import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
 
 const apiDeleteManyRulesArgsSchema = array(
 	object({

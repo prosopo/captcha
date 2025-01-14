@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ruleConfigSchema } from "@rules/rule/config/ruleConfigSchema.js";
-import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
-import { array, boolean, object, string } from "zod";
+import { boolean, object, string } from "zod";
+import { ruleConfigSchema } from "../../rule/config/ruleConfigSchema.js";
+import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
 
 const apiInsertManyRulesArgsSchema = object({
 	isUserBlocked: boolean(),

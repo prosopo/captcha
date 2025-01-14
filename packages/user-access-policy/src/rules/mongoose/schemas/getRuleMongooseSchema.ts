@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { rulePerformanceMongooseIndexes } from "@rules/mongoose/indexes/rulePerformanceMongooseIndexes.js";
-import { ruleUniqueMongooseIndexes } from "@rules/mongoose/indexes/ruleUniqueMongooseIndexes.js";
-import { ruleMongooseSchema } from "@rules/mongoose/schemas/ruleMongooseSchema.js";
-import type { Rule } from "@rules/rule/rule.js";
 import type { Schema } from "mongoose";
+import type { Rule } from "../../rule/rule.js";
+import { rulePerformanceMongooseIndexes } from "../indexes/rulePerformanceMongooseIndexes.js";
+import { ruleUniqueMongooseIndexes } from "../indexes/ruleUniqueMongooseIndexes.js";
+import { ruleMongooseSchema } from "./ruleMongooseSchema.js";
 
 const getRuleMongooseSchema = (): Schema<Rule> => {
 	const ruleMongooseIndexes = [

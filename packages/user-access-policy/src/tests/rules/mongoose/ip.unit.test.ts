@@ -13,15 +13,15 @@
 // limitations under the License.
 
 import type { IPAddress } from "@prosopo/types";
-import { RulesMongooseStorage } from "@rules/mongoose/rulesMongooseStorage.js";
-import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSchema.js";
-import { RuleIpVersion } from "@rules/rule/ip/ruleIpVersion.js";
-import type { Rule } from "@rules/rule/rule.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import { Address4, Address6 } from "ip-address";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { type Model, type Mongoose } from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { RulesMongooseStorage } from "../../../rules/mongoose/rulesMongooseStorage.js";
+import { getRuleMongooseSchema } from "../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
+import { RuleIpVersion } from "../../../rules/rule/ip/ruleIpVersion.js";
+import type { Rule } from "../../../rules/rule/rule.js";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
 
 describe.each([
 	// ipV4

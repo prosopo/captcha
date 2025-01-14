@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ruleIpV6Schema } from "@rules/rule/ip/v6/ruleIpV6Schema.js";
 import type { z } from "zod";
+import type { ruleIpV6Schema } from "./ruleIpV6Schema.js";
 
 type RuleIpV6 = z.infer<typeof ruleIpV6Schema>;
 

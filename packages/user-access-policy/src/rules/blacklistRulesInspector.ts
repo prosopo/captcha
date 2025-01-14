@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import type { IPAddress } from "@prosopo/types";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { BlacklistInspector } from "../blacklistInspector.js";
+import type { RulesStorage } from "./storage/rulesStorage.js";
 
 class BlacklistRulesInspector implements BlacklistInspector {
 	public constructor(private readonly rulesStorage: RulesStorage) {}

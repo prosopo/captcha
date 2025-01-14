@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { BlacklistRulesInspector } from "@rules/blacklistRulesInspector.js";
-import type { RuleRecord } from "@rules/storage/ruleRecord.js";
-import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
 import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import type { BlacklistInspector } from "../../blacklistInspector.js";
+import { BlacklistRulesInspector } from "../../rules/blacklistRulesInspector.js";
+import type { RuleRecord } from "../../rules/storage/ruleRecord.js";
+import { TestRulesStorage } from "./storage/testRulesStorage.js";
 
 describe("BlacklistRulesInspector", () => {
 	function createInspector(ruleRecords: RuleRecord[]): BlacklistInspector {

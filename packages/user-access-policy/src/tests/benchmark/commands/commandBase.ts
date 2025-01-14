@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import { ProsopoError } from "@prosopo/common";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
+import type { RulesStorageFactory } from "../storageFactory/rulesStorageFactory.js";
 
 abstract class CommandBase implements CommandModule {
 	abstract command: string;

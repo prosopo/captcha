@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RuleConfig } from "@rules/rule/config/ruleConfig.js";
-import type { RuleIp } from "@rules/rule/ip/ruleIp.js";
+import type { RuleConfig } from "./config/ruleConfig.js";
+import type { RuleIp } from "./ip/ruleIp.js";
 
 interface Rule {
 	isUserBlocked: boolean;

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ipV4MaskMongooseSchema } from "@rules/mongoose/schemas/ip/v4/ipV4MaskMongooseSchema.js";
-import type { RuleIpV4 } from "@rules/rule/ip/v4/ruleIpV4.js";
 import { Schema } from "mongoose";
+import type { RuleIpV4 } from "../../../../rule/ip/v4/ruleIpV4.js";
+import { ipV4MaskMongooseSchema } from "./ipV4MaskMongooseSchema.js";
 
 const ipV4MongooseSchema = new Schema<RuleIpV4>(
 	{

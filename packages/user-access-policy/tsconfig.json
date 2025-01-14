@@ -2,11 +2,7 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
-		"paths": {
-			"@rules/*": ["./src/rules/*"],
-			"@tests/*": ["./src/tests/*"]
-		}
+		"outDir": "./dist"
 	},
 	"include": ["./src"],
 	"references": [

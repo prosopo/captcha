@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ConnectionCleaner } from "@tests/benchmark/connectionCleaner/connectionCleaner.js";
 import mongoose from "mongoose";
+import type { ConnectionCleaner } from "./connectionCleaner.js";
 
 class MongooseConnectionCleaner implements ConnectionCleaner {
 	public async cleanConnection(): Promise<void> {

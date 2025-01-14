@@ -17,8 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { z } from "zod";
+import type { RulesStorage } from "../../storage/rulesStorage.js";
 import {
 	type ApiDeleteManyRulesArgsSchema,
 	apiDeleteManyRulesArgsSchema,

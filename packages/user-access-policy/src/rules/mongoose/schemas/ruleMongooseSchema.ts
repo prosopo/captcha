@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { configMongooseSchema } from "@rules/mongoose/schemas/config/configMongooseSchema.js";
-import { ipMongooseSchema } from "@rules/mongoose/schemas/ip/ipMongooseSchema.js";
-import type { Rule } from "@rules/rule/rule.js";
 import { Schema } from "mongoose";
+import type { Rule } from "../../rule/rule.js";
+import { configMongooseSchema } from "./config/configMongooseSchema.js";
+import { ipMongooseSchema } from "./ip/ipMongooseSchema.js";
 
 const ruleMongooseSchema = new Schema<Rule>({
 	isUserBlocked: { type: Boolean, required: true },

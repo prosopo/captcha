@@ -13,11 +13,11 @@
 // limitations under the License.
 
 import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
-import { ImageCaptchaConfigRulesResolver } from "@rules/imageCaptchaConfigRulesResolver.js";
-import type { RuleRecord } from "@rules/storage/ruleRecord.js";
-import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
 import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
+import { ImageCaptchaConfigRulesResolver } from "../../rules/imageCaptchaConfigRulesResolver.js";
+import type { RuleRecord } from "../../rules/storage/ruleRecord.js";
+import { TestRulesStorage } from "./storage/testRulesStorage.js";
 
 describe("ImageCaptchaConfigResolver", () => {
 	it("resolvesFromUserAccessRule", async () => {

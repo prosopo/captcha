@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Rule } from "@rules/rule/rule.js";
-import type { DeleteRuleFilters } from "@rules/storage/filters/deleteRuleFilters.js";
-import type { SearchRuleFilterSettings } from "@rules/storage/filters/search/searchRuleFilterSettings.js";
-import type { SearchRuleFilters } from "@rules/storage/filters/search/searchRuleFilters.js";
-import type { RuleRecord } from "@rules/storage/ruleRecord.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import type { Rule } from "../../../rules/rule/rule.js";
+import type { DeleteRuleFilters } from "../../../rules/storage/filters/deleteRuleFilters.js";
+import type { SearchRuleFilterSettings } from "../../../rules/storage/filters/search/searchRuleFilterSettings.js";
+import type { SearchRuleFilters } from "../../../rules/storage/filters/search/searchRuleFilters.js";
+import type { RuleRecord } from "../../../rules/storage/ruleRecord.js";
+import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
 
 class TestRulesStorage implements RulesStorage {
 	constructor(public ruleRecords: RuleRecord[] = []) {}
