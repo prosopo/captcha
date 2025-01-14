@@ -18,6 +18,12 @@ import type {
 } from "@prosopo/types";
 
 interface ImageCaptchaConfigResolver {
+	isConfigDefined(
+		clientId: string,
+		userIpAddress: IPAddress,
+		userId: string,
+	): Promise<boolean>;
+
 	resolveConfig(
 		defaults: ProsopoCaptchaCountConfigSchemaOutput,
 		userIpAddress: IPAddress,

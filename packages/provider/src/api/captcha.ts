@@ -488,19 +488,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
-				const userAccessRules = await tasks.db.getUserAccessRulesStorage().find(
-					{
-						clientId: dapp,
-						userId: user,
-						userIpAddress: ipAddress,
-					},
-					{
-						includeRecordsWithPartialFilterMatches: true,
-						includeRecordsWithoutClientId: true,
-					},
+				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
+					tasks.db.getUserAccessRulesStorage(),
 				);
+				const imageCaptchaConfigDefined =
+					await imageCaptchaConfigResolver.isConfigDefined(
+						dapp,
+						ipAddress,
+						user,
+					);
 
-				if (userAccessRules.length > 0)
+				if (imageCaptchaConfigDefined)
 					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
 				// If the bot score is greater than the threshold, send an image captcha
