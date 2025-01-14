@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/keyring",
-	"version": "2.2.3",
+	"version": "2.3.1",
 	"description": "Keypair generator for Prosopo",
 	"main": "dist/index.js",
 	"type": "module",
@@ -34,11 +34,11 @@
 		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "2.2.3",
-		"@prosopo/types": "2.2.3"
+		"@prosopo/common": "2.3.1",
+		"@prosopo/types": "2.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.2.3",
+		"@prosopo/config": "2.3.1",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
