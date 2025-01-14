@@ -12,19 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ruleConfigSchema } from "@rules/rule/config/ruleConfigSchema.js";
-import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
-import { array, boolean, object, string } from "zod";
+import { ViteCommonJSConfig } from "@prosopo/config";
+import path from "node:path";
 
-const insertManyRulesApiSchema = array(
-	object({
-		isUserBlocked: boolean(),
-		clientId: string().optional(),
-		description: string().optional(),
-		userIp: ruleIpSchema.optional(),
-		userId: string().optional(),
-		config: ruleConfigSchema.optional(),
-	}),
-);
-
-export { insertManyRulesApiSchema };
+export default function () {
+	return ViteCommonJSConfig(
+		"api-route",
+		path.resolve("./tsconfig.cjs.json"),
+	);
+}

@@ -4,7 +4,6 @@
 		"rootDir": "./src",
 		"outDir": "./dist",
 		"paths": {
-			"@api/*": ["./src/api/*"],
 			"@rules/*": ["./src/rules/*"],
 			"@tests/*": ["./src/tests/*"]
 		}

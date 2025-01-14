@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
+enum ApiEndpointResponseStatus {
+	SUCCESS = "SUCCESS",
+	FAIL = "FAIL",
+}
 
-const aliases = {
-	"@rules": path.resolve(__dirname, "./src/rules"),
-	"@tests": path.resolve(__dirname, "./src/tests"),
-};
-
-export { aliases };
+export { ApiEndpointResponseStatus };

@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiEndpoint } from "@api/apiEndpoint.js";
-import type { ZodType } from "zod";
+import type { ApiRoute } from "./apiRoute.js";
 
-interface ApiRoute {
-	path: string;
-	endpoint: ApiEndpoint<ZodType | undefined>;
+interface ApiRoutesProvider {
+	getRoutes(): ApiRoute[];
 }
 
-export type { ApiRoute };
+export type { ApiRoutesProvider };

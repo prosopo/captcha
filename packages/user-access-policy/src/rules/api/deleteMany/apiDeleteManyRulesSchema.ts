@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import type { ApiRoute } from "./apiRoute.js";
+import { array, object, string } from "zod";
+import {ruleIpSchema} from "@rules/rule/ip/ruleIpSchema.js";
 
-interface ApiRoutesProvider {
-	getRoutes(rulesStorage: RulesStorage): ApiRoute[];
-}
+const apiDeleteManyRulesSchema = array(
+	object({
+		clientId: string().optional(),
+		userIp: ruleIpSchema.optional(),
+		userId: string().optional(),
+	}),
+);
 
-export type { ApiRoutesProvider };
+export { apiDeleteManyRulesSchema };

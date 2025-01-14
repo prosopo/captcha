@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createExpressRuleRouter } from "@rules/api/createExpressRuleRouter.js";
 import { getExpressApiRuleRateLimits } from "@rules/api/getExpressApiRuleRateLimits.js";
 import { BlacklistRulesInspector } from "@rules/blacklistRulesInspector.js";
 import { ImageCaptchaConfigRulesResolver } from "@rules/imageCaptchaConfigRulesResolver.js";
@@ -21,6 +20,8 @@ import { getRuleMongooseSchema } from "@rules/mongoose/schemas/getRuleMongooseSc
 import type { Rule } from "@rules/rule/rule.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { BlacklistInspector } from "./blacklistInspector.js";
+import type { ApiRoutesProvider } from "@prosopo/api-route";
+import { ApiRuleRoutesProvider } from "@rules/api/apiRuleRoutesProvider.js";
 
 const createBlacklistInspector = (
 	rulesStorage: RulesStorage,
@@ -34,6 +35,12 @@ const createImageCaptchaConfigResolver = (
 	return new ImageCaptchaConfigRulesResolver(rulesStorage);
 };
 
+const createApiRuleRoutesProvider = (
+	rulesStorage: RulesStorage,
+): ApiRoutesProvider => {
+	return new ApiRuleRoutesProvider(rulesStorage);
+};
+
 export {
 	type Rule,
 	type RulesStorage,
@@ -41,7 +48,7 @@ export {
 	createMongooseRulesStorage,
 	createImageCaptchaConfigResolver,
 	createBlacklistInspector,
-	createExpressRuleRouter,
+	createApiRuleRoutesProvider,
 	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
 };

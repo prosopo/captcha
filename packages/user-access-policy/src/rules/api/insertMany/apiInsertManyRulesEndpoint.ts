@@ -12,31 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiEndpoint } from "@api/apiEndpoint.js";
-import type { ApiResponse } from "@api/response/apiResponse.js";
-import { ApiResponseStatus } from "@api/response/apiResponseStatus.js";
-import { deleteManyRulesApiSchema } from "@rules/api/deleteMany/deleteManyRulesApiSchema.js";
+import { apiInsertManyRulesSchema } from "@rules/api/insertMany/apiInsertManyRulesSchema.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { z } from "zod";
+import {type ApiEndpoint, type ApiEndpointResponse, ApiEndpointResponseStatus} from "@prosopo/api-route";
 
-class DeleteManyRulesApiEndpoint
-	implements ApiEndpoint<typeof deleteManyRulesApiSchema>
+class ApiInsertManyRulesEndpoint
+	implements ApiEndpoint<typeof apiInsertManyRulesSchema>
 {
 	public constructor(private readonly rulesStorage: RulesStorage) {}
 
 	async processRequest(
-		args: z.infer<typeof deleteManyRulesApiSchema>,
-	): Promise<ApiResponse> {
-		await this.rulesStorage.deleteMany(args);
+		args: z.infer<typeof apiInsertManyRulesSchema>,
+	): Promise<ApiEndpointResponse> {
+		await this.rulesStorage.insertMany(args);
 
 		return {
-			status: ApiResponseStatus.SUCCESS,
+			status: ApiEndpointResponseStatus.SUCCESS,
 		};
 	}
 
-	public getRequestArgsSchema(): typeof deleteManyRulesApiSchema {
-		return deleteManyRulesApiSchema;
+	public getRequestArgsSchema(): typeof apiInsertManyRulesSchema {
+		return apiInsertManyRulesSchema;
 	}
 }
 
-export { DeleteManyRulesApiEndpoint };
+export { ApiInsertManyRulesEndpoint };

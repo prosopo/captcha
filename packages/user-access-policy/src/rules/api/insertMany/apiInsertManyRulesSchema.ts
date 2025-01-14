@@ -12,11 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
+import { ruleConfigSchema } from "@rules/rule/config/ruleConfigSchema.js";
+import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
+import { array, boolean, object, string } from "zod";
 
-const aliases = {
-	"@rules": path.resolve(__dirname, "./src/rules"),
-	"@tests": path.resolve(__dirname, "./src/tests"),
-};
+const apiInsertManyRulesSchema = array(
+	object({
+		isUserBlocked: boolean(),
+		clientId: string().optional(),
+		description: string().optional(),
+		userIp: ruleIpSchema.optional(),
+		userId: string().optional(),
+		config: ruleConfigSchema.optional(),
+	}),
+);
 
-export { aliases };
+export { apiInsertManyRulesSchema };

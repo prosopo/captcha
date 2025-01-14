@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiResponse } from "@api/response/apiResponse.js";
-import type { ZodType, z } from "zod";
+import type { ZodType } from "zod";
+import type {ApiEndpoint} from "./endpoint/apiEndpoint.js";
 
-interface ApiEndpoint<T extends ZodType | undefined> {
-	processRequest: T extends ZodType
-		? (args: z.infer<T>) => Promise<ApiResponse>
-		: () => Promise<ApiResponse>;
-
-	getRequestArgsSchema(): T;
+interface ApiRoute {
+	path: string;
+	endpoint: ApiEndpoint<ZodType | undefined>;
 }
 
-export type { ApiEndpoint };
+export type { ApiRoute };

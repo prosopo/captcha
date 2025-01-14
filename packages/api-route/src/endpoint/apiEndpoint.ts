@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
+import type { ZodType, z } from "zod";
+import type {ApiEndpointResponse} from "./apiEndpointResponse.js";
 
-const aliases = {
-	"@rules": path.resolve(__dirname, "./src/rules"),
-	"@tests": path.resolve(__dirname, "./src/tests"),
-};
+interface ApiEndpoint<T extends ZodType | undefined> {
+	processRequest: T extends ZodType
+		? (args: z.infer<T>) => Promise<ApiEndpointResponse>
+		: () => Promise<ApiEndpointResponse>;
 
-export { aliases };
+	getRequestArgsSchema(): T;
+}
+
+export type { ApiEndpoint };

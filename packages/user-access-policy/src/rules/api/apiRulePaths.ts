@@ -12,15 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
-import { array, object, string } from "zod";
+const apiRulePaths = {
+	INSERT_MANY: "/v1/prosopo/user-access-policy/rules/insert-many",
+	DELETE_MANY: "/v1/prosopo/user-access-policy/rules/delete-many",
+};
 
-const deleteManyRulesApiSchema = array(
-	object({
-		clientId: string().optional(),
-		userIp: ruleIpSchema.optional(),
-		userId: string().optional(),
-	}),
-);
-
-export { deleteManyRulesApiSchema };
+export { apiRulePaths };

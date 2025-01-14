@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
+import type {ApiEndpointResponseStatus} from "./apiEndpointResponseStatus.js";
 
-const aliases = {
-	"@rules": path.resolve(__dirname, "./src/rules"),
-	"@tests": path.resolve(__dirname, "./src/tests"),
-};
+interface ApiEndpointResponse {
+	status: ApiEndpointResponseStatus;
+	data?: object;
+}
 
-export { aliases };
+export type { ApiEndpointResponse };

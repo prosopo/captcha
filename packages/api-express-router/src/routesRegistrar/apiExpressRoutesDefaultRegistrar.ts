@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ExpressEndpointAdapter } from "@api/express/expressEndpointAdapter.js";
-import type { ApiRoute } from "@api/route/apiRoute.js";
 import type { Request, Response, Router } from "express";
+import type { ApiRoute } from "@prosopo/api-route";
+import type { ApiExpressRoutesRegistrar } from "./apiExpressRoutesRegistrar.js";
+import type { ApiExpressEndpointAdapter } from "../endpointAdapter/apiExpressEndpointAdapter.js";
 
-class ExpressRoutesRegistrar {
+class ApiExpressRoutesDefaultRegistrar implements ApiExpressRoutesRegistrar {
 	public constructor(
-		private readonly endpointExpressAdapter: ExpressEndpointAdapter,
+		private readonly apiEndpointAdapter: ApiExpressEndpointAdapter,
 	) {}
 
 	public registerRoutes(router: Router, routes: ApiRoute[]): void {
@@ -26,7 +27,7 @@ class ExpressRoutesRegistrar {
 			router.post(
 				route.path,
 				async (request: Request, response: Response): Promise<void> => {
-					await this.endpointExpressAdapter.handleRequest(
+					await this.apiEndpointAdapter.handleRequest(
 						route.endpoint,
 						request,
 						response,
@@ -37,4 +38,4 @@ class ExpressRoutesRegistrar {
 	}
 }
 
-export { ExpressRoutesRegistrar };
+export { ApiExpressRoutesDefaultRegistrar };

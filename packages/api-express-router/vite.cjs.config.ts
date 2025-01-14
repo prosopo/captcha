@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const ruleApiPaths = {
-	INSERT_MANY: "/v1/prosopo/user-access-policy/rules/insert-many",
-	DELETE_MANY: "/v1/prosopo/user-access-policy/rules/delete-many",
-};
+import { ViteCommonJSConfig } from "@prosopo/config";
+import path from "node:path";
 
-export { ruleApiPaths };
+export default function () {
+	return ViteCommonJSConfig(
+		"api-route",
+		path.resolve("./tsconfig.cjs.json"),
+	);
+}

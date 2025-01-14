@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
+import type { Router } from "express";
+import type { ApiRoute } from "@prosopo/api-route";
 
-const aliases = {
-	"@rules": path.resolve(__dirname, "./src/rules"),
-	"@tests": path.resolve(__dirname, "./src/tests"),
-};
+interface ApiExpressRoutesRegistrar {
+	registerRoutes(router: Router, routes: ApiRoute[]): void;
+}
 
-export { aliases };
+export type { ApiExpressRoutesRegistrar };

@@ -22,9 +22,9 @@
 		"storage:benchmark:mongoose:measure-find": "npm run storage:benchmark:mongoose -- measure-find --db-url=mongodb://localhost:27017 --target-ip-v4=0.0.136.184 --target-ip-v6=0000:0000:0000:0000:0000:0000:0000:7530"
 	},
 	"dependencies": {
+		"@prosopo/api-route": "2.2.3",
 		"@prosopo/common": "2.2.3",
 		"@prosopo/types": "2.2.3",
-		"express": "4.21.2",
 		"ip-address": "10.0.1",
 		"mongoose": "8.6.2",
 		"zod": "3.23.8"

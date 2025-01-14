@@ -12,25 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiEndpoint } from "@api/apiEndpoint.js";
-import type { Logger } from "@prosopo/common";
+import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
 import type { Request, Response } from "express";
 import type { ZodType } from "zod";
+import type { ApiRouteEndpoint } from "@prosopo/api-route";
+import type { Logger } from "@prosopo/common";
 
-class ExpressEndpointAdapter {
+class ApiExpressEndpointDefaultAdapter implements ApiExpressEndpointAdapter {
 	public constructor(private readonly logger: Logger) {}
 
 	public async handleRequest(
-		endpoint: ApiEndpoint<ZodType | undefined>,
+		endpoint: ApiRouteEndpoint<ZodType | undefined>,
 		request: Request,
 		response: Response,
 	): Promise<void> {
 		try {
 			const args = endpoint.getRequestArgsSchema()?.parse(request.body);
 
-			const apiResponse = await endpoint.processRequest(args);
+			const apiEndpointResponse = await endpoint.processRequest(args);
 
-			response.json(apiResponse);
+			response.json(apiEndpointResponse);
 		} catch (error) {
 			this.logger.error(error);
 
@@ -39,4 +40,4 @@ class ExpressEndpointAdapter {
 	}
 }
 
-export { ExpressEndpointAdapter };
+export { ApiExpressEndpointDefaultAdapter };

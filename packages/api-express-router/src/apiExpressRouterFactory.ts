@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-enum ApiResponseStatus {
-	SUCCESS = "SUCCESS",
-	FAIL = "FAIL",
+import type { Router } from "express";
+import type { ApiRoutesProvider } from "@prosopo/api-route";
+
+interface ApiExpressRouterFactory {
+	createRouter(routersProvider: ApiRoutesProvider): Router;
 }
 
-export { ApiResponseStatus };
+export type { ApiExpressRouterFactory };

@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ExpressRoutesRegistrar } from "@api/express/expressRoutesRegistrar.js";
-import type { ApiRoutesProvider } from "@api/route/apiRoutesProvider.js";
-import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import { Router } from "express";
+import type { ApiRoutesProvider } from "@prosopo/api-route";
+import type {ApiExpressRouterFactory} from "./apiExpressRouterFactory.js";
+import type {ApiExpressRoutesRegistrar} from "./routesRegistrar/apiExpressRoutesRegistrar.js";
 
-class ExpressRouterFactory {
-	public createRouter(
-		rulesStorage: RulesStorage,
-		routersProvider: ApiRoutesProvider,
-		routesExpressRegistrar: ExpressRoutesRegistrar,
-	): Router {
-		const apiRoutes = routersProvider.getRoutes(rulesStorage);
+class ApiExpressRouterDefaultFactory implements ApiExpressRouterFactory{
+	public constructor(
+		private readonly apiRoutesRegistrar: ApiExpressRoutesRegistrar,
+	) {}
+
+	public createRouter(routersProvider: ApiRoutesProvider): Router {
+		const apiRoutes = routersProvider.getRoutes();
 
 		const router = Router();
 
-		routesExpressRegistrar.registerRoutes(router, apiRoutes);
+		this.apiRoutesRegistrar.registerRoutes(router, apiRoutes);
 
 		return router;
 	}
 }
 
-export { ExpressRouterFactory };
+export { ApiExpressRouterDefaultFactory };

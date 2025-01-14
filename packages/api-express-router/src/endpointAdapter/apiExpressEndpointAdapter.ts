@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiResponseStatus } from "@api/response/apiResponseStatus.js";
+import type { Request, Response } from "express";
+import type { ZodType } from "zod";
+import type { ApiRouteEndpoint } from "@prosopo/api-route";
 
-interface ApiResponse {
-	status: ApiResponseStatus;
-	error?: string;
-	data?: object;
+interface ApiExpressEndpointAdapter {
+	handleRequest(
+		endpoint: ApiRouteEndpoint<ZodType | undefined>,
+		request: Request,
+		response: Response,
+	): Promise<void>;
 }
 
-export type { ApiResponse };
+export type { ApiExpressEndpointAdapter };
