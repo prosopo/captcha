@@ -39,6 +39,9 @@
 		},
 		{
 			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api-route"
 		}
 	]
 }

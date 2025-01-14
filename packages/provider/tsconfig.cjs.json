@@ -43,6 +43,9 @@
 		},
 		{
 			"path": "../user-access-policy/tsconfig.cjs.json"
+		},
+		{
+			"path": "../api-route/tsconfig.cjs.json"
 		}
 	]
 }
