@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import * as util from "node:util";
+import { ProsopoError } from "@prosopo/common";
 import type { IPAddress } from "@prosopo/types";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import { Address4, Address6 } from "ip-address";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { CommandBase } from "./commandBase.js";
-import {ProsopoError} from "@prosopo/common";
 
 class MeasureFindCommand extends CommandBase {
 	public command = "measure-find";

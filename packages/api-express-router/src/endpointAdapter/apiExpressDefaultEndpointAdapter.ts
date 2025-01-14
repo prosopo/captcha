@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
-import type { Request, Response } from "express";
-import type { ZodType } from "zod";
 import type { ApiEndpoint } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
+import type { Request, Response } from "express";
+import type { ZodType } from "zod";
+import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
 
 class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 	public constructor(

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Request, type Response, Router } from "express";
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import { type Request, type Response, Router } from "express";
 import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndpointAdapter.js";
 
 class ApiExpressRouterFactory {

@@ -12,18 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { apiInsertManyRulesSchema } from "@rules/api/insertMany/apiInsertManyRulesSchema.js";
+import {
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
+} from "@prosopo/api-route";
+import {
+	type ApiInsertManyRulesArgsSchema,
+	apiInsertManyRulesArgsSchema,
+} from "@rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { z } from "zod";
-import {type ApiEndpoint, type ApiEndpointResponse, ApiEndpointResponseStatus} from "@prosopo/api-route";
 
 class ApiInsertManyRulesEndpoint
-	implements ApiEndpoint<typeof apiInsertManyRulesSchema>
+	implements ApiEndpoint<ApiInsertManyRulesArgsSchema>
 {
 	public constructor(private readonly rulesStorage: RulesStorage) {}
 
 	async processRequest(
-		args: z.infer<typeof apiInsertManyRulesSchema>,
+		args: z.infer<ApiInsertManyRulesArgsSchema>,
 	): Promise<ApiEndpointResponse> {
 		await this.rulesStorage.insertMany(args);
 
@@ -32,8 +39,8 @@ class ApiInsertManyRulesEndpoint
 		};
 	}
 
-	public getRequestArgsSchema(): typeof apiInsertManyRulesSchema {
-		return apiInsertManyRulesSchema;
+	public getRequestArgsSchema(): ApiInsertManyRulesArgsSchema {
+		return apiInsertManyRulesArgsSchema;
 	}
 }
 

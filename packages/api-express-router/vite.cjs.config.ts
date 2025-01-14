@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ViteCommonJSConfig } from "@prosopo/config";
 import path from "node:path";
+import { ViteCommonJSConfig } from "@prosopo/config";
 
 export default function () {
-	return ViteCommonJSConfig(
-		"api-route",
-		path.resolve("./tsconfig.cjs.json"),
-	);
+	return ViteCommonJSConfig("api-route", path.resolve("./tsconfig.cjs.json"));
 }

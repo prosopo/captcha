@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ProsopoError } from "@prosopo/common";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
-import {ProsopoError} from "@prosopo/common";
 
 abstract class CommandBase implements CommandModule {
 	abstract command: string;

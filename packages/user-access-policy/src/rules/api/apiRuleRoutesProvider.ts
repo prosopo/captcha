@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import { apiRulePaths } from "@rules/api/apiRulePaths.js";
 import { ApiDeleteManyRulesEndpoint } from "@rules/api/deleteMany/apiDeleteManyRulesEndpoint.js";
 import { ApiInsertManyRulesEndpoint } from "@rules/api/insertMany/apiInsertManyRulesEndpoint.js";
-import { apiRulePaths } from "@rules/api/apiRulePaths.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
-import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 
 class ApiRuleRoutesProvider implements ApiRoutesProvider {
 	public constructor(private readonly rulesStorage: RulesStorage) {}

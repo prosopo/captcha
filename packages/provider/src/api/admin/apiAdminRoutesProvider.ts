@@ -1,3 +1,4 @@
+import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +14,10 @@
 // limitations under the License.
 import { AdminApiPaths } from "@prosopo/types";
 import type { Tasks } from "../../tasks/index.js";
-import { ApiRegisterSiteKeyEndpoint } from "./endpoints/apiRegisterSiteKeyEndpoint.js";
-import type {ApiRoute, ApiRoutesProvider} from "@prosopo/api-route";
+import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
 
 class ApiAdminRoutesProvider implements ApiRoutesProvider {
-	public constructor(private readonly tasks:Tasks) {}
+	public constructor(private readonly tasks: Tasks) {}
 
 	public getRoutes(): ApiRoute[] {
 		return [

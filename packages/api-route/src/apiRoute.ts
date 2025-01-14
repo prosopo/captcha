@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { ZodType } from "zod";
-import type {ApiEndpoint} from "./endpoint/apiEndpoint.js";
+import type { ApiEndpoint } from "./endpoint/apiEndpoint.js";
 
 interface ApiRoute {
 	path: string;

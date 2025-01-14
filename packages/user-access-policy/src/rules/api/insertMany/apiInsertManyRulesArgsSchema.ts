@@ -12,17 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ruleConfigSchema } from "@rules/rule/config/ruleConfigSchema.js";
 import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
-import { array, object, string } from "zod";
+import { array, boolean, object, string } from "zod";
 
-const apiDeleteManyRulesArgsSchema = array(
+const apiInsertManyRulesArgsSchema = array(
 	object({
+		isUserBlocked: boolean(),
 		clientId: string().optional(),
+		description: string().optional(),
 		userIp: ruleIpSchema.optional(),
 		userId: string().optional(),
+		config: ruleConfigSchema.optional(),
 	}),
 );
 
-type ApiDeleteManyRulesArgsSchema = typeof apiDeleteManyRulesArgsSchema;
+type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
 
-export { apiDeleteManyRulesArgsSchema, type ApiDeleteManyRulesArgsSchema };
+export { apiInsertManyRulesArgsSchema, type ApiInsertManyRulesArgsSchema };

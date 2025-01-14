@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { ZodType, z } from "zod";
-import type {ApiEndpointResponse} from "./apiEndpointResponse.js";
+import type { ApiEndpointResponse } from "./apiEndpointResponse.js";
 
 interface ApiEndpoint<T extends ZodType | undefined> {
 	processRequest: T extends ZodType

@@ -11,21 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-	type ApiResponse,
-	RegisterSitekeyBody,
-	type RegisterSitekeyBodyTypeOutput,
-} from "@prosopo/types";
-import type { ClientTaskManager } from "../../../tasks/client/clientTasks.js";
-import type {ApiEndpoint} from "@prosopo/api-route";
-import type {z} from "zod";
 
-class ApiRegisterSiteKeyEndpoint implements ApiEndpoint<typeof RegisterSitekeyBody> {
+import {
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
+} from "@prosopo/api-route";
+import { RegisterSitekeyBody } from "@prosopo/types";
+import type { z } from "zod";
+import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
+
+type RegisterSitekeyBodyType = typeof RegisterSitekeyBody;
+
+class ApiRegisterSiteKeyEndpoint
+	implements ApiEndpoint<RegisterSitekeyBodyType>
+{
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
-		args: z.infer<typeof RegisterSitekeyBody>,
-	): Promise<ApiResponse> {
+		args: z.infer<RegisterSitekeyBodyType>,
+	): Promise<ApiEndpointResponse> {
 		const { siteKey, settings } = args;
 
 		const temp = settings || {};
@@ -33,11 +38,11 @@ class ApiRegisterSiteKeyEndpoint implements ApiEndpoint<typeof RegisterSitekeyBo
 		await this.clientTaskManager.registerSiteKey(siteKey, temp);
 
 		return {
-			status: "success",
+			status: ApiEndpointResponseStatus.SUCCESS,
 		};
 	}
 
-	public getRequestArgsSchema(): typeof RegisterSitekeyBody {
+	public getRequestArgsSchema(): RegisterSitekeyBodyType {
 		return RegisterSitekeyBody;
 	}
 }

@@ -13,6 +13,10 @@
 // limitations under the License.
 
 import type { Server } from "node:net";
+import {
+	apiExpressRouterFactory,
+	createApiExpressDefaultEndpointAdapter,
+} from "@prosopo/api-express-router";
 import { getPairAsync } from "@prosopo/contract";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
@@ -38,10 +42,6 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
-import {
-	apiExpressRouterFactory,
-	createApiExpressDefaultEndpointAdapter,
-} from "@prosopo/api-express-router";
 
 function startApi(
 	env: ProviderEnvironment,
@@ -53,10 +53,11 @@ function startApi(
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
 
+	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(env.logger);
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
 	);
-	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(env.logger);
+	const apiAdminRoutesProvider = api.admin.createApiAdminRoutesProvider(env);
 
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set(
@@ -76,11 +77,18 @@ function startApi(
 	apiApp.use(publicRouter(env));
 
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
-	apiApp.use(api.admin.createExpressAdminRouter(env));
+
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiRuleRoutesProvider,
 			apiEndpointAdapter,
+		),
+	);
+	apiApp.use(
+		apiExpressRouterFactory.createRouter(
+			apiAdminRoutesProvider,
+			// unlike the default one, it should have errorStatusCode as 400
+			createApiExpressDefaultEndpointAdapter(env.logger, 400),
 		),
 	);
 

@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ruleConfigSchema } from "@rules/rule/config/ruleConfigSchema.js";
-import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
-import { array, boolean, object, string } from "zod";
+import type { ApiRoutesProvider } from "@prosopo/api-route";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import { Tasks } from "../../tasks/index.js";
+import { ApiAdminRoutesProvider } from "./apiAdminRoutesProvider.js";
 
-const apiInsertManyRulesSchema = array(
-	object({
-		isUserBlocked: boolean(),
-		clientId: string().optional(),
-		description: string().optional(),
-		userIp: ruleIpSchema.optional(),
-		userId: string().optional(),
-		config: ruleConfigSchema.optional(),
-	}),
-);
+const createApiAdminRoutesProvider = (
+	providerEnvironment: ProviderEnvironment,
+): ApiRoutesProvider => {
+	const tasks = new Tasks(providerEnvironment);
 
-export { apiInsertManyRulesSchema };
+	return new ApiAdminRoutesProvider(tasks);
+};
+
+export { createApiAdminRoutesProvider };
