@@ -14,8 +14,10 @@
 		}
 	},
 	"scripts": {
+		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose"
+		"build": "tsc --build --verbose",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
 	"dependencies": {
 		"zod": "3.23.8"

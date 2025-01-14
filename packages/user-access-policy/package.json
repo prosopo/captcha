@@ -14,9 +14,10 @@
 		}
 	},
 	"scripts": {
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build",
 		"storage:benchmark:mongoose": "npx tsx ./src/rule/storage/benchmark/mongooseRulesStorageBenchmark.ts",
 		"storage:benchmark:mongoose:populate": "npm run storage:benchmark:mongoose -- populate --db-url=mongodb://localhost:27017 --entities-count-per-type=100000",
 		"storage:benchmark:mongoose:measure-find": "npm run storage:benchmark:mongoose -- measure-find --db-url=mongodb://localhost:27017 --target-ip-v4=0.0.136.184 --target-ip-v6=0000:0000:0000:0000:0000:0000:0000:7530"
