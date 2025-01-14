@@ -26,8 +26,8 @@ class MongooseRulesStorageFactory implements RulesStorageFactory {
 		return new RulesMongooseStorage(model);
 	}
 
-	protected async createModel(db: string): Promise<Model<Rule>> {
-		const mongoConnection = await mongoose.connect(`mongodb://${db}`);
+	protected async createModel(dbUrl: string): Promise<Model<Rule>> {
+		const mongoConnection = await mongoose.connect(`${dbUrl}`);
 
 		return mongoConnection.model(
 			"UserAccessPolicyRules",

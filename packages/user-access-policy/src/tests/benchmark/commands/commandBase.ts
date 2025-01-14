@@ -15,6 +15,7 @@
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 import type { ArgumentsCamelCase, Argv, CommandModule } from "yargs";
+import {ProsopoError} from "@prosopo/common";
 
 abstract class CommandBase implements CommandModule {
 	abstract command: string;
@@ -25,7 +26,7 @@ abstract class CommandBase implements CommandModule {
 	public builder(yargs: Argv): Argv {
 		return yargs.option("dbUrl", {
 			type: "string" as const,
-			describe: "like 'localhost:27017'",
+			describe: "like 'mongodb://localhost:27017'",
 			demandOption: true,
 		});
 	}
@@ -38,7 +39,7 @@ abstract class CommandBase implements CommandModule {
 		const dbUrl = "string" === typeof args.dbUrl ? args.dbUrl : "";
 
 		if ("" === dbUrl) {
-			throw new Error("dbUrl is not set");
+			throw new ProsopoError("dbUrl is not set");
 		}
 
 		return await this.storageFactory.createRulesStorage(dbUrl);

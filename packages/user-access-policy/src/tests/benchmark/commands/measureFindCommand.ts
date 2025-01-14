@@ -18,6 +18,7 @@ import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import { Address4, Address6 } from "ip-address";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { CommandBase } from "./commandBase.js";
+import {ProsopoError} from "@prosopo/common";
 
 class MeasureFindCommand extends CommandBase {
 	public command = "measure-find";
@@ -46,11 +47,11 @@ class MeasureFindCommand extends CommandBase {
 			"string" === typeof args.targetIpV6 ? args.targetIpV6 : "";
 
 		if (!targetIpV4AsString) {
-			throw new Error("Target ipv4 is not set");
+			throw new ProsopoError("Target ipv4 is not set");
 		}
 
 		if (!targetIpV6AsString) {
-			throw new Error("Target ipv6 is not set");
+			throw new ProsopoError("Target ipv6 is not set");
 		}
 
 		const rulesStorage = await this.createRulesStorage(args);

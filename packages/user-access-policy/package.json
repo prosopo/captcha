@@ -18,8 +18,8 @@
 		"build": "tsc --build --verbose",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"storage:benchmark:mongoose": "npx tsx ./src/rule/storage/benchmark/mongooseRulesStorageBenchmark.ts",
-		"storage:benchmark:mongoose:populate": "npm run storage:benchmark:mongoose -- populate --db-url=localhost:27017 --entities-count-per-type=100000",
-		"storage:benchmark:mongoose:measure-find": "npm run storage:benchmark:mongoose -- measure-find --db-url=localhost:27017 --target-ip-v4=0.0.136.184 --target-ip-v6=0000:0000:0000:0000:0000:0000:0000:7530"
+		"storage:benchmark:mongoose:populate": "npm run storage:benchmark:mongoose -- populate --db-url=mongodb://localhost:27017 --entities-count-per-type=100000",
+		"storage:benchmark:mongoose:measure-find": "npm run storage:benchmark:mongoose -- measure-find --db-url=mongodb://localhost:27017 --target-ip-v4=0.0.136.184 --target-ip-v6=0000:0000:0000:0000:0000:0000:0000:7530"
 	},
 	"dependencies": {
 		"@prosopo/common": "2.2.3",
