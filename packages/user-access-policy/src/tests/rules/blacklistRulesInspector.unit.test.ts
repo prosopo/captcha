@@ -1,7 +1,3 @@
-import { BlacklistRulesInspector } from "@rules/blacklistRulesInspector.js";
-import type { RuleRecord } from "@rules/storage/ruleRecord.js";
-import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
-import { Address4 } from "ip-address";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +11,11 @@ import { Address4 } from "ip-address";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { BlacklistRulesInspector } from "@rules/blacklistRulesInspector.js";
+import type { RuleRecord } from "@rules/storage/ruleRecord.js";
+import { TestRulesStorage } from "@tests/rules/storage/testRulesStorage.js";
+import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import type { BlacklistInspector } from "../../blacklistInspector.js";
 

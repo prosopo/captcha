@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 const ruleApiPaths = {
 	INSERT_MANY: "/v1/prosopo/user-access-policy/rules/insert-many",
 	DELETE_MANY: "/v1/prosopo/user-access-policy/rules/delete-many",

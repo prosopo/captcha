@@ -1,7 +1,3 @@
-import { MeasureFindCommand } from "@tests/benchmark/commands/measureFindCommand.js";
-import { PopulateCommand } from "@tests/benchmark/commands/populateCommand.js";
-import type { ConnectionCleaner } from "@tests/benchmark/connectionCleaner/connectionCleaner.js";
-import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +11,11 @@ import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesS
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { MeasureFindCommand } from "@tests/benchmark/commands/measureFindCommand.js";
+import { PopulateCommand } from "@tests/benchmark/commands/populateCommand.js";
+import type { ConnectionCleaner } from "@tests/benchmark/connectionCleaner/connectionCleaner.js";
+import type { RulesStorageFactory } from "@tests/benchmark/storageFactory/rulesStorageFactory.js";
 import yargs, { type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
 

@@ -1,5 +1,3 @@
-import type { RuleIpV6Mask } from "@rules/rule/ip/v6/mask/ruleIpV6Mask.js";
-import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "@rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,9 @@ import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "@rules/rule/ip/v6/ruleIpV6NumericM
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { RuleIpV6Mask } from "@rules/rule/ip/v6/mask/ruleIpV6Mask.js";
+import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "@rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
 import { Schema } from "mongoose";
 
 const ipV6MaskMongooseSchema = new Schema<RuleIpV6Mask>(

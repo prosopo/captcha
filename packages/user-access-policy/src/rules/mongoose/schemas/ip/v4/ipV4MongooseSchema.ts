@@ -1,5 +1,3 @@
-import { ipV4MaskMongooseSchema } from "@rules/mongoose/schemas/ip/v4/ipV4MaskMongooseSchema.js";
-import type { RuleIpV4 } from "@rules/rule/ip/v4/ruleIpV4.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,9 @@ import type { RuleIpV4 } from "@rules/rule/ip/v4/ruleIpV4.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { ipV4MaskMongooseSchema } from "@rules/mongoose/schemas/ip/v4/ipV4MaskMongooseSchema.js";
+import type { RuleIpV4 } from "@rules/rule/ip/v4/ruleIpV4.js";
 import { Schema } from "mongoose";
 
 const ipV4MongooseSchema = new Schema<RuleIpV4>(

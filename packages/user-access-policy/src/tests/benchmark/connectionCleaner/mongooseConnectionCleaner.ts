@@ -1,4 +1,3 @@
-import type { ConnectionCleaner } from "@tests/benchmark/connectionCleaner/connectionCleaner.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import type { ConnectionCleaner } from "@tests/benchmark/connectionCleaner/conne
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { ConnectionCleaner } from "@tests/benchmark/connectionCleaner/connectionCleaner.js";
 import mongoose from "mongoose";
 
 class MongooseConnectionCleaner implements ConnectionCleaner {

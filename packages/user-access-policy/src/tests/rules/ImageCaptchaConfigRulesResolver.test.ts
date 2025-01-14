@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
 import { ImageCaptchaConfigRulesResolver } from "@rules/imageCaptchaConfigRulesResolver.js";
 import type { RuleRecord } from "@rules/storage/ruleRecord.js";

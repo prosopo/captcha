@@ -1,4 +1,3 @@
-import type { ruleIpV6MaskSchema } from "@rules/rule/ip/v6/mask/ruleIpV6MaskSchema.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import type { ruleIpV6MaskSchema } from "@rules/rule/ip/v6/mask/ruleIpV6MaskSche
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { ruleIpV6MaskSchema } from "@rules/rule/ip/v6/mask/ruleIpV6MaskSchema.js";
 import type { z } from "zod";
 
 type RuleIpV6Mask = z.infer<typeof ruleIpV6MaskSchema>;

@@ -1,7 +1,3 @@
-import { rulePerformanceMongooseIndexes } from "@rules/mongoose/indexes/rulePerformanceMongooseIndexes.js";
-import { ruleUniqueMongooseIndexes } from "@rules/mongoose/indexes/ruleUniqueMongooseIndexes.js";
-import { ruleMongooseSchema } from "@rules/mongoose/schemas/ruleMongooseSchema.js";
-import type { Rule } from "@rules/rule/rule.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +11,11 @@ import type { Rule } from "@rules/rule/rule.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { rulePerformanceMongooseIndexes } from "@rules/mongoose/indexes/rulePerformanceMongooseIndexes.js";
+import { ruleUniqueMongooseIndexes } from "@rules/mongoose/indexes/ruleUniqueMongooseIndexes.js";
+import { ruleMongooseSchema } from "@rules/mongoose/schemas/ruleMongooseSchema.js";
+import type { Rule } from "@rules/rule/rule.js";
 import type { Schema } from "mongoose";
 
 const getRuleMongooseSchema = (): Schema<Rule> => {

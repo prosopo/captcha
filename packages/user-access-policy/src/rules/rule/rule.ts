@@ -1,4 +1,3 @@
-import type { RuleConfig } from "@rules/rule/config/ruleConfig.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import type { RuleConfig } from "@rules/rule/config/ruleConfig.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { RuleConfig } from "@rules/rule/config/ruleConfig.js";
 import type { RuleIp } from "@rules/rule/ip/ruleIp.js";
 
 interface Rule {

@@ -1,4 +1,3 @@
-import type { ruleIpV6Schema } from "@rules/rule/ip/v6/ruleIpV6Schema.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import type { ruleIpV6Schema } from "@rules/rule/ip/v6/ruleIpV6Schema.js";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { ruleIpV6Schema } from "@rules/rule/ip/v6/ruleIpV6Schema.js";
 import type { z } from "zod";
 
 type RuleIpV6 = z.infer<typeof ruleIpV6Schema>;
