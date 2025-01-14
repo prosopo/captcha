@@ -16,6 +16,7 @@ import { ProsopoError } from "@prosopo/common";
 import type { IPAddress } from "@prosopo/types";
 import type { RuleMongooseRecord } from "@rules/mongoose/ruleMongooseRecord.js";
 import { RuleIpVersion } from "@rules/rule/ip/ruleIpVersion.js";
+import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "@rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
 import type { Rule } from "@rules/rule/rule.js";
 import type { SearchRuleFilterSettings } from "@rules/storage/filters/search/searchRuleFilterSettings.js";
 import type { SearchRuleFilters } from "@rules/storage/filters/search/searchRuleFilters.js";
@@ -177,7 +178,11 @@ class RulesMongooseStorage implements RulesStorage {
 
 		const userIpAsNumeric = isIpV4
 			? userIpAddress.bigInt()
-			: userIpAddress.bigInt().toString();
+			: // we must have the exact same string length to guarantee the right comparison.
+				userIpAddress
+					.bigInt()
+					.toString()
+					.padStart(RULE_IPV6_NUMERIC_MAX_LENGTH, "0");
 
 		const userIpKey =
 			userIpVersion === RuleIpVersion.v4

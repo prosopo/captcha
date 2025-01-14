@@ -21,6 +21,7 @@ import {
 	type ApiInsertManyRulesArgsSchema,
 	apiInsertManyRulesArgsSchema,
 } from "@rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
+import type { Rule } from "@rules/rule/rule.js";
 import type { RulesStorage } from "@rules/storage/rulesStorage.js";
 import type { z } from "zod";
 
@@ -32,7 +33,12 @@ class ApiInsertManyRulesEndpoint
 	async processRequest(
 		args: z.infer<ApiInsertManyRulesArgsSchema>,
 	): Promise<ApiEndpointResponse> {
-		await this.rulesStorage.insertMany(args);
+		const rules: Rule[] = [
+			...this.getUserIpRules(args),
+			...this.getUserIdRules(args),
+		];
+
+		await this.rulesStorage.insertMany(rules);
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
@@ -41,6 +47,46 @@ class ApiInsertManyRulesEndpoint
 
 	public getRequestArgsSchema(): ApiInsertManyRulesArgsSchema {
 		return apiInsertManyRulesArgsSchema;
+	}
+
+	protected getUserIpRules(
+		args: z.infer<ApiInsertManyRulesArgsSchema>,
+	): Rule[] {
+		const rules: Rule[] = [];
+
+		const userIps = args.userIps || [];
+
+		for (const userIp of userIps) {
+			rules.push({
+				userIp: userIp,
+				isUserBlocked: args.isUserBlocked,
+				description: args.description,
+				clientId: args.clientId,
+				config: args.config,
+			});
+		}
+
+		return rules;
+	}
+
+	protected getUserIdRules(
+		args: z.infer<ApiInsertManyRulesArgsSchema>,
+	): Rule[] {
+		const rules: Rule[] = [];
+
+		const userIds = args.userIds || [];
+
+		for (const userId of userIds) {
+			rules.push({
+				userId: userId,
+				isUserBlocked: args.isUserBlocked,
+				description: args.description,
+				clientId: args.clientId,
+				config: args.config,
+			});
+		}
+
+		return rules;
 	}
 }
 

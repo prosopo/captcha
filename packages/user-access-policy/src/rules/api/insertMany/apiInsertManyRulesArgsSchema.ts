@@ -16,16 +16,14 @@ import { ruleConfigSchema } from "@rules/rule/config/ruleConfigSchema.js";
 import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
 import { array, boolean, object, string } from "zod";
 
-const apiInsertManyRulesArgsSchema = array(
-	object({
-		isUserBlocked: boolean(),
-		clientId: string().optional(),
-		description: string().optional(),
-		userIp: ruleIpSchema.optional(),
-		userId: string().optional(),
-		config: ruleConfigSchema.optional(),
-	}),
-);
+const apiInsertManyRulesArgsSchema = object({
+	isUserBlocked: boolean(),
+	clientId: string().optional(),
+	description: string().optional(),
+	userIps: ruleIpSchema.array().optional(),
+	userIds: string().array().optional(),
+	config: ruleConfigSchema.optional(),
+});
 
 type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
 
