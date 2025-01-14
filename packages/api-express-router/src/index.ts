@@ -1,31 +1,19 @@
 import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndpointAdapter.js";
-import { ApiExpressRoutesDefaultRegistrar } from "./routesRegistrar/apiExpressRoutesDefaultRegistrar.js";
-import type { ApiExpressRouterFactory } from "./apiExpressRouterFactory.js";
-import { ApiExpressRouterDefaultFactory } from "./apiExpressRouterDefaultFactory.js";
-import type { ApiExpressRoutesRegistrar } from "./routesRegistrar/apiExpressRoutesRegistrar.js";
-import { ApiExpressEndpointDefaultAdapter } from "./endpointAdapter/apiExpressEndpointDefaultAdapter.js";
+import { ApiExpressRouterFactory } from "./apiExpressRouterFactory.js";
+import { ApiExpressDefaultEndpointAdapter } from "./endpointAdapter/apiExpressDefaultEndpointAdapter.js";
 import type { Logger } from "@prosopo/common";
 
-const createApiExpressEndpointAdapter = (
+const apiExpressRouterFactory = new ApiExpressRouterFactory();
+
+const createApiExpressDefaultEndpointAdapter = (
 	logger: Logger,
+	errorStatusCode = 500,
 ): ApiExpressEndpointAdapter => {
-	return new ApiExpressEndpointDefaultAdapter(logger);
-};
-
-const createApiExpressRouterFactory = (
-	apiEndpointAdapter: ApiExpressEndpointAdapter,
-): ApiExpressRouterFactory => {
-	const apiRoutesExpressRegistrar = new ApiExpressRoutesDefaultRegistrar(
-		apiEndpointAdapter,
-	);
-
-	return new ApiExpressRouterDefaultFactory(apiRoutesExpressRegistrar);
+	return new ApiExpressDefaultEndpointAdapter(logger, errorStatusCode);
 };
 
 export {
-	createApiExpressEndpointAdapter,
-	createApiExpressRouterFactory,
+	apiExpressRouterFactory,
+	createApiExpressDefaultEndpointAdapter,
 	type ApiExpressEndpointAdapter,
-	type ApiExpressRouterFactory,
-	type ApiExpressRoutesRegistrar,
 };

@@ -30,7 +30,7 @@ import {
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
 import {
-	createExpressRuleRouter,
+	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy";
 import cors from "cors";
@@ -38,6 +38,10 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+import {
+	apiExpressRouterFactory,
+	createApiExpressDefaultEndpointAdapter,
+} from "@prosopo/api-express-router";
 
 function startApi(
 	env: ProviderEnvironment,
@@ -45,8 +49,15 @@ function startApi(
 	port?: number,
 ): Server {
 	env.logger.info("Starting Prosopo API");
+
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
+
+	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
+		env.getDb().getUserAccessRulesStorage(),
+	);
+	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(env.logger);
+
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set(
 		"trust proxy",
@@ -67,9 +78,9 @@ function startApi(
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
 	apiApp.use(api.admin.createExpressAdminRouter(env));
 	apiApp.use(
-		createExpressRuleRouter(
-			env.getDb().getUserAccessRulesStorage(),
-			env.logger,
+		apiExpressRouterFactory.createRouter(
+			apiRuleRoutesProvider,
+			apiEndpointAdapter,
 		),
 	);
 

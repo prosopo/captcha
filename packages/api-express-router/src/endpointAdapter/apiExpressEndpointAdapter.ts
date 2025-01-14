@@ -14,11 +14,11 @@
 
 import type { Request, Response } from "express";
 import type { ZodType } from "zod";
-import type { ApiRouteEndpoint } from "@prosopo/api-route";
+import type {ApiEndpoint} from "@prosopo/api-route";
 
 interface ApiExpressEndpointAdapter {
 	handleRequest(
-		endpoint: ApiRouteEndpoint<ZodType | undefined>,
+		endpoint: ApiEndpoint<ZodType | undefined>,
 		request: Request,
 		response: Response,
 	): Promise<void>;

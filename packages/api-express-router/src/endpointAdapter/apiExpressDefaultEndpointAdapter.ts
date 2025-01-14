@@ -15,14 +15,17 @@
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
 import type { Request, Response } from "express";
 import type { ZodType } from "zod";
-import type { ApiRouteEndpoint } from "@prosopo/api-route";
+import type { ApiEndpoint } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 
-class ApiExpressEndpointDefaultAdapter implements ApiExpressEndpointAdapter {
-	public constructor(private readonly logger: Logger) {}
+class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
+	public constructor(
+		private readonly logger: Logger,
+		private readonly errorStatusCode: number,
+	) {}
 
 	public async handleRequest(
-		endpoint: ApiRouteEndpoint<ZodType | undefined>,
+		endpoint: ApiEndpoint<ZodType | undefined>,
 		request: Request,
 		response: Response,
 	): Promise<void> {
@@ -40,4 +43,4 @@ class ApiExpressEndpointDefaultAdapter implements ApiExpressEndpointAdapter {
 	}
 }
 
-export { ApiExpressEndpointDefaultAdapter };
+export { ApiExpressDefaultEndpointAdapter };

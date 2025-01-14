@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import { array, object, string } from "zod";
-import {ruleIpSchema} from "@rules/rule/ip/ruleIpSchema.js";
+import { ruleIpSchema } from "@rules/rule/ip/ruleIpSchema.js";
 
-const apiDeleteManyRulesSchema = array(
+const apiDeleteManyRulesArgsSchema = array(
 	object({
 		clientId: string().optional(),
 		userIp: ruleIpSchema.optional(),
@@ -23,4 +23,4 @@ const apiDeleteManyRulesSchema = array(
 	}),
 );
 
-export { apiDeleteManyRulesSchema };
+export { apiDeleteManyRulesArgsSchema };

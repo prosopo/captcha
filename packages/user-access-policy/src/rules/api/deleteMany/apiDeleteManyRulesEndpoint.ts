@@ -13,17 +13,22 @@
 // limitations under the License.
 
 import type { z } from "zod";
-import {type ApiEndpoint, type ApiEndpointResponse, ApiEndpointResponseStatus} from "@prosopo/api-route";
-import {apiDeleteManyRulesSchema} from "./apiDeleteManyRulesSchema.js";
-import type {RulesStorage} from "@rules/storage/rulesStorage.js";
+import {
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
+} from "@prosopo/api-route";
+import { apiDeleteManyRulesArgsSchema } from "./apiDeleteManyRulesArgsSchema.js";
+import type { RulesStorage } from "@rules/storage/rulesStorage.js";
+import type { ApiDeleteManyRulesArgs } from "@rules/api/deleteMany/apiDeleteManyRulesArgs.js";
 
 class ApiDeleteManyRulesEndpoint
-	implements ApiEndpoint<typeof apiDeleteManyRulesSchema>
+	implements ApiEndpoint<ApiDeleteManyRulesArgs>
 {
 	public constructor(private readonly rulesStorage: RulesStorage) {}
 
 	async processRequest(
-		args: z.infer<typeof apiDeleteManyRulesSchema>,
+		args: z.infer<ApiDeleteManyRulesArgs>,
 	): Promise<ApiEndpointResponse> {
 		await this.rulesStorage.deleteMany(args);
 
@@ -32,8 +37,8 @@ class ApiDeleteManyRulesEndpoint
 		};
 	}
 
-	public getRequestArgsSchema(): typeof apiDeleteManyRulesSchema {
-		return apiDeleteManyRulesSchema;
+	public getRequestArgsSchema(): ApiDeleteManyRulesArgs {
+		return apiDeleteManyRulesArgsSchema;
 	}
 }
 

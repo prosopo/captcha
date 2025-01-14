@@ -11,17 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { NextFunction, Request, Response } from "express";
-import type { ZodType } from "zod";
-import type { Endpoint } from "./endpoint.js";
+import { AdminApiPaths } from "@prosopo/types";
+import type { Tasks } from "../../tasks/index.js";
+import { ApiRegisterSiteKeyEndpoint } from "./endpoints/apiRegisterSiteKeyEndpoint.js";
+import type {ApiRoute, ApiRoutesProvider} from "@prosopo/api-route";
 
-interface EndpointExpressAdapter {
-	handleRequest(
-		apiEndpoint: Endpoint<ZodType | undefined>,
-		request: Request,
-		response: Response,
-		next: NextFunction,
-	): Promise<void>;
+class ApiAdminRoutesProvider implements ApiRoutesProvider {
+	public constructor(private readonly tasks:Tasks) {}
+
+	public getRoutes(): ApiRoute[] {
+		return [
+			{
+				path: AdminApiPaths.SiteKeyRegister,
+				endpoint: new ApiRegisterSiteKeyEndpoint(this.tasks.clientTaskManager),
+			},
+		];
+	}
 }
 
-export type { EndpointExpressAdapter };
+export { ApiAdminRoutesProvider };

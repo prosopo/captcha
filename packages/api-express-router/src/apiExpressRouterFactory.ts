@@ -12,11 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Router } from "express";
-import type { ApiRoutesProvider } from "@prosopo/api-route";
+import { type Request, type Response, Router } from "express";
+import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndpointAdapter.js";
 
-interface ApiExpressRouterFactory {
-	createRouter(routersProvider: ApiRoutesProvider): Router;
+class ApiExpressRouterFactory {
+	public createRouter(
+		routersProvider: ApiRoutesProvider,
+		apiEndpointAdapter: ApiExpressEndpointAdapter,
+	): Router {
+		const router = Router();
+		const apiRoutes = routersProvider.getRoutes();
+
+		this.registerRoutes(router, apiRoutes, apiEndpointAdapter);
+
+		return router;
+	}
+
+	protected registerRoutes(
+		router: Router,
+		routes: ApiRoute[],
+		apiEndpointAdapter: ApiExpressEndpointAdapter,
+	): void {
+		for (const route of routes) {
+			this.registerRoute(router, route, apiEndpointAdapter);
+		}
+	}
+
+	protected registerRoute(
+		router: Router,
+		route: ApiRoute,
+		apiEndpointAdapter: ApiExpressEndpointAdapter,
+	): void {
+		router.post(
+			route.path,
+			async (request: Request, response: Response): Promise<void> => {
+				await apiEndpointAdapter.handleRequest(
+					route.endpoint,
+					request,
+					response,
+				);
+			},
+		);
+	}
 }
 
-export type { ApiExpressRouterFactory };
+export { ApiExpressRouterFactory };
