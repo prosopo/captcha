@@ -59,8 +59,8 @@
 		# The rate limit is applied to `remote_host` with a limit of 6 requests per 6 seconds (60 requests per minute).
 		zone dynamic_example {
 			key {remote_host}
-			events 6
-			window 6s
+			events {$CADDY_RATE_LIMIT_EVENTS}
+			window {$CADDY_RATE_LIMIT_WINDOW}
 		}
 		log_key
 	}
