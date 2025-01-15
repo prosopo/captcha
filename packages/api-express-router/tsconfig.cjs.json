@@ -4,5 +4,13 @@
 		"rootDir": "./src",
 		"outDir": "./dist/cjs"
 	},
-	"include": ["./src"]
+	"include": ["./src"],
+	"references": [
+		{
+			"path": "../api-route/tsconfig.cjs.json"
+		},
+		{
+			"common": "../common/tsconfig.cjs.json"
+		}
+	]
 }
