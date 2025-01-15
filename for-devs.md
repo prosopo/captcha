@@ -40,7 +40,9 @@ If your IDE supports `biome` (directly, or via plugin), you can configure it to 
 * Installation: `npm install`
 * Building packages: `npm run build:all`
 * Building the bundle: `npm run build:bundle`
-* Linting: `npm run lint-fix` (formatting & code validation)
+* Linting: `npm run lint/lint-fix`
+
+Linting: The first command checks formatting & code validation, second fixes formatting-related things.
 
 ## 4. Running Tests (locally)
 

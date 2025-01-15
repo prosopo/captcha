@@ -10,7 +10,7 @@
 			"path": "../api-route"
 		},
 		{
-			"common": "../common"
+			"path": "../common"
 		}
 	]
 }

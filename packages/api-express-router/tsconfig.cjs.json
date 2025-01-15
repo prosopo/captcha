@@ -10,7 +10,7 @@
 			"path": "../api-route/tsconfig.cjs.json"
 		},
 		{
-			"common": "../common/tsconfig.cjs.json"
+			"path": "../common/tsconfig.cjs.json"
 		}
 	]
 }
