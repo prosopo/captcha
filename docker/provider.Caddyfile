@@ -8,6 +8,7 @@
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
 	servers {
+		protocols h1 h2
 		listener_wrappers {
 			http_redirect
 			tls
@@ -22,6 +23,17 @@
 }
 
 {$CADDY_DOMAIN} {
+	header / {
+		# Enable HTTP Strict Transport Security (HSTS)
+		Strict-Transport-Security "max-age=31536000;"
+		# Enable cross-site filter (XSS) and tell browser to block detected attacks
+		X-XSS-Protection "1; mode=block"
+		# Disallow the site to be rendered within a frame (clickjacking protection)
+		X-Frame-Options "DENY"
+		# Prevent search engines from indexing
+		X-Robots-Tag "none"
+	}
+
 	# basicauth /metrics {
 	# 	 # this has to be the username<space><bcrypted password>
 	# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
