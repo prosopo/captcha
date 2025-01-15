@@ -96,8 +96,8 @@ function startApi(
 	// const configRateLimits = env.config.rateLimits;
 	// const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
 	// for (const [path, limit] of Object.entries(rateLimits)) {
-		// const enumPath = path as CombinedApiPaths;
-		// apiApp.use(enumPath, rateLimit(limit));
+	// const enumPath = path as CombinedApiPaths;
+	// apiApp.use(enumPath, rateLimit(limit));
 	// }
 
 	return apiApp.listen(apiPort, () => {
