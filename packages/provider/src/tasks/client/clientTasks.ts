@@ -11,31 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import { validateAddress } from "@polkadot/util-crypto/address";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
-	type AddBlockRulesIP,
-	type AddBlockRulesUser,
-	BlockRuleType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
-	type RemoveBlockRulesIP,
-	type RemoveBlockRulesUser,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	IPAddressBlockRule,
 	IProviderDatabase,
 	PoWCaptchaStored,
-	UserAccountBlockRule,
 	UserCommitment,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
-import { getIPAddress } from "../../util.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -223,79 +213,6 @@ export class ClientTaskManager {
 				settings: settings,
 			} as ClientRecord,
 		]);
-	}
-
-	/**
-	 * @description Add IP block rules to the database. Allows specifying mutiple IPs for a single configuration
-	 * @param {AddBlockRulesIP} rulesets
-	 */
-	async addIPBlockRules(rulesets: AddBlockRulesIP): Promise<void> {
-		for (const ruleset of rulesets) {
-			const rules: IPAddressBlockRule[] = ruleset.ips.map((ip) => {
-				return {
-					ip: Number(getIPAddress(ip).bigInt()),
-					global: ruleset.global,
-					type: BlockRuleType.ipAddress,
-					dappAccount: ruleset.dappAccount,
-					hardBlock: ruleset.hardBlock,
-					...(ruleset.captchaConfig && {
-						captchaConfig: ruleset.captchaConfig,
-					}),
-				};
-			});
-			await this.providerDB.storeIPBlockRuleRecords(rules);
-		}
-	}
-
-	/**
-	 * @description Remove IP block rules from the database by IP address and optionally dapp account
-	 * @param {RemoveBlockRulesIP} opts
-	 */
-	async removeIPBlockRules(opts: RemoveBlockRulesIP): Promise<void> {
-		await this.providerDB.removeIPBlockRuleRecords(
-			opts.ips.map((ip) => getIPAddress(ip).bigInt()),
-			opts.dappAccount,
-		);
-	}
-
-	/**
-	 * @description Add user block rules to the database. Allows specifying multiple users for a single configuration
-	 * @param {AddBlockRulesUser} rulesets
-	 */
-	async addUserBlockRules(rulesets: AddBlockRulesUser): Promise<void> {
-		for (const ruleset of rulesets) {
-			validateAddress(ruleset.dappAccount, false, 42);
-			const rules: UserAccountBlockRule[] = ruleset.users.map((userAccount) => {
-				validateAddress(userAccount, false, 42);
-				return {
-					dappAccount: ruleset.dappAccount,
-					userAccount,
-					type: BlockRuleType.userAccount,
-					global: ruleset.global,
-					hardBlock: ruleset.hardBlock,
-					...(ruleset.captchaConfig && {
-						captchaConfig: ruleset.captchaConfig,
-					}),
-				};
-			});
-			await this.providerDB.storeUserBlockRuleRecords(rules);
-		}
-	}
-
-	/**
-	 * @description Remove user block rules from the database by user account and optionally dapp account
-	 * @param {RemoveBlockRulesUser} opts
-	 */
-	async removeUserBlockRules(opts: RemoveBlockRulesUser): Promise<void> {
-		if (opts.dappAccount) {
-			validateAddress(opts.dappAccount, false, 42);
-			await this.providerDB.removeUserBlockRuleRecords(
-				opts.users,
-				opts.dappAccount,
-			);
-		} else {
-			await this.providerDB.removeUserBlockRuleRecords(opts.users);
-		}
 	}
 
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {

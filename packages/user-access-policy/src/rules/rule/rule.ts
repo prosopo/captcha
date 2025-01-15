@@ -12,22 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { BlockRule } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type { RuleConfig } from "./config/ruleConfig.js";
+import type { RuleIp } from "./ip/ruleIp.js";
 
-export const checkUserRules = async (
-	db: IProviderDatabase,
-	user: string,
-	dapp: string,
-): Promise<BlockRule | undefined> => {
-	const userRule = await db.getUserBlockRuleRecord(user, dapp);
+interface Rule {
+	isUserBlocked: boolean;
+	clientId?: string;
+	description?: string;
+	userIp?: RuleIp;
+	userId?: string;
+	config?: RuleConfig;
+}
 
-	if (
-		userRule &&
-		userRule.userAccount === user &&
-		userRule.dappAccount === dapp
-	) {
-		return userRule;
-	}
-	return undefined;
-};
+export type { Rule };

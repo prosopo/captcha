@@ -20,6 +20,7 @@ import {
 	type ZodObject,
 	type ZodOptional,
 	array,
+	bigint,
 	boolean,
 	coerce,
 	type input,
@@ -84,10 +85,6 @@ export type TSubmitPowCaptchaSolutionURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
-	BlockRuleIPAdd = "/v1/prosopo/provider/admin/blockrule/ip/add",
-	BlockRuleIPRemove = "/v1/prosopo/provider/admin/blockrule/ip/remove",
-	BlocKRuleUserAdd = "/v1/prosopo/provider/admin/blockrule/user/add",
-	BlockRuleUserRemove = "/v1/prosopo/provider/admin/blockrule/user/remove",
 }
 
 export type CombinedApiPaths = ApiPaths | AdminApiPaths;
@@ -104,10 +101,6 @@ export const ProviderDefaultRateLimits = {
 	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlockRuleIPAdd]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlockRuleIPRemove]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlocKRuleUserAdd]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlockRuleUserRemove]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -355,6 +348,8 @@ export const RegisterSitekeyBody = object({
 	}).optional(),
 });
 
+export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
+
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({
 		count: number().positive(),
@@ -392,42 +387,6 @@ export const BlockRuleSpec = object({
 });
 
 export type BlockRule = zInfer<typeof BlockRuleSpec>;
-
-export const AddBlockRulesIPSpec = array(
-	BlockRuleSpec.merge(
-		object({
-			ips: array(string()),
-		}),
-	),
-);
-
-export type AddBlockRulesIP = zInfer<typeof AddBlockRulesIPSpec>;
-
-export const RemoveBlockRulesIPSpec = object({
-	ips: array(string()),
-	dappAccount: string().optional(),
-});
-
-export type RemoveBlockRulesIP = zInfer<typeof RemoveBlockRulesIPSpec>;
-
-export const BlockRuleIPAddBody = array(AddBlockRulesIPSpec);
-
-export const AddBlockRulesUserSpec = array(
-	BlockRuleSpec.merge(
-		object({
-			users: array(string()),
-		}),
-	),
-);
-
-export type AddBlockRulesUser = zInfer<typeof AddBlockRulesUserSpec>;
-
-export const RemoveBlockRulesUserSpec = object({
-	users: array(string()),
-	dappAccount: string().optional(),
-});
-
-export type RemoveBlockRulesUser = zInfer<typeof RemoveBlockRulesUserSpec>;
 
 export const DappDomainRequestBody = object({
 	[ApiParams.dapp]: string(),
