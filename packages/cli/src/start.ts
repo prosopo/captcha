@@ -64,12 +64,12 @@ function startApi(
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
 	apiApp.use(prosopoAdminRouter(env));
 
-	// Rate limiting
-	const rateLimits = env.config.rateLimits;
-	for (const [path, limit] of Object.entries(rateLimits)) {
-		const enumPath = path as CombinedApiPaths;
-		apiApp.use(enumPath, rateLimit(limit));
-	}
+	// // Rate limiting
+	// const rateLimits = env.config.rateLimits;
+	// for (const [path, limit] of Object.entries(rateLimits)) {
+	// 	const enumPath = path as CombinedApiPaths;
+	// 	apiApp.use(enumPath, rateLimit(limit));
+	// }
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
