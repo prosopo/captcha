@@ -12,28 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
 import {
 	ApiParams,
-	type CaptchaResult,
-	CaptchaStatus,
 	type GetFrictionlessCaptchaResponse,
-	type IPAddress,
-	POW_SEPARATOR,
-	type PoWCaptcha,
-	type PoWChallengeId,
 	type ProsopoConfigOutput,
-	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase, Session } from "@prosopo/types-database";
-import { at, verifyRecency } from "@prosopo/util";
-import type { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { checkIpRules } from "../../rules/ip.js";
 import { checkLangRules } from "../../rules/lang.js";
-import { checkUserRules } from "../../rules/user.js";
 
 export class FrictionlessManager {
 	config: ProsopoConfigOutput;
@@ -48,16 +35,6 @@ export class FrictionlessManager {
 		this.config = config;
 		this.pair = pair;
 		this.db = db;
-	}
-
-	async checkIpRules(ipAddress: IPAddress, dapp: string): Promise<boolean> {
-		const rule = await checkIpRules(this.db, ipAddress, dapp);
-		return !!rule;
-	}
-
-	async checkUserRules(user: string, dapp: string): Promise<boolean> {
-		const rule = await checkUserRules(this.db, user, dapp);
-		return !!rule;
 	}
 
 	checkLangRules(acceptLanguage: string): number {
