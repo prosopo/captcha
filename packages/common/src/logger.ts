@@ -58,10 +58,12 @@ const JSONReporter = (
 		options: ConsolaOptions;
 	},
 ) => {
+	const writer = process?.stdout ? process.stdout.write : console.info;
+	const writerError = process?.stderr ? process.stderr.write : console.error;
 	if (context.options.level === ConsolaLogLevels.error) {
-		process.stderr.write(`${JSON.stringify(message)}\n`);
+		writer(`${JSON.stringify(message)}\n`);
 	} else {
-		process.stdout.write(`${JSON.stringify(message)}\n`);
+		writerError(`${JSON.stringify(message)}\n`);
 	}
 };
 
