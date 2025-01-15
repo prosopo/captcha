@@ -13,28 +13,33 @@
 // limitations under the License.
 
 import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import mongoose, { type Model, type Mongoose } from "mongoose";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { RulesMongooseStorage } from "../../../../rules/mongoose/rulesMongooseStorage.js";
 import { getRuleMongooseSchema } from "../../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
+import type { Rule } from "../../../../rules/rule/rule.js";
 import type { RulesStorage } from "../../../../rules/storage/rulesStorage.js";
 import { loggerMockedInstance } from "../../loggerMockedInstance.js";
 
 describe("recordValidation", async () => {
-	const mongoServer = await MongoMemoryServer.create();
-	const mongoConnection = await mongoose.connect(mongoServer.getUri());
+	let mongoServer: MongoMemoryServer;
+	let mongoConnection: Mongoose;
+	let rulesStorage: RulesStorage;
+	let model: Model<Rule>;
 
-	const model = mongoConnection.model(
-		"UserAccessPolicyRules",
-		getRuleMongooseSchema(),
-	);
+	beforeAll(async () => {
+		mongoServer = await MongoMemoryServer.create();
+		mongoConnection = await mongoose.connect(mongoServer.getUri());
 
-	await model.syncIndexes();
+		model = mongoConnection.model(
+			"UserAccessPolicyRules",
+			getRuleMongooseSchema(),
+		);
 
-	const rulesStorage: RulesStorage = new RulesMongooseStorage(
-		loggerMockedInstance,
-		model,
-	);
+		await model.syncIndexes();
+
+		rulesStorage = new RulesMongooseStorage(loggerMockedInstance, model);
+	});
 
 	beforeEach(async () => {
 		await model.deleteMany({});
