@@ -66,9 +66,9 @@ const JSONReporter = (
 		? process.stderr.write.bind(process.stderr)
 		: console.error;
 	if (context.options.level === ConsolaLogLevels.error) {
-		writer(`${JSON.stringify(message)}\n`);
-	} else {
 		writerError(`${JSON.stringify(message)}\n`);
+	} else {
+		writer(`${JSON.stringify(message)}\n`);
 	}
 };
 
