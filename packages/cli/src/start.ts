@@ -17,9 +17,9 @@ import {
 	apiExpressRouterFactory,
 	createApiExpressDefaultEndpointAdapter,
 } from "@prosopo/api-express-router";
-import { getPairAsync } from "@prosopo/contract";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
+import { getPairAsync } from "@prosopo/keyring";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
 	api,

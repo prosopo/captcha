@@ -10,9 +10,7 @@
 		{
 			"path": "../common"
 		},
-		{
-			"path": "../contract"
-		},
+
 		{
 			"path": "../../dev/config"
 		},
@@ -24,6 +22,9 @@
 		},
 		{
 			"path": "../env"
+		},
+		{
+			"path": "../keyring"
 		},
 		{
 			"path": "../types"

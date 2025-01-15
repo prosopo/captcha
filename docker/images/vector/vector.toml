@@ -41,6 +41,9 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
 
 # listen to docker events for containers starting+ending
 [sources.docker]
@@ -100,6 +103,9 @@ compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
 
 [sources.caddy]
 type = "docker_logs"
@@ -127,34 +133,6 @@ del(.logger)
 type = "http"
 inputs = ["caddy_format"]
 uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = false
-
-[sources.watchtower]
-type = "docker_logs"
-include_labels = ["vector.watchtower=true"]
-
-[transforms.watchtower_format]
-type = "remap"
-inputs = ["watchtower"]
-source = '''
-.=parse_json!(string!(.message))
-.host="$OO_HOST"
-del(.time)
-del(.notify)
-'''
-
-# send to openobserve
-[sinks.openobserve_watchtower]
-type = "http"
-inputs = ["watchtower_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_watchtower/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"

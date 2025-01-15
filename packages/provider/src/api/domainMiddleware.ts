@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { validateAddress } from "@polkadot/util-crypto";
-import { ProviderApi } from "@prosopo/api";
 import { ProsopoApiError } from "@prosopo/common";
-import { ApiPrefix, DappDomainRequestBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
