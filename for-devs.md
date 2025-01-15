@@ -41,7 +41,7 @@ If your IDE supports `biome` (directly, or via plugin), you can configure it to 
 * Building packages: `npm run build:all`
 * Building the bundle: `npm run build:bundle`
 * Lint checks: `npm run lint`
-* Lint auto-fixes: `npm run lint-fix`
+* Lint formatting fixes: `npm run lint-fix`
 
 ## 4. Running Tests (locally)
 
