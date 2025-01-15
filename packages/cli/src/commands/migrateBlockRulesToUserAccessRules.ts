@@ -20,6 +20,7 @@ import type {
 	UserAccountBlockRuleRecord,
 } from "@prosopo/types-database";
 import type { Rule } from "@prosopo/user-access-policy";
+import { Address4 } from "ip-address";
 import type { CommandModule } from "yargs";
 
 class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
@@ -78,10 +79,13 @@ class MigrateBlockRuleDbRecordsToUserAccessPolicyCommand
 	): Rule {
 		const userAccessRule = this.convertBlockRuleToUserAccessRule(ipBlockRule);
 
+		const ipAsBigInt = BigInt(ipBlockRule.ip);
+		const ipAddress = Address4.fromBigInt(ipAsBigInt);
+
 		userAccessRule.userIp = {
 			v4: {
-				asNumeric: BigInt(ipBlockRule.ip),
-				asString: ipBlockRule.ip.toString(),
+				asNumeric: ipAsBigInt,
+				asString: ipAddress.address.toString(),
 			},
 		};
 
