@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Logger } from "@prosopo/common";
 import type {
 	IPAddress,
 	ProsopoCaptchaCountConfigSchemaOutput,
@@ -22,7 +23,10 @@ import type { Rule } from "./rule/rule.js";
 import type { RulesStorage } from "./storage/rulesStorage.js";
 
 class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
-	public constructor(private readonly rulesStorage: RulesStorage) {}
+	public constructor(
+		private readonly rulesStorage: RulesStorage,
+		private readonly logger: Logger,
+	) {}
 
 	public async isConfigDefined(
 		clientId: string,
@@ -37,7 +41,17 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 		const imageCaptchaConfig = accessRule?.config?.imageCaptcha || null;
 
-		return null !== imageCaptchaConfig;
+		const configDefined = null !== imageCaptchaConfig;
+
+		this.logger.info("ImageCaptchaConfigRulesResolver.isConfigDefined", {
+			configDefined: configDefined,
+			clientId: clientId,
+			userIpAddress: userIpAddress.toString(),
+			userId: userId,
+			imageCaptchaConfig: imageCaptchaConfig,
+		});
+
+		return configDefined;
 	}
 
 	public async resolveConfig(
@@ -46,6 +60,13 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		userId: string,
 		clientId: string,
 	): Promise<ProsopoCaptchaCountConfigSchemaOutput> {
+		const logArgs = {
+			userIpAddress: userIpAddress.address.toString(),
+			userId: userId,
+			clientId: clientId,
+			defaults: defaults,
+		};
+
 		const accessRule = await this.fetchUserAccessRule(
 			userIpAddress,
 			userId,
@@ -53,12 +74,26 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		);
 
 		if (null === accessRule) {
+			this.logger.info("ImageCaptchaConfigRulesResolver.resolveConfig", {
+				configDefined: false,
+				...logArgs,
+			});
+
 			return defaults;
 		}
 
 		const imageCaptchaConfig = accessRule.config?.imageCaptcha || {};
 
-		return this.getImageCaptchaConfig(defaults, imageCaptchaConfig);
+		const config = this.getImageCaptchaConfig(defaults, imageCaptchaConfig);
+
+		this.logger.info("ImageCaptchaConfigRulesResolver.resolveConfig", {
+			configDefined: true,
+			imageCaptchaConfig: imageCaptchaConfig,
+			config: config,
+			...logArgs,
+		});
+
+		return config;
 	}
 
 	protected async fetchUserAccessRule(
@@ -71,6 +106,13 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			userId,
 			clientId,
 		);
+
+		this.logger.info("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
+			accessRules: accessRules.length,
+			userIpAddress: userIpAddress.address.toString(),
+			userId: userId,
+			clientId: clientId,
+		});
 
 		return this.selectPrimaryUserAccessRule(accessRules);
 	}

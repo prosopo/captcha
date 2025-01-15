@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Logger } from "@prosopo/common";
 import type { IPAddress } from "@prosopo/types";
 import type { BlacklistInspector } from "../blacklistInspector.js";
 import type { RulesStorage } from "./storage/rulesStorage.js";
 
 class BlacklistRulesInspector implements BlacklistInspector {
-	public constructor(private readonly rulesStorage: RulesStorage) {}
+	public constructor(
+		private readonly rulesStorage: RulesStorage,
+		private readonly logger: Logger,
+	) {}
 
 	public async isUserBlacklisted(
 		clientId: string,
@@ -40,7 +44,18 @@ class BlacklistRulesInspector implements BlacklistInspector {
 			(accessRule) => accessRule.isUserBlocked,
 		);
 
-		return blockingRules.length > 0;
+		const userBlacklisted = blockingRules.length > 0;
+
+		this.logger.info("BlacklistRulesInspector.isUserBlacklisted", {
+			userBlacklisted: userBlacklisted,
+			clientId: clientId,
+			userIpAddress: userIpAddress.address.toString(),
+			userId: userId,
+			accessRules: accessRules.length,
+			blockingRules: blockingRules.length,
+		});
+
+		return userBlacklisted;
 	}
 }
 

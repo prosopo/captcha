@@ -17,6 +17,7 @@ import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import { ImageCaptchaConfigRulesResolver } from "../../rules/imageCaptchaConfigRulesResolver.js";
 import type { RuleRecord } from "../../rules/storage/ruleRecord.js";
+import { loggerMockedInstance } from "./loggerMockedInstance.js";
 import { TestRulesStorage } from "./storage/testRulesStorage.js";
 
 describe("ImageCaptchaConfigResolver", () => {
@@ -36,6 +37,7 @@ describe("ImageCaptchaConfigResolver", () => {
 		const userAccessRulesStorage = new TestRulesStorage([userAccessRuleRecord]);
 		const resolver = new ImageCaptchaConfigRulesResolver(
 			userAccessRulesStorage,
+			loggerMockedInstance,
 		);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
@@ -90,6 +92,7 @@ describe("ImageCaptchaConfigResolver", () => {
 		]);
 		const resolver = new ImageCaptchaConfigRulesResolver(
 			userAccessRulesStorage,
+			loggerMockedInstance,
 		);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {
@@ -119,6 +122,7 @@ describe("ImageCaptchaConfigResolver", () => {
 		const userAccessRulesStorage = new TestRulesStorage([]);
 		const resolver = new ImageCaptchaConfigRulesResolver(
 			userAccessRulesStorage,
+			loggerMockedInstance,
 		);
 
 		const defaultConfig: ProsopoCaptchaCountConfigSchemaOutput = {

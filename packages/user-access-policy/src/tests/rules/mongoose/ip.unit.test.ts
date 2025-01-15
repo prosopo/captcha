@@ -22,6 +22,7 @@ import { getRuleMongooseSchema } from "../../../rules/mongoose/schemas/getRuleMo
 import { RuleIpVersion } from "../../../rules/rule/ip/ruleIpVersion.js";
 import type { Rule } from "../../../rules/rule/rule.js";
 import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
+import { loggerMockedInstance } from "../loggerMockedInstance.js";
 
 describe.each([
 	// ipV4
@@ -81,7 +82,7 @@ describe.each([
 
 		await model.syncIndexes();
 
-		rulesStorage = new RulesMongooseStorage(model);
+		rulesStorage = new RulesMongooseStorage(loggerMockedInstance, model);
 	});
 
 	beforeEach(async () => {

@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Model } from "mongoose";
-import type { Rule } from "../rule/rule.js";
-import type { RulesStorage } from "../storage/rulesStorage.js";
-import { RulesMongooseStorage } from "./rulesMongooseStorage.js";
+import { vi } from "vitest";
 
-const createMongooseRulesStorage = (
-	readingModel: Model<Rule> | null,
-	writingModel: Model<Rule> | null = null,
-): RulesStorage => {
-	return new RulesMongooseStorage(readingModel, writingModel);
+const loggerMockedInstance = {
+	trace: vi.fn(),
+	debug: vi.fn(),
+	info: vi.fn(),
+	warn: vi.fn(),
+	error: vi.fn(),
+	fatal: vi.fn(),
+	log: vi.fn(),
+	setLogLevel: vi.fn(),
+	getLogLevel: vi.fn(),
 };
 
-export { createMongooseRulesStorage };
+export { loggerMockedInstance };

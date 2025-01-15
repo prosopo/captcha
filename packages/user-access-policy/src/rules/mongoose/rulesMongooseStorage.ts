@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoError } from "@prosopo/common";
+import { type Logger, ProsopoError } from "@prosopo/common";
 import type { IPAddress } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import type { Model } from "mongoose";
@@ -27,6 +27,7 @@ import type { RuleMongooseRecord } from "./ruleMongooseRecord.js";
 
 class RulesMongooseStorage implements RulesStorage {
 	constructor(
+		private readonly logger: Logger,
 		private readingModel: Model<Rule> | null,
 		private writingModel: Model<Rule> | null = null,
 	) {
@@ -77,6 +78,12 @@ class RulesMongooseStorage implements RulesStorage {
 
 		const ruleRecords =
 			this.convertMongooseRecordsToRuleRecords(mongooseRecords);
+
+		this.logger.info("RulesMongooseStorage.find", {
+			query: query,
+			ruleRecordsLength: ruleRecords.length,
+			ruleRecords: ruleRecords,
+		});
 
 		return ruleRecords;
 	}

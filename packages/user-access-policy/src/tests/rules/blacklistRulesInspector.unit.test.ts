@@ -13,16 +13,21 @@
 // limitations under the License.
 
 import { Address4 } from "ip-address";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { BlacklistInspector } from "../../blacklistInspector.js";
 import { BlacklistRulesInspector } from "../../rules/blacklistRulesInspector.js";
 import type { RuleRecord } from "../../rules/storage/ruleRecord.js";
+import { loggerMockedInstance } from "./loggerMockedInstance.js";
 import { TestRulesStorage } from "./storage/testRulesStorage.js";
 
 describe("BlacklistRulesInspector", () => {
 	function createInspector(ruleRecords: RuleRecord[]): BlacklistInspector {
 		const userAccessRulesStorage = new TestRulesStorage(ruleRecords);
-		return new BlacklistRulesInspector(userAccessRulesStorage);
+
+		return new BlacklistRulesInspector(
+			userAccessRulesStorage,
+			loggerMockedInstance,
+		);
 	}
 
 	it("blacklistedWhenRuleRecordContainsBlockedFlag", async () => {

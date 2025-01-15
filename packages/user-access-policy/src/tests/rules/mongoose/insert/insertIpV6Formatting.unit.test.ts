@@ -19,6 +19,7 @@ import { RulesMongooseStorage } from "../../../../rules/mongoose/rulesMongooseSt
 import { getRuleMongooseSchema } from "../../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
 import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "../../../../rules/rule/ip/v6/ruleIpV6NumericMaxLength.js";
 import type { RulesStorage } from "../../../../rules/storage/rulesStorage.js";
+import { loggerMockedInstance } from "../../loggerMockedInstance.js";
 
 describe("ipV6RuleFormatting", async () => {
 	const mongoServer = await MongoMemoryServer.create();
@@ -31,7 +32,10 @@ describe("ipV6RuleFormatting", async () => {
 
 	await model.syncIndexes();
 
-	const rulesStorage: RulesStorage = new RulesMongooseStorage(model);
+	const rulesStorage: RulesStorage = new RulesMongooseStorage(
+		loggerMockedInstance,
+		model,
+	);
 
 	beforeEach(async () => {
 		await model.deleteMany({});

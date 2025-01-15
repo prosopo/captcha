@@ -13,32 +13,44 @@
 // limitations under the License.
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
+import type { Logger } from "@prosopo/common";
+import type { Model } from "mongoose";
 import type { BlacklistInspector } from "./blacklistInspector.js";
 import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
 import { getExpressApiRuleRateLimits } from "./rules/api/getExpressApiRuleRateLimits.js";
 import { BlacklistRulesInspector } from "./rules/blacklistRulesInspector.js";
 import { ImageCaptchaConfigRulesResolver } from "./rules/imageCaptchaConfigRulesResolver.js";
-import { createMongooseRulesStorage } from "./rules/mongoose/createMongooseRulesStorage.js";
+import { RulesMongooseStorage } from "./rules/mongoose/rulesMongooseStorage.js";
 import { getRuleMongooseSchema } from "./rules/mongoose/schemas/getRuleMongooseSchema.js";
 import type { Rule } from "./rules/rule/rule.js";
 import type { RulesStorage } from "./rules/storage/rulesStorage.js";
 
 const createBlacklistInspector = (
 	rulesStorage: RulesStorage,
+	logger: Logger,
 ): BlacklistInspector => {
-	return new BlacklistRulesInspector(rulesStorage);
+	return new BlacklistRulesInspector(rulesStorage, logger);
 };
 
 const createImageCaptchaConfigResolver = (
 	rulesStorage: RulesStorage,
+	logger: Logger,
 ): ImageCaptchaConfigRulesResolver => {
-	return new ImageCaptchaConfigRulesResolver(rulesStorage);
+	return new ImageCaptchaConfigRulesResolver(rulesStorage, logger);
 };
 
 const createApiRuleRoutesProvider = (
 	rulesStorage: RulesStorage,
 ): ApiRoutesProvider => {
 	return new ApiRuleRoutesProvider(rulesStorage);
+};
+
+const createMongooseRulesStorage = (
+	logger: Logger,
+	readingModel: Model<Rule> | null,
+	writingModel: Model<Rule> | null = null,
+): RulesStorage => {
+	return new RulesMongooseStorage(logger, readingModel, writingModel);
 };
 
 export {

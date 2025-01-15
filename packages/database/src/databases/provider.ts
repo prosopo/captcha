@@ -196,6 +196,7 @@ export class ProviderDatabase
 		this.loadTables();
 
 		this.userAccessRulesDbStorage = createMongooseRulesStorage(
+			this.logger,
 			<Model<Rule>>this.tables.userAccessRules,
 		);
 	}

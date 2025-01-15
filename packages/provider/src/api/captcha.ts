@@ -58,6 +58,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
 	const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
 		userAccessRulesStorage,
+		env.logger,
 	);
 
 	/**
@@ -488,9 +489,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
-				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
-					tasks.db.getUserAccessRulesStorage(),
-				);
 				const imageCaptchaConfigDefined =
 					await imageCaptchaConfigResolver.isConfigDefined(
 						dapp,

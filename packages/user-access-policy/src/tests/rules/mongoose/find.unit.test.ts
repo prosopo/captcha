@@ -20,6 +20,7 @@ import { RulesMongooseStorage } from "../../../rules/mongoose/rulesMongooseStora
 import { getRuleMongooseSchema } from "../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
 import type { Rule } from "../../../rules/rule/rule.js";
 import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
+import { loggerMockedInstance } from "../loggerMockedInstance.js";
 
 describe("RulesMongooseStorage", async () => {
 	const mongoServer = await MongoMemoryServer.create();
@@ -32,7 +33,10 @@ describe("RulesMongooseStorage", async () => {
 
 	await model.syncIndexes();
 
-	const rulesStorage: RulesStorage = new RulesMongooseStorage(model);
+	const rulesStorage: RulesStorage = new RulesMongooseStorage(
+		loggerMockedInstance,
+		model,
+	);
 
 	beforeEach(async () => {
 		await model.deleteMany({});

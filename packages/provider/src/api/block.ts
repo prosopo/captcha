@@ -26,7 +26,10 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	const environmentReadinessWaiter =
 		providerEnvironment.isReady.bind(providerEnvironment);
 
-	const blacklistInspector = createBlacklistInspector(userAccessRulesStorage);
+	const blacklistInspector = createBlacklistInspector(
+		userAccessRulesStorage,
+		logger,
+	);
 
 	const blacklistRequestInspector = new BlacklistRequestInspector(
 		blacklistInspector,

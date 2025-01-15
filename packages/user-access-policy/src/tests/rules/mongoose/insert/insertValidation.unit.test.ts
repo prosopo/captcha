@@ -18,6 +18,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { RulesMongooseStorage } from "../../../../rules/mongoose/rulesMongooseStorage.js";
 import { getRuleMongooseSchema } from "../../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
 import type { RulesStorage } from "../../../../rules/storage/rulesStorage.js";
+import { loggerMockedInstance } from "../../loggerMockedInstance.js";
 
 describe("recordValidation", async () => {
 	const mongoServer = await MongoMemoryServer.create();
@@ -30,7 +31,10 @@ describe("recordValidation", async () => {
 
 	await model.syncIndexes();
 
-	const rulesStorage: RulesStorage = new RulesMongooseStorage(model);
+	const rulesStorage: RulesStorage = new RulesMongooseStorage(
+		loggerMockedInstance,
+		model,
+	);
 
 	beforeEach(async () => {
 		await model.deleteMany({});

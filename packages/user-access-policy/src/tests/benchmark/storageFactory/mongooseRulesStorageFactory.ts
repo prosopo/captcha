@@ -17,13 +17,14 @@ import { RulesMongooseStorage } from "../../../rules/mongoose/rulesMongooseStora
 import { getRuleMongooseSchema } from "../../../rules/mongoose/schemas/getRuleMongooseSchema.js";
 import type { Rule } from "../../../rules/rule/rule.js";
 import type { RulesStorage } from "../../../rules/storage/rulesStorage.js";
+import { loggerMockedInstance } from "../../rules/loggerMockedInstance.js";
 import type { RulesStorageFactory } from "./rulesStorageFactory.js";
 
 class MongooseRulesStorageFactory implements RulesStorageFactory {
 	async createRulesStorage(dbUrl: string): Promise<RulesStorage> {
 		const model = await this.createModel(dbUrl);
 
-		return new RulesMongooseStorage(model);
+		return new RulesMongooseStorage(loggerMockedInstance, model);
 	}
 
 	protected async createModel(dbUrl: string): Promise<Model<Rule>> {
