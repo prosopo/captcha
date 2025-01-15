@@ -58,8 +58,13 @@ const JSONReporter = (
 		options: ConsolaOptions;
 	},
 ) => {
-	const writer = process?.stdout ? process.stdout.write : console.info;
-	const writerError = process?.stderr ? process.stderr.write : console.error;
+	// https://stackoverflow.com/a/65886224
+	const writer = process?.stdout
+		? process.stdout.write.bind(process.stdout)
+		: console.info;
+	const writerError = process?.stderr
+		? process.stderr.write.bind(process.stderr)
+		: console.error;
 	if (context.options.level === ConsolaLogLevels.error) {
 		writer(`${JSON.stringify(message)}\n`);
 	} else {
