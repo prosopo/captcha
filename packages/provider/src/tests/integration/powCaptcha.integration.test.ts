@@ -14,7 +14,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { u8aToHex } from "@polkadot/util/u8a";
-import { generateMnemonic, getPairAsync } from "@prosopo/contract";
+import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
 	ApiPaths,

@@ -20,11 +20,15 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status"]  # ping the status api
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status" ] # ping the status api
             interval: 30s
             retries: 3
             start_period: 30s
             timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
     provider:
         container_name: provider
         profiles:
@@ -34,7 +38,7 @@ services:
         labels:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
             - ../.env.${NODE_ENV}
@@ -50,11 +54,15 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details"]  # ping the details endpoint
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
             interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
     database-dev:
         container_name: database
         profiles:
@@ -75,11 +83,15 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
+            test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
             interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
     database:
         container_name: database
         profiles:
@@ -89,7 +101,7 @@ services:
         labels:
             - "vector.mongo=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /data/db:/data/db
         ports:
@@ -106,11 +118,15 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]  # ping the mongo server
+            test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
             interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
     caddy:
         container_name: caddy
         profiles:
@@ -122,7 +138,7 @@ services:
         labels:
             - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
             - '443:443'
@@ -141,31 +157,15 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:2019/metrics"]  # ping the caddy admin api
+            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
             interval: 5m
             retries: 3
             start_period: 30s
             timeout: 10s
-    watchtower:
-        container_name: watchtower
-        profiles:
-            - production
-            - staging
-        image: containrrr/watchtower
-        command: ["--log-format", "JSON", "--remove-volumes", "--cleanup", "--warn-on-head-failure", "never", "--interval", "30", "--include-restarting"]
-        labels:
-            - "vector.watchtower=true" # enable logging as a watchtower
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
-        env_file:
-            - ../.env.${NODE_ENV}
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
     vector:
         container_name: vector
         profiles:
@@ -188,11 +188,15 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: ["CMD", "curl", "--fail", "localhost:8686/health"]
+            test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
             interval: 30s
             timeout: 10s
             retries: 1
             start_period: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
 networks:
     internal:
         name: internal
@@ -209,10 +213,6 @@ networks:
             config:
                 - subnet: 172.19.0.0/16
                   gateway: 172.19.0.1
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
 volumes:
     caddy_data:
     caddy_config:

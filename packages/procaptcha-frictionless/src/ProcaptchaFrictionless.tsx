@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ExtensionWeb2 } from "@prosopo/account";
+import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import detect from "@prosopo/detector";
 import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
@@ -29,12 +28,19 @@ import {
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
 import { useEffect, useState } from "react";
 
+const DetectorLoader = async () => (await import("@prosopo/detector")).default;
+const ExtensionLoader = async (web2: boolean) =>
+	web2
+		? (await import("@prosopo/account")).ExtensionWeb2
+		: (await import("@prosopo/account")).ExtensionWeb3;
+
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 ) => {
+	const detect = await DetectorLoader();
 	const botScore: { token: string } = await detect();
-
-	const userAccount = await new ExtensionWeb2().getAccount(config);
+	const ext = new (await ExtensionLoader(config.web2))();
+	const userAccount = await ext.getAccount(config);
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
