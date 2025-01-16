@@ -4,7 +4,7 @@
         <title>Procaptcha demo: Live Test</title>
         <script type="module">
             async function captchaLoaded() {
-                const render = (await import('./assets/procaptcha.bundle')).render
+                const render = (await import('./assets/procaptcha.bundle.js')).render
                 console.log('Captcha loaded')
                 // Get the Element using elementId
                 const captchaContainer = document.getElementById('procaptcha-container')
