@@ -72,11 +72,13 @@ class BlacklistRequestInspector {
 
 		try {
 			const userIpAddress = getIPAddress(rawIp);
+			console.log("TEMP IP LOG \n\n", userIpAddress, "\n\n");
 
 			const { userId, clientId } = this.extractIdsFromRequest(
 				requestHeaders,
 				requestBody,
 			);
+			console.log("TEMP USER ID LOG \n\n", userId, "\n\n");
 
 			return await this.blacklistInspector.isUserBlacklisted(
 				clientId,
@@ -84,6 +86,7 @@ class BlacklistRequestInspector {
 				userId,
 			);
 		} catch (err) {
+			console.error("\n\n---\n\nTEMP ERROR RESOLUTION\n\n---\n\n", err, "\n\nJSON STRINGIFIED\n---\n\n", JSON.stringify(err));
 			this.logger.error("Block Middleware Error:", err);
 
 			return true;
