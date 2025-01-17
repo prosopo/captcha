@@ -384,7 +384,7 @@ export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
 	sessionId: { type: String, required: true, unique: true },
-	createdAt: { type: Date, required: true, expires: TEN_MINUTES },
+	createdAt: { type: Date, required: true, expires: ONE_DAY },
 	tokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 	},
