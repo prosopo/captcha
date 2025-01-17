@@ -13,16 +13,19 @@
 // limitations under the License.
 
 import type { Server } from "node:net";
-import { getPairAsync } from "@prosopo/contract";
+import {
+	apiExpressRouterFactory,
+	createApiExpressDefaultEndpointAdapter,
+} from "@prosopo/api-express-router";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
+import { getPairAsync } from "@prosopo/keyring";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
+	api,
 	domainMiddleware,
 	getClientList,
-	handleErrors,
 	headerCheckMiddleware,
-	prosopoAdminRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
 	publicRouter,
@@ -30,6 +33,10 @@ import {
 } from "@prosopo/provider";
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
 import type { CombinedApiPaths } from "@prosopo/types";
+import {
+	createApiRuleRoutesProvider,
+	getExpressApiRuleRateLimits,
+} from "@prosopo/user-access-policy";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -42,8 +49,16 @@ function startApi(
 	port?: number,
 ): Server {
 	env.logger.info("Starting Prosopo API");
+
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
+
+	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(env.logger);
+	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
+		env.getDb().getUserAccessRulesStorage(),
+	);
+	const apiAdminRoutesProvider = api.admin.createApiAdminRoutesProvider(env);
+
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set(
 		"trust proxy",
@@ -62,10 +77,24 @@ function startApi(
 	apiApp.use(publicRouter(env));
 
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
-	apiApp.use(prosopoAdminRouter(env));
+
+	apiApp.use(
+		apiExpressRouterFactory.createRouter(
+			apiRuleRoutesProvider,
+			apiEndpointAdapter,
+		),
+	);
+	apiApp.use(
+		apiExpressRouterFactory.createRouter(
+			apiAdminRoutesProvider,
+			// unlike the default one, it should have errorStatusCode as 400
+			createApiExpressDefaultEndpointAdapter(env.logger, 400),
+		),
+	);
 
 	// Rate limiting
-	const rateLimits = env.config.rateLimits;
+	const configRateLimits = env.config.rateLimits;
+	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
 	for (const [path, limit] of Object.entries(rateLimits)) {
 		const enumPath = path as CombinedApiPaths;
 		apiApp.use(enumPath, rateLimit(limit));

@@ -35,11 +35,11 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
-import { getCaptchaConfig } from "../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
 import { handleErrors } from "./errorHandler.js";
@@ -56,6 +56,12 @@ const TEN_MINUTES = 60 * 10 * 1000;
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 	const tasks = new Tasks(env);
+
+	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
+	const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
+		userAccessRulesStorage,
+		env.logger,
+	);
 
 	/**
 	 * Provides a Captcha puzzle to a Dapp User
@@ -111,9 +117,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const captchaConfig = await getCaptchaConfig(
-				tasks.db,
-				env.config,
+			const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
+				env.config.captchas,
 				ipAddress,
 				user,
 				dapp,
@@ -526,26 +531,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
-				const isIpBlocked = await tasks.frictionlessManager.checkIpRules(
-					ipAddress,
-					dapp,
-				);
-				if (isIpBlocked) {
-					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
-					);
-				}
 
-				// Check if the user is blocked
-				const isUserBlocked = await tasks.frictionlessManager.checkUserRules(
-					user,
-					dapp,
-				);
-				if (isUserBlocked) {
-					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+				const imageCaptchaConfigDefined =
+					await imageCaptchaConfigResolver.isConfigDefined(
+						dapp,
+						ipAddress,
+						user,
 					);
-				}
+
+				if (imageCaptchaConfigDefined)
+					return res.json(tasks.frictionlessManager.sendImageCaptcha());
 
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {

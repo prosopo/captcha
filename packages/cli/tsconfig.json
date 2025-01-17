@@ -13,14 +13,15 @@
 		{
 			"path": "../common"
 		},
-		{
-			"path": "../contract"
-		},
+
 		{
 			"path": "../dotenv"
 		},
 		{
 			"path": "../env"
+		},
+		{
+			"path": "../keyring"
 		},
 		{
 			"path": "../locale"
@@ -36,6 +37,12 @@
 		},
 		{
 			"path": "../../dev/config"
+		},
+		{
+			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api-express-router"
 		}
 	]
 }
