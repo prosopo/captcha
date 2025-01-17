@@ -93,12 +93,12 @@ function startApi(
 	);
 
 	// Rate limiting
-	// const configRateLimits = env.config.rateLimits;
-	// const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
-	// for (const [path, limit] of Object.entries(rateLimits)) {
-	// const enumPath = path as CombinedApiPaths;
-	// apiApp.use(enumPath, rateLimit(limit));
-	// }
+	const configRateLimits = env.config.rateLimits;
+	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
+	for (const [path, limit] of Object.entries(rateLimits)) {
+		const enumPath = path as CombinedApiPaths;
+		apiApp.use(enumPath, rateLimit(limit));
+	}
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
