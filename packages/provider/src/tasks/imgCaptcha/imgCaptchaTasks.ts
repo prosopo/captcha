@@ -454,6 +454,7 @@ export class ImgCaptchaManager {
 				return {
 					status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
 					verified: false,
+					score: solution.score,
 				};
 			}
 		}

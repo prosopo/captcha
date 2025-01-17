@@ -172,7 +172,7 @@ export class PowCaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
-	): Promise<boolean> {
+	): Promise<{ verified: boolean; score?: number }> {
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
@@ -194,7 +194,7 @@ export class PowCaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return false;
+		if (challengeRecord.serverChecked) return { verified: false };
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -213,6 +213,6 @@ export class PowCaptchaManager {
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
-		return true;
+		return { verified: true, score: challengeRecord.score };
 	}
 }

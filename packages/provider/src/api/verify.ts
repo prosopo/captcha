@@ -107,6 +107,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					...(response.commitmentId && {
 						[ApiParams.commitmentId]: response.commitmentId,
 					}),
+					...(response.score && { [ApiParams.score]: response.score }),
 				};
 				res.json(verificationResponse);
 			} catch (err) {
@@ -176,7 +177,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			// Will throw an error if the signature is invalid
 			verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-			const approved =
+			const { verified, score } =
 				await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 					dapp,
 					challenge,
@@ -184,8 +185,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				);
 
 			const verificationResponse: VerificationResponse = {
-				status: req.t(approved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED"),
-				[ApiParams.verified]: approved,
+				status: req.t(verified ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED"),
+				[ApiParams.verified]: verified,
+				...(score && { [ApiParams.score]: score }),
 			};
 
 			return res.json(verificationResponse);

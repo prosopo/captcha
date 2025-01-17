@@ -123,6 +123,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				user,
 				dapp,
 			);
+			const clientSettings = await tasks.db.getClientRecord(dapp);
 
 			let score: number | undefined;
 
@@ -133,8 +134,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.db.getFrictionlessTokenRecordByTokenId(
 							sessionRecord.tokenId,
 						);
-					score = tokenRecord?.score;
+					// there should be a token record. Remove any lScore before storing downstream
+					score = tokenRecord
+						? tokenRecord.score - (tokenRecord.lScore || 0)
+						: 1;
 				}
+			} else if (!(clientSettings?.settings?.captchaType === "image")) {
+				// Throw an error if an image captcha has been requested without a session and the client is not configured for image captchas
+				return next(
+					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
+						context: { code: 400, siteKey: dapp, user },
+					}),
+				);
 			}
 
 			const taskData =
@@ -319,9 +330,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const tokenRecord = await tasks.db.getFrictionlessTokenRecordByTokenId(
 					sessionRecord.tokenId,
 				);
-				score = tokenRecord?.score;
+				// there should be a token record. Remove any lScore before storing downstream
+				score = tokenRecord ? tokenRecord.score - (tokenRecord.lScore || 0) : 1;
 			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
-				// Throw an error
+				// Throw an error if a pow captcha has been requested without a session and the client is not configured for pow captchas
 				return next(
 					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
 						context: { code: 400, siteKey: dapp, user },
