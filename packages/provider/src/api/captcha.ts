@@ -540,7 +540,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 
 				if (imageCaptchaConfigDefined)
-					return res.json(tasks.frictionlessManager.sendImageCaptcha());
+					return res.json(tasks.frictionlessManager.sendImageCaptcha(tokenId));
 
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
@@ -554,8 +554,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				return res.json(response);
 			} catch (err) {
-				console.error("Error in frictionless captcha challenge:", err);
-				tasks.logger.error(err);
+				tasks.logger.error("Error in frictionless captcha challenge:", err);
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: err },
