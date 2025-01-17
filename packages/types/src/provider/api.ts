@@ -247,6 +247,7 @@ export interface VerificationResponse extends ApiResponse {
 
 export interface ImageVerificationResponse extends VerificationResponse {
 	[ApiParams.commitmentId]?: Hash;
+	[ApiParams.score]?: number;
 }
 
 export interface GetPowCaptchaResponse extends ApiResponse {
