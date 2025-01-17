@@ -16,15 +16,12 @@ import { CaptchaType } from "@prosopo/types";
 import {
 	ApiParams,
 	type GetFrictionlessCaptchaResponse,
-	type IPAddress,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase, Session } from "@prosopo/types-database";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { checkIpRules } from "../../rules/ip.js";
 import { checkLangRules } from "../../rules/lang.js";
-import { checkUserRules } from "../../rules/user.js";
 
 export class FrictionlessManager {
 	config: ProsopoConfigOutput;
@@ -39,16 +36,6 @@ export class FrictionlessManager {
 		this.config = config;
 		this.pair = pair;
 		this.db = db;
-	}
-
-	async checkIpRules(ipAddress: IPAddress, dapp: string): Promise<boolean> {
-		const rule = await checkIpRules(this.db, ipAddress, dapp);
-		return !!rule;
-	}
-
-	async checkUserRules(user: string, dapp: string): Promise<boolean> {
-		const rule = await checkUserRules(this.db, user, dapp);
-		return !!rule;
 	}
 
 	checkLangRules(acceptLanguage: string): number {

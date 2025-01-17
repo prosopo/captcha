@@ -8,13 +8,13 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
+			"path": "../../packages/account"
+		},
+		{
 			"path": "../../packages/cli"
 		},
 		{
 			"path": "../../packages/common"
-		},
-		{
-			"path": "../../packages/contract"
 		},
 		{
 			"path": "../../packages/datasets"
@@ -24,6 +24,9 @@
 		},
 		{
 			"path": "../../packages/env"
+		},
+		{
+			"path": "../../packages/keyring"
 		},
 		{
 			"path": "../../packages/provider"

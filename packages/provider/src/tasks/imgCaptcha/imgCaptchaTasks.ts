@@ -40,10 +40,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
-import type { Address4, Address6 } from "ip-address";
-import { checkIpRules } from "../../rules/ip.js";
 import { checkLangRules } from "../../rules/lang.js";
-import { checkUserRules } from "../../rules/user.js";
 import { shuffleArray } from "../../util.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 

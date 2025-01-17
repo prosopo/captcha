@@ -63,7 +63,6 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
-	type UserAccountBlockRule,
 	type UserAccountBlockRuleRecord,
 	UserAccountBlockRuleSchema,
 	type UserCommitment,
@@ -73,12 +72,14 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type {
-	FrictionlessTokenRecord,
-	IPBlockRuleMongo,
-} from "@prosopo/types-database";
-import type { DeleteResult } from "mongodb";
-import type { ObjectId } from "mongoose";
+import type { FrictionlessTokenRecord } from "@prosopo/types-database";
+import {
+	type Rule,
+	type RulesStorage,
+	createMongooseRulesStorage,
+	getRuleMongooseSchema,
+} from "@prosopo/user-access-policy";
+import type { Model, ObjectId } from "mongoose";
 import { bigint, string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
@@ -96,6 +97,7 @@ enum TableNames {
 	session = "session",
 	ipblockrules = "ipblockrules",
 	userblockrules = "userblockrules",
+	userAccessRules = "userAccessRules",
 }
 
 const PROVIDER_TABLES = [
@@ -164,6 +166,11 @@ const PROVIDER_TABLES = [
 		modelName: "UserAccountBlockRules",
 		schema: UserAccountBlockRuleSchema,
 	},
+	{
+		collectionName: TableNames.userAccessRules,
+		modelName: "UserAccessRules",
+		schema: getRuleMongooseSchema(),
+	},
 ];
 
 export class ProviderDatabase
@@ -171,6 +178,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
+	private userAccessRulesDbStorage: RulesStorage | null;
 
 	constructor(
 		url: string,
@@ -180,11 +188,19 @@ export class ProviderDatabase
 	) {
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
+
+		this.userAccessRulesDbStorage = null;
 	}
 
 	override async connect(): Promise<void> {
 		await super.connect();
+
 		this.loadTables();
+
+		this.userAccessRulesDbStorage = createMongooseRulesStorage(
+			this.logger,
+			<Model<Rule>>this.tables.userAccessRules,
+		);
 	}
 
 	loadTables() {
@@ -205,6 +221,14 @@ export class ProviderDatabase
 			});
 		}
 		return this.tables;
+	}
+
+	public getUserAccessRulesStorage(): RulesStorage {
+		if (null === this.userAccessRulesDbStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED");
+		}
+
+		return this.userAccessRulesDbStorage;
 	}
 
 	/**
@@ -1471,101 +1495,19 @@ export class ProviderDatabase
 		return doc ? doc : undefined;
 	}
 
-	/**
-	 * @description Check if a request has a blocking rule associated with it
-	 */
-	async getIPBlockRuleRecord(
-		ipAddress: bigint,
-	): Promise<IPBlockRuleMongo | undefined> {
-		const filter: Pick<IPBlockRuleRecord, "ip"> = { ip: Number(ipAddress) };
-		const doc = await this.tables?.ipblockrules
-			.findOne(filter)
-			.lean<IPBlockRuleMongo>();
-		return doc ? doc : undefined;
-	}
-
-	/**
-	 * @description Store IP blocking rule records
-	 */
-	async storeIPBlockRuleRecords(rules: IPBlockRuleRecord[]) {
-		await this.tables?.ipblockrules.bulkWrite(
-			rules.map((rule) => ({
-				updateOne: {
-					filter: { ip: rule.ip } as Pick<IPBlockRuleRecord, "ip">,
-					update: { $set: rule },
-					upsert: true,
-				},
-			})),
-		);
-	}
-
-	/**
-	 * @description Remove IP blocking rule records
-	 */
-	async removeIPBlockRuleRecords(ipAddresses: bigint[], dappAccount?: string) {
-		const filter: {
-			[key in keyof Pick<IPBlockRuleRecord, "ip">]: { $in: number[] };
-		} & {
-			[key in keyof Pick<IPBlockRuleRecord, "dappAccount">]?: string; // Optional `dappAccount` key
-		} = { ip: { $in: ipAddresses.map(Number) } };
-		if (dappAccount) {
-			filter.dappAccount = dappAccount;
+	async getAllIpBlockRules(): Promise<IPBlockRuleRecord[]> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
 		}
-		await this.tables?.ipblockrules.deleteMany(filter);
+
+		return await this.tables.ipblockrules.find().exec();
 	}
 
-	/**
-	 * @description Check if a request has a blocking rule associated with it
-	 */
-	async getUserBlockRuleRecord(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserAccountBlockRuleRecord | undefined> {
-		const filter: Pick<UserAccountBlockRule, "dappAccount" | "userAccount"> = {
-			dappAccount,
-			userAccount,
-		};
-		const doc = await this.tables?.userblockrules
-			.findOne(filter)
-			.lean<UserAccountBlockRuleRecord>();
-		return doc ? doc : undefined;
-	}
-
-	/**
-	 * @description Check if a request has a blocking rule associated with it
-	 */
-	async storeUserBlockRuleRecords(rules: UserAccountBlockRule[]) {
-		await this.tables?.userblockrules.bulkWrite(
-			rules.map((rule) => ({
-				updateOne: {
-					filter: {
-						dappAccount: rule.dappAccount,
-						userAccount: rule.userAccount,
-					} as Pick<UserAccountBlockRule, "dappAccount" | "userAccount">,
-					update: { $set: rule },
-					upsert: true,
-				},
-			})),
-		);
-	}
-
-	/**
-	 * @description Remove user blocking rule records
-	 */
-	async removeUserBlockRuleRecords(
-		userAccounts: string[],
-		dappAccount?: string,
-	) {
-		const filter: {
-			[key in keyof Pick<UserAccountBlockRule, "userAccount">]: {
-				$in: string[];
-			};
-		} & {
-			[key in keyof Pick<UserAccountBlockRule, "dappAccount">]?: string; // Optional `dappAccount` key
-		} = { userAccount: { $in: userAccounts } };
-		if (dappAccount) {
-			filter.dappAccount = dappAccount;
+	async getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
 		}
-		await this.tables?.userblockrules.deleteMany(filter);
+
+		return await this.tables.userblockrules.find().exec();
 	}
 }

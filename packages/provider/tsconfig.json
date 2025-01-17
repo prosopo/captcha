@@ -10,9 +10,7 @@
 		{
 			"path": "../common"
 		},
-		{
-			"path": "../contract"
-		},
+
 		{
 			"path": "../../dev/config"
 		},
@@ -26,6 +24,9 @@
 			"path": "../env"
 		},
 		{
+			"path": "../keyring"
+		},
+		{
 			"path": "../types"
 		},
 		{
@@ -36,6 +37,12 @@
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api-route"
 		}
 	]
 }

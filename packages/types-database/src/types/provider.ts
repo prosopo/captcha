@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import { CaptchaType } from "@prosopo/types";
 import {
@@ -34,7 +33,6 @@ import {
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
-	ProsopoCaptchaCountConfigSchema,
 	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -42,6 +40,7 @@ import {
 	type Timestamp,
 	TimestampSchema,
 } from "@prosopo/types";
+import type { RulesStorage } from "@prosopo/user-access-policy";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
@@ -623,24 +622,9 @@ export interface IProviderDatabase extends IDatabase {
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
-	getIPBlockRuleRecord(
-		ipAddress: bigint,
-		dappAccount?: string,
-	): Promise<IPBlockRuleMongo | undefined>;
+	getUserAccessRulesStorage(): RulesStorage;
 
-	storeIPBlockRuleRecords(rules: IPAddressBlockRule[]): Promise<void>;
+	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
 
-	removeIPBlockRuleRecords(ips: bigint[], dappAccount?: string): Promise<void>;
-
-	getUserBlockRuleRecord(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserAccountBlockRuleRecord | undefined>;
-
-	storeUserBlockRuleRecords(rules: UserAccountBlockRule[]): Promise<void>;
-
-	removeUserBlockRuleRecords(
-		users: string[],
-		dappAccount?: string,
-	): Promise<void>;
+	getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]>;
 }
