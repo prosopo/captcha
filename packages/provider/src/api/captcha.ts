@@ -134,16 +134,29 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			if (sessionId) {
 				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
-				if (sessionRecord) {
-					const tokenRecord =
-						await tasks.db.getFrictionlessTokenRecordByTokenId(
-							sessionRecord.tokenId,
-						);
-					frictionlessTokenId = tokenRecord
-						? (tokenRecord._id as FrictionlessTokenId)
-						: undefined;
+				if (
+					!sessionRecord ||
+					(sessionRecord && sessionRecord.captchaType !== CaptchaType.image)
+				) {
+					// Throw an error if a session ID has been provided and the session is not an image captcha session or the session does not exist
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: {
+								error: "Session ID not found",
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+						}),
+					);
 				}
-			} else if (!(clientSettings?.settings?.captchaType === "image")) {
+				frictionlessTokenId =
+					await tasks.frictionlessManager.getFrictionlessTokenIdFromSession(
+						sessionRecord,
+					);
+			} else if (
+				!(clientSettings?.settings?.captchaType === CaptchaType.image)
+			) {
 				// Throw an error if an image captcha has been requested without a session and the client is not configured for image captchas
 				return next(
 					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
@@ -331,12 +344,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
-				const tokenRecord = await tasks.db.getFrictionlessTokenRecordByTokenId(
-					sessionRecord.tokenId,
-				);
-				frictionlessTokenId = tokenRecord
-					? (tokenRecord._id as FrictionlessTokenId)
-					: undefined;
+				frictionlessTokenId =
+					await tasks.frictionlessManager.getFrictionlessTokenIdFromSession(
+						sessionRecord,
+					);
 			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
 				// Throw an error if a pow captcha has been requested without a session and the client is not configured for pow captchas
 				return next(

@@ -18,7 +18,11 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
-import type { IProviderDatabase, Session } from "@prosopo/types-database";
+import type {
+	FrictionlessTokenId,
+	IProviderDatabase,
+	Session,
+} from "@prosopo/types-database";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
@@ -77,5 +81,12 @@ export class FrictionlessManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};
+	}
+
+	async getFrictionlessTokenIdFromSession(sessionRecord: Session) {
+		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
+			sessionRecord.tokenId,
+		);
+		return tokenRecord ? (tokenRecord._id as FrictionlessTokenId) : undefined;
 	}
 }
