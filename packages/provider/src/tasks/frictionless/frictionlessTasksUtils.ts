@@ -11,15 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./tasks/index.js";
-export * from "./util.js";
-export * from "./api/block.js";
-export * from "./api/captcha.js";
-export * from "./api/verify.js";
-export * from "./api/authMiddleware.js";
-export * from "./api/public.js";
-export * from "./api/domainMiddleware.js";
-export * from "./schedulers/captchaScheduler.js";
-export * from "./schedulers/getClientList.js";
-export * from "./api/headerCheckMiddleware.js";
-export * as api from "./api/export.js";
+import type { ScoreComponents } from "@prosopo/types-database";
+
+export const computeFrictionlessScore = (
+	scoreComponents: ScoreComponents,
+): number => {
+	return Number(
+		Math.min(
+			1,
+			Object.values(scoreComponents)
+				.filter((x) => x !== undefined)
+				.reduce((acc, val) => acc + val, 0),
+		).toFixed(2),
+	);
+};

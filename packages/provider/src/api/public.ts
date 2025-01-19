@@ -1,3 +1,4 @@
+import { handleErrors } from "@prosopo/api-express-router";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +18,6 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
-import { handleErrors } from "./errorHandler.js";
-
-const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

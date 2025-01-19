@@ -20,7 +20,6 @@ import {
 	type ZodObject,
 	type ZodOptional,
 	array,
-	bigint,
 	boolean,
 	coerce,
 	type input,
@@ -216,18 +215,6 @@ export const VerifySolutionBody = object({
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
 export type VerifySolutionBodyTypeOutput = output<typeof VerifySolutionBody>;
 
-export interface PendingCaptchaRequest {
-	accountId: string;
-	pending: boolean;
-	salt: string;
-	[ApiParams.requestHash]: string;
-	deadlineTimestamp: number; // unix timestamp
-	requestedAtTimestamp: number; // unix timestamp
-	ipAddress: bigint;
-	headers: RequestHeaders;
-	score?: number;
-}
-
 export interface UpdateProviderClientsResponse extends ApiResponse {
 	message: string;
 }
@@ -243,11 +230,11 @@ export interface ApiResponse {
 
 export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
+	[ApiParams.score]?: number;
 }
 
 export interface ImageVerificationResponse extends VerificationResponse {
 	[ApiParams.commitmentId]?: Hash;
-	[ApiParams.score]?: number;
 }
 
 export interface GetPowCaptchaResponse extends ApiResponse {

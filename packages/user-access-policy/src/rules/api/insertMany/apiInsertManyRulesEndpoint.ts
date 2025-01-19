@@ -17,7 +17,9 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { Address4, Address6 } from "ip-address";
 import type { z } from "zod";
+import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
 import type { Rule } from "../../rule/rule.js";
 import type { RulesStorage } from "../../storage/rulesStorage.js";
 import {
@@ -56,9 +58,30 @@ class ApiInsertManyRulesEndpoint
 
 		const userIps = args.userIps || [];
 
-		for (const userIp of userIps) {
+		for (const userIp of userIps.v4 || []) {
+			const ipAddress = new Address4(userIp);
 			rules.push({
-				userIp: userIp,
+				userIp: ruleIpSchema.parse({
+					v4: {
+						asNumeric: ipAddress.bigInt(),
+						asString: ipAddress.address,
+					},
+				}),
+				isUserBlocked: args.isUserBlocked,
+				description: args.description,
+				clientId: args.clientId,
+				config: args.config,
+			});
+		}
+		for (const userIp of userIps.v6 || []) {
+			const ipAddress = new Address6(userIp);
+			rules.push({
+				userIp: ruleIpSchema.parse({
+					v4: {
+						asNumeric: ipAddress.bigInt(),
+						asString: ipAddress.address,
+					},
+				}),
 				isUserBlocked: args.isUserBlocked,
 				description: args.description,
 				clientId: args.clientId,

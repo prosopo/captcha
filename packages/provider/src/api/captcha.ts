@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { validateAddress } from "@polkadot/util-crypto/address";
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
 import {
@@ -34,15 +35,19 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
+import type { FrictionlessTokenId } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
+import {
+	PENALTY_ACCESS_RULE,
+	PENALTY_OLD_TIMESTAMP,
+} from "../tasks/frictionless/frictionlessPenalties.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
-import { handleErrors } from "./errorHandler.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 const TEN_MINUTES = 60 * 10 * 1000;
@@ -125,7 +130,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			);
 			const clientSettings = await tasks.db.getClientRecord(dapp);
 
-			let score: number | undefined;
+			let frictionlessTokenId: FrictionlessTokenId | undefined;
 
 			if (sessionId) {
 				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
@@ -134,10 +139,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.db.getFrictionlessTokenRecordByTokenId(
 							sessionRecord.tokenId,
 						);
-					// there should be a token record. Remove any lScore before storing downstream
-					score = tokenRecord
-						? tokenRecord.score - (tokenRecord.lScore || 0)
-						: 1;
+					frictionlessTokenId = tokenRecord
+						? (tokenRecord._id as FrictionlessTokenId)
+						: undefined;
 				}
 			} else if (!(clientSettings?.settings?.captchaType === "image")) {
 				// Throw an error if an image captcha has been requested without a session and the client is not configured for image captchas
@@ -155,7 +159,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					ipAddress,
 					flatten(req.headers),
 					captchaConfig,
-					score,
+					frictionlessTokenId,
 				);
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
@@ -308,7 +312,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			let score: number | undefined;
+			let frictionlessTokenId: FrictionlessTokenId | undefined;
 
 			if (sessionId) {
 				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
@@ -330,8 +334,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const tokenRecord = await tasks.db.getFrictionlessTokenRecordByTokenId(
 					sessionRecord.tokenId,
 				);
-				// there should be a token record. Remove any lScore before storing downstream
-				score = tokenRecord ? tokenRecord.score - (tokenRecord.lScore || 0) : 1;
+				frictionlessTokenId = tokenRecord
+					? (tokenRecord._id as FrictionlessTokenId)
+					: undefined;
 			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
 				// Throw an error if a pow captcha has been requested without a session and the client is not configured for pow captchas
 				return next(
@@ -374,7 +379,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				challenge.providerSignature,
 				getIPAddress(req.ip || "").bigInt(),
 				flatten(req.headers),
-				score,
+				frictionlessTokenId,
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
@@ -449,8 +454,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		try {
 			validateAddress(user, false, 42);
 
-			validateAddress(dapp, false, 42);
-
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
@@ -515,7 +518,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				const { baseBotScore, timestamp } = await getBotScore(token);
 
-				const botScore = baseBotScore + lScore;
+				let botScore = baseBotScore + lScore;
 
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
@@ -527,7 +530,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					token,
 					score: botScore,
 					threshold: botThreshold,
-					...(lScore && { lScore }),
+					scoreComponents: {
+						baseScore: baseBotScore,
+						...(lScore && { lScore }),
+					},
 				});
 
 				// If the timestamp is older than 10 minutes, send an image captcha
@@ -536,6 +542,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						"Timestamp is older than 10 minutes",
 						new Date(timestamp),
 					);
+					botScore += PENALTY_OLD_TIMESTAMP;
+					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
+						score: botScore,
+						scoreComponents: {
+							baseScore: baseBotScore,
+							timeout: PENALTY_OLD_TIMESTAMP,
+						},
+					});
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
 					);
@@ -544,6 +558,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
+				// If the user or IP address has an image captcha config defined, send an image captcha
 				const imageCaptchaConfigDefined =
 					await imageCaptchaConfigResolver.isConfigDefined(
 						dapp,
@@ -551,8 +566,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						user,
 					);
 
-				if (imageCaptchaConfigDefined)
+				if (imageCaptchaConfigDefined) {
+					botScore += PENALTY_ACCESS_RULE;
+					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
+						score: botScore,
+						scoreComponents: {
+							baseScore: baseBotScore,
+							accessPolicy: PENALTY_ACCESS_RULE,
+						},
+					});
 					return res.json(tasks.frictionlessManager.sendImageCaptcha(tokenId));
+				}
 
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
@@ -561,6 +585,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
+				// Otherwise, send a PoW captcha
 				const response =
 					await tasks.frictionlessManager.sendPowCaptcha(tokenId);
 

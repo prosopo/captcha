@@ -27,7 +27,6 @@ import {
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
 	type Hash,
-	type PendingCaptchaRequest,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type RequestHeaders,
@@ -41,11 +40,13 @@ import {
 	ClientRecordSchema,
 	DatasetRecordSchema,
 	type FrictionlessToken,
+	type FrictionlessTokenId,
 	FrictionlessTokenRecordSchema,
 	type IPBlockRuleRecord,
 	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
+	type PendingCaptchaRequest,
 	type PendingCaptchaRequestMongoose,
 	PendingRecordSchema,
 	type PoWCaptchaRecord,
@@ -566,7 +567,7 @@ export class ProviderDatabase
 	 * @param providerSignature
 	 * @param ipAddress
 	 * @param headers
-	 * @param score
+	 * @param frictionlessTokenId
 	 * @param serverChecked
 	 * @param userSubmitted
 	 * @param storedStatus
@@ -580,7 +581,7 @@ export class ProviderDatabase
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
-		score?: number,
+		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked = false,
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -600,7 +601,7 @@ export class ProviderDatabase
 			providerSignature,
 			userSignature,
 			lastUpdatedTimestamp: Date.now(),
-			score,
+			frictionlessTokenId,
 		};
 
 		try {
@@ -941,9 +942,18 @@ export class ProviderDatabase
 		return doc._id;
 	}
 
+	/** Update a frictionless token record */
+	async updateFrictionlessTokenRecord(
+		tokenId: FrictionlessTokenId,
+		updates: Partial<FrictionlessTokenRecord>,
+	): Promise<void> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		await this.tables.frictionlessToken.updateOne(filter, updates);
+	}
+
 	/** Get a frictionless token record */
 	async getFrictionlessTokenRecordByTokenId(
-		tokenId: ObjectId,
+		tokenId: FrictionlessTokenId,
 	): Promise<FrictionlessTokenRecord | undefined> {
 		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
 		const doc =
@@ -1014,7 +1024,7 @@ export class ProviderDatabase
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
 		headers: RequestHeaders,
-		score?: number,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1033,7 +1043,7 @@ export class ProviderDatabase
 			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			headers,
 			ipAddress,
-			score,
+			frictionlessTokenId,
 		};
 		await this.tables?.pending.updateOne(
 			{ requestHash: requestHash },
