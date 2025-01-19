@@ -29,7 +29,6 @@ import {
 	type Hash,
 	type IUserData,
 	type Item,
-	type PendingCaptchaRequest,
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
@@ -50,11 +49,13 @@ import {
 	bigint,
 	boolean,
 	nativeEnum,
-	number,
 	object,
 	string,
+	union,
 	type infer as zInfer,
+	instanceof as zInstanceof,
 } from "zod";
+import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
 
@@ -101,7 +102,7 @@ export interface StoredCaptcha {
 	serverChecked: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
-	score?: number;
+	frictionlessTokenId?: FrictionlessTokenId;
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -131,8 +132,12 @@ export const UserCommitmentSchema = object({
 	storedAtTimestamp: TimestampSchema.optional(),
 	requestedAtTimestamp: TimestampSchema,
 	lastUpdatedTimestamp: TimestampSchema.optional(),
-	score: number().optional(),
-}) satisfies ZodType<UserCommitment>;
+	frictionlessTokenId: union([string(), zInstanceof(mongoose.Types.ObjectId)])
+		.refine((val) => {
+			return mongoose.Types.ObjectId.isValid(val);
+		})
+		.optional(),
+});
 
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
@@ -196,6 +201,10 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
 });
 
 // Set an index on the captchaId field, ascending
@@ -226,6 +235,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Number, required: false },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -296,6 +309,8 @@ export type PendingCaptchaRequestMongoose = Omit<
 	requestedAtTimestamp: Date;
 };
 
+export type FrictionlessTokenId = mongoose.Schema.Types.ObjectId;
+
 export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	accountId: { type: String, required: true },
 	pending: { type: Boolean, required: true },
@@ -305,7 +320,10 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
 	ipAddress: { type: BigInt, required: true },
 	headers: { type: Object, required: true },
-	score: { type: Number, required: false },
+	frictionlessTokenId: {
+		type: mongoose.Types.ObjectId,
+		required: false,
+	},
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -349,12 +367,19 @@ ScheduledTaskRecordSchema.index({ processName: 1 });
 ScheduledTaskRecordSchema.index({ processName: 1, status: 1 });
 ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
 
-export type FrictionlessToken = {
+export interface ScoreComponents {
+	baseScore: number;
+	lScore?: number;
+	timeout?: number;
+	accessPolicy?: number;
+}
+
+export interface FrictionlessToken {
 	token: string;
 	score: number;
 	threshold: number;
-	lScore?: number;
-};
+	scoreComponents: ScoreComponents;
+}
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
 
@@ -367,7 +392,12 @@ export const FrictionlessTokenRecordSchema =
 		token: { type: String, required: true, unique: true },
 		score: { type: Number, required: true },
 		threshold: { type: Number, required: true },
-		lScore: { type: Number, required: false },
+		scoreComponents: {
+			baseScore: { type: Number, required: true },
+			lScore: { type: Number, required: false },
+			timeout: { type: Number, required: false },
+			accessPolicy: { type: Number, required: false },
+		},
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 	});
 
@@ -376,7 +406,7 @@ FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
-	tokenId: ObjectId;
+	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
 };
 
@@ -485,7 +515,7 @@ export interface IProviderDatabase extends IDatabase {
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
 		headers: RequestHeaders,
-		score?: number,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
 
 	getPendingImageCommitment(
@@ -584,7 +614,7 @@ export interface IProviderDatabase extends IDatabase {
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
-		score?: number,
+		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,
@@ -610,8 +640,13 @@ export interface IProviderDatabase extends IDatabase {
 		tokenRecord: FrictionlessToken,
 	): Promise<ObjectId>;
 
+	updateFrictionlessTokenRecord(
+		tokenId: FrictionlessTokenId,
+		updates: Partial<FrictionlessTokenRecord>,
+	): Promise<void>;
+
 	getFrictionlessTokenRecordByTokenId(
-		tokenId: ObjectId,
+		tokenId: FrictionlessTokenId,
 	): Promise<FrictionlessTokenRecord | undefined>;
 
 	getFrictionlessTokenRecordByToken(

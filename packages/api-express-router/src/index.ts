@@ -31,3 +31,5 @@ export {
 	createApiExpressDefaultEndpointAdapter,
 	type ApiExpressEndpointAdapter,
 };
+
+export * from "./errorHandler.js";

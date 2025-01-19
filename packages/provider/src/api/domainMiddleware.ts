@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto";
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
-import { handleErrors } from "./errorHandler.js";
 
 export const domainMiddleware = (env: ProviderEnvironment) => {
 	const tasks = new Tasks(env);

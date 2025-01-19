@@ -24,11 +24,11 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
-	type PendingCaptchaRequest,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
+	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";

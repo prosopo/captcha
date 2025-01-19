@@ -14,13 +14,15 @@
 
 import { boolean, object, string } from "zod";
 import { ruleConfigSchema } from "../../rule/config/ruleConfigSchema.js";
-import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
 
 const apiInsertManyRulesArgsSchema = object({
 	isUserBlocked: boolean(),
 	clientId: string().optional(),
 	description: string().optional(),
-	userIps: ruleIpSchema.array().optional(),
+	userIps: object({
+		v4: string().array().optional(),
+		v6: string().array().optional(),
+	}),
 	userIds: string().array().optional(),
 	config: ruleConfigSchema.optional(),
 });

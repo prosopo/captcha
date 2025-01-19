@@ -19,7 +19,7 @@ import type { NextFunction, Request, Response } from "express";
 // limitations under the License.
 import { describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
-import { handleErrors } from "../../../api/errorHandler.js";
+import { handleErrors } from "../../errorHandler.js";
 
 describe("handleErrors", () => {
 	it("should handle ProsopoApiError", () => {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto/address";
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
@@ -29,7 +30,6 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";
-import { handleErrors } from "./errorHandler.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -101,6 +101,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						parsed.maxVerifiedTime,
 					);
 
+				tasks.logger.debug(response);
 				const verificationResponse: ImageVerificationResponse = {
 					[ApiParams.status]: req.t(response.status),
 					[ApiParams.verified]: response[ApiParams.verified],

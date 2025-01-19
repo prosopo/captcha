@@ -18,6 +18,7 @@ import {
 	ProsopoEnvError,
 	getLoggerDefault,
 } from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -30,20 +31,22 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
+import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
-const logger = getLoggerDefault();
 const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
 	POW_SEPARATOR: string;
+	logger: Logger;
 
-	constructor(pair: KeyringPair, db: IProviderDatabase) {
+	constructor(pair: KeyringPair, db: IProviderDatabase, logger?: Logger) {
 		this.pair = pair;
 		this.db = db;
 		this.POW_SEPARATOR = POW_SEPARATOR;
+		this.logger = logger || getLoggerDefault();
 	}
 
 	/**
@@ -52,6 +55,7 @@ export class PowCaptchaManager {
 	 * @param {string} userAccount - user that is solving the captcha
 	 * @param {string} dappAccount - dapp that is requesting the captcha
 	 * @param origin - not currently used
+	 * @param powDifficulty
 	 */
 	async getPowCaptchaChallenge(
 		userAccount: string,
@@ -121,7 +125,7 @@ export class PowCaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			logger.debug("No record of this challenge");
+			this.logger.debug("No record of this challenge");
 			// no record of this challenge
 			return false;
 		}
@@ -213,6 +217,21 @@ export class PowCaptchaManager {
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
-		return { verified: true, score: challengeRecord.score };
+
+		let score: number | undefined;
+		if (challengeRecord.frictionlessTokenId) {
+			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
+				challengeRecord.frictionlessTokenId,
+			);
+			if (tokenRecord) {
+				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+				this.logger.info({
+					tscoreComponents: tokenRecord?.scoreComponents,
+					score: score,
+				});
+			}
+		}
+
+		return { verified: true, ...(score ? { score } : {}) };
 	}
 }

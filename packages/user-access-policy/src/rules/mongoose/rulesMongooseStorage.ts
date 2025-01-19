@@ -41,7 +41,11 @@ class RulesMongooseStorage implements RulesStorage {
 			throw this.modelNotSetProsopoError();
 		}
 
-		const document = await this.writingModel.create(record);
+		let document = await this.writingModel.findOneAndUpdate(record);
+
+		if (!document) {
+			document = await this.writingModel.create(record);
+		}
 
 		const ruleRecord = this.convertMongooseRecordToRuleRecord(
 			document.toObject(),
@@ -54,6 +58,19 @@ class RulesMongooseStorage implements RulesStorage {
 		if (!this.writingModel) {
 			throw this.modelNotSetProsopoError();
 		}
+
+		// Delete the existing records to avoid duplicates.
+		await this.writingModel.bulkWrite(
+			records.map((record) => ({
+				deleteOne: {
+					filter: {
+						userId: record.userId,
+						clientId: record.clientId,
+						userIp: record.userIp,
+					} as Pick<Rule, "userId" | "userIp" | "clientId">,
+				},
+			})),
+		);
 
 		const documents = await this.writingModel.insertMany(records);
 		const objectDocuments = documents.map((document) => document.toObject());

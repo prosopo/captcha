@@ -28,6 +28,7 @@
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/api-route": "2.3.1",
+		"@prosopo/api-express-router": "2.3.1",
 		"@prosopo/common": "2.3.1",
 		"@prosopo/config": "2.3.1",
 		"@prosopo/keyring": "2.3.1",

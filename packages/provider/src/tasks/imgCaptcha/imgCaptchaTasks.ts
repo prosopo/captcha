@@ -30,18 +30,20 @@ import {
 	type Hash,
 	type IPAddress,
 	type ImageVerificationResponse,
-	type PendingCaptchaRequest,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	FrictionlessTokenId,
 	IProviderDatabase,
+	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { checkLangRules } from "../../rules/lang.js";
 import { shuffleArray } from "../../util.js";
+import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager {
@@ -88,7 +90,7 @@ export class ImgCaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
-		score?: number,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -156,7 +158,7 @@ export class ImgCaptchaManager {
 			currentTime,
 			ipAddress.bigInt(),
 			headers,
-			score,
+			frictionlessTokenId,
 		);
 		return {
 			captchas,
@@ -172,7 +174,7 @@ export class ImgCaptchaManager {
 	 * @param {string} dappAccount
 	 * @param {string} requestHash
 	 * @param {JSON} captchas
-	 * @param {string} userRequestHashSignature
+	 * @param userTimestampSignature
 	 * @param timestamp
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
@@ -268,7 +270,7 @@ export class ImgCaptchaManager {
 				requestedAtTimestamp: timestamp,
 				ipAddress,
 				headers,
-				score: pendingRecord.score,
+				frictionlessTokenId: pendingRecord.frictionlessTokenId,
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
@@ -454,16 +456,31 @@ export class ImgCaptchaManager {
 				return {
 					status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
 					verified: false,
-					score: solution.score,
 				};
 			}
 		}
 
 		const isApproved = solution.result.status === CaptchaStatus.approved;
+
+		let score: number | undefined;
+		if (solution.frictionlessTokenId) {
+			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
+				solution.frictionlessTokenId,
+			);
+			if (tokenRecord) {
+				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+				this.logger.info({
+					tscoreComponents: tokenRecord?.scoreComponents,
+					score: score,
+				});
+			}
+		}
+
 		return {
 			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
+			...(score ? { score } : {}),
 		};
 	}
 
