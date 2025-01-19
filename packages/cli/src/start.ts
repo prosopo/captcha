@@ -76,13 +76,14 @@ function startApi(
 
 	apiApp.use(publicRouter(env));
 
+	// Admin routes
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
-
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiRuleRoutesProvider,
 			apiEndpointAdapter,
 		),
+		authMiddleware(env),
 	);
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
@@ -90,6 +91,7 @@ function startApi(
 			// unlike the default one, it should have errorStatusCode as 400
 			createApiExpressDefaultEndpointAdapter(env.logger, 400),
 		),
+		authMiddleware(env),
 	);
 
 	// Rate limiting

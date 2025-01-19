@@ -14,7 +14,11 @@
 import type { ScoreComponents } from "@prosopo/types-database";
 
 export const computeFrictionlessScore = (
-	scoreComponents: ScoreComponents,
+	scoreComponents:
+		| {
+				[key: string]: number;
+		  }
+		| ScoreComponents,
 ): number => {
 	return Number(
 		Math.min(

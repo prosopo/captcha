@@ -73,8 +73,6 @@ export function Manager(
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
-	console.log("frictionless state at start of manager", frictionlessState);
-
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
 
@@ -145,8 +143,6 @@ export function Manager(
 					config.account.address || "",
 				);
 				updateState({ captchaApi });
-
-				console.log("frictionless state", frictionlessState);
 
 				const challenge = await captchaApi.getCaptchaChallenge(
 					frictionlessState?.sessionId,
