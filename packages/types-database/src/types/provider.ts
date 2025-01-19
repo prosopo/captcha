@@ -132,11 +132,10 @@ export const UserCommitmentSchema = object({
 	storedAtTimestamp: TimestampSchema.optional(),
 	requestedAtTimestamp: TimestampSchema,
 	lastUpdatedTimestamp: TimestampSchema.optional(),
-	frictionlessTokenId: union([string(), zInstanceof(mongoose.Types.ObjectId)])
-		.refine((val) => {
-			return mongoose.Types.ObjectId.isValid(val);
-		})
-		.optional(),
+	frictionlessTokenId: union([
+		string(),
+		zInstanceof(mongoose.Types.ObjectId),
+	]).optional(),
 });
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -321,7 +320,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	ipAddress: { type: BigInt, required: true },
 	headers: { type: Object, required: true },
 	frictionlessTokenId: {
-		type: mongoose.Types.ObjectId,
+		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
 });
