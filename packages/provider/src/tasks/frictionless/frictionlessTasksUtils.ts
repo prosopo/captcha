@@ -11,7 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { ScoreComponents } from "@prosopo/types-database";
+import type {
+	FrictionlessTokenId,
+	IProviderDatabase,
+	ScoreComponents,
+} from "@prosopo/types-database";
 
 export const computeFrictionlessScore = (
 	scoreComponents:
