@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
-import { CaptchaType } from "@prosopo/types";
+import { CaptchaType, Tier } from "@prosopo/types";
 import {
 	type BlockRule,
 	BlockRuleType,
@@ -70,6 +70,7 @@ const ONE_MONTH = ONE_WEEK * 4;
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
 	settings: UserSettingsSchema,
+	tier: { type: String, enum: Tier, required: true },
 });
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
