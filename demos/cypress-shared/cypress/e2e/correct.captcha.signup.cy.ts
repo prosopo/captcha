@@ -32,7 +32,7 @@ describe("Captchas", () => {
 		const signature = u8aToHex(pair.sign(timestamp.toString()));
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 		const settings: IUserSettings = {
-			captchaType: CaptchaType.pow,
+			captchaType: CaptchaType.frictionless,
 			domains: ["0.0.0.0"],
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
