@@ -306,7 +306,7 @@ describe("PowCaptchaManager", () => {
 				timeout,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(true);
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 
