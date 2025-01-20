@@ -71,6 +71,7 @@ class ApiInsertManyRulesEndpoint
 				description: args.description,
 				clientId: args.clientId,
 				config: args.config,
+				score: args.score,
 			});
 		}
 		for (const userIp of userIps.v6 || []) {
