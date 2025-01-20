@@ -22,4 +22,4 @@ export * from "./api/domainMiddleware.js";
 export * from "./schedulers/captchaScheduler.js";
 export * from "./schedulers/getClientList.js";
 export * from "./api/headerCheckMiddleware.js";
-export * as api from "./api/export.js";
+export * from "./api/admin/createApiAdminRoutesProvider.js";

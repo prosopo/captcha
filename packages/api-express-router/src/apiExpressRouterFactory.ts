@@ -46,30 +46,23 @@ class ApiExpressRouterFactory {
 		apiEndpointAdapter: ApiExpressEndpointAdapter,
 	): void {
 		for (const route of routes) {
-			this.registerRoute(router, route, apiEndpointAdapter);
+			console.log("registering route", route.path);
+			router.post(
+				route.path,
+				async (
+					request: Request,
+					response: Response,
+					next: NextFunction,
+				): Promise<void> => {
+					await apiEndpointAdapter.handleRequest(
+						route.endpoint,
+						request,
+						response,
+						next,
+					);
+				},
+			);
 		}
-	}
-
-	protected registerRoute(
-		router: Router,
-		route: ApiRoute,
-		apiEndpointAdapter: ApiExpressEndpointAdapter,
-	): void {
-		router.post(
-			route.path,
-			async (
-				request: Request,
-				response: Response,
-				next: NextFunction,
-			): Promise<void> => {
-				await apiEndpointAdapter.handleRequest(
-					route.endpoint,
-					request,
-					response,
-					next,
-				);
-			},
-		);
 	}
 }
 

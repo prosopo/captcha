@@ -22,7 +22,7 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { getPairAsync } from "@prosopo/keyring";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
-	api,
+	createApiAdminRoutesProvider,
 	domainMiddleware,
 	getClientList,
 	headerCheckMiddleware,
@@ -37,6 +37,7 @@ import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy";
+import { apiRulePaths } from "@prosopo/user-access-policy";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -57,7 +58,7 @@ function startApi(
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
 	);
-	const apiAdminRoutesProvider = api.admin.createApiAdminRoutesProvider(env);
+	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set(
@@ -77,13 +78,15 @@ function startApi(
 	apiApp.use(publicRouter(env));
 
 	// Admin routes
+	env.logger.info("Enabling admin auth middleware");
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
+	apiApp.use(apiRulePaths.INSERT_MANY, authMiddleware(env));
+	apiApp.use(apiRulePaths.DELETE_MANY, authMiddleware(env));
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiRuleRoutesProvider,
 			apiEndpointAdapter,
 		),
-		authMiddleware(env),
 	);
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
@@ -91,7 +94,6 @@ function startApi(
 			// unlike the default one, it should have errorStatusCode as 400
 			createApiExpressDefaultEndpointAdapter(env.logger, 400),
 		),
-		authMiddleware(env),
 	);
 
 	// Rate limiting

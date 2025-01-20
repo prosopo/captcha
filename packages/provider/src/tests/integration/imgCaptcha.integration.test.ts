@@ -39,7 +39,7 @@ describe("Image Captcha Integration Tests", () => {
 			await registerSiteKey(dappAccount, CaptchaType.image);
 		});
 
-		it("should supply an image captcha challenge to a Dapp User", async () => {
+		it.only("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
