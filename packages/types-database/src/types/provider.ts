@@ -59,7 +59,7 @@ import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
 
-export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
+export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
