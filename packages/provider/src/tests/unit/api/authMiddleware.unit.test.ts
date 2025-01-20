@@ -133,7 +133,7 @@ describe("authMiddleware", () => {
 		});
 	});
 
-	it.only("should call next() immediately if url does not contain /v1/prosopo", async () => {
+	it("should call next() immediately if url does not contain /v1/prosopo", async () => {
 		const mockReq = {
 			url: "/favicon.ico",
 			originalUrl: "/favicon.ico",
