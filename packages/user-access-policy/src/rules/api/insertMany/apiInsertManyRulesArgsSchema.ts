@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { boolean, object, string } from "zod";
+import { boolean, number, object, string } from "zod";
 import { ruleConfigSchema } from "../../rule/config/ruleConfigSchema.js";
 
 const apiInsertManyRulesArgsSchema = object({
@@ -25,6 +25,7 @@ const apiInsertManyRulesArgsSchema = object({
 	}),
 	userIds: string().array().optional(),
 	config: ruleConfigSchema.optional(),
+	score: number().optional(),
 });
 
 type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
