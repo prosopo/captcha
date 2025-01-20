@@ -577,14 +577,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 
 				if (imageCaptchaConfigDefined) {
-					botScore +=
+					const accessPolicyPenalty =
 						imageCaptchaConfigResolver.accessRule?.score ||
 						tasks.config.penalties.PENALTY_ACCESS_RULE;
+					botScore += accessPolicyPenalty;
 					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
 						score: botScore,
 						scoreComponents: {
 							baseScore: baseBotScore,
-							accessPolicy: tasks.config.penalties.PENALTY_ACCESS_RULE,
+							accessPolicy: accessPolicyPenalty,
 						},
 					});
 					return res.json(tasks.frictionlessManager.sendImageCaptcha(tokenId));
