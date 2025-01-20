@@ -155,7 +155,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						sessionRecord,
 					);
 			} else if (
-				!(clientSettings?.settings?.captchaType === CaptchaType.image)
+				!(
+					clientSettings?.settings?.captchaType === CaptchaType.image ||
+					clientSettings?.settings?.captchaType === CaptchaType.frictionless
+				)
 			) {
 				// Throw an error if an image captcha has been requested without a session and the client is not configured for image captchas
 				return next(

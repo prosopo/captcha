@@ -16,6 +16,7 @@ import { nativeEnum } from "zod";
 export enum CaptchaType {
 	image = "image",
 	pow = "pow",
+	frictionless = "frictionless",
 }
 
 export const CaptchaTypeSpec = nativeEnum(CaptchaType);

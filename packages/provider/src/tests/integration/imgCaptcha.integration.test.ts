@@ -17,14 +17,11 @@ import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
 	ApiPaths,
-	type Captcha,
 	type CaptchaRequestBodyType,
-	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
-	IUserSettings,
-	type TGetImageCaptchaChallengeURL,
+	CaptchaType,
 } from "@prosopo/types";
 import fetch from "node-fetch";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -39,7 +36,7 @@ const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 describe("Image Captcha Integration Tests", () => {
 	describe("GetImageCaptchaChallenge", () => {
 		beforeAll(async () => {
-			await registerSiteKey(dappAccount);
+			await registerSiteKey(dappAccount, CaptchaType.image);
 		});
 
 		it("should supply an image captcha challenge to a Dapp User", async () => {

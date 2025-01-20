@@ -18,6 +18,7 @@ import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
 	ApiPaths,
+	CaptchaType,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
@@ -81,7 +82,7 @@ const failPoW = (data: string, difficulty: number): number => {
 describe("PoW Integration Tests", () => {
 	describe("GetPowCaptchaChallenge", () => {
 		beforeAll(async () => {
-			await registerSiteKey(dappAccount);
+			await registerSiteKey(dappAccount, CaptchaType.pow);
 		});
 
 		it("should supply a PoW challenge to a Dapp User", async () => {
@@ -163,7 +164,7 @@ describe("PoW Integration Tests", () => {
 
 			const dappAccount = dappPair.address;
 
-			await registerSiteKey(dappAccount);
+			await registerSiteKey(dappAccount, CaptchaType.pow);
 
 			const origin = "http://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
@@ -266,7 +267,7 @@ describe("PoW Integration Tests", () => {
 			const verifiedTimeout = 120000;
 
 			const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-			await registerSiteKey(dapp);
+			await registerSiteKey(dapp, CaptchaType.pow);
 			const body: SubmitPowCaptchaSolutionBodyType = {
 				challenge,
 				difficulty,

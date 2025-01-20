@@ -15,7 +15,7 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import { CaptchaTypeSpec, type ProsopoConfigOutput } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { validateSiteKey } from "./validators.js";
 
@@ -70,7 +70,7 @@ export default (
 				} = argv;
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey as string, {
-					captchaType: captcha_type as "image" | "pow" | "frictionless",
+					captchaType: CaptchaTypeSpec.parse(captcha_type),
 					frictionlessThreshold: frictionless_threshold as number,
 					domains: url as string[],
 					powDifficulty: pow_difficulty as number,
