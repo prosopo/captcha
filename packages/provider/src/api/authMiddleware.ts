@@ -23,7 +23,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 		try {
 			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
 			if (req.originalUrl.indexOf(ApiPrefix) === -1) {
-				env.logger.debug({
+				env.logger.info({
 					message: "Non-api route, skipping auth middleware",
 				});
 				next();
