@@ -30,7 +30,6 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 				return;
 			}
 
-			console.log("In admin auth middleware");
 			const { signature, timestamp } = extractHeaders(req);
 
 			if (env.authAccount) {

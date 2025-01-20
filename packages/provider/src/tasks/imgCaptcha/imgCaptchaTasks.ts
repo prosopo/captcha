@@ -96,7 +96,6 @@ export class ImgCaptchaManager {
 		requestHash: string;
 		timestamp: number;
 		signedRequestHash: string;
-		score?: number;
 	}> {
 		const dataset = await this.db.getDatasetDetails(datasetId);
 		if (!dataset) {
@@ -480,7 +479,7 @@ export class ImgCaptchaManager {
 			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
-			...(score ? { score } : {}),
+			...(score && { score }),
 		};
 	}
 
