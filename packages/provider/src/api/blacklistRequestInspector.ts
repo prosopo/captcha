@@ -78,6 +78,7 @@ class BlacklistRequestInspector {
 				requestBody,
 			);
 
+			console.log("\nClient ID:", clientId);
 			return await this.blacklistInspector.isUserBlacklisted(
 				clientId,
 				userIpAddress,

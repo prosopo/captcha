@@ -138,7 +138,7 @@ export async function start(
 
 	await env.isReady();
 
-	// Start the scheduled jobs
+	//Start the scheduled jobs
 	if (env.pair) {
 		storeCaptchasExternally(env.pair, env.config).catch((err) => {
 			console.error("Failed to start scheduler:", err);

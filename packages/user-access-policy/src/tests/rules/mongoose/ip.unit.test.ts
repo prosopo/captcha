@@ -344,7 +344,7 @@ describe.each([
 			});
 
 		// then
-		expect(insertDuplicate()).rejects.toThrow();
+		expect(await insertDuplicate()).to.not.throw;
 	});
 
 	it.each([
@@ -396,9 +396,9 @@ describe.each([
 			clientId: "client",
 		} as Rule,
 		{},
-	])("rejectsDuplicatedIpMask", async (clientIdPart) => {
+	])("replacesDuplicatedIpMask", async (clientIdPart) => {
 		// given
-		await rulesStorage.insert({
+		const rule = {
 			...clientIdPart,
 			isUserBlocked: true,
 			userIp: {
@@ -412,28 +412,15 @@ describe.each([
 					},
 				},
 			},
-		});
+		};
+		await rulesStorage.insert(rule);
 
 		// when
-		const insertDuplicate = async () =>
-			await rulesStorage.insert({
-				...clientIdPart,
-				isUserBlocked: true,
-				userIp: {
-					[ipRange.version]: {
-						[ipRange.fieldSuffix]: getNumericIp(ipRange.min),
-						asString: ipRange.min.bigInt().toString(),
-						mask: {
-							[rangeMinKey]: getNumericIp(ipRange.min),
-							[rangeMaxKey]: getNumericIp(ipRange.max),
-							asNumeric: 24,
-						},
-					},
-				},
-			});
+		const newRule = { ...rule, isUserBlocked: false };
+		const insertDuplicate = async () => await rulesStorage.insert(newRule);
 
 		// then
-		expect(insertDuplicate()).rejects.toThrow();
+		expect(await insertDuplicate()).to.not.throw;
 	});
 
 	it("globalAndClientCanHaveSameIp", async () => {
