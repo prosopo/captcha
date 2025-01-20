@@ -1479,6 +1479,7 @@ export class ProviderDatabase
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
+				tier: record.tier,
 			};
 			const filter: Pick<IUserDataSlim, "account"> = {
 				account: record.account,
