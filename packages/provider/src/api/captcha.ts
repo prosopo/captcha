@@ -42,10 +42,6 @@ import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
-import {
-	PENALTY_ACCESS_RULE,
-	PENALTY_OLD_TIMESTAMP,
-} from "../tasks/frictionless/frictionlessPenalties.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
 
@@ -556,12 +552,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						"Timestamp is older than 10 minutes",
 						new Date(timestamp),
 					);
-					botScore += PENALTY_OLD_TIMESTAMP;
+					botScore += tasks.config.penalties.PENALTY_OLD_TIMESTAMP;
 					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
 						score: botScore,
 						scoreComponents: {
 							baseScore: baseBotScore,
-							timeout: PENALTY_OLD_TIMESTAMP,
+							timeout: tasks.config.penalties.PENALTY_OLD_TIMESTAMP,
 						},
 					});
 					return res.json(
@@ -581,12 +577,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 
 				if (imageCaptchaConfigDefined) {
-					botScore += PENALTY_ACCESS_RULE;
+					botScore += tasks.config.penalties.PENALTY_ACCESS_RULE;
 					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
 						score: botScore,
 						scoreComponents: {
 							baseScore: baseBotScore,
-							accessPolicy: PENALTY_ACCESS_RULE,
+							accessPolicy: tasks.config.penalties.PENALTY_ACCESS_RULE,
 						},
 					});
 					return res.json(tasks.frictionlessManager.sendImageCaptcha(tokenId));
