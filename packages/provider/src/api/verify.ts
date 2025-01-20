@@ -21,6 +21,7 @@ import {
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
 	type ServerPowCaptchaVerifyRequestBodyOutput,
+	Tier,
 	type VerificationResponse,
 	VerifySolutionBody,
 	type VerifySolutionBodyTypeOutput,
@@ -188,7 +189,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			const verificationResponse: VerificationResponse = {
 				status: req.t(verified ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED"),
 				[ApiParams.verified]: verified,
-				...(score && { [ApiParams.score]: score }),
+				...(score &&
+					clientRecord.tier !== Tier.Free && { [ApiParams.score]: score }),
 			};
 
 			return res.json(verificationResponse);
