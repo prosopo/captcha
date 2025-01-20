@@ -79,12 +79,6 @@ class RulesMongooseStorage implements RulesStorage {
 		const ruleRecords =
 			this.convertMongooseRecordsToRuleRecords(mongooseRecords);
 
-		this.logger.info("RulesMongooseStorage.find", {
-			query: query,
-			ruleRecordsLength: ruleRecords.length,
-			ruleRecords: ruleRecords,
-		});
-
 		return ruleRecords;
 	}
 

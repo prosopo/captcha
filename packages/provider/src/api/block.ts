@@ -11,13 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { getLoggerDefault } from "@prosopo/common";
+import { getLogger, getLoggerDefault } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { createBlacklistInspector } from "@prosopo/user-access-policy";
 import { BlacklistRequestInspector } from "./blacklistRequestInspector.js";
 
 export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
-	const logger = getLoggerDefault();
+	const logLevel = providerEnvironment.config.logLevel;
+	const logger = getLogger(logLevel, "blockMiddleware");
 
 	const userAccessRulesStorage = providerEnvironment
 		.getDb()

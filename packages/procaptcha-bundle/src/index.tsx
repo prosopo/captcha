@@ -37,13 +37,14 @@ const implicitRender = () => {
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
 		const siteKey = at(elements, 0).getAttribute("data-sitekey");
+		const web3 = at(elements, 0).getAttribute("data-web3");
 		if (!siteKey) {
 			console.error("No siteKey found");
 			return;
 		}
 		const captchaType = getCaptchaType(elements);
 
-		const root = renderLogic(elements, getConfig(siteKey), {
+		const root = renderLogic(elements, getConfig(siteKey, !(web3 === "true")), {
 			captchaType,
 			siteKey,
 		});
