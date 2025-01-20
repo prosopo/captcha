@@ -46,7 +46,6 @@ class ApiExpressRouterFactory {
 		apiEndpointAdapter: ApiExpressEndpointAdapter,
 	): void {
 		for (const route of routes) {
-			console.log("registering route", route.path);
 			router.post(
 				route.path,
 				async (

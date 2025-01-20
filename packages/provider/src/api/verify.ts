@@ -109,7 +109,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					...(response.commitmentId && {
 						[ApiParams.commitmentId]: response.commitmentId,
 					}),
-					...(response.score && { [ApiParams.score]: response.score }),
+					...(response.score &&
+						clientRecord.tier &&
+						clientRecord.tier !== Tier.Free && {
+							[ApiParams.score]: response.score,
+						}),
 				};
 				res.json(verificationResponse);
 			} catch (err) {
@@ -190,6 +194,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				status: req.t(verified ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED"),
 				[ApiParams.verified]: verified,
 				...(score &&
+					clientRecord.tier &&
 					clientRecord.tier !== Tier.Free && { [ApiParams.score]: score }),
 			};
 
