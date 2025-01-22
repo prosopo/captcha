@@ -80,7 +80,11 @@
 		"node": "20",
 		"npm": ">=9"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
@@ -89,6 +93,7 @@
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
+		"has-proto": "1.2.0",
 		"htmlhint": "1.1.4",
 		"markdownlint-cli": "0.41.0",
 		"node-stdlib-browser": "1.2.1",
