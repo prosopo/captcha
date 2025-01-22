@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.3.1",
+	"version": "2.3.2",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -89,6 +89,7 @@
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
+		"has-proto": "1.2.0",
 		"htmlhint": "1.1.4",
 		"markdownlint-cli": "0.41.0",
 		"node-stdlib-browser": "1.2.1",
