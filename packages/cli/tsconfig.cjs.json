@@ -36,6 +36,12 @@
 		},
 		{
 			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../user-access-policy/tsconfig.cjs.json"
+		},
+		{
+			"path": "../api-express-router/tsconfig.cjs.json"
 		}
 	]
 }

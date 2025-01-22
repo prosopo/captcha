@@ -17,7 +17,10 @@ import {
 	ProcaptchaConfigSchema,
 } from "@prosopo/types";
 
-export const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
+export const getConfig = (
+	siteKey?: string,
+	web2 = true,
+): ProcaptchaClientConfigOutput => {
 	if (!siteKey) {
 		siteKey = process.env.PROSOPO_SITE_KEY || "";
 	}
@@ -33,6 +36,7 @@ export const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
 		serverUrl: process.env.PROSOPO_SERVER_URL || "",
 		mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === "true" || false,
+		web2,
 	});
 };
 
