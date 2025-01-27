@@ -27,7 +27,7 @@ import { CaptchaManager } from "../../../tasks/captchaManager.js";
 describe("CaptchaManager", () => {
 	let db: IProviderDatabase;
 	let pair: KeyringPair;
-	let logger: Logger; // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+	let logger: Logger;
 	let captchaManager: CaptchaManager;
 
 	beforeEach(() => {
