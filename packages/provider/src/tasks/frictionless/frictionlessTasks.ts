@@ -12,34 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { CaptchaType } from "@prosopo/types";
-import {
-	ApiParams,
-	type GetFrictionlessCaptchaResponse,
-	type ProsopoConfigOutput,
-} from "@prosopo/types";
-import type {
-	FrictionlessTokenId,
-	IProviderDatabase,
-	Session,
-} from "@prosopo/types-database";
+import type { Logger } from "@prosopo/common";
+import { CaptchaType, type ProsopoConfigOutput } from "@prosopo/types";
+import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
+import type { IProviderDatabase, Session } from "@prosopo/types-database";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
+import { CaptchaManager } from "../captchaManager.js";
 
-export class FrictionlessManager {
+export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
-	pair: KeyringPair;
-	db: IProviderDatabase;
 
 	constructor(
-		config: ProsopoConfigOutput,
-		pair: KeyringPair,
 		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
 	) {
+		super(db, pair, logger);
 		this.config = config;
-		this.pair = pair;
-		this.db = db;
 	}
 
 	checkLangRules(acceptLanguage: string): number {
@@ -81,12 +73,5 @@ export class FrictionlessManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};
-	}
-
-	async getFrictionlessTokenIdFromSession(sessionRecord: Session) {
-		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-			sessionRecord.tokenId,
-		);
-		return tokenRecord ? (tokenRecord._id as FrictionlessTokenId) : undefined;
 	}
 }

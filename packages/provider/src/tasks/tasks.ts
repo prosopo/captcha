@@ -52,7 +52,11 @@ export class Tasks {
 		}
 		this.pair = env.pair;
 
-		this.powCaptchaManager = new PowCaptchaManager(this.pair, this.db);
+		this.powCaptchaManager = new PowCaptchaManager(
+			this.db,
+			this.pair,
+			this.logger,
+		);
 		this.datasetManager = new DatasetManager(
 			this.config,
 			this.logger,
@@ -62,8 +66,8 @@ export class Tasks {
 		this.imgCaptchaManager = new ImgCaptchaManager(
 			this.db,
 			this.pair,
-			this.logger,
 			this.config,
+			this.logger,
 		);
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
@@ -71,9 +75,10 @@ export class Tasks {
 			this.db,
 		);
 		this.frictionlessManager = new FrictionlessManager(
-			this.config,
-			this.pair,
 			this.db,
+			this.pair,
+			this.config,
+			this.logger,
 		);
 	}
 }

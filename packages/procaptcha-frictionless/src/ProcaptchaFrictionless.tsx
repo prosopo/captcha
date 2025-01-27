@@ -90,8 +90,6 @@ export const ProcaptchaFrictionless = ({
 					userAccount: result.userAccount,
 				};
 
-				console.log("frictionlessState", frictionlessState);
-
 				if (result.captchaType === "image") {
 					setComponentToRender(
 						<Procaptcha

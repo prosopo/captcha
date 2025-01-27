@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
-import { type Logger, ProsopoDBError, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
@@ -642,7 +642,7 @@ export class ProviderDatabase
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null> {
 		if (!this.tables) {
-			throw new ProsopoEnvError("DATABASE.DATABASE_UNDEFINED", {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
 				context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
 				logger: this.logger,
 			});
@@ -1059,7 +1059,7 @@ export class ProviderDatabase
 		requestHash: string,
 	): Promise<PendingCaptchaRequest> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
 					failedFuncName: this.getPendingImageCommitment.name,
 					requestHash,
@@ -1078,7 +1078,7 @@ export class ProviderDatabase
 			return doc;
 		}
 
-		throw new ProsopoEnvError("DATABASE.PENDING_RECORD_NOT_FOUND", {
+		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
 			context: {
 				failedFuncName: this.getPendingImageCommitment.name,
 				requestHash,
@@ -1091,7 +1091,7 @@ export class ProviderDatabase
 	 */
 	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
 					failedFuncName: this.updatePendingImageCommitmentStatus.name,
 					requestHash,
@@ -1133,7 +1133,7 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
 	}
 
 	/**
@@ -1157,7 +1157,7 @@ export class ProviderDatabase
 			) as UserSolutionRecord[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED");
 	}
 
 	async getDatasetIdWithSolvedCaptchasOfSizeN(

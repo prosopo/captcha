@@ -180,7 +180,7 @@ describe("ImgCaptchaManager", () => {
 			unsolved: { count: 4 },
 		};
 
-		imgCaptchaManager = new ImgCaptchaManager(db, pair, logger, captchaConfig);
+		imgCaptchaManager = new ImgCaptchaManager(db, pair, captchaConfig, logger);
 
 		vi.clearAllMocks();
 	});

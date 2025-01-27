@@ -27,26 +27,23 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
+	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
+import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
-export class PowCaptchaManager {
-	pair: KeyringPair;
-	db: IProviderDatabase;
+export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
-	logger: Logger;
 
-	constructor(pair: KeyringPair, db: IProviderDatabase, logger?: Logger) {
-		this.pair = pair;
-		this.db = db;
+	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
+		super(db, pair, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
-		this.logger = logger || getLoggerDefault();
 	}
 
 	/**

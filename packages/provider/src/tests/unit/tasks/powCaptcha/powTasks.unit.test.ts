@@ -84,7 +84,7 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(pair, db);
+		powCaptchaManager = new PowCaptchaManager(db, pair);
 
 		vi.clearAllMocks();
 	});

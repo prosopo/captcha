@@ -1,4 +1,3 @@
-import { handleErrors } from "@prosopo/api-express-router";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import { handleErrors } from "@prosopo/api-express-router";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import { ApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
