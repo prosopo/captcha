@@ -86,7 +86,7 @@ export class CaptchaManager {
 			sessionId &&
 			clientSettings?.settings?.captchaType !== CaptchaType.frictionless
 		) {
-			this.logger.error({
+			this.logger.warn({
 				message: `Client ${clientSettings.account} requested frictionless captcha with sessionId ${sessionId} but client settings do not specify frictionless`,
 			});
 			return {
@@ -100,6 +100,9 @@ export class CaptchaManager {
 		// is stored on the client's settings. e.g. if `captchaType` is `image` and there is no `sessionId` then the
 		// client must have `captchaType` set to `image` in their settings.
 		if (clientSettings?.settings?.captchaType !== captchaType) {
+			this.logger.warn({
+				message: `Client ${clientSettings.account} requested captcha type ${captchaType} but client settings specify ${clientSettings?.settings?.captchaType}`,
+			});
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",

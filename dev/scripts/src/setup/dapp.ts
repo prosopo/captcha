@@ -30,7 +30,7 @@ export async function registerSiteKey(
 			captchaType: CaptchaType.frictionless,
 			frictionlessThreshold: 0.8,
 			powDifficulty: 4,
-			domains: ["localhost"],
+			domains: ["localhost", "0.0.0.0"],
 		},
 	);
 }

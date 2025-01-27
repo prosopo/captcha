@@ -24,7 +24,7 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		default_page: "/",
+		default_page: `/${process.env.CAPTCHA_TYPE || ""}`,
 	},
 	e2e: {
 		setupNodeEvents(on, config) {
@@ -41,7 +41,6 @@ export default defineConfig({
 					build: {
 						ssr: false,
 						modulePreload: { polyfill: true },
-						mode: "development",
 					},
 					plugins: [
 						nodePolyfills({

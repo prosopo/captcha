@@ -265,20 +265,4 @@ export class ClientTaskManager {
 			skip += batch.length;
 		}
 	}
-
-	private cleanReferrer(referrer: string): string {
-		const lowered = referrer.toLowerCase().trim();
-
-		// Remove trailing slashes safely
-		let cleaned = lowered;
-		const MAX_SLASHES = 10;
-		let slashCount = 0;
-
-		while (cleaned.endsWith("/") && slashCount < MAX_SLASHES) {
-			cleaned = cleaned.slice(0, -1);
-			slashCount++;
-		}
-
-		return cleaned;
-	}
 }
