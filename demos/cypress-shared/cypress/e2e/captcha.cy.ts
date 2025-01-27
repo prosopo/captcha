@@ -41,7 +41,7 @@ describe("Captchas", () => {
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
 		};
-		const response = await fetch(adminSiteKeyURL, {
+		await fetch(adminSiteKeyURL, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -54,7 +54,6 @@ describe("Captchas", () => {
 				settings,
 			} as RegisterSitekeyBodyTypeOutput),
 		});
-		console.log("register site key response", response);
 	});
 
 	beforeEach(() => {
