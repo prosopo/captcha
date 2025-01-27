@@ -550,6 +550,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						imageCaptchaConfigResolver.accessRule?.score ||
 						tasks.config.penalties.PENALTY_ACCESS_RULE;
 					botScore += accessPolicyPenalty;
+					tasks.logger.info({
+						message: "Address has an image captcha config defined",
+					});
 					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
 						score: botScore,
 						scoreComponents: {
@@ -562,6 +565,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
+					tasks.logger.info({
+						message: `Bot score ${botScore} is greater than threshold ${botThreshold}`,
+					});
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
 					);

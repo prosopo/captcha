@@ -983,6 +983,7 @@ export class ProviderDatabase
 	 */
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
+			this.logger.debug({ action: "storing", sessionRecord });
 			await this.tables.session.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
@@ -999,6 +1000,7 @@ export class ProviderDatabase
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
+		this.logger.debug({ action: "checking and removing", sessionId });
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
 		try {
 			const session = await this.tables.session
