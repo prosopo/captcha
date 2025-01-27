@@ -45,6 +45,7 @@ describe("CaptchaManager", () => {
 			info: vi.fn(),
 			error: vi.fn(),
 			debug: vi.fn(),
+			warn: vi.fn(),
 		} as unknown as Logger;
 
 		captchaManager = new CaptchaManager(db, pair, logger);
