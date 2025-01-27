@@ -38,7 +38,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			if (!clientSettings) throw siteKeyNotRegisteredError(dapp);
 
 			const allowedDomains = clientSettings.settings?.domains;
-			if (!allowedDomains) throw siteKeyInvalidDomainError(dapp);
+			if (!allowedDomains) throw siteKeyInvalidDomainError(dapp, req.hostname);
 
 			const origin = req.headers.origin;
 			if (!origin) throw unauthorizedOriginError();
@@ -50,7 +50,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				}
 			}
 
-			throw unauthorizedOriginError();
+			throw unauthorizedOriginError(origin);
 		} catch (err) {
 			if (
 				err instanceof ProsopoApiError ||
@@ -78,19 +78,20 @@ const invalidSiteKeyError = (dapp: string) => {
 	});
 };
 
-const unauthorizedOriginError = () => {
+const unauthorizedOriginError = (origin?: string) => {
 	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
-		context: { code: 400 },
+		context: { code: 400, origin },
 	});
 };
 
-const siteKeyInvalidDomainError = (dapp: string) => {
+const siteKeyInvalidDomainError = (dapp: string, domain: string) => {
 	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
 		context: {
 			code: 400,
 			message:
 				"No domains are allowed for this site key. Please fix in the Procaptcha Portal",
 			siteKey: dapp,
+			domain,
 		},
 	});
 };

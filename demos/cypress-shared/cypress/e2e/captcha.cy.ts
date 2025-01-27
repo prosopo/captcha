@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
+
 import "@cypress/xpath";
 import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
@@ -20,8 +21,10 @@ import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
-	CaptchaType,
+	type CaptchaType,
 	type IUserSettings,
+	type RegisterSitekeyBodyTypeOutput,
+	Tier,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
@@ -33,12 +36,12 @@ describe("Captchas", () => {
 		const signature = u8aToHex(pair.sign(timestamp.toString()));
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 		const settings: IUserSettings = {
-			captchaType: CaptchaType.frictionless,
+			captchaType: (Cypress.env("CAPTCHA_TYPE") || "image") as CaptchaType,
 			domains: ["0.0.0.0"],
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
 		};
-		await fetch(adminSiteKeyURL, {
+		const response = await fetch(adminSiteKeyURL, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -47,9 +50,11 @@ describe("Captchas", () => {
 			},
 			body: JSON.stringify({
 				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+				tier: Tier.Free,
 				settings,
-			}),
+			} as RegisterSitekeyBodyTypeOutput),
 		});
+		console.log("register site key response", response);
 	});
 
 	beforeEach(() => {

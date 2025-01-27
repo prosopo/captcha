@@ -132,6 +132,9 @@ export async function start(
 			config.authAccount.address,
 		);
 		env = new ProviderEnvironment(config, pair, authAccount);
+
+		// Get rid of any scheduled task records from previous runs
+		env.cleanup();
 	} else {
 		env.logger.debug("Env already defined");
 	}

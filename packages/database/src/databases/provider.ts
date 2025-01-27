@@ -1474,6 +1474,16 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Clean up the scheduled task status records
+	 */
+	async cleanupScheduledTaskStatus(status: ScheduledTaskStatus): Promise<void> {
+		const filter: Pick<ScheduledTaskRecord, "status"> = {
+			status,
+		};
+		await this.tables?.scheduler.deleteMany(filter);
+	}
+
+	/**
 	 * @description Update the client records
 	 */
 	async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
