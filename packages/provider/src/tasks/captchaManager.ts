@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, getLoggerDefault } from "@prosopo/common";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
@@ -18,6 +19,7 @@ import type {
 	ClientRecord,
 	FrictionlessTokenId,
 	IProviderDatabase,
+	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
 
@@ -40,7 +42,7 @@ export class CaptchaManager {
 	}
 
 	async isValidRequest(
-		clientSettings: ClientRecord,
+		clientSettings: ClientRecord | IUserDataSlim,
 		captchaType: CaptchaType,
 		sessionId?: string,
 	): Promise<{
@@ -49,17 +51,24 @@ export class CaptchaManager {
 		frictionlessTokenId?: FrictionlessTokenId;
 		type: CaptchaType;
 	}> {
-		if (sessionId) {
+		this.logger.debug({
+			message: "Validating request",
+			captchaType,
+			sessionId,
+		});
+
+		// If the client has a sessionId then they are requesting a frictionless captcha. Pass over if the client
+		// settings do not specify frictionless.
+		if (
+			sessionId &&
+			clientSettings?.settings?.captchaType === CaptchaType.frictionless
+		) {
 			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
-			if (
-				!sessionRecord ||
-				(sessionRecord &&
-					sessionRecord.captchaType !== clientSettings?.settings?.captchaType)
-			) {
+			if (!sessionRecord) {
 				return {
 					valid: false,
-					reason: "Session ID not found",
-					type: CaptchaType.frictionless,
+					reason: `Session ${sessionId} not found`,
+					type: captchaType,
 				};
 			}
 			const frictionlessTokenId =
@@ -67,22 +76,37 @@ export class CaptchaManager {
 			return {
 				valid: true,
 				frictionlessTokenId,
-				type: CaptchaType.frictionless,
+				type: captchaType,
 			};
 		}
+
+		// If the user somehow has a sessionId but the client settings do not specify frictionless then the request is
+		// invalid. This could occur if the client settings were changed after the user received a sessionId.
 		if (
-			!(
-				clientSettings?.settings?.captchaType === captchaType ||
-				clientSettings?.settings?.captchaType === CaptchaType.frictionless
-			)
+			sessionId &&
+			clientSettings?.settings?.captchaType !== CaptchaType.frictionless
 		) {
+			this.logger.error({
+				message: `Client ${clientSettings.account} requested frictionless captcha with sessionId ${sessionId} but client settings do not specify frictionless`,
+			});
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: captchaType,
 			};
 		}
-		return { valid: true, type: clientSettings?.settings?.captchaType };
+
+		// We have already checked frictionless above so to pass here a user must be requesting the captchaType that
+		// is stored on the client's settings. e.g. if `captchaType` is `image` and there is no `sessionId` then the
+		// client must have `captchaType` set to `image` in their settings.
+		if (clientSettings?.settings?.captchaType !== captchaType) {
+			return {
+				valid: false,
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
+				type: captchaType,
+			};
+		}
+		return { valid: true, type: captchaType };
 	}
 
 	getVerificationResponse(

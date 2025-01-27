@@ -18,6 +18,7 @@ import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
+	type Tier,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -205,11 +206,13 @@ export class ClientTaskManager {
 
 	async registerSiteKey(
 		siteKey: string,
+		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
+				tier: tier,
 				settings: settings,
 			} as ClientRecord,
 		]);

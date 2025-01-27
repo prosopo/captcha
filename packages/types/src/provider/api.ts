@@ -32,6 +32,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
+import { Tier } from "../client/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -330,6 +331,7 @@ export const VerifyPowCaptchaSolutionBody = object({
 
 export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
+	[ApiParams.tier]: nativeEnum(Tier),
 	[ApiParams.settings]: object({
 		[ApiParams.captchaType]: string(),
 		[ApiParams.domains]: array(string()),
