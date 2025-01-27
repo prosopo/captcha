@@ -21,7 +21,6 @@ import {
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
 	type ServerPowCaptchaVerifyRequestBodyOutput,
-	Tier,
 	type VerificationResponse,
 	VerifySolutionBody,
 	type VerifySolutionBodyTypeOutput,
@@ -103,18 +102,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					);
 
 				tasks.logger.debug(response);
-				const verificationResponse: ImageVerificationResponse = {
-					[ApiParams.status]: req.t(response.status),
-					[ApiParams.verified]: response[ApiParams.verified],
-					...(response.commitmentId && {
-						[ApiParams.commitmentId]: response.commitmentId,
-					}),
-					...(response.score &&
-						clientRecord.tier &&
-						clientRecord.tier !== Tier.Free && {
-							[ApiParams.score]: response.score,
-						}),
-				};
+				const verificationResponse: ImageVerificationResponse =
+					tasks.imgCaptchaManager.getVerificationResponse(
+						response[ApiParams.verified],
+						clientRecord,
+						req.t,
+						response[ApiParams.score],
+						response[ApiParams.commitmentId],
+					);
 				res.json(verificationResponse);
 			} catch (err) {
 				tasks.logger.error({ err, body: req.body });
@@ -190,13 +185,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					verifiedTimeout,
 				);
 
-			const verificationResponse: VerificationResponse = {
-				status: req.t(verified ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED"),
-				[ApiParams.verified]: verified,
-				...(score &&
-					clientRecord.tier &&
-					clientRecord.tier !== Tier.Free && { [ApiParams.score]: score }),
-			};
+			const verificationResponse: VerificationResponse =
+				tasks.powCaptchaManager.getVerificationResponse(
+					verified,
+					clientRecord,
+					req.t,
+					score,
+				);
 
 			return res.json(verificationResponse);
 		} catch (err) {

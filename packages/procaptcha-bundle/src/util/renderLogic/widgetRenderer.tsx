@@ -53,6 +53,7 @@ class WidgetRenderer {
 		renderOptions?: ProcaptchaRenderOptions,
 	): Root[] {
 		return elements.map((element) => {
+			element.innerHTML = '<a href="prosopo.io">A BIG LINK TO PROSOPO</a>';
 			return this.renderElement(settings, element, config, renderOptions);
 		});
 	}

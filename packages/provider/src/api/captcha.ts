@@ -124,42 +124,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				user,
 				dapp,
 			);
-			const clientSettings = await tasks.db.getClientRecord(dapp);
 
-			let frictionlessTokenId: FrictionlessTokenId | undefined;
+			const { valid, reason, frictionlessTokenId } =
+				await tasks.imgCaptchaManager.isValidRequest(
+					clientRecord,
+					CaptchaType.image,
+					sessionId,
+				);
 
-			if (sessionId) {
-				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
-				if (
-					!sessionRecord ||
-					(sessionRecord && sessionRecord.captchaType !== CaptchaType.image)
-				) {
-					// Throw an error if a session ID has been provided and the session is not an image captcha session or the session does not exist
-					return next(
-						new ProsopoApiError("API.BAD_REQUEST", {
-							context: {
-								error: "Session ID not found",
-								code: 400,
-								siteKey: dapp,
-								user,
-							},
-						}),
-					);
-				}
-				frictionlessTokenId =
-					await tasks.frictionlessManager.getFrictionlessTokenIdFromSession(
-						sessionRecord,
-					);
-			} else if (
-				!(
-					clientSettings?.settings?.captchaType === CaptchaType.image ||
-					clientSettings?.settings?.captchaType === CaptchaType.frictionless
-				)
-			) {
-				// Throw an error if an image captcha has been requested without a session and the client is not configured for image captchas
+			if (!valid) {
 				return next(
-					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
-						context: { code: 400, siteKey: dapp, user },
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							error: reason,
+							code: 400,
+							siteKey: dapp,
+							user,
+						},
 					}),
 				);
 			}
@@ -324,34 +305,22 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			let frictionlessTokenId: FrictionlessTokenId | undefined;
+			const { valid, reason, frictionlessTokenId } =
+				await tasks.powCaptchaManager.isValidRequest(
+					clientRecord,
+					CaptchaType.pow,
+					sessionId,
+				);
 
-			if (sessionId) {
-				const sessionRecord = await tasks.db.checkAndRemoveSession(sessionId);
-				if (
-					!sessionRecord ||
-					(sessionRecord && sessionRecord.captchaType !== CaptchaType.pow)
-				) {
-					return next(
-						new ProsopoApiError("API.BAD_REQUEST", {
-							context: {
-								error: "Session ID not found",
-								code: 400,
-								siteKey: dapp,
-								user,
-							},
-						}),
-					);
-				}
-				frictionlessTokenId =
-					await tasks.frictionlessManager.getFrictionlessTokenIdFromSession(
-						sessionRecord,
-					);
-			} else if (!(clientSettings?.settings?.captchaType === "pow")) {
-				// Throw an error if a pow captcha has been requested without a session and the client is not configured for pow captchas
+			if (!valid) {
 				return next(
-					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
-						context: { code: 400, siteKey: dapp, user },
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							error: reason,
+							code: 400,
+							siteKey: dapp,
+							user,
+						},
 					}),
 				);
 			}

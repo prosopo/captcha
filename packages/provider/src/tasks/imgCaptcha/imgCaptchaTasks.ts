@@ -22,9 +22,11 @@ import {
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
 import {
+	ApiParams,
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
+	CaptchaType,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
 	type Hash,
@@ -35,6 +37,7 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	ClientRecord,
 	FrictionlessTokenId,
 	IProviderDatabase,
 	PendingCaptchaRequest,
@@ -43,24 +46,20 @@ import type {
 import { at } from "@prosopo/util";
 import { checkLangRules } from "../../rules/lang.js";
 import { shuffleArray } from "../../util.js";
+import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
-export class ImgCaptchaManager {
-	db: IProviderDatabase;
-	pair: KeyringPair;
-	logger: Logger;
+export class ImgCaptchaManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
-		logger: Logger,
 		config: ProsopoConfigOutput,
+		logger?: Logger,
 	) {
-		this.db = db;
-		this.pair = pair;
-		this.logger = logger;
+		super(db, pair, logger);
 		this.config = config;
 	}
 
@@ -485,5 +484,25 @@ export class ImgCaptchaManager {
 
 	checkLangRules(acceptLanguage: string): number {
 		return checkLangRules(this.config, acceptLanguage);
+	}
+
+	override getVerificationResponse(
+		verified: boolean,
+		clientRecord: ClientRecord,
+		translateFn: (key: string) => string,
+		score?: number,
+		commitmentId?: Hash,
+	): ImageVerificationResponse {
+		return {
+			...super.getVerificationResponse(
+				verified,
+				clientRecord,
+				translateFn,
+				score,
+			),
+			...(commitmentId && {
+				[ApiParams.commitmentId]: commitmentId,
+			}),
+		};
 	}
 }
