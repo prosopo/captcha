@@ -69,145 +69,134 @@ export const getDefaultCallbacks = (element: Element): Callbacks => ({
 	},
 });
 
+/**
+ * Set the a user callback function for an element. Data tags take precedence over renderOptions.
+ */
+const getUserCallback = (
+	callback: string,
+	element: Element,
+	callbackFnOrName: string | ((token: string) => void) | undefined,
+) => {
+	const callbackFnName = element.getAttribute(`data-${callback}`);
+	if (callbackFnName) {
+		const callbackFn = getWindowCallback(callbackFnName);
+		if (callbackFn) {
+			return callbackFn;
+		}
+	}
+	if (typeof callbackFnOrName === "function") {
+		return callbackFnOrName;
+	}
+	if (typeof callbackFnOrName === "string") {
+		return getWindowCallback(callbackFnOrName);
+	}
+};
+
 export function setUserCallbacks(
 	renderOptions: ProcaptchaRenderOptions | undefined,
 	callbacks: Callbacks,
 	element: Element,
 ) {
-	if (typeof renderOptions?.callback === "function") {
-		const fn = renderOptions.callback;
+	// human callback
+	const humanCallback = getUserCallback(
+		"callback",
+		element,
+		renderOptions?.callback,
+	);
+	if (humanCallback) {
+		// wrap the user's callback in a function that also calls handleOnHuman
 		callbacks.onHuman = (token: ProcaptchaToken) => {
 			handleOnHuman(element, token);
-			fn(token);
+			humanCallback(token);
 		};
-	} else {
-		const callbackName =
-			typeof renderOptions?.callback === "string"
-				? renderOptions?.callback
-				: element.getAttribute("data-callback");
-		if (callbackName)
-			// wrap the user's callback in a function that also calls handleOnHuman
-			callbacks.onHuman = (token: ProcaptchaToken) => {
-				handleOnHuman(element, token);
-				const fn = getWindowCallback(callbackName);
-				fn(token);
-			};
 	}
 
-	if (
-		renderOptions?.["chalexpired-callback"] &&
-		typeof renderOptions["chalexpired-callback"] === "function"
-	) {
-		const fn = renderOptions["chalexpired-callback"];
+	// challenge expired callback
+	const chalExpiredCallback = getUserCallback(
+		"chalexpired-callback",
+		element,
+		renderOptions?.["chalexpired-callback"],
+	);
+	if (chalExpiredCallback) {
 		callbacks.onChallengeExpired = () => {
 			removeProcaptchaResponse();
-			fn();
+			chalExpiredCallback();
 		};
-	} else {
-		const chalExpiredCallbackName =
-			typeof renderOptions?.["chalexpired-callback"] === "string"
-				? renderOptions?.["chalexpired-callback"]
-				: element.getAttribute("data-chalexpired-callback");
-		if (chalExpiredCallbackName)
-			callbacks.onChallengeExpired = () => {
-				const fn = getWindowCallback(chalExpiredCallbackName);
-				removeProcaptchaResponse();
-				fn();
-			};
 	}
 
-	if (
-		renderOptions?.["expired-callback"] &&
-		typeof renderOptions["expired-callback"] === "function"
-	) {
-		const fn = renderOptions["expired-callback"];
+	// expired callback
+	const expiredCallback = getUserCallback(
+		"expired-callback",
+		element,
+		renderOptions?.["expired-callback"],
+	);
+	if (expiredCallback) {
 		callbacks.onExpired = () => {
 			removeProcaptchaResponse();
-			fn();
+			expiredCallback();
 		};
-	} else {
-		const onExpiredCallbackName =
-			typeof renderOptions?.["expired-callback"] === "string"
-				? renderOptions?.["expired-callback"]
-				: element.getAttribute("data-expired-callback");
-		if (onExpiredCallbackName)
-			callbacks.onExpired = () => {
-				const fn = getWindowCallback(onExpiredCallbackName);
-				removeProcaptchaResponse();
-				fn();
-			};
 	}
 
-	if (
-		renderOptions?.["error-callback"] &&
-		typeof renderOptions["error-callback"] === "function"
-	) {
-		const fn = renderOptions["error-callback"];
-		callbacks.onError = () => {
+	// error callback
+	const errorCallback = getUserCallback(
+		"error-callback",
+		element,
+		renderOptions?.["error-callback"],
+	);
+	if (errorCallback) {
+		callbacks.onError = (error: Error) => {
 			removeProcaptchaResponse();
-			fn();
+			errorCallback(error);
 		};
-	} else {
-		const errorCallbackName =
-			typeof renderOptions?.["error-callback"] === "string"
-				? renderOptions?.["error-callback"]
-				: element.getAttribute("data-error-callback");
-		if (errorCallbackName)
-			callbacks.onError = () => {
-				const fn = getWindowCallback(errorCallbackName);
-				removeProcaptchaResponse();
-				fn();
-			};
 	}
 
-	if (typeof renderOptions?.["close-callback"] === "function") {
-		callbacks.onClose = renderOptions["close-callback"];
-	} else {
-		const onCloseCallbackName =
-			typeof renderOptions?.["close-callback"] === "string"
-				? renderOptions?.["close-callback"]
-				: element.getAttribute("data-close-callback");
-		if (onCloseCallbackName)
-			callbacks.onClose = getWindowCallback(onCloseCallbackName);
+	// close callback
+	const closeCallback = getUserCallback(
+		"close-callback",
+		element,
+		renderOptions?.["close-callback"],
+	);
+	if (closeCallback) {
+		callbacks.onClose = () => {
+			closeCallback();
+		};
 	}
 
-	if (renderOptions?.["open-callback"]) {
-		if (typeof renderOptions["open-callback"] === "function") {
-			callbacks.onOpen = renderOptions["open-callback"];
-		} else {
-			const onOpenCallbackName =
-				typeof renderOptions?.["open-callback"] === "string"
-					? renderOptions?.["open-callback"]
-					: element.getAttribute("data-open-callback");
-			if (onOpenCallbackName)
-				callbacks.onOpen = getWindowCallback(onOpenCallbackName);
-		}
+	// open callback
+	const openCallback = getUserCallback(
+		"open-callback",
+		element,
+		renderOptions?.["open-callback"],
+	);
+	if (openCallback) {
+		callbacks.onOpen = () => {
+			openCallback();
+		};
 	}
 
-	if (renderOptions?.["failed-callback"]) {
-		if (typeof renderOptions["failed-callback"] === "function") {
-			callbacks.onFailed = renderOptions["failed-callback"];
-		} else {
-			const onFailedCallbackName =
-				typeof renderOptions?.["failed-callback"] === "string"
-					? renderOptions?.["failed-callback"]
-					: element.getAttribute("data-failed-callback");
-			if (onFailedCallbackName)
-				callbacks.onFailed = getWindowCallback(onFailedCallbackName);
-		}
+	// failed callback
+	const failedCallback = getUserCallback(
+		"failed-callback",
+		element,
+		renderOptions?.["failed-callback"],
+	);
+	if (failedCallback) {
+		callbacks.onFailed = () => {
+			failedCallback();
+		};
 	}
+
 	// reset callback
-	if (renderOptions?.["reset-callback"]) {
-		if (typeof renderOptions["reset-callback"] === "function") {
-			callbacks.onReset = renderOptions["reset-callback"];
-		} else {
-			const onResetCallbackName =
-				typeof renderOptions?.["reset-callback"] === "string"
-					? renderOptions?.["reset-callback"]
-					: element.getAttribute("data-reset-callback");
-			if (onResetCallbackName)
-				callbacks.onReset = getWindowCallback(onResetCallbackName);
-		}
+	const resetCallback = getUserCallback(
+		"reset-callback",
+		element,
+		renderOptions?.["reset-callback"],
+	);
+	if (resetCallback) {
+		callbacks.onReset = () => {
+			removeProcaptchaResponse();
+			resetCallback();
+		};
 	}
 }
 

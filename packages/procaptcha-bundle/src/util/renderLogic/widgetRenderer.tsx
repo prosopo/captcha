@@ -68,6 +68,7 @@ class WidgetRenderer {
 			(renderOptions?.captchaType as FeaturesEnum) ||
 			settings.defaultCaptchaType;
 		const callbacks = getDefaultCallbacks(element);
+		console.log("callbacks", callbacks);
 
 		this.readAndValidateSettings(element, callbacks, config, renderOptions);
 
