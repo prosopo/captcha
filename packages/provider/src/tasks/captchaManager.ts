@@ -87,7 +87,7 @@ export class CaptchaManager {
 			clientSettings?.settings?.captchaType !== CaptchaType.frictionless
 		) {
 			this.logger.warn({
-				message: `Client ${clientSettings.account} requested frictionless captcha with sessionId ${sessionId} but client settings do not specify frictionless`,
+				message: `Client ${clientSettings.account} requested frictionless captcha with sessionId ${sessionId} but client settings specify ${clientSettings?.settings?.captchaType}`,
 			});
 			return {
 				valid: false,
