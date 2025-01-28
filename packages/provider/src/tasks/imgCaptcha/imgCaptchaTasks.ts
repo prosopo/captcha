@@ -26,7 +26,6 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
-	CaptchaType,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	type DappUserSolutionResult,
 	type Hash,
