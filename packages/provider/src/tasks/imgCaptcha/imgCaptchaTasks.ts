@@ -155,7 +155,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			deadlineTs,
 			currentTime,
 			ipAddress.bigInt(),
-			headers,
 			frictionlessTokenId,
 		);
 		return {

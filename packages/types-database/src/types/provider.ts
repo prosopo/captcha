@@ -318,7 +318,6 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
 	ipAddress: { type: BigInt, required: true },
-	headers: { type: Object, required: true },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -513,7 +512,6 @@ export interface IProviderDatabase extends IDatabase {
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
-		headers: RequestHeaders,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
 

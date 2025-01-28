@@ -1025,7 +1025,6 @@ export class ProviderDatabase
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
-		headers: RequestHeaders,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
@@ -1043,7 +1042,6 @@ export class ProviderDatabase
 			requestHash,
 			deadlineTimestamp,
 			requestedAtTimestamp: new Date(requestedAtTimestamp),
-			headers,
 			ipAddress,
 			frictionlessTokenId,
 		};
