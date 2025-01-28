@@ -35,6 +35,8 @@ describe("ipV6RuleFormatting", async () => {
 		model = mongoConnection.model(
 			"UserAccessPolicyRules",
 			getRuleMongooseSchema(),
+			undefined,
+			{ overwriteModels: true },
 		);
 
 		await model.syncIndexes();
