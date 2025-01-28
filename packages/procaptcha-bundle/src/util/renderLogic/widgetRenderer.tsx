@@ -53,7 +53,6 @@ class WidgetRenderer {
 		renderOptions?: ProcaptchaRenderOptions,
 	): Root[] {
 		return elements.map((element) => {
-			element.innerHTML = '<a href="prosopo.io">A BIG LINK TO PROSOPO</a>';
 			return this.renderElement(settings, element, config, renderOptions);
 		});
 	}
@@ -68,7 +67,6 @@ class WidgetRenderer {
 			(renderOptions?.captchaType as FeaturesEnum) ||
 			settings.defaultCaptchaType;
 		const callbacks = getDefaultCallbacks(element);
-		console.log("callbacks", callbacks);
 
 		this.readAndValidateSettings(element, callbacks, config, renderOptions);
 

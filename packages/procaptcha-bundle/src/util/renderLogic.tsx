@@ -30,7 +30,6 @@ export const renderLogic = (
 	config: ProcaptchaClientConfigOutput,
 	renderOptions?: ProcaptchaRenderOptions,
 ) => {
-	console.log("renderOptions", renderOptions);
 	return widgetRenderer.renderElements(
 		{
 			identifierPrefix: "procaptcha-",
