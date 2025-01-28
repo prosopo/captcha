@@ -24,6 +24,8 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
+		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
+		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
 		default_page: `/${process.env.CAPTCHA_TYPE || ""}`,
 	},
 	e2e: {
