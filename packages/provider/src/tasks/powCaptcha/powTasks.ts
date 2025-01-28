@@ -178,12 +178,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: {
-					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
-					challenge,
-				},
-			});
+			this.logger.debug(`No record of this challenge: ${challenge}`);
+			return { verified: false };
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
