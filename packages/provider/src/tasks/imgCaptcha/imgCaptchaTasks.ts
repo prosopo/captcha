@@ -22,6 +22,7 @@ import {
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
 import {
+	ApiParams,
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
@@ -30,35 +31,34 @@ import {
 	type Hash,
 	type IPAddress,
 	type ImageVerificationResponse,
-	type PendingCaptchaRequest,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
+	ClientRecord,
+	FrictionlessTokenId,
 	IProviderDatabase,
+	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { checkLangRules } from "../../rules/lang.js";
 import { shuffleArray } from "../../util.js";
+import { CaptchaManager } from "../captchaManager.js";
+import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
-export class ImgCaptchaManager {
-	db: IProviderDatabase;
-	pair: KeyringPair;
-	logger: Logger;
+export class ImgCaptchaManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
 
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
-		logger: Logger,
 		config: ProsopoConfigOutput,
+		logger?: Logger,
 	) {
-		this.db = db;
-		this.pair = pair;
-		this.logger = logger;
+		super(db, pair, logger);
 		this.config = config;
 	}
 
@@ -88,6 +88,7 @@ export class ImgCaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -117,7 +118,7 @@ export class ImgCaptchaManager {
 		}
 
 		const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount);
-		console.log("solved", solved);
+
 		let unsolved: Captcha[] = [];
 		if (unsolvedCount) {
 			unsolved = await this.getCaptchaWithProof(
@@ -146,14 +147,14 @@ export class ImgCaptchaManager {
 			.reduce((a, b) => a + b, 0);
 		const deadlineTs = timeLimit + currentTime;
 
-		await this.db.storeDappUserPending(
+		await this.db.storePendingImageCommitment(
 			userAccount,
 			requestHash,
 			salt,
 			deadlineTs,
 			currentTime,
 			ipAddress.bigInt(),
-			headers,
+			frictionlessTokenId,
 		);
 		return {
 			captchas,
@@ -169,7 +170,7 @@ export class ImgCaptchaManager {
 	 * @param {string} dappAccount
 	 * @param {string} requestHash
 	 * @param {JSON} captchas
-	 * @param {string} userRequestHashSignature
+	 * @param userTimestampSignature
 	 * @param timestamp
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
@@ -225,7 +226,7 @@ export class ImgCaptchaManager {
 			verified: false,
 		};
 
-		const pendingRecord = await this.db.getDappUserPending(requestHash);
+		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
 
 		const unverifiedCaptchaIds = captchas.map((captcha) => captcha.captchaId);
 		const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
@@ -251,7 +252,7 @@ export class ImgCaptchaManager {
 
 			// Only do stuff if the request is in the local DB
 			// prevent this request hash from being used twice
-			await this.db.updateDappUserPendingStatus(requestHash);
+			await this.db.updatePendingImageCommitmentStatus(requestHash);
 			const commit: UserCommitment = {
 				id: commitmentId,
 				userAccount: userAccount,
@@ -265,8 +266,9 @@ export class ImgCaptchaManager {
 				requestedAtTimestamp: timestamp,
 				ipAddress,
 				headers,
+				frictionlessTokenId: pendingRecord.frictionlessTokenId,
 			};
-			await this.db.storeDappUserSolution(receivedCaptchas, commit);
+			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
 			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
 				response = {
@@ -455,14 +457,50 @@ export class ImgCaptchaManager {
 		}
 
 		const isApproved = solution.result.status === CaptchaStatus.approved;
+
+		let score: number | undefined;
+		if (solution.frictionlessTokenId) {
+			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
+				solution.frictionlessTokenId,
+			);
+			if (tokenRecord) {
+				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+				this.logger.info({
+					tscoreComponents: tokenRecord?.scoreComponents,
+					score: score,
+				});
+			}
+		}
+
 		return {
 			status: isApproved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
+			...(score && { score }),
 		};
 	}
 
 	checkLangRules(acceptLanguage: string): number {
 		return checkLangRules(this.config, acceptLanguage);
+	}
+
+	override getVerificationResponse(
+		verified: boolean,
+		clientRecord: ClientRecord,
+		translateFn: (key: string) => string,
+		score?: number,
+		commitmentId?: Hash,
+	): ImageVerificationResponse {
+		return {
+			...super.getVerificationResponse(
+				verified,
+				clientRecord,
+				translateFn,
+				score,
+			),
+			...(commitmentId && {
+				[ApiParams.commitmentId]: commitmentId,
+			}),
+		};
 	}
 }

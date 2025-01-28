@@ -16,6 +16,7 @@
 		"build:cjs": "echo 'no cjs build'"
 	},
 	"dependencies": {
+		"@prosopo/api-express-router": "2.3.2",
 		"@prosopo/common": "2.3.2",
 		"@prosopo/provider": "2.3.2",
 		"@prosopo/types": "2.3.2",

@@ -17,14 +17,11 @@ import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
 	ApiPaths,
-	type Captcha,
 	type CaptchaRequestBodyType,
-	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
-	IUserSettings,
-	type TGetImageCaptchaChallengeURL,
+	CaptchaType,
 } from "@prosopo/types";
 import fetch from "node-fetch";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -33,15 +30,19 @@ import { registerSiteKey } from "./registerSitekey.js";
 
 const solutions = datasetWithSolutionHashes;
 const baseUrl = "http://localhost:9229";
-const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
 describe("Image Captcha Integration Tests", () => {
-	describe("GetImageCaptchaChallenge", () => {
-		beforeAll(async () => {
-			await registerSiteKey(dappAccount);
-		});
+	let dappAccount: string;
+	let mnemonic: string;
 
+	beforeAll(async () => {
+		// Create a new site key to avoid conflicts with other tests
+		[mnemonic, dappAccount] = await generateMnemonic();
+		await registerSiteKey(dappAccount, CaptchaType.image);
+	});
+
+	describe("GetImageCaptchaChallenge", () => {
 		it("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;

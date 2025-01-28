@@ -11,18 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type {
+	FrictionlessTokenId,
+	IProviderDatabase,
+	ScoreComponents,
+} from "@prosopo/types-database";
 
-import { type ProsopoConfigOutput, ScheduledTaskStatus } from "@prosopo/types";
-import { Environment } from "./env.js";
-
-export class ProviderEnvironment extends Environment {
-	declare config: ProsopoConfigOutput;
-
-	cleanup(): void {
-		this.getDb()
-			.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
-			.catch((err) => {
-				this.logger.error("Failed to cleanup scheduled tasks", err);
-			});
-	}
-}
+export const computeFrictionlessScore = (
+	scoreComponents:
+		| {
+				[key: string]: number;
+		  }
+		| ScoreComponents,
+): number => {
+	return Number(
+		Math.min(
+			1,
+			Object.values(scoreComponents)
+				.filter((x) => x !== undefined)
+				.reduce((acc, val) => acc + val, 0),
+		).toFixed(2),
+	);
+};

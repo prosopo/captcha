@@ -11,18 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { number, object } from "zod";
 
-import { type ProsopoConfigOutput, ScheduledTaskStatus } from "@prosopo/types";
-import { Environment } from "./env.js";
-
-export class ProviderEnvironment extends Environment {
-	declare config: ProsopoConfigOutput;
-
-	cleanup(): void {
-		this.getDb()
-			.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
-			.catch((err) => {
-				this.logger.error("Failed to cleanup scheduled tasks", err);
-			});
-	}
-}
+export const FrictionlessPenalties = object({
+	PENALTY_OLD_TIMESTAMP: number().positive().optional().default(0.2),
+	PENALTY_ACCESS_RULE: number().positive().optional().default(0.5),
+});

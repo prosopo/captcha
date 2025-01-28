@@ -8,9 +8,14 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
+			"path": "../api-route"
+		},
+		{
+			"path": "../api-express-router"
+		},
+		{
 			"path": "../common"
 		},
-
 		{
 			"path": "../../dev/config"
 		},
@@ -40,9 +45,6 @@
 		},
 		{
 			"path": "../user-access-policy"
-		},
-		{
-			"path": "../api-route"
 		}
 	]
 }
