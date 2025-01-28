@@ -22,6 +22,5 @@ export interface PendingCaptchaRequest {
 	deadlineTimestamp: number; // unix timestamp
 	requestedAtTimestamp: number; // unix timestamp
 	ipAddress: bigint;
-	headers: RequestHeaders;
 	frictionlessTokenId?: FrictionlessTokenId;
 }
