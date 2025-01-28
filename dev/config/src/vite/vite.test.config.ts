@@ -13,11 +13,10 @@
 // limitations under the License.
 
 import { defineConfig } from "vitest/config";
-import type { UserConfig } from "vitest/node";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
 
-export default function (): UserConfig {
+export default function () {
 	const testTypeEnv = process.env.TEST_TYPE || "";
 	const testTypes = testTypeEnv.trim().split(",");
 	// @(|) globs any tests which don't have their type specified, e.g. myTest.test.ts. These are included even when filtering by test type because we don't know what type of test they are. Really, they should have their type specified.
