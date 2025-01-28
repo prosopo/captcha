@@ -198,7 +198,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
+					context: { code: 500, error: err },
 				}),
 			);
 		}

@@ -147,4 +147,39 @@ describe("handleErrors", () => {
 		});
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
+
+	it("should unwrap nested ProsopoBaseErrors but not an Error that is nested inside them", () => {
+		const mockRequest = {} as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+		const code = 400;
+		const key = "API.UNKNOWN";
+
+		const error = new Error("Some error");
+		const apiError = new ProsopoApiError(key, {
+			context: { code, error },
+		});
+
+		handleErrors(apiError, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
+		);
+		expect(mockResponse.status).toHaveBeenCalledWith(code);
+		expect(mockResponse.send).toHaveBeenCalledWith({
+			error: {
+				code,
+				key,
+				message: "Unknown API error",
+			},
+		});
+		expect(mockResponse.end).toHaveBeenCalled();
+	});
 });
