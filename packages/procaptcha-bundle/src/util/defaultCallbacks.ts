@@ -97,7 +97,6 @@ export function setUserCallbacks(
 	callbacks: Callbacks,
 	element: Element,
 ) {
-	// human callback
 	const humanCallback = getUserCallback(
 		"callback",
 		element,
@@ -111,7 +110,6 @@ export function setUserCallbacks(
 		};
 	}
 
-	// challenge expired callback
 	const chalExpiredCallback = getUserCallback(
 		"chalexpired-callback",
 		element,
@@ -124,7 +122,6 @@ export function setUserCallbacks(
 		};
 	}
 
-	// expired callback
 	const expiredCallback = getUserCallback(
 		"expired-callback",
 		element,
@@ -137,7 +134,6 @@ export function setUserCallbacks(
 		};
 	}
 
-	// error callback
 	const errorCallback = getUserCallback(
 		"error-callback",
 		element,
@@ -150,7 +146,6 @@ export function setUserCallbacks(
 		};
 	}
 
-	// close callback
 	const closeCallback = getUserCallback(
 		"close-callback",
 		element,
@@ -162,7 +157,6 @@ export function setUserCallbacks(
 		};
 	}
 
-	// open callback
 	const openCallback = getUserCallback(
 		"open-callback",
 		element,
@@ -174,7 +168,6 @@ export function setUserCallbacks(
 		};
 	}
 
-	// failed callback
 	const failedCallback = getUserCallback(
 		"failed-callback",
 		element,
@@ -186,7 +179,6 @@ export function setUserCallbacks(
 		};
 	}
 
-	// reset callback
 	const resetCallback = getUserCallback(
 		"reset-callback",
 		element,
