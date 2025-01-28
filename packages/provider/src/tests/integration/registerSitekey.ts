@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProviderDatabase } from "@prosopo/database";
-import { type CaptchaType, Tier } from "@prosopo/types";
+import type { CaptchaType } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 
 export const registerSiteKey = async (
@@ -34,7 +34,6 @@ export const registerSiteKey = async (
 		await db.updateClientRecords([
 			{
 				account: siteKey,
-				tier: Tier.Free,
 				settings: {
 					captchaType: captchaType,
 					domains: ["example.com"],
