@@ -16,6 +16,7 @@ import type { ApiRoutesProvider } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import type { Model } from "mongoose";
 import type { BlacklistInspector } from "./blacklistInspector.js";
+import { apiRulePaths } from "./rules/api/apiRulePaths.js";
 import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
 import { getExpressApiRuleRateLimits } from "./rules/api/getExpressApiRuleRateLimits.js";
 import { BlacklistRulesInspector } from "./rules/blacklistRulesInspector.js";
@@ -63,4 +64,5 @@ export {
 	createApiRuleRoutesProvider,
 	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
+	apiRulePaths,
 };

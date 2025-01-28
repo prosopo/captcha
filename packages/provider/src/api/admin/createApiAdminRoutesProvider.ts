@@ -17,12 +17,10 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Tasks } from "../../tasks/index.js";
 import { ApiAdminRoutesProvider } from "./apiAdminRoutesProvider.js";
 
-const createApiAdminRoutesProvider = (
+export const createApiAdminRoutesProvider = (
 	providerEnvironment: ProviderEnvironment,
 ): ApiRoutesProvider => {
 	const tasks = new Tasks(providerEnvironment);
 
 	return new ApiAdminRoutesProvider(tasks);
 };
-
-export { createApiAdminRoutesProvider };

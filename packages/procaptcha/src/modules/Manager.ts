@@ -144,7 +144,9 @@ export function Manager(
 				);
 				updateState({ captchaApi });
 
-				const challenge = await captchaApi.getCaptchaChallenge();
+				const challenge = await captchaApi.getCaptchaChallenge(
+					frictionlessState?.sessionId,
+				);
 
 				if (challenge.error) {
 					updateState({

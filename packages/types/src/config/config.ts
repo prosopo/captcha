@@ -27,6 +27,7 @@ import {
 	ProsopoCaptchaCountConfigSchema,
 	ProviderDefaultRateLimits,
 } from "../provider/index.js";
+import { FrictionlessPenalties } from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
@@ -241,7 +242,6 @@ const ThemeType = union([literal("light"), literal("dark")]);
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
-		accountCreator: AccountCreatorConfigSchema.optional(),
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
@@ -259,11 +259,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			solved: { count: 1 },
 			unsolved: { count: 0 },
 		}),
-		captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
-			requiredNumberOfSolutions: 3,
-			solutionWinningPercentage: 80,
-			captchaBlockRecency: 10,
-		}),
+		penalties: FrictionlessPenalties,
 		scheduledTasks: object({
 			captchaScheduler: object({
 				schedule: string().optional(),

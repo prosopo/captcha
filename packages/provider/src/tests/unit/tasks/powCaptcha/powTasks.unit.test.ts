@@ -84,7 +84,7 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(pair, db);
+		powCaptchaManager = new PowCaptchaManager(db, pair);
 
 		vi.clearAllMocks();
 	});
@@ -306,7 +306,7 @@ describe("PowCaptchaManager", () => {
 				timeout,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(true);
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 

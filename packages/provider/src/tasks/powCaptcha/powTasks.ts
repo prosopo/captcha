@@ -18,6 +18,7 @@ import {
 	ProsopoEnvError,
 	getLoggerDefault,
 } from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -26,23 +27,22 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
+	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
+import { CaptchaManager } from "../captchaManager.js";
+import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
-const logger = getLoggerDefault();
 const DEFAULT_POW_DIFFICULTY = 4;
 
-export class PowCaptchaManager {
-	pair: KeyringPair;
-	db: IProviderDatabase;
+export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 
-	constructor(pair: KeyringPair, db: IProviderDatabase) {
-		this.pair = pair;
-		this.db = db;
+	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
+		super(db, pair, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 	}
 
@@ -52,6 +52,7 @@ export class PowCaptchaManager {
 	 * @param {string} userAccount - user that is solving the captcha
 	 * @param {string} dappAccount - dapp that is requesting the captcha
 	 * @param origin - not currently used
+	 * @param powDifficulty
 	 */
 	async getPowCaptchaChallenge(
 		userAccount: string,
@@ -121,7 +122,7 @@ export class PowCaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			logger.debug("No record of this challenge");
+			this.logger.debug("No record of this challenge");
 			// no record of this challenge
 			return false;
 		}
@@ -172,7 +173,7 @@ export class PowCaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
-	): Promise<boolean> {
+	): Promise<{ verified: boolean; score?: number }> {
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
@@ -194,7 +195,7 @@ export class PowCaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return false;
+		if (challengeRecord.serverChecked) return { verified: false };
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -213,6 +214,21 @@ export class PowCaptchaManager {
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
-		return true;
+
+		let score: number | undefined;
+		if (challengeRecord.frictionlessTokenId) {
+			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
+				challengeRecord.frictionlessTokenId,
+			);
+			if (tokenRecord) {
+				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+				this.logger.info({
+					tscoreComponents: tokenRecord?.scoreComponents,
+					score: score,
+				});
+			}
+		}
+
+		return { verified: true, ...(score ? { score } : {}) };
 	}
 }

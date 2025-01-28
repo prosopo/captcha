@@ -44,6 +44,7 @@ describe("authMiddleware", () => {
 	it("should call next() if signature is valid", async () => {
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
+			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -71,6 +72,7 @@ describe("authMiddleware", () => {
 	it("should return 401 if signature is invalid", async () => {
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
+			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -102,6 +104,7 @@ describe("authMiddleware", () => {
 	it("should return 401 if key pair is missing", async () => {
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
+			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -133,6 +136,7 @@ describe("authMiddleware", () => {
 	it("should call next() immediately if url does not contain /v1/prosopo", async () => {
 		const mockReq = {
 			url: "/favicon.ico",
+			originalUrl: "/favicon.ico",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -144,7 +148,9 @@ describe("authMiddleware", () => {
 			json: vi.fn(),
 		} as unknown as Response;
 
-		const mockNext = vi.fn() as unknown as NextFunction;
+		const mockNext = vi.fn(() => {
+			console.log("mock next function");
+		}) as unknown as NextFunction;
 
 		const middleware = authMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
