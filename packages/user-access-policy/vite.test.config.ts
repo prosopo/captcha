@@ -14,4 +14,23 @@
 
 import { ViteTestConfig } from "@prosopo/config";
 
-export default ViteTestConfig;
+export default () => {
+	const testConfig = ViteTestConfig();
+
+	return {
+		...testConfig,
+		test: {
+			// @ts-ignore
+			...testConfig.test,
+			poolOptions: {
+				// @ts-ignore
+				...testConfig.test.poolOptions,
+				forks: {
+					// @ts-ignore
+					...testConfig.test.poolOptions.forks,
+					singleFork: true,
+				},
+			},
+		},
+	};
+};
