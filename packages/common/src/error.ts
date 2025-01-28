@@ -194,8 +194,12 @@ export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
 		jsonError.key =
 			err.context.translationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = err.message;
-		// Don't move to the next error if it is an instance of `Error` only
-		if (err.context.error && err.context.error instanceof ProsopoBaseError) {
+		// Only move to the next error if ProsopoBaseError or ZodError
+		if (
+			err.context.error &&
+			(err.context.error instanceof ProsopoBaseError ||
+				isZodError(err.context.error))
+		) {
 			err = err.context.error;
 		} else {
 			break;
