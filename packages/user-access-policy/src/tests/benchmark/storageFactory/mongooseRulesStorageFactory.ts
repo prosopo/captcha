@@ -33,6 +33,8 @@ class MongooseRulesStorageFactory implements RulesStorageFactory {
 		return mongoConnection.model(
 			"UserAccessPolicyRules",
 			getRuleMongooseSchema(),
+			undefined,
+			{ overwriteModels: true },
 		);
 	}
 }

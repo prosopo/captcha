@@ -11,15 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import { ApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
-import { handleErrors } from "./errorHandler.js";
-
-const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

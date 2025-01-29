@@ -61,12 +61,13 @@ const verify = async (
 			}),
 		});
 
-		const verified = (await response.json()).verified;
-		console.log("Verified", verified);
-		return verified;
+		const verifiedResponse = await response.json();
+		console.log(verifiedResponse);
+		return verifiedResponse.verified;
 	}
 	// verify using the TypeScript library
 	const verified = await prosopoServer.isVerified(token);
+	console.log(verified);
 	return verified;
 };
 

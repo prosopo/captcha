@@ -1,0 +1,33 @@
+name: "save_npm_cache"
+
+runs:
+    using: "composite"
+    steps:
+
+      # dirs must exist before cache restore
+      - name: Make dirs
+        shell: bash
+        run: |
+          mkdir -p ~/.npm
+
+      - name: Save npm cache
+        shell: bash
+        uses: actions/cache/save@v4
+        with:
+            path: |
+              ~/.npm
+            key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Cleanup npm caches
+        shell: bash
+        run: |
+            # remove all but the latest cache, leaving only the cache we just saved
+            echo "Fetching list of cache key"
+            cacheKeys=$(gh cache list --sort created_at --order desc --limit 100 -R "${{ github.repository }}" --key "npm-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
+            echo caches to be removed:
+            echo "${cacheKeys}"
+            set +e
+            for cacheKey in $cacheKeys
+            do
+                gh cache delete "$cacheKey" -R "${{ github.repository }}"
+            done

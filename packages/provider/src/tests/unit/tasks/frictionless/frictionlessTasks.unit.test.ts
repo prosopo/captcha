@@ -37,7 +37,7 @@ describe("Frictionless Task Manager", () => {
 			lRules: { en: 1 },
 		};
 
-		frictionlessTaskManager = new FrictionlessManager(captchaConfig, pair, db);
+		frictionlessTaskManager = new FrictionlessManager(db, pair, captchaConfig);
 
 		vi.clearAllMocks();
 	});
