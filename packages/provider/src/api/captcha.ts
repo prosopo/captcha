@@ -474,14 +474,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const { valid } = await tasks.frictionlessManager.isValidRequest(
-					clientRecord,
-					CaptchaType.frictionless,
-				);
+				const { valid, reason } =
+					await tasks.frictionlessManager.isValidRequest(
+						clientRecord,
+						CaptchaType.frictionless,
+					);
 
 				if (!valid) {
 					return next(
-						new ProsopoApiError("API.BAD_REQUEST", {
+						new ProsopoApiError(reason || "API.BAD_REQUEST", {
 							context: {
 								code: 400,
 								siteKey: dapp,

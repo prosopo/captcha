@@ -60,8 +60,7 @@ export class CaptchaManager {
 
 		// Session ID
 
-		// If the client has a sessionId then they are requesting a frictionless captcha. Pass over if the client
-		// settings do not specify frictionless.
+		// If the client has a sessionId then they are requesting a frictionless captcha.
 		if (sessionId) {
 			if (clientSettings?.settings?.captchaType === CaptchaType.frictionless) {
 				const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
@@ -103,10 +102,10 @@ export class CaptchaManager {
 
 		// No Session ID
 
-		// To pass here a user must be requesting the captchaType that is stored on the client's settings. e.g. if
-		// `captchaType` is `image` and there is no `sessionId` then the client must have `captchaType` set to `image`
-		// in their settings. If the user is at the start of the frictionless flow then they will have no sessionId.
-		// The client settings must specify frictionless for the request to be valid.
+		// To pass here a user must be requesting the captchaType that is stored on the client's settings.
+		// - If `captchaType` is `image` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `image`
+		// - If `captchaType` is `pow` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `pow`
+		// - If `captchaType` is `frictionless` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `frictionless`
 		if (clientSettings?.settings?.captchaType !== captchaType) {
 			this.logger.warn({
 				message: `Invalid ${captchaType} request`,
