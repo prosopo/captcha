@@ -14,5 +14,3 @@
 
 export * from "./util.js";
 export * from "./translations.js";
-export { default as en } from "./locales/en/translation.json";
-export { default as es } from "./locales/es/translation.json";

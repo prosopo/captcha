@@ -87,6 +87,7 @@ export default defineConfig(async ({ command, mode }) => {
 					// biome-ignore lint/correctness/noUnsafeOptionalChaining: external is optional
 					...frontendConfig.build?.rollupOptions.external,
 					...localFiles,
+					"i18next-fs-backend": "i18next-fs-backend",
 				},
 				output: {
 					...output,

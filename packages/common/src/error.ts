@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslationKey } from "@prosopo/locale";
-import { i18n as i18next } from "@prosopo/locale-node";
+import { type TranslationKey, isClientSide } from "@prosopo/locale";
+import { loadI18next } from "@prosopo/locale-node";
+import type { i18n } from "i18next";
 import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 import type { ApiJsonError } from "./types.js";
@@ -25,6 +26,7 @@ type BaseErrorOptions<ContextType> = {
 	logLevel?: LogLevel;
 	context?: ContextType;
 	silent?: boolean;
+	i18nInstance?: typeof i18next;
 };
 
 interface BaseContextParams {
@@ -40,6 +42,21 @@ type CliContextParams = BaseContextParams;
 type DatasetContextParams = BaseContextParams;
 type ApiContextParams = BaseContextParams & { code?: number };
 
+let i18next: i18n;
+
+export const isClientSideOrFrontendVar = () => {
+	return isClientSide() || process.env.FRONTEND;
+};
+
+async function loadi18nextLocal() {
+	i18next = await loadI18next();
+	// @ts-ignore
+	i18next.id = "error";
+}
+
+// Immediately call the function (synchronously starts, but it’s async)
+loadi18nextLocal();
+
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
 > extends Error {
@@ -52,18 +69,23 @@ export abstract class ProsopoBaseError<
 	) {
 		const logger = options?.logger || getLoggerDefault();
 		const logLevel = options?.logLevel || "error";
-
+		const i18n = options?.i18nInstance || i18next;
+		console.log(`\nLanguage: ${i18n.language}`);
 		if (error instanceof Error) {
 			super(error.message);
 			this.translationKey = options?.translationKey;
+
+			console.log("\ntranslating error 1", options?.translationKey, "\n");
+
 			this.context = {
 				...(options?.context as ContextType),
 				...(options?.translationKey
-					? { translationMessage: i18next.t(options.translationKey) }
+					? { translationMessage: i18n.t(options.translationKey) }
 					: {}),
 			};
 		} else {
-			super(i18next.t(error));
+			console.log("\ntranslating error 2", error, "\n");
+			super(i18n.t(error));
 			this.translationKey = error;
 			this.context = options?.context;
 		}
@@ -183,9 +205,16 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	}
 }
 
-export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
+export const unwrapError = (
+	err: ProsopoBaseError | SyntaxError | ZodError,
+	i18nInstance?: typeof i18next,
+) => {
+	const i18n = i18nInstance || i18next;
 	const code = "code" in err ? (err.code as number) : 400;
-	let message = i18next.t(err.message);
+
+	console.log(`\nLanguage: ${i18n.language}`);
+
+	let message = i18n.t(err.message);
 	let jsonError: ApiJsonError = { code, message };
 	let statusMessage = err.message;
 	jsonError.message = message;
@@ -208,7 +237,7 @@ export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
 	}
 
 	if (isZodError(err)) {
-		message = i18next.t("API.PARSE_ERROR");
+		message = i18n.t("API.PARSE_ERROR");
 		statusMessage = message;
 		if (typeof err.message === "object") {
 			jsonError = err.message;

@@ -22,7 +22,8 @@ export const handleErrors = (
 	response: Response,
 	next: NextFunction,
 ) => {
-	const { code, statusMessage, jsonError } = unwrapError(err);
+	// @ts-ignore
+	const { code, statusMessage, jsonError } = unwrapError(err, request.i18n);
 	response.statusMessage = statusMessage;
 	response.set("content-type", "application/json");
 	response.status(code);

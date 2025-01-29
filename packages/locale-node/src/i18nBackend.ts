@@ -12,22 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
 import { LanguageSchema } from "@prosopo/locale";
-import i18n, { type InitOptions } from "i18next";
-import HttpBackend from "i18next-http-backend";
+import i18n from "i18next";
+import FSBackend from "i18next-fs-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
-import resourcesToBackend from "i18next-resources-to-backend";
 
-const commonOptions: InitOptions = {
-	debug: false,
-	fallbackLng: "en",
-};
+const loadPath =
+	`${path.dirname(import.meta.url)}/locales/{{lng}}/{{ns}}.json`.replace(
+		"file://",
+		"",
+	);
 
-const nodeOptions: InitOptions = {};
-
-i18n
-	.use(new HttpBackend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
-	.use(MiddlewareLanguageDetector)
-	.init({ ...commonOptions, ...nodeOptions });
+if (!i18n.isInitialized) {
+	i18n
+		.use(FSBackend)
+		.use(MiddlewareLanguageDetector)
+		.init({
+			debug: process.env.NODE_ENV === "development",
+			fallbackLng: LanguageSchema.enum.en,
+			ns: ["translation"],
+			backend: {
+				loadPath,
+			},
+			detection: { order: ["header", "query", "cookie"] },
+		});
+	i18n.on("loaded", () => {
+		console.log("i18n loaded");
+	});
+}
 
 export default i18n;

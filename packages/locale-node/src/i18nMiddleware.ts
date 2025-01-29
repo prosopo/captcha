@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type HandleOptions, handle } from "i18next-http-middleware";
 
-import i18n from "./i18nBackend.js";
+import { type HandleOptions, handle } from "i18next-http-middleware";
+import { default as i18n } from "./i18nBackend.js";
 
 function i18nMiddleware(options: HandleOptions): ReturnType<typeof handle> {
-	// @ts-ignore not sure how to fix this
+	// @ts-ignore
 	return handle(i18n, { ...options });
 }
 

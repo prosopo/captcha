@@ -227,7 +227,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
-				status: req.t(
+				status: req.i18n.t(
 					result.verified ? "API.CAPTCHA_PASSED" : "API.CAPTCHA_FAILED",
 				),
 				...result,

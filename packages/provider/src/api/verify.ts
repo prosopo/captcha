@@ -106,7 +106,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					tasks.imgCaptchaManager.getVerificationResponse(
 						response[ApiParams.verified],
 						clientRecord,
-						req.t,
+						req.i18n.t,
 						response[ApiParams.score],
 						response[ApiParams.commitmentId],
 					);
@@ -166,7 +166,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			if (!challenge) {
 				const unverifiedResponse: VerificationResponse = {
-					status: req.t("API.USER_NOT_VERIFIED"),
+					status: req.i18n.t("API.USER_NOT_VERIFIED"),
 					[ApiParams.verified]: false,
 				};
 				return res.json(unverifiedResponse);
@@ -189,7 +189,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				tasks.powCaptchaManager.getVerificationResponse(
 					verified,
 					clientRecord,
-					req.t,
+					req.i18n.t,
 					score,
 				);
 

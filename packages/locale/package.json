@@ -14,10 +14,12 @@
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./locales/de": {
-			"import": "./dist/locales/de.json"
+			"import": "./dist/locales/de/translation.json",
+			"default": "./dist/locales/de/translation.json"
 		},
 		"./locales/en": {
-			"import": "./dist/locales/de.json"
+			"import": "./dist/locales/en/translation.json",
+			"default": "./dist/locales/en/translation.json"
 		}
 	},
 	"types": "./dist/index.d.ts",
