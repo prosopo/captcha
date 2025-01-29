@@ -32,7 +32,7 @@ jobs:
         if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
-              uses: ./.github/actions/print_contexts
+              uses: prosopo/captcha/.github/actions/print_contexts@main
               with:
                 INPUTS_CONTEXT: ${{ toJson(inputs) }}
                 NEEDS_CONTEXT: ${{ toJson(needs) }}
