@@ -72,7 +72,7 @@ export class CaptchaManager {
 					});
 					return {
 						valid: false,
-						reason: "CAPTCHA.NO_SESSION_FOUND", // TODO re-instate the crazy typescript nested generics stuff
+						reason: "CAPTCHA.NO_SESSION_FOUND",
 						type: captchaType,
 					};
 				}
