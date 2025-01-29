@@ -35,7 +35,6 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
-import type { FrictionlessTokenId } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
@@ -245,7 +244,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
-				status: req.i18n.t(
+				status: req.t(
 					result.verified ? "API.CAPTCHA_PASSED" : "API.CAPTCHA_FAILED",
 				),
 				...result,

@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./util.js";
-export * from "./translations.js";
-export { default as en } from "./locales/en/translation.json";
-export { default as es } from "./locales/es/translation.json";
+import path from "node:path";
+import { ViteCommonJSConfig } from "@prosopo/config";
+
+export default function () {
+	return ViteCommonJSConfig(
+		"locale-browser",
+		path.resolve("./tsconfig.cjs.json"),
+	);
+}

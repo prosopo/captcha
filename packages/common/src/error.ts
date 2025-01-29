@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
+import type { TranslationKey } from "@prosopo/locale";
+import { i18n as i18next } from "@prosopo/locale-node";
 import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 import type { ApiJsonError } from "./types.js";

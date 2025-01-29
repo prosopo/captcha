@@ -12,3 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export { default as i18nMiddleware } from "./i18nMiddleware.js";
+export { default as i18n } from "./i18nBackend.js";

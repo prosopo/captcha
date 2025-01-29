@@ -12,42 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-nocheck
-
-import path from "node:path";
+import { LanguageSchema } from "@prosopo/locale";
 import i18n, { type InitOptions } from "i18next";
-import Backend from "i18next-http-backend";
 import HttpBackend from "i18next-http-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import resourcesToBackend from "i18next-resources-to-backend";
-import { LanguageSchema } from "../translations.js";
 
-const commonOptions = {
+const commonOptions: InitOptions = {
 	debug: false,
-	fallbackLng: LanguageSchema.enum.en,
-	backend: {
-		// @ts-ignore
-		backends: [
-			HttpBackend, // if you need to check translation files from server
-			resourcesToBackend(
-				(language, namespace) => import(`./${language}/${namespace}.json`),
-			),
-		],
-		// the most important part that allows you to lazy-load translations
-		// @ts-ignore
-		backendOptions: [
-			{
-				loadPath: "./{{lng}}/{{ns}}.json",
-			},
-		],
-	},
+	fallbackLng: "en",
 };
 
 const nodeOptions: InitOptions = {};
 
 i18n
-	.use(new Backend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
+	.use(new HttpBackend(undefined, { reloadInterval: false })) // THIS IS THE LINE THAT CAUSES THE ERROR WHERE VITE NEVER EXITS THE BUNDLING PROCESS! It is due to a setInterval call in this class. Set reloadInterval to false to avoid the interval setup.
 	.use(MiddlewareLanguageDetector)
-	.init({ ...commonOptions, ...nodeOptions }, undefined);
+	.init({ ...commonOptions, ...nodeOptions });
 
 export default i18n;

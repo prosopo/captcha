@@ -36,7 +36,7 @@
 		"@prosopo/dotenv": "2.3.2",
 		"@prosopo/env": "2.3.2",
 		"@prosopo/keyring": "2.3.2",
-		"@prosopo/locale": "2.3.2",
+		"@prosopo/locale-node": "2.3.2",
 		"@prosopo/provider": "2.3.2",
 		"@prosopo/types": "2.3.2",
 		"@prosopo/user-access-policy": "2.3.2",
