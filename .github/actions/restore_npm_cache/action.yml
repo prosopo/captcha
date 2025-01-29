@@ -1,6 +1,4 @@
-name: "npm_cache"
-
-inputs:
+name: "restore_npm_cache"
 
 runs:
     using: "composite"
@@ -12,7 +10,6 @@ runs:
         run: |
           mkdir -p ~/.npm
           mkdir -p ~/.cache/Cypress
-          mkdir -p node_modules
 
       - name: Restore cache
         shell: bash
@@ -30,4 +27,4 @@ runs:
             # thus if you install new deps / update a package lock, the cache will be invalidated and a new cache will be created
             key: some-unused-cache-key
             restore-keys: |
-                npm-${{ hashFiles('**/package-lock.json') }}-${{ runner.os }}-${{ runner.arch }}-
+                npm-${{ runner.os }}-${{ runner.arch }}-
