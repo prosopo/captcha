@@ -12,10 +12,13 @@
 	],
 	"references": [
 		{
-			"path": "../common/tsconfig.cjs.json"
+			"path": "../api-route/tsconfig.cjs.json"
 		},
 		{
-			"path": "../contract/tsconfig.cjs.json"
+			"path": "../api-express-router/tsconfig.cjs.json"
+		},
+		{
+			"path": "../common/tsconfig.cjs.json"
 		},
 		{
 			"path": "../../dev/config/tsconfig.cjs.json"
@@ -30,6 +33,9 @@
 			"path": "../env/tsconfig.cjs.json"
 		},
 		{
+			"path": "../keyring/tsconfig.cjs.json"
+		},
+		{
 			"path": "../types/tsconfig.cjs.json"
 		},
 		{
@@ -40,6 +46,9 @@
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../user-access-policy/tsconfig.cjs.json"
 		}
 	]
 }

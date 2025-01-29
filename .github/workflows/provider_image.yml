@@ -5,7 +5,7 @@ name: provider_image
 on:
     pull_request:
         branches: [main, dev, staging, release/*]
-        types: 
+        types:
             - opened # when a PR is opened
             - synchronize # when a PR is pushed to
             - reopened # when a PR is reopened
@@ -32,42 +32,12 @@ jobs:
         if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
-              env:
-                  GITHUB_CONTEXT: ${{ toJson(github) }}
-                  ENV_CONTEXT: ${{ toJson(env) }}
-                  VARS_CONTEXT: ${{ toJson(vars) }}
-                  JOB_CONTEXT: ${{ toJson(job) }}
-                  STEPS_CONTEXT: ${{ toJson(steps) }}
-                  RUNNER_CONTEXT: ${{ toJson(runner) }}
-                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
-                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
-                  NEEDS_CONTEXT: ${{ toJson(needs) }}
-                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
-              run: |
-                  echo "******************************"
-                  echo "github:" "$GITHUB_CONTEXT"
-                  echo "******************************"
-                  echo "env:" "$ENV_CONTEXT"
-                  echo "******************************"
-                  echo "vars:" "$VARS_CONTEXT"
-                  echo "******************************"
-                  echo "job:" "$JOB_CONTEXT"
-                  echo "******************************"
-                  echo "steps:" "$STEPS_CONTEXT"
-                  echo "******************************"
-                  echo "runner:" "$RUNNER_CONTEXT"
-                  echo "******************************"
-                  echo "secrets:" "$SECRETS_CONTEXT"
-                  echo "******************************"
-                  echo "strategy:" "$STRATEGY_CONTEXT"
-                  echo "******************************"
-                  echo "matrix:" "$MATRIX_CONTEXT"
-                  echo "******************************"
-                  echo "needs:" "$NEEDS_CONTEXT"
-                  echo "******************************"
-                  echo "inputs:" "$INPUTS_CONTEXT"
-                  echo "******************************"
+              uses: prosopo/captcha/.github/actions/print_contexts@main
+              with:
+                INPUTS_CONTEXT: ${{ toJson(inputs) }}
+                NEEDS_CONTEXT: ${{ toJson(needs) }}
+                VARS_CONTEXT: ${{ toJson(vars) }}
+                SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
             - uses: actions/checkout@v4
               with:
@@ -151,7 +121,7 @@ jobs:
                     sleep 20s
                     docker logs "$CONTAINER" >& provider.log
                     cat provider.log
-                    grep -oE "Version: \".*\"" provider.log || (cat provider.log && exit 1)
+                    grep -oE "Version: \\\\\".*\\\\\"" provider.log || (cat provider.log && exit 1)
 
             - name: Build the provider-mock package
               id: build_provider_mock_package

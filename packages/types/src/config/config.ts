@@ -24,8 +24,10 @@ import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import {
 	ApiPathRateLimits,
+	ProsopoCaptchaCountConfigSchema,
 	ProviderDefaultRateLimits,
 } from "../provider/index.js";
+import { FrictionlessPenalties } from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
@@ -114,23 +116,6 @@ export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
 
 export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>;
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>;
-
-export const ProsopoCaptchaCountConfigSchema = object({
-	solved: object({
-		count: number().positive(),
-	})
-		.optional()
-		.default({ count: 1 }),
-	unsolved: object({
-		count: number().nonnegative(),
-	})
-		.optional()
-		.default({ count: 1 }),
-});
-
-export type ProsopoCaptchaCountConfigSchemaInput = input<
-	typeof ProsopoCaptchaCountConfigSchema
->;
 
 export const ProsopoImageServerConfigSchema = object({
 	baseURL: string().url(),
@@ -257,7 +242,6 @@ const ThemeType = union([literal("light"), literal("dark")]);
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
-		accountCreator: AccountCreatorConfigSchema.optional(),
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
@@ -275,11 +259,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			solved: { count: 1 },
 			unsolved: { count: 0 },
 		}),
-		captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
-			requiredNumberOfSolutions: 3,
-			solutionWinningPercentage: 80,
-			captchaBlockRecency: 10,
-		}),
+		penalties: FrictionlessPenalties,
 		scheduledTasks: object({
 			captchaScheduler: object({
 				schedule: string().optional(),
@@ -294,6 +274,12 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		mongoClientUri: string().optional(),
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),
+		lRules: record(string(), number()).optional(),
+		authAccount: object({
+			address: string().optional(),
+			secret: string().optional(),
+			password: string().optional(),
+		}),
 	}),
 );
 

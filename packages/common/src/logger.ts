@@ -11,7 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevels as ConsolaLogLevels, createConsola } from "consola/browser";
+import consola, {
+	LogLevels as ConsolaLogLevels,
+	createConsola,
+	type ConsolaOptions,
+	type LogObject,
+} from "consola/browser";
 import { enum as zEnum, type infer as zInfer } from "zod";
 import { ProsopoEnvError } from "./error.js";
 
@@ -47,8 +52,33 @@ export function getLoggerDefault(): Logger {
 	return defaultLogger;
 }
 
+const JSONReporter = (
+	message: LogObject,
+	context: {
+		options: ConsolaOptions;
+	},
+) => {
+	// https://stackoverflow.com/a/65886224
+	const writer = process?.stdout
+		? process.stdout.write.bind(process.stdout)
+		: console.info;
+	const writerError = process?.stderr
+		? process.stderr.write.bind(process.stderr)
+		: console.error;
+	if (context.options.level === ConsolaLogLevels.error) {
+		writerError(`${JSON.stringify(message)}\n`);
+	} else {
+		writer(`${JSON.stringify(message)}\n`);
+	}
+};
+
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
 	const logger = createConsola({
+		reporters: [
+			{
+				log: JSONReporter,
+			},
+		],
 		formatOptions: { colors: true, date: true },
 	}).withTag(scope);
 	let currentLevel = logLevel;

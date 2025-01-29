@@ -59,5 +59,7 @@ export const loadBalancer = async (
 		];
 	}
 
-	throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT");
+	throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
+		context: { environment },
+	});
 };

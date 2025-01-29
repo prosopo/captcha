@@ -54,11 +54,14 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 		return this._web2;
 	}
 
-	public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
+	public async getCaptchaChallenge(
+		sessionId?: string,
+	): Promise<CaptchaResponseBody> {
 		try {
 			const captchaChallenge = await this.providerApi.getCaptchaChallenge(
 				this.userAccount,
 				this.provider,
+				sessionId,
 			);
 
 			if (captchaChallenge[ApiParams.error]) {
@@ -66,12 +69,17 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 			}
 
 			// convert https/http to match page
-			for (const captcha of captchaChallenge.captchas) {
-				for (const item of captcha.items) {
-					if (item.data) {
-						// drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
-						// https://stackoverflow.com/a/18320348/7215926
-						item.data = item.data.replace(/^http(s)*:\/\//, "//");
+			if (
+				window.location.protocol === "https:" ||
+				window.location.protocol === "http:"
+			) {
+				for (const captcha of captchaChallenge.captchas) {
+					for (const item of captcha.items) {
+						if (item.data) {
+							// drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
+							// https://stackoverflow.com/a/18320348/7215926
+							item.data = item.data.replace(/^http(s)*:\/\//, "//");
+						}
 					}
 				}
 			}

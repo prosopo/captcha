@@ -33,6 +33,7 @@ import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import { getIPAddress } from "../../../../util.js";
 
 vi.mock("@polkadot/util-crypto", () => ({
 	signatureVerify: vi.fn(),
@@ -83,7 +84,7 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(pair, db);
+		powCaptchaManager = new PowCaptchaManager(db, pair);
 
 		vi.clearAllMocks();
 	});
@@ -125,7 +126,7 @@ describe("PowCaptchaManager", () => {
 			const userSignature = "testTimestampSignature";
 			const nonce = 12345;
 			const timeout = 1000;
-			const ipAddress = "ipAddress";
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
@@ -136,7 +137,7 @@ describe("PowCaptchaManager", () => {
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
-				ipAddress,
+				ipAddress: ipAddress.bigInt(),
 				headers,
 				providerSignature,
 				lastUpdatedTimestamp: Date.now(),
@@ -231,7 +232,7 @@ describe("PowCaptchaManager", () => {
 			const nonce = 12345;
 			const timeout = 1000;
 			const timestampSignature = "testTimestampSignature";
-			const ipAddress = "ipAddress";
+			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			const challengeRecord: PoWCaptchaStored = {
 				challenge,
@@ -241,7 +242,7 @@ describe("PowCaptchaManager", () => {
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
-				ipAddress,
+				ipAddress: ipAddress.bigInt(),
 				headers,
 				providerSignature: "testSignature",
 				difficulty,
@@ -290,6 +291,7 @@ describe("PowCaptchaManager", () => {
 				userAccount,
 				timestamp,
 				checked: false,
+				result: { status: CaptchaStatus.approved },
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
@@ -304,7 +306,7 @@ describe("PowCaptchaManager", () => {
 				timeout,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(true);
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 
@@ -317,7 +319,7 @@ describe("PowCaptchaManager", () => {
 			);
 		});
 
-		it("should throw an error if challenge record is not found", async () => {
+		it("should return verified:false if a challenge cannot be found", async () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456678;
 			const userAccount = "testUserAccount";
@@ -326,20 +328,12 @@ describe("PowCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(null);
 
-			await expect(
-				powCaptchaManager.serverVerifyPowCaptchaSolution(
-					dappAccount,
-					challenge,
-					timeout,
-				),
-			).rejects.toThrow(
-				new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						failedFuncName: "serverVerifyPowCaptchaSolution",
-						challenge,
-					},
-				}),
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
 			);
+			expect(result.verified).toBe(false);
 
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 		});

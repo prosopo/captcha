@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { cryptoWaitReady } from "@polkadot/util-crypto";
 import { randomAsHex } from "@polkadot/util-crypto/random";
 import { stringToHex } from "@polkadot/util/string";
-import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
+import type { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import {
 	ProsopoDatasetError,
@@ -32,6 +31,7 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
+	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -69,6 +69,7 @@ export function Manager(
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
+	frictionlessState?: FrictionlessState,
 ) {
 	const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
@@ -108,7 +109,6 @@ export function Manager(
 				if (state.isHuman) {
 					return;
 				}
-				await cryptoWaitReady();
 
 				resetState();
 				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
@@ -144,7 +144,9 @@ export function Manager(
 				);
 				updateState({ captchaApi });
 
-				const challenge = await captchaApi.getCaptchaChallenge();
+				const challenge = await captchaApi.getCaptchaChallenge(
+					frictionlessState?.sessionId,
+				);
 
 				if (challenge.error) {
 					updateState({
@@ -423,8 +425,29 @@ export function Manager(
 		}
 
 		// check if account exists in extension
-		const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
-		const account = await ext.getAccount(config);
+		const selectAccount = async (
+			extensionImport: () => Promise<
+				typeof ExtensionWeb2 | typeof ExtensionWeb3
+			>,
+		) => {
+			if (frictionlessState) {
+				return frictionlessState.userAccount;
+			}
+
+			const ext = new (await extensionImport())();
+			return await ext.getAccount(config);
+		};
+
+		const ExtensionWeb3Import = async () =>
+			(await import("@prosopo/account")).ExtensionWeb3;
+
+		const ExtensionWeb2Import = async () =>
+			(await import("@prosopo/account")).ExtensionWeb2;
+
+		const account = await selectAccount(
+			config.web2 ? ExtensionWeb2Import : ExtensionWeb3Import,
+		);
+
 		// Store the account in local storage
 		storage.setAccount(account.account.address);
 

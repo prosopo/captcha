@@ -11,6 +11,7 @@
 		6093CEA72CA96BB9006699D1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6093CEA62CA96BB9006699D1 /* ContentView.swift */; };
 		6093CEA92CA96BBD006699D1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6093CEA82CA96BBD006699D1 /* Assets.xcassets */; };
 		6093CEAD2CA96BBD006699D1 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6093CEAC2CA96BBD006699D1 /* Preview Assets.xcassets */; };
+		CE79A1EA2D38EC2200047A40 /* procaptcha.html in Resources */ = {isa = PBXBuildFile; fileRef = CE79A1E92D38EC2200047A40 /* procaptcha.html */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		6093CEA82CA96BBD006699D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6093CEAA2CA96BBD006699D1 /* procaptcha.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = procaptcha.entitlements; sourceTree = "<group>"; };
 		6093CEAC2CA96BBD006699D1 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		CE79A1E92D38EC2200047A40 /* procaptcha.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = procaptcha.html; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 				6093CEA42CA96BB9006699D1 /* procaptchaApp.swift */,
 				6093CEA62CA96BB9006699D1 /* ContentView.swift */,
 				6093CEA82CA96BBD006699D1 /* Assets.xcassets */,
+				CE79A1E92D38EC2200047A40 /* procaptcha.html */,
 				6093CEAA2CA96BBD006699D1 /* procaptcha.entitlements */,
 				6093CEAB2CA96BBD006699D1 /* Preview Content */,
 			);
@@ -127,6 +130,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE79A1EA2D38EC2200047A40 /* procaptcha.html in Resources */,
 				6093CEAD2CA96BBD006699D1 /* Preview Assets.xcassets in Resources */,
 				6093CEA92CA96BBD006699D1 /* Assets.xcassets in Resources */,
 			);
@@ -277,11 +281,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
 				MARKETING_VERSION = 1.0;
+				NSExceptionAllInsecureHTTPLoads = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.prosopo.procaptcha;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -315,11 +320,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
 				MARKETING_VERSION = 1.0;
+				NSExceptionAllInsecureHTTPLoads = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.prosopo.procaptcha;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

@@ -42,4 +42,9 @@ export enum ApiParams {
 	captchaType = "captchaType",
 	sessionId = "sessionId",
 	settings = "settings",
+	domains = "domains",
+	frictionlessThreshold = "frictionlessThreshold",
+	powDifficulty = "powDifficulty",
+	score = "score",
+	tier = "tier",
 }

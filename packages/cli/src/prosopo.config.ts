@@ -16,6 +16,7 @@ import { getLogLevel } from "@prosopo/common";
 import {
 	DatabaseTypes,
 	EnvironmentTypesSchema,
+	FrictionlessPenalties,
 	type ProsopoCaptchaCountConfigSchemaInput,
 	type ProsopoCaptchaSolutionConfigSchema,
 	type ProsopoConfigInput,
@@ -37,10 +38,22 @@ function getMongoURI(): string {
 	return mongoURI;
 }
 
+const getLRules = () => {
+	if (!process.env.L_RULES) {
+		return {};
+	}
+	try {
+		return JSON.parse(process.env.L_RULES);
+	} catch (e) {
+		return {};
+	}
+};
+
 export default function getConfig(
 	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
 	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
 	who = "PROVIDER",
+	admin = "ADMIN",
 ): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
 		logLevel: getLogLevel(),
@@ -80,7 +93,10 @@ export default function getConfig(
 		},
 		captchaSolutions: captchaSolutionsConfig,
 		captchas: captchaServeConfig,
-		devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === "true",
+		penalties: FrictionlessPenalties.parse({
+			PENALTY_OLD_TIMESTAMP: process.env.PENALTY_OLD_TIMESTAMP,
+			PENALTY_ACCESS_RULE: process.env.PENALTY_ACCESS_RULE,
+		}),
 		mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || "",
 		mongoClientUri: process.env.PROSOPO_MONGO_CLIENT_URI || "",
@@ -95,6 +111,12 @@ export default function getConfig(
 			clientListScheduler: {
 				schedule: process.env.CLIENT_LIST_SCHEDULE,
 			},
+		},
+		lRules: getLRules(),
+		authAccount: {
+			address: getAddress(admin),
+			password: getPassword(admin),
+			secret: getSecret(admin),
 		},
 	} as ProsopoConfigInput);
 }

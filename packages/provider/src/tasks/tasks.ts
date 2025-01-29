@@ -13,11 +13,15 @@ import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { CaptchaConfig, ProsopoConfigOutput } from "@prosopo/types";
+import type {
+	ProsopoCaptchaCountConfigSchemaOutput,
+	ProsopoConfigOutput,
+} from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
+import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
 
@@ -26,7 +30,7 @@ import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
  */
 export class Tasks {
 	db: IProviderDatabase;
-	captchaConfig: CaptchaConfig;
+	captchaConfig: ProsopoCaptchaCountConfigSchemaOutput;
 	logger: Logger;
 	config: ProsopoConfigOutput;
 	pair: KeyringPair;
@@ -34,6 +38,7 @@ export class Tasks {
 	datasetManager: DatasetManager;
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
+	frictionlessManager: FrictionlessManager;
 
 	constructor(env: ProviderEnvironment) {
 		this.config = env.config;
@@ -47,7 +52,11 @@ export class Tasks {
 		}
 		this.pair = env.pair;
 
-		this.powCaptchaManager = new PowCaptchaManager(this.pair, this.db);
+		this.powCaptchaManager = new PowCaptchaManager(
+			this.db,
+			this.pair,
+			this.logger,
+		);
 		this.datasetManager = new DatasetManager(
 			this.config,
 			this.logger,
@@ -57,13 +66,19 @@ export class Tasks {
 		this.imgCaptchaManager = new ImgCaptchaManager(
 			this.db,
 			this.pair,
+			this.config,
 			this.logger,
-			this.captchaConfig,
 		);
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
 			this.logger,
 			this.db,
+		);
+		this.frictionlessManager = new FrictionlessManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
 		);
 	}
 }

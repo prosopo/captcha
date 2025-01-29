@@ -1,6 +1,6 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
@@ -25,6 +25,10 @@ vi.mock("@polkadot/util", () => ({
 	isHex: vi.fn(),
 }));
 
+const mockLogger = {
+	info: vi.fn(),
+	error: vi.fn(),
+} as unknown as Logger;
 const mockTasks = {} as Tasks;
 const mockPair = {
 	publicKey: "mockPublicKey",
@@ -32,12 +36,15 @@ const mockPair = {
 } as unknown as KeyringPair;
 const mockEnv = {
 	pair: mockPair,
+	authAccount: mockPair,
+	logger: mockLogger,
 } as ProviderEnvironment;
 
 describe("authMiddleware", () => {
 	it("should call next() if signature is valid", async () => {
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
+			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -65,6 +72,7 @@ describe("authMiddleware", () => {
 	it("should return 401 if signature is invalid", async () => {
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
+			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -96,6 +104,7 @@ describe("authMiddleware", () => {
 	it("should return 401 if key pair is missing", async () => {
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
+			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -127,6 +136,7 @@ describe("authMiddleware", () => {
 	it("should call next() immediately if url does not contain /v1/prosopo", async () => {
 		const mockReq = {
 			url: "/favicon.ico",
+			originalUrl: "/favicon.ico",
 			headers: {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
@@ -138,7 +148,9 @@ describe("authMiddleware", () => {
 			json: vi.fn(),
 		} as unknown as Response;
 
-		const mockNext = vi.fn() as unknown as NextFunction;
+		const mockNext = vi.fn(() => {
+			console.log("mock next function");
+		}) as unknown as NextFunction;
 
 		const middleware = authMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);

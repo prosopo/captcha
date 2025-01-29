@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto/address";
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
@@ -29,7 +30,6 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";
-import { handleErrors } from "./errorHandler.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -82,7 +82,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				if (!clientRecord) {
 					return next(
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-							context: { code: 400, siteKey: dapp },
+							context: { code: 400, siteKey: dapp, user },
 						}),
 					);
 				}
@@ -91,7 +91,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const keyPair = env.keyring.addFromAddress(dapp);
 
 				// Will throw an error if the signature is invalid
-
 				verifySignature(dappSignature, timestamp.toString(), keyPair);
 
 				const response =
@@ -102,19 +101,21 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						parsed.maxVerifiedTime,
 					);
 
-				const verificationResponse: ImageVerificationResponse = {
-					[ApiParams.status]: req.t(response.status),
-					[ApiParams.verified]: response[ApiParams.verified],
-					...(response.commitmentId && {
-						[ApiParams.commitmentId]: response.commitmentId,
-					}),
-				};
+				tasks.logger.debug(response);
+				const verificationResponse: ImageVerificationResponse =
+					tasks.imgCaptchaManager.getVerificationResponse(
+						response[ApiParams.verified],
+						clientRecord,
+						req.t,
+						response[ApiParams.score],
+						response[ApiParams.commitmentId],
+					);
 				res.json(verificationResponse);
 			} catch (err) {
 				tasks.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500 },
+						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
 					}),
 				);
 			}
@@ -177,24 +178,27 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			// Will throw an error if the signature is invalid
 			verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-			const approved =
+			const { verified, score } =
 				await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 					dapp,
 					challenge,
 					verifiedTimeout,
 				);
 
-			const verificationResponse: VerificationResponse = {
-				status: req.t(approved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED"),
-				[ApiParams.verified]: approved,
-			};
+			const verificationResponse: VerificationResponse =
+				tasks.powCaptchaManager.getVerificationResponse(
+					verified,
+					clientRecord,
+					req.t,
+					score,
+				);
 
 			return res.json(verificationResponse);
 		} catch (err) {
 			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
+					context: { code: 500, error: err },
 				}),
 			);
 		}

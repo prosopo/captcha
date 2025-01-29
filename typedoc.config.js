@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import pkgJson from "./package.json" assert { type: "json" };
+import pkgJson from "./package.json" with { type: "json" };
 
 export default {
 	extends: "./typedoc.base.config.js",

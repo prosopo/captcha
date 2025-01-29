@@ -16,7 +16,7 @@ import { blake2b } from "@noble/hashes/blake2b";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/contract";
+import { getPairAsync } from "@prosopo/keyring";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,
@@ -61,12 +61,13 @@ const verify = async (
 			}),
 		});
 
-		const verified = (await response.json()).verified;
-		console.log("Verified", verified);
-		return verified;
+		const verifiedResponse = await response.json();
+		console.log(verifiedResponse);
+		return verifiedResponse.verified;
 	}
 	// verify using the TypeScript library
 	const verified = await prosopoServer.isVerified(token);
+	console.log(verified);
 	return verified;
 };
 

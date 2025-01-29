@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import type { Logger } from "@prosopo/common";
 import {
 	type ProsopoConfigOutput,
@@ -194,18 +193,18 @@ describe("ClientTaskManager", () => {
 		];
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
 			mockCommitments,
 		);
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.createScheduledTaskStatus as any).mockResolvedValue({});
+		(providerDB.createScheduledTaskStatus as any).mockResolvedValueOnce({});
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.updateScheduledTaskStatus as any).mockResolvedValue({});
+		(providerDB.updateScheduledTaskStatus as any).mockResolvedValueOnce({});
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
 			mockPoWCommitments,
 		);
 
@@ -225,23 +224,25 @@ describe("ClientTaskManager", () => {
 	it("should not store commitments externally if they have been stored", async () => {
 		const mockCommitments: Pick<
 			UserCommitment,
-			"id" | "lastUpdatedTimestamp"
+			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
 			{
 				id: "commitment1",
 				// Image commitments were stored at time 1
 				lastUpdatedTimestamp: 1,
+				storedAtTimestamp: 1,
 			},
 		];
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
-			"challenge" | "lastUpdatedTimestamp"
+			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
 			{
 				challenge: "1234567___userAccount___dappAccount",
 				// PoW commitments were stored at time 3
 				lastUpdatedTimestamp: 3,
+				storedAtTimestamp: 1,
 			},
 		];
 
@@ -263,52 +264,61 @@ describe("ClientTaskManager", () => {
 		// Update the next ID and time (time is used as a timestamp)
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
+		logger.info("Test: Collections state updated", {
+			nextID: collections.schedulers.nextID,
+			currentTime: collections.schedulers.time,
+		});
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
 			mockCommitments,
 		);
-
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValue(
+		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
 			mockPoWCommitments,
 		);
+		logger.info("Test: Mock DB responses configured");
 
 		await clientTaskManager.storeCommitmentsExternal();
+		logger.info("Test: storeCommitmentsExternal completed");
 
+		// Verification steps with logging
 		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
+		logger.info("Test: Verified DB queries were made");
 
 		expect(providerDB.getLastScheduledTaskStatus).toHaveReturnedWith(
 			mockLastScheduledTask,
 		);
+		logger.info("Test: Verified last scheduled task status");
 
 		expect(providerDB.createScheduledTaskStatus).toHaveBeenCalledWith(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
 		);
-		// TODO either pass in this DB to the function or use mockingoose to mock mongoose
-		// expect(captchaDB.saveCaptchas).toHaveBeenCalledWith(
-		//   // Image commitments should not be stored as their updated timestamp is less than the last task `updated` timestamp
-		//   [],
-		//   // PoW commitments should be stored as they are more recent than the last task `updated` timestamp
-		//   mockPoWCommitments,
-		//   config.mongoCaptchaUri,
-		// );
+		logger.info("Test: Verified task status creation");
 
-		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledWith([]);
-		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
-			mockPoWCommitments.map((c) => c.challenge),
+		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
+		logger.info(
+			"Test: Verified no image commitments were marked as stored (expected as they're old)",
 		);
 
+		const expectedPoWChallenges = mockPoWCommitments.map((c) => c.challenge);
+		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
+			expectedPoWChallenges,
+		);
+		logger.info("Test: Verified PoW commitments were marked as stored", {
+			expectedPoWChallenges,
+		});
+
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fi
 			Number.parseInt(mockLastScheduledTask._id as any) + 1,
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
-					commitments: [],
-					powRecords: mockPoWCommitments.map((c) => c.challenge),
+					processedCommitments: 0,
+					processedPowRecords: 1,
 				},
 			},
 		);
@@ -335,10 +345,14 @@ describe("ClientTaskManager", () => {
 		collections.schedulers.time = 2;
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValue([]);
+		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
+			[],
+		);
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValue([]);
+		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
+			[],
+		);
 
 		await clientTaskManager.storeCommitmentsExternal();
 
@@ -351,10 +365,236 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
-					commitments: [],
-					powRecords: [],
+					processedCommitments: 0,
+					processedPowRecords: 0,
 				},
 			},
 		);
+	});
+
+	describe("isSubdomainOrExactMatch", () => {
+		it("should match exact domains", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"https://example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"http://example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"https://example.com/",
+				),
+			).toBe(true);
+		});
+
+		it("should match subdomains", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.example.com",
+					"example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"a.b.example.com",
+					"example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"dev.test.example.com",
+					"test.example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"0.0.0.0",
+					"http://0.0.0.0:9230",
+				),
+			).toBe(true);
+		});
+
+		it("should not match different domains", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch("example.com", "example.org"),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.example.com",
+					"testexample.com",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"malicious-example.com",
+				),
+			).toBe(false);
+		});
+
+		it("should handle localhost specially", () => {
+			// Valid localhost cases
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch("localhost", "localhost"),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"localhost:3000",
+					"localhost",
+				),
+			).toBe(true);
+
+			// Invalid localhost cases
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"localhost.test.com",
+					"localhost",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"malicious.com/localhost",
+					"localhost",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"evil.com?localhost",
+					"localhost",
+				),
+			).toBe(false);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"localhost.malicious.com",
+					"localhost",
+				),
+			).toBe(false);
+		});
+
+		it("should handle edge cases", () => {
+			expect(clientTaskManager.isSubdomainOrExactMatch("", "example.com")).toBe(
+				false,
+			);
+			expect(clientTaskManager.isSubdomainOrExactMatch("example.com", "")).toBe(
+				false,
+			);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com.",
+					"example.com",
+				),
+			).toBe(true); // trailing dot
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"example.com.",
+				),
+			).toBe(true); // trailing dot
+		});
+
+		it("should handle URLs with paths and protocols", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.example.com",
+					"https://example.com/path",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"https://example.com:3000",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"example.com",
+					"example.com:3000",
+				),
+			).toBe(true);
+		});
+
+		it("should handle exotic domain names", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"⭐⭐⭐⭐.com",
+					"⭐⭐⭐⭐.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.⭐⭐⭐⭐.com",
+					"⭐⭐⭐⭐.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"漢字漢字漢字.com",
+					"漢字漢字漢字.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"test.漢字漢字漢字.com",
+					"漢字漢字漢字.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"🦄.⭐.漢字.test.com",
+					"test.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					`${"a".repeat(63)}.example.com`,
+					"example.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"xn--h28h.com", // 🌟.com in punycode
+					"xn--h28h.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"café.漢字.⭐.example.com",
+					"example.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"123-456.⭐-漢字.com",
+					"⭐-漢字.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"🦄.xn--h28h.café.123-456.⭐.漢字.test.com",
+					"test.com",
+				),
+			).toBe(true);
+
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"..⭐⭐⭐⭐..com",
+					"⭐⭐⭐⭐.com",
+				),
+			).toBe(false);
+		});
 	});
 });

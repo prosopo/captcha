@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
-import { type Logger, ProsopoDBError, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
+	ApiParams,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -26,7 +27,6 @@ import {
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
 	type Hash,
-	type PendingCaptchaRequest,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type RequestHeaders,
@@ -39,8 +39,15 @@ import {
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	type FrictionlessToken,
+	type FrictionlessTokenId,
+	FrictionlessTokenRecordSchema,
+	type IPBlockRuleRecord,
+	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
+	type PendingCaptchaRequest,
+	type PendingCaptchaRequestMongoose,
 	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
@@ -57,6 +64,8 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
+	type UserAccountBlockRuleRecord,
+	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -64,8 +73,15 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type { DeleteResult } from "mongodb";
-import type { ObjectId } from "mongoose";
+import type { FrictionlessTokenRecord } from "@prosopo/types-database";
+import {
+	type Rule,
+	type RulesStorage,
+	createMongooseRulesStorage,
+	getRuleMongooseSchema,
+} from "@prosopo/user-access-policy";
+import type { Model, ObjectId } from "mongoose";
+import { bigint, string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -78,7 +94,11 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
+	frictionlessToken = "frictionlessToken",
 	session = "session",
+	ipblockrules = "ipblockrules",
+	userblockrules = "userblockrules",
+	userAccessRules = "userAccessRules",
 }
 
 const PROVIDER_TABLES = [
@@ -128,9 +148,29 @@ const PROVIDER_TABLES = [
 		schema: ClientRecordSchema,
 	},
 	{
+		collectionName: TableNames.frictionlessToken,
+		modelName: "FrictionlessToken",
+		schema: FrictionlessTokenRecordSchema,
+	},
+	{
 		collectionName: TableNames.session,
 		modelName: "Session",
 		schema: SessionRecordSchema,
+	},
+	{
+		collectionName: TableNames.ipblockrules,
+		modelName: "IPBlockRules",
+		schema: IPBlockRuleRecordSchema,
+	},
+	{
+		collectionName: TableNames.userblockrules,
+		modelName: "UserAccountBlockRules",
+		schema: UserAccountBlockRuleSchema,
+	},
+	{
+		collectionName: TableNames.userAccessRules,
+		modelName: "UserAccessRules",
+		schema: getRuleMongooseSchema(),
 	},
 ];
 
@@ -139,6 +179,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
+	private userAccessRulesDbStorage: RulesStorage | null;
 
 	constructor(
 		url: string,
@@ -148,11 +189,19 @@ export class ProviderDatabase
 	) {
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
+
+		this.userAccessRulesDbStorage = null;
 	}
 
 	override async connect(): Promise<void> {
 		await super.connect();
+
 		this.loadTables();
+
+		this.userAccessRulesDbStorage = createMongooseRulesStorage(
+			this.logger,
+			<Model<Rule>>this.tables.userAccessRules,
+		);
 	}
 
 	loadTables() {
@@ -175,6 +224,14 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
+	public getUserAccessRulesStorage(): RulesStorage {
+		if (null === this.userAccessRulesDbStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED");
+		}
+
+		return this.userAccessRulesDbStorage;
+	}
+
 	/**
 	 * @description Load a dataset to the database
 	 * @param {Dataset}  dataset
@@ -191,8 +248,11 @@ export class ProviderDatabase
 				solutionTree: parsedDataset.solutionTree,
 			};
 
+			const filter: Pick<DatasetBase, "datasetId"> = {
+				datasetId: parsedDataset.datasetId,
+			};
 			await this.tables.dataset?.updateOne(
-				{ datasetId: parsedDataset.datasetId },
+				filter,
 				{ $set: datasetDoc },
 				{ upsert: true },
 			);
@@ -214,7 +274,10 @@ export class ProviderDatabase
 				await this.tables?.captcha.bulkWrite(
 					captchaDocs.map((captchaDoc) => ({
 						updateOne: {
-							filter: { captchaId: captchaDoc.captchaId },
+							filter: { captchaId: captchaDoc.captchaId } as Pick<
+								Captcha,
+								"captchaId"
+							>,
 							update: { $set: captchaDoc },
 							upsert: true,
 						},
@@ -240,7 +303,10 @@ export class ProviderDatabase
 				await this.tables?.solution.bulkWrite(
 					captchaSolutionDocs.map((captchaSolutionDoc) => ({
 						updateOne: {
-							filter: { captchaId: captchaSolutionDoc.captchaId },
+							filter: { captchaId: captchaSolutionDoc.captchaId } as Pick<
+								Captcha,
+								"captchaId"
+							>,
 							update: { $set: captchaSolutionDoc },
 							upsert: true,
 						},
@@ -260,8 +326,9 @@ export class ProviderDatabase
 	 * @param {string} datasetId
 	 */
 	async getSolutions(datasetId: string): Promise<SolutionRecord[]> {
+		const filter: Pick<SolutionRecord, "datasetId"> = { datasetId };
 		const docs = await this.tables?.solution
-			.find({ datasetId })
+			.find(filter)
 			.lean<SolutionRecord[]>();
 		return docs ? docs : [];
 	}
@@ -270,23 +337,20 @@ export class ProviderDatabase
 	 * @param {string} datasetId
 	 */
 	async getDataset(datasetId: string): Promise<DatasetWithIds> {
+		const filter: Pick<DatasetBase, "datasetId"> = { datasetId };
 		const datasetDoc: DatasetWithIds | null | undefined =
-			await this.tables?.dataset
-				.findOne({ datasetId: datasetId })
-				.lean<DatasetWithIds>();
+			await this.tables?.dataset.findOne(filter).lean<DatasetWithIds>();
 
 		if (datasetDoc) {
 			const { datasetContentId, format, contentTree, solutionTree } =
 				datasetDoc;
 
 			const captchas: Captcha[] =
-				(await this.tables?.captcha.find({ datasetId }).lean<Captcha[]>()) ||
-				[];
+				(await this.tables?.captcha.find(filter).lean<Captcha[]>()) || [];
 
 			const solutions: SolutionRecord[] =
-				(await this.tables?.solution
-					.find({ datasetId })
-					.lean<SolutionRecord[]>()) || [];
+				(await this.tables?.solution.find(filter).lean<SolutionRecord[]>()) ||
+				[];
 
 			const solutionsKeyed: {
 				[key: string]: SolutionRecord;
@@ -338,8 +402,9 @@ export class ProviderDatabase
 			});
 		}
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
+		const filter: Pick<Captcha, "datasetId" | "solved"> = { datasetId, solved };
 		const cursor = this.tables?.captcha.aggregate([
-			{ $match: { datasetId, solved } },
+			{ $match: filter },
 			{ $sample: { size: sampleSize } },
 			{
 				$project: {
@@ -374,9 +439,10 @@ export class ProviderDatabase
 	 * @param {string[]} captchaId
 	 */
 	async getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
-		const cursor = this.tables?.captcha
-			.find({ captchaId: { $in: captchaId } })
-			.lean();
+		const filter: {
+			[key in keyof Pick<Captcha, "captchaId">]: { $in: string[] };
+		} = { captchaId: { $in: captchaId } };
+		const cursor = this.tables?.captcha.find(filter).lean();
 		const docs = await cursor;
 
 		if (docs?.length) {
@@ -401,8 +467,9 @@ export class ProviderDatabase
 			});
 		}
 		try {
+			const filter: Pick<DatasetBase, "datasetId"> = { datasetId };
 			await this.tables?.captcha.updateOne(
-				{ datasetId },
+				filter,
 				{ $set: captcha },
 				{ upsert: false },
 			);
@@ -417,7 +484,10 @@ export class ProviderDatabase
 	 * @description Remove captchas
 	 */
 	async removeCaptchas(captchaIds: string[]): Promise<void> {
-		await this.tables?.captcha.deleteMany({ captchaId: { $in: captchaIds } });
+		const filter: {
+			[key in keyof Pick<Captcha, "captchaId">]: { $in: string[] };
+		} = { captchaId: { $in: captchaIds } };
+		await this.tables?.captcha.deleteMany(filter);
 	}
 
 	/**
@@ -430,8 +500,9 @@ export class ProviderDatabase
 			});
 		}
 
+		const filter: Pick<DatasetBase, "datasetId"> = { datasetId };
 		const doc: DatasetBase | undefined | null = await this.tables?.dataset
-			.findOne({ datasetId })
+			.findOne(filter)
 			.lean<DatasetBase>();
 
 		if (doc) {
@@ -449,7 +520,7 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's captcha solution commitment
 	 */
-	async storeDappUserSolution(
+	async storeUserImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void> {
@@ -458,17 +529,19 @@ export class ProviderDatabase
 			lastUpdatedTimestamp: Date.now(),
 		});
 		if (captchas.length) {
-			await this.tables?.commitment.updateOne(
-				{
-					id: commit.id,
-				},
-				commitmentRecord,
-				{ upsert: true },
-			);
+			const filter: Pick<UserCommitmentRecord, "id"> = {
+				id: commit.id,
+			};
+			await this.tables?.commitment.updateOne(filter, commitmentRecord, {
+				upsert: true,
+			});
 
 			const ops = captchas.map((captcha: CaptchaSolution) => ({
 				updateOne: {
-					filter: { commitmentId: commit.id, captchaId: captcha.captchaId },
+					filter: {
+						commitmentId: commit.id,
+						captchaId: captcha.captchaId,
+					} as Pick<UserSolutionRecord, "commitmentId" | "captchaId">,
 					update: {
 						$set: <UserSolutionRecord>{
 							captchaId: captcha.captchaId,
@@ -493,6 +566,8 @@ export class ProviderDatabase
 	 * @param difficulty
 	 * @param providerSignature
 	 * @param ipAddress
+	 * @param headers
+	 * @param frictionlessTokenId
 	 * @param serverChecked
 	 * @param userSubmitted
 	 * @param storedStatus
@@ -504,8 +579,9 @@ export class ProviderDatabase
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: string,
+		ipAddress: bigint,
 		headers: RequestHeaders,
+		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked = false,
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -525,6 +601,7 @@ export class ProviderDatabase
 			providerSignature,
 			userSignature,
 			lastUpdatedTimestamp: Date.now(),
+			frictionlessTokenId,
 		};
 
 		try {
@@ -565,17 +642,18 @@ export class ProviderDatabase
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null> {
 		if (!this.tables) {
-			throw new ProsopoEnvError("DATABASE.DATABASE_UNDEFINED", {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
 				context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
 				logger: this.logger,
 			});
 		}
 
 		try {
+			const filter: {
+				[key in keyof Pick<PoWCaptchaRecord, "challenge">]: string;
+			} = { challenge };
 			const record: PoWCaptchaRecord | null | undefined =
-				await this.tables.powcaptcha
-					.findOne({ challenge })
-					.lean<PoWCaptchaRecord>();
+				await this.tables.powcaptcha.findOne(filter).lean<PoWCaptchaRecord>();
 			if (record) {
 				this.logger.info("PowCaptcha record retrieved successfully", {
 					challenge,
@@ -670,29 +748,14 @@ export class ProviderDatabase
 		}
 	}
 
-	/** @description Get processed Dapp User captcha solutions from the user solution table
-	 */
-	async getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]> {
-		const docs = await this.tables?.usersolution
-			.find({ processed: true })
-			.lean<UserSolutionRecord[]>();
-		return docs || [];
-	}
-
-	/** @description Get processed Dapp User image captcha commitments from the commitments table
-	 */
-	async getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
-		const docs = await this.tables?.commitment
-			.find({ processed: true })
-			.lean<UserCommitmentRecord[]>();
-		return docs || [];
-	}
-
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
 	 */
 	async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+		const filter: {
+			[key in keyof Pick<UserCommitmentRecord, "serverChecked">]: boolean;
+		} = { [StoredStatusNames.serverChecked]: true };
 		const docs = await this.tables?.commitment
-			.find({ [StoredStatusNames.serverChecked]: true })
+			.find(filter)
 			.lean<UserCommitmentRecord[]>();
 		return docs || [];
 	}
@@ -700,15 +763,51 @@ export class ProviderDatabase
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
 	 * client's total
 	 */
-	async getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]> {
-		const docs = await this.tables?.commitment
-			.find({
-				$or: [
-					{ storedStatus: { $ne: StoredStatusNames.stored } },
-					{ storedStatus: { $exists: false } },
-				],
-			})
-			.lean<UserCommitmentRecord[]>();
+	async getUnstoredDappUserCommitments(
+		limit = 1000,
+		skip = 0,
+	): Promise<UserCommitmentRecord[]> {
+		const filterNoStoredTimestamp: {
+			[key in keyof Pick<PoWCaptchaRecord, "storedAtTimestamp">]: {
+				$exists: boolean;
+			};
+		} = { storedAtTimestamp: { $exists: false } };
+		const docs = await this.tables?.commitment.aggregate<UserCommitmentRecord>([
+			{
+				$match: {
+					$or: [
+						filterNoStoredTimestamp,
+						{
+							$expr: {
+								$lt: [
+									{
+										$convert: {
+											input: "$storedAtTimestamp",
+											to: "date",
+										},
+									},
+									{
+										$convert: {
+											input: "$lastUpdatedTimestamp",
+											to: "date",
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+			{
+				$sort: { _id: 1 },
+			},
+			{
+				$skip: skip,
+			},
+			{
+				$limit: limit,
+			},
+		]);
 		return docs || [];
 	}
 
@@ -743,17 +842,57 @@ export class ProviderDatabase
 		);
 	}
 
-	/** @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
+	/**
+	 * @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
+	 * @param {number} limit Maximum number of records to return
+	 * @param {number} skip Number of records to skip (for pagination)
+	 * @returns {Promise<PoWCaptchaRecord[]>} Array of PoW captcha records
 	 */
-	async getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]> {
-		const docs = await this.tables?.powcaptcha
-			.find<PoWCaptchaRecord[]>({
-				$or: [
-					{ storedStatus: { $ne: StoredStatusNames.stored } },
-					{ storedStatus: { $exists: false } },
-				],
-			})
-			.lean<PoWCaptchaRecord[]>();
+	async getUnstoredDappUserPoWCommitments(
+		limit = 1000,
+		skip = 0,
+	): Promise<PoWCaptchaRecord[]> {
+		const filterNoStoredTimestamp: {
+			[key in keyof Pick<PoWCaptchaRecord, "storedAtTimestamp">]: {
+				$exists: boolean;
+			};
+		} = { storedAtTimestamp: { $exists: false } };
+		const docs = await this.tables?.powcaptcha.aggregate<PoWCaptchaRecord>([
+			{
+				$match: {
+					$or: [
+						filterNoStoredTimestamp,
+						{
+							$expr: {
+								$lt: [
+									{
+										$convert: {
+											input: "$storedAtTimestamp",
+											to: "date",
+										},
+									},
+									{
+										$convert: {
+											input: "$lastUpdatedTimestamp",
+											to: "date",
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			},
+			{
+				$sort: { _id: 1 },
+			},
+			{
+				$skip: skip,
+			},
+			{
+				$limit: limit,
+			},
+		]);
 		return docs || [];
 	}
 
@@ -791,10 +930,60 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * Store a new frictionless token record
+	 */
+	async storeFrictionlessTokenRecord(
+		tokenRecord: FrictionlessToken,
+	): Promise<ObjectId> {
+		const doc =
+			await this.tables.frictionlessToken.create<FrictionlessTokenRecord>(
+				tokenRecord,
+			);
+		return doc._id;
+	}
+
+	/** Update a frictionless token record */
+	async updateFrictionlessTokenRecord(
+		tokenId: FrictionlessTokenId,
+		updates: Partial<FrictionlessTokenRecord>,
+	): Promise<void> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		await this.tables.frictionlessToken.updateOne(filter, updates);
+	}
+
+	/** Get a frictionless token record */
+	async getFrictionlessTokenRecordByTokenId(
+		tokenId: FrictionlessTokenId,
+	): Promise<FrictionlessTokenRecord | undefined> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		const doc =
+			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
+				filter,
+			);
+		return doc ? doc : undefined;
+	}
+
+	/**
+	 * Check if a frictionless token record exists.
+	 * Used to ensure that a token is not used more than once.
+	 */
+	async getFrictionlessTokenRecordByToken(
+		token: string,
+	): Promise<FrictionlessTokenRecord | undefined> {
+		const filter: Pick<FrictionlessTokenRecord, "token"> = { token };
+		const record =
+			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
+				filter,
+			);
+		return record || undefined;
+	}
+
+	/**
 	 * Store a new session record
 	 */
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
+			this.logger.debug({ action: "storing", sessionRecord });
 			await this.tables.session.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
@@ -811,9 +1000,11 @@ export class ProviderDatabase
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
+		this.logger.debug({ action: "checking and removing", sessionId });
+		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
 		try {
 			const session = await this.tables.session
-				.findOneAndDelete({ sessionId })
+				.findOneAndDelete<SessionRecord>(filter)
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
@@ -824,55 +1015,35 @@ export class ProviderDatabase
 		}
 	}
 
-	/** @description Remove processed Dapp User captcha solutions from the user solution table
-	 */
-	async removeProcessedDappUserSolutions(
-		commitmentIds: string[],
-	): Promise<DeleteResult | undefined> {
-		return this.tables?.usersolution.deleteMany({
-			processed: true,
-			commitmentId: { $in: commitmentIds },
-		});
-	}
-
-	/** @description Remove processed Dapp User captcha commitments from the user commitments table
-	 */
-	async removeProcessedDappUserCommitments(
-		commitmentIds: string[],
-	): Promise<DeleteResult | undefined> {
-		return this.tables?.commitment.deleteMany({
-			processed: true,
-			id: { $in: commitmentIds },
-		});
-	}
-
 	/**
 	 * @description Store a Dapp User's pending record
 	 */
-	async storeDappUserPending(
+	async storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: string,
+		ipAddress: bigint,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.storeDappUserPending.name,
+					failedFuncName: this.storePendingImageCommitment.name,
 					requestHash,
 				},
 			});
 		}
-		const pendingRecord = {
+		const pendingRecord: PendingCaptchaRequestMongoose = {
 			accountId: userAccount,
 			pending: true,
 			salt,
 			requestHash,
 			deadlineTimestamp,
-			requestedAtTimestamp,
+			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
+			frictionlessTokenId,
 		};
 		await this.tables?.pending.updateOne(
 			{ requestHash: requestHash },
@@ -884,44 +1055,56 @@ export class ProviderDatabase
 	/**
 	 * @description Get a Dapp user's pending record
 	 */
-	async getDappUserPending(
+	async getPendingImageCommitment(
 		requestHash: string,
 	): Promise<PendingCaptchaRequest> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
-				context: { failedFuncName: this.getDappUserPending.name, requestHash },
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+				context: {
+					failedFuncName: this.getPendingImageCommitment.name,
+					requestHash,
+				},
 			});
 		}
+		// @ts-ignore
+		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
+			[ApiParams.requestHash]: requestHash,
+		};
 
 		const doc: PendingCaptchaRequest | null | undefined =
-			await this.tables?.pending
-				.findOne({ requestHash: requestHash })
-				.lean<PendingCaptchaRequest>();
+			await this.tables?.pending.findOne(filter).lean<PendingCaptchaRequest>();
 
 		if (doc) {
 			return doc;
 		}
 
-		throw new ProsopoEnvError("DATABASE.PENDING_RECORD_NOT_FOUND", {
-			context: { failedFuncName: this.getDappUserPending.name, requestHash },
+		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
+			context: {
+				failedFuncName: this.getPendingImageCommitment.name,
+				requestHash,
+			},
 		});
 	}
 
 	/**
 	 * @description Mark a pending request as used
 	 */
-	async updateDappUserPendingStatus(requestHash: string): Promise<void> {
+	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.updateDappUserPendingStatus.name,
+					failedFuncName: this.updatePendingImageCommitmentStatus.name,
 					requestHash,
 				},
 			});
 		}
 
-		await this.tables?.pending.updateOne(
-			{ requestHash: requestHash },
+		// @ts-ignore
+		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
+			[ApiParams.requestHash]: requestHash,
+		};
+		await this.tables?.pending.updateOne<PendingCaptchaRequest>(
+			filter,
 			{
 				$set: {
 					[CaptchaStatus.pending]: false,
@@ -938,12 +1121,11 @@ export class ProviderDatabase
 		datasetId: string,
 		state?: CaptchaStates,
 	): Promise<Captcha[] | undefined> {
-		const cursor = this.tables?.captcha
-			.find({
-				datasetId,
-				solved: state === CaptchaStates.Solved,
-			})
-			.lean();
+		const filter: Pick<Captcha, "datasetId" | "solved"> = {
+			datasetId,
+			solved: state === CaptchaStates.Solved,
+		};
+		const cursor = this.tables?.captcha.find(filter).lean();
 		const docs = await cursor;
 
 		if (docs) {
@@ -951,7 +1133,7 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
 	}
 
 	/**
@@ -960,9 +1142,12 @@ export class ProviderDatabase
 	async getAllDappUserSolutions(
 		captchaId: string[],
 	): Promise<UserSolutionRecord[] | undefined> {
-		const cursor = this.tables?.usersolution
-			?.find({ captchaId: { $in: captchaId } })
-			.lean();
+		const filter: {
+			[key in keyof Pick<UserSolutionRecord, "captchaId">]: { $in: string[] };
+		} = {
+			captchaId: { $in: captchaId },
+		};
+		const cursor = this.tables?.usersolution?.find(filter).lean();
 		const docs = await cursor;
 
 		if (docs) {
@@ -972,7 +1157,7 @@ export class ProviderDatabase
 			) as UserSolutionRecord[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED");
 	}
 
 	async getDatasetIdWithSolvedCaptchasOfSizeN(
@@ -1054,14 +1239,11 @@ export class ProviderDatabase
 	async getDappUserSolutionById(
 		commitmentId: string,
 	): Promise<UserSolutionRecord | undefined> {
-		const cursor = this.tables?.usersolution
-			?.findOne(
-				{
-					commitmentId: commitmentId,
-				},
-				{ projection: { _id: 0 } },
-			)
-			.lean();
+		const filter: Pick<UserSolutionRecord, "commitmentId"> = {
+			commitmentId: commitmentId,
+		};
+		const project = { projection: { _id: 0 } };
+		const cursor = this.tables?.usersolution?.findOne(filter, project).lean();
 		const doc = await cursor;
 
 		if (doc) {
@@ -1080,8 +1262,9 @@ export class ProviderDatabase
 	async getDappUserCommitmentById(
 		commitmentId: string,
 	): Promise<UserCommitmentRecord | undefined> {
+		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne({ id: commitmentId })
+			?.findOne(filter)
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -1098,10 +1281,16 @@ export class ProviderDatabase
 		userAccount: string,
 		dappAccount: string,
 	): Promise<UserCommitmentRecord[]> {
+		const filter: Pick<UserCommitmentRecord, "userAccount" | "dappAccount"> = {
+			userAccount,
+			dappAccount,
+		};
+		const project = { _id: 0 };
+		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
-				?.find({ userAccount, dappAccount }, { _id: 0 }, { sort: { _id: -1 } })
+				?.find(filter, project, sort)
 				.lean<UserCommitmentRecord[]>();
 
 		return docs ? (docs as UserCommitmentRecord[]) : [];
@@ -1119,12 +1308,9 @@ export class ProviderDatabase
 					result,
 					lastUpdatedTimestamp: Date.now(),
 				};
+			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
-				?.findOneAndUpdate(
-					{ id: commitmentId },
-					{ $set: updateDoc },
-					{ upsert: false },
-				)
+				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
@@ -1149,12 +1335,9 @@ export class ProviderDatabase
 					lastUpdatedTimestamp: Date.now(),
 				};
 
+			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
-				?.findOneAndUpdate(
-					{ id: commitmentId },
-					{ $set: updateDoc },
-					{ upsert: false },
-				)
+				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
@@ -1211,9 +1394,13 @@ export class ProviderDatabase
 		taskId: ObjectId,
 		status: ScheduledTaskStatus,
 	): Promise<ScheduledTaskRecord | undefined> {
+		const filter: Pick<ScheduledTaskRecord, "_id" | "status"> = {
+			_id: taskId,
+			status: status,
+		};
 		const cursor: ScheduledTaskRecord | undefined | null =
 			await this.tables?.scheduler
-				?.findOne({ taskId: taskId, status: status })
+				?.findOne<ScheduledTaskRecord>(filter)
 				.lean<ScheduledTaskRecord>();
 		return cursor ? cursor : undefined;
 	}
@@ -1225,17 +1412,20 @@ export class ProviderDatabase
 		task: ScheduledTaskNames,
 		status?: ScheduledTaskStatus,
 	): Promise<ScheduledTaskRecord | undefined> {
-		const lookup: {
+		const filter: {
 			processName: ScheduledTaskNames;
 			status?: ScheduledTaskStatus;
 		} = { processName: task };
 		if (status) {
-			lookup.status = status;
+			filter.status = status;
 		}
+		const sort: { [key in keyof Pick<ScheduledTaskRecord, "datetime">]: -1 } = {
+			datetime: -1,
+		};
 		const cursor: ScheduledTaskRecord | undefined | null =
 			await this.tables?.scheduler
-				?.findOne(lookup)
-				.sort({ datetime: -1 })
+				?.findOne(filter)
+				.sort(sort)
 				.limit(1)
 				.lean<ScheduledTaskRecord>();
 		return cursor ? cursor : undefined;
@@ -1271,13 +1461,24 @@ export class ProviderDatabase
 			updated: new Date().getTime(),
 			...(result && { result }),
 		};
+		const filter: Pick<ScheduledTaskRecord, "_id"> = { _id: taskId };
 		await this.tables?.scheduler.updateOne(
-			{ _id: taskId },
+			filter,
 			{ $set: update },
 			{
 				upsert: false,
 			},
 		);
+	}
+
+	/**
+	 * @description Clean up the scheduled task status records
+	 */
+	async cleanupScheduledTaskStatus(status: ScheduledTaskStatus): Promise<void> {
+		const filter: Pick<ScheduledTaskRecord, "status"> = {
+			status,
+		};
+		await this.tables?.scheduler.deleteMany(filter);
 	}
 
 	/**
@@ -1288,10 +1489,14 @@ export class ProviderDatabase
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
+				tier: record.tier,
+			};
+			const filter: Pick<IUserDataSlim, "account"> = {
+				account: record.account,
 			};
 			return {
 				updateOne: {
-					filter: { account: record.account },
+					filter,
 					update: {
 						$set: clientRecord,
 					},
@@ -1306,9 +1511,24 @@ export class ProviderDatabase
 	 * @description Get a client record
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
-		const doc = await this.tables?.client
-			.findOne({ account })
-			.lean<ClientRecord>();
+		const filter: Pick<ClientRecord, "account"> = { account };
+		const doc = await this.tables?.client.findOne(filter).lean<ClientRecord>();
 		return doc ? doc : undefined;
+	}
+
+	async getAllIpBlockRules(): Promise<IPBlockRuleRecord[]> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
+		}
+
+		return await this.tables.ipblockrules.find().exec();
+	}
+
+	async getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]> {
+		if (!this.tables) {
+			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
+		}
+
+		return await this.tables.userblockrules.find().exec();
 	}
 }

@@ -22,25 +22,35 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
-			if (req.url.indexOf(ApiPrefix) === -1) {
+			if (req.originalUrl.indexOf(ApiPrefix) === -1) {
+				env.logger.info({
+					message: "Non-api route, skipping auth middleware",
+				});
 				next();
 				return;
 			}
 
 			const { signature, timestamp } = extractHeaders(req);
 
-			if (!env.pair) {
-				res.status(401).json({
-					error: "Unauthorized",
-					message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
-				});
+			if (env.authAccount) {
+				verifySignature(signature, timestamp, env.authAccount);
+				next();
 				return;
 			}
-			verifySignature(signature, timestamp, env.pair);
 
-			next();
+			if (env.pair) {
+				verifySignature(signature, timestamp, env.pair);
+				next();
+				return;
+			}
+
+			res.status(401).json({
+				error: "Unauthorized",
+				message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
+			});
+			return;
 		} catch (err) {
-			console.error("Auth Middleware Error:", err);
+			env.logger.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
 		}
@@ -75,7 +85,8 @@ const extractHeaders = (req: Request) => {
 
 	// check if timestamp is from the last 5 minutes
 	const now = new Date().getTime();
-	const ts = Number.parseInt(timestamp, 10);
+	const ts = Number.parseInt(timestamp);
+
 	if (now - ts > 300000) {
 		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
 			context: { error: "Timestamp is too old", code: 400 },
@@ -94,7 +105,11 @@ export const verifySignature = (
 
 	if (!pair.verify(timestamp, u8Sig, pair.publicKey)) {
 		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
-			context: { error: "Signature verification failed", code: 401 },
+			context: {
+				error: "Signature verification failed",
+				code: 401,
+				account: pair.publicKey,
+			},
 		});
 	}
 };

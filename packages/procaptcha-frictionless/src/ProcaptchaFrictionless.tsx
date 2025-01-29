@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import detect from "@prosopo/detector";
 import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
@@ -28,10 +28,19 @@ import {
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
 import { useEffect, useState } from "react";
 
+const DetectorLoader = async () => (await import("@prosopo/detector")).default;
+const ExtensionLoader = async (web2: boolean) =>
+	web2
+		? (await import("@prosopo/account")).ExtensionWeb2
+		: (await import("@prosopo/account")).ExtensionWeb3;
+
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 ) => {
+	const detect = await DetectorLoader();
 	const botScore: { token: string } = await detect();
+	const ext = new (await ExtensionLoader(config.web2))();
+	const userAccount = await ext.getAccount(config);
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
@@ -47,6 +56,7 @@ const customDetectBot: BotDetectionFunction = async (
 	const captcha = await providerApi.getFrictionlessCaptcha(
 		botScore.token,
 		config.account.address,
+		userAccount.account.address,
 	);
 
 	return {
@@ -54,6 +64,7 @@ const customDetectBot: BotDetectionFunction = async (
 		sessionId: captcha.sessionId,
 		provider: provider,
 		status: captcha.status,
+		userAccount: userAccount,
 	};
 };
 
@@ -73,15 +84,21 @@ export const ProcaptchaFrictionless = ({
 			try {
 				const result = await detectBot(configOutput);
 
+				const frictionlessState: FrictionlessState = {
+					provider: result.provider,
+					sessionId: result.sessionId,
+					userAccount: result.userAccount,
+				};
+
 				if (result.captchaType === "image") {
 					setComponentToRender(
-						<Procaptcha config={config} callbacks={callbacks} />,
+						<Procaptcha
+							config={config}
+							callbacks={callbacks}
+							frictionlessState={frictionlessState}
+						/>,
 					);
 				} else {
-					const frictionlessState: FrictionlessState = {
-						provider: result.provider,
-						sessionId: result.sessionId,
-					};
 					setComponentToRender(
 						<ProcaptchaPow
 							config={config}

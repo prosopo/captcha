@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/common";
-import { generateMnemonic } from "@prosopo/contract";
 import { loadEnv } from "@prosopo/dotenv";
+import { generateMnemonic } from "@prosopo/keyring";
 import { updateEnvFile } from "../setup/index.js";
 
 loadEnv();
@@ -31,6 +31,8 @@ async function mnemonic(addToEnv: boolean) {
 		await updateEnvFile({
 			PROSOPO_PROVIDER_MNEMONIC: `"${mnemonic}"`,
 			PROSOPO_PROVIDER_ADDRESS: address,
+			PROSOPO_ADMIN_MNEMONIC: `"${mnemonic}"`,
+			PROSOPO_ADMIN_ADDRESS: address,
 		});
 	}
 }

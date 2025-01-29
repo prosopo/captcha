@@ -42,9 +42,16 @@ import Modal from "./Modal.js";
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
+	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
-	const manager = Manager(config, state, updateState, callbacks);
+	const manager = Manager(
+		config,
+		state,
+		updateState,
+		callbacks,
+		frictionlessState,
+	);
 	const themeColor = props.config.theme === "light" ? "light" : "dark";
 	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 
@@ -61,6 +68,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 					maxWidth: WIDGET_MAX_WIDTH,
 					maxHeight: "100%",
 					overflowX: "auto",
+					...theme.font,
 				}}
 			>
 				<Modal show={state.showModal}>
@@ -146,9 +154,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 								>
 									<a
 										href={WIDGET_URL}
+										// biome-ignore lint/a11y/noBlankTarget: Biome incorrect edge case
 										target="_blank"
 										aria-label={WIDGET_URL_TEXT}
-										rel="noreferrer"
 									>
 										<div style={{ flex: 1 }}>
 											<Logo themeColor={themeColor} aria-label="Prosopo logo" />

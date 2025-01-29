@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { defineConfig } from "vitest/config";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
@@ -51,6 +52,11 @@ export default function () {
 				enabled: true,
 			},
 			pool: "forks", // forks is slower than 'threads' but more compatible with low-level libs (e.g. bcrypt)
+			poolOptions: {
+				forks: {
+					isolate: true,
+				},
+			},
 			testTimeout: 10000,
 		},
 		plugins: [

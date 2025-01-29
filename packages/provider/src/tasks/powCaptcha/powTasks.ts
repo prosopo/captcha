@@ -13,31 +13,36 @@
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
+import {
+	ProsopoApiError,
+	ProsopoEnvError,
+	getLoggerDefault,
+} from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
 import {
 	ApiParams,
 	type CaptchaResult,
 	CaptchaStatus,
+	type IPAddress,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
+	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
+import { CaptchaManager } from "../captchaManager.js";
+import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
-const logger = getLoggerDefault();
 const DEFAULT_POW_DIFFICULTY = 4;
 
-export class PowCaptchaManager {
-	pair: KeyringPair;
-	db: IProviderDatabase;
+export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 
-	constructor(pair: KeyringPair, db: IProviderDatabase) {
-		this.pair = pair;
-		this.db = db;
+	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
+		super(db, pair, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 	}
 
@@ -47,6 +52,7 @@ export class PowCaptchaManager {
 	 * @param {string} userAccount - user that is solving the captcha
 	 * @param {string} dappAccount - dapp that is requesting the captcha
 	 * @param origin - not currently used
+	 * @param powDifficulty
 	 */
 	async getPowCaptchaChallenge(
 		userAccount: string,
@@ -55,11 +61,13 @@ export class PowCaptchaManager {
 		powDifficulty?: number,
 	): Promise<PoWCaptcha> {
 		const difficulty = powDifficulty || DEFAULT_POW_DIFFICULTY;
-
 		const requestedAtTimestamp = Date.now();
 
+		// Create nonce for the challenge
+		const nonce = Math.floor(Math.random() * 1000000);
+
 		// Use blockhash, userAccount and dappAccount for string for challenge
-		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}`;
+		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
 		const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
 		return {
 			challenge,
@@ -88,7 +96,7 @@ export class PowCaptchaManager {
 		nonce: number,
 		timeout: number,
 		userTimestampSignature: string,
-		ipAddress: string,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
@@ -114,7 +122,7 @@ export class PowCaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			logger.debug("No record of this challenge");
+			this.logger.debug("No record of this challenge");
 			// no record of this challenge
 			return false;
 		}
@@ -126,8 +134,8 @@ export class PowCaptchaManager {
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_TIMESTAMP",
 				},
-				false,
-				true,
+				false, //serverchecked
+				true, // usersubmitted
 				userTimestampSignature,
 			);
 			return false;
@@ -165,12 +173,17 @@ export class PowCaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
-	): Promise<boolean> {
+	): Promise<{ verified: boolean; score?: number }> {
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
+			this.logger.debug(`No record of this challenge: ${challenge}`);
+			return { verified: false };
+		}
+
+		if (challengeRecord.result.status !== CaptchaStatus.approved) {
+			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
 				context: {
 					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
 					challenge,
@@ -178,7 +191,7 @@ export class PowCaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return false;
+		if (challengeRecord.serverChecked) return { verified: false };
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -197,6 +210,21 @@ export class PowCaptchaManager {
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
-		return true;
+
+		let score: number | undefined;
+		if (challengeRecord.frictionlessTokenId) {
+			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
+				challengeRecord.frictionlessTokenId,
+			);
+			if (tokenRecord) {
+				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+				this.logger.info({
+					tscoreComponents: tokenRecord?.scoreComponents,
+					score: score,
+				});
+			}
+		}
+
+		return { verified: true, ...(score ? { score } : {}) };
 	}
 }

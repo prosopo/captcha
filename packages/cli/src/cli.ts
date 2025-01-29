@@ -13,8 +13,8 @@
 // limitations under the License.
 import process from "node:process";
 import { LogLevel, getLogger } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/contract";
 import { loadEnv } from "@prosopo/dotenv";
+import { getPairAsync } from "@prosopo/keyring";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";
@@ -47,20 +47,30 @@ async function main() {
 		config.account.address,
 	);
 
+	const authAccount = await getPairAsync(
+		config.authAccount.secret,
+		config.authAccount.address,
+	);
+
 	log.info(`Pair address: ${pair.address}`);
 
-	const processedArgs = await processArgs(process.argv, pair, config);
+	const processedArgs = await processArgs(
+		process.argv,
+		pair,
+		authAccount,
+		config,
+	);
 
-	log.info(`Processsed args: ${JSON.stringify(processedArgs, null, 4)}`);
+	log.info({ cliArgs: processedArgs });
 	if (processedArgs.api) {
 		if (process.env.NODE_ENV === "development") {
-			await new ReloadingAPI(envPath, config, pair, processedArgs)
+			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.startDev()
 				.then(() => {
 					log.info("Reloading API started...");
 				});
 		} else {
-			await new ReloadingAPI(envPath, config, pair, processedArgs)
+			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.start()
 				.then(() => {
 					log.info("Reloading API started...");

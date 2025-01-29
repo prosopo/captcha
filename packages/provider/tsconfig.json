@@ -8,10 +8,13 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../api-route"
 		},
 		{
-			"path": "../contract"
+			"path": "../api-express-router"
+		},
+		{
+			"path": "../common"
 		},
 		{
 			"path": "../../dev/config"
@@ -26,6 +29,9 @@
 			"path": "../env"
 		},
 		{
+			"path": "../keyring"
+		},
+		{
 			"path": "../types"
 		},
 		{
@@ -36,6 +42,9 @@
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../user-access-policy"
 		}
 	]
 }

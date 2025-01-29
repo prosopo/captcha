@@ -1,11 +1,11 @@
 {
 	"name": "@prosopo/types",
-	"version": "2.1.6",
+	"version": "2.3.2",
 	"description": "Types for prosopo TypeScript packages",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
-		"node": ">=20",
+		"node": "20",
 		"npm": ">=9"
 	},
 	"exports": {
@@ -31,25 +31,21 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@polkadot/api": "10.13.1",
-		"@polkadot/api-contract": "10.13.1",
 		"@polkadot/extension-inject": "0.46.9",
-		"@polkadot/keyring": "12.6.2",
-		"@polkadot/types": "10.13.1",
-		"@polkadot/types-codec": "10.13.1",
-		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "2.1.6",
-		"@prosopo/locale": "2.1.6",
+		"@prosopo/common": "2.3.2",
+		"@prosopo/locale": "2.3.2",
+		"express": "4.21.1",
+		"ip-address": "10.0.1",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.1.6",
+		"@prosopo/config": "2.3.2",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
-		"npm-run-all": "4.1.5",
 		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",

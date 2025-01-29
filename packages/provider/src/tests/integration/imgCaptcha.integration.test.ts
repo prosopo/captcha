@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { stringToU8a, u8aToHex } from "@polkadot/util";
-import { generateMnemonic, getPairAsync } from "@prosopo/contract";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
 	ApiPaths,
-	type Captcha,
+	type CaptchaRequestBodyType,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
-	type TGetImageCaptchaChallengeURL,
+	CaptchaType,
 } from "@prosopo/types";
 import fetch from "node-fetch";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -30,28 +30,40 @@ import { registerSiteKey } from "./registerSitekey.js";
 
 const solutions = datasetWithSolutionHashes;
 const baseUrl = "http://localhost:9229";
-const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
 describe("Image Captcha Integration Tests", () => {
-	describe("GetImageCaptchaChallenge", () => {
-		beforeAll(async () => {
-			await registerSiteKey(dappAccount);
-		});
+	let dappAccount: string;
+	let mnemonic: string;
 
+	beforeAll(async () => {
+		// Create a new site key to avoid conflicts with other tests
+		[mnemonic, dappAccount] = await generateMnemonic();
+		await registerSiteKey(dappAccount, CaptchaType.image);
+	});
+
+	describe("GetImageCaptchaChallenge", () => {
 		it("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
-
 			expect(response.status).toBe(200);
+
 			const data = await response.json();
 			expect(data).toHaveProperty("captchas");
 		});
@@ -59,13 +71,21 @@ describe("Image Captcha Integration Tests", () => {
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
 			const origin = "http://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${unregisteredAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: unregisteredAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(body),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": unregisteredAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -78,13 +98,21 @@ describe("Image Captcha Integration Tests", () => {
 		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
 			const invalidSiteKey = "junk";
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${invalidSiteKey}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: invalidSiteKey,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(body),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": invalidSiteKey,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -96,11 +124,21 @@ describe("Image Captcha Integration Tests", () => {
 
 		it("should fail if datasetID is incorrect", async () => {
 			const datasetId = "thewrongdsetId";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${datasetId}/${userAccount}/${dappAccount}`;
+			const origin = "http://localhost";
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: datasetId,
+			};
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(body),
 				headers: {
 					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -118,12 +156,20 @@ describe("Image Captcha Integration Tests", () => {
 
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
-			const getImageCaptchaURL: TGetImageCaptchaChallengeURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}/${solutions.datasetId}/${userAccount}/${dappAccount}`;
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImgCaptchaBody: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
 			const response = await fetch(getImageCaptchaURL, {
-				method: "GET",
+				method: "POST",
+				body: JSON.stringify(getImgCaptchaBody),
 				headers: {
 					"Content-Type": "application/json",
 					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
 				},
 			});
 
@@ -158,7 +204,7 @@ describe("Image Captcha Integration Tests", () => {
 				};
 			});
 
-			const body: CaptchaSolutionBodyType = {
+			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
 				[ApiParams.captchas]: temp,
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.requestHash]: data.requestHash,
@@ -181,8 +227,10 @@ describe("Image Captcha Integration Tests", () => {
 					headers: {
 						"Content-Type": "application/json",
 						Origin: origin,
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
 					},
-					body: JSON.stringify(body),
+					body: JSON.stringify(solveImgCaptchaBody),
 				},
 			);
 			const jsonRes = await solveThatCaptcha.json();

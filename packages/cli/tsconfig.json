@@ -8,16 +8,20 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../api"
 		},
 		{
-			"path": "../contract"
+			"path": "../common"
 		},
+
 		{
 			"path": "../dotenv"
 		},
 		{
 			"path": "../env"
+		},
+		{
+			"path": "../keyring"
 		},
 		{
 			"path": "../locale"
@@ -33,6 +37,12 @@
 		},
 		{
 			"path": "../../dev/config"
+		},
+		{
+			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api-express-router"
 		}
 	]
 }

@@ -11,9 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
+import { CaptchaType, Tier } from "@prosopo/types";
 import {
+	type BlockRule,
+	BlockRuleType,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -27,7 +29,6 @@ import {
 	type Hash,
 	type IUserData,
 	type Item,
-	type PendingCaptchaRequest,
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
@@ -38,33 +39,41 @@ import {
 	type Timestamp,
 	TimestampSchema,
 } from "@prosopo/types";
-import type { DeleteResult } from "mongodb";
-import type mongoose from "mongoose";
+import type { RulesStorage } from "@prosopo/user-access-policy";
+import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
 	type ZodType,
 	any,
 	array,
+	bigint,
 	boolean,
 	nativeEnum,
 	object,
 	string,
+	union,
 	type infer as zInfer,
+	instanceof as zInstanceof,
 } from "zod";
+import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
 
-export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
+export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
-const ONE_WEEK = 60 * 60 * 24 * 7;
+const ONE_DAY = 60 * 60 * 24;
+const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
 
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
 	settings: UserSettingsSchema,
+	tier: { type: String, enum: Tier, required: true },
 });
+// Set an index on the account field, ascending
+ClientRecordSchema.index({ account: 1 });
 
 export enum StoredStatusNames {
 	notStored = "notStored",
@@ -87,12 +96,13 @@ export interface StoredCaptcha {
 	};
 	requestedAtTimestamp: Timestamp;
 	deadlineTimestamp?: Timestamp;
-	ipAddress: string;
+	ipAddress: bigint;
 	headers: RequestHeaders;
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
+	frictionlessTokenId?: FrictionlessTokenId;
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -115,14 +125,18 @@ export const UserCommitmentSchema = object({
 	id: string(),
 	result: CaptchaResultSchema,
 	userSignature: string(),
-	ipAddress: string(),
+	ipAddress: bigint(),
 	headers: object({}).catchall(string()),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
 	storedAtTimestamp: TimestampSchema.optional(),
 	requestedAtTimestamp: TimestampSchema,
 	lastUpdatedTimestamp: TimestampSchema.optional(),
-}) satisfies ZodType<UserCommitment>;
+	frictionlessTokenId: union([
+		string(),
+		zInstanceof(mongoose.Types.ObjectId),
+	]).optional(),
+});
 
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
@@ -164,35 +178,38 @@ export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
-export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>(
-	{
-		challenge: { type: String, required: true },
-		dappAccount: { type: String, required: true },
-		userAccount: { type: String, required: true },
-		requestedAtTimestamp: { type: Number, required: true },
-		lastUpdatedTimestamp: { type: Number, required: false },
-		result: {
-			status: { type: String, enum: CaptchaStatus, required: true },
-			reason: {
-				type: String,
-				enum: TranslationKeysSchema.options,
-				required: false,
-			},
-			error: { type: String, required: false },
+export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
+	challenge: { type: String, required: true },
+	dappAccount: { type: String, required: true },
+	userAccount: { type: String, required: true },
+	requestedAtTimestamp: { type: Number, required: true },
+	lastUpdatedTimestamp: { type: Number, required: false },
+	result: {
+		status: { type: String, enum: CaptchaStatus, required: true },
+		reason: {
+			type: String,
+			enum: TranslationKeysSchema.options,
+			required: false,
 		},
-		difficulty: { type: Number, required: true },
-		ipAddress: { type: String, required: true },
-		headers: { type: Object, required: true },
-		userSignature: { type: String, required: false },
-		userSubmitted: { type: Boolean, required: true },
-		serverChecked: { type: Boolean, required: true },
-		storedAtTimestamp: { type: Number, required: false },
+		error: { type: String, required: false },
 	},
-	{ expireAfterSeconds: ONE_MONTH },
-);
+	difficulty: { type: Number, required: true },
+	ipAddress: { type: BigInt, required: true },
+	headers: { type: Object, required: true },
+	userSignature: { type: String, required: false },
+	userSubmitted: { type: Boolean, required: true },
+	serverChecked: { type: Boolean, required: true },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
+});
 
 // Set an index on the captchaId field, ascending
-PoWCaptchaRecordSchema.index({ captchaId: 1 });
+PoWCaptchaRecordSchema.index({ challenge: 1 });
+PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
+PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -209,7 +226,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		error: { type: String, required: false },
 	},
-	ipAddress: { type: String, required: true },
+	ipAddress: { type: BigInt, required: true },
 	headers: { type: Object, required: true },
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
@@ -217,9 +234,19 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Number, required: false },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
+UserCommitmentRecordSchema.index({ storedAtTimestamp: 1 });
+UserCommitmentRecordSchema.index({
+	storedAtTimestamp: 1,
+	lastUpdatedTimestamp: 1,
+});
+UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
@@ -263,6 +290,8 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 );
 // Set an index on the captchaId field, ascending
 UserSolutionRecordSchema.index({ captchaId: 1 });
+// Set an index on the commitment id field, descending
+UserSolutionRecordSchema.index({ commitmentId: -1 });
 
 export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
 	captchas: array(UserSolutionSchema),
@@ -272,19 +301,28 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-export const PendingRecordSchema = new Schema<PendingCaptchaRequest>(
-	{
-		accountId: { type: String, required: true },
-		pending: { type: Boolean, required: true },
-		salt: { type: String, required: true },
-		requestHash: { type: String, required: true },
-		deadlineTimestamp: { type: Number, required: true }, // unix timestamp
-		requestedAtTimestamp: { type: Number, required: true }, // unix timestamp
-		ipAddress: { type: String, required: true },
-		headers: { type: Object, required: true },
+export type PendingCaptchaRequestMongoose = Omit<
+	PendingCaptchaRequest,
+	"requestedAtTimestamp"
+> & {
+	requestedAtTimestamp: Date;
+};
+
+export type FrictionlessTokenId = mongoose.Schema.Types.ObjectId;
+
+export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
+	accountId: { type: String, required: true },
+	pending: { type: Boolean, required: true },
+	salt: { type: String, required: true },
+	requestHash: { type: String, required: true },
+	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
+	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
+	ipAddress: { type: BigInt, required: true },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
 	},
-	{ expireAfterSeconds: ONE_WEEK },
-);
+});
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
 
@@ -303,35 +341,138 @@ export type ScheduledTask = zInfer<typeof ScheduledTaskSchema>;
 
 export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
-export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>(
-	{
-		processName: { type: String, enum: ScheduledTaskNames, required: true },
-		datetime: { type: Number, required: true },
-		updated: { type: Number, required: false },
-		status: { type: String, enum: ScheduledTaskStatus, required: true },
-		result: {
-			type: new Schema<ScheduledTaskResult>(
-				{
-					error: { type: String, required: false },
-					data: { type: Object, required: false },
-				},
-				{ _id: false },
-			),
-			required: false,
-		},
-	},
-	{ expireAfterSeconds: ONE_WEEK },
-);
+type ScheduledTaskMongoose = Omit<ScheduledTaskRecord, "datetime"> & {
+	datetime: Date;
+};
 
-export interface SessionRecord {
+export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
+	processName: { type: String, enum: ScheduledTaskNames, required: true },
+	datetime: { type: Date, required: true, expires: ONE_WEEK },
+	updated: { type: Number, required: false },
+	status: { type: String, enum: ScheduledTaskStatus, required: true },
+	result: {
+		type: new Schema<ScheduledTaskResult>(
+			{
+				error: { type: String, required: false },
+				data: { type: Object, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
+});
+ScheduledTaskRecordSchema.index({ processName: 1 });
+ScheduledTaskRecordSchema.index({ processName: 1, status: 1 });
+ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
+
+export interface ScoreComponents {
+	baseScore: number;
+	lScore?: number;
+	timeout?: number;
+	accessPolicy?: number;
+}
+
+export interface FrictionlessToken {
+	token: string;
+	score: number;
+	threshold: number;
+	scoreComponents: ScoreComponents;
+}
+
+export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
+
+type FrictionlessTokenMongoose = FrictionlessTokenRecord & {
+	createdAt: Date;
+};
+
+export const FrictionlessTokenRecordSchema =
+	new Schema<FrictionlessTokenMongoose>({
+		token: { type: String, required: true, unique: true },
+		score: { type: Number, required: true },
+		threshold: { type: Number, required: true },
+		scoreComponents: {
+			baseScore: { type: Number, required: true },
+			lScore: { type: Number, required: false },
+			timeout: { type: Number, required: false },
+			accessPolicy: { type: Number, required: false },
+		},
+		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
+	});
+
+FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+
+export type Session = {
 	sessionId: string;
 	createdAt: Date;
-}
+	tokenId: FrictionlessTokenId;
+	captchaType: CaptchaType;
+};
+
+export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
 	sessionId: { type: String, required: true, unique: true },
-	createdAt: { type: Date, required: true },
+	createdAt: { type: Date, required: true, expires: ONE_DAY },
+	tokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+	},
+	captchaType: { type: String, enum: CaptchaType, required: true },
 });
+
+SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+
+export interface IPAddressBlockRule extends BlockRule {
+	ip: number;
+	dappAccount?: string;
+}
+
+export interface UserAccountBlockRule extends BlockRule {
+	dappAccount?: string;
+	userAccount: string;
+}
+
+// A rule to block users based on headers such as IP. Global rules apply to all clients.
+export type IPBlockRuleRecord = mongoose.Document & IPAddressBlockRule;
+export type UserAccountBlockRuleRecord = mongoose.Document &
+	UserAccountBlockRule;
+
+export type IPBlockRuleMongo = Omit<IPBlockRuleRecord, "ip"> & {
+	ip: number;
+};
+
+export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
+	ip: { type: Number, required: true, unique: true },
+	global: { type: Boolean, required: true },
+	type: { type: String, enum: BlockRuleType, required: true },
+	dappAccount: { type: String, required: false },
+	hardBlock: { type: Boolean, required: false },
+	captchaConfig: {
+		solved: { count: { type: Number, required: false } },
+		unsolved: { count: { type: Number, required: false } },
+	},
+});
+
+IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
+IPBlockRuleRecordSchema.index({ ip: 1, dappAccount: 1 }, { unique: true });
+
+export const UserAccountBlockRuleSchema =
+	new Schema<UserAccountBlockRuleRecord>({
+		dappAccount: { type: String, required: false },
+		userAccount: { type: String, required: true },
+		global: { type: Boolean, required: true },
+		hardBlock: { type: Boolean, required: false },
+		type: { type: String, enum: BlockRuleType, required: true },
+		captchaConfig: {
+			solved: { count: { type: Number, required: false } },
+			unsolved: { count: { type: Number, required: false } },
+		},
+	});
+
+UserAccountBlockRuleSchema.index({ userAccount: 1 }, { unique: true });
+UserAccountBlockRuleSchema.index(
+	{ dappAccount: 1, userAccount: 1 },
+	{ unique: true },
+);
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -359,24 +500,26 @@ export interface IProviderDatabase extends IDatabase {
 		datasetId: Hash | string | Uint8Array,
 	): Promise<DatasetBase>;
 
-	storeDappUserSolution(
+	storeUserImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void>;
 
-	storeDappUserPending(
+	storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: string,
-		headers: RequestHeaders,
+		ipAddress: bigint,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
 
-	getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>;
+	getPendingImageCommitment(
+		requestHash: string,
+	): Promise<PendingCaptchaRequest>;
 
-	updateDappUserPendingStatus(requestHash: string): Promise<void>;
+	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
 
 	getAllCaptchasByDatasetId(
 		datasetId: string,
@@ -416,27 +559,21 @@ export interface IProviderDatabase extends IDatabase {
 		reason?: TranslationKey,
 	): Promise<void>;
 
-	removeProcessedDappUserSolutions(
-		commitmentIds: Hash[],
-	): Promise<DeleteResult | undefined>;
-
-	removeProcessedDappUserCommitments(
-		commitmentIds: Hash[],
-	): Promise<DeleteResult | undefined>;
-
-	getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>;
-
-	getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
-
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
-	getUnstoredDappUserCommitments(): Promise<UserCommitmentRecord[]>;
+	getUnstoredDappUserCommitments(
+		limit?: number,
+		skip?: number,
+	): Promise<UserCommitmentRecord[]>;
 
 	markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
-	getUnstoredDappUserPoWCommitments(): Promise<PoWCaptchaRecord[]>;
+	getUnstoredDappUserPoWCommitments(
+		limit?: number,
+		skip?: number,
+	): Promise<PoWCaptchaRecord[]>;
 
 	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
 
@@ -472,8 +609,9 @@ export interface IProviderDatabase extends IDatabase {
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: string,
+		ipAddress: bigint,
 		headers: RequestHeaders,
+		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,
@@ -495,7 +633,30 @@ export interface IProviderDatabase extends IDatabase {
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 
-	storeSessionRecord(sessionRecord: SessionRecord): Promise<void>;
+	storeFrictionlessTokenRecord(
+		tokenRecord: FrictionlessToken,
+	): Promise<ObjectId>;
 
-	checkAndRemoveSession(sessionId: string): Promise<SessionRecord | undefined>;
+	updateFrictionlessTokenRecord(
+		tokenId: FrictionlessTokenId,
+		updates: Partial<FrictionlessTokenRecord>,
+	): Promise<void>;
+
+	getFrictionlessTokenRecordByTokenId(
+		tokenId: FrictionlessTokenId,
+	): Promise<FrictionlessTokenRecord | undefined>;
+
+	getFrictionlessTokenRecordByToken(
+		token: string,
+	): Promise<FrictionlessTokenRecord | undefined>;
+
+	storeSessionRecord(sessionRecord: Session): Promise<void>;
+
+	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getUserAccessRulesStorage(): RulesStorage;
+
+	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
+
+	getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]>;
 }

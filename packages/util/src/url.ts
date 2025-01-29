@@ -18,20 +18,31 @@ export const getURLProtocol = (url: URL) => {
 	return "https";
 };
 
+export const parseUrl = (domain: string) => {
+	//check the url is not an email address
+	if (domain.match(/@/)) {
+		throw new Error("Invalid domain");
+	}
+
+	return new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+};
+
 export const validateDomain = (domain: string): boolean => {
-	if (domain.length > 253) return false;
+	if (domain.length > 253) {
+		return false;
+	}
 
 	// https://stackoverflow.com/a/57129472/1178971
 	if (
 		!domain.match(
-			/^(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})$/,
+			/^\s*(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})(\s*,\s*(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25}))*$/,
 		)
 	) {
 		return false;
 	}
 
 	try {
-		new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+		parseUrl(domain);
 	} catch (e) {
 		return false;
 	}
