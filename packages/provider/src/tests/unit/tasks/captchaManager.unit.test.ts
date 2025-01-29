@@ -169,7 +169,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: `Session ${sessionId} not found`,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
 				type: CaptchaType.image,
 			});
 		});
@@ -198,7 +198,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: `Session ${sessionId} not found`,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
 				type: CaptchaType.pow,
 			});
 		});

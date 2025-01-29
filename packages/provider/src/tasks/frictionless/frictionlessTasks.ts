@@ -15,11 +15,18 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import type { Logger } from "@prosopo/common";
 import { CaptchaType, type ProsopoConfigOutput } from "@prosopo/types";
 import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
-import type { IProviderDatabase, Session } from "@prosopo/types-database";
+import type {
+	FrictionlessTokenId,
+	IProviderDatabase,
+	Session,
+} from "@prosopo/types-database";
+import type { Rule } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
 import { CaptchaManager } from "../captchaManager.js";
+
+const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
@@ -73,5 +80,51 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 		};
+	}
+
+	async scoreIncreaseAccessPolicy(
+		accessRule: Rule | null,
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		const accessPolicyPenalty =
+			accessRule?.score || this.config.penalties.PENALTY_ACCESS_RULE;
+		botScore += accessPolicyPenalty;
+		this.logger.info({
+			message: "Address has an image captcha config defined",
+		});
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				accessPolicy: accessPolicyPenalty,
+			},
+		});
+		return botScore;
+	}
+
+	async scoreIncreaseTimestamp(
+		timestamp: number,
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		this.logger.info("Timestamp is older than 10 minutes", new Date(timestamp));
+		botScore += this.config.penalties.PENALTY_OLD_TIMESTAMP;
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				timeout: this.config.penalties.PENALTY_OLD_TIMESTAMP,
+			},
+		});
+		return botScore;
+	}
+
+	static timestampTooOld(timestamp: number): boolean {
+		const now = Date.now();
+		const diff = now - timestamp;
+		return diff > DEFAULT_MAX_TIMESTAMP_AGE;
 	}
 }

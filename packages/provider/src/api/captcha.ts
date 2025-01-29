@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { validateAddress } from "@polkadot/util-crypto/address";
+
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
@@ -41,11 +41,12 @@ import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { getBotScore } from "../tasks/detection/getBotScore.js";
+import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
+import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
-const TEN_MINUTES = 60 * 10 * 1000;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -94,19 +95,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		const { datasetId, user, dapp, sessionId } = parsed;
 
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
@@ -133,9 +125,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
+					new ProsopoApiError(reason || "API.BAD_REQUEST", {
 						context: {
-							error: reason,
 							code: 400,
 							siteKey: dapp,
 							user,
@@ -178,6 +169,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						error: err,
 						code: 500,
 						params: req.params,
+						context: err,
 					},
 				}),
 			);
@@ -206,19 +198,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		const { user, dapp } = parsed;
 
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
 			if (!clientRecord) {
@@ -254,7 +237,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500, siteKey: req.body.dapp },
+					context: { code: 500, siteKey: req.body.dapp, error: err },
 				}),
 			);
 		}
@@ -280,19 +263,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		}
 
 		const { user, dapp, sessionId } = parsed;
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientSettings = await tasks.db.getClientRecord(dapp);
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -313,9 +288,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
+					new ProsopoApiError(reason || "API.BAD_REQUEST", {
 						context: {
-							error: reason,
 							code: 400,
 							siteKey: dapp,
 							user,
@@ -381,6 +355,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						code: 500,
 						siteKey: req.body.dapp,
 						user: req.body.user,
+						error: err,
 					},
 				}),
 			);
@@ -419,19 +394,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			user,
 		} = parsed;
 
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
@@ -461,6 +427,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					context: {
 						code: 500,
 						siteKey: req.body.dapp,
+						error: err,
 					},
 				}),
 			);
@@ -482,7 +449,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.db.getFrictionlessTokenRecordByToken(token);
 
 				if (existingToken) {
-					tasks.logger.info("Token has already been used");
+					tasks.logger.info(`Token ${existingToken} has already been used`);
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
 							existingToken._id as ObjectId,
@@ -496,7 +463,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				const { baseBotScore, timestamp } = await getBotScore(token);
 
-				let botScore = baseBotScore + lScore;
+				const botScore = baseBotScore + lScore;
 
 				const clientConfig = await tasks.db.getClientRecord(dapp);
 				const botThreshold =
@@ -515,19 +482,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				});
 
 				// If the timestamp is older than 10 minutes, send an image captcha
-				if (timestamp < Date.now() - TEN_MINUTES) {
-					tasks.logger.info(
-						"Timestamp is older than 10 minutes",
-						new Date(timestamp),
+				if (FrictionlessManager.timestampTooOld(timestamp)) {
+					await tasks.frictionlessManager.scoreIncreaseTimestamp(
+						timestamp,
+						baseBotScore,
+						botScore,
+						tokenId,
 					);
-					botScore += tasks.config.penalties.PENALTY_OLD_TIMESTAMP;
-					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
-						score: botScore,
-						scoreComponents: {
-							baseScore: baseBotScore,
-							timeout: tasks.config.penalties.PENALTY_OLD_TIMESTAMP,
-						},
-					});
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
 					);
@@ -545,21 +506,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 
 				if (imageCaptchaConfigDefined) {
-					const accessPolicyPenalty =
-						imageCaptchaConfigResolver.accessRule?.score ||
-						tasks.config.penalties.PENALTY_ACCESS_RULE;
-					botScore += accessPolicyPenalty;
-					tasks.logger.info({
-						message: "Address has an image captcha config defined",
-					});
-					await tasks.db.updateFrictionlessTokenRecord(tokenId, {
-						score: botScore,
-						scoreComponents: {
-							baseScore: baseBotScore,
-							accessPolicy: accessPolicyPenalty,
-						},
-					});
-					return res.json(tasks.frictionlessManager.sendImageCaptcha(tokenId));
+					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
+						imageCaptchaConfigResolver.accessRule,
+						baseBotScore,
+						botScore,
+						tokenId,
+					);
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+					);
 				}
 
 				// If the bot score is greater than the threshold, send an image captcha
@@ -573,10 +528,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				}
 
 				// Otherwise, send a PoW captcha
-				const response =
-					await tasks.frictionlessManager.sendPowCaptcha(tokenId);
-
-				return res.json(response);
+				return res.json(
+					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+				);
 			} catch (err) {
 				tasks.logger.error("Error in frictionless captcha challenge:", err);
 				return next(
