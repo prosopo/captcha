@@ -12,7 +12,6 @@ runs:
           mkdir -p ~/.cache/Cypress
 
       - name: Save npm cache
-        shell: bash
         uses: actions/cache/save@v4
         with:
             path: |
