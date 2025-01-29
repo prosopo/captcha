@@ -43,7 +43,7 @@ describe("Image Captcha Integration Tests", () => {
 	});
 
 	describe("GetImageCaptchaChallenge", () => {
-		it.only("should supply an image captcha challenge to a Dapp User", async () => {
+		it("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
@@ -51,11 +51,7 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-			console.log(
-				"\n Requesting image captcha with site key: ",
-				dappAccount,
-				"\n",
-			);
+
 			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(getImgCaptchaBody),
