@@ -44,7 +44,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
-              uses: ./.github/actions/print_contexts
+              uses: ./.github/actions/print_contexts@main
               with:
                 INPUTS_CONTEXT: ${{ toJson(inputs) }}
                 NEEDS_CONTEXT: ${{ toJson(needs) }}
