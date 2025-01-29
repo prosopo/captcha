@@ -24,7 +24,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
-              uses: prosopo/captcha/.github/actions/print_contexts@main
+              uses: prosopo/captcha/.github/actions/print_contexts@gha
               with:
                 INPUTS_CONTEXT: ${{ toJson(inputs) }}
                 NEEDS_CONTEXT: ${{ toJson(needs) }}
