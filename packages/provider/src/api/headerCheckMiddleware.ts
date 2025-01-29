@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { validateAddress } from "@polkadot/util-crypto/address";
+import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
@@ -27,6 +30,26 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 			if (!dapp) {
 				unauthorised(res);
 				return;
+			}
+
+			try {
+				validateAddress(dapp, false, 42);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("API.INVALID_SITE_KEY", {
+						context: { code: 400, error: err, siteKey: dapp },
+					}),
+				);
+			}
+
+			try {
+				validateAddress(user, false, 42);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("API.INVALID_SITE_KEY", {
+						context: { code: 400, error: err, siteKey: dapp },
+					}),
+				);
 			}
 
 			next();

@@ -14,6 +14,7 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, getLoggerDefault } from "@prosopo/common";
+import type { TranslationKey } from "@prosopo/locale";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -47,7 +48,7 @@ export class CaptchaManager {
 		sessionId?: string,
 	): Promise<{
 		valid: boolean;
-		reason?: string;
+		reason?: TranslationKey;
 		frictionlessTokenId?: FrictionlessTokenId;
 		type: CaptchaType;
 	}> {
@@ -65,9 +66,14 @@ export class CaptchaManager {
 		) {
 			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
 			if (!sessionRecord) {
+				this.logger.warn({
+					message: "No frictionless session found",
+					account: clientSettings.account,
+					sessionId: sessionId,
+				});
 				return {
 					valid: false,
-					reason: `Session ${sessionId} not found`,
+					reason: "CAPTCHA.NO_SESSION_FOUND",
 					type: captchaType,
 				};
 			}
@@ -87,7 +93,10 @@ export class CaptchaManager {
 			clientSettings?.settings?.captchaType !== CaptchaType.frictionless
 		) {
 			this.logger.warn({
-				message: `Client ${clientSettings.account} requested frictionless captcha with sessionId ${sessionId} but client settings specify ${clientSettings?.settings?.captchaType}`,
+				message: "Invalid frictionless request",
+				account: clientSettings.account,
+				sessionId: sessionId,
+				settingsCaptchaType: clientSettings?.settings?.captchaType,
 			});
 			return {
 				valid: false,
@@ -101,7 +110,10 @@ export class CaptchaManager {
 		// client must have `captchaType` set to `image` in their settings.
 		if (clientSettings?.settings?.captchaType !== captchaType) {
 			this.logger.warn({
-				message: `Client ${clientSettings.account} requested captcha type ${captchaType} but client settings specify ${clientSettings?.settings?.captchaType}`,
+				message: `Invalid ${captchaType} request`,
+				account: clientSettings.account,
+				requestedCaptchaType: captchaType,
+				settingsCaptchaType: clientSettings?.settings?.captchaType,
 			});
 			return {
 				valid: false,

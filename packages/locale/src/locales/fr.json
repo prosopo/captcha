@@ -92,6 +92,7 @@
 		"INVALID_CAPTCHA_CHALLENGE": "Défi captcha invalide",
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Solution utilisateur Dapp non trouvée",
 		"NO_CAPTCHA": "Aucun captcha trouvé",
+		"NO_SESSION_FOUND": "Aucune session trouvée",
 		"INVALID_TOKEN": "Jeton invalide",
 		"INVALID_SOLUTION": "Solution invalide"
 	},
