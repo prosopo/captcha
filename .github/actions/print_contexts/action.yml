@@ -38,34 +38,42 @@ runs:
             cat <<'EOF'
             ${{ inputs.VARS_CONTEXT }}
             EOF
+            
             echo "**** job ****"
             cat <<'EOF'
             ${{ toJson(job) }}
             EOF
+            
             echo "**** runner ****"
             cat <<'EOF'
             ${{ toJson(runner) }}
             EOF
+            
             echo "**** secrets ****"
             cat <<'EOF'
             ${{ inputs.SECRETS_CONTEXT }}
             EOF
+            
             echo "**** strategy ****"
             cat <<'EOF'
             ${{ toJson(strategy) }}
             EOF
+            
             echo "**** matrix ****"
             cat <<'EOF'
             ${{ toJson(matrix)}}
             EOF
+            
             echo "**** needs ****"
             cat <<'EOF'
             ${{ inputs.NEEDS_CONTEXT }}
             EOF
+            
             echo "**** inputs ****"
             cat <<'EOF'
             ${{ inputs.INPUTS_CONTEXT }}
             EOF
+            
             echo "**** steps ****"
             cat <<'EOF'
             ${{ inputs.STEPS_CONTEXT }}
