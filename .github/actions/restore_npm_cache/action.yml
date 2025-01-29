@@ -1,0 +1,30 @@
+name: "restore_npm_cache"
+
+runs:
+    using: "composite"
+    steps:
+
+      # dirs must exist before cache restore
+      - name: Make dirs
+        shell: bash
+        run: |
+          mkdir -p ~/.npm
+          mkdir -p ~/.cache/Cypress
+
+      - name: Restore cache
+        shell: bash
+        if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
+        uses: actions/cache/restore@v4
+        with:
+            # must restore all cache dirs, and they must exist ahead of this!
+            path: |
+                ~/.npm
+                ~/.cache/Cypress
+            # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+            # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+            # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+            # we're hashing all package lock json files to create a unique cache key
+            # thus if you install new deps / update a package lock, the cache will be invalidated and a new cache will be created
+            key: some-unused-cache-key
+            restore-keys: |
+                npm-${{ runner.os }}-${{ runner.arch }}-
