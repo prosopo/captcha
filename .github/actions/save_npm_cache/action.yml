@@ -9,6 +9,7 @@ runs:
         shell: bash
         run: |
           mkdir -p ~/.npm
+          mkdir -p ~/.cache/Cypress
 
       - name: Save npm cache
         shell: bash
@@ -16,6 +17,7 @@ runs:
         with:
             path: |
               ~/.npm
+              ~/.cache/Cypress
             key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Cleanup npm caches
