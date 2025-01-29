@@ -58,40 +58,36 @@ export class CaptchaManager {
 			sessionId,
 		});
 
+		// Session ID
+
 		// If the client has a sessionId then they are requesting a frictionless captcha. Pass over if the client
 		// settings do not specify frictionless.
-		if (
-			sessionId &&
-			clientSettings?.settings?.captchaType === CaptchaType.frictionless
-		) {
-			const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
-			if (!sessionRecord) {
-				this.logger.warn({
-					message: "No frictionless session found",
-					account: clientSettings.account,
-					sessionId: sessionId,
-				});
+		if (sessionId) {
+			if (clientSettings?.settings?.captchaType === CaptchaType.frictionless) {
+				const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
+				if (!sessionRecord) {
+					this.logger.warn({
+						message: "No frictionless session found",
+						account: clientSettings.account,
+						sessionId: sessionId,
+					});
+					return {
+						valid: false,
+						reason: "CAPTCHA.NO_SESSION_FOUND", // TODO re-instate the crazy typescript nested generics stuff
+						type: captchaType,
+					};
+				}
+				const frictionlessTokenId =
+					await this.getFrictionlessTokenIdFromSession(sessionRecord);
 				return {
-					valid: false,
-					reason: "CAPTCHA.NO_SESSION_FOUND",
+					valid: true,
+					frictionlessTokenId,
 					type: captchaType,
 				};
 			}
-			const frictionlessTokenId =
-				await this.getFrictionlessTokenIdFromSession(sessionRecord);
-			return {
-				valid: true,
-				frictionlessTokenId,
-				type: captchaType,
-			};
-		}
 
-		// If the user somehow has a sessionId but the client settings do not specify frictionless then the request is
-		// invalid. This could occur if the client settings were changed after the user received a sessionId.
-		if (
-			sessionId &&
-			clientSettings?.settings?.captchaType !== CaptchaType.frictionless
-		) {
+			// If the user somehow has a sessionId but the client settings do not specify frictionless then the request is
+			// invalid. This could occur if the client settings were changed after the user received a sessionId.
 			this.logger.warn({
 				message: "Invalid frictionless request",
 				account: clientSettings.account,
@@ -105,9 +101,12 @@ export class CaptchaManager {
 			};
 		}
 
-		// We have already checked frictionless above so to pass here a user must be requesting the captchaType that
-		// is stored on the client's settings. e.g. if `captchaType` is `image` and there is no `sessionId` then the
-		// client must have `captchaType` set to `image` in their settings.
+		// No Session ID
+
+		// To pass here a user must be requesting the captchaType that is stored on the client's settings. e.g. if
+		// `captchaType` is `image` and there is no `sessionId` then the client must have `captchaType` set to `image`
+		// in their settings. If the user is at the start of the frictionless flow then they will have no sessionId.
+		// The client settings must specify frictionless for the request to be valid.
 		if (clientSettings?.settings?.captchaType !== captchaType) {
 			this.logger.warn({
 				message: `Invalid ${captchaType} request`,
