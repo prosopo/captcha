@@ -117,7 +117,6 @@ describe("Image Captcha Integration Tests", () => {
 			});
 
 			const data = (await response.json()) as CaptchaResponseBody;
-			console.log(data);
 			expect(response.status).toBe(400);
 			expect(data).toHaveProperty("error");
 			expect(data.error?.message).toBe("Invalid site key");
