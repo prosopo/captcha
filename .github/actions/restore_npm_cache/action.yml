@@ -12,7 +12,6 @@ runs:
           mkdir -p ~/.cache/Cypress
 
       - name: Restore cache
-        shell: bash
         if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
         uses: actions/cache/restore@v4
         with:
