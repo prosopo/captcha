@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto/address";
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
@@ -45,6 +44,7 @@ import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
+import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -95,19 +95,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		const { datasetId, user, dapp, sessionId } = parsed;
 
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {
@@ -136,7 +127,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError(reason || "API.BAD_REQUEST", {
 						context: {
-							error: reason,
 							code: 400,
 							siteKey: dapp,
 							user,
@@ -208,19 +198,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		const { user, dapp } = parsed;
 
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
 
 			if (!clientRecord) {
@@ -282,19 +263,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		}
 
 		const { user, dapp, sessionId } = parsed;
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientSettings = await tasks.db.getClientRecord(dapp);
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -317,7 +290,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError(reason || "API.BAD_REQUEST", {
 						context: {
-							error: reason,
 							code: 400,
 							siteKey: dapp,
 							user,
@@ -422,19 +394,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			user,
 		} = parsed;
 
-		try {
-			validateAddress(dapp, false, 42);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("API.INVALID_SITE_KEY", {
-					context: { code: 400, error: err, siteKey: dapp },
-				}),
-			);
-		}
+		validiateSiteKey(dapp);
+		validateAddr(user);
 
 		try {
-			validateAddress(user, false, 42);
-
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 
 			if (!clientRecord) {

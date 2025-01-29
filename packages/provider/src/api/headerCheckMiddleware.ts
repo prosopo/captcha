@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto/address";
-import { ProsopoApiError } from "@prosopo/common";
+import { handleErrors } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
+import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
@@ -32,29 +32,13 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 				return;
 			}
 
-			try {
-				validateAddress(dapp, false, 42);
-			} catch (err) {
-				return next(
-					new ProsopoApiError("API.INVALID_SITE_KEY", {
-						context: { code: 400, error: err, siteKey: dapp },
-					}),
-				);
-			}
+			validiateSiteKey(dapp);
 
-			try {
-				validateAddress(user, false, 42);
-			} catch (err) {
-				return next(
-					new ProsopoApiError("API.INVALID_SITE_KEY", {
-						context: { code: 400, error: err, siteKey: dapp },
-					}),
-				);
-			}
+			validateAddr(user);
 
 			next();
 		} catch (err) {
-			unauthorised(res);
+			return handleErrors(err as Error, req, res, next);
 		}
 	};
 };

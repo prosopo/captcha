@@ -408,7 +408,8 @@ describe("PoW Integration Tests", () => {
 		);
 		const userAccount = userPair.address;
 		const origin = "http://localhost";
-		const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+		// Create a new site key to avoid conflicts with other tests
+		const [mnemonic, dapp] = await generateMnemonic();
 		await registerSiteKey(dapp, CaptchaType.frictionless);
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {

@@ -24,6 +24,7 @@ export const handleErrors = (
 ) => {
 	const { code, statusMessage, jsonError } = unwrapError(err);
 	response.statusMessage = statusMessage;
+	console.log("setting headers");
 	response.set("content-type", "application/json");
 	response.status(code);
 	response.send({ error: jsonError });

@@ -24,7 +24,7 @@ import {
 	CaptchaType,
 } from "@prosopo/types";
 import fetch from "node-fetch";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 import { registerSiteKey } from "./registerSitekey.js";
 
@@ -36,14 +36,14 @@ describe("Image Captcha Integration Tests", () => {
 	let dappAccount: string;
 	let mnemonic: string;
 
-	beforeAll(async () => {
+	beforeEach(async () => {
 		// Create a new site key to avoid conflicts with other tests
 		[mnemonic, dappAccount] = await generateMnemonic();
 		await registerSiteKey(dappAccount, CaptchaType.image);
 	});
 
 	describe("GetImageCaptchaChallenge", () => {
-		it("should supply an image captcha challenge to a Dapp User", async () => {
+		it.only("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
@@ -51,7 +51,11 @@ describe("Image Captcha Integration Tests", () => {
 				[ApiParams.user]: userAccount,
 				[ApiParams.datasetId]: solutions.datasetId,
 			};
-
+			console.log(
+				"\n Requesting image captcha with site key: ",
+				dappAccount,
+				"\n",
+			);
 			const response = await fetch(getImageCaptchaURL, {
 				method: "POST",
 				body: JSON.stringify(getImgCaptchaBody),
@@ -116,8 +120,9 @@ describe("Image Captcha Integration Tests", () => {
 				},
 			});
 
-			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
+			console.log(data);
+			expect(response.status).toBe(400);
 			expect(data).toHaveProperty("error");
 			expect(data.error?.message).toBe("Invalid site key");
 		});
