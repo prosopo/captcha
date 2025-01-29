@@ -27,7 +27,7 @@ jobs:
         steps:
             - name: Print contexts
               uses: ./.github/actions/print_contexts
-                with:
+              with:
                 INPUTS_CONTEXT: ${{ toJson(inputs) }}
                 NEEDS_CONTEXT: ${{ toJson(needs) }}
                 VARS_CONTEXT: ${{ toJson(vars) }}
