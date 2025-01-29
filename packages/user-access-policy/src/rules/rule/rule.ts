@@ -22,6 +22,7 @@ interface Rule {
 	userIp?: RuleIp;
 	userId?: string;
 	config?: RuleConfig;
+	score?: number;
 }
 
 export type { Rule };

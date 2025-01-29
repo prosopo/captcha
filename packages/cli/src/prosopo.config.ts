@@ -16,6 +16,7 @@ import { getLogLevel } from "@prosopo/common";
 import {
 	DatabaseTypes,
 	EnvironmentTypesSchema,
+	FrictionlessPenalties,
 	type ProsopoCaptchaCountConfigSchemaInput,
 	type ProsopoCaptchaSolutionConfigSchema,
 	type ProsopoConfigInput,
@@ -92,7 +93,10 @@ export default function getConfig(
 		},
 		captchaSolutions: captchaSolutionsConfig,
 		captchas: captchaServeConfig,
-		devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === "true",
+		penalties: FrictionlessPenalties.parse({
+			PENALTY_OLD_TIMESTAMP: process.env.PENALTY_OLD_TIMESTAMP,
+			PENALTY_ACCESS_RULE: process.env.PENALTY_ACCESS_RULE,
+		}),
 		mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || "",
 		mongoClientUri: process.env.PROSOPO_MONGO_CLIENT_URI || "",

@@ -43,6 +43,7 @@ const ruleMongooseSchema = new Schema<Rule>({
 		type: configMongooseSchema,
 		required: false,
 	},
+	score: { type: Number, required: false },
 });
 
 export { ruleMongooseSchema };
