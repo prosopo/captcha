@@ -31,4 +31,6 @@ export interface ProcaptchaProps {
 	// optional set of callbacks for various captcha events
 	callbacks?: Partial<ProcaptchaCallbacks>;
 	frictionlessState?: FrictionlessState;
+	// display an error message
+	errorMessage?: string;
 }
