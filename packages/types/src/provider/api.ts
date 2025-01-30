@@ -53,6 +53,7 @@ import {
 	RequestHashSignatureSchema,
 	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
+import {CaptchaType} from "../config/index.js";
 
 export const ApiPrefix = "/v1/prosopo" as const;
 
@@ -248,7 +249,7 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
 	[ApiParams.sessionId]?: string;
 }
 

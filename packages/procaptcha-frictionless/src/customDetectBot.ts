@@ -21,10 +21,11 @@ import type {
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
+import {BotDetectionFunctionResult} from "@prosopo/types";
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
-) => {
+): Promise<BotDetectionFunctionResult> => {
 	const detect = await DetectorLoader();
 	const botScore: { token: string } = await detect();
 	const ext = new (await ExtensionLoader(config.web2))();

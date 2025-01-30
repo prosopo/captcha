@@ -19,7 +19,7 @@ import type {
 	RandomProvider,
 } from "../provider/api.js";
 
-type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
+export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	provider: RandomProvider;
 	userAccount: Account;
 };

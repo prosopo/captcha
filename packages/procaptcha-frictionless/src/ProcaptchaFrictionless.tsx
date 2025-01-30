@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { providerRetry } from "@prosopo/procaptcha-common";
+import {getDefaultEvents, providerRetry} from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
@@ -57,6 +57,7 @@ export const ProcaptchaFrictionless = ({
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
+	const events = getDefaultEvents(callbacks);
 	const [componentToRender, setComponentToRender] = useState(
 		renderPlaceholder({
 			config,
@@ -84,7 +85,7 @@ export const ProcaptchaFrictionless = ({
 	const restartComponentTimeout = () => {
 		setTimeout(() => {
 			resetState(0);
-			callbacks.onReset();
+			events.();
 			// `restart` frictionless widget after 10 seconds
 			restart();
 		}, 10000);
