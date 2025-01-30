@@ -54,11 +54,14 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 		return this._web2;
 	}
 
-	public async getCaptchaChallenge(): Promise<CaptchaResponseBody> {
+	public async getCaptchaChallenge(
+		sessionId?: string,
+	): Promise<CaptchaResponseBody> {
 		try {
 			const captchaChallenge = await this.providerApi.getCaptchaChallenge(
 				this.userAccount,
 				this.provider,
+				sessionId,
 			);
 
 			if (captchaChallenge[ApiParams.error]) {

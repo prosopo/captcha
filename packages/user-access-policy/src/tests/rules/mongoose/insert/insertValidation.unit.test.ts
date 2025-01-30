@@ -34,6 +34,8 @@ describe("recordValidation", async () => {
 		model = mongoConnection.model(
 			"UserAccessPolicyRules",
 			getRuleMongooseSchema(),
+			undefined,
+			{ overwriteModels: true },
 		);
 
 		await model.syncIndexes();
