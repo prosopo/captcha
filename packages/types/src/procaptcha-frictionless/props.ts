@@ -32,5 +32,7 @@ export type BotDetectionFunction = (
  * The props for the Procaptcha Frictionless component.
  */
 export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
+	restart: () => void;
 	detectBot?: BotDetectionFunction;
+	detectBotConfig?: ProcaptchaClientConfigOutput;
 }

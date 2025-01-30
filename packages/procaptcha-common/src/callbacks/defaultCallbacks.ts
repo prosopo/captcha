@@ -13,10 +13,11 @@
 // limitations under the License.
 import {
 	ApiParams,
+	type Callbacks,
 	type ProcaptchaRenderOptions,
 	type ProcaptchaToken,
 } from "@prosopo/types";
-import { getParentForm } from "./form.js";
+import { getParentForm, removeProcaptchaResponse } from "../elements/form.js";
 
 export const getWindowCallback = (callbackName: string) => {
 	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
@@ -29,22 +30,14 @@ export const getWindowCallback = (callbackName: string) => {
 	return fn;
 };
 
-export interface Callbacks {
-	onHuman: (token: ProcaptchaToken) => void;
-	onChallengeExpired: () => void;
-	onExpired: () => void;
-	onError: (error: Error) => void;
-	onClose: () => void;
-	onOpen: () => void;
-	onFailed: () => void;
-	onReset: () => void;
-}
-
 export const getDefaultCallbacks = (element: Element): Callbacks => ({
 	onHuman: (token: ProcaptchaToken) => handleOnHuman(element, token),
 	onChallengeExpired: () => {
 		removeProcaptchaResponse();
 		console.log("Challenge expired");
+	},
+	onExtensionNotFound: () => {
+		console.error("Extension not found");
 	},
 	onExpired: () => {
 		removeProcaptchaResponse();
@@ -66,6 +59,9 @@ export const getDefaultCallbacks = (element: Element): Callbacks => ({
 	onReset: () => {
 		removeProcaptchaResponse();
 		console.log("Captcha widget reset");
+	},
+	onReload: () => {
+		console.log("Challenge reloaded");
 	},
 });
 
@@ -206,11 +202,4 @@ const handleOnHuman = (element: Element, token: ProcaptchaToken) => {
 	input.name = ApiParams.procaptchaResponse;
 	input.value = token;
 	form.appendChild(input);
-};
-
-const removeProcaptchaResponse = () => {
-	const element = Array.from(
-		document.getElementsByName(ApiParams.procaptchaResponse),
-	);
-	element.map((el) => el.remove());
 };

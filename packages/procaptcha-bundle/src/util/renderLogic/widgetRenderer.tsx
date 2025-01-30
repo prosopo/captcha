@@ -11,19 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import createCache, { type EmotionCache } from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
+import {
+	getDefaultCallbacks,
+	setUserCallbacks,
+} from "@prosopo/procaptcha-common";
 import type {
+	Callbacks,
 	ProcaptchaClientConfigOutput,
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
 import type { FeaturesEnum } from "@prosopo/types";
 import { type Root, createRoot } from "react-dom/client";
-import {
-	type Callbacks,
-	getDefaultCallbacks,
-	setUserCallbacks,
-} from "../defaultCallbacks.js";
 import { setLanguage } from "../language.js";
 import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";

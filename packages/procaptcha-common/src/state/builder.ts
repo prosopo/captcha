@@ -80,6 +80,7 @@ export const useProcaptcha = (
 	const [sendData, setSendData] = useState(false);
 	const [attemptCount, setAttemptCount] = useState(0);
 	const [error, setError] = useState<string | undefined>(undefined);
+	const [sessionId, setSessionId] = useState<string | undefined>(undefined);
 	return [
 		// the state
 		{
@@ -98,6 +99,7 @@ export const useProcaptcha = (
 			sendData,
 			attemptCount,
 			error,
+			sessionId,
 		},
 		// and method to update the state
 		(nextState: Partial<ProcaptchaState>) => {
@@ -125,6 +127,7 @@ export const useProcaptcha = (
 			if (nextState.attemptCount !== undefined)
 				setAttemptCount(nextState.attemptCount);
 			if (nextState.error !== undefined) setError(nextState.error);
+			if (nextState.sessionId !== undefined) setSessionId(nextState.sessionId);
 		},
 	];
 };

@@ -12,7 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./providers.js";
-export * from "./state/builder.js";
-export * from "./callbacks/defaultCallbacks.js";
-export * from "./extensionLoader.js";
+import { ApiParams } from "@prosopo/types";
+
+export const getParentForm = (element: Element): HTMLFormElement | null =>
+	element.closest("form") as HTMLFormElement;
+
+export const removeProcaptchaResponse = () => {
+	const element = Array.from(
+		document.getElementsByName(ApiParams.procaptchaResponse),
+	);
+	element.map((el) => el.remove());
+};

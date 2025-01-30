@@ -12,66 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
-import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
-import {
-	getRandomActiveProvider,
-	providerRetry,
-} from "@prosopo/procaptcha-common";
+import { providerRetry } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
-	type BotDetectionFunction,
 	type FrictionlessState,
-	type ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
 	type ProcaptchaProps,
 } from "@prosopo/types";
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
-import { useEffect, useState, useRef } from "react";
-
-const DetectorLoader = async () => (await import("@prosopo/detector")).default;
-const ExtensionLoader = async (web2: boolean) =>
-	web2
-		? (await import("@prosopo/account")).ExtensionWeb2
-		: (await import("@prosopo/account")).ExtensionWeb3;
-
-const customDetectBot: BotDetectionFunction = async (
-	config: ProcaptchaClientConfigOutput,
-) => {
-	const detect = await DetectorLoader();
-	const botScore: { token: string } = await detect();
-	const ext = new (await ExtensionLoader(config.web2))();
-	const userAccount = await ext.getAccount(config);
-
-	if (!config.account.address) {
-		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
-	}
-
-	// Get random active provider
-	const provider = await getRandomActiveProvider(config);
-	const providerApi = new ProviderApi(
-		provider.provider.url,
-		config.account.address,
-	);
-
-	const captcha = await providerApi.getFrictionlessCaptcha(
-		botScore.token,
-		config.account.address,
-		userAccount.account.address,
-	);
-
-	return {
-		captchaType: captcha.captchaType,
-		sessionId: captcha.sessionId,
-		provider: provider,
-		status: captcha.status,
-		userAccount: userAccount,
-		error: captcha.error,
-	};
-};
+import { useEffect, useRef, useState } from "react";
+import customDetectBot from "./customDetectBot.js";
 
 const renderPlaceholder = ({
 	config,
@@ -91,54 +43,77 @@ type FrictionlessLoadingState = {
 	errorMessage?: string;
 };
 
-const defaultLoadingState = (attemptCount: number): FrictionlessLoadingState => ({
+const defaultLoadingState = (
+	attemptCount: number,
+): FrictionlessLoadingState => ({
 	loading: false,
-	attemptCount: 0,
+	attemptCount: attemptCount || 0,
 });
 
 export const ProcaptchaFrictionless = ({
 	config,
 	callbacks,
+	restart,
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
-	const state = useRef(defaultLoadingState(0));
+	const stateRef = useRef(defaultLoadingState(0));
 	const [componentToRender, setComponentToRender] = useState(
-		renderPlaceholder({ config, callbacks, errorMessage: state.errorMessage }),
+		renderPlaceholder({
+			config,
+			callbacks,
+			errorMessage: stateRef.current.errorMessage,
+		}),
 	);
-	const attemptCountRef = useRef(0);
 
-	const resetState = () => {
-		state.current = defaultLoadingState(state.current.attemptCount);
-		callbacks?.onReset ? callbacks.onReset() : undefined;
+	const resetState = (attemptCount?: number) => {
+		stateRef.current = defaultLoadingState(
+			attemptCount || stateRef.current.attemptCount,
+		);
 	};
 
-	const fallOverWithStyle = () => {
+	const fallOverWithStyle = (errorMessage?: string) => {
 		setComponentToRender(
-			renderPlaceholder({ config, callbacks, errorMessage: "asdfasdf im an error" }),
+			renderPlaceholder({
+				config,
+				callbacks,
+				errorMessage: errorMessage || "Cannot load CAPTCHA",
+			}),
 		);
+	};
+
+	const restartComponentTimeout = () => {
+		setTimeout(() => {
+			resetState(0);
+			callbacks.onReset();
+			// `restart` frictionless widget after 10 seconds
+			restart();
+		}, 10000);
 	};
 
 	const start = async () => {
 		await providerRetry(
 			async () => {
-				attemptCountRef.current += 1;
+				stateRef.current.attemptCount += 1;
 
 				const configOutput = ProcaptchaConfigSchema.parse(config);
 				const result = await detectBot(configOutput);
 
 				if (result.error?.message) {
-					state.current = {
-						...state.current,
+					stateRef.current = {
+						...stateRef.current,
 						loading: false,
 						errorMessage: result.error?.message,
 					};
-					throw new Error(result.error?.message);
+					callbacks.onError(new Error(result.error?.message));
+					fallOverWithStyle(result.error?.message);
+					return;
 				}
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,
 					sessionId: result.sessionId,
 					userAccount: result.userAccount,
+					restart, // Pass restart function
 				};
 
 				if (result.captchaType === "image") {
@@ -158,19 +133,20 @@ export const ProcaptchaFrictionless = ({
 						/>,
 					);
 
-						state.current = {
-						...state.current,
+					stateRef.current = {
+						...stateRef.current,
 						loading: false,
 					};
 				}
 			},
 			start,
 			resetState,
-			attemptCountRef.current,
+			stateRef.current.attemptCount,
 			5,
 		).finally(() => {
-			if (attemptCountRef.current >= 5) {
+			if (stateRef.current.attemptCount >= 5) {
 				fallOverWithStyle();
+				restartComponentTimeout();
 			}
 		});
 	};
