@@ -24,7 +24,7 @@ import {
 	CaptchaType,
 } from "@prosopo/types";
 import fetch from "node-fetch";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 import { registerSiteKey } from "./registerSitekey.js";
 
@@ -36,7 +36,7 @@ describe("Image Captcha Integration Tests", () => {
 	let dappAccount: string;
 	let mnemonic: string;
 
-	beforeAll(async () => {
+	beforeEach(async () => {
 		// Create a new site key to avoid conflicts with other tests
 		[mnemonic, dappAccount] = await generateMnemonic();
 		await registerSiteKey(dappAccount, CaptchaType.image);
@@ -116,8 +116,8 @@ describe("Image Captcha Integration Tests", () => {
 				},
 			});
 
-			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
+			expect(response.status).toBe(400);
 			expect(data).toHaveProperty("error");
 			expect(data.error?.message).toBe("Invalid site key");
 		});
@@ -144,7 +144,60 @@ describe("Image Captcha Integration Tests", () => {
 
 			expect(response.status).toBe(500);
 		});
+		it("should return an error if the captcha type is set to pow", async () => {
+			const origin = "http://localhost";
+			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			await registerSiteKey(dappAccount, CaptchaType.pow);
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
+			const response = await fetch(getImageCaptchaURL, {
+				method: "POST",
+				body: JSON.stringify(body),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
+				},
+			});
+
+			expect(response.status).toBe(400);
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(data).toHaveProperty("error");
+			expect(data.error?.message).toBe("Incorrect CAPTCHA type");
+			expect(data.error?.code).toBe(400);
+		});
 	});
+	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
+		const origin = "http://localhost";
+		const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+		await registerSiteKey(dappAccount, CaptchaType.frictionless);
+		const body: CaptchaRequestBodyType = {
+			[ApiParams.dapp]: dappAccount,
+			[ApiParams.user]: userAccount,
+			[ApiParams.datasetId]: solutions.datasetId,
+		};
+		const response = await fetch(getImageCaptchaURL, {
+			method: "POST",
+			body: JSON.stringify(body),
+			headers: {
+				"Content-Type": "application/json",
+				Origin: origin,
+				"Prosopo-Site-Key": dappAccount,
+				"Prosopo-User": userAccount,
+			},
+		});
+
+		expect(response.status).toBe(400);
+		const data = (await response.json()) as CaptchaResponseBody;
+		expect(data).toHaveProperty("error");
+		expect(data.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(data.error?.code).toBe(400);
+	});
+
 	describe("SubmitImageCaptchaSolution", () => {
 		it("should verify a correctly completed image captcha as true", async () => {
 			const pair = await getPairAsync(

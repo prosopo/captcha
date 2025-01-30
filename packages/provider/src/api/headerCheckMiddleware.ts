@@ -11,8 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { handleErrors } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
+import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
@@ -29,9 +32,13 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 				return;
 			}
 
+			validiateSiteKey(dapp);
+
+			validateAddr(user);
+
 			next();
 		} catch (err) {
-			unauthorised(res);
+			return handleErrors(err as Error, req, res, next);
 		}
 	};
 };
