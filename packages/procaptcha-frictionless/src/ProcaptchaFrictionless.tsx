@@ -167,9 +167,9 @@ export const ProcaptchaFrictionless = ({
 			start,
 			resetState,
 			attemptCountRef.current,
-			2,
+			5,
 		).finally(() => {
-			if (state.current.attemptCount >= 2) {
+			if (attemptCountRef.current >= 5) {
 				fallOverWithStyle();
 			}
 		});
