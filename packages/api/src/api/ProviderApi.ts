@@ -59,6 +59,7 @@ export default class ProviderApi
 	public getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
+		sessionId?: string,
 	): Promise<CaptchaResponseBody> {
 		const { provider } = randomProvider;
 		const dappAccount = this.account;
@@ -67,6 +68,9 @@ export default class ProviderApi
 			[ApiParams.user]: userAccount,
 			[ApiParams.datasetId]: provider.datasetId,
 		};
+		if (sessionId) {
+			body[ApiParams.sessionId] = sessionId;
+		}
 		return this.post(ApiPaths.GetImageCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,

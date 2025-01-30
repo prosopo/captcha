@@ -12,9 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import { type ProsopoConfigOutput, ScheduledTaskStatus } from "@prosopo/types";
 import { Environment } from "./env.js";
 
 export class ProviderEnvironment extends Environment {
 	declare config: ProsopoConfigOutput;
+
+	cleanup(): void {
+		this.getDb()
+			.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
+			.catch((err) => {
+				this.logger.error("Failed to cleanup scheduled tasks", err);
+			});
+	}
 }
