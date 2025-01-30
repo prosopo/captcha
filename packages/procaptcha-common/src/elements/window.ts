@@ -11,3 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+export const getWindowCallback = (callbackName: string) => {
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
+	const fn = (window as any)[callbackName.replace("window.", "")];
+	if (typeof fn !== "function") {
+		throw new Error(
+			`Callback ${callbackName} is not defined on the window object`,
+		);
+	}
+	return fn;
+};

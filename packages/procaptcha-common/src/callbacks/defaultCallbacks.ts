@@ -18,17 +18,7 @@ import {
 	type ProcaptchaToken,
 } from "@prosopo/types";
 import { getParentForm, removeProcaptchaResponse } from "../elements/form.js";
-
-export const getWindowCallback = (callbackName: string) => {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-	const fn = (window as any)[callbackName.replace("window.", "")];
-	if (typeof fn !== "function") {
-		throw new Error(
-			`Callback ${callbackName} is not defined on the window object`,
-		);
-	}
-	return fn;
-};
+import { getWindowCallback } from "../elements/window.js";
 
 export const getDefaultCallbacks = (element?: Element): Callbacks => ({
 	onHuman: (token: ProcaptchaToken) => handleOnHuman(token, element),
