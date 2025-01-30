@@ -14,7 +14,6 @@
 
 import { randomAsHex } from "@polkadot/util-crypto/random";
 import { stringToHex } from "@polkadot/util/string";
-import type { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import {
 	ProsopoDatasetError,
@@ -27,6 +26,7 @@ import {
 	getRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -34,6 +34,7 @@ import {
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type FrictionlessState,
+	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
@@ -68,10 +69,10 @@ export function Manager(
 	configOptional: ProcaptchaClientConfigOutput,
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
-	callbacks: Callbacks,
+	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
 ) {
-	const events = callbacks;
+	const events = getDefaultEvents(callbacks);
 
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);

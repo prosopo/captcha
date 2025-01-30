@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Callbacks } from "@prosopo/types";
+import type { ProcaptchaCallbacks } from "@prosopo/types";
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
 import { type LazyExoticComponent, Suspense, lazy } from "react";
 import type { ReactElement } from "react";
@@ -20,7 +20,7 @@ import type { ReactElement } from "react";
 //https://github.com/microsoft/TypeScript/issues/42873
 const ProcaptchaWidget: LazyExoticComponent<
 	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	(props: any, callbacks: Callbacks) => ReactElement
+	(props: any, callbacks: ProcaptchaCallbacks) => ReactElement
 > = lazy(async () => import("./ProcaptchaWidget.js"));
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
 

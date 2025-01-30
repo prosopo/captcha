@@ -30,8 +30,8 @@ export const getWindowCallback = (callbackName: string) => {
 	return fn;
 };
 
-export const getDefaultCallbacks = (element: Element): Callbacks => ({
-	onHuman: (token: ProcaptchaToken) => handleOnHuman(element, token),
+export const getDefaultCallbacks = (element?: Element): Callbacks => ({
+	onHuman: (token: ProcaptchaToken) => handleOnHuman(token, element),
 	onChallengeExpired: () => {
 		removeProcaptchaResponse();
 		console.log("Challenge expired");
@@ -101,7 +101,7 @@ export function setUserCallbacks(
 	if (humanCallback) {
 		// wrap the user's callback in a function that also calls handleOnHuman
 		callbacks.onHuman = (token: ProcaptchaToken) => {
-			handleOnHuman(element, token);
+			handleOnHuman(token, element);
 			humanCallback(token);
 		};
 	}
@@ -188,18 +188,20 @@ export function setUserCallbacks(
 	}
 }
 
-const handleOnHuman = (element: Element, token: ProcaptchaToken) => {
+const handleOnHuman = (token: ProcaptchaToken, element?: Element) => {
 	removeProcaptchaResponse();
-	const form = getParentForm(element);
+	if (element) {
+		const form = getParentForm(element);
 
-	if (!form) {
-		console.error("Parent form not found for the element:", element);
-		return;
+		if (!form) {
+			console.error("Parent form not found for the element:", element);
+			return;
+		}
+
+		const input = document.createElement("input");
+		input.type = "hidden";
+		input.name = ApiParams.procaptchaResponse;
+		input.value = token;
+		form.appendChild(input);
 	}
-
-	const input = document.createElement("input");
-	input.type = "hidden";
-	input.name = ApiParams.procaptchaResponse;
-	input.value = token;
-	form.appendChild(input);
 };

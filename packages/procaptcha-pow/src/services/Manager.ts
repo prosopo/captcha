@@ -21,11 +21,12 @@ import {
 	getRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
-	type Callbacks,
 	type FrictionlessState,
+	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
 	type ProcaptchaState,
@@ -39,10 +40,10 @@ export const Manager = (
 	configInput: ProcaptchaClientConfigInput,
 	state: ProcaptchaState,
 	onStateUpdate: ProcaptchaStateUpdateFn,
-	callbacks: Callbacks,
+	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
 ) => {
-	const events = callbacks;
+	const events = getDefaultEvents(callbacks);
 
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {

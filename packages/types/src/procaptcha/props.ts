@@ -23,13 +23,15 @@ export type FrictionlessState = {
 	sessionId?: string;
 };
 
+export type ProcaptchaCallbacks = Partial<Callbacks>;
+
 /**
  * The props for the Procaptcha component.
  */
 export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
-	callbacks: Callbacks;
+	callbacks: ProcaptchaCallbacks;
 	frictionlessState?: FrictionlessState;
 	// display an error message
 	errorMessage?: string;
