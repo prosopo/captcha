@@ -61,7 +61,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: req.body },
+						context: { code: 400, error: err, i18n: req.i18n, body: req.body },
 					}),
 				);
 			}
@@ -137,7 +137,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
+					context: { code: 400, error: err, i18n: req.i18n, body: req.body },
 				}),
 			);
 		}

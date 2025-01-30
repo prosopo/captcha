@@ -14,7 +14,7 @@
 
 import { type TranslationKey, isClientSide } from "@prosopo/locale";
 import { loadI18next } from "@prosopo/locale-node";
-import type { i18n } from "i18next";
+import type { TFunction, i18n } from "i18next";
 import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 import type { ApiJsonError } from "./types.js";
@@ -26,7 +26,6 @@ type BaseErrorOptions<ContextType> = {
 	logLevel?: LogLevel;
 	context?: ContextType;
 	silent?: boolean;
-	i18nInstance?: typeof i18next;
 };
 
 interface BaseContextParams {
@@ -40,13 +39,12 @@ type ContractContextParams = BaseContextParams;
 type DBContextParams = BaseContextParams & { captchaId?: string[] };
 type CliContextParams = BaseContextParams;
 type DatasetContextParams = BaseContextParams;
-type ApiContextParams = BaseContextParams & { code?: number };
+type ApiContextParams = BaseContextParams & {
+	code?: number;
+	i18n?: { t: TFunction<"translation", undefined> };
+};
 
 let i18next: i18n;
-
-export const isClientSideOrFrontendVar = () => {
-	return isClientSide() || process.env.FRONTEND;
-};
 
 async function loadi18nextLocal() {
 	i18next = await loadI18next();
@@ -69,8 +67,7 @@ export abstract class ProsopoBaseError<
 	) {
 		const logger = options?.logger || getLoggerDefault();
 		const logLevel = options?.logLevel || "error";
-		const i18n = options?.i18nInstance || i18next;
-		console.log(`\nLanguage: ${i18n.language}`);
+		const i18n = options?.context?.i18n || i18next;
 		if (error instanceof Error) {
 			super(error.message);
 			this.translationKey = options?.translationKey;
@@ -212,9 +209,7 @@ export const unwrapError = (
 	const i18n = i18nInstance || i18next;
 	const code = "code" in err ? (err.code as number) : 400;
 
-	console.log(`\nLanguage: ${i18n.language}`);
-
-	let message = i18n.t(err.message);
+	let message = err.message; // should be translated already
 	let jsonError: ApiJsonError = { code, message };
 	let statusMessage = err.message;
 	jsonError.message = message;
