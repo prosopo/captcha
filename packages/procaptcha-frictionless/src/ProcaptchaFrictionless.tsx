@@ -30,7 +30,7 @@ import {
 	type ProcaptchaProps,
 } from "@prosopo/types";
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const DetectorLoader = async () => (await import("@prosopo/detector")).default;
 const ExtensionLoader = async (web2: boolean) =>
@@ -91,7 +91,7 @@ type FrictionlessLoadingState = {
 	errorMessage?: string;
 };
 
-const defaultState = (): FrictionlessLoadingState => ({
+const defaultLoadingState = (attemptCount: number): FrictionlessLoadingState => ({
 	loading: false,
 	attemptCount: 0,
 });
@@ -101,39 +101,37 @@ export const ProcaptchaFrictionless = ({
 	callbacks,
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
-	const [state, updateState] = useState(defaultState());
+	const state = useRef(defaultLoadingState(0));
 	const [componentToRender, setComponentToRender] = useState(
 		renderPlaceholder({ config, callbacks, errorMessage: state.errorMessage }),
 	);
+	const attemptCountRef = useRef(0);
 
 	const resetState = () => {
-		updateState(defaultState());
+		state.current = defaultLoadingState(state.current.attemptCount);
 		callbacks?.onReset ? callbacks.onReset() : undefined;
+	};
+
+	const fallOverWithStyle = () => {
+		setComponentToRender(
+			renderPlaceholder({ config, callbacks, errorMessage: "asdfasdf im an error" }),
+		);
 	};
 
 	const start = async () => {
 		await providerRetry(
 			async () => {
-				console.log("state.attemptCount", state.attemptCount);
-				if (state.loading) {
-					return;
-				}
-				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
-				updateState((prevState) => ({
-					...prevState,
-					loading: true,
-					attemptCount: prevState.attemptCount ? prevState.attemptCount + 1 : 1,
-				}));
-				const configOutput = ProcaptchaConfigSchema.parse(config);
+				attemptCountRef.current += 1;
 
+				const configOutput = ProcaptchaConfigSchema.parse(config);
 				const result = await detectBot(configOutput);
 
 				if (result.error?.message) {
-					updateState((prevState) => ({
-						...prevState,
+					state.current = {
+						...state.current,
 						loading: false,
 						errorMessage: result.error?.message,
-					}));
+					};
 					throw new Error(result.error?.message);
 				}
 
@@ -160,17 +158,21 @@ export const ProcaptchaFrictionless = ({
 						/>,
 					);
 
-					updateState((prevState) => ({
-						...prevState,
+						state.current = {
+						...state.current,
 						loading: false,
-					}));
+					};
 				}
 			},
 			start,
 			resetState,
-			state.attemptCount,
+			attemptCountRef.current,
 			2,
-		);
+		).finally(() => {
+			if (state.current.attemptCount >= 2) {
+				fallOverWithStyle();
+			}
+		});
 	};
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
