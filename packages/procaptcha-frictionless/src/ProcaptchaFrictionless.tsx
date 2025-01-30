@@ -30,7 +30,7 @@ import {
 	type ProcaptchaProps,
 } from "@prosopo/types";
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const DetectorLoader = async () => (await import("@prosopo/detector")).default;
 const ExtensionLoader = async (web2: boolean) =>
@@ -172,6 +172,15 @@ export const ProcaptchaFrictionless = ({
 			2,
 		);
 	};
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	useEffect(() => {
+		const detectAndSetComponent = async () => {
+			await start();
+		};
+
+		detectAndSetComponent();
+	}, [config, callbacks, detectBot, config.language]);
 
 	return componentToRender;
 };
