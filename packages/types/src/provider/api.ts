@@ -33,6 +33,7 @@ import {
 } from "zod";
 import { ApiParams } from "../api/params.js";
 import { Tier } from "../client/index.js";
+import type { CaptchaType } from "../config/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -53,7 +54,6 @@ import {
 	RequestHashSignatureSchema,
 	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
-import {CaptchaType} from "../config/index.js";
 
 export const ApiPrefix = "/v1/prosopo" as const;
 

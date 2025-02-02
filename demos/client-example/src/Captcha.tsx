@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { FormControl } from "@mui/material";
-import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
+
+import { FrictionlessCaptcha } from "@prosopo/procaptcha-bundle/components";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import type { ProcaptchaToken } from "@prosopo/types";
@@ -45,11 +45,10 @@ export function Captcha(props: CaptchProps) {
 	return (
 		<div>
 			{props.captchaType === "frictionless" ? (
-				<ProcaptchaFrictionless
-					config={config}
-					callbacks={{ onError, onHuman, onExpired, onFailed }}
-					aria-label="Frictionless captcha"
-				/>
+				new FrictionlessCaptcha({
+					config,
+					callbacks: { onError, onHuman, onExpired, onFailed },
+				}).render()
 			) : props.captchaType === "pow" ? (
 				<ProcaptchaPow
 					config={config}

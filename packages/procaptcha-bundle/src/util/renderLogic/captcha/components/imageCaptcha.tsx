@@ -1,3 +1,4 @@
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +20,9 @@ class ImageCaptcha extends CaptchaElement {
 	public override render() {
 		const { config, callbacks } = this.props;
 
-		return <Procaptcha config={config} callbacks={callbacks} />;
+		return (
+			<Procaptcha config={config} callbacks={getDefaultEvents(callbacks)} />
+		);
 	}
 }
 

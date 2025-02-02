@@ -16,6 +16,7 @@
 		"@prosopo/common": "2.3.2",
 		"@prosopo/locale-browser": "2.3.2",
 		"@prosopo/procaptcha-frictionless": "2.3.2",
+		"@prosopo/procaptcha-bundle": "2.3.2",
 		"@prosopo/procaptcha-pow": "2.3.2",
 		"@prosopo/procaptcha-react": "2.3.2",
 		"@prosopo/server": "2.3.2",

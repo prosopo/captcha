@@ -20,8 +20,8 @@ import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
 } from "@prosopo/types";
+import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
-import {BotDetectionFunctionResult} from "@prosopo/types";
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,

@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Callbacks, ProcaptchaClientConfigOutput } from "@prosopo/types";
+import type {
+	ProcaptchaCallbacks,
+	ProcaptchaClientConfigInput,
+} from "@prosopo/types";
 import React from "react";
 
 interface CaptchaProps {
-	config: ProcaptchaClientConfigOutput;
-	callbacks: Callbacks;
+	config: ProcaptchaClientConfigInput;
+	callbacks: ProcaptchaCallbacks;
 }
 
 abstract class CaptchaElement extends React.Component<CaptchaProps> {}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {getDefaultEvents, providerRetry} from "@prosopo/procaptcha-common";
+import { getDefaultEvents, providerRetry } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
@@ -85,7 +85,7 @@ export const ProcaptchaFrictionless = ({
 	const restartComponentTimeout = () => {
 		setTimeout(() => {
 			resetState(0);
-			events.();
+			events.onReset();
 			// `restart` frictionless widget after 10 seconds
 			restart();
 		}, 10000);
@@ -105,7 +105,7 @@ export const ProcaptchaFrictionless = ({
 						loading: false,
 						errorMessage: result.error?.message,
 					};
-					callbacks.onError(new Error(result.error?.message));
+					events.onError(new Error(result.error?.message));
 					fallOverWithStyle(result.error?.message);
 					return;
 				}

@@ -210,8 +210,6 @@ export const Manager = (
 					);
 				}
 
-				const events = callbacks;
-
 				const providerUrl = getRandomProviderResponse.provider.url;
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
