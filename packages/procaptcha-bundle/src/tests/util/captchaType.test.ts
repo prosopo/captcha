@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { FeaturesEnum } from "@prosopo/types";
+import { CaptchaType } from "@prosopo/types";
 import { JSDOM } from "jsdom";
 import { beforeEach, describe, expect, it } from "vitest";
 import { getCaptchaType } from "../../util/captchaType.js";
@@ -24,11 +24,11 @@ describe("getCaptchaType", () => {
 	});
 	it("should return the correct captcha type when a valid type is set", () => {
 		const element = document.createElement("div");
-		element.setAttribute("data-captcha-type", FeaturesEnum.Pow);
+		element.setAttribute("data-captcha-type", CaptchaType.pow);
 
 		const result = getCaptchaType([element]);
 
-		expect(result).toBe(FeaturesEnum.Pow);
+		expect(result).toBe(CaptchaType.pow);
 	});
 
 	it('should return "frictionless" when no captcha type is set', () => {
@@ -51,7 +51,7 @@ describe("getCaptchaType", () => {
 	it("should work with all valid FeaturesEnum values", () => {
 		const element = document.createElement("div");
 
-		for (const feature of Object.values(FeaturesEnum)) {
+		for (const feature of Object.values(CaptchaType)) {
 			element.setAttribute("data-captcha-type", feature);
 			const result = getCaptchaType([element]);
 			expect(result).toBe(feature);

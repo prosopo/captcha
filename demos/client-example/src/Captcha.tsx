@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { FrictionlessCaptcha } from "@prosopo/procaptcha-bundle/components";
-import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import { Procaptcha } from "@prosopo/procaptcha-react";
-import type { ProcaptchaToken } from "@prosopo/types";
+import { CaptchaRenderer } from "@prosopo/procaptcha-bundle/components";
+import { CaptchaType, type ProcaptchaToken } from "@prosopo/types";
 import config from "./config.js";
 
 type CaptchProps = {
-	captchaType?: string;
+	captchaType?: CaptchaType;
 	setProcaptchaToken: (procaptchaToken: ProcaptchaToken) => void;
 	key: number;
 };
@@ -44,23 +42,17 @@ export function Captcha(props: CaptchProps) {
 
 	return (
 		<div>
-			{props.captchaType === "frictionless" ? (
-				new FrictionlessCaptcha({
+			{new CaptchaRenderer().render(
+				props.captchaType || CaptchaType.frictionless,
+				{
 					config,
-					callbacks: { onError, onHuman, onExpired, onFailed },
-				}).render()
-			) : props.captchaType === "pow" ? (
-				<ProcaptchaPow
-					config={config}
-					callbacks={{ onError, onHuman, onExpired, onFailed }}
-					aria-label="PoW captcha"
-				/>
-			) : (
-				<Procaptcha
-					config={config}
-					callbacks={{ onError, onHuman, onExpired, onFailed }}
-					aria-label="Image captcha"
-				/>
+					callbacks: {
+						onError,
+						onExpired,
+						onHuman,
+						onFailed,
+					},
+				},
 			)}
 		</div>
 	);

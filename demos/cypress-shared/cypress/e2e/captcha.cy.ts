@@ -21,7 +21,7 @@ import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
-	type CaptchaType,
+	CaptchaType,
 	type IUserSettings,
 	type RegisterSitekeyBodyTypeOutput,
 	Tier,
@@ -29,31 +29,36 @@ import {
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
+const registerSiteKey = async (captchaType?: CaptchaType) => {
+	const timestamp = new Date().getTime();
+	const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+	const signature = u8aToHex(pair.sign(timestamp.toString()));
+	const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+	const settings: IUserSettings = {
+		captchaType:
+			captchaType || ((Cypress.env("CAPTCHA_TYPE") || "image") as CaptchaType),
+		domains: ["0.0.0.0"],
+		frictionlessThreshold: 0.5,
+		powDifficulty: 2,
+	};
+	await fetch(adminSiteKeyURL, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			signature: signature,
+			timestamp: timestamp.toString(),
+		},
+		body: JSON.stringify({
+			siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+			tier: Tier.Free,
+			settings,
+		} as RegisterSitekeyBodyTypeOutput),
+	});
+};
+
 describe("Captchas", () => {
 	before(async () => {
-		const timestamp = new Date().getTime();
-		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
-		const signature = u8aToHex(pair.sign(timestamp.toString()));
-		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
-		const settings: IUserSettings = {
-			captchaType: (Cypress.env("CAPTCHA_TYPE") || "image") as CaptchaType,
-			domains: ["0.0.0.0"],
-			frictionlessThreshold: 0.5,
-			powDifficulty: 2,
-		};
-		await fetch(adminSiteKeyURL, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				signature: signature,
-				timestamp: timestamp.toString(),
-			},
-			body: JSON.stringify({
-				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-				tier: Tier.Free,
-				settings,
-			} as RegisterSitekeyBodyTypeOutput),
-		});
+		await registerSiteKey();
 	});
 
 	beforeEach(() => {
@@ -77,6 +82,14 @@ describe("Captchas", () => {
 			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
+		});
+	});
+
+	it("An error is returned if the wrong captcha type is used in the widget", () => {
+		registerSiteKey(CaptchaType.pow).then(() => {
+			cy.visit(Cypress.env("default_page")).then(() => {
+				cy.get("body").should("contain", "Captcha type not supported");
+			});
 		});
 	});
 

@@ -23,7 +23,7 @@ import type {
 	ProcaptchaClientConfigOutput,
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
-import type { FeaturesEnum } from "@prosopo/types";
+import type { CaptchaType } from "@prosopo/types";
 import { type Root, createRoot } from "react-dom/client";
 import { setLanguage } from "../language.js";
 import { setTheme } from "../theme.js";
@@ -35,7 +35,7 @@ interface RenderSettings {
 	identifierPrefix: string;
 	emotionCacheKey: string;
 	webComponentTag: string;
-	defaultCaptchaType: FeaturesEnum;
+	defaultCaptchaType: CaptchaType;
 }
 
 class WidgetRenderer {
@@ -65,7 +65,7 @@ class WidgetRenderer {
 		renderOptions?: ProcaptchaRenderOptions,
 	): Root {
 		const captchaType =
-			(renderOptions?.captchaType as FeaturesEnum) ||
+			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
 		const callbacks = getDefaultCallbacks(element);
 
