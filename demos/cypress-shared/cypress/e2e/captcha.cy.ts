@@ -66,10 +66,9 @@ describe("Captchas", () => {
 					expect(response?.body).to.have.property("error");
 				})
 				.then(() => {
-					cy.get("prosopo-procaptcha", { includeShadowDom: true })
+					cy.get('div[data-cy="button-human"]', { includeShadowDom: true })
 						.should("exist") // Ensures element exists
 						.should("be.visible") // Ensures it's rendered
-						.shadow()
 						.find("label")
 						.should("have.text", "Incorrect CAPTCHA type");
 				});
