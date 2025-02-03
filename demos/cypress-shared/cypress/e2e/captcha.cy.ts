@@ -23,12 +23,10 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 let captchaType: CaptchaType;
 
 describe("Captchas", () => {
-	before(() => {
+	beforeEach(() => {
 		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 		cy.registerSiteKey(captchaType);
-	});
 
-	beforeEach(() => {
 		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
 			captchaContentId: captcha.captchaContentId,
 			solution: captcha.solution,
