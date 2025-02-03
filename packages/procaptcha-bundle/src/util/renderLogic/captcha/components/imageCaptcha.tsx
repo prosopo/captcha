@@ -14,16 +14,12 @@ import { getDefaultEvents } from "@prosopo/procaptcha-common";
 // limitations under the License.
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import React from "react";
-import { CaptchaElement } from "../captcha.js";
+import type { CaptchaProps } from "../captcha.js";
 
-class ImageCaptcha extends CaptchaElement {
-	public override render() {
-		const { config, callbacks } = this.props;
+const ImageCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks } = props;
 
-		return (
-			<Procaptcha config={config} callbacks={getDefaultEvents(callbacks)} />
-		);
-	}
-}
+	return <Procaptcha config={config} callbacks={getDefaultEvents(callbacks)} />;
+};
 
 export { ImageCaptcha };

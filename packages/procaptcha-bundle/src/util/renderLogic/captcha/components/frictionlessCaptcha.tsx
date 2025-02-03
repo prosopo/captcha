@@ -15,27 +15,25 @@
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
 import React, { useState } from "react";
-import { CaptchaElement, CaptchaProps } from "../captcha.js";
+import type { CaptchaProps } from "../captcha.js";
 
-class FrictionlessCaptcha extends CaptchaElement {
-	public override render() {
-		const { config, callbacks } = this.props;
+const FrictionlessCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks } = props;
 
-		const [componentKey, setComponentKey] = useState(0);
+	const [componentKey, setComponentKey] = useState(0);
 
-		const restart = () => {
-			setComponentKey((prevKey) => prevKey + 1);
-		};
+	const restart = () => {
+		setComponentKey((prevKey) => prevKey + 1);
+	};
 
-		return (
-			<ProcaptchaFrictionless
-				key={componentKey}
-				config={config}
-				callbacks={getDefaultEvents(callbacks)}
-				restart={restart}
-			/>
-		);
-	}
-}
+	return (
+		<ProcaptchaFrictionless
+			key={componentKey}
+			config={config}
+			callbacks={getDefaultEvents(callbacks)}
+			restart={restart}
+		/>
+	);
+};
 
 export { FrictionlessCaptcha };

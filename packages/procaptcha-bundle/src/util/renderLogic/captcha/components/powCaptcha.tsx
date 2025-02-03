@@ -15,16 +15,14 @@
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import React from "react";
-import { CaptchaElement } from "../captcha.js";
+import type { CaptchaProps } from "../captcha.js";
 
-class PowCaptcha extends CaptchaElement {
-	public override render() {
-		const { config, callbacks } = this.props;
+const PowCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks } = props;
 
-		return (
-			<ProcaptchaPow config={config} callbacks={getDefaultEvents(callbacks)} />
-		);
-	}
-}
+	return (
+		<ProcaptchaPow config={config} callbacks={getDefaultEvents(callbacks)} />
+	);
+};
 
 export { PowCaptcha };

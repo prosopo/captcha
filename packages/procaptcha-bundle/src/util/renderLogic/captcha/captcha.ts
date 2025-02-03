@@ -16,13 +16,10 @@ import type {
 	ProcaptchaCallbacks,
 	ProcaptchaClientConfigInput,
 } from "@prosopo/types";
-import React from "react";
 
 interface CaptchaProps {
 	config: ProcaptchaClientConfigInput;
 	callbacks: ProcaptchaCallbacks;
 }
 
-abstract class CaptchaElement extends React.Component<CaptchaProps> {}
-
-export { type CaptchaProps, CaptchaElement };
+export type { CaptchaProps };

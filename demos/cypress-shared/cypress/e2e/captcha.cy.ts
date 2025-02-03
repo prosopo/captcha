@@ -14,51 +14,18 @@
 /// <reference types="cypress" />
 
 import "@cypress/xpath";
-import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { getPairAsync } from "@prosopo/keyring";
-import {
-	AdminApiPaths,
-	type Captcha,
-	CaptchaType,
-	type IUserSettings,
-	type RegisterSitekeyBodyTypeOutput,
-	Tier,
-} from "@prosopo/types";
+import { type Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const registerSiteKey = async (captchaType?: CaptchaType) => {
-	const timestamp = new Date().getTime();
-	const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
-	const signature = u8aToHex(pair.sign(timestamp.toString()));
-	const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
-	const settings: IUserSettings = {
-		captchaType:
-			captchaType || ((Cypress.env("CAPTCHA_TYPE") || "image") as CaptchaType),
-		domains: ["0.0.0.0"],
-		frictionlessThreshold: 0.5,
-		powDifficulty: 2,
-	};
-	await fetch(adminSiteKeyURL, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			signature: signature,
-			timestamp: timestamp.toString(),
-		},
-		body: JSON.stringify({
-			siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-			tier: Tier.Free,
-			settings,
-		} as RegisterSitekeyBodyTypeOutput),
-	});
-};
+let captchaType: CaptchaType;
 
 describe("Captchas", () => {
-	before(async () => {
-		await registerSiteKey();
+	before(() => {
+		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+		cy.registerSiteKey(captchaType);
 	});
 
 	beforeEach(() => {
@@ -86,10 +53,11 @@ describe("Captchas", () => {
 	});
 
 	it("An error is returned if the wrong captcha type is used in the widget", () => {
-		registerSiteKey(CaptchaType.pow).then(() => {
-			cy.visit(Cypress.env("default_page")).then(() => {
-				cy.get("body").should("contain", "Captcha type not supported");
-			});
+		expect(captchaType).to.not.equal(CaptchaType.pow);
+		cy.registerSiteKey(CaptchaType.pow).then(() => {
+			cy.visit(Cypress.env("default_page"));
+			getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+			cy.get("body").should("contain", "Incorrect CAPTCHA type");
 		});
 	});
 
