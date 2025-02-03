@@ -23,6 +23,14 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
 type RegisterSitekeyBodyType = typeof RegisterSitekeyBody;
 
+// TODO: MOVE THIS. DON'T LET ME ACCIDENTALLY COMMIT INTO PROD
+const defaultSettings = {
+	captchaType: "frictionless" as const,
+	frictionlessThreshold: 0.5,
+	powDifficulty: 4,
+	domains: [],
+};
+
 class ApiRegisterSiteKeyEndpoint
 	implements ApiEndpoint<RegisterSitekeyBodyType>
 {
@@ -33,7 +41,8 @@ class ApiRegisterSiteKeyEndpoint
 	): Promise<ApiEndpointResponse> {
 		const { siteKey, settings } = args;
 
-		const temp = settings || {};
+		 
+		const temp = settings || defaultSettings;
 
 		await this.clientTaskManager.registerSiteKey(siteKey, temp);
 

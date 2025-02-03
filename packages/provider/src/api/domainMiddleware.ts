@@ -44,6 +44,11 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			if (!origin) throw unauthorizedOriginError();
 
 			for (const domain of allowedDomains) {
+				console.log(
+					"domain",
+					domain,
+					tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain),
+				);
 				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
 					next();
 					return;

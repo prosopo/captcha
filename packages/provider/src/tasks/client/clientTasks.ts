@@ -224,6 +224,7 @@ export class ClientTaskManager {
 
 			// Special case for localhost
 			if (referrerDomain === "localhost") return true;
+			console.log(referrerDomain, allowedDomain);
 
 			return (
 				referrerDomain === allowedDomain ||
