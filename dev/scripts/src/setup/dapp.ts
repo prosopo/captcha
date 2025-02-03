@@ -23,6 +23,9 @@ export async function registerSiteKey(
 	const tasks = new Tasks(env);
 	logger.info("   - siteKeyRegister");
 	await tasks.clientTaskManager.registerSiteKey(siteKey as string, {
+		captchaType: "frictionless",
+		frictionlessThreshold: 0.5,
+		powDifficulty: 4,
 		domains: ["localhost"],
 	});
 }

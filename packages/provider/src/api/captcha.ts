@@ -106,6 +106,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			validateAddress(user, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
+			console.log("\n\n\---\n\n\clientRecord", clientRecord);
 
 			if (!clientRecord) {
 				return next(
@@ -197,6 +198,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			validateAddress(user, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
+						console.log("\n\n\---\n\n\clientRecord", clientRecord);
 
 			if (!clientRecord) {
 				return next(
@@ -272,6 +274,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const clientSettings = await tasks.db.getClientRecord(dapp);
 			const clientRecord = await tasks.db.getClientRecord(dapp);
+						console.log("\n\n\---\n\n\clientRecord", clientRecord);
 
 			if (!clientRecord) {
 				return next(
@@ -414,6 +417,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			validateAddress(dapp, false, 42);
 
 			const clientRecord = await tasks.db.getClientRecord(dapp);
+						console.log("\n\n\---\n\n\clientRecord", clientRecord);
 
 			if (!clientRecord) {
 				return next(

@@ -40,6 +40,7 @@ import {
 import {
 	type Captcha,
 	CaptchaSolutionSchema,
+	CaptchaTypes,
 	type DappAccount,
 	type DatasetID,
 	type PoWChallengeId,
@@ -338,10 +339,18 @@ export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: string(),
 });
 
+
+//todo don't let me get this into staging tell me off
+enum captchaTypes {
+	pow = "pow",
+	frictionless = "frictionless",
+	image = "image",
+}
+
 export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.settings]: object({
-		[ApiParams.captchaType]: string(),
+		[ApiParams.captchaType]: nativeEnum(captchaTypes),
 		[ApiParams.domains]: array(string()),
 		[ApiParams.frictionlessThreshold]: number(),
 		[ApiParams.powDifficulty]: number(),
