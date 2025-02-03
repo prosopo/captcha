@@ -27,3 +27,4 @@ export * from "./version.js";
 export * from "./hex.js";
 export * from "./checks.js";
 export { verifyRecency } from "./verifyRecency.js";
+export * from "./exec.js";
