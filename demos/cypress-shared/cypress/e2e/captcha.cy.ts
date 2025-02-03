@@ -50,12 +50,29 @@ describe("Captchas", () => {
 		});
 	});
 
-	it("An error is returned if the wrong captcha type is used in the widget", () => {
+	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
 		cy.registerSiteKey(CaptchaType.pow).then(() => {
 			cy.visit(Cypress.env("default_page"));
 			getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
-			cy.get("body").should("contain", "Incorrect CAPTCHA type");
+			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+				"getCaptcha",
+			);
+			cy.wait("@getCaptcha", { timeout: 36000 })
+				.its("response")
+				.then((response) => {
+					expect(response).to.not.be.undefined;
+					expect(response?.statusCode).to.equal(400);
+					expect(response?.body).to.have.property("error");
+				})
+				.then(() => {
+					cy.get("prosopo-procaptcha", { includeShadowDom: true })
+						.should("exist") // Ensures element exists
+						.should("be.visible") // Ensures it's rendered
+						.shadow()
+						.find("label")
+						.should("have.text", "Incorrect CAPTCHA type");
+				});
 		});
 	});
 
