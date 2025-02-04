@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { RegisterSitekeyBody } from "@prosopo/types";
+import { ClientSettingsSchema, RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
@@ -33,7 +33,7 @@ class ApiRegisterSiteKeyEndpoint
 	): Promise<ApiEndpointResponse> {
 		const { siteKey, tier, settings } = args;
 
-		const temp = settings || {};
+		const temp = settings || ClientSettingsSchema.parse({});
 
 		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
 

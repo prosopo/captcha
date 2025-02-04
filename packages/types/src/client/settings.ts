@@ -11,24 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { array, number, object, type output, string } from "zod";
+import { CaptchaType, CaptchaTypeSpec } from "./captchaType.js";
 
-import { validateAddress } from "@polkadot/util-crypto/address";
-import { ProsopoApiError } from "@prosopo/common";
-import type { TranslationKey } from "@prosopo/locale";
-
-export const validiateSiteKey = (siteKey: string) => {
-	return validateAddr(siteKey, "API.INVALID_SITE_KEY");
-};
-
-export const validateAddr = (
-	address: string,
-	translationKey: TranslationKey = "CONTRACT.INVALID_ADDRESS",
-) => {
-	try {
-		return validateAddress(address, false, 42);
-	} catch (err) {
-		throw new ProsopoApiError(translationKey, {
-			context: { code: 400, error: err, siteKey: address },
-		});
-	}
-};
+export const ClientSettingsSchema = object({
+	captchaType: CaptchaTypeSpec.default(CaptchaType.frictionless),
+	domains: array(string()).default([]),
+	frictionlessThreshold: number().default(0.8),
+	powDifficulty: number().default(4),
+});
+export type IUserSettings = output<typeof ClientSettingsSchema>;
