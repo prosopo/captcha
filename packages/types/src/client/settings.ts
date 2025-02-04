@@ -11,18 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import type z from "zod";
-import { array, nativeEnum, number, object, string } from "zod";
-import { ApiParams } from "../api/index.js";
-import { CaptchaType } from "../config/index.js";
+import { array, number, object, type output, string } from "zod";
+import { CaptchaType, CaptchaTypeSpec } from "./captchaType.js";
 
 export const ClientSettingsSchema = object({
-	[ApiParams.captchaType]: nativeEnum(CaptchaType).default(
-		CaptchaType.frictionless,
-	),
-	[ApiParams.domains]: array(string()).default([]),
-	[ApiParams.frictionlessThreshold]: number().default(0.8),
-	[ApiParams.powDifficulty]: number().default(4),
+	captchaType: CaptchaTypeSpec.default(CaptchaType.frictionless),
+	domains: array(string()).default([]),
+	frictionlessThreshold: number().default(0.8),
+	powDifficulty: number().default(4),
 });
-export type IUserSettings = z.output<typeof ClientSettingsSchema>;
+export type IUserSettings = output<typeof ClientSettingsSchema>;

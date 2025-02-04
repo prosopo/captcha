@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 export * from "./user.js";
-export * from "./settings.js";
+export { ClientSettingsSchema } from "./settings.js";
+export type { IUserSettings } from "./settings.js";
+export * from "./captchaType.js";

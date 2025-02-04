@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Timestamp } from "../datasets/index.js";
+
 import type { IUserSettings } from "./settings.js";
 
 export enum Tier {
