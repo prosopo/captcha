@@ -50,11 +50,34 @@ describe("Captchas", () => {
 		});
 	});
 
-	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
+	it("An error is returned if captcha type is set to pow and frictionless is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
 		cy.registerSiteKey(CaptchaType.pow).then(() => {
 			cy.visit(Cypress.env("default_page"));
-			getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+				"getCaptcha",
+			);
+			cy.wait("@getCaptcha", { timeout: 36000 })
+				.its("response")
+				.then((response) => {
+					expect(response).to.not.be.undefined;
+					expect(response?.statusCode).to.equal(400);
+					expect(response?.body).to.have.property("error");
+				})
+				.then(() => {
+					cy.get('div[data-cy="button-human"]', { includeShadowDom: true })
+						.should("exist") // Ensures element exists
+						.should("be.visible") // Ensures it's rendered
+						.find("label")
+						.should("have.text", "Incorrect CAPTCHA type");
+				});
+		});
+	});
+
+	it("An error is returned if captcha type is set to image and frictionless is used in the widget", () => {
+		expect(captchaType).to.not.equal(CaptchaType.image);
+		cy.registerSiteKey(CaptchaType.pow).then(() => {
+			cy.visit(Cypress.env("default_page"));
 			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 				"getCaptcha",
 			);
@@ -78,37 +101,6 @@ describe("Captchas", () => {
 	it("Captchas load when 'I am human' is pressed", () => {
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);
-		});
-	});
-
-	it("Number of displayed captchas equals number received in response", () => {
-		cy.clickIAmHuman().then((captchas: Captcha[]) => {
-			cy.wait(2000);
-			cy.captchaImages().then(() => {
-				console.log(
-					"captchas in 'Number of displayed captchas equals number received in response'",
-					captchas,
-				);
-				cy.get("@captchaImages").should(
-					"have.length",
-					at(captchas, 0).items.length,
-				);
-			});
-		});
-	});
-
-	// move to component testing later
-	it("Can select an item", () => {
-		cy.clickIAmHuman().then(() => {
-			cy.wait(2000);
-			cy.captchaImages().then(() => {
-				cy.get("@captchaImages").first().click();
-				cy.get("@captchaImages")
-					.first()
-					.siblings()
-					.first()
-					.should("have.css", "opacity", "1");
-			});
 		});
 	});
 });

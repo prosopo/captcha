@@ -21,7 +21,11 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
-import { ApiParams, type ProcaptchaToken } from "@prosopo/types";
+import {
+	ApiParams,
+	type CaptchaType,
+	type ProcaptchaToken,
+} from "@prosopo/types";
 import { useReducer, useState } from "react";
 import { Captcha } from "./Captcha.js";
 import NavBar from "./NavBar.js";
@@ -36,7 +40,7 @@ const corsHeaders = {
 };
 
 interface AppProps {
-	captchaType?: string;
+	captchaType?: CaptchaType;
 }
 
 function App(props: AppProps) {

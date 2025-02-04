@@ -11,16 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { stringToHex } from "@polkadot/util/string";
-import { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
+	ExtensionLoader,
 	buildUpdateState,
-	getDefaultEvents,
 	getRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
@@ -42,7 +43,7 @@ export const Manager = (
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
 ) => {
-	const events = getDefaultEvents(onStateUpdate, state, callbacks);
+	const events = getDefaultEvents(callbacks);
 
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {
@@ -64,6 +65,15 @@ export const Manager = (
 		window.clearTimeout(Number(state.timeout));
 		// then clear the timeout from the state
 		updateState({ timeout: undefined });
+	};
+
+	const onFailed = () => {
+		updateState({
+			isHuman: false,
+			loading: false,
+		});
+		events.onFailed();
+		resetState(frictionlessState?.restart);
 	};
 
 	const clearSuccessfulChallengeTimeout = () => {
@@ -110,12 +120,16 @@ export const Manager = (
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
 
-	const resetState = () => {
+	const resetState = (frictionlessRestart?: () => void) => {
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
 		clearSuccessfulChallengeTimeout();
 		updateState(defaultState());
 		events.onReset();
+		// reset the frictionless state if necessary
+		if (frictionlessRestart) {
+			frictionlessRestart();
+		}
 	};
 
 	const setValidChallengeTimeout = () => {
@@ -125,6 +139,7 @@ export const Manager = (
 			updateState({ isHuman: false });
 
 			events.onExpired();
+			resetState(frictionlessState?.restart);
 		}, timeMillis);
 
 		updateState({ successfullChallengeTimeout });
@@ -140,6 +155,7 @@ export const Manager = (
 					return;
 				}
 
+				// reset the state to defaults - do not reset the frictionless state
 				resetState();
 
 				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
@@ -155,8 +171,8 @@ export const Manager = (
 					if (frictionlessState) {
 						return frictionlessState.userAccount;
 					}
-					const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3();
-					return await ext.getAccount(config);
+					const ext = new (await ExtensionLoader(config.web2))();
+					return ext.getAccount(config);
 				};
 
 				// use the passed in account (could be web3) or create a new account
@@ -193,8 +209,6 @@ export const Manager = (
 						getConfig(),
 					);
 				}
-
-				const events = getDefaultEvents(onStateUpdate, state, callbacks);
 
 				const providerUrl = getRandomProviderResponse.provider.url;
 
@@ -264,18 +278,16 @@ export const Manager = (
 						);
 						setValidChallengeTimeout();
 					} else {
-						updateState({
-							isHuman: false,
-							loading: false,
-						});
-						events.onFailed();
+						onFailed();
 					}
 				}
 			},
 			start,
-			resetState,
+			() => {
+				resetState();
+			},
 			state.attemptCount,
-			10,
+			3,
 		);
 	};
 

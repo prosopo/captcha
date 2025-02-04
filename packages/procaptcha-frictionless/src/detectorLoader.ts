@@ -11,12 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { z } from "zod";
 
-export const ProsopoLocalStorageSchema = z.object({
-	account: z.string().optional(),
-	blockNumber: z.number().optional(),
-	providerUrl: z.string().optional(),
-});
+type DetectorType = typeof import("@prosopo/detector").default;
 
-export type ProcaptchaLocalStorage = z.infer<typeof ProsopoLocalStorageSchema>;
+export const DetectorLoader = async (): Promise<DetectorType> =>
+	(await import("@prosopo/detector")).default;
