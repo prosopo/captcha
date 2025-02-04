@@ -33,6 +33,7 @@ import {
 } from "zod";
 import { ApiParams } from "../api/params.js";
 import { Tier } from "../client/index.js";
+import { ClientSettingsSchema } from "../client/settings.js";
 import type { CaptchaType } from "../config/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
@@ -333,12 +334,7 @@ export const VerifyPowCaptchaSolutionBody = object({
 export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.tier]: nativeEnum(Tier),
-	[ApiParams.settings]: object({
-		[ApiParams.captchaType]: string(),
-		[ApiParams.domains]: array(string()),
-		[ApiParams.frictionlessThreshold]: number(),
-		[ApiParams.powDifficulty]: number(),
-	}).optional(),
+	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;

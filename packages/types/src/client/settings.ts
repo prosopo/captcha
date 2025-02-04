@@ -12,5 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./user.js";
-export * from "./settings.js";
+import type z from "zod";
+import { array, nativeEnum, number, object, string } from "zod";
+import { ApiParams } from "../api/index.js";
+import { CaptchaType } from "../config/index.js";
+
+export const ClientSettingsSchema = object({
+	[ApiParams.captchaType]: nativeEnum(CaptchaType).default(
+		CaptchaType.frictionless,
+	),
+	[ApiParams.domains]: array(string()).default([]),
+	[ApiParams.frictionlessThreshold]: number().default(0.8),
+	[ApiParams.powDifficulty]: number().default(4),
+});
+export type IUserSettings = z.output<typeof ClientSettingsSchema>;
