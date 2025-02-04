@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { RegisterSitekeyBody } from "@prosopo/types";
+import { CaptchaType, RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
@@ -25,7 +25,7 @@ type RegisterSitekeyBodyType = typeof RegisterSitekeyBody;
 
 // TODO: MOVE THIS. DON'T LET ME ACCIDENTALLY COMMIT INTO PROD
 const defaultSettings = {
-	captchaType: "frictionless" as const,
+	captchaType: "frictionless" as CaptchaType,
 	frictionlessThreshold: 0.5,
 	powDifficulty: 4,
 	domains: [],
