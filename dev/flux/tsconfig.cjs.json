@@ -10,7 +10,7 @@
 			"path": "../../packages/dotenv/tsconfig.cjs.json"
 		},
 		{
-			"path": "../../packages/types/tsconfig.cjs.json"
+			"path": "../../packages/common/tsconfig.cjs.json"
 		},
 		{
 			"path": "../../packages/util/tsconfig.cjs.json"
