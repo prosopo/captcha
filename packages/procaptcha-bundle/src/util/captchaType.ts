@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { FeaturesEnum } from "@prosopo/types";
+
+import { CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 
 /**
@@ -21,11 +22,11 @@ import { at } from "@prosopo/util";
  * @returns {FeaturesEnum}
  */
 export function getCaptchaType(elements: Element[]) {
-	const features = Object.values(FeaturesEnum);
+	const features = Object.values(CaptchaType);
 	const captchaType =
 		features.find(
 			(feature) =>
 				feature === at(elements, 0).getAttribute("data-captcha-type"),
-		) || ("frictionless" as FeaturesEnum);
+		) || ("frictionless" as CaptchaType);
 	return captchaType;
 }

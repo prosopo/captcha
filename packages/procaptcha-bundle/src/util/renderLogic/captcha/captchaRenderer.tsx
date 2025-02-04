@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { FeaturesEnum } from "@prosopo/types";
+import type { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
 import type { CaptchaProps } from "./captcha.js";
 import { componentsList } from "./componentsList.js";
 
 class CaptchaRenderer {
 	public render(
-		captchaType: FeaturesEnum,
+		captchaType: CaptchaType,
 		captchaProps: CaptchaProps,
 	): ReactNode {
 		const CaptchaComponent = componentsList[captchaType];

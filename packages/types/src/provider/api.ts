@@ -33,6 +33,7 @@ import {
 } from "zod";
 import { ApiParams } from "../api/params.js";
 import { Tier } from "../client/index.js";
+import type { CaptchaType } from "../config/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -248,7 +249,7 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
 	[ApiParams.sessionId]?: string;
 }
 

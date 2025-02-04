@@ -1,5 +1,3 @@
-import { CaptchaType } from "@prosopo/types";
-import React from "react";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +11,15 @@ import React from "react";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import App from "../App.js";
 
-export default function Root() {
-	return (
-		<React.Fragment>
-			<App captchaType={CaptchaType.pow} />
-		</React.Fragment>
+import { ApiParams } from "@prosopo/types";
+
+export const getParentForm = (element: Element): HTMLFormElement | null =>
+	element.closest("form") as HTMLFormElement;
+
+export const removeProcaptchaResponse = () => {
+	const element = Array.from(
+		document.getElementsByName(ApiParams.procaptchaResponse),
 	);
-}
+	element.map((el) => el.remove());
+};

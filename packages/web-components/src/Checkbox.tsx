@@ -109,6 +109,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 				onChange={onChange}
 				checked={checked}
 				style={checkboxStyle}
+				disabled={error !== undefined}
 			/>
 			{error ? (
 				<label
