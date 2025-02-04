@@ -11,6 +11,9 @@
 			"path": "../../packages/locale-browser"
 		},
 		{
+			"path": "../../packages/procaptcha-bundle"
+		},
+		{
 			"path": "../../packages/procaptcha-react"
 		},
 		{

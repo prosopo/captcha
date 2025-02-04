@@ -26,7 +26,12 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 	public constructor(
 		private readonly rulesStorage: RulesStorage,
 		private readonly logger: Logger,
+		private _accessRule: Rule | null = null,
 	) {}
+
+	get accessRule(): Rule | null {
+		return this._accessRule;
+	}
 
 	public async isConfigDefined(
 		clientId: string,
@@ -67,13 +72,13 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			defaults: defaults,
 		};
 
-		const accessRule = await this.fetchUserAccessRule(
+		this._accessRule = await this.fetchUserAccessRule(
 			userIpAddress,
 			userId,
 			clientId,
 		);
 
-		if (null === accessRule) {
+		if (null === this.accessRule) {
 			this.logger.info("ImageCaptchaConfigRulesResolver.resolveConfig", {
 				configDefined: false,
 				...logArgs,
@@ -82,7 +87,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			return defaults;
 		}
 
-		const imageCaptchaConfig = accessRule.config?.imageCaptcha || {};
+		const imageCaptchaConfig = this.accessRule.config?.imageCaptcha || {};
 
 		const config = this.getImageCaptchaConfig(defaults, imageCaptchaConfig);
 

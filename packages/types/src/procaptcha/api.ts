@@ -30,5 +30,5 @@ export interface ProcaptchaApiInterface {
 		timestamp: string,
 		providerRequestHashSignature: string,
 	): Promise<TCaptchaSubmitResult>;
-	getCaptchaChallenge(): Promise<CaptchaResponseBody>;
+	getCaptchaChallenge(sessionId?: string): Promise<CaptchaResponseBody>;
 }

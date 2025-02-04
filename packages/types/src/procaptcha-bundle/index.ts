@@ -13,15 +13,9 @@
 // limitations under the License.
 
 import type { LanguageSchema } from "@prosopo/locale";
-import type { ProcaptchaToken } from "@prosopo/types";
+import type { CaptchaType, ProcaptchaToken } from "@prosopo/types";
 
-export enum FeaturesEnum {
-	Image = "image",
-	Pow = "pow",
-	Frictionless = "frictionless",
-}
-
-export type Features = `${FeaturesEnum}`;
+export type Features = `${CaptchaType}`;
 
 export interface ProcaptchaRenderOptions {
 	siteKey: string;

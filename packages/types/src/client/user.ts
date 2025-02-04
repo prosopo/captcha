@@ -1,3 +1,4 @@
+import type { CaptchaType } from "../config/index.js";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,7 +61,7 @@ export interface IUserData {
 
 export interface IUserSettings {
 	frictionlessThreshold?: number;
-	powDifficulty: number;
-	domains: string[];
-	captchaType: "pow" | "image" | "frictionless"; // don't let me get this into staging
+	powDifficulty?: number;
+	domains?: string[];
+	captchaType?: CaptchaType;
 }

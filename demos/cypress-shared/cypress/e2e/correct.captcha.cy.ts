@@ -20,7 +20,10 @@ import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
+	type CaptchaType,
 	type IUserSettings,
+	type RegisterSitekeyBodyTypeOutput,
+	Tier,
 } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
@@ -31,7 +34,7 @@ describe("Captchas", () => {
 		const signature = u8aToHex(pair.sign(timestamp.toString()));
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 		const settings: IUserSettings = {
-			captchaType: "pow",
+			captchaType: (Cypress.env("CAPTCHA_TYPE") || "image") as CaptchaType,
 			domains: ["0.0.0.0"],
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
@@ -45,8 +48,9 @@ describe("Captchas", () => {
 			},
 			body: JSON.stringify({
 				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+				tier: Tier.Free,
 				settings,
-			}),
+			} as RegisterSitekeyBodyTypeOutput),
 		});
 	});
 
@@ -67,8 +71,12 @@ describe("Captchas", () => {
 
 		cy.intercept("/dummy").as("dummy");
 
+		const page = Cypress.env("default_page");
+
+		console.log(`Visiting page: ${page}`);
+
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(page).then(() => {
 			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");

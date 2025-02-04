@@ -14,6 +14,7 @@
 
 import type { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
+import { CaptchaType, Tier } from "@prosopo/types";
 
 export async function registerSiteKey(
 	env: ProviderEnvironment,
@@ -22,10 +23,14 @@ export async function registerSiteKey(
 	const logger = env.logger;
 	const tasks = new Tasks(env);
 	logger.info("   - siteKeyRegister");
-	await tasks.clientTaskManager.registerSiteKey(siteKey as string, {
-		captchaType: "frictionless",
-		frictionlessThreshold: 0.5,
-		powDifficulty: 4,
-		domains: ["localhost"],
-	});
+	await tasks.clientTaskManager.registerSiteKey(
+		siteKey as string,
+		Tier.Professional,
+		{
+			captchaType: CaptchaType.frictionless,
+			frictionlessThreshold: 0.8,
+			powDifficulty: 4,
+			domains: ["localhost", "0.0.0.0"],
+		},
+	);
 }

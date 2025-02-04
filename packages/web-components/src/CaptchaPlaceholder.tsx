@@ -14,6 +14,7 @@
 /** @jsxImportSource @emotion/react */
 
 import type { ProcaptchaProps } from "@prosopo/types";
+import Checkbox from "./Checkbox.js";
 import { ContainerDiv, WidthBasedStylesDiv } from "./Containers.js";
 import { LoadingSpinner } from "./LoadingSpinner.js";
 import Logo from "./Logo.js";
@@ -31,8 +32,10 @@ import { darkTheme, lightTheme } from "./theme.js";
 
 export const ProcaptchaPlaceholder = ({
 	config,
+	errorMessage,
 	callbacks,
 }: ProcaptchaProps) => {
+	console.log("In placeholder", "error", errorMessage);
 	const themeColor = config.theme === "light" ? "light" : "dark";
 	const theme = config.theme === "light" ? lightTheme : darkTheme;
 	return (
@@ -86,10 +89,21 @@ export const ProcaptchaPlaceholder = ({
 												}}
 											>
 												<div style={{ display: "inline-flex" }}>
-													<LoadingSpinner
-														themeColor={themeColor}
-														aria-label="Loading spinner"
-													/>
+													{errorMessage ? (
+														<Checkbox
+															themeColor={themeColor}
+															onChange={() => {}}
+															checked={false}
+															labelText={""}
+															error={errorMessage}
+															aria-label="human checkbox"
+														/>
+													) : (
+														<LoadingSpinner
+															themeColor={themeColor}
+															aria-label="Loading spinner"
+														/>
+													)}
 												</div>
 											</div>
 										</div>

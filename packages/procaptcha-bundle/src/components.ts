@@ -11,5 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export const getParentForm = (element: Element): HTMLFormElement | null =>
-	element.closest("form") as HTMLFormElement;
+
+export * from "./util/renderLogic/captcha/components/frictionlessCaptcha.js";
+export * from "./util/renderLogic/captcha/components/powCaptcha.js";
+export * from "./util/renderLogic/captcha/components/imageCaptcha.js";
+export * from "./util/renderLogic/captcha/captchaRenderer.js";

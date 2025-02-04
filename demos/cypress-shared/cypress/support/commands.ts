@@ -12,9 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import type { Captcha } from "@prosopo/types";
+
+import {
+	AdminApiPaths,
+	type Captcha,
+	type CaptchaType,
+	type IUserSettings,
+	type RegisterSitekeyBodyTypeOutput,
+	Tier,
+} from "@prosopo/types";
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
+import { u8aToHex } from "@polkadot/util";
+import { getPairAsync } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
 declare global {
@@ -34,6 +44,8 @@ declare global {
 			clickNextButton(): Cypress.Chainable<void>;
 
 			elementExists(element: string): Chainable<Subject>;
+
+			registerSiteKey(captchaType?: CaptchaType): Cypress.Chainable<void>;
 		}
 	}
 }
@@ -167,6 +179,42 @@ function elementExists(selector: string) {
 		.then(($window) => $window.document.querySelector(selector));
 }
 
+function registerSiteKey(captchaType: CaptchaType) {
+	cy.then(() => {
+		const timestamp = new Date().getTime();
+		getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then((pair) => {
+			const signature = u8aToHex(pair.sign(timestamp.toString()));
+			const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+
+			console.log("cType", captchaType);
+			const settings: IUserSettings = {
+				captchaType: captchaType,
+				domains: ["0.0.0.0"],
+				frictionlessThreshold: 0.5,
+				powDifficulty: 2,
+			};
+			fetch(adminSiteKeyURL, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					signature: signature,
+					timestamp: timestamp.toString(),
+				},
+				body: JSON.stringify({
+					siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+					tier: Tier.Free,
+					settings,
+				} as RegisterSitekeyBodyTypeOutput),
+			}).then((response) => {
+				expect(response.status).to.equal(200);
+				response.json().then((data) => {
+					console.log("data", data.status);
+				});
+			});
+		});
+	});
+}
+
 Cypress.Commands.addAll({
 	clickIAmHuman,
 	captchaImages,
@@ -174,4 +222,5 @@ Cypress.Commands.addAll({
 	getSelectors,
 	clickNextButton,
 	elementExists,
+	registerSiteKey,
 });

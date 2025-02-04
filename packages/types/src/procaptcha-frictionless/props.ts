@@ -19,7 +19,7 @@ import type {
 	RandomProvider,
 } from "../provider/api.js";
 
-type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
+export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	provider: RandomProvider;
 	userAccount: Account;
 };
@@ -32,5 +32,7 @@ export type BotDetectionFunction = (
  * The props for the Procaptcha Frictionless component.
  */
 export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
+	restart: () => void;
 	detectBot?: BotDetectionFunction;
+	detectBotConfig?: ProcaptchaClientConfigOutput;
 }
