@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type {
 	InjectedAccount,
 	InjectedExtension,
@@ -21,6 +22,7 @@ import type { CaptchaResponseBody } from "../provider/index.js";
 import type { ProcaptchaApiInterface } from "./api.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 import { type ProcaptchaToken, ProcaptchaTokenSpec } from "./token.js";
+
 /**
  * House the account and associated extension.
  */
@@ -32,28 +34,6 @@ export interface Account {
 export const ProcaptchaResponse = object({
 	[ApiParams.procaptchaResponse]: ProcaptchaTokenSpec,
 });
-
-/**
- * A set of callbacks called by Procaptcha on certain events. These are optional
- * as the client can decide which events they wish to listen for.
- */
-export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>;
-
-/**
- * A list of all events which can occur during the Procaptcha process.
- */
-export interface ProcaptchaEvents {
-	onError: (error: Error) => void;
-	onHuman: (output: ProcaptchaToken) => void;
-	onExtensionNotFound: () => void;
-	onChallengeExpired: () => void;
-	onExpired: () => void;
-	onFailed: () => void;
-	onOpen: () => void;
-	onClose: () => void;
-	onReload: () => void;
-	onReset: () => void;
-}
 
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha
@@ -75,6 +55,7 @@ export interface ProcaptchaState {
 	sendData: boolean; // whether to trigger sending user event data (mouse, keyboard, touch) to the provider
 	attemptCount: number; // Number of attempts to successfully complete captcha without errors
 	error: string | undefined; // any error message
+	sessionId: string | undefined; // the session id for the captcha challenge
 }
 
 /**
@@ -84,3 +65,17 @@ export interface ProcaptchaState {
  * variables.
  */
 export type ProcaptchaStateUpdateFn = (state: Partial<ProcaptchaState>) => void;
+
+/** List of callbacks that Procaptcha widgets must implement. */
+export interface Callbacks {
+	onHuman: (token: ProcaptchaToken) => void;
+	onExtensionNotFound: () => void;
+	onChallengeExpired: () => void;
+	onExpired: () => void;
+	onError: (error: Error) => void;
+	onClose: () => void;
+	onOpen: () => void;
+	onFailed: () => void;
+	onReload: () => void;
+	onReset: () => void;
+}

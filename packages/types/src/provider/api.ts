@@ -20,7 +20,6 @@ import {
 	type ZodObject,
 	type ZodOptional,
 	array,
-	bigint,
 	boolean,
 	coerce,
 	type input,
@@ -33,6 +32,8 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
+import { Tier } from "../client/index.js";
+import type { CaptchaType } from "../config/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -177,6 +178,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.datasetId]: union([string(), array(number())]),
+	[ApiParams.sessionId]: string().optional(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -216,17 +218,6 @@ export const VerifySolutionBody = object({
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
 export type VerifySolutionBodyTypeOutput = output<typeof VerifySolutionBody>;
 
-export interface PendingCaptchaRequest {
-	accountId: string;
-	pending: boolean;
-	salt: string;
-	[ApiParams.requestHash]: string;
-	deadlineTimestamp: number; // unix timestamp
-	requestedAtTimestamp: number; // unix timestamp
-	ipAddress: bigint;
-	headers: RequestHeaders;
-}
-
 export interface UpdateProviderClientsResponse extends ApiResponse {
 	message: string;
 }
@@ -242,6 +233,7 @@ export interface ApiResponse {
 
 export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
+	[ApiParams.score]?: number;
 }
 
 export interface ImageVerificationResponse extends VerificationResponse {
@@ -258,7 +250,7 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
 	[ApiParams.sessionId]?: string;
 }
 
@@ -349,6 +341,7 @@ enum captchaTypes {
 
 export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
+	[ApiParams.tier]: nativeEnum(Tier),
 	[ApiParams.settings]: object({
 		[ApiParams.captchaType]: nativeEnum(captchaTypes),
 		[ApiParams.domains]: array(string()),

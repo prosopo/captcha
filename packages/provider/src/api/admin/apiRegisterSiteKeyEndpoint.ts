@@ -39,12 +39,12 @@ class ApiRegisterSiteKeyEndpoint
 	async processRequest(
 		args: z.infer<RegisterSitekeyBodyType>,
 	): Promise<ApiEndpointResponse> {
-		const { siteKey, settings } = args;
+		const { siteKey, tier, settings } = args;
 
 		 
 		const temp = settings || defaultSettings;
 
-		await this.clientTaskManager.registerSiteKey(siteKey, temp);
+		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,

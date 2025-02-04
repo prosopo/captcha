@@ -14,13 +14,16 @@
 
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
-import type { Account, ProcaptchaCallbacks } from "./manager.js";
+import type { Account, Callbacks } from "./manager.js";
 
 export type FrictionlessState = {
 	provider: RandomProvider;
 	userAccount: Account;
+	restart: () => void;
 	sessionId?: string;
 };
+
+export type ProcaptchaCallbacks = Partial<Callbacks>;
 
 /**
  * The props for the Procaptcha component.
@@ -28,7 +31,8 @@ export type FrictionlessState = {
 export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
-	// optional set of callbacks for various captcha events
-	callbacks?: Partial<ProcaptchaCallbacks>;
+	callbacks: ProcaptchaCallbacks;
 	frictionlessState?: FrictionlessState;
+	// display an error message
+	errorMessage?: string;
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createApiAdminRoutesProvider } from "./createApiAdminRoutesProvider.js";
+type DetectorType = typeof import("@prosopo/detector").default;
 
-export { createApiAdminRoutesProvider };
+export const DetectorLoader = async (): Promise<DetectorType> =>
+	(await import("@prosopo/detector")).default;

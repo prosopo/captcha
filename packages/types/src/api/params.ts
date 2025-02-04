@@ -45,4 +45,6 @@ export enum ApiParams {
 	domains = "domains",
 	frictionlessThreshold = "frictionlessThreshold",
 	powDifficulty = "powDifficulty",
+	score = "score",
+	tier = "tier",
 }
