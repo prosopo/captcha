@@ -62,5 +62,5 @@ export interface IUserSettings {
 	frictionlessThreshold?: number;
 	powDifficulty: number;
 	domains: string[];
-	captchaType: CaptchaType;
+	captchaType: "pow" | "image" | "frictionless"; // don't let me get this into staging
 }
