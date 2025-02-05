@@ -25,6 +25,7 @@ import {
 	WIDGET_DIMENSIONS,
 	WIDGET_INNER_HEIGHT,
 	WIDGET_MAX_WIDTH,
+	WIDGET_MIN_HEIGHT,
 	WIDGET_PADDING,
 	WIDGET_URL,
 	WIDGET_URL_TEXT,
@@ -57,12 +58,17 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [config.language]);
 
 	return (
-		<div ref={captchaRef}>
+		<div
+			ref={captchaRef}
+			style={{ width: "100%", minHeight: WIDGET_MIN_HEIGHT }}
+		>
 			<div
 				style={{
 					maxWidth: WIDGET_MAX_WIDTH,
+					minHeight: WIDGET_MIN_HEIGHT,
 					maxHeight: "100%",
 					overflowX: "auto",
+					width: "100%",
 					...theme.font,
 				}}
 			>
