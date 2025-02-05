@@ -1511,9 +1511,9 @@ export class ProviderDatabase
 	 * @description Get a client record
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
-		console.log("\n\n\---\n\n\account", account);
-		console.log("\n\n\---\n\n\this.tables", this.tables);
-		console.log("\n\n\---\n\n\ db name", this.tables?.client);
+		console.log("\n\n---\n\naccount", account);
+		console.log("\n\n---\n\n\this.tables", this.tables);
+		console.log("\n\n---\n\n db name", this.tables?.client);
 
 		const filter: Pick<ClientRecord, "account"> = { account };
 		const doc = await this.tables?.client.findOne(filter).lean<ClientRecord>();
