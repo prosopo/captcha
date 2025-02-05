@@ -331,7 +331,6 @@ export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: string(),
 });
 
-
 export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.tier]: nativeEnum(Tier),
