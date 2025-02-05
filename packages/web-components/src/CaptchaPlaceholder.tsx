@@ -24,6 +24,7 @@ import {
 	WIDGET_DIMENSIONS,
 	WIDGET_INNER_HEIGHT,
 	WIDGET_MAX_WIDTH,
+	WIDGET_MIN_HEIGHT,
 	WIDGET_PADDING,
 	WIDGET_URL,
 	WIDGET_URL_TEXT,
@@ -39,12 +40,14 @@ export const ProcaptchaPlaceholder = ({
 	const themeColor = config.theme === "light" ? "light" : "dark";
 	const theme = config.theme === "light" ? lightTheme : darkTheme;
 	return (
-		<div>
+		<div style={{ width: "100%", minHeight: WIDGET_MIN_HEIGHT }}>
 			<div
 				style={{
 					maxWidth: WIDGET_MAX_WIDTH,
+					minHeight: WIDGET_MIN_HEIGHT,
 					maxHeight: "100%",
 					overflowX: "auto",
+					width: "100%",
 					...theme.font,
 				}}
 			>
