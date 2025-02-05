@@ -14,7 +14,7 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import type { Logger } from "@prosopo/common";
-import { CaptchaType, IUserSettings, Tier } from "@prosopo/types";
+import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
@@ -23,6 +23,13 @@ import type {
 import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
+
+const defaultUserSettings: IUserSettings = {
+	frictionlessThreshold: 0.8,
+	domains: [],
+	captchaType: CaptchaType.frictionless,
+	powDifficulty: 4,
+};
 
 describe("CaptchaManager", () => {
 	let db: IProviderDatabase;
@@ -60,6 +67,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.image,
 					} as IUserSettings,
 				},
@@ -76,6 +84,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.pow,
 					} as IUserSettings,
 				},
@@ -102,6 +111,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					} as IUserSettings,
 				},
@@ -131,6 +141,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					} as IUserSettings,
 				},
@@ -160,6 +171,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					} as IUserSettings,
 				},
@@ -189,6 +201,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					} as IUserSettings,
 				},
@@ -208,6 +221,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					} as IUserSettings,
 				},
@@ -227,6 +241,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					} as IUserSettings,
 				},
@@ -247,6 +262,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.image,
 					} as IUserSettings,
 				},
@@ -265,6 +281,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.pow,
 					} as IUserSettings,
 				},
