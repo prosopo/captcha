@@ -17,7 +17,11 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { ClientSettingsSchema, RegisterSitekeyBody } from "@prosopo/types";
+import {
+	ClientSettingsSchema,
+	RegisterSitekeyBody,
+	CaptchaType,
+} from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
