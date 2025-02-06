@@ -33,9 +33,12 @@ import {
 	type ProviderApiInterface,
 	type ProviderRegistered,
 	type RandomProvider,
+	RegisterSitekeyBody,
+	type RegisterSitekeyBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
+	type Tier,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -252,20 +255,18 @@ export default class ProviderApi
 
 	public registerSiteKey(
 		siteKey: string,
+		tier: Tier,
 		settings: IUserSettings,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
-		return this.post(
-			AdminApiPaths.SiteKeyRegister,
-			{ siteKey, settings },
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
+		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
+		return this.post(AdminApiPaths.SiteKeyRegister, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
 			},
-		);
+		});
 	}
 }

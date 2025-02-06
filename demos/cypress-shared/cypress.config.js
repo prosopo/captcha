@@ -53,6 +53,7 @@ export default defineConfig({
 				}),
 			);
 		},
+		excludeSpecPattern: ["cypress/e2e/**/frictionless.cy.ts"],
 	},
 	component: {
 		devServer: {

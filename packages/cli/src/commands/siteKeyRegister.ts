@@ -25,13 +25,13 @@ import type { ArgumentsCamelCase, Argv } from "yargs";
 import { z } from "zod";
 import { validateSiteKey } from "./validators.js";
 
-const SiteKeyRegisterCommandArgsSpec = z.object({
+export const SiteKeyRegisterCommandArgsSpec = z.object({
 	sitekey: z.string(),
 	tier: z.nativeEnum(Tier),
 	captcha_type: CaptchaTypeSpec,
 	frictionless_threshold: z.number().max(1).min(0),
-	url: z.array(z.string()),
 	pow_difficulty: z.number(),
+	domains: z.array(z.string()),
 });
 
 export default (
@@ -62,15 +62,15 @@ export default (
 					demandOption: false,
 					desc: "Captcha type for settings",
 				} as const)
+				.option("domains", {
+					type: "array" as const,
+					demandOption: false,
+					desc: "Domains for settings",
+				} as const)
 				.option("frictionless_threshold", {
 					type: "number" as const,
 					demandOption: false,
 					desc: "Frictionless threshold for settings",
-				} as const)
-				.option("url", {
-					type: "array" as const,
-					demandOption: false,
-					desc: "URLs for settings",
 				} as const)
 				.option("pow_difficulty", {
 					type: "number" as const,
@@ -86,14 +86,14 @@ export default (
 					tier,
 					captcha_type,
 					frictionless_threshold,
-					url,
 					pow_difficulty,
+					domains,
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
 					captchaType: CaptchaTypeSpec.parse(captcha_type),
 					frictionlessThreshold: frictionless_threshold as number,
-					domains: url as string[],
+					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
 				});
 				logger.info(`Site Key ${argv.sitekey} registered`);
