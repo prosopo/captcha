@@ -13,38 +13,21 @@
 // limitations under the License.
 import {
 	ApiParams,
+	type Callbacks,
 	type ProcaptchaRenderOptions,
 	type ProcaptchaToken,
 } from "@prosopo/types";
-import { getParentForm } from "./form.js";
+import { getParentForm, removeProcaptchaResponse } from "../elements/form.js";
+import { getWindowCallback } from "../elements/window.js";
 
-export const getWindowCallback = (callbackName: string) => {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-	const fn = (window as any)[callbackName.replace("window.", "")];
-	if (typeof fn !== "function") {
-		throw new Error(
-			`Callback ${callbackName} is not defined on the window object`,
-		);
-	}
-	return fn;
-};
-
-export interface Callbacks {
-	onHuman: (token: ProcaptchaToken) => void;
-	onChallengeExpired: () => void;
-	onExpired: () => void;
-	onError: (error: Error) => void;
-	onClose: () => void;
-	onOpen: () => void;
-	onFailed: () => void;
-	onReset: () => void;
-}
-
-export const getDefaultCallbacks = (element: Element): Callbacks => ({
-	onHuman: (token: ProcaptchaToken) => handleOnHuman(element, token),
+export const getDefaultCallbacks = (element?: Element): Callbacks => ({
+	onHuman: (token: ProcaptchaToken) => handleOnHuman(token, element),
 	onChallengeExpired: () => {
 		removeProcaptchaResponse();
 		console.log("Challenge expired");
+	},
+	onExtensionNotFound: () => {
+		console.error("Extension not found");
 	},
 	onExpired: () => {
 		removeProcaptchaResponse();
@@ -66,6 +49,9 @@ export const getDefaultCallbacks = (element: Element): Callbacks => ({
 	onReset: () => {
 		removeProcaptchaResponse();
 		console.log("Captcha widget reset");
+	},
+	onReload: () => {
+		console.log("Challenge reloaded");
 	},
 });
 
@@ -105,7 +91,7 @@ export function setUserCallbacks(
 	if (humanCallback) {
 		// wrap the user's callback in a function that also calls handleOnHuman
 		callbacks.onHuman = (token: ProcaptchaToken) => {
-			handleOnHuman(element, token);
+			handleOnHuman(token, element);
 			humanCallback(token);
 		};
 	}
@@ -192,25 +178,20 @@ export function setUserCallbacks(
 	}
 }
 
-const handleOnHuman = (element: Element, token: ProcaptchaToken) => {
+const handleOnHuman = (token: ProcaptchaToken, element?: Element) => {
 	removeProcaptchaResponse();
-	const form = getParentForm(element);
+	if (element) {
+		const form = getParentForm(element);
 
-	if (!form) {
-		console.error("Parent form not found for the element:", element);
-		return;
+		if (!form) {
+			console.error("Parent form not found for the element:", element);
+			return;
+		}
+
+		const input = document.createElement("input");
+		input.type = "hidden";
+		input.name = ApiParams.procaptchaResponse;
+		input.value = token;
+		form.appendChild(input);
 	}
-
-	const input = document.createElement("input");
-	input.type = "hidden";
-	input.name = ApiParams.procaptchaResponse;
-	input.value = token;
-	form.appendChild(input);
-};
-
-const removeProcaptchaResponse = () => {
-	const element = Array.from(
-		document.getElementsByName(ApiParams.procaptchaResponse),
-	);
-	element.map((el) => el.remove());
 };
