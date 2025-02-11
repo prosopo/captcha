@@ -131,9 +131,6 @@ export function Manager(
 
 				let captchaApi = state.captchaApi;
 
-				console.log("captchaApi", captchaApi);
-				console.log("frictionlessState", frictionlessState);
-
 				if (!frictionlessState?.provider) {
 					// Get a new random provider if
 					// - we don't have a provider api instance (first time)
