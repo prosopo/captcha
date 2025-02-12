@@ -25,7 +25,7 @@
 	"dependencies": {
 		"@prosopo/config": "2.4.1",
 		"debug": "4.3.7",
-		"esbuild": "0.23.1",
+		"esbuild": "0.25.0",
 		"express": "4.21.1",
 		"fast-glob": "3.3.2"
 	},
