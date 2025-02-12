@@ -41,6 +41,7 @@ import {
 import {
 	type Captcha,
 	CaptchaSolutionSchema,
+	CaptchaTypes,
 	type DappAccount,
 	type DatasetID,
 	type PoWChallengeId,
