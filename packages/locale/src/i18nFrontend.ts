@@ -50,8 +50,7 @@ if (!i18n.isInitialized) {
 				],
 				backendOptions: [
 					{
-						loadPath:
-							"http://localhost:9232/assets/locales/{{lng}}/{{ns}}.json",
+						loadPath: `${process.env.PROSOPO_JS_SERVER || ""}./assets/locales/{{lng}}/{{ns}}.json`,
 					},
 				],
 			},
