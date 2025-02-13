@@ -11,16 +11,29 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
-import React from "react";
-import { CaptchaElement } from "../captcha.js";
+import React, { useState } from "react";
+import type { CaptchaProps } from "../captcha.js";
 
-class FrictionlessCaptcha extends CaptchaElement {
-	public override render() {
-		const { config, callbacks } = this.props;
+const FrictionlessCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks } = props;
 
-		return <ProcaptchaFrictionless config={config} callbacks={callbacks} />;
-	}
-}
+	const [componentKey, setComponentKey] = useState(0);
+
+	const restart = () => {
+		setComponentKey((prevKey) => prevKey + 1);
+	};
+
+	return (
+		<ProcaptchaFrictionless
+			key={componentKey}
+			config={config}
+			callbacks={getDefaultEvents(callbacks)}
+			restart={restart}
+		/>
+	);
+};
 
 export { FrictionlessCaptcha };

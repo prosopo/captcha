@@ -17,7 +17,7 @@ import { ProsopoApiError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 
 export const validiateSiteKey = (siteKey: string) => {
-	validateAddr(siteKey, "API.INVALID_SITE_KEY");
+	return validateAddr(siteKey, "API.INVALID_SITE_KEY");
 };
 
 export const validateAddr = (
@@ -25,7 +25,7 @@ export const validateAddr = (
 	translationKey: TranslationKey = "CONTRACT.INVALID_ADDRESS",
 ) => {
 	try {
-		validateAddress(address, false, 42);
+		return validateAddress(address, false, 42);
 	} catch (err) {
 		throw new ProsopoApiError(translationKey, {
 			context: { code: 400, error: err, siteKey: address },

@@ -276,9 +276,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		try {
 			const clientSettings = await tasks.db.getClientRecord(dapp);
-			const clientRecord = await tasks.db.getClientRecord(dapp);
 
-			if (!clientRecord) {
+			if (!clientSettings) {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp, i18n: req.i18n },
@@ -288,7 +287,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const { valid, reason, frictionlessTokenId } =
 				await tasks.powCaptchaManager.isValidRequest(
-					clientRecord,
+					clientSettings,
 					CaptchaType.pow,
 					sessionId,
 				);
@@ -476,9 +475,36 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				const botScore = baseBotScore + lScore;
 
-				const clientConfig = await tasks.db.getClientRecord(dapp);
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+						}),
+					);
+				}
+
+				const { valid, reason } =
+					await tasks.frictionlessManager.isValidRequest(
+						clientRecord,
+						CaptchaType.frictionless,
+					);
+
+				if (!valid) {
+					return next(
+						new ProsopoApiError(reason || "API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+						}),
+					);
+				}
+
 				const botThreshold =
-					clientConfig?.settings?.frictionlessThreshold ||
+					clientRecord.settings?.frictionlessThreshold ||
 					DEFAULT_FRICTIONLESS_THRESHOLD;
 
 				// Store the token

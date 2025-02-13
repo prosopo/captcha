@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-export * from "./util.js";
-export * from "./translations.js";
+export { default as i18nMiddleware } from "./i18nMiddleware.js";
+export { default as i18nBackend } from "./i18nBackend.js";
+export { default as i18nFrontend } from "./i18nFrontend.js";
+export { default as loadI18next } from "./util.js";

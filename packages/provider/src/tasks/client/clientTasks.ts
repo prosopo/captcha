@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
@@ -27,6 +28,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
+import { validiateSiteKey } from "../../api/validateAddress.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -209,6 +211,7 @@ export class ClientTaskManager {
 		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
+		validiateSiteKey(siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
