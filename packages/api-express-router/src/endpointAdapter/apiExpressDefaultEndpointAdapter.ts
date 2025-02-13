@@ -46,7 +46,7 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 
 			response.json(apiEndpointResponse);
 		} catch (error) {
-			this.logger.error(error);
+			this.logger.error((error as Error).message);
 
 			response.status(500).send("An internal server error occurred.");
 		}
