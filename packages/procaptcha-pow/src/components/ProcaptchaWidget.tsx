@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { i18n, useTranslation } from "@prosopo/locale-browser";
+import { i18nFrontend as i18n, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import type { ProcaptchaProps } from "@prosopo/types";
 import {

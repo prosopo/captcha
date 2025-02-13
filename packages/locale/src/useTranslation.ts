@@ -11,15 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export default {
-	entryPoints: [
-		"src/**/*.ts",
-		"src/**/*.tsx",
-		"src/**/*.js",
-		"src/**/*.jsx",
-		"src/**/*.json",
-	],
-	includes: "src",
-	extends: "../../typedoc.base.config.js",
-	readme: "README.md",
-};
+
+import {
+	type UseTranslationOptions,
+	type UseTranslationResponse,
+	useTranslation as useTranslationDefault,
+} from "react-i18next";
+import i18n from "./i18nFrontend.js";
+
+function useTranslation(
+	options?: UseTranslationOptions<"translation">,
+	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
+): UseTranslationResponse<"translation", any> & { t: typeof i18n.t } {
+	return useTranslationDefault("translation", { i18n, ...options });
+}
+
+export default useTranslation;

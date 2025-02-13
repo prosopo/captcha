@@ -18,3 +18,4 @@ export { default as loadI18next } from "./loadi18next.js";
 export * from "./translations.js";
 export * from "./util.js";
 export * from "./translationKey.js";
+export { default as useTranslation } from "./useTranslation.js";

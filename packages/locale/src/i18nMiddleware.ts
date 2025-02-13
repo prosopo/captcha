@@ -15,8 +15,7 @@
 import { type HandleOptions, handle } from "i18next-http-middleware";
 import { default as i18n } from "./i18nBackend.js";
 
-function i18nMiddleware(options: HandleOptions): ReturnType<typeof handle> {
-	// @ts-ignore
+function i18nMiddleware(options: HandleOptions) {
 	return handle(i18n, { ...options });
 }
 

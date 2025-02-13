@@ -14,7 +14,7 @@
 		"@polkadot/extension-dapp": "0.46.9",
 		"@polkadot/extension-inject": "0.46.9",
 		"@prosopo/common": "2.4.1",
-		"@prosopo/locale-browser": "2.4.1",
+		"@prosopo/locale": "2.4.1",
 		"@prosopo/procaptcha-bundle": "2.4.1",
 		"@prosopo/procaptcha-frictionless": "2.4.1",
 		"@prosopo/procaptcha-pow": "2.4.1",
@@ -24,7 +24,7 @@
 		"@prosopo/vite-plugin-watch-workspace": "2.4.1",
 		"@types/react-dom": "18.3.0",
 		"@vitejs/plugin-react": "4.3.1",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"react": "18.3.1",
 		"react-dom": "18.3.1",
 		"react-router-dom": "6.26.2"
