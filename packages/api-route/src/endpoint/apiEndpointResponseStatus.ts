@@ -15,6 +15,7 @@
 enum ApiEndpointResponseStatus {
 	SUCCESS = "SUCCESS",
 	FAIL = "FAIL",
+	PROCESSING = "PROCESSING",
 }
 
 export { ApiEndpointResponseStatus };
