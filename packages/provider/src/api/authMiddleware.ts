@@ -32,10 +32,20 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 
 			const { signature, timestamp } = extractHeaders(req);
 
+			let error: ProsopoApiError | undefined;
+
 			if (env.authAccount) {
-				verifySignature(signature, timestamp, env.authAccount);
-				next();
-				return;
+				try {
+					verifySignature(signature, timestamp, env.authAccount);
+				} catch (e: unknown) {
+					// need to fall through to the verifySignature check
+					env.logger.warn({
+						message: (e as ProsopoApiError).message,
+						code: (e as ProsopoApiError).code,
+						account: env.authAccount.address,
+					});
+					error = e as ProsopoApiError;
+				}
 			}
 
 			if (env.pair) {
@@ -46,7 +56,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 
 			res.status(401).json({
 				error: "Unauthorized",
-				message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
+				message: new ProsopoEnvError(error || "CONTRACT.CANNOT_FIND_KEYPAIR"),
 			});
 			return;
 		} catch (err) {
