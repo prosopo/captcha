@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import path from "node:path";
-import i18n from "i18next";
+import i18n, { type i18n as i18nInstance } from "i18next";
 import FSBackend from "i18next-fs-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import { LanguageSchema } from "./translations.js";

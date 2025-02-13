@@ -20,7 +20,7 @@ import {
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import { getPairAsync } from "@prosopo/keyring";
-import { i18nMiddleware } from "@prosopo/locale-node";
+import { i18nMiddleware } from "@prosopo/locale";
 import {
 	createApiAdminRoutesProvider,
 	domainMiddleware,

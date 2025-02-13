@@ -15,7 +15,7 @@ import process from "node:process";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getPairAsync } from "@prosopo/keyring";
-import { loadI18next } from "@prosopo/locale-node";
+import { loadI18next } from "@prosopo/locale";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";

@@ -24,7 +24,7 @@
 			"path": "../keyring"
 		},
 		{
-			"path": "../locale-node"
+			"path": "../locale"
 		},
 		{
 			"path": "../provider"

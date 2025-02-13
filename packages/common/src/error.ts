@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { type TranslationKey, isClientSide } from "@prosopo/locale";
-import { loadI18next } from "@prosopo/locale-node";
+import { loadI18next } from "@prosopo/locale";
 import type { TFunction, i18n } from "i18next";
 import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
