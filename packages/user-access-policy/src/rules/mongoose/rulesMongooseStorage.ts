@@ -59,12 +59,11 @@ class RulesMongooseStorage implements RulesStorage {
 			throw this.modelNotSetProsopoError();
 		}
 
-		// Delete the existing records to avoid duplicates.
+		// Delete the existing ip records to avoid duplicates.
 		await this.writingModel.bulkWrite(
 			records.map((record) => ({
 				deleteOne: {
 					filter: {
-						userId: record.userId,
 						clientId: record.clientId,
 						userIp: record.userIp,
 					} as Pick<Rule, "userId" | "userIp" | "clientId">,
