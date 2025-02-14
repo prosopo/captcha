@@ -19,7 +19,8 @@ export default defineConfig(({ command, mode }) => {
 	loadEnv();
 	return {
 		watch: false,
-		mode: "development",
+		mode: "production",
+		base: "./",
 		server: {
 			host: true,
 			cors: true,
@@ -31,6 +32,9 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SERVER_URL": JSON.stringify(
 				process.env.PROSOPO_SERVER_URL,
 			),
+		},
+		optimizeDeps: {
+			noDiscovery: true,
 		},
 	} as UserConfig;
 });

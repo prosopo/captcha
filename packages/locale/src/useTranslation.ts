@@ -17,12 +17,15 @@ import {
 	type UseTranslationResponse,
 	useTranslation as useTranslationDefault,
 } from "react-i18next";
-import i18n from "./i18nFrontend.js";
+import initializeI18n from "./i18nFrontend.js";
 
 function useTranslation(
 	options?: UseTranslationOptions<"translation">,
 	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-): UseTranslationResponse<"translation", any> & { t: typeof i18n.t } {
+): UseTranslationResponse<"translation", any> & {
+	t: ReturnType<typeof initializeI18n>["t"];
+} {
+	const i18n = initializeI18n();
 	return useTranslationDefault("translation", { i18n, ...options });
 }
 

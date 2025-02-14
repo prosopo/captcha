@@ -11,7 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import i18n, { type i18n as i18nInstance, type InitOptions } from "i18next";
+
+import { dirname } from "node:path";
+import i18n, { type InitOptions } from "i18next";
 import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
 import ChainedBackend from "i18next-chained-backend";
 import HttpBackend from "i18next-http-backend";
@@ -29,33 +31,42 @@ const reactOptions: InitOptions = {
 	},
 };
 
-if (!i18n.isInitialized) {
-	i18n
-		// @ts-ignore
-		.use(ChainedBackend)
-		.use(I18nextBrowserLanguageDetector)
-		.use(initReactI18next)
-		.init({
-			debug: true,
-			fallbackLng: LanguageSchema.enum.en,
-			namespace: "translation",
-			backend: {
-				backends: [
-					HttpBackend, // if a namespace can't be loaded via normal http-backend loadPath, then the inMemoryLocalBackend will try to return the correct resources
-					// with dynamic import, you have to use the "default" key of the module ( https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#importing_defaults )
-					resourcesToBackend(
-						(language: string, namespace: string) =>
-							import(`./assets/locales/${language}/${namespace}.json`),
-					),
-				],
-				backendOptions: [
-					{
-						loadPath: `${process.env.PROSOPO_JS_SERVER || ""}./assets/locales/{{lng}}/{{ns}}.json`,
-					},
-				],
-			},
-			...reactOptions,
-		} as InitOptions);
+const getLoadPath = (language: string, namespace: string) => {
+	console.log(import.meta);
+	const filename = import.meta.url.split("/").pop();
+	return `${import.meta.url.replace(`/${filename}`, "")}/locales/${language}/${namespace}.json`;
+};
+
+export function initializeI18n() {
+	if (!i18n.isInitialized) {
+		i18n
+			// @ts-ignore
+			.use(ChainedBackend)
+			.use(I18nextBrowserLanguageDetector)
+			.use(initReactI18next)
+			.init({
+				debug: true,
+				fallbackLng: LanguageSchema.enum.en,
+				namespace: "translation",
+				backend: {
+					backends: [
+						HttpBackend, // if a namespace can't be loaded via normal http-backend loadPath, then the inMemoryLocalBackend will try to return the correct resources
+						// with dynamic import, you have to use the "default" key of the module ( https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#importing_defaults )
+						resourcesToBackend(
+							(language: string, namespace: string) =>
+								import(getLoadPath(language, namespace)),
+						),
+					],
+					backendOptions: [
+						{
+							loadPath: getLoadPath("{{lng}}", "{{ns}}"),
+						},
+					],
+				},
+				...reactOptions,
+			} as InitOptions);
+	}
+	return i18n;
 }
 
-export default i18n;
+export default initializeI18n;

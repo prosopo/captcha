@@ -76,8 +76,24 @@ export default defineConfig(async ({ command, mode }) => {
 	// @ts-ignore
 	// biome-ignore lint/correctness/noUnsafeOptionalChaining: output is optional
 	const { output } = frontendConfig.build?.rollupOptions;
+
+	const exclude = [
+		...Object.values(frontendConfig.build?.rollupOptions?.external || {}),
+		...localFiles,
+		"i18next-fs-backend",
+	];
+	const include = [
+		...(frontendConfig.optimizeDeps?.include || []),
+		...localFiles,
+	];
+
 	return {
 		...frontendConfig,
+		optimizeDeps: {
+			...frontendConfig.optimizeDeps,
+			exclude: exclude,
+			include: include,
+		},
 		build: {
 			...frontendConfig.build,
 			rollupOptions: {
@@ -97,16 +113,6 @@ export default defineConfig(async ({ command, mode }) => {
 				},
 			},
 		},
-		resolve: {
-			...frontendConfig.resolve,
-			alias: [
-				{
-					find: /@prosopo\/locale\/locales\/.*\.json"/,
-					replacement: "./locale/",
-				},
-			],
-		},
-		//assetsInclude: [new RegExp(`${workspaceRoot}/packages/locale/src/locales/.*.json`)],
 		plugins: [
 			{
 				name: "copy-dir",

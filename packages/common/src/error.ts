@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type TranslationKey, isClientSide } from "@prosopo/locale";
-import { loadI18next } from "@prosopo/locale";
-import type { TFunction, i18n } from "i18next";
+import type { TranslationKey } from "@prosopo/locale";
+import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 import type { ApiJsonError } from "./types.js";
@@ -44,16 +43,19 @@ type ApiContextParams = BaseContextParams & {
 	i18n?: { t: TFunction<"translation", undefined> };
 };
 
-let i18next: i18n;
+// let i18next: i18n;
+//
+// async function loadi18nextLocal() {
+// 	i18next = await loadI18next();
+// 	// @ts-ignore
+// 	i18next.id = "error";
+// }
+//
+// // Immediately call the function (synchronously starts, but it’s async)
+// console.log("i18next being loaded from error.ts");
+// loadi18nextLocal();
 
-async function loadi18nextLocal() {
-	i18next = await loadI18next();
-	// @ts-ignore
-	i18next.id = "error";
-}
-
-// Immediately call the function (synchronously starts, but it’s async)
-loadi18nextLocal();
+const backupTranslationObj = { t: (key: string) => key };
 
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
@@ -67,7 +69,7 @@ export abstract class ProsopoBaseError<
 	) {
 		const logger = options?.logger || getLoggerDefault();
 		const logLevel = options?.logLevel || "error";
-		const i18n = options?.context?.i18n || i18next;
+		const i18n = options?.context?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
 			super(error.message);
 			this.translationKey = options?.translationKey;
@@ -204,9 +206,9 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 
 export const unwrapError = (
 	err: ProsopoBaseError | SyntaxError | ZodError,
-	i18nInstance?: typeof i18next,
+	i18nInstance?: any,
 ) => {
-	const i18n = i18nInstance || i18next;
+	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;
 
 	let message = err.message; // should be translated already

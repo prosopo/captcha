@@ -17,7 +17,7 @@ import { ViteCommonJSConfig } from "@prosopo/config";
 
 export default function () {
 	return ViteCommonJSConfig(
-		"locale-browser",
+		"locale",
 		path.resolve("./tsconfig.cjs.json"),
 	);
 }

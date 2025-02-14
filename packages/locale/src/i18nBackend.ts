@@ -13,33 +13,38 @@
 // limitations under the License.
 
 import path from "node:path";
-import i18n, { type i18n as i18nInstance } from "i18next";
+import i18n from "i18next";
 import FSBackend from "i18next-fs-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import { LanguageSchema } from "./translations.js";
+import { isClientSideOrFrontendVar } from "./util.js";
 
 const loadPath =
 	`${path.dirname(import.meta.url)}/locales/{{lng}}/{{ns}}.json`.replace(
 		"file://",
 		"",
 	);
-
-if (!i18n.isInitialized) {
-	i18n
-		.use(FSBackend)
-		.use(MiddlewareLanguageDetector)
-		.init({
-			debug: process.env.NODE_ENV === "development",
-			fallbackLng: LanguageSchema.enum.en,
-			ns: ["translation"],
-			backend: {
-				loadPath,
-			},
-			detection: { order: ["header", "query", "cookie"] },
+export function initializeI18n() {
+	if (!i18n.isInitialized && !isClientSideOrFrontendVar()) {
+		i18n
+			.use(FSBackend)
+			.use(MiddlewareLanguageDetector)
+			.init({
+				debug: process.env.NODE_ENV === "development",
+				fallbackLng: LanguageSchema.enum.en,
+				ns: ["translation"],
+				backend: {
+					loadPath,
+				},
+				detection: { order: ["header", "query", "cookie"] },
+			});
+		i18n.on("loaded", () => {
+			console.log(
+				`i18n backend loaded: isClientSideOrFrontendVar():${isClientSideOrFrontendVar()}`,
+			);
 		});
-	i18n.on("loaded", () => {
-		console.log("i18n loaded");
-	});
+	}
+	return i18n;
 }
 
-export default i18n;
+export default initializeI18n;

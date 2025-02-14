@@ -11,21 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { i18n } from "i18next";
 import { isClientSideOrFrontendVar } from "./util.js";
 
-async function loadi18next(): Promise<i18n> {
+async function loadI18next(): Promise<i18n> {
 	return new Promise((resolve, reject) => {
 		if (isClientSideOrFrontendVar()) {
-			import("./i18nFrontend.js").then(({ default: i18nFrontend }) => {
-				resolve(i18nFrontend);
+			console.log("IMPORTING i18nFrontend !!!!!!!!!!!!!!!!!!!");
+			import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
+				resolve(initializeI18n());
 			});
 		} else {
-			import("./i18nBackend.js").then(({ default: i18nBackend }) => {
-				resolve(i18nBackend);
+			console.log("IMPORTING i18nBackend !!!!!!!!!!!!!!!!!!!");
+			import("./i18nBackend.js").then(({ default: initializeI18n }) => {
+				resolve(initializeI18n());
 			});
 		}
 	});
 }
 
-export default loadi18next;
+export default loadI18next;

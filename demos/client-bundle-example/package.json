@@ -10,7 +10,7 @@
 		"test": "echo \"No test specified\"",
 		"build": "echo \"No build specified\"",
 		"build:cjs": "echo 'no cjs build'",
-		"start": "vite serve ./src --port 9232 --config vite.config.ts",
+		"start": "vite serve ./src --port 9232 --config vite.config.ts --debug",
 		"clean": "echo 'nothing to clean'"
 	},
 	"version": "2.4.1",
@@ -26,8 +26,5 @@
 		"typescript": "5.6.2",
 		"vite": "5.4.6",
 		"vitest": "2.1.1"
-	},
-	"dependencies": {
-		"express": "4.21.2"
 	}
 }

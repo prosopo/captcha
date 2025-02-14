@@ -22,5 +22,19 @@ export const isClientSide = (): boolean => {
 };
 
 export const isClientSideOrFrontendVar = () => {
-	return isClientSide() || process.env.FRONTEND;
+	console.log("isClientSide", isClientSide());
+	console.log("process.env.FRONTEND", process.env.FRONTEND);
+
+	return (
+		isClientSide() ||
+		Boolean(process.env.FRONTEND) ||
+		!(
+			import.meta &&
+			"env" in import.meta &&
+			// @ts-ignore
+			import.meta.env &&
+			// @ts-ignore
+			import.meta.env.SSR
+		)
+	);
 };

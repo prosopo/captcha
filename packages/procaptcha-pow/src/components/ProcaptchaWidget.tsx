@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { i18nFrontend as i18n, useTranslation } from "@prosopo/locale";
+import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import type { ProcaptchaProps } from "@prosopo/types";
 import {
@@ -53,7 +53,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			i18n.changeLanguage(config.language);
+			loadI18next().then((i18n) => {
+				i18n.changeLanguage(config.language).then((r) => r);
+			});
 		}
 	}, [config.language]);
 
