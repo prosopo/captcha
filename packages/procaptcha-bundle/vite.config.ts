@@ -72,46 +72,9 @@ export default defineConfig(async ({ command, mode }) => {
 		tsConfigPaths,
 		workspaceRoot,
 	);
-	// @ts-ignore
-	// biome-ignore lint/correctness/noUnsafeOptionalChaining: output is optional
-	const { output } = frontendConfig.build?.rollupOptions;
-
-	const exclude = [
-		...Object.values(frontendConfig.build?.rollupOptions?.external || {}),
-		...localFiles,
-		"i18next-fs-backend",
-	];
-	const include = [
-		...(frontendConfig.optimizeDeps?.include || []),
-		...localFiles,
-	];
 
 	return {
 		...frontendConfig,
-		optimizeDeps: {
-			...frontendConfig.optimizeDeps,
-			exclude: exclude,
-			include: include,
-		},
-		build: {
-			...frontendConfig.build,
-			rollupOptions: {
-				...frontendConfig.build?.rollupOptions,
-				external: {
-					// @ts-ignore
-					...frontendConfig.build?.rollupOptions.external,
-					...localFiles,
-					"i18next-fs-backend": "i18next-fs-backend",
-				},
-				output: {
-					...output,
-					// manualChunks(id) {
-					// 	if (id.includes('json'))
-					// 		return id.split('/').reverse()[0].split('.')[0];
-					// },
-				},
-			},
-		},
 		plugins: [
 			{
 				name: "copy-dir",
