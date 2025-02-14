@@ -31,7 +31,7 @@ export function initializeI18n() {
 			.use(FSBackend)
 			.use(MiddlewareLanguageDetector)
 			.init({
-				debug: process.env.NODE_ENV === "development",
+				debug: process.env.PROSOPO_LOG_LEVEL === "debug",
 				fallbackLng: LanguageSchema.enum.en,
 				ns: ["translation"],
 				backend: {
