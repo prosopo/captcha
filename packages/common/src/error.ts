@@ -43,18 +43,7 @@ type ApiContextParams = BaseContextParams & {
 	i18n?: { t: TFunction<"translation", undefined> };
 };
 
-// let i18next: i18n;
-//
-// async function loadi18nextLocal() {
-// 	i18next = await loadI18next();
-// 	// @ts-ignore
-// 	i18next.id = "error";
-// }
-//
-// // Immediately call the function (synchronously starts, but it’s async)
-// console.log("i18next being loaded from error.ts");
-// loadi18nextLocal();
-
+// if i18n is not loaded then we use this
 const backupTranslationObj = { t: (key: string) => key };
 
 export abstract class ProsopoBaseError<
@@ -73,9 +62,6 @@ export abstract class ProsopoBaseError<
 		if (error instanceof Error) {
 			super(error.message);
 			this.translationKey = options?.translationKey;
-
-			console.log("\ntranslating error 1", options?.translationKey, "\n");
-
 			this.context = {
 				...(options?.context as ContextType),
 				...(options?.translationKey
@@ -83,7 +69,6 @@ export abstract class ProsopoBaseError<
 					: {}),
 			};
 		} else {
-			console.log("\ntranslating error 2", error, "\n");
 			super(i18n.t(error));
 			this.translationKey = error;
 			this.context = options?.context;

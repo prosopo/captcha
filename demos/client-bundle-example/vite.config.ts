@@ -19,8 +19,7 @@ export default defineConfig(({ command, mode }) => {
 	loadEnv();
 	return {
 		watch: false,
-		mode: "production",
-		base: "./",
+		mode: "development",
 		server: {
 			host: true,
 			cors: true,

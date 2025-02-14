@@ -84,10 +84,7 @@ async function main() {
 
 //if main process
 if (isMain(import.meta.url, "provider")) {
-	loadI18next(true).then((i18n) => {
-		console.log("\ni18next.language", i18n.language, "\n");
-		// @ts-ignore
-		console.log("\ni18next.id", i18n.id, "\n");
+	loadI18next(true).then(() => {
 		main()
 			.then(() => {
 				log.info("Running main process...");

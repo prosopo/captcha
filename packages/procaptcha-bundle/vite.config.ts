@@ -47,7 +47,6 @@ for (const packageName of packages) {
 	// Add the tsconfig for each package to tsConfigPaths
 	tsConfigPaths.push(path.resolve(`../${packageName}/tsconfig.json`));
 }
-console.log(`${workspaceRoot}/packages/locale/src/locales/.*.json`);
 
 const copyDir = {
 	srcDir: `${workspaceRoot}/packages/locale/src/locales`,

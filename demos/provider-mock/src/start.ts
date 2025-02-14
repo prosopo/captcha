@@ -26,8 +26,7 @@ async function startApi() {
 
 	apiApp.use(cors());
 	apiApp.use(express.json());
-	// @ts-ignore
-	apiApp.use(i18nMiddleware({}));
+	apiApp.use(await i18nMiddleware({}));
 	apiApp.use(prosopoRouter());
 	apiApp.use(handleErrors);
 

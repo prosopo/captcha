@@ -32,7 +32,6 @@ const reactOptions: InitOptions = {
 };
 
 const getLoadPath = (language: string, namespace: string) => {
-	console.log(import.meta);
 	const filename = import.meta.url.split("/").pop();
 	return `${import.meta.url.replace(`/${filename}`, "")}/locales/${language}/${namespace}.json`;
 };
