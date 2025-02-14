@@ -16,7 +16,7 @@ import path from "node:path";
 import i18n from "i18next";
 import FSBackend from "i18next-fs-backend/cjs"; // https://github.com/i18next/i18next-fs-backend/issues/57
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
-import { LanguageSchema } from "./translations.js";
+import { LanguageSchema, Languages } from "./translations.js";
 import { isServerSide } from "./util.js";
 
 const loadPath =
@@ -34,6 +34,7 @@ export function initializeI18n() {
 			.init({
 				debug: process.env.PROSOPO_LOG_LEVEL === "debug",
 				fallbackLng: LanguageSchema.enum.en,
+				supportedLngs: Languages,
 				ns: ["translation"],
 				backend: {
 					loadPath,
