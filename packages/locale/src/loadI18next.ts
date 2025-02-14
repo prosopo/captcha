@@ -13,20 +13,21 @@
 // limitations under the License.
 
 import type { i18n } from "i18next";
-import { isClientSideOrFrontendVar } from "./util.js";
 
-async function loadI18next(): Promise<i18n> {
+async function loadI18next(backend: boolean): Promise<i18n> {
 	return new Promise((resolve, reject) => {
-		if (isClientSideOrFrontendVar()) {
-			console.log("IMPORTING i18nFrontend !!!!!!!!!!!!!!!!!!!");
-			import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
-				resolve(initializeI18n());
-			});
-		} else {
-			console.log("IMPORTING i18nBackend !!!!!!!!!!!!!!!!!!!");
-			import("./i18nBackend.js").then(({ default: initializeI18n }) => {
-				resolve(initializeI18n());
-			});
+		try {
+			if (backend) {
+				import("./i18nBackend.js").then(({ default: initializeI18n }) => {
+					resolve(initializeI18n());
+				});
+			} else {
+				import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
+					resolve(initializeI18n());
+				});
+			}
+		} catch (e) {
+			reject(e);
 		}
 	});
 }

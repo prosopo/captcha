@@ -14,10 +14,7 @@
 export { default as i18nMiddleware } from "./i18nMiddleware.js";
 export { default as loadI18next } from "./loadI18next.js";
 export { Languages, LanguageSchema } from "./translations.js";
-export {
-	isClientSide,
-	isClientSideOrFrontendVar,
-} from "./util.js";
+export { isClientSide } from "./util.js";
 export { TranslationKeysSchema } from "./translationKey.js";
 export type { TranslationKey } from "./translationKey.js";
 export { default as useTranslation } from "./useTranslation.js";

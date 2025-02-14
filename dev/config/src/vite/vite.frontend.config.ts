@@ -85,7 +85,6 @@ export default async function (
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
 			process.env.PROSOPO_SITE_KEY,
 		),
-		"process.env.FRONTEND": JSON.stringify("true"),
 	};
 
 	logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`);

@@ -18,7 +18,7 @@ import loadI18next from "./loadI18next.js";
 async function i18nMiddleware(
 	options: HandleOptions,
 ): Promise<ReturnType<typeof handle>> {
-	const i18n = await loadI18next();
+	const i18n = await loadI18next(true);
 	return handle(i18n, { ...options });
 }
 

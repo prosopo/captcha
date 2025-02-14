@@ -53,7 +53,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			loadI18next().then((i18n) => {
+			loadI18next(false).then((i18n) => {
 				i18n.changeLanguage(config.language).then((r) => r);
 			});
 		}

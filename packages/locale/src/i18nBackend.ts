@@ -17,15 +17,16 @@ import i18n from "i18next";
 import FSBackend from "i18next-fs-backend";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import { LanguageSchema } from "./translations.js";
-import { isClientSideOrFrontendVar } from "./util.js";
+import { isServerSide } from "./util.js";
 
 const loadPath =
 	`${path.dirname(import.meta.url)}/locales/{{lng}}/{{ns}}.json`.replace(
 		"file://",
 		"",
 	);
+
 export function initializeI18n() {
-	if (!i18n.isInitialized && !isClientSideOrFrontendVar()) {
+	if (!i18n.isInitialized && isServerSide()) {
 		i18n
 			.use(FSBackend)
 			.use(MiddlewareLanguageDetector)
@@ -39,9 +40,7 @@ export function initializeI18n() {
 				detection: { order: ["header", "query", "cookie"] },
 			});
 		i18n.on("loaded", () => {
-			console.log(
-				`i18n backend loaded: isClientSideOrFrontendVar():${isClientSideOrFrontendVar()}`,
-			);
+			console.log("i18n backend loaded");
 		});
 	}
 	return i18n;

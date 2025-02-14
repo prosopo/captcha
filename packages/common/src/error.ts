@@ -206,7 +206,7 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 
 export const unwrapError = (
 	err: ProsopoBaseError | SyntaxError | ZodError,
-	i18nInstance?: any,
+	i18nInstance?: { t: TFunction<"translation", undefined> },
 ) => {
 	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;

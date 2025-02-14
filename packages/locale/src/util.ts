@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { i18n } from "i18next";
 
 export const isClientSide = (): boolean => {
 	return !!(
@@ -21,20 +20,6 @@ export const isClientSide = (): boolean => {
 	);
 };
 
-export const isClientSideOrFrontendVar = () => {
-	console.log("isClientSide", isClientSide());
-	console.log("process.env.FRONTEND", process.env.FRONTEND);
-
-	return (
-		isClientSide() ||
-		Boolean(process.env.FRONTEND) ||
-		!(
-			import.meta &&
-			"env" in import.meta &&
-			// @ts-ignore
-			import.meta.env &&
-			// @ts-ignore
-			import.meta.env.SSR
-		)
-	);
+export const isServerSide = (): boolean => {
+	return !isClientSide();
 };
