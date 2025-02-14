@@ -14,7 +14,7 @@
 
 import path from "node:path";
 import i18n from "i18next";
-import FSBackend from "i18next-fs-backend";
+import FSBackend from "i18next-fs-backend/cjs"; // https://github.com/i18next/i18next-fs-backend/issues/57
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import { LanguageSchema } from "./translations.js";
 import { isServerSide } from "./util.js";
@@ -28,6 +28,7 @@ const loadPath =
 export function initializeI18n() {
 	if (!i18n.isInitialized && isServerSide()) {
 		i18n
+			// @ts-ignore https://github.com/i18next/i18next-fs-backend/issues/57
 			.use(FSBackend)
 			.use(MiddlewareLanguageDetector)
 			.init({

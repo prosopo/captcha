@@ -43,6 +43,7 @@ export default defineConfig(async ({ command, mode }) => {
 		undefined,
 		workspaceRoot,
 	);
+
 	const define = {
 		...frontendConfig.define,
 		"process.env.PROSOPO_WEB2": JSON.stringify(
