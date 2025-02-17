@@ -13,7 +13,7 @@
 // limitations under the License.
 // @ts-nocheck
 
-// load JSON file in REPO_DIR/packages/common/src/locales/en.json
+// load JSON file in REPO_DIR/packages/locale/src/locales/en/translation.json
 
 // for each combined key in the JSON file, check if it is used in any .ts, .tsx, .js, .jsx files in REPO_DIR, excluding node_modules
 // if it is not used, print a message to the console
@@ -29,15 +29,17 @@
 //     "KEY4": "value4"
 //   }
 
+import { Languages } from "@prosopo/locale";
+
+const REPO_DIR = "/home/chris/dev/prosopo/captcha-private/captcha";
+
 import fs from "node:fs";
 import { getRootDir } from "@prosopo/config";
 import fg from "fast-glob";
 // keys are accessed by the code as `SECTION1.KEY1`, `SECTION1.KEY2`, `SECTION2.KEY3`, `SECTION2.KEY4`
-import json from "./packages/common/src/locales/en.json" assert {
+import json from "../../../../packages/locale/src/locales/en/translation.json" assert {
 	type: "json",
 };
-
-const REPO_DIR = "/home/chris/dev/prosopo/captcha-private/captcha";
 
 const findUsedKeys = (
 	jsonPath: string,
@@ -118,7 +120,7 @@ const removeUnusedKeys = (jsonPath: string, projectPath: string) => {
 
 	// for each of en.json, es.json, and pt.json, load the files, remove the unused keys, and write the files back
 	// to the same location
-	for (const lang of ["en", "es", "pt"]) {
+	for (const lang of Languages) {
 		const langJsonPath = jsonPath.replace("en", lang);
 		const langJson = JSON.parse(fs.readFileSync(langJsonPath, "utf8"));
 		for (const key of unusedKeys) {
@@ -129,4 +131,7 @@ const removeUnusedKeys = (jsonPath: string, projectPath: string) => {
 	}
 };
 
-removeUnusedKeys(`${REPO_DIR}/packages/common/src/locales/en.json`, REPO_DIR);
+removeUnusedKeys(
+	`${REPO_DIR}/packages/locale/src/locales/en/translation.json`,
+	REPO_DIR,
+);
