@@ -12,12 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteCommonJSConfig } from "@prosopo/config";
+import {
+	type UseTranslationOptions,
+	type UseTranslationResponse,
+	useTranslation as useTranslationDefault,
+} from "react-i18next";
+import initializeI18n from "./i18nFrontend.js";
 
-export default function () {
-	return ViteCommonJSConfig(
-		"locale-browser",
-		path.resolve("./tsconfig.cjs.json"),
-	);
+function useTranslation(
+	options?: UseTranslationOptions<"translation">,
+	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
+): UseTranslationResponse<"translation", any> & {
+	t: ReturnType<typeof initializeI18n>["t"];
+} {
+	const i18n = initializeI18n();
+	return useTranslationDefault("translation", { i18n, ...options });
 }
+
+export default useTranslation;

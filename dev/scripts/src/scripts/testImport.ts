@@ -11,15 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export default {
-	entryPoints: [
-		"src/**/*.ts",
-		"src/**/*.tsx",
-		"src/**/*.js",
-		"src/**/*.jsx",
-		"src/**/*.json",
-	],
-	includes: "src",
-	extends: "../../typedoc.base.config.js",
-	readme: "README.md",
+const getLang = async (language: string) => {
+	console.log("Getting language", language);
+	// @ts-ignore
+	return (await import(`@prosopo/locale/locales/${language}`)).default;
 };
+
+getLang("en")
+	.then((lang) => {
+		console.log(lang);
+	})
+	.catch((err) => {
+		console.error(err);
+	});

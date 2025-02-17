@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type TranslationKey, i18n as i18next } from "@prosopo/locale";
+import type { TranslationKey } from "@prosopo/locale";
+import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
 import type { ApiJsonError } from "./types.js";
@@ -24,6 +25,7 @@ type BaseErrorOptions<ContextType> = {
 	logLevel?: LogLevel;
 	context?: ContextType;
 	silent?: boolean;
+	i18n?: { t: TFunction<"translation", undefined> };
 };
 
 interface BaseContextParams {
@@ -37,7 +39,12 @@ type ContractContextParams = BaseContextParams;
 type DBContextParams = BaseContextParams & { captchaId?: string[] };
 type CliContextParams = BaseContextParams;
 type DatasetContextParams = BaseContextParams;
-type ApiContextParams = BaseContextParams & { code?: number };
+type ApiContextParams = BaseContextParams & {
+	code?: number;
+};
+
+// if i18n is not loaded then we use this
+const backupTranslationObj = { t: (key: string) => key };
 
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
@@ -51,18 +58,18 @@ export abstract class ProsopoBaseError<
 	) {
 		const logger = options?.logger || getLoggerDefault();
 		const logLevel = options?.logLevel || "error";
-
+		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
-			super(error.message);
+			super(i18n.t(error.message));
 			this.translationKey = options?.translationKey;
 			this.context = {
 				...(options?.context as ContextType),
 				...(options?.translationKey
-					? { translationMessage: i18next.t(options.translationKey) }
+					? { translationMessage: i18n.t(options.translationKey) }
 					: {}),
 			};
 		} else {
-			super(i18next.t(error));
+			super(i18n.t(error));
 			this.translationKey = error;
 			this.context = options?.context;
 		}
@@ -182,9 +189,14 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	}
 }
 
-export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
+export const unwrapError = (
+	err: ProsopoBaseError | SyntaxError | ZodError,
+	i18nInstance?: { t: TFunction<"translation", undefined> },
+) => {
+	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;
-	let message = i18next.t(err.message);
+
+	let message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
 	let statusMessage = err.message;
 	jsonError.message = message;
@@ -193,7 +205,7 @@ export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
 		// base error will not have a translation key
 		jsonError.key =
 			err.context.translationKey || err.translationKey || "API.UNKNOWN";
-		jsonError.message = err.message;
+		jsonError.message = i18n.t(err.message);
 		// Only move to the next error if ProsopoBaseError or ZodError
 		if (
 			err.context.error &&
@@ -207,7 +219,7 @@ export const unwrapError = (err: ProsopoBaseError | SyntaxError | ZodError) => {
 	}
 
 	if (isZodError(err)) {
-		message = i18next.t("API.PARSE_ERROR");
+		message = i18n.t("API.PARSE_ERROR");
 		statusMessage = message;
 		if (typeof err.message === "object") {
 			jsonError = err.message;

@@ -77,6 +77,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: { code: 400, error: "IP address not found" },
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -89,6 +90,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err },
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -106,6 +108,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -132,6 +135,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							siteKey: dapp,
 							user,
 						},
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -168,10 +172,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
 						error: err,
+
 						code: 500,
 						params: req.params,
 						context: err,
 					},
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -193,6 +199,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err, body: req.body },
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -210,6 +217,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -239,7 +247,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500, siteKey: req.body.dapp, error: err },
+					context: {
+						code: 500,
+						siteKey: req.body.dapp,
+						error: err,
+					},
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -260,6 +273,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err },
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -276,6 +290,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -295,6 +310,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							siteKey: dapp,
 							user,
 						},
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -310,6 +326,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							siteKey: dapp,
 							user,
 						},
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -358,6 +375,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						user: req.body.user,
 						error: err,
 					},
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -381,6 +399,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err, body: req.body },
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -406,6 +425,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -431,6 +451,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						siteKey: req.body.dapp,
 						error: err,
 					},
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -473,6 +494,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					return next(
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
 						}),
 					);
 				}
@@ -491,6 +513,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 								siteKey: dapp,
 								user,
 							},
+							i18n: req.i18n,
 						}),
 					);
 				}
@@ -565,6 +588,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: err },
+						i18n: req.i18n,
 					}),
 				);
 			}
