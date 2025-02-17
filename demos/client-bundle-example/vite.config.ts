@@ -34,6 +34,7 @@ export default defineConfig(({ command, mode }) => {
 		},
 		optimizeDeps: {
 			noDiscovery: true,
+			include: ["void-elements", "react", "bn.js"],
 		},
 	} as UserConfig;
 });

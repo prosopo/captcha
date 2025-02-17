@@ -10,7 +10,7 @@
 		"test": "echo \"No test specified\"",
 		"build": "echo \"No build specified\"",
 		"build:cjs": "echo 'no cjs build'",
-		"start": "vite serve ./src --port 9232 --config vite.config.ts --debug",
+		"start": "vite serve ./src --port 9232 --config vite.config.ts",
 		"clean": "echo 'nothing to clean'"
 	},
 	"version": "2.4.1",
