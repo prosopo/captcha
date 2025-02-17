@@ -32,5 +32,9 @@ export default defineConfig(({ command, mode }) => {
 				process.env.PROSOPO_SERVER_URL,
 			),
 		},
+		optimizeDeps: {
+			noDiscovery: true,
+			include: ["void-elements", "react", "bn.js"],
+		},
 	} as UserConfig;
 });

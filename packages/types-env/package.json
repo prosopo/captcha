@@ -35,7 +35,7 @@
 		"@prosopo/common": "2.4.1",
 		"@prosopo/types": "2.4.1",
 		"@prosopo/types-database": "2.4.1",
-		"express": "4.21.1"
+		"express": "4.21.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.4.1",

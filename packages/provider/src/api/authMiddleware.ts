@@ -118,7 +118,7 @@ export const verifySignature = (
 			context: {
 				error: "Signature verification failed",
 				code: 401,
-				account: pair.publicKey,
+				account: pair.address,
 			},
 		});
 	}

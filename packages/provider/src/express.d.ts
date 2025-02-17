@@ -11,4 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { default as i18nMiddleware } from "./i18nMiddleware.js";
+
+import type { TFunction } from "i18next";
+
+declare module "express-serve-static-core" {
+	interface Request {
+		t: TFunction;
+		i18n: {
+			t: TFunction;
+		};
+	}
+}

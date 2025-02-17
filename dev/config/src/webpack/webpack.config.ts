@@ -43,6 +43,8 @@ export default (mode: string) => {
 		externals: {
 			"node:url": "commonjs url",
 			url: "commonjs url",
+			"node:path": "commonjs path",
+			"node:fs": "commonjs fs",
 		},
 		entry: "./src/index.tsx",
 		output: {
