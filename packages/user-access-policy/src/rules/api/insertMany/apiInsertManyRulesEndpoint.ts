@@ -37,14 +37,26 @@ class ApiInsertManyRulesEndpoint
 	): Promise<ApiEndpointResponse> {
 		const rules: Rule[] = [
 			...this.getUserIpRules(args),
+			...this.getUserIPMaskRules(args),
 			...this.getUserIdRules(args),
 		];
 
-		await this.rulesStorage.insertMany(rules);
+		let response: ApiEndpointResponse;
 
-		return {
-			status: ApiEndpointResponseStatus.SUCCESS,
+		response = {
+			status: ApiEndpointResponseStatus.PROCESSING,
 		};
+
+		this.rulesStorage.insertMany(rules).then(() => {
+			response = {
+				status: ApiEndpointResponseStatus.SUCCESS,
+			};
+		});
+
+		// wait to see if the promise resolves, otherwise return the processing status
+		await new Promise((resolve) => setTimeout(resolve, 5000));
+
+		return response;
 	}
 
 	public getRequestArgsSchema(): ApiInsertManyRulesArgsSchema {
@@ -91,6 +103,58 @@ class ApiInsertManyRulesEndpoint
 			});
 		}
 
+		return rules;
+	}
+
+	protected getUserIPMaskRules(
+		args: z.infer<ApiInsertManyRulesArgsSchema>,
+	): Rule[] {
+		const rules: Rule[] = [];
+		const userIpMasks = args.userIpMasks || [];
+		for (const userMask of userIpMasks.v4 || []) {
+			const min = new Address4(userMask.min);
+			const max = new Address4(userMask.max);
+			rules.push({
+				userIp: ruleIpSchema.parse({
+					v4: {
+						asNumeric: min.bigInt(),
+						asString: min.address,
+						mask: {
+							rangeMinAsNumeric: min.bigInt(),
+							rangeMaxAsNumeric: max.bigInt(),
+							asNumeric: Number(min.bigInt()),
+						},
+					},
+				}),
+				isUserBlocked: args.isUserBlocked,
+				description: args.description,
+				clientId: args.clientId,
+				config: args.config,
+				score: args.score,
+			});
+		}
+		for (const userMask of userIpMasks.v6 || []) {
+			const min = new Address6(userMask.min);
+			const max = new Address6(userMask.max);
+			rules.push({
+				userIp: ruleIpSchema.parse({
+					v6: {
+						asNumeric: min.bigInt(),
+						asString: min.address,
+						mask: {
+							rangeMinAsNumeric: min.bigInt(),
+							rangeMaxAsNumeric: max.bigInt(),
+							asNumeric: Number(min.bigInt()),
+						},
+					},
+				}),
+				isUserBlocked: args.isUserBlocked,
+				description: args.description,
+				clientId: args.clientId,
+				config: args.config,
+				score: args.score,
+			});
+		}
 		return rules;
 	}
 
