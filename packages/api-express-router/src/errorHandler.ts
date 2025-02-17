@@ -11,7 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 // We need the unused params to make express recognise this function as an error handler
+
 import { type ProsopoApiError, unwrapError } from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodError } from "zod";

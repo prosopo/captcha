@@ -31,7 +31,7 @@ describe("logging", () => {
 		const innerKeysObj: { [key: string]: { [key: string]: Set<string> } } = {};
 		for (const locale of locales) {
 			const localeData = fs.readFileSync(
-				path.resolve(`./src/locales/${locale}.json`),
+				path.resolve(`./src/locales/${locale}/translation.json`),
 				"utf8",
 			);
 			const localeKeys = Object.keys(JSON.parse(localeData));

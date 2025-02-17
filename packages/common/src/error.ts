@@ -25,6 +25,7 @@ type BaseErrorOptions<ContextType> = {
 	logLevel?: LogLevel;
 	context?: ContextType;
 	silent?: boolean;
+	i18n?: { t: TFunction<"translation", undefined> };
 };
 
 interface BaseContextParams {
@@ -40,7 +41,6 @@ type CliContextParams = BaseContextParams;
 type DatasetContextParams = BaseContextParams;
 type ApiContextParams = BaseContextParams & {
 	code?: number;
-	i18n?: { t: TFunction<"translation", undefined> };
 };
 
 // if i18n is not loaded then we use this
@@ -58,9 +58,9 @@ export abstract class ProsopoBaseError<
 	) {
 		const logger = options?.logger || getLoggerDefault();
 		const logLevel = options?.logLevel || "error";
-		const i18n = options?.context?.i18n || backupTranslationObj;
+		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
-			super(error.message);
+			super(i18n.t(error.message));
 			this.translationKey = options?.translationKey;
 			this.context = {
 				...(options?.context as ContextType),
@@ -196,7 +196,7 @@ export const unwrapError = (
 	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;
 
-	let message = err.message; // should be translated already
+	let message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
 	let statusMessage = err.message;
 	jsonError.message = message;
@@ -205,7 +205,7 @@ export const unwrapError = (
 		// base error will not have a translation key
 		jsonError.key =
 			err.context.translationKey || err.translationKey || "API.UNKNOWN";
-		jsonError.message = err.message;
+		jsonError.message = i18n.t(err.message);
 		// Only move to the next error if ProsopoBaseError or ZodError
 		if (
 			err.context.error &&
