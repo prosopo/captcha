@@ -21,7 +21,7 @@
 		"@prosopo/provider": "2.4.1",
 		"@prosopo/types": "2.4.1",
 		"cors": "2.8.5",
-		"express": "4.21.1"
+		"express": "4.21.2"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "2.1.1",
