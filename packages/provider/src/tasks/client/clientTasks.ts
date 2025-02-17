@@ -171,10 +171,14 @@ export class ClientTaskManager {
 			);
 
 			// Get updated client records within a ten minute window of the last completed task
-			const tenMinuteWindow = new Date().getTime() - 10 * 60 * 1000;
+			const tenMinuteWindow = 10 * 60 * 1000;
 			const updatedAtTimestamp = lastTask?.updated
 				? lastTask.updated - tenMinuteWindow || 0
 				: 0;
+
+			this.logger.info({
+				message: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
+			});
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
