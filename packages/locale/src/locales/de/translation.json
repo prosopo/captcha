@@ -20,27 +20,16 @@
 		"CANT_FIND_KEYRINGPAIR": "Kann den Keyringpair für {{address}} nicht finden",
 		"ENVIRONMENT_NOT_READY": "Umgebung nicht bereit",
 		"INVALID_SIGNATURE": "Ungültige Signatur",
-		"NOT_IMPLEMENTED": "Nicht implementiert",
 		"SITE_KEY_MISSING": "SITE-KEY fehlt",
 		"ACCOUNT_NOT_FOUND": "Konto nicht gefunden",
 		"INVALID_TIMESTAMP": "Ungültiger Zeitstempel"
 	},
 	"CONTRACT": {
-		"INVALID_METHOD": "Ungültige Vertragsmethode",
-		"TX_ERROR": "Fehler bei der Transaktion",
 		"INVALID_ADDRESS": "Ungültige Adresse konnte nicht codiert werden",
-		"INVALID_STORAGE_NAME": "Der angegebene Speichername konnte nicht gefunden werden",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-Lösungsverpflichtung existiert nicht",
-		"CONTRACT_UNDEFINED": "Vertrag undefiniert",
 		"SIGNER_UNDEFINED": "Unterzeichner undefiniert",
 		"CANNOT_FIND_KEYPAIR": "Kann das Schlüsselpaar nicht finden",
-		"INTERRUPTED_EVENT": "Ereignis unterbrochen",
-		"TOO_MANY_CALLS": "Zu viele Anrufe",
-		"UNKNOWN_ERROR": "Unbekannter Fehler",
-		"CHAIN_DECIMALS_UNDEFINED": "Ketten-Dezimalstellen sind nicht definiert",
-		"INVALID_DATA_FORMAT": "Ungültiges Datenformat",
-		"TX_QUEUE_ERROR": "Fehler in der Transaktionswarteschlange",
-		"DISPATCH_ERROR": "Fehler beim Senden der Transaktion"
+		"INVALID_DATA_FORMAT": "Ungültiges Datenformat"
 	},
 	"CONFIG": {
 		"UNKNOWN_ENVIRONMENT": "Unbekannte Umgebung angefordert",
@@ -111,8 +100,6 @@
 		"UNAUTHORIZED_ORIGIN_URL": "Nicht autorisierte Ursprungs-URL",
 		"INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
 		"INVALID_IP": "Ungültige IP",
-		"INVALID_URL": "Ungültiger URL",
-		"INVALID_BODY": "Ungültiger Körper",
 		"PARSE_ERROR": "Fehler beim Parsen der Anfrage"
 	},
 	"CLI": {
@@ -125,7 +112,6 @@
 		"MISSING_ENV_VARIABLE": "Fehlende Umgebungsvariable",
 		"GENERAL": "Allgemeiner Entwicklerfehler, siehe Kontext",
 		"MISSING_SECRET_KEY": "Fehlender geheimer Schlüssel",
-		"KEY_ERROR": "Schlüssel-Fehler",
 		"METHOD_NOT_IMPLEMENTED": "Methode nicht implementiert"
 	},
 	"FS": {

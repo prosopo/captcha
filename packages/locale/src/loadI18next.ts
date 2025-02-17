@@ -11,13 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type HandleOptions, handle } from "i18next-http-middleware";
 
-import i18n from "./i18nBackend.js";
+import type { i18n } from "i18next";
 
-function i18nMiddleware(options: HandleOptions): ReturnType<typeof handle> {
-	// @ts-ignore not sure how to fix this
-	return handle(i18n, { ...options });
+async function loadI18next(backend: boolean): Promise<i18n> {
+	return new Promise((resolve, reject) => {
+		try {
+			if (backend) {
+				import("./i18nBackend.js").then(({ default: initializeI18n }) => {
+					resolve(initializeI18n());
+				});
+			} else {
+				import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
+					resolve(initializeI18n());
+				});
+			}
+		} catch (e) {
+			reject(e);
+		}
+	});
 }
 
-export default i18nMiddleware;
+export default loadI18next;
