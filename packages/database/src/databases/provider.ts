@@ -779,20 +779,7 @@ export class ProviderDatabase
 						filterNoStoredTimestamp,
 						{
 							$expr: {
-								$lt: [
-									{
-										$convert: {
-											input: "$storedAtTimestamp",
-											to: "date",
-										},
-									},
-									{
-										$convert: {
-											input: "$lastUpdatedTimestamp",
-											to: "date",
-										},
-									},
-								],
+								$lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"],
 							},
 						},
 					],
@@ -864,20 +851,7 @@ export class ProviderDatabase
 						filterNoStoredTimestamp,
 						{
 							$expr: {
-								$lt: [
-									{
-										$convert: {
-											input: "$storedAtTimestamp",
-											to: "date",
-										},
-									},
-									{
-										$convert: {
-											input: "$lastUpdatedTimestamp",
-											to: "date",
-										},
-									},
-								],
+								$lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"],
 							},
 						},
 					],
