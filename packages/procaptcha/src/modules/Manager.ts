@@ -131,7 +131,7 @@ export function Manager(
 
 				let captchaApi = state.captchaApi;
 
-				if (!captchaApi || (captchaApi && !state.sessionId)) {
+				if (!frictionlessState?.provider) {
 					// Get a new random provider if
 					// - we don't have a provider api instance (first time)
 					// - we do have a provider api instance but no sessionId (image captcha only)
@@ -146,6 +146,17 @@ export function Manager(
 					captchaApi = new ProsopoCaptchaApi(
 						account.account.address,
 						getRandomProviderResponse,
+						providerApi,
+						config.web2,
+						config.account.address || "",
+					);
+					updateState({ captchaApi });
+				} else {
+					const providerUrl = frictionlessState.provider.provider.url;
+					const providerApi = await loadProviderApi(providerUrl);
+					captchaApi = new ProsopoCaptchaApi(
+						account.account.address,
+						frictionlessState.provider,
 						providerApi,
 						config.web2,
 						config.account.address || "",
