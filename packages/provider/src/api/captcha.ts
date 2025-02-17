@@ -102,6 +102,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
+			console.log("\n\n---\n\nclientRecord", clientRecord);
 
 			if (!clientRecord) {
 				return next(
@@ -210,6 +211,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
+			console.log("\n\n---\n\nclientRecord", clientRecord);
 
 			if (!clientRecord) {
 				return next(
@@ -417,6 +419,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		try {
 			const clientRecord = await tasks.db.getClientRecord(dapp);
+			console.log("\n\n---\n\nclientRecord", clientRecord);
 
 			if (!clientRecord) {
 				return next(
