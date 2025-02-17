@@ -28,6 +28,7 @@ vi.mock("@polkadot/util", () => ({
 const mockLogger = {
 	info: vi.fn(),
 	error: vi.fn(),
+	warn: vi.fn(),
 } as unknown as Logger;
 const mockTasks = {} as Tasks;
 const mockPair = {
