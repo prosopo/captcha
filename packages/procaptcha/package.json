@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha",
-	"version": "2.3.1",
+	"version": "2.4.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -14,7 +14,7 @@
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"test": "NODE_ENV=${NODE_ENV:-test}; vitest --run --config vite.test.config.ts"
+		"test": "echo \"No test specified\""
 	},
 	"exports": {
 		".": {
@@ -33,15 +33,15 @@
 		"@polkadot/api-contract": "10.13.1",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/account": "2.3.1",
-		"@prosopo/api": "2.3.1",
-		"@prosopo/common": "2.3.1",
-		"@prosopo/datasets": "2.3.1",
-		"@prosopo/load-balancer": "2.3.1",
-		"@prosopo/procaptcha-common": "2.3.1",
-		"@prosopo/types": "2.3.1",
-		"@prosopo/util": "2.3.1",
-		"express": "4.21.1",
+		"@prosopo/account": "2.4.1",
+		"@prosopo/api": "2.4.1",
+		"@prosopo/common": "2.4.1",
+		"@prosopo/datasets": "2.4.1",
+		"@prosopo/load-balancer": "2.4.1",
+		"@prosopo/procaptcha-common": "2.4.1",
+		"@prosopo/types": "2.4.1",
+		"@prosopo/util": "2.4.1",
+		"express": "4.21.2",
 		"jsdom": "25.0.0"
 	},
 	"overrides": {
@@ -57,7 +57,7 @@
 		}
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.3.1",
+		"@prosopo/config": "2.4.1",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

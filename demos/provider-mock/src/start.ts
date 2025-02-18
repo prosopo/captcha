@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { handleErrors } from "@prosopo/api-express-router";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { i18nMiddleware } from "@prosopo/locale";
-import { handleErrors } from "@prosopo/provider";
 import cors from "cors";
 import express from "express";
 import { prosopoRouter } from "./api.js";
@@ -25,7 +26,7 @@ async function startApi() {
 
 	apiApp.use(cors());
 	apiApp.use(express.json());
-	apiApp.use(i18nMiddleware({}));
+	apiApp.use(await i18nMiddleware({}));
 	apiApp.use(prosopoRouter());
 	apiApp.use(handleErrors);
 

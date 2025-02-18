@@ -34,7 +34,6 @@ const Logo: React.FC<LogoProps> = ({ themeColor }: LogoProps) => {
 	return (
 		<LogoContainer>
 			<LogoInnerContainer>
-				<LogoWithoutText themeColor={themeColor} />
 				<LogoWithText themeColor={themeColor} />
 			</LogoInnerContainer>
 		</LogoContainer>

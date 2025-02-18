@@ -33,9 +33,12 @@ import {
 	type ProviderApiInterface,
 	type ProviderRegistered,
 	type RandomProvider,
+	RegisterSitekeyBody,
+	type RegisterSitekeyBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
+	type Tier,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -59,6 +62,7 @@ export default class ProviderApi
 	public getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
+		sessionId?: string,
 	): Promise<CaptchaResponseBody> {
 		const { provider } = randomProvider;
 		const dappAccount = this.account;
@@ -67,6 +71,9 @@ export default class ProviderApi
 			[ApiParams.user]: userAccount,
 			[ApiParams.datasetId]: provider.datasetId,
 		};
+		if (sessionId) {
+			body[ApiParams.sessionId] = sessionId;
+		}
 		return this.post(ApiPaths.GetImageCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
@@ -248,20 +255,18 @@ export default class ProviderApi
 
 	public registerSiteKey(
 		siteKey: string,
+		tier: Tier,
 		settings: IUserSettings,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
-		return this.post(
-			AdminApiPaths.SiteKeyRegister,
-			{ siteKey, settings },
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
+		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
+		return this.post(AdminApiPaths.SiteKeyRegister, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
 			},
-		);
+		});
 	}
 }

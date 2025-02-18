@@ -1,3 +1,4 @@
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 // Copyright 2021-2024 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +14,12 @@
 // limitations under the License.
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import React from "react";
-import { CaptchaElement } from "../captcha.js";
+import type { CaptchaProps } from "../captcha.js";
 
-class ImageCaptcha extends CaptchaElement {
-	public override render() {
-		const { config, callbacks } = this.props;
+const ImageCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks } = props;
 
-		return <Procaptcha config={config} callbacks={callbacks} />;
-	}
-}
+	return <Procaptcha config={config} callbacks={getDefaultEvents(callbacks)} />;
+};
 
 export { ImageCaptcha };

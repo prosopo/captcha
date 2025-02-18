@@ -11,9 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { WIDGET_MAX_WIDTH } from "@prosopo/web-components";
+
 class WebComponent {
 	public addToElement(componentTag: string, element: Element): ShadowRoot {
 		const webComponent = this.makeWebComponent(componentTag);
+		webComponent.style.display = "flex";
+		webComponent.style.flexDirection = "column";
+		webComponent.style.width = "100%";
+		webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
 		const shadowRoot = this.attachShadowDom(webComponent);
 
 		element.appendChild(webComponent);
@@ -30,7 +36,7 @@ class WebComponent {
 		const customCss = "";
 
 		let baseStyles =
-			'<style>:host{all:initial!important;}:host *{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
+			'<style>*{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
 		baseStyles += "" !== customCss ? `<style>${customCss}</style>` : "";
 
 		return baseStyles;

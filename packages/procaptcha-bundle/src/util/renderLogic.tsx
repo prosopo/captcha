@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-	FeaturesEnum,
+	CaptchaType,
 	type ProcaptchaClientConfigOutput,
 	type ProcaptchaRenderOptions,
 } from "@prosopo/types";
@@ -35,7 +35,7 @@ export const renderLogic = (
 			identifierPrefix: "procaptcha-",
 			emotionCacheKey: "procaptcha",
 			webComponentTag: "prosopo-procaptcha",
-			defaultCaptchaType: FeaturesEnum.Frictionless,
+			defaultCaptchaType: CaptchaType.frictionless,
 		},
 		elements,
 		config,

@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { Timestamp } from "../datasets/index.js";
+
+import type { IUserSettings } from "./settings.js";
 
 export enum Tier {
 	Free = "free",
@@ -56,11 +59,4 @@ export interface IUserData {
 	stripeUpdatedAt?: number; // the time the user's stripe details were last updated (needed for webhook ordering)
 	pendingCheckoutTier?: Tier; // the pending checkout tier, if any
 	pendingCheckoutTierRequestQuota?: number; // the pending checkout tier request quota, if any
-}
-
-export interface IUserSettings {
-	frictionlessThreshold?: number;
-	powDifficulty?: number;
-	domains?: string[];
-	captchaType?: "image" | "pow" | "frictionless";
 }

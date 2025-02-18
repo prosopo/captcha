@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
+import { CaptchaType, Tier } from "@prosopo/types";
 import {
 	type BlockRule,
 	BlockRuleType,
@@ -29,11 +29,9 @@ import {
 	type Hash,
 	type IUserData,
 	type Item,
-	type PendingCaptchaRequest,
 	type PoWCaptchaUser,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
-	ProsopoCaptchaCountConfigSchema,
 	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -41,6 +39,7 @@ import {
 	type Timestamp,
 	TimestampSchema,
 } from "@prosopo/types";
+import type { RulesStorage } from "@prosopo/user-access-policy";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
@@ -52,16 +51,18 @@ import {
 	nativeEnum,
 	object,
 	string,
+	union,
 	type infer as zInfer,
+	instanceof as zInstanceof,
 } from "zod";
+import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
 
-export type IUserDataSlim = Pick<IUserData, "account" | "settings">;
+export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
-const TEN_MINUTES = 60 * 10;
 const ONE_DAY = 60 * 60 * 24;
 const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
@@ -69,6 +70,7 @@ const ONE_MONTH = ONE_WEEK * 4;
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
 	settings: UserSettingsSchema,
+	tier: { type: String, enum: Tier, required: true },
 });
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
@@ -100,6 +102,7 @@ export interface StoredCaptcha {
 	serverChecked: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
+	frictionlessTokenId?: FrictionlessTokenId;
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -129,7 +132,11 @@ export const UserCommitmentSchema = object({
 	storedAtTimestamp: TimestampSchema.optional(),
 	requestedAtTimestamp: TimestampSchema,
 	lastUpdatedTimestamp: TimestampSchema.optional(),
-}) satisfies ZodType<UserCommitment>;
+	frictionlessTokenId: union([
+		string(),
+		zInstanceof(mongoose.Types.ObjectId),
+	]).optional(),
+});
 
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
@@ -193,6 +200,10 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
 });
 
 // Set an index on the captchaId field, ascending
@@ -223,6 +234,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Number, required: false },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -286,12 +301,14 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-type PendingCaptchaRequestMongoose = Omit<
+export type PendingCaptchaRequestMongoose = Omit<
 	PendingCaptchaRequest,
 	"requestedAtTimestamp"
 > & {
 	requestedAtTimestamp: Date;
 };
+
+export type FrictionlessTokenId = mongoose.Schema.Types.ObjectId;
 
 export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	accountId: { type: String, required: true },
@@ -301,7 +318,10 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
 	ipAddress: { type: BigInt, required: true },
-	headers: { type: Object, required: true },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -345,11 +365,19 @@ ScheduledTaskRecordSchema.index({ processName: 1 });
 ScheduledTaskRecordSchema.index({ processName: 1, status: 1 });
 ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
 
-export type FrictionlessToken = {
+export interface ScoreComponents {
+	baseScore: number;
+	lScore?: number;
+	timeout?: number;
+	accessPolicy?: number;
+}
+
+export interface FrictionlessToken {
 	token: string;
 	score: number;
 	threshold: number;
-};
+	scoreComponents: ScoreComponents;
+}
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
 
@@ -362,6 +390,12 @@ export const FrictionlessTokenRecordSchema =
 		token: { type: String, required: true, unique: true },
 		score: { type: Number, required: true },
 		threshold: { type: Number, required: true },
+		scoreComponents: {
+			baseScore: { type: Number, required: true },
+			lScore: { type: Number, required: false },
+			timeout: { type: Number, required: false },
+			accessPolicy: { type: Number, required: false },
+		},
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 	});
 
@@ -370,17 +404,19 @@ FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
-	tokenId: ObjectId;
+	tokenId: FrictionlessTokenId;
+	captchaType: CaptchaType;
 };
 
 export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
 	sessionId: { type: String, required: true, unique: true },
-	createdAt: { type: Date, required: true, expires: TEN_MINUTES },
+	createdAt: { type: Date, required: true, expires: ONE_DAY },
 	tokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 	},
+	captchaType: { type: String, enum: CaptchaType, required: true },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
@@ -464,24 +500,26 @@ export interface IProviderDatabase extends IDatabase {
 		datasetId: Hash | string | Uint8Array,
 	): Promise<DatasetBase>;
 
-	storeDappUserSolution(
+	storeUserImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void>;
 
-	storeDappUserPending(
+	storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
-		headers: RequestHeaders,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
 
-	getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>;
+	getPendingImageCommitment(
+		requestHash: string,
+	): Promise<PendingCaptchaRequest>;
 
-	updateDappUserPendingStatus(requestHash: string): Promise<void>;
+	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
 
 	getAllCaptchasByDatasetId(
 		datasetId: string,
@@ -573,6 +611,7 @@ export interface IProviderDatabase extends IDatabase {
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,
@@ -598,30 +637,26 @@ export interface IProviderDatabase extends IDatabase {
 		tokenRecord: FrictionlessToken,
 	): Promise<ObjectId>;
 
-	checkFrictionlessTokenRecord(token: string): Promise<boolean>;
+	updateFrictionlessTokenRecord(
+		tokenId: FrictionlessTokenId,
+		updates: Partial<FrictionlessTokenRecord>,
+	): Promise<void>;
+
+	getFrictionlessTokenRecordByTokenId(
+		tokenId: FrictionlessTokenId,
+	): Promise<FrictionlessTokenRecord | undefined>;
+
+	getFrictionlessTokenRecordByToken(
+		token: string,
+	): Promise<FrictionlessTokenRecord | undefined>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
-	getIPBlockRuleRecord(
-		ipAddress: bigint,
-		dappAccount?: string,
-	): Promise<IPBlockRuleMongo | undefined>;
+	getUserAccessRulesStorage(): RulesStorage;
 
-	storeIPBlockRuleRecords(rules: IPAddressBlockRule[]): Promise<void>;
+	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
 
-	removeIPBlockRuleRecords(ips: bigint[], dappAccount?: string): Promise<void>;
-
-	getUserBlockRuleRecord(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserAccountBlockRuleRecord | undefined>;
-
-	storeUserBlockRuleRecords(rules: UserAccountBlockRule[]): Promise<void>;
-
-	removeUserBlockRuleRecords(
-		users: string[],
-		dappAccount?: string,
-	): Promise<void>;
+	getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]>;
 }

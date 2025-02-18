@@ -15,11 +15,22 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 import { ProviderApi } from "@prosopo/api";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
-import { Tasks } from "@prosopo/provider";
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import {
+	CaptchaTypeSpec,
+	type ProsopoConfigOutput,
+	Tier,
+} from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";
 import type { ArgumentsCamelCase, Argv } from "yargs";
+import { z } from "zod";
+import { SiteKeyRegisterCommandArgsSpec } from "./siteKeyRegister.js";
 import { validateSiteKey } from "./validators.js";
+
+const SiteKeyRegisterApiCommandArgsSpec = SiteKeyRegisterCommandArgsSpec.extend(
+	{
+		url: z.string(),
+	},
+);
 
 export default (
 	pair: KeyringPair,
@@ -40,10 +51,15 @@ export default (
 					demandOption: true,
 					desc: "The AccountId of the application to register the Site Key with",
 				} as const)
+				.positional("tier", {
+					choices: Object.values(Tier),
+					demandOption: true,
+					desc: "The tier of the account",
+				} as const)
 				.option("url", {
 					type: "string" as const,
 					demandOption: true,
-					desc: "URL to register the Site Key with",
+					desc: "Provider URL to register the Site Key with",
 				} as const)
 				.option("captcha_type", {
 					type: "string" as const,
@@ -76,17 +92,17 @@ export default (
 					url,
 					domains,
 					pow_difficulty,
-				} = argv;
-				const tasks = new Tasks(env);
+				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
 				const timestamp = new Date().getTime().toString();
 				const signature = u8aToHex(authAccount.sign(timestamp));
 				await api.registerSiteKey(
 					sitekey as string,
+					argv.tier as Tier,
 					{
-						captchaType: captcha_type as "image" | "pow" | "frictionless",
+						captchaType: CaptchaTypeSpec.parse(captcha_type),
 						frictionlessThreshold: frictionless_threshold as number,
-						domains: domains as string[],
+						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
 					},
 					timestamp,

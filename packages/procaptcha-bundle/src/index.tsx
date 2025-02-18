@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
@@ -21,7 +22,6 @@ import {
 	getConfig,
 	getProcaptchaScript,
 } from "./util/config.js";
-import { getWindowCallback } from "./util/defaultCallbacks.js";
 import { renderLogic } from "./util/renderLogic.js";
 
 const BUNDLE_NAME = "procaptcha.bundle.js";
@@ -37,13 +37,14 @@ const implicitRender = () => {
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
 		const siteKey = at(elements, 0).getAttribute("data-sitekey");
+		const web3 = at(elements, 0).getAttribute("data-web3");
 		if (!siteKey) {
 			console.error("No siteKey found");
 			return;
 		}
 		const captchaType = getCaptchaType(elements);
 
-		const root = renderLogic(elements, getConfig(siteKey), {
+		const root = renderLogic(elements, getConfig(siteKey, !(web3 === "true")), {
 			captchaType,
 			siteKey,
 		});
