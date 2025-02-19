@@ -27,6 +27,8 @@ const grey = {
 
 const DEFAULT_SPACING = 10; // size in pixels
 
+export type Theme = typeof lightTheme | typeof darkTheme;
+
 export const lightTheme = {
 	palette: {
 		mode: "light",
@@ -41,7 +43,7 @@ export const lightTheme = {
 		error: {
 			main: "#f44336",
 		},
-
+		logoFill: "#1d1d1b",
 		grey,
 	},
 	spacing: {
@@ -69,6 +71,7 @@ export const darkTheme = {
 		error: {
 			main: "#f44336",
 		},
+		logoFill: "#fff",
 		grey,
 	},
 	spacing: {
