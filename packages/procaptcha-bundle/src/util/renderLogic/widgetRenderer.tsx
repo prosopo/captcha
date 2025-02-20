@@ -29,7 +29,7 @@ import { setLanguage } from "../language.js";
 import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
-import type { WebComponent } from "./webComponent.js";
+import type { WebComponentFactory } from "./webComponentFactory.js";
 
 interface RenderSettings {
 	identifierPrefix: string;
@@ -39,11 +39,11 @@ interface RenderSettings {
 }
 
 class WidgetRenderer {
-	private readonly webComponent: WebComponent;
+	private readonly webComponentFactory: WebComponentFactory;
 	private readonly captchaRenderer: CaptchaRenderer;
 
-	constructor(webComponent: WebComponent, captchaRenderer: CaptchaRenderer) {
-		this.webComponent = webComponent;
+	constructor(webComponentFactory: WebComponentFactory, captchaRenderer: CaptchaRenderer) {
+		this.webComponentFactory = webComponentFactory;
 		this.captchaRenderer = captchaRenderer;
 	}
 
@@ -75,7 +75,7 @@ class WidgetRenderer {
 		// If the renderElement() is called several times on the same element, it should recreate the captcha from scratch.
 		element.innerHTML = "";
 
-		const shadowRoot = this.webComponent.addToElement(
+		const shadowRoot = this.webComponentFactory.createWebComponent(
 			settings.webComponentTag,
 			element,
 		);

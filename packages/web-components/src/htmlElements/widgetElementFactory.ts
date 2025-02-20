@@ -22,27 +22,27 @@ import {
     WIDGET_PADDING
 } from "../WidgetConstants.js";
 import type {Theme} from "../theme.js";
-import type {WidgetElementFactory} from "./widgetElementFactory.js";
+import type {HtmlElementFactory} from "./htmlElementFactory.js";
 
-class WidgetSkeletonFactory implements WidgetElementFactory {
-    constructor(private readonly checkboxFactory: WidgetElementFactory,
-                private readonly logoFactory: WidgetElementFactory) {
+class WidgetElementFactory implements HtmlElementFactory {
+    constructor(private readonly checkboxElementFactory: HtmlElementFactory,
+                private readonly logoElementFactory: HtmlElementFactory) {
     }
 
     public createHtmlElement(theme: Theme): HTMLElement {
-        const widgetSkeleton = document.createElement("div");
-        const checkbox = this.checkboxFactory.createHtmlElement(theme);
-        const logo = this.logoFactory.createHtmlElement(theme);
+        const widgetElement = document.createElement("div");
+        const checkboxElement = this.checkboxElementFactory.createHtmlElement(theme);
+        const logoElement = this.logoElementFactory.createHtmlElement(theme);
 
-        widgetSkeleton.outerHTML = this.getStyles(theme) + this.getMarkup();
+        widgetElement.outerHTML = this.getStyles(theme) + this.getMarkup();
 
-        widgetSkeleton.querySelector(".widget__checkbox")
-            ?.replaceWith(checkbox);
+        widgetElement.querySelector(".widget__checkbox")
+            ?.replaceWith(checkboxElement);
 
-        widgetSkeleton.querySelector(".widget__logo")
-            ?.replaceWith(logo);
+        widgetElement.querySelector(".widget__logo")
+            ?.replaceWith(logoElement);
 
-        return widgetSkeleton;
+        return widgetElement;
     }
 
     protected getMarkup(): string {
@@ -121,4 +121,4 @@ class WidgetSkeletonFactory implements WidgetElementFactory {
 }
 
 
-export {WidgetSkeletonFactory};
+export {WidgetElementFactory};

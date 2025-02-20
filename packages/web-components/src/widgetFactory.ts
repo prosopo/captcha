@@ -12,21 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { default as styled } from "@emotion/styled";
-import { WIDGET_OUTER_HEIGHT } from "./WidgetConstants.js";
+import type {Theme} from "./theme.js";
 
-export const ContainerDiv = styled.div`
-    container-type: size;
-    display: flex;
-    flex-direction: column;
-    height: ${WIDGET_OUTER_HEIGHT}px;
-`;
+interface WidgetFactory {
+    createWidget(theme: Theme, webComponentTag: string): HTMLElement;
+}
 
-export const WidthBasedStylesDiv = styled.div`
-    max-height: 100%;
-    min-width: 100%;
-    overflow: hidden;
-    height: ${WIDGET_OUTER_HEIGHT}px;
-    width: 100%;
-    display: grid;
-`;
+export type {WidgetFactory};

@@ -14,8 +14,8 @@
 
 import type {Theme} from "../theme.js";
 
-interface WidgetElementFactory {
+interface HtmlElementFactory {
     createHtmlElement(theme: Theme): HTMLElement
 }
 
-export type {WidgetElementFactory};
+export type {HtmlElementFactory};

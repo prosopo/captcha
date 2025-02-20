@@ -17,15 +17,15 @@ import {
     WIDGET_URL_TEXT,
 } from "../../WidgetConstants.js";
 import type {Theme} from "../../theme.js";
-import type {WidgetElementFactory} from "../widgetElementFactory.js";
+import type {HtmlElementFactory} from "../htmlElementFactory.js";
 
-class WidgetLogoFactory implements WidgetElementFactory {
-    public constructor(private readonly svgLogoFactory: WidgetElementFactory) {
+class LogoElementFactory implements HtmlElementFactory {
+    public constructor(private readonly svgLogoIconFactory: HtmlElementFactory) {
     }
 
     public createHtmlElement(theme: Theme): HTMLElement {
         const widgetLogo = document.createElement("div");
-        const svgLogo = this.svgLogoFactory.createHtmlElement(theme);
+        const svgLogo = this.svgLogoIconFactory.createHtmlElement(theme);
 
         widgetLogo.outerHTML = this.getStyles() + this.getMarkup();
         widgetLogo.querySelector(".logo__svg")
@@ -75,4 +75,4 @@ class WidgetLogoFactory implements WidgetElementFactory {
     }
 }
 
-export {WidgetLogoFactory};
+export {LogoElementFactory};

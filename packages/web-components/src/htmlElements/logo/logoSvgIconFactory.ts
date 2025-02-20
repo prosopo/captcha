@@ -1,7 +1,7 @@
-import type {WidgetElementFactory} from "../widgetElementFactory.js";
+import type {HtmlElementFactory} from "../htmlElementFactory.js";
 import type {Theme} from "../../theme.js";
 
-class WidgetSvgLogoFactory implements WidgetElementFactory {
+class LogoSvgIconFactory implements HtmlElementFactory {
     createHtmlElement(theme: Theme): HTMLElement {
         const svgLogo = document.createElement("div");
 
@@ -60,3 +60,5 @@ class WidgetSvgLogoFactory implements WidgetElementFactory {
 `
     }
 }
+
+export { LogoSvgIconFactory};

@@ -16,6 +16,8 @@ Client-side (browser):
     - `procaptcha-react` (image)
     - `procaptcha-pow`
 
+* `web-components` - Captcha Widget
+
 Server-side (node.js):
 
 * `provider` - API Endpoints for the captcha widget

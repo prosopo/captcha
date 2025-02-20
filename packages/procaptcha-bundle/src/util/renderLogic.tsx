@@ -17,11 +17,11 @@ import {
 	type ProcaptchaRenderOptions,
 } from "@prosopo/types";
 import { CaptchaRenderer } from "./renderLogic/captcha/captchaRenderer.js";
-import { WebComponent } from "./renderLogic/webComponent.js";
+import { WebComponentFactory } from "./renderLogic/webComponentFactory.js";
 import { WidgetRenderer } from "./renderLogic/widgetRenderer.js";
 
 const widgetRenderer = new WidgetRenderer(
-	new WebComponent(),
+	new WebComponentFactory(),
 	new CaptchaRenderer(),
 );
 
