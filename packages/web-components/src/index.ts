@@ -45,4 +45,8 @@ const getWidgetFactory = (): WidgetFactory => {
 export * from "./theme.js";
 export * from "./WidgetConstants.js";
 export * from "./Reload.js";
-export {getWidgetFactory};
+
+export {
+    type WidgetFactory,
+    getWidgetFactory,
+};

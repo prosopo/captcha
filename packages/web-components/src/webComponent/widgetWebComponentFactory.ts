@@ -30,6 +30,8 @@ class WidgetWebComponentFactory implements WidgetFactory {
 
         webComponentRoot.appendChild(widgetElement);
 
+        // todo we'll need to use checkbox as the React Root, how to implement it properly?
+
         return widgetElement;
     }
 }
