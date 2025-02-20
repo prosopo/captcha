@@ -100,6 +100,8 @@
 		"UNAUTHORIZED_ORIGIN_URL": "URL de origen no autorizada",
 		"INVALID_SITE_KEY": "Clave de sitio no válida",
 		"INVALID_IP": "IP no válida",
+		"INVALID_URL": "URL inválida",
+		"INVALID_BODY": "Cuerpo inválido",
 		"PARSE_ERROR": "Error al analizar la respuesta"
 	},
 	"CLI": {
