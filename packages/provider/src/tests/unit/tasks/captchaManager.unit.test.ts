@@ -69,7 +69,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.image,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.image,
 			);
@@ -86,7 +86,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.pow,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.pow,
 			);
@@ -113,7 +113,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.pow,
 				"sessionId",
@@ -143,7 +143,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.image,
 				"sessionId",
@@ -173,7 +173,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.image,
 				sessionId,
@@ -203,7 +203,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.pow,
 				sessionId,
@@ -223,7 +223,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.pow,
 				undefined,
@@ -243,7 +243,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.image,
 				undefined,
@@ -264,7 +264,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.image,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.pow,
 			);
@@ -283,7 +283,7 @@ describe("CaptchaManager", () => {
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.pow,
-					},
+					} as IUserSettings,
 				},
 				CaptchaType.image,
 			);
