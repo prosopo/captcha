@@ -74,7 +74,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 					for (const item of captcha.items) {
 						if (item.data) {
 							// drop the 'http:' prefix and replace it with https:
-							item.data = `https:${item.data.replace(/^http:\/\//, "//")}`;
+							item.data = `https://${item.data.replace(/^http(s)*:\/\//, "")}`;
 						}
 					}
 				}
