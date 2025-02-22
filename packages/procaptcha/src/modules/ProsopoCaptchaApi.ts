@@ -69,13 +69,11 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 			}
 
 			// convert http to https
-			if (window.location.protocol === "http:") {
-				for (const captcha of captchaChallenge.captchas) {
-					for (const item of captcha.items) {
-						if (item.data) {
-							// drop the 'http:' prefix and replace it with https:
-							item.data = `https://${item.data.replace(/^http(s)*:\/\//, "")}`;
-						}
+			for (const captcha of captchaChallenge.captchas) {
+				for (const item of captcha.items) {
+					if (item.data) {
+						// drop the 'http:' prefix and replace it with https:
+						item.data = `https://${item.data.replace(/^http(s)*:\/\//, "")}`;
 					}
 				}
 			}
