@@ -134,7 +134,7 @@ function getSelectors(captcha: Captcha) {
 						// drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
 						.map(
 							(item) =>
-								`img[src="${item.data.replace(/^http(s)*:\/\//, "//")}"]`,
+								`img[src="${item.data.replace(/^http(s)*:\/\//, "https://")}"]`,
 						);
 				} else {
 					console.log("Unsolved captcha or captcha with zero solutions");

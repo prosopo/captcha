@@ -68,18 +68,12 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 				return captchaChallenge;
 			}
 
-			// convert https/http to match page
-			if (
-				window.location.protocol === "https:" ||
-				window.location.protocol === "http:"
-			) {
-				for (const captcha of captchaChallenge.captchas) {
-					for (const item of captcha.items) {
-						if (item.data) {
-							// drop the 'http(s):' prefix, leaving '//'. The '//' will autodetect http/https from the page load type
-							// https://stackoverflow.com/a/18320348/7215926
-							item.data = item.data.replace(/^http(s)*:\/\//, "//");
-						}
+			// convert http to https
+			for (const captcha of captchaChallenge.captchas) {
+				for (const item of captcha.items) {
+					if (item.data) {
+						// drop the 'http:' prefix and replace it with https:
+						item.data = `https://${item.data.replace(/^http(s)*:\/\//, "")}`;
 					}
 				}
 			}
