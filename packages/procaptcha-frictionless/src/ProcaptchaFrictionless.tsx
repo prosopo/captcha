@@ -19,23 +19,28 @@ import {
 	type FrictionlessState,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
-	type ProcaptchaProps,
 } from "@prosopo/types";
-import { ProcaptchaPlaceholder } from "@prosopo/web-components";
+import { Checkbox, darkTheme, lightTheme } from "@prosopo/web-components";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
 
-const renderPlaceholder = ({
-	config,
-	callbacks,
-	errorMessage,
-}: ProcaptchaProps) => (
-	<ProcaptchaPlaceholder
-		config={config}
-		callbacks={callbacks}
-		errorMessage={errorMessage}
-	/>
-);
+const renderPlaceholder = (
+	theme: string | undefined,
+	errorMessage: string | undefined,
+) => {
+	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
+
+	return (
+		<Checkbox
+			theme={checkboxTheme}
+			onChange={() => {}}
+			checked={false}
+			labelText={""}
+			error={errorMessage}
+			aria-label="human checkbox"
+		/>
+	);
+};
 
 type FrictionlessLoadingState = {
 	loading: boolean;
@@ -58,12 +63,9 @@ export const ProcaptchaFrictionless = ({
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
 	const events = getDefaultEvents(callbacks);
+
 	const [componentToRender, setComponentToRender] = useState(
-		renderPlaceholder({
-			config,
-			callbacks,
-			errorMessage: stateRef.current.errorMessage,
-		}),
+		renderPlaceholder(config.theme, stateRef.current.errorMessage),
 	);
 
 	const resetState = (attemptCount?: number) => {
@@ -74,11 +76,7 @@ export const ProcaptchaFrictionless = ({
 
 	const fallOverWithStyle = (errorMessage?: string) => {
 		setComponentToRender(
-			renderPlaceholder({
-				config,
-				callbacks,
-				errorMessage: errorMessage || "Cannot load CAPTCHA",
-			}),
+			renderPlaceholder(config.theme, errorMessage || "Cannot load CAPTCHA"),
 		);
 	};
 

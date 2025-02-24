@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {HtmlElementFactory} from "./htmlElementFactory.js";
-import type {Theme} from "../theme.js";
+import type { Theme } from "../theme.js";
+import type { HtmlElementFactory } from "./htmlElementFactory.js";
 
 class CheckboxElementFactory implements HtmlElementFactory {
-    createHtmlElement(theme: Theme): HTMLElement {
-        const checkbox = document.createElement("div");
+	createHtmlElement(theme: Theme): HTMLElement {
+		const checkbox = document.createElement("div");
 
-        checkbox.outerHTML = this.getStyles(theme) + this.getMarkup();
+		checkbox.outerHTML = this.getStyles(theme) + this.getMarkup();
 
-        return checkbox;
-    }
+		return checkbox;
+	}
 
-    protected getMarkup(): string {
-        return `
+	protected getMarkup(): string {
+		return `
 <div class="checkbox">
     <div class="checkbox__outer">
         <div class="checkbox__wrapper">
@@ -38,10 +38,10 @@ class CheckboxElementFactory implements HtmlElementFactory {
     </div>
 </div>
 `;
-    }
+	}
 
-    protected getStyles(theme: Theme): string {
-        return `
+	protected getStyles(theme: Theme): string {
+		return `
 <style>
 .checkbox {
     display: flex;
@@ -93,7 +93,7 @@ class CheckboxElementFactory implements HtmlElementFactory {
 }
 </style>
 `;
-    }
+	}
 }
 
-export {CheckboxElementFactory};
+export { CheckboxElementFactory };

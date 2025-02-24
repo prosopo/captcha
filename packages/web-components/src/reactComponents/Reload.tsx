@@ -13,7 +13,7 @@
 // limitations under the License.
 import type React from "react";
 import { type ButtonHTMLAttributes, useMemo, useState } from "react";
-import { darkTheme, lightTheme } from "./theme.js";
+import { darkTheme, lightTheme } from "../theme.js";
 
 interface ReloadButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	themeColor: "light" | "dark";

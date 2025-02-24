@@ -1,19 +1,32 @@
-import type {HtmlElementFactory} from "../htmlElementFactory.js";
-import type {Theme} from "../../theme.js";
+import type { Theme } from "../../theme.js";
+// Copyright 2021-2024 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import type { HtmlElementFactory } from "../htmlElementFactory.js";
 
 class LogoSvgIconFactory implements HtmlElementFactory {
-    createHtmlElement(theme: Theme): HTMLElement {
-        const svgLogo = document.createElement("div");
+	createHtmlElement(theme: Theme): HTMLElement {
+		const svgLogo = document.createElement("div");
 
-        svgLogo.outerHTML = this.getMarkup(theme);
+		svgLogo.outerHTML = this.getMarkup(theme);
 
-        return svgLogo;
-    }
+		return svgLogo;
+	}
 
-    protected getMarkup(theme: Theme): string {
-        const inlineStyles = `fill:${theme.palette.logoFill}`;
+	protected getMarkup(theme: Theme): string {
+		const inlineStyles = `fill:${theme.palette.logoFill}`;
 
-        return `
+		return `
 <svg class="prosopo-logo"
      id="logo-with-text"
      xmlns="http://www.w3.org/2000/svg"
@@ -57,8 +70,8 @@ class LogoSvgIconFactory implements HtmlElementFactory {
         </g>
     </g>
 </svg>
-`
-    }
+`;
+	}
 }
 
-export { LogoSvgIconFactory};
+export { LogoSvgIconFactory };

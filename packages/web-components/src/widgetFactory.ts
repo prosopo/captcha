@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {Theme} from "./theme.js";
+import type { Theme } from "./theme.js";
 
 interface WidgetFactory {
-    createWidget(theme: Theme, webComponentTag: string): HTMLElement;
+	createWidget(theme: Theme, webComponentTag: string): HTMLElement;
 }
 
-export type {WidgetFactory};
+export type { WidgetFactory };

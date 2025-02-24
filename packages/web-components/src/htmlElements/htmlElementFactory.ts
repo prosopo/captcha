@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {Theme} from "../theme.js";
+import type { Theme } from "../theme.js";
 
 interface HtmlElementFactory {
-    createHtmlElement(theme: Theme): HTMLElement
+	createHtmlElement(theme: Theme): HTMLElement;
 }
 
-export type {HtmlElementFactory};
+export type { HtmlElementFactory };

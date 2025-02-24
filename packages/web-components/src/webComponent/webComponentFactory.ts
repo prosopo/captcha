@@ -12,37 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {WIDGET_MAX_WIDTH} from "@prosopo/web-components";
+import { WIDGET_MAX_WIDTH } from "@prosopo/web-components";
 
 class WebComponentFactory {
-    public createWebComponent(componentTag: string): HTMLElement {
-        const webComponent = document.createElement(componentTag);
-        webComponent.style.display = "flex";
-        webComponent.style.flexDirection = "column";
-        webComponent.style.width = "100%";
-        webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
+	public createWebComponent(componentTag: string): HTMLElement {
+		const webComponent = document.createElement(componentTag);
+		webComponent.style.display = "flex";
+		webComponent.style.flexDirection = "column";
+		webComponent.style.width = "100%";
+		webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
 
-        this.attachShadowDom(webComponent);
+		this.attachShadowDom(webComponent);
 
-        return webComponent;
-    }
+		return webComponent;
+	}
 
-    protected attachShadowDom(webComponent: HTMLElement): void {
-        const shadowRoot = webComponent.attachShadow({mode: "open"});
+	protected attachShadowDom(webComponent: HTMLElement): void {
+		const shadowRoot = webComponent.attachShadow({ mode: "open" });
 
-        shadowRoot.innerHTML += this.getBaseShadowStyles();
-    }
+		shadowRoot.innerHTML += this.getBaseShadowStyles();
+	}
 
-    protected getBaseShadowStyles(): string {
-        // todo maybe introduce customCSS in renderOptions.
-        const customCss = "";
+	protected getBaseShadowStyles(): string {
+		// todo maybe introduce customCSS in renderOptions.
+		const customCss = "";
 
-        let baseStyles =
-            '<style>*{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
-        baseStyles += "" !== customCss ? `<style>${customCss}</style>` : "";
+		let baseStyles =
+			'<style>*{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
+		baseStyles += "" !== customCss ? `<style>${customCss}</style>` : "";
 
-        return baseStyles;
-    }
+		return baseStyles;
+	}
 }
 
-export {WebComponentFactory};
+export { WebComponentFactory };

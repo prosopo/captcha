@@ -12,30 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-    WIDGET_URL,
-    WIDGET_URL_TEXT,
-} from "../../WidgetConstants.js";
-import type {Theme} from "../../theme.js";
-import type {HtmlElementFactory} from "../htmlElementFactory.js";
+import { WIDGET_URL, WIDGET_URL_TEXT } from "../../constants.js";
+import type { Theme } from "../../theme.js";
+import type { HtmlElementFactory } from "../htmlElementFactory.js";
 
 class LogoElementFactory implements HtmlElementFactory {
-    public constructor(private readonly svgLogoIconFactory: HtmlElementFactory) {
-    }
+	public constructor(private readonly svgLogoIconFactory: HtmlElementFactory) {}
 
-    public createHtmlElement(theme: Theme): HTMLElement {
-        const widgetLogo = document.createElement("div");
-        const svgLogo = this.svgLogoIconFactory.createHtmlElement(theme);
+	public createHtmlElement(theme: Theme): HTMLElement {
+		const widgetLogo = document.createElement("div");
+		const svgLogo = this.svgLogoIconFactory.createHtmlElement(theme);
 
-        widgetLogo.outerHTML = this.getStyles() + this.getMarkup();
-        widgetLogo.querySelector(".logo__svg")
-            ?.replaceWith(svgLogo);
+		widgetLogo.outerHTML = this.getStyles() + this.getMarkup();
+		widgetLogo.querySelector(".logo__svg")?.replaceWith(svgLogo);
 
-        return widgetLogo;
-    }
+		return widgetLogo;
+	}
 
-    protected getMarkup(): string {
-        return `
+	protected getMarkup(): string {
+		return `
 <div class="logo">
     <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
         <div class="logo__outer">
@@ -48,10 +43,10 @@ class LogoElementFactory implements HtmlElementFactory {
     </a>
 </div>
     `;
-    }
+	}
 
-    protected getStyles(): string {
-        return `
+	protected getStyles(): string {
+		return `
 <style>
 .logo {
     display: inline-flex;
@@ -72,7 +67,7 @@ class LogoElementFactory implements HtmlElementFactory {
 }
 </style>
 `;
-    }
+	}
 }
 
-export {LogoElementFactory};
+export { LogoElementFactory };

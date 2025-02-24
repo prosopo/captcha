@@ -12,28 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {Theme} from "../theme.js";
-import type {WebComponentFactory} from "./webComponentFactory.js";
-import type {HtmlElementFactory} from "../htmlElements/htmlElementFactory.js";
-import type {WidgetFactory} from "../widgetFactory.js";
+import type { HtmlElementFactory } from "../htmlElements/htmlElementFactory.js";
+import type { Theme } from "../theme.js";
+import type { WidgetFactory } from "../widgetFactory.js";
+import type { WebComponentFactory } from "./webComponentFactory.js";
 
 class WidgetWebComponentFactory implements WidgetFactory {
-    constructor(private readonly widgetElementFactory: HtmlElementFactory,
-                private readonly webComponentFactory: WebComponentFactory) {
-    }
+	constructor(
+		private readonly widgetElementFactory: HtmlElementFactory,
+		private readonly webComponentFactory: WebComponentFactory,
+	) {}
 
-    public createWidget(theme: Theme, webComponentTag: string): HTMLElement {
-        const widgetElement = this.widgetElementFactory.createHtmlElement(theme);
+	public createWidget(theme: Theme, webComponentTag: string): HTMLElement {
+		const widgetElement = this.widgetElementFactory.createHtmlElement(theme);
 
-        const webComponent = this.webComponentFactory.createWebComponent(webComponentTag);
-        const webComponentRoot = webComponent.shadowRoot || webComponent;
+		const webComponent =
+			this.webComponentFactory.createWebComponent(webComponentTag);
+		const webComponentRoot = webComponent.shadowRoot || webComponent;
 
-        webComponentRoot.appendChild(widgetElement);
+		webComponentRoot.appendChild(widgetElement);
 
-        // todo we'll need to use checkbox as the React Root, how to implement it properly?
+		// todo we'll need to use checkbox as the React Root, how to implement it properly?
 
-        return widgetElement;
-    }
+		return widgetElement;
+	}
 }
 
-export {WidgetWebComponentFactory};
+export { WidgetWebComponentFactory };

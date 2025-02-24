@@ -42,7 +42,10 @@ class WidgetRenderer {
 	private readonly webComponentFactory: WebComponentFactory;
 	private readonly captchaRenderer: CaptchaRenderer;
 
-	constructor(webComponentFactory: WebComponentFactory, captchaRenderer: CaptchaRenderer) {
+	constructor(
+		webComponentFactory: WebComponentFactory,
+		captchaRenderer: CaptchaRenderer,
+	) {
 		this.webComponentFactory = webComponentFactory;
 		this.captchaRenderer = captchaRenderer;
 	}

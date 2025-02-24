@@ -11,44 +11,46 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {WIDGET_MAX_WIDTH} from "@prosopo/web-components";
+import { WIDGET_MAX_WIDTH } from "@prosopo/web-components";
 
 class WebComponentFactory {
+	// todo remove from this package.
 
-    // todo remove from this package.
+	public createWebComponent(
+		componentTag: string,
+		parentElement: Element,
+	): ShadowRoot {
+		const webComponent = document.createElement(componentTag);
+		webComponent.style.display = "flex";
+		webComponent.style.flexDirection = "column";
+		webComponent.style.width = "100%";
+		webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
 
-    public createWebComponent(componentTag: string, parentElement: Element): ShadowRoot {
-        const webComponent = document.createElement(componentTag);
-        webComponent.style.display = "flex";
-        webComponent.style.flexDirection = "column";
-        webComponent.style.width = "100%";
-        webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
+		const shadowRoot = this.attachShadowDom(webComponent);
 
-        const shadowRoot = this.attachShadowDom(webComponent);
+		parentElement.appendChild(webComponent);
 
-        parentElement.appendChild(webComponent);
+		return shadowRoot;
+	}
 
-        return shadowRoot;
-    }
+	public attachShadowDom(webComponent: HTMLElement): ShadowRoot {
+		const shadowRoot = webComponent.attachShadow({ mode: "open" });
 
-    public attachShadowDom(webComponent: HTMLElement): ShadowRoot {
-        const shadowRoot = webComponent.attachShadow({mode: "open"});
+		shadowRoot.innerHTML += this.getBaseShadowStyles();
 
-        shadowRoot.innerHTML += this.getBaseShadowStyles();
+		return shadowRoot;
+	}
 
-        return shadowRoot;
-    }
+	protected getBaseShadowStyles(): string {
+		// todo maybe introduce customCSS in renderOptions.
+		const customCss = "";
 
-    protected getBaseShadowStyles(): string {
-        // todo maybe introduce customCSS in renderOptions.
-        const customCss = "";
+		let baseStyles =
+			'<style>*{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
+		baseStyles += "" !== customCss ? `<style>${customCss}</style>` : "";
 
-        let baseStyles =
-            '<style>*{font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}</style>';
-        baseStyles += "" !== customCss ? `<style>${customCss}</style>` : "";
-
-        return baseStyles;
-    }
+		return baseStyles;
+	}
 }
 
-export {WebComponentFactory};
+export { WebComponentFactory };

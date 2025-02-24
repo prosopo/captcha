@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import type { ProcaptchaCallbacks } from "@prosopo/types";
-import { ProcaptchaPlaceholder } from "@prosopo/web-components";
 import { type LazyExoticComponent, Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 
@@ -25,14 +24,7 @@ const ProcaptchaWidget: LazyExoticComponent<
 > = lazy(async () => import("./ProcaptchaWidget.js"));
 
 export const ProcaptchaPow = (props: ProcaptchaProps) => (
-	<Suspense
-		fallback={
-			<ProcaptchaPlaceholder
-				config={props.config}
-				callbacks={props.callbacks}
-			/>
-		}
-	>
+	<Suspense>
 		<ProcaptchaWidget
 			config={props.config}
 			callbacks={props.callbacks}

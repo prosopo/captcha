@@ -13,40 +13,42 @@
 // limitations under the License.
 
 import {
-    WIDGET_BORDER,
-    WIDGET_BORDER_RADIUS,
-    WIDGET_INNER_HEIGHT,
-    WIDGET_MAX_WIDTH,
-    WIDGET_MIN_HEIGHT,
-    WIDGET_OUTER_HEIGHT,
-    WIDGET_PADDING
-} from "../WidgetConstants.js";
-import type {Theme} from "../theme.js";
-import type {HtmlElementFactory} from "./htmlElementFactory.js";
+	WIDGET_BORDER,
+	WIDGET_BORDER_RADIUS,
+	WIDGET_INNER_HEIGHT,
+	WIDGET_MAX_WIDTH,
+	WIDGET_MIN_HEIGHT,
+	WIDGET_OUTER_HEIGHT,
+	WIDGET_PADDING,
+} from "../constants.js";
+import type { Theme } from "../theme.js";
+import type { HtmlElementFactory } from "./htmlElementFactory.js";
 
 class WidgetElementFactory implements HtmlElementFactory {
-    constructor(private readonly checkboxElementFactory: HtmlElementFactory,
-                private readonly logoElementFactory: HtmlElementFactory) {
-    }
+	constructor(
+		private readonly checkboxElementFactory: HtmlElementFactory,
+		private readonly logoElementFactory: HtmlElementFactory,
+	) {}
 
-    public createHtmlElement(theme: Theme): HTMLElement {
-        const widgetElement = document.createElement("div");
-        const checkboxElement = this.checkboxElementFactory.createHtmlElement(theme);
-        const logoElement = this.logoElementFactory.createHtmlElement(theme);
+	public createHtmlElement(theme: Theme): HTMLElement {
+		const widgetElement = document.createElement("div");
+		const checkboxElement =
+			this.checkboxElementFactory.createHtmlElement(theme);
+		const logoElement = this.logoElementFactory.createHtmlElement(theme);
 
-        widgetElement.outerHTML = this.getStyles(theme) + this.getMarkup();
+		widgetElement.outerHTML = this.getStyles(theme) + this.getMarkup();
 
-        widgetElement.querySelector(".widget__checkbox")
-            ?.replaceWith(checkboxElement);
+		widgetElement
+			.querySelector(".widget__checkbox")
+			?.replaceWith(checkboxElement);
 
-        widgetElement.querySelector(".widget__logo")
-            ?.replaceWith(logoElement);
+		widgetElement.querySelector(".widget__logo")?.replaceWith(logoElement);
 
-        return widgetElement;
-    }
+		return widgetElement;
+	}
 
-    protected getMarkup(): string {
-        return `
+	protected getMarkup(): string {
+		return `
 <div class="widget">
     <div class="widget__outer">
         <div class="widget__wrapper">
@@ -62,10 +64,10 @@ class WidgetElementFactory implements HtmlElementFactory {
         </div>
     </div>
 </div>`;
-    }
+	}
 
-    protected getStyles(theme: Theme): string {
-        return `
+	protected getStyles(theme: Theme): string {
+		return `
 <style>
 .widget {
     width: 100%;
@@ -117,8 +119,7 @@ class WidgetElementFactory implements HtmlElementFactory {
 }
 </style>
 `;
-    }
+	}
 }
 
-
-export {WidgetElementFactory};
+export { WidgetElementFactory };
