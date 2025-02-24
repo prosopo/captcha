@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import { CheckboxElementFactory } from "./htmlElements/checkboxElementFactory.js";
-import { LogoElementFactory } from "./htmlElements/logo/logoElementFactory.js";
-import { LogoSvgIconFactory } from "./htmlElements/logo/logoSvgIconFactory.js";
+import { LogoElementFactory } from "./htmlElements/logoElementFactory.js";
 import { WidgetElementFactory } from "./htmlElements/widgetElementFactory.js";
 import { WebComponentFactory } from "./webComponent/webComponentFactory.js";
 import { WidgetWebComponentFactory } from "./webComponent/widgetWebComponentFactory.js";
@@ -24,8 +23,7 @@ import type { WidgetInteractiveAreaProvider } from "./widgetInteractiveAreaProvi
 const checkboxElementFactory = new CheckboxElementFactory();
 
 const getWidgetFactory = (): WidgetFactory => {
-	const logoSvgIconFactory = new LogoSvgIconFactory();
-	const logoElementFactory = new LogoElementFactory(logoSvgIconFactory);
+	const logoElementFactory = new LogoElementFactory();
 
 	const widgetElementFactory = new WidgetElementFactory(
 		checkboxElementFactory,
@@ -45,9 +43,12 @@ const getWidgetInteractiveAreaProvider = (): WidgetInteractiveAreaProvider => {
 };
 
 /*todo:
- * 2. update 'procaptcha-bundle': remove webComponentFactory and use from the current one
+ * 2. make sure the image popup works properly
+ * 2. run tests to make sure everything works
  * 3. rename web-components to 'widget'
  * 4. update dependencies: remove express
+ * 5. run tests again
+ * 6. work out on the lazy loading
  * */
 
 export * from "./theme.js";
