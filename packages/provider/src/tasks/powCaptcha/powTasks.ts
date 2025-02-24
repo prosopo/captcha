@@ -121,8 +121,6 @@ export class PowCaptchaManager extends CaptchaManager {
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
-		console.log("\n\nchallengeRecord\n\n", challengeRecord);
-
 		if (!challengeRecord) {
 			this.logger.debug("No record of this challenge");
 			// no record of this challenge
@@ -146,7 +144,6 @@ export class PowCaptchaManager extends CaptchaManager {
 		const correct = validateSolution(nonce, challenge, difficulty);
 
 		let result: CaptchaResult = { status: CaptchaStatus.approved };
-		console.log("\n\ncorrect\n\n", correct);
 		if (!correct) {
 			result = {
 				status: CaptchaStatus.disapproved,
