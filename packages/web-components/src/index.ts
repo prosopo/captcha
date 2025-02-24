@@ -32,7 +32,7 @@ const getWidgetFactory = (): WidgetFactory => {
 		logoElementFactory,
 	);
 
-	const webComponentFactory = new WebComponentFactory();
+	const webComponentFactory = new WebComponentFactory("prosopo-procaptcha");
 
 	return new WidgetWebComponentFactory(
 		widgetElementFactory,

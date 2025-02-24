@@ -14,15 +14,18 @@
 
 import { CaptchaType } from "@prosopo/types";
 import type React from "react";
-import type { CaptchaProps } from "./captcha.js";
+import type { CaptchaProps } from "./captchaProps.js";
 import { FrictionlessCaptcha } from "./components/frictionlessCaptcha.js";
 import { ImageCaptcha } from "./components/imageCaptcha.js";
 import { PowCaptcha } from "./components/powCaptcha.js";
 
-const componentsList: Record<CaptchaType, React.ComponentType<CaptchaProps>> = {
+const captchaComponentsList: Record<
+	CaptchaType,
+	React.ComponentType<CaptchaProps>
+> = {
 	[CaptchaType.image]: ImageCaptcha,
 	[CaptchaType.pow]: PowCaptcha,
 	[CaptchaType.frictionless]: FrictionlessCaptcha,
 };
 
-export { componentsList };
+export { captchaComponentsList };

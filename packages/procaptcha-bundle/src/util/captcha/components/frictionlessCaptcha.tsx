@@ -15,7 +15,7 @@
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import { ProcaptchaFrictionless } from "@prosopo/procaptcha-frictionless";
 import React, { useState } from "react";
-import type { CaptchaProps } from "../captcha.js";
+import type { CaptchaProps } from "../captchaProps.js";
 
 const FrictionlessCaptcha = (props: CaptchaProps) => {
 	const { config, callbacks } = props;

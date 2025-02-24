@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaRenderer } from "@prosopo/procaptcha-bundle/components";
+import { CaptchaComponentProvider } from "@prosopo/procaptcha-bundle/components";
 import { CaptchaType, type ProcaptchaToken } from "@prosopo/types";
 import config from "./config.js";
 
@@ -42,7 +42,7 @@ export function Captcha(props: CaptchProps) {
 
 	return (
 		<div>
-			{new CaptchaRenderer().render(
+			{new CaptchaComponentProvider().getCaptchaComponent(
 				props.captchaType || CaptchaType.frictionless,
 				{
 					config,

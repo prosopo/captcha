@@ -32,11 +32,13 @@ class WidgetElementFactory implements HtmlElementFactory {
 
 	public createHtmlElement(theme: Theme): HTMLElement {
 		const widgetElement = document.createElement("div");
+		widgetElement.className = "widget";
+
 		const checkboxElement =
 			this.checkboxElementFactory.createHtmlElement(theme);
 		const logoElement = this.logoElementFactory.createHtmlElement(theme);
 
-		widgetElement.outerHTML = this.getStyles(theme) + this.getMarkup();
+		widgetElement.innerHTML = this.getStyles(theme) + this.getMarkup();
 
 		widgetElement
 			.querySelector(".widget__checkbox")
@@ -49,21 +51,19 @@ class WidgetElementFactory implements HtmlElementFactory {
 
 	protected getMarkup(): string {
 		return `
-<div class="widget">
-    <div class="widget__outer">
-        <div class="widget__wrapper">
-            <div class="widget__inner">
-                <div class="widget__dimensions" data-cy={"button-human"}>
-                    {" "}
-                    <div class="widget__content">
-                        <div className="widget__checkbox"></div>
-                        <div class="widget__logo"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>`;
+<div class="widget__outer">
+	<div class="widget__wrapper">
+		<div class="widget__inner">
+			<div class="widget__dimensions" data-cy={"button-human"}>
+				<div class="widget__content">
+					<div class="widget__checkbox"></div>
+					<div class="widget__logo"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+`;
 	}
 
 	protected getStyles(theme: Theme): string {

@@ -21,19 +21,21 @@ class CheckboxElementFactory
 {
 	createHtmlElement(theme: Theme): HTMLElement {
 		const checkbox = document.createElement("div");
+		checkbox.className = "checkbox";
 
-		checkbox.outerHTML = this.getStyles(theme) + this.getMarkup();
+		checkbox.innerHTML = this.getStyles(theme) + this.getMarkup();
 
 		return checkbox;
 	}
 
 	getInteractiveArea(widget: HTMLElement): HTMLElement | null {
-		return widget.querySelector(".checkbox__content");
+		const widgetRoot = widget.shadowRoot || widget;
+
+		return widgetRoot.querySelector(".checkbox__content");
 	}
 
 	protected getMarkup(): string {
 		return `
-<div class="checkbox">
     <div class="checkbox__outer">
         <div class="checkbox__wrapper">
             <div class="checkbox__inner">
@@ -43,7 +45,6 @@ class CheckboxElementFactory
             </div>
         </div>
     </div>
-</div>
 `;
 	}
 

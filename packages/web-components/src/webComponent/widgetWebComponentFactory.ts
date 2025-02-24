@@ -23,11 +23,10 @@ class WidgetWebComponentFactory implements WidgetFactory {
 		private readonly webComponentFactory: WebComponentFactory,
 	) {}
 
-	public createWidget(theme: Theme, webComponentTag: string): HTMLElement {
+	public createWidget(theme: Theme): HTMLElement {
 		const element = this.widgetElementFactory.createHtmlElement(theme);
 
-		const webComponent =
-			this.webComponentFactory.createWebComponent(webComponentTag);
+		const webComponent = this.webComponentFactory.createWebComponent();
 
 		const componentRoot = webComponent.shadowRoot || webComponent;
 

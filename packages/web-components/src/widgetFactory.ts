@@ -15,7 +15,7 @@
 import type { Theme } from "./theme.js";
 
 interface WidgetFactory {
-	createWidget(theme: Theme, webComponentTag: string): HTMLElement;
+	createWidget(theme: Theme): HTMLElement;
 }
 
 export type { WidgetFactory };

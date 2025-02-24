@@ -28,7 +28,7 @@ import { type Root, createRoot } from "react-dom/client";
 import { setLanguage } from "../language.js";
 import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";
-import type { CaptchaComponentProvider } from "./captcha/captchaComponentProvider.js";
+import type { CaptchaComponentProvider } from "./captchaComponentProvider.js";
 
 interface RenderSettings {
 	identifierPrefix: string;
@@ -37,36 +37,31 @@ interface RenderSettings {
 	defaultCaptchaType: CaptchaType;
 }
 
-class WidgetCaptchaRenderer {
+class CaptchaRenderer {
 	private readonly captchaComponentProvider: CaptchaComponentProvider;
 
 	constructor(captchaComponentProvider: CaptchaComponentProvider) {
 		this.captchaComponentProvider = captchaComponentProvider;
 	}
 
-	public renderWidgetCaptcha(
+	public renderCaptcha(
 		settings: RenderSettings,
-		widgetInteractiveArea: HTMLElement,
+		container: HTMLElement,
 		config: ProcaptchaClientConfigOutput,
 		renderOptions?: ProcaptchaRenderOptions,
 	): Root {
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
-		const callbacks = getDefaultCallbacks(widgetInteractiveArea);
+		const callbacks = getDefaultCallbacks(container);
 
-		this.readAndValidateSettings(
-			widgetInteractiveArea,
-			callbacks,
-			config,
-			renderOptions,
-		);
+		this.readAndValidateSettings(container, callbacks, config, renderOptions);
 
 		const emotionCache = this.makeEmotionCache(
 			settings.emotionCacheKey,
-			widgetInteractiveArea,
+			container,
 		);
-		const root = createRoot(widgetInteractiveArea, {
+		const root = createRoot(container, {
 			identifierPrefix: settings.identifierPrefix,
 		});
 
@@ -109,4 +104,4 @@ class WidgetCaptchaRenderer {
 	}
 }
 
-export { WidgetCaptchaRenderer };
+export { CaptchaRenderer };

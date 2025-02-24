@@ -21,9 +21,11 @@ class LogoElementFactory implements HtmlElementFactory {
 
 	public createHtmlElement(theme: Theme): HTMLElement {
 		const widgetLogo = document.createElement("div");
+		widgetLogo.className = "logo";
+
 		const svgLogo = this.svgLogoIconFactory.createHtmlElement(theme);
 
-		widgetLogo.outerHTML = this.getStyles() + this.getMarkup();
+		widgetLogo.innerHTML = this.getStyles() + this.getMarkup();
 		widgetLogo.querySelector(".logo__svg")?.replaceWith(svgLogo);
 
 		return widgetLogo;
@@ -31,17 +33,15 @@ class LogoElementFactory implements HtmlElementFactory {
 
 	protected getMarkup(): string {
 		return `
-<div class="logo">
-    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
-        <div class="logo__outer">
-            <div class="logo__wrapper">
-                <div class="logo__inner">
-                    <div class="logo__svg"></div>
-                </div>
-            </div>
-        </div>
-    </a>
-</div>
+<a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
+	<div class="logo__outer">
+		<div class="logo__wrapper">
+			<div class="logo__inner">
+				<div class="logo__svg"></div>
+			</div>
+		</div>
+	</div>
+</a>
     `;
 	}
 
