@@ -27,12 +27,12 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@prosopo/detector": "2.4.1",
-		"@prosopo/locale": "2.4.1",
+		"@prosopo/locale-browser": "2.4.1",
 		"@prosopo/procaptcha-pow": "2.4.1",
 		"@prosopo/procaptcha-react": "2.4.1",
 		"@prosopo/types": "2.4.1",
 		"@prosopo/web-components": "2.4.1",
-		"express": "4.21.2",
+		"express": "4.21.1",
 		"react": "18.3.1"
 	},
 	"devDependencies": {

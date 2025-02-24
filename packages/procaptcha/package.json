@@ -41,7 +41,7 @@
 		"@prosopo/procaptcha-common": "2.4.1",
 		"@prosopo/types": "2.4.1",
 		"@prosopo/util": "2.4.1",
-		"express": "4.21.2",
+		"express": "4.21.1",
 		"jsdom": "25.0.0"
 	},
 	"overrides": {

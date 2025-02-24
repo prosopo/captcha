@@ -30,13 +30,13 @@
 		"@prosopo/account": "2.4.1",
 		"@prosopo/api": "2.4.1",
 		"@prosopo/common": "2.4.1",
-		"@prosopo/locale": "2.4.1",
+		"@prosopo/locale-browser": "2.4.1",
 		"@prosopo/procaptcha": "2.4.1",
 		"@prosopo/procaptcha-common": "2.4.1",
 		"@prosopo/types": "2.4.1",
 		"@prosopo/util": "2.4.1",
 		"@prosopo/web-components": "2.4.1",
-		"express": "4.21.2",
+		"express": "4.21.1",
 		"react": "18.3.1"
 	},
 	"overrides": {

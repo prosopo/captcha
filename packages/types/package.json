@@ -34,7 +34,7 @@
 		"@polkadot/extension-inject": "0.46.9",
 		"@prosopo/common": "2.4.1",
 		"@prosopo/locale": "2.4.1",
-		"express": "4.21.2",
+		"express": "4.21.1",
 		"ip-address": "10.0.1",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8"
