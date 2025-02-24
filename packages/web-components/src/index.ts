@@ -43,12 +43,11 @@ const getWidgetInteractiveAreaProvider = (): WidgetInteractiveAreaProvider => {
 };
 
 /*todo:
- * 2. make sure the image popup works properly
- * 2. run tests to make sure everything works
- * 3. rename web-components to 'widget'
- * 4. update dependencies: remove express
- * 5. run tests again
- * 6. work out on the lazy loading
+ * 1. rename web-components to 'widget'
+ * 2. update dependencies: remove express
+ * 3. make sure the image popup works properly
+ * 4. run tests
+ * 5. work out on the lazy loading
  * */
 
 export * from "./theme.js";

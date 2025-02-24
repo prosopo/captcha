@@ -54,7 +54,7 @@ class WidgetElementFactory implements HtmlElementFactory {
 <div class="widget__outer">
 	<div class="widget__wrapper">
 		<div class="widget__inner">
-			<div class="widget__dimensions" data-cy={"button-human"}>
+			<div class="widget__dimensions" data-cy="button-human">
 				<div class="widget__content">
 					<div class="widget__checkbox"></div>
 					<div class="widget__logo"></div>
