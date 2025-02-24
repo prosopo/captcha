@@ -707,6 +707,7 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 		};
+		console.log("\n\nupdate\n\n", update);
 		try {
 			const updateResult = await tables.powcaptcha.updateOne(
 				{ challenge },
@@ -714,6 +715,7 @@ export class ProviderDatabase
 					$set: update,
 				},
 			);
+			console.log("\n\nupdateResult\n\n", updateResult);
 			if (updateResult.matchedCount === 0) {
 				this.logger.info("No PowCaptcha record found to update", {
 					challenge,
@@ -851,7 +853,20 @@ export class ProviderDatabase
 						filterNoStoredTimestamp,
 						{
 							$expr: {
-								$lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"],
+								$lt: [
+									{
+										$convert: {
+											input: "$storedAtTimestamp",
+											to: "date",
+										},
+									},
+									{
+										$convert: {
+											input: "$lastUpdatedTimestamp",
+											to: "date",
+										},
+									},
+								],
 							},
 						},
 					],
