@@ -707,7 +707,6 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 		};
-		console.log("\n\nupdate\n\n", update);
 		try {
 			const updateResult = await tables.powcaptcha.updateOne(
 				{ challenge },
@@ -715,7 +714,6 @@ export class ProviderDatabase
 					$set: update,
 				},
 			);
-			console.log("\n\nupdateResult\n\n", updateResult);
 			if (updateResult.matchedCount === 0) {
 				this.logger.info("No PowCaptcha record found to update", {
 					challenge,
