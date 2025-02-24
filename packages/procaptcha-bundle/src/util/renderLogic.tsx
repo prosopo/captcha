@@ -16,29 +16,53 @@ import {
 	type ProcaptchaClientConfigOutput,
 	type ProcaptchaRenderOptions,
 } from "@prosopo/types";
-import { CaptchaRenderer } from "./renderLogic/captcha/captchaRenderer.js";
-import { WebComponentFactory } from "./renderLogic/webComponentFactory.js";
-import { WidgetRenderer } from "./renderLogic/widgetRenderer.js";
+import {
+	getWidgetFactory,
+	getWidgetInteractiveAreaProvider,
+} from "@prosopo/web-components";
+import type { Root } from "react-dom/client";
+import { CaptchaComponentProvider } from "./renderLogic/captcha/captchaComponentProvider.js";
+import { WidgetCaptchaRenderer } from "./renderLogic/widgetCaptchaRenderer.js";
 
-const widgetRenderer = new WidgetRenderer(
-	new WebComponentFactory(),
-	new CaptchaRenderer(),
+const widgetFactory = getWidgetFactory();
+const widgetInteractiveAreaProvider = getWidgetInteractiveAreaProvider();
+
+const captchaComponentProvider = new CaptchaComponentProvider();
+const widgetCaptchaRenderer = new WidgetCaptchaRenderer(
+	captchaComponentProvider,
 );
 
 export const renderLogic = (
 	elements: Element[],
 	config: ProcaptchaClientConfigOutput,
 	renderOptions?: ProcaptchaRenderOptions,
-) => {
-	return widgetRenderer.renderElements(
-		{
-			identifierPrefix: "procaptcha-",
-			emotionCacheKey: "procaptcha",
-			webComponentTag: "prosopo-procaptcha",
-			defaultCaptchaType: CaptchaType.frictionless,
-		},
-		elements,
-		config,
-		renderOptions,
-	);
+): Root[] => {
+	return elements.map((element) => {
+		// Clear all the children inside, if there are any.
+		// If the renderElement() is called several times on the same element, it should recreate the captcha from scratch.
+		element.innerHTML = "";
+
+		const widget = widgetFactory.createWidget(
+			// fixme
+			config.theme,
+			"prosopo-procaptcha",
+		);
+		const widgetInteractiveArea =
+			widgetInteractiveAreaProvider.getInteractiveArea(widget);
+
+		const captchaRoot = widgetCaptchaRenderer.renderWidgetCaptcha(
+			{
+				identifierPrefix: "procaptcha-",
+				emotionCacheKey: "procaptcha",
+				webComponentTag: "prosopo-procaptcha",
+				defaultCaptchaType: CaptchaType.frictionless,
+			},
+			// fixme
+			widgetInteractiveArea,
+			config,
+			renderOptions,
+		);
+
+		return captchaRoot;
+	});
 };

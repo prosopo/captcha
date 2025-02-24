@@ -24,17 +24,16 @@ class WidgetWebComponentFactory implements WidgetFactory {
 	) {}
 
 	public createWidget(theme: Theme, webComponentTag: string): HTMLElement {
-		const widgetElement = this.widgetElementFactory.createHtmlElement(theme);
+		const element = this.widgetElementFactory.createHtmlElement(theme);
 
 		const webComponent =
 			this.webComponentFactory.createWebComponent(webComponentTag);
-		const webComponentRoot = webComponent.shadowRoot || webComponent;
 
-		webComponentRoot.appendChild(widgetElement);
+		const componentRoot = webComponent.shadowRoot || webComponent;
 
-		// todo we'll need to use checkbox as the React Root, how to implement it properly?
+		componentRoot.appendChild(element);
 
-		return widgetElement;
+		return webComponent;
 	}
 }
 

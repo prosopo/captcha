@@ -19,9 +19,11 @@ import { WidgetElementFactory } from "./htmlElements/widgetElementFactory.js";
 import { WebComponentFactory } from "./webComponent/webComponentFactory.js";
 import { WidgetWebComponentFactory } from "./webComponent/widgetWebComponentFactory.js";
 import type { WidgetFactory } from "./widgetFactory.js";
+import type { WidgetInteractiveAreaProvider } from "./widgetInteractiveAreaProvider.js";
+
+const checkboxElementFactory = new CheckboxElementFactory();
 
 const getWidgetFactory = (): WidgetFactory => {
-	const checkboxElementFactory = new CheckboxElementFactory();
 	const logoSvgIconFactory = new LogoSvgIconFactory();
 	const logoElementFactory = new LogoElementFactory(logoSvgIconFactory);
 
@@ -38,6 +40,10 @@ const getWidgetFactory = (): WidgetFactory => {
 	);
 };
 
+const getWidgetInteractiveAreaProvider = (): WidgetInteractiveAreaProvider => {
+	return checkboxElementFactory;
+};
+
 /*todo:
  * 2. update 'procaptcha-bundle': remove webComponentFactory and use from the current one
  * 3. rename web-components to 'widget'
@@ -49,4 +55,9 @@ export * from "./constants.js";
 export * from "./reactComponents/Checkbox.js";
 export * from "./reactComponents/Reload.js";
 
-export { type WidgetFactory, getWidgetFactory };
+export {
+	type WidgetFactory,
+	type WidgetInteractiveAreaProvider,
+	getWidgetFactory,
+	getWidgetInteractiveAreaProvider,
+};

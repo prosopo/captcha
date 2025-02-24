@@ -16,8 +16,8 @@ import type { ReactNode } from "react";
 import type { CaptchaProps } from "./captcha.js";
 import { componentsList } from "./componentsList.js";
 
-class CaptchaRenderer {
-	public render(
+class CaptchaComponentProvider {
+	public getCaptchaComponent(
 		captchaType: CaptchaType,
 		captchaProps: CaptchaProps,
 	): ReactNode {
@@ -34,4 +34,4 @@ class CaptchaRenderer {
 	}
 }
 
-export { CaptchaRenderer };
+export { CaptchaComponentProvider };

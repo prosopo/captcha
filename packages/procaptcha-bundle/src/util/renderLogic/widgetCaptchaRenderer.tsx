@@ -28,8 +28,7 @@ import { type Root, createRoot } from "react-dom/client";
 import { setLanguage } from "../language.js";
 import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";
-import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
-import type { WebComponentFactory } from "./webComponentFactory.js";
+import type { CaptchaComponentProvider } from "./captcha/captchaComponentProvider.js";
 
 interface RenderSettings {
 	identifierPrefix: string;
@@ -38,64 +37,50 @@ interface RenderSettings {
 	defaultCaptchaType: CaptchaType;
 }
 
-class WidgetRenderer {
-	private readonly webComponentFactory: WebComponentFactory;
-	private readonly captchaRenderer: CaptchaRenderer;
+class WidgetCaptchaRenderer {
+	private readonly captchaComponentProvider: CaptchaComponentProvider;
 
-	constructor(
-		webComponentFactory: WebComponentFactory,
-		captchaRenderer: CaptchaRenderer,
-	) {
-		this.webComponentFactory = webComponentFactory;
-		this.captchaRenderer = captchaRenderer;
+	constructor(captchaComponentProvider: CaptchaComponentProvider) {
+		this.captchaComponentProvider = captchaComponentProvider;
 	}
 
-	public renderElements(
+	public renderWidgetCaptcha(
 		settings: RenderSettings,
-		elements: Element[],
-		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
-	): Root[] {
-		return elements.map((element) => {
-			return this.renderElement(settings, element, config, renderOptions);
-		});
-	}
-
-	protected renderElement(
-		settings: RenderSettings,
-		element: Element,
+		widgetInteractiveArea: HTMLElement,
 		config: ProcaptchaClientConfigOutput,
 		renderOptions?: ProcaptchaRenderOptions,
 	): Root {
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
-		const callbacks = getDefaultCallbacks(element);
+		const callbacks = getDefaultCallbacks(widgetInteractiveArea);
 
-		this.readAndValidateSettings(element, callbacks, config, renderOptions);
-
-		// Clear all the children inside, if there are any.
-		// If the renderElement() is called several times on the same element, it should recreate the captcha from scratch.
-		element.innerHTML = "";
-
-		const shadowRoot = this.webComponentFactory.createWebComponent(
-			settings.webComponentTag,
-			element,
+		this.readAndValidateSettings(
+			widgetInteractiveArea,
+			callbacks,
+			config,
+			renderOptions,
 		);
+
 		const emotionCache = this.makeEmotionCache(
 			settings.emotionCacheKey,
-			shadowRoot,
+			widgetInteractiveArea,
 		);
-		const root = createRoot(shadowRoot, {
+		const root = createRoot(widgetInteractiveArea, {
 			identifierPrefix: settings.identifierPrefix,
 		});
 
-		const captcha = this.captchaRenderer.render(captchaType, {
-			config: config,
-			callbacks: callbacks,
-		});
+		const captchaComponent = this.captchaComponentProvider.getCaptchaComponent(
+			captchaType,
+			{
+				config: config,
+				callbacks: callbacks,
+			},
+		);
 
-		root.render(<CacheProvider value={emotionCache}>{captcha}</CacheProvider>);
+		root.render(
+			<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>,
+		);
 
 		return root;
 	}
@@ -114,14 +99,14 @@ class WidgetRenderer {
 
 	protected makeEmotionCache(
 		cacheKey: string,
-		shadowRoot: ShadowRoot,
+		container: HTMLElement,
 	): EmotionCache {
 		return createCache({
 			key: cacheKey,
 			prepend: true,
-			container: shadowRoot,
+			container: container,
 		});
 	}
 }
 
-export { WidgetRenderer };
+export { WidgetCaptchaRenderer };

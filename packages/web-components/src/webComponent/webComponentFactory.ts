@@ -17,6 +17,7 @@ import { WIDGET_MAX_WIDTH } from "@prosopo/web-components";
 class WebComponentFactory {
 	public createWebComponent(componentTag: string): HTMLElement {
 		const webComponent = document.createElement(componentTag);
+
 		webComponent.style.display = "flex";
 		webComponent.style.flexDirection = "column";
 		webComponent.style.width = "100%";

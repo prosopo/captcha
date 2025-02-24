@@ -13,15 +13,22 @@
 // limitations under the License.
 
 import type { Theme } from "../theme.js";
+import type { WidgetInteractiveAreaProvider } from "../widgetInteractiveAreaProvider.js";
 import type { HtmlElementFactory } from "./htmlElementFactory.js";
 
-class CheckboxElementFactory implements HtmlElementFactory {
+class CheckboxElementFactory
+	implements HtmlElementFactory, WidgetInteractiveAreaProvider
+{
 	createHtmlElement(theme: Theme): HTMLElement {
 		const checkbox = document.createElement("div");
 
 		checkbox.outerHTML = this.getStyles(theme) + this.getMarkup();
 
 		return checkbox;
+	}
+
+	getInteractiveArea(widget: HTMLElement): HTMLElement | null {
+		return widget.querySelector(".checkbox__content");
 	}
 
 	protected getMarkup(): string {
