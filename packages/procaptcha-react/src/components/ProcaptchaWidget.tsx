@@ -18,7 +18,7 @@ import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
-import { Checkbox, darkTheme, lightTheme } from "@prosopo/web-components";
+import { Checkbox, darkTheme, lightTheme } from "@prosopo/widget";
 import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";

@@ -29,7 +29,7 @@
 			"path": "../util"
 		},
 		{
-			"path": "../web-components"
+			"path": "../widget"
 		}
 	]
 }

@@ -14,7 +14,7 @@
 import { useTranslation } from "@prosopo/locale";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { ReloadButton, darkTheme, lightTheme } from "@prosopo/web-components";
+import { ReloadButton, darkTheme, lightTheme } from "@prosopo/widget";
 import { Suspense, useMemo } from "react";
 import addDataAttr from "../util/index.js";
 import Button from "./Button.js";

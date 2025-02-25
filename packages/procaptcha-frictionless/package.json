@@ -31,7 +31,7 @@
 		"@prosopo/procaptcha-pow": "2.4.1",
 		"@prosopo/procaptcha-react": "2.4.1",
 		"@prosopo/types": "2.4.1",
-		"@prosopo/web-components": "2.4.1",
+		"@prosopo/widget": "2.4.1",
 		"express": "4.21.2",
 		"react": "18.3.1"
 	},

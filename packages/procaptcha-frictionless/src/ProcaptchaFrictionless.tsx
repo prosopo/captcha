@@ -20,7 +20,7 @@ import {
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
 } from "@prosopo/types";
-import { Checkbox, darkTheme, lightTheme } from "@prosopo/web-components";
+import { Checkbox, darkTheme, lightTheme } from "@prosopo/widget";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
 

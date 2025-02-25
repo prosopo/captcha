@@ -19,7 +19,7 @@ import type {
 import {
 	getWidgetFactory,
 	getWidgetInteractiveAreaProvider,
-} from "@prosopo/web-components";
+} from "@prosopo/widget";
 import type { Root } from "react-dom/client";
 import { CaptchaComponentProvider } from "./captcha/captchaComponentProvider.js";
 import { CaptchaRenderer } from "./captcha/captchaRenderer.js";

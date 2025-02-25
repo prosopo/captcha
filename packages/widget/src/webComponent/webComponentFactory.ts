@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { WIDGET_MAX_WIDTH } from "@prosopo/web-components";
+import { WIDGET_MAX_WIDTH } from "../constants.js";
 
 class WebComponentFactory {
 	public constructor(private readonly webComponentTag: string) {}
