@@ -37,7 +37,7 @@ export function Captcha(props: CaptchProps) {
 	};
 
 	const onFailed = () => {
-		console.log("The user failed the captcha");
+		console.log("Challenge failed");
 	};
 
 	return (
