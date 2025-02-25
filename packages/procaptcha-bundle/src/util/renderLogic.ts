@@ -37,12 +37,14 @@ const widgetInitializer = new WidgetInitializer(
 	captchaRenderer,
 );
 
-export const renderLogic = (
+export const renderLogic = async (
 	elements: Element[],
 	config: ProcaptchaClientConfigOutput,
 	renderOptions?: ProcaptchaRenderOptions,
-): Root[] => {
-	return elements.map((element) => {
-		return widgetInitializer.initializeWidget(element, config, renderOptions);
-	});
+): Promise<Root[]> => {
+	return await Promise.all(
+		elements.map(async (element) => {
+			return widgetInitializer.initializeWidget(element, config, renderOptions);
+		}),
+	);
 };

@@ -11,15 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { css } from "@emotion/react";
-import type React from "react";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
+	type FC,
 	useMemo,
 	useState,
 } from "react";
-import { type Theme, darkTheme, lightTheme } from "../theme.js";
+import type { Theme } from "../theme.js";
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;
@@ -79,7 +80,7 @@ const responsiveFont = css`
 	}
 `;
 
-export const Checkbox: React.FC<CheckboxProps> = ({
+export const Checkbox: FC<CheckboxProps> = ({
 	theme,
 	onChange,
 	checked,

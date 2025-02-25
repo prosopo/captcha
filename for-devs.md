@@ -25,6 +25,12 @@ Server-side (node.js):
 * `database` - Mongo DB Query builder
     - `types-database` - declaration of interfaces and types used in the Query builder
 
+Building configs (for Vite):
+
+`dev/config/src/vite`:
+
+* `vite.frontend.config.ts`
+
 ## 2. Code Quality & Style
 
 * [ESLint](https://eslint.org/) - static code analyses

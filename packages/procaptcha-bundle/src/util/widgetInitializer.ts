@@ -32,11 +32,11 @@ class WidgetInitializer {
 		private readonly captchaRenderer: CaptchaRenderer,
 	) {}
 
-	public initializeWidget(
+	public async initializeWidget(
 		element: Element,
 		config: ProcaptchaClientConfigOutput,
 		renderOptions?: ProcaptchaRenderOptions,
-	): Root {
+	): Promise<Root> {
 		const theme = "light" === config.theme ? lightTheme : darkTheme;
 
 		const widget = this.widgetFactory.createWidget(theme);
@@ -46,9 +46,15 @@ class WidgetInitializer {
 		element.innerHTML = "";
 		element.appendChild(widget);
 
+		// fixme
+		console.log("optimization: widget was attached to the DOM", {
+			performnce: performance.now(),
+		});
+		performance.mark("widgetAttached");
+
 		const widgetInteractiveArea = this.getWidgetInteractiveArea(widget);
 
-		const captchaRoot = this.captchaRenderer.renderCaptcha(
+		const captchaRoot = await this.captchaRenderer.renderCaptcha(
 			{
 				identifierPrefix: "procaptcha-",
 				emotionCacheKey: "procaptcha",

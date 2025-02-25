@@ -14,7 +14,6 @@
 
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import React from "react";
 import type { CaptchaProps } from "../captchaProps.js";
 
 const PowCaptcha = (props: CaptchaProps) => {

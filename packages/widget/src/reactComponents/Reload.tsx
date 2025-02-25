@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type React from "react";
-import { type ButtonHTMLAttributes, useMemo, useState } from "react";
+
+import { type ButtonHTMLAttributes, type FC, useMemo, useState } from "react";
 import { darkTheme, lightTheme } from "../theme.js";
 
 interface ReloadButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -30,7 +30,7 @@ const buttonStyleBase = {
 	borderRadius: "50%",
 };
 
-export const ReloadButton: React.FC<ReloadButtonProps> = ({
+export const ReloadButton: FC<ReloadButtonProps> = ({
 	themeColor,
 	onReload,
 }: ReloadButtonProps) => {

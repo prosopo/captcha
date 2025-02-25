@@ -42,11 +42,6 @@ const getWidgetInteractiveAreaProvider = (): WidgetInteractiveAreaProvider => {
 	return checkboxElementFactory;
 };
 
-/*todo:
- * 4. run tests
- * 5. work out on the lazy loading
- * */
-
 export * from "./theme.js";
 export * from "./constants.js";
 export * from "./reactComponents/Checkbox.js";

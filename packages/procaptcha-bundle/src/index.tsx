@@ -28,7 +28,7 @@ const BUNDLE_NAME = "procaptcha.bundle.js";
 let procaptchaRoots: Root[] = [];
 
 // Implicit render for targeting all elements with class 'procaptcha'
-const implicitRender = () => {
+const implicitRender = async () => {
 	// Get elements with class 'procaptcha'
 	const elements: Element[] = Array.from(
 		document.getElementsByClassName("procaptcha"),
@@ -44,23 +44,27 @@ const implicitRender = () => {
 		}
 		const captchaType = getCaptchaType(elements);
 
-		const root = renderLogic(elements, getConfig(siteKey, !(web3 === "true")), {
-			captchaType,
-			siteKey,
-		});
+		const root = await renderLogic(
+			elements,
+			getConfig(siteKey, !(web3 === "true")),
+			{
+				captchaType,
+				siteKey,
+			},
+		);
 
 		procaptchaRoots.push(...root);
 	}
 };
 
 // Explicit render for targeting specific elements
-export const render = (
+export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ) => {
 	const siteKey = renderOptions.siteKey;
 
-	const roots = renderLogic([element], getConfig(siteKey), renderOptions);
+	const roots = await renderLogic([element], getConfig(siteKey), renderOptions);
 
 	procaptchaRoots.push(...roots);
 };
