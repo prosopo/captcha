@@ -16,7 +16,7 @@ Client-side (browser):
     - `procaptcha-react` (image)
     - `procaptcha-pow`
 
-* `web-components` - Captcha Widget
+* `widget` - Widget skeleton wrapped into the web component
 
 Server-side (node.js):
 

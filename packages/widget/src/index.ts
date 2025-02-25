@@ -43,9 +43,6 @@ const getWidgetInteractiveAreaProvider = (): WidgetInteractiveAreaProvider => {
 };
 
 /*todo:
- * 1. rename web-components to 'widget'
- * 2. update dependencies: remove express
- * 3. make sure the image popup works properly
  * 4. run tests
  * 5. work out on the lazy loading
  * */
