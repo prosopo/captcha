@@ -6,12 +6,16 @@
 			"type": "node",
 			"request": "launch",
 			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/tsx",
-			"runtimeArgs": ["--transpile-only", "--esm"],
-			"program": "${workspaceRoot}/dev/scripts/src/cli/index.ts",
-			"args": ["version"],
+			"program": "${workspaceRoot}/packages/util/solverService.ts",
+			"args": [
+				"version"
+			],
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",
-			"skipFiles": ["<node_internals>/**", "node_modules/**"]
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/**"
+			]
 		}
 	]
 }
