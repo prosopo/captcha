@@ -47,7 +47,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	}, [config.language]);
 
 	return (
-		<div>
+		<div className={"image-captcha"}>
 			<Modal show={state.showModal}>
 				{state.challenge ? (
 					<CaptchaComponent

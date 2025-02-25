@@ -66,7 +66,7 @@ describe("Captchas", () => {
 					expect(response?.body).to.have.property("error");
 				})
 				.then(() => {
-					cy.get('div[data-cy="button-human"]', { includeShadowDom: true })
+					cy.get("div.image-captcha", { includeShadowDom: true })
 						.should("exist") // Ensures element exists
 						.should("be.visible") // Ensures it's rendered
 						.find("label")
