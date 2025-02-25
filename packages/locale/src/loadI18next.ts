@@ -12,17 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<<< HEAD:packages/provider/src/express.d.ts
-import type { TFunction } from "i18next";
-
-declare module "express-serve-static-core" {
-	interface Request {
-		t: TFunction;
-		i18n: {
-			t: TFunction;
-		};
-	}
-========
 import type { i18n } from "i18next";
 
 async function loadI18next(backend: boolean): Promise<i18n> {
@@ -41,7 +30,6 @@ async function loadI18next(backend: boolean): Promise<i18n> {
 			reject(e);
 		}
 	});
->>>>>>>> prosopo/staging:packages/locale/src/loadI18next.ts
 }
 
 export default loadI18next;

@@ -12,15 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<<< HEAD:packages/web-components/src/widgetFactory.ts
-import type { Theme } from "./theme.js";
-
-interface WidgetFactory {
-	createWidget(theme: Theme): HTMLElement;
-}
-
-export type { WidgetFactory };
-========
 import type { TFunction } from "i18next";
 
 declare module "express-serve-static-core" {
@@ -31,4 +22,3 @@ declare module "express-serve-static-core" {
 		};
 	}
 }
->>>>>>>> prosopo/staging:packages/provider/src/express.d.ts
