@@ -50,23 +50,26 @@ class WidgetInitializer {
 		console.log("optimization: widget was attached to the DOM", {
 			performnce: performance.now(),
 		});
-		performance.mark("widgetAttached");
 
-		const widgetInteractiveArea = this.getWidgetInteractiveArea(widget);
+		return new Promise((resolve) => {
+			setTimeout(async () => {
+				const widgetInteractiveArea = this.getWidgetInteractiveArea(widget);
 
-		const captchaRoot = await this.captchaRenderer.renderCaptcha(
-			{
-				identifierPrefix: "procaptcha-",
-				emotionCacheKey: "procaptcha",
-				webComponentTag: "prosopo-procaptcha",
-				defaultCaptchaType: CaptchaType.frictionless,
-			},
-			widgetInteractiveArea,
-			config,
-			renderOptions,
-		);
+				const captchaRoot = await this.captchaRenderer.renderCaptcha(
+					{
+						identifierPrefix: "procaptcha-",
+						emotionCacheKey: "procaptcha",
+						webComponentTag: "prosopo-procaptcha",
+						defaultCaptchaType: CaptchaType.frictionless,
+					},
+					widgetInteractiveArea,
+					config,
+					renderOptions,
+				);
 
-		return captchaRoot;
+				resolve(captchaRoot);
+			}, 10000);
+		});
 	}
 
 	protected getWidgetInteractiveArea(widget: HTMLElement): HTMLElement {

@@ -88,16 +88,16 @@ class CheckboxElementFactory
     border-radius: 50%;
     display: inherit;
     box-sizing: border-box;
-    animation: rotation 1s linear infinite;
+    animation: checkbox__loading-spinner-rotation 1s linear infinite;
+}
 
-    @keyframes rotation {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
+@keyframes checkbox__loading-spinner-rotation {
+  0% {
+	transform: rotate(0deg);
+  }
+  100% {
+	transform: rotate(360deg);
+  }
 }
 </style>
 `;
