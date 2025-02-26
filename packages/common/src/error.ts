@@ -25,7 +25,7 @@ type BaseErrorOptions<ContextType> = {
 	logLevel?: LogLevel;
 	context?: ContextType;
 	silent?: boolean;
-	i18n?: { t: TFunction<"translation", undefined> };
+	i18n?: { t: TFunction };
 };
 
 interface BaseContextParams {
@@ -191,7 +191,7 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 
 export const unwrapError = (
 	err: ProsopoBaseError | SyntaxError | ZodError,
-	i18nInstance?: { t: TFunction<"translation", undefined> },
+	i18nInstance?: { t: TFunction },
 ) => {
 	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;

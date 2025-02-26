@@ -32,4 +32,6 @@ async function loadI18next(backend: boolean): Promise<i18n> {
 	});
 }
 
+export type { i18n as Ti18n };
+
 export default loadI18next;
