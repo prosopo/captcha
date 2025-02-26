@@ -24,13 +24,17 @@
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
+		"@emotion/react": "11.13.3",
 		"@prosopo/common": "2.4.1",
 		"@prosopo/load-balancer": "2.4.1",
 		"@prosopo/types": "2.4.1",
 		"@prosopo/util": "2.4.1",
-		"express": "4.21.2"
+		"@prosopo/widget": "2.4.1",
+		"react": "18.3.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.4.1",

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { css } from "@emotion/react";
+import type { Theme } from "@prosopo/widget";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
@@ -20,7 +21,6 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import type { Theme } from "../theme.js";
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;

@@ -5,7 +5,7 @@
 		"outDir": "./dist/cjs",
 		"lib": ["es6", "dom"]
 	},
-	"include": ["src/index.tsx", "src/index.html"],
+	"include": ["src/index.ts", "src/index.html"],
 	"references": [
 		{
 			"path": "../dotenv/tsconfig.cjs.json"

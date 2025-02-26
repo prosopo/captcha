@@ -44,6 +44,7 @@ class CaptchaRenderer {
 		this.captchaComponentProvider = captchaComponentProvider;
 	}
 
+	// fixme remove async
 	public async renderCaptcha(
 		settings: RenderSettings,
 		container: HTMLElement,

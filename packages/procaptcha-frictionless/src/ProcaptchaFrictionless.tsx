@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getDefaultEvents, providerRetry } from "@prosopo/procaptcha-common";
+import {
+	Checkbox,
+	getDefaultEvents,
+	providerRetry,
+} from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
@@ -20,7 +24,7 @@ import {
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
 } from "@prosopo/types";
-import { Checkbox, darkTheme, lightTheme } from "@prosopo/widget";
+import { darkTheme, lightTheme } from "@prosopo/widget";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
 

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { darkTheme, lightTheme } from "@prosopo/widget";
 import { type ButtonHTMLAttributes, type FC, useMemo, useState } from "react";
-import { darkTheme, lightTheme } from "../theme.js";
 
 interface ReloadButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	themeColor: "light" | "dark";

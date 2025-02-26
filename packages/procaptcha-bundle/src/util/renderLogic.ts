@@ -16,35 +16,24 @@ import type {
 	ProcaptchaClientConfigOutput,
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
-import {
-	getWidgetFactory,
-	getWidgetInteractiveAreaProvider,
-} from "@prosopo/widget";
+import { getWidgetCreator } from "@prosopo/widget";
 import type { Root } from "react-dom/client";
-import { CaptchaComponentProvider } from "./captcha/captchaComponentProvider.js";
-import { CaptchaRenderer } from "./captcha/captchaRenderer.js";
-import { WidgetInitializer } from "./widgetInitializer.js";
+import { CaptchaWidgetCreator } from "./captchaWidgetCreator.js";
 
-const widgetFactory = getWidgetFactory();
-const widgetInteractiveAreaProvider = getWidgetInteractiveAreaProvider();
-
-const captchaComponentProvider = new CaptchaComponentProvider();
-const captchaRenderer = new CaptchaRenderer(captchaComponentProvider);
-
-const widgetInitializer = new WidgetInitializer(
-	widgetFactory,
-	widgetInteractiveAreaProvider,
-	captchaRenderer,
-);
+const captchaWidgetCreator = new CaptchaWidgetCreator(getWidgetCreator());
 
 export const renderLogic = async (
-	elements: Element[],
+	containers: Element[],
 	config: ProcaptchaClientConfigOutput,
 	renderOptions?: ProcaptchaRenderOptions,
 ): Promise<Root[]> => {
-	return await Promise.all(
-		elements.map(async (element) => {
-			return widgetInitializer.initializeWidget(element, config, renderOptions);
-		}),
+	return Promise.all(
+		containers.map((container) =>
+			captchaWidgetCreator.createCaptchaWidget(
+				container,
+				config,
+				renderOptions,
+			),
+		),
 	);
 };

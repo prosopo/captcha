@@ -42,6 +42,7 @@ const implicitRender = async () => {
 			console.error("No siteKey found");
 			return;
 		}
+
 		const captchaType = getCaptchaType(elements);
 
 		const root = await renderLogic(

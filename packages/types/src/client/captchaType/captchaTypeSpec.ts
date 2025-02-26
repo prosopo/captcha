@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Theme } from "./theme.js";
+import { nativeEnum } from "zod";
+import { CaptchaType } from "./captchaType.js";
 
-interface WidgetFactory {
-	createWidget(theme: Theme): HTMLElement;
-}
+const CaptchaTypeSpec = nativeEnum(CaptchaType);
 
-export type { WidgetFactory };
+export { CaptchaTypeSpec };
