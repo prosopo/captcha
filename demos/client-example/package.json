@@ -15,7 +15,6 @@
 		"@polkadot/extension-inject": "0.46.9",
 		"@prosopo/common": "2.4.1",
 		"@prosopo/locale": "2.4.1",
-		"@prosopo/locale-browser": "2.4.1",
 		"@prosopo/procaptcha-bundle": "2.4.1",
 		"@prosopo/procaptcha-frictionless": "2.4.1",
 		"@prosopo/procaptcha-pow": "2.4.1",
@@ -65,7 +64,11 @@
 		"clean": "tsc --build --clean"
 	},
 	"browserslist": {
-		"production": [">0.2%", "not dead", "not op_mini all"],
+		"production": [
+			">0.2%",
+			"not dead",
+			"not op_mini all"
+		],
 		"development": [
 			"last 1 chrome version",
 			"last 1 firefox version",

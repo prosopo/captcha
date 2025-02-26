@@ -70,7 +70,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 };
 
 const siteKeyNotRegisteredError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TFunction },
 	dapp: string,
 ) => {
 	return new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
@@ -80,7 +80,7 @@ const siteKeyNotRegisteredError = (
 };
 
 const invalidSiteKeyError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TFunction },
 	dapp: string,
 ) => {
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
@@ -90,7 +90,7 @@ const invalidSiteKeyError = (
 };
 
 const unauthorizedOriginError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TFunction },
 	origin?: string,
 ) => {
 	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
@@ -100,7 +100,7 @@ const unauthorizedOriginError = (
 };
 
 const siteKeyInvalidDomainError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TFunction },
 	dapp: string,
 	domain: string,
 ) => {
