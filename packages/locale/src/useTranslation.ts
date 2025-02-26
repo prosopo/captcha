@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,18 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import {
 	type UseTranslationOptions,
 	type UseTranslationResponse,
 	useTranslation as useTranslationDefault,
 } from "react-i18next";
-import i18n from "../i18n.js";
+import initializeI18n from "./i18nFrontend.js";
 
 function useTranslation(
 	options?: UseTranslationOptions<"translation">,
 	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-): UseTranslationResponse<"translation", any> & { t: typeof i18n.t } {
-	// @ts-ignore not sure how to fix this
+): UseTranslationResponse<"translation", any> & {
+	t: ReturnType<typeof initializeI18n>["t"];
+} {
+	const i18n = initializeI18n();
 	return useTranslationDefault("translation", { i18n, ...options });
 }
 

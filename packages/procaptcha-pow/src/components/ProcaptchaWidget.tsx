@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { i18n, useTranslation } from "@prosopo/locale-browser";
+import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import type { ProcaptchaProps } from "@prosopo/types";
 import {
@@ -53,7 +53,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			i18n.changeLanguage(config.language);
+			loadI18next(false).then((i18n) => {
+				i18n.changeLanguage(config.language).then((r) => r);
+			});
 		}
 	}, [config.language]);
 

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getLogger } from "@prosopo/common";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,13 +65,14 @@ const clearOutputDirJS = (__dirname: string, destDir: string) =>
 			fs.rmSync(path.resolve(__dirname, destDir, file));
 		});
 
-const copyBundle = (__dirname: string, srcDir: string, destDir: string) =>
-	fs
-		.readdirSync(path.resolve(__dirname, srcDir))
-		.filter((file) => file.endsWith("js"))
-		.map((file) => {
-			fs.copyFileSync(
-				path.resolve(__dirname, srcDir, file),
-				path.resolve(__dirname, destDir, file),
-			);
-		});
+const copyBundle = (__dirname: string, srcDir: string, destDir: string) => {
+	log.info(
+		"Copying",
+		path.resolve(__dirname, srcDir),
+		"to",
+		path.resolve(__dirname, destDir),
+	);
+	fs.cpSync(path.resolve(__dirname, srcDir), path.resolve(__dirname, destDir), {
+		recursive: true,
+	});
+};

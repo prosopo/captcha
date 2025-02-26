@@ -20,27 +20,16 @@
 		"CANT_FIND_KEYRINGPAIR": "Impossible de trouver la paire de porte-clés pour {{address}}",
 		"ENVIRONMENT_NOT_READY": "Environnement non prêt",
 		"INVALID_SIGNATURE": "Signature invalide",
-		"NOT_IMPLEMENTED": "Non implémenté",
 		"SITE_KEY_MISSING": "CLÉ DU SITE manquante",
 		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
 		"INVALID_TIMESTAMP": "Horodatage invalide"
 	},
 	"CONTRACT": {
-		"INVALID_METHOD": "Méthode de contrat invalide",
-		"TX_ERROR": "Erreur lors de l'exécution de la transaction",
 		"INVALID_ADDRESS": "Échec de l'encodage de l'adresse invalide",
-		"INVALID_STORAGE_NAME": "Nom de stockage donné introuvable",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "L'engagement de la solution Captcha n'existe pas",
-		"CONTRACT_UNDEFINED": "Contrat non défini",
 		"SIGNER_UNDEFINED": "Signataire non défini",
 		"CANNOT_FIND_KEYPAIR": "Impossible de trouver la paire de clés",
-		"INTERRUPTED_EVENT": "Événement interrompu",
-		"TOO_MANY_CALLS": "Trop d'appels",
-		"UNKNOWN_ERROR": "Erreur inconnue",
-		"CHAIN_DECIMALS_UNDEFINED": "Décimales de la chaîne non définies",
-		"INVALID_DATA_FORMAT": "Format de données invalide",
-		"TX_QUEUE_ERROR": "Erreur dans la file d'attente des transactions",
-		"DISPATCH_ERROR": "Erreur lors de l'envoi de la transaction"
+		"INVALID_DATA_FORMAT": "Format de données invalide"
 	},
 	"CONFIG": {
 		"UNKNOWN_ENVIRONMENT": "Environnement inconnu demandé",
@@ -125,7 +114,6 @@
 		"MISSING_ENV_VARIABLE": "Variable d'environnement manquante",
 		"GENERAL": "Erreur Dev Générale, voir le contexte",
 		"MISSING_SECRET_KEY": "Clé secrète manquante",
-		"KEY_ERROR": "Erreur de clé",
 		"METHOD_NOT_IMPLEMENTED": "Méthode non implémentée"
 	},
 	"FS": {

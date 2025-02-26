@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ async function startApi() {
 
 	apiApp.use(cors());
 	apiApp.use(express.json());
-	apiApp.use(i18nMiddleware({}));
+	apiApp.use(await i18nMiddleware({}));
 	apiApp.use(prosopoRouter());
 	apiApp.use(handleErrors);
 

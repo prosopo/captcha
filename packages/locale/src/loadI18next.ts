@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteCommonJSConfig } from "@prosopo/config";
+import type { i18n } from "i18next";
 
-export default function () {
-	return ViteCommonJSConfig(
-		"locale-browser",
-		path.resolve("./tsconfig.cjs.json"),
-	);
+async function loadI18next(backend: boolean): Promise<i18n> {
+	return new Promise((resolve, reject) => {
+		try {
+			if (backend) {
+				import("./i18nBackend.js").then(({ default: initializeI18n }) => {
+					resolve(initializeI18n());
+				});
+			} else {
+				import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
+					resolve(initializeI18n());
+				});
+			}
+		} catch (e) {
+			reject(e);
+		}
+	});
 }
+
+export type { i18n as Ti18n };
+
+export default loadI18next;

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 // We need the unused params to make express recognise this function as an error handler
+
 import { type ProsopoApiError, unwrapError } from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodError } from "zod";
@@ -22,7 +24,7 @@ export const handleErrors = (
 	response: Response,
 	next: NextFunction,
 ) => {
-	const { code, statusMessage, jsonError } = unwrapError(err);
+	const { code, statusMessage, jsonError } = unwrapError(err, request.i18n);
 	response.statusMessage = statusMessage;
 	response.set("content-type", "application/json");
 	response.status(code);

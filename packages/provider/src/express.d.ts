@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,13 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type HandleOptions, handle } from "i18next-http-middleware";
 
-import i18n from "./i18nBackend.js";
+import type { TFunction } from "i18next";
 
-function i18nMiddleware(options: HandleOptions): ReturnType<typeof handle> {
-	// @ts-ignore not sure how to fix this
-	return handle(i18n, { ...options });
+declare module "express-serve-static-core" {
+	interface Request {
+		t: TFunction;
+		i18n: {
+			t: TFunction;
+		};
+	}
 }
-
-export default i18nMiddleware;

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -171,10 +171,14 @@ export class ClientTaskManager {
 			);
 
 			// Get updated client records within a ten minute window of the last completed task
-			const tenMinuteWindow = new Date().getTime() - 10 * 60 * 1000;
+			const tenMinuteWindow = 10 * 60 * 1000;
 			const updatedAtTimestamp = lastTask?.updated
 				? lastTask.updated - tenMinuteWindow || 0
 				: 0;
+
+			this.logger.info({
+				message: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
+			});
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
