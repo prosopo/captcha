@@ -1,8 +1,17 @@
-import {
-	CaptchaType,
-	type ProcaptchaClientConfigOutput,
-	type ProcaptchaRenderOptions,
-} from "@prosopo/types";
+// Copyright 2021-2025 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { CaptchaType, type ProcaptchaRenderOptions } from "@prosopo/types";
 import {
 	type WidgetSkeletonFactory,
 	darkTheme,
@@ -10,40 +19,43 @@ import {
 } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
+import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
 class WidgetFactory {
 	private captchaRenderer: CaptchaRenderer | null = null;
 
 	public constructor(
 		private readonly widgetSkeletonFactory: WidgetSkeletonFactory,
+		private readonly widgetThemeResolver: WidgetThemeResolver,
 	) {}
 
 	public async createWidgets(
 		containers: Element[],
-		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
+		renderOptions: ProcaptchaRenderOptions,
+		isWeb2 = true,
 	): Promise<Root[]> {
 		return Promise.all(
 			containers.map((container) =>
-				this.createWidget(container, config, renderOptions),
+				this.createWidget(container, renderOptions, isWeb2),
 			),
 		);
 	}
 
 	public async createWidget(
 		container: Element,
-		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
+		renderOptions: ProcaptchaRenderOptions,
+		isWeb2 = true,
 	): Promise<Root> {
-		const widgetTheme = "light" === config.theme ? lightTheme : darkTheme;
+		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
+			container,
+			renderOptions,
+		);
+
+		const widgetTheme =
+			"light" === renderOptions.theme ? lightTheme : darkTheme;
 
 		const widgetInteractiveArea =
 			this.widgetSkeletonFactory.createWidgetSkeleton(container, widgetTheme);
-
-		// fixme
-		console.log("optimization: widget was attached to the DOM", {
-			performance: performance.now(),
-		});
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
 
@@ -57,8 +69,8 @@ class WidgetFactory {
 				defaultCaptchaType: CaptchaType.frictionless,
 			},
 			widgetInteractiveArea,
-			config,
 			renderOptions,
+			isWeb2,
 		);
 
 		return captchaRoot;
@@ -73,23 +85,14 @@ class WidgetFactory {
 	}
 
 	protected async createCaptchaRenderer(): Promise<CaptchaRenderer> {
-		// fixme
-		return new Promise((resolve) => {
-			setTimeout(async () => {
-				const CaptchaRenderer = (await import("./captcha/captchaRenderer.js"))
-					.CaptchaRenderer;
+		const CaptchaRenderer = (await import("./captcha/captchaRenderer.js"))
+			.CaptchaRenderer;
 
-				const CaptchaComponentProvider = (
-					await import("./captcha/captchaComponentProvider.js")
-				).CaptchaComponentProvider;
+		const CaptchaComponentProvider = (
+			await import("./captcha/captchaComponentProvider.js")
+		).CaptchaComponentProvider;
 
-				const captchaRenderer = new CaptchaRenderer(
-					new CaptchaComponentProvider(),
-				);
-
-				resolve(captchaRenderer);
-			}, 10000);
-		});
+		return new CaptchaRenderer(new CaptchaComponentProvider());
 	}
 }
 

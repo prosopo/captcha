@@ -18,8 +18,12 @@ import { getWidgetSkeletonFactory } from "@prosopo/widget-skeleton";
 import { type DOMWindow, JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WidgetFactory } from "../../util/widgetFactory.js";
+import { WidgetThemeResolver } from "../../util/widgetThemeResolver.js";
 
-const widgetFactory = new WidgetFactory(getWidgetSkeletonFactory());
+const widgetFactory = new WidgetFactory(
+	getWidgetSkeletonFactory(),
+	new WidgetThemeResolver(),
+);
 
 interface TestContext {
 	document?: Document;
@@ -108,11 +112,7 @@ describe("Config utility functions", () => {
 			return;
 		}
 
-		const config = ProcaptchaConfigSchema.parse({
-			account: { address: "1234" },
-		});
-
-		await widgetFactory.createWidgets([script], config, {
+		await widgetFactory.createWidgets([script], {
 			siteKey: "1234",
 			captchaType: "pow",
 		});
@@ -184,7 +184,7 @@ describe("Config utility functions", () => {
 			account: { address: "1234" },
 		});
 
-		await widgetFactory.createWidgets([script], config, {
+		await widgetFactory.createWidgets([script], {
 			siteKey: "1234",
 			captchaType: "pow",
 		});

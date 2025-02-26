@@ -26,8 +26,8 @@ import type {
 import type { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
 import { type Root, createRoot } from "react-dom/client";
+import { createConfig } from "../configCreator.js";
 import { setLanguage } from "../language.js";
-import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";
 import type { CaptchaComponentProvider } from "./captchaComponentProvider.js";
 
@@ -48,13 +48,15 @@ class CaptchaRenderer {
 	public renderCaptcha(
 		settings: RenderSettings,
 		container: HTMLElement,
-		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
+		renderOptions: ProcaptchaRenderOptions,
+		isWeb2: boolean,
 	): Root {
 		const callbacks = getDefaultCallbacks(container);
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
+
+		const config = createConfig(renderOptions.siteKey, isWeb2);
 
 		this.readAndValidateSettings(container, callbacks, config, renderOptions);
 
@@ -85,10 +87,9 @@ class CaptchaRenderer {
 		element: Element,
 		callbacks: Callbacks,
 		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
+		renderOptions: ProcaptchaRenderOptions,
 	): void {
 		setUserCallbacks(renderOptions, callbacks, element);
-		setTheme(renderOptions, element, config);
 		setValidChallengeLength(renderOptions, element, config);
 		setLanguage(renderOptions, element, config);
 	}
