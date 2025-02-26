@@ -20,27 +20,16 @@
 		"CANT_FIND_KEYRINGPAIR": "No se puede encontrar el keyringpair para {{address}}",
 		"ENVIRONMENT_NOT_READY": "Entorno no listo",
 		"INVALID_SIGNATURE": "Firma inválida",
-		"NOT_IMPLEMENTED": "No implementado",
 		"SITE_KEY_MISSING": "Falta la CLAVE DEL SITIO",
 		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
 		"INVALID_TIMESTAMP": "Marca de tiempo inválida"
 	},
 	"CONTRACT": {
-		"INVALID_METHOD": "Método de contrato inválido",
-		"TX_ERROR": "Error al hacer la tx",
 		"INVALID_ADDRESS": "Error al codificar dirección inválida",
-		"INVALID_STORAGE_NAME": "No se encontró el nombre de almacenamiento proporcionado",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "El compromiso de la solución del captcha no existe",
-		"CONTRACT_UNDEFINED": "Contrato indefinido",
 		"SIGNER_UNDEFINED": "Firmante indefinido",
 		"CANNOT_FIND_KEYPAIR": "No se puede encontrar el par de claves",
-		"INTERRUPTED_EVENT": "Evento interrumpido",
-		"TOO_MANY_CALLS": "Demasiadas llamadas",
-		"UNKNOWN_ERROR": "Error desconocido",
-		"CHAIN_DECIMALS_UNDEFINED": "Decimales de la cadena no definidos",
-		"INVALID_DATA_FORMAT": "Formato de datos inválido",
-		"TX_QUEUE_ERROR": "Error en la cola de transacciones",
-		"DISPATCH_ERROR": "Error al despachar la transacción"
+		"INVALID_DATA_FORMAT": "Formato de datos inválido"
 	},
 	"CONFIG": {
 		"UNKNOWN_ENVIRONMENT": "Entorno solicitado desconocido",
@@ -125,7 +114,6 @@
 		"MISSING_ENV_VARIABLE": "Falta una variable de entorno",
 		"GENERAL": "Error general de desarrollo, ver contexto",
 		"MISSING_SECRET_KEY": "Falta la clave secreta",
-		"KEY_ERROR": "Error de clave",
 		"METHOD_NOT_IMPLEMENTED": "Método no implementado"
 	},
 	"FS": {

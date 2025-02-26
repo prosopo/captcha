@@ -5,7 +5,7 @@
 		"outDir": "./dist",
 		"allowJs": true
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": ["src", "src/**/*.json", "express.d.ts"],
 	"references": [
 		{
 			"path": "../api-route"

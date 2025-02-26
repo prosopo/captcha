@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,10 @@ import type { BlacklistInspector } from "./blacklistInspector.js";
 import { apiRulePaths } from "./rules/api/apiRulePaths.js";
 import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
 import { getExpressApiRuleRateLimits } from "./rules/api/getExpressApiRuleRateLimits.js";
+import type {
+	ApiInsertManyRulesArgsOutputSchema,
+	ApiInsertManyRulesArgsSchema,
+} from "./rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
 import { BlacklistRulesInspector } from "./rules/blacklistRulesInspector.js";
 import { ImageCaptchaConfigRulesResolver } from "./rules/imageCaptchaConfigRulesResolver.js";
 import { RulesMongooseStorage } from "./rules/mongoose/rulesMongooseStorage.js";
@@ -58,6 +62,8 @@ export {
 	type Rule,
 	type RulesStorage,
 	type BlacklistInspector,
+	type ApiInsertManyRulesArgsSchema,
+	type ApiInsertManyRulesArgsOutputSchema,
 	createMongooseRulesStorage,
 	createImageCaptchaConfigResolver,
 	createBlacklistInspector,

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,25 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import z from "zod";
-import translationsDe from "./locales/de.json" with { type: "json" };
-import translationsEn from "./locales/en.json" with { type: "json" };
-import translationsEs from "./locales/es.json" with { type: "json" };
-import translationsFr from "./locales/fr.json" with { type: "json" };
-import translationsIt from "./locales/it.json" with { type: "json" };
-import translationsPtBR from "./locales/pt-BR.json" with { type: "json" };
-import translationsPt from "./locales/pt.json" with { type: "json" };
 
 export const Languages = ["de", "en", "es", "fr", "it", "pt", "pt-BR"] as const;
 
 export const LanguageSchema = z.enum(Languages);
-
-export const translations = {
-	[LanguageSchema.enum.de]: { translation: translationsDe },
-	[LanguageSchema.enum.en]: { translation: translationsEn },
-	[LanguageSchema.enum.es]: { translation: translationsEs },
-	[LanguageSchema.enum.fr]: { translation: translationsFr },
-	[LanguageSchema.enum.it]: { translation: translationsIt },
-	[LanguageSchema.enum.pt]: { translation: translationsPt },
-	[LanguageSchema.enum["pt-BR"]]: { translation: translationsPtBR },
-};
