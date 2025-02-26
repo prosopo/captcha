@@ -24,7 +24,7 @@ import {
 import type { Theme } from "../theme.js";
 import type { HtmlElementFactory } from "./htmlElementFactory.js";
 
-class WidgetElementFactory implements HtmlElementFactory {
+class WidgetSkeletonElementFactory implements HtmlElementFactory {
 	constructor(
 		private readonly checkboxElementFactory: HtmlElementFactory,
 		private readonly logoElementFactory: HtmlElementFactory,
@@ -122,4 +122,4 @@ class WidgetElementFactory implements HtmlElementFactory {
 	}
 }
 
-export { WidgetElementFactory };
+export { WidgetSkeletonElementFactory };

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { css } from "@emotion/react";
-import type { Theme } from "@prosopo/widget";
+import type { Theme } from "@prosopo/widget-skeleton";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,

@@ -15,17 +15,19 @@
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
+import { getWidgetSkeletonFactory } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
-import { getCaptchaType } from "./util/captchaType.js";
+import { getCaptchaType } from "./util/captcha/captchaType.js";
 import {
 	extractParams,
 	getConfig,
 	getProcaptchaScript,
 } from "./util/config.js";
-import { renderLogic } from "./util/renderLogic.js";
+import { WidgetFactory } from "./util/widgetFactory.js";
 
 const BUNDLE_NAME = "procaptcha.bundle.js";
 let procaptchaRoots: Root[] = [];
+const widgetFactory = new WidgetFactory(getWidgetSkeletonFactory());
 
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = async () => {
@@ -45,7 +47,7 @@ const implicitRender = async () => {
 
 		const captchaType = getCaptchaType(elements);
 
-		const root = await renderLogic(
+		const root = await widgetFactory.createWidgets(
 			elements,
 			getConfig(siteKey, !(web3 === "true")),
 			{
@@ -65,7 +67,11 @@ export const render = async (
 ) => {
 	const siteKey = renderOptions.siteKey;
 
-	const roots = await renderLogic([element], getConfig(siteKey), renderOptions);
+	const roots = await widgetFactory.createWidgets(
+		[element],
+		getConfig(siteKey),
+		renderOptions,
+	);
 
 	procaptchaRoots.push(...roots);
 };

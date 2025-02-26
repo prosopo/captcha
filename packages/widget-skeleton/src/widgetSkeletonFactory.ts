@@ -14,8 +14,8 @@
 
 import type { Theme } from "./theme.js";
 
-interface WidgetCreator {
-	createWidget(container: Element, theme: Theme): HTMLElement;
+interface WidgetSkeletonFactory {
+	createWidgetSkeleton(container: Element, theme: Theme): HTMLElement;
 }
 
-export type { WidgetCreator };
+export type { WidgetSkeletonFactory };

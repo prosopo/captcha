@@ -29,7 +29,7 @@
 			"path": "../util"
 		},
 		{
-			"path": "../widget"
+			"path": "../widget-skeleton"
 		}
 	]
 }

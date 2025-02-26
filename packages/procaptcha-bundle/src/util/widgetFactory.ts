@@ -3,26 +3,42 @@ import {
 	type ProcaptchaClientConfigOutput,
 	type ProcaptchaRenderOptions,
 } from "@prosopo/types";
-import { type WidgetCreator, darkTheme, lightTheme } from "@prosopo/widget";
+import {
+	type WidgetSkeletonFactory,
+	darkTheme,
+	lightTheme,
+} from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
 
-class CaptchaWidgetCreator {
+class WidgetFactory {
 	private captchaRenderer: CaptchaRenderer | null = null;
 
-	public constructor(private readonly widgetCreator: WidgetCreator) {}
+	public constructor(
+		private readonly widgetSkeletonFactory: WidgetSkeletonFactory,
+	) {}
 
-	public async createCaptchaWidget(
+	public async createWidgets(
+		containers: Element[],
+		config: ProcaptchaClientConfigOutput,
+		renderOptions?: ProcaptchaRenderOptions,
+	): Promise<Root[]> {
+		return Promise.all(
+			containers.map((container) =>
+				this.createWidget(container, config, renderOptions),
+			),
+		);
+	}
+
+	public async createWidget(
 		container: Element,
 		config: ProcaptchaClientConfigOutput,
 		renderOptions?: ProcaptchaRenderOptions,
 	): Promise<Root> {
 		const widgetTheme = "light" === config.theme ? lightTheme : darkTheme;
 
-		const widgetInteractiveArea = this.widgetCreator.createWidget(
-			container,
-			widgetTheme,
-		);
+		const widgetInteractiveArea =
+			this.widgetSkeletonFactory.createWidgetSkeleton(container, widgetTheme);
 
 		// fixme
 		console.log("optimization: widget was attached to the DOM", {
@@ -57,17 +73,24 @@ class CaptchaWidgetCreator {
 	}
 
 	protected async createCaptchaRenderer(): Promise<CaptchaRenderer> {
-		// fixme add 10 seconds delay
+		// fixme
+		return new Promise((resolve) => {
+			setTimeout(async () => {
+				const CaptchaRenderer = (await import("./captcha/captchaRenderer.js"))
+					.CaptchaRenderer;
 
-		const CaptchaRenderer = (await import("./captcha/captchaRenderer.js"))
-			.CaptchaRenderer;
+				const CaptchaComponentProvider = (
+					await import("./captcha/captchaComponentProvider.js")
+				).CaptchaComponentProvider;
 
-		const CaptchaComponentProvider = (
-			await import("./captcha/captchaComponentProvider.js")
-		).CaptchaComponentProvider;
+				const captchaRenderer = new CaptchaRenderer(
+					new CaptchaComponentProvider(),
+				);
 
-		return new CaptchaRenderer(new CaptchaComponentProvider());
+				resolve(captchaRenderer);
+			}, 10000);
+		});
 	}
 }
 
-export { CaptchaWidgetCreator };
+export { WidgetFactory };

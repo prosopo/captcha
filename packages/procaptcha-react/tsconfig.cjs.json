@@ -32,7 +32,7 @@
 			"path": "../util/tsconfig.cjs.json"
 		},
 		{
-			"path": "../widget/tsconfig.cjs.json"
+			"path": "../widget-skeleton/tsconfig.cjs.json"
 		}
 	]
 }

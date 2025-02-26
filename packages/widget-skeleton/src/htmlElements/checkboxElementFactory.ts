@@ -28,7 +28,7 @@ class CheckboxElementFactory
 		return checkbox;
 	}
 
-	getInteractiveArea(widget: HTMLElement): HTMLElement | null {
+	getWidgetInteractiveArea(widget: HTMLElement): HTMLElement | null {
 		const widgetRoot = widget.shadowRoot || widget;
 
 		return widgetRoot.querySelector(".checkbox__content");

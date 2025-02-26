@@ -24,7 +24,7 @@
 			"path": "../types"
 		},
 		{
-			"path": "../widget"
+			"path": "../widget-skeleton"
 		}
 	]
 }

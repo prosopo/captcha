@@ -13,7 +13,7 @@
 // limitations under the License.
 
 interface WidgetInteractiveAreaProvider {
-	getInteractiveArea(widget: HTMLElement): HTMLElement | null;
+	getWidgetInteractiveArea(widget: HTMLElement): HTMLElement | null;
 }
 
 export type { WidgetInteractiveAreaProvider };

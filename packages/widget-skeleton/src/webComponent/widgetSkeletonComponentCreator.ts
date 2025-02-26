@@ -14,18 +14,18 @@
 
 import type { HtmlElementFactory } from "../htmlElements/htmlElementFactory.js";
 import type { Theme } from "../theme.js";
-import type { WidgetCreator } from "../widgetCreator.js";
 import type { WidgetInteractiveAreaProvider } from "../widgetInteractiveAreaProvider.js";
+import type { WidgetSkeletonFactory } from "../widgetSkeletonFactory.js";
 import type { WebComponentFactory } from "./webComponentFactory.js";
 
-class WidgetWebComponentCreator implements WidgetCreator {
+class WidgetSkeletonComponentCreator implements WidgetSkeletonFactory {
 	constructor(
-		private readonly widgetElementFactory: HtmlElementFactory,
+		private readonly widgetSkeletonElementFactory: HtmlElementFactory,
 		private readonly webComponentFactory: WebComponentFactory,
 		private readonly widgetInteractiveAreaProvider: WidgetInteractiveAreaProvider,
 	) {}
 
-	public createWidget(container: Element, theme: Theme): HTMLElement {
+	public createWidgetSkeleton(container: Element, theme: Theme): HTMLElement {
 		const widgetWebComponent = this.createWidgetWebComponent(theme);
 
 		// Clear all the children inside, if there are any.
@@ -37,7 +37,7 @@ class WidgetWebComponentCreator implements WidgetCreator {
 	}
 
 	protected createWidgetWebComponent(theme: Theme): HTMLElement {
-		const widget = this.widgetElementFactory.createHtmlElement(theme);
+		const widget = this.widgetSkeletonElementFactory.createHtmlElement(theme);
 		const webComponent = this.webComponentFactory.createWebComponent();
 		const webComponentRoot = webComponent.shadowRoot || webComponent;
 
@@ -48,7 +48,7 @@ class WidgetWebComponentCreator implements WidgetCreator {
 
 	protected getWidgetInteractiveArea(widget: HTMLElement): HTMLElement {
 		const widgetInteractiveArea =
-			this.widgetInteractiveAreaProvider.getInteractiveArea(widget);
+			this.widgetInteractiveAreaProvider.getWidgetInteractiveArea(widget);
 
 		if (widgetInteractiveArea instanceof HTMLElement) {
 			return widgetInteractiveArea;
@@ -65,4 +65,4 @@ class WidgetWebComponentCreator implements WidgetCreator {
 	}
 }
 
-export { WidgetWebComponentCreator };
+export { WidgetSkeletonComponentCreator };

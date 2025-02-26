@@ -74,13 +74,13 @@ cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 The DB is necessary for all kind of the tests. Since the DB is docked, to start the DB service run the following:
 
 ```
-docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+sudo docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
 ```
 
 Note: After the testing is done, stop it using the `down` command:
 
 ```
-docker compose --file ./docker/docker-compose.test.yml down
+sudo docker compose --file ./docker/docker-compose.test.yml down
 ```
 
 ### 4.3) DB population

@@ -14,36 +14,36 @@
 
 import { CheckboxElementFactory } from "./htmlElements/checkboxElementFactory.js";
 import { LogoElementFactory } from "./htmlElements/logoElementFactory.js";
-import { WidgetElementFactory } from "./htmlElements/widgetElementFactory.js";
+import { WidgetSkeletonElementFactory } from "./htmlElements/widgetSkeletonElementFactory.js";
 import { WebComponentFactory } from "./webComponent/webComponentFactory.js";
-import { WidgetWebComponentCreator } from "./webComponent/widgetWebComponentCreator.js";
-import type { WidgetCreator } from "./widgetCreator.js";
+import { WidgetSkeletonComponentCreator } from "./webComponent/widgetSkeletonComponentCreator.js";
 import type { WidgetInteractiveAreaProvider } from "./widgetInteractiveAreaProvider.js";
+import type { WidgetSkeletonFactory } from "./widgetSkeletonFactory.js";
 
 const checkboxElementFactory = new CheckboxElementFactory();
 
-const getWidgetCreator = (): WidgetCreator => {
+const getWidgetSkeletonFactory = (): WidgetSkeletonFactory => {
 	const logoElementFactory = new LogoElementFactory();
 
-	const widgetElementFactory = new WidgetElementFactory(
+	const widgetSkeletonElementFactory = new WidgetSkeletonElementFactory(
 		checkboxElementFactory,
 		logoElementFactory,
 	);
 
 	const webComponentFactory = new WebComponentFactory("prosopo-procaptcha");
 
-	return new WidgetWebComponentCreator(
-		widgetElementFactory,
+	return new WidgetSkeletonComponentCreator(
+		widgetSkeletonElementFactory,
 		webComponentFactory,
 		checkboxElementFactory,
 	);
 };
 
+export {
+	type WidgetSkeletonFactory,
+	type WidgetInteractiveAreaProvider,
+	getWidgetSkeletonFactory,
+};
+
 export * from "./theme.js";
 export * from "./constants.js";
-
-export {
-	type WidgetCreator,
-	type WidgetInteractiveAreaProvider,
-	getWidgetCreator,
-};

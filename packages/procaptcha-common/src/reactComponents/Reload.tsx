@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { darkTheme, lightTheme } from "@prosopo/widget";
+import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { type ButtonHTMLAttributes, type FC, useMemo, useState } from "react";
 
 interface ReloadButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

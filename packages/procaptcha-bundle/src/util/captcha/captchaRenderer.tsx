@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { EmotionCache } from "@emotion/cache";
+import createCache, { type EmotionCache } from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
 import {
 	getDefaultCallbacks,
 	setUserCallbacks,
@@ -24,7 +25,7 @@ import type {
 } from "@prosopo/types";
 import type { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
-import type { Root } from "react-dom/client";
+import { type Root, createRoot } from "react-dom/client";
 import { setLanguage } from "../language.js";
 import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";
@@ -44,13 +45,12 @@ class CaptchaRenderer {
 		this.captchaComponentProvider = captchaComponentProvider;
 	}
 
-	// fixme remove async
-	public async renderCaptcha(
+	public renderCaptcha(
 		settings: RenderSettings,
 		container: HTMLElement,
 		config: ProcaptchaClientConfigOutput,
 		renderOptions?: ProcaptchaRenderOptions,
-	): Promise<Root> {
+	): Root {
 		const callbacks = getDefaultCallbacks(container);
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
@@ -58,12 +58,12 @@ class CaptchaRenderer {
 
 		this.readAndValidateSettings(container, callbacks, config, renderOptions);
 
-		const reactRoot = await this.createReactRoot(
+		const reactRoot = this.createReactRoot(
 			container,
 			settings.identifierPrefix,
 		);
 
-		const emotionCache = await this.makeEmotionCache(
+		const emotionCache = this.makeEmotionCache(
 			settings.emotionCacheKey,
 			container,
 		);
@@ -76,11 +76,7 @@ class CaptchaRenderer {
 			},
 		);
 
-		await this.renderCaptchaComponent(
-			reactRoot,
-			emotionCache,
-			captchaComponent,
-		);
+		this.renderCaptchaComponent(reactRoot, emotionCache, captchaComponent);
 
 		return reactRoot;
 	}
@@ -97,12 +93,10 @@ class CaptchaRenderer {
 		setLanguage(renderOptions, element, config);
 	}
 
-	protected async makeEmotionCache(
+	protected makeEmotionCache(
 		cacheKey: string,
 		container: HTMLElement,
-	): Promise<EmotionCache> {
-		const createCache = (await import("@emotion/cache")).default;
-
+	): EmotionCache {
 		return createCache({
 			key: cacheKey,
 			prepend: true,
@@ -110,24 +104,20 @@ class CaptchaRenderer {
 		});
 	}
 
-	protected async createReactRoot(
+	protected createReactRoot(
 		container: HTMLElement,
 		identifierPrefix: string,
-	): Promise<Root> {
-		const createRoot = (await import("react-dom/client")).createRoot;
-
+	): Root {
 		return createRoot(container, {
 			identifierPrefix: identifierPrefix,
 		});
 	}
 
-	protected async renderCaptchaComponent(
+	protected renderCaptchaComponent(
 		reactRoot: Root,
 		emotionCache: EmotionCache,
 		captchaComponent: ReactNode,
-	): Promise<void> {
-		const CacheProvider = (await import("@emotion/react")).CacheProvider;
-
+	): void {
 		reactRoot.render(
 			<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>,
 		);
