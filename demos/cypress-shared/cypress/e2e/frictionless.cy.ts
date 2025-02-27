@@ -99,6 +99,11 @@ describe("Captchas", () => {
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
+			"frictionless",
+		);
+		cy.wait("@frictionless", { timeout: 36000 });
+
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);
 		});
