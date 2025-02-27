@@ -1,0 +1,42 @@
+{
+	"name": "@prosopo/angular-procaptcha-wrapper",
+	"version": "2.4.2",
+	"description": "Angular wrapper for Procaptcha bundle",
+	"main": "dist/index.js",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": ">=9"
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"clean": "tsc --build --clean",
+		"build": "tsc --build --verbose",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git"
+	},
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"peerDependencies": {
+		"@angular/common": "^17.0.0",
+		"@angular/core": "^17.0.0"
+	},
+	"dependencies": {
+		"tslib": "^2.7.0"
+	},
+	"devDependencies": {
+		"@angular/common": "^17.0.0",
+		"@angular/compiler": "^17.0.0",
+		"@angular/core": "^17.0.0",
+		"@types/node": "^20.11.0",
+		"typescript": "~5.3.0"
+	},
+	"sideEffects": false
+}
