@@ -48,7 +48,4 @@ export interface IUserData {
 	originUrl: string;
 	settings?: IUserSettings;
 	updatedAtTimestamp?: Timestamp;
-	stripeCustomerId?: string; // stripe customer id
-	pendingCheckoutTier?: Tier; // the pending checkout tier, if any
-	pendingCheckoutTierRequestQuota?: number; // the pending checkout tier request quota, if any
 }
