@@ -17,6 +17,7 @@ import * as path from "node:path";
 import { ViteFrontendConfig } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import fg from "fast-glob";
+import type { PreRenderedChunk } from "rollup";
 import { defineConfig } from "vite";
 
 // load env using our util because vite loadEnv is not working for .env.development
@@ -75,6 +76,25 @@ export default defineConfig(async ({ command, mode }) => {
 
 	return {
 		...frontendConfig,
+		build: {
+			...frontendConfig.build,
+			rollupOptions: {
+				...frontendConfig.build?.rollupOptions,
+				output: {
+					chunkFileNames: (chunkInfo: PreRenderedChunk) => {
+						console.log(chunkInfo.facadeModuleId);
+						if (
+							chunkInfo.facadeModuleId &&
+							chunkInfo.facadeModuleId.indexOf("packages/detector") > -1
+						) {
+							return "detector.js";
+						}
+						return "[name].[hash].js";
+					},
+				},
+			},
+		},
+
 		plugins: [
 			{
 				name: "copy-dir",
