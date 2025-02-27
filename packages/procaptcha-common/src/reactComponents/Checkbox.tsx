@@ -11,18 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { css } from "@emotion/react";
-import type React from "react";
+import type { Theme } from "@prosopo/widget-skeleton";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
+	type FC,
 	useMemo,
 	useState,
 } from "react";
-import { darkTheme, lightTheme } from "./theme.js";
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-	themeColor: "light" | "dark";
+	theme: Theme;
 	checked: boolean;
 	onChange: () => void;
 	labelText: string;
@@ -79,17 +80,13 @@ const responsiveFont = css`
 	}
 `;
 
-export const Checkbox: React.FC<CheckboxProps> = ({
-	themeColor,
+export const Checkbox: FC<CheckboxProps> = ({
+	theme,
 	onChange,
 	checked,
 	labelText,
 	error,
 }: CheckboxProps) => {
-	const theme = useMemo(
-		() => (themeColor === "light" ? lightTheme : darkTheme),
-		[themeColor],
-	);
 	const checkboxStyleBase: CSSProperties = {
 		...baseStyle,
 		border: `1px solid ${theme.palette.background.contrastText}`,
@@ -112,7 +109,10 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
 	return (
-		<span style={{ display: "inline-flex", alignItems: "center" }}>
+		<span
+			style={{ display: "inline-flex", alignItems: "center" }}
+			className={"captcha-checkbox"}
+		>
 			<input
 				name={id}
 				id={id}

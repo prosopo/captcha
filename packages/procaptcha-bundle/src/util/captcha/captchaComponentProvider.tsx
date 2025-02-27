@@ -13,15 +13,15 @@
 // limitations under the License.
 import type { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
-import type { CaptchaProps } from "./captcha.js";
-import { componentsList } from "./componentsList.js";
+import { captchaComponentsList } from "./captchaComponentsList.js";
+import type { CaptchaProps } from "./captchaProps.js";
 
-class CaptchaRenderer {
-	public render(
+class CaptchaComponentProvider {
+	public getCaptchaComponent(
 		captchaType: CaptchaType,
 		captchaProps: CaptchaProps,
 	): ReactNode {
-		const CaptchaComponent = componentsList[captchaType];
+		const CaptchaComponent = captchaComponentsList[captchaType];
 
 		console.log(`rendering ${captchaType}`);
 
@@ -34,4 +34,4 @@ class CaptchaRenderer {
 	}
 }
 
-export { CaptchaRenderer };
+export { CaptchaComponentProvider };

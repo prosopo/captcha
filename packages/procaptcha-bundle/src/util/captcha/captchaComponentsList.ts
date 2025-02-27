@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
-import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import React from "react";
-import type { CaptchaProps } from "../captcha.js";
+import { CaptchaType } from "@prosopo/types";
+import type React from "react";
+import type { CaptchaProps } from "./captchaProps.js";
+import { FrictionlessCaptcha } from "./components/frictionlessCaptcha.js";
+import { ImageCaptcha } from "./components/imageCaptcha.js";
+import { PowCaptcha } from "./components/powCaptcha.js";
 
-const PowCaptcha = (props: CaptchaProps) => {
-	const { config, callbacks } = props;
-
-	return (
-		<ProcaptchaPow config={config} callbacks={getDefaultEvents(callbacks)} />
-	);
+const captchaComponentsList: Record<
+	CaptchaType,
+	React.ComponentType<CaptchaProps>
+> = {
+	[CaptchaType.image]: ImageCaptcha,
+	[CaptchaType.pow]: PowCaptcha,
+	[CaptchaType.frictionless]: FrictionlessCaptcha,
 };
 
-export { PowCaptcha };
+export { captchaComponentsList };

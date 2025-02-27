@@ -12,21 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { default as styled } from "@emotion/styled";
-import { WIDGET_OUTER_HEIGHT } from "./WidgetConstants.js";
+import { nativeEnum } from "zod";
+import { CaptchaType } from "./captchaType.js";
 
-export const ContainerDiv = styled.div`
-    container-type: size;
-    display: flex;
-    flex-direction: column;
-    height: ${WIDGET_OUTER_HEIGHT}px;
-`;
+const CaptchaTypeSpec = nativeEnum(CaptchaType);
 
-export const WidthBasedStylesDiv = styled.div`
-    max-height: 100%;
-    min-width: 100%;
-    overflow: hidden;
-    height: ${WIDGET_OUTER_HEIGHT}px;
-    width: 100%;
-    display: grid;
-`;
+export { CaptchaTypeSpec };

@@ -12,17 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType } from "@prosopo/types";
-import type React from "react";
-import type { CaptchaProps } from "./captcha.js";
-import { FrictionlessCaptcha } from "./components/frictionlessCaptcha.js";
-import { ImageCaptcha } from "./components/imageCaptcha.js";
-import { PowCaptcha } from "./components/powCaptcha.js";
+import type { Theme } from "./theme.js";
 
-const componentsList: Record<CaptchaType, React.ComponentType<CaptchaProps>> = {
-	[CaptchaType.image]: ImageCaptcha,
-	[CaptchaType.pow]: PowCaptcha,
-	[CaptchaType.frictionless]: FrictionlessCaptcha,
-};
+interface WidgetSkeletonFactory {
+	createWidgetSkeleton(container: Element, theme: Theme): HTMLElement;
+}
 
-export { componentsList };
+export type { WidgetSkeletonFactory };

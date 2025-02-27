@@ -15,20 +15,23 @@
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
+import { getWidgetSkeletonFactory } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
-import { getCaptchaType } from "./util/captchaType.js";
-import {
-	extractParams,
-	getConfig,
-	getProcaptchaScript,
-} from "./util/config.js";
-import { renderLogic } from "./util/renderLogic.js";
+import { getCaptchaType } from "./util/captcha/captchaType.js";
+import { extractParams, getProcaptchaScript } from "./util/config.js";
+import { WidgetFactory } from "./util/widgetFactory.js";
+import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
 const BUNDLE_NAME = "procaptcha.bundle.js";
 let procaptchaRoots: Root[] = [];
 
+const widgetFactory = new WidgetFactory(
+	getWidgetSkeletonFactory(),
+	new WidgetThemeResolver(),
+);
+
 // Implicit render for targeting all elements with class 'procaptcha'
-const implicitRender = () => {
+const implicitRender = async () => {
 	// Get elements with class 'procaptcha'
 	const elements: Element[] = Array.from(
 		document.getElementsByClassName("procaptcha"),
@@ -42,25 +45,28 @@ const implicitRender = () => {
 			console.error("No siteKey found");
 			return;
 		}
+
 		const captchaType = getCaptchaType(elements);
 
-		const root = renderLogic(elements, getConfig(siteKey, !(web3 === "true")), {
-			captchaType,
-			siteKey,
-		});
+		const root = await widgetFactory.createWidgets(
+			elements,
+			{
+				captchaType: captchaType,
+				siteKey: siteKey,
+			},
+			!(web3 === "true"),
+		);
 
 		procaptchaRoots.push(...root);
 	}
 };
 
 // Explicit render for targeting specific elements
-export const render = (
+export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ) => {
-	const siteKey = renderOptions.siteKey;
-
-	const roots = renderLogic([element], getConfig(siteKey), renderOptions);
+	const roots = await widgetFactory.createWidgets([element], renderOptions);
 
 	procaptchaRoots.push(...roots);
 };

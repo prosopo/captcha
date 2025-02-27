@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ProsopoDatasetError } from "@prosopo/common";
 import type { Captcha } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/web-components";
+import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { Properties } from "csstype";
 import { useMemo } from "react";
 

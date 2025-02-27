@@ -14,4 +14,5 @@
 export * from "./user.js";
 export { ClientSettingsSchema } from "./settings.js";
 export type { IUserSettings } from "./settings.js";
-export * from "./captchaType.js";
+export * from "./captchaType/captchaType.js";
+export * from "./captchaType/captchaTypeSpec.js";

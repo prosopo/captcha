@@ -11,24 +11,29 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { WIDGET_MAX_WIDTH } from "@prosopo/web-components";
 
-class WebComponent {
-	public addToElement(componentTag: string, element: Element): ShadowRoot {
-		const webComponent = this.makeWebComponent(componentTag);
+import { WIDGET_MAX_WIDTH } from "../constants.js";
+
+class WebComponentFactory {
+	public constructor(private readonly webComponentTag: string) {}
+
+	public createWebComponent(): HTMLElement {
+		const webComponent = document.createElement(this.webComponentTag);
+
 		webComponent.style.display = "flex";
 		webComponent.style.flexDirection = "column";
 		webComponent.style.width = "100%";
 		webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
-		const shadowRoot = this.attachShadowDom(webComponent);
 
-		element.appendChild(webComponent);
+		this.attachShadowDom(webComponent);
 
-		return shadowRoot;
+		return webComponent;
 	}
 
-	protected makeWebComponent(componentTag: string): HTMLElement {
-		return document.createElement(componentTag);
+	protected attachShadowDom(webComponent: HTMLElement): void {
+		const shadowRoot = webComponent.attachShadow({ mode: "open" });
+
+		shadowRoot.innerHTML += this.getBaseShadowStyles();
 	}
 
 	protected getBaseShadowStyles(): string {
@@ -41,14 +46,6 @@ class WebComponent {
 
 		return baseStyles;
 	}
-
-	protected attachShadowDom(webComponent: HTMLElement): ShadowRoot {
-		const shadowRoot = webComponent.attachShadow({ mode: "open" });
-
-		shadowRoot.innerHTML += this.getBaseShadowStyles();
-
-		return shadowRoot;
-	}
 }
 
-export { WebComponent };
+export { WebComponentFactory };

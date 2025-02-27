@@ -24,12 +24,12 @@ import type {
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
 import type { CaptchaType } from "@prosopo/types";
+import type { ReactNode } from "react";
 import { type Root, createRoot } from "react-dom/client";
+import { createConfig } from "../configCreator.js";
 import { setLanguage } from "../language.js";
-import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";
-import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
-import type { WebComponent } from "./webComponent.js";
+import type { CaptchaComponentProvider } from "./captchaComponentProvider.js";
 
 interface RenderSettings {
 	identifierPrefix: string;
@@ -38,87 +38,91 @@ interface RenderSettings {
 	defaultCaptchaType: CaptchaType;
 }
 
-class WidgetRenderer {
-	private readonly webComponent: WebComponent;
-	private readonly captchaRenderer: CaptchaRenderer;
+class CaptchaRenderer {
+	private readonly captchaComponentProvider: CaptchaComponentProvider;
 
-	constructor(webComponent: WebComponent, captchaRenderer: CaptchaRenderer) {
-		this.webComponent = webComponent;
-		this.captchaRenderer = captchaRenderer;
+	constructor(captchaComponentProvider: CaptchaComponentProvider) {
+		this.captchaComponentProvider = captchaComponentProvider;
 	}
 
-	public renderElements(
+	public renderCaptcha(
 		settings: RenderSettings,
-		elements: Element[],
-		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
-	): Root[] {
-		return elements.map((element) => {
-			return this.renderElement(settings, element, config, renderOptions);
-		});
-	}
-
-	protected renderElement(
-		settings: RenderSettings,
-		element: Element,
-		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
+		container: HTMLElement,
+		renderOptions: ProcaptchaRenderOptions,
+		isWeb2: boolean,
 	): Root {
+		const callbacks = getDefaultCallbacks(container);
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
-		const callbacks = getDefaultCallbacks(element);
 
-		this.readAndValidateSettings(element, callbacks, config, renderOptions);
+		const config = createConfig(renderOptions.siteKey, isWeb2);
 
-		// Clear all the children inside, if there are any.
-		// If the renderElement() is called several times on the same element, it should recreate the captcha from scratch.
-		element.innerHTML = "";
+		this.readAndValidateSettings(container, callbacks, config, renderOptions);
 
-		const shadowRoot = this.webComponent.addToElement(
-			settings.webComponentTag,
-			element,
+		const reactRoot = this.createReactRoot(
+			container,
+			settings.identifierPrefix,
 		);
+
 		const emotionCache = this.makeEmotionCache(
 			settings.emotionCacheKey,
-			shadowRoot,
+			container,
 		);
-		const root = createRoot(shadowRoot, {
-			identifierPrefix: settings.identifierPrefix,
-		});
 
-		const captcha = this.captchaRenderer.render(captchaType, {
-			config: config,
-			callbacks: callbacks,
-		});
+		const captchaComponent = this.captchaComponentProvider.getCaptchaComponent(
+			captchaType,
+			{
+				config: config,
+				callbacks: callbacks,
+			},
+		);
 
-		root.render(<CacheProvider value={emotionCache}>{captcha}</CacheProvider>);
+		this.renderCaptchaComponent(reactRoot, emotionCache, captchaComponent);
 
-		return root;
+		return reactRoot;
 	}
 
 	protected readAndValidateSettings(
 		element: Element,
 		callbacks: Callbacks,
 		config: ProcaptchaClientConfigOutput,
-		renderOptions?: ProcaptchaRenderOptions,
+		renderOptions: ProcaptchaRenderOptions,
 	): void {
 		setUserCallbacks(renderOptions, callbacks, element);
-		setTheme(renderOptions, element, config);
 		setValidChallengeLength(renderOptions, element, config);
 		setLanguage(renderOptions, element, config);
 	}
 
 	protected makeEmotionCache(
 		cacheKey: string,
-		shadowRoot: ShadowRoot,
+		container: HTMLElement,
 	): EmotionCache {
 		return createCache({
 			key: cacheKey,
 			prepend: true,
-			container: shadowRoot,
+			container: container,
 		});
+	}
+
+	protected createReactRoot(
+		container: HTMLElement,
+		identifierPrefix: string,
+	): Root {
+		return createRoot(container, {
+			identifierPrefix: identifierPrefix,
+		});
+	}
+
+	protected renderCaptchaComponent(
+		reactRoot: Root,
+		emotionCache: EmotionCache,
+		captchaComponent: ReactNode,
+	): void {
+		reactRoot.render(
+			<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>,
+		);
 	}
 }
 
-export { WidgetRenderer };
+export { CaptchaRenderer };

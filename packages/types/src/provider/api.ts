@@ -32,7 +32,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import type { CaptchaType } from "../client/captchaType.js";
+import type { CaptchaType } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,

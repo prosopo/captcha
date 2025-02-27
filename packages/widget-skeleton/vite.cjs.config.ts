@@ -1,4 +1,4 @@
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
+import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +12,8 @@ import { getDefaultEvents } from "@prosopo/procaptcha-common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Procaptcha } from "@prosopo/procaptcha-react";
-import React from "react";
-import type { CaptchaProps } from "../captcha.js";
+import { ViteCommonJSConfig } from "@prosopo/config";
 
-const ImageCaptcha = (props: CaptchaProps) => {
-	const { config, callbacks } = props;
-
-	return <Procaptcha config={config} callbacks={getDefaultEvents(callbacks)} />;
-};
-
-export { ImageCaptcha };
+export default function () {
+	return ViteCommonJSConfig("widget", path.resolve("./tsconfig.cjs.json"));
+}
