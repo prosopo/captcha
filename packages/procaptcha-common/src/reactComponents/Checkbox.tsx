@@ -109,7 +109,10 @@ export const Checkbox: FC<CheckboxProps> = ({
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
 	return (
-		<span style={{ display: "inline-flex", alignItems: "center" }}>
+		<span
+			style={{ display: "inline-flex", alignItems: "center" }}
+			className={"captcha-checkbox"}
+		>
 			<input
 				name={id}
 				id={id}
