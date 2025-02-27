@@ -33,7 +33,7 @@ export class ProcaptchaService {
   private readonly SCRIPT_URL = 'https://js.prosopo.io/js/procaptcha.bundle.js';
   private scriptPromise: Promise<void> | null = null;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
   /**
    * Loads the Procaptcha script

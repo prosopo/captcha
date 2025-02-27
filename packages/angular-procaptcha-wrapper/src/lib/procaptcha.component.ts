@@ -13,16 +13,16 @@
 // limitations under the License.
 import {
 	Component,
-	type ElementRef,
+	ElementRef,
 	EventEmitter,
 	Input,
-	type NgZone,
-	type OnDestroy,
-	type OnInit,
+	NgZone,
+	OnDestroy,
+	OnInit,
 	Output,
 	ViewChild,
 } from "@angular/core";
-import type { ProcaptchaService } from "./procaptcha.service";
+import { ProcaptchaService } from "./procaptcha.service";
 import type { ProcaptchaConfig } from "./procaptcha.types";
 
 declare global {
