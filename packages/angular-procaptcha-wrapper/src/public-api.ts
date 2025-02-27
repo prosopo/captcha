@@ -1,5 +1,5 @@
 /*
- * Public API Surface of procaptcha
+ * Public API Surface of angular-procaptcha-wrapper
  */
 
 export * from './lib/procaptcha.component';

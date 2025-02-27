@@ -5,7 +5,9 @@ import { ProcaptchaService } from './procaptcha.service';
 
 @NgModule({
   imports: [
-    CommonModule,
+    CommonModule
+  ],
+  declarations: [
     ProcaptchaComponent
   ],
   exports: [

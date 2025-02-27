@@ -21,8 +21,7 @@ declare global {
 @Component({
   selector: 'prosopo-captcha',
   template: `<div #captchaContainer class="procaptcha-container"></div>`,
-  styles: [`.procaptcha-container { min-height: 78px; }`],
-  standalone: true
+  styles: [`.procaptcha-container { min-height: 78px; }`]
 })
 export class ProcaptchaComponent implements OnInit, OnDestroy {
   @ViewChild('captchaContainer', { static: true }) captchaContainer!: ElementRef;

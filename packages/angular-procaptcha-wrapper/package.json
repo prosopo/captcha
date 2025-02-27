@@ -3,7 +3,6 @@
 	"version": "2.4.2",
 	"description": "Angular wrapper for Procaptcha bundle",
 	"main": "dist/index.js",
-	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": ">=9"
@@ -11,7 +10,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
+		"build": "ng-packagr -p ng-package.json",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
 	"repository": {
@@ -34,8 +33,10 @@
 	"devDependencies": {
 		"@angular/common": "^17.0.0",
 		"@angular/compiler": "^17.0.0",
+		"@angular/compiler-cli": "17.3.12",
 		"@angular/core": "^17.0.0",
 		"@types/node": "^20.11.0",
+		"ng-packagr": "17.3.0",
 		"typescript": "~5.3.0"
 	},
 	"sideEffects": false

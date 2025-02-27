@@ -46,8 +46,8 @@ export class ProcaptchaService {
         }
       };
       
-      script.onerror = (error: Event) => {
-        reject(error);
+      script.onerror = (event: Event | string) => {
+        reject(event);
       };
       
       document.head.appendChild(script);
