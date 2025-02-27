@@ -26,14 +26,14 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-        "@emotion/react": "11.13.3",
+		"@emotion/react": "11.13.3",
 		"@prosopo/common": "2.4.2",
 		"@prosopo/load-balancer": "2.4.2",
 		"@prosopo/types": "2.4.2",
 		"@prosopo/util": "2.4.2",
 		"express": "4.21.2",
-        "@prosopo/widget-skeleton": "2.4.1",
-        "react": "18.3.1"
+		"@prosopo/widget-skeleton": "2.4.2",
+		"react": "18.3.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.4.2",
