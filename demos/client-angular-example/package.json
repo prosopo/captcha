@@ -2,11 +2,17 @@
 	"name": "@prosopo/client-angular-example",
 	"version": "2.4.2",
 	"description": "Simple Angular demo",
+	"engines": {
+		"node": "20",
+		"npm": ">=9"
+	},
 	"scripts": {
 		"ng": "ng",
 		"start": "ng serve --port 9233",
 		"build": "ng build",
-		"watch": "ng build --watch --configuration development"
+		"watch": "ng build --watch --configuration development",
+		"test": "echo \"No test specified\"",
+		"clean": "echo \"No clean specified\""
 	},
 	"private": true,
 	"dependencies": {
