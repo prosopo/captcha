@@ -152,3 +152,5 @@ captcha.json
 
 # ignore bundle stats
 **/stats.html
+
+*.angular
