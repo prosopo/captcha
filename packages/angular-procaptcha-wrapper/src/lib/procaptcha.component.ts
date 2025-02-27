@@ -28,13 +28,19 @@ export class ProcaptchaComponent implements OnInit, OnDestroy {
   
   @Input() siteKey!: string;
   @Input() theme: 'light' | 'dark' = 'light';
-  @Input() captchaType: string = 'image';
+  @Input() captchaType: 'frictionless' | 'image' | 'pow' = 'frictionless';
   @Input() size: 'normal' | 'compact' = 'normal';
   @Input() tabIndex: number = 0;
+  @Input() language?: string;
+  @Input() challengeValidLength?: number;
   
   @Output() verified = new EventEmitter<string>();
   @Output() expired = new EventEmitter<void>();
   @Output() failed = new EventEmitter<void>();
+  @Output() error = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
+  @Output() opened = new EventEmitter<void>();
+  @Output() reset = new EventEmitter<void>();
   @Output() loaded = new EventEmitter<void>();
   
   private widgetId: string | null = null;
@@ -54,7 +60,7 @@ export class ProcaptchaComponent implements OnInit, OnDestroy {
   }
   
   ngOnDestroy(): void {
-    this.reset();
+    this.resetCaptcha();
   }
   
   /**
@@ -67,7 +73,7 @@ export class ProcaptchaComponent implements OnInit, OnDestroy {
   /**
    * Resets the captcha
    */
-  reset(): void {
+  resetCaptcha(): void {
     if (this.widgetId) {
       this.procaptchaService.reset(this.widgetId);
     }
@@ -125,8 +131,37 @@ export class ProcaptchaComponent implements OnInit, OnDestroy {
         this.zone.run(() => {
           this.failed.emit();
         });
+      },
+      'error-callback': () => {
+        this.zone.run(() => {
+          this.error.emit();
+        });
+      },
+      'close-callback': () => {
+        this.zone.run(() => {
+          this.closed.emit();
+        });
+      },
+      'open-callback': () => {
+        this.zone.run(() => {
+          this.opened.emit();
+        });
+      },
+      'reset-callback': () => {
+        this.zone.run(() => {
+          this.reset.emit();
+        });
       }
     };
+    
+    // Add optional parameters if they are set
+    if (this.language) {
+      params.language = this.language;
+    }
+    
+    if (this.challengeValidLength) {
+      params['challenge-valid-length'] = this.challengeValidLength;
+    }
     
     this.widgetId = this.procaptchaService.render(this.captchaContainer.nativeElement, params);
   }

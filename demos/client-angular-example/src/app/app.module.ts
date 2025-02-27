@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+
+import { ProcaptchaModule } from '@prosopo/angular-procaptcha-wrapper';
 
 import { AppComponent } from './app.component';
 
@@ -10,7 +12,8 @@ import { AppComponent } from './app.component';
   ],
   imports: [
     BrowserModule,
-    FormsModule
+    ReactiveFormsModule,
+    ProcaptchaModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -4,9 +4,12 @@ import { ProcaptchaConfig } from './procaptcha.types';
 
 declare global {
   interface Window {
-    render: (element: HTMLElement, params: ProcaptchaConfig) => string;
-    reset: (widgetId: string) => void;
-    getResponse: (widgetId: string | null) => string | null;
+    procaptcha: {
+      render: (element: HTMLElement, params: ProcaptchaConfig) => string;
+      reset: (widgetId: string) => void;
+      getResponse: (widgetId: string | null) => string | null;
+    };
+    procaptchaOnLoad: () => void;
   }
 }
 
@@ -14,7 +17,7 @@ declare global {
   providedIn: 'root'
 })
 export class ProcaptchaService {
-  private readonly SCRIPT_URL = 'https://procaptcha.prosopo.io/procaptcha.bundle.js';
+  private readonly SCRIPT_URL = 'https://js.prosopo.io/js/procaptcha.bundle.js';
   private scriptPromise: Promise<void> | null = null;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
@@ -33,7 +36,7 @@ export class ProcaptchaService {
 
     this.scriptPromise = new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
-      script.type = 'text/javascript';
+      script.type = 'module';
       script.src = this.SCRIPT_URL;
       script.async = true;
       script.defer = true;
@@ -64,12 +67,12 @@ export class ProcaptchaService {
       return '';
     }
 
-    if (!window.render) {
+    if (!window.procaptcha || !window.procaptcha.render) {
       console.error('Procaptcha script not loaded yet');
       return '';
     }
 
-    return window.render(element, params);
+    return window.procaptcha.render(element, params);
   }
 
   /**
@@ -80,12 +83,12 @@ export class ProcaptchaService {
       return;
     }
 
-    if (!window.reset) {
+    if (!window.procaptcha || !window.procaptcha.reset) {
       console.error('Procaptcha script not loaded yet');
       return;
     }
 
-    window.reset(widgetId);
+    window.procaptcha.reset(widgetId);
   }
 
   /**
@@ -96,11 +99,11 @@ export class ProcaptchaService {
       return null;
     }
 
-    if (!window.getResponse) {
+    if (!window.procaptcha || !window.procaptcha.getResponse) {
       console.error('Procaptcha script not loaded yet');
       return null;
     }
 
-    return window.getResponse(widgetId);
+    return window.procaptcha.getResponse(widgetId);
   }
 } 

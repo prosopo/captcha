@@ -1,71 +1,64 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <div class="container">
-      <h1>Simple Form Demo</h1>
-      <form (ngSubmit)="onSubmit()" #demoForm="ngForm">
-        <div class="form-group">
-          <label for="name">Name</label>
-          <input type="text" class="form-control" id="name" name="name" [(ngModel)]="model.name" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" class="form-control" id="email" name="email" [(ngModel)]="model.email" required>
-        </div>
-        
-        <button type="submit" [disabled]="!demoForm.form.valid">Submit</button>
-      </form>
-      
-      <div *ngIf="submitted">
-        <h2>Form submitted successfully!</h2>
-        <p>Name: {{ model.name }}</p>
-        <p>Email: {{ model.email }}</p>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-    }
-    button {
-      padding: 10px 15px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:disabled {
-      background-color: #cccccc;
-    }
-  `]
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  siteKey = '5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw'; // Replace with your actual site key
+  captchaToken: string | null = null;
   submitted = false;
+  form!: FormGroup;
   
-  model = {
-    name: '',
-    email: ''
-  };
+  constructor(private fb: FormBuilder) {}
+  
+  ngOnInit(): void {
+    this.initForm();
+  }
+  
+  initForm(): void {
+    this.form = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]]
+    });
+  }
+  
+  onCaptchaVerified(token: string): void {
+    console.log('Captcha verified with token:', token);
+    this.captchaToken = token;
+  }
+  
+  onCaptchaExpired(): void {
+    console.log('Captcha expired');
+    this.captchaToken = null;
+  }
+  
+  onCaptchaFailed(): void {
+    console.log('Captcha failed');
+    this.captchaToken = null;
+  }
+  
+  onCaptchaLoaded(): void {
+    console.log('Captcha loaded');
+  }
   
   onSubmit(): void {
-    console.log('Form submitted');
-    this.submitted = true;
+    if (this.form.valid && this.captchaToken) {
+      console.log('Form submitted with captcha token:', this.captchaToken);
+      console.log('Form values:', this.form.value);
+      this.submitted = true;
+    } else {
+      // Mark all fields as touched to trigger validation messages
+      this.form.markAllAsTouched();
+      if (!this.captchaToken) {
+        console.error('Cannot submit form without captcha verification');
+      }
+    }
+  }
+  
+  get formControls() {
+    return this.form.controls;
   }
 } 
