@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,26 +12,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  build: {
-    lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'ProsopoCaptcha',
-      fileName: (format) => `index.${format}.js`,
-      formats: ['cjs']
-    },
-    rollupOptions: {
-      external: ['@angular/core', '@angular/common'],
-      output: {
-        globals: {
-          '@angular/core': 'ng.core',
-          '@angular/common': 'ng.common'
-        }
-      }
-    },
-    outDir: 'dist/cjs'
-  }
-}); 
+	build: {
+		lib: {
+			entry: resolve(__dirname, "src/index.ts"),
+			name: "ProsopoCaptcha",
+			fileName: (format) => `index.${format}.js`,
+			formats: ["cjs"],
+		},
+		rollupOptions: {
+			external: ["@angular/core", "@angular/common"],
+			output: {
+				globals: {
+					"@angular/core": "ng.core",
+					"@angular/common": "ng.common",
+				},
+			},
+		},
+		outDir: "dist/cjs",
+	},
+});

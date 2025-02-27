@@ -11,24 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { ReactiveFormsModule } from '@angular/forms';
+import { NgModule } from "@angular/core";
+import { ReactiveFormsModule } from "@angular/forms";
+import { BrowserModule } from "@angular/platform-browser";
 
-import { ProcaptchaModule } from '@prosopo/angular-procaptcha-wrapper';
+import { ProcaptchaModule } from "@prosopo/angular-procaptcha-wrapper";
 
-import { AppComponent } from './app.component';
+import { AppComponent } from "./app.component";
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule,
-    ReactiveFormsModule,
-    ProcaptchaModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
+	declarations: [AppComponent],
+	imports: [BrowserModule, ReactiveFormsModule, ProcaptchaModule],
+	providers: [],
+	bootstrap: [AppComponent],
 })
-export class AppModule { } 
+export class AppModule {}
