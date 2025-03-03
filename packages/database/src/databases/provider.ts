@@ -851,7 +851,20 @@ export class ProviderDatabase
 						filterNoStoredTimestamp,
 						{
 							$expr: {
-								$lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"],
+								$lt: [
+									{
+										$convert: {
+											input: "$storedAtTimestamp",
+											to: "date",
+										},
+									},
+									{
+										$convert: {
+											input: "$lastUpdatedTimestamp",
+											to: "date",
+										},
+									},
+								],
 							},
 						},
 					],
