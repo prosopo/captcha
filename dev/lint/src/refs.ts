@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,7 +129,7 @@ const main = async (args: {
 		ok = ok && result;
 	}
 	if (!ok) {
-		throw new Error("Refs and deps not in sync");
+		throw new Error("Refs and deps not in sync - see above for details");
 	}
 };
 
@@ -150,7 +150,6 @@ const check = async (args: {
 			// ignore @prosopo/config pkg bc circular dep
 			return d !== "@prosopo/config";
 		});
-	// console.log('deps', deps)
 
 	let ok = true;
 	// find all tsconfig files in the same dir as the package.json
@@ -191,9 +190,12 @@ const check = async (args: {
 			console.log(`${missingDep} ref missing from ${tsconfigPath}`);
 		}
 		ok = ok && missingRefs.length === 0 && missingDeps.length === 0;
+		if (missingDeps.length > 0 || missingRefs.length > 0) {
+			console.log({ name: pkgJson.path, missingRefs, missingDeps });
+		}
 	}
+
 	if (!ok) {
-		console.log();
 	}
 	return ok;
 };

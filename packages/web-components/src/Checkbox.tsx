@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,6 +41,8 @@ const checkboxBefore = css`{
 const baseStyle: CSSProperties = {
 	width: "28px",
 	height: "28px",
+	minWidth: "14px",
+	minHeight: "14px",
 	top: "auto",
 	left: "auto",
 	opacity: "1",
@@ -64,6 +66,18 @@ const generateRandomId = () => {
 		() => ID_LETTERS[Math.floor(Math.random() * ID_LETTERS.length)],
 	).join("");
 };
+
+const responsiveFont = css`
+	display: none;
+	@media (min-width: 216px) {
+		display: flex;
+		font-size: 12px;
+	}
+	@media (min-width: 268px) {
+		display: flex;
+		font-size: 16px;
+	}
+`;
 
 export const Checkbox: React.FC<CheckboxProps> = ({
 	themeColor,
@@ -92,11 +106,13 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 			appearance: checked ? "auto" : "none",
 			flex: 1,
 			margin: "15px",
+			minWidth: "14px",
+			minHeight: "14px",
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
 	return (
-		<span style={{ display: "inline-flex" }}>
+		<span style={{ display: "inline-flex", alignItems: "center" }}>
 			<input
 				name={id}
 				id={id}
@@ -109,6 +125,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 				onChange={onChange}
 				checked={checked}
 				style={checkboxStyle}
+				disabled={error !== undefined}
 			/>
 			{error ? (
 				<label
@@ -118,8 +135,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 						display: "flex",
 						cursor: "pointer",
 						userSelect: "none",
-						top: "20px",
-						fontSize: "12px",
+						...responsiveFont,
 					}}
 					htmlFor={id}
 				>
@@ -140,7 +156,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 						display: "flex",
 						cursor: "pointer",
 						userSelect: "none",
-						top: "18px",
+						...responsiveFont,
 					}}
 					htmlFor={id}
 				>

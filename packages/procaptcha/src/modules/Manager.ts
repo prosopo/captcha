@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { randomAsHex } from "@polkadot/util-crypto/random";
 import { stringToHex } from "@polkadot/util/string";
-import type { ExtensionWeb2, ExtensionWeb3 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import {
 	ProsopoDatasetError,
@@ -21,14 +21,16 @@ import {
 	ProsopoError,
 } from "@prosopo/common";
 import {
+	ExtensionLoader,
 	buildUpdateState,
-	getDefaultEvents,
 	getRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
+	type Callbacks,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type FrictionlessState,
@@ -44,7 +46,6 @@ import {
 import { at, hashToHex } from "@prosopo/util";
 import { sleep } from "@prosopo/util";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
-import storage from "./storage.js";
 
 const defaultState = (): Partial<ProcaptchaState> => {
 	return {
@@ -71,7 +72,7 @@ export function Manager(
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
 ) {
-	const events = getDefaultEvents(onStateUpdate, state, callbacks);
+	const events = getDefaultEvents(callbacks);
 
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
@@ -110,11 +111,13 @@ export function Manager(
 					return;
 				}
 
-				resetState();
 				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
 				updateState({ loading: true });
 				updateState({
 					attemptCount: state.attemptCount ? state.attemptCount + 1 : 1,
+				});
+				updateState({
+					sessionId: frictionlessState?.sessionId,
 				});
 
 				// snapshot the config into the state
@@ -126,31 +129,51 @@ export function Manager(
 
 				const account = await loadAccount();
 
-				// get a random provider
-				const getRandomProviderResponse = await getRandomActiveProvider(
-					getConfig(),
+				let captchaApi = state.captchaApi;
+
+				if (!frictionlessState?.provider) {
+					// Get a new random provider if
+					// - we don't have a provider api instance (first time)
+					// - we do have a provider api instance but no sessionId (image captcha only)
+					const getRandomProviderResponse = await getRandomActiveProvider(
+						getConfig(),
+					);
+
+					const providerUrl = getRandomProviderResponse.provider.url;
+					// get the provider api inst
+					const providerApi = await loadProviderApi(providerUrl);
+
+					captchaApi = new ProsopoCaptchaApi(
+						account.account.address,
+						getRandomProviderResponse,
+						providerApi,
+						config.web2,
+						config.account.address || "",
+					);
+					updateState({ captchaApi });
+				} else {
+					const providerUrl = frictionlessState.provider.provider.url;
+					const providerApi = await loadProviderApi(providerUrl);
+					captchaApi = new ProsopoCaptchaApi(
+						account.account.address,
+						frictionlessState.provider,
+						providerApi,
+						config.web2,
+						config.account.address || "",
+					);
+					updateState({ captchaApi });
+				}
+
+				const challenge = await captchaApi?.getCaptchaChallenge(
+					state.sessionId,
 				);
-
-				const providerUrl = getRandomProviderResponse.provider.url;
-				// get the provider api inst
-				const providerApi = await loadProviderApi(providerUrl);
-
-				const captchaApi = new ProsopoCaptchaApi(
-					account.account.address,
-					getRandomProviderResponse,
-					providerApi,
-					config.web2,
-					config.account.address || "",
-				);
-				updateState({ captchaApi });
-
-				const challenge = await captchaApi.getCaptchaChallenge();
 
 				if (challenge.error) {
 					updateState({
 						loading: false,
 						error: challenge.error.message,
 					});
+					events.onError(new Error(challenge.error?.message));
 				} else {
 					if (challenge.captchas.length <= 0) {
 						throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
@@ -176,6 +199,7 @@ export function Manager(
 						challenge,
 						showModal: true,
 						timeout,
+						loading: false,
 					});
 				}
 			},
@@ -271,11 +295,6 @@ export function Manager(
 				});
 				if (state.isHuman) {
 					const providerUrl = captchaApi.provider.provider.url;
-					// cache this provider for future use
-					storage.setProcaptchaStorage({
-						...storage.getProcaptchaStorage(),
-						providerUrl,
-					});
 					events.onHuman(
 						encodeProcaptchaOutput({
 							[ApiParams.providerUrl]: providerUrl,
@@ -297,6 +316,7 @@ export function Manager(
 					setValidChallengeTimeout();
 				} else {
 					events.onFailed();
+					resetState(frictionlessState?.restart);
 				}
 			},
 			start,
@@ -309,8 +329,8 @@ export function Manager(
 	const cancel = async () => {
 		// disable the time limit
 		clearTimeout();
-		// abandon the captcha process
-		resetState();
+		// abandon the captcha process and restart frictionless, if it exists
+		resetState(frictionlessState?.restart);
 		// trigger the onClose event
 		events.onClose();
 	};
@@ -318,12 +338,14 @@ export function Manager(
 	const reload = async () => {
 		// disable the time limit
 		clearTimeout();
-		// abandon the captcha process
-		resetState();
 		// trigger the onClose event
-		events.onClose();
-		// start the captcha process again
-		await start();
+		events.onReload();
+		// abandon the captcha process and restart frictionless, if it exists
+		resetState(frictionlessState?.restart);
+		if (!frictionlessState?.restart) {
+			// start the captcha process again unless we need a new session
+			await start();
+		}
 	};
 
 	/**
@@ -403,11 +425,15 @@ export function Manager(
 		updateState({ successfullChallengeTimeout });
 	};
 
-	const resetState = () => {
+	const resetState = (frictionlessRestart?: () => void) => {
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
 		updateState(defaultState());
 		events.onReset();
+		// reset the frictionless state if it exists
+		if (frictionlessRestart) {
+			frictionlessRestart();
+		}
 	};
 
 	/**
@@ -423,31 +449,17 @@ export function Manager(
 		}
 
 		// check if account exists in extension
-		const selectAccount = async (
-			extensionImport: () => Promise<
-				typeof ExtensionWeb2 | typeof ExtensionWeb3
-			>,
-		) => {
+		const selectAccount = async () => {
+			const ext = new (await ExtensionLoader(config.web2))();
+
 			if (frictionlessState) {
 				return frictionlessState.userAccount;
 			}
 
-			const ext = new (await extensionImport())();
 			return await ext.getAccount(config);
 		};
 
-		const ExtensionWeb3Import = async () =>
-			(await import("@prosopo/account")).ExtensionWeb3;
-
-		const ExtensionWeb2Import = async () =>
-			(await import("@prosopo/account")).ExtensionWeb2;
-
-		const account = await selectAccount(
-			config.web2 ? ExtensionWeb2Import : ExtensionWeb3Import,
-		);
-
-		// Store the account in local storage
-		storage.setAccount(account.account.address);
+		const account = await selectAccount();
 
 		updateState({ account });
 

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { boolean, object, string } from "zod";
+import { boolean, number, object, type output, string } from "zod";
 import { ruleConfigSchema } from "../../rule/config/ruleConfigSchema.js";
-import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
 
 const apiInsertManyRulesArgsSchema = object({
 	isUserBlocked: boolean(),
 	clientId: string().optional(),
 	description: string().optional(),
-	userIps: ruleIpSchema.array().optional(),
+	userIps: object({
+		v4: string().array().optional(),
+		v6: string().array().optional(),
+	}),
+	userIpMasks: object({
+		v4: object({
+			min: string(),
+			max: string(),
+		})
+			.array()
+			.optional(),
+		v6: object({
+			min: string(),
+			max: string(),
+		})
+			.array()
+			.optional(),
+	}),
 	userIds: string().array().optional(),
 	config: ruleConfigSchema.optional(),
+	score: number().optional(),
 });
 
 type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
 
-export { apiInsertManyRulesArgsSchema, type ApiInsertManyRulesArgsSchema };
+type ApiInsertManyRulesArgsOutputSchema = output<
+	typeof apiInsertManyRulesArgsSchema
+>;
+
+export {
+	apiInsertManyRulesArgsSchema,
+	type ApiInsertManyRulesArgsSchema,
+	type ApiInsertManyRulesArgsOutputSchema,
+};

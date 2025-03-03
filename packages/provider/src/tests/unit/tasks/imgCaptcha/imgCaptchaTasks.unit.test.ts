@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ import {
 	type Captcha,
 	type CaptchaSolution,
 	CaptchaStatus,
-	type PendingCaptchaRequest,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
+	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -155,9 +155,9 @@ describe("ImgCaptchaManager", () => {
 				},
 			),
 			getDatasetDetails: vi.fn(),
-			storeDappUserPending: vi.fn(),
-			getDappUserPending: vi.fn(),
-			updateDappUserPendingStatus: vi.fn(),
+			storePendingImageCommitment: vi.fn(),
+			getPendingImageCommitment: vi.fn(),
+			updatePendingImageCommitmentStatus: vi.fn(),
 			storeDappUserSolution: vi.fn(),
 			approveDappUserCommitment: vi.fn(),
 			getCaptchaById: vi.fn(),
@@ -180,7 +180,7 @@ describe("ImgCaptchaManager", () => {
 			unsolved: { count: 4 },
 		};
 
-		imgCaptchaManager = new ImgCaptchaManager(db, pair, logger, captchaConfig);
+		imgCaptchaManager = new ImgCaptchaManager(db, pair, captchaConfig, logger);
 
 		vi.clearAllMocks();
 	});

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 					],
 					activated: true,
 				},
-				{ account: 1, settings: 1 },
+				{ account: 1, settings: 1, tier: 1 },
 			)
 			.lean<ClientRecord[]>();
 		await this.close();
