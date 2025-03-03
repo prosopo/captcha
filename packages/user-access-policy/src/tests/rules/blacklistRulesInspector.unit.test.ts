@@ -40,7 +40,7 @@ describe("BlacklistRulesInspector", () => {
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "", "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(true);
@@ -63,7 +63,7 @@ describe("BlacklistRulesInspector", () => {
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "", "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(true);
@@ -86,7 +86,7 @@ describe("BlacklistRulesInspector", () => {
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "", "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(false);
@@ -98,7 +98,7 @@ describe("BlacklistRulesInspector", () => {
 
 		// when
 		const shouldAbortRequest = () =>
-			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "");
+			inspector.isUserBlacklisted("", new Address4("127.0.0.1"), "", "");
 
 		// then
 		expect(await shouldAbortRequest()).toBe(false);

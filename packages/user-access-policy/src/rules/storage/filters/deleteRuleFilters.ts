@@ -17,6 +17,7 @@ import type { RuleIp } from "../../rule/ip/ruleIp.js";
 interface DeleteRuleFilters {
 	clientId?: string;
 	userIp?: RuleIp;
+	ja4?: string;
 	userId?: string;
 }
 
