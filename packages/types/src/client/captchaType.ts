@@ -18,13 +18,12 @@ const powStr = "pow";
 const frictionlessStr = "frictionless";
 
 export enum CaptchaType {
+	// biome-ignore lint/style/useLiteralEnumMembers: zod workaround
 	image = imageStr,
+	// biome-ignore lint/style/useLiteralEnumMembers: zod workaround
 	pow = powStr,
+	// biome-ignore lint/style/useLiteralEnumMembers: zod workaround
 	frictionless = frictionlessStr,
 }
 
-export const CaptchaTypeSpec = z.enum([
-	imageStr,
-	powStr,
-	frictionlessStr,
-]);
+export const CaptchaTypeSpec = z.enum([imageStr, powStr, frictionlessStr]);
