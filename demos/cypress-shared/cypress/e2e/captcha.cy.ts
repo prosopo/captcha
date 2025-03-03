@@ -66,7 +66,7 @@ describe("Captchas", () => {
 					expect(response?.body).to.have.property("error");
 				})
 				.then(() => {
-					cy.get(".captcha-checkbox", { includeShadowDom: true })
+					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
 						.should("exist") // Ensures element exists
 						.should("be.visible") // Ensures it's rendered
 						.find("label")

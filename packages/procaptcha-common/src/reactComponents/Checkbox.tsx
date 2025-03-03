@@ -111,7 +111,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 	return (
 		<span
 			style={{ display: "inline-flex", alignItems: "center" }}
-			className={"captcha-checkbox"}
+			data-cy="captcha-checkbox"
 		>
 			<input
 				name={id}
