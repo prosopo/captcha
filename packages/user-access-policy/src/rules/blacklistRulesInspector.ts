@@ -46,14 +46,16 @@ class BlacklistRulesInspector implements BlacklistInspector {
 
 		const userBlacklisted = blockingRules.length > 0;
 
-		this.logger.info("BlacklistRulesInspector.isUserBlacklisted", {
-			userBlacklisted: userBlacklisted,
-			clientId: clientId,
-			userIpAddress: userIpAddress.address.toString(),
-			userId: userId,
-			accessRules: accessRules.length,
-			blockingRules: blockingRules.length,
-		});
+		if (userBlacklisted) {
+			this.logger.info({
+				userBlacklisted: userBlacklisted,
+				clientId: clientId,
+				userIpAddress: userIpAddress.address.toString(),
+				userId: userId,
+				accessRules: accessRules.length,
+				blockingRules: blockingRules.length,
+			});
+		}
 
 		return userBlacklisted;
 	}

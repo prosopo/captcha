@@ -21,7 +21,8 @@
 		"@prosopo/provider": "2.4.2",
 		"@prosopo/types": "2.4.2",
 		"cors": "2.8.5",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"read-tls-client-hello": "1.1.0"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "2.1.1",

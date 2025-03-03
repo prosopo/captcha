@@ -134,8 +134,6 @@ pronode4old.prosopo.io {
             header_up x-tls-client-san-uris "{http.request.tls.client.san.uris}"
             header_up x-tls-client-san-uris "^{http.request.tls.client.san.uris}$" ""
 
-            header_up X-TLS-ClientHello "{http.request.tls.client_hello}"
-            header_up X-TLS-ClientHello "^{http.request.tls.client_hello}$" ""
         }
 
     }

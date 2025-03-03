@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createHash } from "node:crypto";
+import { Readable } from "node:stream";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiPaths,
@@ -20,6 +22,7 @@ import {
 } from "@prosopo/types";
 import type { VerifySolutionBodyTypeOutput } from "@prosopo/types";
 import express, { type Router } from "express";
+import { readTlsClientHello } from "read-tls-client-hello";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -84,6 +87,92 @@ export function prosopoRouter(): Router {
 			}
 		},
 	);
+
+	router.get("/test", async (req, res) => {
+		console.log(req.headers);
+		console.log(req.rawHeaders);
+
+		// Base64-encoded Client Hello message
+		const base64ClientHello = req.headers["x-tls-clienthello"];
+
+		if (!base64ClientHello || typeof base64ClientHello !== "string") {
+			console.error("No valid Client Hello message found.");
+			process.exit(1);
+		}
+
+		// Decode the base64-encoded Client Hello
+		const clientHelloBuffer = Buffer.from(base64ClientHello, "base64");
+
+		// Convert Buffer to Readable stream
+		const clientHelloStream = new Readable();
+		clientHelloStream.push(clientHelloBuffer);
+		clientHelloStream.push(null);
+
+		// Parse the Client Hello message
+		const clientHello = await readTlsClientHello(clientHelloStream);
+
+		if (!clientHello) {
+			console.error("Failed to parse the Client Hello message.");
+			process.exit(1);
+		}
+
+		// Extract necessary fields from the parsed Client Hello
+		const { version, cipherSuites, extensions, alpnProtocols, sni } =
+			clientHello;
+
+		// Determine the transport protocol (assuming TCP for this example)
+		const transport = "t";
+
+		// TLS version
+		const tlsVersion =
+			version === 0x0303 ? "12" : version === 0x0304 ? "13" : "unknown";
+
+		// SNI existence
+		const sniIndicator = sni ? "d" : "i";
+
+		// Number of cipher suites (excluding GREASE values)
+		const validCipherSuites = cipherSuites.filter(
+			(cs) => (cs & 0x0f0f) !== 0x0a0a,
+		);
+		const cipherCount = validCipherSuites.length;
+
+		// Number of extensions (excluding GREASE values)
+		const validExtensions = extensions.filter(
+			(ext) => (ext.type & 0x0f0f) !== 0x0a0a,
+		);
+		const extensionCount = validExtensions.length;
+
+		// ALPN protocol (first and last character of the first protocol)
+		const alpn =
+			alpnProtocols && alpnProtocols.length > 0 ? alpnProtocols[0] : "";
+		const alpnLabel = alpn ? `${alpn[0]}${alpn[alpn.length - 1]}` : "00";
+
+		// Hash of sorted cipher suites
+		const sortedCiphers = validCipherSuites
+			.map((cs) => cs.toString(16).padStart(4, "0"))
+			.sort()
+			.join(",");
+		const cipherHash = createHash("sha256")
+			.update(sortedCiphers)
+			.digest("hex")
+			.slice(0, 12);
+
+		// Hash of sorted extensions
+		const sortedExtensions = validExtensions
+			.map((ext) => ext.type.toString(16).padStart(4, "0"))
+			.sort()
+			.join(",");
+		const extensionHash = createHash("sha256")
+			.update(sortedExtensions)
+			.digest("hex")
+			.slice(0, 12);
+
+		// Construct the JA4 fingerprint
+		const ja4Fingerprint = `${transport}${tlsVersion}${sniIndicator}${cipherCount}${extensionCount}${alpnLabel}_${cipherHash}_${extensionHash}`;
+
+		console.log("JA4 Fingerprint:", ja4Fingerprint);
+		res.send("Hello World!");
+	});
 
 	return router;
 }
