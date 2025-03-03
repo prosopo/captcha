@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 import type { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
+import { CaptchaType, Tier } from "@prosopo/types";
 
 export async function registerSiteKey(
 	env: ProviderEnvironment,
@@ -22,7 +23,14 @@ export async function registerSiteKey(
 	const logger = env.logger;
 	const tasks = new Tasks(env);
 	logger.info("   - siteKeyRegister");
-	await tasks.clientTaskManager.registerSiteKey(siteKey as string, {
-		domains: ["localhost"],
-	});
+	await tasks.clientTaskManager.registerSiteKey(
+		siteKey as string,
+		Tier.Professional,
+		{
+			captchaType: CaptchaType.frictionless,
+			frictionlessThreshold: 0.8,
+			powDifficulty: 4,
+			domains: ["localhost", "0.0.0.0"],
+		},
+	);
 }

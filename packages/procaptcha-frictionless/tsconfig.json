@@ -12,7 +12,7 @@
 			"path": "../detector"
 		},
 		{
-			"path": "../locale-browser"
+			"path": "../locale"
 		},
 		{
 			"path": "../procaptcha-pow"
