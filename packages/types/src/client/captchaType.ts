@@ -11,12 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { nativeEnum } from "zod";
+import { nativeEnum, z } from "zod";
+
+const imageStr = "image";
+const powStr = "pow";
+const frictionlessStr = "frictionless";
 
 export enum CaptchaType {
-	image = "image",
-	pow = "pow",
-	frictionless = "frictionless",
+	image = imageStr,
+	pow = powStr,
+	frictionless = frictionlessStr,
 }
 
-export const CaptchaTypeSpec = nativeEnum(CaptchaType);
+export const CaptchaTypeSpec = z.enum([
+	imageStr,
+	powStr,
+	frictionlessStr,
+]);
