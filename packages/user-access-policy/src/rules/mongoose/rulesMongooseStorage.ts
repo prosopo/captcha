@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,11 @@ class RulesMongooseStorage implements RulesStorage {
 			throw this.modelNotSetProsopoError();
 		}
 
-		const document = await this.writingModel.create(record);
+		let document = await this.writingModel.findOneAndUpdate(record);
+
+		if (!document) {
+			document = await this.writingModel.create(record);
+		}
 
 		const ruleRecord = this.convertMongooseRecordToRuleRecord(
 			document.toObject(),
@@ -54,6 +58,18 @@ class RulesMongooseStorage implements RulesStorage {
 		if (!this.writingModel) {
 			throw this.modelNotSetProsopoError();
 		}
+
+		// Delete the existing ip records to avoid duplicates.
+		await this.writingModel.bulkWrite(
+			records.map((record) => ({
+				deleteOne: {
+					filter: {
+						clientId: record.clientId,
+						userIp: record.userIp,
+					} as Pick<Rule, "userId" | "userIp" | "clientId">,
+				},
+			})),
+		);
 
 		const documents = await this.writingModel.insertMany(records);
 		const objectDocuments = documents.map((document) => document.toObject());

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,4 +14,23 @@
 
 import { ViteTestConfig } from "@prosopo/config";
 
-export default ViteTestConfig;
+export default () => {
+	const testConfig = ViteTestConfig();
+
+	return {
+		...testConfig,
+		test: {
+			// @ts-ignore
+			...testConfig.test,
+			poolOptions: {
+				// @ts-ignore
+				...testConfig.test.poolOptions,
+				forks: {
+					// @ts-ignore
+					...testConfig.test.poolOptions.forks,
+					singleFork: true,
+				},
+			},
+		},
+	};
+};
