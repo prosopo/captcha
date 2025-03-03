@@ -27,7 +27,7 @@ const ruleMongooseSchema = new Schema<Rule>({
 			function () {
 				return !this.userId && !this.ja4;
 			},
-			"userIp is required when userId is not set",
+			"userIp is required when userId is not set and ja4 is not set",
 		],
 	},
 	userId: {
@@ -36,7 +36,7 @@ const ruleMongooseSchema = new Schema<Rule>({
 			function () {
 				return !this.userIp && !this.ja4;
 			},
-			"userId is required when userIp is not set",
+			"userId is required when userIp is not set and ja4 is not set",
 		],
 	},
 	ja4: {
@@ -45,7 +45,7 @@ const ruleMongooseSchema = new Schema<Rule>({
 			function () {
 				return !this.userIp && !this.userId;
 			},
-			"userId is required when userIp is not set",
+			"ja4 is required when userIp is not set and userId is not set",
 		],
 	},
 	config: {
