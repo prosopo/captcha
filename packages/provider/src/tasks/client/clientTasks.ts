@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
@@ -27,6 +28,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
+import { validiateSiteKey } from "../../api/validateAddress.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -169,10 +171,14 @@ export class ClientTaskManager {
 			);
 
 			// Get updated client records within a ten minute window of the last completed task
-			const tenMinuteWindow = new Date().getTime() - 10 * 60 * 1000;
+			const tenMinuteWindow = 10 * 60 * 1000;
 			const updatedAtTimestamp = lastTask?.updated
 				? lastTask.updated - tenMinuteWindow || 0
 				: 0;
+
+			this.logger.info({
+				message: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
+			});
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
@@ -209,6 +215,7 @@ export class ClientTaskManager {
 		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
+		validiateSiteKey(siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,

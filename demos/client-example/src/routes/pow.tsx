@@ -1,5 +1,6 @@
+import { CaptchaType } from "@prosopo/types";
 import React from "react";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +18,7 @@ import App from "../App.js";
 export default function Root() {
 	return (
 		<React.Fragment>
-			<App captchaType={"pow"} />
+			<App captchaType={CaptchaType.pow} />
 		</React.Fragment>
 	);
 }

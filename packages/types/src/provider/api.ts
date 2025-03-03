@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,8 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import { Tier } from "../client/index.js";
+import type { CaptchaType } from "../client/captchaType.js";
+import { ClientSettingsSchema, Tier } from "../client/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -248,7 +249,7 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
 	[ApiParams.sessionId]?: string;
 }
 
@@ -332,12 +333,7 @@ export const VerifyPowCaptchaSolutionBody = object({
 export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.tier]: nativeEnum(Tier),
-	[ApiParams.settings]: object({
-		[ApiParams.captchaType]: string(),
-		[ApiParams.domains]: array(string()),
-		[ApiParams.frictionlessThreshold]: number(),
-		[ApiParams.powDifficulty]: number(),
-	}).optional(),
+	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;

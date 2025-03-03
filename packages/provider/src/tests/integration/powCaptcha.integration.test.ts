@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -369,5 +369,65 @@ describe("PoW Integration Tests", () => {
 
 		expect(challengeBody).toHaveProperty("error");
 		expect(challengeBody.error?.message).toBe("Invalid site key");
+	});
+
+	it("should return an error if the captcha type is set to image", async () => {
+		const userPair = await getPairAsync(
+			dummyUserAccount.seed,
+			undefined,
+			"sr25519",
+		);
+		const userAccount = userPair.address;
+		const origin = "http://localhost";
+		const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+		await registerSiteKey(dapp, CaptchaType.image);
+
+		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			method: "POST",
+			headers: {
+				Connection: "close",
+				"Content-Type": "application/json",
+				Origin: origin,
+				"Prosopo-Site-Key": dapp,
+				"Prosopo-User": userAccount,
+			},
+			body: JSON.stringify({ user: userAccount, dapp }),
+		});
+
+		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+
+		expect(challengeBody).toHaveProperty("error");
+		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(challengeBody.error?.code).toBe(400);
+	});
+	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
+		const userPair = await getPairAsync(
+			dummyUserAccount.seed,
+			undefined,
+			"sr25519",
+		);
+		const userAccount = userPair.address;
+		const origin = "http://localhost";
+		// Create a new site key to avoid conflicts with other tests
+		const [mnemonic, dapp] = await generateMnemonic();
+		await registerSiteKey(dapp, CaptchaType.frictionless);
+
+		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			method: "POST",
+			headers: {
+				Connection: "close",
+				"Content-Type": "application/json",
+				Origin: origin,
+				"Prosopo-Site-Key": dapp,
+				"Prosopo-User": userAccount,
+			},
+			body: JSON.stringify({ user: userAccount, dapp }),
+		});
+
+		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+
+		expect(challengeBody).toHaveProperty("error");
+		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(challengeBody.error?.code).toBe(400);
 	});
 });

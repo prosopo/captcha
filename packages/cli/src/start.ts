@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,11 +44,11 @@ import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 
-function startApi(
+async function startApi(
 	env: ProviderEnvironment,
 	admin = false,
 	port?: number,
-): Server {
+): Promise<Server> {
 	env.logger.info("Starting Prosopo API");
 
 	const apiApp = express();
@@ -67,7 +67,7 @@ function startApi(
 	);
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
-	apiApp.use(i18nMiddleware({}));
+	apiApp.use(await i18nMiddleware({}));
 	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));

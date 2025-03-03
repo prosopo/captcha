@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -178,12 +178,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: {
-					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
-					challenge,
-				},
-			});
+			this.logger.debug(`No record of this challenge: ${challenge}`);
+			return { verified: false };
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {

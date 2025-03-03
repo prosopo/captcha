@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import type { Logger } from "@prosopo/common";
-import { CaptchaType, Tier } from "@prosopo/types";
+import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
@@ -23,6 +23,13 @@ import type {
 import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
+
+const defaultUserSettings: IUserSettings = {
+	frictionlessThreshold: 0.8,
+	domains: [],
+	captchaType: CaptchaType.frictionless,
+	powDifficulty: 4,
+};
 
 describe("CaptchaManager", () => {
 	let db: IProviderDatabase;
@@ -60,6 +67,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.image,
 					},
 				},
@@ -76,6 +84,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.pow,
 					},
 				},
@@ -102,6 +111,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					},
 				},
@@ -131,6 +141,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					},
 				},
@@ -160,6 +171,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					},
 				},
@@ -169,7 +181,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: `Session ${sessionId} not found`,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
 				type: CaptchaType.image,
 			});
 		});
@@ -189,6 +201,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					},
 				},
@@ -198,7 +211,7 @@ describe("CaptchaManager", () => {
 
 			expect(result).toEqual({
 				valid: false,
-				reason: `Session ${sessionId} not found`,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
 				type: CaptchaType.pow,
 			});
 		});
@@ -208,6 +221,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					},
 				},
@@ -227,6 +241,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.frictionless,
 					},
 				},
@@ -247,6 +262,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.image,
 					},
 				},
@@ -265,6 +281,7 @@ describe("CaptchaManager", () => {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
+						...defaultUserSettings,
 						captchaType: CaptchaType.pow,
 					},
 				},

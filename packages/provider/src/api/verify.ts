@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,6 +62,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -83,6 +84,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return next(
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp, user },
+							i18n: req.i18n,
 						}),
 					);
 				}
@@ -106,7 +108,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					tasks.imgCaptchaManager.getVerificationResponse(
 						response[ApiParams.verified],
 						clientRecord,
-						req.t,
+						req.i18n.t,
 						response[ApiParams.score],
 						response[ApiParams.commitmentId],
 					);
@@ -116,6 +118,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -138,6 +141,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err, body: req.body },
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -160,13 +164,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
 					}),
 				);
 			}
 
 			if (!challenge) {
 				const unverifiedResponse: VerificationResponse = {
-					status: req.t("API.USER_NOT_VERIFIED"),
+					status: req.i18n.t("API.USER_NOT_VERIFIED"),
 					[ApiParams.verified]: false,
 				};
 				return res.json(unverifiedResponse);
@@ -189,7 +194,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				tasks.powCaptchaManager.getVerificationResponse(
 					verified,
 					clientRecord,
-					req.t,
+					req.i18n.t,
 					score,
 				);
 
@@ -198,7 +203,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
+					context: { code: 500, error: err },
+					i18n: req.i18n,
 				}),
 			);
 		}

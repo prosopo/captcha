@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 /** @jsxImportSource @emotion/react */
 
-import { i18n, useTranslation } from "@prosopo/locale-browser";
+import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import { useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
@@ -27,6 +27,7 @@ import {
 	WIDGET_DIMENSIONS,
 	WIDGET_INNER_HEIGHT,
 	WIDGET_MAX_WIDTH,
+	WIDGET_MIN_HEIGHT,
 	WIDGET_PADDING,
 	WIDGET_URL,
 	WIDGET_URL_TEXT,
@@ -57,17 +58,21 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			i18n.changeLanguage(config.language);
+			loadI18next(false).then((i18n) => {
+				i18n.changeLanguage(config.language).then((r) => r);
+			});
 		}
 	}, [config.language]);
 
 	return (
-		<div>
+		<div style={{ width: "100%", minHeight: WIDGET_MIN_HEIGHT }}>
 			<div
 				style={{
 					maxWidth: WIDGET_MAX_WIDTH,
+					minHeight: WIDGET_MIN_HEIGHT,
 					maxHeight: "100%",
 					overflowX: "auto",
+					width: "100%",
 					...theme.font,
 				}}
 			>
