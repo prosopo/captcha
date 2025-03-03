@@ -26,6 +26,7 @@ async function startApi() {
 
 	apiApp.use(cors());
 	apiApp.use(express.json());
+	// @ts-ignore express doesn't like the handler type for some reason
 	apiApp.use(await i18nMiddleware({}));
 	apiApp.use(prosopoRouter());
 	apiApp.use(handleErrors);

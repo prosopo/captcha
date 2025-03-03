@@ -67,6 +67,7 @@ async function startApi(
 	);
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
+	// @ts-ignore express doesn't like the handler type for some reason
 	apiApp.use(await i18nMiddleware({}));
 	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
 	// Blocking middleware will run on any routes defined after this point
