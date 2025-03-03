@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto/address";
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
@@ -29,7 +30,6 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";
-import { handleErrors } from "./errorHandler.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -62,6 +62,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -83,6 +84,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return next(
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp, user },
+							i18n: req.i18n,
 						}),
 					);
 				}
@@ -101,19 +103,22 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						parsed.maxVerifiedTime,
 					);
 
-				const verificationResponse: ImageVerificationResponse = {
-					[ApiParams.status]: req.t(response.status),
-					[ApiParams.verified]: response[ApiParams.verified],
-					...(response.commitmentId && {
-						[ApiParams.commitmentId]: response.commitmentId,
-					}),
-				};
+				tasks.logger.debug(response);
+				const verificationResponse: ImageVerificationResponse =
+					tasks.imgCaptchaManager.getVerificationResponse(
+						response[ApiParams.verified],
+						clientRecord,
+						req.i18n.t,
+						response[ApiParams.score],
+						response[ApiParams.commitmentId],
+					);
 				res.json(verificationResponse);
 			} catch (err) {
 				tasks.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
+						i18n: req.i18n,
 					}),
 				);
 			}
@@ -136,6 +141,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err, body: req.body },
+					i18n: req.i18n,
 				}),
 			);
 		}
@@ -158,13 +164,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
 					}),
 				);
 			}
 
 			if (!challenge) {
 				const unverifiedResponse: VerificationResponse = {
-					status: req.t("API.USER_NOT_VERIFIED"),
+					status: req.i18n.t("API.USER_NOT_VERIFIED"),
 					[ApiParams.verified]: false,
 				};
 				return res.json(unverifiedResponse);
@@ -176,24 +183,28 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			// Will throw an error if the signature is invalid
 			verifySignature(dappSignature, timestamp.toString(), dappPair);
 
-			const approved =
+			const { verified, score } =
 				await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 					dapp,
 					challenge,
 					verifiedTimeout,
 				);
 
-			const verificationResponse: VerificationResponse = {
-				status: req.t(approved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED"),
-				[ApiParams.verified]: approved,
-			};
+			const verificationResponse: VerificationResponse =
+				tasks.powCaptchaManager.getVerificationResponse(
+					verified,
+					clientRecord,
+					req.i18n.t,
+					score,
+				);
 
 			return res.json(verificationResponse);
 		} catch (err) {
 			tasks.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
+					context: { code: 500, error: err },
+					i18n: req.i18n,
 				}),
 			);
 		}

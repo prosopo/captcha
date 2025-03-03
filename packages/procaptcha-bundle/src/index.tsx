@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
@@ -21,7 +22,6 @@ import {
 	getConfig,
 	getProcaptchaScript,
 } from "./util/config.js";
-import { getWindowCallback } from "./util/defaultCallbacks.js";
 import { renderLogic } from "./util/renderLogic.js";
 
 const BUNDLE_NAME = "procaptcha.bundle.js";

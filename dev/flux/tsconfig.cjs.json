@@ -7,13 +7,13 @@
 	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
 	"references": [
 		{
-			"path": "../../packages/dotenv"
+			"path": "../../packages/dotenv/tsconfig.cjs.json"
 		},
 		{
-			"path": "../../packages/common"
+			"path": "../../packages/common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../../packages/util"
+			"path": "../../packages/util/tsconfig.cjs.json"
 		}
 	]
 }

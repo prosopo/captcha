@@ -13,9 +13,9 @@
 		"start": "vite serve ./src --port 9232 --config vite.config.ts",
 		"clean": "echo 'nothing to clean'"
 	},
-	"version": "2.3.2",
+	"version": "2.4.2",
 	"devDependencies": {
-		"@prosopo/dotenv": "2.3.2",
+		"@prosopo/dotenv": "2.4.2",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
@@ -26,8 +26,5 @@
 		"typescript": "5.6.2",
 		"vite": "5.4.6",
 		"vitest": "2.1.1"
-	},
-	"dependencies": {
-		"express": "4.21.1"
 	}
 }

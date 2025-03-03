@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,34 +20,19 @@ import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
+	type CaptchaType,
 	type IUserSettings,
+	type RegisterSitekeyBodyTypeOutput,
+	Tier,
 } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
+let captchaType: CaptchaType;
+
 describe("Captchas", () => {
 	before(async () => {
-		const timestamp = new Date().getTime();
-		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
-		const signature = u8aToHex(pair.sign(timestamp.toString()));
-		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
-		const settings: IUserSettings = {
-			captchaType: "pow",
-			domains: ["0.0.0.0"],
-			frictionlessThreshold: 0.5,
-			powDifficulty: 2,
-		};
-		await fetch(adminSiteKeyURL, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				signature: signature,
-				timestamp: timestamp.toString(),
-			},
-			body: JSON.stringify({
-				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-				settings,
-			}),
-		});
+		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+		cy.registerSiteKey(captchaType);
 	});
 
 	beforeEach(() => {

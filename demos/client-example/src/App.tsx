@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,11 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
-import { ApiParams, type ProcaptchaToken } from "@prosopo/types";
+import {
+	ApiParams,
+	type CaptchaType,
+	type ProcaptchaToken,
+} from "@prosopo/types";
 import { useReducer, useState } from "react";
 import { Captcha } from "./Captcha.js";
 import NavBar from "./NavBar.js";
@@ -36,7 +40,7 @@ const corsHeaders = {
 };
 
 interface AppProps {
-	captchaType?: string;
+	captchaType?: CaptchaType;
 }
 
 function App(props: AppProps) {
