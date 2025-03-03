@@ -22,12 +22,15 @@ const professionalTier = "professional";
 const enterpriseTier = "enterprise";
 
 export enum Tier {
+	// biome-ignore lint/style/useLiteralEnumMembers: zod workaround
 	Free = freeTier,
+	// biome-ignore lint/style/useLiteralEnumMembers: zod workaround
 	Professional = professionalTier,
+	// biome-ignore lint/style/useLiteralEnumMembers: zod workaround
 	Enterprise = enterpriseTier,
 }
 
-export const TierSchema = z.nativeEnum(Tier)//[freeTier, professionalTier, enterpriseTier]);
+export const TierSchema = z.nativeEnum(Tier); //[freeTier, professionalTier, enterpriseTier]);
 
 export const TierMonthlyLimits = {
 	[Tier.Free]: {
