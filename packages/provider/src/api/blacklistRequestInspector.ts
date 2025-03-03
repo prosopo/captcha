@@ -34,6 +34,7 @@ class BlacklistRequestInspector {
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
 			rawIp,
+			request.ja4,
 			request.headers,
 			request.body,
 		);
@@ -49,6 +50,7 @@ class BlacklistRequestInspector {
 	public async shouldAbortRequest(
 		requestedRoute: string,
 		rawIp: string,
+		ja4: string,
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 	): Promise<boolean> {
@@ -81,6 +83,7 @@ class BlacklistRequestInspector {
 			return await this.blacklistInspector.isUserBlacklisted(
 				clientId,
 				userIpAddress,
+				ja4,
 				userId,
 			);
 		} catch (err) {

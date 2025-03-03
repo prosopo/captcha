@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Logger } from "@prosopo/common";
 import type { TFunction } from "i18next";
 
 declare module "express-serve-static-core" {
@@ -20,5 +21,9 @@ declare module "express-serve-static-core" {
 		i18n: {
 			t: TFunction;
 		};
+		user?: string;
+		siteKey?: string;
+		ja4: string;
+		logger?: Logger;
 	}
 }

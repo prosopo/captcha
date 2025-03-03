@@ -115,6 +115,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
 				env.config.captchas,
 				ipAddress,
+				req.ja4,
 				user,
 				dapp,
 			);
@@ -551,6 +552,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await imageCaptchaConfigResolver.isConfigDefined(
 						dapp,
 						ipAddress,
+						req.ja4,
 						user,
 					);
 
