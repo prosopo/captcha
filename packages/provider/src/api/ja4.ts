@@ -18,14 +18,6 @@ import { Readable } from "node:stream";
 import { type Logger, getLoggerDefault } from "@prosopo/common";
 import { readTlsClientHello } from "read-tls-client-hello";
 
-// Determine TLS version
-const tlsVersionMap: Record<string, Buffer> = {
-	"tls1.3": Buffer.from([0x03, 0x04]),
-	"tls1.2": Buffer.from([0x03, 0x03]),
-	"tls1.1": Buffer.from([0x03, 0x02]),
-	"tls1.0": Buffer.from([0x03, 0x01]),
-};
-
 const DEFAULT_JA4 = "ja4";
 
 export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
@@ -61,7 +53,8 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 
 		logger.debug("Headers TLS Version:", xTlsVersion);
 
-		const tlsVersion = tlsVersionMap[xTlsVersion] || Buffer.from([0x03, 0x03]);
+		//`tls1.3` becomes `13` etc.
+		const tlsVersion = xTlsVersion.replace(/(tls)|\./g, "");
 
 		// Convert to Readable stream
 		const readableStream = new Readable({
