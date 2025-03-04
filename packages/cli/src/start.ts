@@ -75,6 +75,7 @@ async function startApi(
 	});
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
+	// @ts-ignore TODO fix peer dependencies so this is not necessary
 	apiApp.use(await i18nMiddleware({}));
 
 	// Header check middleware will run on any client routes excluding verify
