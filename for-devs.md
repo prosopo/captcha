@@ -16,12 +16,20 @@ Client-side (browser):
     - `procaptcha-react` (image)
     - `procaptcha-pow`
 
+* `widget-skeleton` - Widget skeleton wrapped into the web component
+
 Server-side (node.js):
 
 * `provider` - API Endpoints for the captcha widget
     - `cli` - CLI wrapper for the `provider`, that starts `Express`
 * `database` - Mongo DB Query builder
     - `types-database` - declaration of interfaces and types used in the Query builder
+
+Building configs (for Vite):
+
+`dev/config/src/vite`:
+
+* `vite.frontend.config.ts`
 
 ## 2. Code Quality & Style
 
@@ -66,13 +74,13 @@ cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 The DB is necessary for all kind of the tests. Since the DB is docked, to start the DB service run the following:
 
 ```
-docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+sudo docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
 ```
 
 Note: After the testing is done, stop it using the `down` command:
 
 ```
-docker compose --file ./docker/docker-compose.test.yml down
+sudo docker compose --file ./docker/docker-compose.test.yml down
 ```
 
 ### 4.3) DB population
