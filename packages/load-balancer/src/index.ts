@@ -52,9 +52,9 @@ export const loadBalancer = async (
 		return [
 			{
 				address: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
-				url: "https://pronode4old.prosopo.io",
+				url: "http://localhost:9229",
 				datasetId:
-					"0xe666b35451f302b9fccfbe783b1de9a6a4420b840abed071931d68a9ccc1c21d",
+					"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
 			},
 		];
 	}
