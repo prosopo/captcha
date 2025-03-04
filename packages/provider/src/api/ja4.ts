@@ -76,18 +76,12 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		// Extract details
 		const { alpnProtocols } = clientHello;
 
+		// _tlsVersion is not used, as we already have the TLS version from the headers. The tlsVersion reported by the
+		// `clientHello` object is also not accurate.
 		const [_tlsVersion, cipherSuites, extensions] = clientHello.fingerprintData;
 
 		// Determine the transport protocol
 		const transport = "t"; // Assuming TCP
-
-		if (tlsVersion.readUInt16BE(0) !== _tlsVersion) {
-			logger.warn(
-				"TLS version mismatch.",
-				tlsVersion.readUInt16BE(0),
-				_tlsVersion,
-			);
-		}
 
 		// Check if SNI is present
 		const sniIndicator = xTlsServerName ? "d" : "i";
