@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { getJA4 } from "./ja4.js";
