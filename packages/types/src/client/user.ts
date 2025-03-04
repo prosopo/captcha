@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { z } from "zod";
 import type { Timestamp } from "../datasets/index.js";
 
 import type { IUserSettings } from "./settings.js";
@@ -21,6 +22,8 @@ export enum Tier {
 	Professional = "professional",
 	Enterprise = "enterprise",
 }
+
+export const TierSchema = z.nativeEnum(Tier);
 
 export const TierMonthlyLimits = {
 	[Tier.Free]: {
