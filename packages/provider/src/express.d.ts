@@ -15,15 +15,17 @@
 import type { Logger } from "@prosopo/common";
 import type { TFunction } from "i18next";
 
-declare module "express-serve-static-core" {
-	interface Request {
-		t: TFunction;
-		i18n: {
+declare global {
+	namespace Express {
+		interface Request {
 			t: TFunction;
-		};
-		user?: string;
-		siteKey?: string;
-		ja4: string;
-		logger?: Logger;
+			i18n: {
+				t: TFunction;
+			};
+			user?: string;
+			siteKey?: string;
+			ja4: string;
+			logger?: Logger;
+		}
 	}
 }

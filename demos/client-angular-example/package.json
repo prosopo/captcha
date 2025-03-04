@@ -35,5 +35,8 @@
 		"@angular/compiler-cli": "^17.0.0",
 		"@types/node": "^20.11.0",
 		"typescript": "~5.3.0"
+	},
+	"overrides": {
+		"@types/express-serve-static-core": "4.17.33"
 	}
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { RequestHandler } from "express";
 import { type HandleOptions, handle } from "i18next-http-middleware";
 import loadI18next from "./loadI18next.js";
 
@@ -19,7 +20,7 @@ async function i18nMiddleware(
 	options: HandleOptions,
 ): Promise<ReturnType<typeof handle>> {
 	const i18n = await loadI18next(true);
-	return handle(i18n, { ...options });
+	return handle(i18n, { ...options }) as RequestHandler;
 }
 
 export default i18nMiddleware;
