@@ -37,10 +37,6 @@ jobs:
               with:
                   submodules: "recursive"
 
-            # make cache dirs, these must exist before doing cache stuff
-            - run: mkdir -p ~/.npm
-            - run: mkdir -p ~/.cache/Cypress
-
             # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
             - run: npm cache clean --force
 
@@ -55,24 +51,5 @@ jobs:
             - run: npx cypress install
 
             - name: Save npm cache
-              uses: actions/cache/save@v4
-              if: always()
-              with:
-                  path: |
-                    ~/.npm
-                    ~/.cache/Cypress
-                  key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+              uses: prosopo/captcha/.github/actions/save_npm_cache@gha
 
-            - name: Cleanup npm caches
-              if: always()
-              run: |
-                  # remove all but the latest cache, leaving only the cache we just saved
-                  echo "Fetching list of cache key"
-                  cacheKeys=$(gh cache list --sort created_at --order desc --limit 100 -R "${{ github.repository }}" --key "npm-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
-                  echo caches to be removed:
-                  echo "${cacheKeys}"
-                  set +e
-                  for cacheKey in $cacheKeys
-                  do
-                      gh cache delete "$cacheKey" -R "${{ github.repository }}"
-                  done
