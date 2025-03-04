@@ -28,6 +28,7 @@ class WidgetSkeletonElementFactory implements HtmlElementFactory {
 	constructor(
 		private readonly checkboxElementFactory: HtmlElementFactory,
 		private readonly logoElementFactory: HtmlElementFactory,
+		private readonly isDevelopmentMode: boolean,
 	) {}
 
 	public createHtmlElement(theme: Theme): HTMLElement {
@@ -50,11 +51,15 @@ class WidgetSkeletonElementFactory implements HtmlElementFactory {
 	}
 
 	protected getMarkup(): string {
+		const buttonDataAttribute = this.isDevelopmentMode
+			? 'data-cy="button-human"'
+			: "";
+
 		return `
 <div class="widget__outer">
 	<div class="widget__wrapper">
 		<div class="widget__inner">
-			<div class="widget__dimensions" data-cy="button-human">
+			<div class="widget__dimensions" ${buttonDataAttribute}>
 				<div class="widget__content">
 					<div class="widget__checkbox"></div>
 					<div class="widget__logo"></div>

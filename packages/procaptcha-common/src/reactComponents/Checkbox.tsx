@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { css } from "@emotion/react";
-import type { Theme } from "@prosopo/widget-skeleton";
+import { type Theme, getWidgetSkeleton } from "@prosopo/widget-skeleton";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
@@ -108,10 +108,13 @@ export const Checkbox: FC<CheckboxProps> = ({
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
+
+	const widgetSkeleton = getWidgetSkeleton();
+
 	return (
 		<span
 			style={{ display: "inline-flex", alignItems: "center" }}
-			data-cy="captcha-checkbox"
+			data-cy={widgetSkeleton.isInDevelopmentMode() && "captcha-checkbox"}
 		>
 			<input
 				name={id}

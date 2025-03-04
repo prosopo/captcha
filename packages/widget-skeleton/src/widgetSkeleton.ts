@@ -12,17 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { WidgetWebComponentSkeleton } from "./webComponent/widgetWebComponentSkeleton.js";
-import type { WidgetSkeleton } from "./widgetSkeleton.js";
 import type { WidgetSkeletonFactory } from "./widgetSkeletonFactory.js";
 
-const widgetWebComponentSkeleton = new WidgetWebComponentSkeleton();
+interface WidgetSkeleton {
+	getFactory(): WidgetSkeletonFactory;
 
-function getWidgetSkeleton(): WidgetSkeleton {
-	return widgetWebComponentSkeleton;
+	isInDevelopmentMode(): boolean;
 }
 
-export { type WidgetSkeleton, type WidgetSkeletonFactory, getWidgetSkeleton };
-
-export * from "./theme.js";
-export * from "./constants.js";
+export type { WidgetSkeleton };

@@ -18,7 +18,7 @@ import type { WidgetInteractiveAreaProvider } from "../widgetInteractiveAreaProv
 import type { WidgetSkeletonFactory } from "../widgetSkeletonFactory.js";
 import type { WebComponentFactory } from "./webComponentFactory.js";
 
-class WidgetSkeletonComponentCreator implements WidgetSkeletonFactory {
+class WidgetSkeletonComponentFactory implements WidgetSkeletonFactory {
 	constructor(
 		private readonly widgetSkeletonElementFactory: HtmlElementFactory,
 		private readonly webComponentFactory: WebComponentFactory,
@@ -65,4 +65,4 @@ class WidgetSkeletonComponentCreator implements WidgetSkeletonFactory {
 	}
 }
 
-export { WidgetSkeletonComponentCreator };
+export { WidgetSkeletonComponentFactory };

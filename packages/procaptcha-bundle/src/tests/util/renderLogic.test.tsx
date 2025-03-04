@@ -14,14 +14,14 @@
 
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
-import { getWidgetSkeletonFactory } from "@prosopo/widget-skeleton";
+import { getWidgetSkeleton } from "@prosopo/widget-skeleton";
 import { type DOMWindow, JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WidgetFactory } from "../../util/widgetFactory.js";
 import { WidgetThemeResolver } from "../../util/widgetThemeResolver.js";
 
 const widgetFactory = new WidgetFactory(
-	getWidgetSkeletonFactory(),
+	getWidgetSkeleton().getFactory(),
 	new WidgetThemeResolver(),
 );
 

@@ -15,7 +15,7 @@
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { getWidgetSkeletonFactory } from "@prosopo/widget-skeleton";
+import { getWidgetSkeleton } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
 import { getCaptchaType } from "./util/captcha/captchaType.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
@@ -26,7 +26,7 @@ const BUNDLE_NAME = "procaptcha.bundle.js";
 let procaptchaRoots: Root[] = [];
 
 const widgetFactory = new WidgetFactory(
-	getWidgetSkeletonFactory(),
+	getWidgetSkeleton().getFactory(),
 	new WidgetThemeResolver(),
 );
 
