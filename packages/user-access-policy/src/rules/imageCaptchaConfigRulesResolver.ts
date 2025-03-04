@@ -50,13 +50,15 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 		const configDefined = null !== imageCaptchaConfig;
 
-		this.logger.info("ImageCaptchaConfigRulesResolver.isConfigDefined", {
-			configDefined: configDefined,
-			clientId: clientId,
-			userIpAddress: userIpAddress.toString(),
-			userId: userId,
-			imageCaptchaConfig: imageCaptchaConfig,
-		});
+		if (configDefined) {
+			this.logger.info({
+				configDefined: configDefined,
+				clientId: clientId,
+				userIpAddress: userIpAddress.toString(),
+				userId: userId,
+				imageCaptchaConfig: imageCaptchaConfig,
+			});
+		}
 
 		return configDefined;
 	}
