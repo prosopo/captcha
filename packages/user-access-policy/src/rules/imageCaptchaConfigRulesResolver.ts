@@ -85,7 +85,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		);
 
 		if (null === this.accessRule) {
-			this.logger.info("ImageCaptchaConfigRulesResolver.resolveConfig", {
+			this.logger.debug("ImageCaptchaConfigRulesResolver.resolveConfig", {
 				configDefined: false,
 				...logArgs,
 			});
@@ -120,7 +120,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			clientId,
 		);
 
-		this.logger.info("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
+		this.logger.debug("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
 			accessRules: accessRules.length,
 			userIpAddress: userIpAddress.address.toString(),
 			userId: userId,

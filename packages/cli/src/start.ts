@@ -32,7 +32,7 @@ import {
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import { authMiddleware, blockMiddleware } from "@prosopo/provider";
-import type { CombinedApiPaths } from "@prosopo/types";
+import { ApiPaths, type CombinedApiPaths } from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
@@ -43,6 +43,13 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+
+const getClientApiPathsExcludingVerify = () => {
+	const paths = Object.values(ApiPaths).filter(
+		(path) => path.indexOf("verify") === -1,
+	);
+	return paths as ApiPaths[];
+};
 
 async function startApi(
 	env: ProviderEnvironment,
@@ -60,26 +67,27 @@ async function startApi(
 	);
 	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
-	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-	apiApp.set(
-		"trust proxy",
-		env.config.proxyCount /* number of proxies between user and server */,
-	);
+	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
+
+	env.logger.debug({
+		message: "Adding headerCheckMiddleware",
+		paths: clientPathsExcludingVerify,
+	});
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 	apiApp.use(await i18nMiddleware({}));
-	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
 	apiApp.use(prosopoVerifyRouter(env));
-	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(clientPathsExcludingVerify, domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
-
 	apiApp.use(publicRouter(env));
 
 	// Admin routes
 	env.logger.info("Enabling admin auth middleware");
-	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
+	apiApp.use(/v1\/prosopo\/provider\/admin/, authMiddleware(env));
 	apiApp.use(apiRulePaths.INSERT_MANY, authMiddleware(env));
 	apiApp.use(apiRulePaths.DELETE_MANY, authMiddleware(env));
 	apiApp.use(

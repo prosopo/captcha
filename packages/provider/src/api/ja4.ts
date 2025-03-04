@@ -18,63 +18,50 @@ import { Readable } from "node:stream";
 import { type Logger, getLoggerDefault } from "@prosopo/common";
 import { readTlsClientHello } from "read-tls-client-hello";
 
+// Determine TLS version
+const tlsVersionMap: Record<string, Buffer> = {
+	"tls1.3": Buffer.from([0x03, 0x04]),
+	"tls1.2": Buffer.from([0x03, 0x03]),
+	"tls1.1": Buffer.from([0x03, 0x02]),
+	"tls1.0": Buffer.from([0x03, 0x01]),
+};
+
+const DEFAULT_JA4 = "ja4";
+
 export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 	logger = logger || getLoggerDefault();
 
-	// Validate headers
-	if (
-		!headers["x-tls-clienthello"] ||
-		!headers["x-tls-version"] ||
-		!headers["x-tls-server-name"]
-	) {
-		logger.error("Missing required headers.");
-		return { error: "Missing required headers." };
-	}
-
-	// make sure the client hello message is a string
-	if (
-		typeof headers["x-tls-clienthello"] !== "string" ||
-		typeof headers["x-tls-version"] !== "string" ||
-		typeof headers["x-tls-server-name"] !== "string"
-	) {
-		logger.error("Client Hello message is not a string.");
-		return { error: "Client Hello message is not a string." };
+	// Default JA4+ fingerprint for development
+	if (process.env.NODE_ENV === "development") {
+		return { ja4PlusFingerprint: DEFAULT_JA4 };
 	}
 
 	try {
+		// Validate headers and make sure they're strings
+		const xTlsClientHello = (headers["x-tls-clienthello"] || "").toString();
+		const xTlsVersion = (headers["x-tls-version"] || "")
+			.toString()
+			.toLowerCase();
+		const xTlsServerName = (headers["x-tls-server-name"] || "").toString();
+
 		// Decode the base64 ClientHello message
-		const clientHelloBuffer = Buffer.from(
-			headers["x-tls-clienthello"],
-			"base64",
-		);
+		const clientHelloBuffer = Buffer.from(xTlsClientHello, "base64");
 
 		// Debug: Check first few bytes
 		logger.debug(
 			"ClientHello First Bytes:",
-			clientHelloBuffer.slice(0, 5).toString("hex"),
+			clientHelloBuffer.subarray(0, 5).toString("hex"),
 		);
 
 		// Check first byte after the initial 5
 		if (clientHelloBuffer[5] !== 0x01) {
-			throw new Error("Invalid ClientHello message: First byte is not 0x01");
+			logger.warn("Invalid ClientHello message: First byte is not 0x01");
+			return { ja4PlusFingerprint: DEFAULT_JA4 };
 		}
 
-		// Determine TLS version
-		const tlsVersionMap: Record<string, Buffer> = {
-			"tls1.3": Buffer.from([0x03, 0x04]),
-			"tls1.2": Buffer.from([0x03, 0x03]),
-			"tls1.1": Buffer.from([0x03, 0x02]),
-			"tls1.0": Buffer.from([0x03, 0x01]),
-		};
+		logger.debug("Headers TLS Version:", xTlsVersion);
 
-		logger.debug(
-			"Headers TLS Version:",
-			headers["x-tls-version"].toLowerCase(),
-		);
-
-		const tlsVersion =
-			tlsVersionMap[headers["x-tls-version"].toLowerCase()] ||
-			Buffer.from([0x03, 0x03]);
+		const tlsVersion = tlsVersionMap[xTlsVersion] || Buffer.from([0x03, 0x03]);
 
 		// Convert to Readable stream
 		const readableStream = new Readable({
@@ -103,12 +90,11 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		}
 
 		// Check if SNI is present
-		const sniIndicator = headers["x-tls-server-name"] ? "d" : "i";
+		const sniIndicator = xTlsServerName ? "d" : "i";
 
 		// Count valid cipher suites (excluding GREASE values)
 		const validCipherSuites = cipherSuites.filter(
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-			(cs: any) => (cs & 0x0f0f) !== 0x0a0a,
+			(cs: number) => (cs & 0x0f0f) !== 0x0a0a,
 		);
 		const cipherCount = validCipherSuites.length;
 
@@ -151,6 +137,6 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		return { ja4PlusFingerprint };
 	} catch (e) {
 		logger.error("Error generating JA4+ fingerprint:", e);
-		return { error: "Error generating JA4+ fingerprint." };
+		return { ja4PlusFingerprint: DEFAULT_JA4 };
 	}
 };

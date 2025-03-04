@@ -40,10 +40,6 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 
 			const ja4 = await getJA4(req.headers, req.logger);
 
-			if (ja4.error) {
-				return handleErrors(new ProsopoApiError(ja4.error), req, res, next);
-			}
-
 			req.user = user;
 			req.siteKey = siteKey;
 			req.ja4 = ja4.ja4PlusFingerprint || "";
