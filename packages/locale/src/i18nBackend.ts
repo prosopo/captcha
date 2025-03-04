@@ -25,30 +25,28 @@ const loadPath =
 		"",
 	);
 
-export function initializeI18n(): Promise<typeof i18n> {
-	return new Promise((resolve) => {
-		if (!i18n.isInitialized && isServerSide()) {
-			i18n
-				// @ts-ignore https://github.com/i18next/i18next-fs-backend/issues/57
-				.use(FSBackend)
-				.use(MiddlewareLanguageDetector)
-				.init({
-					debug: process.env.PROSOPO_LOG_LEVEL === "debug",
-					fallbackLng: LanguageSchema.enum.en,
-					supportedLngs: Languages,
+export function initializeI18n() {
+	if (!i18n.isInitialized && isServerSide()) {
+		i18n
+			// @ts-ignore https://github.com/i18next/i18next-fs-backend/issues/57
+			.use(FSBackend)
+			.use(MiddlewareLanguageDetector)
+			.init({
+				debug: process.env.PROSOPO_LOG_LEVEL === "debug",
+				fallbackLng: LanguageSchema.enum.en,
+				supportedLngs: Languages,
 
-					ns: ["translation"],
-					backend: {
-						loadPath,
-					},
-					detection: { order: ["header", "query", "cookie"] },
-				});
-			i18n.on("loaded", () => {
-				console.log("i18n backend loaded");
-				resolve(i18n);
+				ns: ["translation"],
+				backend: {
+					loadPath,
+				},
+				detection: { order: ["header", "query", "cookie"] },
 			});
-		}
-	});
+		i18n.on("loaded", () => {
+			console.log("i18n backend loaded");
+		});
+	}
+	return i18n;
 }
 
 export default initializeI18n;

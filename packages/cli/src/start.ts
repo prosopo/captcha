@@ -67,8 +67,8 @@ async function startApi(
 	);
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
-	// @ts-ignore TODO fix peer dependencies so this is not necessary
-	apiApp.use(await i18nMiddleware({}));
+	const i18Middleware = await i18nMiddleware({});
+	apiApp.use(i18Middleware);
 	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
