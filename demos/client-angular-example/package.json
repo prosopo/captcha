@@ -4,7 +4,7 @@
 	"description": "Simple Angular demo",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"ng": "ng",
