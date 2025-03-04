@@ -20,8 +20,14 @@ import type { WidgetSkeletonFactory } from "../widgetSkeletonFactory.js";
 import { WebComponentFactory } from "./webComponentFactory.js";
 import { WidgetSkeletonComponentFactory } from "./widgetSkeletonComponentFactory.js";
 
+interface ImportMetaByVite {
+	env?: {
+		MODE?: string;
+	};
+}
+
 class WidgetWebComponentSkeleton implements WidgetSkeleton {
-	getFactory(): WidgetSkeletonFactory {
+	public getFactory(): WidgetSkeletonFactory {
 		const checkboxElementFactory = new CheckboxElementFactory();
 		const logoElementFactory = new LogoElementFactory();
 
@@ -40,16 +46,16 @@ class WidgetWebComponentSkeleton implements WidgetSkeleton {
 		);
 	}
 
-	isInDevelopmentMode(): boolean {
-		if ("undefined" === typeof process) {
-			return false;
+	public isInDevelopmentMode(): boolean {
+		return "production" !== this.getCurrentEnvironmentMode();
+	}
+
+	protected getCurrentEnvironmentMode(): string | undefined {
+		if (typeof process !== "undefined") {
+			return process.env.NODE_ENV;
 		}
 
-		const productionEnvironment = "production";
-
-		const currentEnvironment = process.env?.NODE_ENV || productionEnvironment;
-
-		return productionEnvironment !== currentEnvironment.toLowerCase();
+		return (import.meta as ImportMetaByVite).env?.MODE;
 	}
 }
 
