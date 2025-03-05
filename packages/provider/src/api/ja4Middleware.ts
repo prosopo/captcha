@@ -15,12 +15,15 @@
 import { createHash } from "node:crypto";
 import type { IncomingHttpHeaders } from "node:http";
 import { Readable } from "node:stream";
+import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLoggerDefault } from "@prosopo/common";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { NextFunction, Request, Response } from "express";
 import { readTlsClientHello } from "read-tls-client-hello";
 
 const DEFAULT_JA4 = "ja4";
 
-export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
+const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 	logger = logger || getLoggerDefault();
 
 	// Default JA4+ fingerprint for development
@@ -126,4 +129,17 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		logger.error("Error generating JA4+ fingerprint:", e);
 		return { ja4PlusFingerprint: DEFAULT_JA4 };
 	}
+};
+
+export const ja4Middleware = (env: ProviderEnvironment) => {
+	return async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const ja4 = await getJA4(req.headers, env.logger);
+
+			req.ja4 = ja4.ja4PlusFingerprint || "";
+			next();
+		} catch (err) {
+			return handleErrors(err as Error, req, res, next);
+		}
+	};
 };

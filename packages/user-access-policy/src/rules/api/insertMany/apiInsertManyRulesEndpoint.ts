@@ -39,6 +39,7 @@ class ApiInsertManyRulesEndpoint
 			...this.getUserIpRules(args),
 			...this.getUserIPMaskRules(args),
 			...this.getUserIdRules(args),
+			...this.getJa4Rules(args),
 		];
 
 		let response: ApiEndpointResponse;
@@ -169,6 +170,25 @@ class ApiInsertManyRulesEndpoint
 		for (const userId of userIds) {
 			rules.push({
 				userId: userId,
+				isUserBlocked: args.isUserBlocked,
+				description: args.description,
+				clientId: args.clientId,
+				config: args.config,
+				score: args.score,
+			});
+		}
+
+		return rules;
+	}
+
+	protected getJa4Rules(args: z.infer<ApiInsertManyRulesArgsSchema>): Rule[] {
+		const rules: Rule[] = [];
+
+		const ja4s = args.ja4s || [];
+
+		for (const ja4 of ja4s) {
+			rules.push({
+				ja4: ja4,
 				isUserBlocked: args.isUserBlocked,
 				description: args.description,
 				clientId: args.clientId,
