@@ -176,6 +176,10 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 });
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
+// Set an index on the datasetId field, ascending
+CaptchaRecordSchema.index({ datasetId: 1 });
+// Set an index on the datasetId and solved fields, ascending
+CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
 
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
