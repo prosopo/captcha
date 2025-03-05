@@ -31,6 +31,8 @@ class BlacklistRequestInspector {
 	): Promise<void> {
 		const rawIp = request.ip || "";
 
+		this.logger.debug("JA4", request.ja4);
+
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
 			rawIp,

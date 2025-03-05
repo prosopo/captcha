@@ -29,6 +29,12 @@ class BlacklistRulesInspector implements BlacklistInspector {
 		ja4: string,
 		userId: string,
 	): Promise<boolean> {
+		this.logger.debug({
+			clientId: clientId,
+			userIpAddress: userIpAddress,
+			ja4: ja4,
+			userId: userId,
+		});
 		const accessRules = await this.rulesStorage.find(
 			{
 				clientId: clientId,
