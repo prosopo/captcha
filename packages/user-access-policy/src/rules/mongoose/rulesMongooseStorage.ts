@@ -17,7 +17,6 @@ import type { IPAddress } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import type { Model } from "mongoose";
 import { RuleIpVersion } from "../rule/ip/ruleIpVersion.js";
-import { RuleIpV4 } from "../rule/ip/v4/ruleIpV4.js";
 import { RULE_IPV6_NUMERIC_MAX_LENGTH } from "../rule/ip/v6/ruleIpV6NumericMaxLength.js";
 import type { Rule } from "../rule/rule.js";
 import type { SearchRuleFilterSettings } from "../storage/filters/search/searchRuleFilterSettings.js";
@@ -25,16 +24,6 @@ import type { SearchRuleFilters } from "../storage/filters/search/searchRuleFilt
 import type { RuleRecord } from "../storage/ruleRecord.js";
 import type { RulesStorage } from "../storage/rulesStorage.js";
 import type { RuleMongooseRecord } from "./ruleMongooseRecord.js";
-
-type IPFilter = {
-	[userIpKey: string]: string | bigint;
-};
-
-type IPRangeFilter = {
-	$and: {
-		[rangeKey: string]: { $lte?: string | bigint; $gte?: string | bigint };
-	}[];
-};
 
 class RulesMongooseStorage implements RulesStorage {
 	constructor(
@@ -101,8 +90,6 @@ class RulesMongooseStorage implements RulesStorage {
 
 		const query = this.createSearchQuery(filters, filterSettings);
 
-		this.logger.debug({ query });
-
 		const mongooseRecords = await this.readingModel.find(query).lean().exec();
 
 		const ruleRecords =
@@ -168,12 +155,8 @@ class RulesMongooseStorage implements RulesStorage {
 			queryFilters.push({ userId: filters.userId });
 		}
 
-		if (undefined !== filters.userIpAddress) {
-			const IPFilters = this.getFilterByUserIp(filters.userIpAddress);
-			if (IPFilters) {
-				queryFilters.push(IPFilters.IPFilter);
-				queryFilters.push(IPFilters.IPRangeFilter);
-			}
+		if (filters.userIpAddress) {
+			queryFilters.push(this.getFilterByUserIp(filters.userIpAddress));
 		}
 
 		if (filters.ja4) {
@@ -203,21 +186,13 @@ class RulesMongooseStorage implements RulesStorage {
 			: clientIdFilter;
 	}
 
-	protected getFilterByUserIp(userIpAddress: IPAddress | null):
-		| {
-				IPFilter: IPFilter;
-				IPRangeFilter: IPRangeFilter;
-		  }
-		| undefined {
-		return userIpAddress
+	protected getFilterByUserIp(userIpAddress: IPAddress | null): object {
+		return null !== userIpAddress
 			? this.getFilterByUserIpAddress(userIpAddress)
-			: undefined;
+			: { userIp: null };
 	}
 
-	protected getFilterByUserIpAddress(userIpAddress: IPAddress): {
-		IPFilter: IPFilter;
-		IPRangeFilter: IPRangeFilter;
-	} {
+	protected getFilterByUserIpAddress(userIpAddress: IPAddress): object {
 		const isIpV4 = userIpAddress instanceof Address4;
 
 		const userIpVersion = isIpV4 ? RuleIpVersion.v4 : RuleIpVersion.v6;
@@ -244,19 +219,17 @@ class RulesMongooseStorage implements RulesStorage {
 				: "userIp.v6.mask.rangeMaxAsNumericString";
 
 		return {
-			IPFilter: { [userIpKey]: userIpAsNumeric },
-			IPRangeFilter: {
-				$and: [
-					{
-						[rangeMinKey]: {
-							$lte: userIpAsNumeric,
-						},
-						[rangeMaxKey]: {
-							$gte: userIpAsNumeric,
-						},
+			$or: [
+				{ [userIpKey]: userIpAsNumeric },
+				{
+					[rangeMinKey]: {
+						$lte: userIpAsNumeric,
 					},
-				],
-			},
+					[rangeMaxKey]: {
+						$gte: userIpAsNumeric,
+					},
+				},
+			],
 		};
 	}
 
