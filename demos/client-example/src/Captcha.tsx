@@ -14,7 +14,7 @@
 
 import { CaptchaRenderer } from "@prosopo/procaptcha-bundle/components";
 import { CaptchaType, type ProcaptchaToken } from "@prosopo/types";
-import config from "./config.js";
+import configs from "./config.js";
 
 type CaptchProps = {
 	captchaType?: CaptchaType;
@@ -45,7 +45,7 @@ export function Captcha(props: CaptchProps) {
 			{new CaptchaRenderer().render(
 				props.captchaType || CaptchaType.frictionless,
 				{
-					config,
+					config: configs[props.captchaType || CaptchaType.frictionless],
 					callbacks: {
 						onError,
 						onExpired,
