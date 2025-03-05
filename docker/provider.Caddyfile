@@ -31,6 +31,8 @@
 
 {$CADDY_DOMAIN} {
 	route {
+		client_hello
+
 		header / {
 			# Enable HTTP Strict Transport Security (HSTS)
 			Strict-Transport-Security "max-age=31536000;"
