@@ -42,7 +42,10 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 		}
 
 		try {
-			const apiEndpointResponse = await endpoint.processRequest(args);
+			const apiEndpointResponse = await endpoint.processRequest(
+				args,
+				this.logger,
+			);
 
 			response.json(apiEndpointResponse);
 		} catch (error) {

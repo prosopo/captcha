@@ -20,6 +20,7 @@ interface Rule {
 	clientId?: string;
 	description?: string;
 	userIp?: RuleIp;
+	ja4?: string;
 	userId?: string;
 	config?: RuleConfig;
 	score?: number;

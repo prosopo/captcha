@@ -567,6 +567,7 @@ export class ProviderDatabase
 	 * @param providerSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param ja4
 	 * @param frictionlessTokenId
 	 * @param serverChecked
 	 * @param userSubmitted
@@ -581,6 +582,7 @@ export class ProviderDatabase
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		ja4: string,
 		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked = false,
 		userSubmitted = false,
@@ -594,6 +596,7 @@ export class ProviderDatabase
 			...components,
 			ipAddress,
 			headers,
+			ja4,
 			result: { status: CaptchaStatus.pending },
 			userSubmitted,
 			serverChecked,
