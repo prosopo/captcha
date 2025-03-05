@@ -365,6 +365,7 @@ export class ProviderDatabase
 				format,
 				contentTree: contentTree || [],
 				solutionTree: solutionTree || [],
+				randomMax: datasetDoc.randomMax,
 				captchas: captchas.map((captchaDoc) => {
 					const { captchaId, captchaContentId, items, target, salt, solved } =
 						captchaDoc;
