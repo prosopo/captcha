@@ -89,13 +89,14 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
 				captchaContentId: at(contentTree.leaves, index).hash,
 				datasetId: solutionTree.root?.hash,
 				datasetContentId: contentTree.root?.hash,
-				randomSeed: lodash().random(0, 1000000),
+				randomSeed: lodash().random(0, dataset.captchas.length),
 			}) as Captcha,
 	);
 	dataset.solutionTree = solutionTree.layers;
 	dataset.contentTree = contentTree.layers;
 	dataset.datasetId = solutionTree.root?.hash;
 	dataset.datasetContentId = contentTree.root?.hash;
+	dataset.randomMax = dataset.captchas.length;
 	return dataset;
 }
 

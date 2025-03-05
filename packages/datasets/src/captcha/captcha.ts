@@ -59,6 +59,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
 						: [],
 				};
 			}),
+			randomMax: result.captchas.length,
 		};
 		if (result.datasetId !== undefined) result2.datasetId = result.datasetId;
 		if (result.contentTree !== undefined)

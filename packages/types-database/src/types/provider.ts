@@ -496,6 +496,7 @@ export interface IProviderDatabase extends IDatabase {
 	getRandomCaptcha(
 		solved: boolean,
 		datasetId: Hash | string,
+		randomMax: number,
 		size?: number,
 	): Promise<Captcha[] | undefined>;
 

@@ -206,6 +206,7 @@ describe("ImgCaptchaManager", () => {
 			const result = await imgCaptchaManager.getCaptchaWithProof(
 				datasetId,
 				solved,
+				captchaDocs.length,
 				size,
 			);
 
@@ -221,7 +222,7 @@ describe("ImgCaptchaManager", () => {
 			(db.getRandomCaptcha as any).mockResolvedValue(null);
 
 			await expect(
-				imgCaptchaManager.getCaptchaWithProof(datasetId, solved, size),
+				imgCaptchaManager.getCaptchaWithProof(datasetId, solved, 100, size),
 			).rejects.toThrow(
 				new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
@@ -241,6 +242,7 @@ describe("ImgCaptchaManager", () => {
 			const solvedResult = await imgCaptchaManager.getCaptchaWithProof(
 				datasetId,
 				true,
+				100,
 				size,
 			);
 
@@ -249,6 +251,7 @@ describe("ImgCaptchaManager", () => {
 			const unsolvedResult = await imgCaptchaManager.getCaptchaWithProof(
 				datasetId,
 				false,
+				100,
 				size,
 			);
 

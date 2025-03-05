@@ -391,10 +391,12 @@ export class ProviderDatabase
 	 * @param {boolean}  solved    `true` when captcha is solved
 	 * @param {string}   datasetId  the id of the data set
 	 * @param {number}   size       the number of records to be returned
+	 * @param {number}   randomMax
 	 */
 	async getRandomCaptcha(
 		solved: boolean,
 		datasetId: Hash,
+		randomMax: number,
 		size?: number,
 	): Promise<Captcha[] | undefined> {
 		if (!isHex(datasetId)) {
@@ -409,8 +411,8 @@ export class ProviderDatabase
 			datasetId,
 			solved,
 			randomSeed: {
-				$gt: lodash().random(0, 1000000),
-				$lt: lodash().random(0, 1000000),
+				$gt: lodash().random(0, randomMax),
+				$lt: lodash().random(0, randomMax),
 			},
 		};
 		const cursor = this.tables?.captcha.aggregate([
