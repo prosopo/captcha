@@ -19,6 +19,7 @@ import type {
 	DatasetRaw,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
+import { lodash } from "@prosopo/util/lodash";
 import {
 	computeCaptchaHash,
 	computeItemHash,
@@ -76,7 +77,7 @@ export async function validateDatasetContent(
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
 	logger.debug("Adding solution hashes to dataset");
-	const dataset = await addSolutionHashesToDataset(datasetRaw);
+	const dataset = addSolutionHashesToDataset(datasetRaw);
 	logger.debug("Building dataset merkle trees");
 	const contentTree = await buildCaptchaTree(dataset, false, false, true);
 	const solutionTree = await buildCaptchaTree(dataset, true, true, false);
@@ -88,6 +89,7 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
 				captchaContentId: at(contentTree.leaves, index).hash,
 				datasetId: solutionTree.root?.hash,
 				datasetContentId: contentTree.root?.hash,
+				randomSeed: lodash().random(0, 1000000),
 			}) as Captcha,
 	);
 	dataset.solutionTree = solutionTree.layers;
