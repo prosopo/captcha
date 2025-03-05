@@ -17,6 +17,7 @@ export * from "./api/block.js";
 export * from "./api/captcha.js";
 export * from "./api/verify.js";
 export * from "./api/authMiddleware.js";
+export * from "./api/ja4Middleware.js";
 export * from "./api/public.js";
 export * from "./api/domainMiddleware.js";
 export * from "./schedulers/captchaScheduler.js";

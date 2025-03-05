@@ -31,7 +31,11 @@ import {
 	publicRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
-import { authMiddleware, blockMiddleware } from "@prosopo/provider";
+import {
+	authMiddleware,
+	blockMiddleware,
+	ja4Middleware,
+} from "@prosopo/provider";
 import { ApiPaths, type CombinedApiPaths } from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
@@ -77,14 +81,16 @@ async function startApi(
 	apiApp.use(express.json({ limit: "50mb" }));
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(i18Middleware);
+	apiApp.use(ja4Middleware(env));
 
-	// Header check middleware will run on any client routes excluding verify
-	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+	// Specify verify router before the blocking middlewares
+	apiApp.use(prosopoVerifyRouter(env));
+
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
 
-	// Domain middleware does not run on verify endpoints as they are being called from Client Servers, not browsers
-	apiApp.use(prosopoVerifyRouter(env));
+	// Header check middleware will run on any client routes excluding verify
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
 
 	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
