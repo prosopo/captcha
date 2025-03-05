@@ -55,6 +55,15 @@ export default defineConfig(async ({ command, mode }) => {
 		"process.env.PROSOPO_DOCS_URL": JSON.stringify(
 			process.env.PROSOPO_DOCS_URL,
 		),
+		"process.env.PROSOPO_SITE_KEY_IMAGE": JSON.stringify(
+			process.env.PROSOPO_SITE_KEY_IMAGE,
+		),
+		"process.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
+			process.env.PROSOPO_SITE_KEY_POW,
+		),
+		"process.env.PROSOPO_SITE_KEY_FRICTIONLESS": JSON.stringify(
+			process.env.PROSOPO_SITE_KEY_FRICTIONLESS,
+		),
 	};
 	console.log("defined vars", define);
 	return {
