@@ -276,7 +276,6 @@ describe("ImgCaptchaManager", () => {
 				datasetId,
 				userAccount,
 				ipAddress,
-				headers,
 				captchaConfig,
 			);
 
@@ -302,7 +301,6 @@ describe("ImgCaptchaManager", () => {
 					datasetId,
 					userAccount,
 					ipAddress,
-					headers,
 					{ solved: { count: 1 }, unsolved: { count: 1 } },
 				),
 			).rejects.toThrow(
@@ -436,6 +434,7 @@ describe("ImgCaptchaManager", () => {
 			requestedAtTimestamp: 0,
 			ipAddress: getIPAddress("1.1.1.1").bigInt(),
 			headers: { a: "1", b: "2", c: "3" },
+			ja4: "ja4",
 			lastUpdatedTimestamp: Date.now(),
 		};
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -481,6 +480,7 @@ describe("ImgCaptchaManager", () => {
 				requestedAtTimestamp: 0,
 				ipAddress: getIPAddress("1.1.1.1").bigInt(),
 				headers: { a: "1", b: "2", c: "3" },
+				ja4: "ja4",
 				lastUpdatedTimestamp: Date.now(),
 			},
 		];

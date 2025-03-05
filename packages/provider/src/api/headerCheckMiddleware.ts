@@ -15,26 +15,33 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
+import { getJA4 } from "./ja4.js";
 import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const user = req.headers["prosopo-user"] as string;
-			const dapp = req.headers["prosopo-site-key"] as string;
+			const siteKey = req.headers["prosopo-site-key"] as string;
 
 			if (!user) {
 				unauthorised(res);
 				return;
 			}
-			if (!dapp) {
+			if (!siteKey) {
 				unauthorised(res);
 				return;
 			}
 
-			validiateSiteKey(dapp);
+			validiateSiteKey(siteKey);
 
 			validateAddr(user);
+
+			const ja4 = await getJA4(req.headers, req.logger);
+
+			req.user = user;
+			req.siteKey = siteKey;
+			req.ja4 = ja4.ja4PlusFingerprint || "";
 
 			next();
 		} catch (err) {

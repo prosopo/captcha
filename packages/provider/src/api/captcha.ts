@@ -115,6 +115,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
 				env.config.captchas,
 				ipAddress,
+				req.ja4,
 				user,
 				dapp,
 			);
@@ -144,7 +145,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					datasetId,
 					user,
 					ipAddress,
-					flatten(req.headers),
 					captchaConfig,
 					frictionlessTokenId,
 				);
@@ -232,6 +232,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					parsed[ApiParams.signature].provider.requestHash,
 					getIPAddress(req.ip || "").bigInt(),
 					flatten(req.headers),
+					req.ja4,
 				);
 
 			const returnValue: CaptchaSolutionResponse = {
@@ -347,6 +348,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				challenge.providerSignature,
 				getIPAddress(req.ip || "").bigInt(),
 				flatten(req.headers),
+				req.ja4,
 				frictionlessTokenId,
 			);
 
@@ -551,6 +553,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await imageCaptchaConfigResolver.isConfigDefined(
 						dapp,
 						ipAddress,
+						req.ja4,
 						user,
 					);
 

@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Logger } from "@prosopo/common";
 import type { ZodType, z } from "zod";
 import type { ApiEndpointResponse } from "./apiEndpointResponse.js";
 
 interface ApiEndpoint<T extends ZodType | undefined> {
 	processRequest: T extends ZodType
-		? (args: z.infer<T>) => Promise<ApiEndpointResponse>
-		: () => Promise<ApiEndpointResponse>;
+		? (args: z.infer<T>, logger?: Logger) => Promise<ApiEndpointResponse>
+		: (logger?: Logger) => Promise<ApiEndpointResponse>;
 
 	getRequestArgsSchema(): T;
 }

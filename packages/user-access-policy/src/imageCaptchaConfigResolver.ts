@@ -21,12 +21,14 @@ interface ImageCaptchaConfigResolver {
 	isConfigDefined(
 		clientId: string,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 	): Promise<boolean>;
 
 	resolveConfig(
 		defaults: ProsopoCaptchaCountConfigSchemaOutput,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 		clientId: string,
 	): Promise<ProsopoCaptchaCountConfigSchemaOutput>;
