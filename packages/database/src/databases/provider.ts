@@ -405,15 +405,16 @@ export class ProviderDatabase
 			});
 		}
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
+		const randomRange = {
+			$gte: lodash().random(0, randomMax),
+			$lt: lodash().random(1, randomMax),
+		};
 		const filter: Pick<Captcha, "datasetId" | "solved"> & {
-			randomSeed: { $gt: number; $lt: number };
+			randomSeed: { $gte: number; $lt: number };
 		} = {
 			datasetId,
 			solved,
-			randomSeed: {
-				$gt: lodash().random(0, randomMax),
-				$lt: lodash().random(0, randomMax),
-			},
+			randomSeed: randomRange,
 		};
 		const cursor = this.tables?.captcha.aggregate([
 			{ $match: filter },
@@ -442,6 +443,8 @@ export class ProviderDatabase
 				solved,
 				datasetId,
 				size,
+				randomRange,
+				randomMax,
 			},
 		});
 	}
