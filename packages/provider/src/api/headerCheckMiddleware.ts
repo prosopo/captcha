@@ -37,7 +37,7 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 
 			validateAddr(user);
 
-			const ja4 = await getJA4(req.headers, req.logger);
+			const ja4 = await getJA4(req.headers, env.logger);
 
 			req.user = user;
 			req.siteKey = siteKey;
