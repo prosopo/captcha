@@ -141,7 +141,7 @@ describe.each([
 		expect(rules.length).toBe(0);
 	});
 
-	it.only("findIgnoresRecordByUserIpMask", async () => {
+	it("findIgnoresRecordByUserIpMask", async () => {
 		// given
 		const rule: Rule = {
 			isUserBlocked: false,
