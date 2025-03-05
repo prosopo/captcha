@@ -408,10 +408,9 @@ export class ProviderDatabase
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
 		const randomRange = {
 			$gte: lodash().random(0, randomMax),
-			$lt: lodash().random(1, randomMax),
 		};
 		const filter: Pick<Captcha, "datasetId" | "solved"> & {
-			randomSeed: { $gte: number; $lt: number };
+			randomSeed: { $gte: number };
 		} = {
 			datasetId,
 			solved,
