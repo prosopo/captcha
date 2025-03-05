@@ -80,6 +80,7 @@ import {
 	createMongooseRulesStorage,
 	getRuleMongooseSchema,
 } from "@prosopo/user-access-policy";
+import { lodash } from "@prosopo/util/lodash";
 import type { Model, ObjectId } from "mongoose";
 import { bigint, string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
@@ -402,7 +403,16 @@ export class ProviderDatabase
 			});
 		}
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
-		const filter: Pick<Captcha, "datasetId" | "solved"> = { datasetId, solved };
+		const filter: Pick<Captcha, "datasetId" | "solved"> & {
+			randomSeed: { $gt: number; $lt: number };
+		} = {
+			datasetId,
+			solved,
+			randomSeed: {
+				$gt: lodash().random(0, 1000000),
+				$lt: lodash().random(0, 1000000),
+			},
+		};
 		const cursor = this.tables?.captcha.aggregate([
 			{ $match: filter },
 			{ $sample: { size: sampleSize } },
