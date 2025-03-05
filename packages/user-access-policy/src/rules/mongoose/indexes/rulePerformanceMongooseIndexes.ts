@@ -42,6 +42,7 @@ const userIpMaskIndexes: MongooseIndex[] = [
 		definition: {
 			"userIp.v4.mask.rangeMinAsNumeric": 1,
 			"userIp.v4.mask.rangeMaxAsNumeric": 1,
+			"userIp.v4.asNumeric": 1,
 		},
 		options: {
 			partialFilterExpression: {
@@ -62,6 +63,29 @@ const userIpMaskIndexes: MongooseIndex[] = [
 	},
 ];
 
-const rulePerformanceMongooseIndexes = [...userIpIndexes, ...userIpMaskIndexes];
+const otherIndexes: MongooseIndex[] = [
+	{
+		definition: {
+			userId: 1,
+		},
+		options: {
+			unique: true,
+		},
+	},
+	{
+		definition: {
+			ja4: 1,
+		},
+		options: {
+			unique: true,
+		},
+	},
+];
+
+const rulePerformanceMongooseIndexes = [
+	...userIpIndexes,
+	...userIpMaskIndexes,
+	...otherIndexes,
+];
 
 export { rulePerformanceMongooseIndexes };
