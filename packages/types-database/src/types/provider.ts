@@ -173,9 +173,13 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 		],
 		required: true,
 	},
+	randomSeed: { type: Number, required: false },
 });
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
+CaptchaRecordSchema.index({ datasetId: 1 });
+CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
+CaptchaRecordSchema.index({ randomSeed: 1 });
 
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
@@ -492,6 +496,7 @@ export interface IProviderDatabase extends IDatabase {
 	getRandomCaptcha(
 		solved: boolean,
 		datasetId: Hash | string,
+		randomMax: number,
 		size?: number,
 	): Promise<Captcha[] | undefined>;
 
