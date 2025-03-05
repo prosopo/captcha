@@ -148,7 +148,11 @@ describe("DatasetManager", () => {
 
 	it("should set the provider dataset from a file", async () => {
 		const mockFile = { captchas: [] };
-		const mockDatasetRaw = { captchas: [], format: "SelectAll" } as DatasetRaw;
+		const mockDatasetRaw = {
+			captchas: [],
+			format: "SelectAll",
+			randomMax: 100,
+		} as DatasetRaw;
 		const mockValidatedDataset = { datasetId: "123", datasetContentId: "456" };
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(parseCaptchaDataset as any).mockReturnValue(mockDatasetRaw);

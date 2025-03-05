@@ -127,6 +127,7 @@ describe("CAPTCHA FUNCTIONS", async () => {
 					items: ITEMS,
 				},
 			],
+			randomMax: 2,
 		};
 
 		RECEIVED = [
