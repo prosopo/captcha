@@ -21,16 +21,12 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
-import {
-	ApiParams,
-	type CaptchaType,
-	type ProcaptchaToken,
-} from "@prosopo/types";
+import { ApiParams, CaptchaType, type ProcaptchaToken } from "@prosopo/types";
 import { useReducer, useState } from "react";
 import { Captcha } from "./Captcha.js";
 import NavBar from "./NavBar.js";
 import { ExtensionAccountSelect } from "./components/ExtensionAccountSelect.js";
-import config from "./config.js";
+import configs from "./config.js";
 
 const corsHeaders = {
 	"Access-Control-Allow-Origin": "*", // Required for CORS support to work
@@ -58,7 +54,7 @@ function App(props: AppProps) {
 	>(undefined);
 	const [updateKey, forceUpdate] = useReducer((x) => x + 1, 0);
 
-	console.log(config);
+	const config = configs[props.captchaType || CaptchaType.frictionless];
 
 	config.userAccountAddress = account;
 
