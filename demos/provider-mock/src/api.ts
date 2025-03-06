@@ -16,7 +16,7 @@ import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { ProsopoApiError } from "@prosopo/common";
 import {
-	ApiPaths,
+	ClientApiPaths,
 	VerifySolutionBody,
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
@@ -39,7 +39,7 @@ export function prosopoRouter(): Router {
 	 * @param {string} commitmentId - The captcha solution to look up
 	 */
 	router.post(
-		ApiPaths.VerifyImageCaptchaSolutionDapp,
+		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
 			let body: VerifySolutionBodyTypeOutput;
 			try {

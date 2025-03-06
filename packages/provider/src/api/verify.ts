@@ -17,7 +17,7 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
-	ApiPaths,
+	ClientApiPaths,
 	type ImageVerificationResponse,
 	ServerPowCaptchaVerifyRequestBody,
 	type ServerPowCaptchaVerifyRequestBodyOutput,
@@ -52,7 +52,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	 * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
 	 */
 	router.post(
-		ApiPaths.VerifyImageCaptchaSolutionDapp,
+		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
@@ -132,83 +132,86 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	 * @param {string} dappSignature - Signed token
 	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
 	 */
-	router.post(ApiPaths.VerifyPowCaptchaSolution, async (req, res, next) => {
-		let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
-		// We can be helpful and provide a more detailed error message when there are missing fields
-		try {
-			parsed = ServerPowCaptchaVerifyRequestBody.parse(req.body);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
-					i18n: req.i18n,
-				}),
-			);
-		}
-
-		// We don't want to expose any other errors to the client
-		try {
-			const { token, dappSignature, verifiedTimeout } = parsed;
-
-			// This can error if the token is invalid
-			const { dapp, user, timestamp, challenge } =
-				decodeProcaptchaOutput(token);
-
-			// Do this before checking the db
-			validateAddress(dapp, false, 42);
-			validateAddress(user, false, 42);
-
-			// Reject any unregistered site keys
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-			if (!clientRecord) {
+	router.post(
+		ClientApiPaths.VerifyPowCaptchaSolution,
+		async (req, res, next) => {
+			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
+			// We can be helpful and provide a more detailed error message when there are missing fields
+			try {
+				parsed = ServerPowCaptchaVerifyRequestBody.parse(req.body);
+			} catch (err) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
 						i18n: req.i18n,
 					}),
 				);
 			}
 
-			if (!challenge) {
-				const unverifiedResponse: VerificationResponse = {
-					status: req.i18n.t("API.USER_NOT_VERIFIED"),
-					[ApiParams.verified]: false,
-				};
-				return res.json(unverifiedResponse);
+			// We don't want to expose any other errors to the client
+			try {
+				const { token, dappSignature, verifiedTimeout } = parsed;
+
+				// This can error if the token is invalid
+				const { dapp, user, timestamp, challenge } =
+					decodeProcaptchaOutput(token);
+
+				// Do this before checking the db
+				validateAddress(dapp, false, 42);
+				validateAddress(user, false, 42);
+
+				// Reject any unregistered site keys
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+						}),
+					);
+				}
+
+				if (!challenge) {
+					const unverifiedResponse: VerificationResponse = {
+						status: req.i18n.t("API.USER_NOT_VERIFIED"),
+						[ApiParams.verified]: false,
+					};
+					return res.json(unverifiedResponse);
+				}
+
+				// Verify using the dapp pair passed in the request
+				const dappPair = env.keyring.addFromAddress(dapp);
+
+				// Will throw an error if the signature is invalid
+				verifySignature(dappSignature, timestamp.toString(), dappPair);
+
+				const { verified, score } =
+					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
+						dapp,
+						challenge,
+						verifiedTimeout,
+					);
+
+				const verificationResponse: VerificationResponse =
+					tasks.powCaptchaManager.getVerificationResponse(
+						verified,
+						clientRecord,
+						req.i18n.t,
+						score,
+					);
+
+				return res.json(verificationResponse);
+			} catch (err) {
+				tasks.logger.error({ err, body: req.body });
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 500, error: err },
+						i18n: req.i18n,
+					}),
+				);
 			}
-
-			// Verify using the dapp pair passed in the request
-			const dappPair = env.keyring.addFromAddress(dapp);
-
-			// Will throw an error if the signature is invalid
-			verifySignature(dappSignature, timestamp.toString(), dappPair);
-
-			const { verified, score } =
-				await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
-					dapp,
-					challenge,
-					verifiedTimeout,
-				);
-
-			const verificationResponse: VerificationResponse =
-				tasks.powCaptchaManager.getVerificationResponse(
-					verified,
-					clientRecord,
-					req.i18n.t,
-					score,
-				);
-
-			return res.json(verificationResponse);
-		} catch (err) {
-			tasks.logger.error({ err, body: req.body });
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500, error: err },
-					i18n: req.i18n,
-				}),
-			);
-		}
-	});
+		},
+	);
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.

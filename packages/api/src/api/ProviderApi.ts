@@ -14,7 +14,6 @@
 import {
 	AdminApiPaths,
 	ApiParams,
-	ApiPaths,
 	type ApiResponse,
 	type CaptchaRequestBodyType,
 	CaptchaRequestBodyTypeOutput,
@@ -22,6 +21,7 @@ import {
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	ClientApiPaths,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
@@ -32,6 +32,7 @@ import {
 	type Provider,
 	type ProviderApiInterface,
 	type ProviderRegistered,
+	PublicApiPaths,
 	type RandomProvider,
 	RegisterSitekeyBody,
 	type RegisterSitekeyBodyTypeOutput,
@@ -74,7 +75,7 @@ export default class ProviderApi
 		if (sessionId) {
 			body[ApiParams.sessionId] = sessionId;
 		}
-		return this.post(ApiPaths.GetImageCaptchaChallenge, body, {
+		return this.post(ClientApiPaths.GetImageCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -105,7 +106,7 @@ export default class ProviderApi
 				},
 			},
 		};
-		return this.post(ApiPaths.SubmitImageCaptchaSolution, body, {
+		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -127,7 +128,7 @@ export default class ProviderApi
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
 		}
 
-		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
+		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -145,7 +146,7 @@ export default class ProviderApi
 			[ApiParams.dapp]: dapp.toString(),
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
-		return this.post(ApiPaths.GetPowCaptchaChallenge, body, {
+		return this.post(ClientApiPaths.GetPowCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -177,7 +178,7 @@ export default class ProviderApi
 				},
 			},
 		});
-		return this.post(ApiPaths.SubmitPowCaptchaSolution, body, {
+		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -195,7 +196,7 @@ export default class ProviderApi
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
 		};
-		return this.post(ApiPaths.GetFrictionlessCaptchaChallenge, body, {
+		return this.post(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -208,7 +209,7 @@ export default class ProviderApi
 		string: string,
 	): Promise<UpdateProviderClientsResponse> {
 		return this.post(
-			ApiPaths.SubmitUserEvents,
+			ClientApiPaths.SubmitUserEvents,
 			{ events, string },
 			{
 				headers: {
@@ -219,7 +220,7 @@ export default class ProviderApi
 	}
 
 	public getProviderStatus(): Promise<ProviderRegistered> {
-		return this.fetch(ApiPaths.GetProviderStatus, {
+		return this.fetch(ClientApiPaths.GetProviderStatus, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 			},
@@ -227,7 +228,7 @@ export default class ProviderApi
 	}
 
 	public getProviderDetails(): Promise<Provider> {
-		return this.fetch(ApiPaths.GetProviderDetails, {
+		return this.fetch(PublicApiPaths.GetProviderDetails, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 			},
@@ -245,7 +246,7 @@ export default class ProviderApi
 			[ApiParams.dappSignature]: signatureHex,
 			[ApiParams.verifiedTimeout]: recencyLimit,
 		};
-		return this.post(ApiPaths.VerifyPowCaptchaSolution, body, {
+		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
