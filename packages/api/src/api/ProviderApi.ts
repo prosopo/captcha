@@ -127,9 +127,6 @@ export default class ProviderApi
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
 		}
 
-		console.log("this.baseURL", this.baseURL);
-		console.log("payload", payload);
-
 		return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
