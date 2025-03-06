@@ -36,7 +36,7 @@ import {
 	blockMiddleware,
 	ja4Middleware,
 } from "@prosopo/provider";
-import { ApiPaths, type CombinedApiPaths } from "@prosopo/types";
+import { ClientApiPaths, type CombinedApiPaths } from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
@@ -49,10 +49,10 @@ import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 
 const getClientApiPathsExcludingVerify = () => {
-	const paths = Object.values(ApiPaths).filter(
+	const paths = Object.values(ClientApiPaths).filter(
 		(path) => path.indexOf("verify") === -1,
 	);
-	return paths as ApiPaths[];
+	return paths as ClientApiPaths[];
 };
 
 async function startApi(
