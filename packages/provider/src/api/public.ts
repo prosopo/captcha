@@ -14,7 +14,7 @@
 
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
-import { ApiPaths } from "@prosopo/types";
+import { ClientApiPaths, PublicApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
@@ -33,7 +33,7 @@ export function publicRouter(env: ProviderEnvironment): Router {
 	/**
 	 * Gets public details of the provider
 	 */
-	router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
+	router.get(PublicApiPaths.GetProviderDetails, async (req, res, next) => {
 		try {
 			return res.json({ version, ...{ message: "Provider online" } });
 		} catch (err) {
