@@ -31,8 +31,12 @@ import {
 	publicRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
-import { authMiddleware, blockMiddleware } from "@prosopo/provider";
-import type { CombinedApiPaths } from "@prosopo/types";
+import {
+	authMiddleware,
+	blockMiddleware,
+	ja4Middleware,
+} from "@prosopo/provider";
+import { ClientApiPaths, type CombinedApiPaths } from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
@@ -43,6 +47,13 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+
+const getClientApiPathsExcludingVerify = () => {
+	const paths = Object.values(ClientApiPaths).filter(
+		(path) => path.indexOf("verify") === -1,
+	);
+	return paths as ClientApiPaths[];
+};
 
 async function startApi(
 	env: ProviderEnvironment,
@@ -60,21 +71,30 @@ async function startApi(
 	);
 	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
-	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-	apiApp.set(
-		"trust proxy",
-		env.config.proxyCount /* number of proxies between user and server */,
-	);
+	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
+
+	env.logger.debug({
+		message: "Adding headerCheckMiddleware",
+		paths: clientPathsExcludingVerify,
+	});
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
-	apiApp.use(await i18nMiddleware({}));
-	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
+	const i18Middleware = await i18nMiddleware({});
+	apiApp.use(i18Middleware);
+	apiApp.use(ja4Middleware(env));
+
+	// Specify verify router before the blocking middlewares
+	apiApp.use(prosopoVerifyRouter(env));
+
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
-	apiApp.use(prosopoVerifyRouter(env));
+
+	// Header check middleware will run on any client routes excluding verify
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
-
 	apiApp.use(publicRouter(env));
 
 	// Admin routes

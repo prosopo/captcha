@@ -36,10 +36,12 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 	public async isConfigDefined(
 		clientId: string,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 	): Promise<boolean> {
 		const accessRule = await this.fetchUserAccessRule(
 			userIpAddress,
+			ja4,
 			userId,
 			clientId,
 		);
@@ -48,13 +50,15 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 		const configDefined = null !== imageCaptchaConfig;
 
-		this.logger.info("ImageCaptchaConfigRulesResolver.isConfigDefined", {
-			configDefined: configDefined,
-			clientId: clientId,
-			userIpAddress: userIpAddress.toString(),
-			userId: userId,
-			imageCaptchaConfig: imageCaptchaConfig,
-		});
+		if (configDefined) {
+			this.logger.info({
+				configDefined: configDefined,
+				clientId: clientId,
+				userIpAddress: userIpAddress.toString(),
+				userId: userId,
+				imageCaptchaConfig: imageCaptchaConfig,
+			});
+		}
 
 		return configDefined;
 	}
@@ -62,6 +66,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 	public async resolveConfig(
 		defaults: ProsopoCaptchaCountConfigSchemaOutput,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 		clientId: string,
 	): Promise<ProsopoCaptchaCountConfigSchemaOutput> {
@@ -74,12 +79,13 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 		this._accessRule = await this.fetchUserAccessRule(
 			userIpAddress,
+			ja4,
 			userId,
 			clientId,
 		);
 
 		if (null === this.accessRule) {
-			this.logger.info("ImageCaptchaConfigRulesResolver.resolveConfig", {
+			this.logger.debug("ImageCaptchaConfigRulesResolver.resolveConfig", {
 				configDefined: false,
 				...logArgs,
 			});
@@ -103,16 +109,18 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 	protected async fetchUserAccessRule(
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 		clientId: string,
 	): Promise<Rule | null> {
 		const accessRules = await this.queryUserAccessRules(
 			userIpAddress,
+			ja4,
 			userId,
 			clientId,
 		);
 
-		this.logger.info("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
+		this.logger.debug("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
 			accessRules: accessRules.length,
 			userIpAddress: userIpAddress.address.toString(),
 			userId: userId,
@@ -124,6 +132,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 	protected async queryUserAccessRules(
 		ipAddress: IPAddress,
+		ja4: string,
 		user: string,
 		clientId: string,
 	): Promise<Rule[]> {
@@ -132,6 +141,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 				clientId: clientId,
 				userId: user,
 				userIpAddress: ipAddress,
+				ja4: ja4,
 			},
 			{
 				includeRecordsWithoutClientId: true,

@@ -38,6 +38,7 @@ const apiInsertManyRulesArgsSchema = object({
 			.optional(),
 	}),
 	userIds: string().array().optional(),
+	ja4s: string().array().optional(),
 	config: ruleConfigSchema.optional(),
 	score: number().optional(),
 });

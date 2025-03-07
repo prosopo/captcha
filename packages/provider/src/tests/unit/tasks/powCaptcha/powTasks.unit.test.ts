@@ -139,6 +139,7 @@ describe("PowCaptchaManager", () => {
 				serverChecked: false,
 				ipAddress: ipAddress.bigInt(),
 				headers,
+				ja4: "ja4",
 				providerSignature,
 				lastUpdatedTimestamp: Date.now(),
 			};
@@ -244,6 +245,7 @@ describe("PowCaptchaManager", () => {
 				serverChecked: false,
 				ipAddress: ipAddress.bigInt(),
 				headers,
+				ja4: "ja4",
 				providerSignature: "testSignature",
 				difficulty,
 				lastUpdatedTimestamp: 0,

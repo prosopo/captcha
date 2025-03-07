@@ -76,7 +76,7 @@ export class ProsopoServer {
 		user: string,
 		challenge?: string,
 	): Promise<VerificationResponse> {
-		this.logger.info("Verifying with provider.");
+		this.logger.info(`Verifying with provider: ${providerUrl}`);
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
 			throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {

@@ -49,6 +49,7 @@ describe("ImageCaptchaConfigResolver", () => {
 		const resolvedConfig = await resolver.resolveConfig(
 			defaultConfig,
 			new Address4("127.0.0.1"),
+			"",
 			"userId",
 			"clientId",
 		);
@@ -104,6 +105,7 @@ describe("ImageCaptchaConfigResolver", () => {
 		const resolvedConfig = await resolver.resolveConfig(
 			defaultConfig,
 			new Address4("127.0.0.1"),
+			"",
 			"userId",
 			"clientId",
 		);
@@ -134,6 +136,7 @@ describe("ImageCaptchaConfigResolver", () => {
 		const resolvedConfig = await resolver.resolveConfig(
 			defaultConfig,
 			new Address4("127.0.0.1"),
+			"",
 			"userId",
 			"clientId",
 		);

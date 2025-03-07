@@ -79,7 +79,7 @@
 	"private": true,
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"workspaces": ["dev/*", "packages/*", "demos/*"],
 	"devDependencies": {
@@ -90,7 +90,6 @@
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
-		"has-proto": "1.2.0",
 		"htmlhint": "1.1.4",
 		"husky": "9.1.7",
 		"markdownlint-cli": "0.41.0",

@@ -20,6 +20,7 @@ const apiDeleteManyRulesArgsSchema = array(
 		clientId: string().optional(),
 		userIp: ruleIpSchema.optional(),
 		userId: string().optional(),
+		ja4: string().optional(),
 	}),
 );
 

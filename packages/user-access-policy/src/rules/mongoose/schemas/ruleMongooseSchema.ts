@@ -25,18 +25,27 @@ const ruleMongooseSchema = new Schema<Rule>({
 		type: ipMongooseSchema,
 		required: [
 			function () {
-				return !this.userId;
+				return !this.userId && !this.ja4;
 			},
-			"userIp is required when userId is not set",
+			"userIp is required when userId is not set and ja4 is not set",
 		],
 	},
 	userId: {
 		type: String,
 		required: [
 			function () {
-				return !this.userIp;
+				return !this.userIp && !this.ja4;
 			},
-			"userId is required when userIp is not set",
+			"userId is required when userIp is not set and ja4 is not set",
+		],
+	},
+	ja4: {
+		type: String,
+		required: [
+			function () {
+				return !this.userIp && !this.userId;
+			},
+			"ja4 is required when userIp is not set and userId is not set",
 		],
 	},
 	config: {

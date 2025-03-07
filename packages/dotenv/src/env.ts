@@ -36,9 +36,16 @@ export function loadEnv(
 	rootDir?: string,
 	filename?: string,
 	filePath?: string,
+	nodeEnv?: string,
+	override = false,
 ): string {
-	const envPath = getEnvFile(path.resolve(rootDir || "."), filename, filePath);
-	const args = { path: envPath };
+	const envPath = getEnvFile(
+		path.resolve(rootDir || "."),
+		filename,
+		filePath,
+		nodeEnv,
+	);
+	const args = { path: envPath, override };
 	logger.info(`Loading env from ${envPath}`);
 	dotenv.config(args);
 	return envPath;
@@ -50,13 +57,15 @@ export function loadEnv(
  * @param rootDir
  * @param filename
  * @param filepath
+ * @param nodeEnv Environment override
  */
 export function getEnvFile(
 	rootDir?: string,
 	filename = ".env",
 	filepath = path.join(__dirname, "../.."),
+	nodeEnv?: string,
 ) {
-	const env = getEnv();
+	const env = nodeEnv || getEnv();
 	const fileNameFull = `${filename}.${env}`;
 
 	let searchPath = path.resolve(rootDir || ".");
