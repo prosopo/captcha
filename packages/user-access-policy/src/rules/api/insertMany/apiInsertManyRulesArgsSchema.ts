@@ -22,7 +22,7 @@ const apiInsertManyRulesArgsSchema = object({
 	userIps: object({
 		v4: string().array().optional(),
 		v6: string().array().optional(),
-	}),
+	}), // block multiple user ip ranges
 	userIpMasks: object({
 		v4: object({
 			min: string(),
@@ -36,9 +36,16 @@ const apiInsertManyRulesArgsSchema = object({
 		})
 			.array()
 			.optional(),
-	}),
-	userIds: string().array().optional(),
-	ja4s: string().array().optional(),
+	}), // block multiple user ip ranges
+	userIds: string().array().optional(), // block multiple user ids
+	ja4s: string().array().optional(), // block multiple ja4s
+	// setting individual rule values overrides any array values for the same type
+	userIp: object({
+		v4: string().optional(),
+		v6: string().optional(),
+	}).optional(),
+	userId: string().optional(),
+	ja4: string().optional(),
 	config: ruleConfigSchema.optional(),
 	score: number().optional(),
 });
