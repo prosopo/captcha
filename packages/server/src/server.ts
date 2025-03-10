@@ -160,11 +160,6 @@ export class ProsopoServer {
 					challenge,
 				);
 			}
-			this.logger.error("No provider URL found in user token");
-			return {
-				verified: false,
-				status: i18n.t("API.USER_NOT_VERIFIED"),
-			};
 		} catch (err) {
 			this.logger.error({ err, token });
 			throw new ProsopoApiError("API.BAD_REQUEST", {
