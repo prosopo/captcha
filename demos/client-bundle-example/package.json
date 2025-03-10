@@ -4,7 +4,7 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
@@ -13,9 +13,9 @@
 		"start": "vite serve ./src --port 9232 --config vite.config.ts",
 		"clean": "echo 'nothing to clean'"
 	},
-	"version": "2.4.2",
+	"version": "2.5.0",
 	"devDependencies": {
-		"@prosopo/dotenv": "2.4.2",
+		"@prosopo/dotenv": "2.5.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",

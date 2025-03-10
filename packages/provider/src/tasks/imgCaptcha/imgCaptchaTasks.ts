@@ -86,7 +86,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		datasetId: Hash,
 		userAccount: string,
 		ipAddress: IPAddress,
-		headers: RequestHeaders,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<{
@@ -187,6 +186,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		providerRequestHashSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		ja4: string,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		const verification = signatureVerify(
@@ -267,6 +267,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				ipAddress,
 				headers,
 				frictionlessTokenId: pendingRecord.frictionlessTokenId,
+				ja4,
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 

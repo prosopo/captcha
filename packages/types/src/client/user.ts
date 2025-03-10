@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { z } from "zod";
 import type { Timestamp } from "../datasets/index.js";
 
 import type { IUserSettings } from "./settings.js";
@@ -21,6 +22,8 @@ export enum Tier {
 	Professional = "professional",
 	Enterprise = "enterprise",
 }
+
+export const TierSchema = z.nativeEnum(Tier);
 
 export const TierMonthlyLimits = {
 	[Tier.Free]: {
@@ -48,15 +51,4 @@ export interface IUserData {
 	originUrl: string;
 	settings?: IUserSettings;
 	updatedAtTimestamp?: Timestamp;
-	tierCheckoutId?: string; // prosopo (not stripe!) checkout session id / lock
-	stripeCustomerId?: string; // stripe customer id
-	stripeTierCheckoutId?: string; // stripe checkout session id
-	stripeTierSubscriptionId?: string; // stripe subscription id
-	stripeTierPriceId?: string; // stripe price id for the subscription
-	stripeTierNext?: string; // the next tier the user is moving to, if any
-	stripeTierNextAt?: number; // the time the user will move to the next tier, if any
-	stripeTierCancelAt?: number; // the time the user's subscription will be cancelled (e.g. if cancelling at end of billing period)
-	stripeUpdatedAt?: number; // the time the user's stripe details were last updated (needed for webhook ordering)
-	pendingCheckoutTier?: Tier; // the pending checkout tier, if any
-	pendingCheckoutTierRequestQuota?: number; // the pending checkout tier request quota, if any
 }

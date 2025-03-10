@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/file-server",
-	"version": "2.4.2",
+	"version": "2.5.0",
 	"description": "Simple static file server",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"exports": {
 		".": {
@@ -22,14 +22,14 @@
 		"start": "node ./dist/index.js"
 	},
 	"dependencies": {
-		"@prosopo/util": "2.4.2",
+		"@prosopo/util": "2.5.0",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
 		"node-fetch": "3.3.2",
 		"sharp": "0.33.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.4.2",
+		"@prosopo/config": "2.5.0",
 		"@types/express": "4.17.21",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "2.1.1",

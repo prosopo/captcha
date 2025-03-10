@@ -16,6 +16,7 @@ import type { IPAddress } from "@prosopo/types";
 
 interface SearchRuleFilters {
 	userIpAddress?: IPAddress;
+	ja4?: string;
 	userId?: string;
 	clientId?: string;
 }

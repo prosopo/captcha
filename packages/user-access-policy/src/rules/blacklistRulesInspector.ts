@@ -26,12 +26,20 @@ class BlacklistRulesInspector implements BlacklistInspector {
 	public async isUserBlacklisted(
 		clientId: string,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 	): Promise<boolean> {
+		this.logger.debug({
+			clientId: clientId,
+			userIpAddress: userIpAddress,
+			ja4: ja4,
+			userId: userId,
+		});
 		const accessRules = await this.rulesStorage.find(
 			{
 				clientId: clientId,
 				userIpAddress: userIpAddress,
+				ja4: ja4,
 				userId: userId,
 			},
 			{
@@ -46,14 +54,16 @@ class BlacklistRulesInspector implements BlacklistInspector {
 
 		const userBlacklisted = blockingRules.length > 0;
 
-		this.logger.info("BlacklistRulesInspector.isUserBlacklisted", {
-			userBlacklisted: userBlacklisted,
-			clientId: clientId,
-			userIpAddress: userIpAddress.address.toString(),
-			userId: userId,
-			accessRules: accessRules.length,
-			blockingRules: blockingRules.length,
-		});
+		if (userBlacklisted) {
+			this.logger.info({
+				userBlacklisted: userBlacklisted,
+				clientId: clientId,
+				userIpAddress: userIpAddress.address.toString(),
+				userId: userId,
+				accessRules: accessRules.length,
+				blockingRules: blockingRules.length,
+			});
+		}
 
 		return userBlacklisted;
 	}

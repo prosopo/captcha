@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/database",
-	"version": "2.4.2",
+	"version": "2.5.0",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"exports": {
 		".": {
@@ -31,11 +31,11 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "2.4.2",
-		"@prosopo/config": "2.4.2",
-		"@prosopo/types": "2.4.2",
-		"@prosopo/types-database": "2.4.2",
-		"@prosopo/user-access-policy": "2.4.2",
+		"@prosopo/common": "2.5.0",
+		"@prosopo/config": "2.5.0",
+		"@prosopo/types": "2.5.0",
+		"@prosopo/types-database": "2.5.0",
+		"@prosopo/user-access-policy": "2.5.0",
 		"express": "4.21.2",
 		"mongodb": "6.9.0",
 		"mongodb-memory-server": "10.0.0",

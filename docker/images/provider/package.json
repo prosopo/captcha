@@ -3,7 +3,7 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
-	"version": "2.4.2"
+	"version": "2.5.0"
 }

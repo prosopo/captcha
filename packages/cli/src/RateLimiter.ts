@@ -11,43 +11,43 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AdminApiPaths, ApiPaths } from "@prosopo/types";
+import { AdminApiPaths, ClientApiPaths, PublicApiPaths } from "@prosopo/types";
 
 export const getRateLimitConfig = () => {
 	return {
-		[ApiPaths.GetImageCaptchaChallenge]: {
+		[ClientApiPaths.GetImageCaptchaChallenge]: {
 			windowMs: process.env.PROSOPO_GET_IMAGE_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_IMAGE_CAPTCHA_CHALLENGE_LIMIT,
 		},
-		[ApiPaths.GetPowCaptchaChallenge]: {
+		[ClientApiPaths.GetPowCaptchaChallenge]: {
 			windowMs: process.env.PROSOPO_GET_POW_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_POW_CAPTCHA_CHALLENGE_LIMIT,
 		},
-		[ApiPaths.SubmitImageCaptchaSolution]: {
+		[ClientApiPaths.SubmitImageCaptchaSolution]: {
 			windowMs: process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_LIMIT,
 		},
-		[ApiPaths.SubmitPowCaptchaSolution]: {
+		[ClientApiPaths.SubmitPowCaptchaSolution]: {
 			windowMs: process.env.PROSOPO_SUBMIT_POW_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_POW_CAPTCHA_SOLUTION_LIMIT,
 		},
-		[ApiPaths.VerifyPowCaptchaSolution]: {
+		[ClientApiPaths.VerifyPowCaptchaSolution]: {
 			windowMs: process.env.PROSOPO_VERIFY_POW_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_POW_CAPTCHA_SOLUTION_LIMIT,
 		},
-		[ApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_LIMIT,
 		},
-		[ApiPaths.GetProviderStatus]: {
+		[ClientApiPaths.GetProviderStatus]: {
 			windowMs: process.env.PROSOPO_GET_PROVIDER_STATUS_WINDOW,
 			limit: process.env.PROSOPO_GET_PROVIDER_STATUS_LIMIT,
 		},
-		[ApiPaths.GetProviderDetails]: {
+		[PublicApiPaths.GetProviderDetails]: {
 			windowMs: process.env.PROSOPO_GET_PROVIDER_DETAILS_WINDOW,
 			limit: process.env.PROSOPO_GET_PROVIDER_DETAILS_LIMIT,
 		},
-		[ApiPaths.SubmitUserEvents]: {
+		[ClientApiPaths.SubmitUserEvents]: {
 			windowMs: process.env.PROSOPO_SUBMIT_USER_EVENTS_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_USER_EVENTS_LIMIT,
 		},
@@ -55,7 +55,7 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SITE_KEY_REGISTER_WINDOW,
 			limit: process.env.PROSOPO_SITE_KEY_REGISTER_LIMIT,
 		},
-		[ApiPaths.GetFrictionlessCaptchaChallenge]: {
+		[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,
 		},

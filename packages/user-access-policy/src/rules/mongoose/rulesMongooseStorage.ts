@@ -151,12 +151,16 @@ class RulesMongooseStorage implements RulesStorage {
 	): object[] {
 		const queryFilters = [];
 
-		if (undefined !== filters.userId) {
+		if (filters.userId) {
 			queryFilters.push({ userId: filters.userId });
 		}
 
-		if (undefined !== filters.userIpAddress) {
+		if (filters.userIpAddress) {
 			queryFilters.push(this.getFilterByUserIp(filters.userIpAddress));
+		}
+
+		if (filters.ja4) {
+			queryFilters.push({ ja4: filters.ja4 });
 		}
 
 		return includeRecordsWithPartialFilterMatches && queryFilters.length > 1
