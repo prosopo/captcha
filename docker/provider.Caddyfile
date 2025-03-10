@@ -30,6 +30,29 @@
 }
 
 {$CADDY_DOMAIN} {
+		rate_limit {
+			distributed
+
+			# Means that the rate limit is applied to all GET requests, with a limit of 100 requests per minute.
+			# zone get_rate_limit {
+			# 	match {
+			# 		method GETevents
+			# 	}
+			# 	key static
+			# 	events 100
+			# 	window 1m
+			# }
+
+			# The rate limit is applied to `remote_host` with a limit of 6 requests per 6 seconds (60 requests per minute).
+			zone dynamic_example {
+				key {remote_host}
+				events {$CADDY_RATE_LIMIT_EVENTS}
+				window {$CADDY_RATE_LIMIT_WINDOW}
+			}
+			log_key
+		}
+
+
 	route {
 		client_hello
 
@@ -52,28 +75,6 @@
 
 		# reverse proxy the metrics path to the metrics emitted by caddy on the admin api
 		# reverse_proxy /metrics {$CADDY_ADMIN_API}
-
-		rate_limit {
-			distributed
-
-			# Means that the rate limit is applied to all GET requests, with a limit of 100 requests per minute.
-			# zone get_rate_limit {
-			# 	match {
-			# 		method GET
-			# 	}
-			# 	key static
-			# 	events 100
-			# 	window 1m
-			# }
-
-			# The rate limit is applied to `remote_host` with a limit of 6 requests per 6 seconds (60 requests per minute).
-			zone dynamic_example {
-				key {remote_host}
-				events {$CADDY_RATE_LIMIT_EVENTS}
-				window {$CADDY_RATE_LIMIT_WINDOW}
-			}
-			log_key
-		}
 
 		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider}:{$CADDY_PROVIDER_PORT:9229} {
