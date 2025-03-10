@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,30 +31,32 @@
 //
 // Optionally include the empty permutation, i.e. [] (useful for when you want to include the empty permutation in a cartesian product)
 export function* permutations(
-    bins: number[],
-    options?: {
-        includeEmpty?: boolean
-    }
+	bins: number[],
+	options?: {
+		includeEmpty?: boolean;
+	},
 ): Generator<number[]> {
-    if (options?.includeEmpty) {
-        yield []
-    }
-    if (bins.length === 0) {
-        return
-    }
-    const arr = Array.from({ length: bins.length }, () => 0)
-    let i = arr.length - 1
-    while (true) {
-        yield [...arr]
-        arr[i]++
-        while (arr[i] === bins[i]) {
-            arr[i] = 0
-            i--
-            if (i < 0) {
-                return
-            }
-            arr[i]++
-        }
-        i = arr.length - 1
-    }
+	if (options?.includeEmpty) {
+		yield [];
+	}
+	if (bins.length === 0) {
+		return;
+	}
+	const arr = Array.from({ length: bins.length }, () => 0);
+	let i = arr.length - 1;
+	while (true) {
+		yield [...arr];
+		// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
+		arr[i]!++;
+		while (arr[i] === bins[i]) {
+			arr[i] = 0;
+			i--;
+			if (i < 0) {
+				return;
+			}
+			// biome-ignore lint/style/noNonNullAssertion: ts thinks array is potentially undefined
+			arr[i]!++;
+		}
+		i = arr.length - 1;
+	}
 }

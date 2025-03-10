@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,54 +13,71 @@
 // limitations under the License.
 
 const grey = {
-    0: '#fff',
-    100: '#f5f5f5',
-    200: '#eeeeee',
-    300: '#e0e0e0',
-    400: '#bdbdbd',
-    500: '#9e9e9e',
-    600: '#757575',
-    700: '#616161',
-    800: '#424242',
-    900: '#212121',
-}
+	0: "#fff",
+	100: "#f5f5f5",
+	200: "#eeeeee",
+	300: "#e0e0e0",
+	400: "#bdbdbd",
+	500: "#9e9e9e",
+	600: "#757575",
+	700: "#616161",
+	800: "#424242",
+	900: "#212121",
+};
 
-const DEFAULT_SPACING = 10 // size in pixels
+const DEFAULT_SPACING = 10; // size in pixels
 
 export const lightTheme = {
-    palette: {
-        mode: 'light',
-        primary: {
-            main: '#487DFA',
-            contrastText: '#fff',
-        },
-        background: {
-            default: '#fff',
-            contrastText: '#000',
-        },
-        grey,
-    },
-    spacing: {
-        unit: DEFAULT_SPACING,
-        half: Math.floor(DEFAULT_SPACING / 2),
-    },
-}
+	palette: {
+		mode: "light",
+		primary: {
+			main: "#487DFA",
+			contrastText: "#fff",
+		},
+		background: {
+			default: "#fff",
+			contrastText: "#000",
+		},
+		error: {
+			main: "#f44336",
+		},
+
+		grey,
+	},
+	spacing: {
+		unit: DEFAULT_SPACING,
+		half: Math.floor(DEFAULT_SPACING / 2),
+	},
+	font: {
+		fontFamily:
+			'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+		color: "#000",
+	},
+};
 
 export const darkTheme = {
-    palette: {
-        mode: 'dark',
-        primary: {
-            main: '#487DFA',
-            contrastText: '#fff',
-        },
-        background: {
-            default: '#303030',
-            contrastText: '#fff',
-        },
-        grey,
-    },
-    spacing: {
-        unit: DEFAULT_SPACING,
-        half: Math.floor(DEFAULT_SPACING / 2),
-    },
-}
+	palette: {
+		mode: "dark",
+		primary: {
+			main: "#487DFA",
+			contrastText: "#fff",
+		},
+		background: {
+			default: "#303030",
+			contrastText: "#fff",
+		},
+		error: {
+			main: "#f44336",
+		},
+		grey,
+	},
+	spacing: {
+		unit: DEFAULT_SPACING,
+		half: Math.floor(DEFAULT_SPACING / 2),
+	},
+	font: {
+		fontFamily:
+			'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+		color: "#fff",
+	},
+};

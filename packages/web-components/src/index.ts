@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,10 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './CaptchaPlaceholder.js'
-export * from './LoadingSpinner.js'
-export * from './theme.js'
-export * from './Checkbox.js'
-export { default as Logo } from './Logo.js'
-export * from './Containers.js'
-export * from './WidgetConstants.js'
+export * from "./CaptchaPlaceholder.js";
+export * from "./LoadingSpinner.js";
+export * from "./theme.js";
+export * from "./Checkbox.js";
+export { default as Logo } from "./Logo.js";
+export * from "./Containers.js";
+export * from "./WidgetConstants.js";
+export * from "./Reload.js";

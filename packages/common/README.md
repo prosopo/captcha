@@ -1,1 +1,1 @@
-# i18next localization for Prosopo
+# Common functions for Prosopo

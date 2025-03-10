@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,59 +12,103 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import '@cypress/xpath'
-import { Captcha } from '@prosopo/types'
-import { ProsopoDatasetError } from '@prosopo/common'
-import { at } from '@prosopo/util'
-import { checkboxClass } from '../support/commands.js'
-import { datasetWithSolutionHashes } from '@prosopo/datasets'
 
-describe('Captchas', () => {
-    beforeEach(() => {
-        const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
-            captchaContentId: captcha.captchaContentId,
-            solution: captcha.solution,
-        }))
+import "@cypress/xpath";
+import { ProsopoDatasetError } from "@prosopo/common";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { type Captcha, CaptchaType } from "@prosopo/types";
+import { at } from "@prosopo/util";
+import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-        if (!solutions) {
-            throw new ProsopoDatasetError('DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED', {
-                context: { datasetWithSolutionHashes },
-            })
-        }
-        cy.intercept('/dummy').as('dummy')
+let captchaType: CaptchaType;
 
-        // visit the base URL specified on command line when running cypress
-        return cy.visit(Cypress.env('default_page')).then(() => {
-            cy.get(checkboxClass).should('be.visible')
-            // wrap the solutions to make them available to the tests
-            cy.wrap(solutions).as('solutions')
-        })
-    })
+describe("Captchas", () => {
+	beforeEach(() => {
+		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+		cy.registerSiteKey(captchaType);
 
-    it("Captchas load when 'I am human' is pressed", () => {
-        cy.clickIAmHuman().then((captchas) => {
-            expect(captchas.length).to.be.gt(0)
-        })
-    })
+		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
+			captchaContentId: captcha.captchaContentId,
+			solution: captcha.solution,
+		}));
 
-    it('Number of displayed captchas equals number received in response', () => {
-        cy.clickIAmHuman().then((captchas: Captcha[]) => {
-            cy.wait(2000)
-            cy.captchaImages().then(() => {
-                console.log("captchas in 'Number of displayed captchas equals number received in response'", captchas)
-                cy.get('@captchaImages').should('have.length', at(captchas, 0).items.length)
-            })
-        })
-    })
+		if (!solutions) {
+			throw new ProsopoDatasetError(
+				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
+				{
+					context: { datasetWithSolutionHashes },
+				},
+			);
+		}
+		cy.intercept("/dummy").as("dummy");
 
-    // move to component testing later
-    it('Can select an item', () => {
-        cy.clickIAmHuman().then(() => {
-            cy.wait(2000)
-            cy.captchaImages().then(() => {
-                cy.get('@captchaImages').first().click()
-                cy.get('@captchaImages').first().siblings().first().should('have.css', 'opacity', '1')
-            })
-        })
-    })
-})
+		// visit the base URL specified on command line when running cypress
+		return cy.visit(Cypress.env("default_page")).then(() => {
+			getWidgetElement(checkboxClass).should("be.visible");
+			// wrap the solutions to make them available to the tests
+			cy.wrap(solutions).as("solutions");
+		});
+	});
+
+	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
+		expect(captchaType).to.not.equal(CaptchaType.pow);
+		cy.registerSiteKey(CaptchaType.pow).then(() => {
+			cy.visit(Cypress.env("default_page"));
+			getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+				"getCaptcha",
+			);
+			cy.wait("@getCaptcha", { timeout: 36000 })
+				.its("response")
+				.then((response) => {
+					expect(response).to.not.be.undefined;
+					expect(response?.statusCode).to.equal(400);
+					expect(response?.body).to.have.property("error");
+				})
+				.then(() => {
+					cy.get('div[data-cy="button-human"]', { includeShadowDom: true })
+						.should("exist") // Ensures element exists
+						.should("be.visible") // Ensures it's rendered
+						.find("label")
+						.should("have.text", "Incorrect CAPTCHA type");
+				});
+		});
+	});
+
+	it("Captchas load when 'I am human' is pressed", () => {
+		cy.clickIAmHuman().then((captchas) => {
+			expect(captchas.length).to.be.gt(0);
+		});
+	});
+
+	it("Number of displayed captchas equals number received in response", () => {
+		cy.clickIAmHuman().then((captchas: Captcha[]) => {
+			cy.wait(2000);
+			cy.captchaImages().then(() => {
+				console.log(
+					"captchas in 'Number of displayed captchas equals number received in response'",
+					captchas,
+				);
+				cy.get("@captchaImages").should(
+					"have.length",
+					at(captchas, 0).items.length,
+				);
+			});
+		});
+	});
+
+	// move to component testing later
+	it("Can select an item", () => {
+		cy.clickIAmHuman().then(() => {
+			cy.wait(2000);
+			cy.captchaImages().then(() => {
+				cy.get("@captchaImages").first().click();
+				cy.get("@captchaImages")
+					.first()
+					.siblings()
+					.first()
+					.should("have.css", "opacity", "1");
+			});
+		});
+	});
+});

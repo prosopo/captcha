@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,154 +11,263 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AccountId } from '@prosopo/captcha-contract'
 import {
-    ApiParams,
-    ApiPaths,
-    CaptchaResponseBody,
-    CaptchaSolution,
-    CaptchaSolutionBody,
-    CaptchaSolutionBodyType,
-    CaptchaSolutionResponse,
-    GetPowCaptchaChallengeRequestBodyType,
-    GetPowCaptchaResponse,
-    ImageVerificationResponse,
-    NetworkConfig,
-    PowCaptchaSolutionResponse,
-    ProcaptchaToken,
-    ProviderRegistered,
-    ServerPowCaptchaVerifyRequestBodyType,
-    StoredEvents,
-    SubmitPowCaptchaSolutionBody,
-    VerificationResponse,
-    VerifySolutionBodyTypeInput,
-} from '@prosopo/types'
-import { Provider, RandomProvider } from '@prosopo/captcha-contract/types-returns'
-import HttpClientBase from './HttpClientBase.js'
+	AdminApiPaths,
+	ApiParams,
+	type ApiResponse,
+	type CaptchaRequestBodyType,
+	CaptchaRequestBodyTypeOutput,
+	type CaptchaResponseBody,
+	type CaptchaSolution,
+	type CaptchaSolutionBodyType,
+	type CaptchaSolutionResponse,
+	ClientApiPaths,
+	type GetFrictionlessCaptchaResponse,
+	type GetPowCaptchaChallengeRequestBodyType,
+	type GetPowCaptchaResponse,
+	type IUserSettings,
+	type ImageVerificationResponse,
+	type PowCaptchaSolutionResponse,
+	type ProcaptchaToken,
+	type Provider,
+	type ProviderApiInterface,
+	type ProviderRegistered,
+	PublicApiPaths,
+	type RandomProvider,
+	RegisterSitekeyBody,
+	type RegisterSitekeyBodyTypeOutput,
+	type ServerPowCaptchaVerifyRequestBodyType,
+	type StoredEvents,
+	SubmitPowCaptchaSolutionBody,
+	type Tier,
+	type UpdateProviderClientsResponse,
+	type VerificationResponse,
+	type VerifySolutionBodyTypeInput,
+} from "@prosopo/types";
+import HttpClientBase from "./HttpClientBase.js";
 
-export default class ProviderApi extends HttpClientBase implements ProviderApi {
-    private network: NetworkConfig
-    private account: AccountId
+export default class ProviderApi
+	extends HttpClientBase
+	implements ProviderApiInterface
+{
+	private account: string;
 
-    constructor(network: NetworkConfig, providerUrl: string, account: AccountId) {
-        if (!providerUrl.startsWith('http')) {
-            providerUrl = `https://${providerUrl}`
-        }
-        super(providerUrl)
-        this.network = network
-        this.account = account
-    }
+	constructor(providerUrl: string, account: string) {
+		const providerUrlWithProtocol = !providerUrl.startsWith("http")
+			? `https://${providerUrl}`
+			: providerUrl;
+		super(providerUrlWithProtocol);
+		this.account = account;
+	}
 
-    public getCaptchaChallenge(userAccount: AccountId, randomProvider: RandomProvider): Promise<CaptchaResponseBody> {
-        const { provider, blockNumber } = randomProvider
-        const dappAccount = this.account
-        const url = `${ApiPaths.GetImageCaptchaChallenge}/${
-            provider.datasetId
-        }/${userAccount}/${dappAccount}/${blockNumber.toString().replace(/,/g, '')}`
-        return this.fetch(url)
-    }
+	public getCaptchaChallenge(
+		userAccount: string,
+		randomProvider: RandomProvider,
+		sessionId?: string,
+	): Promise<CaptchaResponseBody> {
+		const { provider } = randomProvider;
+		const dappAccount = this.account;
+		const body: CaptchaRequestBodyType = {
+			[ApiParams.dapp]: dappAccount,
+			[ApiParams.user]: userAccount,
+			[ApiParams.datasetId]: provider.datasetId,
+		};
+		if (sessionId) {
+			body[ApiParams.sessionId] = sessionId;
+		}
+		return this.post(ClientApiPaths.GetImageCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
 
-    public submitCaptchaSolution(
-        captchas: CaptchaSolution[],
-        requestHash: string,
-        userAccount: AccountId,
-        salt: string,
-        signature?: string
-    ): Promise<CaptchaSolutionResponse> {
-        const captchaSolutionBody: CaptchaSolutionBodyType = CaptchaSolutionBody.parse({
-            captchas,
-            requestHash,
-            [ApiParams.user]: userAccount,
-            [ApiParams.dapp]: this.account,
-            salt,
-            signature,
-        })
-        return this.post(ApiPaths.SubmitImageCaptchaSolution, captchaSolutionBody)
-    }
+	public submitCaptchaSolution(
+		captchas: CaptchaSolution[],
+		requestHash: string,
+		userAccount: string,
+		timestamp: string,
+		providerRequestHashSignature: string,
+		userTimestampSignature: string,
+	): Promise<CaptchaSolutionResponse> {
+		const body: CaptchaSolutionBodyType = {
+			[ApiParams.user]: userAccount,
+			[ApiParams.dapp]: this.account,
+			[ApiParams.captchas]: captchas,
+			[ApiParams.requestHash]: requestHash,
+			[ApiParams.timestamp]: timestamp,
+			[ApiParams.signature]: {
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: userTimestampSignature,
+				},
+				[ApiParams.provider]: {
+					[ApiParams.requestHash]: providerRequestHashSignature,
+				},
+			},
+		};
+		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
 
-    public verifyDappUser(
-        token: ProcaptchaToken,
-        dappUserSignature: string,
-        maxVerifiedTime?: number
-    ): Promise<ImageVerificationResponse> {
-        const payload: VerifySolutionBodyTypeInput = {
-            [ApiParams.token]: token,
-            [ApiParams.dappUserSignature]: dappUserSignature,
-        }
-        if (maxVerifiedTime) {
-            payload[ApiParams.maxVerifiedTime] = maxVerifiedTime
-        }
+	public verifyDappUser(
+		token: ProcaptchaToken,
+		signature: string,
+		userAccount: string,
+		maxVerifiedTime?: number,
+	): Promise<ImageVerificationResponse> {
+		const payload: VerifySolutionBodyTypeInput = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: signature,
+		};
+		if (maxVerifiedTime) {
+			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
+		}
 
-        return this.post(ApiPaths.VerifyImageCaptchaSolutionDapp, payload)
-    }
+		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
 
-    public verifyUser(
-        token: ProcaptchaToken,
-        dappUserSignature: string,
-        maxVerifiedTime?: number
-    ): Promise<ImageVerificationResponse> {
-        const payload: VerifySolutionBodyTypeInput = {
-            [ApiParams.token]: token,
-            [ApiParams.dappUserSignature]: dappUserSignature,
-            ...(maxVerifiedTime && { [ApiParams.maxVerifiedTime]: maxVerifiedTime }),
-        }
+	public getPowCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+	): Promise<GetPowCaptchaResponse> {
+		const body: GetPowCaptchaChallengeRequestBodyType = {
+			[ApiParams.user]: user.toString(),
+			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+		};
+		return this.post(ClientApiPaths.GetPowCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
 
-        return this.post(ApiPaths.VerifyImageCaptchaSolutionUser, payload)
-    }
+	public submitPowCaptchaSolution(
+		challenge: GetPowCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		nonce: number,
+		userTimestampSignature: string,
+		timeout?: number,
+	): Promise<PowCaptchaSolutionResponse> {
+		const body = SubmitPowCaptchaSolutionBody.parse({
+			[ApiParams.challenge]: challenge.challenge,
+			[ApiParams.difficulty]: challenge.difficulty,
+			[ApiParams.timestamp]: challenge.timestamp,
+			[ApiParams.user]: userAccount.toString(),
+			[ApiParams.dapp]: dappAccount.toString(),
+			[ApiParams.nonce]: nonce,
+			[ApiParams.verifiedTimeout]: timeout,
+			[ApiParams.signature]: {
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: userTimestampSignature,
+				},
+			},
+		});
+		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
 
-    public getPowCaptchaChallenge(user: AccountId, dapp: AccountId): Promise<GetPowCaptchaResponse> {
-        const body: GetPowCaptchaChallengeRequestBodyType = {
-            [ApiParams.user]: user.toString(),
-            [ApiParams.dapp]: dapp.toString(),
-        }
-        return this.post(ApiPaths.GetPowCaptchaChallenge, body)
-    }
+	public getFrictionlessCaptcha(
+		token: string,
+		dapp: string,
+		user: string,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		const body = {
+			[ApiParams.token]: token,
+			[ApiParams.dapp]: dapp,
+			[ApiParams.user]: user,
+		};
+		return this.post(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
 
-    public submitPowCaptchaSolution(
-        challenge: GetPowCaptchaResponse,
-        userAccount: AccountId,
-        dappAccount: AccountId,
-        randomProvider: RandomProvider,
-        nonce: number,
-        timeout?: number
-    ): Promise<PowCaptchaSolutionResponse> {
-        const { blockNumber } = randomProvider
-        const body = SubmitPowCaptchaSolutionBody.parse({
-            [ApiParams.blockNumber]: blockNumber,
-            [ApiParams.challenge]: challenge.challenge,
-            [ApiParams.difficulty]: challenge.difficulty,
-            [ApiParams.signature]: challenge.signature,
-            // TODO add utility to convert `AccountId` to string
-            [ApiParams.user]: userAccount.toString(),
-            [ApiParams.dapp]: dappAccount.toString(),
-            [ApiParams.nonce]: nonce,
-            [ApiParams.verifiedTimeout]: timeout,
-        })
-        return this.post(ApiPaths.SubmitPowCaptchaSolution, body)
-    }
+	public submitUserEvents(
+		events: StoredEvents,
+		string: string,
+	): Promise<UpdateProviderClientsResponse> {
+		return this.post(
+			ClientApiPaths.SubmitUserEvents,
+			{ events, string },
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+				},
+			},
+		);
+	}
 
-    public submitUserEvents(events: StoredEvents, accountId: AccountId) {
-        return this.post(ApiPaths.SubmitUserEvents, { events, accountId })
-    }
+	public getProviderStatus(): Promise<ProviderRegistered> {
+		return this.fetch(ClientApiPaths.GetProviderStatus, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+			},
+		});
+	}
 
-    public getProviderStatus(): Promise<ProviderRegistered> {
-        return this.fetch(ApiPaths.GetProviderStatus)
-    }
+	public getProviderDetails(): Promise<Provider> {
+		return this.fetch(PublicApiPaths.GetProviderDetails, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+			},
+		});
+	}
 
-    public getProviderDetails(): Promise<Provider> {
-        return this.fetch(ApiPaths.GetProviderDetails)
-    }
+	public submitPowCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		recencyLimit: number,
+		user: string,
+	): Promise<VerificationResponse> {
+		const body: ServerPowCaptchaVerifyRequestBodyType = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: signatureHex,
+			[ApiParams.verifiedTimeout]: recencyLimit,
+		};
+		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
 
-    public submitPowCaptchaVerify(
-        token: string,
-        signatureHex: string,
-        recencyLimit: number
-    ): Promise<VerificationResponse> {
-        const body: ServerPowCaptchaVerifyRequestBodyType = {
-            [ApiParams.token]: token,
-            [ApiParams.dappSignature]: signatureHex,
-            [ApiParams.verifiedTimeout]: recencyLimit,
-        }
-        return this.post(ApiPaths.VerifyPowCaptchaSolution, body)
-    }
+	public registerSiteKey(
+		siteKey: string,
+		tier: Tier,
+		settings: IUserSettings,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
+		return this.post(AdminApiPaths.SiteKeyRegister, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
 }

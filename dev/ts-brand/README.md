@@ -1,4 +1,4 @@
-# Brand your TypeScript types!
+# Brand your TypeScript types
 
 See our [tutorial](https://prosopo.io/articles/typescript-branding/) for more info on what branding is and why you'd want to use it.
 

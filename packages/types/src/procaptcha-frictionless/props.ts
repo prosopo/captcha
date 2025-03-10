@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,13 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProcaptchaProps } from '../procaptcha/props.js'
+import type { ProcaptchaClientConfigOutput } from "../config/config.js";
+import type { Account } from "../procaptcha/manager.js";
+import type { ProcaptchaProps } from "../procaptcha/props.js";
+import type {
+	GetFrictionlessCaptchaResponse,
+	RandomProvider,
+} from "../provider/api.js";
 
-export type BotDetectionFunction = () => Promise<{ bot: boolean }>
+export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
+	provider: RandomProvider;
+	userAccount: Account;
+};
+
+export type BotDetectionFunction = (
+	config: ProcaptchaClientConfigOutput,
+) => Promise<BotDetectionFunctionResult>;
 
 /**
  * The props for the Procaptcha Frictionless component.
  */
 export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
-    detectBot?: BotDetectionFunction
+	restart: () => void;
+	detectBot?: BotDetectionFunction;
+	detectBotConfig?: ProcaptchaClientConfigOutput;
 }

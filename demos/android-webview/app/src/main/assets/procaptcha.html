@@ -1,0 +1,76 @@
+<html lang="en">
+<head>
+    <title>Procaptcha</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+    <style>
+        div {
+          padding: 4px;
+        }
+        input, button {
+          padding: 6px 8px;
+          margin: 4px;
+          border-radius: 5px;
+          height: 30px;
+          border: 1px solid rgb(224, 224, 224);
+        }
+        .text-center {
+          text-align: center;
+        }
+        .container: {
+          display: grid;
+        }
+        .row {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          grid-template-areas: "a";
+          grid-auto-rows: minmax(20px, auto);
+          margin-bottom: 20px;
+          margin-top: 20px;
+        }
+        .bg-light {
+          background-color: rgb(221, 244, 255);
+        }
+        .m-auto {
+          margin: 0 auto;
+        }
+        .w-300 {
+          width: 300px;
+        }
+        .text-grey {
+          color: #666666;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<form action="" method="POST">
+
+    <div class="container bg-light text-grey">
+        <div class="row text-center">
+            <a class="text-grey" href="https://prosopo.io">Procaptcha Example Android Form</a>
+        </div>
+        <div class="row">
+                <input type="text" name="email" id="email" placeholder="Email"/>
+        </div>
+        <div class="row">
+                <input type="password" name="password" id="password" placeholder="Password"/>
+        </div>
+        <div class="row">
+            <div class="procaptcha w-300 m-auto"
+                 data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+                 data-captcha-type="image"></div>
+        </div>
+        <div class="row text-center">
+                <input type="submit" value="Submit"/>
+        </div>
+    </div>
+
+    <br/>
+
+</form>
+</body>
+</html>

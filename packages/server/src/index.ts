@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,13 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoServer } from './server.js'
-export { ProsopoServer } from './server.js'
-export { getServerConfig, getServerUrl } from './config.js'
-import { ProsopoServerConfigOutput } from '@prosopo/types'
-import { getPairAsync } from '@prosopo/contract'
-export const PublicProsopoServer = async (config: ProsopoServerConfigOutput) => {
-    // if site key is '' then it will burn address
-    const pair = await getPairAsync(config.networks[config.defaultNetwork], undefined, config.account.address)
-    return new ProsopoServer(config, pair)
-}
+import { ProsopoServer } from "./server.js";
+export { ProsopoServer } from "./server.js";
+export { getServerConfig, getServerUrl } from "./config.js";
+import { getPairAsync } from "@prosopo/keyring";
+import type { ProsopoServerConfigOutput } from "@prosopo/types";
+export const PublicProsopoServer = async (
+	config: ProsopoServerConfigOutput,
+) => {
+	// if site key is '' then it will burn address
+	const pair = await getPairAsync(undefined, config.account.address);
+	return new ProsopoServer(config, pair);
+};

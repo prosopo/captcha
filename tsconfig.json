@@ -1,4 +1,4 @@
 {
-    "extends": "./tsconfig.esm.json",
-    "references": []
+	"extends": "./tsconfig.esm.json",
+	"references": []
 }

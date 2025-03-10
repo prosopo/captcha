@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export function capitaliseFirstLetter(s: string) {
-    return s.charAt(0).toUpperCase() + s.slice(1)
+	return s.charAt(0).toUpperCase() + s.slice(1);
 }

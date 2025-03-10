@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { at } from '@prosopo/util'
+import { at } from "@prosopo/util";
 
-const arg = at(process.argv.slice(2), 0).trim()
-console.log(`arg          : ${arg}`)
+const arg = at(process.argv.slice(2), 0).trim();
+console.log(`arg          : ${arg}`);
 
-const byteArray = arg.split(',').map((x) => parseInt(x))
+const byteArray = arg.split(",").map((x) => Number.parseInt(x));
 
-const hex = Array.from(byteArray, function (byte) {
-    return ('0' + (byte & 0xff).toString(16)).slice(-2)
-}).join('')
+const hex = Array.from(byteArray, (byte) =>
+	`0${(byte & 0xff).toString(16)}`.slice(-2),
+).join("");
 
-console.log(hex)
+console.log(hex);

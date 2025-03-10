@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,142 +11,170 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 /** @jsxImportSource @emotion/react */
+
+import { loadI18next, useTranslation } from "@prosopo/locale";
+import { Manager } from "@prosopo/procaptcha";
+import { useProcaptcha } from "@prosopo/procaptcha-common";
+import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
 import {
-    Checkbox,
-    ContainerDiv,
-    LoadingSpinner,
-    WIDGET_BORDER,
-    WIDGET_BORDER_RADIUS,
-    WIDGET_DIMENSIONS,
-    WIDGET_INNER_HEIGHT,
-    WIDGET_PADDING,
-    WIDGET_URL,
-    WIDGET_URL_TEXT,
-    WidthBasedStylesDiv,
-    darkTheme,
-    lightTheme,
-} from '@prosopo/web-components'
-import { Logo } from '@prosopo/web-components'
-import { Manager } from '@prosopo/procaptcha'
-import { ProcaptchaConfigSchema, ProcaptchaProps } from '@prosopo/types'
-import { useProcaptcha } from '@prosopo/procaptcha-common'
-import { useRef, useState } from 'react'
-import CaptchaComponent from './CaptchaComponent.js'
-import Collector from './collector.js'
-import Modal from './Modal.js'
+	Checkbox,
+	ContainerDiv,
+	LoadingSpinner,
+	WIDGET_BORDER,
+	WIDGET_BORDER_RADIUS,
+	WIDGET_DIMENSIONS,
+	WIDGET_INNER_HEIGHT,
+	WIDGET_MAX_WIDTH,
+	WIDGET_MIN_HEIGHT,
+	WIDGET_PADDING,
+	WIDGET_URL,
+	WIDGET_URL_TEXT,
+	WidthBasedStylesDiv,
+	darkTheme,
+	lightTheme,
+} from "@prosopo/web-components";
+import { Logo } from "@prosopo/web-components";
+import { useEffect, useRef, useState } from "react";
+import CaptchaComponent from "./CaptchaComponent.js";
+import Modal from "./Modal.js";
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
-    const config = ProcaptchaConfigSchema.parse(props.config)
-    const callbacks = props.callbacks || {}
-    const [state, updateState] = useProcaptcha(useState, useRef)
-    const manager = Manager(config, state, updateState, callbacks)
-    const themeColor = props.config.theme === 'light' ? 'light' : 'dark'
-    const theme = props.config.theme === 'light' ? lightTheme : darkTheme
+	const { t } = useTranslation();
+	const config = ProcaptchaConfigSchema.parse(props.config);
+	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
+	const callbacks = props.callbacks || {};
+	const [state, updateState] = useProcaptcha(useState, useRef);
+	const manager = Manager(
+		config,
+		state,
+		updateState,
+		callbacks,
+		frictionlessState,
+	);
+	const themeColor = props.config.theme === "light" ? "light" : "dark";
+	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 
-    return (
-        <div>
-            <div style={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-                <Modal show={state.showModal}>
-                    {state.challenge ? (
-                        <CaptchaComponent
-                            challenge={state.challenge}
-                            index={state.index}
-                            solutions={state.solutions}
-                            onSubmit={manager.submit}
-                            onCancel={manager.cancel}
-                            onClick={manager.select}
-                            onNext={manager.nextRound}
-                            themeColor={config.theme ?? 'light'}
-                        />
-                    ) : (
-                        <div>No challenge set.</div>
-                    )}
-                </Modal>
-                <ContainerDiv>
-                    <WidthBasedStylesDiv>
-                        <div style={WIDGET_DIMENSIONS} data-cy={'button-human'}>
-                            {' '}
-                            <div
-                                style={{
-                                    padding: WIDGET_PADDING,
-                                    border: WIDGET_BORDER,
-                                    backgroundColor: theme.palette.background.default,
-                                    borderColor: theme.palette.grey[300],
-                                    borderRadius: WIDGET_BORDER_RADIUS,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    flexWrap: 'wrap',
-                                    justifyContent: 'space-between',
-                                    minHeight: `${WIDGET_INNER_HEIGHT}px`,
-                                    overflow: 'hidden',
-                                }}
-                            >
-                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <div
-                                        style={{
-                                            alignItems: 'center',
-                                            flex: 1,
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                flexDirection: 'column',
-                                                verticalAlign: 'middle',
-                                            }}
-                                        >
-                                            <div
-                                                style={{
-                                                    display: !state.loading ? 'flex' : 'none',
-                                                }}
-                                            >
-                                                <Checkbox
-                                                    themeColor={themeColor}
-                                                    onChange={manager.start}
-                                                    checked={state.isHuman}
-                                                    labelText="I am human"
-                                                    aria-label="human checkbox"
-                                                />
-                                            </div>
-                                            <div
-                                                style={{
-                                                    display: state.loading ? 'flex' : 'none',
-                                                }}
-                                            >
-                                                <div style={{ display: 'inline-flex' }}>
-                                                    <LoadingSpinner
-                                                        themeColor={themeColor}
-                                                        aria-label="Loading spinner"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                                    <a href={WIDGET_URL} target="_blank" aria-label={WIDGET_URL_TEXT}>
-                                        <div style={{ flex: 1 }}>
-                                            <Logo themeColor={themeColor} aria-label="Prosopo logo"></Logo>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </WidthBasedStylesDiv>
-                    {config.devOnlyWatchEvents && (
-                        <Collector
-                            onProcessData={manager.exportData}
-                            sendData={state.sendData}
-                            account={state.account}
-                        ></Collector>
-                    )}
-                </ContainerDiv>
-            </div>
-        </div>
-    )
-}
+	useEffect(() => {
+		if (config.language) {
+			loadI18next(false).then((i18n) => {
+				i18n.changeLanguage(config.language).then((r) => r);
+			});
+		}
+	}, [config.language]);
 
-export default ProcaptchaWidget
+	return (
+		<div style={{ width: "100%", minHeight: WIDGET_MIN_HEIGHT }}>
+			<div
+				style={{
+					maxWidth: WIDGET_MAX_WIDTH,
+					minHeight: WIDGET_MIN_HEIGHT,
+					maxHeight: "100%",
+					overflowX: "auto",
+					width: "100%",
+					...theme.font,
+				}}
+			>
+				<Modal show={state.showModal}>
+					{state.challenge ? (
+						<CaptchaComponent
+							challenge={state.challenge}
+							index={state.index}
+							solutions={state.solutions}
+							onSubmit={manager.submit}
+							onCancel={manager.cancel}
+							onClick={manager.select}
+							onNext={manager.nextRound}
+							onReload={manager.reload}
+							themeColor={config.theme ?? "light"}
+						/>
+					) : (
+						<div>No challenge set.</div>
+					)}
+				</Modal>
+				<ContainerDiv>
+					<WidthBasedStylesDiv>
+						<div style={WIDGET_DIMENSIONS} data-cy={"button-human"}>
+							{" "}
+							<div
+								style={{
+									padding: WIDGET_PADDING,
+									border: WIDGET_BORDER,
+									backgroundColor: theme.palette.background.default,
+									borderColor: theme.palette.grey[300],
+									borderRadius: WIDGET_BORDER_RADIUS,
+									display: "flex",
+									alignItems: "center",
+									flexWrap: "wrap",
+									justifyContent: "space-between",
+									minHeight: `${WIDGET_INNER_HEIGHT}px`,
+									overflow: "hidden",
+								}}
+							>
+								<div
+									style={{ display: "inline-flex", flexDirection: "column" }}
+								>
+									<div
+										style={{
+											alignItems: "center",
+											flex: 1,
+										}}
+									>
+										<div
+											style={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												flexDirection: "column",
+												verticalAlign: "middle",
+											}}
+										>
+											<div
+												style={{
+													display: "flex",
+												}}
+											>
+												{state.loading ? (
+													<LoadingSpinner
+														themeColor={themeColor}
+														aria-label="Loading spinner"
+													/>
+												) : (
+													<Checkbox
+														themeColor={themeColor}
+														onChange={manager.start}
+														checked={state.isHuman}
+														labelText={t("WIDGET.I_AM_HUMAN")}
+														error={state.error}
+														aria-label="human checkbox"
+													/>
+												)}
+											</div>
+										</div>
+									</div>
+								</div>
+								<div
+									style={{ display: "inline-flex", flexDirection: "column" }}
+								>
+									<a
+										href={WIDGET_URL}
+										// biome-ignore lint/a11y/noBlankTarget: Biome incorrect edge case
+										target="_blank"
+										aria-label={WIDGET_URL_TEXT}
+									>
+										<div style={{ flex: 1 }}>
+											<Logo themeColor={themeColor} aria-label="Prosopo logo" />
+										</div>
+									</a>
+								</div>
+							</div>
+						</div>
+					</WidthBasedStylesDiv>
+				</ContainerDiv>
+			</div>
+		</div>
+	);
+};
+
+export default ProcaptchaWidget;

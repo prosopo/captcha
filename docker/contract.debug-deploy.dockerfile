@@ -20,11 +20,9 @@ VOLUME ["/contracts"]
 
 COPY $CONTRACT_PATH $CONTRACT_NAME
 
-RUN echo $(ls -l "/contracts/$CONTRACT_NAME")
-
-RUN echo "derp" > /contracts/test.txt
-
-RUN cat /contracts/test.txt
+RUN echo $(ls -l "/contracts/$CONTRACT_NAME") && \
+    echo "derp" > /contracts/test.txt && \
+    cat /contracts/test.txt
 
 WORKDIR "/contracts/$CONTRACT_NAME"
 
