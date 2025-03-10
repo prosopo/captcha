@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/dotenv",
-	"version": "2.4.2",
+	"version": "2.5.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"clean": "tsc --build --clean",
@@ -25,8 +25,8 @@
 	},
 	"types": "./dist/index.d.ts",
 	"dependencies": {
-		"@prosopo/common": "2.4.2",
-		"@prosopo/config": "2.4.2",
+		"@prosopo/common": "2.5.0",
+		"@prosopo/config": "2.5.0",
 		"dotenv": "16.4.5",
 		"express": "4.21.2"
 	},

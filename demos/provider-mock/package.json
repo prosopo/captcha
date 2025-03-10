@@ -1,13 +1,13 @@
 {
 	"name": "@prosopo/provider-mock",
-	"version": "2.4.2",
+	"version": "2.5.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
@@ -16,12 +16,13 @@
 		"build:cjs": "echo 'no cjs build'"
 	},
 	"dependencies": {
-		"@prosopo/api-express-router": "2.4.2",
-		"@prosopo/common": "2.4.2",
-		"@prosopo/provider": "2.4.2",
-		"@prosopo/types": "2.4.2",
+		"@prosopo/api-express-router": "2.5.0",
+		"@prosopo/common": "2.5.0",
+		"@prosopo/provider": "2.5.0",
+		"@prosopo/types": "2.5.0",
 		"cors": "2.8.5",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"read-tls-client-hello": "1.1.0"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "2.1.1",

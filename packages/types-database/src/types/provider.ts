@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import { CaptchaType, Tier } from "@prosopo/types";
 import {
@@ -98,6 +99,7 @@ export interface StoredCaptcha {
 	deadlineTimestamp?: Timestamp;
 	ipAddress: bigint;
 	headers: RequestHeaders;
+	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	storedAtTimestamp?: Timestamp;
@@ -127,6 +129,7 @@ export const UserCommitmentSchema = object({
 	userSignature: string(),
 	ipAddress: bigint(),
 	headers: object({}).catchall(string()),
+	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
 	storedAtTimestamp: TimestampSchema.optional(),
@@ -173,6 +176,10 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 });
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
+// Set an index on the datasetId field, ascending
+CaptchaRecordSchema.index({ datasetId: 1 });
+// Set an index on the datasetId and solved fields, ascending
+CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
 
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
@@ -196,6 +203,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	difficulty: { type: Number, required: true },
 	ipAddress: { type: BigInt, required: true },
 	headers: { type: Object, required: true },
+	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
@@ -228,6 +236,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	},
 	ipAddress: { type: BigInt, required: true },
 	headers: { type: Object, required: true },
+	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
@@ -611,6 +620,7 @@ export interface IProviderDatabase extends IDatabase {
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		ja4: string,
 		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,

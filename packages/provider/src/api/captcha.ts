@@ -17,7 +17,6 @@ import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
 import {
 	ApiParams,
-	ApiPaths,
 	type Captcha,
 	CaptchaRequestBody,
 	type CaptchaRequestBodyTypeOutput,
@@ -26,6 +25,7 @@ import {
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
 	CaptchaType,
+	ClientApiPaths,
 	type DappUserSolutionResult,
 	GetFrictionlessCaptchaChallengeRequestBody,
 	GetPowCaptchaChallengeRequestBody,
@@ -70,117 +70,120 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {string} userAccount - Dapp User AccountId
 	 * @return {Captcha} - The Captcha data
 	 */
-	router.post(ApiPaths.GetImageCaptchaChallenge, async (req, res, next) => {
-		let parsed: CaptchaRequestBodyTypeOutput;
+	router.post(
+		ClientApiPaths.GetImageCaptchaChallenge,
+		async (req, res, next) => {
+			let parsed: CaptchaRequestBodyTypeOutput;
 
-		if (!req.ip) {
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: "IP address not found" },
-					i18n: req.i18n,
-				}),
-			);
-		}
-
-		const ipAddress = getIPAddress(req.ip || "");
-
-		try {
-			parsed = CaptchaRequestBody.parse(req.body);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-				}),
-			);
-		}
-
-		const { datasetId, user, dapp, sessionId } = parsed;
-
-		validiateSiteKey(dapp);
-		validateAddr(user);
-
-		try {
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-
-			if (!clientRecord) {
+			if (!req.ip) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 400, error: "IP address not found" },
 						i18n: req.i18n,
 					}),
 				);
 			}
 
-			const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
-				env.config.captchas,
-				ipAddress,
-				user,
-				dapp,
-			);
+			const ipAddress = getIPAddress(req.ip || "");
 
-			const { valid, reason, frictionlessTokenId } =
-				await tasks.imgCaptchaManager.isValidRequest(
-					clientRecord,
-					CaptchaType.image,
-					sessionId,
+			try {
+				parsed = CaptchaRequestBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err },
+						i18n: req.i18n,
+					}),
+				);
+			}
+
+			const { datasetId, user, dapp, sessionId } = parsed;
+
+			validiateSiteKey(dapp);
+			validateAddr(user);
+
+			try {
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+						}),
+					);
+				}
+
+				const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
+					env.config.captchas,
+					ipAddress,
+					req.ja4,
+					user,
+					dapp,
 				);
 
-			if (!valid) {
+				const { valid, reason, frictionlessTokenId } =
+					await tasks.imgCaptchaManager.isValidRequest(
+						clientRecord,
+						CaptchaType.image,
+						sessionId,
+					);
+
+				if (!valid) {
+					return next(
+						new ProsopoApiError(reason || "API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+							i18n: req.i18n,
+						}),
+					);
+				}
+
+				const taskData =
+					await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
+						datasetId,
+						user,
+						ipAddress,
+						captchaConfig,
+						frictionlessTokenId,
+					);
+				const captchaResponse: CaptchaResponseBody = {
+					[ApiParams.status]: "ok",
+					[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
+						...captcha,
+						items: captcha.items.map((item) =>
+							parseCaptchaAssets(item, env.assetsResolver),
+						),
+					})),
+					[ApiParams.requestHash]: taskData.requestHash,
+					[ApiParams.timestamp]: taskData.timestamp.toString(),
+					[ApiParams.signature]: {
+						[ApiParams.provider]: {
+							[ApiParams.requestHash]: taskData.signedRequestHash,
+						},
+					},
+				};
+				return res.json(captchaResponse);
+			} catch (err) {
+				tasks.logger.error({ err, params: req.params });
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
+					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
-							code: 400,
-							siteKey: dapp,
-							user,
+							error: err,
+
+							code: 500,
+							params: req.params,
+							context: err,
 						},
 						i18n: req.i18n,
 					}),
 				);
 			}
-
-			const taskData =
-				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
-					datasetId,
-					user,
-					ipAddress,
-					flatten(req.headers),
-					captchaConfig,
-					frictionlessTokenId,
-				);
-			const captchaResponse: CaptchaResponseBody = {
-				[ApiParams.status]: "ok",
-				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
-					...captcha,
-					items: captcha.items.map((item) =>
-						parseCaptchaAssets(item, env.assetsResolver),
-					),
-				})),
-				[ApiParams.requestHash]: taskData.requestHash,
-				[ApiParams.timestamp]: taskData.timestamp.toString(),
-				[ApiParams.signature]: {
-					[ApiParams.provider]: {
-						[ApiParams.requestHash]: taskData.signedRequestHash,
-					},
-				},
-			};
-			return res.json(captchaResponse);
-		} catch (err) {
-			tasks.logger.error({ err, params: req.params });
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						error: err,
-
-						code: 500,
-						params: req.params,
-						context: err,
-					},
-					i18n: req.i18n,
-				}),
-			);
-		}
-	});
+		},
+	);
 
 	/**
 	 * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment
@@ -190,71 +193,75 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {Captcha[]} captchas - The Captcha solutions
 	 * @return {DappUserSolutionResult} - The Captcha solution result and proof
 	 */
-	router.post(ApiPaths.SubmitImageCaptchaSolution, async (req, res, next) => {
-		let parsed: CaptchaSolutionBodyType;
-		try {
-			parsed = CaptchaSolutionBody.parse(req.body);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
-					i18n: req.i18n,
-				}),
-			);
-		}
-
-		const { user, dapp } = parsed;
-
-		validiateSiteKey(dapp);
-		validateAddr(user);
-
-		try {
-			const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
-
-			if (!clientRecord) {
+	router.post(
+		ClientApiPaths.SubmitImageCaptchaSolution,
+		async (req, res, next) => {
+			let parsed: CaptchaSolutionBodyType;
+			try {
+				parsed = CaptchaSolutionBody.parse(req.body);
+			} catch (err) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
 						i18n: req.i18n,
 					}),
 				);
 			}
 
-			// TODO allow the dapp to override the length of time that the request hash is valid for
-			const result: DappUserSolutionResult =
-				await tasks.imgCaptchaManager.dappUserSolution(
-					user,
-					dapp,
-					parsed[ApiParams.requestHash],
-					parsed[ApiParams.captchas],
-					parsed[ApiParams.signature].user.timestamp,
-					Number.parseInt(parsed[ApiParams.timestamp]),
-					parsed[ApiParams.signature].provider.requestHash,
-					getIPAddress(req.ip || "").bigInt(),
-					flatten(req.headers),
-				);
+			const { user, dapp } = parsed;
 
-			const returnValue: CaptchaSolutionResponse = {
-				status: req.i18n.t(
-					result.verified ? "API.CAPTCHA_PASSED" : "API.CAPTCHA_FAILED",
-				),
-				...result,
-			};
-			return res.json(returnValue);
-		} catch (err) {
-			tasks.logger.error({ err, body: req.body });
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						error: err,
-					},
-					i18n: req.i18n,
-				}),
-			);
-		}
-	});
+			validiateSiteKey(dapp);
+			validateAddr(user);
+
+			try {
+				const clientRecord = await tasks.db.getClientRecord(parsed.dapp);
+
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+						}),
+					);
+				}
+
+				// TODO allow the dapp to override the length of time that the request hash is valid for
+				const result: DappUserSolutionResult =
+					await tasks.imgCaptchaManager.dappUserSolution(
+						user,
+						dapp,
+						parsed[ApiParams.requestHash],
+						parsed[ApiParams.captchas],
+						parsed[ApiParams.signature].user.timestamp,
+						Number.parseInt(parsed[ApiParams.timestamp]),
+						parsed[ApiParams.signature].provider.requestHash,
+						getIPAddress(req.ip || "").bigInt(),
+						flatten(req.headers),
+						req.ja4,
+					);
+
+				const returnValue: CaptchaSolutionResponse = {
+					status: req.i18n.t(
+						result.verified ? "API.CAPTCHA_PASSED" : "API.CAPTCHA_FAILED",
+					),
+					...result,
+				};
+				return res.json(returnValue);
+			} catch (err) {
+				tasks.logger.error({ err, body: req.body });
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							code: 500,
+							siteKey: req.body.dapp,
+							error: err,
+						},
+						i18n: req.i18n,
+					}),
+				);
+			}
+		},
+	);
 
 	/**
 	 * Supplies a PoW challenge to a Dapp User
@@ -262,7 +269,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {string} userAccount - User address
 	 * @param {string} dappAccount - Dapp address
 	 */
-	router.post(ApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
+	router.post(ClientApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
 		let parsed: GetPowCaptchaChallengeRequestBodyTypeOutput;
 
 		try {
@@ -347,6 +354,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				challenge.providerSignature,
 				getIPAddress(req.ip || "").bigInt(),
 				flatten(req.headers),
+				req.ja4,
 				frictionlessTokenId,
 			);
 
@@ -388,77 +396,80 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {string} nonce - the nonce of the challenge
 	 * @param {number} verifiedTimeout - the valid length of captcha solution in ms
 	 */
-	router.post(ApiPaths.SubmitPowCaptchaSolution, async (req, res, next) => {
-		let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
+	router.post(
+		ClientApiPaths.SubmitPowCaptchaSolution,
+		async (req, res, next) => {
+			let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
 
-		try {
-			parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
-					i18n: req.i18n,
-				}),
-			);
-		}
-
-		const {
-			challenge,
-			difficulty,
-			signature,
-			nonce,
-			verifiedTimeout,
-			dapp,
-			user,
-		} = parsed;
-
-		validiateSiteKey(dapp);
-		validateAddr(user);
-
-		try {
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-
-			if (!clientRecord) {
+			try {
+				parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
+			} catch (err) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
 						i18n: req.i18n,
 					}),
 				);
 			}
 
-			const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
+			const {
 				challenge,
 				difficulty,
-				signature.provider.challenge,
+				signature,
 				nonce,
 				verifiedTimeout,
-				signature.user.timestamp,
-				getIPAddress(req.ip || ""),
-				flatten(req.headers),
-			);
-			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
-			return res.json(response);
-		} catch (err) {
-			tasks.logger.error({ err, body: req.body });
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						error: err,
-					},
-					i18n: req.i18n,
-				}),
-			);
-		}
-	});
+				dapp,
+				user,
+			} = parsed;
+
+			validiateSiteKey(dapp);
+			validateAddr(user);
+
+			try {
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+						}),
+					);
+				}
+
+				const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
+					challenge,
+					difficulty,
+					signature.provider.challenge,
+					nonce,
+					verifiedTimeout,
+					signature.user.timestamp,
+					getIPAddress(req.ip || ""),
+					flatten(req.headers),
+				);
+				const response: PowCaptchaSolutionResponse = { status: "ok", verified };
+				return res.json(response);
+			} catch (err) {
+				tasks.logger.error({ err, body: req.body });
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							code: 500,
+							siteKey: req.body.dapp,
+							error: err,
+						},
+						i18n: req.i18n,
+					}),
+				);
+			}
+		},
+	);
 
 	/**
 	 * Gets a frictionless captcha challenge
 	 */
 	router.post(
-		ApiPaths.GetFrictionlessCaptchaChallenge,
+		ClientApiPaths.GetFrictionlessCaptchaChallenge,
 		async (req, res, next) => {
 			try {
 				const { token, dapp, user } =
@@ -551,6 +562,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await imageCaptchaConfigResolver.isConfigDefined(
 						dapp,
 						ipAddress,
+						req.ja4,
 						user,
 					);
 

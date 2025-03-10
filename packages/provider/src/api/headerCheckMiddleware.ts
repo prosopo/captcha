@@ -21,20 +21,23 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const user = req.headers["prosopo-user"] as string;
-			const dapp = req.headers["prosopo-site-key"] as string;
+			const siteKey = req.headers["prosopo-site-key"] as string;
 
 			if (!user) {
 				unauthorised(res);
 				return;
 			}
-			if (!dapp) {
+			if (!siteKey) {
 				unauthorised(res);
 				return;
 			}
 
-			validiateSiteKey(dapp);
+			validiateSiteKey(siteKey);
 
 			validateAddr(user);
+
+			req.user = user;
+			req.siteKey = siteKey;
 
 			next();
 		} catch (err) {

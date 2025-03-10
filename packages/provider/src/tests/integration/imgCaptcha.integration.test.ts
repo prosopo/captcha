@@ -16,12 +16,12 @@ import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
-	ApiPaths,
 	type CaptchaRequestBodyType,
 	type CaptchaResponseBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
 	CaptchaType,
+	ClientApiPaths,
 } from "@prosopo/types";
 import fetch from "node-fetch";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -45,7 +45,7 @@ describe("Image Captcha Integration Tests", () => {
 	describe("GetImageCaptchaChallenge", () => {
 		it("should supply an image captcha challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
-			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
@@ -62,6 +62,7 @@ describe("Image Captcha Integration Tests", () => {
 					"Prosopo-User": userAccount,
 				},
 			});
+			console.log(response);
 			expect(response.status).toBe(200);
 
 			const data = await response.json();
@@ -71,7 +72,7 @@ describe("Image Captcha Integration Tests", () => {
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
 			const origin = "http://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
-			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: unregisteredAccount,
 				[ApiParams.user]: userAccount,
@@ -98,7 +99,7 @@ describe("Image Captcha Integration Tests", () => {
 		it("should not supply an image captcha challenge to a Dapp User if an invalid site key is provided", async () => {
 			const invalidSiteKey = "junk";
 			const origin = "http://localhost";
-			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: invalidSiteKey,
 				[ApiParams.user]: userAccount,
@@ -125,7 +126,7 @@ describe("Image Captcha Integration Tests", () => {
 		it("should fail if datasetID is incorrect", async () => {
 			const datasetId = "thewrongdsetId";
 			const origin = "http://localhost";
-			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
@@ -146,7 +147,7 @@ describe("Image Captcha Integration Tests", () => {
 		});
 		it("should return an error if the captcha type is set to pow", async () => {
 			const origin = "http://localhost";
-			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			await registerSiteKey(dappAccount, CaptchaType.pow);
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
@@ -173,7 +174,7 @@ describe("Image Captcha Integration Tests", () => {
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
 		const origin = "http://localhost";
-		const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+		const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 		await registerSiteKey(dappAccount, CaptchaType.frictionless);
 		const body: CaptchaRequestBodyType = {
 			[ApiParams.dapp]: dappAccount,
@@ -209,7 +210,7 @@ describe("Image Captcha Integration Tests", () => {
 
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
-			const getImageCaptchaURL = `${baseUrl}${ApiPaths.GetImageCaptchaChallenge}`;
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			const getImgCaptchaBody: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
@@ -274,7 +275,7 @@ describe("Image Captcha Integration Tests", () => {
 			};
 
 			const solveThatCaptcha = await fetch(
-				`${baseUrl}${ApiPaths.SubmitImageCaptchaSolution}`,
+				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
 				{
 					method: "POST",
 					headers: {
