@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,22 +11,40 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-/* eslint-disable @typescript-eslint/no-var-requires */
-const getWebpackConfig = require('@prosopo/config/webpack/webpack.config')
-const path = require('path')
-const args = process.argv.slice(2)
-const mode = args.indexOf('--mode') > -1 ? args[args.indexOf('--mode') + 1] : 'development'
-const webpackConfig = getWebpackConfig(mode)
+const getWebpackConfig = require("@prosopo/config/webpack/webpack.config");
+const path = require("node:path");
+const fg = require("fast-glob");
+const args = process.argv.slice(2);
+const mode =
+	args.indexOf("--mode") > -1
+		? args[args.indexOf("--mode") + 1]
+		: "development";
+const webpackConfig = getWebpackConfig(mode);
+
+const rootDir = path.resolve(__dirname, "../..");
+console.log("Looking in", rootDir);
+
+const nodeModulePaths = fg.sync("**/node_modules", {
+	onlyDirectories: true,
+	cwd: rootDir,
+});
+
+console.log(nodeModulePaths);
+
 const bundleWebpackConfig = {
-    ...webpackConfig,
-    resolve: {
-        ...webpackConfig.resolve,
-        modules: [path.resolve('node_modules'), path.resolve('../node_modules'), path.resolve('../../node_modules')],
-        alias: {
-            '@polkadot/x-textdecoder': path.resolve('../../node_modules/@polkadot/x-textdecoder'),
-            '@polkadot/x-textencoder': path.resolve('../../node_modules/@polkadot/x-textencoder'),
-        },
-    },
-}
-console.log(bundleWebpackConfig)
-module.exports = bundleWebpackConfig
+	...webpackConfig,
+	resolve: {
+		...webpackConfig.resolve,
+		modules: nodeModulePaths,
+		alias: {
+			"@polkadot/x-textdecoder": path.resolve(
+				"../../node_modules/@polkadot/x-textdecoder",
+			),
+			"@polkadot/x-textencoder": path.resolve(
+				"../../node_modules/@polkadot/x-textencoder",
+			),
+		},
+	},
+};
+console.log(bundleWebpackConfig);
+module.exports = bundleWebpackConfig;

@@ -1,19 +1,19 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist"
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		}
+	]
 }

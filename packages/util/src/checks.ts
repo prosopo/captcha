@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export const isArray = (value: unknown): boolean => {
-    // null passes the isArray check, so manually check for it
-    return Array.isArray(value) && value !== null
-}
+	// null passes the isArray check, so manually check for it
+	return Array.isArray(value) && value !== null;
+};
 
 export const isObject = (value: unknown): boolean => {
-    return value instanceof Object && !isArray(value)
-}
+	return value instanceof Object && !isArray(value);
+};

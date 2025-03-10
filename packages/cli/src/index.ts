@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './argv.js'
-export * from './cli.js'
-export * from './start.js'
-export * from './process.env.js'
-export * from './files.js'
-export { default as defaultConfig } from './prosopo.config.js'
-export * from './env.js'
+export * from "./argv.js";
+export * from "./cli.js";
+export * from "./start.js";
+export * from "./process.env.js";
+export * from "./files.js";
+export { default as defaultConfig } from "./prosopo.config.js";

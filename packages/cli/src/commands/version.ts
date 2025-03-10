@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,19 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
-import { version } from '@prosopo/util'
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import type { ProsopoConfigOutput } from "@prosopo/types";
+import { version } from "@prosopo/util";
 
-export default (pair: KeyringPair, config: ProsopoConfigOutput, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.version')
+export default (
+	pair: KeyringPair,
+	config: ProsopoConfigOutput,
+	cmdArgs?: { logger?: Logger },
+) => {
+	const logger =
+		cmdArgs?.logger || getLogger(LogLevel.enum.info, "cli.version");
 
-    return {
-        command: 'version',
-        describe: 'Return the version of the software',
-        handler: async () => {
-            logger.info(`Version: ${JSON.stringify(version)}`)
-        },
-    }
-}
+	return {
+		command: "version",
+		describe: "Return the version of the software",
+		handler: () => {
+			logger.info(`Version: ${JSON.stringify(version)}`);
+		},
+	};
+};

@@ -1,35 +1,48 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "NodeNext"
-    },
-    "include": ["src", "src/**/*.json"],
-    "references": [
-        {
-            "path": "../../contracts/captcha"
-        },
-        {
-            "path": "../../dev/config"
-        },
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../contract"
-        },
-        {
-            "path": "../env"
-        },
-        {
-            "path": "../provider"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"module": "NodeNext"
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+
+		{
+			"path": "../dotenv"
+		},
+		{
+			"path": "../env"
+		},
+		{
+			"path": "../keyring"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../provider"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api-express-router"
+		}
+	]
 }

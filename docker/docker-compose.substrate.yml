@@ -1,4 +1,3 @@
-version: '3.4'
 services:
     substrate:
         image: prosopo/substrate:polkadot-v0.9.43

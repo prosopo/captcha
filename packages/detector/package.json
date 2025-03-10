@@ -1,15 +1,36 @@
 {
-    "name": "@prosopo/detector",
-    "version": "1.0.2",
-    "main": "src/index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 0",
-        "lint:fix": "echo \"Not linting @prosopo/obf-bot\" && exit 0",
-        "lint": "echo \"Not linting @prosopo/obf-bot\" && exit 0",
-        "build": "tsc"
-    },
-    "devDependencies": {
-        "typescript": "5.3.2"
-    },
-    "type": "module"
+	"name": "@prosopo/detector",
+	"version": "2.5.0",
+	"main": "src/index.js",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"build": "tsc --build --verbose",
+		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"clean": "tsc --build --clean"
+	},
+	"devDependencies": {
+		"@vitest/coverage-v8": "2.1.1",
+		"concurrently": "9.0.1",
+		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
+		"tslib": "2.7.0",
+		"tsx": "4.19.1",
+		"typescript": "5.6.2",
+		"vite": "5.4.6",
+		"vitest": "2.1.1"
+	},
+	"type": "module",
+	"dependencies": {
+		"express": "4.21.2"
+	}
 }

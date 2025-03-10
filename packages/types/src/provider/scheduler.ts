@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export enum ScheduledTaskNames {
-    BatchCommitment = 'BatchCommitment',
-    CalculateSolution = 'CalculateSolution',
+	BatchCommitment = "BatchCommitment",
+	CalculateSolution = "CalculateSolution",
+	StoreCommitmentsExternal = "StoreCommitmentsExternal",
+	GetClientList = "GetClientList",
 }
 
 export enum ScheduledTaskStatus {
-    Pending = 'Pending',
-    Running = 'Running',
-    Completed = 'Completed',
-    Failed = 'Failed',
+	Pending = "Pending",
+	Running = "Running",
+	Completed = "Completed",
+	Failed = "Failed",
 }
 
 export interface ScheduledTaskResult {
-    error?: string
-    data?: Record<string, any>
+	error?: string;
+	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+	data?: Record<string, any>;
 }

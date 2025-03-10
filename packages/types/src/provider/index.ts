@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './accounts.js'
-export * from './api.js'
-export * from './scheduler.js'
-export * from './argv.js'
+export * from "./accounts.js";
+export * from "./api.js";
+export * from "./scheduler.js";
+export * from "./argv.js";

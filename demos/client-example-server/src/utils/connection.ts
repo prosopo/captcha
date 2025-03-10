@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,16 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { AutoIncrementID, AutoIncrementIDOptions } from '@typegoose/auto-increment'
-import UserSchema from '../models/user.js'
-import mongoose, { Connection } from 'mongoose'
+import {
+	AutoIncrementID,
+	type AutoIncrementIDOptions,
+} from "@typegoose/auto-increment";
+import mongoose, { type Connection } from "mongoose";
+import UserSchema from "../models/user.js";
 
 function connectionFactory(uri: string): Connection {
-    const conn = mongoose.createConnection(uri)
-    if (!conn.models.user) {
-        UserSchema.plugin(AutoIncrementID, { field: 'id' } as AutoIncrementIDOptions)
-        conn.model('User', UserSchema)
-    }
-    return conn
+	const conn = mongoose.createConnection(uri);
+	if (!conn.models.user) {
+		UserSchema.plugin(AutoIncrementID, {
+			field: "id",
+		} as AutoIncrementIDOptions);
+		conn.model("User", UserSchema);
+	}
+	return conn;
 }
-export default connectionFactory
+export default connectionFactory;

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,10 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { DatabaseTypes } from '@prosopo/types'
-import { ProsopoDatabase as MongoDatabase } from './mongo.js'
-import { MongoMemoryDatabase } from './mongoMemory.js'
+import { DatabaseTypes } from "@prosopo/types";
+import { MongoDatabase } from "../base/mongo.js";
+import { MongoMemoryDatabase } from "../base/mongoMemory.js";
+import { CaptchaDatabase } from "./captcha.js";
+import { ClientDatabase } from "./client.js";
+import { ProviderDatabase } from "./provider.js";
+export * from "./captcha.js";
+export * from "./client.js";
+export { ProviderDatabase } from "./provider.js";
 export const Databases = {
-    [DatabaseTypes.Values.mongo]: MongoDatabase,
-    [DatabaseTypes.Values.mongoMemory]: MongoMemoryDatabase,
-}
+	[DatabaseTypes.Values.mongo]: MongoDatabase,
+	[DatabaseTypes.Values.provider]: ProviderDatabase,
+	[DatabaseTypes.Values.client]: ClientDatabase,
+	[DatabaseTypes.Values.captcha]: CaptchaDatabase,
+	[DatabaseTypes.Values.mongoMemory]: MongoMemoryDatabase,
+};

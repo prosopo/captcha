@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,47 +11,65 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, getLogger } from '@prosopo/common'
-import { ProsopoConfigOutput } from '@prosopo/types'
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import type { ProsopoConfigOutput } from "@prosopo/types";
+import yargs, { type CommandModule } from "yargs";
+import { hideBin } from "yargs/helpers";
 import {
-    commandBatchCommit,
-    commandDappAccounts,
-    commandDappDetails,
-    commandDappRegister,
-    commandDappUpdate,
-    commandProviderAccounts,
-    commandProviderDataset,
-    commandProviderDeregister,
-    commandProviderDetails,
-    commandProviderRegister,
-    commandProviderSetDataset,
-    commandProviderUpdate,
-    commandVersion,
-} from './commands/index.js'
-import { hideBin } from 'yargs/helpers'
-import yargs from 'yargs'
+	commandProviderSetDataset,
+	commandSiteKeyRegister,
+	commandSiteKeyRegisterApi,
+	commandStoreCaptchasExternally,
+	commandVersion,
+} from "./commands/index.js";
+import { MigrateBlockRuleDbRecordsToUserAccessPolicyCommand } from "./commands/migrateBlockRulesToUserAccessRules.js";
 
-export type AwaitedProcessedArgs = { [x: string]: unknown; api: boolean; _: (string | number)[]; $0: string }
+export type AwaitedProcessedArgs = {
+	[x: string]: unknown;
+	api: boolean;
+	_: (string | number)[];
+	$0: string;
+};
 
-export function processArgs(args: string[], pair: KeyringPair, config: ProsopoConfigOutput) {
-    const logger = getLogger(LogLevel.enum.info, 'CLI')
-    return yargs(hideBin(args))
-        .usage('Usage: $0 [global options] <command> [options]')
-        .option('api', { demand: false, default: false, type: 'boolean' } as const)
-        .option('adminApi', { demand: false, default: false, type: 'boolean' } as const)
-        .command(commandProviderRegister(pair, config, { logger }))
-        .command(commandProviderUpdate(pair, config, { logger }))
-        .command(commandProviderDeregister(pair, config, { logger }))
-        .command(commandProviderSetDataset(pair, config, { logger }))
-        .command(commandDappRegister(pair, config, { logger }))
-        .command(commandDappUpdate(pair, config, { logger }))
-        .command(commandProviderAccounts(pair, config, { logger }))
-        .command(commandDappAccounts(pair, config, { logger }))
-        .command(commandProviderDetails(pair, config, { logger }))
-        .command(commandProviderDataset(pair, config, { logger }))
-        .command(commandDappDetails(pair, config, { logger }))
-        .command(commandBatchCommit(pair, config, { logger }))
-        .command(commandVersion(pair, config, { logger }))
-        .parse()
+function getCommands(
+	pair: KeyringPair,
+	config: ProsopoConfigOutput,
+	authAccount: KeyringPair,
+	logger: Logger,
+): CommandModule[] {
+	return [
+		commandProviderSetDataset(pair, config, { logger }),
+		commandStoreCaptchasExternally(pair, config, { logger }),
+		commandSiteKeyRegister(pair, config, { logger }),
+		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
+		commandVersion(pair, config, { logger }),
+		new MigrateBlockRuleDbRecordsToUserAccessPolicyCommand(pair, config),
+	];
+}
+
+export function processArgs(
+	args: string[],
+	pair: KeyringPair,
+	authAccount: KeyringPair,
+	config: ProsopoConfigOutput,
+) {
+	const logger = getLogger(LogLevel.enum.info, "CLI");
+
+	const commandManager = yargs(hideBin(args))
+		.usage("Usage: $0 [global options] <command> [options]")
+		.option("api", { demand: false, default: false, type: "boolean" } as const)
+		.option("adminApi", {
+			demand: false,
+			default: false,
+			type: "boolean",
+		} as const);
+
+	const commands = getCommands(pair, config, authAccount, logger);
+
+	for (const command of commands) {
+		commandManager.command(command);
+	}
+
+	return commandManager.parse();
 }

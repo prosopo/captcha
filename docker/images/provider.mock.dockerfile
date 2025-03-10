@@ -2,11 +2,12 @@ FROM node:20
 
 WORKDIR /usr/src/app
 
-COPY ./demos/provider-mock/dist/ ./
 COPY ./demos/provider-mock/package.json ./
 
 RUN npm i
 
+COPY ./demos/provider-mock/dist/ ./
+
 EXPOSE 9229 80 443
 
-CMD exec /bin/bash -c "node ./start.js"
+CMD ["node", "./start.js"]

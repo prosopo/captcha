@@ -1,28 +1,30 @@
 {
-    "name": "@prosopo/client-bundle-example",
-    "main": "index.js",
-    "engines": {
-        "node": ">=20",
-        "npm": ">=9"
-    },
-    "scripts": {
-        "test": "echo \"No test specified\"",
-        "start": "vite serve ./src --port 9232 --config vite.config.ts",
-        "clean": "echo 'nothing to clean'",
-        "eslint": "npx eslint . --cache --cache-location ../../node_modules/.cache/eslint/.eslintcache --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore --quiet",
-        "eslint:fix": "npm run eslint -- --fix",
-        "prettier": "npx prettier . --cache --cache-location ../../node_modules/.cache/prettier/.prettiercache --check --no-error-on-unmatched-pattern --ignore-path ../../.eslintignore",
-        "prettier:fix": "npm run prettier -- --write",
-        "lint": "npm run eslint && npm run prettier",
-        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
-    },
-    "dependencies": {
-        "dotenv": "^16.0.1",
-        "vite": "^5.1.7"
-    },
-    "version": "1.0.2",
-    "devDependencies": {
-        "tslib": "2.6.2",
-        "typescript": "5.1.6"
-    }
+	"name": "@prosopo/client-bundle-example",
+	"main": "index.js",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"build": "echo \"No build specified\"",
+		"build:cjs": "echo 'no cjs build'",
+		"start": "vite serve ./src --port 9232 --config vite.config.ts",
+		"clean": "echo 'nothing to clean'"
+	},
+	"version": "2.5.0",
+	"devDependencies": {
+		"@prosopo/dotenv": "2.5.0",
+		"@types/node": "22.5.5",
+		"@vitest/coverage-v8": "2.1.1",
+		"concurrently": "9.0.1",
+		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
+		"tslib": "2.7.0",
+		"tsx": "4.19.1",
+		"typescript": "5.6.2",
+		"vite": "5.4.6",
+		"vitest": "2.1.1"
+	}
 }
