@@ -17,7 +17,7 @@ import { CaptchaType, CaptchaTypeSpec } from "./captchaType.js";
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.default(CaptchaType.frictionless),
 	domains: array(string()).default([]),
-	frictionlessThreshold: number().default(0.8),
+	frictionlessThreshold: number().default(0.5),
 	powDifficulty: number().default(4),
 });
 export type IUserSettings = output<typeof ClientSettingsSchema>;
