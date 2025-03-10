@@ -150,16 +150,14 @@ export class ProsopoServer {
 				};
 			}
 
-			if (providerUrl) {
-				return await this.verifyProvider(
-					token,
-					this.config.timeouts,
-					providerUrl,
-					Number(timestamp),
-					user,
-					challenge,
-				);
-			}
+			return await this.verifyProvider(
+				token,
+				this.config.timeouts,
+				provider.url,
+				Number(timestamp),
+				user,
+				challenge,
+			);
 		} catch (err) {
 			this.logger.error({ err, token });
 			throw new ProsopoApiError("API.BAD_REQUEST", {
