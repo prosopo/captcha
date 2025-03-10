@@ -22,6 +22,7 @@ import {
 	ProsopoContractError,
 	getLogger,
 } from "@prosopo/common";
+import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	type CaptchaTimeoutOutput,
 	ProcaptchaOutputSchema,
@@ -133,6 +134,21 @@ export class ProsopoServer {
 
 			const { providerUrl, challenge, timestamp, user } =
 				ProcaptchaOutputSchema.parse(payload);
+
+			// check provides URL is valid
+			const providers = await loadBalancer(this.config.defaultEnvironment);
+
+			// find the provider by URL in providers
+			const provider = providers.find((p) => p.url === providerUrl);
+
+			// if the provider is not found, return an error
+			if (!provider) {
+				this.logger.error("Provider not found");
+				return {
+					verified: false,
+					status: i18n.t("API.USER_NOT_VERIFIED"),
+				};
+			}
 
 			if (providerUrl) {
 				return await this.verifyProvider(
