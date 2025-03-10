@@ -36,7 +36,7 @@ const workspaceRoot = path.resolve("../..");
 export default defineConfig(async ({ command, mode }) => {
 	const copyDir = {
 		srcDir: `${workspaceRoot}/packages/locale/src/locales`,
-		destDir: `${workspaceRoot}/demos/client-example/dist/bundle/locales`,
+		destDir: `${workspaceRoot}/demos/client-example/dist/locales`,
 	};
 
 	const localFiles = await fg.glob(
