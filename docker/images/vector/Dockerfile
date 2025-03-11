@@ -36,7 +36,7 @@ set -eux
 # substitute the env vars into the template toml config for vector
 envsubst < /etc/vector/vector.toml > /etc/vector/vector-filled.toml
 
-cat /etc/vector/vector-filled.toml
+# cat /etc/vector/vector-filled.toml
 
 # start vector
 vector --config /etc/vector/vector-filled.toml
