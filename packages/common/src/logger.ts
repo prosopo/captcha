@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,10 +58,17 @@ const JSONReporter = (
 		options: ConsolaOptions;
 	},
 ) => {
+	// https://stackoverflow.com/a/65886224
+	const writer = process?.stdout
+		? process.stdout.write.bind(process.stdout)
+		: console.info;
+	const writerError = process?.stderr
+		? process.stderr.write.bind(process.stderr)
+		: console.error;
 	if (context.options.level === ConsolaLogLevels.error) {
-		process.stderr.write(`${JSON.stringify(message)}\n`);
+		writerError(`${JSON.stringify(message)}\n`);
 	} else {
-		process.stdout.write(`${JSON.stringify(message)}\n`);
+		writer(`${JSON.stringify(message)}\n`);
 	}
 };
 

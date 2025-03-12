@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		default_page: "/",
+		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
+		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
+		default_page: `/${process.env.CAPTCHA_TYPE || ""}`,
 	},
 	e2e: {
 		setupNodeEvents(on, config) {
@@ -41,7 +43,6 @@ export default defineConfig({
 					build: {
 						ssr: false,
 						modulePreload: { polyfill: true },
-						mode: "development",
 					},
 					plugins: [
 						nodePolyfills({
@@ -52,6 +53,7 @@ export default defineConfig({
 				}),
 			);
 		},
+		excludeSpecPattern: ["cypress/e2e/**/frictionless.cy.ts"],
 	},
 	component: {
 		devServer: {

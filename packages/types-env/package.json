@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/types-env",
-	"version": "2.3.1",
+	"version": "2.5.0",
 	"description": "Types for prosopo environment",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"exports": {
 		".": {
@@ -32,13 +32,13 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/keyring": "12.6.2",
-		"@prosopo/common": "2.3.1",
-		"@prosopo/types": "2.3.1",
-		"@prosopo/types-database": "2.3.1",
-		"express": "4.21.1"
+		"@prosopo/common": "2.5.0",
+		"@prosopo/types": "2.5.0",
+		"@prosopo/types-database": "2.5.0",
+		"express": "4.21.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.3.1",
+		"@prosopo/config": "2.5.0",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

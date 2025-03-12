@@ -1,6 +1,4 @@
-import type { Hash } from "@prosopo/types";
-import { array, nativeEnum, number, object, string } from "zod";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +11,9 @@ import { array, nativeEnum, number, object, string } from "zod";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { array, nativeEnum, number, object, string } from "zod";
+import type { Hash } from "../provider/api.js";
 import {
 	type Captcha,
 	CaptchaTypes,

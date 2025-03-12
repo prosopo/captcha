@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,15 +26,22 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 	public constructor(
 		private readonly rulesStorage: RulesStorage,
 		private readonly logger: Logger,
+		private _accessRule: Rule | null = null,
 	) {}
+
+	get accessRule(): Rule | null {
+		return this._accessRule;
+	}
 
 	public async isConfigDefined(
 		clientId: string,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 	): Promise<boolean> {
 		const accessRule = await this.fetchUserAccessRule(
 			userIpAddress,
+			ja4,
 			userId,
 			clientId,
 		);
@@ -43,13 +50,15 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 		const configDefined = null !== imageCaptchaConfig;
 
-		this.logger.info("ImageCaptchaConfigRulesResolver.isConfigDefined", {
-			configDefined: configDefined,
-			clientId: clientId,
-			userIpAddress: userIpAddress.toString(),
-			userId: userId,
-			imageCaptchaConfig: imageCaptchaConfig,
-		});
+		if (configDefined) {
+			this.logger.info({
+				configDefined: configDefined,
+				clientId: clientId,
+				userIpAddress: userIpAddress.toString(),
+				userId: userId,
+				imageCaptchaConfig: imageCaptchaConfig,
+			});
+		}
 
 		return configDefined;
 	}
@@ -57,6 +66,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 	public async resolveConfig(
 		defaults: ProsopoCaptchaCountConfigSchemaOutput,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 		clientId: string,
 	): Promise<ProsopoCaptchaCountConfigSchemaOutput> {
@@ -67,14 +77,15 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			defaults: defaults,
 		};
 
-		const accessRule = await this.fetchUserAccessRule(
+		this._accessRule = await this.fetchUserAccessRule(
 			userIpAddress,
+			ja4,
 			userId,
 			clientId,
 		);
 
-		if (null === accessRule) {
-			this.logger.info("ImageCaptchaConfigRulesResolver.resolveConfig", {
+		if (null === this.accessRule) {
+			this.logger.debug("ImageCaptchaConfigRulesResolver.resolveConfig", {
 				configDefined: false,
 				...logArgs,
 			});
@@ -82,7 +93,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			return defaults;
 		}
 
-		const imageCaptchaConfig = accessRule.config?.imageCaptcha || {};
+		const imageCaptchaConfig = this.accessRule.config?.imageCaptcha || {};
 
 		const config = this.getImageCaptchaConfig(defaults, imageCaptchaConfig);
 
@@ -98,16 +109,18 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 	protected async fetchUserAccessRule(
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 		clientId: string,
 	): Promise<Rule | null> {
 		const accessRules = await this.queryUserAccessRules(
 			userIpAddress,
+			ja4,
 			userId,
 			clientId,
 		);
 
-		this.logger.info("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
+		this.logger.debug("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
 			accessRules: accessRules.length,
 			userIpAddress: userIpAddress.address.toString(),
 			userId: userId,
@@ -119,6 +132,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 	protected async queryUserAccessRules(
 		ipAddress: IPAddress,
+		ja4: string,
 		user: string,
 		clientId: string,
 	): Promise<Rule[]> {
@@ -127,6 +141,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 				clientId: clientId,
 				userId: user,
 				userIpAddress: ipAddress,
+				ja4: ja4,
 			},
 			{
 				includeRecordsWithoutClientId: true,

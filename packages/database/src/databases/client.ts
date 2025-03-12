@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { Timestamp } from "@prosopo/types";
 import {
+	AccountSchema,
 	type ClientRecord,
 	type IClientDatabase,
 	TableNames,
@@ -25,9 +26,9 @@ import { MongoDatabase } from "../base/index.js";
 
 const CLIENT_TABLES = [
 	{
-		collectionName: TableNames.emails,
-		modelName: "Email",
-		schema: UserDataSchema,
+		collectionName: TableNames.accounts,
+		modelName: "Account",
+		schema: AccountSchema,
 	},
 ];
 
@@ -68,18 +69,29 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 	): Promise<ClientRecord[]> {
 		await this.connect();
 		// get remote client records that have been updated since the last task
-		const newClientRecords = await this.tables.emails
+		const newClientRecords = await this.tables.accounts
 			.find<ClientRecord>(
 				{
 					$or: [
-						{ updatedAtTimestamp: { $gt: updatedAtTimestamp } },
-						{ updatedAtTimestamp: { $exists: false } },
+						{ "sites.updatedAt": { $gt: updatedAtTimestamp } },
+						{ "sites.updatedAt": { $exists: false } },
 					],
-					activated: true,
+					"users.status": "active",
 				},
-				{ account: 1, settings: 1 },
+				{ "sites.siteKey": 1, "sites.settings": 1, "sites.tier": 1 },
 			)
-			.lean<ClientRecord[]>();
+			.lean()
+			.then((records) =>
+				records.map(
+					(record) =>
+						({
+							account: record.sites.siteKey, // Rename "sites.siteKey" to "account"
+							settings: record.sites.settings, // Rename "sites.settings" to "settings"
+							tier: record.tier, // Keep "tier" as is
+						}) as ClientRecord,
+				),
+			);
+
 		await this.close();
 		return newClientRecords;
 	}

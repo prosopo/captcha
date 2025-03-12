@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { getPairAsync } from "@prosopo/keyring";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
-	api,
+	createApiAdminRoutesProvider,
 	domainMiddleware,
 	getClientList,
 	headerCheckMiddleware,
@@ -31,23 +31,35 @@ import {
 	publicRouter,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
-import { authMiddleware, blockMiddleware } from "@prosopo/provider";
-import type { CombinedApiPaths } from "@prosopo/types";
+import {
+	authMiddleware,
+	blockMiddleware,
+	ja4Middleware,
+} from "@prosopo/provider";
+import { ClientApiPaths, type CombinedApiPaths } from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy";
+import { apiRulePaths } from "@prosopo/user-access-policy";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 
-function startApi(
+const getClientApiPathsExcludingVerify = () => {
+	const paths = Object.values(ClientApiPaths).filter(
+		(path) => path.indexOf("verify") === -1,
+	);
+	return paths as ClientApiPaths[];
+};
+
+async function startApi(
 	env: ProviderEnvironment,
 	admin = false,
 	port?: number,
-): Server {
+): Promise<Server> {
 	env.logger.info("Starting Prosopo API");
 
 	const apiApp = express();
@@ -57,27 +69,39 @@ function startApi(
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
 	);
-	const apiAdminRoutesProvider = api.admin.createApiAdminRoutesProvider(env);
+	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
-	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-	apiApp.set(
-		"trust proxy",
-		env.config.proxyCount /* number of proxies between user and server */,
-	);
+	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
+
+	env.logger.debug({
+		message: "Adding headerCheckMiddleware",
+		paths: clientPathsExcludingVerify,
+	});
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
-	apiApp.use(i18nMiddleware({}));
-	apiApp.use("/v1/prosopo/provider/client/", headerCheckMiddleware(env));
+	const i18Middleware = await i18nMiddleware({});
+	apiApp.use(i18Middleware);
+	apiApp.use(ja4Middleware(env));
+
+	// Specify verify router before the blocking middlewares
+	apiApp.use(prosopoVerifyRouter(env));
+
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
-	apiApp.use(prosopoVerifyRouter(env));
+
+	// Header check middleware will run on any client routes excluding verify
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
-
 	apiApp.use(publicRouter(env));
 
+	// Admin routes
+	env.logger.info("Enabling admin auth middleware");
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
-
+	apiApp.use(apiRulePaths.INSERT_MANY, authMiddleware(env));
+	apiApp.use(apiRulePaths.DELETE_MANY, authMiddleware(env));
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiRuleRoutesProvider,
@@ -93,12 +117,12 @@ function startApi(
 	);
 
 	// Rate limiting
-	// const configRateLimits = env.config.rateLimits;
-	// const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
-	// for (const [path, limit] of Object.entries(rateLimits)) {
-	// const enumPath = path as CombinedApiPaths;
-	// apiApp.use(enumPath, rateLimit(limit));
-	// }
+	const configRateLimits = env.config.rateLimits;
+	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
+	for (const [path, limit] of Object.entries(rateLimits)) {
+		const enumPath = path as CombinedApiPaths;
+		apiApp.use(enumPath, rateLimit(limit));
+	}
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
@@ -134,7 +158,10 @@ export async function start(
 
 	await env.isReady();
 
-	// Start the scheduled jobs
+	// Get rid of any scheduled task records from previous runs
+	env.cleanup();
+
+	//Start the scheduled jobs
 	if (env.pair) {
 		storeCaptchasExternally(env.pair, env.config).catch((err) => {
 			console.error("Failed to start scheduler:", err);

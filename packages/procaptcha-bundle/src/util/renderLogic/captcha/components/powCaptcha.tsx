@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,16 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import React from "react";
-import { CaptchaElement } from "../captcha.js";
+import type { CaptchaProps } from "../captcha.js";
 
-class PowCaptcha extends CaptchaElement {
-	public override render() {
-		const { config, callbacks } = this.props;
+const PowCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks } = props;
 
-		return <ProcaptchaPow config={config} callbacks={callbacks} />;
-	}
-}
+	return (
+		<ProcaptchaPow config={config} callbacks={getDefaultEvents(callbacks)} />
+	);
+};
 
 export { PowCaptcha };

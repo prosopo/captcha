@@ -8,7 +8,10 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
-			"path": "../../packages/locale-browser"
+			"path": "../../packages/locale"
+		},
+		{
+			"path": "../../packages/procaptcha-bundle"
 		},
 		{
 			"path": "../../packages/procaptcha-react"

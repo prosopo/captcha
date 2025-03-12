@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import {
 	ProsopoContractError,
 	getLogger,
 } from "@prosopo/common";
+import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	type CaptchaTimeoutOutput,
 	ProcaptchaOutputSchema,
@@ -76,7 +77,7 @@ export class ProsopoServer {
 		user: string,
 		challenge?: string,
 	): Promise<VerificationResponse> {
-		this.logger.info("Verifying with provider.");
+		this.logger.info(`Verifying with provider: ${providerUrl}`);
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
 			throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
@@ -134,21 +135,29 @@ export class ProsopoServer {
 			const { providerUrl, challenge, timestamp, user } =
 				ProcaptchaOutputSchema.parse(payload);
 
-			if (providerUrl) {
-				return await this.verifyProvider(
-					token,
-					this.config.timeouts,
-					providerUrl,
-					Number(timestamp),
-					user,
-					challenge,
-				);
+			// check provides URL is valid
+			const providers = await loadBalancer(this.config.defaultEnvironment);
+
+			// find the provider by URL in providers
+			const provider = providers.find((p) => p.url === providerUrl);
+
+			// if the provider is not found, return an error
+			if (!provider) {
+				this.logger.error("Provider not found");
+				return {
+					verified: false,
+					status: i18n.t("API.USER_NOT_VERIFIED"),
+				};
 			}
-			this.logger.error("No provider URL found in user token");
-			return {
-				verified: false,
-				status: i18n.t("API.USER_NOT_VERIFIED"),
-			};
+
+			return await this.verifyProvider(
+				token,
+				this.config.timeouts,
+				provider.url,
+				Number(timestamp),
+				user,
+				challenge,
+			);
 		} catch (err) {
 			this.logger.error({ err, token });
 			throw new ProsopoApiError("API.BAD_REQUEST", {
