@@ -66,9 +66,15 @@ const compareU8a = (a: Uint8Array, b: Uint8Array): 1 | 0 | -1 => {
  * Solve a Proof of Work (PoW) puzzle
  * @param data the data to hash
  * @param difficulty the threshold which a hash must be greater than to solve the PoW
+ * @returns An object containing the nonce and the time taken to solve the puzzle
  */
-export const solvePoW = (data: string, difficulty: bigint, maxTime=100000): bigint => {
+export const solvePoW = (data: string, difficulty: number, maxTime=100000): { nonce: bigint; timeTaken: number } => {
 	const now = Date.now();
+	// if not in range 0-1 difficulty, throw
+	if (!(0 <= difficulty && difficulty <= 1)) {
+		throw new Error("Difficulty must be between 0 and 1");
+	}
+	const bigIntDifficulty = difficultyFromNormalizedValue(difficulty);
 	// example:
 	// take a payload (data + nonce) and hash it, producing a hash
 	// let's say the hash in bytes is [2, 99, 32]
@@ -96,7 +102,7 @@ export const solvePoW = (data: string, difficulty: bigint, maxTime=100000): bigi
 	// this is the equivalent of representing the difficulty in base 2^32
 
 	// big endian format for integer comparison against the hash
-	const threshold = 2n ** 256n - 1n - difficulty;
+	const threshold = 2n ** 256n - 1n - bigIntDifficulty;
 	const thresholdU8a = biToU8a(threshold, true, 32);
 
 	// convert the data to bytes
@@ -130,9 +136,10 @@ export const solvePoW = (data: string, difficulty: bigint, maxTime=100000): bigi
 			// check if the hash meets the difficulty
 			const comparison = compareU8a(hash, thresholdU8a);
 			if (comparison < 0) {
-				// if the hash meets the difficulty, return the nonce
-				// convert the nonce bytes to string
-				return u8aToBi(dataAndNonce.slice(0, nonceBytes.length)); // TODO check the endianess
+				// if the hash meets the difficulty, return the nonce and time taken
+				const timeTaken = Date.now() - now;
+				const nonce = u8aToBi(dataAndNonce.slice(0, nonceBytes.length)); // TODO check the endianess
+				return { nonce, timeTaken };
 			}
 			// check max time
 			if (Date.now() - now > maxTime) {
@@ -157,121 +164,134 @@ export const solvePoW = (data: string, difficulty: bigint, maxTime=100000): bigi
 };
 
 const main = async () => {
-	const data = "hello world";
-	// chars are 8 bits
-	// old version used to specify 3-5 chars, so 24-40 bits
-	// for (let i = 0; i < 256; i++) {
-	// 	i = 255
-	// 	// const difficulty = 2n ** BigInt(i);
-	// 	// const difficulty = 257n;
-	// 	const difficulty = (2n ** BigInt(128) - 1n);
-	// 	console.log(`Trying difficulty: ${difficulty} , ${i} bits`);
-	// 	const now = Date.now();
-	// 	const nonce = solvePoW(data, difficulty);
-	// 	const elapsed = Date.now() - now;
-	// 	console.log(`nonce: ${nonce} in ${elapsed}ms`);
-	// }
+	// Test multiple difficulty levels with multiple trials per level
+	const difficultyLevels = Array.from({ length: 21 }, (_, i) => i * 0.05); // 0, 0.05, 0.1, ..., 1.0
+	const numTrials = 3; // Reduced number of trials for faster testing
+	const maxTime = 10000; // Max time per trial in ms
+	const results: { difficulty: number; avgTime: number }[] = [];
+	const allPowResults: { difficulty: number; timeTaken: number; nonce: bigint }[] = [];
 
-	// let min = 0n;
-	// let max = 2n ** 256n - 1n;
-	// const maxTime = 10000 // 1min
-
-	// // binary search to find the difficulty which takes my pc ~1min to solve
-	// while (max - min > 1n) {
-	// 	const mid = min + (max - min) / 2n;
-	// 	console.log(`Trying difficulty: ${mid}`);
-	// 	const now = Date.now();
-	// 	const nonce = solvePoW(data, mid, maxTime);
-	// 	const elapsed = Date.now() - now;
-	// 	console.log(`nonce: ${nonce} in ${elapsed}ms`);
-	// 	if (nonce === undefined) {
-	// 		max = mid;
-	// 	} else {
-	// 		min = mid;
-	// 	}
-	// }
-
-	// const a1 = biToU8a(300n, true, 4)
-	// const a2 = biToU8a(2n ** 32n - 257n, true, 4)
-	// const a3 = biToU8a(2n ** 32n - 256n, true, 4)
-	// const a4 = biToU8a(2n ** 32n - 255n, true, 4)
-	// const a5 = biToU8a(2n ** 32n - 254n, true, 4)
-
-	// const a1 = compareU8a(new Uint8Array([0, 0, 1, 45]), new Uint8Array([0, 0, 1, 44]))
-	// const a2 = compareU8a(new Uint8Array([0, 0, 1, 43]), new Uint8Array([0, 0, 1, 44]))
-	// const a3 = compareU8a(new Uint8Array([0, 0, 1, 44]), new Uint8Array([0, 0, 1, 44]))
-
-	// solvePoW(data, 254n, Number.POSITIVE_INFINITY)
-	// solvePoW(data, 255n, Number.POSITIVE_INFINITY)
-	// solvePoW(data, 256n, Number.POSITIVE_INFINITY)
-	// solvePoW(data, 257n, Number.POSITIVE_INFINITY)
-	// solvePoW(data, 2n ** 256n - 1n, Number.POSITIVE_INFINITY)
-
-	// let min = 1n
-	// let max = 1n
-	// let mid = 1n
-	// let setup = true
-	// let run = true
-	// const maxTime = 10000
-	// let count = 0
-	// while(run) {
-	// 	count++
-	// 	console.log(`Trying difficulty: ${mid}`);
-	// 	const now = Date.now();
-	// 	const nonce = solvePoW(data, mid, maxTime);
-	// 	const elapsed = Date.now() - now;
-	// 	console.log(`nonce: ${nonce} in ${elapsed}ms`);
-	// 	if(setup) {
-	// 		if(nonce !== undefined) {
-	// 			min = mid
-	// 			mid *= 2n
-	// 			max = mid
-	// 		} else {
-	// 			setup = false
-	// 		}
-	// 	}
-	// 	if(!setup) {
-	// 		if(nonce === undefined) {
-	// 			max = mid
-	// 			mid = (max - min) / 2n + min
-	// 		} else {
-	// 			min = mid
-	// 			mid = (max - min) / 2n + min
-	// 		}
-	// 	}
-	// }
-
-	// let amount = 0n
-	// const maxTime = 10000
-	// for(let i = 256; i >= 0; i--) {
-	// 	const inc = 2n ** BigInt(i) - 1n
-	// 	const diff = amount + inc
-	// 	const now = Date.now();
-	// 	const nonce = solvePoW(data, diff, maxTime);
-	// 	const elapsed = Date.now() - now;
-	// 	console.log(`${i}th diff ${diff} solved by ${nonce} in ${elapsed}ms`);
-	// 	if(nonce !== undefined) {
-	// 		amount = diff
-	// 	}
-	// }
-
-	let diff = 115792069461391469497439717614192095521140896008391839564465112707866132898966n
-	let inc = 1_000_000n
-	while(true) {
-		const now = Date.now();
-		const nonce = solvePoW(data, diff, 10000);
-		const elapsed = Date.now() - now;
-		console.log(`diff ${diff} solved by ${nonce} in ${elapsed}ms`);
-		if(nonce !== undefined) {
-			diff += inc
-		} else {
-			break
+	for (const difficulty of difficultyLevels) {
+		console.log(`Testing difficulty level: ${difficulty}`);
+		let totalTime = 0;
+		let successfulTrials = 0;
+		
+		for (let trial = 0; trial < numTrials; trial++) {
+			// Add randomness to the data to ensure different hashes for each trial
+			const data = `hello world ${Math.random().toString(36).substring(7)}`;
+			const startTime = Date.now();
+			
+			try {
+				const { nonce, timeTaken } = solvePoW(data, difficulty, maxTime);
+				console.log(`  Trial ${trial + 1}: solved in ${timeTaken}ms with nonce ${nonce}`);
+				totalTime += timeTaken;
+				successfulTrials++;
+				
+				// Store individual POW result
+				allPowResults.push({ difficulty, timeTaken, nonce });
+			} catch (error) {
+				console.log(`  Trial ${trial + 1}: max time exceeded`);
+				// If we can't solve it within the time limit, we'll stop testing this difficulty level
+				break;
+			}
 		}
+		
+		if (successfulTrials > 0) {
+			const avgTime = totalTime / successfulTrials;
+			results.push({ difficulty, avgTime });
+			console.log(`Difficulty ${difficulty}: Average time ${avgTime.toFixed(2)}ms over ${successfulTrials} trials`);
+		} else {
+			console.log(`Difficulty ${difficulty}: Could not solve within time limit`);
+			// If we can't solve any trials at this difficulty, we'll stop testing higher difficulties
+			break;
+		}
+	}
+	
+	// Output the final results as a table
+	console.log("\nFinal Results:");
+	console.log("Difficulty | Average Time (ms)");
+	console.log("------------------------");
+	for (const result of results) {
+		console.log(`${result.difficulty.toFixed(2).padStart(10)} | ${result.avgTime.toFixed(2).padStart(10)}`);
+	}
+
+	// Generate CSV output for plotting
+	console.log("\nCSV Data for Plotting:");
+	console.log("difficulty,avgTime");
+	for (const result of results) {
+		console.log(`${result.difficulty},${result.avgTime}`);
+	}
+
+	// Output all individual POW results
+	console.log("\nAll POW Results:");
+	console.log("difficulty,timeTaken,nonce");
+	for (const result of allPowResults) {
+		console.log(`${result.difficulty},${result.timeTaken},${result.nonce}`);
+	}
+
+	// Create a simple ASCII chart
+	console.log("\nASCII Chart (log scale):");
+	console.log("Difficulty | Time (ms) | Chart (each * = ~5% of max)");
+	console.log("------------------------------------------------");
+	
+	// Find the maximum time for scaling
+	const maxAvgTime = Math.max(...results.map(r => r.avgTime));
+	
+	// Use log scale for better visualization
+	for (const result of results) {
+		// Calculate the number of stars to display (log scale)
+		const logScale = Math.log(result.avgTime + 1) / Math.log(maxAvgTime + 1);
+		const numStars = Math.round(logScale * 20); // 20 stars max
+		const stars = '*'.repeat(numStars);
+		
+		console.log(`${result.difficulty.toFixed(2).padStart(10)} | ${result.avgTime.toFixed(2).padStart(9)} | ${stars}`);
 	}
 }
 
-main()
+/**
+ * Convert a normalized value (0-1) to a difficulty value in the specified range using a logarithmic scale
+ * @param normalizedValue A number between 0 and 1 (inclusive)
+ * @returns A bigint difficulty value
+ */
+export const difficultyFromNormalizedValue = (normalizedValue: number): bigint => {
+	// Validate input
+	if (normalizedValue < 0 || normalizedValue > 1) {
+		throw new Error("Normalized value must be between 0 and 1");
+	}
+
+	// Define our difficulty range
+	const minDifficulty = 115787368442814990677940379635678110367860508107103599495053852841344050922469n;
+	const maxDifficulty = 115791993805572251109631470458973827890575769264982743614897639476041363751909n;
+	const difficultyRange = maxDifficulty - minDifficulty;
+
+	// Apply logarithmic scaling
+	// Using a logarithmic function where:
+	// - normalizedValue = 0 maps to minDifficulty
+	// - normalizedValue = 1 maps to maxDifficulty
+	// - normalizedValue = 0.5 maps to a value much closer to maxDifficulty than minDifficulty
+	
+	// We'll use the formula: minDifficulty + difficultyRange * (1 - Math.exp(-k * normalizedValue)) / (1 - Math.exp(-k))
+	// where k is a constant that determines how logarithmic the scale is (higher k = more logarithmic)
+	const k = 8; // This can be adjusted to change the logarithmic curve
+	
+	// Calculate the logarithmic factor (between 0 and 1)
+	const logFactor = (1 - Math.exp(-k * normalizedValue)) / (1 - Math.exp(-k));
+	
+	// To avoid precision loss when working with bigints, we'll use a high-precision approach
+	// We'll multiply by a large factor, do integer division, then divide by the same factor
+	const precision = 1000000n; // 6 decimal places of precision
+	
+	// Calculate (logFactor * precision) as a bigint
+	const logFactorScaled = BigInt(Math.round(logFactor * Number(precision)));
+	
+	// Calculate (difficultyRange * logFactorScaled) / precision with proper rounding
+	const difficultyOffset = (difficultyRange * logFactorScaled) / precision;
+	
+	return minDifficulty + difficultyOffset;
+};
 
 // TODO convert difficulty to a 0-1 threshold?
 // TODO fix array access
 // TODO check comments make sense
+
+main()
