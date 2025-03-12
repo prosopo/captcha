@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ import { u8aToHex } from "@polkadot/util/u8a";
 import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
-	ApiPaths,
+	CaptchaType,
+	ClientApiPaths,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
@@ -33,7 +34,7 @@ import { registerSiteKey } from "./registerSitekey.js";
 
 // Define the endpoint path and base URL
 const baseUrl = "http://localhost:9229";
-const getPowCaptchaChallengePath = ApiPaths.GetPowCaptchaChallenge;
+const getPowCaptchaChallengePath = ClientApiPaths.GetPowCaptchaChallenge;
 const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
@@ -81,7 +82,7 @@ const failPoW = (data: string, difficulty: number): number => {
 describe("PoW Integration Tests", () => {
 	describe("GetPowCaptchaChallenge", () => {
 		beforeAll(async () => {
-			await registerSiteKey(dappAccount);
+			await registerSiteKey(dappAccount, CaptchaType.pow);
 		});
 
 		it("should supply a PoW challenge to a Dapp User", async () => {
@@ -161,14 +162,14 @@ describe("PoW Integration Tests", () => {
 				42,
 			);
 
-			const dappAccount = dappPair.address;
+			const dummyDappAccountAddr = dappPair.address;
 
-			await registerSiteKey(dappAccount);
+			await registerSiteKey(dummyDappAccountAddr, CaptchaType.pow);
 
 			const origin = "http://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
 				user: userPair.address,
-				dapp: dappAccount,
+				dapp: dummyDappAccountAddr,
 			};
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -178,7 +179,7 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-Site-Key": dummyDappAccountAddr,
 						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(requestBody),
@@ -207,17 +208,17 @@ describe("PoW Integration Tests", () => {
 				nonce,
 				verifiedTimeout,
 				user: userPair.address,
-				dapp: dappAccount,
+				dapp: dummyDappAccountAddr,
 			};
 			const response = await fetch(
-				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
+				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
 				{
 					method: "POST",
 					headers: {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-Site-Key": dummyDappAccountAddr,
 						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(submitBody),
@@ -241,6 +242,8 @@ describe("PoW Integration Tests", () => {
 			);
 			const userAccount = userPair.address;
 			const origin = "http://localhost";
+			const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+			await registerSiteKey(dapp, CaptchaType.pow);
 
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -250,10 +253,10 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-Site-Key": dapp,
 						"Prosopo-User": userAccount,
 					},
-					body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+					body: JSON.stringify({ user: userAccount, dapp: dapp }),
 				},
 			);
 
@@ -265,8 +268,6 @@ describe("PoW Integration Tests", () => {
 			const nonce = failPoW(challenge, difficulty);
 			const verifiedTimeout = 120000;
 
-			const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-			await registerSiteKey(dapp);
 			const body: SubmitPowCaptchaSolutionBodyType = {
 				challenge,
 				difficulty,
@@ -284,14 +285,14 @@ describe("PoW Integration Tests", () => {
 				dapp,
 			};
 			const response = await fetch(
-				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
+				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
 				{
 					method: "POST",
 					headers: {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-Site-Key": dapp,
 						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(body),
@@ -368,5 +369,65 @@ describe("PoW Integration Tests", () => {
 
 		expect(challengeBody).toHaveProperty("error");
 		expect(challengeBody.error?.message).toBe("Invalid site key");
+	});
+
+	it("should return an error if the captcha type is set to image", async () => {
+		const userPair = await getPairAsync(
+			dummyUserAccount.seed,
+			undefined,
+			"sr25519",
+		);
+		const userAccount = userPair.address;
+		const origin = "http://localhost";
+		const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+		await registerSiteKey(dapp, CaptchaType.image);
+
+		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			method: "POST",
+			headers: {
+				Connection: "close",
+				"Content-Type": "application/json",
+				Origin: origin,
+				"Prosopo-Site-Key": dapp,
+				"Prosopo-User": userAccount,
+			},
+			body: JSON.stringify({ user: userAccount, dapp }),
+		});
+
+		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+
+		expect(challengeBody).toHaveProperty("error");
+		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(challengeBody.error?.code).toBe(400);
+	});
+	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
+		const userPair = await getPairAsync(
+			dummyUserAccount.seed,
+			undefined,
+			"sr25519",
+		);
+		const userAccount = userPair.address;
+		const origin = "http://localhost";
+		// Create a new site key to avoid conflicts with other tests
+		const [mnemonic, dapp] = await generateMnemonic();
+		await registerSiteKey(dapp, CaptchaType.frictionless);
+
+		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+			method: "POST",
+			headers: {
+				Connection: "close",
+				"Content-Type": "application/json",
+				Origin: origin,
+				"Prosopo-Site-Key": dapp,
+				"Prosopo-User": userAccount,
+			},
+			body: JSON.stringify({ user: userAccount, dapp }),
+		});
+
+		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+
+		expect(challengeBody).toHaveProperty("error");
+		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
+		expect(challengeBody.error?.code).toBe(400);
 	});
 });

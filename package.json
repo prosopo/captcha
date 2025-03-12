@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.3.1",
+	"version": "2.5.0",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -78,7 +78,7 @@
 	"private": true,
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"workspaces": ["dev/*", "packages/*", "demos/*"],
 	"devDependencies": {
@@ -139,6 +139,6 @@
 	],
 	"license": "Apache-2.0",
 	"dependencies": {
-		"express": "4.21.1"
+		"express": "4.21.2"
 	}
 }

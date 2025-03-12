@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import typescript from "@rollup/plugin-typescript";
 import { wasm } from "@rollup/plugin-wasm";
 import { default as viteReact } from "@vitejs/plugin-react";
 import type { Drop } from "esbuild";
+import type { ExternalOption } from "rollup";
 import css from "rollup-plugin-import-css";
 import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
@@ -100,6 +101,7 @@ export default async function (
 		"aws",
 		"webpack",
 		"vite",
+		"i18next-fs-backend",
 	]);
 
 	// Add the node builtins (path, fs, os, etc.) to the external list
@@ -126,11 +128,10 @@ export default async function (
 		pure = ["console.log", "console.warn", "console.info", "console.debug"];
 	}
 
+	const rollupExternal: ExternalOption = allExternal;
+
 	logger.info("Bundle name", bundleName);
 	return {
-		ssr: {
-			target: "webworker",
-		},
 		server: {
 			host: "127.0.0.1",
 		},
@@ -146,7 +147,7 @@ export default async function (
 				"chrome60",
 				"edge18",
 				"firefox60",
-				"node12",
+				"node22",
 				"safari11",
 			],
 			drop,
@@ -182,7 +183,7 @@ export default async function (
 					unknownGlobalSideEffects: false,
 				},
 				experimentalLogSideEffects: false,
-				external: allExternal,
+				external: rollupExternal,
 				watch: false,
 
 				output: {

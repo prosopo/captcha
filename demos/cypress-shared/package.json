@@ -1,22 +1,22 @@
 {
 	"name": "@prosopo/cypress-shared",
-	"version": "2.3.1",
+	"version": "2.5.0",
 	"private": true,
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/types": "2.3.1",
-		"@prosopo/util": "2.3.1",
-		"express": "4.21.1"
+		"@prosopo/types": "2.5.0",
+		"@prosopo/util": "2.5.0",
+		"express": "4.21.2"
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
-		"@prosopo/common": "2.3.1",
-		"@prosopo/datasets": "2.3.1",
-		"@prosopo/types-database": "2.3.1",
+		"@prosopo/common": "2.5.0",
+		"@prosopo/datasets": "2.5.0",
+		"@prosopo/types-database": "2.5.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
@@ -38,15 +38,11 @@
 		"clean": "tsc --build --clean",
 		"cypress:open:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
 		"cypress:run:client-example": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",
-		"cypress:open:client-example:frictionless": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open --env default_page='/frictionless'",
-		"cypress:run:client-example:frictionless": "CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run --env default_page='/frictionless'",
+		"cypress:open:client-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress open",
+		"cypress:run:client-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://0.0.0.0:9230' cypress run",
 		"cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress open",
 		"cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress run",
-		"cypress:open:client-bundle-example:explicit": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/urlParams.html'",
-		"cypress:run:client-bundle-example:explicit": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/urlParams.html' --spec 'cypress/e2e/captcha.cy.ts'",
-		"cypress:open:client-bundle-example:frictionless": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/frictionless.html'",
-		"cypress:run:client-bundle-example:frictionless": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/frictionless.html'",
-		"cypress:open:client-bundle-example:js_server": "CYPRESS_BASE_URL='http://localhost:9232' cypress open --env default_page='/jsBundleTest.html'",
-		"cypress:run:client-bundle-example:js_server": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --env default_page='/jsBundleTest.html' --spec 'cypress/e2e/captcha.cy.ts'"
+		"cypress:open:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress open",
+		"cypress:run:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.frictionless.config.js"
 	}
 }

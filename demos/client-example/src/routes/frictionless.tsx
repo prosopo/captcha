@@ -1,5 +1,4 @@
-import React from "react";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +11,15 @@ import React from "react";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { CaptchaType } from "@prosopo/types";
+import React from "react";
 import App from "../App.js";
 
 export default function Root() {
 	return (
 		<React.Fragment>
-			<App captchaType={"frictionless"} />
+			<App captchaType={CaptchaType.frictionless} />
 		</React.Fragment>
 	);
 }

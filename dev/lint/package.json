@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.3.1",
+	"version": "2.5.0",
 	"description": "",
 	"private": true,
 	"scripts": {
@@ -34,11 +34,11 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/util": "2.3.1",
-		"express": "4.21.1",
+		"@prosopo/util": "2.5.0",
+		"express": "4.21.2",
 		"fast-glob": "3.3.2",
 		"zod": "3.23.8"
 	}

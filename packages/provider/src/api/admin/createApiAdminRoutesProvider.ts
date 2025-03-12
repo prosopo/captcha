@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Tasks } from "../../tasks/index.js";
 import { ApiAdminRoutesProvider } from "./apiAdminRoutesProvider.js";
 
-const createApiAdminRoutesProvider = (
+export const createApiAdminRoutesProvider = (
 	providerEnvironment: ProviderEnvironment,
 ): ApiRoutesProvider => {
 	const tasks = new Tasks(providerEnvironment);
 
 	return new ApiAdminRoutesProvider(tasks);
 };
-
-export { createApiAdminRoutesProvider };

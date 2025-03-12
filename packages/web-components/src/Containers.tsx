@@ -1,5 +1,4 @@
-import { default as styled } from "@emotion/styled";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,42 +11,22 @@ import { default as styled } from "@emotion/styled";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { default as styled } from "@emotion/styled";
 import { WIDGET_OUTER_HEIGHT } from "./WidgetConstants.js";
 
 export const ContainerDiv = styled.div`
-  container-type: inline-size;
+    container-type: size;
+    display: flex;
+    flex-direction: column;
+    height: ${WIDGET_OUTER_HEIGHT}px;
 `;
 
 export const WidthBasedStylesDiv = styled.div`
-  max-width: 100%;
-  max-height: 100%;
-  overflow: hidden;
-  height: ${WIDGET_OUTER_HEIGHT}px;
-  @container (max-width: 200px) {
-    #logo-without-text {
-      display: none;
-    }
-
-    #logo-with-text {
-      display: none;
-    }
-  }
-  @container (min-width: 201px) and (max-width: 244px) {
-    #logo-without-text {
-      display: inherit;
-    }
-
-    #logo-with-text {
-      display: none;
-    }
-  }
-  @container (min-width: 245px) {
-    #logo-without-text {
-      display: none;
-    }
-
-    #logo-with-text {
-      display: inherit;
-    }
-  }
+    max-height: 100%;
+    min-width: 100%;
+    overflow: hidden;
+    height: ${WIDGET_OUTER_HEIGHT}px;
+    width: 100%;
+    display: grid;
 `;

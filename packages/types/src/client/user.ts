@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,13 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { z } from "zod";
 import type { Timestamp } from "../datasets/index.js";
+
+import type { IUserSettings } from "./settings.js";
 
 export enum Tier {
 	Free = "free",
 	Professional = "professional",
 	Enterprise = "enterprise",
 }
+
+export const TierSchema = z.nativeEnum(Tier);
 
 export const TierMonthlyLimits = {
 	[Tier.Free]: {
@@ -45,22 +51,4 @@ export interface IUserData {
 	originUrl: string;
 	settings?: IUserSettings;
 	updatedAtTimestamp?: Timestamp;
-	tierCheckoutId?: string; // prosopo (not stripe!) checkout session id / lock
-	stripeCustomerId?: string; // stripe customer id
-	stripeTierCheckoutId?: string; // stripe checkout session id
-	stripeTierSubscriptionId?: string; // stripe subscription id
-	stripeTierPriceId?: string; // stripe price id for the subscription
-	stripeTierNext?: string; // the next tier the user is moving to, if any
-	stripeTierNextAt?: number; // the time the user will move to the next tier, if any
-	stripeTierCancelAt?: number; // the time the user's subscription will be cancelled (e.g. if cancelling at end of billing period)
-	stripeUpdatedAt?: number; // the time the user's stripe details were last updated (needed for webhook ordering)
-	pendingCheckoutTier?: Tier; // the pending checkout tier, if any
-	pendingCheckoutTierRequestQuota?: number; // the pending checkout tier request quota, if any
-}
-
-export interface IUserSettings {
-	frictionlessThreshold?: number;
-	powDifficulty?: number;
-	domains?: string[];
-	captchaType?: "image" | "pow" | "frictionless";
 }

@@ -141,7 +141,9 @@ vite.config.ts.timestamp*
 .cache
 
 js_bundles_host_temp
-**/client-bundle-example/src/assets/**
+**/client-bundle-example/src/assets/*.js
+**/client-bundle-example/src/assets/*.ts
+**/client-bundle-example/src/assets/*.ts.map
 
 .csv
 
@@ -150,3 +152,5 @@ captcha.json
 
 # ignore bundle stats
 **/stats.html
+
+*.angular

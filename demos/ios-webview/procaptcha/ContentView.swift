@@ -2,7 +2,7 @@ import SwiftUI
 import WebKit
 
 struct WebView: UIViewRepresentable {
-    let htmlString: String
+    let filePath: String
     
     func makeCoordinator() -> Coordinator {
         return Coordinator(self)
@@ -49,8 +49,10 @@ struct WebView: UIViewRepresentable {
         webView.isInspectable = true
         
         //DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
-        // baseURL must be set for localstorage to work. If localstorage is not required, it can be set to nil. Localstorage errors appear like "SecurityError: The operation is insecure."
-            webView.loadHTMLString(htmlString, baseURL: URL(string: "https://prosopo.io"))
+        guard let fileUrl = Bundle.main.url(forResource: filePath, withExtension: nil) else {
+            fatalError("html file \(filePath) not found")
+        }
+        webView.loadFileURL(fileUrl, allowingReadAccessTo: fileUrl.deletingLastPathComponent())
         //}
         
         return webView
@@ -89,25 +91,7 @@ struct ContentView: View {
     var body: some View {
         VStack {
             Text("Demo Procaptcha:")
-            WebView(htmlString: """
-<html>
-<head>
-<title>Procaptcha</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script type="module" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
-</head>
-<body>
-<form action="" method="POST">
-<input type="text" name="email" placeholder="Email" />
-<input type="password" name="password" placeholder="Password" />
-<p>image</p>
-<div class="procaptcha" data-sitekey="5FWCbfR7pH9QiZqLgmm5Rw4QbFwyU5EaMqUV4G6xrvrTZDtC" data-captcha-type="image"></div>
-<br />
-<input type="submit" value="Submit" />
-</form>
-</body>
-</html>
-""")
+            WebView(filePath: "procaptcha.html")
         }
         .padding()
     }

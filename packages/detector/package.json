@@ -1,10 +1,10 @@
 {
 	"name": "@prosopo/detector",
-	"version": "2.3.1",
+	"version": "2.5.0",
 	"main": "src/index.js",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"exports": {
 		".": {
@@ -31,6 +31,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"express": "4.21.1"
+		"express": "4.21.2"
 	}
 }

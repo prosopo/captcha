@@ -132,7 +132,7 @@ services:
         profiles:
             - production
             - staging
-        image: prosopo/caddy:latest
+        image: prosopo/caddy:${COMPOSE_PROVIDER_IMAGE_VERSION}
         env_file:
             - ../.env.${NODE_ENV}
         labels:

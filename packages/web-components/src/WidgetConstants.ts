@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ export const WIDGET_URL_TEXT =
 	"Visit prosopo.io to learn more about the service and its accessibility options.";
 export const WIDGET_INNER_HEIGHT = 74;
 export const WIDGET_OUTER_HEIGHT = 80;
+export const WIDGET_MIN_HEIGHT = "80px";
 export const WIDGET_MAX_WIDTH = "302px";
 export const WIDGET_DIMENSIONS = {
 	maxWidth: WIDGET_MAX_WIDTH,

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
-import { ApiParams, type ProcaptchaToken } from "@prosopo/types";
+import { ApiParams, CaptchaType, type ProcaptchaToken } from "@prosopo/types";
 import { useReducer, useState } from "react";
 import { Captcha } from "./Captcha.js";
 import NavBar from "./NavBar.js";
 import { ExtensionAccountSelect } from "./components/ExtensionAccountSelect.js";
-import config from "./config.js";
+import configs from "./config.js";
 
 const corsHeaders = {
 	"Access-Control-Allow-Origin": "*", // Required for CORS support to work
@@ -36,7 +36,7 @@ const corsHeaders = {
 };
 
 interface AppProps {
-	captchaType?: string;
+	captchaType?: CaptchaType;
 }
 
 function App(props: AppProps) {
@@ -54,7 +54,7 @@ function App(props: AppProps) {
 	>(undefined);
 	const [updateKey, forceUpdate] = useReducer((x) => x + 1, 0);
 
-	console.log(config);
+	const config = configs[props.captchaType || CaptchaType.frictionless];
 
 	config.userAccountAddress = account;
 

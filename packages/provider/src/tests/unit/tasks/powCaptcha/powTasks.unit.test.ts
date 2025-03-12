@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(pair, db);
+		powCaptchaManager = new PowCaptchaManager(db, pair);
 
 		vi.clearAllMocks();
 	});
@@ -139,6 +139,7 @@ describe("PowCaptchaManager", () => {
 				serverChecked: false,
 				ipAddress: ipAddress.bigInt(),
 				headers,
+				ja4: "ja4",
 				providerSignature,
 				lastUpdatedTimestamp: Date.now(),
 			};
@@ -244,6 +245,7 @@ describe("PowCaptchaManager", () => {
 				serverChecked: false,
 				ipAddress: ipAddress.bigInt(),
 				headers,
+				ja4: "ja4",
 				providerSignature: "testSignature",
 				difficulty,
 				lastUpdatedTimestamp: 0,
@@ -306,7 +308,7 @@ describe("PowCaptchaManager", () => {
 				timeout,
 			);
 
-			expect(result).toBe(true);
+			expect(result.verified).toBe(true);
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 
@@ -319,7 +321,7 @@ describe("PowCaptchaManager", () => {
 			);
 		});
 
-		it("should throw an error if challenge record is not found", async () => {
+		it("should return verified:false if a challenge cannot be found", async () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456678;
 			const userAccount = "testUserAccount";
@@ -328,20 +330,12 @@ describe("PowCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(null);
 
-			await expect(
-				powCaptchaManager.serverVerifyPowCaptchaSolution(
-					dappAccount,
-					challenge,
-					timeout,
-				),
-			).rejects.toThrow(
-				new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						failedFuncName: "serverVerifyPowCaptchaSolution",
-						challenge,
-					},
-				}),
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
 			);
+			expect(result.verified).toBe(false);
 
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 		});

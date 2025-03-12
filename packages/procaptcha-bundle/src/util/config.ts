@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,10 @@ import {
 	ProcaptchaConfigSchema,
 } from "@prosopo/types";
 
-export const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
+export const getConfig = (
+	siteKey?: string,
+	web2 = true,
+): ProcaptchaClientConfigOutput => {
 	if (!siteKey) {
 		siteKey = process.env.PROSOPO_SITE_KEY || "";
 	}
@@ -33,6 +36,7 @@ export const getConfig = (siteKey?: string): ProcaptchaClientConfigOutput => {
 		serverUrl: process.env.PROSOPO_SERVER_URL || "",
 		mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === "true" || false,
+		web2,
 	});
 };
 

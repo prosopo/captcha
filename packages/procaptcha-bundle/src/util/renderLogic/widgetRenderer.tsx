@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,19 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import createCache, { type EmotionCache } from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
+import {
+	getDefaultCallbacks,
+	setUserCallbacks,
+} from "@prosopo/procaptcha-common";
 import type {
+	Callbacks,
 	ProcaptchaClientConfigOutput,
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
-import type { FeaturesEnum } from "@prosopo/types";
+import type { CaptchaType } from "@prosopo/types";
 import { type Root, createRoot } from "react-dom/client";
-import {
-	type Callbacks,
-	getDefaultCallbacks,
-	setUserCallbacks,
-} from "../defaultCallbacks.js";
 import { setLanguage } from "../language.js";
 import { setTheme } from "../theme.js";
 import { setValidChallengeLength } from "../timeout.js";
@@ -34,7 +35,7 @@ interface RenderSettings {
 	identifierPrefix: string;
 	emotionCacheKey: string;
 	webComponentTag: string;
-	defaultCaptchaType: FeaturesEnum;
+	defaultCaptchaType: CaptchaType;
 }
 
 class WidgetRenderer {
@@ -64,7 +65,7 @@ class WidgetRenderer {
 		renderOptions?: ProcaptchaRenderOptions,
 	): Root {
 		const captchaType =
-			(renderOptions?.captchaType as FeaturesEnum) ||
+			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
 		const callbacks = getDefaultCallbacks(element);
 

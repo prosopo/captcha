@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "2.3.1",
+	"version": "2.5.0",
 	"description": "Prosopo config library",
 	"main": "./dist/index.js",
 	"type": "module",
@@ -26,7 +26,7 @@
 	},
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
@@ -36,9 +36,9 @@
 		"@babel/plugin-transform-react-jsx": "7.25.2",
 		"@babel/plugin-transform-runtime": "7.25.4",
 		"@babel/preset-env": "7.25.4",
-		"@prosopo/common": "2.3.1",
-		"@prosopo/types": "2.3.1",
-		"@prosopo/util": "2.3.1",
+		"@prosopo/common": "2.5.0",
+		"@prosopo/types": "2.5.0",
+		"@prosopo/util": "2.5.0",
 		"@rollup/plugin-alias": "5.1.0",
 		"@rollup/plugin-babel": "6.0.4",
 		"@rollup/plugin-commonjs": "26.0.1",
@@ -53,7 +53,7 @@
 		"babel-loader": "9.2.1",
 		"css-loader": "7.1.2",
 		"esbuild": "0.23.1",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"html-webpack-plugin": "5.6.0",
 		"mini-css-extract-plugin": "2.9.1",
 		"node-polyfill-webpack-plugin": "4.0.0",

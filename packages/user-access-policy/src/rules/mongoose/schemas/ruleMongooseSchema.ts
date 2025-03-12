@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,24 +25,34 @@ const ruleMongooseSchema = new Schema<Rule>({
 		type: ipMongooseSchema,
 		required: [
 			function () {
-				return !this.userId;
+				return !this.userId && !this.ja4;
 			},
-			"userIp is required when userId is not set",
+			"userIp is required when userId is not set and ja4 is not set",
 		],
 	},
 	userId: {
 		type: String,
 		required: [
 			function () {
-				return !this.userIp;
+				return !this.userIp && !this.ja4;
 			},
-			"userId is required when userIp is not set",
+			"userId is required when userIp is not set and ja4 is not set",
+		],
+	},
+	ja4: {
+		type: String,
+		required: [
+			function () {
+				return !this.userIp && !this.userId;
+			},
+			"ja4 is required when userIp is not set and userId is not set",
 		],
 	},
 	config: {
 		type: configMongooseSchema,
 		required: false,
 	},
+	score: { type: Number, required: false },
 });
 
 export { ruleMongooseSchema };

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,46 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
+
 import "@cypress/xpath";
-import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { getPairAsync } from "@prosopo/keyring";
-import {
-	AdminApiPaths,
-	type Captcha,
-	type IUserSettings,
-} from "@prosopo/types";
+import { type Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-describe("Captchas", () => {
-	before(async () => {
-		const timestamp = new Date().getTime();
-		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
-		const signature = u8aToHex(pair.sign(timestamp.toString()));
-		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
-		const settings: IUserSettings = {
-			captchaType: "pow",
-			domains: ["0.0.0.0"],
-			frictionlessThreshold: 0.5,
-			powDifficulty: 2,
-		};
-		await fetch(adminSiteKeyURL, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				signature: signature,
-				timestamp: timestamp.toString(),
-			},
-			body: JSON.stringify({
-				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-				settings,
-			}),
-		});
-	});
+let captchaType: CaptchaType;
 
+describe("Captchas", () => {
 	beforeEach(() => {
+		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+		cy.registerSiteKey(captchaType);
+
 		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
 			captchaContentId: captcha.captchaContentId,
 			solution: captcha.solution,
@@ -72,6 +47,31 @@ describe("Captchas", () => {
 			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
+		});
+	});
+
+	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
+		expect(captchaType).to.not.equal(CaptchaType.pow);
+		cy.registerSiteKey(CaptchaType.pow).then(() => {
+			cy.visit(Cypress.env("default_page"));
+			getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+				"getCaptcha",
+			);
+			cy.wait("@getCaptcha", { timeout: 36000 })
+				.its("response")
+				.then((response) => {
+					expect(response).to.not.be.undefined;
+					expect(response?.statusCode).to.equal(400);
+					expect(response?.body).to.have.property("error");
+				})
+				.then(() => {
+					cy.get('div[data-cy="button-human"]', { includeShadowDom: true })
+						.should("exist") // Ensures element exists
+						.should("be.visible") // Ensures it's rendered
+						.find("label")
+						.should("have.text", "Incorrect CAPTCHA type");
+				});
 		});
 	});
 

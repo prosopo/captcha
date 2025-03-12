@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { get } from "@prosopo/util";
 import { lodash } from "@prosopo/util/lodash";
 import cliProgress from "cli-progress";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

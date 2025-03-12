@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { ProcaptchaEvents } from "@prosopo/types";
+
+import type { ProcaptchaCallbacks } from "@prosopo/types";
 import { ProcaptchaPlaceholder } from "@prosopo/web-components";
 import { type LazyExoticComponent, Suspense, lazy } from "react";
 import type { ReactElement } from "react";
@@ -19,7 +20,7 @@ import type { ReactElement } from "react";
 //https://github.com/microsoft/TypeScript/issues/42873
 const ProcaptchaWidget: LazyExoticComponent<
 	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	(props: any, callbacks: Partial<ProcaptchaEvents>) => ReactElement
+	(props: any, callbacks: ProcaptchaCallbacks) => ReactElement
 > = lazy(async () => import("./ProcaptchaWidget.js"));
 type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
 
@@ -32,7 +33,11 @@ const Procaptcha = (props: ProcaptchaProps) => (
 			/>
 		}
 	>
-		<ProcaptchaWidget config={props.config} callbacks={props.callbacks} />
+		<ProcaptchaWidget
+			config={props.config}
+			callbacks={props.callbacks}
+			frictionlessState={props.frictionlessState}
+		/>
 	</Suspense>
 );
 

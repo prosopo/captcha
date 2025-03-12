@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 import { web3AccountsSubscribe, web3Enable } from "@polkadot/extension-dapp";
 import type { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useTranslation } from "@prosopo/locale-browser";
+import { useTranslation } from "@prosopo/locale";
 import { useEffect, useRef, useState } from "react";
 
 export const ExtensionAccountSelect = ({

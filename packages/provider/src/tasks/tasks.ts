@@ -1,6 +1,6 @@
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,11 @@ export class Tasks {
 		}
 		this.pair = env.pair;
 
-		this.powCaptchaManager = new PowCaptchaManager(this.pair, this.db);
+		this.powCaptchaManager = new PowCaptchaManager(
+			this.db,
+			this.pair,
+			this.logger,
+		);
 		this.datasetManager = new DatasetManager(
 			this.config,
 			this.logger,
@@ -62,8 +66,8 @@ export class Tasks {
 		this.imgCaptchaManager = new ImgCaptchaManager(
 			this.db,
 			this.pair,
-			this.logger,
 			this.config,
+			this.logger,
 		);
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
@@ -71,9 +75,10 @@ export class Tasks {
 			this.db,
 		);
 		this.frictionlessManager = new FrictionlessManager(
-			this.config,
-			this.pair,
 			this.db,
+			this.pair,
+			this.config,
+			this.logger,
 		);
 	}
 }

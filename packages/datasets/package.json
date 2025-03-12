@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "2.3.1",
+	"version": "2.5.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"clean": "tsc --build --clean",
@@ -38,13 +38,13 @@
 	},
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "2.3.1",
-		"@prosopo/types": "2.3.1",
-		"@prosopo/util": "2.3.1",
-		"express": "4.21.1"
+		"@prosopo/common": "2.5.0",
+		"@prosopo/types": "2.5.0",
+		"@prosopo/util": "2.5.0",
+		"express": "4.21.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.3.1",
+		"@prosopo/config": "2.5.0",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

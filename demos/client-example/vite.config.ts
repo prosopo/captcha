@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
 import * as path from "node:path";
 import { ViteFrontendConfig } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { VitePluginWatchWorkspace } from "@prosopo/vite-plugin-watch-workspace";
+import fg from "fast-glob";
 import { defineConfig } from "vite";
 
 // load env using our util because vite loadEnv is not working for .env.development
@@ -28,10 +30,20 @@ process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
 const bundleName = "prosopo-client-example";
 const packageName = "@prosopo/client-example";
 const entry = path.resolve("./index.html");
-const workspaceRoot = path.resolve("../../..");
+const workspaceRoot = path.resolve("../..");
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ command, mode }) => {
+	const copyDir = {
+		srcDir: `${workspaceRoot}/packages/locale/src/locales`,
+		destDir: `${workspaceRoot}/demos/client-example/dist/locales`,
+	};
+
+	const localFiles = await fg.glob(
+		`${workspaceRoot}/packages/locale/src/locales/**/*.json`,
+	);
+
+	console.log(localFiles);
 	const frontendConfig = await ViteFrontendConfig(
 		packageName,
 		bundleName,
@@ -43,6 +55,7 @@ export default defineConfig(async ({ command, mode }) => {
 		undefined,
 		workspaceRoot,
 	);
+
 	const define = {
 		...frontendConfig.define,
 		"process.env.PROSOPO_WEB2": JSON.stringify(
@@ -53,6 +66,15 @@ export default defineConfig(async ({ command, mode }) => {
 		),
 		"process.env.PROSOPO_DOCS_URL": JSON.stringify(
 			process.env.PROSOPO_DOCS_URL,
+		),
+		"process.env.PROSOPO_SITE_KEY_IMAGE": JSON.stringify(
+			process.env.PROSOPO_SITE_KEY_IMAGE,
+		),
+		"process.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
+			process.env.PROSOPO_SITE_KEY_POW,
+		),
+		"process.env.PROSOPO_SITE_KEY_FRICTIONLESS": JSON.stringify(
+			process.env.PROSOPO_SITE_KEY_FRICTIONLESS,
 		),
 	};
 	console.log("defined vars", define);
@@ -90,6 +112,20 @@ export default defineConfig(async ({ command, mode }) => {
 					"**/dist/**/*",
 				],
 			}),
+			{
+				name: "copy-dir",
+				async writeBundle() {
+					if (copyDir) {
+						const containingFolder = path.dirname(copyDir.destDir);
+						if (!fs.existsSync(containingFolder)) {
+							fs.mkdirSync(containingFolder, { recursive: true });
+						}
+						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
+							recursive: true,
+						});
+					}
+				},
+			},
 		],
 		server: {
 			port: process.env.PROSOPO_PORT ? Number(process.env.PROSOPO_PORT) : 9230,
