@@ -67,7 +67,7 @@ const compareU8a = (a: Uint8Array, b: Uint8Array): 1 | 0 | -1 => {
  * @param data the data to hash
  * @param difficulty the threshold which a hash must be greater than to solve the PoW
  */
-export const solvePoW = (data: string, difficulty: bigint, maxTime: number): bigint | undefined => {
+export const solvePoW = (data: string, difficulty: bigint, maxTime=100000): bigint => {
 	const now = Date.now();
 	// example:
 	// take a payload (data + nonce) and hash it, producing a hash
@@ -136,7 +136,7 @@ export const solvePoW = (data: string, difficulty: bigint, maxTime: number): big
 			}
 			// check max time
 			if (Date.now() - now > maxTime) {
-				return undefined;
+				throw new Error("Max time exceeded");
 			}
 			// else try a different nonce, i.e. inc the nonce
 			nonceExhausted = true;
