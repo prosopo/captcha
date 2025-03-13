@@ -79,6 +79,7 @@ services:
         ports:
             - '9339:9339'
         networks:
+            external:
             internal:
                 ipv4_address: 172.18.0.7
         logging:
