@@ -8,16 +8,16 @@
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
 
-	client_hello {
+	# client_hello {
 		# Configure the maximum allowed ClientHello packet size in bytes (1-16384)
-		max_client_hello_size 16384
-	}
+		# max_client_hello_size 16384
+	# }
 
 	servers {
 		protocols h1 h2
 		listener_wrappers {
 			http_redirect
-			client_hello
+			# client_hello
 			tls
 		}
 		timeouts {
@@ -31,7 +31,7 @@
 
 {$CADDY_DOMAIN} {
 	route {
-		client_hello
+		# client_hello
 
 		header / {
 			# Enable HTTP Strict Transport Security (HSTS)
