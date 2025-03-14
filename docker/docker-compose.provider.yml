@@ -29,8 +29,8 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
-    provider:
-        container_name: provider
+    provider1:
+        container_name: provider1
         profiles:
             - production
             - staging
@@ -41,7 +41,7 @@ services:
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
-            - ../.env.${NODE_ENV}
+            - ../.env.1.${NODE_ENV}
         ports:
             - '9229:9229'
         networks:
@@ -55,6 +55,40 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+    provider2:
+        container_name: provider2
+        profiles:
+            - production
+            - staging
+        image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
+        labels:
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: build
+        env_file:
+            - ../.env.2.${NODE_ENV}
+        ports:
+            - '9339:9339'
+        networks:
+            external:
+            internal:
+                ipv4_address: 172.18.0.7
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/details" ]  # ping the details endpoint
             interval: 5m
             retries: 3
             start_period: 30s
