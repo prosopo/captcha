@@ -17,6 +17,6 @@ RUN echo '#!/usr/bin/env node' | cat - provider.cli.bundle.js > temp && mv temp 
 # install the provider cli binary
 RUN npm i
 
-EXPOSE 9229 80 443
+EXPOSE 9229 9339 80 443
 
 CMD ["npx" , "provider" ,"--api"]
