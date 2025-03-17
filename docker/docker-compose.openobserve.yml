@@ -48,7 +48,7 @@ services:
             - "oo.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+          - /data/oo:/data
         networks:
             - internal
             - external
@@ -75,7 +75,7 @@ services:
           - "oo.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
-          - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+          - /data/oo:/data
         networks:
           - internal
         logging:
