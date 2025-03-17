@@ -59,6 +59,54 @@ const implicitRender = async () => {
 
 		procaptchaRoots.push(...root);
 	}
+	
+	// NEW: Check for invisible mode indicators (p-procaptcha class on buttons)
+	const invisibleButtons = Array.from(
+		document.getElementsByClassName("p-procaptcha")
+	);
+	
+	if (invisibleButtons.length) {
+		// Found buttons with p-procaptcha class - this would be invisible mode
+		console.log("Invisible Procaptcha mode detected (implicit rendering)");
+		
+		// Process each invisible button
+		invisibleButtons.forEach(button => {
+			const siteKey = button.getAttribute("data-sitekey");
+			const callback = button.getAttribute("data-callback");
+			
+			if (!siteKey) {
+				console.error("No siteKey found for invisible button");
+				return;
+			}
+			
+			// Add click event listener to the button
+			button.addEventListener("click", (event) => {
+				// Prevent default button action temporarily
+				event.preventDefault();
+				
+				// Show alert for MVP
+				alert("Invisible Procaptcha verification would happen here!");
+				
+				// If a callback is specified, try to call it
+				if (callback) {
+					try {
+						const callbackFn = getWindowCallback(callback);
+						if (typeof callbackFn === "function") {
+							// In a real implementation, we would pass the token here
+							callbackFn("sample-token-for-testing");
+						}
+					} catch (error) {
+						console.error("Error calling callback:", error);
+					}
+				}
+				
+				// Log for debugging
+				console.log(`Invisible Procaptcha button clicked. SiteKey: ${siteKey}, Callback: ${callback}`);
+			});
+			
+			console.log(`Initialized invisible Procaptcha on button with siteKey: ${siteKey}`);
+		});
+	}
 };
 
 // Explicit render for targeting specific elements
@@ -66,6 +114,45 @@ export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ) => {
+	// Check if this is an invisible mode request
+	// Use a type-safe way to check for the 'size' property
+	const hasInvisibleSize = Object.prototype.hasOwnProperty.call(renderOptions, 'size') && 
+		(renderOptions as any).size === 'invisible';
+	
+	if (hasInvisibleSize || element.tagName.toLowerCase() === 'button') {
+		console.log("Invisible Procaptcha mode detected (explicit rendering)");
+		
+		// For MVP, just show an alert and attach a click handler if it's a button
+		if (element.tagName.toLowerCase() === 'button') {
+			element.addEventListener("click", (event) => {
+				event.preventDefault();
+				alert("Invisible Procaptcha verification would happen here (explicit rendering)!");
+				
+				// If a callback is specified, try to call it
+				if (renderOptions.callback) {
+					try {
+						if (typeof renderOptions.callback === "function") {
+							// In a real implementation, we would pass the token here
+							renderOptions.callback("sample-token-for-testing");
+						} else if (typeof renderOptions.callback === "string") {
+							const callbackFn = getWindowCallback(renderOptions.callback);
+							if (typeof callbackFn === "function") {
+								callbackFn("sample-token-for-testing");
+							}
+						}
+					} catch (error) {
+						console.error("Error calling callback:", error);
+					}
+				}
+			});
+		} else {
+			// If it's not a button but has size='invisible', it's for programmatic execution
+			console.log("Initialized invisible Procaptcha container for programmatic execution");
+		}
+		
+		return;
+	}
+
 	const roots = await widgetFactory.createWidgets([element], renderOptions);
 
 	procaptchaRoots.push(...roots);
@@ -81,6 +168,17 @@ export default function ready(fn: () => void) {
 	}
 }
 
+// Add execute method for invisible mode
+export const execute = () => {
+	console.log("Procaptcha execute() method called");
+	alert("Procaptcha execute() method called. Invisible verification would happen here!");
+	
+	// In a real implementation, we would:
+	// 1. Find the invisible Procaptcha container
+	// 2. Perform verification
+	// 3. Call the callback with the token
+};
+
 // extend the global Window interface to include the procaptcha object
 declare global {
 	interface Window {
@@ -88,6 +186,7 @@ declare global {
 			ready: typeof ready;
 			render: typeof render;
 			reset: typeof reset;
+			execute: typeof execute;
 		};
 	}
 }
@@ -127,6 +226,6 @@ export const reset = () => {
 };
 
 // set the procaptcha attribute on the window
-window.procaptcha = { ready, render, reset };
+window.procaptcha = { ready, render, reset, execute };
 
 start();
