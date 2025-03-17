@@ -51,7 +51,6 @@ services:
           - /data/oo:/data
         networks:
             - internal
-            - external
         logging:
             driver: 'json-file'
             options:
