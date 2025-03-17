@@ -171,7 +171,7 @@ services:
         profiles:
             - production
             - staging
-        image: prosopo/vector:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        image: prosopo/vector:dev
         env_file:
             - ../.env.${NODE_ENV}
         labels:
