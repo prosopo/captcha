@@ -14,8 +14,14 @@
 
 import { ApiParams } from "@prosopo/types";
 
-export const getParentForm = (element: Element): HTMLFormElement | null =>
-	element.closest("form") as HTMLFormElement;
+export function getParentForm(widgetElement: Element): HTMLFormElement | null {
+	const rootWidgetNode = widgetElement.getRootNode();
+
+	const topWidgetElement =
+		rootWidgetNode instanceof ShadowRoot ? rootWidgetNode.host : widgetElement;
+
+	return topWidgetElement.closest("form") as HTMLFormElement;
+}
 
 export const removeProcaptchaResponse = () => {
 	const element = Array.from(

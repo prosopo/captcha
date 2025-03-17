@@ -8,16 +8,16 @@
 	# Caddy must be told custom rate_limit module its order
 	order rate_limit before basicauth
 
-	client_hello {
+	# client_hello {
 		# Configure the maximum allowed ClientHello packet size in bytes (1-16384)
-		max_client_hello_size 16384
-	}
+		# max_client_hello_size 16384
+	# }
 
 	servers {
 		protocols h1 h2
 		listener_wrappers {
 			http_redirect
-			client_hello
+			# client_hello
 			tls
 		}
 		timeouts {
@@ -31,7 +31,7 @@
 
 {$CADDY_DOMAIN} {
 	route {
-		client_hello
+		# client_hello
 
 		header / {
 			# Enable HTTP Strict Transport Security (HSTS)
@@ -76,16 +76,11 @@
 		}
 
 		# reverse proxy to the provider container
-		# reverse proxy to the provider container
-		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
-            lb_policy first
-            lb_try_duration 5s
-            lb_try_interval 250ms
-            fail_duration 10s
-            max_fails 1
-            unhealthy_status 5xx
-            unhealthy_latency 5s
-            unhealthy_request_count 1
+		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
+            lb_policy round_robin
+            lb_try_duration 3s
+            lb_try_interval 1s
+            fail_duration 20s
 
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs

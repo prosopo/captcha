@@ -18,3 +18,5 @@ export * from "./callbacks/defaultCallbacks.js";
 export * from "./callbacks/defaultEvents.js";
 export * from "./extensionLoader.js";
 export * from "./elements/window.js";
+export * from "./reactComponents/Reload.js";
+export * from "./reactComponents/Checkbox.js";

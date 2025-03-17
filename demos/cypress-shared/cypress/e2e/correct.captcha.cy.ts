@@ -83,10 +83,7 @@ describe("Captchas", () => {
 		});
 
 		// check the logs by going through all recorded calls
-		cy.get("@log").should(
-			"have.been.calledWith",
-			"The user failed the captcha",
-		);
+		cy.get("@log").should("have.been.calledWith", "Challenge failed");
 	});
 
 	it("Selecting the correct images passes the captcha", () => {

@@ -12,9 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { useTranslation } from "@prosopo/locale";
+import { ReloadButton } from "@prosopo/procaptcha-common";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { ReloadButton, darkTheme, lightTheme } from "@prosopo/web-components";
+import {
+	darkTheme,
+	getWidgetSkeleton,
+	lightTheme,
+} from "@prosopo/widget-skeleton";
 import { Suspense, useMemo } from "react";
 import addDataAttr from "../util/index.js";
 import Button from "./Button.js";
@@ -52,6 +57,8 @@ const CaptchaComponent = ({
 	);
 	const fullSpacing = `${theme.spacing.unit}px`;
 	const halfSpacing = `${theme.spacing.half}px`;
+
+	const widgetSkeleton = getWidgetSkeleton();
 
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
@@ -203,7 +210,9 @@ const CaptchaComponent = ({
 											? t("WIDGET.NEXT")
 											: t("WIDGET.SUBMIT")
 									}
-									data-cy="button-next"
+									data-cy={
+										widgetSkeleton.isInDevelopmentMode() && "button-next"
+									}
 								/>
 							</div>
 						</div>

@@ -16,26 +16,9 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
-import { useProcaptcha } from "@prosopo/procaptcha-common";
+import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
-import {
-	Checkbox,
-	ContainerDiv,
-	LoadingSpinner,
-	WIDGET_BORDER,
-	WIDGET_BORDER_RADIUS,
-	WIDGET_DIMENSIONS,
-	WIDGET_INNER_HEIGHT,
-	WIDGET_MAX_WIDTH,
-	WIDGET_MIN_HEIGHT,
-	WIDGET_PADDING,
-	WIDGET_URL,
-	WIDGET_URL_TEXT,
-	WidthBasedStylesDiv,
-	darkTheme,
-	lightTheme,
-} from "@prosopo/web-components";
-import { Logo } from "@prosopo/web-components";
+import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
@@ -53,8 +36,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		callbacks,
 		frictionlessState,
 	);
-	const themeColor = props.config.theme === "light" ? "light" : "dark";
-	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
+	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
 	useEffect(() => {
 		if (config.language) {
@@ -65,114 +47,32 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	}, [config.language]);
 
 	return (
-		<div style={{ width: "100%", minHeight: WIDGET_MIN_HEIGHT }}>
-			<div
-				style={{
-					maxWidth: WIDGET_MAX_WIDTH,
-					minHeight: WIDGET_MIN_HEIGHT,
-					maxHeight: "100%",
-					overflowX: "auto",
-					width: "100%",
-					...theme.font,
-				}}
-			>
-				<Modal show={state.showModal}>
-					{state.challenge ? (
-						<CaptchaComponent
-							challenge={state.challenge}
-							index={state.index}
-							solutions={state.solutions}
-							onSubmit={manager.submit}
-							onCancel={manager.cancel}
-							onClick={manager.select}
-							onNext={manager.nextRound}
-							onReload={manager.reload}
-							themeColor={config.theme ?? "light"}
-						/>
-					) : (
-						<div>No challenge set.</div>
-					)}
-				</Modal>
-				<ContainerDiv>
-					<WidthBasedStylesDiv>
-						<div style={WIDGET_DIMENSIONS} data-cy={"button-human"}>
-							{" "}
-							<div
-								style={{
-									padding: WIDGET_PADDING,
-									border: WIDGET_BORDER,
-									backgroundColor: theme.palette.background.default,
-									borderColor: theme.palette.grey[300],
-									borderRadius: WIDGET_BORDER_RADIUS,
-									display: "flex",
-									alignItems: "center",
-									flexWrap: "wrap",
-									justifyContent: "space-between",
-									minHeight: `${WIDGET_INNER_HEIGHT}px`,
-									overflow: "hidden",
-								}}
-							>
-								<div
-									style={{ display: "inline-flex", flexDirection: "column" }}
-								>
-									<div
-										style={{
-											alignItems: "center",
-											flex: 1,
-										}}
-									>
-										<div
-											style={{
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												flexDirection: "column",
-												verticalAlign: "middle",
-											}}
-										>
-											<div
-												style={{
-													display: "flex",
-												}}
-											>
-												{state.loading ? (
-													<LoadingSpinner
-														themeColor={themeColor}
-														aria-label="Loading spinner"
-													/>
-												) : (
-													<Checkbox
-														themeColor={themeColor}
-														onChange={manager.start}
-														checked={state.isHuman}
-														labelText={t("WIDGET.I_AM_HUMAN")}
-														error={state.error}
-														aria-label="human checkbox"
-													/>
-												)}
-											</div>
-										</div>
-									</div>
-								</div>
-								<div
-									style={{ display: "inline-flex", flexDirection: "column" }}
-								>
-									<a
-										href={WIDGET_URL}
-										// biome-ignore lint/a11y/noBlankTarget: Biome incorrect edge case
-										target="_blank"
-										aria-label={WIDGET_URL_TEXT}
-									>
-										<div style={{ flex: 1 }}>
-											<Logo themeColor={themeColor} aria-label="Prosopo logo" />
-										</div>
-									</a>
-								</div>
-							</div>
-						</div>
-					</WidthBasedStylesDiv>
-				</ContainerDiv>
-			</div>
+		<div className={"image-captcha"}>
+			<Modal show={state.showModal}>
+				{state.challenge ? (
+					<CaptchaComponent
+						challenge={state.challenge}
+						index={state.index}
+						solutions={state.solutions}
+						onSubmit={manager.submit}
+						onCancel={manager.cancel}
+						onClick={manager.select}
+						onNext={manager.nextRound}
+						onReload={manager.reload}
+						themeColor={config.theme ?? "light"}
+					/>
+				) : (
+					<div>No challenge set.</div>
+				)}
+			</Modal>
+			<Checkbox
+				theme={theme}
+				onChange={manager.start}
+				checked={state.isHuman}
+				labelText={t("WIDGET.I_AM_HUMAN")}
+				error={state.error}
+				aria-label="human checkbox"
+			/>
 		</div>
 	);
 };

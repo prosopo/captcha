@@ -6,7 +6,7 @@
 		"lib": ["es6", "dom"],
 		"jsxImportSource": "@emotion/react"
 	},
-	"include": ["src/index.tsx", "src/index.html"],
+	"include": ["src/index.ts", "src/index.html"],
 	"references": [
 		{
 			"path": "../detector/tsconfig.cjs.json"
@@ -24,7 +24,7 @@
 			"path": "../types/tsconfig.cjs.json"
 		},
 		{
-			"path": "../web-components/tsconfig.cjs.json"
+			"path": "../widget-skeleton/tsconfig.cjs.json"
 		}
 	]
 }
