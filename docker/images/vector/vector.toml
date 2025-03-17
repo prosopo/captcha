@@ -14,7 +14,7 @@ include_labels = ["vector.provider=true"]
 type = "remap"
 inputs = ["provider"]
 source = '''
-.=parse_json!(string!(.message))
+.=parse_json!(.message)
 del(.message)
 del(.timestamp)
 del(._timestamp)
@@ -33,6 +33,23 @@ del(.date)
 type = "http"
 inputs = ["provider_format"]
 uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
+
+# send provider logs to tiger-stairs
+[sinks.prosopo_provider]
+type = "http"
+inputs = ["provider_format"]
+uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -107,6 +124,23 @@ batch.timeout_secs = 10 # time to wait before sending a batch
 batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
 batch.max_events = 100000 # max number of events per batch
 
+# send to openobserve
+[sinks.prosopo_docker]
+type = "http"
+inputs = ["docker_format"]
+uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
+
 [sources.caddy]
 type = "docker_logs"
 include_labels = ["vector.caddy=true"]
@@ -133,6 +167,20 @@ del(.logger)
 type = "http"
 inputs = ["caddy_format"]
 uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = false
+
+# send to openobserve
+[sinks.prosopo_caddy]
+type = "http"
+inputs = ["caddy_format"]
+uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
