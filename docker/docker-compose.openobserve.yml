@@ -9,8 +9,8 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "vector.caddy=true" # enable logging as caddy
-            - "vector.docker=true" # log docker events
+            - "oo.caddy=true" # enable logging as caddy
+            - "oo.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '8018:80'
@@ -35,18 +35,18 @@ services:
             retries: 3
             start_period: 30s
             timeout: 10s
-    vector1:
-        container_name: vector1
+    oo1:
+        container_name: oo1
         profiles:
             - production
             - staging
-        image: prosopo/vector:dev
+        image: public.ecr.aws/zinclabs/openobserve:latest
         ports:
           - "5080:5080"
         env_file:
             - ../.env.${NODE_ENV}
         labels:
-            - "vector.docker=true" # log docker events
+            - "oo.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
@@ -58,28 +58,22 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
-        healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
-            interval: 30s
-            timeout: 10s
-            retries: 1
-            start_period: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
-    vector2:
-      container_name: vector2
+    oo2:
+      container_name: oo2
       profiles:
         - production
         - staging
-      image: prosopo/vector:dev
+      image: public.ecr.aws/zinclabs/openobserve:latest
       ports:
         - "5081:5080"
       env_file:
         - ../.env.${NODE_ENV}
       labels:
-        - "vector.docker=true" # log docker events
+        - "oo.docker=true" # log docker events
       restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
@@ -90,12 +84,6 @@ services:
         options:
           max-size: '100m'
           max-file: '1'
-      healthcheck:
-        test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
-        interval: 30s
-        timeout: 10s
-        retries: 1
-        start_period: 10s
       dns:
         - 8.8.8.8
         - 1.1.1.1
