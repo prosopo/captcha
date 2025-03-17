@@ -14,7 +14,8 @@
 
 import { CaptchaComponentProvider } from "@prosopo/procaptcha-bundle/components";
 import { CaptchaType, type ProcaptchaToken } from "@prosopo/types";
-import config from "./config.js";
+import { useEffect, useRef, useState } from "react";
+import configs from "./config.js";
 
 type CaptchProps = {
 	captchaType?: CaptchaType;
@@ -31,6 +32,10 @@ const onExpired = () => {
 };
 
 export function Captcha(props: CaptchProps) {
+	const [config, setConfig] = useState(
+		configs[props.captchaType || CaptchaType.frictionless],
+	);
+
 	const onHuman = async (procaptchaToken: ProcaptchaToken) => {
 		console.log("onHuman", procaptchaToken);
 		props.setProcaptchaToken(procaptchaToken);
@@ -39,6 +44,10 @@ export function Captcha(props: CaptchProps) {
 	const onFailed = () => {
 		console.log("Challenge failed");
 	};
+
+	useEffect(() => {
+		setConfig(configs[props.captchaType || CaptchaType.frictionless]);
+	}, [props.captchaType]);
 
 	return (
 		<div>

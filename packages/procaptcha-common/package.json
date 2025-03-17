@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-common",
-	"version": "2.4.2",
+	"version": "2.5.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -24,19 +24,21 @@
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@emotion/react": "11.13.3",
-		"@prosopo/common": "2.4.2",
-		"@prosopo/load-balancer": "2.4.2",
-		"@prosopo/types": "2.4.2",
-		"@prosopo/util": "2.4.2",
+		"@prosopo/common": "2.5.0",
+		"@prosopo/load-balancer": "2.5.0",
+		"@prosopo/types": "2.5.0",
+		"@prosopo/util": "2.5.0",
 		"express": "4.21.2",
-		"@prosopo/widget-skeleton": "2.4.2",
+		"@prosopo/widget-skeleton": "2.5.0",
 		"react": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.4.2",
+		"@prosopo/config": "2.5.0",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

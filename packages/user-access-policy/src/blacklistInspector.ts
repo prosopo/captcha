@@ -18,6 +18,7 @@ interface BlacklistInspector {
 	isUserBlacklisted(
 		clientId: string,
 		userIpAddress: IPAddress,
+		ja4: string,
 		userId: string,
 	): Promise<boolean>;
 }

@@ -7,6 +7,8 @@ SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 COPY ./packages/cli/dist/bundle/ ./
 
+COPY ./packages/locale/dist/locales/ ./locales/
+
 # make the provider cli executable
 # create a package.json file for the provider cli to force it to run in module mode and set the binary for npx
 RUN echo '#!/usr/bin/env node' | cat - provider.cli.bundle.js > temp && mv temp provider.cli.bundle.js && \
@@ -15,6 +17,6 @@ RUN echo '#!/usr/bin/env node' | cat - provider.cli.bundle.js > temp && mv temp 
 # install the provider cli binary
 RUN npm i
 
-EXPOSE 9229 80 443
+EXPOSE 9229 9339 80 443
 
 CMD ["npx" , "provider" ,"--api"]

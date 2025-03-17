@@ -14,19 +14,44 @@
 
 import { getServerUrl } from "@prosopo/server";
 import {
+	CaptchaType,
 	ProcaptchaConfigSchema,
 	type ProsopoClientConfigOutput,
 } from "@prosopo/types";
 
-const config: ProsopoClientConfigOutput = ProcaptchaConfigSchema.parse({
-	account: {
-		address: process.env.PROSOPO_SITE_KEY,
-	},
+export const configBase = {
 	web2: process.env.PROSOPO_WEB2 !== "false",
 	defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT,
 	dappName: "client-example",
 	serverUrl: getServerUrl(),
 	theme: "light",
-});
+};
 
-export default config;
+const configs = {
+	[CaptchaType.image]: ProcaptchaConfigSchema.parse({
+		...configBase,
+
+		account: {
+			address:
+				process.env.PROSOPO_SITE_KEY_IMAGE || process.env.PROSOPO_SITE_KEY,
+		},
+	}),
+	[CaptchaType.pow]: ProcaptchaConfigSchema.parse({
+		...configBase,
+
+		account: {
+			address: process.env.PROSOPO_SITE_KEY_POW || process.env.PROSOPO_SITE_KEY,
+		},
+	}),
+	[CaptchaType.frictionless]: ProcaptchaConfigSchema.parse({
+		...configBase,
+
+		account: {
+			address:
+				process.env.PROSOPO_SITE_KEY_FRICTIONLESS ||
+				process.env.PROSOPO_SITE_KEY,
+		},
+	}),
+};
+
+export default configs;
