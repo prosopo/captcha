@@ -21,7 +21,7 @@
 		}
 	},
 	"types": "./dist/index.d.ts",
-	"source": "./src/index.tsx",
+	"source": "./src/index.ts",
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
@@ -33,6 +33,7 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
+		"@emotion/react": "11.13.3",
 		"@prosopo/dotenv": "2.5.0",
 		"@prosopo/locale": "2.5.0",
 		"@prosopo/procaptcha-frictionless": "2.5.0",
@@ -42,7 +43,8 @@
 		"@prosopo/util": "2.5.0",
 		"express": "4.21.2",
 		"react": "18.3.1",
-		"react-dom": "18.3.1"
+		"react-dom": "18.3.1",
+		"@prosopo/widget-skeleton": "2.5.0"
 	},
 	"repository": {
 		"type": "git",

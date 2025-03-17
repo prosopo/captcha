@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +11,25 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import path from "node:path";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
 import TerserPlugin from "terser-webpack-plugin";
 
 const moduleDirs = [path.resolve("./node_modules")];
+
+function resolveEntryFile(): string {
+	const defaultEntry = "./src/index.tsx";
+	const supportedEntries = [defaultEntry, "./src/index.ts"];
+
+	return (
+		supportedEntries.find((entry) => fs.existsSync(path.resolve(entry))) ||
+		defaultEntry
+	);
+}
 
 export default (mode: string) => {
 	const isProduction = mode === "production";
@@ -46,7 +58,7 @@ export default (mode: string) => {
 			"node:path": "commonjs path",
 			"node:fs": "commonjs fs",
 		},
-		entry: "./src/index.tsx",
+		entry: resolveEntryFile(),
 		output: {
 			filename: `${libraryName}.[name].bundle.js`,
 			path: path.resolve("./dist"),
