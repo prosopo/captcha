@@ -26,11 +26,14 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
+		"@emotion/react": "11.13.3",
 		"@prosopo/common": "2.5.0",
 		"@prosopo/load-balancer": "2.5.0",
 		"@prosopo/types": "2.5.0",
 		"@prosopo/util": "2.5.0",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"@prosopo/widget-skeleton": "2.5.0",
+		"react": "18.3.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.5.0",

@@ -65,7 +65,7 @@ describe("Captchas", () => {
 					expect(response?.body).to.have.property("error");
 				})
 				.then(() => {
-					cy.get('div[data-cy="button-human"]', { includeShadowDom: true })
+					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
 						.should("exist") // Ensures element exists
 						.should("be.visible") // Ensures it's rendered
 						.find("label")
@@ -89,7 +89,7 @@ describe("Captchas", () => {
 					expect(response?.body).to.have.property("error");
 				})
 				.then(() => {
-					cy.get('div[data-cy="button-human"]', { includeShadowDom: true })
+					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
 						.should("exist") // Ensures element exists
 						.should("be.visible") // Ensures it's rendered
 						.find("label")
@@ -99,6 +99,11 @@ describe("Captchas", () => {
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
+			"frictionless",
+		);
+		cy.wait("@frictionless", { timeout: 36000 });
+
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);
 		});

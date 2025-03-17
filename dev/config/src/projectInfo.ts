@@ -99,7 +99,7 @@ export const getTypesEnvPkgDir = () => `${getPackagesDir()}/types-env`;
 
 export const getUtilPkgDir = () => `${getPackagesDir()}/util`;
 
-export const getWebComponentsPkgDir = () =>
-	`${getPackagesDir()}/web-components`;
+export const getWidgetSkeletonPkgDir = () =>
+	`${getPackagesDir()}/widget-skeleton`;
 
 export const getLocalePkgDir = () => `${getPackagesDir()}/locale`;
