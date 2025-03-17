@@ -62,31 +62,31 @@ services:
             - 1.1.1.1
             - 208.67.222.222
     oo2:
-      container_name: oo2
-      profiles:
-        - production
-        - staging
-      image: public.ecr.aws/zinclabs/openobserve:latest
-      ports:
-        - "5081:5080"
-      env_file:
-        - ../.env.${NODE_ENV}
-      labels:
-        - "oo.docker=true" # log docker events
-      restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
-      volumes:
-        - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
-      networks:
-        - internal
-      logging:
-        driver: 'json-file'
-        options:
-          max-size: '100m'
-          max-file: '1'
-      dns:
-        - 8.8.8.8
-        - 1.1.1.1
-        - 208.67.222.222
+        container_name: oo2
+        profiles:
+          - production
+          - staging
+        image: public.ecr.aws/zinclabs/openobserve:latest
+        ports:
+          - "5081:5080"
+        env_file:
+          - ../.env.${NODE_ENV}
+        labels:
+          - "oo.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+        networks:
+          - internal
+        logging:
+          driver: 'json-file'
+          options:
+            max-size: '100m'
+            max-file: '1'
+        dns:
+          - 8.8.8.8
+          - 1.1.1.1
+          - 208.67.222.222
 networks:
     internal:
         name: internal
