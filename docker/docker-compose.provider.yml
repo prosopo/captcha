@@ -29,8 +29,8 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
-    provider:
-        container_name: provider
+    provider1:
+        container_name: provider1
         profiles:
             - production
             - staging
@@ -63,6 +63,11 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            - database
+            - caddy
+            - vector
     provider2:
         container_name: provider2
         profiles:
@@ -79,6 +84,7 @@ services:
         ports:
             - '9339:9339'
         networks:
+            external:
             internal:
                 ipv4_address: 172.18.0.7
         logging:
@@ -96,6 +102,11 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            - database
+            - caddy
+            - vector
     database-dev:
         container_name: database
         profiles:
@@ -160,12 +171,15 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            - vector
     caddy:
         container_name: caddy
         profiles:
             - production
             - staging
-        image: prosopo/caddy:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        image: prosopo/caddy:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
         env_file:
             - ../.env.${NODE_ENV}
         labels:
@@ -199,6 +213,9 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            - vector
     vector:
         container_name: vector
         profiles:
@@ -230,6 +247,7 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 0s # will discard some logs that haven't been pushed up, but will stop the container immediately
 networks:
     internal:
         name: internal
