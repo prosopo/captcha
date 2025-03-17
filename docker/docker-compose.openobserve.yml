@@ -1,0 +1,116 @@
+services:
+    caddy:
+        container_name: caddy
+        pull_policy: never
+        profiles:
+            - production
+            - staging
+        image: prosopo/caddy:latest
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "vector.caddy=true" # enable logging as caddy
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        ports:
+            - '8018:80'
+            - '44318:443'
+            - '44318:443/udp'
+        volumes:
+            - ./oo.Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            external:
+            internal:
+                ipv4_address: 172.18.0.6
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "localhost:2019/metrics"]  # ping the caddy admin api
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+    vector1:
+        container_name: vector1
+        profiles:
+            - production
+            - staging
+        image: prosopo/vector:dev
+        ports:
+          - "5080:5080"
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+        networks:
+            - internal
+            - external
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
+            interval: 30s
+            timeout: 10s
+            retries: 1
+            start_period: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+    vector2:
+      container_name: vector2
+      profiles:
+        - production
+        - staging
+      image: prosopo/vector:dev
+      ports:
+        - "5081:5080"
+      env_file:
+        - ../.env.${NODE_ENV}
+      labels:
+        - "vector.docker=true" # log docker events
+      restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+      networks:
+        - internal
+      logging:
+        driver: 'json-file'
+        options:
+          max-size: '100m'
+          max-file: '1'
+      healthcheck:
+        test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
+        interval: 30s
+        timeout: 10s
+        retries: 1
+        start_period: 10s
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
+        - 208.67.222.222
+networks:
+    internal:
+        name: internal
+        internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
+    external:
+        name: external
+volumes:
+    caddy_data:
+    caddy_config:
