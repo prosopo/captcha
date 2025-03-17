@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Procaptcha Invisible Mode - Explicit Rendering</title>
+    <!-- Load the Procaptcha script with explicit rendering -->
+    <script type="module" src="./assets/procaptcha.bundle.js?render=explicit" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        // Callback function when the CAPTCHA is verified
+        function onSubmit(token) {
+            console.log('Procaptcha verified, token: ' + token);
+            
+            // Get form values
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            
+            // Display the result
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = `Form submitted with:
+- Name: ${name}
+- Email: ${email}
+- Procaptcha verified: Yes`;
+            resultElement.style.display = 'block';
+            
+            // Prevent actual form submission
+            return false;
+        }
+        
+        // Function to validate form and execute Procaptcha
+        function validate(event) {
+            event.preventDefault();
+            
+            // Simple form validation
+            if (!document.getElementById('name').value) {
+                alert("Please enter your name");
+                return;
+            }
+            
+            if (!document.getElementById('email').value) {
+                alert("Please enter your email");
+                return;
+            }
+            
+            // Execute Procaptcha verification
+            window.procaptcha.execute();
+        }
+        
+        // Callback function when Procaptcha script is loaded
+        function onloadCallback() {
+            // Render the Procaptcha widget
+            window.procaptcha.render('procaptcha-container', {
+                'siteKey': '%PROSOPO_SITE_KEY%',
+                'callback': onSubmit,
+                'captchaType': 'frictionless',
+                'size': 'invisible'
+            });
+            
+            // Add click event to the submit button
+            document.getElementById('submit-button').addEventListener('click', validate);
+        }
+        
+        // Initialize when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up the onload callback for Procaptcha
+            window.onProcaptchaLoad = onloadCallback;
+        });
+    </script>
+</head>
+<body>
+    <h1>Procaptcha Invisible Mode</h1>
+    <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering.</p>
+    
+    <form id="demo-form" action="javascript:void(0);" method="POST">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+        </div>
+        
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Your email" required />
+        </div>
+        
+        <!-- Invisible Procaptcha container -->
+        <div id="procaptcha-container" data-size="invisible"></div>
+        
+        <!-- Regular submit button (not directly tied to Procaptcha) -->
+        <button id="submit-button" type="button">Submit</button>
+    </form>
+    
+    <!-- Result display area -->
+    <div id="result"></div>
+    
+    <div style="margin-top: 20px;">
+        <h2>How It Works</h2>
+        <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering:</p>
+        <ol>
+            <li>Include the Procaptcha script with <code>?render=explicit</code> parameter</li>
+            <li>Create a container div with <code>data-size="invisible"</code></li>
+            <li>Define an <code>onloadCallback</code> function that renders the Procaptcha widget</li>
+            <li>Add a click handler to your submit button that validates the form and executes Procaptcha</li>
+            <li>When Procaptcha verification succeeds, your callback function is called</li>
+        </ol>
+        <p>The key elements are:</p>
+        <pre>
+&lt;script type="module" src="./assets/procaptcha.bundle.js?render=explicit" async defer&gt;&lt;/script&gt;
+
+&lt;div id="procaptcha-container" data-size="invisible"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+// Render the widget
+window.procaptcha.render('procaptcha-container', {
+    'siteKey': 'your_site_key',
+    'callback': onSubmit,
+    'size': 'invisible'
+});
+
+// Execute the verification
+window.procaptcha.execute();
+&lt;/script&gt;
+        </pre>
+    </div>
+    
+    <!-- Initialize Procaptcha with onload callback -->
+    <script type="module">
+        import { render } from './assets/procaptcha.bundle.js';
+        window.onProcaptchaLoad();
+    </script>
+</body>
+</html> 
