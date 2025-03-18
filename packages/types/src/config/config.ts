@@ -239,12 +239,15 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
+const Mode = union([literal("visible"), literal("invisible")]).optional();
+export type ModeType = zInfer<typeof Mode>;
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
+		mode: Mode.optional().default("visible"),
 	}),
 );
 

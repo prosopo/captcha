@@ -50,13 +50,14 @@ class CaptchaRenderer {
 		container: HTMLElement,
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2: boolean,
+		invisible = false,
 	): Root {
 		const callbacks = getDefaultCallbacks(container);
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
 
-		const config = createConfig(renderOptions.siteKey, isWeb2);
+		const config = createConfig(renderOptions.siteKey, isWeb2, invisible);
 
 		this.readAndValidateSettings(container, callbacks, config, renderOptions);
 

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Procaptcha Invisible Mode - Explicit Rendering</title>
+    <title>Procaptcha Invisible Mode - Proof of Work</title>
     <!-- Load the Procaptcha script with explicit rendering -->
     <script type="module" src="./assets/procaptcha.bundle.js?render=explicit" async defer></script>
     <style>
@@ -64,11 +64,17 @@
             padding: 15px;
             margin: 20px 0;
         }
+        .highlight-box {
+            background-color: #fffde7;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
     </style>
     <script type="text/javascript">
         // Callback function when the CAPTCHA is verified
         function onSubmit(token) {
-            console.log('Procaptcha verified, token:', token);
+            console.log('Procaptcha PoW verification completed, token:', token);
             
             // Get form values
             const name = document.getElementById('name').value;
@@ -79,7 +85,7 @@
             resultElement.textContent = `Form submitted with:
 - Name: ${name}
 - Email: ${email}
-- Procaptcha verified: Yes`;
+- Proof of Work verified: Yes (token received)`;
             resultElement.style.display = 'block';
             
             // Prevent actual form submission
@@ -129,7 +135,7 @@
             };
             
             // Execute Procaptcha verification
-            console.log('Executing Procaptcha verification...');
+            console.log('Executing Procaptcha PoW verification...');
             window.procaptcha.execute();
             
             // Restore original console.log after a short delay
@@ -146,7 +152,7 @@
             window.procaptcha.render(document.getElementById('procaptcha-container'), {
                 'siteKey': '%PROSOPO_SITE_KEY%',
                 'callback': onSubmit,
-                'captchaType': 'frictionless',
+                'captchaType': 'pow',  // Use Proof of Work captcha type
                 'size': 'invisible'
             });
             
@@ -162,8 +168,19 @@
     </script>
 </head>
 <body>
-    <h1>Procaptcha Invisible Mode</h1>
-    <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering.</p>
+    <h1>Procaptcha Invisible Mode - Proof of Work</h1>
+    <p>This example demonstrates how to use Procaptcha with Proof of Work verification in invisible mode.</p>
+    
+    <div class="highlight-box">
+        <strong>Silent Verification:</strong> Unlike regular CAPTCHA, the Proof of Work verification happens completely in the background without displaying any modal or UI to the user. The process is:
+        <ol>
+            <li>User fills out the form and clicks Submit</li>
+            <li>The <code>execute()</code> function is called, triggering the custom event</li>
+            <li>PoW component silently performs the verification computation</li>
+            <li>Upon success, the callback is called with the verification token</li>
+            <li>No user interaction is required during verification</li>
+        </ol>
+    </div>
     
     <form id="demo-form" action="javascript:void(0);" method="POST">
         <div>
@@ -191,52 +208,26 @@
     
     <div style="margin-top: 20px;">
         <h2>How It Works</h2>
-        <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering:</p>
+        <p>This example demonstrates how to use Procaptcha with Proof of Work verification in invisible mode:</p>
         <ol>
             <li>Include the Procaptcha script with <code>?render=explicit</code> parameter</li>
             <li>Create a container div with <code>data-size="invisible"</code></li>
-            <li>Define an <code>onloadCallback</code> function that renders the Procaptcha widget</li>
-            <li>Add a click handler to your submit button that validates the form and executes Procaptcha</li>
-            <li>When Procaptcha verification succeeds, your callback function is called</li>
+            <li>Specify <code>'captchaType': 'pow'</code> when rendering the widget</li>
+            <li>When the submit button is clicked, call <code>window.procaptcha.execute()</code></li>
+            <li>The PoW verification happens silently in the background</li>
+            <li>When verification completes, your callback function is called with the token</li>
         </ol>
-        <p>The key elements are:</p>
-        <pre>
-&lt;script type="module" src="./assets/procaptcha.bundle.js?render=explicit" async defer&gt;&lt;/script&gt;
-
-&lt;div id="procaptcha-container" data-size="invisible"&gt;&lt;/div&gt;
-
-&lt;script&gt;
-// Render the widget
-window.procaptcha.render('procaptcha-container', {
-    'siteKey': 'your_site_key',
-    'callback': onSubmit,
-    'size': 'invisible'
-});
-
-// Execute the verification
-window.procaptcha.execute();
-&lt;/script&gt;
-        </pre>
-        
-        <h3>Console Output</h3>
-        <p>When you click the Submit button, the <code>execute()</code> function will:</p>
-        <ol>
-            <li>Find all Procaptcha containers on the page</li>
-            <li>Log each container and its attributes to the console</li>
-            <li>Log all child elements of each container</li>
-            <li>Dispatch a custom <code>procaptcha:execute</code> event to show the modal</li>
-        </ol>
-        <p>This helps debug and understand how the invisible Procaptcha is structured in the DOM.</p>
         
         <h3>Event-Based Communication System</h3>
-        <p>To connect the vanilla JavaScript bundle with the React components, we use a custom event system:</p>
+        <p>This implementation uses a custom event system to communicate between components:</p>
         <ol>
             <li>When <code>window.procaptcha.execute()</code> is called, it dispatches a <code>procaptcha:execute</code> event</li>
-            <li>The ProcaptchaWidget React component listens for this event</li>
-            <li>When the event is received, the component sets <code>state.showModal = true</code></li>
-            <li>This causes the CAPTCHA modal to appear and verification to begin</li>
+            <li>The PoW ProcaptchaWidget component listens for this event</li>
+            <li>When the event is received, the component silently initiates verification</li>
+            <li>No modal or UI is displayed during the process</li>
+            <li>After verification, the callback is called with the result</li>
         </ol>
-        <p>This decoupled approach allows the JavaScript bundle to communicate with React components without direct references.</p>
+        <p>This approach allows for a completely frictionless user experience with background verification.</p>
     </div>
     
     <!-- Initialize Procaptcha with onload callback -->

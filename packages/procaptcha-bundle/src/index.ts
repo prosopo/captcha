@@ -30,6 +30,9 @@ const widgetFactory = new WidgetFactory(
 	new WidgetThemeResolver(),
 );
 
+// Define a custom event name for procaptcha execution
+const PROCAPTCHA_EXECUTE_EVENT = 'procaptcha:execute';
+
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = async () => {
 	// Get elements with class 'procaptcha'
@@ -59,34 +62,34 @@ const implicitRender = async () => {
 
 		procaptchaRoots.push(...root);
 	}
-	
+
 	// NEW: Check for invisible mode indicators (p-procaptcha class on buttons)
 	const invisibleButtons = Array.from(
-		document.getElementsByClassName("p-procaptcha")
+		document.getElementsByClassName("p-procaptcha"),
 	);
-	
+
 	if (invisibleButtons.length) {
 		// Found buttons with p-procaptcha class - this would be invisible mode
 		console.log("Invisible Procaptcha mode detected (implicit rendering)");
-		
+
 		// Process each invisible button
-		invisibleButtons.forEach(button => {
+		invisibleButtons.forEach((button) => {
 			const siteKey = button.getAttribute("data-sitekey");
 			const callback = button.getAttribute("data-callback");
-			
+
 			if (!siteKey) {
 				console.error("No siteKey found for invisible button");
 				return;
 			}
-			
+
 			// Add click event listener to the button
 			button.addEventListener("click", (event) => {
 				// Prevent default button action temporarily
 				event.preventDefault();
-				
+
 				// Show alert for MVP
 				alert("Invisible Procaptcha verification would happen here!");
-				
+
 				// If a callback is specified, try to call it
 				if (callback) {
 					try {
@@ -99,12 +102,16 @@ const implicitRender = async () => {
 						console.error("Error calling callback:", error);
 					}
 				}
-				
+
 				// Log for debugging
-				console.log(`Invisible Procaptcha button clicked. SiteKey: ${siteKey}, Callback: ${callback}`);
+				console.log(
+					`Invisible Procaptcha button clicked. SiteKey: ${siteKey}, Callback: ${callback}`,
+				);
 			});
-			
-			console.log(`Initialized invisible Procaptcha on button with siteKey: ${siteKey}`);
+
+			console.log(
+				`Initialized invisible Procaptcha on button with siteKey: ${siteKey}`,
+			);
 		});
 	}
 };
@@ -116,40 +123,18 @@ export const render = async (
 ) => {
 	// Check if this is an invisible mode request
 	// Use a type-safe way to check for the 'size' property
-	const hasInvisibleSize = Object.prototype.hasOwnProperty.call(renderOptions, 'size') && 
-		(renderOptions as any).size === 'invisible';
-	
-	if (hasInvisibleSize || element.tagName.toLowerCase() === 'button') {
-		console.log("Invisible Procaptcha mode detected (explicit rendering)");
-		
-		// For MVP, just show an alert and attach a click handler if it's a button
-		if (element.tagName.toLowerCase() === 'button') {
-			element.addEventListener("click", (event) => {
-				event.preventDefault();
-				alert("Invisible Procaptcha verification would happen here (explicit rendering)!");
-				
-				// If a callback is specified, try to call it
-				if (renderOptions.callback) {
-					try {
-						if (typeof renderOptions.callback === "function") {
-							// In a real implementation, we would pass the token here
-							renderOptions.callback("sample-token-for-testing");
-						} else if (typeof renderOptions.callback === "string") {
-							const callbackFn = getWindowCallback(renderOptions.callback);
-							if (typeof callbackFn === "function") {
-								callbackFn("sample-token-for-testing");
-							}
-						}
-					} catch (error) {
-						console.error("Error calling callback:", error);
-					}
-				}
-			});
-		} else {
-			// If it's not a button but has size='invisible', it's for programmatic execution
-			console.log("Initialized invisible Procaptcha container for programmatic execution");
-		}
-		
+	const hasInvisibleSize =
+		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&
+		(renderOptions as any).size === "invisible";
+
+	if (hasInvisibleSize || element.tagName.toLowerCase() === "button") {
+		const roots = await widgetFactory.createWidgets(
+			[element],
+			renderOptions,
+			true,
+			true,
+		);
+		procaptchaRoots.push(...roots);
 		return;
 	}
 
@@ -171,13 +156,101 @@ export default function ready(fn: () => void) {
 // Add execute method for invisible mode
 export const execute = () => {
 	console.log("Procaptcha execute() method called");
-	alert("Procaptcha execute() method called. Invisible verification would happen here!");
+	
+	// Find all potential Procaptcha containers
+	const containers = findProcaptchaContainers();
+	
+	if (containers.length === 0) {
+		console.error("No Procaptcha containers found for execution");
+		return;
+	}
+	
+	// Log the containers and their elements - but avoid circular reference issues
+	containers.forEach((container, index) => {
+		console.log(`Found Procaptcha container ${index + 1}:`, container);
+		
+		// Safely log container attributes
+		const containerAttrs = getElementAttributes(container);
+		console.log(`Container ${index + 1} attributes:`, containerAttrs);
+		
+		// Log child elements
+		const children = Array.from(container.children);
+		console.log(`Container ${index + 1} has ${children.length} child elements`);
+		
+		// Log each child element safely
+		children.forEach((child, childIndex) => {
+			console.log(`Child ${childIndex + 1} of container ${index + 1}:`, child);
+			
+			// Safely log child attributes
+			const childAttrs = getElementAttributes(child);
+			console.log(`Child ${childIndex + 1} attributes:`, childAttrs);
+		});
+	});
+	
+	// Dispatch a custom event to notify React components to show the modal or perform silent verification
+	const executeEvent = new CustomEvent(PROCAPTCHA_EXECUTE_EVENT, {
+		detail: {
+			containerId: containers[0]?.id || 'procaptcha-container', // Use optional chaining to avoid undefined error
+			containerCount: containers.length,
+			timestamp: Date.now()
+		},
+		bubbles: true,
+		cancelable: true
+	});
+	
+	// Dispatch the event on the document
+	document.dispatchEvent(executeEvent);
+	console.log(`Dispatched "${PROCAPTCHA_EXECUTE_EVENT}" event to trigger verification`);
+	console.log(`This will either:
+- Show a CAPTCHA modal for regular image verification
+- Silently perform Proof of Work verification if in PoW mode
+- Do nothing if no appropriate handler is registered`);
 	
 	// In a real implementation, we would:
-	// 1. Find the invisible Procaptcha container
-	// 2. Perform verification
-	// 3. Call the callback with the token
+	// 1. Perform verification on the found container
+	// 2. Call the callback with the token
 };
+
+// Helper function to find all potential Procaptcha containers
+function findProcaptchaContainers(): Element[] {
+	const containers: Element[] = [];
+	
+	// Strategy 1: Look for elements with data-size="invisible"
+	const invisibleContainers = Array.from(
+		document.querySelectorAll('[data-size="invisible"]')
+	);
+	containers.push(...invisibleContainers);
+	
+	// Strategy 2: Look for elements with specific IDs
+	const idContainers = Array.from(
+		document.querySelectorAll('#procaptcha-container, [id$="-procaptcha-container"]')
+	);
+	
+	// Add only unique elements
+	idContainers.forEach(container => {
+		if (!containers.includes(container)) {
+			containers.push(container);
+		}
+	});
+	
+	return containers;
+}
+
+// Helper function to get all attributes of an element
+function getElementAttributes(element: Element): Record<string, string> {
+	const attributes: Record<string, string> = {};
+	
+	if (element && element.attributes) {
+		for (let i = 0; i < element.attributes.length; i++) {
+			const attr = element.attributes[i];
+			if (attr && attr.name && attr.value !== undefined) {
+				attributes[attr.name] = attr.value;
+			}
+		}
+	}
+	
+	return attributes;
+}
 
 // extend the global Window interface to include the procaptcha object
 declare global {
@@ -229,3 +302,4 @@ export const reset = () => {
 window.procaptcha = { ready, render, reset, execute };
 
 start();
+

@@ -33,10 +33,11 @@ class WidgetFactory {
 		containers: Element[],
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
+		invisible = false,
 	): Promise<Root[]> {
 		return Promise.all(
 			containers.map((container) =>
-				this.createWidget(container, renderOptions, isWeb2),
+				this.createWidget(container, renderOptions, isWeb2, invisible),
 			),
 		);
 	}
@@ -45,6 +46,7 @@ class WidgetFactory {
 		container: Element,
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
+		invisible = false,
 	): Promise<Root> {
 		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
 			container,
@@ -54,8 +56,15 @@ class WidgetFactory {
 		const widgetTheme =
 			"light" === renderOptions.theme ? lightTheme : darkTheme;
 
-		const widgetInteractiveArea =
-			this.widgetSkeletonFactory.createWidgetSkeleton(container, widgetTheme);
+		let widgetInteractiveArea: HTMLElement;
+
+		// Don't create the widget skeleton if the mode is invisible
+		if (!invisible) {
+			widgetInteractiveArea =
+				this.widgetSkeletonFactory.createWidgetSkeleton(container, widgetTheme);
+		} else {
+			widgetInteractiveArea = container as HTMLElement;
+		}
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
 
@@ -71,6 +80,7 @@ class WidgetFactory {
 			widgetInteractiveArea,
 			renderOptions,
 			isWeb2,
+			invisible,
 		);
 
 		return captchaRoot;

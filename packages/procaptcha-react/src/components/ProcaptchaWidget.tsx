@@ -18,10 +18,14 @@ import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
+import { type ProcaptchaState } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
+
+// Define the same event name as in the bundle
+const PROCAPTCHA_EXECUTE_EVENT = 'procaptcha:execute';
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
@@ -45,6 +49,59 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			});
 		}
 	}, [config.language]);
+
+	// Add event listener for the execute event
+	useEffect(() => {
+		// Event handler for when execute() is called
+		const handleExecuteEvent = (event: Event) => {
+			console.log('ProcaptchaWidget received execute event:', event);
+			
+			// Show the modal
+			updateState({
+				showModal: true
+			});
+			
+			// If we need to load a challenge or do other initialization
+			if (!state.challenge && manager.start) {
+				console.log('No challenge set, attempting to start verification');
+				try {
+					manager.start();
+				} catch (error) {
+					console.error('Error starting verification:', error);
+				}
+			}
+		};
+
+		// Add event listener
+		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
+		// Cleanup function to remove event listener
+		return () => {
+			document.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		};
+	}, [manager, state.challenge, updateState]); // Add dependencies
+
+	if (config.mode === "invisible") {
+		return (
+			<Modal show={state.showModal}>
+				{state.challenge ? (
+					<CaptchaComponent
+						challenge={state.challenge}
+						index={state.index}
+						solutions={state.solutions}
+						onSubmit={manager.submit}
+						onCancel={manager.cancel}
+						onClick={manager.select}
+						onNext={manager.nextRound}
+						onReload={manager.reload}
+						themeColor={config.theme ?? "light"}
+					/>
+				) : (
+					null
+				)}
+			</Modal>
+		);
+	}
 
 	return (
 		<div className={"image-captcha"}>
