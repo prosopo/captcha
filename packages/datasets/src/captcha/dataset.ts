@@ -75,19 +75,23 @@ export async function validateDatasetContent(
 	return hashes.every((hash) => hash);
 }
 
+export const getRandomCaptchaSeed = (randomMax: number): number => {
+	return lodash().random(0, randomMax);
+};
+
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
 	logger.debug("Adding solution hashes to dataset");
 	const dataset = addSolutionHashesToDataset(datasetRaw);
 	logger.debug("Building dataset merkle trees");
 	const contentTree = await buildCaptchaTree(dataset, false, false, true);
 	const solutionTree = await buildCaptchaTree(dataset, true, true, false);
-
+	dataset.randomMax = dataset.captchas.length;
 	dataset.captchas = dataset.captchas.map(
 		(captcha: CaptchaWithoutId, index: number) => {
 			let randomSeed = index;
 			if (dataset.captchas.length > 1000) {
 				// for a large dataset, we use random seeds when generating captchas
-				randomSeed = lodash().random(0, dataset.captchas.length);
+				randomSeed = getRandomCaptchaSeed(dataset.randomMax);
 			}
 			return {
 				...captcha,
@@ -103,7 +107,7 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
 	dataset.contentTree = contentTree.layers;
 	dataset.datasetId = solutionTree.root?.hash;
 	dataset.datasetContentId = contentTree.root?.hash;
-	dataset.randomMax = dataset.captchas.length;
+
 	return dataset;
 }
 
