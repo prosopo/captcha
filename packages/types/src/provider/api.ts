@@ -32,7 +32,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import type { CaptchaType } from "../client/captchaType.js";
+import type { CaptchaType } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
@@ -59,7 +59,7 @@ export const ApiPrefix = "/v1/prosopo" as const;
 
 export type IPAddress = Address4 | Address6;
 
-export enum ApiPaths {
+export enum ClientApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
 	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
@@ -68,39 +68,48 @@ export enum ApiPaths {
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
-	GetProviderDetails = "/v1/prosopo/provider/public/details",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 }
 
+export enum PublicApiPaths {
+	GetProviderDetails = "/v1/prosopo/provider/public/details",
+}
+
 export type TGetImageCaptchaChallengePathAndParams =
-	`${ApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
+	`${ClientApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
 
 export type TGetImageCaptchaChallengeURL =
 	`${string}${TGetImageCaptchaChallengePathAndParams}`;
 
 export type TGetPowCaptchaChallengeURL =
-	`${string}${ApiPaths.GetPowCaptchaChallenge}`;
+	`${string}${ClientApiPaths.GetPowCaptchaChallenge}`;
 
 export type TSubmitPowCaptchaSolutionURL =
-	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
+	`${string}${ClientApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 }
 
-export type CombinedApiPaths = ApiPaths | AdminApiPaths;
+export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 
 export const ProviderDefaultRateLimits = {
-	[ApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
-	[ApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.GetFrictionlessCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
+	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
+		windowMs: 60000,
+		limit: 60,
+	},
+	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		windowMs: 60000,
+		limit: 60,
+	},
+	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
+	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 };
 

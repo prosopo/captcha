@@ -76,7 +76,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 						{ "sites.updatedAt": { $gt: updatedAtTimestamp } },
 						{ "sites.updatedAt": { $exists: false } },
 					],
-					"users.active": true,
+					"users.status": "active",
 				},
 				{ "sites.siteKey": 1, "sites.settings": 1, "sites.tier": 1 },
 			)

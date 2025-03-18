@@ -17,8 +17,8 @@ import { u8aToHex } from "@polkadot/util/u8a";
 import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
 	ApiParams,
-	ApiPaths,
 	CaptchaType,
+	ClientApiPaths,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
@@ -34,7 +34,7 @@ import { registerSiteKey } from "./registerSitekey.js";
 
 // Define the endpoint path and base URL
 const baseUrl = "http://localhost:9229";
-const getPowCaptchaChallengePath = ApiPaths.GetPowCaptchaChallenge;
+const getPowCaptchaChallengePath = ClientApiPaths.GetPowCaptchaChallenge;
 const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
@@ -211,7 +211,7 @@ describe("PoW Integration Tests", () => {
 				dapp: dummyDappAccountAddr,
 			};
 			const response = await fetch(
-				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
+				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
 				{
 					method: "POST",
 					headers: {
@@ -285,7 +285,7 @@ describe("PoW Integration Tests", () => {
 				dapp,
 			};
 			const response = await fetch(
-				`${baseUrl}${ApiPaths.SubmitPowCaptchaSolution}`,
+				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
 				{
 					method: "POST",
 					headers: {

@@ -14,9 +14,16 @@
 
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
+import { getWidgetSkeleton } from "@prosopo/widget-skeleton";
 import { type DOMWindow, JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { renderLogic } from "../../util/renderLogic.js";
+import { WidgetFactory } from "../../util/widgetFactory.js";
+import { WidgetThemeResolver } from "../../util/widgetThemeResolver.js";
+
+const widgetFactory = new WidgetFactory(
+	getWidgetSkeleton().getFactory(),
+	new WidgetThemeResolver(),
+);
 
 interface TestContext {
 	document?: Document;
@@ -105,11 +112,7 @@ describe("Config utility functions", () => {
 			return;
 		}
 
-		const config = ProcaptchaConfigSchema.parse({
-			account: { address: "1234" },
-		});
-
-		renderLogic([script], config, {
+		await widgetFactory.createWidgets([script], {
 			siteKey: "1234",
 			captchaType: "pow",
 		});
@@ -181,7 +184,7 @@ describe("Config utility functions", () => {
 			account: { address: "1234" },
 		});
 
-		renderLogic([script], config, {
+		await widgetFactory.createWidgets([script], {
 			siteKey: "1234",
 			captchaType: "pow",
 		});

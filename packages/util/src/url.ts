@@ -24,7 +24,9 @@ export const parseUrl = (domain: string) => {
 		throw new Error("Invalid domain");
 	}
 
-	return new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+	return new URL(
+		`https://${domain.replace(/^https?:\/\//, "").replace(/^www\./, "")}`,
+	);
 };
 
 export const validateDomain = (domain: string): boolean => {
@@ -49,3 +51,6 @@ export const validateDomain = (domain: string): boolean => {
 
 	return true;
 };
+
+export const domainIsLocalhost = (domain: string) =>
+	domain === "localhost" || domain === "127.0.0.1";

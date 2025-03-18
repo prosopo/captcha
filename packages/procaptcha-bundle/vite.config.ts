@@ -29,7 +29,7 @@ process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
 const copyTo = ["../../demos/client-bundle-example/src/assets"];
 const bundleName = "procaptcha";
 const packageName = "@prosopo/procaptcha-bundle";
-const entry = "./src/index.tsx";
+const entry = "./src/index.ts";
 const copyOptions = copyTo
 	? {
 			srcDir: "./dist/bundle",

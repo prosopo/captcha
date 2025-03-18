@@ -30,7 +30,7 @@ export function initializeI18n() {
 		i18n
 			// @ts-ignore https://github.com/i18next/i18next-fs-backend/issues/57
 			.use(FSBackend)
-			.use(MiddlewareLanguageDetector)
+			.use(MiddlewareLanguageDetector) // this line should switch the language to the one the user reports in the Accept-Language header
 			.init({
 				debug: process.env.PROSOPO_LOG_LEVEL === "debug",
 				fallbackLng: LanguageSchema.enum.en,
