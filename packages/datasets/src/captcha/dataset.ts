@@ -81,16 +81,23 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
 	logger.debug("Building dataset merkle trees");
 	const contentTree = await buildCaptchaTree(dataset, false, false, true);
 	const solutionTree = await buildCaptchaTree(dataset, true, true, false);
+
 	dataset.captchas = dataset.captchas.map(
-		(captcha: CaptchaWithoutId, index: number) =>
-			({
+		(captcha: CaptchaWithoutId, index: number) => {
+			let randomSeed = index;
+			if (dataset.captchas.length > 1000) {
+				// for a large dataset, we use random seeds when generating captchas
+				randomSeed = lodash().random(0, dataset.captchas.length);
+			}
+			return {
 				...captcha,
 				captchaId: at(solutionTree.leaves, index).hash,
 				captchaContentId: at(contentTree.leaves, index).hash,
 				datasetId: solutionTree.root?.hash,
 				datasetContentId: contentTree.root?.hash,
-				randomSeed: lodash().random(0, dataset.captchas.length),
-			}) as Captcha,
+				randomSeed: randomSeed,
+			} as Captcha;
+		},
 	);
 	dataset.solutionTree = solutionTree.layers;
 	dataset.contentTree = contentTree.layers;
