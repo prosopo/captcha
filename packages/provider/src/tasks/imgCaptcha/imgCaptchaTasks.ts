@@ -68,13 +68,31 @@ export class ImgCaptchaManager extends CaptchaManager {
 		randomMax: number,
 		size: number,
 	): Promise<Captcha[]> {
-		const captchaDocs = await this.db.getRandomCaptcha(
-			solved,
-			datasetId,
-			randomMax,
-			size,
-		);
-		if (!captchaDocs) {
+		let captchaDocs: Captcha[] = [];
+		const tryLimit = 10;
+		let tryCount = 0;
+		// for smaller datasets, we may need to get more than one batch of captchas if random sampling is not enough
+		while (captchaDocs.length < size) {
+			const newCaptchas = await this.db.getRandomCaptcha(
+				solved,
+				datasetId,
+				randomMax,
+				size - captchaDocs.length,
+			);
+			captchaDocs = [...captchaDocs, ...(newCaptchas || [])];
+			tryCount++;
+			if (tryCount > tryLimit) {
+				throw new ProsopoEnvError("CAPTCHA.CAPTCHA_GET_FAILED", {
+					context: {
+						failedFuncName: this.getCaptchaWithProof.name,
+						datasetId,
+						solved,
+						size,
+					},
+				});
+			}
+		}
+		if (captchaDocs.length !== size) {
 			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: {
 					failedFuncName: this.getCaptchaWithProof.name,
