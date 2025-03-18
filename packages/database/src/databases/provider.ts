@@ -13,6 +13,7 @@
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
+import { getRandomCaptchaSeed } from "@prosopo/datasets";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
@@ -407,7 +408,7 @@ export class ProviderDatabase
 		}
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
 		const randomRange = {
-			$gte: lodash().random(0, randomMax),
+			$gte: getRandomCaptchaSeed(randomMax),
 		};
 		const filter: Pick<Captcha, "datasetId" | "solved"> & {
 			randomSeed: { $gte: number };

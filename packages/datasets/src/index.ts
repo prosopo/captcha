@@ -16,3 +16,4 @@ export {
 	datasetWithSolutionHashes,
 	datasetWithIndexSolutions,
 } from "./tests/mocks/data/captchas.js";
+export { getRandomCaptchaSeed } from "./captcha/dataset.js";
