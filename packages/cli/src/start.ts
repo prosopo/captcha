@@ -77,6 +77,13 @@ async function startApi(
 		message: "Adding headerCheckMiddleware",
 		paths: clientPathsExcludingVerify,
 	});
+
+	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+	apiApp.set(
+		"trust proxy",
+		env.config.proxyCount /* number of proxies between user and server */,
+	);
+
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 	const i18Middleware = await i18nMiddleware({});
