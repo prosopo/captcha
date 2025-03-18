@@ -5,7 +5,7 @@
     <title>Procaptcha demo: Simple page</title>
     <script type="text/javascript">
         window.onCaptchaFailed = function () {
-            console.log('The user failed the captcha')
+            console.log('Challenge failed')
         }
     </script>
     <script type="module">
@@ -152,7 +152,7 @@
         theme: 'dark',
         callback: onCaptchaVerified,
         "failed-callback": function () {
-            console.log('The user failed the captcha')
+            console.log('Challenge failed')
         }
     })
 </script>

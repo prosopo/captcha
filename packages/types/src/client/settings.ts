@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, number, object, type output, string } from "zod";
-import { CaptchaType, CaptchaTypeSpec } from "./captchaType.js";
+import { CaptchaType } from "./captchaType/captchaType.js";
+import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.default(CaptchaType.frictionless),
 	domains: array(string()).default([]),
-	frictionlessThreshold: number().default(0.8),
+	frictionlessThreshold: number().default(0.5),
 	powDifficulty: number().default(4),
 });
 export type IUserSettings = output<typeof ClientSettingsSchema>;
