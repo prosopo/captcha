@@ -1,7 +1,5 @@
 FROM caddy:2-builder AS builder
 RUN apk update && apk add gcc g++ make libpcap-dev libpcap
-# Copy the local package into the builder image
-COPY ./chaddy /go/src/github.com/prosopo/chaddy
 RUN CGO_ENABLED=1 xcaddy build \
     --with github.com/mholt/caddy-ratelimit \
     --with github.com/prosopo/chaddy
