@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.5.0",
+	"version": "2.5.1",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -73,7 +73,8 @@
 		"deps:dupe": "npm run deps:ls | awk -F': ' 'NF {count[$1]++; lines[$1] = lines[$1] $0 \"\\n\"} END {for (pkg in count) if (count[pkg] > 1) printf \"%s\", lines[pkg]}' | sort",
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npm-check-updates --deep",
-		"deps:upgrade": "npm-check-updates --deep --interactive --format group"
+		"deps:upgrade": "npm-check-updates --deep --interactive --format group",
+		"prepare": "husky"
 	},
 	"private": true,
 	"engines": {
@@ -90,6 +91,7 @@
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
 		"htmlhint": "1.1.4",
+		"husky": "9.1.7",
 		"markdownlint-cli": "0.41.0",
 		"node-stdlib-browser": "1.2.1",
 		"npm-check-updates": "17.1.1",
