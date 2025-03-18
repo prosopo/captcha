@@ -82,17 +82,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			captchaDocs = [...captchaDocs, ...(newCaptchas || [])];
 			tryCount++;
 			if (tryCount > tryLimit) {
-				throw new ProsopoEnvError("CAPTCHA.CAPTCHA_GET_FAILED", {
-					context: {
-						failedFuncName: this.getCaptchaWithProof.name,
-						datasetId,
-						solved,
-						size,
-					},
-				});
+				break;
 			}
 		}
-		if (captchaDocs.length !== size) {
+		if (!captchaDocs.length) {
 			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: {
 					failedFuncName: this.getCaptchaWithProof.name,
