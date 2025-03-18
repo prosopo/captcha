@@ -1,5 +1,5 @@
 {
-	"name": "@prosopo/web-components",
+	"name": "@prosopo/widget-skeleton",
 	"version": "2.5.1",
 	"description": "Non business logic utilities for web applications",
 	"main": "dist/index.js",
