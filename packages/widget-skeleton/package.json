@@ -1,7 +1,7 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.5.0",
-	"description": "Procaptcha widget skeleton",
+	"version": "2.5.1",
+	"description": "Non business logic utilities for web applications",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
@@ -31,7 +31,7 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"devDependencies": {
-		"@prosopo/config": "2.5.0",
+		"@prosopo/config": "2.5.1",
 		"@vitest/coverage-v8": "2.1.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
