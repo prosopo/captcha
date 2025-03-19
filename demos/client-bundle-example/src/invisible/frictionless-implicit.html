@@ -49,7 +49,6 @@
         }
     </style>
     <script type="text/javascript">
-        // Callback function when the CAPTCHA is verified
         function onSubmit(token) {
             console.log('Procaptcha verified, token: ' + token);
             
@@ -57,7 +56,6 @@
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             
-            // Display the result
             const resultElement = document.getElementById('result');
             resultElement.textContent = `Form submitted with:
 - Name: ${name}
@@ -96,7 +94,6 @@
         </button>
     </form>
     
-    <!-- Result display area -->
     <div id="result"></div>
     
     <div style="margin-top: 20px;">
