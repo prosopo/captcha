@@ -48,10 +48,16 @@ class RulesMongooseStorage implements RulesStorage {
 			...(record.ja4 && { ja4: record.ja4 }),
 		};
 
+		// Validate record manually
+		const validationError = new this.writingModel(record).validateSync();
+		if (validationError) {
+			throw validationError; // Reject invalid input before DB call
+		}
+
 		const document = await this.writingModel.findOneAndUpdate(
 			filter,
 			record,
-			{ new: true, upsert: true }, // Return the updated document, or insert if not found
+			{ new: true, upsert: true, runValidators: true }, // 🔥 Enforce schema validation!
 		);
 
 		const ruleRecord = this.convertMongooseRecordToRuleRecord(
