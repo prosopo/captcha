@@ -48,11 +48,11 @@ class RulesMongooseStorage implements RulesStorage {
 			...(record.ja4 && { ja4: record.ja4 }),
 		};
 
-		let document = await this.writingModel.findOneAndUpdate(filter, record);
-
-		if (!document) {
-			document = await this.writingModel.create(record);
-		}
+		const document = await this.writingModel.findOneAndUpdate(
+			filter,
+			record,
+			{ new: true, upsert: true }, // Return the updated document, or insert if not found
+		);
 
 		const ruleRecord = this.convertMongooseRecordToRuleRecord(
 			document.toObject(),
