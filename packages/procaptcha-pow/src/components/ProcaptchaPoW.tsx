@@ -17,11 +17,13 @@ import { type LazyExoticComponent, Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 
 // Define the function signature more precisely
-type ProcaptchaWidgetComponent = (props: ProcaptchaProps) => ReactElement | null;
+type ProcaptchaWidgetComponent = (
+	props: ProcaptchaProps,
+) => ReactElement | null;
 
 // Lazy load the widget with the correct type signature
 const ProcaptchaWidget: LazyExoticComponent<ProcaptchaWidgetComponent> = lazy(
-	async () => import("./ProcaptchaWidget.js")
+	async () => import("./ProcaptchaWidget.js"),
 );
 
 export const ProcaptchaPow = (props: ProcaptchaProps) => (

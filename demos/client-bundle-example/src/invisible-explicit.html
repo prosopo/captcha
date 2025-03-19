@@ -66,15 +66,12 @@
         }
     </style>
     <script type="text/javascript">
-        // Callback function when the CAPTCHA is verified
         function onSubmit(token) {
             console.log('Procaptcha verified, token:', token);
             
-            // Get form values
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             
-            // Display the result
             const resultElement = document.getElementById('result');
             resultElement.textContent = `Form submitted with:
 - Name: ${name}
@@ -82,11 +79,9 @@
 - Procaptcha verified: Yes`;
             resultElement.style.display = 'block';
             
-            // Prevent actual form submission
             return false;
         }
         
-        // Function to validate form and execute Procaptcha
         function validate(event) {
             event.preventDefault();
             
@@ -101,15 +96,11 @@
                 return;
             }
             
-            // Clear previous console output display
             document.getElementById('console-output').innerHTML = '';
-            
-            // Override console.log to capture output
             const originalConsoleLog = console.log;
             const consoleOutput = document.getElementById('console-output');
             
             console.log = function() {
-                // Call the original console.log
                 originalConsoleLog.apply(console, arguments);
                 
                 // Format and display the arguments in our custom console
@@ -128,17 +119,14 @@
                 consoleOutput.style.display = 'block';
             };
             
-            // Execute Procaptcha verification
             console.log('Executing Procaptcha verification...');
             window.procaptcha.execute();
             
-            // Restore original console.log after a short delay
             setTimeout(() => {
                 console.log = originalConsoleLog;
             }, 1000);
         }
         
-        // Callback function when Procaptcha script is loaded
         function onloadCallback() {
             console.log('Procaptcha script loaded, initializing explicit rendering');
             
@@ -150,11 +138,9 @@
                 'size': 'invisible'
             });
             
-            // Add click event to the submit button
             document.getElementById('submit-button').addEventListener('click', validate);
         }
         
-        // Initialize when the page loads
         document.addEventListener('DOMContentLoaded', function() {
             // Set up the onload callback for Procaptcha
             window.onProcaptchaLoad = onloadCallback;

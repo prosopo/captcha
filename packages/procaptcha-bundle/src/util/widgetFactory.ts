@@ -60,8 +60,10 @@ class WidgetFactory {
 
 		// Don't create the widget skeleton if the mode is invisible
 		if (!invisible) {
-			widgetInteractiveArea =
-				this.widgetSkeletonFactory.createWidgetSkeleton(container, widgetTheme);
+			widgetInteractiveArea = this.widgetSkeletonFactory.createWidgetSkeleton(
+				container,
+				widgetTheme,
+			);
 		} else {
 			widgetInteractiveArea = container as HTMLElement;
 		}

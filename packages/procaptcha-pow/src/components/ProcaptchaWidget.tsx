@@ -21,7 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
 
 // Define the same event name as in the bundle for consistency
-const PROCAPTCHA_EXECUTE_EVENT = 'procaptcha:execute';
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
@@ -50,15 +50,15 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		if (config.mode === "invisible") {
 			// Event handler for when execute() is called
 			const handleExecuteEvent = (event: Event) => {
-				console.log('PoW ProcaptchaWidget received execute event:', event);
-				
+				console.log("PoW ProcaptchaWidget received execute event:", event);
+
 				// Directly start the verification process without showing any UI
 				try {
 					// Start the PoW verification process
 					manager.current.start();
-					console.log('Started invisible PoW verification process');
+					console.log("Started invisible PoW verification process");
 				} catch (error) {
-					console.error('Error starting PoW verification:', error);
+					console.error("Error starting PoW verification:", error);
 				}
 			};
 
@@ -67,13 +67,16 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 			// Cleanup function to remove event listener
 			return () => {
-				document.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+				document.removeEventListener(
+					PROCAPTCHA_EXECUTE_EVENT,
+					handleExecuteEvent,
+				);
 			};
 		}
-		
+
 		// Return empty cleanup function when not in invisible mode
 		return () => {};
-	}, [config.mode, manager]);
+	}, [config.mode]);
 
 	if (config.mode === "invisible") {
 		// Return null for invisible mode - no UI needed
