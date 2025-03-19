@@ -54,8 +54,6 @@ class RulesMongooseStorage implements RulesStorage {
 			throw validationError; // Reject invalid input before DB call
 		}
 
-		console.log("Filter", filter);
-
 		const document = await this.writingModel.findOneAndUpdate(
 			filter,
 			record,
