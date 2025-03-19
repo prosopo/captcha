@@ -48,4 +48,5 @@ export enum ApiParams {
 	powDifficulty = "powDifficulty",
 	score = "score",
 	tier = "tier",
+	detectorKey = "detectorKey",
 }

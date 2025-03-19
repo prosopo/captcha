@@ -430,58 +430,17 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 
-export interface IPAddressBlockRule extends BlockRule {
-	ip: number;
-	dappAccount?: string;
-}
-
-export interface UserAccountBlockRule extends BlockRule {
-	dappAccount?: string;
-	userAccount: string;
-}
-
-// A rule to block users based on headers such as IP. Global rules apply to all clients.
-export type IPBlockRuleRecord = mongoose.Document & IPAddressBlockRule;
-export type UserAccountBlockRuleRecord = mongoose.Document &
-	UserAccountBlockRule;
-
-export type IPBlockRuleMongo = Omit<IPBlockRuleRecord, "ip"> & {
-	ip: number;
+export type DetectorKey = {
+	detectorKey: string;
+	createdAt: Date;
 };
 
-export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
-	ip: { type: Number, required: true, unique: true },
-	global: { type: Boolean, required: true },
-	type: { type: String, enum: BlockRuleType, required: true },
-	dappAccount: { type: String, required: false },
-	hardBlock: { type: Boolean, required: false },
-	captchaConfig: {
-		solved: { count: { type: Number, required: false } },
-		unsolved: { count: { type: Number, required: false } },
-	},
+export type DetectorSchema = mongoose.Document & DetectorKey;
+export const DetectorRecordSchema = new Schema<DetectorSchema>({
+	createdAt: { type: Date, required: true },
+	detectorKey: { type: String, required: true },
 });
-
-IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
-IPBlockRuleRecordSchema.index({ ip: 1, dappAccount: 1 }, { unique: true });
-
-export const UserAccountBlockRuleSchema =
-	new Schema<UserAccountBlockRuleRecord>({
-		dappAccount: { type: String, required: false },
-		userAccount: { type: String, required: true },
-		global: { type: Boolean, required: true },
-		hardBlock: { type: Boolean, required: false },
-		type: { type: String, enum: BlockRuleType, required: true },
-		captchaConfig: {
-			solved: { count: { type: Number, required: false } },
-			unsolved: { count: { type: Number, required: false } },
-		},
-	});
-
-UserAccountBlockRuleSchema.index({ userAccount: 1 }, { unique: true });
-UserAccountBlockRuleSchema.index(
-	{ dappAccount: 1, userAccount: 1 },
-	{ unique: true },
-);
+DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -666,7 +625,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	getUserAccessRulesStorage(): RulesStorage;
 
-	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
+	storeDetectorKey(detectorKey: string): Promise<void>;
 
-	getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]>;
+	getDetectorKey(): Promise<string | undefined>;
 }
