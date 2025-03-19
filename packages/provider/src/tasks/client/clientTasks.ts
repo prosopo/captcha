@@ -232,9 +232,6 @@ export class ClientTaskManager {
 			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
 			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
 
-			// Special case for localhost
-			if (referrerDomain === "localhost") return true;
-
 			return (
 				referrerDomain === allowedDomain ||
 				referrerDomain.endsWith(`.${allowedDomain}`)
