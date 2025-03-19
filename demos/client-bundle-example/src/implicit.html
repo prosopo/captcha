@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <title>Simple Procaptcha Implicit Rendering Demo</title>
-    <!-- Load the Procaptcha script -->
     <script type="module" src="./assets/procaptcha.bundle.js" async defer></script>
     <style>
         body {
@@ -60,12 +59,9 @@
             document.getElementById('status').style.color = 'green';
         }
 
-        // Handle form submission
         function handleSubmit(event) {
-            // Prevent the default form submission
             event.preventDefault();
             
-            // Get form values
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
@@ -80,24 +76,19 @@
                 return;
             }
             
-            // Create a message with the form data
             const message = `Form submitted with:
 - Email: ${email}
 - Password: ${password.replace(/./g, '*')}
 - CAPTCHA Token: ${procaptchaToken.substring(0, 20)}...`;
             
-            // Display the result
             const resultElement = document.getElementById('result');
             resultElement.textContent = message;
             resultElement.style.display = 'block';
             
-            // Also show an alert
             alert('Form submitted successfully!\nCheck the result section below for details.');
-            
             return false;
         }
         
-        // Add event listener when the DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('demo-form');
             form.addEventListener('submit', handleSubmit);
