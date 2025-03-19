@@ -54,6 +54,8 @@ class RulesMongooseStorage implements RulesStorage {
 			throw validationError; // Reject invalid input before DB call
 		}
 
+		console.log("Filter", filter);
+
 		const document = await this.writingModel.findOneAndUpdate(
 			filter,
 			record,
@@ -74,14 +76,20 @@ class RulesMongooseStorage implements RulesStorage {
 
 		// Delete the existing ip records to avoid duplicates.
 		await this.writingModel.bulkWrite(
-			records.map((record) => ({
-				deleteOne: {
-					filter: {
-						clientId: record.clientId,
-						userIp: record.userIp,
-					} as Pick<Rule, "userId" | "userIp" | "clientId">,
-				},
-			})),
+			records.map((record) => {
+				const filter = {
+					...(record.clientId && { clientId: record.clientId }),
+					...(record.userIp && { userIp: record.userIp }),
+					...(record.userId && { userId: record.userId }),
+					...(record.ja4 && { ja4: record.ja4 }),
+				};
+
+				return {
+					deleteOne: {
+						filter,
+					},
+				};
+			}),
 		);
 
 		const documents = await this.writingModel.insertMany(records);
