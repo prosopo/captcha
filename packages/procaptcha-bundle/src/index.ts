@@ -63,7 +63,7 @@ const implicitRender = async () => {
 		procaptchaRoots.push(...root);
 	}
 
-	// NEW: Check for invisible mode indicators (p-procaptcha class on buttons)
+	// Check for invisible mode indicators (p-procaptcha class on buttons)
 	const invisibleButtons = Array.from(
 		document.getElementsByClassName("p-procaptcha"),
 	);
@@ -86,9 +86,6 @@ const implicitRender = async () => {
 			button.addEventListener("click", (event) => {
 				// Prevent default button action temporarily
 				event.preventDefault();
-
-				// Show alert for MVP
-				alert("Invisible Procaptcha verification would happen here!");
 
 				// If a callback is specified, try to call it
 				if (callback) {
@@ -201,14 +198,6 @@ export const execute = () => {
 	console.log(
 		`Dispatched "${PROCAPTCHA_EXECUTE_EVENT}" event to trigger verification`,
 	);
-	console.log(`This will either:
-- Show a CAPTCHA modal for regular image verification
-- Silently perform Proof of Work verification if in PoW mode
-- Do nothing if no appropriate handler is registered`);
-
-	// In a real implementation, we would:
-	// 1. Perform verification on the found container
-	// 2. Call the callback with the token
 };
 
 // Helper function to find all potential Procaptcha containers
@@ -228,7 +217,6 @@ function findProcaptchaContainers(): Element[] {
 		),
 	);
 
-	// Add only unique elements
 	for (const container of idContainers) {
 		if (!containers.includes(container)) {
 			containers.push(container);
