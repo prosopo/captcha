@@ -15,11 +15,11 @@ interface WidgetCallbacks {
 	/**
 	 * The name of the window function, or a function, that will be called when the CAPTCHA is opened.
 	 */
-	onOpen?: () => (() => void) | string;
+	onOpened?: () => (() => void) | string;
 	/**
 	 * The name of the window function, or a function, that will be called when the CAPTCHA is closed.
 	 */
-	onClose?: () => (() => void) | string;
+	onClosed?: () => (() => void) | string;
 	/**
 	 * The name of the window function, or a function, that will be called when the CAPTCHA is reset.
 	 */
