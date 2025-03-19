@@ -41,7 +41,14 @@ class RulesMongooseStorage implements RulesStorage {
 			throw this.modelNotSetProsopoError();
 		}
 
-		let document = await this.writingModel.findOneAndUpdate(record);
+		const filter = {
+			...(record.clientId && { clientId: record.clientId }),
+			...(record.userIp && { userIp: record.userIp }),
+			...(record.userId && { userId: record.userId }),
+			...(record.ja4 && { ja4: record.ja4 }),
+		};
+
+		let document = await this.writingModel.findOneAndUpdate(filter, record);
 
 		if (!document) {
 			document = await this.writingModel.create(record);
