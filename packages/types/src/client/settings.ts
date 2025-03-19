@@ -15,10 +15,15 @@ import { array, number, object, type output, string } from "zod";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
+export const captchaTypeDefault = CaptchaType.frictionless;
+export const domainsDefault: string[] = [];
+export const frictionlessThresholdDefault = 0.5;
+export const powDifficultyDefault = 4;
+
 export const ClientSettingsSchema = object({
-	captchaType: CaptchaTypeSpec.default(CaptchaType.frictionless),
-	domains: array(string()).default([]),
-	frictionlessThreshold: number().default(0.5),
-	powDifficulty: number().default(4),
+	captchaType: CaptchaTypeSpec.default(captchaTypeDefault),
+	domains: array(string()).default([...domainsDefault]),
+	frictionlessThreshold: number().default(frictionlessThresholdDefault),
+	powDifficulty: number().default(powDifficultyDefault),
 });
 export type IUserSettings = output<typeof ClientSettingsSchema>;
