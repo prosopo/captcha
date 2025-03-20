@@ -29,6 +29,7 @@ import type {
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import { validiateSiteKey } from "../../api/validateAddress.js";
+import { getBotScore } from "../detection/getBotScore.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;

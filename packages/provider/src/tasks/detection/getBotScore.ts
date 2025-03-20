@@ -14,10 +14,16 @@ import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 // limitations under the License.
 import getBotScoreFromPayload from "./decodePayload.js";
 
-export const getBotScore = async (payload: string) => {
+export const getBotScore = async (
+	payload: string,
+	privateKeyString?: string,
+) => {
 	const logger = getLogger(LogLevel.enum.info, "provider.get_bot_score");
 	try {
-		const result = (await getBotScoreFromPayload(payload)) as {
+		const result = (await getBotScoreFromPayload(
+			payload,
+			privateKeyString,
+		)) as {
 			score: number;
 			timestamp: number;
 		};

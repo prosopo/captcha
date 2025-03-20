@@ -1514,14 +1514,14 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Get the latest detector key
+	 * @description Get valid detector keys
 	 */
-	async getDetectorKey(): Promise<string | undefined> {
-		const latestRecord = await this.tables?.detector
-			.findOne({}, { detectorKey: 1 })
+	async getDetectorKeys(): Promise<string[]> {
+		const keyRecords = await this.tables?.detector
+			.find({}, { detectorKey: 1 })
 			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
-			.lean<DetectorSchema>(); // Improve performance by returning a plain object
+			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
-		return latestRecord?.detectorKey;
+		return (keyRecords || []).map((record) => record.detectorKey);
 	}
 }
