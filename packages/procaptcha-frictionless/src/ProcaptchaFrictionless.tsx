@@ -27,11 +27,13 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
+import { useTranslation } from "@prosopo/locale";
 
 const renderPlaceholder = (
 	theme: string | undefined,
 	errorMessage: string | undefined,
 ) => {
+	const { t } = useTranslation();
 	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
 
 	return (
@@ -39,7 +41,7 @@ const renderPlaceholder = (
 			theme={checkboxTheme}
 			onChange={() => {}}
 			checked={false}
-			labelText={""}
+			labelText={t("WIDGET.I_AM_HUMAN")}
 			error={errorMessage}
 			aria-label="human checkbox"
 		/>
