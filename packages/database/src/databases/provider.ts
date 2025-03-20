@@ -34,16 +34,17 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
+import type { FrictionlessTokenRecord } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	DetectorRecordSchema,
+	type DetectorSchema,
 	type FrictionlessToken,
 	type FrictionlessTokenId,
 	FrictionlessTokenRecordSchema,
-	type IPBlockRuleRecord,
-	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type PendingCaptchaRequest,
@@ -64,8 +65,6 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
-	type UserAccountBlockRuleRecord,
-	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -73,7 +72,6 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type { FrictionlessTokenRecord } from "@prosopo/types-database";
 import {
 	type Rule,
 	type RulesStorage,
@@ -81,7 +79,6 @@ import {
 	getRuleMongooseSchema,
 } from "@prosopo/user-access-policy";
 import type { Model, ObjectId } from "mongoose";
-import { bigint, string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -96,9 +93,8 @@ enum TableNames {
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	ipblockrules = "ipblockrules",
-	userblockrules = "userblockrules",
 	userAccessRules = "userAccessRules",
+	detector = "detector",
 }
 
 const PROVIDER_TABLES = [
@@ -158,19 +154,14 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.ipblockrules,
-		modelName: "IPBlockRules",
-		schema: IPBlockRuleRecordSchema,
-	},
-	{
-		collectionName: TableNames.userblockrules,
-		modelName: "UserAccountBlockRules",
-		schema: UserAccountBlockRuleSchema,
-	},
-	{
 		collectionName: TableNames.userAccessRules,
 		modelName: "UserAccessRules",
 		schema: getRuleMongooseSchema(),
+	},
+	{
+		collectionName: TableNames.detector,
+		modelName: "Detector",
+		schema: DetectorRecordSchema,
 	},
 ];
 
@@ -1506,19 +1497,31 @@ export class ProviderDatabase
 		return doc ? doc : undefined;
 	}
 
-	async getAllIpBlockRules(): Promise<IPBlockRuleRecord[]> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
-		}
-
-		return await this.tables.ipblockrules.find().exec();
+	/**
+	 * @description Store a detector key
+	 */
+	async storeDetectorKey(detectorKey: string): Promise<void> {
+		return this.tables?.detector.create({
+			detectorKey,
+			createdAt: new Date(),
+		});
 	}
 
-	async getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
-		}
+	/** @description Remove a detector key */
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
+		await this.tables?.detector.deleteOne(filter);
+	}
 
-		return await this.tables.userblockrules.find().exec();
+	/**
+	 * @description Get valid detector keys
+	 */
+	async getDetectorKeys(): Promise<string[]> {
+		const keyRecords = await this.tables?.detector
+			.find({}, { detectorKey: 1 })
+			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
+			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
+
+		return (keyRecords || []).map((record) => record.detectorKey);
 	}
 }

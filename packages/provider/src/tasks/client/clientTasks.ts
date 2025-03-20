@@ -29,6 +29,7 @@ import type {
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import { validiateSiteKey } from "../../api/validateAddress.js";
+import { getBotScore } from "../detection/getBotScore.js";
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -223,6 +224,14 @@ export class ClientTaskManager {
 				settings: settings,
 			} as ClientRecord,
 		]);
+	}
+
+	async updateDetectorKey(detectorKey: string): Promise<void> {
+		await this.providerDB.storeDetectorKey(detectorKey);
+	}
+
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		await this.providerDB.removeDetectorKey(detectorKey);
 	}
 
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
