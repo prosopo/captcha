@@ -13,29 +13,32 @@
 // limitations under the License.
 
 import type { Theme } from "../theme.js";
-import type { WidgetInteractiveAreaProvider } from "../widgetInteractiveAreaProvider.js";
-import type { HtmlElementFactory } from "./htmlElementFactory.js";
 
-class CheckboxElementFactory
-	implements HtmlElementFactory, WidgetInteractiveAreaProvider
-{
-	createHtmlElement(theme: Theme): HTMLElement {
-		const checkbox = document.createElement("div");
-		checkbox.className = "checkbox";
+/**
+ * Creates a checkbox element with appropriate styling
+ * @param theme - The theme to apply to the checkbox
+ * @returns An HTMLElement representing the checkbox
+ */
+export function createCheckboxElement(theme: Theme): HTMLElement {
+	const checkbox = document.createElement("div");
+	checkbox.className = "checkbox";
+	checkbox.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+	return checkbox;
+}
 
-		checkbox.innerHTML = this.getStyles(theme) + this.getMarkup();
+/**
+ * Finds the interactive area within a widget element
+ * @param widget - The widget element to search within
+ * @returns The interactive area element or null if not found
+ */
+export const getCheckboxInteractiveArea = (
+	widget: HTMLElement,
+): HTMLElement | null => {
+	const widgetRoot = widget.shadowRoot || widget;
+	return widgetRoot.querySelector(".checkbox__content");
+};
 
-		return checkbox;
-	}
-
-	getWidgetInteractiveArea(widget: HTMLElement): HTMLElement | null {
-		const widgetRoot = widget.shadowRoot || widget;
-
-		return widgetRoot.querySelector(".checkbox__content");
-	}
-
-	protected getMarkup(): string {
-		return `
+const CHECKBOX_MARKUP = `
     <div class="checkbox__outer">
         <div class="checkbox__wrapper">
             <div class="checkbox__inner">
@@ -46,10 +49,12 @@ class CheckboxElementFactory
         </div>
     </div>
 `;
-	}
 
-	protected getStyles(theme: Theme): string {
-		return `
+/**
+ * Generates the CSS styles for the checkbox
+ * @param theme - The theme to apply to the styles
+ */
+const getCheckboxStyles = (theme: Theme): string => `
 <style>
 .checkbox {
     display: flex;
@@ -101,7 +106,3 @@ class CheckboxElementFactory
 }
 </style>
 `;
-	}
-}
-
-export { CheckboxElementFactory };

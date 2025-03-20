@@ -14,30 +14,42 @@
 
 import { WIDGET_MAX_WIDTH } from "../constants.js";
 
+const FONT_FAMILY =
+	'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+
 /**
  * Creates a web component with shadow DOM and basic styles
+ *
  * @param webComponentTag - The tag name for the web component
  * @param customCss - Optional custom CSS to apply
  */
-export function createWebComponent(webComponentTag: string, customCss = ""): HTMLElement {
+export function createWebComponent(
+	webComponentTag: string,
+	customCss = "",
+): HTMLElement {
 	const webComponent = document.createElement(webComponentTag);
 	applyDefaultStyles(webComponent);
 
 	const shadowRoot = webComponent.attachShadow({ mode: "open" });
 	shadowRoot.innerHTML = getStyles(customCss);
-	
+
 	return webComponent;
 }
 
-const FONT_FAMILY = 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+const getStyles = (customCss: string) =>
+	`
+<style>
+	*{font-family: ${FONT_FAMILY};}
+</style>
 
-const getStyles = (customCss: string) => {
-	return `<style>*{font-family: ${FONT_FAMILY};}</style> ${customCss}`;
-}
+<style>
+	${customCss}
+</style>
+`;
 
 const applyDefaultStyles = (webComponent: HTMLElement) => {
 	webComponent.style.display = "flex";
 	webComponent.style.flexDirection = "column";
 	webComponent.style.width = "100%";
 	webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
-}
+};
