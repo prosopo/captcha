@@ -16,12 +16,12 @@ import type { HtmlElementFactory } from "../htmlElements/htmlElementFactory.js";
 import type { Theme } from "../theme.js";
 import type { WidgetInteractiveAreaProvider } from "../widgetInteractiveAreaProvider.js";
 import type { WidgetSkeletonFactory } from "../widgetSkeletonFactory.js";
-import type { WebComponentFactory } from "./webComponentFactory.js";
+import { createWebComponent } from "./webComponentFactory.js";
 
 class WidgetSkeletonComponentFactory implements WidgetSkeletonFactory {
 	constructor(
 		private readonly widgetSkeletonElementFactory: HtmlElementFactory,
-		private readonly webComponentFactory: WebComponentFactory,
+		private readonly webComponentTag: string,
 		private readonly widgetInteractiveAreaProvider: WidgetInteractiveAreaProvider,
 	) {}
 
@@ -38,7 +38,7 @@ class WidgetSkeletonComponentFactory implements WidgetSkeletonFactory {
 
 	protected createWidgetWebComponent(theme: Theme): HTMLElement {
 		const widget = this.widgetSkeletonElementFactory.createHtmlElement(theme);
-		const webComponent = this.webComponentFactory.createWebComponent();
+		const webComponent = createWebComponent(this.webComponentTag);
 		const webComponentRoot = webComponent.shadowRoot || webComponent;
 
 		webComponentRoot.appendChild(widget);

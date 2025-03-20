@@ -17,7 +17,7 @@ import { LogoElementFactory } from "../htmlElements/logoElementFactory.js";
 import { WidgetSkeletonElementFactory } from "../htmlElements/widgetSkeletonElementFactory.js";
 import type { WidgetSkeleton } from "../widgetSkeleton.js";
 import type { WidgetSkeletonFactory } from "../widgetSkeletonFactory.js";
-import { WebComponentFactory } from "./webComponentFactory.js";
+import { createWebComponent } from "./webComponentFactory.js";
 import { WidgetSkeletonComponentFactory } from "./widgetSkeletonComponentFactory.js";
 
 interface ImportMetaByVite {
@@ -37,11 +37,9 @@ class WidgetWebComponentSkeleton implements WidgetSkeleton {
 			this.isInDevelopmentMode(),
 		);
 
-		const webComponentFactory = new WebComponentFactory("prosopo-procaptcha");
-
 		return new WidgetSkeletonComponentFactory(
 			widgetSkeletonElementFactory,
-			webComponentFactory,
+			"prosopo-procaptcha",
 			checkboxElementFactory,
 		);
 	}
