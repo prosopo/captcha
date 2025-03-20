@@ -17,7 +17,7 @@ import { LogoElementFactory } from "../htmlElements/logoElementFactory.js";
 import { WidgetSkeletonElementFactory } from "../htmlElements/widgetSkeletonElementFactory.js";
 import type { WidgetSkeleton } from "../widgetSkeleton.js";
 import type { WidgetSkeletonFactory } from "../widgetSkeletonFactory.js";
-import { createWebComponent } from "./webComponentFactory.js";
+import { createWebComponent } from "./createWebComponent.js";
 import { WidgetSkeletonComponentFactory } from "./widgetSkeletonComponentFactory.js";
 
 interface ImportMetaByVite {

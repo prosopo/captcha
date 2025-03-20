@@ -20,28 +20,24 @@ import { WIDGET_MAX_WIDTH } from "../constants.js";
  * @param customCss - Optional custom CSS to apply
  */
 export function createWebComponent(webComponentTag: string, customCss = ""): HTMLElement {
-	// Create the web component
 	const webComponent = document.createElement(webComponentTag);
+	applyDefaultStyles(webComponent);
+
+	const shadowRoot = webComponent.attachShadow({ mode: "open" });
+	shadowRoot.innerHTML = getStyles(customCss);
 	
-	// Apply basic styles
+	return webComponent;
+}
+
+const FONT_FAMILY = 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+
+const getStyles = (customCss: string) => {
+	return `<style>*{font-family: ${FONT_FAMILY};}</style> ${customCss}`;
+}
+
+const applyDefaultStyles = (webComponent: HTMLElement) => {
 	webComponent.style.display = "flex";
 	webComponent.style.flexDirection = "column";
 	webComponent.style.width = "100%";
 	webComponent.style.maxWidth = WIDGET_MAX_WIDTH;
-	
-	// Create shadow DOM
-	const shadowRoot = webComponent.attachShadow({ mode: "open" });
-	
-	// Add base styles to shadow DOM
-	const fontFamily = 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
-	let styles = `<style>*{font-family: ${fontFamily};}</style>`;
-	
-	// Add any custom CSS if provided
-	if (customCss) {
-		styles += `<style>${customCss}</style>`;
-	}
-	
-	shadowRoot.innerHTML = styles;
-	
-	return webComponent;
 }

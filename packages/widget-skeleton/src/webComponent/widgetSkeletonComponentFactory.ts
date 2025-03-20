@@ -16,7 +16,7 @@ import type { HtmlElementFactory } from "../htmlElements/htmlElementFactory.js";
 import type { Theme } from "../theme.js";
 import type { WidgetInteractiveAreaProvider } from "../widgetInteractiveAreaProvider.js";
 import type { WidgetSkeletonFactory } from "../widgetSkeletonFactory.js";
-import { createWebComponent } from "./webComponentFactory.js";
+import { createWebComponent } from "./createWebComponent.js";
 
 class WidgetSkeletonComponentFactory implements WidgetSkeletonFactory {
 	constructor(
