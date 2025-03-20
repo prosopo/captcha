@@ -12,21 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {
-	ProcaptchaOptions,
-	WidgetCallbacks,
-	WidgetCaptchaType,
-	WidgetTheme,
-} from "@prosopo/procaptcha-wrapper";
-import { WidgetCaptchaTypes, WidgetThemes } from "@prosopo/procaptcha-wrapper";
-import { ProcaptchaComponent } from "./procaptchaComponent.js";
+// https://docs.prosopo.io/en/basics/client-side-rendering/
 
-export {
-	ProcaptchaComponent,
-	type ProcaptchaOptions,
-	type WidgetTheme,
-	type WidgetCaptchaType,
-	type WidgetCallbacks,
-	WidgetThemes,
-	WidgetCaptchaTypes,
-};
+type WidgetTheme = "light" | "dark";
+
+enum WidgetThemes {
+	Light = "light",
+	Dark = "dark",
+}
+
+WidgetThemes satisfies { [K: string]: WidgetTheme };
+
+export { type WidgetTheme, WidgetThemes };
