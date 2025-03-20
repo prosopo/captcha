@@ -23,7 +23,7 @@ import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
 ### 3.2) Advanced usage
 
 ```typescript jsx
-import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
+import { ProcaptchaComponent } from "@prosopo/react-procaptcha-wrapper";
 
 <ProcaptchaComponent
     siteKey={"my-site-key"}
@@ -35,7 +35,9 @@ import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
     }}
     htmlAttributes={{
         className: "my-app__procaptcha",
-        style: "max-width:600px;"
+        style: {
+            maxWidth: "600px",
+        },
     }}
 />;
 ```

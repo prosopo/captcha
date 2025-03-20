@@ -81,7 +81,13 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*", "integrations/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*",
+		"integrations/*",
+		"integrations/*/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
