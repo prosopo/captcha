@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { useTranslation } from "@prosopo/locale";
 import {
 	Checkbox,
 	getDefaultEvents,
@@ -32,6 +33,7 @@ const renderPlaceholder = (
 	theme: string | undefined,
 	errorMessage: string | undefined,
 ) => {
+	const { t } = useTranslation();
 	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
 
 	return (
@@ -39,7 +41,7 @@ const renderPlaceholder = (
 			theme={checkboxTheme}
 			onChange={() => {}}
 			checked={false}
-			labelText={""}
+			labelText={t("WIDGET.I_AM_HUMAN")}
 			error={errorMessage}
 			aria-label="human checkbox"
 		/>
