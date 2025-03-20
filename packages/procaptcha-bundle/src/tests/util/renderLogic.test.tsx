@@ -14,16 +14,12 @@
 
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
-import { getWidgetSkeleton } from "@prosopo/widget-skeleton";
 import { type DOMWindow, JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WidgetFactory } from "../../util/widgetFactory.js";
 import { WidgetThemeResolver } from "../../util/widgetThemeResolver.js";
 
-const widgetFactory = new WidgetFactory(
-	getWidgetSkeleton().getFactory(),
-	new WidgetThemeResolver(),
-);
+const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 
 interface TestContext {
 	document?: Document;
