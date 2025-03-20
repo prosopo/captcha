@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { useTranslation } from "@prosopo/locale";
 import {
 	Checkbox,
 	getDefaultEvents,
@@ -27,7 +28,6 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
-import { useTranslation } from "@prosopo/locale";
 
 const renderPlaceholder = (
 	theme: string | undefined,
