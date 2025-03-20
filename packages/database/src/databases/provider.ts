@@ -1507,6 +1507,12 @@ export class ProviderDatabase
 		});
 	}
 
+	/** @description Remove a detector key */
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
+		await this.tables?.detector.deleteOne(filter);
+	}
+
 	/**
 	 * @description Get the latest detector key
 	 */

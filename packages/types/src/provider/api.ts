@@ -90,6 +90,7 @@ export type TSubmitPowCaptchaSolutionURL =
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
+	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -113,6 +114,7 @@ export const ProviderDefaultRateLimits = {
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
