@@ -596,5 +596,20 @@ describe("ClientTaskManager", () => {
 				),
 			).toBe(false);
 		});
+
+		it("should handle URLs that are preceedded with www", () => {
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"https://www.example.com",
+					"example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.isSubdomainOrExactMatch(
+					"www.example.com",
+					"example.com",
+				),
+			).toBe(true);
+		});
 	});
 });
