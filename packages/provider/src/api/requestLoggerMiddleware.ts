@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 
 export function requestLoggerMiddleware(env: ProviderEnvironment) {
 	return (req: Request, res: Response, next: NextFunction) => {
-		const requestId = (req.headers["x-request-id"] as string) || uuidv4();
+		const requestId =
+			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`; // use prefix to differentiate from other IDs
 
 		const logger = getLogger(env.config.logLevel, "request-logger", requestId);
 
