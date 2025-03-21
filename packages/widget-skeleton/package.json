@@ -1,5 +1,5 @@
 {
-	"name": "@prosopo/widget-skeleton",
+	"name": "@prosopo/web-components",
 	"version": "2.5.1",
 	"description": "Non business logic utilities for web applications",
 	"main": "dist/index.js",
@@ -30,6 +30,12 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
+	"dependencies": {
+		"@emotion/react": "11.13.3",
+		"@emotion/styled": "11.13.0",
+		"express": "4.21.2",
+		"react": "18.3.1"
+	},
 	"devDependencies": {
 		"@prosopo/config": "2.5.1",
 		"@vitest/coverage-v8": "2.1.1",

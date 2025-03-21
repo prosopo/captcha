@@ -30,7 +30,6 @@
 		"@prosopo/load-balancer": "2.5.1",
 		"@prosopo/types": "2.5.1",
 		"@prosopo/util": "2.5.1",
-		"@prosopo/widget-skeleton": "2.5.1",
 		"express": "4.21.2"
 	},
 	"devDependencies": {
