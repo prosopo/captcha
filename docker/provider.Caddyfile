@@ -89,6 +89,8 @@
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs
 
+			header_up x-request-id "{request_id}"
+
 			header_up x-tls-version "{tls_version}"
 			header_up x-tls-version "^{tls_version}$" ""
 
@@ -157,6 +159,8 @@
 
 			header_up x-tls-client-san-uris "{http.request.tls.client.san.uris}"
 			header_up x-tls-client-san-uris "^{http.request.tls.client.san.uris}$" ""
+
+
 		}
 	}
 
