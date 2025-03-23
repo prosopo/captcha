@@ -34,6 +34,8 @@
 		client_hello
 		request_id
 
+		header X-Request-ID "{http.request_id}"
+
 		header / {
 			# Enable HTTP Strict Transport Security (HSTS)
 			Strict-Transport-Security "max-age=31536000;"
