@@ -24,3 +24,4 @@ export * from "./schedulers/captchaScheduler.js";
 export * from "./schedulers/getClientList.js";
 export * from "./api/headerCheckMiddleware.js";
 export * from "./api/admin/createApiAdminRoutesProvider.js";
+export * from "./api/requestLoggerMiddleware.js";

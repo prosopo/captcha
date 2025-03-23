@@ -32,9 +32,9 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 				return;
 			}
 
-			validiateSiteKey(siteKey);
+			validiateSiteKey(siteKey, req.logger);
 
-			validateAddr(user);
+			validateAddr(user, undefined, req.logger);
 
 			req.user = user;
 			req.siteKey = siteKey;
