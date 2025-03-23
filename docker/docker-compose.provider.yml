@@ -166,7 +166,7 @@ services:
         profiles:
             - production
             - staging
-        image: prosopo/caddy:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        image: prosopo/caddy:${CADDY_IMAGE}
         env_file:
             - ../.env.${NODE_ENV}
         labels:
