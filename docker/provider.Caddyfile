@@ -32,6 +32,7 @@
 {$CADDY_DOMAIN} {
 	route {
 		client_hello
+		request_id
 
 		header / {
 			# Enable HTTP Strict Transport Security (HSTS)
