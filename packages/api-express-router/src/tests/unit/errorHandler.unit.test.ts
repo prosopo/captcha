@@ -24,7 +24,7 @@ describe("handleErrors", async () => {
 	await i18n.changeLanguage("en");
 
 	it("should handle ProsopoApiError", async () => {
-		const mockRequest = { i18n } as Request;
+		const mockRequest = { i18n } as unknown as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
@@ -58,7 +58,7 @@ describe("handleErrors", async () => {
 	});
 
 	it("should handle SyntaxError", async () => {
-		const mockRequest = { i18n } as Request;
+		const mockRequest = { i18n } as unknown as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
@@ -89,7 +89,7 @@ describe("handleErrors", async () => {
 	});
 
 	it("should handle ZodError", () => {
-		const mockRequest = { i18n } as Request;
+		const mockRequest = { i18n } as unknown as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
@@ -120,7 +120,7 @@ describe("handleErrors", async () => {
 	});
 
 	it("should unwrap nested ProsopoBaseError", async () => {
-		const mockRequest = { i18n } as Request;
+		const mockRequest = { i18n } as unknown as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
@@ -153,7 +153,7 @@ describe("handleErrors", async () => {
 	});
 
 	it("should unwrap nested ProsopoBaseErrors but not an Error that is nested inside them", async () => {
-		const mockRequest = { i18n } as Request;
+		const mockRequest = { i18n } as unknown as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
