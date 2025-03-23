@@ -23,7 +23,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 		try {
 			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
 			if (req.originalUrl.indexOf(ApiPrefix) === -1) {
-				env.logger.info({
+				req.logger.info({
 					message: "Non-api route, skipping auth middleware",
 				});
 				next();
@@ -41,7 +41,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 					return;
 				} catch (e: unknown) {
 					// need to fall through to the verifySignature check
-					env.logger.warn({
+					req.logger.warn({
 						message: (e as ProsopoApiError).message,
 						code: (e as ProsopoApiError).code,
 						account: env.authAccount.address,
@@ -62,7 +62,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 			});
 			return;
 		} catch (err) {
-			env.logger.error("Auth Middleware Error:", err);
+			req.logger.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
 		}

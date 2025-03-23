@@ -14,7 +14,7 @@
 
 import { validateAddress } from "@polkadot/util-crypto";
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
+import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import type { TFunction } from "i18next";
@@ -28,23 +28,34 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 		try {
 			const dapp = req.headers["prosopo-site-key"] as string;
 			if (!dapp)
-				throw siteKeyNotRegisteredError(req.i18n, "No sitekey provided");
+				throw siteKeyNotRegisteredError(
+					req.i18n,
+					"No sitekey provided",
+					req.logger,
+				);
 
 			try {
 				validateAddress(dapp, false, 42);
 			} catch (err) {
-				throw invalidSiteKeyError(req.i18n, dapp);
+				throw invalidSiteKeyError(req.i18n, dapp, req.logger);
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(dapp);
-			if (!clientSettings) throw siteKeyNotRegisteredError(req.i18n, dapp);
+			if (!clientSettings)
+				throw siteKeyNotRegisteredError(req.i18n, dapp, req.logger);
 
 			const allowedDomains = clientSettings.settings?.domains;
 			if (!allowedDomains)
-				throw siteKeyInvalidDomainError(req.i18n, dapp, req.hostname);
+				throw siteKeyInvalidDomainError(
+					req.i18n,
+					dapp,
+					req.hostname,
+					req.logger,
+				);
 
 			const origin = req.headers.origin;
-			if (!origin) throw unauthorizedOriginError(req.i18n);
+			if (!origin)
+				throw unauthorizedOriginError(req.i18n, undefined, req.logger);
 
 			for (const domain of allowedDomains) {
 				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
@@ -53,7 +64,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				}
 			}
 
-			throw unauthorizedOriginError(req.i18n, origin);
+			throw unauthorizedOriginError(req.i18n, origin, req.logger);
 		} catch (err) {
 			if (
 				err instanceof ProsopoApiError ||
@@ -72,30 +83,36 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 const siteKeyNotRegisteredError = (
 	i18n: { t: TFunction<"translation", undefined> },
 	dapp: string,
+	logger?: Logger,
 ) => {
 	return new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 		context: { code: 400, siteKey: dapp },
 		i18n,
+		logger,
 	});
 };
 
 const invalidSiteKeyError = (
 	i18n: { t: TFunction<"translation", undefined> },
 	dapp: string,
+	logger?: Logger,
 ) => {
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
 		context: { code: 400, siteKey: dapp },
 		i18n,
+		logger,
 	});
 };
 
 const unauthorizedOriginError = (
 	i18n: { t: TFunction<"translation", undefined> },
 	origin?: string,
+	logger?: Logger,
 ) => {
 	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
 		context: { code: 400, origin },
 		i18n,
+		logger,
 	});
 };
 
@@ -103,6 +120,7 @@ const siteKeyInvalidDomainError = (
 	i18n: { t: TFunction<"translation", undefined> },
 	dapp: string,
 	domain: string,
+	logger?: Logger,
 ) => {
 	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
 		context: {
@@ -113,5 +131,6 @@ const siteKeyInvalidDomainError = (
 			domain,
 		},
 		i18n,
+		logger,
 	});
 };
