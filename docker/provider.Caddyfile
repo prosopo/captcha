@@ -34,6 +34,8 @@
 		client_hello
 		request_id
 
+		header X-Request-ID "{http.request_id}"
+
 		header / {
 			# Enable HTTP Strict Transport Security (HSTS)
 			Strict-Transport-Security "max-age=31536000;"
@@ -90,7 +92,7 @@
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs
 
-			header_up x-request-id "{request_id}"
+			header_up X-Request-ID "{http.request_id}"
 
 			header_up x-tls-version "{tls_version}"
 			header_up x-tls-version "^{tls_version}$" ""
