@@ -20,6 +20,17 @@ import {
 	normalizePath,
 } from "vite";
 
+interface CaptchaTypeDetails {
+	path: string;
+	exists: boolean;
+}
+
+interface CaptchaTypes {
+	[key: string]: {
+		[key: string]: CaptchaTypeDetails;
+	};
+}
+
 export default function navigationInjector(): Plugin {
 	// Define all pages, including existing and planned
 	const pageDefinitions = {
@@ -364,7 +375,7 @@ export default function navigationInjector(): Plugin {
 	// Helper function to build a navigation group for each captcha type
 	function buildCaptchaNavGroup(
 		title: string,
-		captchaTypes: any,
+		captchaTypes: CaptchaTypes,
 		currentPath: string,
 	): string {
 		const navGroups: string[] = [];
@@ -373,14 +384,12 @@ export default function navigationInjector(): Plugin {
 			const typeTitle = typeName.charAt(0).toUpperCase() + typeName.slice(1);
 			const links: string[] = [];
 
-			for (const [implName, implDetails] of Object.entries(
-				captchaType as any,
-			)) {
-				const pagePath = (implDetails as any).path;
-				const pageExists = (implDetails as any).exists;
+			for (const [implName, implDetails] of Object.entries(captchaType)) {
+				const pagePath = implDetails.path;
+				const pageExists = implDetails.exists;
 
 				// Calculate relative path
-				let href;
+				let href: string;
 				if (currentPath.includes("/")) {
 					// We're in a subdirectory
 					const depth = (currentPath.match(/\//g) || []).length;
@@ -394,7 +403,7 @@ export default function navigationInjector(): Plugin {
 				const isActive = currentPath === pagePath;
 				const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
 
-				let linkHtml;
+				let linkHtml: string;
 				if (pageExists) {
 					const activeClass = isActive ? ' class="active"' : "";
 					linkHtml = `<a href="${href}"${activeClass}>${implTitle}</a>`;
