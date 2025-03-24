@@ -74,7 +74,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		return () => {};
 	}, [config.mode]);
 
-	if (config.mode === "invisible") {
+	if (config.mode === ModeEnum.invisible) {
 		// Return null for invisible mode - no UI needed
 		return null;
 	}
