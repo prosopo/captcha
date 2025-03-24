@@ -54,8 +54,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	useEffect(() => {
 		// Event handler for when execute() is called
 		const handleExecuteEvent = (event: Event) => {
-			console.log("ProcaptchaWidget received execute event:", event);
-
 			// Show the modal
 			updateState({
 				showModal: true,
@@ -72,7 +70,6 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			}
 		};
 
-		// Add event listener
 		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 
 		// Cleanup function to remove event listener
