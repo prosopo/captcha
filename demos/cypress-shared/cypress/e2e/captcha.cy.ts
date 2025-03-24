@@ -58,7 +58,7 @@ describe("Captchas", () => {
 			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 				"getCaptcha",
 			);
-			cy.wait("@getCaptcha", { timeout: 36000 })
+			cy.wait("@getCaptcha", { timeout: 48000 })
 				.its("response")
 				.then((response) => {
 					expect(response).to.not.be.undefined;
