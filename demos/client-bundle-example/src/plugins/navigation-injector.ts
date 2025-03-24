@@ -30,7 +30,7 @@ export default function navigationInjector(): Plugin {
 			},
 			pow: {
 				implicit: { path: "standard/pow-implicit.html", exists: false },
-				explicit: { path: "pow.html", exists: true },
+				explicit: { path: "pow.html", exists: false },
 			},
 			frictionless: {
 				implicit: {
@@ -47,7 +47,7 @@ export default function navigationInjector(): Plugin {
 			},
 			pow: {
 				implicit: { path: "invisible/pow-implicit.html", exists: false },
-				explicit: { path: "invisible/pow.html", exists: true },
+				explicit: { path: "invisible/pow.html", exists: false },
 			},
 			frictionless: {
 				implicit: {
