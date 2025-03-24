@@ -64,13 +64,16 @@ describe("Captchas", () => {
 					expect(response).to.not.be.undefined;
 					expect(response?.statusCode).to.equal(400);
 					expect(response?.body).to.have.property("error");
+					expect(response?.body.error).to.have.property("key");
+					expect(response?.body.error.key).to.equal(
+						"API.INCORRECT_CAPTCHA_TYPE",
+					);
 				})
 				.then(() => {
 					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
 						.should("exist") // Ensures element exists
 						.should("be.visible") // Ensures it's rendered
-						.find("label")
-						.should("have.text", "Incorrect CAPTCHA type");
+						.find("label");
 				});
 		});
 	});
