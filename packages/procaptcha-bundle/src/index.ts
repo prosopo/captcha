@@ -69,10 +69,6 @@ const implicitRender = async () => {
 	);
 
 	if (invisibleButtons.length) {
-		// Found buttons with p-procaptcha class - this would be invisible mode
-		console.log("Invisible Procaptcha mode detected (implicit rendering)");
-
-		// Process each invisible button
 		for (const button of invisibleButtons) {
 			const siteKey = button.getAttribute("data-sitekey") || "";
 			const callback = button.getAttribute("data-callback") || "";
@@ -92,27 +88,11 @@ const implicitRender = async () => {
 
 			procaptchaRoots.push(...root);
 
-			if (!siteKey) {
-				console.error("No siteKey found for invisible button");
-				return;
-			}
-
 			// Add click event listener to the button
 			button.addEventListener("click", async (event) => {
-				// Prevent default button action temporarily
 				event.preventDefault();
-
 				execute();
-
-				// Log for debugging
-				console.log(
-					`Invisible Procaptcha button clicked. SiteKey: ${siteKey}, Callback: ${callback}`,
-				);
 			});
-
-			console.log(
-				`Initialized invisible Procaptcha on button with siteKey: ${siteKey}`,
-			);
 		}
 	}
 };
@@ -152,11 +132,7 @@ export default function ready(fn: () => void) {
 	}
 }
 
-// Add execute method for invisible mode
 export const execute = () => {
-	console.log("Procaptcha execute() method called");
-
-	// Find all potential Procaptcha containers
 	const containers = findProcaptchaContainers();
 
 	if (containers.length === 0) {
@@ -164,32 +140,10 @@ export const execute = () => {
 		return;
 	}
 
-	// Log the containers and their elements - but avoid circular reference issues
-	containers.forEach((container, index) => {
-		console.log(`Found Procaptcha container ${index + 1}:`, container);
-
-		// Safely log container attributes
-		const containerAttrs = getElementAttributes(container);
-		console.log(`Container ${index + 1} attributes:`, containerAttrs);
-
-		// Log child elements
-		const children = Array.from(container.children);
-		console.log(`Container ${index + 1} has ${children.length} child elements`);
-
-		// Log each child element safely
-		children.forEach((child, childIndex) => {
-			console.log(`Child ${childIndex + 1} of container ${index + 1}:`, child);
-
-			// Safely log child attributes
-			const childAttrs = getElementAttributes(child);
-			console.log(`Child ${childIndex + 1} attributes:`, childAttrs);
-		});
-	});
-
 	// Dispatch a custom event to notify React components to show the modal or perform silent verification
 	const executeEvent = new CustomEvent(PROCAPTCHA_EXECUTE_EVENT, {
 		detail: {
-			containerId: containers[0]?.id || "procaptcha-container", // Use optional chaining to avoid undefined error
+			containerId: containers[0]?.id || "procaptcha-container",
 			containerCount: containers.length,
 			timestamp: Date.now(),
 		},
@@ -199,12 +153,8 @@ export const execute = () => {
 
 	// Dispatch the event on the document
 	document.dispatchEvent(executeEvent);
-	console.log(
-		`Dispatched "${PROCAPTCHA_EXECUTE_EVENT}" event to trigger verification`,
-	);
 };
 
-// Helper function to find all potential Procaptcha containers
 function findProcaptchaContainers(): Element[] {
 	const containers: Element[] = [];
 
@@ -236,7 +186,6 @@ function findProcaptchaContainers(): Element[] {
 	return containers;
 }
 
-// Helper function to get all attributes of an element
 function getElementAttributes(element: Element): Record<string, string> {
 	const attributes: Record<string, string> = {};
 

@@ -50,19 +50,15 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		if (config.mode === "invisible") {
 			// Event handler for when execute() is called
 			const handleExecuteEvent = (event: Event) => {
-				console.log("PoW ProcaptchaWidget received execute event:", event);
-
 				// Directly start the verification process without showing any UI
 				try {
 					// Start the PoW verification process
 					manager.current.start();
-					console.log("Started invisible PoW verification process");
 				} catch (error) {
 					console.error("Error starting PoW verification:", error);
 				}
 			};
 
-			// Add event listener
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 
 			// Cleanup function to remove event listener
