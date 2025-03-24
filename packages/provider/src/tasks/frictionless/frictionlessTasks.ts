@@ -130,7 +130,10 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async decryptPayload(token: string) {
-		const decryptKeys = await this.getDetectorKeys();
+		const decryptKeys = [
+			process.env.BOT_DECRYPTION_KEY,
+			...(await this.getDetectorKeys()),
+		];
 
 		// run through the keys and try to decrypt the score
 		// if we run out of keys and the score is still not decrypted, throw an error
@@ -145,7 +148,9 @@ export class FrictionlessManager extends CaptchaManager {
 			} catch (err) {
 				// check if the next index exists, if not, log an error
 				if (keyIndex === decryptKeys.length - 1) {
-					this.logger.error(new ProsopoApiError("CAPTCHA.DECRYPT_ERROR"));
+					this.logger.warn({
+						message: "Error decrypting score: no more keys to try",
+					});
 					baseBotScore = 1;
 					timestamp = 0;
 				}
