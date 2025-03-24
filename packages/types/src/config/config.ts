@@ -244,7 +244,7 @@ export enum ModeEnum {
 	visible = "visible",
 	invisible = "invisible",
 }
-export const Mode = zEnum(ModeEnum).optional();
+export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
 export type ModeType = zInfer<typeof Mode>;
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
@@ -252,7 +252,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
-		mode: Mode.optional().default("visible"),
+		mode: Mode.optional().default(ModeEnum.visible),
 	}),
 );
 
