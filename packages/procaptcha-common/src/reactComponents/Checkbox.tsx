@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import { css } from "@emotion/react";
-import { type Theme, getWidgetSkeleton } from "@prosopo/widget-skeleton";
+import {
+	type Theme,
+	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
+} from "@prosopo/widget-skeleton";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
@@ -25,7 +28,7 @@ import {
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;
 	checked: boolean;
-	onChange: () => void;
+	onChange: () => Promise<void>;
 	labelText: string;
 	error?: string;
 }
@@ -92,6 +95,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 		border: `1px solid ${theme.palette.background.contrastText}`,
 	};
 	const [hover, setHover] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
@@ -99,7 +103,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 			...checkboxStyleBase,
 			borderColor: hover
 				? theme.palette.background.contrastText
-				: theme.palette.grey[400],
+				: theme.palette.border,
 			appearance: checked ? "auto" : "none",
 			flex: 1,
 			margin: "15px",
@@ -109,27 +113,46 @@ export const Checkbox: FC<CheckboxProps> = ({
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
 
-	const widgetSkeleton = getWidgetSkeleton();
-
 	return (
 		<span
 			style={{ display: "inline-flex", alignItems: "center" }}
-			data-cy={widgetSkeleton.isInDevelopmentMode() && "captcha-checkbox"}
+			data-cy={"captcha-checkbox"}
 		>
-			<input
-				name={id}
-				id={id}
-				onMouseEnter={() => setHover(true)}
-				onMouseLeave={() => setHover(false)}
-				css={checkboxBefore}
-				type={"checkbox"}
-				aria-live={"assertive"}
-				aria-label={labelText}
-				onChange={onChange}
-				checked={checked}
-				style={checkboxStyle}
-				disabled={error !== undefined}
-			/>
+			{loading ? (
+				<div className="checkbox__outer">
+					<div className="checkbox__wrapper">
+						<div className="checkbox__inner">
+							<div className="checkbox__content">
+								<div
+									className={WIDGET_CHECKBOX_SPINNER_CSS_CLASS}
+									aria-label="Loading spinner"
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+			) : (
+				<input
+					name={id}
+					id={id}
+					onMouseEnter={() => setHover(true)}
+					onMouseLeave={() => setHover(false)}
+					css={checkboxBefore}
+					type={"checkbox"}
+					aria-live={"assertive"}
+					aria-label={labelText}
+					onChange={() => {
+						setLoading(true);
+						onChange().then(() => {
+							setLoading(false);
+						});
+					}}
+					checked={checked}
+					style={checkboxStyle}
+					disabled={error !== undefined}
+					className={loading ? "checkbox__loading-spinner" : ""}
+				/>
+			)}
 			{error ? (
 				<label
 					css={{

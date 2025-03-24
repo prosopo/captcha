@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { LanguageSchema } from "@prosopo/locale";
 import {
 	EnvironmentTypesSchema,
 	type ProcaptchaClientConfigOutput,
@@ -20,6 +21,8 @@ import {
 
 function createConfig(
 	siteKey?: string,
+	theme: "light" | "dark" = "light",
+	language?: typeof LanguageSchema,
 	web2 = true,
 	invisible = false,
 ): ProcaptchaClientConfigOutput {
@@ -40,6 +43,8 @@ function createConfig(
 		devOnlyWatchEvents: process.env._DEV_ONLY_WATCH_EVENTS === "true" || false,
 		web2,
 		mode: invisible ? "invisible" : "visible",
+		theme,
+		language,
 	});
 }
 
