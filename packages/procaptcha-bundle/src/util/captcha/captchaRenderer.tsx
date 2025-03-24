@@ -26,10 +26,12 @@ import type {
 import type { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
 import { type Root, createRoot } from "react-dom/client";
+import { I18nextProvider } from "react-i18next";
 import { createConfig } from "../configCreator.js";
 import { setLanguage } from "../language.js";
 import { setValidChallengeLength } from "../timeout.js";
 import type { CaptchaComponentProvider } from "./captchaComponentProvider.js";
+import { loadI18next } from "@prosopo/locale";
 
 interface RenderSettings {
 	identifierPrefix: string;
@@ -120,9 +122,13 @@ class CaptchaRenderer {
 		emotionCache: EmotionCache,
 		captchaComponent: ReactNode,
 	): void {
-		reactRoot.render(
-			<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>,
-		);
+		loadI18next(false).then((i18n) => {
+			reactRoot.render(
+				<I18nextProvider i18n={i18n}>
+					<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>
+				</I18nextProvider>,
+			);
+		});
 	}
 }
 
