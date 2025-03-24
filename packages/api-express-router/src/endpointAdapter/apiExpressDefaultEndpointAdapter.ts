@@ -13,14 +13,14 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
+import { type LogLevel, ProsopoApiError } from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
 
 class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 	public constructor(
-		private readonly logger: Logger,
+		private readonly logLevel: LogLevel,
 		private readonly errorStatusCode: number,
 	) {}
 
@@ -44,12 +44,12 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 		try {
 			const apiEndpointResponse = await endpoint.processRequest(
 				args,
-				this.logger,
+				request.logger,
 			);
 
 			response.json(apiEndpointResponse);
 		} catch (error) {
-			this.logger.error((error as Error).message);
+			request.logger.error((error as Error).message);
 
 			response.status(500).send("An internal server error occurred.");
 		}

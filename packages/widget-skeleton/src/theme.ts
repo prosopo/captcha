@@ -40,6 +40,7 @@ export const lightTheme = {
 			default: "#fff",
 			contrastText: "#000",
 		},
+		border: grey[400],
 		error: {
 			main: "#f44336",
 		},
@@ -68,6 +69,7 @@ export const darkTheme = {
 			default: "#303030",
 			contrastText: "#fff",
 		},
+		border: grey[300],
 		error: {
 			main: "#f44336",
 		},

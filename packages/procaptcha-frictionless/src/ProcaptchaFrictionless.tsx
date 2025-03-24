@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { useTranslation } from "@prosopo/locale";
 import {
 	Checkbox,
 	getDefaultEvents,
@@ -21,6 +22,8 @@ import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type FrictionlessState,
+	type ModeType,
+	ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
 } from "@prosopo/types";
@@ -30,16 +33,22 @@ import customDetectBot from "./customDetectBot.js";
 
 const renderPlaceholder = (
 	theme: string | undefined,
+	mode: ModeType,
 	errorMessage: string | undefined,
 ) => {
+	const { t } = useTranslation();
 	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
+
+	if (mode === "invisible") {
+		return null;
+	}
 
 	return (
 		<Checkbox
 			theme={checkboxTheme}
-			onChange={() => {}}
+			onChange={async () => {}}
 			checked={false}
-			labelText={""}
+			labelText={t("WIDGET.I_AM_HUMAN")}
 			error={errorMessage}
 			aria-label="human checkbox"
 		/>
@@ -69,7 +78,7 @@ export const ProcaptchaFrictionless = ({
 	const events = getDefaultEvents(callbacks);
 
 	const [componentToRender, setComponentToRender] = useState(
-		renderPlaceholder(config.theme, stateRef.current.errorMessage),
+		renderPlaceholder(config.theme, config.mode, stateRef.current.errorMessage),
 	);
 
 	const resetState = (attemptCount?: number) => {
@@ -80,7 +89,11 @@ export const ProcaptchaFrictionless = ({
 
 	const fallOverWithStyle = (errorMessage?: string) => {
 		setComponentToRender(
-			renderPlaceholder(config.theme, errorMessage || "Cannot load CAPTCHA"),
+			renderPlaceholder(
+				config.theme,
+				config.mode,
+				errorMessage || "Cannot load CAPTCHA",
+			),
 		);
 	};
 

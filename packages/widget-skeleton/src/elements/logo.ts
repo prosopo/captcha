@@ -14,20 +14,47 @@
 
 import { WIDGET_URL, WIDGET_URL_TEXT } from "../constants.js";
 import type { Theme } from "../theme.js";
-import type { HtmlElementFactory } from "./htmlElementFactory.js";
 
-class LogoElementFactory implements HtmlElementFactory {
-	public createHtmlElement(theme: Theme): HTMLElement {
-		const widgetLogo = document.createElement("div");
-		widgetLogo.className = "logo";
+/**
+ * Creates a logo element with appropriate styling
+ * @param theme - The theme to apply to the logo
+ * @returns An HTMLElement representing the logo
+ */
+export function createLogoElement(theme: Theme): HTMLElement {
+	const widgetLogo = document.createElement("div");
+	widgetLogo.className = "logo";
+	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
+	return widgetLogo;
+}
 
-		widgetLogo.innerHTML = this.getStyles() + this.getMarkup(theme);
+const LOGO_STYLES = `
+<style>
+.logo {
+    display: inline-flex;
+    flex-direction: column;
+}
 
-		return widgetLogo;
-	}
+.logo__outer {
+    flex:1;
+}
 
-	protected getMarkup(theme: Theme): string {
-		return `
+.logo__wrapper {
+    padding: 4px;
+    flex: 1 1 0;
+}
+
+.logo__inner {
+    padding: 4px;
+}
+</style>
+`;
+
+/**
+ * Generates the HTML markup for the logo
+ * @param theme - The theme to apply to the logo
+ */
+function getLogoMarkup(theme: Theme): string {
+	return `
 <a href="${WIDGET_URL}" 
 	target="_blank" 
 	aria-label="${WIDGET_URL_TEXT}">
@@ -75,31 +102,4 @@ class LogoElementFactory implements HtmlElementFactory {
 	</div>
 </a>
     `;
-	}
-
-	protected getStyles(): string {
-		return `
-<style>
-.logo {
-    display: inline-flex;
-    flex-direction: column;
 }
-
-.logo__outer {
-    flex:1;
-}
-
-.logo__wrapper {
-    padding: 4px;
-    flex: 1 1 0;
-}
-
-.logo__inner {
-    padding: 4px;
-}
-</style>
-`;
-	}
-}
-
-export { LogoElementFactory };

@@ -26,9 +26,12 @@ import {
 	domainMiddleware,
 	getClientList,
 	headerCheckMiddleware,
+	ignoreMiddleware,
 	prosopoRouter,
 	prosopoVerifyRouter,
 	publicRouter,
+	requestLoggerMiddleware,
+	robotsMiddleware,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import {
@@ -65,7 +68,9 @@ async function startApi(
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
 
-	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(env.logger);
+	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
+		env.config.logLevel,
+	);
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
 	);
@@ -87,6 +92,9 @@ async function startApi(
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 	const i18Middleware = await i18nMiddleware({});
+	apiApp.use(robotsMiddleware());
+	apiApp.use(ignoreMiddleware());
+	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 
@@ -119,7 +127,7 @@ async function startApi(
 		apiExpressRouterFactory.createRouter(
 			apiAdminRoutesProvider,
 			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(env.logger, 400),
+			createApiExpressDefaultEndpointAdapter(env.config.logLevel, 400),
 		),
 	);
 

@@ -11,9 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ApiPrefix } from "@prosopo/types";
+import type { NextFunction, Request, Response } from "express";
 
-interface WidgetInteractiveAreaProvider {
-	getWidgetInteractiveArea(widget: HTMLElement): HTMLElement | null;
+export function ignoreMiddleware() {
+	return (req: Request, res: Response, next: NextFunction) => {
+		// Ignore non-api routes
+		if (req.originalUrl.indexOf(ApiPrefix) === -1) {
+			res.statusCode = 404;
+			res.send("Not Found");
+			return;
+		}
+		next();
+	};
 }
-
-export type { WidgetInteractiveAreaProvider };

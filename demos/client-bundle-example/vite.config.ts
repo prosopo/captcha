@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
+import navigationInjector from "./src/plugins/navigation-injector.js";
 
 export default defineConfig(({ command, mode }) => {
 	loadEnv();
@@ -24,6 +26,7 @@ export default defineConfig(({ command, mode }) => {
 			host: true,
 			cors: true,
 		},
+		plugins: [navigationInjector()],
 		define: {
 			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY,
@@ -31,10 +34,22 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SERVER_URL": JSON.stringify(
 				process.env.PROSOPO_SERVER_URL,
 			),
+			"import.meta.env.VITE_BUNDLE_URL": JSON.stringify(
+				process.env.VITE_BUNDLE_URL,
+			),
 		},
 		optimizeDeps: {
 			noDiscovery: true,
 			include: ["void-elements", "react", "bn.js"],
+		},
+		build: {
+			outDir: "dist",
+			emptyOutDir: true,
+			rollupOptions: {
+				input: {
+					main: path.resolve(__dirname, "src/index.html"),
+				},
+			},
 		},
 	} as UserConfig;
 });
