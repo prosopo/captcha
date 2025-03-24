@@ -360,7 +360,8 @@ export default function navigationInjector(): Plugin {
         `;
 
 				// Replace environment variables
-				const bundleUrl = process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js";
+				const bundleUrl =
+					process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js";
 				html = html.replace(/%VITE_BUNDLE_URL%/g, bundleUrl);
 
 				// Inject navigation after <body> tag and script before </body>

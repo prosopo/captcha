@@ -50,6 +50,7 @@ describe("authMiddleware", () => {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
 			},
+			logger: mockLogger,
 		} as unknown as Request;
 
 		const mockRes = {
@@ -78,6 +79,7 @@ describe("authMiddleware", () => {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
 			},
+			logger: mockLogger,
 		} as unknown as Request;
 
 		const mockRes = {
@@ -110,6 +112,7 @@ describe("authMiddleware", () => {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
 			},
+			logger: mockLogger,
 		} as unknown as Request;
 
 		const mockRes = {
@@ -142,6 +145,7 @@ describe("authMiddleware", () => {
 				signature: "0x1234",
 				timestamp: new Date().getTime(),
 			},
+			logger: mockLogger,
 		} as unknown as Request;
 
 		const mockRes = {

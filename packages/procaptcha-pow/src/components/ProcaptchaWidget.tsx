@@ -15,10 +15,13 @@
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import { Checkbox } from "@prosopo/procaptcha-common";
-import type { ProcaptchaProps } from "@prosopo/types";
+import { Mode, ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
+
+// Define the same event name as in the bundle for consistency
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
@@ -40,6 +43,41 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			});
 		}
 	}, [config.language]);
+
+	// Add event listener for the execute event (works for invisible mode)
+	useEffect(() => {
+		// Only set up event listener if in invisible mode
+		if (config.mode === ModeEnum.invisible) {
+			// Event handler for when execute() is called
+			const handleExecuteEvent = (event: Event) => {
+				// Directly start the verification process without showing any UI
+				try {
+					// Start the PoW verification process
+					manager.current.start();
+				} catch (error) {
+					console.error("Error starting PoW verification:", error);
+				}
+			};
+
+			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
+			// Cleanup function to remove event listener
+			return () => {
+				document.removeEventListener(
+					PROCAPTCHA_EXECUTE_EVENT,
+					handleExecuteEvent,
+				);
+			};
+		}
+
+		// Return empty cleanup function when not in invisible mode
+		return () => {};
+	}, [config.mode]);
+
+	if (config.mode === ModeEnum.invisible) {
+		// Return null for invisible mode - no UI needed
+		return null;
+	}
 
 	return (
 		<Checkbox
