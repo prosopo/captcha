@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { WIDGET_CHECKBOX_SPINNER_CSS_CLASS } from "../constants.js";
 import type { Theme } from "../theme.js";
 
 /**
@@ -38,12 +39,12 @@ export const getCheckboxInteractiveArea = (
 	return widgetRoot.querySelector(".checkbox__content");
 };
 
-const CHECKBOX_MARKUP = `
+export const CHECKBOX_MARKUP = `
     <div class="checkbox__outer">
         <div class="checkbox__wrapper">
             <div class="checkbox__inner">
                 <div class="checkbox__content">
-                    <div class="checkbox__loading-spinner" aria-label="Loading spinner"></div>
+                    <div class="${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}" aria-label="Loading spinner"></div>
                 </div>
             </div>
         </div>
@@ -82,7 +83,7 @@ const getCheckboxStyles = (theme: Theme): string => `
     display: inline-flex;
 }
 
-.checkbox__loading-spinner {
+.${WIDGET_CHECKBOX_SPINNER_CSS_CLASS} {
     margin-top: 0;
     margin-left: 15px;
     margin-right: 15px;
@@ -96,7 +97,7 @@ const getCheckboxStyles = (theme: Theme): string => `
     animation: checkbox__loading-spinner-rotation 1s linear infinite;
 }
 
-@keyframes checkbox__loading-spinner-rotation {
+@keyframes ${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}-rotation {
   0% {
 	transform: rotate(0deg);
   }

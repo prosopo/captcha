@@ -56,7 +56,12 @@ class CaptchaRenderer {
 			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
 
-		const config = createConfig(renderOptions.siteKey, isWeb2);
+		const config = createConfig(
+			renderOptions.siteKey,
+			renderOptions.theme,
+			renderOptions.language,
+			isWeb2,
+		);
 
 		this.readAndValidateSettings(container, callbacks, config, renderOptions);
 
