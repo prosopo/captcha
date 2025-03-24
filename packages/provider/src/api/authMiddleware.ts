@@ -21,15 +21,6 @@ import type { NextFunction, Request, Response } from "express";
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
-			if (req.originalUrl.indexOf(ApiPrefix) === -1) {
-				req.logger.info({
-					message: "Non-api route, skipping auth middleware",
-				});
-				next();
-				return;
-			}
-
 			const { signature, timestamp } = extractHeaders(req);
 
 			let error: ProsopoApiError | undefined;
