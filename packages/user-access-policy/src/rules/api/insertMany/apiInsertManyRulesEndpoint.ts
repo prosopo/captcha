@@ -53,7 +53,7 @@ class ApiInsertManyRulesEndpoint
 						status: ApiEndpointResponseStatus.SUCCESS,
 					});
 				})
-				.catch(() => {
+				.catch((e) => {
 					resolve({
 						status: ApiEndpointResponseStatus.FAIL,
 					});
