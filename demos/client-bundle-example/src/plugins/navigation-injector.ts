@@ -360,7 +360,9 @@ export default function navigationInjector(): Plugin {
         `;
 
 				// Replace environment variables
-				const bundleUrl = process.env.VITE_BUNDLE_URL || "https://js.prosopo.io/js/procaptcha.bundle.js";
+				const bundleUrl =
+					process.env.VITE_BUNDLE_URL ||
+					"https://js.prosopo.io/js/procaptcha.bundle.js";
 				if (!bundleUrl) {
 					console.error("VITE_BUNDLE_URL is not defined");
 					return html;
