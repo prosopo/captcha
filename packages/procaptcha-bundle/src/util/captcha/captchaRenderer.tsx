@@ -64,7 +64,7 @@ class CaptchaRenderer {
 			renderOptions.theme,
 			renderOptions.language,
 			isWeb2,
-            invisible,
+			invisible,
 		);
 
 		this.readAndValidateSettings(container, callbacks, config, renderOptions);
