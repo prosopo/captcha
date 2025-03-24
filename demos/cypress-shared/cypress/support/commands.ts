@@ -189,7 +189,7 @@ function registerSiteKey(captchaType: CaptchaType) {
 			console.log("cType", captchaType);
 			const settings: IUserSettings = {
 				captchaType: captchaType,
-				domains: ["0.0.0.0"],
+				domains: ["0.0.0.0", "localhost"],
 				frictionlessThreshold: 0.5,
 				powDifficulty: 2,
 			};
