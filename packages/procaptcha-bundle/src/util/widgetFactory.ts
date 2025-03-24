@@ -13,7 +13,7 @@
 // limitations under the License.
 import { CaptchaType, type ProcaptchaRenderOptions } from "@prosopo/types";
 import {
-	type WidgetSkeletonFactory,
+	createWidgetSkeleton,
 	darkTheme,
 	lightTheme,
 } from "@prosopo/widget-skeleton";
@@ -25,7 +25,6 @@ class WidgetFactory {
 	private captchaRenderer: CaptchaRenderer | null = null;
 
 	public constructor(
-		private readonly widgetSkeletonFactory: WidgetSkeletonFactory,
 		private readonly widgetThemeResolver: WidgetThemeResolver,
 	) {}
 
@@ -65,9 +64,10 @@ class WidgetFactory {
 			container.appendChild(newDiv);
 			widgetInteractiveArea = newDiv as HTMLElement;
 		} else {
-			widgetInteractiveArea = this.widgetSkeletonFactory.createWidgetSkeleton(
+			widgetInteractiveArea = createWidgetSkeleton(
 				container,
 				widgetTheme,
+				"prosopo-procaptcha",
 			);
 		}
 
@@ -75,7 +75,7 @@ class WidgetFactory {
 
 		const captchaRenderer = await this.getCaptchaRenderer();
 
-		const captchaRoot = await captchaRenderer.renderCaptcha(
+		const captchaRoot = captchaRenderer.renderCaptcha(
 			{
 				identifierPrefix: "procaptcha-",
 				emotionCacheKey: "procaptcha",

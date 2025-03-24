@@ -46,7 +46,7 @@ const renderPlaceholder = (
 	return (
 		<Checkbox
 			theme={checkboxTheme}
-			onChange={() => {}}
+			onChange={async () => {}}
 			checked={false}
 			labelText={t("WIDGET.I_AM_HUMAN")}
 			error={errorMessage}
