@@ -12,10 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import navigationInjector from "./src/plugins/navigation-injector.js";
+import path from "path";
+import fs from "fs";
+
+// Get all HTML files in the src directory
+const htmlFiles = fs.readdirSync(path.resolve(__dirname, "src"))
+    .filter(file => file.endsWith('.html'))
+    .reduce((acc, file) => {
+        acc[path.parse(file).name] = path.resolve(__dirname, "src", file);
+        return acc;
+    }, {} as Record<string, string>);
 
 export default defineConfig(({ command, mode }) => {
 	loadEnv();
@@ -35,7 +44,7 @@ export default defineConfig(({ command, mode }) => {
 				process.env.PROSOPO_SERVER_URL,
 			),
 			"import.meta.env.VITE_BUNDLE_URL": JSON.stringify(
-				process.env.VITE_BUNDLE_URL,
+				process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js",
 			),
 		},
 		optimizeDeps: {
@@ -46,9 +55,7 @@ export default defineConfig(({ command, mode }) => {
 			outDir: "dist",
 			emptyOutDir: true,
 			rollupOptions: {
-				input: {
-					main: path.resolve(__dirname, "src/index.html"),
-				},
+				input: htmlFiles,
 			},
 		},
 	} as UserConfig;
