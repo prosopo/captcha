@@ -50,6 +50,11 @@ describe("Captchas", () => {
 		});
 	});
 
+	after(() => {
+		captchaType = Cypress.env("CAPTCHA_TYPE") || "frictionless";
+		cy.registerSiteKey(captchaType);
+	});
+
 	it("An error is returned if captcha type is set to pow and frictionless is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
 		cy.registerSiteKey(CaptchaType.pow).then(() => {
@@ -63,13 +68,10 @@ describe("Captchas", () => {
 					expect(response).to.not.be.undefined;
 					expect(response?.statusCode).to.equal(400);
 					expect(response?.body).to.have.property("error");
-				})
-				.then(() => {
-					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
-						.should("exist") // Ensures element exists
-						.should("be.visible") // Ensures it's rendered
-						.find("label")
-						.should("have.text", "Incorrect CAPTCHA type");
+					expect(response?.body.error).to.have.property("key");
+					expect(response?.body.error.key).to.equal(
+						"API.INCORRECT_CAPTCHA_TYPE",
+					);
 				});
 		});
 	});
@@ -87,13 +89,10 @@ describe("Captchas", () => {
 					expect(response).to.not.be.undefined;
 					expect(response?.statusCode).to.equal(400);
 					expect(response?.body).to.have.property("error");
-				})
-				.then(() => {
-					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
-						.should("exist") // Ensures element exists
-						.should("be.visible") // Ensures it's rendered
-						.find("label")
-						.should("have.text", "Incorrect CAPTCHA type");
+					expect(response?.body.error).to.have.property("key");
+					expect(response?.body.error.key).to.equal(
+						"API.INCORRECT_CAPTCHA_TYPE",
+					);
 				});
 		});
 	});

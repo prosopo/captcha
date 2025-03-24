@@ -36,7 +36,7 @@ export const registerSiteKey = async (
 				account: siteKey,
 				settings: {
 					captchaType: captchaType,
-					domains: ["example.com"],
+					domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
 					frictionlessThreshold: 0.5,
 					powDifficulty: 4,
 				},
