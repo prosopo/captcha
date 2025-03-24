@@ -14,6 +14,7 @@
 
 import createCache, { type EmotionCache } from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
+import { loadI18next } from "@prosopo/locale";
 import {
 	getDefaultCallbacks,
 	setUserCallbacks,
@@ -31,7 +32,6 @@ import { createConfig } from "../configCreator.js";
 import { setLanguage } from "../language.js";
 import { setValidChallengeLength } from "../timeout.js";
 import type { CaptchaComponentProvider } from "./captchaComponentProvider.js";
-import { loadI18next } from "@prosopo/locale";
 
 interface RenderSettings {
 	identifierPrefix: string;
@@ -124,9 +124,7 @@ class CaptchaRenderer {
 	): void {
 		loadI18next(false).then((i18n) => {
 			reactRoot.render(
-				<I18nextProvider i18n={i18n}>
-					<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>
-				</I18nextProvider>,
+				<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>,
 			);
 		});
 	}

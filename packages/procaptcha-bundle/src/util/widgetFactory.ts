@@ -65,7 +65,10 @@ class WidgetFactory {
 				widgetTheme,
 			);
 		} else {
-			widgetInteractiveArea = container as HTMLElement;
+			//Create new div inside the container
+			const newDiv = document.createElement("div");
+			container.appendChild(newDiv);
+			widgetInteractiveArea = newDiv as HTMLElement;
 		}
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.

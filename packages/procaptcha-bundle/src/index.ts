@@ -74,8 +74,23 @@ const implicitRender = async () => {
 
 		// Process each invisible button
 		for (const button of invisibleButtons) {
-			const siteKey = button.getAttribute("data-sitekey");
-			const callback = button.getAttribute("data-callback");
+			const siteKey = button.getAttribute("data-sitekey") || "";
+			const callback = button.getAttribute("data-callback") || "";
+
+			const captchaType = getCaptchaType([button]);
+
+			const root = await widgetFactory.createWidgets(
+				[button],
+				{
+					captchaType: captchaType,
+					siteKey: siteKey,
+					callback: callback,
+				},
+				true,
+				true,
+			);
+
+			procaptchaRoots.push(...root);
 
 			if (!siteKey) {
 				console.error("No siteKey found for invisible button");
@@ -83,22 +98,11 @@ const implicitRender = async () => {
 			}
 
 			// Add click event listener to the button
-			button.addEventListener("click", (event) => {
+			button.addEventListener("click", async (event) => {
 				// Prevent default button action temporarily
 				event.preventDefault();
 
-				// If a callback is specified, try to call it
-				if (callback) {
-					try {
-						const callbackFn = getWindowCallback(callback);
-						if (typeof callbackFn === "function") {
-							// In a real implementation, we would pass the token here
-							callbackFn("sample-token-for-testing");
-						}
-					} catch (error) {
-						console.error("Error calling callback:", error);
-					}
-				}
+				execute();
 
 				// Log for debugging
 				console.log(
@@ -216,6 +220,12 @@ function findProcaptchaContainers(): Element[] {
 			'#procaptcha-container, [id$="-procaptcha-container"]',
 		),
 	);
+
+	// Strategy 3: Look for elements with class 'p-procaptcha'
+	const classContainers = Array.from(
+		document.getElementsByClassName("p-procaptcha"),
+	);
+	containers.push(...classContainers);
 
 	for (const container of idContainers) {
 		if (!containers.includes(container)) {

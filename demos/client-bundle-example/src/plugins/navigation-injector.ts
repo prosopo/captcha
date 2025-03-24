@@ -1,43 +1,69 @@
+// Copyright 2021-2025 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 // Vite plugin to inject navigation into HTML files
-import fs from 'fs';
-import path from 'path';
-import { normalizePath, Plugin, IndexHtmlTransformContext } from 'vite';
+import fs from "node:fs";
+import path from "node:path";
+import {
+	type IndexHtmlTransformContext,
+	type Plugin,
+	normalizePath,
+} from "vite";
 
 export default function navigationInjector(): Plugin {
-  // Define all pages, including existing and planned
-  const pageDefinitions = {
-    standard: {
-      image: {
-        implicit: { path: 'index.html', exists: true },
-        explicit: { path: 'standard/image-explicit.html', exists: false }
-      },
-      pow: {
-        implicit: { path: 'standard/pow-implicit.html', exists: false },
-        explicit: { path: 'pow.html', exists: true }
-      },
-      frictionless: {
-        implicit: { path: 'standard/frictionless-implicit.html', exists: false },
-        explicit: { path: 'frictionless.html', exists: true }
-      }
-    },
-    invisible: {
-      image: {
-        implicit: { path: 'invisible/image-implicit.html', exists: false },
-        explicit: { path: 'invisible/image-explicit.html', exists: false }
-      },
-      pow: {
-        implicit: { path: 'invisible/pow-implicit.html', exists: false },
-        explicit: { path: 'invisible/pow.html', exists: true }
-      },
-      frictionless: {
-        implicit: { path: 'invisible/frictionless-implicit.html', exists: true },
-        explicit: { path: 'invisible/frictionless-explicit.html', exists: true }
-      }
-    }
-  };
+	// Define all pages, including existing and planned
+	const pageDefinitions = {
+		standard: {
+			image: {
+				implicit: { path: "index.html", exists: true },
+				explicit: { path: "standard/image-explicit.html", exists: false },
+			},
+			pow: {
+				implicit: { path: "standard/pow-implicit.html", exists: false },
+				explicit: { path: "pow.html", exists: true },
+			},
+			frictionless: {
+				implicit: {
+					path: "standard/frictionless-implicit.html",
+					exists: false,
+				},
+				explicit: { path: "frictionless.html", exists: true },
+			},
+		},
+		invisible: {
+			image: {
+				implicit: { path: "invisible/image-implicit.html", exists: false },
+				explicit: { path: "invisible/image-explicit.html", exists: false },
+			},
+			pow: {
+				implicit: { path: "invisible/pow-implicit.html", exists: false },
+				explicit: { path: "invisible/pow.html", exists: true },
+			},
+			frictionless: {
+				implicit: {
+					path: "invisible/frictionless-implicit.html",
+					exists: true,
+				},
+				explicit: {
+					path: "invisible/frictionless-explicit.html",
+					exists: true,
+				},
+			},
+		},
+	};
 
-  // Style for the navigation bar
-  const navStyle = `
+	// Style for the navigation bar
+	const navStyle = `
     <style>
       .nav-topbar {
         background-color: #2196F3;
@@ -186,8 +212,8 @@ export default function navigationInjector(): Plugin {
     </style>
   `;
 
-  // JavaScript for toggling navigation
-  const navScript = `
+	// JavaScript for toggling navigation
+	const navScript = `
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         const toggleBtn = document.getElementById('nav-toggle');
@@ -250,38 +276,50 @@ export default function navigationInjector(): Plugin {
     </script>
   `;
 
-  // Function to check if a file exists
-  const fileExists = (filePath: string): boolean => {
-    try {
-      // For development only - assuming files in src directory 
-      const srcPath = path.resolve(process.cwd(), 'src', filePath);
-      return fs.existsSync(srcPath);
-    } catch (err) {
-      return false;
-    }
-  };
+	// Function to check if a file exists
+	const fileExists = (filePath: string): boolean => {
+		try {
+			// For development only - assuming files in src directory
+			const srcPath = path.resolve(process.cwd(), "src", filePath);
+			return fs.existsSync(srcPath);
+		} catch (err) {
+			return false;
+		}
+	};
 
-  return {
-    name: 'navigation-injector',
-    transformIndexHtml: {
-      enforce: 'pre',
-      transform(html: string, ctx: IndexHtmlTransformContext): string {
-        // Get the relative path from the root
-        const relativePath = ctx.filename ? normalizePath(path.relative(process.cwd(), ctx.filename)) : '';
-        
-        // Extract the page path relative to src directory
-        const srcDir = 'src/';
-        let pagePath = '';
-        
-        if (relativePath.includes(srcDir)) {
-          pagePath = relativePath.substring(relativePath.indexOf(srcDir) + srcDir.length);
-        }
-        
-        // Build navigation structure
-        const standardNav = buildCaptchaNavGroup('Standard Captchas', pageDefinitions.standard, pagePath);
-        const invisibleNav = buildCaptchaNavGroup('Invisible Captchas', pageDefinitions.invisible, pagePath);
-        
-        const navHtml = `
+	return {
+		name: "navigation-injector",
+		transformIndexHtml: {
+			enforce: "pre",
+			transform(html: string, ctx: IndexHtmlTransformContext): string {
+				// Get the relative path from the root
+				const relativePath = ctx.filename
+					? normalizePath(path.relative(process.cwd(), ctx.filename))
+					: "";
+
+				// Extract the page path relative to src directory
+				const srcDir = "src/";
+				let pagePath = "";
+
+				if (relativePath.includes(srcDir)) {
+					pagePath = relativePath.substring(
+						relativePath.indexOf(srcDir) + srcDir.length,
+					);
+				}
+
+				// Build navigation structure
+				const standardNav = buildCaptchaNavGroup(
+					"Standard Captchas",
+					pageDefinitions.standard,
+					pagePath,
+				);
+				const invisibleNav = buildCaptchaNavGroup(
+					"Invisible Captchas",
+					pageDefinitions.invisible,
+					pagePath,
+				);
+
+				const navHtml = `
           <div id="nav-topbar" class="nav-topbar">
             <div class="nav-container">
               <div id="nav-header" class="nav-header">
@@ -309,75 +347,81 @@ export default function navigationInjector(): Plugin {
             </div>
           </div>
         `;
-        
-        // Inject navigation after <body> tag and script before </body>
-        if (html.includes('<body>') && html.includes('</body>')) {
-          return html
-            .replace('</head>', `${navStyle}</head>`)
-            .replace('<body>', `<body>\n${navHtml}`)
-            .replace('</body>', `${navScript}\n</body>`);
-        }
-        
-        return html;
-      }
-    }
-  };
-  
-  // Helper function to build a navigation group for each captcha type
-  function buildCaptchaNavGroup(title: string, captchaTypes: any, currentPath: string): string {
-    const navGroups: string[] = [];
-    
-    for (const [typeName, captchaType] of Object.entries(captchaTypes)) {
-      const typeTitle = typeName.charAt(0).toUpperCase() + typeName.slice(1);
-      const links: string[] = [];
-      
-      for (const [implName, implDetails] of Object.entries(captchaType as any)) {
-        const pagePath = (implDetails as any).path;
-        const pageExists = (implDetails as any).exists;
-        
-        // Calculate relative path
-        let href;
-        if (currentPath.includes('/')) {
-          // We're in a subdirectory
-          const depth = (currentPath.match(/\//g) || []).length;
-          href = '../'.repeat(depth) + pagePath;
-        } else {
-          // We're in the src root
-          href = pagePath;
-        }
-        
-        // Mark current page as active and check if the file exists
-        const isActive = currentPath === pagePath;
-        const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
-        
-        let linkHtml;
-        if (pageExists) {
-          const activeClass = isActive ? ' class="active"' : '';
-          linkHtml = `<a href="${href}"${activeClass}>${implTitle}</a>`;
-        } else {
-          linkHtml = `<span class="disabled" title="Coming Soon">${implTitle}</span>`;
-        }
-        
-        links.push(`<li>${linkHtml}</li>`);
-      }
-      
-      navGroups.push(`
+
+				// Inject navigation after <body> tag and script before </body>
+				if (html.includes("<body>") && html.includes("</body>")) {
+					return html
+						.replace("</head>", `${navStyle}</head>`)
+						.replace("<body>", `<body>\n${navHtml}`)
+						.replace("</body>", `${navScript}\n</body>`);
+				}
+
+				return html;
+			},
+		},
+	};
+
+	// Helper function to build a navigation group for each captcha type
+	function buildCaptchaNavGroup(
+		title: string,
+		captchaTypes: any,
+		currentPath: string,
+	): string {
+		const navGroups: string[] = [];
+
+		for (const [typeName, captchaType] of Object.entries(captchaTypes)) {
+			const typeTitle = typeName.charAt(0).toUpperCase() + typeName.slice(1);
+			const links: string[] = [];
+
+			for (const [implName, implDetails] of Object.entries(
+				captchaType as any,
+			)) {
+				const pagePath = (implDetails as any).path;
+				const pageExists = (implDetails as any).exists;
+
+				// Calculate relative path
+				let href;
+				if (currentPath.includes("/")) {
+					// We're in a subdirectory
+					const depth = (currentPath.match(/\//g) || []).length;
+					href = "../".repeat(depth) + pagePath;
+				} else {
+					// We're in the src root
+					href = pagePath;
+				}
+
+				// Mark current page as active and check if the file exists
+				const isActive = currentPath === pagePath;
+				const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
+
+				let linkHtml;
+				if (pageExists) {
+					const activeClass = isActive ? ' class="active"' : "";
+					linkHtml = `<a href="${href}"${activeClass}>${implTitle}</a>`;
+				} else {
+					linkHtml = `<span class="disabled" title="Coming Soon">${implTitle}</span>`;
+				}
+
+				links.push(`<li>${linkHtml}</li>`);
+			}
+
+			navGroups.push(`
         <div class="nav-group">
           <div class="nav-group-title">${typeTitle}</div>
           <ul class="nav-group-links">
-            ${links.join('\n            ')}
+            ${links.join("\n            ")}
           </ul>
         </div>
       `);
-    }
-    
-    return `
+		}
+
+		return `
       <div class="nav-section">
         <h3 style="color: white; margin: 0 0 10px 0;">${title}</h3>
         <div class="nav-row">
-          ${navGroups.join('\n          ')}
+          ${navGroups.join("\n          ")}
         </div>
       </div>
     `;
-  }
-} 
+	}
+}
