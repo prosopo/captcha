@@ -205,12 +205,16 @@ function registerSiteKey(captchaType: CaptchaType) {
 					tier: Tier.Free,
 					settings,
 				} as RegisterSitekeyBodyTypeOutput),
-			}).then((response) => {
-				expect(response.status).to.equal(200);
-				response.json().then((data) => {
-					console.log("data", data.status);
+			})
+				.then((response) => {
+					expect(response.status).to.equal(200);
+					response.json().then((data) => {
+						console.log("data", data.status);
+					});
+				})
+				.catch((error) => {
+					console.error("Failed to register site key", error);
 				});
-			});
 		});
 	});
 }

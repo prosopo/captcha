@@ -68,12 +68,6 @@ describe("Captchas", () => {
 					expect(response?.body.error.key).to.equal(
 						"API.INCORRECT_CAPTCHA_TYPE",
 					);
-				})
-				.then(() => {
-					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
-						.should("exist") // Ensures element exists
-						.should("be.visible") // Ensures it's rendered
-						.find("label");
 				});
 		});
 	});

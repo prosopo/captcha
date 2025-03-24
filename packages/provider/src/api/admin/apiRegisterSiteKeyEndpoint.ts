@@ -41,7 +41,13 @@ class ApiRegisterSiteKeyEndpoint
 
 		logger.info(`Registering site key: ${siteKey}`);
 
-		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
+		const result = await this.clientTaskManager.registerSiteKey(
+			siteKey,
+			tier,
+			temp,
+		);
+
+		logger.info(`Site key registered: ${result}`);
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
