@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaType, type ProcaptchaRenderOptions } from "@prosopo/types";
-import {
-	createWidgetSkeleton,
-	darkTheme,
+import {darkTheme,
 	lightTheme,
 } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
@@ -32,10 +30,11 @@ class WidgetFactory {
 		containers: Element[],
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
+		invisible = false,
 	): Promise<Root[]> {
 		return Promise.all(
 			containers.map((container) =>
-				this.createWidget(container, renderOptions, isWeb2),
+				this.createWidget(container, renderOptions, isWeb2, invisible),
 			),
 		);
 	}
@@ -44,6 +43,7 @@ class WidgetFactory {
 		container: Element,
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
+		invisible = false,
 	): Promise<Root> {
 		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
 			container,
@@ -53,11 +53,20 @@ class WidgetFactory {
 		const widgetTheme =
 			"light" === renderOptions.theme ? lightTheme : darkTheme;
 
-		const widgetInteractiveArea = createWidgetSkeleton(
-			container,
-			widgetTheme,
-			"prosopo-procaptcha",
-		);
+		let widgetInteractiveArea: HTMLElement;
+
+		// Don't create the widget skeleton if the mode is invisible
+		if (invisible) {
+			//Create new div inside the container
+			const newDiv = document.createElement("div");
+			container.appendChild(newDiv);
+			widgetInteractiveArea = newDiv as HTMLElement;
+		} else {
+			widgetInteractiveArea = this.widgetSkeletonFactory.createWidgetSkeleton(
+				container,
+				widgetTheme,
+			);
+		}
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
 
@@ -73,6 +82,7 @@ class WidgetFactory {
 			widgetInteractiveArea,
 			renderOptions,
 			isWeb2,
+			invisible,
 		);
 
 		return captchaRoot;
