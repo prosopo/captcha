@@ -37,7 +37,7 @@ export function publicRouter(env: ProviderEnvironment): Router {
 		try {
 			return res.json({ version, ...{ message: "Provider online" } });
 		} catch (err) {
-			tasks.logger.error({ err, params: req.params });
+			req.logger.error({ err, params: req.params });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: { code: 500 },
