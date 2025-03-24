@@ -143,10 +143,11 @@ export class FrictionlessManager extends CaptchaManager {
 				timestamp = t;
 				break;
 			} catch (err) {
-				// check if the next index exists, if not, throw an error
+				// check if the next index exists, if not, log an error
 				if (keyIndex === decryptKeys.length - 1) {
-					this.logger.error({ message: `Error decrypting score: ${err}` });
-					throw new ProsopoApiError("CAPTCHA.DECRYPT_ERROR");
+					this.logger.error(new ProsopoApiError("CAPTCHA.DECRYPT_ERROR"));
+					baseBotScore = 1;
+					timestamp = 0;
 				}
 			}
 		}
