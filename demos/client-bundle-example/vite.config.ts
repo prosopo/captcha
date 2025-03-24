@@ -14,6 +14,7 @@
 
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
+import navigationInjector from "./src/plugins/navigation-injector.js";
 
 export default defineConfig(({ command, mode }) => {
 	loadEnv();
@@ -24,6 +25,7 @@ export default defineConfig(({ command, mode }) => {
 			host: true,
 			cors: true,
 		},
+		plugins: [navigationInjector()],
 		define: {
 			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY,
