@@ -15,7 +15,7 @@
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import { Checkbox } from "@prosopo/procaptcha-common";
-import type { ProcaptchaProps } from "@prosopo/types";
+import { Mode, ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
@@ -47,7 +47,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	// Add event listener for the execute event (works for invisible mode)
 	useEffect(() => {
 		// Only set up event listener if in invisible mode
-		if (config.mode === "invisible") {
+		if (config.mode === ModeEnum.invisible) {
 			// Event handler for when execute() is called
 			const handleExecuteEvent = (event: Event) => {
 				// Directly start the verification process without showing any UI

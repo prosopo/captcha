@@ -239,7 +239,12 @@ export type ProsopoClientConfigOutput = output<
 >;
 
 const ThemeType = union([literal("light"), literal("dark")]);
-const Mode = union([literal("visible"), literal("invisible")]).optional();
+
+export enum ModeEnum {
+	visible = "visible",
+	invisible = "invisible",
+}
+export const Mode = zEnum(ModeEnum).optional();
 export type ModeType = zInfer<typeof Mode>;
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
