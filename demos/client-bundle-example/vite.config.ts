@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import navigationInjector from "./src/plugins/navigation-injector.js";
-import path from "path";
 
 export default defineConfig(({ command, mode }) => {
 	loadEnv();
