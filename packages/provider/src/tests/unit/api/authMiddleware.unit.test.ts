@@ -137,7 +137,7 @@ describe("authMiddleware", () => {
 		});
 	});
 
-	it("should call next() immediately if url does not contain /v1/prosopo", async () => {
+	it("should 404 if url does not contain /v1/prosopo", async () => {
 		const mockReq = {
 			url: "/favicon.ico",
 			originalUrl: "/favicon.ico",
@@ -150,6 +150,7 @@ describe("authMiddleware", () => {
 
 		const mockRes = {
 			status: vi.fn().mockReturnThis(),
+			statusCode: 404,
 			json: vi.fn(),
 		} as unknown as Response;
 
@@ -160,7 +161,6 @@ describe("authMiddleware", () => {
 		const middleware = authMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
-		expect(mockNext).toHaveBeenCalled();
-		expect(mockRes.status).not.toHaveBeenCalled();
+		expect(mockRes.statusCode).toBe(404);
 	});
 });
