@@ -12,27 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaOptions } from "./procaptchaOptions.js";
-import type { ProcaptchaWrapper } from "./procaptchaWrapper.js";
-import type { WidgetCallbacks } from "./widget/widgetCallbacks.js";
+import type {ProcaptchaOptions} from "./procaptchaOptions.js";
+import type {ProcaptchaWrapper} from "./procaptchaWrapper.js";
+import type {WidgetCallbacks} from "./widget/widgetCallbacks.js";
 import {
-	type WidgetCaptchaType,
-	WidgetCaptchaTypes,
+    type WidgetCaptchaType,
+    WidgetCaptchaTypes,
 } from "./widget/widgetCaptchaTypes.js";
-import { type WidgetTheme, WidgetThemes } from "./widget/widgetThemes.js";
-import { WidgetWrapper } from "./widget/widgetWrapper.js";
+import {type WidgetTheme, WidgetThemes} from "./widget/widgetThemes.js";
+import {WidgetWrapper} from "./widget/widgetWrapper.js";
 
-function getProcaptchaWrapper(): ProcaptchaWrapper {
-	return new WidgetWrapper();
-}
+const procaptchaWrapper: ProcaptchaWrapper = new WidgetWrapper();
 
 export {
-	type WidgetCallbacks,
-	type ProcaptchaOptions,
-	type WidgetTheme,
-	type WidgetCaptchaType,
-	type ProcaptchaWrapper,
-	WidgetThemes,
-	WidgetCaptchaTypes,
-	getProcaptchaWrapper,
+    type WidgetCallbacks,
+    type ProcaptchaOptions,
+    type WidgetTheme,
+    type WidgetCaptchaType,
+    type ProcaptchaWrapper,
+    WidgetThemes,
+    WidgetCaptchaTypes,
+    procaptchaWrapper,
 };

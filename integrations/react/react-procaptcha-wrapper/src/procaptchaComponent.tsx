@@ -14,9 +14,8 @@
 
 import {
 	type ProcaptchaOptions,
-	getProcaptchaWrapper,
+	procaptchaWrapper,
 } from "@prosopo/procaptcha-wrapper";
-import type { ProcaptchaWrapper } from "@prosopo/procaptcha-wrapper";
 import React from "react";
 
 type ProcaptchaComponentProperties = ProcaptchaOptions & {
@@ -28,13 +27,11 @@ type ProcaptchaComponentProperties = ProcaptchaOptions & {
 
 class ProcaptchaComponent extends React.Component<ProcaptchaComponentProperties> {
 	private readonly elementRef: React.RefObject<HTMLDivElement>;
-	private readonly procaptchaWrapper: ProcaptchaWrapper;
 
 	constructor(properties: ProcaptchaComponentProperties) {
 		super(properties);
 
 		this.elementRef = React.createRef();
-		this.procaptchaWrapper = getProcaptchaWrapper();
 	}
 
 	public override componentDidMount(): void {
@@ -53,7 +50,7 @@ class ProcaptchaComponent extends React.Component<ProcaptchaComponentProperties>
 
 	protected async renderProcaptcha(): Promise<void> {
 		if (this.elementRef.current instanceof HTMLElement) {
-			await this.procaptchaWrapper.renderProcaptcha(
+			await procaptchaWrapper.renderProcaptcha(
 				this.elementRef.current,
 				this.props,
 			);
