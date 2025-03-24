@@ -59,16 +59,16 @@ class WidgetFactory {
 		let widgetInteractiveArea: HTMLElement;
 
 		// Don't create the widget skeleton if the mode is invisible
-		if (!invisible) {
-			widgetInteractiveArea = this.widgetSkeletonFactory.createWidgetSkeleton(
-				container,
-				widgetTheme,
-			);
-		} else {
+		if (invisible) {
 			//Create new div inside the container
 			const newDiv = document.createElement("div");
 			container.appendChild(newDiv);
 			widgetInteractiveArea = newDiv as HTMLElement;
+		} else {
+			widgetInteractiveArea = this.widgetSkeletonFactory.createWidgetSkeleton(
+				container,
+				widgetTheme,
+			);
 		}
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
