@@ -26,10 +26,12 @@ import {
 	domainMiddleware,
 	getClientList,
 	headerCheckMiddleware,
+	ignoreMiddleware,
 	prosopoRouter,
 	prosopoVerifyRouter,
 	publicRouter,
 	requestLoggerMiddleware,
+	robotsMiddleware,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import {
@@ -90,6 +92,8 @@ async function startApi(
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 	const i18Middleware = await i18nMiddleware({});
+	apiApp.use(robotsMiddleware());
+	apiApp.use(ignoreMiddleware());
 	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
