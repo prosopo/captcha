@@ -35,10 +35,10 @@ const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = async () => {
-	// Get elements with class 'procaptcha'
+	// Get elements with class 'procaptcha', not including buttons
 	const elements: Element[] = Array.from(
 		document.getElementsByClassName("procaptcha"),
-	);
+	).filter((element) => element.tagName.toLowerCase() !== "button");
 
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
@@ -63,10 +63,10 @@ const implicitRender = async () => {
 		procaptchaRoots.push(...root);
 	}
 
-	// Check for invisible mode indicators (p-procaptcha class on buttons)
+	// Check for invisible mode indicators (procaptcha class on buttons)
 	const invisibleButtons = Array.from(
-		document.getElementsByClassName("p-procaptcha"),
-	);
+		document.getElementsByClassName("procaptcha"),
+	).filter((button) => button.tagName.toLowerCase() === "button");
 
 	if (invisibleButtons.length) {
 		for (const button of invisibleButtons) {
