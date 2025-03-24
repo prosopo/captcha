@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaType, type ProcaptchaRenderOptions } from "@prosopo/types";
-import {darkTheme,
+import {
+	createWidgetSkeleton,
+	darkTheme,
 	lightTheme,
 } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
@@ -62,9 +64,10 @@ class WidgetFactory {
 			container.appendChild(newDiv);
 			widgetInteractiveArea = newDiv as HTMLElement;
 		} else {
-			widgetInteractiveArea = this.widgetSkeletonFactory.createWidgetSkeleton(
+			widgetInteractiveArea = createWidgetSkeleton(
 				container,
 				widgetTheme,
+				"prosopo-procaptcha",
 			);
 		}
 
