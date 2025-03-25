@@ -55,22 +55,23 @@ describe("Captchas", () => {
 	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
 		cy.registerSiteKey(CaptchaType.pow).then(() => {
-			cy.visit(Cypress.env("default_page"));
-			getWidgetElement(checkboxClass, { timeout: 48000 }).first().click();
-			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-				"getCaptcha",
-			);
-			cy.wait("@getCaptcha", { timeout: 48000 })
-				.its("response")
-				.then((response) => {
-					expect(response).to.not.be.undefined;
-					expect(response?.statusCode).to.equal(400);
-					expect(response?.body).to.have.property("error");
-					expect(response?.body.error).to.have.property("key");
-					expect(response?.body.error.key).to.equal(
-						"API.INCORRECT_CAPTCHA_TYPE",
-					);
-				});
+			cy.visit(Cypress.env("default_page")).then(() => {
+				getWidgetElement(checkboxClass, { timeout: 48000 }).first().click();
+				cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+					"getCaptcha",
+				);
+				cy.wait("@getCaptcha", { timeout: 48000 })
+					.its("response")
+					.then((response) => {
+						expect(response).to.not.be.undefined;
+						expect(response?.statusCode).to.equal(400);
+						expect(response?.body).to.have.property("error");
+						expect(response?.body.error).to.have.property("key");
+						expect(response?.body.error.key).to.equal(
+							"API.INCORRECT_CAPTCHA_TYPE",
+						);
+					});
+			});
 		});
 	});
 
