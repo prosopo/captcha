@@ -30,6 +30,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
+	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const manager = Manager(
@@ -43,11 +44,18 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			loadI18next(false).then((i18n) => {
-				i18n.changeLanguage(config.language).then((r) => r);
-			});
+			if (i18n) {
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
+			} else {
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
+			}
 		}
-	}, [config.language]);
+	}, [i18n, config.language]);
 
 	// Add event listener for the execute event
 	useEffect(() => {

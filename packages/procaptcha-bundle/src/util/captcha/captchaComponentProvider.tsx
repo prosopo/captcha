@@ -11,12 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { Ti18n } from "@prosopo/locale";
 import type { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
 import { captchaComponentsList } from "./captchaComponentsList.js";
 import type { CaptchaProps } from "./captchaProps.js";
 
 class CaptchaComponentProvider {
+	i18n: Ti18n;
+
+	constructor(i18n: Ti18n) {
+		this.i18n = i18n;
+	}
+
 	public getCaptchaComponent(
 		captchaType: CaptchaType,
 		captchaProps: CaptchaProps,
@@ -29,6 +37,7 @@ class CaptchaComponentProvider {
 			<CaptchaComponent
 				config={captchaProps.config}
 				callbacks={captchaProps.callbacks}
+				i18n={this.i18n}
 			/>
 		);
 	}

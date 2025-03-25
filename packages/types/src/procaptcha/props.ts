@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type { Account, Callbacks } from "./manager.js";
@@ -32,6 +33,7 @@ export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
 	callbacks: ProcaptchaCallbacks;
+	i18n?: Ti18n;
 	frictionlessState?: FrictionlessState;
 	// display an error message
 	errorMessage?: string;

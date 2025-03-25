@@ -14,7 +14,7 @@
 
 import createCache, { type EmotionCache } from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
-import { loadI18next } from "@prosopo/locale";
+import type { Ti18n } from "@prosopo/locale";
 import {
 	getDefaultCallbacks,
 	setUserCallbacks,
@@ -53,6 +53,7 @@ class CaptchaRenderer {
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2: boolean,
 		invisible = false,
+		i18n: Ti18n,
 	): Root {
 		const callbacks = getDefaultCallbacks(container);
 		const captchaType =
@@ -84,6 +85,7 @@ class CaptchaRenderer {
 			{
 				config: config,
 				callbacks: callbacks,
+				i18n: i18n,
 			},
 		);
 
@@ -128,11 +130,9 @@ class CaptchaRenderer {
 		emotionCache: EmotionCache,
 		captchaComponent: ReactNode,
 	): void {
-		loadI18next(false).then((i18n) => {
-			reactRoot.render(
-				<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>,
-			);
-		});
+		reactRoot.render(
+			<CacheProvider value={emotionCache}>{captchaComponent}</CacheProvider>,
+		);
 	}
 }
 

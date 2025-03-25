@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { loadI18next } from "@prosopo/locale";
+import type { Ti18n } from "@prosopo/locale";
 import { CaptchaType, type ProcaptchaRenderOptions } from "@prosopo/types";
 import {
 	createWidgetSkeleton,
@@ -23,10 +26,18 @@ import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
 class WidgetFactory {
 	private captchaRenderer: CaptchaRenderer | null = null;
+	private _i18n: Ti18n | null = null;
 
 	public constructor(
 		private readonly widgetThemeResolver: WidgetThemeResolver,
 	) {}
+
+	get i18n(): Ti18n {
+		if (this._i18n === null) {
+			throw new Error("I18n is not initialized");
+		}
+		return this._i18n;
+	}
 
 	public async createWidgets(
 		containers: Element[],
@@ -86,20 +97,25 @@ class WidgetFactory {
 			renderOptions,
 			isWeb2,
 			invisible,
+			this.i18n,
 		);
 
 		return captchaRoot;
 	}
 
 	protected async getCaptchaRenderer(): Promise<CaptchaRenderer> {
-		if (null === this.captchaRenderer) {
-			this.captchaRenderer = await this.createCaptchaRenderer();
+		if (this._i18n === null) {
+			this._i18n = await loadI18next(false);
+		}
+
+		if (this.captchaRenderer === null) {
+			this.captchaRenderer = await this.createCaptchaRenderer(this.i18n);
 		}
 
 		return this.captchaRenderer;
 	}
 
-	protected async createCaptchaRenderer(): Promise<CaptchaRenderer> {
+	protected async createCaptchaRenderer(i18n: Ti18n): Promise<CaptchaRenderer> {
 		const CaptchaRenderer = (await import("./captcha/captchaRenderer.js"))
 			.CaptchaRenderer;
 
@@ -107,7 +123,7 @@ class WidgetFactory {
 			await import("./captcha/captchaComponentProvider.js")
 		).CaptchaComponentProvider;
 
-		return new CaptchaRenderer(new CaptchaComponentProvider());
+		return new CaptchaRenderer(new CaptchaComponentProvider(i18n));
 	}
 }
 

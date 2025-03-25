@@ -72,6 +72,7 @@ export const ProcaptchaFrictionless = ({
 	config,
 	callbacks,
 	restart,
+	i18n,
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
@@ -138,6 +139,7 @@ export const ProcaptchaFrictionless = ({
 							config={config}
 							callbacks={callbacks}
 							frictionlessState={frictionlessState}
+							i18n={i18n}
 						/>,
 					);
 				} else {
@@ -146,6 +148,7 @@ export const ProcaptchaFrictionless = ({
 							config={config}
 							callbacks={callbacks}
 							frictionlessState={frictionlessState}
+							i18n={i18n}
 						/>,
 					);
 
