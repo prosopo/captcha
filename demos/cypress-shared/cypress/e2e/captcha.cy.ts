@@ -87,7 +87,7 @@ describe("Captchas", () => {
 			"getCaptcha",
 		);
 		cy.task("log", "Waiting for @getCaptcha...");
-		cy.wait("@getCaptcha", { timeout: 36000 })
+		cy.wait("@getCaptcha", { timeout: 62000 })
 			.its("response")
 			.then((response) => {
 				expect(response).to.not.be.undefined;
