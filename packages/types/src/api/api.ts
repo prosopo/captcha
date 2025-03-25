@@ -1,3 +1,4 @@
+import type { IUserSettings, Tier } from "../client/index.js";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +15,7 @@
 import type { CaptchaSolution } from "../datasets/index.js";
 import type { ProcaptchaToken, StoredEvents } from "../procaptcha/index.js";
 import type {
+	ApiResponse,
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
 	GetPowCaptchaResponse,
@@ -62,4 +64,21 @@ export interface ProviderApiInterface {
 	): Promise<UpdateProviderClientsResponse>;
 	getProviderStatus(): Promise<ProviderRegistered>;
 	getProviderDetails(): Promise<Provider>;
+	registerSiteKey(
+		siteKey: string,
+		tier: Tier,
+		settings: IUserSettings,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse>;
+	updateDetectorKey(
+		detectorKey: string,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse>;
+	removeDetectorKey(
+		detectorKey: string,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse>;
 }
