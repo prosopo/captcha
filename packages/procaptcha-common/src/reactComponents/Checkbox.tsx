@@ -96,6 +96,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 	};
 	const [hover, setHover] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const stopLoading = () => setLoading(false);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
@@ -143,9 +144,13 @@ export const Checkbox: FC<CheckboxProps> = ({
 						e.stopPropagation();
 						setLoading(true);
 						setHover(false);
-						onChange().then(() => {
-							setLoading(false);
-						});
+						(async () => {
+							try {
+								await onChange();
+							} finally {
+								setLoading(false);
+							}
+						})();
 					}}
 					checked={checked}
 					style={checkboxStyle}
