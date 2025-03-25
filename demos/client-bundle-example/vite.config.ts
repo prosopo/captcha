@@ -12,30 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
+import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import navigationInjector from "./src/plugins/navigation-injector.js";
-import path from "path";
-import fs from "fs";
 
 // Function to copy contents of a directory to another directory
 function copyDirContents(src: string, dest: string) {
-    if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
-    }
+	if (!fs.existsSync(dest)) {
+		fs.mkdirSync(dest, { recursive: true });
+	}
 
-    const entries = fs.readdirSync(src, { withFileTypes: true });
+	const entries = fs.readdirSync(src, { withFileTypes: true });
 
-    for (const entry of entries) {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
+	for (const entry of entries) {
+		const srcPath = path.join(src, entry.name);
+		const destPath = path.join(dest, entry.name);
 
-        if (entry.isDirectory()) {
-            copyDirContents(srcPath, destPath);
-        } else {
-            fs.copyFileSync(srcPath, destPath);
-        }
-    }
+		if (entry.isDirectory()) {
+			copyDirContents(srcPath, destPath);
+		} else {
+			fs.copyFileSync(srcPath, destPath);
+		}
+	}
 }
 
 export default defineConfig(({ command, mode }) => {
@@ -67,15 +67,33 @@ export default defineConfig(({ command, mode }) => {
 			emptyOutDir: true,
 			rollupOptions: {
 				input: {
-					index: path.resolve(__dirname, 'src/index.html'),
-					'invisible-pow-explicit': path.resolve(__dirname, 'src/invisible-pow-explicit.html'),
-					'invisible-image-explicit': path.resolve(__dirname, 'src/invisible-image-explicit.html'),
-					'invisible-pow-implicit': path.resolve(__dirname, 'src/invisible-pow-implicit.html'),
-					'invisible-image-implicit': path.resolve(__dirname, 'src/invisible-image-implicit.html'),
-					'pow': path.resolve(__dirname, 'src/pow.html'),
-					'frictionless': path.resolve(__dirname, 'src/frictionless.html'),
-					'invisible-frictionless-implicit': path.resolve(__dirname, 'src/invisible-frictionless-implicit.html'),
-					'invisible-frictionless-explicit': path.resolve(__dirname, 'src/invisible-frictionless-explicit.html'),
+					index: path.resolve(__dirname, "src/index.html"),
+					"invisible-pow-explicit": path.resolve(
+						__dirname,
+						"src/invisible-pow-explicit.html",
+					),
+					"invisible-image-explicit": path.resolve(
+						__dirname,
+						"src/invisible-image-explicit.html",
+					),
+					"invisible-pow-implicit": path.resolve(
+						__dirname,
+						"src/invisible-pow-implicit.html",
+					),
+					"invisible-image-implicit": path.resolve(
+						__dirname,
+						"src/invisible-image-implicit.html",
+					),
+					pow: path.resolve(__dirname, "src/pow.html"),
+					frictionless: path.resolve(__dirname, "src/frictionless.html"),
+					"invisible-frictionless-implicit": path.resolve(
+						__dirname,
+						"src/invisible-frictionless-implicit.html",
+					),
+					"invisible-frictionless-explicit": path.resolve(
+						__dirname,
+						"src/invisible-frictionless-explicit.html",
+					),
 				},
 			},
 			write: false,
@@ -83,13 +101,13 @@ export default defineConfig(({ command, mode }) => {
 		plugins: [
 			navigationInjector(),
 			{
-				name: 'copy-files',
+				name: "copy-files",
 				closeBundle() {
-					const srcDir = path.resolve(__dirname, 'src');
-					const destDir = path.resolve(__dirname, 'dist');
+					const srcDir = path.resolve(__dirname, "src");
+					const destDir = path.resolve(__dirname, "dist");
 					copyDirContents(srcDir, destDir);
-				}
-			}
-		]
+				},
+			},
+		],
 	} as UserConfig;
 });
