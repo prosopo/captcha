@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
+import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import navigationInjector from "./src/plugins/navigation-injector.js";
-import path from "path";
-import fs from "fs";
 
 // Get all HTML files in the src directory
-const htmlFiles = fs.readdirSync(path.resolve(__dirname, "src"))
-    .filter(file => file.endsWith('.html'))
-    .reduce((acc, file) => {
-        acc[path.parse(file).name] = path.resolve(__dirname, "src", file);
-        return acc;
-    }, {} as Record<string, string>);
+const htmlFiles = fs
+	.readdirSync(path.resolve(__dirname, "src"))
+	.filter((file) => file.endsWith(".html"))
+	.reduce(
+		(acc, file) => {
+			acc[path.parse(file).name] = path.resolve(__dirname, "src", file);
+			return acc;
+		},
+		{} as Record<string, string>,
+	);
 
 export default defineConfig(({ command, mode }) => {
 	loadEnv();
