@@ -109,13 +109,13 @@ class WidgetFactory {
 		}
 
 		if (this.captchaRenderer === null) {
-			this.captchaRenderer = await this.createCaptchaRenderer(this.i18n);
+			this.captchaRenderer = await this.createCaptchaRenderer();
 		}
 
 		return this.captchaRenderer;
 	}
 
-	protected async createCaptchaRenderer(i18n: Ti18n): Promise<CaptchaRenderer> {
+	protected async createCaptchaRenderer(): Promise<CaptchaRenderer> {
 		const CaptchaRenderer = (await import("./captcha/captchaRenderer.js"))
 			.CaptchaRenderer;
 
@@ -123,7 +123,7 @@ class WidgetFactory {
 			await import("./captcha/captchaComponentProvider.js")
 		).CaptchaComponentProvider;
 
-		return new CaptchaRenderer(new CaptchaComponentProvider(i18n));
+		return new CaptchaRenderer(new CaptchaComponentProvider());
 	}
 }
 

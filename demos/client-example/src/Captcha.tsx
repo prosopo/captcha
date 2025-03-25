@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { loadI18next } from "@prosopo/locale";
+import type { Ti18n } from "@prosopo/locale";
 import { CaptchaComponentProvider } from "@prosopo/procaptcha-bundle/components";
 import { CaptchaType, type ProcaptchaToken } from "@prosopo/types";
 import { useEffect, useRef, useState } from "react";
@@ -35,6 +37,7 @@ export function Captcha(props: CaptchProps) {
 	const [config, setConfig] = useState(
 		configs[props.captchaType || CaptchaType.frictionless],
 	);
+	const [i18n, setI18n] = useState<Ti18n | null>(null);
 
 	const onHuman = async (procaptchaToken: ProcaptchaToken) => {
 		console.log("onHuman", procaptchaToken);
@@ -49,6 +52,12 @@ export function Captcha(props: CaptchProps) {
 		setConfig(configs[props.captchaType || CaptchaType.frictionless]);
 	}, [props.captchaType]);
 
+	useEffect(() => {
+		loadI18next(false).then((i18n) => {
+			setI18n(i18n);
+		});
+	}, []);
+
 	return (
 		<div>
 			{new CaptchaComponentProvider().getCaptchaComponent(
@@ -61,6 +70,7 @@ export function Captcha(props: CaptchProps) {
 						onHuman,
 						onFailed,
 					},
+					i18n: i18n || undefined,
 				},
 			)}
 		</div>

@@ -21,7 +21,7 @@ import type {
 interface CaptchaProps {
 	config: ProcaptchaClientConfigInput;
 	callbacks: ProcaptchaCallbacks;
-	i18n: Ti18n;
+	i18n?: Ti18n;
 }
 
 export type { CaptchaProps };
