@@ -72,13 +72,21 @@ describe("Captchas", () => {
 			expect(response.status).to.equal(200);
 		});
 		cy.visit(Cypress.env("default_page"));
+
+		cy.task("log", "Clicking the first div...");
 		cy.get("div").first().click();
+
 		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
+
+		cy.task("log", "Checking if checkbox is visible...");
 		checkbox.first().should("be.visible");
 		checkbox.first().click();
+
+		cy.task("log", "Intercepting POST request...");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"getCaptcha",
 		);
+		cy.task("log", "Waiting for @getCaptcha...");
 		cy.wait("@getCaptcha", { timeout: 36000 })
 			.its("response")
 			.then((response) => {
