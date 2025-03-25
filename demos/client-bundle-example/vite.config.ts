@@ -38,6 +38,44 @@ function copyDirContents(src: string, dest: string) {
 	}
 }
 
+// This is like close and copy but for output /dist/src to just /dist
+function moveDirectoryContents(srcDir: string, destDir: string, deleteSource = false) {
+	if (!fs.existsSync(srcDir)) {
+		return;
+	}
+
+	if (!fs.existsSync(destDir)) {
+		fs.mkdirSync(destDir, { recursive: true });
+	}
+
+	const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+
+	for (const entry of entries) {
+		const srcPath = path.join(srcDir, entry.name);
+		const destPath = path.join(destDir, entry.name);
+
+		if (entry.isDirectory()) {
+			moveDirectoryContents(srcPath, destPath, deleteSource);
+			if (deleteSource) {
+				try {
+					fs.rmdirSync(srcPath);
+				} catch (err) {
+					console.warn(`Could not remove directory ${srcPath}:`, err);
+				}
+			}
+		} else {
+			try {
+				fs.copyFileSync(srcPath, destPath);
+				if (deleteSource) {
+					fs.unlinkSync(srcPath);
+				}
+			} catch (err) {
+				console.warn(`Error moving file ${srcPath} to ${destPath}:`, err);
+			}
+		}
+	}
+}
+
 export default defineConfig(({ command, mode }) => {
 	loadEnv();
 	return {
@@ -96,16 +134,43 @@ export default defineConfig(({ command, mode }) => {
 					),
 				},
 			},
-			write: false,
 		},
 		plugins: [
 			navigationInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {
-					const srcDir = path.resolve(__dirname, "src");
-					const destDir = path.resolve(__dirname, "dist");
-					copyDirContents(srcDir, destDir);
+					// This runs after all other plugins have processed files
+					console.log("Copying additional files from src to dist...");
+					// Only copy assets and other non-HTML files since HTML files are processed by Vite
+					const srcAssetsDir = path.resolve(__dirname, "src/assets");
+					const destAssetsDir = path.resolve(__dirname, "dist/assets");
+					if (fs.existsSync(srcAssetsDir)) {
+						copyDirContents(srcAssetsDir, destAssetsDir);
+					}
+					
+					// Copy any other necessary directories
+					const srcPluginsDir = path.resolve(__dirname, "src/plugins");
+					const destPluginsDir = path.resolve(__dirname, "dist/plugins");
+					if (fs.existsSync(srcPluginsDir)) {
+						copyDirContents(srcPluginsDir, destPluginsDir);
+					}
+
+					// Final step: move any content from dist/src to dist root
+					const distSrcDir = path.resolve(__dirname, "dist/src");
+					const distDir = path.resolve(__dirname, "dist");
+					if (fs.existsSync(distSrcDir)) {
+						console.log("Moving files from dist/src to dist root...");
+						moveDirectoryContents(distSrcDir, distDir, true);
+						
+						// Try to remove the now-empty dist/src directory
+						try {
+							fs.rmdirSync(distSrcDir);
+							console.log("Removed empty dist/src directory");
+						} catch (err) {
+							console.warn("Could not remove dist/src directory:", err);
+						}
+					}
 				},
 			},
 		],

@@ -287,17 +287,6 @@ export default function navigationInjector(): Plugin {
     </script>
   `;
 
-	// Function to check if a file exists
-	const fileExists = (filePath: string): boolean => {
-		try {
-			// For development only - assuming files in src directory
-			const srcPath = path.resolve(process.cwd(), "src", filePath);
-			return fs.existsSync(srcPath);
-		} catch (err) {
-			return false;
-		}
-	};
-
 	return {
 		name: "navigation-injector",
 		transformIndexHtml: {
@@ -308,15 +297,22 @@ export default function navigationInjector(): Plugin {
 					? normalizePath(path.relative(process.cwd(), ctx.filename))
 					: "";
 
-				// Extract the page path relative to src directory
-				const srcDir = "src/";
+				// Extract the page path relative to src or dist directory
 				let pagePath = "";
+				const srcDir = "src/";
+				const distDir = "dist/";
 
 				if (relativePath.includes(srcDir)) {
 					pagePath = relativePath.substring(
 						relativePath.indexOf(srcDir) + srcDir.length,
 					);
+				} else if (relativePath.includes(distDir)) {
+					pagePath = relativePath.substring(
+						relativePath.indexOf(distDir) + distDir.length,
+					);
 				}
+
+				console.log(`Processing file: ${relativePath}, pagePath: ${pagePath}`);
 
 				// Build navigation structure
 				const standardNav = buildCaptchaNavGroup(
@@ -362,12 +358,18 @@ export default function navigationInjector(): Plugin {
 				// Replace environment variables
 				const bundleUrl =
 					process.env.VITE_BUNDLE_URL ||
-					"https://js.prosopo.io/js/procaptcha.bundle.js";
-				if (!bundleUrl) {
-					console.error("VITE_BUNDLE_URL is not defined");
-					return html;
-				}
+					"./assets/procaptcha.bundle.js";
+				
+				console.log(`Using bundle URL: ${bundleUrl}`);
 				html = html.replace(/%VITE_BUNDLE_URL%/g, bundleUrl);
+
+				// Replace other environment variables
+				if (process.env.PROSOPO_SITE_KEY) {
+					html = html.replace(/%PROSOPO_SITE_KEY%/g, process.env.PROSOPO_SITE_KEY);
+				}
+				if (process.env.PROSOPO_SERVER_URL) {
+					html = html.replace(/%PROSOPO_SERVER_URL%/g, process.env.PROSOPO_SERVER_URL);
+				}
 
 				// Inject navigation after <body> tag and script before </body>
 				if (html.includes("<body>") && html.includes("</body>")) {
