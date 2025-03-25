@@ -81,25 +81,29 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "2.1.1",
+		"@vitest/coverage-v8": "2.1.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
 		"htmlhint": "1.1.4",
 		"husky": "9.1.7",
-		"markdownlint-cli": "0.41.0",
+		"markdownlint-cli": "0.44.0",
 		"node-stdlib-browser": "1.2.1",
 		"npm-check-updates": "17.1.1",
 		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.19.3",
 		"typescript": "5.6.2",
-		"vite": "5.4.6",
+		"vite": "5.4.15",
 		"vitest": "2.1.1"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
@@ -141,6 +145,9 @@
 	],
 	"license": "Apache-2.0",
 	"dependencies": {
+		"@typegoose/auto-increment": "4.12.0",
+		"axios": "1.8.4",
+		"esbuild": "0.25.1",
 		"express": "4.21.2"
 	}
 }
