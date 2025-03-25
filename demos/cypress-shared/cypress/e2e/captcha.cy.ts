@@ -47,6 +47,8 @@ describe("Captchas", () => {
 			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
+			// trigger a click to trigger Frictionless in React Component
+			cy.get("div").first().click();
 		});
 	});
 
