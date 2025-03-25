@@ -52,7 +52,7 @@ class CaptchaRenderer {
 		container: HTMLElement,
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2: boolean,
-		invisible = false,
+		invisible,
 		i18n: Ti18n,
 	): Root {
 		const callbacks = getDefaultCallbacks(container);
