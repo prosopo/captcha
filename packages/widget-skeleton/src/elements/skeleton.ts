@@ -56,7 +56,9 @@ export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
  * @param isDevelopmentMode - Whether the app is in development mode
  */
 function getWidgetMarkup(isDevelopmentMode: boolean): string {
-	const buttonDataAttribute = isDevelopmentMode ? 'data-cy="button-human"' : "";
+	const buttonDataAttribute = isDevelopmentMode
+		? 'data-cy="captcha-checkbox"'
+		: "";
 
 	return `
 <div class="widget__outer">

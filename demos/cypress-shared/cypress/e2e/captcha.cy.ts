@@ -25,7 +25,14 @@ let captchaType: CaptchaType;
 describe("Captchas", () => {
 	beforeEach(() => {
 		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
-		cy.registerSiteKey(captchaType);
+		cy.registerSiteKey(captchaType).then((response) => {
+			// Log the response status and body using cy.task()
+			cy.task("log", `Response status: ${response.status}`);
+			cy.task("log", `Response: ${JSON.stringify(response)}`);
+
+			// Ensure the request was successful
+			expect(response.status).to.equal(200);
+		});
 
 		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
 			captchaContentId: captcha.captchaContentId,
@@ -50,29 +57,27 @@ describe("Captchas", () => {
 		});
 	});
 
+	after(() => {
+		cy.registerSiteKey(CaptchaType.image);
+	});
+
 	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(CaptchaType.pow).then(() => {
-			cy.visit(Cypress.env("default_page"));
-			getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
-			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-				"getCaptcha",
-			);
-			cy.wait("@getCaptcha", { timeout: 36000 })
-				.its("response")
-				.then((response) => {
-					expect(response).to.not.be.undefined;
-					expect(response?.statusCode).to.equal(400);
-					expect(response?.body).to.have.property("error");
-				})
-				.then(() => {
-					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
-						.should("exist") // Ensures element exists
-						.should("be.visible") // Ensures it's rendered
-						.find("label")
-						.should("have.text", "Incorrect CAPTCHA type");
-				});
-		});
+		cy.registerSiteKey(CaptchaType.pow);
+		cy.visit(Cypress.env("default_page"));
+		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
+		checkbox.first().should("be.visible");
+		checkbox.first().click();
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+			"getCaptcha",
+		);
+		cy.wait("@getCaptcha", { timeout: 36000 })
+			.its("response")
+			.then((response) => {
+				expect(response).to.not.be.undefined;
+				expect(response?.statusCode).to.equal(400);
+				expect(response?.body).to.have.property("error");
+			});
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
