@@ -96,8 +96,8 @@ class WidgetFactory {
 			widgetInteractiveArea,
 			renderOptions,
 			isWeb2,
-			invisible,
 			this.i18n,
+			invisible,
 		);
 
 		return captchaRoot;

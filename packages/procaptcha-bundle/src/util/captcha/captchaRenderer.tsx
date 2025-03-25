@@ -52,8 +52,8 @@ class CaptchaRenderer {
 		container: HTMLElement,
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2: boolean,
-		invisible,
 		i18n: Ti18n,
+		invisible = false,
 	): Root {
 		const callbacks = getDefaultCallbacks(container);
 		const captchaType =
