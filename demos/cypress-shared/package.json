@@ -10,7 +10,11 @@
 	"dependencies": {
 		"@prosopo/types": "2.5.1",
 		"@prosopo/util": "2.5.1",
-		"express": "4.21.2"
+		"@typegoose/auto-increment": "4.12.0",
+		"axios": "1.8.4",
+		"esbuild": "0.25.1",
+		"express": "4.21.2",
+		"markdownlint-cli": "0.44.0"
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
@@ -18,16 +22,16 @@
 		"@prosopo/datasets": "2.5.1",
 		"@prosopo/types-database": "2.5.1",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "2.1.1",
+		"@vitest/coverage-v8": "2.1.9",
 		"concurrently": "9.0.1",
 		"cypress": "13.14.2",
 		"cypress-vite": "1.5.0",
 		"del-cli": "6.0.0",
 		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.19.3",
 		"typescript": "5.6.2",
-		"vite": "5.4.6",
+		"vite": "5.4.15",
 		"vite-plugin-node-polyfills": "0.22.0",
 		"vitest": "2.1.1"
 	},

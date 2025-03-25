@@ -26,6 +26,10 @@
 		"@prosopo/api-route": "2.5.1",
 		"@prosopo/common": "2.5.1",
 		"@prosopo/types": "2.5.1",
+		"@typegoose/auto-increment": "4.12.0",
+		"@vitest/coverage-v8": "2.1.9",
+		"axios": "1.8.4",
+		"esbuild": "0.25.1",
 		"ip-address": "10.0.1",
 		"mongoose": "8.6.2",
 		"zod": "3.23.8"
@@ -33,7 +37,7 @@
 	"devDependencies": {
 		"mongodb": "6.9.0",
 		"mongodb-memory-server": "10.0.0",
-		"vite": "5.4.6",
+		"vite": "5.4.15",
 		"vitest": "2.1.1",
 		"yargs": "17.7.2"
 	},
