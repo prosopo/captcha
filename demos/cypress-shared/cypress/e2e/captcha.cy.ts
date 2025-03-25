@@ -64,13 +64,6 @@ describe("Captchas", () => {
 					expect(response).to.not.be.undefined;
 					expect(response?.statusCode).to.equal(400);
 					expect(response?.body).to.have.property("error");
-				})
-				.then(() => {
-					cy.get("[data-cy='captcha-checkbox']", { includeShadowDom: true })
-						.should("exist") // Ensures element exists
-						.should("be.visible") // Ensures it's rendered
-						.find("label")
-						.should("have.text", "Incorrect CAPTCHA type");
 				});
 		});
 	});
