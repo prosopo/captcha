@@ -357,18 +357,23 @@ export default function navigationInjector(): Plugin {
 
 				// Replace environment variables
 				const bundleUrl =
-					process.env.VITE_BUNDLE_URL ||
-					"./assets/procaptcha.bundle.js";
-				
+					process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js";
+
 				console.log(`Using bundle URL: ${bundleUrl}`);
 				html = html.replace(/%VITE_BUNDLE_URL%/g, bundleUrl);
 
 				// Replace other environment variables
 				if (process.env.PROSOPO_SITE_KEY) {
-					html = html.replace(/%PROSOPO_SITE_KEY%/g, process.env.PROSOPO_SITE_KEY);
+					html = html.replace(
+						/%PROSOPO_SITE_KEY%/g,
+						process.env.PROSOPO_SITE_KEY,
+					);
 				}
 				if (process.env.PROSOPO_SERVER_URL) {
-					html = html.replace(/%PROSOPO_SERVER_URL%/g, process.env.PROSOPO_SERVER_URL);
+					html = html.replace(
+						/%PROSOPO_SERVER_URL%/g,
+						process.env.PROSOPO_SERVER_URL,
+					);
 				}
 
 				// Inject navigation after <body> tag and script before </body>

@@ -39,7 +39,11 @@ function copyDirContents(src: string, dest: string) {
 }
 
 // This is like close and copy but for output /dist/src to just /dist
-function moveDirectoryContents(srcDir: string, destDir: string, deleteSource = false) {
+function moveDirectoryContents(
+	srcDir: string,
+	destDir: string,
+	deleteSource = false,
+) {
 	if (!fs.existsSync(srcDir)) {
 		return;
 	}
@@ -148,7 +152,7 @@ export default defineConfig(({ command, mode }) => {
 					if (fs.existsSync(srcAssetsDir)) {
 						copyDirContents(srcAssetsDir, destAssetsDir);
 					}
-					
+
 					// Copy any other necessary directories
 					const srcPluginsDir = path.resolve(__dirname, "src/plugins");
 					const destPluginsDir = path.resolve(__dirname, "dist/plugins");
@@ -162,7 +166,7 @@ export default defineConfig(({ command, mode }) => {
 					if (fs.existsSync(distSrcDir)) {
 						console.log("Moving files from dist/src to dist root...");
 						moveDirectoryContents(distSrcDir, distDir, true);
-						
+
 						// Try to remove the now-empty dist/src directory
 						try {
 							fs.rmdirSync(distSrcDir);
