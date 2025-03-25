@@ -140,6 +140,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					aria-label={labelText}
 					onChange={() => {
 						setLoading(true);
+						setHover(false);
 						onChange().then(() => {
 							setLoading(false);
 						});
