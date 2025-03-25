@@ -96,7 +96,6 @@ export const Checkbox: FC<CheckboxProps> = ({
 	};
 	const [hover, setHover] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const stopLoading = () => setLoading(false);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
@@ -115,7 +114,13 @@ export const Checkbox: FC<CheckboxProps> = ({
 	const id = generateRandomId();
 
 	return (
-		<span style={{ display: "inline-flex", alignItems: "center" }}>
+		<span
+			style={{
+				display: "inline-flex",
+				alignItems: "center",
+				minHeight: "58px",
+			}}
+		>
 			{loading ? (
 				<div className="checkbox__outer">
 					<div className="checkbox__wrapper">
