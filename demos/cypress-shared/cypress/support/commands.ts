@@ -189,7 +189,7 @@ function registerSiteKey(captchaType: CaptchaType) {
 			console.log("cType", captchaType);
 			const settings: IUserSettings = {
 				captchaType: captchaType,
-				domains: ["0.0.0.0", "localhost"],
+				domains: ["0.0.0.0", "localhost", "*"],
 				frictionlessThreshold: 0.5,
 				powDifficulty: 2,
 			};
@@ -205,12 +205,16 @@ function registerSiteKey(captchaType: CaptchaType) {
 					tier: Tier.Free,
 					settings,
 				} as RegisterSitekeyBodyTypeOutput),
-			}).then((response) => {
-				expect(response.status).to.equal(200);
-				response.json().then((data) => {
-					console.log("data", data.status);
+			})
+				.then((response) => {
+					expect(response.status).to.equal(200);
+					response.json().then((data) => {
+						console.log("data", data.status);
+					});
+				})
+				.catch((error) => {
+					throw new Error(error);
 				});
-			});
 		});
 	});
 }
