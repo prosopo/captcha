@@ -357,7 +357,7 @@ export default function navigationInjector(): Plugin {
 
 				// Replace environment variables
 				const bundleUrl =
-					process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js";
+					process.env.VITE_BUNDLE_URL || "https://staging-js.prosopo.io/js/procaptcha.bundle.js";
 
 				console.log(`Using bundle URL: ${bundleUrl}`);
 				html = html.replace(/%VITE_BUNDLE_URL%/g, bundleUrl);
