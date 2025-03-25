@@ -65,7 +65,9 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 		"getCaptcha",
 	);
-	getWidgetElement(checkboxClass, { timeout: 24000 }).first().click();
+	getWidgetElement(checkboxClass, { timeout: 24000 })
+		.first()
+		.click({ force: true });
 
 	return cy
 		.wait("@getCaptcha", { timeout: 36000 })

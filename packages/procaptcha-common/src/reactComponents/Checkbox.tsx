@@ -142,6 +142,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					aria-live={"assertive"}
 					aria-label={labelText}
 					onChange={(e) => {
+						e.preventDefault();
 						e.stopPropagation();
 						setLoading(true);
 						onChange().then(() => {
