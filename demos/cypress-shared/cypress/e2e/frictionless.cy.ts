@@ -72,9 +72,9 @@ describe("Captchas", () => {
 			expect(response.status).to.equal(200);
 		});
 		cy.visit(Cypress.env("default_page"));
-
-		cy.task("log", "Clicking the first div...");
-		cy.get("div").first().click();
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+			"getCaptcha",
+		);
 
 		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
 
@@ -82,9 +82,7 @@ describe("Captchas", () => {
 		checkbox.first().should("be.visible");
 
 		cy.task("log", "Intercepting POST request...");
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-			"getCaptcha",
-		);
+
 		checkbox.first().click();
 
 		cy.task("log", "Waiting for @getCaptcha...");
@@ -100,8 +98,6 @@ describe("Captchas", () => {
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
-		cy.get("div").first().click();
-
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
 			"frictionless",
 		);
