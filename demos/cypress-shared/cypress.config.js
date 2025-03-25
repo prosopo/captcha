@@ -52,6 +52,13 @@ export default defineConfig({
 					],
 				}),
 			);
+			// Add task event for logging to the terminal
+			on("task", {
+				log(message) {
+					console.log(message);
+					return null; // Cypress requires tasks to return something
+				},
+			});
 		},
 		excludeSpecPattern: ["cypress/e2e/**/frictionless.cy.ts"],
 	},
