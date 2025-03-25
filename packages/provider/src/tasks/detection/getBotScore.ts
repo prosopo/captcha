@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import { LogLevel, getLogger } from "@prosopo/common";
 import getBotScoreFromPayload from "./decodePayload.js";
 
 export const getBotScore = async (
