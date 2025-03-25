@@ -28,7 +28,7 @@ describe("Captchas", () => {
 		cy.registerSiteKey(captchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response)}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
 			// Ensure the request was successful
 			expect(response.status).to.equal(200);
@@ -63,8 +63,16 @@ describe("Captchas", () => {
 
 	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(CaptchaType.pow);
+		cy.registerSiteKey(CaptchaType.pow).then((response) => {
+			// Log the response status and body using cy.task()
+			cy.task("log", `Response status: ${response.status}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+
+			// Ensure the request was successful
+			expect(response.status).to.equal(200);
+		});
 		cy.visit(Cypress.env("default_page"));
+		cy.get("div").first().click();
 		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
 		checkbox.first().should("be.visible");
 		checkbox.first().click();
