@@ -82,15 +82,14 @@
             <input type="email" id="email" name="email" placeholder="Your email" required />
         </div>
         
-        <!-- Submit button with Procaptcha attributes -->
-        <!-- The p-procaptcha class and data-sitekey attribute are required -->
-        <button 
-            class="p-procaptcha" 
-            data-sitekey="%PROSOPO_SITE_KEY%" 
-            data-callback="onSubmit"
+        <!-- Invisible Procaptcha -->
+        <div 
+            class="procaptcha" 
+            data-sitekey="%PROSOPO_SITE_KEY_POW%" 
+            data-callback="onSubmit" 
+            data-size="invisible" 
             data-captcha-type="pow">
-            Submit
-        </button>
+        </div>
     </form>
     
     <div id="result"></div>
