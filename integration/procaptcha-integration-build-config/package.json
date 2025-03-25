@@ -8,11 +8,6 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js"
-    }
-  },
   "scripts": {
     "test": "echo \"No test specified\"",
     "clean": "tsc --build --clean",

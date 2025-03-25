@@ -12,21 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {
-	ProcaptchaOptions,
-	WidgetCallbacks,
-	WidgetCaptchaType,
-	WidgetTheme,
-} from "@prosopo/procaptcha-wrapper";
-import { WidgetCaptchaTypes, WidgetThemes } from "@prosopo/procaptcha-wrapper";
-import ProcaptchaComponent from "./procaptchaComponent.vue";
+import { IntegrationDemo } from "./integrationDemo.js";
 
-export {
-	type ProcaptchaOptions,
-	type WidgetTheme,
-	type WidgetCaptchaType,
-	type WidgetCallbacks,
-	WidgetThemes,
-	WidgetCaptchaTypes,
-	ProcaptchaComponent,
-};
+const integrationDemo = new IntegrationDemo();
+
+integrationDemo.render();

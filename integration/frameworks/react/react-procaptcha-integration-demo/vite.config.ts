@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteCommonJSConfig } from "@prosopo/config";
+import { createIntegrationViteConfig } from "@prosopo/procaptcha-integration-build-config";
+import react from "@vitejs/plugin-react";
 
-export default function () {
-	return ViteCommonJSConfig(
-		"react-procaptcha-wrapper",
-		path.resolve("./tsconfig.cjs.json"),
-	);
-}
+export default createIntegrationViteConfig({
+	name: "ReactProcaptchaIntegrationDemo",
+	directory: __dirname,
+	viteSettings: {
+		plugins: [react()],
+	},
+});

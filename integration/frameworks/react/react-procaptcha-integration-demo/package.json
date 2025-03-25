@@ -1,24 +1,18 @@
 {
 	"name": "@prosopo/react-procaptcha-integration-demo",
 	"version": "1.0.0",
-	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"dev": "npx vite dev --config vite.cjs.config.ts --port=9330"
+		"build": "npx vite build",
+		"dev": "npx vite dev --port=9330"
 	},
 	"dependencies": {
 		"@prosopo/react-procaptcha-wrapper": "1.0.0",
@@ -26,8 +20,8 @@
 		"react-dom": "18.3.1"
 	},
 	"devDependencies": {
-		"vite": "5.4.6",
-		"vitest": "2.1.1"
+		"@prosopo/procaptcha-integration-build-config": "1.0.0",
+		"@vitejs/plugin-react": "4.3.1"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

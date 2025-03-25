@@ -1,18 +1,13 @@
 {
   "name": "@prosopo/vue-procaptcha-integration-demo",
   "version": "1.0.0",
-  "main": "dist/index.js",
   "type": "module",
   "engines": {
     "node": "20",
     "npm": "10.8.2"
   },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/cjs/index.cjs"
-    }
-  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"No test specified\"",
     "clean": "tsc --build --clean",

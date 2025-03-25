@@ -16,7 +16,7 @@ import { ProcaptchaComponent } from "@prosopo/react-procaptcha-wrapper";
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-class ReactIntegrationDemo {
+class IntegrationDemo {
 	public render(): void {
 		const rootElement = document.querySelector("#root");
 
@@ -31,10 +31,13 @@ class ReactIntegrationDemo {
 	protected renderProcaptcha(rootElement: Element): void {
 		const reactRoot = ReactDOM.createRoot(rootElement);
 
+		// @ts-expect-error Env variables will be read by Vite
+		const siteKey = import.meta.env.VITE_PROCAPTCHA_SITE_KEY || "";
+
 		reactRoot.render(
 			<React.StrictMode>
 				<ProcaptchaComponent
-					siteKey="stub"
+					siteKey={siteKey}
 					captchaType={"image"}
 					callbacks={{
 						onVerified: (token: string): void => {
@@ -53,6 +56,4 @@ class ReactIntegrationDemo {
 	}
 }
 
-const reactIntegrationDemo = new ReactIntegrationDemo();
-
-reactIntegrationDemo.render();
+export { IntegrationDemo };

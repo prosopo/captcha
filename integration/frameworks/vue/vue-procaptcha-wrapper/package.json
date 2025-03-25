@@ -1,12 +1,13 @@
 {
   "name": "@prosopo/vue-procaptcha-wrapper",
   "version": "1.0.0",
-  "main": "dist/index.js",
   "type": "module",
   "engines": {
     "node": "20",
     "npm": "10.8.2"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"No test specified\"",
     "clean": "tsc --build --clean",
@@ -15,12 +16,12 @@
   "dependencies": {
     "@prosopo/procaptcha-wrapper": "1.0.0"
   },
+  "peerDependencies": {
+    "vue": "^3.5.13"
+  },
   "devDependencies": {
     "@prosopo/procaptcha-integration-build-config": "1.0.0",
     "@vitejs/plugin-vue": "5.2.3"
-  },
-  "peerDependencies": {
-    "vue": "^3.5.13"
   },
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
