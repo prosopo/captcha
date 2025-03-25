@@ -207,10 +207,13 @@ function registerSiteKey(captchaType: CaptchaType) {
 				} as RegisterSitekeyBodyTypeOutput),
 			})
 				.then((response) => {
-					expect(response.status).to.equal(200);
-					response.json().then((data) => {
-						console.log("data", data.status);
-					});
+					if (response.status !== 200) {
+						cy.log(`Request failed with status: ${response.status}`);
+						cy.log(`Response body: ${JSON.stringify(response.body)}`);
+						throw new Error(`Request failed with status ${response.status}`);
+					}
+					cy.log(`Response status: ${response.status}`);
+					cy.log(`Response data: ${JSON.stringify(response.body)}`);
 				})
 				.catch((error) => {
 					throw new Error(error);
