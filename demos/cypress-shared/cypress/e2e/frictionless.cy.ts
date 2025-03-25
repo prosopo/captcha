@@ -51,8 +51,7 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		captchaType = Cypress.env("CAPTCHA_TYPE") || "frictionless";
-		cy.registerSiteKey(captchaType);
+		cy.registerSiteKey(CaptchaType.image);
 	});
 
 	it("An error is returned if captcha type is set to pow and frictionless is used in the widget", () => {

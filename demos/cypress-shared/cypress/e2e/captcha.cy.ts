@@ -50,6 +50,10 @@ describe("Captchas", () => {
 		});
 	});
 
+	after(() => {
+		cy.registerSiteKey(CaptchaType.image);
+	});
+
 	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
 		cy.registerSiteKey(CaptchaType.pow).then(() => {

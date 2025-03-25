@@ -20,7 +20,7 @@ import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
-	type CaptchaType,
+	CaptchaType,
 	type IUserSettings,
 	type RegisterSitekeyBodyTypeOutput,
 	Tier,
@@ -58,6 +58,10 @@ describe("Captchas", () => {
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
 		});
+	});
+
+	after(() => {
+		cy.registerSiteKey(CaptchaType.image);
 	});
 
 	it("Selecting the correct images passes the captcha and signs up the user", () => {
