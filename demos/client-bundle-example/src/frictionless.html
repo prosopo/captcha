@@ -147,7 +147,7 @@
     const captchaContainer = document.getElementById('procaptcha-container')
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
     render(captchaContainer, {
-        siteKey: import.meta.env.PROSOPO_SITE_KEY,
+        siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
         captchaType: import.meta.env.CAPTCHA_TYPE || CaptchaType.frictionless,
         theme: 'dark',
         callback: onCaptchaVerified,
