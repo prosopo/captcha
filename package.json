@@ -85,8 +85,8 @@
 		"dev/*",
 		"packages/*",
 		"demos/*",
-		"integrations/*",
-		"integrations/*/*"
+		"integration/*",
+		"integration/frameworks/*/*"
 	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
