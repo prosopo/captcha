@@ -80,12 +80,13 @@ describe("Captchas", () => {
 
 		cy.task("log", "Checking if checkbox is visible...");
 		checkbox.first().should("be.visible");
-		checkbox.first().click();
 
 		cy.task("log", "Intercepting POST request...");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"getCaptcha",
 		);
+		checkbox.first().click();
+
 		cy.task("log", "Waiting for @getCaptcha...");
 		cy.wait("@getCaptcha", { timeout: 62000 })
 			.its("response")
