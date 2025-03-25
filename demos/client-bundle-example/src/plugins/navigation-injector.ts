@@ -53,12 +53,12 @@ export default function navigationInjector(): Plugin {
 		},
 		invisible: {
 			image: {
-				implicit: { path: "invisible-image-implicit.html", exists: false },
-				explicit: { path: "invisible-image-explicit.html", exists: false },
+				implicit: { path: "invisible-image-implicit.html", exists: true },
+				explicit: { path: "invisible-image-explicit.html", exists: true },
 			},
 			pow: {
-				implicit: { path: "invisible-pow-implicit.html", exists: false },
-				explicit: { path: "invisible-pow-explicit.html", exists: false },
+				implicit: { path: "invisible-pow-implicit.html", exists: true },
+				explicit: { path: "invisible-pow-explicit.html", exists: true },
 			},
 			frictionless: {
 				implicit: {
