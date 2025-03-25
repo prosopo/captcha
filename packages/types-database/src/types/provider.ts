@@ -64,7 +64,8 @@ export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
-const ONE_DAY = 60 * 60 * 24;
+const ONE_HOUR = 60 * 60;
+const ONE_DAY = ONE_HOUR * 24;
 const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
 
@@ -405,7 +406,7 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
-		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
+		createdAt: { type: Date, default: Date.now, expires: ONE_HOUR },
 	});
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
