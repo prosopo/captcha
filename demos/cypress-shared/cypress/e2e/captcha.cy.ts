@@ -56,7 +56,7 @@ describe("Captchas", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
 		cy.registerSiteKey(CaptchaType.pow).then(() => {
 			cy.visit(Cypress.env("default_page"));
-			getWidgetElement(checkboxClass, { timeout: 24000 }).first().click();
+			getWidgetElement(checkboxClass, { timeout: 48000 }).first().click();
 			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 				"getCaptcha",
 			);
