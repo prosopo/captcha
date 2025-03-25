@@ -33,6 +33,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
+	const [loading, setLoading] = useState(false);
 	const manager = Manager(
 		config,
 		state,
@@ -129,11 +130,19 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			</Modal>
 			<Checkbox
 				theme={theme}
-				onChange={manager.start}
+				onChange={async () => {
+					if (loading) {
+						return;
+					}
+					setLoading(true);
+					await manager.start();
+					setLoading(false);
+				}}
 				checked={state.isHuman}
 				labelText={t("WIDGET.I_AM_HUMAN")}
 				error={state.error}
 				aria-label="human checkbox"
+				loading={loading}
 			/>
 		</div>
 	);

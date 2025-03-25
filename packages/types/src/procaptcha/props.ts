@@ -33,7 +33,7 @@ export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
 	callbacks: ProcaptchaCallbacks;
-	i18n?: Ti18n;
+	i18n: Ti18n;
 	frictionlessState?: FrictionlessState;
 	// display an error message
 	errorMessage?: string;

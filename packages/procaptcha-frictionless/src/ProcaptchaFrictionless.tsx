@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { useTranslation } from "@prosopo/locale";
+import { loadI18next } from "@prosopo/locale";
 import {
 	Checkbox,
 	getDefaultEvents,
@@ -23,7 +23,6 @@ import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type FrictionlessState,
 	type ModeType,
-	ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
 } from "@prosopo/types";
@@ -35,8 +34,9 @@ const renderPlaceholder = (
 	theme: string | undefined,
 	mode: ModeType,
 	errorMessage: string | undefined,
+	translationFn: (key: string) => string,
+	loading: boolean,
 ) => {
-	const { t } = useTranslation();
 	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
 
 	if (mode === "invisible") {
@@ -48,9 +48,10 @@ const renderPlaceholder = (
 			theme={checkboxTheme}
 			onChange={async () => {}}
 			checked={false}
-			labelText={t("WIDGET.I_AM_HUMAN")}
+			labelText={translationFn("WIDGET.I_AM_HUMAN")}
 			error={errorMessage}
 			aria-label="human checkbox"
+			loading={loading}
 		/>
 	);
 };
@@ -78,8 +79,29 @@ export const ProcaptchaFrictionless = ({
 	const stateRef = useRef(defaultLoadingState(0));
 	const events = getDefaultEvents(callbacks);
 
+	useEffect(() => {
+		if (config.language) {
+			if (i18n) {
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
+			} else {
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
+			}
+		}
+	}, [i18n, config.language]);
+
 	const [componentToRender, setComponentToRender] = useState(
-		renderPlaceholder(config.theme, config.mode, stateRef.current.errorMessage),
+		renderPlaceholder(
+			config.theme,
+			config.mode,
+			stateRef.current.errorMessage,
+			i18n.t,
+			true,
+		),
 	);
 
 	const resetState = (attemptCount?: number) => {
@@ -94,6 +116,8 @@ export const ProcaptchaFrictionless = ({
 				config.theme,
 				config.mode,
 				errorMessage || "Cannot load CAPTCHA",
+				i18n.t,
+				false,
 			),
 		);
 	};

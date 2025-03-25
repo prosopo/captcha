@@ -31,6 +31,7 @@ interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	onChange: () => Promise<void>;
 	labelText: string;
 	error?: string;
+	loading: boolean;
 }
 
 const checkboxBefore = css`{
@@ -89,13 +90,13 @@ export const Checkbox: FC<CheckboxProps> = ({
 	checked,
 	labelText,
 	error,
+	loading,
 }: CheckboxProps) => {
 	const checkboxStyleBase: CSSProperties = {
 		...baseStyle,
 		border: `1px solid ${theme.palette.background.contrastText}`,
 	};
 	const [hover, setHover] = useState(false);
-	const [loading, setLoading] = useState(false);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
@@ -147,15 +148,8 @@ export const Checkbox: FC<CheckboxProps> = ({
 					onChange={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
-						setLoading(true);
 						setHover(false);
-						(async () => {
-							try {
-								await onChange();
-							} finally {
-								setLoading(false);
-							}
-						})();
+						onChange();
 					}}
 					checked={checked}
 					style={checkboxStyle}

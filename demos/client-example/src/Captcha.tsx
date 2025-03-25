@@ -58,6 +58,10 @@ export function Captcha(props: CaptchProps) {
 		});
 	}, []);
 
+	if (!i18n) {
+		return <div>Loading...</div>;
+	}
+
 	return (
 		<div>
 			{new CaptchaComponentProvider().getCaptchaComponent(
@@ -70,7 +74,7 @@ export function Captcha(props: CaptchProps) {
 						onHuman,
 						onFailed,
 					},
-					i18n: i18n || undefined,
+					i18n: i18n,
 				},
 			)}
 		</div>

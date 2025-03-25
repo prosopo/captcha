@@ -31,6 +31,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);
+	const [loading, setLoading] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
@@ -90,11 +91,19 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	return (
 		<Checkbox
 			checked={state.isHuman}
-			onChange={manager.current.start}
+			onChange={async () => {
+				if (loading) {
+					return;
+				}
+				setLoading(true);
+				await manager.current.start();
+				setLoading(false);
+			}}
 			theme={theme}
 			labelText={t("WIDGET.I_AM_HUMAN")}
 			error={state.error}
 			aria-label="human checkbox"
+			loading={loading}
 		/>
 	);
 };
