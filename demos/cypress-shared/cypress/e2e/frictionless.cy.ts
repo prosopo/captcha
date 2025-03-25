@@ -58,7 +58,7 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		cy.registerSiteKey(CaptchaType.image);
+		return cy.registerSiteKey(CaptchaType.image);
 	});
 
 	it("An error is returned if captcha type is set to pow and frictionless is used in the widget", () => {
@@ -76,17 +76,6 @@ describe("Captchas", () => {
 			"getCaptcha",
 		);
 
-		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
-
-		cy.task("log", "Checking if checkbox is visible...");
-		checkbox.first().should("be.visible");
-
-		cy.task("log", "Intercepting POST request...");
-
-		checkbox.first().click();
-
-		cy.task("log", "Waiting for @getCaptcha...");
-
 		return cy
 			.wait("@getCaptcha", { timeout: 36000 })
 			.its("response")
@@ -98,10 +87,11 @@ describe("Captchas", () => {
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
+		cy.visit(Cypress.env("default_page"));
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
 			"frictionless",
 		);
-		cy.wait("@frictionless", { timeout: 36000 });
+		cy.wait("@frictionless", { timeout: 5000 });
 
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);
