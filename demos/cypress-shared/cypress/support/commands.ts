@@ -24,6 +24,7 @@ import {
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { u8aToHex } from "@polkadot/util";
+import type { ApiEndpointResponse } from "@prosopo/api-route";
 import { getPairAsync } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
@@ -45,7 +46,10 @@ declare global {
 
 			elementExists(element: string): Chainable<Subject>;
 
-			registerSiteKey(captchaType?: CaptchaType): Cypress.Chainable<void>;
+			registerSiteKey(
+				captchaType?: CaptchaType,
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+			): Cypress.Chainable<Response<any>>;
 		}
 	}
 }
@@ -65,9 +69,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 		"getCaptcha",
 	);
-	getWidgetElement(checkboxClass, { timeout: 24000 })
-		.first()
-		.click({ force: true });
+	getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
 
 	return cy
 		.wait("@getCaptcha", { timeout: 36000 })
@@ -182,42 +184,39 @@ function elementExists(selector: string) {
 }
 
 function registerSiteKey(captchaType: CaptchaType) {
-	cy.then(() => {
-		const timestamp = new Date().getTime();
-		getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then((pair) => {
-			const signature = u8aToHex(pair.sign(timestamp.toString()));
-			const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+	const timestamp = new Date().getTime();
 
-			console.log("cType", captchaType);
-			const settings: IUserSettings = {
-				captchaType: captchaType,
-				domains: ["0.0.0.0", "localhost"],
-				frictionlessThreshold: 0.5,
-				powDifficulty: 2,
-			};
-			fetch(adminSiteKeyURL, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					signature: signature,
-					timestamp: timestamp.toString(),
-				},
-				body: JSON.stringify({
-					siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-					tier: Tier.Free,
-					settings,
-				} as RegisterSitekeyBodyTypeOutput),
-			})
-				.then((response) => {
-					expect(response.status).to.equal(200);
-					response.json().then((data) => {
-						console.log("data", data.status);
-					});
-				})
-				.catch((error) => {
-					console.error("Failed to register site key", error);
+	return cy.then(() => {
+		return getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then(
+			(pair) => {
+				const signature = u8aToHex(pair.sign(timestamp.toString()));
+				const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+
+				const settings: IUserSettings = {
+					captchaType: captchaType,
+					domains: ["0.0.0.0", "localhost", "*"],
+					frictionlessThreshold: 0.5,
+					powDifficulty: 2,
+				};
+
+				// Use cy.request() to ensure Cypress correctly queues the request
+				return cy.request({
+					method: "POST",
+					url: adminSiteKeyURL,
+					headers: {
+						"Content-Type": "application/json",
+						signature: signature,
+						timestamp: timestamp.toString(),
+					},
+					body: {
+						siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+						tier: Tier.Free,
+						settings,
+					},
+					failOnStatusCode: false, // Allow handling of non-200 responses manually
 				});
-		});
+			},
+		);
 	});
 }
 

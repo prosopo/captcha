@@ -37,36 +37,36 @@ export default function navigationInjector(): Plugin {
 		standard: {
 			image: {
 				implicit: { path: "index.html", exists: true },
-				explicit: { path: "standard/image-explicit.html", exists: false },
+				explicit: { path: "image-explicit.html", exists: false },
 			},
 			pow: {
-				implicit: { path: "standard/pow-implicit.html", exists: false },
-				explicit: { path: "pow.html", exists: false },
+				implicit: { path: "pow-implicit.html", exists: false },
+				explicit: { path: "pow-explicit.html", exists: false },
 			},
 			frictionless: {
 				implicit: {
-					path: "standard/frictionless-implicit.html",
+					path: "frictionless-implicit.html",
 					exists: false,
 				},
-				explicit: { path: "frictionless.html", exists: true },
+				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
 		},
 		invisible: {
 			image: {
-				implicit: { path: "invisible/image-implicit.html", exists: false },
-				explicit: { path: "invisible/image-explicit.html", exists: false },
+				implicit: { path: "invisible-image-implicit.html", exists: true },
+				explicit: { path: "invisible-image-explicit.html", exists: true },
 			},
 			pow: {
-				implicit: { path: "invisible/pow-implicit.html", exists: false },
-				explicit: { path: "invisible/pow.html", exists: false },
+				implicit: { path: "invisible-pow-implicit.html", exists: true },
+				explicit: { path: "invisible-pow-explicit.html", exists: true },
 			},
 			frictionless: {
 				implicit: {
-					path: "invisible/frictionless-implicit.html",
+					path: "invisible-frictionless-implicit.html",
 					exists: true,
 				},
 				explicit: {
-					path: "invisible/frictionless-explicit.html",
+					path: "invisible-frictionless-explicit.html",
 					exists: true,
 				},
 			},

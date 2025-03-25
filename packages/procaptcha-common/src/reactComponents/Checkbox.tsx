@@ -114,10 +114,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 	const id = generateRandomId();
 
 	return (
-		<span
-			style={{ display: "inline-flex", alignItems: "center" }}
-			data-cy={"captcha-checkbox"}
-		>
+		<span style={{ display: "inline-flex", alignItems: "center" }}>
 			{loading ? (
 				<div className="checkbox__outer">
 					<div className="checkbox__wrapper">
@@ -145,6 +142,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 						e.preventDefault();
 						e.stopPropagation();
 						setLoading(true);
+						setHover(false);
 						onChange().then(() => {
 							setLoading(false);
 						});
@@ -153,6 +151,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					style={checkboxStyle}
 					disabled={error !== undefined}
 					className={loading ? "checkbox__loading-spinner" : ""}
+					data-cy={"captcha-checkbox"}
 				/>
 			)}
 			{error ? (
