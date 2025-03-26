@@ -114,7 +114,7 @@ export const ProcaptchaFrictionless = ({
 		// We could always re-render here after a period but this will result in never-ending requests to Providers when
 		// settings are incorrect, or the user is not human. We need to selectively re-render for events like
 		// `no session found` but not for other errors.
-		if (errorKey === "NO_SESSION_FOUND") {
+		if (errorKey === "CAPTCHA.NO_SESSION_FOUND") {
 			setTimeout(() => {
 				restartComponentTimeout();
 			}, 0);
