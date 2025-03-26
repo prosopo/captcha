@@ -23,7 +23,7 @@ Server-side (node.js):
 * `provider` - API Endpoints for the captcha widget
     - `cli` - CLI wrapper for the `provider`, that starts `Express`
 * `database` - Mongo DB Query builder
-    - `types-database` - declaration of interfaces and types used in the Query builder
+    - `types-database` - Declaration of interfaces and types used in the Query builder
 
 Building configs (for Vite):
 
