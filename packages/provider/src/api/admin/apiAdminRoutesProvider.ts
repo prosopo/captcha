@@ -16,6 +16,7 @@ import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import { AdminApiPaths } from "@prosopo/types";
 import type { Tasks } from "../../tasks/index.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
+import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
 import { ApiUpdateDetectorKeyEndpoint } from "./apiUpdateDetectorKeyEndpoint.js";
 
 class ApiAdminRoutesProvider implements ApiRoutesProvider {
@@ -30,6 +31,12 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 			{
 				path: AdminApiPaths.UpdateDetectorKey,
 				endpoint: new ApiUpdateDetectorKeyEndpoint(
+					this.tasks.clientTaskManager,
+				),
+			},
+			{
+				path: AdminApiPaths.RemoveDetectorKey,
+				endpoint: new ApiRemoveDetectorKeyEndpoint(
 					this.tasks.clientTaskManager,
 				),
 			},
