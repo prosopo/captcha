@@ -1,5 +1,5 @@
 {
-	"name": "@prosopo/procaptcha-integration-build-config",
+	"name": "@prosopo/svelte-procaptcha-wrapper",
 	"version": "1.0.0",
 	"type": "module",
 	"engines": {
@@ -11,12 +11,17 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose"
+		"build": "npx vite build"
 	},
 	"dependencies": {
-		"deepmerge": "4.3.1",
-		"vite": "6.2.3",
-		"vite-plugin-dts": "4.5.3"
+		"@prosopo/procaptcha-wrapper": "1.0.0"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"@prosopo/procaptcha-integration-build-config": "1.0.0",
+		"@sveltejs/vite-plugin-svelte": "5.0.3"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

@@ -36,11 +36,6 @@ interface ProcaptchaOptions {
 	 * The language of the CAPTCHA widget.
 	 */
 	language?: string;
-	/**
-	 * The amount of time, in milliseconds, a successful CAPTCHA challenge is valid for.
-	 * Defaults to 2 minutes.
-	 */
-	challengeValidLengthMs?: number;
 }
 
 export type { ProcaptchaOptions };

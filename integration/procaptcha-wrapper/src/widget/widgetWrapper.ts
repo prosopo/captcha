@@ -62,7 +62,6 @@ class WidgetWrapper implements ProcaptchaWrapper {
 			"expired-callback": procaptchaOptions.callbacks?.onChallengeExpired,
 			"failed-callback": procaptchaOptions.callbacks?.onFailed,
 			"reset-callback": procaptchaOptions.callbacks?.onReset,
-			"challenge-valid-length": procaptchaOptions.challengeValidLengthMs,
 		};
 
 		const filledRenderOptions = Object.entries(allRenderOptions).filter(
