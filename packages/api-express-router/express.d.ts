@@ -12,10 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Theme } from "../theme.js";
+import type { Logger } from "@prosopo/common";
+import type { TFunction } from "i18next";
 
-interface HtmlElementFactory {
-	createHtmlElement(theme: Theme): HTMLElement;
+declare global {
+	namespace Express {
+		interface Request {
+			t: TFunction;
+			i18n: {
+				t: TFunction;
+			};
+			user?: string;
+			siteKey?: string;
+			ja4: string;
+			logger: Logger;
+			requestId?: string;
+		}
+	}
 }
-
-export type { HtmlElementFactory };

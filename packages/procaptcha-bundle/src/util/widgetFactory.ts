@@ -11,9 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { loadI18next } from "@prosopo/locale";
+import type { Ti18n } from "@prosopo/locale";
 import { CaptchaType, type ProcaptchaRenderOptions } from "@prosopo/types";
 import {
-	type WidgetSkeletonFactory,
+	createWidgetSkeleton,
 	darkTheme,
 	lightTheme,
 } from "@prosopo/widget-skeleton";
@@ -23,20 +26,28 @@ import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
 class WidgetFactory {
 	private captchaRenderer: CaptchaRenderer | null = null;
+	private _i18n: Ti18n | null = null;
 
 	public constructor(
-		private readonly widgetSkeletonFactory: WidgetSkeletonFactory,
 		private readonly widgetThemeResolver: WidgetThemeResolver,
 	) {}
+
+	get i18n(): Ti18n {
+		if (this._i18n === null) {
+			throw new Error("I18n is not initialized");
+		}
+		return this._i18n;
+	}
 
 	public async createWidgets(
 		containers: Element[],
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
+		invisible = false,
 	): Promise<Root[]> {
 		return Promise.all(
 			containers.map((container) =>
-				this.createWidget(container, renderOptions, isWeb2),
+				this.createWidget(container, renderOptions, isWeb2, invisible),
 			),
 		);
 	}
@@ -45,6 +56,7 @@ class WidgetFactory {
 		container: Element,
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
+		invisible = false,
 	): Promise<Root> {
 		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
 			container,
@@ -54,14 +66,27 @@ class WidgetFactory {
 		const widgetTheme =
 			"light" === renderOptions.theme ? lightTheme : darkTheme;
 
-		const widgetInteractiveArea =
-			this.widgetSkeletonFactory.createWidgetSkeleton(container, widgetTheme);
+		let widgetInteractiveArea: HTMLElement;
+
+		// Don't create the widget skeleton if the mode is invisible
+		if (invisible) {
+			//Create new div inside the container
+			const newDiv = document.createElement("div");
+			container.appendChild(newDiv);
+			widgetInteractiveArea = newDiv as HTMLElement;
+		} else {
+			widgetInteractiveArea = createWidgetSkeleton(
+				container,
+				widgetTheme,
+				"prosopo-procaptcha",
+			);
+		}
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
 
 		const captchaRenderer = await this.getCaptchaRenderer();
 
-		const captchaRoot = await captchaRenderer.renderCaptcha(
+		const captchaRoot = captchaRenderer.renderCaptcha(
 			{
 				identifierPrefix: "procaptcha-",
 				emotionCacheKey: "procaptcha",
@@ -71,13 +96,19 @@ class WidgetFactory {
 			widgetInteractiveArea,
 			renderOptions,
 			isWeb2,
+			this.i18n,
+			invisible,
 		);
 
 		return captchaRoot;
 	}
 
 	protected async getCaptchaRenderer(): Promise<CaptchaRenderer> {
-		if (null === this.captchaRenderer) {
+		if (this._i18n === null) {
+			this._i18n = await loadI18next(false);
+		}
+
+		if (this.captchaRenderer === null) {
 			this.captchaRenderer = await this.createCaptchaRenderer();
 		}
 

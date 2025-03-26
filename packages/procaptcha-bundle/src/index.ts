@@ -15,7 +15,6 @@
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { getWidgetSkeleton } from "@prosopo/widget-skeleton";
 import type { Root } from "react-dom/client";
 import { getCaptchaType } from "./util/captcha/captchaType.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
@@ -25,17 +24,17 @@ import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 const BUNDLE_NAME = "procaptcha.bundle.js";
 let procaptchaRoots: Root[] = [];
 
-const widgetFactory = new WidgetFactory(
-	getWidgetSkeleton().getFactory(),
-	new WidgetThemeResolver(),
-);
+const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
+
+// Define a custom event name for procaptcha execution
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = async () => {
-	// Get elements with class 'procaptcha'
+	// Get elements with class 'procaptcha', not including buttons
 	const elements: Element[] = Array.from(
 		document.getElementsByClassName("procaptcha"),
-	);
+	).filter((element) => element.tagName.toLowerCase() !== "button");
 
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
@@ -59,6 +58,39 @@ const implicitRender = async () => {
 
 		procaptchaRoots.push(...root);
 	}
+
+	// Check for invisible mode indicators (procaptcha class on buttons)
+	const invisibleButtons = Array.from(
+		document.getElementsByClassName("procaptcha"),
+	).filter((button) => button.tagName.toLowerCase() === "button");
+
+	if (invisibleButtons.length) {
+		for (const button of invisibleButtons) {
+			const siteKey = button.getAttribute("data-sitekey") || "";
+			const callback = button.getAttribute("data-callback") || "";
+
+			const captchaType = getCaptchaType([button]);
+
+			const root = await widgetFactory.createWidgets(
+				[button],
+				{
+					captchaType: captchaType,
+					siteKey: siteKey,
+					callback: callback,
+				},
+				true,
+				true,
+			);
+
+			procaptchaRoots.push(...root);
+
+			// Add click event listener to the button
+			button.addEventListener("click", async (event) => {
+				event.preventDefault();
+				execute();
+			});
+		}
+	}
 };
 
 // Explicit render for targeting specific elements
@@ -66,6 +98,21 @@ export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ) => {
+	const hasInvisibleSize =
+		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&
+		renderOptions.size === "invisible";
+
+	if (hasInvisibleSize || element.tagName.toLowerCase() === "button") {
+		const roots = await widgetFactory.createWidgets(
+			[element],
+			renderOptions,
+			true,
+			true,
+		);
+		procaptchaRoots.push(...roots);
+		return;
+	}
+
 	const roots = await widgetFactory.createWidgets([element], renderOptions);
 
 	procaptchaRoots.push(...roots);
@@ -81,6 +128,75 @@ export default function ready(fn: () => void) {
 	}
 }
 
+export const execute = () => {
+	const containers = findProcaptchaContainers();
+
+	if (containers.length === 0) {
+		console.error("No Procaptcha containers found for execution");
+		return;
+	}
+
+	// Dispatch a custom event to notify React components to show the modal or perform silent verification
+	const executeEvent = new CustomEvent(PROCAPTCHA_EXECUTE_EVENT, {
+		detail: {
+			containerId: containers[0]?.id || "procaptcha-container",
+			containerCount: containers.length,
+			timestamp: Date.now(),
+		},
+		bubbles: true,
+		cancelable: true,
+	});
+
+	// Dispatch the event on the document
+	document.dispatchEvent(executeEvent);
+};
+
+function findProcaptchaContainers(): Element[] {
+	const containers: Element[] = [];
+
+	// Strategy 1: Look for elements with data-size="invisible"
+	const invisibleContainers = Array.from(
+		document.querySelectorAll('[data-size="invisible"]'),
+	);
+	containers.push(...invisibleContainers);
+
+	// Strategy 2: Look for elements with specific IDs
+	const idContainers = Array.from(
+		document.querySelectorAll(
+			'#procaptcha-container, [id$="-procaptcha-container"]',
+		),
+	);
+
+	// Strategy 3: Look for elements with class 'p-procaptcha'
+	const classContainers = Array.from(
+		document.getElementsByClassName("p-procaptcha"),
+	);
+	containers.push(...classContainers);
+
+	for (const container of idContainers) {
+		if (!containers.includes(container)) {
+			containers.push(container);
+		}
+	}
+
+	return containers;
+}
+
+function getElementAttributes(element: Element): Record<string, string> {
+	const attributes: Record<string, string> = {};
+
+	if (element?.attributes) {
+		for (let i = 0; i < element.attributes.length; i++) {
+			const attr = element.attributes[i];
+			if (attr?.name && attr.value !== undefined) {
+				attributes[attr.name] = attr.value;
+			}
+		}
+	}
+
+	return attributes;
+}
+
 // extend the global Window interface to include the procaptcha object
 declare global {
 	interface Window {
@@ -88,6 +204,7 @@ declare global {
 			ready: typeof ready;
 			render: typeof render;
 			reset: typeof reset;
+			execute: typeof execute;
 		};
 	}
 }
@@ -127,6 +244,6 @@ export const reset = () => {
 };
 
 // set the procaptcha attribute on the window
-window.procaptcha = { ready, render, reset };
+window.procaptcha = { ready, render, reset, execute };
 
 start();

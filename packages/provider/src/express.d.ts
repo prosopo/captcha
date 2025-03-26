@@ -25,7 +25,8 @@ declare global {
 			user?: string;
 			siteKey?: string;
 			ja4: string;
-			logger?: Logger;
+			logger: Logger;
+			requestId?: string;
 		}
 	}
 }

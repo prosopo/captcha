@@ -225,15 +225,20 @@ export class ClientTaskManager {
 		]);
 	}
 
+	async updateDetectorKey(detectorKey: string): Promise<void> {
+		await this.providerDB.storeDetectorKey(detectorKey);
+	}
+
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		await this.providerDB.removeDetectorKey(detectorKey);
+	}
+
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
 		if (clientDomain === "*") return true;
 		try {
 			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
 			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
-
-			// Special case for localhost
-			if (referrerDomain === "localhost") return true;
 
 			return (
 				referrerDomain === allowedDomain ||

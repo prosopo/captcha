@@ -22,40 +22,45 @@ import {
 	WIDGET_PADDING,
 } from "../constants.js";
 import type { Theme } from "../theme.js";
-import type { HtmlElementFactory } from "./htmlElementFactory.js";
+import { createCheckboxElement } from "./checkbox.js";
+import { createLogoElement } from "./logo.js";
 
-class WidgetSkeletonElementFactory implements HtmlElementFactory {
-	constructor(
-		private readonly checkboxElementFactory: HtmlElementFactory,
-		private readonly logoElementFactory: HtmlElementFactory,
-		private readonly isDevelopmentMode: boolean,
-	) {}
+/**
+ * Creates a widget skeleton element with theme styling
+ *
+ * @param theme - The theme to apply to the widget
+ * @returns HTMLElement for the widget skeleton
+ */
+export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
+	const widgetElement = document.createElement("div");
+	widgetElement.className = "widget";
 
-	public createHtmlElement(theme: Theme): HTMLElement {
-		const widgetElement = document.createElement("div");
-		widgetElement.className = "widget";
+	const checkboxElement = createCheckboxElement(theme);
+	const logoElement = createLogoElement(theme);
 
-		const checkboxElement =
-			this.checkboxElementFactory.createHtmlElement(theme);
-		const logoElement = this.logoElementFactory.createHtmlElement(theme);
+	widgetElement.innerHTML =
+		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());
 
-		widgetElement.innerHTML = this.getStyles(theme) + this.getMarkup();
+	widgetElement
+		.querySelector(".widget__checkbox")
+		?.replaceWith(checkboxElement);
 
-		widgetElement
-			.querySelector(".widget__checkbox")
-			?.replaceWith(checkboxElement);
+	widgetElement.querySelector(".widget__logo")?.replaceWith(logoElement);
 
-		widgetElement.querySelector(".widget__logo")?.replaceWith(logoElement);
+	return widgetElement;
+}
 
-		return widgetElement;
-	}
+/**
+ * Generates the HTML markup for the widget
+ *
+ * @param isDevelopmentMode - Whether the app is in development mode
+ */
+function getWidgetMarkup(isDevelopmentMode: boolean): string {
+	const buttonDataAttribute = isDevelopmentMode
+		? 'data-cy="captcha-checkbox"'
+		: "";
 
-	protected getMarkup(): string {
-		const buttonDataAttribute = this.isDevelopmentMode
-			? 'data-cy="button-human"'
-			: "";
-
-		return `
+	return `
 <div class="widget__outer">
 	<div class="widget__wrapper">
 		<div class="widget__inner">
@@ -69,10 +74,15 @@ class WidgetSkeletonElementFactory implements HtmlElementFactory {
 	</div>
 </div>
 `;
-	}
+}
 
-	protected getStyles(theme: Theme): string {
-		return `
+/**
+ * Generates the CSS styles for the widget
+ *
+ * @param theme - The theme to apply to the styles
+ */
+function getWidgetStyles(theme: Theme): string {
+	return `
 <style>
 .widget {
     width: 100%;
@@ -124,7 +134,15 @@ class WidgetSkeletonElementFactory implements HtmlElementFactory {
 }
 </style>
 `;
-	}
 }
 
-export { WidgetSkeletonElementFactory };
+function getCurrentEnvironmentMode(): string | undefined {
+	if (typeof process !== "undefined") {
+		return process.env.NODE_ENV;
+	}
+
+	const importMeta = import.meta as { env?: { MODE?: string } };
+	return importMeta.env?.MODE;
+}
+
+const isDevMode = () => getCurrentEnvironmentMode() !== "production";

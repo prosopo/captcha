@@ -17,10 +17,14 @@ import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import type { CaptchaProps } from "../captchaProps.js";
 
 const PowCaptcha = (props: CaptchaProps) => {
-	const { config, callbacks } = props;
+	const { config, callbacks, i18n } = props;
 
 	return (
-		<ProcaptchaPow config={config} callbacks={getDefaultEvents(callbacks)} />
+		<ProcaptchaPow
+			config={config}
+			callbacks={getDefaultEvents(callbacks)}
+			i18n={i18n}
+		/>
 	);
 };
 

@@ -23,12 +23,17 @@ import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
 import Modal from "./Modal.js";
 
+// Define the same event name as in the bundle
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
+
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
+	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
+	const [loading, setLoading] = useState(false);
 	const manager = Manager(
 		config,
 		state,
@@ -40,11 +45,69 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			loadI18next(false).then((i18n) => {
-				i18n.changeLanguage(config.language).then((r) => r);
-			});
+			if (i18n) {
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
+			} else {
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
+			}
 		}
-	}, [config.language]);
+	}, [i18n, config.language]);
+
+	// Add event listener for the execute event
+	useEffect(() => {
+		// Event handler for when execute() is called
+		const handleExecuteEvent = (event: Event) => {
+			// Show the modal
+			updateState({
+				showModal: true,
+			});
+
+			// If we need to load a challenge or do other initialization
+			if (!state.challenge && manager.start) {
+				console.log("No challenge set, attempting to start verification");
+				try {
+					manager.start();
+				} catch (error) {
+					console.error("Error starting verification:", error);
+				}
+			}
+		};
+
+		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
+		// Cleanup function to remove event listener
+		return () => {
+			document.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
+		};
+	}, [manager, state.challenge, updateState]); // Add dependencies
+
+	if (config.mode === "invisible") {
+		return (
+			<Modal show={state.showModal}>
+				{state.challenge ? (
+					<CaptchaComponent
+						challenge={state.challenge}
+						index={state.index}
+						solutions={state.solutions}
+						onSubmit={manager.submit}
+						onCancel={manager.cancel}
+						onClick={manager.select}
+						onNext={manager.nextRound}
+						onReload={manager.reload}
+						themeColor={config.theme ?? "light"}
+					/>
+				) : null}
+			</Modal>
+		);
+	}
 
 	return (
 		<div className={"image-captcha"}>
@@ -67,11 +130,19 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			</Modal>
 			<Checkbox
 				theme={theme}
-				onChange={manager.start}
+				onChange={async () => {
+					if (loading) {
+						return;
+					}
+					setLoading(true);
+					await manager.start();
+					setLoading(false);
+				}}
 				checked={state.isHuman}
 				labelText={t("WIDGET.I_AM_HUMAN")}
 				error={state.error}
 				aria-label="human checkbox"
+				loading={loading}
 			/>
 		</div>
 	);
