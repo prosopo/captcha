@@ -11,21 +11,5 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import { getDefaultEvents } from "@prosopo/procaptcha-common";
-import { SliderCaptcha as SliderCaptchaComponent } from "@prosopo/procaptcha-slider";
-import type { CaptchaProps } from "../captchaProps.js";
-
-const SliderCaptcha = (props: CaptchaProps) => {
-	const { config, callbacks, i18n } = props;
-
-	return (
-		<SliderCaptchaComponent
-			config={config}
-			callbacks={getDefaultEvents(callbacks)}
-			i18n={i18n}
-		/>
-	);
-};
-
-export { SliderCaptcha }; 
+export * from "./components/index.js";
+export * from "./util/index.js"; 
