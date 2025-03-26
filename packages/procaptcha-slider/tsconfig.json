@@ -1,0 +1,37 @@
+{
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"],
+		"jsxImportSource": "@emotion/react"
+	},
+	"include": ["src", "src/**/*.json"],
+
+	"references": [
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../procaptcha"
+		},
+		{
+			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../procaptcha-react"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../widget-skeleton"
+		}
+	]
+} 
