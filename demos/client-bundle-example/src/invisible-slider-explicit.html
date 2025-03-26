@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Procaptcha Invisible Slider Mode - Explicit Rendering</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            display: none;
+        }
+        #error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Procaptcha Invisible Slider Mode</h1>
+    <p>This example demonstrates how to use Procaptcha in invisible slider mode with explicit rendering.</p>
+    
+    <form id="demo-form">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+        </div>
+        
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Your email" required />
+        </div>
+        
+        <!-- The container for the invisible CAPTCHA -->
+        <div id="procaptcha-container" style="display: none;"></div>
+        
+        <!-- Regular submit button that will trigger the CAPTCHA check -->
+        <button type="button" id="submit-button">Submit</button>
+        
+        <div id="error"></div>
+    </form>
+    
+    <div id="result"></div>
+    
+    <div style="margin-top: 20px;">
+        <h2>How It Works</h2>
+        <p>This example demonstrates how to use Procaptcha in invisible slider mode with explicit rendering:</p>
+        <ol>
+            <li>Import the Procaptcha render function</li>
+            <li>Create a container for the invisible CAPTCHA (usually hidden)</li>
+            <li>Render the CAPTCHA explicitly with <code>mode: 'invisible'</code></li>
+            <li>When the user clicks the submit button, execute the CAPTCHA verification</li>
+            <li>Handle the verification result in the callback function</li>
+        </ol>
+        <p>The key elements are:</p>
+        <pre>
+// Import the render function
+import { render, execute } from "%VITE_BUNDLE_URL%"
+import { CaptchaType } from "@prosopo/types";
+
+// Render invisible CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: "%PROSOPO_SITE_KEY%",
+    captchaType: CaptchaType.slider,
+    mode: 'invisible',
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed
+});
+
+// Execute when user clicks submit
+document.getElementById('submit-button').addEventListener('click', function() {
+    // Validate form
+    if (!validateForm()) {
+        return;
+    }
+
+    // Execute CAPTCHA verification
+    execute();
+});
+        </pre>
+    </div>
+    
+    <script type="module">
+        import { render, execute } from "%VITE_BUNDLE_URL%"
+        import { CaptchaType } from "@prosopo/types";
+        
+        // Form validation function
+        function validateForm() {
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const errorDisplay = document.getElementById('error');
+            
+            if (!nameInput.value || !emailInput.value) {
+                errorDisplay.textContent = 'Please fill out all fields';
+                errorDisplay.style.display = 'block';
+                return false;
+            }
+            
+            // Basic email validation
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(emailInput.value)) {
+                errorDisplay.textContent = 'Please enter a valid email address';
+                errorDisplay.style.display = 'block';
+                return false;
+            }
+            
+            errorDisplay.style.display = 'none';
+            return true;
+        }
+        
+        // Callback for successful CAPTCHA verification
+        function handleCaptchaResponse(token) {
+            console.log('Procaptcha verified, token:', token);
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            
+            // Display result
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = `Form submitted with:
+- Name: ${name}
+- Email: ${email}
+- Procaptcha verified: Yes`;
+            resultElement.style.display = 'block';
+            
+            // In a real application, you would submit the form data with the token
+            // to your server for verification and processing
+        }
+        
+        // Callback for failed CAPTCHA verification
+        function handleCaptchaFailed() {
+            console.log('Captcha verification failed');
+            document.getElementById('error').textContent = 'CAPTCHA verification failed. Please try again.';
+            document.getElementById('error').style.display = 'block';
+        }
+        
+        // Render the invisible CAPTCHA
+        const widgetId = render(document.getElementById('procaptcha-container'), {
+            siteKey: "%PROSOPO_SITE_KEY%",
+            captchaType: CaptchaType.slider,
+            mode: 'invisible',
+            callback: handleCaptchaResponse,
+            "failed-callback": handleCaptchaFailed
+        });
+        
+        // Add event listener to the submit button
+        document.getElementById('submit-button').addEventListener('click', function() {
+            // Validate form first
+            if (!validateForm()) {
+                return;
+            }
+            
+            // Execute the CAPTCHA verification
+            execute();
+        });
+    </script>
+</body>
+</html> 
