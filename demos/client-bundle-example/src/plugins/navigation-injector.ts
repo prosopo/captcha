@@ -50,6 +50,10 @@ export default function navigationInjector(): Plugin {
 				},
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
+			slider: {
+				implicit: { path: "slider-implicit.html", exists: true },
+				explicit: { path: "slider.html", exists: true },
+			},
 		},
 		invisible: {
 			image: {
@@ -69,6 +73,10 @@ export default function navigationInjector(): Plugin {
 					path: "invisible-frictionless-explicit.html",
 					exists: true,
 				},
+			},
+			slider: {
+				implicit: { path: "invisible-slider-implicit.html", exists: true },
+				explicit: { path: "invisible-slider-explicit.html", exists: true },
 			},
 		},
 	};
