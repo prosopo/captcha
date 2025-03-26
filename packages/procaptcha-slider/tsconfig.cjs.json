@@ -1,0 +1,41 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/cjs",
+		"lib": ["es6", "dom"],
+		"jsxImportSource": "@emotion/react"
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.json",
+		"./src/**/*.d.ts",
+		"./src/**/*.tsx"
+	],
+	"references": [
+		{
+			"path": "../common/tsconfig.cjs.json"
+		},
+		{
+			"path": "../locale/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-common/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-react/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../widget-skeleton/tsconfig.cjs.json"
+		}
+	]
+} 
