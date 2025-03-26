@@ -225,6 +225,14 @@ export class ClientTaskManager {
 		]);
 	}
 
+	async updateDetectorKey(detectorKey: string): Promise<void> {
+		await this.providerDB.storeDetectorKey(detectorKey);
+	}
+
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		await this.providerDB.removeDetectorKey(detectorKey);
+	}
+
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
 		if (clientDomain === "*") return true;

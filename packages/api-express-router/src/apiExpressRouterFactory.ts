@@ -53,7 +53,7 @@ class ApiExpressRouterFactory {
 					response: Response,
 					next: NextFunction,
 				): Promise<void> => {
-					await apiEndpointAdapter.handleRequest(
+					return await apiEndpointAdapter.handleRequest(
 						route.endpoint,
 						request,
 						response,

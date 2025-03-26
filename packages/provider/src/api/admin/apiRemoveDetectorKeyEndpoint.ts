@@ -18,41 +18,45 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { type Logger, getLoggerDefault } from "@prosopo/common";
-import { ClientSettingsSchema, RegisterSitekeyBody } from "@prosopo/types";
+import { UpdateDetectorKeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
-type RegisterSitekeyBodyType = typeof RegisterSitekeyBody;
+type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
 
-class ApiRegisterSiteKeyEndpoint
-	implements ApiEndpoint<RegisterSitekeyBodyType>
+class ApiUpdateDetectorKeyEndpoint
+	implements ApiEndpoint<UpdateDetectorKeyBodyType>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
-		args: z.infer<RegisterSitekeyBodyType>,
+		args: z.infer<UpdateDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		const { siteKey, tier, settings } = args;
-
 		logger = logger || getLoggerDefault();
+		try {
+			const { detectorKey } = args;
 
-		const temp = settings || ClientSettingsSchema.parse({});
+			logger = logger || getLoggerDefault();
 
-		logger.info(`Registering site key: ${siteKey}`);
+			logger.info({ message: "Removing detector key" });
 
-		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
+			await this.clientTaskManager.removeDetectorKey(detectorKey);
 
-		logger.info("Site key registered");
-
-		return {
-			status: ApiEndpointResponseStatus.SUCCESS,
-		};
+			return {
+				status: ApiEndpointResponseStatus.SUCCESS,
+			};
+		} catch (error) {
+			logger.error({ message: "Error updating detector key", error });
+			return {
+				status: ApiEndpointResponseStatus.FAIL,
+			};
+		}
 	}
 
-	public getRequestArgsSchema(): RegisterSitekeyBodyType {
-		return RegisterSitekeyBody;
+	public getRequestArgsSchema(): UpdateDetectorKeyBodyType {
+		return UpdateDetectorKeyBody;
 	}
 }
 
-export { ApiRegisterSiteKeyEndpoint };
+export { ApiUpdateDetectorKeyEndpoint };

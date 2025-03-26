@@ -36,7 +36,7 @@ describe("Captchas", () => {
 		return cy.registerSiteKey(captchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response)}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
 			// Ensure the request was successful
 			expect(response.status).to.equal(200);

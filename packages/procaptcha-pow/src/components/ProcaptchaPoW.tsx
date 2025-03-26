@@ -32,6 +32,7 @@ export const ProcaptchaPow = (props: ProcaptchaProps) => (
 			config={props.config}
 			callbacks={props.callbacks}
 			frictionlessState={props.frictionlessState}
+			i18n={props.i18n}
 		/>
 	</Suspense>
 );
