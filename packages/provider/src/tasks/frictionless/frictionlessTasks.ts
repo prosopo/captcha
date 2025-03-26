@@ -174,7 +174,8 @@ export class FrictionlessManager extends CaptchaManager {
 				message:
 					"Error decrypting score: baseBotScore or timestamp is undefined",
 			});
-			throw new ProsopoApiError("CAPTCHA.DECRYPT_ERROR");
+			baseBotScore = 1;
+			timestamp = 0;
 		}
 
 		return { baseBotScore, timestamp };
