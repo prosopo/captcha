@@ -83,7 +83,8 @@
 		"NO_CAPTCHA": "Aucun captcha trouvé",
 		"NO_SESSION_FOUND": "Aucune session trouvée",
 		"INVALID_TOKEN": "Jeton invalide",
-		"INVALID_SOLUTION": "Solution invalide"
+		"INVALID_SOLUTION": "Solution invalide",
+		"DECRYPTION_ERROR": "Erreur de décryptage"
 	},
 	"API": {
 		"CAPTCHA_FAILED": "Vous avez répondu incorrectement à un ou plusieurs captchas. Veuillez réessayer",

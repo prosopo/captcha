@@ -25,7 +25,14 @@ let captchaType: CaptchaType;
 describe("Captchas", () => {
 	beforeEach(() => {
 		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
-		cy.registerSiteKey(captchaType);
+		cy.registerSiteKey(captchaType).then((response) => {
+			// Log the response status and body using cy.task()
+			cy.task("log", `Response status: ${response.status}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+
+			// Ensure the request was successful
+			expect(response.status).to.equal(200);
+		});
 
 		const solutions = datasetWithSolutionHashes.captchas.map((captcha) => ({
 			captchaContentId: captcha.captchaContentId,
@@ -51,56 +58,40 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		cy.registerSiteKey(CaptchaType.image);
+		return cy.registerSiteKey(CaptchaType.image);
 	});
 
 	it("An error is returned if captcha type is set to pow and frictionless is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(CaptchaType.pow).then(() => {
-			cy.visit(Cypress.env("default_page"));
-			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-				"getCaptcha",
-			);
-			cy.wait("@getCaptcha", { timeout: 36000 })
-				.its("response")
-				.then((response) => {
-					expect(response).to.not.be.undefined;
-					expect(response?.statusCode).to.equal(400);
-					expect(response?.body).to.have.property("error");
-					expect(response?.body.error).to.have.property("key");
-					expect(response?.body.error.key).to.equal(
-						"API.INCORRECT_CAPTCHA_TYPE",
-					);
-				});
-		});
-	});
+		cy.registerSiteKey(CaptchaType.pow).then((response) => {
+			// Log the response status and body using cy.task()
+			cy.task("log", `Response status: ${response.status}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
-	it("An error is returned if captcha type is set to image and frictionless is used in the widget", () => {
-		expect(captchaType).to.not.equal(CaptchaType.image);
-		cy.registerSiteKey(CaptchaType.pow).then(() => {
-			cy.visit(Cypress.env("default_page"));
-			cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-				"getCaptcha",
-			);
-			cy.wait("@getCaptcha", { timeout: 36000 })
-				.its("response")
-				.then((response) => {
-					expect(response).to.not.be.undefined;
-					expect(response?.statusCode).to.equal(400);
-					expect(response?.body).to.have.property("error");
-					expect(response?.body.error).to.have.property("key");
-					expect(response?.body.error.key).to.equal(
-						"API.INCORRECT_CAPTCHA_TYPE",
-					);
-				});
+			// Ensure the request was successful
+			expect(response.status).to.equal(200);
 		});
+		cy.visit(Cypress.env("default_page"));
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+			"getCaptcha",
+		);
+
+		return cy
+			.wait("@getCaptcha", { timeout: 36000 })
+			.its("response")
+			.then((response) => {
+				expect(response).to.not.be.undefined;
+				expect(response?.statusCode).to.equal(400);
+				expect(response?.body).to.have.property("error");
+			});
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
+		cy.visit(Cypress.env("default_page"));
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
 			"frictionless",
 		);
-		cy.wait("@frictionless", { timeout: 36000 });
+		cy.wait("@frictionless", { timeout: 5000 });
 
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);

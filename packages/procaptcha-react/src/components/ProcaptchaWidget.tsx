@@ -18,7 +18,6 @@ import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
-import type { ProcaptchaState } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import CaptchaComponent from "./CaptchaComponent.js";
@@ -31,8 +30,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
+	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
+	const [loading, setLoading] = useState(false);
 	const manager = Manager(
 		config,
 		state,
@@ -44,11 +45,18 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			loadI18next(false).then((i18n) => {
-				i18n.changeLanguage(config.language).then((r) => r);
-			});
+			if (i18n) {
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
+			} else {
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
+			}
 		}
-	}, [config.language]);
+	}, [i18n, config.language]);
 
 	// Add event listener for the execute event
 	useEffect(() => {
@@ -122,11 +130,19 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			</Modal>
 			<Checkbox
 				theme={theme}
-				onChange={manager.start}
+				onChange={async () => {
+					if (loading) {
+						return;
+					}
+					setLoading(true);
+					await manager.start();
+					setLoading(false);
+				}}
 				checked={state.isHuman}
 				labelText={t("WIDGET.I_AM_HUMAN")}
 				error={state.error}
 				aria-label="human checkbox"
+				loading={loading}
 			/>
 		</div>
 	);
