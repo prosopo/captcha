@@ -83,7 +83,8 @@
 		"NO_CAPTCHA": "Kein Captcha gefunden",
 		"NO_SESSION_FOUND": "Keine Session gefunden",
 		"INVALID_TOKEN": "Ungültiges Token",
-		"INVALID_SOLUTION": "Ungültige Lösung"
+		"INVALID_SOLUTION": "Ungültige Lösung",
+		"DECRYPTION_ERROR": "Fehler beim Entschlüsseln"
 	},
 	"API": {
 		"CAPTCHA_FAILED": "Sie haben ein oder mehrere Captchas falsch beantwortet. Bitte versuchen Sie es erneut",
