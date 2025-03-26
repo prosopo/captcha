@@ -52,6 +52,13 @@ const configs = {
 				process.env.PROSOPO_SITE_KEY,
 		},
 	}),
+	[CaptchaType.slider]: ProcaptchaConfigSchema.parse({
+		...configBase,
+
+		account: {
+			address: process.env.PROSOPO_SITE_KEY_SLIDER || process.env.PROSOPO_SITE_KEY,
+		},
+	}),
 };
 
 export default configs;
