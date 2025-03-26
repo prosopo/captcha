@@ -167,8 +167,5 @@
 
 	log {
 		format json
-		fields {
-			request_id {http.request_id}
-		}
 	}
 }
