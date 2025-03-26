@@ -32,6 +32,18 @@ export const flatten = (obj: object, prefix = ""): Record<string, string> => {
 	return flattenedObj;
 };
 
+export const unflatten = (obj: Record<string, string>, prefix = "") => {
+	const unflattenedObj: Record<string, string> = {};
+
+	// object is a flattened JSON object like { "a.b.c": "value",
+	for (const [key, value] of Object.entries(obj)) {
+		const keyParts = key.replace(prefix, "").split(".");
+		const lastKey = keyParts.pop();
+		const currentObj = unflattenedObj;
+	}
+	return unflattenedObj;
+};
+
 // https://stackoverflow.com/questions/63116039/camelcase-to-kebab-case
 export const kebabCase = (str: string) =>
 	str.replace(
