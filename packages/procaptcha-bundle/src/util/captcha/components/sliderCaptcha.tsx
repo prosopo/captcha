@@ -12,8 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./util/captcha/components/frictionlessCaptcha.js";
-export * from "./util/captcha/components/powCaptcha.js";
-export * from "./util/captcha/components/imageCaptcha.js";
-export * from "./util/captcha/components/sliderCaptcha.js";
-export * from "./util/captcha/captchaComponentProvider.js";
+import { getDefaultEvents } from "@prosopo/procaptcha-common";
+import { Procaptcha } from "@prosopo/procaptcha-react";
+import type { CaptchaProps } from "../captchaProps.js";
+
+const SliderCaptcha = (props: CaptchaProps) => {
+	const { config, callbacks, i18n } = props;
+
+	return (
+		<Procaptcha
+			config={config}
+			callbacks={getDefaultEvents(callbacks)}
+			i18n={i18n}
+		/>
+	);
+};
+
+export { SliderCaptcha }; 
