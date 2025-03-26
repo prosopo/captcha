@@ -17,6 +17,7 @@ import type { ApiEndpointResponseStatus } from "./apiEndpointResponseStatus.js";
 interface ApiEndpointResponse {
 	status: ApiEndpointResponseStatus;
 	data?: object;
+	error?: string;
 }
 
 export type { ApiEndpointResponse };
