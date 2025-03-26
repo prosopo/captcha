@@ -15,7 +15,7 @@
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
 import { Checkbox } from "@prosopo/procaptcha-common";
-import { Mode, ModeEnum, type ProcaptchaProps } from "@prosopo/types";
+import { ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
@@ -52,6 +52,17 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			}
 		}
 	}, [i18n, config.language]);
+
+	useEffect(() => {
+		if (state.error) {
+			setLoading(false);
+			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
+				setTimeout(() => {
+					frictionlessState.restart();
+				}, 3000);
+			}
+		}
+	}, [state.error, frictionlessState]);
 
 	// Add event listener for the execute event (works for invisible mode)
 	useEffect(() => {
@@ -101,7 +112,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			}}
 			theme={theme}
 			labelText={t("WIDGET.I_AM_HUMAN")}
-			error={state.error}
+			error={state.error?.message}
 			aria-label="human checkbox"
 			loading={loading}
 		/>
