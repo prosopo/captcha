@@ -17,7 +17,11 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type Logger, getLoggerDefault } from "@prosopo/common";
+import {
+	type Logger,
+	type ProsopoApiError,
+	getLoggerDefault,
+} from "@prosopo/common";
 import { UpdateDetectorKeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -50,6 +54,7 @@ class ApiUpdateDetectorKeyEndpoint
 			logger.error("Error updating detector key", error);
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
+				error: (error as ProsopoApiError).message,
 			};
 		}
 	}
