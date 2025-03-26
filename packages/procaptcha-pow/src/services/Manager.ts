@@ -223,7 +223,10 @@ export const Manager = (
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: challenge.error.message,
+						error: {
+							message: challenge.error.message,
+							key: challenge.error.key || "API.UNKNOWN_ERROR",
+						},
 					});
 				} else {
 					const solution = solvePoW(challenge.challenge, challenge.difficulty);

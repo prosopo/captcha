@@ -54,7 +54,7 @@ export interface ProcaptchaState {
 	successfullChallengeTimeout: NodeJS.Timeout | undefined; // the timer for the captcha challenge. undefined if not set
 	sendData: boolean; // whether to trigger sending user event data (mouse, keyboard, touch) to the provider
 	attemptCount: number; // Number of attempts to successfully complete captcha without errors
-	error: string | undefined; // any error message
+	error: { message: string; key: string } | undefined; // any error message
 	sessionId: string | undefined; // the session id for the captcha challenge
 }
 
