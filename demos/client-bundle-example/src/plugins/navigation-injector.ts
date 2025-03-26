@@ -363,13 +363,27 @@ export default function navigationInjector(): Plugin {
 				console.log(`Using bundle URL: ${bundleUrl}`);
 				html = html.replace(/%VITE_BUNDLE_URL%/g, bundleUrl);
 
-				// Replace other environment variables
-				if (process.env.PROSOPO_SITE_KEY) {
+				// Replace sitekey environment variables
+				if (process.env.PROSOPO_SITE_KEY_FRICTIONLESS) {
 					html = html.replace(
-						/%PROSOPO_SITE_KEY%/g,
-						process.env.PROSOPO_SITE_KEY,
+						/%PROSOPO_SITE_KEY_FRICTIONLESS%/g,
+						process.env.PROSOPO_SITE_KEY_FRICTIONLESS,
 					);
 				}
+				if (process.env.PROSOPO_SITE_KEY_POW) {
+					html = html.replace(
+						/%PROSOPO_SITE_KEY_POW%/g,
+						process.env.PROSOPO_SITE_KEY_POW,
+					);
+				}
+				if (process.env.PROSOPO_SITE_KEY_IMAGE) {
+					html = html.replace(
+						/%PROSOPO_SITE_KEY_IMAGE%/g,
+						process.env.PROSOPO_SITE_KEY_IMAGE,
+					);
+				}
+
+				// Replace server URL
 				if (process.env.PROSOPO_SERVER_URL) {
 					html = html.replace(
 						/%PROSOPO_SERVER_URL%/g,
