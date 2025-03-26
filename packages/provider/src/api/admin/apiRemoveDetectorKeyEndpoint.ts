@@ -24,7 +24,7 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
 type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
 
-class ApiUpdateDetectorKeyEndpoint
+class ApiRemoveDetectorKeyEndpoint
 	implements ApiEndpoint<UpdateDetectorKeyBodyType>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
@@ -59,4 +59,4 @@ class ApiUpdateDetectorKeyEndpoint
 	}
 }
 
-export { ApiUpdateDetectorKeyEndpoint };
+export { ApiRemoveDetectorKeyEndpoint };

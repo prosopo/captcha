@@ -171,6 +171,33 @@ describe("Image Captcha Integration Tests", () => {
 			expect(data.error?.message).toBe("Incorrect CAPTCHA type");
 			expect(data.error?.code).toBe(400);
 		});
+		it("should return a translated error if the captcha type is set to pow and the language is set to es", async () => {
+			const origin = "http://localhost";
+			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
+			await registerSiteKey(dappAccount, CaptchaType.pow);
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
+			const response = await fetch(getImageCaptchaURL, {
+				method: "POST",
+				body: JSON.stringify(body),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": dappAccount,
+					"Prosopo-User": userAccount,
+					"Accept-Language": "es",
+				},
+			});
+
+			expect(response.status).toBe(400);
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(data).toHaveProperty("error");
+			expect(data.error?.message).toBe("Tipo di CAPTCHA errato");
+			expect(data.error?.code).toBe(400);
+		});
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
 		const origin = "http://localhost";
