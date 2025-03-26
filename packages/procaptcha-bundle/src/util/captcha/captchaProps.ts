@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Ti18n } from "@prosopo/locale";
 import type {
 	ProcaptchaCallbacks,
 	ProcaptchaClientConfigInput,
@@ -20,6 +21,7 @@ import type {
 interface CaptchaProps {
 	config: ProcaptchaClientConfigInput;
 	callbacks: ProcaptchaCallbacks;
+	i18n: Ti18n;
 }
 
 export type { CaptchaProps };

@@ -28,7 +28,7 @@ describe("Captchas", () => {
 		cy.registerSiteKey(captchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
-			cy.task("log", `Response: ${JSON.stringify(response)}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 
 			// Ensure the request was successful
 			expect(response.status).to.equal(200);
@@ -49,6 +49,25 @@ describe("Captchas", () => {
 		}
 		cy.intercept("/dummy").as("dummy");
 
+		// Intercept ALL POST requests and log them
+		cy.intercept("POST", "**", (req) => {
+			// Synchronously log request details using Cypress.log()
+			Cypress.log({
+				name: "Request",
+				message: `${req.method} ${req.url}`,
+				consoleProps: () => ({ requestBody: req.body }),
+			});
+
+			// Continue request & log response
+			req.continue((res) => {
+				Cypress.log({
+					name: "Response",
+					message: `${res.statusCode}`,
+					consoleProps: () => ({ responseBody: res.body }),
+				});
+			});
+		}).as("allRequests");
+
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(Cypress.env("default_page")).then(() => {
 			getWidgetElement(checkboxClass).should("be.visible");
@@ -63,15 +82,45 @@ describe("Captchas", () => {
 
 	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
 		expect(captchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(CaptchaType.pow);
+		cy.registerSiteKey(CaptchaType.pow).then((response) => {
+			// Log the response status and body using cy.task()
+			cy.task("log", `Response status: ${response.status}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+
+			// Ensure the request was successful
+			expect(response.status).to.equal(200);
+		});
 		cy.visit(Cypress.env("default_page"));
+
+		cy.task("log", "Clicking the first div...");
+		cy.get("div").first().click();
+
 		const checkbox = getWidgetElement(checkboxClass, { timeout: 12000 });
+
+		cy.task("log", "Checking if checkbox is visible...");
 		checkbox.first().should("be.visible");
-		checkbox.first().click();
+
+		cy.task("log", "Intercepting POST request...");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"getCaptcha",
 		);
-		cy.wait("@getCaptcha", { timeout: 36000 })
+		checkbox.first().click();
+
+		cy.task("log", "Waiting for @getCaptcha...");
+
+		// Wait for at least one request and log it to terminal
+		cy.wait("@allRequests").then((interception) => {
+			cy.task(
+				"log",
+				`Intercepted Request: ${JSON.stringify(interception.request.body)}`,
+			);
+			cy.task(
+				"log",
+				`Intercepted Response: ${interception.response?.statusCode} - ${JSON.stringify(interception.response?.body)}`,
+			);
+		});
+		return cy
+			.wait("@getCaptcha", { timeout: 36000 })
 			.its("response")
 			.then((response) => {
 				expect(response).to.not.be.undefined;

@@ -1,4 +1,3 @@
-import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +11,12 @@ import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import { AdminApiPaths } from "@prosopo/types";
 import type { Tasks } from "../../tasks/index.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
+import { ApiUpdateDetectorKeyEndpoint } from "./apiUpdateDetectorKeyEndpoint.js";
 
 class ApiAdminRoutesProvider implements ApiRoutesProvider {
 	public constructor(private readonly tasks: Tasks) {}
@@ -24,6 +26,12 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 			{
 				path: AdminApiPaths.SiteKeyRegister,
 				endpoint: new ApiRegisterSiteKeyEndpoint(this.tasks.clientTaskManager),
+			},
+			{
+				path: AdminApiPaths.UpdateDetectorKey,
+				endpoint: new ApiUpdateDetectorKeyEndpoint(
+					this.tasks.clientTaskManager,
+				),
 			},
 		];
 	}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
-import type { Logger } from "@prosopo/common";
+import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaType, type ProsopoConfigOutput } from "@prosopo/types";
 import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
 import type {
@@ -25,6 +25,7 @@ import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { getBotScore } from "../detection/getBotScore.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 
@@ -126,5 +127,44 @@ export class FrictionlessManager extends CaptchaManager {
 		const now = Date.now();
 		const diff = now - timestamp;
 		return diff > DEFAULT_MAX_TIMESTAMP_AGE;
+	}
+
+	async decryptPayload(token: string) {
+		const decryptKeys = [
+			process.env.BOT_DECRYPTION_KEY,
+			...(await this.getDetectorKeys()),
+		];
+
+		// run through the keys and try to decrypt the score
+		// if we run out of keys and the score is still not decrypted, throw an error
+		let baseBotScore: number | undefined;
+		let timestamp: number | undefined;
+		for (const [keyIndex, key] of decryptKeys.entries()) {
+			try {
+				const { baseBotScore: s, timestamp: t } = await getBotScore(token, key);
+				baseBotScore = s;
+				timestamp = t;
+				break;
+			} catch (err) {
+				// check if the next index exists, if not, log an error
+				if (keyIndex === decryptKeys.length - 1) {
+					this.logger.warn({
+						message: "Error decrypting score: no more keys to try",
+					});
+					baseBotScore = 1;
+					timestamp = 0;
+				}
+			}
+		}
+
+		if (baseBotScore === undefined || timestamp === undefined) {
+			this.logger.error({
+				message:
+					"Error decrypting score: baseBotScore or timestamp is undefined",
+			});
+			throw new ProsopoApiError("CAPTCHA.DECRYPT_ERROR");
+		}
+
+		return { baseBotScore, timestamp };
 	}
 }

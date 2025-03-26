@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { dirname } from "node:path";
 import i18n, { type InitOptions } from "i18next";
 import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
 import ChainedBackend from "i18next-chained-backend";

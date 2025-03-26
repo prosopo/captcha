@@ -26,10 +26,12 @@ const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = props.config;
+	const i18n = props.i18n;
 	const theme = "light" === config.theme ? lightTheme : darkTheme;
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);
+	const [loading, setLoading] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
@@ -38,11 +40,18 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 	useEffect(() => {
 		if (config.language) {
-			loadI18next(false).then((i18n) => {
-				i18n.changeLanguage(config.language).then((r) => r);
-			});
+			if (i18n) {
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
+			} else {
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
+			}
 		}
-	}, [config.language]);
+	}, [i18n, config.language]);
 
 	// Add event listener for the execute event (works for invisible mode)
 	useEffect(() => {
@@ -82,11 +91,19 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	return (
 		<Checkbox
 			checked={state.isHuman}
-			onChange={manager.current.start}
+			onChange={async () => {
+				if (loading) {
+					return;
+				}
+				setLoading(true);
+				await manager.current.start();
+				setLoading(false);
+			}}
 			theme={theme}
 			labelText={t("WIDGET.I_AM_HUMAN")}
 			error={state.error}
 			aria-label="human checkbox"
+			loading={loading}
 		/>
 	);
 };

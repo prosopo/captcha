@@ -13,17 +13,23 @@
 // limitations under the License.
 
 import type { i18n } from "i18next";
-
+let i18nInstance: i18n;
 async function loadI18next(backend: boolean): Promise<i18n> {
 	return new Promise((resolve, reject) => {
 		try {
 			if (backend) {
 				import("./i18nBackend.js").then(({ default: initializeI18n }) => {
-					resolve(initializeI18n());
+					if (!i18nInstance) {
+						i18nInstance = initializeI18n();
+					}
+					resolve(i18nInstance);
 				});
 			} else {
 				import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
-					resolve(initializeI18n());
+					if (!i18nInstance) {
+						i18nInstance = initializeI18n();
+					}
+					resolve(i18nInstance);
 				});
 			}
 		} catch (e) {
