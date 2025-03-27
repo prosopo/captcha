@@ -14,152 +14,108 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import type { ProcaptchaProps } from "@prosopo/types";
-import {
-	Checkbox,
-	ContainerDiv,
-	LoadingSpinner,
-	Logo,
-	WIDGET_BORDER,
-	WIDGET_BORDER_RADIUS,
-	WIDGET_DIMENSIONS,
-	WIDGET_INNER_HEIGHT,
-	WIDGET_MAX_WIDTH,
-	WIDGET_MIN_HEIGHT,
-	WIDGET_PADDING,
-	WIDGET_URL,
-	WIDGET_URL_TEXT,
-	WidthBasedStylesDiv,
-	darkTheme,
-	lightTheme,
-} from "@prosopo/web-components";
+import { Checkbox } from "@prosopo/procaptcha-common";
+import { ModeEnum, type ProcaptchaProps } from "@prosopo/types";
+import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
+
+// Define the same event name as in the bundle for consistency
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 const Procaptcha = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = props.config;
-	const themeColor = config.theme === "light" ? "light" : "dark";
+	const i18n = props.i18n;
+	const theme = "light" === config.theme ? lightTheme : darkTheme;
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
-	const theme = props.config.theme === "light" ? lightTheme : darkTheme;
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);
+	const [loading, setLoading] = useState(false);
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
 		Manager(config, state, updateState, callbacks, frictionlessState),
 	);
-	const captchaRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (config.language) {
-			loadI18next(false).then((i18n) => {
-				i18n.changeLanguage(config.language).then((r) => r);
-			});
+			if (i18n) {
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
+			} else {
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
+			}
 		}
-	}, [config.language]);
+	}, [i18n, config.language]);
+
+	useEffect(() => {
+		if (state.error) {
+			setLoading(false);
+			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
+				setTimeout(() => {
+					frictionlessState.restart();
+				}, 3000);
+			}
+		}
+	}, [state.error, frictionlessState]);
+
+	// Add event listener for the execute event (works for invisible mode)
+	useEffect(() => {
+		// Only set up event listener if in invisible mode
+		if (config.mode === ModeEnum.invisible) {
+			// Event handler for when execute() is called
+			const handleExecuteEvent = (event: Event) => {
+				// Directly start the verification process without showing any UI
+				try {
+					// Start the PoW verification process
+					manager.current.start();
+				} catch (error) {
+					console.error("Error starting PoW verification:", error);
+				}
+			};
+
+			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
+			// Cleanup function to remove event listener
+			return () => {
+				document.removeEventListener(
+					PROCAPTCHA_EXECUTE_EVENT,
+					handleExecuteEvent,
+				);
+			};
+		}
+
+		// Return empty cleanup function when not in invisible mode
+		return () => {};
+	}, [config.mode]);
+
+	if (config.mode === ModeEnum.invisible) {
+		// Return null for invisible mode - no UI needed
+		return null;
+	}
 
 	return (
-		<div
-			ref={captchaRef}
-			style={{ width: "100%", minHeight: WIDGET_MIN_HEIGHT }}
-		>
-			<div
-				style={{
-					maxWidth: WIDGET_MAX_WIDTH,
-					minHeight: WIDGET_MIN_HEIGHT,
-					maxHeight: "100%",
-					overflowX: "auto",
-					width: "100%",
-					...theme.font,
-				}}
-			>
-				<ContainerDiv>
-					<WidthBasedStylesDiv>
-						<div style={WIDGET_DIMENSIONS} data-cy={"button-human"}>
-							{" "}
-							<div
-								style={{
-									padding: WIDGET_PADDING,
-									border: WIDGET_BORDER,
-									backgroundColor: theme.palette.background.default,
-									borderColor: theme.palette.grey[300],
-									borderRadius: WIDGET_BORDER_RADIUS,
-									display: "flex",
-									alignItems: "center",
-									flexWrap: "wrap",
-									justifyContent: "space-between",
-									minHeight: `${WIDGET_INNER_HEIGHT}px`,
-									overflow: "hidden",
-								}}
-							>
-								<div
-									style={{ display: "inline-flex", flexDirection: "column" }}
-								>
-									<div
-										style={{
-											display: "flex",
-											justifyContent: "flex-start",
-											alignItems: "center",
-											flexWrap: "wrap",
-										}}
-									>
-										<div
-											style={{
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												flexDirection: "column",
-												verticalAlign: "middle",
-											}}
-										>
-											<div
-												style={{
-													display: "flex",
-												}}
-											>
-												<div style={{ flex: 1 }}>
-													{state.loading ? (
-														<LoadingSpinner
-															themeColor={themeColor}
-															aria-label="Loading spinner"
-														/>
-													) : (
-														<Checkbox
-															checked={state.isHuman}
-															onChange={manager.current.start}
-															themeColor={themeColor}
-															labelText={t("WIDGET.I_AM_HUMAN")}
-															error={state.error}
-															aria-label="human checkbox"
-														/>
-													)}
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-
-								<div
-									style={{ display: "inline-flex", flexDirection: "column" }}
-								>
-									<a
-										href={WIDGET_URL}
-										// biome-ignore lint/a11y/noBlankTarget: Biome incorrect edge case
-										target="_blank"
-										aria-label={WIDGET_URL_TEXT}
-									>
-										<div style={{ flex: 1 }}>
-											<Logo themeColor={themeColor} aria-label="Prosopo logo" />
-										</div>
-									</a>
-								</div>
-							</div>
-						</div>
-					</WidthBasedStylesDiv>
-				</ContainerDiv>
-			</div>
-		</div>
+		<Checkbox
+			checked={state.isHuman}
+			onChange={async () => {
+				if (loading) {
+					return;
+				}
+				setLoading(true);
+				await manager.current.start();
+				setLoading(false);
+			}}
+			theme={theme}
+			labelText={t("WIDGET.I_AM_HUMAN")}
+			error={state.error?.message}
+			aria-label="human checkbox"
+			loading={loading}
+		/>
 	);
 };
 export default Procaptcha;

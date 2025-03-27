@@ -5,7 +5,7 @@
     <title>Procaptcha demo: Simple page</title>
     <script type="text/javascript">
         window.onCaptchaFailed = function () {
-            console.log('The user failed the captcha')
+            console.log('Challenge failed')
         }
     </script>
     <script type="module">
@@ -135,7 +135,7 @@
 </div>
 <script type="module">
     // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-    import { render } from './assets/procaptcha.bundle.js'
+    import { render } from "%VITE_BUNDLE_URL%"
     import { CaptchaType } from "@prosopo/types";
 
     // Define a callback function to be called when the CAPTCHA is verified
@@ -152,7 +152,7 @@
         theme: 'dark',
         callback: onCaptchaVerified,
         "failed-callback": function () {
-            console.log('The user failed the captcha')
+            console.log('Challenge failed')
         }
     })
 </script>

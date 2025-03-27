@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./user.js";
-export { ClientSettingsSchema } from "./settings.js";
-export type { IUserSettings } from "./settings.js";
-export * from "./captchaType.js";
+export * from "./settings.js";
+export * from "./captchaType/captchaType.js";
+export * from "./captchaType/captchaTypeSpec.js";
