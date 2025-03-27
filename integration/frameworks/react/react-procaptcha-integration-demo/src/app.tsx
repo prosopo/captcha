@@ -12,32 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProcaptchaComponent } from "@prosopo/react-procaptcha-wrapper";
 import React from "react";
+import ReactDOM from "react-dom/client";
+import { IntegrationDemo } from "./integrationDemo.js";
 
-class IntegrationDemo extends React.Component {
-	public override render(): React.ReactNode {
-		// @ts-expect-error Env variables will be read by Vite
-		const siteKey = import.meta.env.VITE_PROCAPTCHA_SITE_KEY || "";
+class App {
+	public render(): void {
+		const rootElement = document.querySelector("#root");
 
-		return (
-			<ProcaptchaComponent
-				siteKey={siteKey}
-				captchaType={"image"}
-				callbacks={{
-					onVerified: (token: string): void => {
-						console.log("verified", token);
-					},
-				}}
-				htmlAttributes={{
-					className: "my-app__procaptcha",
-					style: {
-						maxWidth: "600px",
-					},
-				}}
-			/>
+		if (rootElement) {
+			this.renderProcaptcha(rootElement);
+			return;
+		}
+
+		throw new Error("root element is not found");
+	}
+
+	protected renderProcaptcha(rootElement: Element): void {
+		const reactRoot = ReactDOM.createRoot(rootElement);
+
+		reactRoot.render(
+			<React.StrictMode>
+				<IntegrationDemo />
+			</React.StrictMode>,
 		);
 	}
 }
 
-export { IntegrationDemo };
+export { App };

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { IntegrationDemo } from "./integrationDemo.js";
+import { App } from "./app.js";
 
-const integrationDemo = new IntegrationDemo();
-
-integrationDemo.render();
+new App().render();
