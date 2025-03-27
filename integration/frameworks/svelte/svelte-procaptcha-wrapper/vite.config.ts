@@ -22,10 +22,11 @@ export default createIntegrationViteConfig({
 		plugins: [svelte()],
 		build: {
 			rollupOptions: {
-				external: ["svelte"],
+				external: ["svelte", "svelte/*"],
 				output: {
 					globals: {
 						svelte: "Svelte",
+						"svelte/*": "Svelte",
 					},
 				},
 			},

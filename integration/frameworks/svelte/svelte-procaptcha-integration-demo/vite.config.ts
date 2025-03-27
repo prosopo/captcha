@@ -20,15 +20,5 @@ export default createIntegrationViteConfig({
 	directory: __dirname,
 	viteSettings: {
 		plugins: [svelte()],
-		build: {
-			rollupOptions: {
-				external: ["svelte"],
-				output: {
-					globals: {
-						svelte: "Svelte",
-					},
-				},
-			},
-		},
 	},
 });
