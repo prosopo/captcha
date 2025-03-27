@@ -65,8 +65,7 @@ import React from 'react';
 
 // called once at inclusion
 
-interface AppProperties {
-};
+interface AppProperties {};
 
 class App extends React.Component<AppProperties, AppState> {
 
@@ -122,11 +121,7 @@ Usage
 <script lang="ts">
     // called once at inclusion
 
-    interface
-    AppProperties
-    {
-    }
-    ;
+    interface AppProperties {};
 </script>
 
 <script setup lang="ts">
@@ -153,14 +148,10 @@ Usage:
 ### 3. Svelte - .svelte
 
 ```html
-<script>
+<script module lang="ts">
     // called once at inclusion
 
-    interface
-    AppProperties
-    {
-    }
-    ;
+    interface AppProperties {};
 </script>
 
 <script lang="ts">
