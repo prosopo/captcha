@@ -15,11 +15,11 @@
 /** @jsxImportSource @emotion/react */
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
-import { Manager } from "@prosopo/procaptcha";
+import { Manager } from "../services/Manager.js";
 import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
-import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
+import { ProcaptchaConfigSchema, type ProcaptchaProps, type ProcaptchaSliderState, type ProcaptchaSliderStateUpdateFn, type SliderCaptchaResponseBody, type MouseMovement } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Modal from "./Modal.js";
 import { css, keyframes } from "@emotion/react";
 
@@ -368,23 +368,35 @@ const sliderFailClass = `
 }
 `;
 
-const SliderCaptchaWidget = (props: ProcaptchaProps) => {
+export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const { t } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
-	const frictionlessState = props.frictionlessState; 
+	const frictionlessState = props.frictionlessState;
 	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
-	const [state, updateState] = useProcaptcha(useState, useRef);
+	const [baseState, updateBaseState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	const [imageLoading, setImageLoading] = useState(true);
+
+	// Create the full slider state
+	const state: ProcaptchaSliderState = {
+		...baseState,
+		config,
+		frictionlessState,
+		i18n,
+		callbacks,
+		mouseMovements: [],
+		attemptCount: 0
+	};
+
 	const manager = Manager(
 		config,
 		state,
-		updateState,
+		updateBaseState,
 		callbacks,
 		frictionlessState,
 	);
-	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
+	const theme = "light" === state.config.theme ? lightTheme : darkTheme;
 	
 	// Puzzle captcha state
 	const [sliderLeft, setSliderLeft] = useState(0);
@@ -413,6 +425,17 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const originYRef = useRef<number>(0);
 	const trailRef = useRef<number[]>([]);
 	const xRef = useRef<number>(0);
+	
+	// Update type assertions for challenge
+	const challenge = state.challenge as SliderCaptchaResponseBody;
+	
+	// Update image URL checks
+	if (challenge?.imageUrl) {
+		console.log('[SliderCaptcha] Using server-provided image URL:', challenge.imageUrl);
+	}
+
+	// Update target position checks
+	const serverTargetPosition = challenge?.targetPosition;
 	
 	// Initialize the puzzle immediately when the component mounts
 	useEffect(() => {
@@ -485,7 +508,7 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		// Event handler for when execute() is called
 		const handleExecuteEvent = (event: Event) => {
 			// Show the modal
-			updateState({
+			updateBaseState({
 				showModal: true,
 			});
 		};
@@ -499,7 +522,7 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 				handleExecuteEvent,
 			);
 		};
-	}, [updateState]); 
+	}, [updateBaseState]); 
 
 	const getRandomImage = () => {
 		// Get a random image from picsum
@@ -507,7 +530,104 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		return `https://picsum.photos/id/${imageId}/320/160`;
 	};
 
-	const resetPuzzle = () => {
+	// Add additional logging for debugging server challenge
+	useEffect(() => {
+		if (manager && state?.challenge) {
+			console.log('[SliderCaptcha] Received challenge from server:', state.challenge);
+			if (state.challenge.imageUrl) {
+				console.log('[SliderCaptcha] Using server-provided image URL:', state.challenge.imageUrl);
+			} else {
+				console.log('[SliderCaptcha] No image URL provided, will generate client-side puzzle');
+			}
+		}
+	}, [manager, state?.challenge]);
+
+	// Modify the resetPuzzle function to use the server-provided image if available
+	const resetPuzzle = useCallback(() => {
+		if (!canvasRef.current || !blockRef.current) {
+			return;
+		}
+
+		// Set loading state
+		setImageLoading(true);
+
+		// Generate a random destination if not provided in challenge
+		const puzzleDestination = serverTargetPosition || getRandomInt(20, 300);
+
+		// If we have a server-provided image URL, use it
+		if (state?.challenge?.imageUrl) {
+			const img = new Image();
+			img.onload = () => {
+				drawPuzzleFromImage(img, puzzleDestination);
+				setImageLoading(false);
+			};
+			img.onerror = () => {
+				console.error("Failed to load server image, falling back to client-side generation");
+				generateRandomImage(puzzleDestination);
+			};
+			img.src = state.challenge.imageUrl;
+		} else {
+			// Otherwise, generate a random image client-side
+			generateRandomImage(puzzleDestination);
+		}
+	}, [canvasRef, blockRef, state?.challenge]);
+
+	// Add a function to draw puzzle from a pre-loaded image
+	const drawPuzzleFromImage = (img: HTMLImageElement, destination: number) => {
+		if (!canvasRef.current || !blockRef.current) {
+			return;
+		}
+
+		const canvas = canvasRef.current;
+		const block = blockRef.current;
+		const ctx = canvas.getContext('2d');
+		const blockCtx = block.getContext('2d');
+
+		if (!ctx || !blockCtx) {
+			return;
+		}
+
+		const canvasWidth = canvas.width;
+		const canvasHeight = canvas.height;
+		
+		// Clear canvas
+		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+		blockCtx.clearRect(0, 0, block.width, block.height);
+		
+		// Draw the image on the canvas with proper scaling
+		ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+		
+		// Generate the puzzle piece
+		const blockX = 0;
+		const blockY = Math.random() * (canvasHeight - 60) + 10;
+		
+		// Store the current destination and block position
+		setDestX(destination);
+		xRef.current = destination;
+		setPuzzleImage(getRandomImage());
+		
+		// Create a puzzle piece and cut it out of the canvas
+		blockCtx.drawImage(canvas, blockX, blockY, 40, 40, 0, 0, 40, 40);
+		ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+		ctx.fillRect(blockX, blockY, 40, 40);
+	};
+
+	// Add a function to generate a random image when there's no server-provided one
+	const generateRandomImage = (destination: number) => {
+		if (!canvasRef.current || !blockRef.current) {
+			return;
+		}
+
+		const canvas = canvasRef.current;
+		const block = blockRef.current;
+		const ctx = canvas.getContext('2d');
+		const blockCtx = block.getContext('2d');
+
+		if (!ctx || !blockCtx) {
+			return;
+		}
+
+		// Reset slider state
 		setSliderLeft(0);
 		setSliderClass("sliderContainer");
 		setIsVerified(false);
@@ -516,74 +636,48 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		setShowSuccessIcon(false);
 		trailRef.current = [];
 		
-		// Set random target position
-		const randomX = getRandomInt(60, 260);
-		setDestX(randomX);
-		xRef.current = randomX;
+		// Store the destination value
+		setDestX(destination);
+		xRef.current = destination;
+		
+		// Set a new random image
 		setPuzzleImage(getRandomImage());
-		
-		// Set loading state while image loads
-		setImageLoading(true);
-		
-		// Reset canvas and draw new puzzle
-		if (canvasRef.current && blockRef.current) {
-			blockRef.current.style.left = '0px';
-			setupCanvas();
-		}
-	};
-
-	const setupCanvas = () => {
-		if (!canvasRef.current || !blockRef.current) return;
-		
-		const canvas = canvasRef.current;
-		const block = blockRef.current;
-		const ctx = canvas.getContext('2d');
-		const blockCtx = block.getContext('2d');
-		
-		if (!ctx || !blockCtx) return;
-		
-		// Clear canvas
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		blockCtx.clearRect(0, 0, block.width, block.height);
 		
 		// Draw the image onto the canvas once it's loaded
 		const img = new Image();
 		
-		// Show loading state
-		setImageLoading(true);
-		
 		img.onload = () => {
-			// Hide loading state
-			setImageLoading(false);
-			
 			// Draw main image
 			ctx.drawImage(img, 0, 0, 320, 160);
 			
 			// Draw the puzzle piece shape
-			drawPuzzlePiece(ctx, destX, 80, 'fill');
-			drawPuzzlePiece(blockCtx, destX, 80, 'clip');
+			drawPuzzlePiece(ctx, destination, 80, 'fill');
+			drawPuzzlePiece(blockCtx, destination, 80, 'clip');
 			
 			// Draw the image on the block canvas
 			blockCtx.drawImage(img, 0, 0, 320, 160);
 			
 			// Get the puzzle piece image data and place it at the left
-			const imageData = blockCtx.getImageData(destX - R, 80 - R * 2, L + R * 2, L + R * 2);
+			const imageData = blockCtx.getImageData(destination - R, 80 - R * 2, L + R * 2, L + R * 2);
 			blockCtx.clearRect(0, 0, 320, 160);
 			block.width = L + R * 2;
 			blockCtx.putImageData(imageData, 0, 80 - R * 2);
+			
+			// Hide loading state
+			setImageLoading(false);
 		};
 		
 		img.onerror = () => {
 			// Handle image loading error by trying a different image
-			setImageLoading(false);
+			console.error("Failed to load image, trying another one");
 			setPuzzleImage(getRandomImage());
-			setupCanvas();
+			generateRandomImage(destination);
 		};
 		
 		img.crossOrigin = "Anonymous";
 		img.src = puzzleImage;
 	};
-	
+
 	// Draw the puzzle piece
 	const drawPuzzlePiece = (ctx: CanvasRenderingContext2D, x: number, y: number, operation: 'fill' | 'clip') => {
 		const l = L; // side length
@@ -612,21 +706,25 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		}
 	};
 
-	// Verification logic similar to the demo
-	const verify = () => {
-		const arr = trailRef.current; // Movement trail on Y-axis
-		if (arr.length === 0) return { spliced: false, verified: false };
+	// Update verifySlider to use server target position and add debug logging
+	const verifySlider = (sliderLeftValue: number) => {
+		// Get the current target position from state or destX
+		const targetPosition = state?.challenge?.targetPosition || destX;
 		
-		const average = arr.reduce(sum) / arr.length;
-		const deviations = arr.map((x) => x - average);
-		const stddev = Math.sqrt(deviations.map(square).reduce(sum) / arr.length);
-		const left = blockRef.current?.style?.left ? parseInt(blockRef.current.style.left) : 0;
+		// Debug logging
+		console.log('[SliderCaptcha] Verifying slider position:', sliderLeftValue);
+		console.log('[SliderCaptcha] Target position:', targetPosition);
+		console.log('[SliderCaptcha] Distance from target:', Math.abs(sliderLeftValue - targetPosition));
 		
+		// Calculate verification based on how close the slider is to the target position
+		const isClose = Math.abs(sliderLeftValue - targetPosition) < 10;
+		
+		console.log('[SliderCaptcha] Is close enough to target?', isClose);
+		
+		// Return verification data
 		return {
-			spliced: Math.abs(left - xRef.current) < 10,
-			verified: stddev !== 0, // Check for Y-axis movement to prevent bots
-			left,
-			destX: xRef.current
+			verified: isClose,
+			destX: targetPosition,
 		};
 	};
 
@@ -680,6 +778,9 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		// Record Y movement for verification
 		trailRef.current.push(moveY);
 		
+		// Track mouse movement in manager for verification
+		manager.trackMouseMovement(eventX, eventY);
+		
 		return true;
 	};
 
@@ -702,8 +803,8 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		setSliderClass("sliderContainer");
 		
 		// Verify the puzzle completion
-		const verificationData = verify();
-		const { spliced, verified } = verificationData;
+		const verificationData = verifySlider(eventX);
+		const { verified } = verificationData;
 		
 		// Calculate stats for debug purposes
 		const yTrailData = trailRef.current;
@@ -712,18 +813,17 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		const yStdDev = yTrailData.length > 0 ? 
 			Math.sqrt(yDeviations.map(square).reduce(sum, 0) / yTrailData.length) : 0;
 		
-		// Show debug info in alert
 		const debugInfo = {
 			captchaResult: {
-				passed: spliced && verified,
-				spliced: spliced,
+				passed: verified,
+				destX: verificationData.destX ?? 0,
 				verified: verified
 			},
 			positionData: {
-				sliderPosition: sliderLeft,
-				blockPosition: verificationData.left ?? 0,
+				sliderPosition: eventX,
+				blockPosition: verificationData.destX ?? 0,
 				targetPosition: verificationData.destX ?? 0,
-				offset: Math.abs((verificationData.left ?? 0) - (verificationData.destX ?? 0))
+				offset: Math.abs((verificationData.destX ?? 0) - (verificationData.destX ?? 0))
 			},
 			mouseMovement: {
 				yTrailPoints: yTrailData.length,
@@ -733,39 +833,30 @@ const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 			}
 		};
 		
-		alert(`Captcha Debug Information:
+		console.log(`Captcha Debug Information:
 ${JSON.stringify(debugInfo, null, 2)}`);
 		
-		if (spliced) {
-			if (verified) {
-				// Success
-				setSliderClass("sliderContainer sliderContainer_success");
-				setIsSuccess(true);
-				setIsVerified(true);
-				
-				// Show success icon animation
-				setShowSuccessIcon(true);
-				
-				// Wait a moment to show success state
-				setTimeout(() => {
-					updateState({
-						loading: false,
-						isHuman: true,
-						showModal: false
-					});
+		if (verified) {
+			// Success case - Use the manager's onSuccess to verify with additional checks
+			manager.onSuccess(eventX, verificationData.destX).then((isVerified) => {
+				if (isVerified) {
+					// Manager has already handled the verification success internally
+					// Just handle UI updates
+					setSliderClass("sliderContainer sliderContainer_success");
+					setIsSuccess(true);
+					setIsVerified(true);
+					setShowSuccessIcon(true);
+				} else {
+					// Verification still failed in manager's additional checks
+					setSliderClass("sliderContainer sliderContainer_fail");
+					setIsFailed(true);
 					
-					// Generate a dummy token
-					const dummyToken = `slider_token_${Math.random().toString(36).substring(2, 15)}`;
-					
-					// Call onHuman callback with token
-					callbacks.onHuman?.(dummyToken);
-				}, 1200);
-			} else {
-				// Failed verification (bot suspected)
-				setSliderClass("sliderContainer sliderContainer_fail");
-				setIsFailed(true);
-				resetPuzzle();
-			}
+					// Reset after delay
+					setTimeout(() => {
+						resetPuzzle();
+					}, 1000);
+				}
+			});
 		} else {
 			// Puzzle piece not in the right position
 			setSliderClass("sliderContainer sliderContainer_fail");
@@ -983,10 +1074,8 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 						return;
 					}
 					setLoading(true);
-					// Simply show the modal instead of using manager.start()
-					updateState({
-						showModal: true
-					});
+					// Use manager.start() instead of directly setting the state
+					await manager.start();
 					setLoading(false);
 				}}
 				checked={state.isHuman}

@@ -25,6 +25,7 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	GetSliderCaptchaResponse,
 	type IUserSettings,
 	type ImageVerificationResponse,
 	type PowCaptchaSolutionResponse,
@@ -306,5 +307,72 @@ export default class ProviderApi
 				},
 			},
 		);
+	}
+
+	public getSliderCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+	): Promise<GetSliderCaptchaResponse> {
+		const body = {
+			user: user.toString(),
+			dapp: dapp.toString(),
+			...(sessionId && { sessionId }),
+		};
+		return this.post(ClientApiPaths.GetSliderCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public submitSliderCaptchaSolution(
+		userAccount: string,
+		dappAccount: string,
+		position: number,
+		targetPosition: number,
+		mouseMovements: Array<{ x: number, y: number, time: number }>,
+		solveTime: number,
+		timestamp: string,
+		signature: any,
+		fingerprint?: string,
+	): Promise<any> {
+		const body = {
+			user: userAccount.toString(),
+			dapp: dappAccount.toString(),
+			position,
+			targetPosition,
+			mouseMovements,
+			solveTime,
+			timestamp,
+			signature,
+			...(fingerprint && { fingerprint }),
+		};
+		return this.post(ClientApiPaths.SubmitSliderCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	public verifySliderCaptchaSolution(
+		token: ProcaptchaToken,
+		dappSignature: string,
+		userAccount: string,
+		verifiedTimeout?: number,
+	): Promise<any> {
+		const body = {
+			token,
+			dappSignature,
+			...(verifiedTimeout && { verifiedTimeout }),
+		};
+		return this.post(ClientApiPaths.VerifySliderCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
 	}
 }
