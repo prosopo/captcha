@@ -43,6 +43,8 @@ class ApiRegisterSiteKeyEndpoint
 
 		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
 
+		logger.info("Site key registered");
+
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
 		};

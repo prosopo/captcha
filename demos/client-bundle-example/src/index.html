@@ -3,10 +3,10 @@
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
     <title>Procaptcha demo: Implicit Rendering</title>
-    <script id="procaptchaScript" type="module" src="./assets/procaptcha.bundle.js" async defer></script>
+    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%" async defer></script>
     <script type="text/javascript">
         window.onCaptchaFailed = function () {
-            console.log('The user failed the captcha')
+            console.log('Challenge failed')
         }
     </script>
     <script type="module">

@@ -71,6 +71,10 @@ class RulesMongooseStorage implements RulesStorage {
 		if (!this.writingModel) {
 			throw this.modelNotSetProsopoError();
 		}
+		if (!this.readingModel) {
+			throw this.modelNotSetProsopoError();
+		}
+
 		const beforeDelete = await this.writingModel.find({});
 		this.logger.debug("Before deletion, DB records:", beforeDelete.length);
 
@@ -83,9 +87,6 @@ class RulesMongooseStorage implements RulesStorage {
 					...(record.userId && { userId: record.userId }),
 					...(record.ja4 && { ja4: record.ja4 }),
 				};
-
-				this.logger.debug("Attempting to delete with filter:", filter);
-
 				return {
 					deleteOne: {
 						filter,
@@ -93,7 +94,8 @@ class RulesMongooseStorage implements RulesStorage {
 				};
 			}),
 		);
-		const afterDelete = await this.writingModel.find({});
+		this.logger.debug("After deletion");
+		const afterDelete = await this.readingModel.find({});
 		this.logger.debug("After deletion, DB records:", afterDelete.length);
 
 		const documents = await this.writingModel.insertMany(records);

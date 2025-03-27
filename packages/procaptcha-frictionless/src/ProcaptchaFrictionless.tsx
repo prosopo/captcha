@@ -12,30 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getDefaultEvents, providerRetry } from "@prosopo/procaptcha-common";
+import { loadI18next } from "@prosopo/locale";
+import {
+	Checkbox,
+	getDefaultEvents,
+	providerRetry,
+} from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
 import { Procaptcha } from "@prosopo/procaptcha-react";
 import {
 	type FrictionlessState,
+	type ModeType,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
-	type ProcaptchaProps,
 } from "@prosopo/types";
-import { ProcaptchaPlaceholder } from "@prosopo/web-components";
+import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
 
-const renderPlaceholder = ({
-	config,
-	callbacks,
-	errorMessage,
-}: ProcaptchaProps) => (
-	<ProcaptchaPlaceholder
-		config={config}
-		callbacks={callbacks}
-		errorMessage={errorMessage}
-	/>
-);
+const renderPlaceholder = (
+	theme: string | undefined,
+	mode: ModeType,
+	errorMessage: string | undefined,
+	translationFn: (key: string) => string,
+	loading: boolean,
+) => {
+	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
+
+	if (mode === "invisible") {
+		return null;
+	}
+
+	return (
+		<Checkbox
+			theme={checkboxTheme}
+			onChange={async () => {}}
+			checked={false}
+			labelText={translationFn("WIDGET.I_AM_HUMAN")}
+			error={errorMessage}
+			aria-label="human checkbox"
+			loading={loading}
+		/>
+	);
+};
 
 type FrictionlessLoadingState = {
 	loading: boolean;
@@ -54,16 +73,35 @@ export const ProcaptchaFrictionless = ({
 	config,
 	callbacks,
 	restart,
+	i18n,
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
 	const events = getDefaultEvents(callbacks);
+
+	useEffect(() => {
+		if (config.language) {
+			if (i18n) {
+				if (i18n.language !== config.language) {
+					i18n.changeLanguage(config.language).then((r) => r);
+				}
+			} else {
+				loadI18next(false).then((i18n) => {
+					if (i18n.language !== config.language)
+						i18n.changeLanguage(config.language).then((r) => r);
+				});
+			}
+		}
+	}, [i18n, config.language]);
+
 	const [componentToRender, setComponentToRender] = useState(
-		renderPlaceholder({
-			config,
-			callbacks,
-			errorMessage: stateRef.current.errorMessage,
-		}),
+		renderPlaceholder(
+			config.theme,
+			config.mode,
+			stateRef.current.errorMessage,
+			i18n.t,
+			true,
+		),
 	);
 
 	const resetState = (attemptCount?: number) => {
@@ -72,13 +110,23 @@ export const ProcaptchaFrictionless = ({
 		);
 	};
 
-	const fallOverWithStyle = (errorMessage?: string) => {
+	const fallOverWithStyle = (errorMessage?: string, errorKey?: string) => {
+		// We could always re-render here after a period but this will result in never-ending requests to Providers when
+		// settings are incorrect, or the user is not human. We need to selectively re-render for events like
+		// `no session found` but not for other errors.
+		if (errorKey === "CAPTCHA.NO_SESSION_FOUND") {
+			setTimeout(() => {
+				restartComponentTimeout();
+			}, 0);
+		}
 		setComponentToRender(
-			renderPlaceholder({
-				config,
-				callbacks,
-				errorMessage: errorMessage || "Cannot load CAPTCHA",
-			}),
+			renderPlaceholder(
+				config.theme,
+				config.mode,
+				errorMessage || "Cannot load CAPTCHA",
+				i18n.t,
+				false,
+			),
 		);
 	};
 
@@ -106,7 +154,7 @@ export const ProcaptchaFrictionless = ({
 						errorMessage: result.error?.message,
 					};
 					events.onError(new Error(result.error?.message));
-					fallOverWithStyle(result.error?.message);
+					fallOverWithStyle(result.error?.message, result.error?.key);
 					return;
 				}
 
@@ -123,6 +171,7 @@ export const ProcaptchaFrictionless = ({
 							config={config}
 							callbacks={callbacks}
 							frictionlessState={frictionlessState}
+							i18n={i18n}
 						/>,
 					);
 				} else {
@@ -131,6 +180,7 @@ export const ProcaptchaFrictionless = ({
 							config={config}
 							callbacks={callbacks}
 							frictionlessState={frictionlessState}
+							i18n={i18n}
 						/>,
 					);
 

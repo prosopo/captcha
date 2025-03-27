@@ -32,7 +32,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
-import type { CaptchaType } from "../client/captchaType.js";
+import type { CaptchaType } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
@@ -89,6 +89,8 @@ export type TSubmitPowCaptchaSolutionURL =
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
+	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
+	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -111,6 +113,8 @@ export const ProviderDefaultRateLimits = {
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -343,6 +347,10 @@ export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
 	[ApiParams.tier]: nativeEnum(Tier),
 	[ApiParams.settings]: ClientSettingsSchema.optional(),
+});
+
+export const UpdateDetectorKeyBody = object({
+	[ApiParams.detectorKey]: string(),
 });
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;

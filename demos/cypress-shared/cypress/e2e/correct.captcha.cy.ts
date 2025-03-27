@@ -20,7 +20,7 @@ import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
-	type CaptchaType,
+	CaptchaType,
 	type IUserSettings,
 	type RegisterSitekeyBodyTypeOutput,
 	Tier,
@@ -30,9 +30,17 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 let captchaType: CaptchaType;
 
 describe("Captchas", () => {
-	before(async () => {
+	before(() => {
 		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
-		cy.registerSiteKey(captchaType);
+		// Call registerSiteKey and handle response here
+		return cy.registerSiteKey(captchaType).then((response) => {
+			// Log the response status and body using cy.task()
+			cy.task("log", `Response status: ${response.status}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+
+			// Ensure the request was successful
+			expect(response.status).to.equal(200);
+		});
 	});
 
 	beforeEach(() => {
@@ -64,6 +72,10 @@ describe("Captchas", () => {
 		});
 	});
 
+	after(() => {
+		return cy.registerSiteKey(CaptchaType.image);
+	});
+
 	it("Selecting the incorrect images fails the captcha", () => {
 		cy.window()
 			.its("console")
@@ -83,10 +95,7 @@ describe("Captchas", () => {
 		});
 
 		// check the logs by going through all recorded calls
-		cy.get("@log").should(
-			"have.been.calledWith",
-			"The user failed the captcha",
-		);
+		cy.get("@log").should("have.been.calledWith", "Challenge failed");
 	});
 
 	it("Selecting the correct images passes the captcha", () => {
