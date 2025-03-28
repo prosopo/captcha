@@ -11,11 +11,33 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { css } from "@emotion/react";
 import React, { type CSSProperties } from "react";
 type ModalProps = {
 	show: boolean;
 	children: React.ReactNode;
 };
+
+const ModalInnerDivCSS = css`
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 99%;
+	max-width: 500px;
+	background-color: white;
+	border: none;
+	z-index: 2147483647;
+	box-shadow: rgba(0, 0, 0, 0.2) 0px 11px 15px -7px,
+		rgba(0, 0, 0, 0.14) 0px 24px 38px 3px,
+		rgba(0, 0, 0, 0.12) 0px 9px 46px 8px;
+
+	/* iOS only */
+    @supports (-webkit-touch-callout: none) { 
+		transform: translate(-43%, -100%);
+    }
+`;
 
 const ModalComponent = React.memo(
 	(props: ModalProps, nextProps: ModalProps) => {
@@ -28,6 +50,7 @@ const ModalComponent = React.memo(
 			display,
 			alignItems: "center",
 			justifyContent: "center",
+			minHeight: "100vh",
 		};
 
 		const ModalBackgroundCSS: CSSProperties = {
@@ -39,24 +62,11 @@ const ModalComponent = React.memo(
 			backgroundColor: "rgba(0, 0, 0, 0.5)",
 			zIndex: 2147483645,
 		};
-		const ModalInnerDivCSS: CSSProperties = {
-			position: "absolute",
-			top: "50%",
-			left: "50%",
-			transform: "translate(-50%, -50%)",
-			width: "50%",
-			maxWidth: "500px",
-			backgroundColor: "white",
-			border: "none",
-			zIndex: 2147483647,
-			boxShadow:
-				"rgba(0, 0, 0, 0.2) 0px 11px 15px -7px, rgba(0, 0, 0, 0.14) 0px 24px 38px 3px, rgba(0, 0, 0, 0.12) 0px 9px 46px 8px,",
-		};
 
 		return (
 			<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
 				<div className="prosopo-modalBackground" style={ModalBackgroundCSS} />
-				<div className="prosopo-modalInner" style={ModalInnerDivCSS}>
+				<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
 					{children}
 				</div>
 			</div>
