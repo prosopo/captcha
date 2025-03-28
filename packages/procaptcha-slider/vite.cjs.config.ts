@@ -19,4 +19,4 @@ export default function () {
 		"procaptcha-slider",
 		path.resolve("./tsconfig.cjs.json"),
 	);
-} 
+}

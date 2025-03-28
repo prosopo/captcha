@@ -33,4 +33,4 @@ const SliderCaptcha = (props: SliderCaptchaProps) => (
 	</Suspense>
 );
 
-export default SliderCaptcha; 
+export default SliderCaptcha;
