@@ -35,7 +35,7 @@ const ModalInnerDivCSS = css`
 
 	/* iOS only */
     @supports (-webkit-touch-callout: none) { 
-		transform: translate(-43%, -100%);
+		transform: translate(-50%, -100%);
     }
 `;
 
