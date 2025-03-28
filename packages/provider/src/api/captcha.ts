@@ -158,7 +158,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					[ApiParams.status]: "ok",
 					[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 						...captcha,
-						target: req.t(`TARGET.${captcha.target}`),
+						target: req.t(captcha.target),
 						items: captcha.items.map((item) =>
 							parseCaptchaAssets(item, env.assetsResolver),
 						),
