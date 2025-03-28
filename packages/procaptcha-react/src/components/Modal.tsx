@@ -20,34 +20,35 @@ type ModalProps = {
 const ModalComponent = React.memo(
 	(props: ModalProps, nextProps: ModalProps) => {
 		const { show, children } = props;
-		const display = show ? "block" : "none";
+		const display = show ? "flex" : "none";
 		const ModalOuterDivCss: CSSProperties = {
 			position: "fixed",
 			zIndex: 2147483646,
 			inset: 0,
 			display,
+			alignItems: "center",
+			justifyContent: "center",
 		};
 
 		const ModalBackgroundCSS: CSSProperties = {
 			position: "fixed",
-			display: "flex",
-			alignItems: "center",
-			justifyContent: "center",
 			right: 0,
 			bottom: 0,
 			top: 0,
 			left: 0,
 			backgroundColor: "rgba(0, 0, 0, 0.5)",
-			zIndex: -1,
+			zIndex: 2147483645,
 		};
 		const ModalInnerDivCSS: CSSProperties = {
 			position: "absolute",
 			top: "50%",
 			left: "50%",
 			transform: "translate(-50%, -50%)",
-			width: "inherit",
-			backgroundColor: "transparent",
+			width: "50%",
+			maxWidth: "500px",
+			backgroundColor: "white",
 			border: "none",
+			zIndex: 2147483647,
 			boxShadow:
 				"rgba(0, 0, 0, 0.2) 0px 11px 15px -7px, rgba(0, 0, 0, 0.14) 0px 24px 38px 3px, rgba(0, 0, 0, 0.12) 0px 9px 46px 8px,",
 		};
