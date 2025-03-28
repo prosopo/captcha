@@ -73,7 +73,7 @@ export const CaptchaWidget = ({
 					flexBasis: "33.3333%",
 					// include the padding / margin / border in the width
 					boxSizing: "border-box",
-					paddingLeft: halfSpacing,
+					paddingLeft: index % 3 === 0 ? "0" : halfSpacing,
 					paddingTop: halfSpacing,
 				};
 				return (
@@ -100,6 +100,7 @@ export const CaptchaWidget = ({
 									objectFit: "contain", // contain the entire image in the img tag
 									aspectRatio: "1/1", // force AR to be 1, letterboxing images with different aspect ratios
 									height: "auto", // make the img tag responsive to its container
+									overflow: "hidden",
 								}}
 								src={item.data}
 								// biome-ignore lint/a11y/noRedundantAlt: has to contain image
