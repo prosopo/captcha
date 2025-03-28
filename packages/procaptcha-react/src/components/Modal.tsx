@@ -21,6 +21,7 @@ type ModalProps = {
 };
 
 const ModalInnerDivCSS = css`
+	font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 	position: absolute;
 	top: 50%;
 	left: 50%;
