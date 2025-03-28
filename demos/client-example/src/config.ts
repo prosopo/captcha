@@ -56,7 +56,8 @@ const configs = {
 		...configBase,
 
 		account: {
-			address: process.env.PROSOPO_SITE_KEY_SLIDER || process.env.PROSOPO_SITE_KEY,
+			address:
+				process.env.PROSOPO_SITE_KEY_SLIDER || process.env.PROSOPO_SITE_KEY,
 		},
 	}),
 };

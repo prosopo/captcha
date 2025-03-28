@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export { Manager } from "../services/Manager.js"; 
+export { Manager } from "../services/Manager.js";

@@ -13,4 +13,4 @@
 // limitations under the License.
 export { default as SliderCaptcha } from "./SliderCaptcha.js";
 export * from "./SliderCaptcha.js";
-export { default as SliderCaptchaWidget } from "./SliderCaptchaWidget.js"; 
+export { default as SliderCaptchaWidget } from "./SliderCaptchaWidget.js";

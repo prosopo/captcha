@@ -14,14 +14,21 @@
 
 /** @jsxImportSource @emotion/react */
 
-import { loadI18next, useTranslation } from "@prosopo/locale";
-import { Manager } from "../services/Manager.js";
-import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
-import { ProcaptchaConfigSchema, type ProcaptchaProps, type ProcaptchaSliderState, type ProcaptchaSliderStateUpdateFn, type SliderCaptchaResponseBody, type MouseMovement } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
-import { useEffect, useRef, useState, useCallback } from "react";
-import Modal from "./Modal.js";
 import { css, keyframes } from "@emotion/react";
+import { loadI18next, useTranslation } from "@prosopo/locale";
+import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
+import {
+	type MouseMovement,
+	ProcaptchaConfigSchema,
+	type ProcaptchaProps,
+	type ProcaptchaSliderState,
+	type ProcaptchaSliderStateUpdateFn,
+	type SliderCaptchaResponseBody,
+} from "@prosopo/types";
+import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Manager } from "../services/Manager.js";
+import Modal from "./Modal.js";
 
 // Define the same event name as in the bundle
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
@@ -60,21 +67,21 @@ const slideInAnimation = keyframes`
 
 // Modern color palette
 const colors = {
-	primary: '#4361ee',
-	primaryLight: '#4895ef',
-	primaryDark: '#3f37c9',
-	success: '#4cc9f0',
-	successLight: '#4cc9f0',
-	successDark: '#4361ee',
-	error: '#f72585',
-	errorLight: '#f72585',
-	errorDark: '#b5179e',
-	background: '#f8f9fa',
-	backgroundDark: '#e9ecef',
-	text: '#212529',
-	textLight: '#495057',
-	cardBg: '#ffffff',
-	border: '#dee2e6'
+	primary: "#4361ee",
+	primaryLight: "#4895ef",
+	primaryDark: "#3f37c9",
+	success: "#4cc9f0",
+	successLight: "#4cc9f0",
+	successDark: "#4361ee",
+	error: "#f72585",
+	errorLight: "#f72585",
+	errorDark: "#b5179e",
+	background: "#f8f9fa",
+	backgroundDark: "#e9ecef",
+	text: "#212529",
+	textLight: "#495057",
+	cardBg: "#ffffff",
+	border: "#dee2e6",
 };
 
 // Add styles for slider and puzzle captcha
@@ -299,7 +306,7 @@ const styles = {
 		&.show {
 			opacity: 1;
 		}
-	`
+	`,
 };
 
 // Define custom CSS class strings for slider states
@@ -386,7 +393,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		i18n,
 		callbacks,
 		mouseMovements: [],
-		attemptCount: 0
+		attemptCount: 0,
 	};
 
 	const manager = Manager(
@@ -397,7 +404,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		frictionlessState,
 	);
 	const theme = "light" === state.config.theme ? lightTheme : darkTheme;
-	
+
 	// Puzzle captcha state
 	const [sliderLeft, setSliderLeft] = useState(0);
 	const [sliderClass, setSliderClass] = useState("sliderContainer");
@@ -407,43 +414,46 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const [destX, setDestX] = useState(0);
 	const [puzzleImage, setPuzzleImage] = useState("");
 	const [showSuccessIcon, setShowSuccessIcon] = useState(false);
-	
+
 	// Canvas setup
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const blockRef = useRef<HTMLCanvasElement>(null);
 	const sliderRef = useRef<HTMLDivElement>(null);
 	const maskRef = useRef<HTMLDivElement>(null);
 	const thumbRef = useRef<HTMLDivElement>(null);
-	
+
 	// Constants for puzzle piece
 	const L = 42; // Puzzle piece size
-	const R = 9;  // Radius of the puzzle piece corners
-	
+	const R = 9; // Radius of the puzzle piece corners
+
 	// Additional refs for tracking drag
 	const isMouseDownRef = useRef<boolean>(false);
 	const originXRef = useRef<number>(0);
 	const originYRef = useRef<number>(0);
 	const trailRef = useRef<number[]>([]);
 	const xRef = useRef<number>(0);
-	
+
 	// Update type assertions for challenge
 	const challenge = state.challenge as SliderCaptchaResponseBody;
-	
+
 	// Update image URL checks
 	if (challenge?.imageUrl) {
-		console.log('[SliderCaptcha] Using server-provided image URL:', challenge.imageUrl);
+		console.log(
+			"[SliderCaptcha] Using server-provided image URL:",
+			challenge.imageUrl,
+		);
 	}
 
 	// Update target position checks
 	const serverTargetPosition = challenge?.targetPosition;
-	
+
 	// Initialize the puzzle immediately when the component mounts
 	useEffect(() => {
 		// Pre-generate a random destination so we have it ready
 		const randomX = getRandomInt(60, 260);
 		setDestX(randomX);
 		xRef.current = randomX;
-		
+
 		// Pre-load the initial image
 		setPuzzleImage(getRandomImage());
 	}, []);
@@ -459,14 +469,13 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 						resetPuzzle();
 					}
 				}, 50);
-				
+
 				// Clean up interval if modal closes
 				return () => clearInterval(checkInterval);
-			} else {
-				resetPuzzle();
-				// Return empty cleanup function to satisfy TypeScript
-				return () => {};
 			}
+			resetPuzzle();
+			// Return empty cleanup function to satisfy TypeScript
+			return () => {};
 		}
 		// Return empty cleanup function to satisfy TypeScript
 		return () => {};
@@ -491,10 +500,11 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		if (state.error) {
 			setLoading(false);
 			// Type error fix: Treat error as an object with a key property
-			const errorObj = typeof state.error === 'object' && state.error !== null 
-				? state.error as { key?: string }
-				: { key: undefined };
-			
+			const errorObj =
+				typeof state.error === "object" && state.error !== null
+					? (state.error as { key?: string })
+					: { key: undefined };
+
 			if (errorObj.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
 				setTimeout(() => {
 					frictionlessState.restart();
@@ -522,7 +532,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 				handleExecuteEvent,
 			);
 		};
-	}, [updateBaseState]); 
+	}, [updateBaseState]);
 
 	const getRandomImage = () => {
 		// Get a random image from picsum
@@ -533,14 +543,25 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	// Add additional logging for debugging server challenge
 	useEffect(() => {
 		if (manager && state?.challenge) {
-			console.log('[SliderCaptcha] Received challenge from server:', state.challenge);
+			console.log(
+				"[SliderCaptcha] Received challenge from server:",
+				state.challenge,
+			);
 			if (state.challenge.imageUrl) {
-				console.log('[SliderCaptcha] Using server-provided image URL:', state.challenge.imageUrl);
+				console.log(
+					"[SliderCaptcha] Using server-provided image URL:",
+					state.challenge.imageUrl,
+				);
 			} else {
-				console.log('[SliderCaptcha] No image URL provided, will generate client-side puzzle');
+				console.log(
+					"[SliderCaptcha] No image URL provided, will generate client-side puzzle",
+				);
 			}
 		}
 	}, [manager, state?.challenge]);
+
+	// Add a maximum retry count for image loading
+	const MAX_IMAGE_RETRIES = 3;
 
 	// Modify the resetPuzzle function to use the server-provided image if available
 	const resetPuzzle = useCallback(() => {
@@ -562,7 +583,9 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 				setImageLoading(false);
 			};
 			img.onerror = () => {
-				console.error("Failed to load server image, falling back to client-side generation");
+				console.error(
+					"Failed to load server image, falling back to client-side generation",
+				);
 				generateRandomImage(puzzleDestination);
 			};
 			img.src = state.challenge.imageUrl;
@@ -580,8 +603,8 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 
 		const canvas = canvasRef.current;
 		const block = blockRef.current;
-		const ctx = canvas.getContext('2d');
-		const blockCtx = block.getContext('2d');
+		const ctx = canvas.getContext("2d");
+		const blockCtx = block.getContext("2d");
 
 		if (!ctx || !blockCtx) {
 			return;
@@ -589,39 +612,46 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 
 		const canvasWidth = canvas.width;
 		const canvasHeight = canvas.height;
-		
+
 		// Clear canvas
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		blockCtx.clearRect(0, 0, block.width, block.height);
-		
+
 		// Draw the image on the canvas with proper scaling
 		ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-		
+
 		// Generate the puzzle piece
 		const blockX = 0;
 		const blockY = Math.random() * (canvasHeight - 60) + 10;
-		
+
 		// Store the current destination and block position
 		setDestX(destination);
 		xRef.current = destination;
 		setPuzzleImage(getRandomImage());
-		
+
 		// Create a puzzle piece and cut it out of the canvas
 		blockCtx.drawImage(canvas, blockX, blockY, 40, 40, 0, 0, 40, 40);
-		ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+		ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
 		ctx.fillRect(blockX, blockY, 40, 40);
 	};
 
 	// Add a function to generate a random image when there's no server-provided one
-	const generateRandomImage = (destination: number) => {
+	const generateRandomImage = (destination: number, retryCount = 0) => {
 		if (!canvasRef.current || !blockRef.current) {
+			return;
+		}
+
+		// If we've exceeded max retries, stop trying
+		if (retryCount >= MAX_IMAGE_RETRIES) {
+			console.error("Max image loading retries reached");
+			setImageLoading(false);
 			return;
 		}
 
 		const canvas = canvasRef.current;
 		const block = blockRef.current;
-		const ctx = canvas.getContext('2d');
-		const blockCtx = block.getContext('2d');
+		const ctx = canvas.getContext("2d");
+		const blockCtx = block.getContext("2d");
 
 		if (!ctx || !blockCtx) {
 			return;
@@ -635,55 +665,66 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		setIsFailed(false);
 		setShowSuccessIcon(false);
 		trailRef.current = [];
-		
+
 		// Store the destination value
 		setDestX(destination);
 		xRef.current = destination;
-		
+
 		// Set a new random image
 		setPuzzleImage(getRandomImage());
-		
+
 		// Draw the image onto the canvas once it's loaded
 		const img = new Image();
-		
+
 		img.onload = () => {
 			// Draw main image
 			ctx.drawImage(img, 0, 0, 320, 160);
-			
+
 			// Draw the puzzle piece shape
-			drawPuzzlePiece(ctx, destination, 80, 'fill');
-			drawPuzzlePiece(blockCtx, destination, 80, 'clip');
-			
+			drawPuzzlePiece(ctx, destination, 80, "fill");
+			drawPuzzlePiece(blockCtx, destination, 80, "clip");
+
 			// Draw the image on the block canvas
 			blockCtx.drawImage(img, 0, 0, 320, 160);
-			
+
 			// Get the puzzle piece image data and place it at the left
-			const imageData = blockCtx.getImageData(destination - R, 80 - R * 2, L + R * 2, L + R * 2);
+			const imageData = blockCtx.getImageData(
+				destination - R,
+				80 - R * 2,
+				L + R * 2,
+				L + R * 2,
+			);
 			blockCtx.clearRect(0, 0, 320, 160);
 			block.width = L + R * 2;
 			blockCtx.putImageData(imageData, 0, 80 - R * 2);
-			
+
 			// Hide loading state
 			setImageLoading(false);
 		};
-		
+
 		img.onerror = () => {
 			// Handle image loading error by trying a different image
-			console.error("Failed to load image, trying another one");
+			console.error(`Failed to load image (attempt ${retryCount + 1}/${MAX_IMAGE_RETRIES}), trying another one`);
 			setPuzzleImage(getRandomImage());
-			generateRandomImage(destination);
+			// Pass the retry count to prevent infinite loops
+			generateRandomImage(destination, retryCount + 1);
 		};
-		
+
 		img.crossOrigin = "Anonymous";
 		img.src = puzzleImage;
 	};
 
 	// Draw the puzzle piece
-	const drawPuzzlePiece = (ctx: CanvasRenderingContext2D, x: number, y: number, operation: 'fill' | 'clip') => {
+	const drawPuzzlePiece = (
+		ctx: CanvasRenderingContext2D,
+		x: number,
+		y: number,
+		operation: "fill" | "clip",
+	) => {
 		const l = L; // side length
 		const r = R; // radius
 		const PI = Math.PI;
-		
+
 		ctx.beginPath();
 		ctx.moveTo(x, y);
 		ctx.arc(x + l / 2, y - r + 2, r, 0.72 * PI, 2.26 * PI);
@@ -698,8 +739,8 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
 		ctx.stroke();
 		ctx.globalCompositeOperation = "destination-over";
-		
-		if (operation === 'fill') {
+
+		if (operation === "fill") {
 			ctx.fill();
 		} else {
 			ctx.clip();
@@ -710,17 +751,20 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const verifySlider = (sliderLeftValue: number) => {
 		// Get the current target position from state or destX
 		const targetPosition = state?.challenge?.targetPosition || destX;
-		
+
 		// Debug logging
-		console.log('[SliderCaptcha] Verifying slider position:', sliderLeftValue);
-		console.log('[SliderCaptcha] Target position:', targetPosition);
-		console.log('[SliderCaptcha] Distance from target:', Math.abs(sliderLeftValue - targetPosition));
-		
+		console.log("[SliderCaptcha] Verifying slider position:", sliderLeftValue);
+		console.log("[SliderCaptcha] Target position:", targetPosition);
+		console.log(
+			"[SliderCaptcha] Distance from target:",
+			Math.abs(sliderLeftValue - targetPosition),
+		);
+
 		// Calculate verification based on how close the slider is to the target position
 		const isClose = Math.abs(sliderLeftValue - targetPosition) < 10;
-		
-		console.log('[SliderCaptcha] Is close enough to target?', isClose);
-		
+
+		console.log("[SliderCaptcha] Is close enough to target?", isClose);
+
 		// Return verification data
 		return {
 			verified: isClose,
@@ -730,10 +774,10 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 
 	// Touch and mouse event handlers similar to the demo
 	const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-		if ('touches' in e && e.touches[0]) {
+		if ("touches" in e && e.touches[0]) {
 			originXRef.current = e.touches[0].clientX;
 			originYRef.current = e.touches[0].clientY;
-		} else if ('clientX' in e) {
+		} else if ("clientX" in e) {
 			originXRef.current = e.clientX;
 			originYRef.current = e.clientY;
 		}
@@ -744,9 +788,10 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const handleDragMove = (e: MouseEvent | TouchEvent) => {
 		if (!isMouseDownRef.current) return false;
 		e.preventDefault();
-		
-		let eventX, eventY;
-		if ('touches' in e) {
+
+		let eventX;
+		let eventY;
+		if ("touches" in e) {
 			if (!e.touches[0]) return false;
 			eventX = e.touches[0].clientX;
 			eventY = e.touches[0].clientY;
@@ -754,88 +799,93 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 			eventX = e.clientX;
 			eventY = e.clientY;
 		}
-		
+
 		const moveX = eventX - originXRef.current;
 		const moveY = eventY - originYRef.current;
-		
+
 		// Limit movement within bounds
 		if (moveX < 0 || moveX + 38 >= 320) return false;
-		
+
 		// Update slider position
 		setSliderLeft(moveX);
-		
+
 		// Calculate block position (adjusting for margins)
 		const blockLeft = ((320 - 40 - 20) / (320 - 40)) * moveX;
-		
+
 		// Apply position directly to the DOM
 		if (blockRef.current) {
 			blockRef.current.style.left = `${blockLeft}px`;
 		}
-		
+
 		// Update slider appearance
 		setSliderClass("sliderContainer sliderContainer_active");
-		
+
 		// Record Y movement for verification
 		trailRef.current.push(moveY);
-		
+
 		// Track mouse movement in manager for verification
 		manager.trackMouseMovement(eventX, eventY);
-		
+
 		return true;
 	};
 
 	const handleDragEnd = (e: MouseEvent | TouchEvent) => {
 		if (!isMouseDownRef.current) return false;
 		isMouseDownRef.current = false;
-		
+
 		let eventX;
-		if ('changedTouches' in e && e.changedTouches[0]) {
+		if ("changedTouches" in e && e.changedTouches[0]) {
 			eventX = e.changedTouches[0].clientX;
-		} else if ('clientX' in e) {
+		} else if ("clientX" in e) {
 			eventX = e.clientX;
 		} else {
 			return false; // No valid coordinates found
 		}
-		
+
 		// No movement case
 		if (eventX === originXRef.current) return false;
-		
+
 		setSliderClass("sliderContainer");
-		
+
 		// Verify the puzzle completion
 		const verificationData = verifySlider(eventX);
 		const { verified } = verificationData;
-		
+
 		// Calculate stats for debug purposes
 		const yTrailData = trailRef.current;
-		const yAverage = yTrailData.length > 0 ? yTrailData.reduce(sum) / yTrailData.length : 0;
-		const yDeviations = yTrailData.map(y => y - yAverage);
-		const yStdDev = yTrailData.length > 0 ? 
-			Math.sqrt(yDeviations.map(square).reduce(sum, 0) / yTrailData.length) : 0;
-		
+		const yAverage =
+			yTrailData.length > 0 ? yTrailData.reduce(sum) / yTrailData.length : 0;
+		const yDeviations = yTrailData.map((y) => y - yAverage);
+		const yStdDev =
+			yTrailData.length > 0
+				? Math.sqrt(yDeviations.map(square).reduce(sum, 0) / yTrailData.length)
+				: 0;
+
 		const debugInfo = {
 			captchaResult: {
 				passed: verified,
 				destX: verificationData.destX ?? 0,
-				verified: verified
+				verified: verified,
 			},
 			positionData: {
 				sliderPosition: eventX,
 				blockPosition: verificationData.destX ?? 0,
 				targetPosition: verificationData.destX ?? 0,
-				offset: Math.abs((verificationData.destX ?? 0) - (verificationData.destX ?? 0))
+				offset: Math.abs(
+					(verificationData.destX ?? 0) - (verificationData.destX ?? 0),
+				),
 			},
 			mouseMovement: {
 				yTrailPoints: yTrailData.length,
 				yAverage: yAverage.toFixed(2),
 				yStandardDeviation: yStdDev.toFixed(2),
-				hasVariation: yStdDev > 0
-			}
+				hasVariation: yStdDev > 0,
+			},
 		};
-		
+
 		console.log(`Captcha Debug Information:
 ${JSON.stringify(debugInfo, null, 2)}`);
-		
+
 		if (verified) {
 			// Success case - Use the manager's onSuccess to verify with additional checks
 			manager.onSuccess(eventX, verificationData.destX).then((isVerified) => {
@@ -850,7 +900,7 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 					// Verification still failed in manager's additional checks
 					setSliderClass("sliderContainer sliderContainer_fail");
 					setIsFailed(true);
-					
+
 					// Reset after delay
 					setTimeout(() => {
 						resetPuzzle();
@@ -861,30 +911,30 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 			// Puzzle piece not in the right position
 			setSliderClass("sliderContainer sliderContainer_fail");
 			setIsFailed(true);
-			
+
 			// Reset after delay
 			setTimeout(() => {
 				resetPuzzle();
 			}, 1000);
 		}
-		
+
 		return true;
 	};
 
 	// Remove separate mouse/touch event handlers and use container-level handling
 	useEffect(() => {
 		// Add event listeners to the document for drag events
-		document.addEventListener('mousemove', handleDragMove);
-		document.addEventListener('mouseup', handleDragEnd);
-		document.addEventListener('touchmove', handleDragMove, { passive: false });
-		document.addEventListener('touchend', handleDragEnd);
-		
+		document.addEventListener("mousemove", handleDragMove);
+		document.addEventListener("mouseup", handleDragEnd);
+		document.addEventListener("touchmove", handleDragMove, { passive: false });
+		document.addEventListener("touchend", handleDragEnd);
+
 		// Cleanup function to remove event listeners
 		return () => {
-			document.removeEventListener('mousemove', handleDragMove);
-			document.removeEventListener('mouseup', handleDragEnd);
-			document.removeEventListener('touchmove', handleDragMove);
-			document.removeEventListener('touchend', handleDragEnd);
+			document.removeEventListener("mousemove", handleDragMove);
+			document.removeEventListener("mouseup", handleDragEnd);
+			document.removeEventListener("touchmove", handleDragMove);
+			document.removeEventListener("touchend", handleDragEnd);
 		};
 	}, []);
 
@@ -897,7 +947,7 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 				img.src = getRandomImage();
 			}
 		};
-		
+
 		preloadImages();
 	}, []);
 
@@ -905,9 +955,9 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 	useEffect(() => {
 		const addSliderStyles = () => {
 			// Add CSS for slider states if not already in document
-			if (!document.getElementById('slider-captcha-styles')) {
-				const styleEl = document.createElement('style');
-				styleEl.id = 'slider-captcha-styles';
+			if (!document.getElementById("slider-captcha-styles")) {
+				const styleEl = document.createElement("style");
+				styleEl.id = "slider-captcha-styles";
 				styleEl.textContent = `
 					${sliderActiveClass}
 					${sliderSuccessClass}
@@ -918,12 +968,12 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 				document.head.appendChild(styleEl);
 			}
 		};
-		
+
 		addSliderStyles();
-		
+
 		return () => {
 			// Clean up styles when component unmounts
-			const styleEl = document.getElementById('slider-captcha-styles');
+			const styleEl = document.getElementById("slider-captcha-styles");
 			if (styleEl) {
 				document.head.removeChild(styleEl);
 			}
@@ -932,14 +982,20 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 
 	// Success icon component (checkmark)
 	const SuccessIcon = () => (
-		<div 
-			className={`success-icon ${showSuccessIcon ? 'show' : ''}`}
+		<div
+			className={`success-icon ${showSuccessIcon ? "show" : ""}`}
 			css={styles.successIcon}
 			aria-hidden="true"
 		>
-			<svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-				<path 
-					d="M8.79508 15.875L4.62508 11.705L3.20508 13.115L8.79508 18.705L20.7951 6.70504L19.3851 5.29504L8.79508 15.875Z" 
+			<svg
+				width="60"
+				height="60"
+				viewBox="0 0 24 24"
+				fill="none"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<path
+					d="M8.79508 15.875L4.62508 11.705L3.20508 13.115L8.79508 18.705L20.7951 6.70504L19.3851 5.29504L8.79508 15.875Z"
 					fill="currentColor"
 				/>
 			</svg>
@@ -951,31 +1007,33 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 			<Modal show={state.showModal}>
 				<div css={styles.container}>
 					<div css={styles.title}>Verify you are human</div>
-					<div css={styles.instruction}>Drag the puzzle piece into position</div>
-					
+					<div css={styles.instruction}>
+						Drag the puzzle piece into position
+					</div>
+
 					<div css={styles.canvasContainer}>
-						<canvas 
-							css={styles.canvas} 
-							ref={canvasRef} 
-							width="320" 
-							height="160" 
+						<canvas
+							css={styles.canvas}
+							ref={canvasRef}
+							width="320"
+							height="160"
 						/>
-						<canvas 
-							css={styles.block} 
+						<canvas
+							css={styles.block}
 							ref={blockRef}
 							className="block"
-							width="320" 
-							height="160" 
+							width="320"
+							height="160"
 							onMouseDown={handleDragStart}
 							onTouchStart={handleDragStart}
 						/>
 						{imageLoading && (
 							<div css={styles.loadingOverlay}>
-								<div css={styles.loadingSpinner}></div>
+								<div css={styles.loadingSpinner} />
 								<div css={styles.loadingText}>Loading puzzle...</div>
 							</div>
 						)}
-						<div 
+						<div
 							css={styles.refreshIcon}
 							onClick={resetPuzzle}
 							aria-label="Refresh puzzle"
@@ -984,19 +1042,19 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 						</div>
 						{showSuccessIcon && <SuccessIcon />}
 					</div>
-					
-					<div 
-						css={styles.sliderContainer} 
+
+					<div
+						css={styles.sliderContainer}
 						ref={sliderRef}
 						className={sliderClass}
 					>
-						<div 
-							css={styles.sliderMask} 
+						<div
+							css={styles.sliderMask}
 							ref={maskRef}
 							style={{ width: `${sliderLeft}px` }}
 						/>
-						<div 
-							css={styles.slider} 
+						<div
+							css={styles.slider}
 							ref={thumbRef}
 							style={{ left: `${sliderLeft}px` }}
 							onMouseDown={handleDragStart}
@@ -1013,31 +1071,33 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 			<Modal show={state.showModal}>
 				<div css={styles.container}>
 					<div css={styles.title}>Verify you are human</div>
-					<div css={styles.instruction}>Drag the puzzle piece into position</div>
-					
+					<div css={styles.instruction}>
+						Drag the puzzle piece into position
+					</div>
+
 					<div css={styles.canvasContainer}>
-						<canvas 
-							css={styles.canvas} 
-							ref={canvasRef} 
-							width="320" 
-							height="160" 
+						<canvas
+							css={styles.canvas}
+							ref={canvasRef}
+							width="320"
+							height="160"
 						/>
-						<canvas 
-							css={styles.block} 
+						<canvas
+							css={styles.block}
 							ref={blockRef}
 							className="block"
-							width="320" 
-							height="160" 
+							width="320"
+							height="160"
 							onMouseDown={handleDragStart}
 							onTouchStart={handleDragStart}
 						/>
 						{imageLoading && (
 							<div css={styles.loadingOverlay}>
-								<div css={styles.loadingSpinner}></div>
+								<div css={styles.loadingSpinner} />
 								<div css={styles.loadingText}>Loading puzzle...</div>
 							</div>
 						)}
-						<div 
+						<div
 							css={styles.refreshIcon}
 							onClick={resetPuzzle}
 							aria-label="Refresh puzzle"
@@ -1046,19 +1106,19 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 						</div>
 						{showSuccessIcon && <SuccessIcon />}
 					</div>
-					
-					<div 
-						css={styles.sliderContainer} 
+
+					<div
+						css={styles.sliderContainer}
 						ref={sliderRef}
 						className={sliderClass}
 					>
-						<div 
-							css={styles.sliderMask} 
+						<div
+							css={styles.sliderMask}
 							ref={maskRef}
 							style={{ width: `${sliderLeft}px` }}
 						/>
-						<div 
-							css={styles.slider} 
+						<div
+							css={styles.slider}
 							ref={thumbRef}
 							style={{ left: `${sliderLeft}px` }}
 							onMouseDown={handleDragStart}
@@ -1081,9 +1141,15 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 				checked={state.isHuman}
 				labelText={t("WIDGET.I_AM_HUMAN")}
 				// Type error fix: Ensure error property has message or convert to string
-				error={typeof state.error === 'object' && state.error !== null && 'message' in state.error 
-					? (state.error as {message: string}).message
-					: typeof state.error === 'string' ? state.error : undefined}
+				error={
+					typeof state.error === "object" &&
+					state.error !== null &&
+					"message" in state.error
+						? (state.error as { message: string }).message
+						: typeof state.error === "string"
+							? state.error
+							: undefined
+				}
 				aria-label="human checkbox"
 				loading={loading}
 			/>
@@ -1091,4 +1157,4 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 	);
 };
 
-export default SliderCaptchaWidget; 
+export default SliderCaptchaWidget;

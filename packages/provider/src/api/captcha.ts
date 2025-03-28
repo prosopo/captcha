@@ -31,15 +31,15 @@ import {
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
-	type PowCaptchaSolutionResponse,
-	SubmitPowCaptchaSolutionBody,
-	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	GetSliderCaptchaChallengeRequestBody,
 	type GetSliderCaptchaChallengeRequestBodyTypeOutput,
 	type GetSliderCaptchaResponse,
+	type PowCaptchaSolutionResponse,
+	type SliderCaptchaSolutionResponse,
+	SubmitPowCaptchaSolutionBody,
+	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	SubmitSliderCaptchaSolutionBody,
 	type SubmitSliderCaptchaSolutionBodyTypeOutput,
-	type SliderCaptchaSolutionResponse,
 	VerifySliderCaptchaSolutionBody,
 	type VerifySliderCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
@@ -54,6 +54,12 @@ import { getIPAddress } from "../util.js";
 import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
+
+// Add helper function to get random image URL
+const getRandomImageUrl = () => {
+	const imageId = Math.floor(Math.random() * 1000) + 1;
+	return `https://picsum.photos/id/${imageId}/320/160`;
+};
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -644,69 +650,72 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * @param {string} userAccount - User address
 	 * @param {string} dappAccount - Dapp address
 	 */
-	router.post(ClientApiPaths.GetSliderCaptchaChallenge, async (req, res, next) => {
-		let parsed: GetSliderCaptchaChallengeRequestBodyTypeOutput;
+	router.post(
+		ClientApiPaths.GetSliderCaptchaChallenge,
+		async (req, res, next) => {
+			let parsed: GetSliderCaptchaChallengeRequestBodyTypeOutput;
 
-		try {
-			parsed = GetSliderCaptchaChallengeRequestBody.parse(req.body);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
-				}),
-			);
-		}
-
-		const { user, dapp, sessionId } = parsed;
-
-		validiateSiteKey(dapp);
-		validateAddr(user);
-
-		try {
-			const clientSettings = await tasks.db.getClientRecord(dapp);
-
-			if (!clientSettings) {
+			try {
+				parsed = GetSliderCaptchaChallengeRequestBody.parse(req.body);
+			} catch (err) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err },
 						i18n: req.i18n,
 						logger: req.logger,
 					}),
 				);
 			}
 
-			// Dummy successful response for slider captcha challenge
-			const getSliderCaptchaResponse: GetSliderCaptchaResponse = {
-				status: "ok",
-				imageUrl: "https://example.com/slider-puzzle.jpg",
-				targetPosition: Math.floor(Math.random() * 280) + 20, // Random position between 20-300
-				timestamp: Date.now().toString(),
-				signature: {
-					provider: {
-						challenge: "dummy-signature",
-					},
-				},
-			};
+			const { user, dapp, sessionId } = parsed;
 
-			return res.json(getSliderCaptchaResponse);
-		} catch (err) {
-			req.logger.error({ err, body: req.body });
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						user: req.body.user,
-						error: err,
+			validiateSiteKey(dapp);
+			validateAddr(user);
+
+			try {
+				const clientSettings = await tasks.db.getClientRecord(dapp);
+
+				if (!clientSettings) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
+				// Dummy successful response for slider captcha challenge
+				const getSliderCaptchaResponse: GetSliderCaptchaResponse = {
+					status: "ok",
+					imageUrl: getRandomImageUrl(),
+					targetPosition: Math.floor(Math.random() * 280) + 20, // Random position between 20-300
+					timestamp: Date.now().toString(),
+					signature: {
+						provider: {
+							challenge: "dummy-signature",
+						},
 					},
-					i18n: req.i18n,
-					logger: req.logger,
-				}),
-			);
-		}
-	});
+				};
+
+				return res.json(getSliderCaptchaResponse);
+			} catch (err) {
+				req.logger.error({ err, body: req.body });
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							code: 500,
+							siteKey: req.body.dapp,
+							user: req.body.user,
+							error: err,
+						},
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
 
 	/**
 	 * Verifies a user's Slider captcha solution
@@ -754,11 +763,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				}
 
 				// Dummy successful response for slider captcha solution verification
-				const response: SliderCaptchaSolutionResponse = { 
-					status: "ok", 
-					verified: true 
+				const response: SliderCaptchaSolutionResponse = {
+					status: "ok",
+					verified: true,
 				};
-				
+
 				return res.json(response);
 			} catch (err) {
 				req.logger.error({ err, body: req.body });
@@ -799,11 +808,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			try {
 				// Dummy successful response for slider captcha token verification
-				const response: SliderCaptchaSolutionResponse = { 
-					status: "ok", 
-					verified: true 
+				const response: SliderCaptchaSolutionResponse = {
+					status: "ok",
+					verified: true,
 				};
-				
+
 				return res.json(response);
 			} catch (err) {
 				req.logger.error({ err, body: req.body });

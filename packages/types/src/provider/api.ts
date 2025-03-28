@@ -447,11 +447,13 @@ export const SubmitSliderCaptchaSolutionBody = object({
 	dapp: string(),
 	position: number(),
 	targetPosition: number(),
-	mouseMovements: array(object({
-		x: number(),
-		y: number(),
-		time: number()
-	})),
+	mouseMovements: array(
+		object({
+			x: number(),
+			y: number(),
+			time: number(),
+		}),
+	),
 	solveTime: number(),
 	timestamp: string(),
 	signature: object({

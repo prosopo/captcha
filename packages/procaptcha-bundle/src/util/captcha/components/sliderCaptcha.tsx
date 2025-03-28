@@ -28,4 +28,4 @@ const SliderCaptcha = (props: CaptchaProps) => {
 	);
 };
 
-export { SliderCaptcha }; 
+export { SliderCaptcha };
