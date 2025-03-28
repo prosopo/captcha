@@ -14,20 +14,23 @@
 
 import { css } from "@emotion/react";
 import React, { type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 type ModalProps = {
 	show: boolean;
 	children: React.ReactNode;
 };
 
 const ModalInnerDivCSS = css`
+	font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
 	width: 99%;
 	max-width: 500px;
-	background-color: white;
+	background-color: transparent;
 	border: none;
+	border-radius: 4px;
 	z-index: 2147483647;
 	box-shadow: rgba(0, 0, 0, 0.2) 0px 11px 15px -7px,
 		rgba(0, 0, 0, 0.14) 0px 24px 38px 3px,
@@ -53,23 +56,13 @@ const ModalComponent = React.memo(
 			minHeight: "100vh",
 		};
 
-		const ModalBackgroundCSS: CSSProperties = {
-			position: "fixed",
-			right: 0,
-			bottom: 0,
-			top: 0,
-			left: 0,
-			backgroundColor: "rgba(0, 0, 0, 0.5)",
-			zIndex: 2147483645,
-		};
-
-		return (
+		return createPortal(
 			<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
-				<div className="prosopo-modalBackground" style={ModalBackgroundCSS} />
 				<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
 					{children}
 				</div>
-			</div>
+			</div>,
+			document.body, // Renders modal in the global document, outside the Shadow DOM
 		);
 	},
 );

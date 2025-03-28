@@ -81,6 +81,9 @@ const CaptchaComponent = ({
 						display: "flex",
 						flexDirection: "column",
 						minWidth: "300px",
+						marginLeft: fullSpacing,
+						marginRight: fullSpacing,
+						justifyContent: "center",
 					}}
 				>
 					<div
@@ -95,8 +98,6 @@ const CaptchaComponent = ({
 								backgroundColor: theme.palette.primary.main,
 								width: "100%",
 								marginTop: fullSpacing,
-								marginLeft: fullSpacing,
-								marginRight: fullSpacing,
 							}}
 						>
 							<div
