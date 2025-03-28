@@ -567,6 +567,26 @@ export const Manager = (
 					);
 
 				debug("Received slider captcha challenge", sliderCaptchaResponse);
+
+				// Transform the response into the format expected by the widget
+				const widgetChallenge: SliderCaptchaResponseBody = {
+					status: sliderCaptchaResponse.status,
+					captchas: [], // Not used by slider captcha
+					requestHash: sliderCaptchaResponse.signature.provider.challenge,
+					timestamp: sliderCaptchaResponse.timestamp,
+					signature: {
+						provider: {
+							requestHash: sliderCaptchaResponse.signature.provider.challenge,
+						},
+					},
+					imageUrl: sliderCaptchaResponse.imageUrl,
+					targetPosition: sliderCaptchaResponse.targetPosition,
+				};
+
+				// Store the challenge in state so the widget can use the image URL
+				updateState({
+					challenge: widgetChallenge,
+				});
 			} catch (err) {
 				debug("Error getting slider captcha challenge", err);
 				console.error("Failed to get slider captcha challenge", err);
