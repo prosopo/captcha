@@ -24,6 +24,7 @@ import { DatasetManager } from "./dataset/datasetTasks.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
+import { SliderCaptchaManager } from "./sliderCaptcha/sliderTasks.js";
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -39,6 +40,8 @@ export class Tasks {
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
 	frictionlessManager: FrictionlessManager;
+	sliderCaptchaManager: SliderCaptchaManager;
+	clientManager: ClientTaskManager;
 
 	constructor(env: ProviderEnvironment) {
 		this.config = env.config;
@@ -47,37 +50,52 @@ export class Tasks {
 		this.logger = getLogger(env.config.logLevel, "Tasks");
 		if (!env.pair) {
 			throw new ProsopoEnvError("DEVELOPER.MISSING_PROVIDER_PAIR", {
-				context: { failedFuncName: "Tasks.constructor" },
+				context: { error: "No account was set" },
 			});
 		}
 		this.pair = env.pair;
 
-		this.powCaptchaManager = new PowCaptchaManager(
-			this.db,
-			this.pair,
-			this.logger,
-		);
+		// Create managers that don't depend on other managers first
 		this.datasetManager = new DatasetManager(
 			this.config,
 			this.logger,
 			this.captchaConfig,
 			this.db,
 		);
+
+		this.frictionlessManager = new FrictionlessManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
+		);
+
+		this.powCaptchaManager = new PowCaptchaManager(
+			this.db,
+			this.pair,
+			this.logger,
+		);
+
+		this.clientTaskManager = new ClientTaskManager(
+			this.config,
+			this.logger,
+			this.db,
+		);
+
+		// ClientManager is an alias of ClientTaskManager
+		this.clientManager = this.clientTaskManager;
+
+		// Create managers that depend on other managers
 		this.imgCaptchaManager = new ImgCaptchaManager(
 			this.db,
 			this.pair,
 			this.config,
 			this.logger,
 		);
-		this.clientTaskManager = new ClientTaskManager(
-			this.config,
-			this.logger,
-			this.db,
-		);
-		this.frictionlessManager = new FrictionlessManager(
+
+		this.sliderCaptchaManager = new SliderCaptchaManager(
 			this.db,
 			this.pair,
-			this.config,
 			this.logger,
 		);
 	}

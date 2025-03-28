@@ -59,6 +59,9 @@ import {
 	ScheduledTaskSchema,
 	type SessionRecord,
 	SessionRecordSchema,
+	type SliderCaptchaRecord,
+	SliderCaptchaRecordSchema,
+	type SliderCaptchaStored,
 	type SolutionRecord,
 	SolutionRecordSchema,
 	type StoredCaptcha,
@@ -90,9 +93,10 @@ enum TableNames {
 	pending = "pending",
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
+	slidercaptcha = "slidercaptcha",
 	client = "client",
 	frictionlessToken = "frictionlessToken",
-	session = "session",
+	sessions = "sessions",
 	userAccessRules = "userAccessRules",
 	detector = "detector",
 }
@@ -107,6 +111,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
 		schema: PoWCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.slidercaptcha,
+		modelName: "SliderCaptcha",
+		schema: SliderCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.dataset,
@@ -149,7 +158,7 @@ const PROVIDER_TABLES = [
 		schema: FrictionlessTokenRecordSchema,
 	},
 	{
-		collectionName: TableNames.session,
+		collectionName: TableNames.sessions,
 		modelName: "Session",
 		schema: SessionRecordSchema,
 	},
@@ -965,7 +974,7 @@ export class ProviderDatabase
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
 			this.logger.debug({ action: "storing", sessionRecord });
-			await this.tables.session.create(sessionRecord);
+			await this.tables.sessions.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
 				context: { error: err, sessionId: sessionRecord.sessionId },
@@ -984,7 +993,7 @@ export class ProviderDatabase
 		this.logger.debug({ action: "checking and removing", sessionId });
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
 		try {
-			const session = await this.tables.session
+			const session = await this.tables.sessions
 				.findOneAndDelete<SessionRecord>(filter)
 				.lean<SessionRecord>();
 			return session || undefined;
@@ -1509,8 +1518,16 @@ export class ProviderDatabase
 
 	/** @description Remove a detector key */
 	async removeDetectorKey(detectorKey: string): Promise<void> {
-		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
-		await this.tables?.detector.deleteOne(filter);
+		try {
+			await this.tables.detector.deleteOne({
+				detectorKey,
+			});
+		} catch (err) {
+			this.logger.error("DATABASE.DETECTOR_REMOVE_FAILED", { err });
+			throw new ProsopoDBError("DATABASE.DETECTOR_REMOVE_FAILED", {
+				context: { err },
+			});
+		}
 	}
 
 	/**
@@ -1523,5 +1540,140 @@ export class ProviderDatabase
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
 		return (keyRecords || []).map((record) => record.detectorKey);
+	}
+
+	/**
+	 * @description Adds a new Slider Captcha record to the database.
+	 * @param {SliderCaptchaStored} sliderCaptcha The slider captcha data
+	 * @returns {Promise<void>} A promise that resolves when the record is added.
+	 */
+	async storeSliderCaptchaRecord(sliderCaptcha: SliderCaptchaStored): Promise<void> {
+		try {
+			await this.tables.slidercaptcha.create({
+				...sliderCaptcha,
+				storedAtTimestamp: new Date(),
+			});
+			this.logger.info("Slider captcha record stored", { id: sliderCaptcha.id });
+		} catch (err) {
+			this.logger.error("Failed to store slider captcha record", { 
+				err,
+				id: sliderCaptcha.id
+			});
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_STORE_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	/**
+	 * @description Gets a Slider Captcha record by its ID.
+	 * @param {string} id The ID of the slider captcha record.
+	 * @returns {Promise<SliderCaptchaRecord | null>} A promise that resolves to the record or null if not found.
+	 */
+	async getSliderCaptchaRecordById(id: string): Promise<SliderCaptchaRecord | null> {
+		try {
+			return await this.tables.slidercaptcha.findOne({ id });
+		} catch (err) {
+			this.logger.error("Failed to get slider captcha record", { err, id });
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_GET_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	/**
+	 * @description Updates a Slider Captcha record in the database.
+	 * @param {string} id The ID of the slider captcha to be updated.
+	 * @param {CaptchaResult} result The verification result.
+	 * @param {boolean} serverChecked Whether the captcha has been server-checked.
+	 * @param {boolean} userSubmitted Whether the user has submitted the captcha.
+	 * @param {number} position The position value submitted by the user.
+	 * @param {number} solveTime The time taken to solve the captcha.
+	 * @param {string} userSignature The user's signature.
+	 * @returns {Promise<void>} A promise that resolves when the record is updated.
+	 */
+	async updateSliderCaptchaRecord(
+		id: string,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		position?: number,
+		solveTime?: number,
+		userSignature?: string,
+	): Promise<void> {
+		try {
+			const update: any = {
+				result,
+				serverChecked,
+				userSubmitted,
+				lastUpdatedTimestamp: Date.now(),
+			};
+			
+			if (position !== undefined) {
+				update.position = position;
+			}
+			
+			if (solveTime !== undefined) {
+				update.solveTime = solveTime;
+			}
+			
+			if (userSignature) {
+				update.userSignature = userSignature;
+			}
+			
+			const updatedRecord = await this.tables.slidercaptcha.findOneAndUpdate(
+				{ id },
+				{ $set: update },
+				{ new: true }
+			);
+			
+			if (!updatedRecord) {
+				throw new Error(`Slider captcha record with id ${id} not found`);
+			}
+			
+			this.logger.info("Slider captcha record updated", { id });
+		} catch (err) {
+			this.logger.error("Failed to update slider captcha record", { err, id });
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_UPDATE_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	/**
+	 * @description Marks a Slider Captcha as checked by the server.
+	 * @param {string} id The ID of the slider captcha.
+	 * @returns {Promise<void>} A promise that resolves when the operation is complete.
+	 */
+	async markSliderCaptchaChecked(id: string): Promise<void> {
+		try {
+			const updatedRecord = await this.tables.slidercaptcha.findOneAndUpdate(
+				{ id },
+				{ $set: { serverChecked: true, lastUpdatedTimestamp: Date.now() } },
+				{ new: true }
+			);
+			
+			if (!updatedRecord) {
+				throw new Error(`Slider captcha record with id ${id} not found`);
+			}
+			
+			this.logger.info("Slider captcha marked as checked", { id });
+		} catch (err) {
+			this.logger.error("Failed to mark slider captcha as checked", { err, id });
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_MARK_CHECKED_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	async getSessionRecordBySessionId(sessionId: string): Promise<SessionRecord | null> {
+		try {
+			return await this.tables.sessions.findOne({ sessionId });
+		} catch (err) {
+			this.logger.error("Failed to get session record", { err, sessionId });
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { err },
+			});
+		}
 	}
 }

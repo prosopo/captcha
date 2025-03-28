@@ -631,4 +631,84 @@ export interface IProviderDatabase extends IDatabase {
 	getDetectorKeys(): Promise<string[]>;
 
 	removeDetectorKey(detectorKey: string): Promise<void>;
+	
+	// Slider Captcha methods
+	storeSliderCaptchaRecord(sliderCaptcha: SliderCaptchaStored): Promise<void>;
+	
+	getSliderCaptchaRecordById(id: string): Promise<SliderCaptchaRecord | null>;
+	
+	updateSliderCaptchaRecord(
+		id: string,
+		result: CaptchaResult,
+		serverChecked?: boolean,
+		userSubmitted?: boolean,
+		position?: number,
+		solveTime?: number,
+		userSignature?: string,
+	): Promise<void>;
+	
+	markSliderCaptchaChecked(id: string): Promise<void>;
+	
+	getSessionRecordBySessionId(sessionId: string): Promise<SessionRecord | null>;
 }
+
+// Define Slider Captcha stored type and record type
+export type SliderCaptchaStored = {
+	id: string; // Unique ID for this slider challenge
+	dappAccount: string;
+	userAccount: string;
+	targetPosition: number;
+	imageUrl: string;
+	requestedAtTimestamp: number;
+	lastUpdatedTimestamp?: number;
+	result: CaptchaResult;
+	ipAddress: bigint;
+	headers: RequestHeaders;
+	ja4: string;
+	userSignature?: string;
+	userSubmitted: boolean;
+	serverChecked: boolean;
+	solveTime?: number;
+	position?: number;
+	storedAtTimestamp?: Date;
+	frictionlessTokenId?: ObjectId;
+};
+
+export type SliderCaptchaRecord = mongoose.Document & SliderCaptchaStored;
+
+export const SliderCaptchaRecordSchema = new Schema<SliderCaptchaRecord>({
+	id: { type: String, required: true },
+	dappAccount: { type: String, required: true },
+	userAccount: { type: String, required: true },
+	targetPosition: { type: Number, required: true },
+	imageUrl: { type: String, required: true },
+	requestedAtTimestamp: { type: Number, required: true },
+	lastUpdatedTimestamp: { type: Number, required: false },
+	result: {
+		status: { type: String, enum: CaptchaStatus, required: true },
+		reason: {
+			type: String,
+			enum: TranslationKeysSchema.options,
+			required: false,
+		},
+		error: { type: String, required: false },
+	},
+	ipAddress: { type: BigInt, required: true },
+	headers: { type: Object, required: true },
+	ja4: { type: String, required: true },
+	userSignature: { type: String, required: false },
+	userSubmitted: { type: Boolean, required: true },
+	serverChecked: { type: Boolean, required: true },
+	solveTime: { type: Number, required: false },
+	position: { type: Number, required: false },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	frictionlessTokenId: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: false,
+	},
+});
+
+// Set indexes for performance
+SliderCaptchaRecordSchema.index({ id: 1 });
+SliderCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
+SliderCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });

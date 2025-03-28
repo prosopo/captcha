@@ -423,10 +423,15 @@ export interface GetSliderCaptchaResponse extends ApiResponse {
 	};
 }
 
-export interface SliderCaptchaSolutionResponse extends ApiResponse {
-	[ApiParams.verified]: boolean;
-	[ApiParams.error]?: ApiJsonError;
-}
+export type SliderCaptchaSolutionResponse = {
+	status: "ok" | "error";
+	verified: boolean;
+	signature?: {
+		provider: {
+			timestamp: string;
+		};
+	};
+};
 
 export const GetSliderCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: string(),
@@ -465,6 +470,7 @@ export const SubmitSliderCaptchaSolutionBody = object({
 		}),
 	}),
 	fingerprint: string().optional(),
+	challengeId: string(),
 });
 
 export type SubmitSliderCaptchaSolutionBodyType = zInfer<
@@ -475,10 +481,42 @@ export type SubmitSliderCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitSliderCaptchaSolutionBody
 >;
 
+export type VerifySliderCaptchaSolutionBody = {
+	token: {
+		user: string;
+		dapp: string;
+		challenge: string;
+		timestamp: string;
+		signature: {
+			provider: {
+				challenge: string;
+			};
+			user?: {
+				solution: string;
+			};
+		};
+	};
+	dappSignature: string;
+	verifiedTimeout?: number;
+};
+
 export const VerifySliderCaptchaSolutionBody = object({
-	[ApiParams.token]: ProcaptchaTokenSpec,
-	[ApiParams.dappSignature]: string(),
-	[ApiParams.verifiedTimeout]: number()
+	token: object({
+		user: string(),
+		dapp: string(),
+		challenge: string(),
+		timestamp: string(),
+		signature: object({
+			provider: object({
+				challenge: string(),
+			}),
+			user: object({
+				solution: string(),
+			}).optional(),
+		}),
+	}),
+	dappSignature: string(),
+	verifiedTimeout: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 });

@@ -55,12 +55,6 @@ import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
-// Add helper function to get random image URL
-const getRandomImageUrl = () => {
-	const imageId = Math.floor(Math.random() * 1000) + 1;
-	return `https://picsum.photos/id/${imageId}/320/160`;
-};
-
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
@@ -655,6 +649,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		async (req, res, next) => {
 			let parsed: GetSliderCaptchaChallengeRequestBodyTypeOutput;
 
+			if (!req.ip) {
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 400, error: "IP address not found" },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const ipAddress = getIPAddress(req.ip || "");
+
 			try {
 				parsed = GetSliderCaptchaChallengeRequestBody.parse(req.body);
 			} catch (err) {
@@ -685,20 +691,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				// Dummy successful response for slider captcha challenge
-				const getSliderCaptchaResponse: GetSliderCaptchaResponse = {
-					status: "ok",
-					imageUrl: getRandomImageUrl(),
-					targetPosition: Math.floor(Math.random() * 280) + 20, // Random position between 20-300
-					timestamp: Date.now().toString(),
-					signature: {
-						provider: {
-							challenge: "dummy-signature",
-						},
-					},
-				};
-
-				return res.json(getSliderCaptchaResponse);
+				// Use our SliderCaptchaManager to create and store the challenge
+				const sliderCaptchaResponse = await tasks.sliderCaptchaManager.getSliderCaptchaChallenge(
+					user,
+					dapp,
+					flatten(req.headers),
+					ipAddress,
+					req.ja4,
+					sessionId,
+				);
+				
+				return res.json(sliderCaptchaResponse);
 			} catch (err) {
 				req.logger.error({ err, body: req.body });
 				return next(
@@ -732,6 +735,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		async (req, res, next) => {
 			let parsed: SubmitSliderCaptchaSolutionBodyTypeOutput;
 
+			if (!req.ip) {
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 400, error: "IP address not found" },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const ipAddress = getIPAddress(req.ip || "");
+
 			try {
 				parsed = SubmitSliderCaptchaSolutionBody.parse(req.body);
 			} catch (err) {
@@ -744,7 +759,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const { user, dapp } = parsed;
+			const { user, dapp, position, targetPosition, mouseMovements, solveTime, signature, challengeId } = parsed;
 
 			validiateSiteKey(dapp);
 			validateAddr(user);
@@ -762,10 +777,25 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				// Dummy successful response for slider captcha solution verification
+				// Use our SliderCaptchaManager to verify the solution
+				const verified = await tasks.sliderCaptchaManager.verifySliderCaptchaSolution(
+					challengeId,
+					position,
+					mouseMovements,
+					solveTime,
+					signature.user.timestamp || "",
+					ipAddress,
+					flatten(req.headers),
+				);
+
 				const response: SliderCaptchaSolutionResponse = {
 					status: "ok",
-					verified: true,
+					verified,
+					signature: {
+						provider: {
+							timestamp: Date.now().toString(),
+						},
+					},
 				};
 
 				return res.json(response);
@@ -775,7 +805,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
 							code: 500,
-							siteKey: req.body.dapp,
+							siteKey: dapp,
+							user,
 							error: err,
 						},
 						i18n: req.i18n,
@@ -799,21 +830,27 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: req.body },
+						context: { code: 400, error: err },
 						i18n: req.i18n,
 						logger: req.logger,
 					}),
 				);
 			}
 
-			try {
-				// Dummy successful response for slider captcha token verification
-				const response: SliderCaptchaSolutionResponse = {
-					status: "ok",
-					verified: true,
-				};
+			const { token, dappSignature, verifiedTimeout } = parsed;
 
-				return res.json(response);
+			try {
+				const verificationResult = await tasks.sliderCaptchaManager.serverVerifySliderCaptchaSolution(
+					token.dapp,
+					token.challenge,
+					verifiedTimeout || 600000, // Default 10 minutes if not specified
+				);
+				
+				return res.json({
+					status: "ok",
+					verified: verificationResult.verified,
+					score: verificationResult.score,
+				});
 			} catch (err) {
 				req.logger.error({ err, body: req.body });
 				return next(
