@@ -14,6 +14,7 @@
 
 import { css } from "@emotion/react";
 import React, { type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 type ModalProps = {
 	show: boolean;
 	children: React.ReactNode;
@@ -54,12 +55,13 @@ const ModalComponent = React.memo(
 			minHeight: "100vh",
 		};
 
-		return (
+		return createPortal(
 			<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
 				<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
 					{children}
 				</div>
-			</div>
+			</div>,
+			document.body, // Renders modal in the global document, outside the Shadow DOM
 		);
 	},
 );
