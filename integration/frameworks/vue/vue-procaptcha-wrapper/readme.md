@@ -1,39 +1,39 @@
-# React Procaptcha Wrapper
+# Vue Procaptcha Wrapper
 
 ## 1. About
 
-A React component that provides seamless integration of [Procaptcha](https://prosopo.io/) into any React project.
+A Vue component that provides seamless integration of [Procaptcha](https://prosopo.io/) into any Vue project.
 
 ## 2. Installation
 
 ```bash
-npm install @prosopo/react-procaptcha-wrapper
+npm install @prosopo/vue-procaptcha-wrapper
 ```
 
 ## 3. Usage
 
 ### 3.1) Basic setup
 
-```typescript jsx
-import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
+```html
+import {ProcaptchaComponent} from "@prosopo/vue-procaptcha-wrapper";
 
-<ProcaptchaComponent siteKey={"my-site-key"}/>;
+<ProcaptchaComponent :siteKey={"my-site-key"}/>;
 ```
 
 ### 3.2) Advanced usage
 
-```typescript jsx
-import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
+```html
+import {ProcaptchaComponent} from "@prosopo/vue-procaptcha-wrapper";
 
 <ProcaptchaComponent
-    siteKey={"my-site-key"}
-    captchaType={"image"}
-    callbacks={{
+    :siteKey={"my-site-key"}
+    :captchaType={"image"}
+    :callbacks={{
         onVerified: (token: string): void => {
             console.log("verified", token);
         },
     }}
-    htmlAttributes={{
+    :htmlAttributes={{
         className: "my-app__procaptcha",
         style: {
             maxWidth: "600px",

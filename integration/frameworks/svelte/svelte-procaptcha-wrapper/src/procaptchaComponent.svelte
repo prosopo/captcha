@@ -4,7 +4,7 @@
     import {type ProcaptchaOptions, procaptchaWrapper} from "@prosopo/procaptcha-wrapper";
 
     type ProcaptchaComponentProperties = ProcaptchaOptions & {
-        htmlAttrs?: AllHtmlAttributes,
+        htmlAttributes?: AllHtmlAttributes,
     }
 
     type AllHtmlAttributes = HTMLAttributes<HTMLElement> & {
@@ -13,7 +13,7 @@
     };
 
     const properties: ProcaptchaComponentProperties = $props();
-    const htmlWrapperElementAttributes = $derived(properties.htmlAttrs || {});
+    const htmlWrapperElementAttributes = $derived(properties.htmlAttributes || {});
     let wrapperElement: HTMLDivElement;
 
     onMount(() => {
@@ -21,6 +21,7 @@
             procaptchaWrapper.renderProcaptcha(wrapperElement, properties);
         });
     });
+
 </script>
 
 <div bind:this={wrapperElement} {...htmlWrapperElementAttributes}></div>

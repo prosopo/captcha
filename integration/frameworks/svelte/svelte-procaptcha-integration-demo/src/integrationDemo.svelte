@@ -7,6 +7,5 @@ const siteKey = import.meta.env.VITE_PROCAPTCHA_SITE_KEY;
 </script>
 
 <div>
-    test
-    <!--fixme <ProcaptchaComponent siteKey="{siteKey}"/>-->
+    <ProcaptchaComponent siteKey="{siteKey}" htmlAttributes={{class: "my-app__procaptcha"}} />
 </div>

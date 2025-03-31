@@ -8,10 +8,18 @@
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "npx vite build"
+		"package": "svelte-package -i ./src -o ./dist",
+		"build": "npm run package",
+		"dev": "npm run package -- -w"
 	},
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": "1.0.0"
@@ -20,8 +28,7 @@
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.0.0",
-		"@sveltejs/vite-plugin-svelte": "5.0.3"
+		"@sveltejs/package": "2.3.10"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

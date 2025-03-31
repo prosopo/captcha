@@ -5,7 +5,7 @@ import {HTMLAttributes} from "vue"
 import {type ProcaptchaOptions, procaptchaWrapper} from "@prosopo/procaptcha-wrapper";
 
 type ProcaptchaComponentProperties = ProcaptchaOptions & {
-  htmlAttrs?: AllHtmlAttributes,
+  htmlAttributes?: AllHtmlAttributes,
 }
 
 type AllHtmlAttributes = HTMLAttributes & {
@@ -38,5 +38,5 @@ function renderProcaptcha(): void {
 </script>
 
 <template>
-  <div ref="wrapper" v-bind="htmlAttrs"></div>
+  <div ref="wrapper" v-bind="htmlAttributes"></div>
 </template>

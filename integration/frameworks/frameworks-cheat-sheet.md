@@ -65,7 +65,8 @@ import React from 'react';
 
 // called once at inclusion
 
-interface AppProperties {};
+interface AppProperties {
+};
 
 class App extends React.Component<AppProperties, AppState> {
 
@@ -90,14 +91,15 @@ Function-based
 ```tsx
 // called once at inclusion
 
-interface AppProperties {};
+interface AppProperties {
+};
 
 function App(properties: AppProperties) {
 // called on both creation and every render
-return (<div></div>);
+    return (<div></div>);
 }
 
-export { App };
+export {App};
 ```
 
 Usage
@@ -110,8 +112,8 @@ Usage
 
 ### 2. Vue - .vue
 
-
 ```html
+
 <template>
     <!-- called on every component render, the response is used in the Virtual DOM -->
     <!-- https://vuejs.org/guide/extras/rendering-mechanism.html#virtual-dom -->
@@ -121,7 +123,11 @@ Usage
 <script lang="ts">
     // called once at inclusion
 
-    interface AppProperties {};
+    interface
+    AppProperties
+    {
+    }
+    ;
 </script>
 
 <script setup lang="ts">
@@ -148,10 +154,15 @@ Usage:
 ### 3. Svelte - .svelte
 
 ```html
+
 <script module lang="ts">
     // called once at inclusion
 
-    interface AppProperties {};
+    interface
+    AppProperties
+    {
+    }
+    ;
 </script>
 
 <script lang="ts">
@@ -204,7 +215,7 @@ const deepStateValue = reactive({count: 0})
 ```typescript
 const stateValue = $state("initial");
 const shallowStateValue = $state.raw({
-plain: "text",
+    plain: "text",
 });
 
 // <div>{stateValue}</div>
@@ -482,31 +493,47 @@ function MyComponent() {
 
 [Docs](https://svelte.dev/docs/svelte/bind#bind:this)
 
-## 8. Vite plugins
+## 8. Application bundling
 
 ### 8.1) React
 
-[Docs](https://www.npmjs.com/package/@vitejs/plugin-react)
+* With Vite, using the [React plugin](https://www.npmjs.com/package/@vitejs/plugin-react)
 
 ### 8.2) Vue
 
-[Docs](https://www.npmjs.com/package/@vitejs/plugin-vue)
+* With Vite, using the [Vue plugin](https://www.npmjs.com/package/@vitejs/plugin-vue)
 
 ### 8.3) Svelte
 
-[Docs](https://www.npmjs.com/package/@sveltejs/vite-plugin-svelte)
+* With Vite, using the [Svelte plugin](https://www.npmjs.com/package/@sveltejs/vite-plugin-svelte)
 
+## 9. Components library bundling
 
+### 8.1) React
 
+### 9.2) Vue
 
+### 9.3) Svelte
 
+To be available for reusing, [Svelte components should be packaged](https://svelte.dev/docs/kit/packaging), which
+implies compiling TS-related resources, while
+keeping `.svelte` component files as is.
 
+> Note: In Svelte v5, you [can't compile `.svelte` component](https://github.com/sveltejs/svelte/issues/13186) into
+> standalone JS with Svelte being
+> externalized, so packaging is the only way to create a components' library.
 
+Using the official [@sveltejs/package](https://www.npmjs.com/package/@sveltejs/package):
 
+1. Add `svelte` to the `peerDependencies` section of your `package.json`
+2. Add `svelte` to the `exports` section of your `package.json` with the `dist/index.js` value
+3. Install the `svelte-package`
+4. Package your component(s) using the command: `npm run svelte-package -i ./src -o ./dist`
 
+Packaging does the following:
 
+1. Compiles all `.ts` files in the `src` folder into `.js` in the `dist` folder (including declaration files and maps if
+   configured in your `tsconfig.json`)
+2. Copies used `.svelte` files as is - so they can be directly used in other Svelte apps
 
-
-
-
-
+After that, you can publish your package at npmjs, and your Svelte components will be available for reusing.

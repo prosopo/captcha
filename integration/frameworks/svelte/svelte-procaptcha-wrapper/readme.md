@@ -1,13 +1,13 @@
-# React Procaptcha Wrapper
+# Svelte Procaptcha Wrapper
 
-## 1. About
+## 1. About the package
 
-A React component that provides seamless integration of [Procaptcha](https://prosopo.io/) into any React project.
+A Svelte component that provides seamless integration of [Procaptcha](https://prosopo.io/) into any Svelte project.
 
 ## 2. Installation
 
 ```bash
-npm install @prosopo/react-procaptcha-wrapper
+npm install @prosopo/svelte-procaptcha-wrapper
 ```
 
 ## 3. Usage
@@ -15,7 +15,7 @@ npm install @prosopo/react-procaptcha-wrapper
 ### 3.1) Basic setup
 
 ```typescript jsx
-import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
+import {ProcaptchaComponent} from "@prosopo/svelte-procaptcha-wrapper";
 
 <ProcaptchaComponent siteKey={"my-site-key"}/>;
 ```
@@ -23,7 +23,7 @@ import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
 ### 3.2) Advanced usage
 
 ```typescript jsx
-import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
+import {ProcaptchaComponent} from "@prosopo/svelte-procaptcha-wrapper";
 
 <ProcaptchaComponent
     siteKey={"my-site-key"}
@@ -34,7 +34,7 @@ import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
         },
     }}
     htmlAttributes={{
-        className: "my-app__procaptcha",
+        class: "my-app__procaptcha",
         style: {
             maxWidth: "600px",
         },
