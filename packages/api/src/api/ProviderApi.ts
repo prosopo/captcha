@@ -337,6 +337,7 @@ export default class ProviderApi
 		timestamp: string,
 		signature: any,
 		fingerprint?: string,
+		challengeId?: string,
 	): Promise<any> {
 		const body = {
 			user: userAccount.toString(),
@@ -347,6 +348,7 @@ export default class ProviderApi
 			solveTime,
 			timestamp,
 			signature,
+			challengeId,
 			...(fingerprint && { fingerprint }),
 		};
 		return this.post(ClientApiPaths.SubmitSliderCaptchaSolution, body, {

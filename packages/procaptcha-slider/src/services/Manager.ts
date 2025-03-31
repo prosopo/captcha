@@ -703,6 +703,7 @@ export const Manager = (
 					},
 				},
 				fingerprint,
+				state.challenge?.requestHash
 			);
 
 			debug("Received slider solution verification", response);
