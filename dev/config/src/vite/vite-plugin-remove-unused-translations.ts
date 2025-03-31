@@ -27,7 +27,7 @@ export default function VitePluginRemoveUnusedTranslations(
 		name: "remove-unused-translations",
 		configResolved(config) {
 			logger = config.logger;
-			config.logger.info("Hello from myPlugin!", { timestamp: true });
+			config.logger.info("Remove-Unused-Translations", { timestamp: true });
 		},
 		transform(code: string) {
 			// Collect translation keys used in the source files
