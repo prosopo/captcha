@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import fs from "node:fs/promises";
+import { getLogger } from "@prosopo/common";
 import { flatten, unflatten } from "@prosopo/util";
 import glob from "fast-glob";
-import type { Logger, Plugin } from "vite";
+import type { Plugin } from "vite";
 
 const used = new Set<string>();
-let logger: Logger | Console;
+const log = getLogger(
+	"Info",
+	"config.vite.vite-plugin-removed-unused-translations.js",
+);
 
 export default function VitePluginRemoveUnusedTranslations(
 	translationKeys: string[],
@@ -25,15 +29,11 @@ export default function VitePluginRemoveUnusedTranslations(
 ): Plugin {
 	return {
 		name: "remove-unused-translations",
-		configResolved(config) {
-			logger = config.logger;
-			config.logger.info("Remove-Unused-Translations", { timestamp: true });
-		},
 		transform(code: string) {
 			// Collect translation keys used in the source files
 			for (const key of translationKeys) {
-				if (code.includes(key)) {
-					logger.info(`Found key: ${key}`);
+				if (code.includes(key) && !used.has(key)) {
+					log.info(`Found key: ${key}`);
 					used.add(key);
 				}
 			}
@@ -41,18 +41,13 @@ export default function VitePluginRemoveUnusedTranslations(
 		},
 		enforce: "post",
 
-		async closeBundle() {
-			if (logger) {
-				logger.info("Build is done!");
-			} else {
-				console.log("Build is done!");
-			}
-
+		async writeBundle() {
 			// Find all matching JSON files
 			const jsonFiles = await glob(jsonPattern, { absolute: true });
 
-			console.log(`Found ${jsonFiles.length} JSON files at ${jsonPattern}`);
+			log.info(`Found ${jsonFiles.length} JSON files at ${jsonPattern}`);
 
+			const filePromises = [];
 			for (const filePath of jsonFiles) {
 				try {
 					const content = await fs.readFile(filePath, "utf-8");
@@ -66,18 +61,29 @@ export default function VitePluginRemoveUnusedTranslations(
 
 					const unflattened = unflatten(filteredData);
 
+					// log.info(unflattened);
+
 					// Write back the filtered JSON
-					await fs.writeFile(
-						filePath,
-						JSON.stringify(unflattened, null, 2),
-						"utf-8",
+					filePromises.push(
+						fs
+							.writeFile(
+								filePath,
+								JSON.stringify(unflattened, null, 2),
+								"utf-8",
+							)
+							.then(() => {
+								log.info(`Updated ${filePath}`);
+							})
+							.catch((e) => {
+								log.error(`Failed to update ${filePath}:`, e);
+							}),
 					);
-					logger.info(`Updated: ${filePath}`);
 				} catch (error: unknown) {
 					// @ts-ignore
-					logger.error(`Failed to process ${filePath}:`, error);
+					log.error(`Failed to process ${filePath}:`, error);
 				}
 			}
+			await Promise.all(filePromises);
 		},
 	};
 }
