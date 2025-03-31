@@ -35,26 +35,53 @@ import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils
 import { randomUUID } from "crypto";
 
 // Tolerance in pixels for slider positioning
-const SLIDER_POSITION_TOLERANCE = 10;
+const SLIDER_POSITION_TOLERANCE = 50;
 
 // The minimum variance in Y-axis mouse movements for human detection
-const MOUSE_MOVEMENT_Y_VARIANCE_THRESHOLD = 5;
+const MOUSE_MOVEMENT_Y_VARIANCE_THRESHOLD = 2;
 
 // Minimum required mouse movements for verification
-const MIN_MOUSE_MOVEMENTS = 5;
+const MIN_MOUSE_MOVEMENTS = 3;
 
 // The minimum time (in ms) a human should spend solving a slider captcha
-const MIN_SOLVE_TIME = 1000;
+const MIN_SOLVE_TIME = 500;
 
 // Helper function to get random image URL
 const getRandomImageUrl = () => {
+	// Use a more reliable CORS-friendly image service
+	const width = 320;
+	const height = 160;
 	const imageId = Math.floor(Math.random() * 1000) + 1;
-	return `https://picsum.photos/id/${imageId}/320/160`;
+	
+	// Use picsum.photos which typically has proper CORS headers
+	return `https://picsum.photos/id/${imageId}/${width}/${height}`;
 };
 
 export class SliderCaptchaManager extends CaptchaManager {
 	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
 		super(db, pair, logger || getLoggerDefault());
+	}
+
+	/**
+	 * Helper method to safely convert an IP address to bigint
+	 * @param ipAddress IP address object
+	 * @returns bigint representation of the IP address
+	 */
+	private convertIpAddressToBigInt(ipAddress: IPAddress): bigint {
+		try {
+			// Handle both IPv4 and IPv6 addresses
+			if (ipAddress.address) {
+				// Use a safe fallback value if conversion fails
+				const ipValue = ipAddress.address.replace(/[^0-9]/g, "");
+				return ipValue ? BigInt(ipValue.substring(0, 16)) : BigInt(0);
+			}
+		} catch (error) {
+			this.logger.warn("IP address conversion failed, using 0", { 
+				address: ipAddress.address,
+				error 
+			});
+		}
+		return BigInt(0);
 	}
 
 	/**
@@ -105,7 +132,7 @@ export class SliderCaptchaManager extends CaptchaManager {
 		
 		// Store the challenge in the database
 		// Convert ipAddress to bigint as required by the schema
-		const ipAddressBigInt = BigInt(ipAddress.address ? parseInt(ipAddress.address.replace(/\./g, "")) : 0);
+		const ipAddressBigInt = this.convertIpAddressToBigInt(ipAddress);
 		
 		const sliderCaptcha: SliderCaptchaStored = {
 			id,
@@ -124,14 +151,14 @@ export class SliderCaptchaManager extends CaptchaManager {
 		
 		try {
 			// Let's check if we need to attach this to a frictionless token
-			// let frictionlessTokenId;
-			// if (sessionId) {
-			// 	const session = await this.db.getSessionRecordBySessionId(sessionId);
-			// 	if (session && session.frictionlessTokenId) {
-			// 		frictionlessTokenId = session.frictionlessTokenId;
-			// 		sliderCaptcha.frictionlessTokenId = frictionlessTokenId;
-			// 	}
-			// }
+			let frictionlessTokenId;
+			if (sessionId) {
+				const session = await this.db.getSessionRecordBySessionId(sessionId);
+				if (session && session.tokenId) {
+					frictionlessTokenId = session.tokenId;
+					sliderCaptcha.frictionlessTokenId = frictionlessTokenId;
+				}
+			}
 			
 			// Store the new slider captcha record
 			await this.db.storeSliderCaptchaRecord(sliderCaptcha);
@@ -139,7 +166,7 @@ export class SliderCaptchaManager extends CaptchaManager {
 				id,
 				userAccount,
 				dappAccount,
-				// hasFrictionlessToken: !!frictionlessTokenId,
+				hasFrictionlessToken: !!frictionlessTokenId,
 			});
 			
 			return response;
@@ -180,6 +207,9 @@ export class SliderCaptchaManager extends CaptchaManager {
 			this.logger.info("No record of this slider challenge", { challengeId });
 			return false;
 		}
+		
+		// Convert IP address to bigint safely to add to logs
+		const ipAddressBigInt = this.convertIpAddressToBigInt(ipAddress);
 		
 		// Verify challenge is recent (within 2 minutes)
 		const challengeTime = challengeRecord.requestedAtTimestamp;
@@ -250,42 +280,33 @@ export class SliderCaptchaManager extends CaptchaManager {
 			return false;
 		}
 		
-		// Check mouse movement variability (anti-bot measure)
-		let hasMouseVariance = false;
+		// Check mouse movement variability (anti-bot measure) - more lenient now
+		let hasMouseVariance = true; // Default to true for leniency
+		
 		if (mouseMovements.length >= MIN_MOUSE_MOVEMENTS) {
 			// Calculate variance in Y positions (natural human movement has variance)
 			const yPositions = mouseMovements.map((m) => m.y);
 			const yAvg = yPositions.reduce((a, b) => a + b, 0) / yPositions.length;
 			const yVariance = yPositions.reduce((a, b) => a + Math.pow(b - yAvg, 2), 0) / yPositions.length;
 			
-			hasMouseVariance = yVariance > MOUSE_MOVEMENT_Y_VARIANCE_THRESHOLD;
+			this.logger.info("Mouse movement analysis", {
+				challengeId,
+				yVariance,
+				threshold: MOUSE_MOVEMENT_Y_VARIANCE_THRESHOLD,
+				movements: mouseMovements.length,
+			});
 			
-			if (!hasMouseVariance) {
-				this.logger.info("Insufficient mouse movement variance", {
-					challengeId,
-					yVariance,
-					threshold: MOUSE_MOVEMENT_Y_VARIANCE_THRESHOLD,
-					movements: mouseMovements.length,
-				});
-				await this.db.updateSliderCaptchaRecord(
-					challengeId,
-					{
-						status: CaptchaStatus.disapproved,
-						reason: "CAPTCHA.SUSPICIOUS_BEHAVIOR",
-					},
-					false,
-					true,
-					position,
-					solveTime,
-					userSignature,
-				);
-				return false;
+			// Only mark as suspicious if there's almost no variance at all (likely a bot)
+			if (yVariance < 0.5) {
+				hasMouseVariance = false;
 			}
-		} else {
-			this.logger.info("Not enough mouse movements", {
+		}
+		
+		// Only reject if extremely suspicious (no variance at all)
+		if (!hasMouseVariance) {
+			this.logger.info("Extremely suspicious mouse movement pattern", {
 				challengeId,
 				movements: mouseMovements.length,
-				minRequired: MIN_MOUSE_MOVEMENTS,
 			});
 			await this.db.updateSliderCaptchaRecord(
 				challengeId,

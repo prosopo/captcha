@@ -82,6 +82,8 @@ const colors = {
 	textLight: "#495057",
 	cardBg: "#ffffff",
 	border: "#dee2e6",
+	secondary: "#6c757d",
+	secondaryLight: "#f8f9fa",
 };
 
 // Add styles for slider and puzzle captcha
@@ -100,12 +102,25 @@ const styles = {
 		background-color: ${colors.backgroundDark};
 		overflow: hidden;
 		border-radius: 12px;
-		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 		margin-bottom: 15px;
 		transition: all 0.3s ease;
+		border: 2px solid ${colors.primary}40; /* 40 adds 25% opacity */
 		
 		&:hover {
-			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+			transform: translateY(-2px);
+		}
+		
+		&:before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 3px;
+			background: linear-gradient(90deg, ${colors.primaryDark}, ${colors.primary});
+			z-index: 1;
 		}
 	`,
 	canvas: css`
@@ -157,32 +172,23 @@ const styles = {
 	`,
 	sliderContainer: css`
 		position: relative;
-		text-align: center;
 		width: 320px;
-		height: 48px;
-		line-height: 48px;
-		background: ${colors.background};
-		color: ${colors.textLight};
-		border: 1px solid ${colors.border};
-		border-radius: 24px;
+		height: 40px;
+		background-color: #f5f5f5;
+		border-radius: 20px;
+		margin: 15px auto 25px;
+		overflow: hidden;
+		box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
 		transition: all 0.3s ease;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-		font-weight: 500;
 		
-		&:hover {
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+		&.success {
+			background-color: rgba(40, 167, 69, 0.15);
+			box-shadow: inset 0 2px 5px rgba(40, 167, 69, 0.2);
 		}
 		
-		&:before {
-			content: "Slide to solve puzzle";
-			position: absolute;
-			width: 100%;
-			text-align: center;
-			font-size: 14px;
-			color: ${colors.textLight};
-			z-index: 1;
-			opacity: 0.8;
-			font-weight: 500;
+		&.error {
+			background-color: rgba(220, 53, 69, 0.15);
+			box-shadow: inset 0 2px 5px rgba(220, 53, 69, 0.2);
 		}
 	`,
 	sliderMask: css`
@@ -196,54 +202,45 @@ const styles = {
 		transition: width 0.1s ease;
 	`,
 	slider: css`
-		position: absolute;
-		top: 4px;
-		left: 0;
-		width: 40px;
+		position: relative;
+		width: 320px;
 		height: 40px;
-		background: #ffffff;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-		transition: background 0.2s ease, transform 0.1s ease;
-		border-radius: 50%;
+		background-color: ${colors.secondaryLight};
+		border-radius: 20px;
+		margin-top: 10px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 		cursor: pointer;
-		cursor: grab;
+		user-select: none;
+		overflow: hidden;
+		transition: all 0.3s ease;
+		
+		&:hover {
+			background-color: ${colors.secondary}15;
+		}
+	`,
+	sliderProgress: css`
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 0%; /* Will be updated dynamically via inline style */
+		background: linear-gradient(90deg, ${colors.primaryLight}80, ${colors.primary}50);
+		transition: width 0.3s ease;
+		z-index: 1;
+	`,
+	sliderText: css`
+		position: absolute;
+		width: 100%;
+		height: 100%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 2;
-		touch-action: none;
-		will-change: transform;
-		
-		&:after {
-			content: "";
-			display: block;
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-			background: ${colors.primary};
-			transition: all 0.2s ease;
-		}
-		
-		&:active {
-			cursor: grabbing;
-			transform: scale(1.05);
-			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-			
-			&:after {
-				transform: scale(0.8);
-				background: ${colors.primaryDark};
-			}
-		}
-		
-		&:hover {
-			&:after {
-				background: ${colors.primaryDark};
-			}
-		}
-	`,
-	sliderText: css`
-		position: relative;
+		font-size: 14px;
+		color: #666;
 		z-index: 1;
+		pointer-events: none;
+		user-select: none;
+		padding-left: 45px; /* Make room for the handle */
 	`,
 	loadingOverlay: css`
 		position: absolute;
@@ -279,17 +276,31 @@ const styles = {
 	title: css`
 		font-size: 18px;
 		font-weight: 600;
-		color: ${colors.primary};
+		color: #ffffff;
 		text-align: center;
 		margin-bottom: 15px;
 		letter-spacing: 0.5px;
+		background: linear-gradient(90deg, ${colors.primaryDark}, ${colors.primary});
+		padding: 10px 15px;
+		border-radius: 8px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		width: fit-content;
+		margin-left: auto;
+		margin-right: auto;
 	`,
 	instruction: css`
 		font-size: 14px;
-		font-weight: 400;
+		font-weight: 500;
 		color: ${colors.textLight};
 		text-align: center;
 		margin-bottom: 15px;
+		background-color: ${colors.backgroundDark};
+		padding: 8px 12px;
+		border-radius: 6px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		width: fit-content;
+		margin-left: auto;
+		margin-right: auto;
 	`,
 	successIcon: css`
 		position: absolute;
@@ -305,6 +316,41 @@ const styles = {
 		
 		&.show {
 			opacity: 1;
+		}
+	`,
+	sliderHandle: css`
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 40px;
+		height: 40px;
+		background: white;
+		border-radius: 50%;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: grab;
+		z-index: 2;
+		transition: box-shadow 0.2s ease, transform 0.1s ease;
+		
+		&:hover {
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+		}
+		
+		&:active {
+			cursor: grabbing;
+			transform: scale(1.05);
+		}
+		
+		&:after {
+			content: "";
+			display: block;
+			width: 14px;
+			height: 14px;
+			border-radius: 50%;
+			background: ${colors.primary};
+			transition: all 0.2s ease;
 		}
 	`,
 };
@@ -535,7 +581,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	}, [updateBaseState]);
 
 	const getRandomImage = () => {
-		// Get a random image from picsum
+		// Get a random image from picsum with CORS-friendly URL
 		const imageId = getRandomInt(1, 1000);
 		return `https://picsum.photos/id/${imageId}/320/160`;
 	};
@@ -569,6 +615,30 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 			return;
 		}
 
+		// Reset all slider elements
+		setSliderLeft(0);
+		setSliderClass("sliderContainer");
+		setIsVerified(false);
+		setIsSuccess(false);
+		setIsFailed(false);
+		setShowSuccessIcon(false);
+		trailRef.current = [];
+		
+		// Reset slider handle position
+		if (thumbRef.current) {
+			thumbRef.current.style.left = '0px';
+		}
+		
+		// Reset block position
+		if (blockRef.current) {
+			blockRef.current.style.left = '0px';
+		}
+		
+		// Reset mask width
+		if (maskRef.current) {
+			maskRef.current.style.width = '0px';
+		}
+
 		// Set loading state
 		setImageLoading(true);
 
@@ -578,6 +648,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		// If we have a server-provided image URL, use it
 		if (state?.challenge?.imageUrl) {
 			const img = new Image();
+			img.crossOrigin = "anonymous";
 			img.onload = () => {
 				drawPuzzleFromImage(img, puzzleDestination);
 				setImageLoading(false);
@@ -617,23 +688,79 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		blockCtx.clearRect(0, 0, block.width, block.height);
 
-		// Draw the image on the canvas with proper scaling
-		ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+		try {
+			// Draw the image on the canvas with proper scaling
+			ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
-		// Generate the puzzle piece
-		const blockX = 0;
-		const blockY = Math.random() * (canvasHeight - 60) + 10;
+			// Generate the puzzle piece at the target position
+			const blockX = destination;
+			const blockY = Math.random() * (canvasHeight - 60) + 10;
 
-		// Store the current destination and block position
-		setDestX(destination);
-		xRef.current = destination;
-		setPuzzleImage(getRandomImage());
+			// Store the current destination and block position
+			setDestX(destination);
+			xRef.current = destination;
+			setPuzzleImage(getRandomImage());
 
-		// Create a puzzle piece and cut it out of the canvas
-		blockCtx.drawImage(canvas, blockX, blockY, 40, 40, 0, 0, 40, 40);
-		ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-		ctx.fillRect(blockX, blockY, 40, 40);
-	};
+			// Draw the puzzle piece shape
+			drawPuzzlePiece(ctx, blockX, blockY, "fill"); 
+			drawPuzzlePiece(blockCtx, blockX, blockY, "clip");
+
+			// Create a puzzle piece and cut it out of the canvas
+			blockCtx.drawImage(canvas, 0, 0, canvasWidth, canvasHeight);
+			ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+			ctx.fillRect(blockX, blockY, 40, 40);
+			
+			// Get the puzzle piece image data and place it at the left
+			const imageData = blockCtx.getImageData(
+				blockX - R, 
+				blockY - R * 2,
+				L + R * 2,
+				L + R * 2
+			);
+			blockCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+			block.width = L + R * 2;
+			blockCtx.putImageData(imageData, 0, blockY - R * 2);
+		} catch (error) {
+			console.error("CORS error with canvas:", error);
+			// Fall back to a simpler approach without getImageData
+			setImageLoading(false);
+			
+			// Create a solid color puzzle piece instead
+			ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+			
+			// Generate random block position
+			const blockX = destination;
+			const blockY = 80;
+			
+			// Store the destination
+			setDestX(destination);
+			xRef.current = destination;
+			
+			// Draw a visible target area instead of trying to extract image data
+			ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+			ctx.fillRect(blockX, blockY, 40, 40);
+			
+			// Draw a solid color block for the puzzle piece
+			blockCtx.clearRect(0, 0, block.width, block.height);
+			block.width = 40;
+			block.height = 40;
+			blockCtx.fillStyle = "rgba(67, 97, 238, 0.8)";
+			blockCtx.fillRect(0, 0, 40, 40);
+			
+			// Add a border to the block
+			blockCtx.strokeStyle = "white";
+			blockCtx.lineWidth = 2;
+			blockCtx.strokeRect(0, 0, 40, 40);
+		}
+
+		// Reset slider position to start
+		setSliderLeft(0);
+		
+		// Reset block position to the left
+		if (blockRef.current) {
+			blockRef.current.style.left = '0px';
+		}
+	}
 
 	// Add a function to generate a random image when there's no server-provided one
 	const generateRandomImage = (destination: number, retryCount = 0) => {
@@ -666,6 +793,11 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		setShowSuccessIcon(false);
 		trailRef.current = [];
 
+		// Reset block position to the left
+		if (blockRef.current) {
+			blockRef.current.style.left = '0px';
+		}
+
 		// Store the destination value
 		setDestX(destination);
 		xRef.current = destination;
@@ -675,28 +807,52 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 
 		// Draw the image onto the canvas once it's loaded
 		const img = new Image();
+		img.crossOrigin = "anonymous"; // Important for CORS
 
 		img.onload = () => {
-			// Draw main image
-			ctx.drawImage(img, 0, 0, 320, 160);
+			try {
+				// Draw main image
+				ctx.drawImage(img, 0, 0, 320, 160);
 
-			// Draw the puzzle piece shape
-			drawPuzzlePiece(ctx, destination, 80, "fill");
-			drawPuzzlePiece(blockCtx, destination, 80, "clip");
+				// Draw the puzzle piece shape
+				drawPuzzlePiece(ctx, destination, 80, "fill");
+				drawPuzzlePiece(blockCtx, destination, 80, "clip");
 
-			// Draw the image on the block canvas
-			blockCtx.drawImage(img, 0, 0, 320, 160);
+				// Draw the image on the block canvas
+				blockCtx.drawImage(img, 0, 0, 320, 160);
 
-			// Get the puzzle piece image data and place it at the left
-			const imageData = blockCtx.getImageData(
-				destination - R,
-				80 - R * 2,
-				L + R * 2,
-				L + R * 2,
-			);
-			blockCtx.clearRect(0, 0, 320, 160);
-			block.width = L + R * 2;
-			blockCtx.putImageData(imageData, 0, 80 - R * 2);
+				// Get the puzzle piece image data and place it at the left
+				const imageData = blockCtx.getImageData(
+					destination - R,
+					80 - R * 2,
+					L + R * 2,
+					L + R * 2,
+				);
+				blockCtx.clearRect(0, 0, 320, 160);
+				block.width = L + R * 2;
+				blockCtx.putImageData(imageData, 0, 80 - R * 2);
+			} catch (error) {
+				console.error("CORS error in generateRandomImage:", error);
+				
+				// Fall back to solid color if we get a CORS error
+				ctx.drawImage(img, 0, 0, 320, 160);
+				
+				// Draw a visible target area
+				ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+				ctx.fillRect(destination, 80, 40, 40);
+				
+				// Create a solid color block for the puzzle piece
+				blockCtx.clearRect(0, 0, block.width, block.height);
+				block.width = 40;
+				block.height = 40;
+				blockCtx.fillStyle = "rgba(67, 97, 238, 0.8)";
+				blockCtx.fillRect(0, 0, 40, 40);
+				
+				// Add a border to the block
+				blockCtx.strokeStyle = "white";
+				blockCtx.lineWidth = 2;
+				blockCtx.strokeRect(0, 0, 40, 40);
+			}
 
 			// Hide loading state
 			setImageLoading(false);
@@ -710,7 +866,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 			generateRandomImage(destination, retryCount + 1);
 		};
 
-		img.crossOrigin = "Anonymous";
+		img.crossOrigin = "anonymous";
 		img.src = puzzleImage;
 	};
 
@@ -803,18 +959,15 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		const moveX = eventX - originXRef.current;
 		const moveY = eventY - originYRef.current;
 
-		// Limit movement within bounds
-		if (moveX < 0 || moveX + 38 >= 320) return false;
-
+		// Limit movement within bounds (0 to 280 - slider handle width)
+		const maxMove = Math.min(Math.max(moveX, 0), 280);
+		
 		// Update slider position
-		setSliderLeft(moveX);
+		setSliderLeft(maxMove);
 
-		// Calculate block position (adjusting for margins)
-		const blockLeft = ((320 - 40 - 20) / (320 - 40)) * moveX;
-
-		// Apply position directly to the DOM
+		// Update block position to match slider movement (keep them synchronized)
 		if (blockRef.current) {
-			blockRef.current.style.left = `${blockLeft}px`;
+			blockRef.current.style.left = `${maxMove}px`;
 		}
 
 		// Update slider appearance
@@ -847,76 +1000,34 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 
 		setSliderClass("sliderContainer");
 
-		// Verify the puzzle completion
-		const verificationData = verifySlider(eventX);
-		const { verified } = verificationData;
+		// Get the target position from state or destX
+		const targetPosition = state?.challenge?.targetPosition || destX;
 
-		// Calculate stats for debug purposes
-		const yTrailData = trailRef.current;
-		const yAverage =
-			yTrailData.length > 0 ? yTrailData.reduce(sum) / yTrailData.length : 0;
-		const yDeviations = yTrailData.map((y) => y - yAverage);
-		const yStdDev =
-			yTrailData.length > 0
-				? Math.sqrt(yDeviations.map(square).reduce(sum, 0) / yTrailData.length)
-				: 0;
+		// Skip client-side verification and always send to provider for verification
+		console.log("[SliderCaptcha] Submitting position to provider for verification:", {
+			sliderPosition: eventX,
+			targetPosition: targetPosition
+		});
 
-		const debugInfo = {
-			captchaResult: {
-				passed: verified,
-				destX: verificationData.destX ?? 0,
-				verified: verified,
-			},
-			positionData: {
-				sliderPosition: eventX,
-				blockPosition: verificationData.destX ?? 0,
-				targetPosition: verificationData.destX ?? 0,
-				offset: Math.abs(
-					(verificationData.destX ?? 0) - (verificationData.destX ?? 0),
-				),
-			},
-			mouseMovement: {
-				yTrailPoints: yTrailData.length,
-				yAverage: yAverage.toFixed(2),
-				yStandardDeviation: yStdDev.toFixed(2),
-				hasVariation: yStdDev > 0,
-			},
-		};
+		// Always pass to manager for provider verification
+		manager.onSuccess(eventX, targetPosition).then((isVerified) => {
+			if (isVerified) {
+				// Server verified successfully
+				setSliderClass("sliderContainer sliderContainer_success");
+				setIsSuccess(true);
+				setIsVerified(true);
+				setShowSuccessIcon(true);
+			} else {
+				// Server rejected the verification
+				setSliderClass("sliderContainer sliderContainer_fail");
+				setIsFailed(true);
 
-		console.log(`Captcha Debug Information:
-${JSON.stringify(debugInfo, null, 2)}`);
-
-		if (verified) {
-			// Success case - Use the manager's onSuccess to verify with additional checks
-			manager.onSuccess(eventX, verificationData.destX).then((isVerified) => {
-				if (isVerified) {
-					// Manager has already handled the verification success internally
-					// Just handle UI updates
-					setSliderClass("sliderContainer sliderContainer_success");
-					setIsSuccess(true);
-					setIsVerified(true);
-					setShowSuccessIcon(true);
-				} else {
-					// Verification still failed in manager's additional checks
-					setSliderClass("sliderContainer sliderContainer_fail");
-					setIsFailed(true);
-
-					// Reset after delay
-					setTimeout(() => {
-						resetPuzzle();
-					}, 1000);
-				}
-			});
-		} else {
-			// Puzzle piece not in the right position
-			setSliderClass("sliderContainer sliderContainer_fail");
-			setIsFailed(true);
-
-			// Reset after delay
-			setTimeout(() => {
-				resetPuzzle();
-			}, 1000);
-		}
+				// Reset after delay
+				setTimeout(() => {
+					resetPuzzle();
+				}, 1000);
+			}
+		});
 
 		return true;
 	};
@@ -1048,18 +1159,22 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 						ref={sliderRef}
 						className={sliderClass}
 					>
+						<div css={styles.sliderProgress} style={{ width: `${sliderLeft}px` }} />
 						<div
 							css={styles.sliderMask}
 							ref={maskRef}
 							style={{ width: `${sliderLeft}px` }}
 						/>
 						<div
-							css={styles.slider}
+							css={styles.sliderHandle}
 							ref={thumbRef}
 							style={{ left: `${sliderLeft}px` }}
 							onMouseDown={handleDragStart}
 							onTouchStart={handleDragStart}
 						/>
+						<div css={styles.sliderText}>
+							{isSuccess ? 'Verification complete!' : isFailed ? 'Verification failed. Try again.' : 'Slide to verify'}
+						</div>
 					</div>
 				</div>
 			</Modal>
@@ -1112,18 +1227,22 @@ ${JSON.stringify(debugInfo, null, 2)}`);
 						ref={sliderRef}
 						className={sliderClass}
 					>
+						<div css={styles.sliderProgress} style={{ width: `${sliderLeft}px` }} />
 						<div
 							css={styles.sliderMask}
 							ref={maskRef}
 							style={{ width: `${sliderLeft}px` }}
 						/>
 						<div
-							css={styles.slider}
+							css={styles.sliderHandle}
 							ref={thumbRef}
 							style={{ left: `${sliderLeft}px` }}
 							onMouseDown={handleDragStart}
 							onTouchStart={handleDragStart}
 						/>
+						<div css={styles.sliderText}>
+							{isSuccess ? 'Verification complete!' : isFailed ? 'Verification failed. Try again.' : 'Slide to verify'}
+						</div>
 					</div>
 				</div>
 			</Modal>
