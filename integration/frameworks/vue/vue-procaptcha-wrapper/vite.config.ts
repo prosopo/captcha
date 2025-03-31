@@ -12,24 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import {createIntegrationViteConfig} from "@prosopo/procaptcha-integration-build-config";
+import { createIntegrationViteConfig } from "@prosopo/procaptcha-integration-build-config";
 import vue from "@vitejs/plugin-vue";
 
 export default createIntegrationViteConfig({
-    name: "VueProcaptchaWrapper",
-    directory: __dirname,
-    viteSettings: {
-        plugins: [vue()],
-        build: {
-            rollupOptions: {
-                external: ['vue',],
-                output: {
-                    globals: {
-                        "vue": "Vue",
-                    }
-                }
-            }
-        }
-    }
+	name: "VueProcaptchaWrapper",
+	directory: __dirname,
+	viteSettings: {
+		plugins: [vue()],
+		build: {
+			rollupOptions: {
+				external: ["vue", "@prosopo/procaptcha-wrapper"],
+			},
+		},
+	},
 });

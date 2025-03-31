@@ -509,15 +509,36 @@ function MyComponent() {
 
 ## 9. Components library bundling
 
-### 8.1) React
+### 9.1) React
+
+Unlike the app bundling case, to make a reusable components library we need to compile only the component-related code,
+while keeping React as a `peer` (external) dependency, so it'll be pickup up from the target application.
+
+* With Vite, using the [React plugin](https://www.npmjs.com/package/@vitejs/plugin-react):
+
+1. Add `react` to the `peerDependencies` section of your `package.json`
+2. Configure the [Vite Library mode](https://vite.dev/guide/build#library-mode)
+3. Add `react` to the `external` section of the
+   Vite [build.rollupOptions](https://vite.dev/config/build-options#build-rollupoptions) setting
+4. Run `vite build` or `vite dev`
 
 ### 9.2) Vue
+
+Unlike the app bundling case, to make a reusable components library we need to compile only the component-related code,
+while keeping React as a `peer` (external) dependency, so it'll be pickup up from the target application.
+
+* With Vite, using the [Vue plugin](https://www.npmjs.com/package/@vitejs/plugin-vue):
+
+1. Add `vue` to the `peerDependencies` section of your `package.json`
+2. Configure the [Vite Library mode](https://vite.dev/guide/build#library-mode)
+3. Add `vue` to the `external` section of the
+   Vite [build.rollupOptions](https://vite.dev/config/build-options#build-rollupoptions) setting
+4. Run `vite build` or `vite dev`
 
 ### 9.3) Svelte
 
 To be available for reusing, [Svelte components should be packaged](https://svelte.dev/docs/kit/packaging), which
-implies compiling TS-related resources, while
-keeping `.svelte` component files as is.
+implies compiling TS-related resources, while keeping `.svelte` component files as is.
 
 > Note: In Svelte v5, you [can't compile `.svelte` component](https://github.com/sveltejs/svelte/issues/13186) into
 > standalone JS with Svelte being

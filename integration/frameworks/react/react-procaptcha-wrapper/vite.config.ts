@@ -22,13 +22,7 @@ export default createIntegrationViteConfig({
 		plugins: [react()],
 		build: {
 			rollupOptions: {
-				external: ["react", "react/jsx-runtime"],
-				output: {
-					globals: {
-						react: "React",
-						"react/jsx-runtime": "React.jsx",
-					},
-				},
+				external: ["react", "react/jsx-runtime", "@prosopo/procaptcha-wrapper"],
 			},
 		},
 	},
