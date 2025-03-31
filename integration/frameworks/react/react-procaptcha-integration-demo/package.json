@@ -21,7 +21,7 @@
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.0.0",
-		"@vitejs/plugin-react": "4.3.1"
+		"@vitejs/plugin-react": "4.3.4"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
