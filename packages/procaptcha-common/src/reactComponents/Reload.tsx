@@ -53,6 +53,7 @@ export const ReloadButton: FC<ReloadButtonProps> = ({
 			boxShadow: `0px 1px 3px 0px ${theme.palette.grey[500]}`,
 			justifyContent: "center",
 			alignItems: "center",
+			margin: "0 auto",
 		};
 		return {
 			...baseStyle,
