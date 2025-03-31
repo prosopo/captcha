@@ -98,7 +98,7 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 			VitePluginRemoveUnusedTranslations(
 				translationKeys,
-				`${copyDir.destDir}/*.json`,
+				`${copyDir.destDir}/**/*.json`,
 			),
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),
 		],

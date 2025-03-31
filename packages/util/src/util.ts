@@ -33,14 +33,42 @@ export const flatten = (obj: object, prefix = ""): Record<string, string> => {
 };
 
 export const unflatten = (obj: Record<string, string>, prefix = "") => {
-	const unflattenedObj: Record<string, string> = {};
+	// biome-ignore lint/suspicious/noExplicitAny: <We dont know>
+	const unflattenedObj: Record<string, any> = {};
 
-	// object is a flattened JSON object like { "a.b.c": "value",
+	// Iterate through the entries of the object
 	for (const [key, value] of Object.entries(obj)) {
+		// Remove the prefix and split the key by "."
 		const keyParts = key.replace(prefix, "").split(".");
-		const lastKey = keyParts.pop();
-		const currentObj = unflattenedObj;
+
+		// Start with the outermost object
+		let currentObj = unflattenedObj;
+
+		// Loop through each part of the key
+		for (let i = 0; i < keyParts.length - 1; i++) {
+			// Create nested objects as needed
+			const accessor1 = keyParts[i];
+			if (accessor1 === undefined) {
+				continue;
+			}
+
+			if (!currentObj[accessor1]) {
+				currentObj[accessor1] = {};
+			}
+			// Move deeper into the object
+			currentObj = currentObj[accessor1];
+		}
+
+		const accessor2 = keyParts[keyParts.length - 1];
+
+		if (accessor2 === undefined) {
+			continue;
+		}
+
+		// Assign the value to the last key part
+		currentObj[accessor2] = value;
 	}
+
 	return unflattenedObj;
 };
 
