@@ -32,44 +32,38 @@ export const flatten = (obj: object, prefix = ""): Record<string, string> => {
 	return flattenedObj;
 };
 
-export const unflatten = (obj: Record<string, string>, prefix = "") => {
-	// biome-ignore lint/suspicious/noExplicitAny: <We dont know>
-	const unflattenedObj: Record<string, any> = {};
+type UnflattenObject =
+	| Record<string, string | number | boolean | undefined>
+	| string[]
+	| number[]
+	| boolean[];
 
-	// Iterate through the entries of the object
+export const unflatten = (
+	obj: Record<string, string | number | boolean>,
+): Record<string, string | number | boolean | UnflattenObject> => {
+	const result: Record<string, string | number | boolean | UnflattenObject> =
+		{};
+
 	for (const [key, value] of Object.entries(obj)) {
-		// Remove the prefix and split the key by "."
-		const keyParts = key.replace(prefix, "").split(".");
-
-		// Start with the outermost object
-		let currentObj = unflattenedObj;
-
-		// Loop through each part of the key
-		for (let i = 0; i < keyParts.length - 1; i++) {
-			// Create nested objects as needed
-			const accessor1 = keyParts[i];
-			if (accessor1 === undefined) {
-				continue;
+		const keys = key.split(".");
+		keys.reduce((acc, k, i) => {
+			if (i === keys.length - 1) {
+				(acc as Record<string, string | number | boolean | UnflattenObject>)[
+					k
+				] = value;
+			} else {
+				if (!acc[k]) {
+					acc[k] = Number.isNaN(Number(keys[i + 1])) ? {} : [];
+				}
 			}
-
-			if (!currentObj[accessor1]) {
-				currentObj[accessor1] = {};
-			}
-			// Move deeper into the object
-			currentObj = currentObj[accessor1];
-		}
-
-		const accessor2 = keyParts[keyParts.length - 1];
-
-		if (accessor2 === undefined) {
-			continue;
-		}
-
-		// Assign the value to the last key part
-		currentObj[accessor2] = value;
+			return acc[k] as Record<
+				string,
+				string | number | boolean | UnflattenObject
+			>;
+		}, result);
 	}
 
-	return unflattenedObj;
+	return result;
 };
 
 // https://stackoverflow.com/questions/63116039/camelcase-to-kebab-case
