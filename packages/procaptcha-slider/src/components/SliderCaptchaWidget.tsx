@@ -610,7 +610,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const MAX_IMAGE_RETRIES = 3;
 
 	// Modify the resetPuzzle function to use the server-provided image if available
-	const resetPuzzle = useCallback(() => {
+	const resetPuzzle = useCallback(async () => {
 		if (!canvasRef.current || !blockRef.current) {
 			return;
 		}
@@ -642,29 +642,40 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		// Set loading state
 		setImageLoading(true);
 
-		// Generate a random destination if not provided in challenge
-		const puzzleDestination = serverTargetPosition || getRandomInt(20, 300);
+		try {
+			// Call manager.start() to fetch a new captcha from the provider
+			await manager.start();
+			
+			// After getting new challenge, generate puzzle with new target position
+			const puzzleDestination = state?.challenge?.targetPosition || getRandomInt(20, 300);
 
-		// If we have a server-provided image URL, use it
-		if (state?.challenge?.imageUrl) {
-			const img = new Image();
-			img.crossOrigin = "anonymous";
-			img.onload = () => {
-				drawPuzzleFromImage(img, puzzleDestination);
-				setImageLoading(false);
-			};
-			img.onerror = () => {
-				console.error(
-					"Failed to load server image, falling back to client-side generation",
-				);
+			// If we have a server-provided image URL, use it
+			if (state?.challenge?.imageUrl) {
+				const img = new Image();
+				img.crossOrigin = "anonymous";
+				img.onload = () => {
+					drawPuzzleFromImage(img, puzzleDestination);
+					setImageLoading(false);
+				};
+				img.onerror = () => {
+					console.error(
+						"Failed to load server image, falling back to client-side generation",
+					);
+					generateRandomImage(puzzleDestination);
+				};
+				img.src = state.challenge.imageUrl;
+			} else {
+				// Otherwise, generate a random image client-side
 				generateRandomImage(puzzleDestination);
-			};
-			img.src = state.challenge.imageUrl;
-		} else {
-			// Otherwise, generate a random image client-side
+			}
+		} catch (error) {
+			console.error("Error resetting puzzle:", error);
+			setImageLoading(false);
+			// Fall back to client-side generation if provider request fails
+			const puzzleDestination = getRandomInt(20, 300);
 			generateRandomImage(puzzleDestination);
 		}
-	}, [canvasRef, blockRef, state?.challenge]);
+	}, [canvasRef, blockRef, state?.challenge, manager]);
 
 	// Add a function to draw puzzle from a pre-loaded image
 	const drawPuzzleFromImage = (img: HTMLImageElement, destination: number) => {
@@ -986,31 +997,49 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		if (!isMouseDownRef.current) return false;
 		isMouseDownRef.current = false;
 
-		let eventX;
-		if ("changedTouches" in e && e.changedTouches[0]) {
-			eventX = e.changedTouches[0].clientX;
-		} else if ("clientX" in e) {
-			eventX = e.clientX;
-		} else {
-			return false; // No valid coordinates found
-		}
-
 		// No movement case
-		if (eventX === originXRef.current) return false;
+		if (sliderLeft === 0) return false;
 
 		setSliderClass("sliderContainer");
 
 		// Get the target position from state or destX
 		const targetPosition = state?.challenge?.targetPosition || destX;
+		
+		// Get the challenge ID from the state
+		const challengeId = state?.challenge?.requestHash;
+		
+		// Debug alert for verification details
+		const debugInfo = {
+			challengeId: challengeId || 'Missing',
+			sliderPosition: sliderLeft, // Use sliderLeft instead of eventX
+			targetPosition: targetPosition,
+			difference: Math.abs(sliderLeft - targetPosition),
+			mouseMovements: state.mouseMovements.length,
+			solveTime: state.captchaStartTime ? Date.now() - state.captchaStartTime : 'Unknown',
+			state: {
+				hasChallenge: !!state.challenge,
+				challengeDetails: state.challenge,
+				isHuman: state.isHuman,
+				loading: state.loading
+			}
+		};
 
-		// Skip client-side verification and always send to provider for verification
-		console.log("[SliderCaptcha] Submitting position to provider for verification:", {
-			sliderPosition: eventX,
-			targetPosition: targetPosition
-		});
+		if (!challengeId) {
+			console.error("[SliderCaptcha] No challenge ID found in state");
+			alert(`Captcha Failed - Debug Info:\n${JSON.stringify(debugInfo, null, 2)}`);
+			setSliderClass("sliderContainer sliderContainer_fail");
+			setIsFailed(true);
+			setTimeout(() => {
+				resetPuzzle();
+			}, 1000);
+			return false;
+		}
+
+		// Submit to provider for verification
+		console.log("[SliderCaptcha] Submitting solution to provider:", debugInfo);
 
 		// Always pass to manager for provider verification
-		manager.onSuccess(eventX, targetPosition).then((isVerified) => {
+		manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => { // Use sliderLeft instead of eventX
 			if (isVerified) {
 				// Server verified successfully
 				setSliderClass("sliderContainer sliderContainer_success");
@@ -1019,6 +1048,8 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 				setShowSuccessIcon(true);
 			} else {
 				// Server rejected the verification
+				console.error("[SliderCaptcha] Verification failed");
+				alert(`Captcha Failed - Debug Info:\n${JSON.stringify(debugInfo, null, 2)}`);
 				setSliderClass("sliderContainer sliderContainer_fail");
 				setIsFailed(true);
 
@@ -1027,6 +1058,14 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 					resetPuzzle();
 				}, 1000);
 			}
+		}).catch((error) => {
+			console.error("[SliderCaptcha] Error submitting solution:", error);
+			alert(`Captcha Error - Debug Info:\n${JSON.stringify(debugInfo, null, 2)}\n\nError: ${error.message}`);
+			setSliderClass("sliderContainer sliderContainer_fail");
+			setIsFailed(true);
+			setTimeout(() => {
+				resetPuzzle();
+			}, 1000);
 		});
 
 		return true;
