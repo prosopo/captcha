@@ -21,21 +21,20 @@ type ModalProps = {
 };
 
 const ModalInnerDivCSS = css`
-	font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	width: 99%;
 	max-width: 500px;
 	background-color: transparent;
 	border: none;
 	border-radius: 4px;
 	z-index: 2147483647;
+	align-self: center;
 	box-shadow: rgba(0, 0, 0, 0.2) 0px 11px 15px -7px,
 		rgba(0, 0, 0, 0.14) 0px 24px 38px 3px,
 		rgba(0, 0, 0, 0.12) 0px 9px 46px 8px;
-
+	box-sizing: border-box; /* Ensures border is part of width */
 	/* iOS only */
     @supports (-webkit-touch-callout: none) { 
 		transform: translate(-50%, -100%);
