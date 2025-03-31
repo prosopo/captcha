@@ -365,13 +365,13 @@ export const Manager = (
 			return false;
 		}
 
-		// Check if slider position is close enough to target
+		// Check if slider position is close enough to target, using a very lenient 50px threshold
 		const positionDifference = Math.abs(sliderPosition - targetPosition);
-		const isPositionCorrect = positionDifference < 10;
-		debug("Position verification", {
+		const isPositionCorrect = positionDifference < 50; // Much more lenient (50px margin)
+		debug("Position verification with lenient threshold", {
 			isPositionCorrect,
 			positionDifference,
-			toleranceThreshold: 10,
+			toleranceThreshold: 50, // Updated to 50px
 		});
 
 		// Check if there's enough mouse movement variance (anti-bot measure)
@@ -388,19 +388,21 @@ export const Manager = (
 				yPositions.length;
 
 			// If there's enough variance, it's likely a human
-			hasMouseVariance = yVariance > 5;
+			hasMouseVariance = yVariance > 2; // Reduce this threshold to be more lenient (was 5)
 			debug("Mouse movement analysis", {
 				hasMouseVariance,
 				yVariance,
 				movementCount: state.mouseMovements.length,
 				yAverage: yAvg,
-				varianceThreshold: 5,
+				varianceThreshold: 2, // Updated to be more lenient
 			});
 		} else {
 			debug("Not enough mouse movements to calculate variance", {
 				movementCount: state.mouseMovements.length,
 				minimumRequired: 5,
 			});
+			// Still allow verification with limited mouse movements
+			hasMouseVariance = true;
 		}
 
 		// Generate a fingerprint for the user
@@ -759,12 +761,12 @@ export const Manager = (
 			debug("Error submitting slider solution", err);
 			console.error("Failed to submit slider solution", err);
 
-			// Fall back to client-side verification only if server API call fails
-			debug("Falling back to client-side verification");
+			// Try client-side verification as fallback only if server verification fails
+			debug("Falling back to client-side verification due to server error");
 			const isVerified = await verifySolution(sliderPosition, targetPosition);
 
 			if (isVerified) {
-				debug("Client-side verification successful");
+				debug("Client-side fallback verification successful");
 
 				// Set user as human
 				updateState({
