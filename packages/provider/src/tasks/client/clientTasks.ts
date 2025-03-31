@@ -31,7 +31,8 @@ import type {
 import { parseUrl } from "@prosopo/util";
 import { validiateSiteKey } from "../../api/validateAddress.js";
 
-const isValidPrivateKey = (privateKey: string) => {
+const isValidPrivateKey = (privateKeyString: string) => {
+	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
 		createPrivateKey({
 			key: privateKey,

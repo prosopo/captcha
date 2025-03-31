@@ -58,6 +58,17 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		}
 	}, [i18n, config.language]);
 
+	useEffect(() => {
+		if (state.error) {
+			setLoading(false);
+			if (state.error.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
+				setTimeout(() => {
+					frictionlessState.restart();
+				}, 3000);
+			}
+		}
+	}, [state.error, frictionlessState]);
+
 	// Add event listener for the execute event
 	useEffect(() => {
 		// Event handler for when execute() is called
@@ -140,7 +151,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				}}
 				checked={state.isHuman}
 				labelText={t("WIDGET.I_AM_HUMAN")}
-				error={state.error}
+				error={state.error?.message}
 				aria-label="human checkbox"
 				loading={loading}
 			/>
