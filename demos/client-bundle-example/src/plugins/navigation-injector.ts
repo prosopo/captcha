@@ -36,23 +36,20 @@ export default function navigationInjector(): Plugin {
 	const pageDefinitions = {
 		standard: {
 			image: {
-				implicit: { path: "index.html", exists: true },
-				explicit: { path: "image-explicit.html", exists: false },
+				implicit: { path: "image-implicit.html", exists: true },
+				explicit: { path: "image-explicit.html", exists: true },
 			},
 			pow: {
-				implicit: { path: "pow-implicit.html", exists: false },
-				explicit: { path: "pow-explicit.html", exists: false },
+				implicit: { path: "pow-implicit.html", exists: true },
+				explicit: { path: "pow-explicit.html", exists: true },
 			},
 			frictionless: {
-				implicit: {
-					path: "frictionless-implicit.html",
-					exists: false,
-				},
+				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
 			slider: {
 				implicit: { path: "slider-implicit.html", exists: true },
-				explicit: { path: "slider.html", exists: true },
+				explicit: { path: "slider-explicit.html", exists: true },
 			},
 		},
 		invisible: {

@@ -416,6 +416,7 @@ export interface GetSliderCaptchaResponse extends ApiResponse {
 	imageUrl: string;
 	targetPosition: number;
 	timestamp: string;
+	challengeId: string;
 	signature: {
 		provider: {
 			challenge: string;
