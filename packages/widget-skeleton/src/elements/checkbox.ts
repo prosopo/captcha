@@ -95,6 +95,7 @@ const getCheckboxStyles = (theme: Theme): string => `
     display: inherit;
     box-sizing: border-box;
     animation: checkbox__loading-spinner-rotation 1s linear infinite;
+    will-change: transform;
 }
 
 @keyframes ${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}-rotation {

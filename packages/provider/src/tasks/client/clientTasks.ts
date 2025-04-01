@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
@@ -29,6 +30,20 @@ import type {
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import { validiateSiteKey } from "../../api/validateAddress.js";
+
+const isValidPrivateKey = (privateKeyString: string) => {
+	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
+	try {
+		createPrivateKey({
+			key: privateKey,
+			format: "pem",
+			type: "pkcs8",
+		});
+		return true;
+	} catch (error) {
+		return false;
+	}
+};
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -226,10 +241,22 @@ export class ClientTaskManager {
 	}
 
 	async updateDetectorKey(detectorKey: string): Promise<void> {
+		if (!isValidPrivateKey(detectorKey)) {
+			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+				context: { detectorKey },
+				logger: this.logger,
+			});
+		}
 		await this.providerDB.storeDetectorKey(detectorKey);
 	}
 
 	async removeDetectorKey(detectorKey: string): Promise<void> {
+		if (!isValidPrivateKey(detectorKey)) {
+			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+				context: { detectorKey },
+				logger: this.logger,
+			});
+		}
 		await this.providerDB.removeDetectorKey(detectorKey);
 	}
 
