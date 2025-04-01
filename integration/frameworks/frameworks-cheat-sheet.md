@@ -50,6 +50,17 @@ mount(App, {
 
 [Docs](https://svelte.dev/docs/svelte/imperative-component-api#mount)
 
+### 1.4) Angular - bootstrapApplication()
+
+```typescript
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent);
+```
+
+[Docs](https://angular.dev/api/platform-browser/bootstrapApplication)
+
 ## 2. Component definition
 
 ### 1. React - .tsx
@@ -119,11 +130,7 @@ Usage
 <script lang="ts">
     // called once at inclusion
 
-    interface
-    AppProperties
-    {
-    }
-    ;
+    interface AppProperties {};
 </script>
 
 <script setup lang="ts">
@@ -154,11 +161,7 @@ Usage:
 <script module lang="ts">
     // called once at inclusion
 
-    interface
-    AppProperties
-    {
-    }
-    ;
+    interface AppProperties {};
 </script>
 
 <script lang="ts">
@@ -176,156 +179,35 @@ Usage:
 </style>
 ```
 
-[Docs](https://svelte.dev/docs/svelte/svelte-files)
-
-## 3. Reactive variables
-
-### 3.1) React - useState()
-
-```tsx
-import {useState} from "react";
-
-const [stateValue, setStateValue] = useState("initial");
-
-// <div>{stateValue}</div>
-```
-
-[Docs](https://react.dev/reference/react/useState)
-
-### 3.2) Vue - ref/reactive()
+### 4. Angular - .ts
 
 ```typescript
-import {ref, reactive} from "vue";
+import { Component } from "@angular/core";
 
-const stateValue = ref("initial");
-const deepStateValue = reactive({count: 0})
+// called once at inclusion
 
-// <div>{{ stateValue }}</div>
-// <div>{{ deepStateValue.count }} </div>
+@Component({
+	selector: "app-root",
+	imports: [],
+   // keept up to date with the Incremental DOM technique https://blog.nrwl.io/understanding-angular-ivy-incremental-dom-and-virtual-dom-243be844bf36
+	template:"<div></<div>", 
+    // templateUrl: "./app.component.html",
+	styles: "",
+	// styleUrl: "./app.component.css",
+})
+
+export class AppComponent {
+   constructor() {
+      // called once per component instance
+   }
+}
 ```
 
-[Docs](https://vuejs.org/guide/essentials/reactivity-fundamentals.html)
+[Docs](https://angular.dev/guide/components)
 
-### 3.3) Svelte - $state/.raw()
+## 3. Component lifecycle hooks
 
-```typescript
-const stateValue = $state("initial");
-const shallowStateValue = $state.raw({
-    plain: "text",
-});
-
-// <div>{stateValue}</div>
-// <div>{shallowStateValue.plain}</div>
-```
-
-[Docs](https://svelte.dev/docs/svelte/$state)
-
-## 4. Computed variables
-
-### 4.1) React - useMemo()
-
-```typescript
-import {useState, useMemo} from "react";
-
-const [stateValue, setStateValue] = useState(1);
-
-const computedValue = useMemo(
-    () => stateValue * 2, // computing function
-    [stateValue] // list of the reactive variables we depend on
-);
-
-// <div>{computedValue}</div>
-```
-
-[Docs](https://react.dev/reference/react/useMemo)
-
-### 4.2) Vue - computed()
-
-```typescript
-import {ref, computed} from "vue";
-
-const stateValue = ref(1);
-
-const computedValue = computed(
-    () => stateValue.value * 2  // computing function
-);
-
-// note: Vue implicitly picks up function dependencies
-
-// <div>{{ computedValue }}</div>
-```
-
-[Docs](https://vuejs.org/guide/essentials/computed.html)
-
-### 4.3) Svelte - $derived()
-
-```typescript
-const stateValue = $state(1);
-
-const computedValue = $derived(stateValue * 2); // computing expression
-const complexComputedValue = $derived.by(() => {
-    return computeSomething(stateValue);  // computing function
-});
-
-// note: Svelte implicitly picks up function dependencies
-
-// <div>{computedValue}</div>
-// <div>{complexComplutedValue}</div>
-```
-
-[Docs](https://svelte.dev/docs/svelte/$derived)
-
-## 5. Reactive variable changes tracking
-
-### 5.1) React - useEffect()
-
-```typescript
-import {useEffect} from "react";
-
-const [stateValue, setStateValue] = useState("initial");
-
-useEffect(() => {
-        console.log('stateValue has changed', stateValue); // tracking function
-    },
-    [stateValue] // list of the reactive variables we depend on
-);
-```
-
-[Docs](https://react.dev/reference/react/useEffect)
-
-### 5.2) Vue - watchEffect()
-
-```typescript
-import {watchEffect} from "vue";
-
-const stateValue = ref("initial");
-
-const {stop, pause, resume} = watchEffect(() => {
-    console.log('stateValue has changed', stateValue.value);  // tracking function
-});
-
-// note: Vue implicitly picks up function dependencies
-```
-
-[Docs](https://vuejs.org/api/reactivity-core.html#watcheffect)
-
-### 5.3) Svelte - $effect()
-
-```typescript
-const stateValue = $state("initial");
-
-$effect(() => {
-    console.log('stateValue has changed', stateValue.value);  // tracking function
-});
-
-// note: Svelte implicitly picks up function dependencies
-```
-
-[Docs](https://svelte.dev/docs/svelte/$effect)
-
-## 6. Lifecycle hooks
-
-### 6.1) React - useEffect()
+### 3.1) React - useEffect()
 
 Class-based component:
 
@@ -363,7 +245,7 @@ function App(): React.ReactNode {
 
 [Docs](https://react.dev/reference/react/useEffect#examples-dependencies)
 
-### 6.2) Vue - onMounted()
+### 3.2) Vue - onMounted()
 
 ```typescript
 import {onMounted, onUpdated} from "vue";
@@ -379,7 +261,7 @@ onUpdated(() => {
 
 [Docs](https://vuejs.org/api/composition-api-lifecycle.html)
 
-### 6.3) Svelte - onMount()
+### 3.3) Svelte - onMount()
 
 ```typescript
 import {onMount, tick} from 'svelte';
@@ -399,13 +281,220 @@ $effect.pre(() => {
 
 [Docs](https://svelte.dev/docs/svelte/lifecycle-hooks)
 
+### 3.4) Angular - ngOnInit()
+
+```typescript
+export class DemoComponent {
+   ngOnInit() {
+      // called once after the initial render
+   }
+}
+```
+
+[Docs](https://angular.dev/guide/components/lifecycle)
+
+## 4. Reactive variables
+
+### 4.1) React - useState()
+
+```tsx
+import {useState} from "react";
+
+const [stateValue, setStateValue] = useState("initial");
+
+// <div>{stateValue}</div>
+
+setStateValue("newValue");
+```
+
+[Docs](https://react.dev/reference/react/useState)
+
+### 4.2) Vue - ref/reactive()
+
+```typescript
+import {ref, reactive} from "vue";
+
+const stateValue = ref("initial");
+const deepStateValue = reactive({count: 0})
+
+// <div>{{ stateValue }}</div>
+// <div>{{ deepStateValue.count }} </div>
+
+stateValue.value = "newValue";
+```
+
+[Docs](https://vuejs.org/guide/essentials/reactivity-fundamentals.html)
+
+### 4.3) Svelte - $state/.raw()
+
+```typescript
+let stateValue = $state("initial");
+const shallowStateValue = $state.raw({
+    plain: "text",
+});
+
+// <div>{stateValue}</div>
+// <div>{shallowStateValue.plain}</div>
+
+stateValue = "newValue";
+```
+
+### 4.4) Angular - signal()
+
+```typescript
+import {signal} from '@angular/core';
+
+const stateValue = signal("initial");
+
+// <div>{{stateValue()}}</div>
+
+stateValue.set("newValue");
+```
+
+[Docs](https://angular.dev/guide/signals)
+
+## 5. Computed variables
+
+### 5.1) React - useMemo()
+
+```typescript
+import {useState, useMemo} from "react";
+
+const [stateValue, setStateValue] = useState(1);
+
+const computedValue = useMemo(
+    () => stateValue * 2, // computing function
+    [stateValue] // list of the reactive variables we depend on
+);
+
+// <div>{computedValue}</div>
+```
+
+[Docs](https://react.dev/reference/react/useMemo)
+
+### 5.2) Vue - computed()
+
+```typescript
+import {ref, computed} from "vue";
+
+const stateValue = ref(1);
+
+const computedValue = computed(
+    () => stateValue.value * 2  // computing function
+);
+
+// note: Vue implicitly picks up function dependencies
+
+// <div>{{ computedValue }}</div>
+```
+
+[Docs](https://vuejs.org/guide/essentials/computed.html)
+
+### 5.3) Svelte - $derived()
+
+```typescript
+const stateValue = $state(1);
+
+const computedValue = $derived(stateValue * 2); // computing expression
+const complexComputedValue = $derived.by(() => {
+    return computeSomething(stateValue);  // computing function
+});
+
+// note: Svelte implicitly picks up function dependencies
+
+// <div>{computedValue}</div>
+// <div>{complexComplutedValue}</div>
+```
+
+[Docs](https://svelte.dev/docs/svelte/$derived)
+
+### 5.4) Angular - computed()
+
+```typescript
+import {signal, computed} from '@angular/core';
+
+const stateValue = signal("initial");
+const computedValue = computed(() => stateValue() + " prefix")
+
+// note: Angular implicitly picks up function dependencies
+
+// <div>{{computedValue()}}</div>
+```
+
+[Docs](https://angular.dev/guide/signals#computed-signals)
+
+## 6. Reactive variable changes tracking
+
+### 6.1) React - useEffect()
+
+```typescript
+import {useEffect} from "react";
+
+const [stateValue, setStateValue] = useState("initial");
+
+useEffect(() => {
+        console.log('stateValue has changed', stateValue); // tracking function
+    },
+    [stateValue] // list of the reactive variables we depend on
+);
+```
+
+[Docs](https://react.dev/reference/react/useEffect)
+
+### 6.2) Vue - watchEffect()
+
+```typescript
+import {watchEffect} from "vue";
+
+const stateValue = ref("initial");
+
+const {stop, pause, resume} = watchEffect(() => {
+    console.log('stateValue has changed', stateValue.value);  // tracking function
+});
+
+// note: Vue implicitly picks up function dependencies
+```
+
+[Docs](https://vuejs.org/api/reactivity-core.html#watcheffect)
+
+### 6.3) Svelte - $effect()
+
+```typescript
+const stateValue = $state("initial");
+
+$effect(() => {
+    console.log('stateValue has changed', stateValue.value);  // tracking function
+});
+
+// note: Svelte implicitly picks up function dependencies
+```
+
+[Docs](https://svelte.dev/docs/svelte/$effect)
+
+### 6.4) Angular - effect()
+
+```typescript
+import {signal, effect} from '@angular/core';
+
+const stateValue = signal("initial");
+
+effect(() => {
+    // distinct behavior: this function is called at least once, so includes the initial value assignment
+    console.log("state value was set: " + stateValue());
+});
+
+// note: Angular implicitly picks up function dependencies
+
+```
+[Docs](https://angular.dev/api/core/effect)
+
 ## 7. Direct DOM manipulations
 
 ### 7.1) React - useRef()
 
 Class-based component
 
-```typescript
+```typescript jsx
 import React, {useRef} from 'react';
 
 class App extends React.Component {
@@ -418,9 +507,7 @@ class App extends React.Component {
     }
 
     public override render(): React.ReactNode {
-        return <div ref = {this.elementRef}
-        onClick = {this.focus.bind(this)}
-        />;
+        return <div ref={this.elementRef} onClick={this.focus.bind(this)}/>;
     }
 
     public focus(): void {
@@ -431,7 +518,7 @@ class App extends React.Component {
 
 Function-based component
 
-```typescript
+```typescript jsx
 import {useRef} from 'react';
 
 function MyComponent() {
@@ -441,9 +528,7 @@ function MyComponent() {
         inputRef.current.focus();
     }
 
-    return <input ref = {inputRef}
-    onClick = {handleClick}
-    />;
+    return <input ref={inputRef} onClick={handleClick}/>;
 }
 ```
 
@@ -489,6 +574,26 @@ function MyComponent() {
 
 [Docs](https://svelte.dev/docs/svelte/bind#bind:this)
 
+### 7.4) Angular - @ViewChild
+
+```typescript
+import {afterRender, ElementRef, inject, ViewChild} from "@angular/core";
+
+export class AppComponent {
+   elementRef = inject(ElementRef);
+   @ViewChild("intro") intro!: ElementRef;
+
+   constructor() {
+      afterRender(() => {
+         this.elementRef.nativeElement.classList.add("loaded");
+         this.intro.nativeElement.classList.add("loaded2");
+      });
+   }
+}
+```
+
+[Docs](https://angular.dev/api/core/ViewChild)
+
 ## 8. Application bundling
 
 ### 8.1) React
@@ -502,6 +607,10 @@ function MyComponent() {
 ### 8.3) Svelte
 
 * With Vite, using the [Svelte plugin](https://www.npmjs.com/package/@sveltejs/vite-plugin-svelte)
+
+### 8.4) Angular
+
+* Using [Angular-CLI](https://github.com/angular/angular-cli)
 
 ## 9. Components library bundling
 
