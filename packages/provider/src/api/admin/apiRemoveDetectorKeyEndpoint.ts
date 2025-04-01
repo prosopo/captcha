@@ -17,14 +17,18 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type Logger, getLoggerDefault } from "@prosopo/common";
+import {
+	type Logger,
+	type ProsopoApiError,
+	getLoggerDefault,
+} from "@prosopo/common";
 import { UpdateDetectorKeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
 type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
 
-class ApiUpdateDetectorKeyEndpoint
+class ApiRemoveDetectorKeyEndpoint
 	implements ApiEndpoint<UpdateDetectorKeyBodyType>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
@@ -46,10 +50,11 @@ class ApiUpdateDetectorKeyEndpoint
 			return {
 				status: ApiEndpointResponseStatus.SUCCESS,
 			};
-		} catch (error) {
+		} catch (error: unknown) {
 			logger.error({ message: "Error updating detector key", error });
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
+				error: (error as ProsopoApiError).message,
 			};
 		}
 	}
@@ -59,4 +64,4 @@ class ApiUpdateDetectorKeyEndpoint
 	}
 }
 
-export { ApiUpdateDetectorKeyEndpoint };
+export { ApiRemoveDetectorKeyEndpoint };
