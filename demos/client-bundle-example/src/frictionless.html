@@ -140,9 +140,8 @@
 
     // Define a callback function to be called when the CAPTCHA is verified
     function onCaptchaVerified(output) {
-        console.log('Captcha verified, output: ' + JSON.stringify(output))
+        console.log('Challenge passed')
     }
-
     // Get the Element using elementId
     const captchaContainer = document.getElementById('procaptcha-container')
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
