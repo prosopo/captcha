@@ -101,6 +101,11 @@
             }
         );
 
+
+        window.onCaptchaFailed = function () {
+            console.log('Challenge failed')
+        }
+
         window.onCaptchaVerified = (output) => {
             console.log('Challenge passed')
         }
