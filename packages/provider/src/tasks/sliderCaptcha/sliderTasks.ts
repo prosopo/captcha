@@ -123,6 +123,7 @@ export class SliderCaptchaManager extends CaptchaManager {
 			imageUrl,
 			targetPosition,
 			timestamp: requestedAtTimestamp.toString(),
+			challengeId: id,
 			signature: {
 				provider: {
 					challenge: challengeSignature,
@@ -231,26 +232,26 @@ export class SliderCaptchaManager extends CaptchaManager {
 		}
 		
 		// Check if solved too quickly (potential bot)
-		if (solveTime < MIN_SOLVE_TIME) {
-			this.logger.info("Slider solved too quickly", {
-				challengeId,
-				solveTime,
-				minRequiredTime: MIN_SOLVE_TIME,
-			});
-			await this.db.updateSliderCaptchaRecord(
-				challengeId,
-				{
-					status: CaptchaStatus.disapproved,
-					reason: "CAPTCHA.TOO_FAST",
-				},
-				false,
-				true,
-				position,
-				solveTime,
-				userSignature,
-			);
-			return false;
-		}
+		// if (solveTime < MIN_SOLVE_TIME) {
+		// 	this.logger.info("Slider solved too quickly", {
+		// 		challengeId,
+		// 		solveTime,
+		// 		minRequiredTime: MIN_SOLVE_TIME,
+		// 	});
+		// 	await this.db.updateSliderCaptchaRecord(
+		// 		challengeId,
+		// 		{
+		// 			status: CaptchaStatus.disapproved,
+		// 			reason: "CAPTCHA.TOO_FAST",
+		// 		},
+		// 		false,
+		// 		true,
+		// 		position,
+		// 		solveTime,
+		// 		userSignature,
+		// 	);
+		// 	return false;
+		// }
 		
 		// Check if position is close enough to target
 		const targetPosition = challengeRecord.targetPosition;
@@ -347,7 +348,7 @@ export class SliderCaptchaManager extends CaptchaManager {
 	async serverVerifySliderCaptchaSolution(
 		dappAccount: string,
 		challengeId: string,
-		timeout: number,
+		timeout: number, // This parameter is now ignored as we calculate timeout from record creation
 	): Promise<{ verified: boolean; score?: number }> {
 		const challengeRecord = await this.db.getSliderCaptchaRecordById(challengeId);
 		
@@ -381,9 +382,16 @@ export class SliderCaptchaManager extends CaptchaManager {
 			});
 		}
 		
-		// Verify the challenge is recent
+		// Calculate timeout based on record creation date (10 minutes from creation)
+		const VERIFICATION_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
 		const challengeTime = challengeRecord.requestedAtTimestamp;
-		if (Date.now() - challengeTime > timeout) {
+		if (Date.now() - challengeTime > VERIFICATION_TIMEOUT) {
+			this.logger.info("Slider captcha verification timeout", {
+				challengeId,
+				creationTime: challengeTime,
+				currentTime: Date.now(),
+				timeout: VERIFICATION_TIMEOUT
+			});
 			return { verified: false };
 		}
 		

@@ -363,12 +363,10 @@ export default class ProviderApi
 		token: ProcaptchaToken,
 		dappSignature: string,
 		userAccount: string,
-		verifiedTimeout?: number,
 	): Promise<any> {
 		const body = {
 			token,
 			dappSignature,
-			...(verifiedTimeout && { verifiedTimeout }),
 		};
 		return this.post(ClientApiPaths.VerifySliderCaptchaSolution, body, {
 			headers: {

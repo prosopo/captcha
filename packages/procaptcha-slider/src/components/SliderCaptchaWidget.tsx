@@ -94,6 +94,11 @@ const styles = {
 		position: relative;
 		font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
 		animation: ${slideInAnimation} 0.3s ease-out;
+		background: ${colors.cardBg};
+		border-radius: 12px;
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+		overflow: hidden;
+		margin-bottom: 15px;
 	`,
 	canvasContainer: css`
 		position: relative;
@@ -101,33 +106,17 @@ const styles = {
 		height: 160px;
 		background-color: ${colors.backgroundDark};
 		overflow: hidden;
-		border-radius: 12px;
-		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-		margin-bottom: 15px;
 		transition: all 0.3s ease;
-		border: 2px solid ${colors.primary}40; /* 40 adds 25% opacity */
+		border-bottom: 1px solid ${colors.border};
 		
 		&:hover {
-			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-			transform: translateY(-2px);
-		}
-		
-		&:before {
-			content: "";
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			height: 3px;
-			background: linear-gradient(90deg, ${colors.primaryDark}, ${colors.primary});
-			z-index: 1;
+			transform: translateY(-1px);
 		}
 	`,
 	canvas: css`
 		position: absolute;
 		top: 0;
 		left: 0;
-		border-radius: 12px;
 	`,
 	block: css`
 		position: absolute;
@@ -174,32 +163,32 @@ const styles = {
 		position: relative;
 		width: 320px;
 		height: 40px;
-		background-color: #f5f5f5;
-		border-radius: 20px;
-		margin: 15px auto 25px;
+		background-color: ${colors.background};
+		margin: 0;
 		overflow: hidden;
-		box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+		box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
 		transition: all 0.3s ease;
+		border-bottom-left-radius: 12px;
+		border-bottom-right-radius: 12px;
 		
 		&.success {
 			background-color: rgba(40, 167, 69, 0.15);
-			box-shadow: inset 0 2px 5px rgba(40, 167, 69, 0.2);
 		}
 		
 		&.error {
 			background-color: rgba(220, 53, 69, 0.15);
-			box-shadow: inset 0 2px 5px rgba(220, 53, 69, 0.2);
 		}
 	`,
 	sliderMask: css`
 		position: absolute;
 		left: 0;
 		top: 0;
-		height: 48px;
+		height: 40px;
 		border: 0 solid ${colors.primary};
-		background: linear-gradient(90deg, ${colors.primaryLight}, ${colors.primary});
-		border-radius: 24px 0 0 24px;
+		background: ${colors.primary}20;
+		border-bottom-left-radius: 12px;
 		transition: width 0.1s ease;
+		z-index: 1;
 	`,
 	slider: css`
 		position: relative;
@@ -224,7 +213,8 @@ const styles = {
 		top: 0;
 		height: 100%;
 		width: 0%; /* Will be updated dynamically via inline style */
-		background: linear-gradient(90deg, ${colors.primaryLight}80, ${colors.primary}50);
+		background: ${colors.primary}20;
+		border-bottom-left-radius: 12px;
 		transition: width 0.3s ease;
 		z-index: 1;
 	`,
@@ -236,11 +226,13 @@ const styles = {
 		align-items: center;
 		justify-content: center;
 		font-size: 14px;
-		color: #666;
+		color: ${colors.textLight};
 		z-index: 1;
 		pointer-events: none;
 		user-select: none;
-		padding-left: 45px; /* Make room for the handle */
+		text-align: center;
+		font-weight: 500;
+		letter-spacing: 0.2px;
 	`,
 	loadingOverlay: css`
 		position: absolute;
@@ -274,33 +266,24 @@ const styles = {
 		letter-spacing: 0.5px;
 	`,
 	title: css`
-		font-size: 18px;
+		font-size: 16px;
 		font-weight: 600;
-		color: #ffffff;
+		color: ${colors.text};
 		text-align: center;
-		margin-bottom: 15px;
-		letter-spacing: 0.5px;
-		background: linear-gradient(90deg, ${colors.primaryDark}, ${colors.primary});
-		padding: 10px 15px;
-		border-radius: 8px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		width: fit-content;
-		margin-left: auto;
-		margin-right: auto;
+		padding: 15px;
+		background: ${colors.background};
+		border-bottom: 1px solid ${colors.border};
+		margin: 0;
 	`,
 	instruction: css`
 		font-size: 14px;
 		font-weight: 500;
 		color: ${colors.textLight};
 		text-align: center;
-		margin-bottom: 15px;
-		background-color: ${colors.backgroundDark};
-		padding: 8px 12px;
-		border-radius: 6px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-		width: fit-content;
-		margin-left: auto;
-		margin-right: auto;
+		padding: 10px;
+		background: ${colors.backgroundDark};
+		border-bottom: 1px solid ${colors.border};
+		margin: 0;
 	`,
 	successIcon: css`
 		position: absolute;
@@ -325,33 +308,108 @@ const styles = {
 		width: 40px;
 		height: 40px;
 		background: white;
-		border-radius: 50%;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+		border-radius: 0 0 12px 12px;
+		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		cursor: grab;
 		z-index: 2;
-		transition: box-shadow 0.2s ease, transform 0.1s ease;
+		transition: all 0.2s ease;
 		
 		&:hover {
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+			box-shadow: 0 6px 14px rgba(67, 97, 238, 0.25), 0 2px 6px rgba(67, 97, 238, 0.1);
+			transform: translateY(-1px);
 		}
 		
 		&:active {
 			cursor: grabbing;
-			transform: scale(1.05);
+			transform: scale(0.98);
+			box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
 		}
 		
 		&:after {
 			content: "";
 			display: block;
-			width: 14px;
-			height: 14px;
-			border-radius: 50%;
+			width: 16px;
+			height: 2px;
 			background: ${colors.primary};
+			border-radius: 1px;
+			margin-top: -4px;
 			transition: all 0.2s ease;
 		}
+		
+		&:hover:after {
+			background: ${colors.primaryDark};
+			width: 18px;
+		}
+	`,
+	closeButton: css`
+		position: absolute;
+		right: 10px;
+		top: 10px;
+		width: 36px;
+		height: 36px;
+		background-color: rgba(255, 255, 255, 0.9);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		z-index: 15;
+		font-size: 20px;
+		box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		color: ${colors.error};
+		transition: all 0.2s ease;
+		
+		&:hover {
+			background-color: #ffffff;
+			box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+			transform: rotate(90deg);
+			color: ${colors.errorDark};
+		}
+	`,
+	tempSubmitButton: css`
+		width: 320px;
+		padding: 10px;
+		margin: 15px auto 0;
+		background-color: #ff6b6b;
+		color: white;
+		border: none;
+		border-radius: 8px;
+		font-weight: bold;
+		cursor: pointer;
+		position: relative;
+		overflow: hidden;
+		display: block;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		
+		&:before {
+			content: "DEV";
+			position: absolute;
+			top: 0;
+			right: 0;
+			background: #ff4757;
+			color: white;
+			padding: 2px 6px;
+			font-size: 10px;
+			border-radius: 0 8px 0 8px;
+		}
+		
+		&:hover {
+			background-color: #ff5252;
+			transform: translateY(-1px);
+			box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+		}
+		
+		&:active {
+			transform: scale(0.98);
+		}
+	`,
+	modalContent: css`
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	`,
 };
 
@@ -427,7 +485,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const frictionlessState = props.frictionlessState;
 	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
-	const [baseState, updateBaseState] = useProcaptcha(useState, useRef);
+	const [baseState, updateBaseState] = useProcaptcha<SliderCaptchaResponseBody>(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	const [imageLoading, setImageLoading] = useState(true);
 
@@ -440,6 +498,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		callbacks,
 		mouseMovements: [],
 		attemptCount: 0,
+		challenge: baseState.challenge,
 	};
 
 	const manager = Manager(
@@ -490,74 +549,31 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		);
 	}
 
-	// Update target position checks
-	const serverTargetPosition = challenge?.targetPosition;
-
-	// Initialize the puzzle immediately when the component mounts
-	useEffect(() => {
-		// Pre-generate a random destination so we have it ready
-		const randomX = getRandomInt(60, 260);
-		setDestX(randomX);
-		xRef.current = randomX;
-
-		// Pre-load the initial image
-		setPuzzleImage(getRandomImage());
-	}, []);
-
 	// Update to ensure the canvas is initialized when the modal shows
 	useEffect(() => {
 		if (state.showModal) {
-			if (!canvasRef.current || !blockRef.current) {
-				// Wait for refs to be available before initializing
-				const checkInterval = setInterval(() => {
-					if (canvasRef.current && blockRef.current) {
-						clearInterval(checkInterval);
-						resetPuzzle();
-					}
-				}, 50);
+			// Only initialize if we have a challenge
+			if (state.challenge) {
+				if (!canvasRef.current || !blockRef.current) {
+					// Wait for refs to be available before initializing
+					const checkInterval = setInterval(() => {
+						if (canvasRef.current && blockRef.current) {
+							clearInterval(checkInterval);
+							resetPuzzle();
+						}
+					}, 50);
 
-				// Clean up interval if modal closes
-				return () => clearInterval(checkInterval);
+					// Clean up interval if modal closes
+					return () => clearInterval(checkInterval);
+				}
+				resetPuzzle();
 			}
-			resetPuzzle();
 			// Return empty cleanup function to satisfy TypeScript
 			return () => {};
 		}
 		// Return empty cleanup function to satisfy TypeScript
 		return () => {};
-	}, [state.showModal]);
-
-	useEffect(() => {
-		if (config.language) {
-			if (i18n) {
-				if (i18n.language !== config.language) {
-					i18n.changeLanguage(config.language).then((r) => r);
-				}
-			} else {
-				loadI18next(false).then((i18n) => {
-					if (i18n.language !== config.language)
-						i18n.changeLanguage(config.language).then((r) => r);
-				});
-			}
-		}
-	}, [i18n, config.language]);
-
-	useEffect(() => {
-		if (state.error) {
-			setLoading(false);
-			// Type error fix: Treat error as an object with a key property
-			const errorObj =
-				typeof state.error === "object" && state.error !== null
-					? (state.error as { key?: string })
-					: { key: undefined };
-
-			if (errorObj.key === "CAPTCHA.NO_SESSION_FOUND" && frictionlessState) {
-				setTimeout(() => {
-					frictionlessState.restart();
-				}, 3000);
-			}
-		}
-	}, [state.error, frictionlessState]);
+	}, [state.showModal, state.challenge]);
 
 	// Add event listener for the execute event
 	useEffect(() => {
@@ -586,30 +602,10 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		return `https://picsum.photos/id/${imageId}/320/160`;
 	};
 
-	// Add additional logging for debugging server challenge
-	useEffect(() => {
-		if (manager && state?.challenge) {
-			console.log(
-				"[SliderCaptcha] Received challenge from server:",
-				state.challenge,
-			);
-			if (state.challenge.imageUrl) {
-				console.log(
-					"[SliderCaptcha] Using server-provided image URL:",
-					state.challenge.imageUrl,
-				);
-			} else {
-				console.log(
-					"[SliderCaptcha] No image URL provided, will generate client-side puzzle",
-				);
-			}
-		}
-	}, [manager, state?.challenge]);
-
 	// Add a maximum retry count for image loading
 	const MAX_IMAGE_RETRIES = 3;
 
-	// Modify the resetPuzzle function to use the server-provided image if available
+	// Modify the resetPuzzle function to not call manager.start()
 	const resetPuzzle = useCallback(async () => {
 		if (!canvasRef.current || !blockRef.current) {
 			return;
@@ -643,14 +639,19 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		setImageLoading(true);
 
 		try {
-			// Call manager.start() to fetch a new captcha from the provider
-			await manager.start();
-			
-			// After getting new challenge, generate puzzle with new target position
-			const puzzleDestination = state?.challenge?.targetPosition || getRandomInt(20, 300);
+			// Use the current challenge instead of requesting a new one
+			const challenge = state.challenge as SliderCaptchaResponseBody;
+			if (!challenge) {
+				console.error("No challenge available for puzzle reset");
+				setImageLoading(false);
+				return;
+			}
+
+			// After getting challenge, generate puzzle with target position
+			const puzzleDestination = challenge.targetPosition || getRandomInt(20, 300);
 
 			// If we have a server-provided image URL, use it
-			if (state?.challenge?.imageUrl) {
+			if (challenge.imageUrl) {
 				const img = new Image();
 				img.crossOrigin = "anonymous";
 				img.onload = () => {
@@ -663,7 +664,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 					);
 					generateRandomImage(puzzleDestination);
 				};
-				img.src = state.challenge.imageUrl;
+				img.src = challenge.imageUrl;
 			} else {
 				// Otherwise, generate a random image client-side
 				generateRandomImage(puzzleDestination);
@@ -675,7 +676,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 			const puzzleDestination = getRandomInt(20, 300);
 			generateRandomImage(puzzleDestination);
 		}
-	}, [canvasRef, blockRef, state?.challenge, manager]);
+	}, [canvasRef, blockRef, state.challenge]);
 
 	// Add a function to draw puzzle from a pre-loaded image
 	const drawPuzzleFromImage = (img: HTMLImageElement, destination: number) => {
@@ -914,32 +915,6 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		}
 	};
 
-	// Update verifySlider to use server target position and add debug logging
-	const verifySlider = (sliderLeftValue: number) => {
-		// Get the current target position from state or destX
-		const targetPosition = state?.challenge?.targetPosition || destX;
-
-		// Debug logging
-		console.log("[SliderCaptcha] Verifying slider position:", sliderLeftValue);
-		console.log("[SliderCaptcha] Target position:", targetPosition);
-		console.log(
-			"[SliderCaptcha] Distance from target:",
-			Math.abs(sliderLeftValue - targetPosition),
-		);
-
-		// Calculate verification based on how close the slider is to the target position
-		const isClose = Math.abs(sliderLeftValue - targetPosition) < 10;
-
-		console.log("[SliderCaptcha] Is close enough to target?", isClose);
-
-		// Return verification data
-		return {
-			verified: isClose,
-			destX: targetPosition,
-		};
-	};
-
-	// Touch and mouse event handlers similar to the demo
 	const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
 		if ("touches" in e && e.touches[0]) {
 			originXRef.current = e.touches[0].clientX;
@@ -993,6 +968,29 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		return true;
 	};
 
+	const handleVerificationFailure = () => {
+		console.error("[SliderCaptcha] Verification failed");
+		setSliderClass("sliderContainer sliderContainer_fail");
+		setIsFailed(true);
+
+		// Reset after delay
+		setTimeout(async () => {
+			// First close the modal and reset all state
+			handleCloseModal();
+			
+			// Small additional delay to ensure state is cleared
+			setTimeout(() => {
+				// Find and click the checkbox to start fresh
+				const checkbox = document.querySelector('.slider-captcha input[type="checkbox"]') as HTMLInputElement;
+				if (checkbox) {
+					checkbox.click();
+				} else {
+					console.error("[SliderCaptcha] Could not find checkbox to restart verification");
+				}
+			}, 100);
+		}, 1000);
+	};
+
 	const handleDragEnd = (e: MouseEvent | TouchEvent) => {
 		if (!isMouseDownRef.current) return false;
 		isMouseDownRef.current = false;
@@ -1006,40 +1004,28 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		const targetPosition = state?.challenge?.targetPosition || destX;
 		
 		// Get the challenge ID from the state
-		const challengeId = state?.challenge?.requestHash;
-		
-		// Debug alert for verification details
-		const debugInfo = {
-			challengeId: challengeId || 'Missing',
-			sliderPosition: sliderLeft, // Use sliderLeft instead of eventX
-			targetPosition: targetPosition,
-			difference: Math.abs(sliderLeft - targetPosition),
-			mouseMovements: state.mouseMovements.length,
-			solveTime: state.captchaStartTime ? Date.now() - state.captchaStartTime : 'Unknown',
-			state: {
-				hasChallenge: !!state.challenge,
-				challengeDetails: state.challenge,
-				isHuman: state.isHuman,
-				loading: state.loading
-			}
-		};
+		const challengeId = state?.challenge?.challengeId;
 
 		if (!challengeId) {
 			console.error("[SliderCaptcha] No challenge ID found in state");
-			alert(`Captcha Failed - Debug Info:\n${JSON.stringify(debugInfo, null, 2)}`);
-			setSliderClass("sliderContainer sliderContainer_fail");
-			setIsFailed(true);
-			setTimeout(() => {
-				resetPuzzle();
-			}, 1000);
+			handleVerificationFailure();
+			return false;
+		}
+
+		// Check if puzzle piece is in correct position (within 50px tolerance)
+		const isInPosition = Math.abs(sliderLeft - targetPosition) <= 50;
+		
+		if (!isInPosition) {
+			console.error("[SliderCaptcha] Puzzle piece not in correct position");
+			handleVerificationFailure();
 			return false;
 		}
 
 		// Submit to provider for verification
-		console.log("[SliderCaptcha] Submitting solution to provider:", debugInfo);
+		console.log("[SliderCaptcha] Submitting solution to provider");
 
 		// Always pass to manager for provider verification
-		manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => { // Use sliderLeft instead of eventX
+		manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => {
 			if (isVerified) {
 				// Server verified successfully
 				setSliderClass("sliderContainer sliderContainer_success");
@@ -1048,24 +1034,11 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 				setShowSuccessIcon(true);
 			} else {
 				// Server rejected the verification
-				console.error("[SliderCaptcha] Verification failed");
-				alert(`Captcha Failed - Debug Info:\n${JSON.stringify(debugInfo, null, 2)}`);
-				setSliderClass("sliderContainer sliderContainer_fail");
-				setIsFailed(true);
-
-				// Reset after delay
-				setTimeout(() => {
-					resetPuzzle();
-				}, 1000);
+				handleVerificationFailure();
 			}
 		}).catch((error) => {
 			console.error("[SliderCaptcha] Error submitting solution:", error);
-			alert(`Captcha Error - Debug Info:\n${JSON.stringify(debugInfo, null, 2)}\n\nError: ${error.message}`);
-			setSliderClass("sliderContainer sliderContainer_fail");
-			setIsFailed(true);
-			setTimeout(() => {
-				resetPuzzle();
-			}, 1000);
+			handleVerificationFailure();
 		});
 
 		return true;
@@ -1086,19 +1059,6 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 			document.removeEventListener("touchmove", handleDragMove);
 			document.removeEventListener("touchend", handleDragEnd);
 		};
-	}, []);
-
-	// Pre-load images to avoid delay when modal opens
-	useEffect(() => {
-		// Preload a few images for faster response when modal opens
-		const preloadImages = () => {
-			for (let i = 0; i < 3; i++) {
-				const img = new Image();
-				img.src = getRandomImage();
-			}
-		};
-
-		preloadImages();
 	}, []);
 
 	// Add a CSS class for proper styling of the slider states
@@ -1152,69 +1112,157 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		</div>
 	);
 
+	// Add close modal handler
+	const handleCloseModal = useCallback(() => {
+		// Reset all state
+		setSliderLeft(0);
+		setSliderClass("sliderContainer");
+		setIsVerified(false);
+		setIsSuccess(false);
+		setIsFailed(false);
+		setShowSuccessIcon(false);
+		setImageLoading(false);
+		trailRef.current = [];
+		
+		// Reset positions
+		if (thumbRef.current) {
+			thumbRef.current.style.left = '0px';
+		}
+		if (blockRef.current) {
+			blockRef.current.style.left = '0px';
+		}
+		if (maskRef.current) {
+			maskRef.current.style.width = '0px';
+		}
+
+		// Close the modal and reset state
+		updateBaseState({
+			showModal: false,
+			isHuman: false,
+			challenge: undefined,
+			attemptCount: 0,
+			error: undefined // Also clear any error state
+		});
+	}, [updateBaseState]);
+
 	if (config.mode === "invisible") {
 		return (
 			<Modal show={state.showModal}>
-				<div css={styles.container}>
-					<div css={styles.title}>Verify you are human</div>
-					<div css={styles.instruction}>
-						Drag the puzzle piece into position
-					</div>
-
-					<div css={styles.canvasContainer}>
-						<canvas
-							css={styles.canvas}
-							ref={canvasRef}
-							width="320"
-							height="160"
-						/>
-						<canvas
-							css={styles.block}
-							ref={blockRef}
-							className="block"
-							width="320"
-							height="160"
-							onMouseDown={handleDragStart}
-							onTouchStart={handleDragStart}
-						/>
-						{imageLoading && (
-							<div css={styles.loadingOverlay}>
-								<div css={styles.loadingSpinner} />
-								<div css={styles.loadingText}>Loading puzzle...</div>
-							</div>
-						)}
+				<div css={styles.modalContent}>
+					<div css={styles.container}>
 						<div
-							css={styles.refreshIcon}
-							onClick={resetPuzzle}
-							aria-label="Refresh puzzle"
+							css={styles.closeButton}
+							onClick={handleCloseModal}
+							aria-label="Close verification"
 						>
-							↻
+							×
 						</div>
-						{showSuccessIcon && <SuccessIcon />}
+						<div css={styles.title}>Verify you are human</div>
+						<div css={styles.instruction}>
+							Drag the puzzle piece into position
+						</div>
+
+						<div css={styles.canvasContainer}>
+							<canvas
+								css={styles.canvas}
+								ref={canvasRef}
+								width="320"
+								height="160"
+							/>
+							<canvas
+								css={styles.block}
+								ref={blockRef}
+								className="block"
+								width="320"
+								height="160"
+								onMouseDown={handleDragStart}
+								onTouchStart={handleDragStart}
+							/>
+							{imageLoading && (
+								<div css={styles.loadingOverlay}>
+									<div css={styles.loadingSpinner} />
+									<div css={styles.loadingText}>Loading puzzle...</div>
+								</div>
+							)}
+							<div
+								css={styles.refreshIcon}
+								onClick={resetPuzzle}
+								aria-label="Refresh puzzle"
+							>
+								↻
+							</div>
+							{showSuccessIcon && <SuccessIcon />}
+						</div>
+
+						<div
+							css={styles.sliderContainer}
+							ref={sliderRef}
+							className={sliderClass}
+						>
+							<div css={styles.sliderProgress} style={{ width: `${sliderLeft + 20}px` }} />
+							<div
+								css={styles.sliderMask}
+								ref={maskRef}
+								style={{ width: `${sliderLeft + 20}px` }}
+							/>
+							<div
+								css={styles.sliderHandle}
+								ref={thumbRef}
+								style={{ left: `${sliderLeft}px` }}
+								onMouseDown={handleDragStart}
+								onTouchStart={handleDragStart}
+							/>
+							<div css={styles.sliderText}>
+								{isSuccess ? 'Verification complete!' : isFailed ? 'Verification failed. Try again.' : 'Slide to verify'}
+							</div>
+						</div>
 					</div>
 
-					<div
-						css={styles.sliderContainer}
-						ref={sliderRef}
-						className={sliderClass}
+					{/* Temp dev button now inside modal but outside main container */}
+					<button 
+						css={styles.tempSubmitButton}
+						onClick={() => {
+							const targetPosition = state?.challenge?.targetPosition || destX;
+							const challengeId = state?.challenge?.challengeId;
+
+							if (!challengeId) {
+								console.error("[SliderCaptcha] No challenge ID found in state");
+								handleVerificationFailure();
+								return;
+							}
+
+							// Check if puzzle piece is in correct position (within 50px tolerance)
+							const isInPosition = Math.abs(sliderLeft - targetPosition) <= 50;
+							
+							if (!isInPosition) {
+								console.error("[SliderCaptcha] Puzzle piece not in correct position");
+								handleVerificationFailure();
+								return;
+							}
+
+							// Submit to provider for verification
+							console.log("[SliderCaptcha] Submitting solution to provider");
+
+							// Always pass to manager for provider verification
+							manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => {
+								if (isVerified) {
+									// Server verified successfully
+									setSliderClass("sliderContainer sliderContainer_success");
+									setIsSuccess(true);
+									setIsVerified(true);
+									setShowSuccessIcon(true);
+								} else {
+									// Server rejected the verification
+									handleVerificationFailure();
+								}
+							}).catch((error) => {
+								console.error("[SliderCaptcha] Error submitting solution:", error);
+								handleVerificationFailure();
+							});
+						}}
 					>
-						<div css={styles.sliderProgress} style={{ width: `${sliderLeft}px` }} />
-						<div
-							css={styles.sliderMask}
-							ref={maskRef}
-							style={{ width: `${sliderLeft}px` }}
-						/>
-						<div
-							css={styles.sliderHandle}
-							ref={thumbRef}
-							style={{ left: `${sliderLeft}px` }}
-							onMouseDown={handleDragStart}
-							onTouchStart={handleDragStart}
-						/>
-						<div css={styles.sliderText}>
-							{isSuccess ? 'Verification complete!' : isFailed ? 'Verification failed. Try again.' : 'Slide to verify'}
-						</div>
-					</div>
+						[TEMP DEV] Submit Slider Position
+					</button>
 				</div>
 			</Modal>
 		);
@@ -1223,68 +1271,124 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	return (
 		<div className={"slider-captcha"}>
 			<Modal show={state.showModal}>
-				<div css={styles.container}>
-					<div css={styles.title}>Verify you are human</div>
-					<div css={styles.instruction}>
-						Drag the puzzle piece into position
-					</div>
-
-					<div css={styles.canvasContainer}>
-						<canvas
-							css={styles.canvas}
-							ref={canvasRef}
-							width="320"
-							height="160"
-						/>
-						<canvas
-							css={styles.block}
-							ref={blockRef}
-							className="block"
-							width="320"
-							height="160"
-							onMouseDown={handleDragStart}
-							onTouchStart={handleDragStart}
-						/>
-						{imageLoading && (
-							<div css={styles.loadingOverlay}>
-								<div css={styles.loadingSpinner} />
-								<div css={styles.loadingText}>Loading puzzle...</div>
-							</div>
-						)}
+				<div css={styles.modalContent}>
+					<div css={styles.container}>
 						<div
-							css={styles.refreshIcon}
-							onClick={resetPuzzle}
-							aria-label="Refresh puzzle"
+							css={styles.closeButton}
+							onClick={handleCloseModal}
+							aria-label="Close verification"
 						>
-							↻
+							×
 						</div>
-						{showSuccessIcon && <SuccessIcon />}
+						<div css={styles.title}>Verify you are human</div>
+						<div css={styles.instruction}>
+							Drag the puzzle piece into position
+						</div>
+
+						<div css={styles.canvasContainer}>
+							<canvas
+								css={styles.canvas}
+								ref={canvasRef}
+								width="320"
+								height="160"
+							/>
+							<canvas
+								css={styles.block}
+								ref={blockRef}
+								className="block"
+								width="320"
+								height="160"
+								onMouseDown={handleDragStart}
+								onTouchStart={handleDragStart}
+							/>
+							{imageLoading && (
+								<div css={styles.loadingOverlay}>
+									<div css={styles.loadingSpinner} />
+									<div css={styles.loadingText}>Loading puzzle...</div>
+								</div>
+							)}
+							<div
+								css={styles.refreshIcon}
+								onClick={resetPuzzle}
+								aria-label="Refresh puzzle"
+							>
+								↻
+							</div>
+							{showSuccessIcon && <SuccessIcon />}
+						</div>
+
+						<div
+							css={styles.sliderContainer}
+							ref={sliderRef}
+							className={sliderClass}
+						>
+							<div css={styles.sliderProgress} style={{ width: `${sliderLeft + 20}px` }} />
+							<div
+								css={styles.sliderMask}
+								ref={maskRef}
+								style={{ width: `${sliderLeft + 20}px` }}
+							/>
+							<div
+								css={styles.sliderHandle}
+								ref={thumbRef}
+								style={{ left: `${sliderLeft}px` }}
+								onMouseDown={handleDragStart}
+								onTouchStart={handleDragStart}
+							/>
+							<div css={styles.sliderText}>
+								{isSuccess ? 'Verification complete!' : isFailed ? 'Verification failed. Try again.' : 'Slide to verify'}
+							</div>
+						</div>
 					</div>
 
-					<div
-						css={styles.sliderContainer}
-						ref={sliderRef}
-						className={sliderClass}
+					{/* Temp dev button now inside modal but outside main container */}
+					<button 
+						css={styles.tempSubmitButton}
+						onClick={() => {
+							const targetPosition = state?.challenge?.targetPosition || destX;
+							const challengeId = state?.challenge?.challengeId;
+
+							if (!challengeId) {
+								console.error("[SliderCaptcha] No challenge ID found in state");
+								handleVerificationFailure();
+								return;
+							}
+
+							// Check if puzzle piece is in correct position (within 50px tolerance)
+							const isInPosition = Math.abs(sliderLeft - targetPosition) <= 50;
+							
+							if (!isInPosition) {
+								console.error("[SliderCaptcha] Puzzle piece not in correct position");
+								handleVerificationFailure();
+								return;
+							}
+
+							// Submit to provider for verification
+							console.log("[SliderCaptcha] Submitting solution to provider");
+
+							// Always pass to manager for provider verification
+							manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => {
+								if (isVerified) {
+									// Server verified successfully
+									setSliderClass("sliderContainer sliderContainer_success");
+									setIsSuccess(true);
+									setIsVerified(true);
+									setShowSuccessIcon(true);
+								} else {
+									// Server rejected the verification
+									handleVerificationFailure();
+								}
+							}).catch((error) => {
+								console.error("[SliderCaptcha] Error submitting solution:", error);
+								handleVerificationFailure();
+							});
+						}}
 					>
-						<div css={styles.sliderProgress} style={{ width: `${sliderLeft}px` }} />
-						<div
-							css={styles.sliderMask}
-							ref={maskRef}
-							style={{ width: `${sliderLeft}px` }}
-						/>
-						<div
-							css={styles.sliderHandle}
-							ref={thumbRef}
-							style={{ left: `${sliderLeft}px` }}
-							onMouseDown={handleDragStart}
-							onTouchStart={handleDragStart}
-						/>
-						<div css={styles.sliderText}>
-							{isSuccess ? 'Verification complete!' : isFailed ? 'Verification failed. Try again.' : 'Slide to verify'}
-						</div>
-					</div>
+						[TEMP DEV] Submit Slider Position
+					</button>
 				</div>
 			</Modal>
+
 			<Checkbox
 				theme={theme}
 				onChange={async () => {
@@ -1292,13 +1396,11 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 						return;
 					}
 					setLoading(true);
-					// Use manager.start() instead of directly setting the state
 					await manager.start();
 					setLoading(false);
 				}}
 				checked={state.isHuman}
 				labelText={t("WIDGET.I_AM_HUMAN")}
-				// Type error fix: Ensure error property has message or convert to string
 				error={
 					typeof state.error === "object" &&
 					state.error !== null &&

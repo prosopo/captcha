@@ -460,34 +460,20 @@ export const Manager = (
 	 * Start the slider captcha process
 	 */
 	const start = async () => {
-		debug("Starting slider captcha process");
 		try {
-			// Check if already loading or verified
 			if (state.loading) {
-				debug("Already loading, ignoring start request");
 				return;
 			}
 			if (state.isHuman) {
-				debug("Already verified as human, ignoring start request");
 				return;
 			}
 
-			// Reset the state to defaults
-			debug("Resetting state before starting");
 			resetState();
-
-			// Set loading state
-			debug("Setting loading state");
 			updateState({
-				loading: true,
 			});
 
 			// Increment attempt counter
 			const newAttemptCount = state.attemptCount + 1;
-			debug("Incrementing attempt counter", {
-				previousCount: state.attemptCount,
-				newCount: newAttemptCount,
-			});
 			updateState({ attemptCount: newAttemptCount });
 
 			const config = getConfig();
@@ -583,6 +569,7 @@ export const Manager = (
 					},
 					imageUrl: sliderCaptchaResponse.imageUrl,
 					targetPosition: sliderCaptchaResponse.targetPosition,
+					challengeId: sliderCaptchaResponse.challengeId,
 				};
 
 				// Store the challenge in state so the widget can use the image URL
@@ -703,7 +690,7 @@ export const Manager = (
 					},
 				},
 				fingerprint,
-				state.challenge?.requestHash
+				state.challenge?.challengeId
 			);
 
 			debug("Received slider solution verification", response);
@@ -752,7 +739,7 @@ export const Manager = (
 			debug("Calling onHuman event handler with token");
 			events.onHuman(verificationToken);
 
-			// Set timeout for how long verification is valid
+			// Set timeout for how long verification is valid (10 minutes)
 			debug("Setting verification validity timeout");
 			setValidChallengeTimeout();
 

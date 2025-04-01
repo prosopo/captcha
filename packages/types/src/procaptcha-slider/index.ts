@@ -25,6 +25,7 @@ import type { CaptchaResponseBody } from "../provider/api.js";
 export interface SliderCaptchaResponseBody extends CaptchaResponseBody {
 	imageUrl?: string;
 	targetPosition?: number;
+	challengeId: string;
 }
 
 /**
