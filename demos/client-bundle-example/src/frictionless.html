@@ -142,6 +142,10 @@
     function onCaptchaVerified(output) {
         console.log('Challenge passed')
     }
+
+    // Do not set on the window, we want to ensure that the function passed in via `render` is called
+    // window.onCaptchaVerified = onCaptchaVerified
+
     // Get the Element using elementId
     const captchaContainer = document.getElementById('procaptcha-container')
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
