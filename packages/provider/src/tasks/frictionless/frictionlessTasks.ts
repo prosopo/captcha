@@ -151,6 +151,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const { baseBotScore: s, timestamp: t } = await getBotScore(token, key);
 				this.logger.debug({
 					message: "Successfully decrypted score",
+					key: key ? `${key.slice(0, 5)}...${key.slice(-5)}` : "",
 					baseBotScore: s,
 					timestamp: t,
 				});
