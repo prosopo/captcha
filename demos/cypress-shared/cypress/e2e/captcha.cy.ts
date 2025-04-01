@@ -122,10 +122,10 @@ describe("Captchas", () => {
 		return cy
 			.wait("@getCaptcha", { timeout: 36000 })
 			.its("response")
+			.should("exist") // Ensures response is not undefined
 			.then((response) => {
-				expect(response).to.not.be.undefined;
-				expect(response?.statusCode).to.equal(400);
-				expect(response?.body).to.have.property("error");
+				expect(response.statusCode).to.equal(400);
+				expect(response.body).to.have.property("error");
 			});
 	});
 
