@@ -105,8 +105,13 @@
                 };
                 console.log("here")
             }
-        )
-        ;
+        );
+
+        window.onCaptchaVerified = (output) => {
+            console.log('Challenge passed')
+        }
+
+
     </script>
 
 </head>
@@ -134,6 +139,7 @@
                     data-theme="light"
                     data-sitekey="%PROSOPO_SITE_KEY%"
                     data-failed-callback="onCaptchaFailed"
+                    data-callback="onCaptchaVerified"
                     data-captcha-type="image"
             ></div>
         </div>
