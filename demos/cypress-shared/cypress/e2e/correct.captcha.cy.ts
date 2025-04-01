@@ -99,6 +99,11 @@ describe("Captchas", () => {
 	});
 
 	it("Selecting the correct images passes the captcha", () => {
+		cy.window()
+			.its("console")
+			.then((console) => {
+				cy.spy(console, "log").as("log");
+			});
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
@@ -115,5 +120,7 @@ describe("Captchas", () => {
 					});
 			});
 		});
+		// check the logs by going through all recorded calls
+		cy.get("@log").should("have.been.calledWith", "Challenge passed");
 	});
 });

@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Callbacks } from "@prosopo/types";
-import { getDefaultCallbacks } from "./defaultCallbacks.js";
+// vite.config.js
+import { defineConfig } from "vite";
 
-export const getDefaultEvents = (callbacks: Partial<Callbacks>) => ({
-	...getDefaultCallbacks(undefined),
-	...callbacks,
+export default defineConfig({
+	server: {
+		port: 9269,
+	},
+	// Change the default public directory if needed
+	publicDir: "dist/bundle", // assets in the "assets" folder at the project root will be served
 });
