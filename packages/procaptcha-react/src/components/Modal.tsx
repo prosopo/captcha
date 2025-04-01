@@ -41,29 +41,27 @@ const ModalInnerDivCSS = css`
     }
 `;
 
-const ModalComponent = React.memo(
-	(props: ModalProps, nextProps: ModalProps) => {
-		const { show, children } = props;
-		const display = show ? "flex" : "none";
-		const ModalOuterDivCss: CSSProperties = {
-			position: "fixed",
-			zIndex: 2147483646,
-			inset: 0,
-			display,
-			alignItems: "center",
-			justifyContent: "center",
-			minHeight: "100vh",
-		};
+const ModalComponent = React.memo((props: ModalProps) => {
+	const { show, children } = props;
+	const display = show ? "flex" : "none";
+	const ModalOuterDivCss: CSSProperties = {
+		position: "fixed",
+		zIndex: 2147483646,
+		inset: 0,
+		display,
+		alignItems: "center",
+		justifyContent: "center",
+		minHeight: "100vh",
+	};
 
-		return createPortal(
-			<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
-				<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
-					{children}
-				</div>
-			</div>,
-			document.body, // Renders modal in the global document, outside the Shadow DOM
-		);
-	},
-);
+	return createPortal(
+		<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
+			<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
+				{children}
+			</div>
+		</div>,
+		document.body,
+	);
+});
 
 export default ModalComponent;
