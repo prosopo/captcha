@@ -74,11 +74,15 @@ const generateRandomId = () => {
 
 const responsiveFont = css`
 	display: none;
-	@media (min-width: 216px) {
+	@media (min-width: 275px) {
 		display: flex;
 		font-size: 12px;
 	}
-	@media (min-width: 268px) {
+	@media (min-width: 300px) {
+		display: flex;
+		font-size: 14px;
+	}
+	@media (min-width: 320px) {
 		display: flex;
 		font-size: 16px;
 	}
