@@ -124,11 +124,7 @@ export default function ready(fn: () => void) {
 		fn();
 	} else {
 		console.log("DOMContentLoaded listener!");
-		document.addEventListener("DOMContentLoaded", () => {
-			console.log("DOMContentLoaded fired");
-			console.log(window);
-			fn();
-		});
+		document.addEventListener("DOMContentLoaded", fn);
 	}
 }
 
