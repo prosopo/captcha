@@ -8,6 +8,9 @@
 	"references": [
 		{
 			"path": "../react-procaptcha-wrapper"
+		},
+		{
+			"path": "../../../procaptcha-integration-build-config"
 		}
 	]
 }

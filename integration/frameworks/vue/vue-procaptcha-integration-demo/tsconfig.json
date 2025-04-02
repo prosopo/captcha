@@ -8,6 +8,9 @@
 	"references": [
 		{
 			"path": "../vue-procaptcha-wrapper"
+		},
+		{
+			"path": "../../../procaptcha-integration-build-config"
 		}
 	]
 }

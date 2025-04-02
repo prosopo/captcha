@@ -1,7 +1,12 @@
 {
 	"name": "@prosopo/angular-procaptcha-integration-demo",
 	"version": "1.0.0",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
 	"scripts": {
+		"clean": "tsc --build --clean",
 		"ng": "ng",
 		"start": "ng serve",
 		"build": "ng build",

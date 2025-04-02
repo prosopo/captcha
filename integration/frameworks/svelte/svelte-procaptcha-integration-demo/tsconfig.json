@@ -8,6 +8,9 @@
 	"references": [
 		{
 			"path": "../svelte-procaptcha-wrapper"
+		},
+		{
+			"path": "../../../procaptcha-integration-build-config"
 		}
 	]
 }
