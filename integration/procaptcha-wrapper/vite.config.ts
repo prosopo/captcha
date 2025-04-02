@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import path from "node:path";
-import {createIntegrationViteConfig} from "@prosopo/procaptcha-integration-build-config";
+import { createIntegrationViteConfig } from "@prosopo/procaptcha-integration-build-config";
 
 export default createIntegrationViteConfig({
-    name: "ProcaptchaWrapper",
-    directory: __dirname,
+	name: "ProcaptchaWrapper",
+	directory: __dirname,
 });
