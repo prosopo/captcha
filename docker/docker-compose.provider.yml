@@ -65,9 +65,12 @@ services:
             - 208.67.222.222
         stop_grace_period: 10s
         depends_on:
-            - database
-            - caddy
-            - vector
+            database:
+                condition: service_healthy
+            caddy:
+                condition: service_healthy
+            vector:
+                condition: service_healthy
     provider2:
         container_name: provider2
         profiles:
@@ -104,9 +107,12 @@ services:
             - 208.67.222.222
         stop_grace_period: 10s
         depends_on:
-            - database
-            - caddy
-            - vector
+            database:
+                condition: service_healthy
+            caddy:
+                condition: service_healthy
+            vector:
+                condition: service_healthy
     database-dev:
         container_name: database
         profiles:
@@ -173,7 +179,8 @@ services:
             - 208.67.222.222
         stop_grace_period: 10s
         depends_on:
-            - vector
+            vector:
+                condition: service_healthy
     caddy:
         container_name: caddy
         profiles:
@@ -215,7 +222,8 @@ services:
             - 208.67.222.222
         stop_grace_period: 10s
         depends_on:
-            - vector
+            vector:
+                condition: service_healthy
     vector:
         container_name: vector
         profiles:
