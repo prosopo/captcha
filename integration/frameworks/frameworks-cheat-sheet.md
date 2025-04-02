@@ -120,7 +120,6 @@ Usage
 ### 2. Vue - .vue
 
 ```html
-
 <template>
     <!-- called on every component render, the response is used in the Virtual DOM -->
     <!-- https://vuejs.org/guide/extras/rendering-mechanism.html#virtual-dom -->
@@ -136,7 +135,7 @@ Usage
 <script setup lang="ts">
     // called once per component instance
 
-    const properties = defineProps < AppProperties > ();
+    const properties = defineProps<AppProperties>();
 </script>
 
 <style scoped>
@@ -182,7 +181,7 @@ Usage:
 ### 4. Angular - .ts
 
 ```typescript
-import { Component } from "@angular/core";
+import { Component, Input } from "@angular/core";
 
 // called once at inclusion
 
@@ -194,9 +193,13 @@ import { Component } from "@angular/core";
     // templateUrl: "./app.component.html",
 	styles: "",
 	// styleUrl: "./app.component.css",
+   // inputs: Object.keys({} as AppProperties) as (keyof AppProperties)[],
 })
 
 export class AppComponent {
+   @Input({ required: true }) 
+   name!: string;
+   
    constructor() {
       // called once per component instance
    }
@@ -653,7 +656,7 @@ Using the official [@sveltejs/package](https://www.npmjs.com/package/@sveltejs/p
 
 1. Add `svelte` to the `peerDependencies` section of your `package.json`
 2. Add `svelte` to the `exports` section of your `package.json` with the `dist/index.js` value
-3. Install the `svelte-package`
+3. Install the `svelte-package` tool
 4. Package your component(s) using the command: `npm run svelte-package -i ./src -o ./dist`
 
 Packaging does the following:
@@ -663,3 +666,23 @@ Packaging does the following:
 2. Copies used `.svelte` files as is - so they can be directly used in other Svelte apps
 
 After that, you can publish your package at npmjs, and your Svelte components will be available for reusing.
+
+### 9.4) Angular
+
+To be available for reusing, components package should be made in the [Angular package format](https://angular.dev/tools/libraries/angular-package-format).
+
+Using the official [ng-packagr](https://www.npmjs.com/package/ng-packagr):
+
+1. Add `@angular/core` to the `peerDependencies` section of your `package.json`
+2. Install the `ng-packagr` tool
+3. Create `ng-package.json` file - Angular library configuration file with the following content: `{"$schema": "./node_modules/ng-packagr/ng-package.schema.json"}`
+4. Add component exports to the `src/public_api.ts` file (a custom entry can be [configured in the config](https://github.com/ng-packagr/ng-packagr/blob/HEAD/docs/entry-file.md))
+5. Package your component(s) using the command: `ng-packagr -p ng-package.json`
+
+Packaging does the following:
+
+1. Compiles all `.ts` files in the `src` folder into `fesm2022/{package-name}.mjs` in the `dist` folder (including declaration files and maps if
+   configured in your `tsconfig.json`)
+2. Copies your `package.json` to the `dist` folder and customizes the `exports` section
+
+After that, you can publish your package from the `dist` folder at npmjs, and your Angular components will be available for reusing.

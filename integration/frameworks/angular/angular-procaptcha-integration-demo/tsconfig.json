@@ -21,5 +21,10 @@
 		"strictInjectionParameters": true,
 		"strictInputAccessModifiers": true,
 		"strictTemplates": true
-	}
+	},
+	"references": [
+		{
+			"path": "../angular-procaptcha-wrapper"
+		}
+	]
 }
