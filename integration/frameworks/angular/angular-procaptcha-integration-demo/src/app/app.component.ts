@@ -1,5 +1,6 @@
 import { Component } from "@angular/core";
 import { ProcaptchaComponent } from "@prosopo/angular-procaptcha-wrapper";
+import { environment } from "../environments/environment";
 
 @Component({
 	selector: "app-root",
@@ -9,5 +10,5 @@ import { ProcaptchaComponent } from "@prosopo/angular-procaptcha-wrapper";
 	styles: "",
 })
 export class AppComponent {
-	procaptchaSiteKey = "mySiteKey"; // todo pickup from '.env'
+	procaptchaSiteKey = environment.PROCATCHA_SITE_KEY;
 }

@@ -16,11 +16,11 @@
 			"prefix": "app",
 			"architect": {
 				"build": {
-					"builder": "@angular-devkit/build-angular:application",
+					"builder": "@angular-builders/custom-webpack:browser",
 					"options": {
 						"outputPath": "dist/prosopo/angular-procaptcha-integration-demo",
 						"index": "src/index.html",
-						"browser": "src/main.ts",
+						"main": "src/main.ts",
 						"polyfills": ["zone.js"],
 						"tsConfig": "tsconfig.app.json",
 						"assets": [
@@ -30,7 +30,10 @@
 							}
 						],
 						"styles": ["src/styles.css"],
-						"scripts": []
+						"scripts": [],
+						"customWebpackConfig": {
+							"path": "webpack.config.ts"
+						}
 					},
 					"configurations": {
 						"production": {
@@ -57,7 +60,7 @@
 					"defaultConfiguration": "production"
 				},
 				"serve": {
-					"builder": "@angular-devkit/build-angular:dev-server",
+					"builder": "@angular-builders/custom-webpack:dev-server",
 					"configurations": {
 						"production": {
 							"buildTarget": "@prosopo/angular-procaptcha-integration-demo:build:production"

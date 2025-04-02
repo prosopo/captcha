@@ -22,6 +22,10 @@ export class ProcaptchaComponent {
 		this.render();
 	}
 
+	public ngOnChanges(): void {
+		this.render();
+	}
+
 	private render(): void {
 		for (const attr in this.htmlAttributes) {
 			this.elementRef.nativeElement.setAttribute(

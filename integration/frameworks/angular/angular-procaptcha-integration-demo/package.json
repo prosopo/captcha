@@ -19,15 +19,18 @@
 		"@angular/platform-browser-dynamic": "^19.2.0",
 		"@angular/router": "^19.2.0",
 		"@prosopo/angular-procaptcha-wrapper": "1.0.0",
+		"@types/node": "22.13.17",
 		"rxjs": "~7.8.0",
 		"tslib": "^2.3.0",
 		"zone.js": "~0.15.0"
 	},
 	"devDependencies": {
+		"@angular-builders/custom-webpack": "19.0.0",
 		"@angular-devkit/build-angular": "^19.2.5",
 		"@angular/cli": "^19.2.5",
 		"@angular/compiler-cli": "^19.2.0",
 		"@types/jasmine": "~5.1.0",
+		"dotenv-webpack": "8.1.0",
 		"jasmine-core": "~5.6.0",
 		"karma": "~6.4.0",
 		"karma-chrome-launcher": "~3.2.0",
