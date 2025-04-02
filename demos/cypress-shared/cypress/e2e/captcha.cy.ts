@@ -24,6 +24,14 @@ let captchaType: CaptchaType;
 
 describe("Captchas", () => {
 	beforeEach(() => {
+		// Define the onCaptchaVerified callback
+		cy.window().then((win) => {
+			// @ts-ignore
+			win.onCaptchaVerified = () => {
+				// Mock implementation for the test
+				console.log("Challenge passed");
+			};
+		});
 		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 		cy.registerSiteKey(captchaType).then((response) => {
 			// Log the response status and body using cy.task()
