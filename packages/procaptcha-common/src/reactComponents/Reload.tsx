@@ -86,7 +86,7 @@ export const ReloadButton: FC<ReloadButtonProps> = ({
 			>
 				<title>reload</title>
 				<path
-					shape-rendering="optimizeQuality"
+					shapeRendering="optimizeQuality"
 					fill={
 						hover ? theme.palette.primary.contrastText : theme.palette.grey[700]
 					}

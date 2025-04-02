@@ -3,12 +3,6 @@
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
     <title>Procaptcha demo: Implicit Rendering</title>
-    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%" async defer></script>
-    <script type="text/javascript">
-        window.onCaptchaFailed = function () {
-            console.log('Challenge failed')
-        }
-    </script>
     <script type="module">
         window.addEventListener('load', () => {
 
@@ -103,16 +97,23 @@
                             setMessage("Error: " + err);
                         });
                 };
-                console.log("here")
+
             }
         );
+
+
+        window.onCaptchaFailed = function () {
+            console.log('Challenge failed')
+        }
 
         window.onCaptchaVerified = (output) => {
             console.log('Challenge passed')
         }
 
-
     </script>
+    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%"></script>
+
+
 
 </head>
 <body>

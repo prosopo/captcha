@@ -14,13 +14,20 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { ViteFrontendConfig } from "@prosopo/config";
+import { getLoggerDefault } from "@prosopo/common";
+import {
+	ViteFrontendConfig,
+	VitePluginRemoveUnusedTranslations,
+} from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
+import { at, flatten } from "@prosopo/util";
 import fg from "fast-glob";
 import { defineConfig } from "vite";
 
 // load env using our util because vite loadEnv is not working for .env.development
 loadEnv();
+
+const logger = getLoggerDefault();
 
 // Vite doesn't find the tsconfig for some reason
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
@@ -53,11 +60,13 @@ const copyDir = {
 	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
 };
 
-const localFiles = await fg.glob(
+const localeFiles = await fg.glob(
 	`${workspaceRoot}/packages/locale/src/locales/**/*.json`,
 );
 
-console.log(localFiles);
+const translationKeys = Object.keys(
+	flatten(JSON.parse(fs.readFileSync(at(localeFiles, 0), "utf-8"))),
+);
 
 // Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
@@ -84,12 +93,18 @@ export default defineConfig(async ({ command, mode }) => {
 						if (!fs.existsSync(containingFolder)) {
 							fs.mkdirSync(containingFolder, { recursive: true });
 						}
+						logger.info(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
 						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
 							recursive: true,
 						});
 					}
 				},
 			},
+			VitePluginRemoveUnusedTranslations(
+				translationKeys,
+				`${copyDir.destDir}/**/*.json`,
+			),
+
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),
 		],
 	};

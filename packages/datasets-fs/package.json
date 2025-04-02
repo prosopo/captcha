@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "2.5.3",
+	"version": "2.5.4",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -28,9 +28,9 @@
 		"@noble/hashes": "1.5.0",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "2.5.3",
-		"@prosopo/types": "2.5.3",
-		"@prosopo/util": "2.5.3",
+		"@prosopo/common": "2.5.4",
+		"@prosopo/types": "2.5.4",
+		"@prosopo/util": "2.5.4",
 		"bcrypt": "5.1.1",
 		"cli-progress": "3.12.0",
 		"express": "4.21.2",
@@ -39,10 +39,10 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.5.3",
+		"@prosopo/config": "2.5.4",
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
-		"@vitest/coverage-v8": "2.1.1",
+		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
@@ -50,8 +50,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
-		"vite": "5.4.6",
-		"vitest": "2.1.1"
+		"vite": "6.2.3",
+		"vitest": "3.0.9"
 	},
 	"repository": {
 		"type": "git",
