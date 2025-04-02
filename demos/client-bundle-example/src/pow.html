@@ -23,6 +23,8 @@
             function onCaptchaVerified(output) {
                 console.log('Captcha verified, output: ' + JSON.stringify(output))
             }
+
+            window.onCaptchaVerified = onCaptchaVerified
         </script>
         <script
             id="procaptchaScript"
