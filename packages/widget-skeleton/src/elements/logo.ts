@@ -55,9 +55,12 @@ const LOGO_STYLES = `
  */
 function getLogoMarkup(theme: Theme): string {
 	return `
-<a href="${WIDGET_URL}" 
-	target="_blank" 
+<a href="${WIDGET_URL}"
+    tabindex="0" 
+	target="_blank"
+	role="button"
 	aria-label="${WIDGET_URL_TEXT}">
+	alt="${WIDGET_URL_TEXT}"
 	<div class="logo__outer">
 		<div class="logo__wrapper">
 			<div class="logo__inner">
