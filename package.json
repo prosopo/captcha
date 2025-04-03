@@ -19,6 +19,7 @@
 		"clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
 		"clean-npm:node-modules": "del-cli --verbose '**/node_modules'",
 		"clean-npm:package-lock": "del-cli --verbose '**/package-lock.json' '!**/node_modules'",
+		"clean-npm:cache": "del-cli --force --verbose $(npm config get cache)",
 		"clean:npm": "run-s clean-npm:*",
 		"clean-ts:buildinfo": "del-cli --verbose '**/*.tsbuildinfo' '!**/node_modules'",
 		"clean-ts:dist": "del-cli --verbose '**/dist' '!**/node_modules'",
@@ -81,7 +82,11 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
