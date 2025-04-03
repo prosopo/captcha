@@ -82,11 +82,7 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"workspaces": [
-		"dev/*",
-		"packages/*",
-		"demos/*"
-	],
+	"workspaces": ["dev/*", "packages/*", "demos/*"],
 	"devDependencies": {
 		"commitizen": "4.3.1",
 		"cz-conventional-changelog": "3.3.0",
