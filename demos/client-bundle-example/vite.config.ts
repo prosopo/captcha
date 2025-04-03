@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,73 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import fs from "node:fs";
+import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
+import navigationInjector from "./src/plugins/navigation-injector.js";
+
+// Function to copy contents of a directory to another directory
+function copyDirContents(src: string, dest: string) {
+	if (!fs.existsSync(dest)) {
+		fs.mkdirSync(dest, { recursive: true });
+	}
+
+	const entries = fs.readdirSync(src, { withFileTypes: true });
+
+	for (const entry of entries) {
+		const srcPath = path.join(src, entry.name);
+		const destPath = path.join(dest, entry.name);
+
+		if (entry.isDirectory()) {
+			copyDirContents(srcPath, destPath);
+		} else {
+			fs.copyFileSync(srcPath, destPath);
+		}
+	}
+}
+
+// This is like close and copy but for output /dist/src to just /dist
+function moveDirectoryContents(
+	srcDir: string,
+	destDir: string,
+	deleteSource = false,
+) {
+	if (!fs.existsSync(srcDir)) {
+		return;
+	}
+
+	if (!fs.existsSync(destDir)) {
+		fs.mkdirSync(destDir, { recursive: true });
+	}
+
+	const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+
+	for (const entry of entries) {
+		const srcPath = path.join(srcDir, entry.name);
+		const destPath = path.join(destDir, entry.name);
+
+		if (entry.isDirectory()) {
+			moveDirectoryContents(srcPath, destPath, deleteSource);
+			if (deleteSource) {
+				try {
+					fs.rmdirSync(srcPath);
+				} catch (err) {
+					console.warn(`Could not remove directory ${srcPath}:`, err);
+				}
+			}
+		} else {
+			try {
+				fs.copyFileSync(srcPath, destPath);
+				if (deleteSource) {
+					fs.unlinkSync(srcPath);
+				}
+			} catch (err) {
+				console.warn(`Error moving file ${srcPath} to ${destPath}:`, err);
+			}
+		}
+	}
+}
 
 export default defineConfig(({ command, mode }) => {
 	loadEnv();
@@ -31,6 +96,87 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SERVER_URL": JSON.stringify(
 				process.env.PROSOPO_SERVER_URL,
 			),
+			"import.meta.env.VITE_BUNDLE_URL": JSON.stringify(
+				process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js",
+			),
 		},
+		optimizeDeps: {
+			noDiscovery: true,
+			include: ["void-elements", "react", "bn.js"],
+		},
+		build: {
+			outDir: "dist",
+			emptyOutDir: true,
+			rollupOptions: {
+				input: {
+					index: path.resolve(__dirname, "src/index.html"),
+					"invisible-pow-explicit": path.resolve(
+						__dirname,
+						"src/invisible-pow-explicit.html",
+					),
+					"invisible-image-explicit": path.resolve(
+						__dirname,
+						"src/invisible-image-explicit.html",
+					),
+					"invisible-pow-implicit": path.resolve(
+						__dirname,
+						"src/invisible-pow-implicit.html",
+					),
+					"invisible-image-implicit": path.resolve(
+						__dirname,
+						"src/invisible-image-implicit.html",
+					),
+					pow: path.resolve(__dirname, "src/pow.html"),
+					frictionless: path.resolve(__dirname, "src/frictionless.html"),
+					"invisible-frictionless-implicit": path.resolve(
+						__dirname,
+						"src/invisible-frictionless-implicit.html",
+					),
+					"invisible-frictionless-explicit": path.resolve(
+						__dirname,
+						"src/invisible-frictionless-explicit.html",
+					),
+				},
+			},
+		},
+		plugins: [
+			navigationInjector(),
+			{
+				name: "copy-files",
+				closeBundle() {
+					// This runs after all other plugins have processed files
+					console.log("Copying additional files from src to dist...");
+					// Only copy assets and other non-HTML files since HTML files are processed by Vite
+					const srcAssetsDir = path.resolve(__dirname, "src/assets");
+					const destAssetsDir = path.resolve(__dirname, "dist/assets");
+					if (fs.existsSync(srcAssetsDir)) {
+						copyDirContents(srcAssetsDir, destAssetsDir);
+					}
+
+					// Copy any other necessary directories
+					const srcPluginsDir = path.resolve(__dirname, "src/plugins");
+					const destPluginsDir = path.resolve(__dirname, "dist/plugins");
+					if (fs.existsSync(srcPluginsDir)) {
+						copyDirContents(srcPluginsDir, destPluginsDir);
+					}
+
+					// Final step: move any content from dist/src to dist root
+					const distSrcDir = path.resolve(__dirname, "dist/src");
+					const distDir = path.resolve(__dirname, "dist");
+					if (fs.existsSync(distSrcDir)) {
+						console.log("Moving files from dist/src to dist root...");
+						moveDirectoryContents(distSrcDir, distDir, true);
+
+						// Try to remove the now-empty dist/src directory
+						try {
+							fs.rmdirSync(distSrcDir);
+							console.log("Removed empty dist/src directory");
+						} catch (err) {
+							console.warn("Could not remove dist/src directory:", err);
+						}
+					}
+				},
+			},
+		],
 	} as UserConfig;
 });

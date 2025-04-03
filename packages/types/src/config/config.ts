@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import {
 	ProsopoCaptchaCountConfigSchema,
 	ProviderDefaultRateLimits,
 } from "../provider/index.js";
+import { FrictionlessPenalties } from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
@@ -239,12 +240,19 @@ export type ProsopoClientConfigOutput = output<
 
 const ThemeType = union([literal("light"), literal("dark")]);
 
+export enum ModeEnum {
+	visible = "visible",
+	invisible = "invisible",
+}
+export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
+export type ModeType = zInfer<typeof Mode>;
+
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
-		accountCreator: AccountCreatorConfigSchema.optional(),
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
+		mode: Mode.optional().default(ModeEnum.visible),
 	}),
 );
 
@@ -259,11 +267,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			solved: { count: 1 },
 			unsolved: { count: 0 },
 		}),
-		captchaSolutions: ProsopoCaptchaSolutionConfigSchema.optional().default({
-			requiredNumberOfSolutions: 3,
-			solutionWinningPercentage: 80,
-			captchaBlockRecency: 10,
-		}),
+		penalties: FrictionlessPenalties,
 		scheduledTasks: object({
 			captchaScheduler: object({
 				schedule: string().optional(),

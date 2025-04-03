@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { RegisterSitekeyBody } from "@prosopo/types";
+import { type Logger, getLoggerDefault } from "@prosopo/common";
+import { ClientSettingsSchema, RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
@@ -30,12 +31,19 @@ class ApiRegisterSiteKeyEndpoint
 
 	async processRequest(
 		args: z.infer<RegisterSitekeyBodyType>,
+		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		const { siteKey, settings } = args;
+		const { siteKey, tier, settings } = args;
 
-		const temp = settings || {};
+		logger = logger || getLoggerDefault();
 
-		await this.clientTaskManager.registerSiteKey(siteKey, temp);
+		const temp = settings || ClientSettingsSchema.parse({});
+
+		logger.info(`Registering site key: ${siteKey}`);
+
+		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
+
+		logger.info("Site key registered");
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,

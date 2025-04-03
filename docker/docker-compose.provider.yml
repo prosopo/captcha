@@ -20,17 +20,17 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status" ] # ping the status api
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
             interval: 30s
-            retries: 3
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
-    provider:
-        container_name: provider
+    provider1:
+        container_name: provider1
         profiles:
             - production
             - staging
@@ -41,7 +41,7 @@ services:
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
-            - ../.env.${NODE_ENV}
+            - ../.env.1.${NODE_ENV}
         ports:
             - '9229:9229'
         networks:
@@ -54,15 +54,65 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            database:
+                condition: service_healthy
+            caddy:
+                condition: service_healthy
+            vector:
+                condition: service_healthy
+    provider2:
+        container_name: provider2
+        profiles:
+            - production
+            - staging
+        image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
+        labels:
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
+        env_file:
+            - ../.env.2.${NODE_ENV}
+        ports:
+            - '9339:9339'
+        networks:
+            external:
+            internal:
+                ipv4_address: 172.18.0.7
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            interval: 30s
+            retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
+            start_period: 30s
+            timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            database:
+                condition: service_healthy
+            caddy:
+                condition: service_healthy
+            vector:
+                condition: service_healthy
     database-dev:
         container_name: database
         profiles:
@@ -83,9 +133,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
-            interval: 5m
-            retries: 3
+            test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
@@ -102,6 +152,7 @@ services:
             - "vector.mongo=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         volumes:
             - /data/db:/data/db
         ports:
@@ -118,27 +169,32 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
-            interval: 5m
-            retries: 3
+            test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            vector:
+                condition: service_healthy
     caddy:
         container_name: caddy
         profiles:
             - production
             - staging
-        image: prosopo/caddy:latest
+        image: prosopo/caddy:${CADDY_IMAGE}
         env_file:
             - ../.env.${NODE_ENV}
         labels:
             - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         ports:
             - '80:80'
             - '443:443'
@@ -158,25 +214,30 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            vector:
+                condition: service_healthy
     vector:
         container_name: vector
         profiles:
             - production
             - staging
-        image: prosopo/vector:${COMPOSE_PROVIDER_IMAGE_VERSION}
+        image: prosopo/vector:${VECTOR_IMAGE}
         env_file:
             - ../.env.${NODE_ENV}
         labels:
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
         networks:
@@ -190,13 +251,14 @@ services:
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
             interval: 30s
+            retries: 5
+            start_period: 30s
             timeout: 10s
-            retries: 1
-            start_period: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 0s # will discard some logs that haven't been pushed up, but will stop the container immediately
 networks:
     internal:
         name: internal

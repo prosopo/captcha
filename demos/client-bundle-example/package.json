@@ -4,30 +4,27 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"build": "echo \"No build specified\"",
+		"build": "vite build",
 		"build:cjs": "echo 'no cjs build'",
 		"start": "vite serve ./src --port 9232 --config vite.config.ts",
 		"clean": "echo 'nothing to clean'"
 	},
-	"version": "2.3.2",
+	"version": "2.5.5",
 	"devDependencies": {
-		"@prosopo/dotenv": "2.3.2",
+		"@prosopo/dotenv": "2.5.5",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "2.1.1",
+		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
-		"vite": "5.4.6",
-		"vitest": "2.1.1"
-	},
-	"dependencies": {
-		"express": "4.21.1"
+		"vite": "6.2.3",
+		"vitest": "3.0.9"
 	}
 }

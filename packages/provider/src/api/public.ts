@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,15 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
-import { ApiPaths } from "@prosopo/types";
+import { ClientApiPaths, PublicApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
-import { handleErrors } from "./errorHandler.js";
-
-const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -34,11 +33,11 @@ export function publicRouter(env: ProviderEnvironment): Router {
 	/**
 	 * Gets public details of the provider
 	 */
-	router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
+	router.get(PublicApiPaths.GetProviderDetails, async (req, res, next) => {
 		try {
 			return res.json({ version, ...{ message: "Provider online" } });
 		} catch (err) {
-			tasks.logger.error({ err, params: req.params });
+			req.logger.error({ err, params: req.params });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: { code: 500 },

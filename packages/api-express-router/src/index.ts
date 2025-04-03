@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import type { LogLevel } from "@prosopo/common";
 import { ApiExpressRouterFactory } from "./apiExpressRouterFactory.js";
 import { ApiExpressDefaultEndpointAdapter } from "./endpointAdapter/apiExpressDefaultEndpointAdapter.js";
 import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndpointAdapter.js";
@@ -20,10 +20,10 @@ import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndp
 const apiExpressRouterFactory = new ApiExpressRouterFactory();
 
 const createApiExpressDefaultEndpointAdapter = (
-	logger: Logger,
+	logLevel: LogLevel,
 	errorStatusCode = 500,
 ): ApiExpressEndpointAdapter => {
-	return new ApiExpressDefaultEndpointAdapter(logger, errorStatusCode);
+	return new ApiExpressDefaultEndpointAdapter(logLevel, errorStatusCode);
 };
 
 export {
@@ -31,3 +31,5 @@ export {
 	createApiExpressDefaultEndpointAdapter,
 	type ApiExpressEndpointAdapter,
 };
+
+export * from "./errorHandler.js";

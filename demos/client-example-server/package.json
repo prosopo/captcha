@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/client-example-server",
-	"version": "2.3.2",
+	"version": "2.5.5",
 	"description": "Backend for client-example",
 	"main": "dist/app.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": ">=9"
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
@@ -32,31 +32,30 @@
 		"@noble/hashes": "1.5.0",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "2.3.2",
-		"@prosopo/contract": "2.2.3",
-		"@prosopo/dotenv": "2.3.2",
-		"@prosopo/server": "2.3.2",
-		"@prosopo/types": "2.3.2",
-		"@prosopo/util": "2.3.2",
+		"@prosopo/common": "2.5.5",
+		"@prosopo/dotenv": "2.5.5",
+		"@prosopo/server": "2.5.5",
+		"@prosopo/types": "2.5.5",
+		"@prosopo/util": "2.5.5",
 		"@typegoose/auto-increment": "4.6.0",
 		"cors": "2.8.5",
-		"express": "4.21.1",
+		"express": "4.21.2",
 		"jsonwebtoken": "9.0.2",
 		"mongodb-memory-server": "10.0.0",
 		"mongoose": "8.6.2",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.3.2",
+		"@prosopo/config": "2.5.5",
 		"@types/jsonwebtoken": "9.0.6",
-		"@vitest/coverage-v8": "2.1.1",
+		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
-		"vite": "5.4.6",
-		"vitest": "2.1.1"
+		"vite": "6.2.3",
+		"vitest": "3.0.9"
 	}
 }

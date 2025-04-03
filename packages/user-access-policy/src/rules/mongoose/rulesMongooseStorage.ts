@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,7 +41,24 @@ class RulesMongooseStorage implements RulesStorage {
 			throw this.modelNotSetProsopoError();
 		}
 
-		const document = await this.writingModel.create(record);
+		const filter = {
+			...(record.clientId && { clientId: record.clientId }),
+			...(record.userIp && { userIp: record.userIp }),
+			...(record.userId && { userId: record.userId }),
+			...(record.ja4 && { ja4: record.ja4 }),
+		};
+
+		// Validate record manually
+		const validationError = new this.writingModel(record).validateSync();
+		if (validationError) {
+			throw validationError; // Reject invalid input before DB call
+		}
+
+		const document = await this.writingModel.findOneAndUpdate(
+			filter,
+			record,
+			{ new: true, upsert: true, runValidators: true }, // 🔥 Enforce schema validation!
+		);
 
 		const ruleRecord = this.convertMongooseRecordToRuleRecord(
 			document.toObject(),
@@ -54,6 +71,32 @@ class RulesMongooseStorage implements RulesStorage {
 		if (!this.writingModel) {
 			throw this.modelNotSetProsopoError();
 		}
+		if (!this.readingModel) {
+			throw this.modelNotSetProsopoError();
+		}
+
+		const beforeDelete = await this.writingModel.find({});
+		this.logger.debug("Before deletion, DB records:", beforeDelete.length);
+
+		// Delete the existing ip records to avoid duplicates.
+		await this.writingModel.bulkWrite(
+			records.map((record) => {
+				const filter = {
+					...(record.clientId && { clientId: record.clientId }),
+					...(record.userIp && { userIp: record.userIp }),
+					...(record.userId && { userId: record.userId }),
+					...(record.ja4 && { ja4: record.ja4 }),
+				};
+				return {
+					deleteOne: {
+						filter,
+					},
+				};
+			}),
+		);
+		this.logger.debug("After deletion");
+		const afterDelete = await this.readingModel.find({});
+		this.logger.debug("After deletion, DB records:", afterDelete.length);
 
 		const documents = await this.writingModel.insertMany(records);
 		const objectDocuments = documents.map((document) => document.toObject());
@@ -135,12 +178,16 @@ class RulesMongooseStorage implements RulesStorage {
 	): object[] {
 		const queryFilters = [];
 
-		if (undefined !== filters.userId) {
+		if (filters.userId) {
 			queryFilters.push({ userId: filters.userId });
 		}
 
-		if (undefined !== filters.userIpAddress) {
+		if (filters.userIpAddress) {
 			queryFilters.push(this.getFilterByUserIp(filters.userIpAddress));
+		}
+
+		if (filters.ja4) {
+			queryFilters.push({ ja4: filters.ja4 });
 		}
 
 		return includeRecordsWithPartialFilterMatches && queryFilters.length > 1

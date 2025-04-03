@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,40 @@ export const flatten = (obj: object, prefix = ""): Record<string, string> => {
 		}
 	}
 	return flattenedObj;
+};
+
+type UnflattenObject =
+	| Record<string, string | number | boolean | undefined>
+	| string[]
+	| number[]
+	| boolean[];
+
+export const unflatten = (
+	obj: Record<string, string | number | boolean>,
+): Record<string, string | number | boolean | UnflattenObject> => {
+	const result: Record<string, string | number | boolean | UnflattenObject> =
+		{};
+
+	for (const [key, value] of Object.entries(obj)) {
+		const keys = key.split(".");
+		keys.reduce((acc, k, i) => {
+			if (i === keys.length - 1) {
+				(acc as Record<string, string | number | boolean | UnflattenObject>)[
+					k
+				] = value;
+			} else {
+				if (!acc[k]) {
+					acc[k] = Number.isNaN(Number(keys[i + 1])) ? {} : [];
+				}
+			}
+			return acc[k] as Record<
+				string,
+				string | number | boolean | UnflattenObject
+			>;
+		}, result);
+	}
+
+	return result;
 };
 
 // https://stackoverflow.com/questions/63116039/camelcase-to-kebab-case

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,15 +13,9 @@
 // limitations under the License.
 
 import type { LanguageSchema } from "@prosopo/locale";
-import type { ProcaptchaToken } from "@prosopo/types";
+import type { CaptchaType, ProcaptchaToken } from "@prosopo/types";
 
-export enum FeaturesEnum {
-	Image = "image",
-	Pow = "pow",
-	Frictionless = "frictionless",
-}
-
-export type Features = `${FeaturesEnum}`;
+export type Features = `${CaptchaType}`;
 
 export interface ProcaptchaRenderOptions {
 	siteKey: string;
@@ -37,4 +31,5 @@ export interface ProcaptchaRenderOptions {
 	"failed-callback"?: string | (() => void);
 	"reset-callback"?: string | (() => void);
 	language?: typeof LanguageSchema;
+	size?: "invisible";
 }

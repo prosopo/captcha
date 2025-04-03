@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,14 +13,14 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
-import type { Request, Response } from "express";
+import { type LogLevel, ProsopoApiError } from "@prosopo/common";
+import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
 
 class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 	public constructor(
-		private readonly logger: Logger,
+		private readonly logLevel: LogLevel,
 		private readonly errorStatusCode: number,
 	) {}
 
@@ -28,15 +28,28 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 		endpoint: ApiEndpoint<ZodType | undefined>,
 		request: Request,
 		response: Response,
+		next: NextFunction,
 	): Promise<void> {
+		let args: unknown;
 		try {
-			const args = endpoint.getRequestArgsSchema()?.parse(request.body);
+			args = endpoint.getRequestArgsSchema()?.parse(request.body);
+		} catch (error) {
+			return next(
+				new ProsopoApiError("API.PARSE_ERROR", {
+					context: { code: 400, error: error },
+				}),
+			);
+		}
 
-			const apiEndpointResponse = await endpoint.processRequest(args);
+		try {
+			const apiEndpointResponse = await endpoint.processRequest(
+				args,
+				request.logger,
+			);
 
 			response.json(apiEndpointResponse);
 		} catch (error) {
-			this.logger.error(error);
+			request.logger.error((error as Error).message);
 
 			response.status(500).send("An internal server error occurred.");
 		}

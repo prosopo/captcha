@@ -19,7 +19,7 @@
 			"path": "../common"
 		},
 		{
-			"path": "../locale-browser"
+			"path": "../locale"
 		},
 		{
 			"path": "../procaptcha"
@@ -34,7 +34,7 @@
 			"path": "../util"
 		},
 		{
-			"path": "../web-components"
+			"path": "../widget-skeleton"
 		}
 	]
 }

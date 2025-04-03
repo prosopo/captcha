@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import {
 	commandStoreCaptchasExternally,
 	commandVersion,
 } from "./commands/index.js";
-import { MigrateBlockRuleDbRecordsToUserAccessPolicyCommand } from "./commands/migrateBlockRulesToUserAccessRules.js";
 
 export type AwaitedProcessedArgs = {
 	[x: string]: unknown;
@@ -44,7 +43,6 @@ function getCommands(
 		commandSiteKeyRegister(pair, config, { logger }),
 		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
 		commandVersion(pair, config, { logger }),
-		new MigrateBlockRuleDbRecordsToUserAccessPolicyCommand(pair, config),
 	];
 }
 

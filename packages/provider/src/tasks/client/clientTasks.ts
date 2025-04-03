@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
@@ -18,6 +20,7 @@ import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
+	type Tier,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -26,6 +29,21 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
+import { validiateSiteKey } from "../../api/validateAddress.js";
+
+const isValidPrivateKey = (privateKeyString: string) => {
+	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
+	try {
+		createPrivateKey({
+			key: privateKey,
+			format: "pem",
+			type: "pkcs8",
+		});
+		return true;
+	} catch (error) {
+		return false;
+	}
+};
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -168,10 +186,14 @@ export class ClientTaskManager {
 			);
 
 			// Get updated client records within a ten minute window of the last completed task
-			const tenMinuteWindow = new Date().getTime() - 10 * 60 * 1000;
+			const tenMinuteWindow = 10 * 60 * 1000;
 			const updatedAtTimestamp = lastTask?.updated
 				? lastTask.updated - tenMinuteWindow || 0
 				: 0;
+
+			this.logger.info({
+				message: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
+			});
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
@@ -205,14 +227,37 @@ export class ClientTaskManager {
 
 	async registerSiteKey(
 		siteKey: string,
+		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
+		validiateSiteKey(siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
+				tier: tier,
 				settings: settings,
 			} as ClientRecord,
 		]);
+	}
+
+	async updateDetectorKey(detectorKey: string): Promise<void> {
+		if (!isValidPrivateKey(detectorKey)) {
+			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+				context: { detectorKey },
+				logger: this.logger,
+			});
+		}
+		await this.providerDB.storeDetectorKey(detectorKey);
+	}
+
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		if (!isValidPrivateKey(detectorKey)) {
+			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+				context: { detectorKey },
+				logger: this.logger,
+			});
+		}
+		await this.providerDB.removeDetectorKey(detectorKey);
 	}
 
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
@@ -221,9 +266,6 @@ export class ClientTaskManager {
 		try {
 			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
 			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
-
-			// Special case for localhost
-			if (referrerDomain === "localhost") return true;
 
 			return (
 				referrerDomain === allowedDomain ||
@@ -261,21 +303,5 @@ export class ClientTaskManager {
 			await processBatch(batch);
 			skip += batch.length;
 		}
-	}
-
-	private cleanReferrer(referrer: string): string {
-		const lowered = referrer.toLowerCase().trim();
-
-		// Remove trailing slashes safely
-		let cleaned = lowered;
-		const MAX_SLASHES = 10;
-		let slashCount = 0;
-
-		while (cleaned.endsWith("/") && slashCount < MAX_SLASHES) {
-			cleaned = cleaned.slice(0, -1);
-			slashCount++;
-		}
-
-		return cleaned;
 	}
 }

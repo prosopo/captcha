@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,14 @@
 // limitations under the License.
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
-import { type Request, type Response, Router } from "express";
+import {
+	type NextFunction,
+	type Request,
+	type Response,
+	Router,
+} from "express";
 import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndpointAdapter.js";
+import { handleErrors } from "./errorHandler.js";
 
 class ApiExpressRouterFactory {
 	public createRouter(
@@ -26,6 +32,11 @@ class ApiExpressRouterFactory {
 
 		this.registerRoutes(router, apiRoutes, apiEndpointAdapter);
 
+		// Your error handler should always be at the end of your application stack. Apparently it means not only after all
+		// app.use() but also after all your app.get() and app.post() calls.
+		// https://stackoverflow.com/a/62358794/1178971
+		router.use(handleErrors);
+
 		return router;
 	}
 
@@ -35,25 +46,22 @@ class ApiExpressRouterFactory {
 		apiEndpointAdapter: ApiExpressEndpointAdapter,
 	): void {
 		for (const route of routes) {
-			this.registerRoute(router, route, apiEndpointAdapter);
+			router.post(
+				route.path,
+				async (
+					request: Request,
+					response: Response,
+					next: NextFunction,
+				): Promise<void> => {
+					return await apiEndpointAdapter.handleRequest(
+						route.endpoint,
+						request,
+						response,
+						next,
+					);
+				},
+			);
 		}
-	}
-
-	protected registerRoute(
-		router: Router,
-		route: ApiRoute,
-		apiEndpointAdapter: ApiExpressEndpointAdapter,
-	): void {
-		router.post(
-			route.path,
-			async (request: Request, response: Response): Promise<void> => {
-				await apiEndpointAdapter.handleRequest(
-					route.endpoint,
-					request,
-					response,
-				);
-			},
-		);
 	}
 }
 

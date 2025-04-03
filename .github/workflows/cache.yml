@@ -26,50 +26,16 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Print contexts
-              env:
-                  GITHUB_CONTEXT: ${{ toJson(github) }}
-                  ENV_CONTEXT: ${{ toJson(env) }}
-                  VARS_CONTEXT: ${{ toJson(vars) }}
-                  JOB_CONTEXT: ${{ toJson(job) }}
-                  STEPS_CONTEXT: ${{ toJson(steps) }}
-                  RUNNER_CONTEXT: ${{ toJson(runner) }}
-                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
-                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
-                  NEEDS_CONTEXT: ${{ toJson(needs) }}
-                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
-              run: |
-                  echo "******************************"
-                  echo "github:" "$GITHUB_CONTEXT"
-                  echo "******************************"
-                  echo "env:" "$ENV_CONTEXT"
-                  echo "******************************"
-                  echo "vars:" "$VARS_CONTEXT"
-                  echo "******************************"
-                  echo "job:" "$JOB_CONTEXT"
-                  echo "******************************"
-                  echo "steps:" "$STEPS_CONTEXT"
-                  echo "******************************"
-                  echo "runner:" "$RUNNER_CONTEXT"
-                  echo "******************************"
-                  echo "secrets:" "$SECRETS_CONTEXT"
-                  echo "******************************"
-                  echo "strategy:" "$STRATEGY_CONTEXT"
-                  echo "******************************"
-                  echo "matrix:" "$MATRIX_CONTEXT"
-                  echo "******************************"
-                  echo "needs:" "$NEEDS_CONTEXT"
-                  echo "******************************"
-                  echo "inputs:" "$INPUTS_CONTEXT"
-                  echo "******************************"
-
+              uses: prosopo/captcha/.github/actions/print_contexts@gha
+              with:
+                INPUTS_CONTEXT: ${{ toJson(inputs) }}
+                NEEDS_CONTEXT: ${{ toJson(needs) }}
+                VARS_CONTEXT: ${{ toJson(vars) }}
+                SECRETS_CONTEXT: ${{ toJson(secrets) }}
+                
             - uses: actions/checkout@v4
               with:
                   submodules: "recursive"
-
-            # make cache dirs, these must exist before doing cache stuff
-            - run: mkdir -p ~/.npm
-            - run: mkdir -p ~/.cache/Cypress
 
             # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
             - run: npm cache clean --force
@@ -85,24 +51,5 @@ jobs:
             - run: npx cypress install
 
             - name: Save npm cache
-              uses: actions/cache/save@v4
-              if: always()
-              with:
-                  path: |
-                    ~/.npm
-                    ~/.cache/Cypress
-                  key: npm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+              uses: prosopo/captcha/.github/actions/save_npm_cache@gha
 
-            - name: Cleanup npm caches
-              if: always()
-              run: |
-                  # remove all but the latest cache, leaving only the cache we just saved
-                  echo "Fetching list of cache key"
-                  cacheKeys=$(gh cache list --sort created_at --order desc --limit 100 -R "${{ github.repository }}" --key "npm-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
-                  echo caches to be removed:
-                  echo "${cacheKeys}"
-                  set +e
-                  for cacheKey in $cacheKeys
-                  do
-                      gh cache delete "$cacheKey" -R "${{ github.repository }}"
-                  done

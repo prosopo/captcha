@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ describe("logging", () => {
 		const innerKeysObj: { [key: string]: { [key: string]: Set<string> } } = {};
 		for (const locale of locales) {
 			const localeData = fs.readFileSync(
-				path.resolve(`./src/locales/${locale}.json`),
+				path.resolve(`./src/locales/${locale}/translation.json`),
 				"utf8",
 			);
 			const localeKeys = Object.keys(JSON.parse(localeData));

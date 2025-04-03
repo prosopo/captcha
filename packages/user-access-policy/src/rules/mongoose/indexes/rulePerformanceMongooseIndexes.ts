@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ const userIpMaskIndexes: MongooseIndex[] = [
 		definition: {
 			"userIp.v4.mask.rangeMinAsNumeric": 1,
 			"userIp.v4.mask.rangeMaxAsNumeric": 1,
+			"userIp.v4.asNumeric": 1,
 		},
 		options: {
 			partialFilterExpression: {
@@ -62,6 +63,31 @@ const userIpMaskIndexes: MongooseIndex[] = [
 	},
 ];
 
-const rulePerformanceMongooseIndexes = [...userIpIndexes, ...userIpMaskIndexes];
+const otherIndexes: MongooseIndex[] = [
+	{
+		definition: {
+			userId: 1,
+		},
+		options: {
+			unique: true,
+			sparse: true,
+		},
+	},
+	{
+		definition: {
+			ja4: 1,
+		},
+		options: {
+			unique: true,
+			sparse: true,
+		},
+	},
+];
+
+const rulePerformanceMongooseIndexes = [
+	...userIpIndexes,
+	...userIpMaskIndexes,
+	...otherIndexes,
+];
 
 export { rulePerformanceMongooseIndexes };

@@ -5,12 +5,17 @@
 		"outDir": "./dist",
 		"allowJs": true
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": ["src", "src/**/*.json", "./src/**/*.d.ts"],
 	"references": [
+		{
+			"path": "../api-route"
+		},
+		{
+			"path": "../api-express-router"
+		},
 		{
 			"path": "../common"
 		},
-
 		{
 			"path": "../../dev/config"
 		},
@@ -40,9 +45,6 @@
 		},
 		{
 			"path": "../user-access-policy"
-		},
-		{
-			"path": "../api-route"
 		}
 	]
 }

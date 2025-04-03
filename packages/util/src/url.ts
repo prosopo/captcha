@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ export const parseUrl = (domain: string) => {
 		throw new Error("Invalid domain");
 	}
 
-	return new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+	return new URL(
+		`https://${domain.replace(/^https?:\/\//, "").replace(/^www\./, "")}`,
+	);
 };
 
 export const validateDomain = (domain: string): boolean => {
@@ -49,3 +51,6 @@ export const validateDomain = (domain: string): boolean => {
 
 	return true;
 };
+
+export const domainIsLocalhost = (domain: string) =>
+	domain === "localhost" || domain === "127.0.0.1";

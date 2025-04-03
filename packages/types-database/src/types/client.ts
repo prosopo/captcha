@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IUserData, Timestamp } from "@prosopo/types";
+import type { IUserData, IUserSettings, Timestamp } from "@prosopo/types";
 import type mongoose from "mongoose";
 import { Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
@@ -43,8 +43,74 @@ export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
 	updatedAtTimestamp: Number,
 });
 
+type User = {
+	email: string;
+	name: string;
+	role: string;
+	createdAt: number;
+	updatedAt: number;
+	status: string;
+};
+
+type AccountRecord = mongoose.Document & {
+	createdAt: number;
+	updatedAt: number;
+	signupEmail: string;
+	tier: string;
+	tierRequestQuota: number;
+	marketingPreferences: boolean;
+	users: User[];
+	sites: {
+		name: string;
+		siteKey: string;
+		secretKey: string;
+		settings: IUserSettings;
+		createdAt: number;
+		updatedAt: number;
+		active: boolean;
+	}[];
+	deletedUsers: User[];
+};
+
+// Account format
+export const AccountSchema = new Schema<AccountRecord>({
+	createdAt: Number,
+	updatedAt: Number,
+	signupEmail: String,
+	tier: String,
+	tierRequestQuota: Number,
+	marketingPreferences: Boolean,
+	users: [
+		{
+			email: String,
+			name: String,
+			role: String,
+			createdAt: Number,
+			updatedAt: Number,
+			status: String,
+		},
+	],
+	sites: [
+		{
+			name: String,
+			siteKey: String,
+			secretKey: String,
+			settings: {
+				domains: [String],
+				powDifficulty: Number,
+				captchaType: String,
+				frictionlessThreshold: Number,
+			},
+			createdAt: Number,
+			updatedAt: Number,
+			active: Boolean,
+		},
+	],
+	deletedUsers: [],
+});
+
 export enum TableNames {
-	emails = "emails",
+	accounts = "accounts",
 }
 
 export interface IClientDatabase extends IDatabase {

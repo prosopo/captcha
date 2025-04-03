@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
-import { type Logger, ProsopoDBError, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
@@ -27,7 +27,6 @@ import {
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
 	type Hash,
-	type PendingCaptchaRequest,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type RequestHeaders,
@@ -35,17 +34,21 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
+import type { FrictionlessTokenRecord } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	DetectorRecordSchema,
+	type DetectorSchema,
 	type FrictionlessToken,
+	type FrictionlessTokenId,
 	FrictionlessTokenRecordSchema,
-	type IPBlockRuleRecord,
-	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
+	type PendingCaptchaRequest,
+	type PendingCaptchaRequestMongoose,
 	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
@@ -62,8 +65,6 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
-	type UserAccountBlockRuleRecord,
-	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -71,7 +72,6 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type { FrictionlessTokenRecord } from "@prosopo/types-database";
 import {
 	type Rule,
 	type RulesStorage,
@@ -93,9 +93,8 @@ enum TableNames {
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	ipblockrules = "ipblockrules",
-	userblockrules = "userblockrules",
 	userAccessRules = "userAccessRules",
+	detector = "detector",
 }
 
 const PROVIDER_TABLES = [
@@ -155,19 +154,14 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.ipblockrules,
-		modelName: "IPBlockRules",
-		schema: IPBlockRuleRecordSchema,
-	},
-	{
-		collectionName: TableNames.userblockrules,
-		modelName: "UserAccountBlockRules",
-		schema: UserAccountBlockRuleSchema,
-	},
-	{
 		collectionName: TableNames.userAccessRules,
 		modelName: "UserAccessRules",
 		schema: getRuleMongooseSchema(),
+	},
+	{
+		collectionName: TableNames.detector,
+		modelName: "Detector",
+		schema: DetectorRecordSchema,
 	},
 ];
 
@@ -517,7 +511,7 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's captcha solution commitment
 	 */
-	async storeDappUserSolution(
+	async storeUserImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void> {
@@ -563,6 +557,9 @@ export class ProviderDatabase
 	 * @param difficulty
 	 * @param providerSignature
 	 * @param ipAddress
+	 * @param headers
+	 * @param ja4
+	 * @param frictionlessTokenId
 	 * @param serverChecked
 	 * @param userSubmitted
 	 * @param storedStatus
@@ -576,6 +573,8 @@ export class ProviderDatabase
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		ja4: string,
+		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked = false,
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -588,6 +587,7 @@ export class ProviderDatabase
 			...components,
 			ipAddress,
 			headers,
+			ja4,
 			result: { status: CaptchaStatus.pending },
 			userSubmitted,
 			serverChecked,
@@ -595,6 +595,7 @@ export class ProviderDatabase
 			providerSignature,
 			userSignature,
 			lastUpdatedTimestamp: Date.now(),
+			frictionlessTokenId,
 		};
 
 		try {
@@ -635,7 +636,7 @@ export class ProviderDatabase
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null> {
 		if (!this.tables) {
-			throw new ProsopoEnvError("DATABASE.DATABASE_UNDEFINED", {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
 				context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
 				logger: this.logger,
 			});
@@ -772,20 +773,7 @@ export class ProviderDatabase
 						filterNoStoredTimestamp,
 						{
 							$expr: {
-								$lt: [
-									{
-										$convert: {
-											input: "$storedAtTimestamp",
-											to: "date",
-										},
-									},
-									{
-										$convert: {
-											input: "$lastUpdatedTimestamp",
-											to: "date",
-										},
-									},
-								],
+								$lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"],
 							},
 						},
 					],
@@ -935,17 +923,40 @@ export class ProviderDatabase
 		return doc._id;
 	}
 
+	/** Update a frictionless token record */
+	async updateFrictionlessTokenRecord(
+		tokenId: FrictionlessTokenId,
+		updates: Partial<FrictionlessTokenRecord>,
+	): Promise<void> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		await this.tables.frictionlessToken.updateOne(filter, updates);
+	}
+
+	/** Get a frictionless token record */
+	async getFrictionlessTokenRecordByTokenId(
+		tokenId: FrictionlessTokenId,
+	): Promise<FrictionlessTokenRecord | undefined> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		const doc =
+			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
+				filter,
+			);
+		return doc ? doc : undefined;
+	}
+
 	/**
 	 * Check if a frictionless token record exists.
 	 * Used to ensure that a token is not used more than once.
 	 */
-	async checkFrictionlessTokenRecord(token: string): Promise<boolean> {
+	async getFrictionlessTokenRecordByToken(
+		token: string,
+	): Promise<FrictionlessTokenRecord | undefined> {
 		const filter: Pick<FrictionlessTokenRecord, "token"> = { token };
 		const record =
 			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
 				filter,
 			);
-		return !!record;
+		return record || undefined;
 	}
 
 	/**
@@ -953,6 +964,7 @@ export class ProviderDatabase
 	 */
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
+			this.logger.debug({ action: "storing", sessionRecord });
 			await this.tables.session.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
@@ -969,6 +981,7 @@ export class ProviderDatabase
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
+		this.logger.debug({ action: "checking and removing", sessionId });
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
 		try {
 			const session = await this.tables.session
@@ -986,30 +999,32 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's pending record
 	 */
-	async storeDappUserPending(
+	async storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.storeDappUserPending.name,
+					failedFuncName: this.storePendingImageCommitment.name,
 					requestHash,
 				},
 			});
 		}
-		const pendingRecord = {
+		const pendingRecord: PendingCaptchaRequestMongoose = {
 			accountId: userAccount,
 			pending: true,
 			salt,
 			requestHash,
 			deadlineTimestamp,
-			requestedAtTimestamp,
+			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
+			frictionlessTokenId,
 		};
 		await this.tables?.pending.updateOne(
 			{ requestHash: requestHash },
@@ -1021,12 +1036,15 @@ export class ProviderDatabase
 	/**
 	 * @description Get a Dapp user's pending record
 	 */
-	async getDappUserPending(
+	async getPendingImageCommitment(
 		requestHash: string,
 	): Promise<PendingCaptchaRequest> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
-				context: { failedFuncName: this.getDappUserPending.name, requestHash },
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+				context: {
+					failedFuncName: this.getPendingImageCommitment.name,
+					requestHash,
+				},
 			});
 		}
 		// @ts-ignore
@@ -1041,19 +1059,22 @@ export class ProviderDatabase
 			return doc;
 		}
 
-		throw new ProsopoEnvError("DATABASE.PENDING_RECORD_NOT_FOUND", {
-			context: { failedFuncName: this.getDappUserPending.name, requestHash },
+		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
+			context: {
+				failedFuncName: this.getPendingImageCommitment.name,
+				requestHash,
+			},
 		});
 	}
 
 	/**
 	 * @description Mark a pending request as used
 	 */
-	async updateDappUserPendingStatus(requestHash: string): Promise<void> {
+	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.updateDappUserPendingStatus.name,
+					failedFuncName: this.updatePendingImageCommitmentStatus.name,
 					requestHash,
 				},
 			});
@@ -1093,7 +1114,7 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
 	}
 
 	/**
@@ -1117,7 +1138,7 @@ export class ProviderDatabase
 			) as UserSolutionRecord[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED");
 	}
 
 	async getDatasetIdWithSolvedCaptchasOfSizeN(
@@ -1432,6 +1453,16 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Clean up the scheduled task status records
+	 */
+	async cleanupScheduledTaskStatus(status: ScheduledTaskStatus): Promise<void> {
+		const filter: Pick<ScheduledTaskRecord, "status"> = {
+			status,
+		};
+		await this.tables?.scheduler.deleteMany(filter);
+	}
+
+	/**
 	 * @description Update the client records
 	 */
 	async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
@@ -1439,6 +1470,7 @@ export class ProviderDatabase
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
+				tier: record.tier,
 			};
 			const filter: Pick<IUserDataSlim, "account"> = {
 				account: record.account,
@@ -1465,19 +1497,31 @@ export class ProviderDatabase
 		return doc ? doc : undefined;
 	}
 
-	async getAllIpBlockRules(): Promise<IPBlockRuleRecord[]> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
-		}
-
-		return await this.tables.ipblockrules.find().exec();
+	/**
+	 * @description Store a detector key
+	 */
+	async storeDetectorKey(detectorKey: string): Promise<void> {
+		return this.tables?.detector.create({
+			detectorKey,
+			createdAt: new Date(),
+		});
 	}
 
-	async getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
-		}
+	/** @description Remove a detector key */
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
+		await this.tables?.detector.deleteOne(filter);
+	}
 
-		return await this.tables.userblockrules.find().exec();
+	/**
+	 * @description Get valid detector keys
+	 */
+	async getDetectorKeys(): Promise<string[]> {
+		const keyRecords = await this.tables?.detector
+			.find({}, { detectorKey: 1 })
+			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
+			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
+
+		return (keyRecords || []).map((record) => record.detectorKey);
 	}
 }

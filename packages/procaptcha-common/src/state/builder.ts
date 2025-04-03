@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,10 @@ export const useProcaptcha = (
 		useRefAsState<NodeJS.Timeout | undefined>(useRef, undefined);
 	const [sendData, setSendData] = useState(false);
 	const [attemptCount, setAttemptCount] = useState(0);
-	const [error, setError] = useState<string | undefined>(undefined);
+	const [error, setError] = useState<
+		{ message: string; key: string } | undefined
+	>(undefined);
+	const [sessionId, setSessionId] = useState<string | undefined>(undefined);
 	return [
 		// the state
 		{
@@ -98,6 +101,7 @@ export const useProcaptcha = (
 			sendData,
 			attemptCount,
 			error,
+			sessionId,
 		},
 		// and method to update the state
 		(nextState: Partial<ProcaptchaState>) => {
@@ -125,6 +129,7 @@ export const useProcaptcha = (
 			if (nextState.attemptCount !== undefined)
 				setAttemptCount(nextState.attemptCount);
 			if (nextState.error !== undefined) setError(nextState.error);
+			if (nextState.sessionId !== undefined) setSessionId(nextState.sessionId);
 		},
 	];
 };

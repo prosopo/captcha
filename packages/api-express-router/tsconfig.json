@@ -4,7 +4,7 @@
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},
-	"include": ["./src"],
+	"include": ["./src", "express.d.ts"],
 	"references": [
 		{
 			"path": "../api-route"

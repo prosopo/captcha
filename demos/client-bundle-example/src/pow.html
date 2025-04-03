@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Procaptcha demo: Live Test</title>
+        <script type="module">
+            import {CaptchaType} from "@prosopo/types";
+
+            async function captchaLoaded() {
+                const render = (await import("%VITE_BUNDLE_URL%")).render
+                console.log('Captcha loaded')
+                // Get the Element using elementId
+                const captchaContainer = document.getElementById('procaptcha-container')
+                render(captchaContainer, {
+                    siteKey: import.meta.env.PROSOPO_SITE_KEY,
+                    theme: 'dark',
+                    callback: onCaptchaVerified,
+                    captchaType: CaptchaType.pow,
+                })
+            }
+            window.captchaLoaded = captchaLoaded
+
+            // Define a callback function to be called when the CAPTCHA is verified
+            function onCaptchaVerified(output) {
+                console.log('Captcha verified, output: ' + JSON.stringify(output))
+            }
+
+            window.onCaptchaVerified = onCaptchaVerified
+        </script>
+        <script
+            id="procaptchaScript"
+            type="module"
+            src="%VITE_BUNDLE_URL%?onload=captchaLoaded&render=explicit"
+            async
+            defer
+        ></script>
+    </head>
+    <body>
+        <form>
+            <div id="procaptcha-container"></div>
+        </form>
+    </body>
+</html>

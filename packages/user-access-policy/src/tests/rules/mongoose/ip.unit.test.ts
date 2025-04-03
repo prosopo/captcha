@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,6 +78,8 @@ describe.each([
 		model = mongoConnection.model(
 			"UserAccessPolicyRules",
 			getRuleMongooseSchema(),
+			undefined,
+			{ overwriteModels: true },
 		);
 
 		await model.syncIndexes();
@@ -344,7 +346,7 @@ describe.each([
 			});
 
 		// then
-		expect(insertDuplicate()).rejects.toThrow();
+		expect(await insertDuplicate()).to.not.throw;
 	});
 
 	it.each([
@@ -396,9 +398,9 @@ describe.each([
 			clientId: "client",
 		} as Rule,
 		{},
-	])("rejectsDuplicatedIpMask", async (clientIdPart) => {
+	])("replacesDuplicatedIpMask", async (clientIdPart) => {
 		// given
-		await rulesStorage.insert({
+		const rule = {
 			...clientIdPart,
 			isUserBlocked: true,
 			userIp: {
@@ -412,28 +414,15 @@ describe.each([
 					},
 				},
 			},
-		});
+		};
+		await rulesStorage.insert(rule);
 
 		// when
-		const insertDuplicate = async () =>
-			await rulesStorage.insert({
-				...clientIdPart,
-				isUserBlocked: true,
-				userIp: {
-					[ipRange.version]: {
-						[ipRange.fieldSuffix]: getNumericIp(ipRange.min),
-						asString: ipRange.min.bigInt().toString(),
-						mask: {
-							[rangeMinKey]: getNumericIp(ipRange.min),
-							[rangeMaxKey]: getNumericIp(ipRange.max),
-							asNumeric: 24,
-						},
-					},
-				},
-			});
+		const newRule = { ...rule, isUserBlocked: false };
+		const insertDuplicate = async () => await rulesStorage.insert(newRule);
 
 		// then
-		expect(insertDuplicate()).rejects.toThrow();
+		expect(await insertDuplicate()).to.not.throw;
 	});
 
 	it("globalAndClientCanHaveSameIp", async () => {

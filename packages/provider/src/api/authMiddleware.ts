@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,18 +21,24 @@ import type { NextFunction, Request, Response } from "express";
 export const authMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			// Stops this middleware from running on non-api routes like /json /favicon.ico etc
-			if (req.url.indexOf(ApiPrefix) === -1) {
-				next();
-				return;
-			}
-
 			const { signature, timestamp } = extractHeaders(req);
 
+			let error: ProsopoApiError | undefined;
+
 			if (env.authAccount) {
-				verifySignature(signature, timestamp, env.authAccount);
-				next();
-				return;
+				try {
+					verifySignature(signature, timestamp, env.authAccount);
+					next();
+					return;
+				} catch (e: unknown) {
+					// need to fall through to the verifySignature check
+					req.logger.warn({
+						message: (e as ProsopoApiError).message,
+						code: (e as ProsopoApiError).code,
+						account: env.authAccount.address,
+					});
+					error = e as ProsopoApiError;
+				}
 			}
 
 			if (env.pair) {
@@ -43,11 +49,11 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 
 			res.status(401).json({
 				error: "Unauthorized",
-				message: new ProsopoEnvError("CONTRACT.CANNOT_FIND_KEYPAIR"),
+				message: new ProsopoEnvError(error || "CONTRACT.CANNOT_FIND_KEYPAIR"),
 			});
 			return;
 		} catch (err) {
-			env.logger.error("Auth Middleware Error:", err);
+			req.logger.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
 		}
@@ -105,7 +111,7 @@ export const verifySignature = (
 			context: {
 				error: "Signature verification failed",
 				code: 401,
-				account: pair.publicKey,
+				account: pair.address,
 			},
 		});
 	}

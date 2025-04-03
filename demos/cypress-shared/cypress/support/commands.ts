@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /// <reference types="cypress" />
-import type { Captcha } from "@prosopo/types";
+
+import {
+	AdminApiPaths,
+	type Captcha,
+	type CaptchaType,
+	type IUserSettings,
+	type RegisterSitekeyBodyTypeOutput,
+	Tier,
+} from "@prosopo/types";
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
+import { u8aToHex } from "@polkadot/util";
+import type { ApiEndpointResponse } from "@prosopo/api-route";
+import { getPairAsync } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
 declare global {
@@ -34,6 +45,11 @@ declare global {
 			clickNextButton(): Cypress.Chainable<void>;
 
 			elementExists(element: string): Chainable<Subject>;
+
+			registerSiteKey(
+				captchaType?: CaptchaType,
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+			): Cypress.Chainable<Response<any>>;
 		}
 	}
 }
@@ -122,7 +138,7 @@ function getSelectors(captcha: Captcha) {
 						// drop https from the urls as this is what procaptcha does (avoids mixed-content warnings, e.g. resources loaded via a mix of http / https)
 						.map(
 							(item) =>
-								`img[src="${item.data.replace(/^http(s)*:\/\//, "//")}"]`,
+								`img[src="${item.data.replace(/^http(s)*:\/\//, "https://")}"]`,
 						);
 				} else {
 					console.log("Unsolved captcha or captcha with zero solutions");
@@ -167,6 +183,43 @@ function elementExists(selector: string) {
 		.then(($window) => $window.document.querySelector(selector));
 }
 
+function registerSiteKey(captchaType: CaptchaType) {
+	const timestamp = new Date().getTime();
+
+	return cy.then(() => {
+		return getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then(
+			(pair) => {
+				const signature = u8aToHex(pair.sign(timestamp.toString()));
+				const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+
+				const settings: IUserSettings = {
+					captchaType: captchaType,
+					domains: ["0.0.0.0", "localhost", "*"],
+					frictionlessThreshold: 0.5,
+					powDifficulty: 2,
+				};
+
+				// Use cy.request() to ensure Cypress correctly queues the request
+				return cy.request({
+					method: "POST",
+					url: adminSiteKeyURL,
+					headers: {
+						"Content-Type": "application/json",
+						signature: signature,
+						timestamp: timestamp.toString(),
+					},
+					body: {
+						siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+						tier: Tier.Free,
+						settings,
+					},
+					failOnStatusCode: false, // Allow handling of non-200 responses manually
+				});
+			},
+		);
+	});
+}
+
 Cypress.Commands.addAll({
 	clickIAmHuman,
 	captchaImages,
@@ -174,4 +227,5 @@ Cypress.Commands.addAll({
 	getSelectors,
 	clickNextButton,
 	elementExists,
+	registerSiteKey,
 });

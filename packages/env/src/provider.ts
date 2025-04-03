@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import { type ProsopoConfigOutput, ScheduledTaskStatus } from "@prosopo/types";
 import { Environment } from "./env.js";
 
 export class ProviderEnvironment extends Environment {
 	declare config: ProsopoConfigOutput;
+
+	cleanup(): void {
+		this.getDb()
+			.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
+			.catch((err) => {
+				this.logger.error("Failed to cleanup scheduled tasks", err);
+			});
+	}
 }

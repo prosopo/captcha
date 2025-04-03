@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,9 +42,13 @@ export const LogLevel = zEnum([
 ]);
 export type LogLevel = zInfer<typeof LogLevel>;
 
-// Create a new logger with the given level and scope
-export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
-	return getLoggerAdapterConsola(getLogLevel(logLevel), scope);
+// Create a new logger with the given level and scope and optional request ID
+export function getLogger(
+	logLevel: LogLevel | string,
+	scope: string,
+	requestId?: string,
+): Logger {
+	return getLoggerAdapterConsola(getLogLevel(logLevel), scope, requestId);
 }
 
 // Get the default logger (i.e. the global logger)
@@ -72,11 +76,20 @@ const JSONReporter = (
 	}
 };
 
-const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
+const getLoggerAdapterConsola = (
+	logLevel: LogLevel,
+	scope: string,
+	requestId?: string,
+): Logger => {
 	const logger = createConsola({
 		reporters: [
 			{
-				log: JSONReporter,
+				log: (logObj, ctx) => {
+					const reporter = JSONReporter;
+					// Attach requestId to the log object before passing it to JSONReporter
+					const enhancedLogObj = { ...logObj, requestId };
+					reporter(enhancedLogObj, ctx);
+				},
 			},
 		],
 		formatOptions: { colors: true, date: true },
