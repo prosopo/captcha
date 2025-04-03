@@ -20,9 +20,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status" ] # ping the status api
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
             interval: 30s
-            retries: 3
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
@@ -54,9 +54,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:
@@ -88,9 +88,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/details" ]  # ping the details endpoint
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:
@@ -118,8 +118,8 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
@@ -153,8 +153,8 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
@@ -192,8 +192,8 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
@@ -224,9 +224,9 @@ services:
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
             interval: 30s
+            retries: 5
+            start_period: 30s
             timeout: 10s
-            retries: 1
-            start_period: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1

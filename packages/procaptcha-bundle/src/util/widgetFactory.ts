@@ -14,7 +14,16 @@
 
 import { loadI18next } from "@prosopo/locale";
 import type { Ti18n } from "@prosopo/locale";
-import { CaptchaType, type ProcaptchaRenderOptions } from "@prosopo/types";
+import {
+	getDefaultCallbacks,
+	setUserCallbacks,
+} from "@prosopo/procaptcha-common";
+import {
+	type Callbacks,
+	CaptchaType,
+	type ProcaptchaCallbacks,
+	type ProcaptchaRenderOptions,
+} from "@prosopo/types";
 import {
 	createWidgetSkeleton,
 	darkTheme,
@@ -46,15 +55,24 @@ class WidgetFactory {
 		invisible = false,
 	): Promise<Root[]> {
 		return Promise.all(
-			containers.map((container) =>
-				this.createWidget(container, renderOptions, isWeb2, invisible),
-			),
+			containers.map((container) => {
+				const callbacks = getDefaultCallbacks(container);
+				setUserCallbacks(renderOptions, callbacks, container);
+				return this.createWidget(
+					container,
+					renderOptions,
+					callbacks,
+					isWeb2,
+					invisible,
+				);
+			}),
 		);
 	}
 
 	public async createWidget(
 		container: Element,
 		renderOptions: ProcaptchaRenderOptions,
+		callbacks: Callbacks,
 		isWeb2 = true,
 		invisible = false,
 	): Promise<Root> {
@@ -95,6 +113,7 @@ class WidgetFactory {
 			},
 			widgetInteractiveArea,
 			renderOptions,
+			callbacks,
 			isWeb2,
 			this.i18n,
 			invisible,

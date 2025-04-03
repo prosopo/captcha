@@ -24,6 +24,14 @@ let captchaType: CaptchaType;
 
 describe("Captchas", () => {
 	beforeEach(() => {
+		// Define the onCaptchaVerified callback
+		cy.window().then((win) => {
+			// @ts-ignore
+			win.onCaptchaVerified = () => {
+				// Mock implementation for the test
+				console.log("Challenge passed");
+			};
+		});
 		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 		cy.registerSiteKey(captchaType).then((response) => {
 			// Log the response status and body using cy.task()
@@ -122,10 +130,10 @@ describe("Captchas", () => {
 		return cy
 			.wait("@getCaptcha", { timeout: 36000 })
 			.its("response")
+			.should("exist") // Ensures response is not undefined
 			.then((response) => {
-				expect(response).to.not.be.undefined;
-				expect(response?.statusCode).to.equal(400);
-				expect(response?.body).to.have.property("error");
+				expect(response.statusCode).to.equal(400);
+				expect(response.body).to.have.property("error");
 			});
 	});
 
