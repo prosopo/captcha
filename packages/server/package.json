@@ -37,6 +37,7 @@
 		"@prosopo/api": "2.5.4",
 		"@prosopo/common": "2.5.4",
 		"@prosopo/keyring": "2.5.4",
+		"@prosopo/load-balancer": "2.5.4",
 		"@prosopo/types": "2.5.4",
 		"express": "4.21.2"
 	},
