@@ -213,7 +213,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            test: [ "CMD", "curl", "--fail", "localhost:2020/metrics" ] # ping the caddy admin api
             interval: 30s
             retries: 5
             start_period: 30s
