@@ -82,12 +82,10 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"workspaces": [
-		"dev/*",
-		"packages/*",
-		"demos/*"
-	],
+	"workspaces": ["dev/*", "packages/*", "demos/*"],
 	"devDependencies": {
+		"commitizen": "4.3.1",
+		"cz-conventional-changelog": "3.3.0",
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
 		"@types/node": "22.5.5",
@@ -147,5 +145,10 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"express": "4.21.2"
+	},
+	"config": {
+		"commitizen": {
+			"path": "./node_modules/cz-conventional-changelog"
+		}
 	}
 }
