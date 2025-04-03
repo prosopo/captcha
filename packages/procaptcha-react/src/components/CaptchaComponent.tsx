@@ -116,7 +116,7 @@ const CaptchaComponent = ({
 									{t("WIDGET.SELECT_ALL")}
 									{":"}
 									&nbsp;
-									<span>{`${t(at(challenge.captchas, index).target)} `}</span>
+									<span>{`${at(challenge.captchas, index).target} `}</span>
 								</p>
 								<p
 									style={{

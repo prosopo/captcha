@@ -20,7 +20,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status" ] # ping the status api
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
             interval: 30s
             retries: 5
             start_period: 30s
@@ -54,9 +54,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
             interval: 30s
             retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:
@@ -88,9 +88,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/details" ]  # ping the details endpoint
             interval: 30s
             retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.5.3",
+	"version": "2.5.5",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -19,6 +19,7 @@
 		"clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
 		"clean-npm:node-modules": "del-cli --verbose '**/node_modules'",
 		"clean-npm:package-lock": "del-cli --verbose '**/package-lock.json' '!**/node_modules'",
+		"clean-npm:cache": "del-cli --force --verbose $(npm config get cache)",
 		"clean:npm": "run-s clean-npm:*",
 		"clean-ts:buildinfo": "del-cli --verbose '**/*.tsbuildinfo' '!**/node_modules'",
 		"clean-ts:dist": "del-cli --verbose '**/dist' '!**/node_modules'",
@@ -81,12 +82,16 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "2.1.1",
+		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
@@ -99,8 +104,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
-		"vite": "5.4.6",
-		"vitest": "2.1.1"
+		"vite": "6.2.3",
+		"vitest": "3.0.9"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
 	"bugs": {
