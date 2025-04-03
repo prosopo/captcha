@@ -49,7 +49,7 @@ const LOGO_STYLES = `
 	font-weight: bold;
 	font-family: Helvetica Neue,Helvetica,Arial,sans-serif !important;
 	vertical-align: top;
-	margin-top: -4px;
+	margin-top: -6px;
 }
 
 #logo {
