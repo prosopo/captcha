@@ -73,7 +73,7 @@ services:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
-        pull_policy: build
+        pull_policy: always
         env_file:
             - ../.env.2.${NODE_ENV}
         ports:
@@ -136,6 +136,7 @@ services:
             - "vector.mongo=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         volumes:
             - /data/db:/data/db
         ports:
@@ -173,6 +174,7 @@ services:
             - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         ports:
             - '80:80'
             - '443:443'
@@ -211,6 +213,7 @@ services:
         labels:
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
         networks:
