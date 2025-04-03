@@ -12,6 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type {
+	ProcaptchaOptions,
+	WidgetCallbacks,
+	WidgetCaptchaType,
+	WidgetTheme,
+} from "@prosopo/procaptcha-wrapper";
+import { WidgetCaptchaTypes, WidgetThemes } from "@prosopo/procaptcha-wrapper";
 import { ProcaptchaComponent } from "./lib/procaptcha.component";
 
-export { ProcaptchaComponent };
+export {
+	ProcaptchaComponent,
+	type ProcaptchaOptions,
+	type WidgetTheme,
+	type WidgetCaptchaType,
+	type WidgetCallbacks,
+	WidgetThemes,
+	WidgetCaptchaTypes,
+};
