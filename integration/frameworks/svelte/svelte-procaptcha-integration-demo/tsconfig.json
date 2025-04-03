@@ -1,0 +1,16 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["./src"],
+	"references": [
+		{
+			"path": "../svelte-procaptcha-wrapper"
+		},
+		{
+			"path": "../../../procaptcha-integration-build-config"
+		}
+	]
+}
