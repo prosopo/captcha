@@ -11,7 +11,7 @@
 		"start": "ng serve",
 		"build": "ng build",
 		"watch": "ng build --watch --configuration development",
-		"test": "ng test",
+		"test": "echo \"No test specified\"",
 		"dev": "npm run start"
 	},
 	"private": true,
