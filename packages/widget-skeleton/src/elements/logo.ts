@@ -43,13 +43,15 @@ const LOGO_STYLES = `
 }
 
 .prosopo-logo-text {
-	font-size: 9px;
+	all: unset;
+	font-size: 9px !important;
 	text-align: center;
 	display: flex;
-	font-weight: bold;
+	font-weight: bold !important;
 	font-family: Helvetica Neue,Helvetica,Arial,sans-serif !important;
 	vertical-align: top;
-	margin-top: -6px;
+	margin-top: -6px !important;
+	line-height: normal !important;
 }
 
 #logo {
