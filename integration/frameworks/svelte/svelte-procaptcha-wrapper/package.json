@@ -16,9 +16,9 @@
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
+		"clean": "del-cli ./dist && del-cli ./.svelte-kit",
 		"package": "svelte-package -i ./src -o ./dist",
-		"build": "npm run package",
+		"build": "npm run package && del-cli ./.svelte-kit",
 		"dev": "npm run package -- -w"
 	},
 	"dependencies": {
@@ -28,7 +28,8 @@
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@sveltejs/package": "2.3.10"
+		"@sveltejs/package": "2.3.10",
+		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

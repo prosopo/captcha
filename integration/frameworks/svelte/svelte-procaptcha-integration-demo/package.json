@@ -10,7 +10,7 @@
 	"types": "dist/index.d.ts",
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
+		"clean": "del-cli ./dist",
 		"build": "npx vite build",
 		"dev": "npx vite dev --port=9332"
 	},
@@ -20,7 +20,8 @@
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.0.0",
-		"@sveltejs/vite-plugin-svelte": "5.0.3"
+		"@sveltejs/vite-plugin-svelte": "5.0.3",
+		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

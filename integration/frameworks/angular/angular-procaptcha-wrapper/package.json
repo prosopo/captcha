@@ -17,7 +17,7 @@
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
+		"clean": "del-cli ./dist",
 		"build": "ng-packagr -p ng-package.json",
 		"dev": "npm run build -- --watch"
 	},
@@ -28,6 +28,7 @@
 		"@angular/core": "^19.2.0"
 	},
 	"devDependencies": {
+		"del-cli": "6.0.0",
 		"ng-packagr": "19.2.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
