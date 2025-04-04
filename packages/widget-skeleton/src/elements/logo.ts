@@ -35,23 +35,23 @@ const LOGO_STYLES = `
 }
 
 .prosopo-logo {
+    display: inline-flex;
+    flex-direction: column;    /* ✅ Stack vertically */
+    align-items: center;       /* ✅ Center horizontally */
+    justify-content: center;   /* ✅ Optional: center vertically if needed */
     padding: 8px;
-    flex: 1 1 0;
-    text-align: center;
-    width: 36px;
-    height: 36px;
+    height: auto;
+    min-width: max-content;
+    gap: 2px;                  /* ✅ Space between SVG and text */
 }
 
 .prosopo-logo-text {
-	all: unset;
-	font-size: 9px !important;
-	text-align: center;
-	display: flex;
-	font-weight: bold !important;
-	font-family: Helvetica Neue,Helvetica,Arial,sans-serif !important;
-	vertical-align: top;
-	margin-top: -6px !important;
-	line-height: normal !important;
+    all: unset;
+    font-size: 9px !important;
+    font-weight: bold !important;
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif !important;
+    line-height: 1 !important;
+    text-align: center;
 }
 
 #logo {
