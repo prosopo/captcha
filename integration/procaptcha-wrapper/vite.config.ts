@@ -18,4 +18,7 @@ import { createIntegrationViteConfig } from "@prosopo/procaptcha-integration-bui
 export default createIntegrationViteConfig({
 	name: "ProcaptchaWrapper",
 	directory: __dirname,
+	viteSettings: {
+		envDir: __dirname,
+	},
 });

@@ -12,25 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaOptions } from "./procaptchaOptions.js";
-import type { ProcaptchaWrapper } from "./procaptchaWrapper.js";
-import type { WidgetCallbacks } from "./widget/widgetCallbacks.js";
 import {
-	type WidgetCaptchaType,
-	WidgetCaptchaTypes,
-} from "./widget/widgetCaptchaTypes.js";
-import { type WidgetTheme, WidgetThemes } from "./widget/widgetThemes.js";
-import { WidgetWrapper } from "./widget/widgetWrapper.js";
+	type RenderProcaptchaFunction,
+	loadRenderProcaptchaScript,
+} from "./renderProcaptcha.js";
 
-const procaptchaWrapper = new WidgetWrapper();
+let renderFunction: RenderProcaptchaFunction;
 
-export {
-	type WidgetCallbacks,
-	type ProcaptchaOptions,
-	type WidgetTheme,
-	type WidgetCaptchaType,
-	type ProcaptchaWrapper,
-	WidgetThemes,
-	WidgetCaptchaTypes,
-	procaptchaWrapper,
+export const renderProcaptcha = async (
+	element: HTMLElement,
+	options: object,
+): Promise<void> => {
+	if (undefined === renderFunction) {
+		renderFunction = await loadRenderProcaptchaScript(
+			// @ts-expect-error
+			import.meta.env.VITE_RENDER_SCRIPT_URL,
+			{
+				// @ts-expect-error
+				id: import.meta.env.VITE_RENDER_SCRIPT_ID,
+			},
+		);
+	}
+
+	await renderFunction(element, options);
 };
