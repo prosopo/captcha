@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
 import { createIntegrationViteConfig } from "@prosopo/procaptcha-integration-build-config";
 
 export default createIntegrationViteConfig({
@@ -20,5 +19,11 @@ export default createIntegrationViteConfig({
 	directory: __dirname,
 	viteSettings: {
 		envDir: __dirname,
+	},
+	dtsPluginOptions: {
+		// workaround to "inline" external dependencies
+		bundledPackages: ["@prosopo/types", "@prosopo/locale"],
+		// note: "bundledPackages" option doesn't work without "rollupTypes" https://github.com/qmhc/vite-plugin-dts/issues/302
+		rollupTypes: true,
 	},
 });

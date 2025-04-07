@@ -13,20 +13,15 @@
 // limitations under the License.
 
 import type {
-	ProcaptchaOptions,
-	WidgetCallbacks,
-	WidgetCaptchaType,
-	WidgetTheme,
+	ProcaptchaRenderOptions,
+	ProcaptchaType,
+	ProcaptchaLanguages,
 } from "@prosopo/procaptcha-wrapper";
-import { WidgetCaptchaTypes, WidgetThemes } from "@prosopo/procaptcha-wrapper";
 import { ProcaptchaComponent } from "./procaptchaComponent.js";
 
 export {
 	ProcaptchaComponent,
-	type ProcaptchaOptions,
-	type WidgetTheme,
-	type WidgetCaptchaType,
-	type WidgetCallbacks,
-	WidgetThemes,
-	WidgetCaptchaTypes,
+	type ProcaptchaRenderOptions,
+	type ProcaptchaType,
+	type ProcaptchaLanguages,
 };

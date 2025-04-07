@@ -2,9 +2,9 @@
 import {onMounted, onUpdated, useTemplateRef} from "vue";
 
 import {HTMLAttributes} from "vue"
-import {type ProcaptchaOptions, procaptchaWrapper} from "@prosopo/procaptcha-wrapper";
+import {type ProcaptchaRenderOptions, renderProcaptcha} from "@prosopo/procaptcha-wrapper";
 
-type ProcaptchaComponentProperties = ProcaptchaOptions & {
+type ProcaptchaComponentProperties = ProcaptchaRenderOptions & {
   htmlAttributes?: AllHtmlAttributes,
 }
 
@@ -22,17 +22,17 @@ defineOptions({
 });
 
 onMounted(() => {
-  renderProcaptcha();
+  render();
 });
 onUpdated(() => {
-  renderProcaptcha();
+  render();
 });
 
-function renderProcaptcha(): void {
+function render(): void {
   const wrapperElement = wrapper.value;
 
   if (wrapperElement instanceof HTMLElement) {
-    procaptchaWrapper.renderProcaptcha(wrapperElement, properties);
+    renderProcaptcha(wrapperElement, properties);
   }
 }
 </script>

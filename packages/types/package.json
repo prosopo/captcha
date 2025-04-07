@@ -3,6 +3,7 @@
 	"version": "2.5.4",
 	"description": "Types for prosopo TypeScript packages",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",

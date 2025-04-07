@@ -1,9 +1,9 @@
 <script lang="ts">
     import {tick, onMount} from "svelte";
     import type {HTMLAttributes} from "svelte/elements";
-    import {type ProcaptchaOptions, procaptchaWrapper} from "@prosopo/procaptcha-wrapper";
+    import {type ProcaptchaRenderOptions, renderProcaptcha} from "@prosopo/procaptcha-wrapper";
 
-    type ProcaptchaComponentProperties = ProcaptchaOptions & {
+    type ProcaptchaComponentProperties = ProcaptchaRenderOptions & {
         htmlAttributes?: AllHtmlAttributes,
     }
 
@@ -18,7 +18,7 @@
 
     onMount(() => {
         tick().then(() => {
-            procaptchaWrapper.renderProcaptcha(wrapperElement, properties);
+            renderProcaptcha(wrapperElement, properties);
         });
     });
 

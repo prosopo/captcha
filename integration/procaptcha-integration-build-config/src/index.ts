@@ -15,12 +15,13 @@
 import path from "node:path";
 import deepmerge from "deepmerge";
 import type { UserConfig } from "vite";
-import dts from "vite-plugin-dts";
+import dts, { type PluginOptions as DtsPluginOptions } from "vite-plugin-dts";
 
 interface IntegrationConfigSettings {
 	directory: string;
 	name: string;
 	viteSettings?: UserConfig;
+	dtsPluginOptions?: DtsPluginOptions;
 }
 
 function createIntegrationViteConfig(
@@ -28,7 +29,7 @@ function createIntegrationViteConfig(
 ): UserConfig {
 	const defaultConfig: UserConfig = {
 		envDir: path.resolve(configSettings.directory, "../.."),
-		plugins: [dts()],
+		plugins: [dts(configSettings.dtsPluginOptions)],
 		build: {
 			outDir: path.resolve(configSettings.directory, "./dist"),
 			emptyOutDir: true,

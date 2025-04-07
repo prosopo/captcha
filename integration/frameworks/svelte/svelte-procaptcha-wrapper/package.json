@@ -22,7 +22,7 @@
 		"dev": "npm run package -- -w"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "1.0.0"
+		"@prosopo/procaptcha-wrapper": ">=2.5.4"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"

@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { LanguageSchema } from "@prosopo/locale";
-import type { CaptchaType, ProcaptchaToken } from "@prosopo/types";
+import type { Languages } from "@prosopo/locale";
+import type { CaptchaType } from "@prosopo/types";
 
 export type Features = `${CaptchaType}`;
 
+// note: do not use any Zod-related types inside the interface,
+// as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
 export interface ProcaptchaRenderOptions {
 	siteKey: string;
 	theme?: "light" | "dark";
 	captchaType?: Features;
-	callback?: string | ((token: ProcaptchaToken) => void);
+	callback?: string | ((token: string) => void);
 	"challenge-valid-length"?: string; // seconds for successful challenge to be valid
 	"chalexpired-callback"?: string | (() => void);
 	"expired-callback"?: string | (() => void);
@@ -30,6 +32,6 @@ export interface ProcaptchaRenderOptions {
 	"error-callback"?: string | (() => void);
 	"failed-callback"?: string | (() => void);
 	"reset-callback"?: string | (() => void);
-	language?: typeof LanguageSchema;
+	language?: typeof Languages;
 	size?: "invisible";
 }

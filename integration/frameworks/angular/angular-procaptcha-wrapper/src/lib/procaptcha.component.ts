@@ -14,8 +14,8 @@
 
 import { Component, ElementRef, Input, inject } from "@angular/core";
 import {
-	type ProcaptchaOptions,
-	procaptchaWrapper,
+	type ProcaptchaRenderOptions,
+	renderProcaptcha,
 } from "@prosopo/procaptcha-wrapper";
 
 @Component({
@@ -28,7 +28,7 @@ export class ProcaptchaComponent {
 	elementRef = inject(ElementRef);
 
 	@Input({ required: true })
-	settings!: ProcaptchaOptions;
+	settings!: ProcaptchaRenderOptions;
 	@Input()
 	htmlAttributes: { [key: string]: string } = {};
 
@@ -48,9 +48,6 @@ export class ProcaptchaComponent {
 			);
 		}
 
-		procaptchaWrapper.renderProcaptcha(
-			this.elementRef.nativeElement,
-			this.settings,
-		);
+		renderProcaptcha(this.elementRef.nativeElement, this.settings);
 	}
 }

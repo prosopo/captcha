@@ -16,12 +16,14 @@ import {
 	type RenderProcaptchaFunction,
 	loadRenderProcaptchaScript,
 } from "./renderProcaptcha.js";
+import type { ProcaptchaRenderOptions, CaptchaType } from "@prosopo/types";
+import type { Languages } from "@prosopo/locale";
 
 let renderFunction: RenderProcaptchaFunction;
 
 export const renderProcaptcha = async (
 	element: HTMLElement,
-	options: object,
+	options: ProcaptchaRenderOptions,
 ): Promise<void> => {
 	if (undefined === renderFunction) {
 		renderFunction = await loadRenderProcaptchaScript(
@@ -35,4 +37,10 @@ export const renderProcaptcha = async (
 	}
 
 	await renderFunction(element, options);
+};
+
+export type {
+	ProcaptchaRenderOptions,
+	CaptchaType as ProcaptchaType,
+	Languages as ProcaptchaLanguages,
 };

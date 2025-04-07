@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import {
-	type ProcaptchaOptions,
-	procaptchaWrapper,
+	type ProcaptchaRenderOptions,
+	renderProcaptcha,
 } from "@prosopo/procaptcha-wrapper";
 import React from "react";
 
-type ProcaptchaComponentProperties = ProcaptchaOptions & {
+type ProcaptchaComponentProperties = ProcaptchaRenderOptions & {
 	htmlAttributes: React.DetailedHTMLProps<
 		React.HTMLAttributes<HTMLDivElement>,
 		HTMLDivElement
@@ -50,10 +50,7 @@ class ProcaptchaComponent extends React.Component<ProcaptchaComponentProperties>
 
 	protected async renderProcaptcha(): Promise<void> {
 		if (this.elementRef.current instanceof HTMLElement) {
-			await procaptchaWrapper.renderProcaptcha(
-				this.elementRef.current,
-				this.props,
-			);
+			await renderProcaptcha(this.elementRef.current, this.props);
 		}
 	}
 }

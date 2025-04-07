@@ -1,6 +1,8 @@
+import type {ProcaptchaRenderOptions} from "@prosopo/types";
+
 export type RenderProcaptchaFunction = (
 	element: HTMLElement,
-	options: object,
+	options: ProcaptchaRenderOptions,
 ) => Promise<void>;
 
 export const loadRenderProcaptchaScript = async (
