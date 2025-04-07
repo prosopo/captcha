@@ -657,8 +657,12 @@ export type SliderCaptchaStored = {
 	id: string; // Unique ID for this slider challenge
 	dappAccount: string;
 	userAccount: string;
-	targetPosition: number;
-	imageUrl: string;
+	targetPosition: {
+		x: number;
+		y: number;
+	};
+	baseImageUrl: string;
+	puzzlePieceUrl: string;
 	requestedAtTimestamp: number;
 	lastUpdatedTimestamp?: number;
 	result: CaptchaResult;
@@ -669,7 +673,10 @@ export type SliderCaptchaStored = {
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	solveTime?: number;
-	position?: number;
+	position?: {
+		x: number;
+		y: number;
+	};
 	storedAtTimestamp?: Date;
 	frictionlessTokenId?: ObjectId;
 };
@@ -680,8 +687,9 @@ export const SliderCaptchaRecordSchema = new Schema<SliderCaptchaRecord>({
 	id: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
-	targetPosition: { type: Number, required: true },
-	imageUrl: { type: String, required: true },
+	targetPosition: { type: Object, required: true },
+	baseImageUrl: { type: String, required: true },
+	puzzlePieceUrl: { type: String, required: true },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
 	result: {
@@ -700,7 +708,7 @@ export const SliderCaptchaRecordSchema = new Schema<SliderCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	solveTime: { type: Number, required: false },
-	position: { type: Number, required: false },
+	position: { type: Object, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
