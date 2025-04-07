@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<< HEAD
-import { LogLevel, getLogger } from "@prosopo/common";
-=======
->>>>>>> 57eee5889a51e7a20c6f5f7220552796c1543cd0
 import getBotScoreFromPayload from "./decodePayload.js";
 
 export const getBotScore = async (
