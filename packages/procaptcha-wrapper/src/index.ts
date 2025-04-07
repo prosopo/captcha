@@ -36,7 +36,11 @@ export const renderProcaptcha = async (
 		);
 	}
 
-	await renderFunction(element, options);
+	// cloning gives us a writable and independent object, which the render function then may change.
+	// reason: some frameworks, like React, lock extending, and direct operations lead to https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cant_define_property_object_not_extensible
+	const renderOptions = Object.assign({}, options);
+
+	await renderFunction(element, renderOptions);
 };
 
 export type {

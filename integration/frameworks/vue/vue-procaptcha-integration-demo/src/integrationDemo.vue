@@ -1,5 +1,7 @@
 <template>
- <ProcaptchaComponent :siteKey="siteKey" :htmlAttributes="{class:'my-app__procaptcha'}"/>
+ <ProcaptchaComponent :siteKey="siteKey"
+                      captchaType="image"
+                      :htmlAttributes="{class:'my-app__procaptcha'}"/>
 </template>
 
 <script setup lang="ts">

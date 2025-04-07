@@ -19,15 +19,12 @@ class IntegrationDemo extends React.Component {
 	public override render(): React.ReactNode {
 		// @ts-expect-error Env variables will be read by Vite
 		const siteKey = import.meta.env.VITE_PROCAPTCHA_SITE_KEY || "";
-
 		return (
 			<ProcaptchaComponent
 				siteKey={siteKey}
-				captchaType={"image"}
-				callbacks={{
-					onVerified: (token: string): void => {
-						console.log("verified", token);
-					},
+				captchaType={"pow"}
+				callback={(token: string): void => {
+					console.log("verified", token);
 				}}
 				htmlAttributes={{
 					className: "my-app__procaptcha",
