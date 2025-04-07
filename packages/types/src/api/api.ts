@@ -26,6 +26,8 @@ import type {
 	ProviderRegistered,
 	RandomProvider,
 	UpdateProviderClientsResponse,
+	GetSliderCaptchaResponse,
+	SliderCaptchaSolutionResponse,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {
@@ -59,6 +61,30 @@ export interface ProviderApiInterface {
 		userTimestampSignature: string,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse>;
+	getSliderCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+	): Promise<GetSliderCaptchaResponse>;
+	submitSliderCaptchaSolution(
+		userAccount: string,
+		dappAccount: string,
+		position: number,
+		targetPosition: number,
+		mouseMovements: Array<{ x: number; y: number; time: number }>,
+		solveTime: number,
+		timestamp: string,
+		signature: {
+			user: {
+				timestamp: string;
+			};
+			provider: {
+				challenge: string;
+			};
+		},
+		fingerprint: string,
+		challengeId: string,
+	): Promise<SliderCaptchaSolutionResponse>;
 	submitUserEvents(
 		events: StoredEvents,
 		string: string,

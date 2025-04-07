@@ -38,6 +38,7 @@ import {
 	RegisterSitekeyBody,
 	type RegisterSitekeyBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
+	type SliderCaptchaSolutionResponse,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
@@ -307,5 +308,62 @@ export default class ProviderApi
 				},
 			},
 		);
+	}
+
+	public getSliderCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+	): Promise<GetSliderCaptchaResponse> {
+		const body = {
+			[ApiParams.user]: userAccount,
+			[ApiParams.dapp]: dappAccount,
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+		};
+		return this.post(ClientApiPaths.GetSliderCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	public submitSliderCaptchaSolution(
+		userAccount: string,
+		dappAccount: string,
+		position: number,
+		targetPosition: number,
+		mouseMovements: Array<{ x: number; y: number; time: number }>,
+		solveTime: number,
+		timestamp: string,
+		signature: {
+			user: {
+				timestamp: string;
+			};
+			provider: {
+				challenge: string;
+			};
+		},
+		fingerprint: string,
+		challengeId: string,
+	): Promise<SliderCaptchaSolutionResponse> {
+		const body = {
+			[ApiParams.user]: userAccount,
+			[ApiParams.dapp]: dappAccount,
+			position,
+			targetPosition,
+			mouseMovements,
+			solveTime,
+			timestamp,
+			signature,
+			fingerprint,
+			challengeId,
+		};
+		return this.post(ClientApiPaths.SubmitSliderCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
 	}
 }
