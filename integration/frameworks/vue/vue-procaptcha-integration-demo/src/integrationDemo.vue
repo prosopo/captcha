@@ -1,6 +1,10 @@
 <template>
  <ProcaptchaComponent :siteKey="siteKey"
-                      captchaType="image"
+                      captchaType="pow"
+                      language="en"
+                      :callback="(token: string): void => {
+                        console.log('verified', token)
+                        }"
                       :htmlAttributes="{class:'my-app__procaptcha'}"/>
 </template>
 

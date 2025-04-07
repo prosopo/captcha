@@ -24,14 +24,12 @@ import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
 
 ```typescript jsx
 import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
-
 <ProcaptchaComponent
-    siteKey={"my-site-key"}
-    captchaType={"image"}
-    callbacks={{
-        onVerified: (token: string): void => {
-            console.log("verified", token);
-        },
+    siteKey={siteKey}
+    captchaType={"pow"}
+    language={"en"}
+    callback={(token: string): void => {
+        console.log("verified", token);
     }}
     htmlAttributes={{
         className: "my-app__procaptcha",
@@ -39,9 +37,9 @@ import {ProcaptchaComponent} from "@prosopo/react-procaptcha-wrapper";
             maxWidth: "600px",
         },
     }}
-/>;
+/>
 ```
 
 ## 4. Configuration options
 
-Check the [Procaptcha Docs](https://docs.prosopo.io/en/basics/client-side-rendering/) or `@prosopo/procaptcha-wrapper` package's readme to see the full list of the available options.
+Check the [Procaptcha Docs](https://docs.prosopo.io/en/basics/client-side-rendering/) to see the full list of the available options.

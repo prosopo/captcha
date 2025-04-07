@@ -23,6 +23,7 @@ class IntegrationDemo extends React.Component {
 			<ProcaptchaComponent
 				siteKey={siteKey}
 				captchaType={"pow"}
+				language={"en"}
 				callback={(token: string): void => {
 					console.log("verified", token);
 				}}

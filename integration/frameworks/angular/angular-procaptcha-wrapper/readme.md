@@ -16,20 +16,55 @@ npm install @prosopo/angular-procaptcha-wrapper
 
 ```typescript
 import { Component } from "@angular/core";
-import { ProcaptchaComponent } from "@prosopo/angular-procaptcha-wrapper";
+import {
+    ProcaptchaComponent,
+    type ProcaptchaRenderOptions,
+} from "@prosopo/angular-procaptcha-wrapper";
 
 @Component({
     selector: "app-root",
     imports: [ProcaptchaComponent],
-    template: `<procaptcha-component [settings]="{siteKey:procaptchaSiteKey}"
-                        [htmlAttributes]="{class:'my-app__procaptcha'}"/>`,
+    template: `
+    <procaptcha-component [settings]="procaptchaSettings"
+                          [htmlAttributes]="{class:'my-app__procaptcha'}"/>`,
     styles: "",
 })
 export class AppComponent {
-    procaptchaSiteKey = "my-procaptcha-key";
+    procaptchaSettings: ProcaptchaRenderOptions = {
+        siteKey: "your-site-key",
+    };
+}
+```
+
+### 3.2) Advanced usage
+
+```typescript
+import { Component } from "@angular/core";
+import {
+    ProcaptchaComponent,
+    type ProcaptchaRenderOptions,
+} from "@prosopo/angular-procaptcha-wrapper";
+
+@Component({
+    selector: "app-root",
+    imports: [ProcaptchaComponent],
+    template: `
+    <procaptcha-component [settings]="procaptchaSettings"
+                          [htmlAttributes]="{class:'my-app__procaptcha'}"/>`,
+    styles: "",
+})
+export class AppComponent {
+    procaptchaSettings: ProcaptchaRenderOptions = {
+        siteKey: environment.PROCATCHA_SITE_KEY,
+        captchaType: "pow",
+        language: "en",
+        callback: (token: string) => {
+            console.log("verified", token);
+        },
+    };
 }
 ```
 
 ## 4. Configuration options
 
-Check the [Procaptcha Docs](https://docs.prosopo.io/en/basics/client-side-rendering/) or `@prosopo/procaptcha-wrapper` package's readme to see the full list of the available options.
+Check the [Procaptcha Docs](https://docs.prosopo.io/en/basics/client-side-rendering/) to see the full list of the available options.

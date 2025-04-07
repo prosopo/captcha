@@ -44,4 +44,4 @@ import {ProcaptchaComponent} from "@prosopo/vue-procaptcha-wrapper";
 
 ## 4. Configuration options
 
-Check the [Procaptcha Docs](https://docs.prosopo.io/en/basics/client-side-rendering/) or `@prosopo/procaptcha-wrapper` package's readme to see the full list of the available options.
+Check the [Procaptcha Docs](https://docs.prosopo.io/en/basics/client-side-rendering/) to see the full list of the available options.
