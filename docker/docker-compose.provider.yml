@@ -20,9 +20,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/status" ] # ping the status api
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
             interval: 30s
-            retries: 3
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
@@ -54,15 +54,23 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            database:
+                condition: service_healthy
+            caddy:
+                condition: service_healthy
+            vector:
+                condition: service_healthy
     provider2:
         container_name: provider2
         profiles:
@@ -73,7 +81,7 @@ services:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
-        pull_policy: build
+        pull_policy: always
         env_file:
             - ../.env.2.${NODE_ENV}
         ports:
@@ -88,15 +96,23 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/details" ]  # ping the details endpoint
-            interval: 5m
-            retries: 3
+            interval: 30s
+            retries: 5
+            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            database:
+                condition: service_healthy
+            caddy:
+                condition: service_healthy
+            vector:
+                condition: service_healthy
     database-dev:
         container_name: database
         profiles:
@@ -117,9 +133,9 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
-            interval: 5m
-            retries: 3
+            test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
@@ -136,6 +152,7 @@ services:
             - "vector.mongo=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         volumes:
             - /data/db:/data/db
         ports:
@@ -152,15 +169,19 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
-            interval: 5m
-            retries: 3
+            test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            vector:
+                condition: service_healthy
     caddy:
         container_name: caddy
         profiles:
@@ -173,6 +194,7 @@ services:
             - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         ports:
             - '80:80'
             - '443:443'
@@ -191,15 +213,19 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
-            interval: 5m
-            retries: 3
+            test: [ "CMD", "curl", "--fail", "localhost:2020/metrics" ] # ping the caddy admin api
+            interval: 30s
+            retries: 5
             start_period: 30s
             timeout: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 10s
+        depends_on:
+            vector:
+                condition: service_healthy
     vector:
         container_name: vector
         profiles:
@@ -211,6 +237,7 @@ services:
         labels:
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
         networks:
@@ -224,13 +251,14 @@ services:
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
             interval: 30s
+            retries: 5
+            start_period: 30s
             timeout: 10s
-            retries: 1
-            start_period: 10s
         dns:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        stop_grace_period: 0s # will discard some logs that haven't been pushed up, but will stop the container immediately
 networks:
     internal:
         name: internal

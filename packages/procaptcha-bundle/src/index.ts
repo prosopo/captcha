@@ -124,7 +124,11 @@ export default function ready(fn: () => void) {
 		fn();
 	} else {
 		console.log("DOMContentLoaded listener!");
-		document.addEventListener("DOMContentLoaded", fn);
+		document.addEventListener("DOMContentLoaded", () => {
+			console.log("DOMContentLoaded fired");
+			console.log(window);
+			fn();
+		});
 	}
 }
 
@@ -182,21 +186,6 @@ function findProcaptchaContainers(): Element[] {
 	return containers;
 }
 
-function getElementAttributes(element: Element): Record<string, string> {
-	const attributes: Record<string, string> = {};
-
-	if (element?.attributes) {
-		for (let i = 0; i < element.attributes.length; i++) {
-			const attr = element.attributes[i];
-			if (attr?.name && attr.value !== undefined) {
-				attributes[attr.name] = attr.value;
-			}
-		}
-	}
-
-	return attributes;
-}
-
 // extend the global Window interface to include the procaptcha object
 declare global {
 	interface Window {
@@ -213,22 +202,30 @@ const start = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
 	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAME);
+	let readyCalled = false;
 
 	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
 	if (renderExplicit !== "explicit") {
-		ready(implicitRender);
+		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+			ready(implicitRender);
+			readyCalled = true;
+		});
+		// or if the document has already loaded, call the implicit render function
+		if (document.readyState === "complete" && !readyCalled) {
+			ready(implicitRender);
+		}
 	}
 
 	if (onloadUrlCallback) {
-		const onloadCallback = getWindowCallback(onloadUrlCallback);
-		let readyCalled = false;
 		// Add event listener to the script tag to call the callback function when the script is loaded
 		getProcaptchaScript(BUNDLE_NAME)?.addEventListener("load", () => {
+			const onloadCallback = getWindowCallback(onloadUrlCallback);
 			ready(onloadCallback);
-			readyCalled = true;
 		});
+
 		// or if the document has already loaded, call the callback function
 		if (document.readyState === "complete" && !readyCalled) {
+			const onloadCallback = getWindowCallback(onloadUrlCallback);
 			ready(onloadCallback);
 		}
 	}

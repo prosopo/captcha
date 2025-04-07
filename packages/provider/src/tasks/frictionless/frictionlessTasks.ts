@@ -133,7 +133,14 @@ export class FrictionlessManager extends CaptchaManager {
 		const decryptKeys = [
 			process.env.BOT_DECRYPTION_KEY,
 			...(await this.getDetectorKeys()),
-		];
+		].filter((k) => k);
+		this.logger.debug({
+			action: "Decrypting score",
+			keysLength: decryptKeys.length,
+			keys: decryptKeys.map((k) =>
+				k ? `${k.slice(0, 5)}...${k.slice(-5)}` || "" : "",
+			),
+		});
 
 		// run through the keys and try to decrypt the score
 		// if we run out of keys and the score is still not decrypted, throw an error
@@ -142,6 +149,12 @@ export class FrictionlessManager extends CaptchaManager {
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				const { baseBotScore: s, timestamp: t } = await getBotScore(token, key);
+				this.logger.debug({
+					message: "Successfully decrypted score",
+					key: key ? `${key.slice(0, 5)}...${key.slice(-5)}` : "",
+					baseBotScore: s,
+					timestamp: t,
+				});
 				baseBotScore = s;
 				timestamp = t;
 				break;
@@ -162,7 +175,8 @@ export class FrictionlessManager extends CaptchaManager {
 				message:
 					"Error decrypting score: baseBotScore or timestamp is undefined",
 			});
-			throw new ProsopoApiError("CAPTCHA.DECRYPT_ERROR");
+			baseBotScore = 1;
+			timestamp = 0;
 		}
 
 		return { baseBotScore, timestamp };

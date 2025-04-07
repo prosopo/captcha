@@ -51,6 +51,7 @@ const CaptchaComponent = ({
 		() => (themeColor === "light" ? lightTheme : darkTheme),
 		[themeColor],
 	);
+	const doubleSpacing = `${theme.spacing.unit * 2}px`;
 	const fullSpacing = `${theme.spacing.unit}px`;
 	const halfSpacing = `${theme.spacing.half}px`;
 
@@ -61,7 +62,6 @@ const CaptchaComponent = ({
 					// introduce scroll bars when screen < minWidth of children
 					overflowX: "auto",
 					overflowY: "auto",
-					width: "100%",
 					maxWidth: "500px",
 					maxHeight: "100%",
 					display: "flex",
@@ -81,6 +81,9 @@ const CaptchaComponent = ({
 						display: "flex",
 						flexDirection: "column",
 						minWidth: "300px",
+						marginLeft: fullSpacing,
+						marginRight: fullSpacing,
+						justifyContent: "center",
 					}}
 				>
 					<div
@@ -95,14 +98,12 @@ const CaptchaComponent = ({
 								backgroundColor: theme.palette.primary.main,
 								width: "100%",
 								marginTop: fullSpacing,
-								marginLeft: fullSpacing,
-								marginRight: fullSpacing,
 							}}
 						>
 							<div
 								style={{
-									paddingLeft: `${theme.spacing.half}px`,
-									paddingRight: `${theme.spacing.half}px`,
+									padding: `${theme.spacing.half}px`,
+									fontFamily: theme.font.fontFamily,
 								}}
 							>
 								<p
@@ -115,7 +116,7 @@ const CaptchaComponent = ({
 									{t("WIDGET.SELECT_ALL")}
 									{":"}
 									&nbsp;
-									<span>{`${t(at(challenge.captchas, index).target)} `}</span>
+									<span>{`${at(challenge.captchas, index).target} `}</span>
 								</p>
 								<p
 									style={{
@@ -132,10 +133,7 @@ const CaptchaComponent = ({
 					</div>
 					<div
 						{...addDataAttr({ dev: { cy: `captcha-${index}` } })}
-						style={{
-							paddingRight: halfSpacing,
-							paddingLeft: halfSpacing,
-						}}
+						style={{ overflow: "hidden" }}
 					>
 						{captcha && (
 							<CaptchaWidget
@@ -146,36 +144,36 @@ const CaptchaComponent = ({
 							/>
 						)}
 					</div>
-					{/* <div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							width: "100%",
-							paddingTop: fullSpacing,
-						}}
-						{...addDataAttr({ dev: { cy: "dots-captcha" } })}
-					/> */}
 					<div
 						style={{
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "space-between",
 							lineHeight: 1.75,
-							padding: fullSpacing,
-							paddingBottom: halfSpacing,
-							paddingTop: halfSpacing,
+							padding: `${fullSpacing} 0 ${doubleSpacing} 0`,
 						}}
 					>
 						<div
 							style={{
-								display: "grid",
-								gridAutoFlow: "column",
-								gridTemplateColumns: "repeat(3, minmax(0, 1fr)",
+								// expand to full height / width of parent
 								width: "100%",
+								height: "100%",
+								// display children in flex, spreading them evenly and wrapping when row length exceeded
+								display: "flex",
+								flexDirection: "row",
+								flexWrap: "wrap",
+								justifyContent: "space-between",
+								gap: "10px",
 							}}
 						>
-							<div style={{ justifySelf: "left" }}>
+							<div
+								style={{
+									position: "relative",
+									flexGrow: 1,
+									// make the width of each item 1/3rd of the width overall, i.e. 3 columns
+									flexBasis: "calc(33.333% - 10px)",
+								}}
+							>
 								<Button
 									themeColor={themeColor}
 									buttonType="cancel"
@@ -184,10 +182,24 @@ const CaptchaComponent = ({
 									aria-label={t("WIDGET.CANCEL")}
 								/>
 							</div>
-							<div style={{ justifySelf: "center" }}>
+							<div
+								style={{
+									position: "relative",
+									flexGrow: 1,
+									// make the width of each item 1/3rd of the width overall, i.e. 3 columns
+									flexBasis: "calc(33.333% - 10px)",
+								}}
+							>
 								<ReloadButton themeColor={themeColor} onReload={onReload} />
 							</div>
-							<div style={{ justifySelf: "right" }}>
+							<div
+								style={{
+									position: "relative",
+									flexGrow: 1,
+									// make the width of each item 1/3rd of the width overall, i.e. 3 columns
+									flexBasis: "calc(33.333% - 10px)",
+								}}
+							>
 								<Button
 									themeColor={themeColor}
 									buttonType="next"

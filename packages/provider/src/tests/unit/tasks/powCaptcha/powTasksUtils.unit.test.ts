@@ -91,9 +91,10 @@ describe("Validation Functions", () => {
 			).toThrow(
 				new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
 					context: {
-						ERROR: "Provider signature is invalid for this message",
+						ERROR: "Signature is invalid for this message: undefined",
 						failedFuncName: "checkPowSignature",
 						signature,
+						signatureType: undefined,
 					},
 				}),
 			);

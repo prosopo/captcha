@@ -1518,16 +1518,8 @@ export class ProviderDatabase
 
 	/** @description Remove a detector key */
 	async removeDetectorKey(detectorKey: string): Promise<void> {
-		try {
-			await this.tables.detector.deleteOne({
-				detectorKey,
-			});
-		} catch (err) {
-			this.logger.error("DATABASE.DETECTOR_REMOVE_FAILED", { err });
-			throw new ProsopoDBError("DATABASE.DETECTOR_REMOVE_FAILED", {
-				context: { err },
-			});
-		}
+		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
+		await this.tables?.detector.deleteOne(filter);
 	}
 
 	/**
