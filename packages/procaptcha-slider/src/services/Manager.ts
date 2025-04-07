@@ -690,7 +690,7 @@ export const Manager = (
 					},
 				},
 				fingerprint,
-				state.challenge?.challengeId
+				state.challenge?.challengeId || ""
 			);
 
 			debug("Received slider solution verification", response);
