@@ -22,7 +22,7 @@ import {
 function createConfig(
 	siteKey?: string,
 	theme: "light" | "dark" = "light",
-	language?: typeof Languages,
+	language?: (typeof Languages)[number],
 	web2 = true,
 	invisible = false,
 ): ProcaptchaClientConfigOutput {
