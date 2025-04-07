@@ -35,7 +35,6 @@ const buttonStyleBase: CSSProperties = {
 	position: "relative",
 	boxSizing: "border-box",
 	outline: "0px",
-	border: "0px",
 	margin: "0px",
 	cursor: "pointer",
 	userSelect: "none",
@@ -52,10 +51,7 @@ const buttonStyleBase: CSSProperties = {
 	borderRadius: "4px",
 	transition:
 		"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-	color: "rgb(0, 0, 0)",
 	backgroundColor: "#ffffff",
-	boxShadow:
-		"rgba(0, 0, 0, 0.2) 0px 3px 1px -2px, rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px",
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -72,6 +68,10 @@ const Button: React.FC<ButtonProps> = ({
 	const buttonStyle = useMemo(() => {
 		const baseStyle = {
 			...buttonStyleBase,
+			border: `1px solid ${theme.palette.grey[500]}`,
+			boxShadow: `0px 1px 3px 0px ${theme.palette.grey[500]}`,
+			fontFamily: theme.font.fontFamily,
+			width: "100%",
 			color: hover
 				? theme.palette.primary.contrastText
 				: theme.palette.background.contrastText,

@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType } from "@prosopo/types";
-import React from "react";
-import App from "../App.js";
+// vite.config.js
+import { defineConfig } from "vite";
 
-export default function Root() {
-	return (
-		<React.Fragment>
-			<App captchaType={CaptchaType.frictionless} />
-		</React.Fragment>
-	);
-}
+export default defineConfig({
+	server: {
+		port: 9269,
+	},
+	// Change the default public directory if needed
+	publicDir: "dist/bundle", // assets in the "assets" folder at the project root will be served
+});

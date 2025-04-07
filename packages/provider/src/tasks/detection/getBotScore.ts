@@ -12,32 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD
 import { LogLevel, getLogger } from "@prosopo/common";
+=======
+>>>>>>> 57eee5889a51e7a20c6f5f7220552796c1543cd0
 import getBotScoreFromPayload from "./decodePayload.js";
 
 export const getBotScore = async (
 	payload: string,
 	privateKeyString?: string,
 ) => {
-	const logger = getLogger(LogLevel.enum.info, "provider.get_bot_score");
-	try {
-		const result = (await getBotScoreFromPayload(
-			payload,
-			privateKeyString,
-		)) as {
-			score: number;
-			timestamp: number;
-		};
-		const baseBotScore: number = result.score;
-		const timestamp: number = result.timestamp;
+	const result = (await getBotScoreFromPayload(payload, privateKeyString)) as {
+		score: number;
+		timestamp: number;
+	};
+	const baseBotScore: number = result.score;
+	const timestamp: number = result.timestamp;
 
-		if (baseBotScore === undefined) {
-			return { baseBotScore: 1, timestamp: 0 };
-		}
-
-		return { baseBotScore, timestamp };
-	} catch (error) {
-		logger.error(error);
+	if (baseBotScore === undefined) {
 		return { baseBotScore: 1, timestamp: 0 };
 	}
+
+	return { baseBotScore, timestamp };
 };
