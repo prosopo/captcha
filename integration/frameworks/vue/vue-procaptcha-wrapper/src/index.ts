@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import type {
+	ProcaptchaLanguages,
 	ProcaptchaRenderOptions,
 	ProcaptchaType,
-	ProcaptchaLanguages,
 } from "@prosopo/procaptcha-wrapper";
 import ProcaptchaComponent from "./procaptchaComponent.vue";
 

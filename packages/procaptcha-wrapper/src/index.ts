@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Languages } from "@prosopo/locale";
+import type { CaptchaType, ProcaptchaRenderOptions } from "@prosopo/types";
 import {
 	type RenderProcaptchaFunction,
 	loadRenderProcaptchaScript,
 } from "./renderProcaptcha.js";
-import type { ProcaptchaRenderOptions, CaptchaType } from "@prosopo/types";
-import type { Languages } from "@prosopo/locale";
 
 let renderFunction: RenderProcaptchaFunction;
 
