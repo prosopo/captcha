@@ -56,7 +56,7 @@ services:
         healthcheck:
             interval: 30s
             retries: 5
-            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
             start_period: 30s
             timeout: 10s
         dns:
