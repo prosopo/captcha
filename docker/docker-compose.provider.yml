@@ -21,9 +21,9 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
-            interval: 30s
-            retries: 5
-            start_period: 30s
+            interval: 10s
+            retries: 3
+            start_period: 10s
             timeout: 10s
         dns:
             - 8.8.8.8
@@ -54,10 +54,10 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            interval: 30s
-            retries: 5
             test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
-            start_period: 30s
+            interval: 10s
+            retries: 3
+            start_period: 10s
             timeout: 10s
         dns:
             - 8.8.8.8
@@ -96,10 +96,10 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            interval: 30s
-            retries: 5
             test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/public/details" ]
-            start_period: 30s
+            interval: 10s
+            retries: 3
+            start_period: 10s
             timeout: 10s
         dns:
             - 8.8.8.8
@@ -134,9 +134,9 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
-            interval: 30s
-            retries: 5
-            start_period: 30s
+            interval: 10s
+            retries: 3
+            start_period: 10s
             timeout: 10s
         dns:
             - 8.8.8.8
@@ -170,9 +170,9 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
-            interval: 30s
-            retries: 5
-            start_period: 30s
+            interval: 10s
+            retries: 3
+            start_period: 10s
             timeout: 10s
         dns:
             - 8.8.8.8
@@ -214,9 +214,9 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:2020/metrics" ] # ping the caddy admin api
-            interval: 30s
-            retries: 5
-            start_period: 30s
+            interval: 10s
+            retries: 3
+            start_period: 10s
             timeout: 10s
         dns:
             - 8.8.8.8
@@ -250,9 +250,9 @@ services:
                 max-file: '1'
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
-            interval: 30s
-            retries: 5
-            start_period: 30s
+            interval: 10s
+            retries: 3
+            start_period: 10s
             timeout: 10s
         dns:
             - 8.8.8.8
