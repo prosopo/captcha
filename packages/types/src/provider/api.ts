@@ -413,8 +413,12 @@ export const DappDomainRequestBody = object({
 });
 
 export interface GetSliderCaptchaResponse extends ApiResponse {
-	imageUrl: string;
-	targetPosition: number;
+	baseImageUrl: string;
+	puzzlePieceUrl: string;
+	targetPosition: {
+		x: number;
+		y: number;
+	};
 	timestamp: string;
 	challengeId: string;
 	signature: {
