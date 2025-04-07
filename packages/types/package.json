@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types",
-	"version": "2.5.4",
+	"version": "2.5.5",
 	"description": "Types for prosopo TypeScript packages",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -33,15 +33,15 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/extension-inject": "0.46.9",
-		"@prosopo/common": "2.5.4",
-		"@prosopo/locale": "2.5.4",
+		"@prosopo/common": "2.5.5",
+		"@prosopo/locale": "2.5.5",
 		"express": "4.21.2",
 		"ip-address": "10.0.1",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.5.4",
+		"@prosopo/config": "2.5.5",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
