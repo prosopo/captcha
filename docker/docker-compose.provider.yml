@@ -42,10 +42,9 @@ services:
         pull_policy: always
         env_file:
             - ../.env.1.${NODE_ENV}
-        ports:
-            - '9229:9229'
+        expose:
+            - '9229'
         networks:
-            external:
             internal:
                 ipv4_address: 172.18.0.3
         logging:
@@ -84,10 +83,9 @@ services:
         pull_policy: always
         env_file:
             - ../.env.2.${NODE_ENV}
-        ports:
-            - '9339:9339'
+        expose:
+            - '9339'
         networks:
-            external:
             internal:
                 ipv4_address: 172.18.0.7
         logging:
@@ -155,12 +153,11 @@ services:
         pull_policy: always
         volumes:
             - /data/db:/data/db
-        ports:
-            - '27017:27017'
+        expose:
+            - '27017'
         env_file:
             - ../.env.${NODE_ENV}
         networks:
-            external:
             internal:
                 ipv4_address: 172.18.0.5
         logging:
