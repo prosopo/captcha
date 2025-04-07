@@ -1,4 +1,4 @@
-import type { SliderCaptcha, SliderCaptchaWithoutId } from "@prosopo/types";
+import type { SliderCaptcha, SliderCaptchaWithoutId, SliderCaptchaItem } from "@prosopo/types";
 
 export interface SliderDataset {
     datasetId: string;
@@ -22,4 +22,12 @@ export interface SliderDatasetGenerationOptions {
     };
     tolerance: number;
     timeLimitMs?: number;
+    /**
+     * Optional base URL to prepend to asset filenames.
+     * For local development, this can be:
+     * - An absolute file path: "file:///path/to/assets/"
+     * - A relative path: "./assets/"
+     * - A web URL: "https://example.com/assets/"
+     */
+    assetBaseUrl?: string;
 } 
