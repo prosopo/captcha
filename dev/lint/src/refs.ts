@@ -19,36 +19,43 @@ import { get } from "@prosopo/util";
 import fg from "fast-glob";
 import z from "zod";
 
+// covers both package.json and tsconfig.json fields
+const packageConfigSchema = z.object({
+	name: z.string().optional(),
+	version: z.string().optional(),
+	dependencies: z.record(z.string()).optional(),
+	devDependencies: z.record(z.string()).optional(),
+	workspaces: z.array(z.string()).optional(),
+	references: z.array(z.record(z.string())).optional(),
+});
+
+type PackageConfig = z.infer<typeof packageConfigSchema>;
+
 // file consists of a path to the file or the content of the file if already read
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-type File = { path: string; content: any };
+type File = { path: string; content: PackageConfig };
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-const parseJsonFile = (filePath: string): any => {
-	return JSON.parse(fs.readFileSync(filePath, "utf8"));
-};
+const parsePackageConfig = (filePath: string): PackageConfig =>
+	packageConfigSchema.parse(JSON.parse(fs.readFileSync(filePath, "utf8")));
 
-const loadFileWithContent = (filePath: string): File => {
-	return {
-		path: filePath,
-		content: parseJsonFile(filePath),
-	};
-};
+const loadPackageConfig = (filePath: string): File => ({
+	path: filePath,
+	content: parsePackageConfig(filePath),
+});
 
-const loadFileWithErrorContext = (
+const loadPackageConfigWithErrorContext = (
 	filePath: string,
 	errorContext: string,
 ): File => {
 	try {
-		return loadFileWithContent(filePath);
+		return loadPackageConfig(filePath);
 	} catch (err) {
 		throw new Error(`Failed to read file ${filePath}: ${errorContext}`);
 	}
 };
 
-const findWorkspacePackageJsons = (workspacePackageJson: File) => {
+const findWorkspacePackageJsons = (workspacePackageJson: File) =>
 	// get the workspace globs
-	const packagePatterns = z
+	z
 		.string()
 		.array()
 		.catch([])
@@ -56,14 +63,12 @@ const findWorkspacePackageJsons = (workspacePackageJson: File) => {
 		.map(
 			(pattern) =>
 				`${path.dirname(workspacePackageJson.path)}/${pattern}/package.json`,
-		);
-	// glob the workspace paths
-	// add package.json to the dirs and filter out any that don't exist (e.g. packages/* may match packages/some-dir but if some-dir doesn't have a package.json we don't want it)
-	const packageJsonPaths = packagePatterns
+		)
+		// glob the workspace paths
+		// add package.json to the dirs and filter out any that don't exist (e.g. packages/* may match packages/some-dir but if some-dir doesn't have a package.json we don't want it)
+
 		.map((pattern) => fg.globSync(pattern))
 		.reduce((acc, val) => acc.concat(val), []);
-	return packageJsonPaths;
-};
 
 const getAllDependencies = (packageJson: File) => {
 	const regularDependencies = Object.keys(
@@ -75,32 +80,26 @@ const getAllDependencies = (packageJson: File) => {
 	return [...new Set([...regularDependencies, ...developmentDependencies])];
 };
 
-const getWorkspacePackageNames = (workspacePackagePaths: string[]) => {
-	const packageNames = workspacePackagePaths.map((packagePath) =>
-		z.string().parse(loadFileWithContent(packagePath).content.name),
+const getWorkspacePackageNames = (workspacePackagePaths: string[]) =>
+	workspacePackagePaths.map((packagePath) =>
+		z.string().parse(loadPackageConfig(packagePath).content.name),
 	);
-	return packageNames;
-};
 
-const getTsConfigReferences = (tsConfigJson: File) => {
-	const references = z
+const getTsConfigReferences = (tsConfigJson: File) =>
+	z
 		.array(z.record(z.string()))
 		.catch([])
-		.parse(tsConfigJson.content.references);
-	return references
+		.parse(tsConfigJson.content.references)
 		.map((reference) => get(reference, "path"))
-		.map((referencePath) => {
+		.map((referencePath) =>
 			// ref paths can point at a tsconfig OR a dir containing a tsconfig. If it's a dir, add /tsconfig.json
-			if (referencePath.endsWith(".json")) {
-				return referencePath;
-			}
-			return `${referencePath}/tsconfig.json`;
-		});
-};
+			referencePath.endsWith(".json")
+				? referencePath
+				: `${referencePath}/tsconfig.json`,
+		);
 
-const getPackageName = (packageJson: File) => {
-	return z.string().parse(packageJson.content.name);
-};
+const getPackageName = (packageJson: File) =>
+	z.string().parse(packageJson.content.name);
 
 interface InvalidPackage {
 	packageJsonPath: string;
@@ -111,7 +110,7 @@ const validateWorkspace = async (args: {
 	packageJsonPath: string;
 }) => {
 	const workspacePackagePath = args.packageJsonPath;
-	const workspacePackage = loadFileWithContent(workspacePackagePath);
+	const workspacePackage = loadPackageConfig(workspacePackagePath);
 
 	// check the package json is a workspace
 	if (workspacePackage.content.workspaces === undefined) {
@@ -141,7 +140,7 @@ const validateWorkspace = async (args: {
 
 	for (const packagePath of packagePaths) {
 		const invalidTsConfigs = await validateDependencies({
-			packageJson: loadFileWithContent(packagePath),
+			packageJson: loadPackageConfig(packagePath),
 			workspacePackageNames,
 		});
 
@@ -186,36 +185,30 @@ const validateDependencies = async (args: {
 
 	// get the dependencies for this package that are in the workspace
 	const workspaceDependencies = getAllDependencies(packageJson)
-		.filter((dependency) => {
-			return workspacePackageNames.includes(dependency);
-		})
-		.filter((dependency) => {
-			// ignore @prosopo/config package because of circular dependency
-			return dependency !== "@prosopo/config";
-		});
+		.filter((dependency) => workspacePackageNames.includes(dependency))
+		// ignore @prosopo/config package because of circular dependency
+		.filter((dependency) => dependency !== "@prosopo/config");
 
 	const wrongTsConfigs: InvalidTsConfig[] = [];
 
 	// find all tsconfig files in the same directory as the package.json
 	const tsConfigPaths = fg.globSync(`${packageDirectory}/tsconfig{,.cjs}.json`);
 	for (const tsConfigPath of tsConfigPaths) {
-		const tsConfigJson = loadFileWithContent(tsConfigPath);
+		const tsConfigJson = loadPackageConfig(tsConfigPath);
 		const tsConfigReferences = getTsConfigReferences(tsConfigJson);
 
 		// convert references to package names, e.g. ../common => @prosopo/common
 		const referencedPackageNames = tsConfigReferences
 			.map((referencePath) => {
 				const referenceDirectory = path.dirname(referencePath);
-				const referencedPackage = loadFileWithErrorContext(
+				const referencedPackage = loadPackageConfigWithErrorContext(
 					`${packageDirectory}/${referenceDirectory}/package.json`,
 					`specified in ${tsConfigPath}`,
 				);
 				return getPackageName(referencedPackage);
 			})
-			.filter((packageName) => {
-				// ignore @prosopo/config package because of circular dependency
-				return packageName !== "@prosopo/config";
-			});
+			// ignore @prosopo/config package because of circular dependency
+			.filter((packageName) => packageName !== "@prosopo/config");
 
 		// validate references against dependencies
 		const unnecessaryReferences: string[] = referencedPackageNames.filter(
