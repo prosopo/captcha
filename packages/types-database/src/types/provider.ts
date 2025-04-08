@@ -650,6 +650,8 @@ export interface IProviderDatabase extends IDatabase {
 	markSliderCaptchaChecked(id: string): Promise<void>;
 	
 	getSessionRecordBySessionId(sessionId: string): Promise<SessionRecord | null>;
+
+	getDatasetByType(datasetType: string): Promise<DatasetBase[] | undefined>;
 }
 
 // Define Slider Captcha stored type and record type

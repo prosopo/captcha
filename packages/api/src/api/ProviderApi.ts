@@ -48,6 +48,7 @@ import {
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import HttpClientBase from "./HttpClientBase.js";
+import { LogLevel } from "@prosopo/common";
 
 export default class ProviderApi
 	extends HttpClientBase
@@ -328,16 +329,20 @@ export default class ProviderApi
 		});
 	}
 
-	public submitSliderCaptchaSolution(
+	/**
+	 * Submit a solution to a slider captcha challenge
+	 */
+	public async submitSliderCaptchaSolution(
+		userAccount: string,
+		dappAccount: string,
 		position: number,
 		targetPosition: number,
 		mouseMovements: Array<{ x: number; y: number; time: number }>,
 		solveTime: number,
-		userAccount: string,
-		dappAccount: string,
-		challengeId: string,
-		userTimestampSignature?: string,
-		fingerprint?: string,
+		timestamp: string,
+		signature: { user: { timestamp: string }; provider: { challenge: string } },
+		fingerprint: string,
+		challengeId: string
 	): Promise<SliderCaptchaSolutionResponse> {
 		const body = {
 			[ApiParams.user]: userAccount,
@@ -347,13 +352,11 @@ export default class ProviderApi
 			mouseMovements,
 			solveTime,
 			challengeId,
-			signature: {
-				user: {
-					...(userTimestampSignature && { timestamp: userTimestampSignature }),
-				},
-			},
-			...(fingerprint && { fingerprint }),
+			timestamp,
+			signature,
+			fingerprint,
 		};
+		
 		return this.post(ClientApiPaths.SubmitSliderCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
