@@ -1,0 +1,27 @@
+{
+  "datasetId": "21512284a9ffd903827f79205ac177564a5efe521ab694703b529589ecfe3763",
+  "datasetType": "slider",
+  "captchas": [
+    {
+      "salt": "706bd663f30f96c800a929832c98febcd4bfd97b76e309be38eba8bef04dc4da",
+      "baseImage": {
+        "hash": "54f56ed372a1410ad22aa3560c3486a7444099f02471081f236582ab42abb42e",
+        "data": "base_1744041570864_96c9839e.png",
+        "type": "sliderBase"
+      },
+      "puzzlePiece": {
+        "hash": "8db1d4482e5a26e2b3992f8c916745209b08edf8ab9289b94a8d2961c1915a0a",
+        "data": "piece_1744041570864_96c9839e.png",
+        "type": "sliderPiece",
+        "position": {
+          "x": 367,
+          "y": 314
+        },
+        "shape": "key"
+      },
+      "solved": false,
+      "timeLimitMs": 30000
+    }
+  ],
+  "format": "slider"
+}

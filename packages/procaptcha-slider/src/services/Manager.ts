@@ -567,8 +567,19 @@ export const Manager = (
 							requestHash: sliderCaptchaResponse.signature.provider.challenge,
 						},
 					},
+					// Handle different targetPosition formats
+					targetPosition: typeof sliderCaptchaResponse.targetPosition === 'object' 
+						? (sliderCaptchaResponse.targetPosition as {x: number, y: number}).x 
+						: sliderCaptchaResponse.targetPosition as number,
+					// Include new properties for shaped slider captchas
+					baseImageUrl: sliderCaptchaResponse.baseImageUrl,
+					puzzlePieceUrl: sliderCaptchaResponse.puzzlePieceUrl,
+					shape: sliderCaptchaResponse.shape,
+					// Store the original target position as 2D if available
+					targetPosition2D: typeof sliderCaptchaResponse.targetPosition === 'object' 
+						? sliderCaptchaResponse.targetPosition as {x: number, y: number}
+						: undefined,
 					imageUrl: sliderCaptchaResponse.imageUrl,
-					targetPosition: sliderCaptchaResponse.targetPosition,
 					challengeId: sliderCaptchaResponse.challengeId,
 				};
 

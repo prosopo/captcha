@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { CaptchaResult } from "@prosopo/types";
+import type { DatasetBase, Dataset, DatasetWithIds } from "@prosopo/types";
+import type { Hash } from "@prosopo/types";
 import type { IDatabase } from "./mongo.js";
 import type {
 	ClientRecord,
@@ -24,9 +26,17 @@ import type {
 	SessionRecord,
 	SliderCaptchaRecord,
 	SliderCaptchaStored,
+	SolutionRecord,
 } from "./provider.js";
 
 export interface IProviderDatabase extends IDatabase {
+	// Dataset methods
+	storeDataset(dataset: Dataset): Promise<void>;
+	getSolutions(datasetId: string): Promise<SolutionRecord[]>;
+	getDataset(datasetId: string): Promise<DatasetWithIds>;
+	getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>;
+	getDatasetByType(datasetType: string): Promise<DatasetBase[] | undefined>;
+	
 	// Slider Captcha methods
 	storeSliderCaptchaRecord(sliderCaptcha: SliderCaptchaStored): Promise<void>;
 	getSliderCaptchaRecordById(id: string): Promise<SliderCaptchaRecord | null>;

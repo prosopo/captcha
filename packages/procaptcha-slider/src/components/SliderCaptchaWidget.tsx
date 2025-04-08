@@ -647,10 +647,36 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 				return;
 			}
 
-			// After getting challenge, generate puzzle with target position
-			const puzzleDestination = challenge.targetPosition || getRandomInt(20, 300);
+			// Get target position using all possible formats
+			let puzzleDestination: number;
+			
+			// Check for all possible target position formats
+			if (typeof challenge.targetPosition === 'number') {
+				// Simple number format
+				puzzleDestination = challenge.targetPosition;
+			} else if (challenge.targetPosition2D && typeof challenge.targetPosition2D.x === 'number') {
+				// Object format with x/y coordinates
+				puzzleDestination = challenge.targetPosition2D.x;
+			} else if (challenge.targetPosition && typeof challenge.targetPosition === 'object' && 'x' in challenge.targetPosition) {
+				// GetSliderCaptchaResponse format
+				puzzleDestination = (challenge.targetPosition as {x: number, y: number}).x;
+			} else {
+				// Fallback to random position
+				puzzleDestination = getRandomInt(20, 300);
+			}
 
-			// If we have a server-provided image URL, use it
+			// Check for shaped slider captcha (has baseImageUrl AND puzzlePieceUrl)
+			if (challenge.baseImageUrl && challenge.puzzlePieceUrl) {
+				console.log("[SliderCaptcha] Using shaped slider captcha");
+				renderShapedSliderCaptcha(
+					challenge.baseImageUrl,
+					challenge.puzzlePieceUrl,
+					puzzleDestination
+				);
+				return;
+			}
+			
+			// If we have a server-provided image URL (legacy format), use it
 			if (challenge.imageUrl) {
 				const img = new Image();
 				img.crossOrigin = "anonymous";
@@ -1145,6 +1171,149 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		});
 	}, [updateBaseState]);
 
+	// Modify the puzzle piece rendering to support shaped pieces
+	const handleChallengeUpdate = useCallback(() => {
+		// Reset any verification state
+		setIsVerified(false);
+		setIsSuccess(false);
+		setIsFailed(false);
+		setShowSuccessIcon(false);
+		
+		setImageLoading(true);
+
+		// Check if we have a server-provided challenge
+		if (state.challenge) {
+			// Check if this is a shaped slider captcha with pre-generated images
+			if (state.challenge.baseImageUrl && state.challenge.puzzlePieceUrl) {
+				console.log('[SliderCaptcha] Rendering shaped slider captcha');
+				
+				// We have pre-rendered base and puzzle piece images
+				renderShapedSliderCaptcha(
+					state.challenge.baseImageUrl,
+					state.challenge.puzzlePieceUrl,
+					state.challenge.targetPosition2D?.x || 
+					state.challenge.targetPosition || 
+					Math.floor(Math.random() * 280) + 20
+				);
+			} else if (state.challenge.imageUrl) {
+				console.log('[SliderCaptcha] Rendering simple slider captcha');
+				
+				// Load the server-provided image
+				const img = new Image();
+				img.crossOrigin = "anonymous";
+				img.onload = () => {
+					// We have the challenge image, now draw the puzzle at the target position
+					drawPuzzleFromImage(
+						img, 
+						state.challenge?.targetPosition || 
+						Math.floor(Math.random() * 280) + 20
+					);
+					setImageLoading(false);
+				};
+				img.onerror = () => {
+					console.error('[SliderCaptcha] Error loading challenge image');
+					const puzzleDestination = getRandomInt(20, 300);
+					generateRandomImage(puzzleDestination);
+				};
+				img.src = state.challenge.imageUrl;
+			} else {
+				console.log('[SliderCaptcha] No image provided in challenge, generating random one');
+				// No image provided in the challenge, generate a random one
+				const puzzleDestination = getRandomInt(20, 300);
+				generateRandomImage(puzzleDestination);
+			}
+		} else {
+			console.log('[SliderCaptcha] No challenge provided, generating random one');
+			// No challenge provided, generate a random puzzle
+			const puzzleDestination = getRandomInt(20, 300);
+			generateRandomImage(puzzleDestination);
+		}
+	}, [canvasRef, blockRef, state.challenge]);
+
+	// Add a function to render a pre-generated shaped slider captcha
+	const renderShapedSliderCaptcha = (
+		baseImageUrl: string,
+		puzzlePieceUrl: string,
+		targetPosition: number
+	) => {
+		if (!canvasRef.current || !blockRef.current) {
+			console.error('[SliderCaptcha] Canvas or block not available');
+			return;
+		}
+
+		// Load the base image
+		const baseImage = new Image();
+		baseImage.crossOrigin = "anonymous";
+		
+		// Load the puzzle piece image
+		const puzzlePieceImage = new Image();
+		puzzlePieceImage.crossOrigin = "anonymous";
+		
+		// Counter to track loaded images
+		let imagesLoaded = 0;
+		
+		const checkAllImagesLoaded = () => {
+			imagesLoaded++;
+			if (imagesLoaded === 2) {
+				completeRendering();
+			}
+		};
+		
+		const completeRendering = () => {
+			const canvas = canvasRef.current;
+			const block = blockRef.current;
+			
+			if (!canvas || !block) return;
+			
+			const ctx = canvas.getContext('2d');
+			const blockCtx = block.getContext('2d');
+			
+			if (!ctx || !blockCtx) return;
+			
+			// Draw the base image on the canvas
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+			
+			// Store the target position
+			setDestX(targetPosition);
+			xRef.current = targetPosition;
+			
+			// Size the puzzle piece canvas appropriately
+			block.width = puzzlePieceImage.width;
+			block.height = puzzlePieceImage.height;
+			
+			// Draw the puzzle piece
+			blockCtx.clearRect(0, 0, block.width, block.height);
+			blockCtx.drawImage(puzzlePieceImage, 0, 0);
+			
+			// Reset slider position
+			setSliderLeft(0);
+			if (blockRef.current) {
+				blockRef.current.style.left = '0px';
+			}
+			
+			// Hide loading state
+			setImageLoading(false);
+		};
+		
+		// Set up image loading handlers
+		baseImage.onload = checkAllImagesLoaded;
+		baseImage.onerror = () => {
+			console.error('[SliderCaptcha] Failed to load base image, falling back to random image');
+			generateRandomImage(targetPosition);
+		};
+		
+		puzzlePieceImage.onload = checkAllImagesLoaded;
+		puzzlePieceImage.onerror = () => {
+			console.error('[SliderCaptcha] Failed to load puzzle piece image, falling back to random image');
+			generateRandomImage(targetPosition);
+		};
+		
+		// Start loading the images
+		baseImage.src = baseImageUrl;
+		puzzlePieceImage.src = puzzlePieceUrl;
+	}
+
 	if (config.mode === "invisible") {
 		return (
 			<Modal show={state.showModal}>
@@ -1186,7 +1355,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 							)}
 							<div
 								css={styles.refreshIcon}
-								onClick={resetPuzzle}
+								onClick={handleChallengeUpdate}
 								aria-label="Refresh puzzle"
 							>
 								↻
@@ -1222,13 +1391,29 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 					<button 
 						css={styles.tempSubmitButton}
 						onClick={() => {
-							const targetPosition = state?.challenge?.targetPosition || destX;
-							const challengeId = state?.challenge?.challengeId;
+							const challenge = state?.challenge as SliderCaptchaResponseBody;
+							const challengeId = challenge?.challengeId;
 
 							if (!challengeId) {
 								console.error("[SliderCaptcha] No challenge ID found in state");
 								handleVerificationFailure();
 								return;
+							}
+
+							// Get the target position depending on format
+							let targetPosition: number;
+							if (typeof challenge.targetPosition === 'number') {
+								// Simple number format
+								targetPosition = challenge.targetPosition;
+							} else if (challenge.targetPosition2D && typeof challenge.targetPosition2D.x === 'number') {
+								// Object format with x/y coordinates
+								targetPosition = challenge.targetPosition2D.x;
+							} else if (challenge.targetPosition && typeof challenge.targetPosition === 'object' && 'x' in challenge.targetPosition) {
+								// GetSliderCaptchaResponse format
+								targetPosition = (challenge.targetPosition as {x: number, y: number}).x;
+							} else {
+								// Fallback to the stored destX from rendered captcha
+								targetPosition = destX;
 							}
 
 							// Check if puzzle piece is in correct position (within 50px tolerance)
@@ -1309,7 +1494,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 							)}
 							<div
 								css={styles.refreshIcon}
-								onClick={resetPuzzle}
+								onClick={handleChallengeUpdate}
 								aria-label="Refresh puzzle"
 							>
 								↻
@@ -1345,13 +1530,29 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 					<button 
 						css={styles.tempSubmitButton}
 						onClick={() => {
-							const targetPosition = state?.challenge?.targetPosition || destX;
-							const challengeId = state?.challenge?.challengeId;
+							const challenge = state?.challenge as SliderCaptchaResponseBody;
+							const challengeId = challenge?.challengeId;
 
 							if (!challengeId) {
 								console.error("[SliderCaptcha] No challenge ID found in state");
 								handleVerificationFailure();
 								return;
+							}
+
+							// Get the target position depending on format
+							let targetPosition: number;
+							if (typeof challenge.targetPosition === 'number') {
+								// Simple number format
+								targetPosition = challenge.targetPosition;
+							} else if (challenge.targetPosition2D && typeof challenge.targetPosition2D.x === 'number') {
+								// Object format with x/y coordinates
+								targetPosition = challenge.targetPosition2D.x;
+							} else if (challenge.targetPosition && typeof challenge.targetPosition === 'object' && 'x' in challenge.targetPosition) {
+								// GetSliderCaptchaResponse format
+								targetPosition = (challenge.targetPosition as {x: number, y: number}).x;
+							} else {
+								// Fallback to the stored destX from rendered captcha
+								targetPosition = destX;
 							}
 
 							// Check if puzzle piece is in correct position (within 50px tolerance)
