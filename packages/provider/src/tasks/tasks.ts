@@ -25,6 +25,8 @@ import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
 import { SliderCaptchaManager } from "./sliderCaptcha/sliderTasks.js";
+import { join } from "path";
+import { existsSync } from "fs";
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -55,14 +57,7 @@ export class Tasks {
 		}
 		this.pair = env.pair;
 
-		// Create managers that don't depend on other managers first
-		this.datasetManager = new DatasetManager(
-			this.config,
-			this.logger,
-			this.captchaConfig,
-			this.db,
-		);
-
+		// Create basic managers first
 		this.frictionlessManager = new FrictionlessManager(
 			this.db,
 			this.pair,
@@ -85,7 +80,7 @@ export class Tasks {
 		// ClientManager is an alias of ClientTaskManager
 		this.clientManager = this.clientTaskManager;
 
-		// Create managers that depend on other managers
+		// Create captcha-related managers
 		this.imgCaptchaManager = new ImgCaptchaManager(
 			this.db,
 			this.pair,
@@ -93,10 +88,35 @@ export class Tasks {
 			this.logger,
 		);
 
+		// Define paths for the slider captcha datasets
+		const sliderDatasetPath = join(process.cwd(), 'assets/slider-datasets');
+		const sliderAssetPath = '/assets/slider-datasets';
+		
+		this.logger.info("Initializing SliderCaptchaManager", {
+			sliderDatasetPath,
+			sliderAssetPath
+		});
+
+		// Initialize SliderCaptchaManager without requiring config flag
+		// It will automatically detect available datasets in both database and filesystem
 		this.sliderCaptchaManager = new SliderCaptchaManager(
 			this.db,
 			this.pair,
 			this.logger,
+			{
+				datasetPath: sliderDatasetPath,
+				assetPath: sliderAssetPath
+			}
+		);
+		
+		// Initialize the DatasetManager with the SliderCaptchaManager instance
+		// This allows the DatasetManager to handle slider captcha datasets
+		this.datasetManager = new DatasetManager(
+			this.config,
+			this.logger,
+			this.captchaConfig,
+			this.db,
+			this.sliderCaptchaManager
 		);
 	}
 }

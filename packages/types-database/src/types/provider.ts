@@ -657,12 +657,13 @@ export type SliderCaptchaStored = {
 	id: string; // Unique ID for this slider challenge
 	dappAccount: string;
 	userAccount: string;
-	targetPosition: {
-		x: number;
-		y: number;
-	};
-	baseImageUrl: string;
-	puzzlePieceUrl: string;
+	targetPosition: number | { x: number; y: number; }; // Support both simple number and position object
+	imageUrl?: string; // Original implementation used random image URLs
+	// Add shape-based captcha support
+	baseImageUrl?: string; // URL to the base image with cutout
+	puzzlePieceUrl?: string; // URL to the puzzle piece image
+	shape?: string; // The shape name used for the puzzle piece
+	datasetId?: string; // Optional reference to a dataset ID if using pre-generated captchas
 	requestedAtTimestamp: number;
 	lastUpdatedTimestamp?: number;
 	result: CaptchaResult;
@@ -673,10 +674,7 @@ export type SliderCaptchaStored = {
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	solveTime?: number;
-	position?: {
-		x: number;
-		y: number;
-	};
+	position?: number | { x: number; y: number; }; // User's submitted position
 	storedAtTimestamp?: Date;
 	frictionlessTokenId?: ObjectId;
 };
@@ -687,9 +685,12 @@ export const SliderCaptchaRecordSchema = new Schema<SliderCaptchaRecord>({
 	id: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
-	targetPosition: { type: Object, required: true },
-	baseImageUrl: { type: String, required: true },
-	puzzlePieceUrl: { type: String, required: true },
+	targetPosition: { type: mongoose.Schema.Types.Mixed, required: true }, // Can be number or object
+	imageUrl: { type: String, required: false },
+	baseImageUrl: { type: String, required: false },
+	puzzlePieceUrl: { type: String, required: false },
+	shape: { type: String, required: false },
+	datasetId: { type: String, required: false },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
 	result: {
@@ -708,7 +709,7 @@ export const SliderCaptchaRecordSchema = new Schema<SliderCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	solveTime: { type: Number, required: false },
-	position: { type: Object, required: false },
+	position: { type: mongoose.Schema.Types.Mixed, required: false }, // Can be number or object
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,

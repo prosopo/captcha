@@ -30,4 +30,10 @@ export interface SliderDatasetGenerationOptions {
      * - A web URL: "https://example.com/assets/"
      */
     assetBaseUrl?: string;
+    /**
+     * Optional shape name to use for all puzzle pieces.
+     * If not provided, shapes will be randomly selected.
+     * See the PUZZLE_SHAPES array for available shape names.
+     */
+    selectedShapeName?: string;
 } 

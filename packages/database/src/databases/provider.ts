@@ -1668,4 +1668,19 @@ export class ProviderDatabase
 			});
 		}
 	}
+
+	/**
+	 * @description Get datasets by type
+	 * @param {string} datasetType - The type of dataset to get (e.g., 'slider')
+	 */
+	async getDatasetByType(datasetType: string): Promise<DatasetBase[] | undefined> {
+		const filter = { datasetType };
+		const docs = await this.tables?.dataset.find(filter).lean<DatasetBase[]>();
+		
+		if (docs && docs.length > 0) {
+			return docs;
+		}
+		
+		return undefined;
+	}
 }

@@ -32,7 +32,7 @@ export default (
 
 	return {
 		command: "provider_set_data_set",
-		describe: "Add a dataset as a Provider",
+		describe: "Add a dataset as a Provider (supports both image and slider captchas)",
 		builder: (yargs: Argv) =>
 			yargs.option("file", {
 				type: "string" as const,
@@ -47,9 +47,11 @@ export default (
 				const file = z.string().parse(argv.file);
 				const jsonFile = loadJSONFile(file) as JSON;
 				logger.info(`Loaded JSON from ${file}`);
-				const result =
-					await tasks.datasetManager.providerSetDatasetFromFile(jsonFile);
-				logger.info(JSON.stringify(result, null, 2));
+				
+				// Pass the provider's pair to allow the DatasetManager to handle slider captcha datasets
+				const result = await tasks.datasetManager.providerSetDatasetFromFile(jsonFile, pair);
+				
+				logger.info(`Dataset successfully loaded`);
 			} catch (err) {
 				logger.error(err);
 			}
