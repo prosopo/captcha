@@ -62,6 +62,12 @@ interface ShapedSliderCaptchaWithoutId extends Omit<SliderCaptchaWithoutId, 'puz
     puzzlePiece: ShapedSliderCaptchaItem;
 }
 
+// Interface for slider dataset
+interface SliderDataset extends DatasetBase {
+    captchas: ShapedSliderCaptchaWithoutId[];
+    datasetId: string;
+}
+
 // Helper function to get random image URL
 const getRandomImageUrl = () => {
 	// Use a more reliable CORS-friendly image service
@@ -283,95 +289,98 @@ export class SliderCaptchaManager extends CaptchaManager {
 				try {
 					// Get a random dataset from the database
 					const datasets = await this.db.getDatasetByType('slider');
-					if (datasets && datasets.length > 0) {
-						const randomDatasetIndex = Math.floor(Math.random() * datasets.length);
-						const dataset = datasets[randomDatasetIndex];
-						
-						this.logger.info('Using shaped slider captcha from database', {
-							datasetId: dataset.datasetId,
-							captchaCount: dataset.captchas.length
-						});
-						
-						// Get a random captcha from the dataset
-						const captchaIndex = Math.floor(Math.random() * dataset.captchas.length);
-						const captcha = dataset.captchas[captchaIndex] as ShapedSliderCaptchaWithoutId;
-						
-						// Create base URLs for the assets
-						const assetBaseUrl = this.assetPath || `/datasets/${dataset.datasetId}/assets`;
-						
-						// Get the target position from the puzzle piece
-						const targetPosition = captcha.puzzlePiece.position;
-						
-						if (!targetPosition) {
-							throw new Error('Captcha puzzle piece has no position');
-						}
-						
-						// Generate a challenge signature
-						const challengeString = `${id}-${userAccount}-${dappAccount}-${JSON.stringify(targetPosition)}`;
-						const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challengeString)));
-						
-						// Create the response object
-						const response: GetSliderCaptchaResponse = {
-							status: "ok",
-							baseImageUrl: `${assetBaseUrl}/${captcha.baseImage.data}`,
-							puzzlePieceUrl: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
-							targetPosition: targetPosition,
-							timestamp: requestedAtTimestamp.toString(),
-							challengeId: id,
-							signature: {
-								provider: {
-									challenge: challengeSignature,
-								},
-							},
-							// Add the shape as a custom property (compatible with original interface)
-							shape: captcha.puzzlePiece.shape,
-						};
-						
-						// Store the challenge in the database
-						// Convert ipAddress to bigint as required by the schema
-						const ipAddressBigInt = this.convertIpAddressToBigInt(ipAddress);
-						
-						const sliderCaptcha: SliderCaptchaStored = {
-							id,
-							dappAccount,
-							userAccount,
-							targetPosition,
-							baseImageUrl: response.baseImageUrl,
-							puzzlePieceUrl: response.puzzlePieceUrl,
-							shape: response.shape,
-							datasetId: dataset.datasetId,
-							requestedAtTimestamp,
-							ipAddress: ipAddressBigInt,
-							headers,
-							ja4,
-							result: { status: CaptchaStatus.pending },
-							userSubmitted: false,
-							serverChecked: false,
-						};
-						
-						// Check if we need to attach this to a frictionless token
-						let frictionlessTokenId;
-						if (sessionId) {
-							const session = await this.db.getSessionRecordBySessionId(sessionId);
-							if (session && session.tokenId) {
-								frictionlessTokenId = session.tokenId;
-								sliderCaptcha.frictionlessTokenId = frictionlessTokenId;
-							}
-						}
-						
-						// Store the new slider captcha record
-						await this.db.storeSliderCaptchaRecord(sliderCaptcha);
-						this.logger.info("Shaped slider captcha challenge created from database", {
-							id,
-							userAccount,
-							dappAccount,
-							datasetId: dataset.datasetId,
-							shape: response.shape,
-							hasFrictionlessToken: !!frictionlessTokenId,
-						});
-						
-						return response;
+					if (!datasets || datasets.length === 0) {
+						throw new Error('No slider captcha datasets available');
 					}
+					
+					const dataset = datasets[0] as SliderDataset;
+					if (!dataset || !('captchas' in dataset)) {
+						throw new Error('Invalid dataset format');
+					}
+					
+					// Get a random captcha from the dataset
+					const captchaIndex = Math.floor(Math.random() * dataset.captchas.length);
+					const captcha = dataset.captchas[captchaIndex];
+					
+					if (!captcha) {
+						throw new Error('Failed to select a captcha from the dataset');
+					}
+					
+					// Create base URLs for the assets
+					const assetBaseUrl = this.assetPath || `/datasets/${dataset.datasetId}/assets`;
+					
+					// Get the target position from the puzzle piece
+					const targetPosition = captcha.puzzlePiece.position;
+					
+					if (!targetPosition) {
+						throw new Error('Captcha puzzle piece has no position');
+					}
+					
+					// Generate a challenge signature
+					const challengeString = `${id}-${userAccount}-${dappAccount}-${JSON.stringify(targetPosition)}`;
+					const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challengeString)));
+					
+					// Create the response object
+					const response: GetSliderCaptchaResponse = {
+						status: "ok",
+						baseImageUrl: `${assetBaseUrl}/${captcha.baseImage.data}`,
+						puzzlePieceUrl: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
+						targetPosition: targetPosition,
+						timestamp: requestedAtTimestamp.toString(),
+						challengeId: id,
+						signature: {
+							provider: {
+								challenge: challengeSignature,
+							},
+						},
+						// Add the shape as a custom property (compatible with original interface)
+						shape: captcha.puzzlePiece.shape,
+					};
+					
+					// Store the challenge in the database
+					// Convert ipAddress to bigint as required by the schema
+					const ipAddressBigInt = this.convertIpAddressToBigInt(ipAddress);
+					
+					const sliderCaptcha: SliderCaptchaStored = {
+						id,
+						dappAccount,
+						userAccount,
+						targetPosition,
+						baseImageUrl: response.baseImageUrl,
+						puzzlePieceUrl: response.puzzlePieceUrl,
+						shape: response.shape,
+						datasetId: dataset.datasetId,
+						requestedAtTimestamp,
+						ipAddress: ipAddressBigInt,
+						headers,
+						ja4,
+						result: { status: CaptchaStatus.pending },
+						userSubmitted: false,
+						serverChecked: false,
+					};
+					
+					// Check if we need to attach this to a frictionless token
+					let frictionlessTokenId;
+					if (sessionId) {
+						const session = await this.db.getSessionRecordBySessionId(sessionId);
+						if (session && session.tokenId) {
+							frictionlessTokenId = session.tokenId;
+							sliderCaptcha.frictionlessTokenId = frictionlessTokenId;
+						}
+					}
+					
+					// Store the new slider captcha record
+					await this.db.storeSliderCaptchaRecord(sliderCaptcha);
+					this.logger.info("Shaped slider captcha challenge created from database", {
+						id,
+						userAccount,
+						dappAccount,
+						datasetId: dataset.datasetId,
+						shape: response.shape,
+						hasFrictionlessToken: !!frictionlessTokenId,
+					});
+					
+					return response;
 				} catch (dbError) {
 					this.logger.warn("Error getting shaped slider captcha from database, falling back to filesystem", {
 						error: dbError
@@ -396,7 +405,7 @@ export class SliderCaptchaManager extends CaptchaManager {
 			
 			// Load the dataset
 			const datasetContent = readFileSync(datasetPath, 'utf8');
-			const dataset = JSON.parse(datasetContent);
+			const dataset = JSON.parse(datasetContent) as SliderDataset;
 			
 			this.logger.info('Using shaped slider captcha from filesystem', {
 				datasetPath,
