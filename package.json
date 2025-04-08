@@ -12,7 +12,7 @@
 		"cmd:about": "perform string substitution on the command and then execute it. Make sure to use --, e.g. npm run cmd -- my args here",
 		"cmd": "f() { (cmd=$1; shift; printf \"$cmd\" $@ | bash -ex) ;}; f",
 		"build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
-		"build:all": "lerna run build",
+		"build:all": "lerna run build --verbose",
 		"build:all:cjs": "npm run ws -- --if-present build:cjs",
 		"bundle:all": "npm run ws -- --if-present bundle",
 		"build:bundle": "npm run -w @prosopo/procaptcha-bundle bundle",
@@ -113,7 +113,7 @@
 		"vitest": "3.0.9"
 	},
 	"overrides": {
-		"@types/express-serve-static-core": "^4.17.33"
+		"@types/express-serve-static-core": "4.19.6"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
 	"bugs": {
