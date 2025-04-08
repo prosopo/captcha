@@ -28,7 +28,7 @@ consistency with the core Procaptcha codebase.
 The `@prosopo/procaptcha-wrapper` package:
 
 1. Includes `@prosopo/types` as a dev dependency.
-2. Contains `/dist/index.d.ts` contains the full `ProcaptchaRenderOptions` type inline, rather than as a type
+2. Contains `/dist/index.d.ts` which includes the full `ProcaptchaRenderOptions` type inline, rather than as a type
    reference (which is the default behavior).
 
 This approach ensures that framework integration consumers **will not have `@prosopo/types` or its dependencies** in
