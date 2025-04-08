@@ -112,6 +112,9 @@
 		"vite": "6.2.3",
 		"vitest": "3.0.9"
 	},
+	"overrides": {
+		"@types/express-serve-static-core": "^4.17.33"
+	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
 	"bugs": {
 		"url": "https://github.com/prosopo/captcha/issues"
