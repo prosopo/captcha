@@ -14,7 +14,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { IntegrationDemo } from "./integrationDemo.js";
+import { IntegrationDemoComponent } from "./integrationDemo.js";
 
 class App {
 	public render(): void {
@@ -31,11 +31,7 @@ class App {
 	protected renderProcaptcha(rootElement: Element): void {
 		const reactRoot = ReactDOM.createRoot(rootElement);
 
-		reactRoot.render(
-			<React.StrictMode>
-				<IntegrationDemo />
-			</React.StrictMode>,
-		);
+		reactRoot.render(<IntegrationDemoComponent />);
 	}
 }
 

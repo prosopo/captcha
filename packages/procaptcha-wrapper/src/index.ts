@@ -14,34 +14,14 @@
 
 import type { Languages } from "@prosopo/locale";
 import type { CaptchaType, ProcaptchaRenderOptions } from "@prosopo/types";
-import {
-	type RenderProcaptchaFunction,
-	loadRenderProcaptchaScript,
-} from "./renderProcaptcha.js";
+import { type RendererFunction, createRenderer } from "./renderer.js";
 
-let renderFunction: RenderProcaptchaFunction;
-
-export const renderProcaptcha = async (
-	element: HTMLElement,
-	options: ProcaptchaRenderOptions,
-): Promise<void> => {
-	if (undefined === renderFunction) {
-		renderFunction = await loadRenderProcaptchaScript(
-			// @ts-expect-error
-			import.meta.env.VITE_RENDER_SCRIPT_URL,
-			{
-				// @ts-expect-error
-				id: import.meta.env.VITE_RENDER_SCRIPT_ID,
-			},
-		);
-	}
-
-	// cloning gives us a writable and independent object, which the render function then may change.
-	// reason: some frameworks, like React, lock extending, and direct operations lead to https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cant_define_property_object_not_extensible
-	const renderOptions = Object.assign({}, options);
-
-	await renderFunction(element, renderOptions);
-};
+export const renderProcaptcha: RendererFunction = createRenderer(
+	// @ts-expect-error
+	import.meta.env.VITE_RENDER_SCRIPT_URL,
+	// @ts-expect-error
+	import.meta.env.VITE_RENDER_SCRIPT_ID,
+);
 
 export type {
 	ProcaptchaRenderOptions,

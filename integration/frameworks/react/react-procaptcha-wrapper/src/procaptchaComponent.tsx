@@ -16,43 +16,37 @@ import {
 	type ProcaptchaRenderOptions,
 	renderProcaptcha,
 } from "@prosopo/procaptcha-wrapper";
-import React from "react";
+import {
+	type MutableRefObject,
+	type ReactNode,
+	type DetailedHTMLProps,
+	type HTMLAttributes,
+	useEffect,
+	useRef,
+} from "react";
 
 type ProcaptchaComponentProperties = ProcaptchaRenderOptions & {
-	htmlAttributes: React.DetailedHTMLProps<
-		React.HTMLAttributes<HTMLDivElement>,
+	htmlAttributes: DetailedHTMLProps<
+		HTMLAttributes<HTMLDivElement>,
 		HTMLDivElement
 	>;
 };
 
-class ProcaptchaComponent extends React.Component<ProcaptchaComponentProperties> {
-	private readonly elementRef: React.RefObject<HTMLDivElement>;
+const ProcaptchaComponent = (
+	properties: ProcaptchaComponentProperties,
+): ReactNode => {
+	const { htmlAttributes = {} } = properties;
 
-	constructor(properties: ProcaptchaComponentProperties) {
-		super(properties);
+	const elementReference: MutableRefObject<HTMLDivElement | null> =
+		useRef(null);
 
-		this.elementRef = React.createRef();
-	}
-
-	public override componentDidMount(): void {
-		this.renderProcaptcha();
-	}
-
-	public override componentDidUpdate(): void {
-		this.renderProcaptcha();
-	}
-
-	public override render(): React.ReactNode {
-		const { htmlAttributes = {} } = this.props;
-
-		return <div ref={this.elementRef} {...htmlAttributes} />;
-	}
-
-	protected async renderProcaptcha(): Promise<void> {
-		if (this.elementRef.current instanceof HTMLElement) {
-			await renderProcaptcha(this.elementRef.current, this.props);
+	useEffect(() => {
+		if (elementReference.current instanceof HTMLElement) {
+			renderProcaptcha(elementReference.current, properties);
 		}
-	}
-}
+	}, [properties]);
+
+	return <div ref={elementReference} {...htmlAttributes} />;
+};
 
 export { ProcaptchaComponent };

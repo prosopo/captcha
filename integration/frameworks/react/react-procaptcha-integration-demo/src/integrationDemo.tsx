@@ -13,29 +13,28 @@
 // limitations under the License.
 
 import { ProcaptchaComponent } from "@prosopo/react-procaptcha-wrapper";
-import React from "react";
+import type { ReactNode } from "react";
 
-class IntegrationDemo extends React.Component {
-	public override render(): React.ReactNode {
-		// @ts-expect-error Env variables will be read by Vite
-		const siteKey = import.meta.env.VITE_PROCAPTCHA_SITE_KEY || "";
-		return (
-			<ProcaptchaComponent
-				siteKey={siteKey}
-				captchaType={"pow"}
-				language={"en"}
-				callback={(token: string): void => {
-					console.log("verified", token);
-				}}
-				htmlAttributes={{
-					className: "my-app__procaptcha",
-					style: {
-						maxWidth: "600px",
-					},
-				}}
-			/>
-		);
-	}
-}
+const IntegrationDemoComponent = (): ReactNode => {
+	// @ts-expect-error Env variables will be read by Vite
+	const siteKey = import.meta.env.VITE_PROCAPTCHA_SITE_KEY || "";
 
-export { IntegrationDemo };
+	return (
+		<ProcaptchaComponent
+			siteKey={siteKey}
+			captchaType={"pow"}
+			language={"en"}
+			callback={(token: string): void => {
+				console.log("verified", token);
+			}}
+			htmlAttributes={{
+				className: "my-app__procaptcha",
+				style: {
+					maxWidth: "600px",
+				},
+			}}
+		/>
+	);
+};
+
+export { IntegrationDemoComponent };
