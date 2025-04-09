@@ -11,11 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import consola, {
+
+import { at } from "@prosopo/util";
+import {
 	LogLevels as ConsolaLogLevels,
-	createConsola,
 	type ConsolaOptions,
 	type LogObject,
+	createConsola,
 } from "consola/browser";
 import { enum as zEnum, type infer as zInfer } from "zod";
 import { ProsopoEnvError } from "./error.js";
@@ -57,7 +59,7 @@ export function getLoggerDefault(): Logger {
 }
 
 const JSONReporter = (
-	message: LogObject,
+	logObject: LogObject,
 	context: {
 		options: ConsolaOptions;
 	},
@@ -69,10 +71,19 @@ const JSONReporter = (
 	const writerError = process?.stderr
 		? process.stderr.write.bind(process.stderr)
 		: console.error;
-	if (context.options.level === ConsolaLogLevels.error) {
-		writerError(`${JSON.stringify(message)}\n`);
+	if (logObject.type === LogLevel.enum.error) {
+		if (logObject.args.length > 0 && logObject.args[0] instanceof Error) {
+			const error = logObject.args[0] as Error;
+			const logObjectError = {
+				...logObject,
+				args: [error.message],
+			};
+			writerError(`${JSON.stringify(logObjectError)}\n`);
+		} else {
+			writerError(`${JSON.stringify(logObject)}\n`);
+		}
 	} else {
-		writer(`${JSON.stringify(message)}\n`);
+		writer(`${JSON.stringify(logObject)}\n`);
 	}
 };
 
