@@ -20,11 +20,11 @@ import { Languages } from "../index.js";
 describe("logging", () => {
 	test("Make sure the number of files present in the locales folder is the same size as the Languages array", () => {
 		const locales = fs.readdirSync(path.resolve("./src/locales"));
-		expect(locales.length).to.equal(Languages.length);
+		expect(locales.length).to.equal(Object.keys(Languages).length);
 	});
 
 	test("Get all locale JSON files and ensure the keys are identical in each one", () => {
-		const locales = Languages;
+		const locales = Object.values(Languages);
 		const sectionKeys = new Set<string>();
 		console.log("Local test running at ", path.resolve("."));
 		const sectionKeysObj: { [key: string]: Set<string> } = {};

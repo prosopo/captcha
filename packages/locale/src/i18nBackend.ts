@@ -34,7 +34,7 @@ export function initializeI18n() {
 			.init({
 				debug: process.env.PROSOPO_LOG_LEVEL === "debug",
 				fallbackLng: LanguageSchema.enum.en,
-				supportedLngs: Languages,
+				supportedLngs: Object.values(Languages),
 
 				ns: ["translation"],
 				backend: {
