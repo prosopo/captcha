@@ -56,9 +56,9 @@ async function findImages(directory: string): Promise<string[]> {
 
 async function createTestImage(outputPath: string): Promise<boolean> {
     try {
-        // Create a simple gradient image using sharp
-        const width = 800;
-        const height = 600;
+        // Create a gradient image that matches the slider captcha UI dimensions
+        const width = 320;
+        const height = 160;
         
         // Create a linear gradient SVG
         const svg = `

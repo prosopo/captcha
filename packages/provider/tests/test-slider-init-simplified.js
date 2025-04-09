@@ -4,7 +4,7 @@
  */
 
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 
 // Set up paths
 const datasetPath = join(process.cwd(), 'assets/slider-datasets');
@@ -42,26 +42,22 @@ if (datasetFiles.length > 0) {
     
     try {
         const dataset = JSON.parse(readFileSync(firstDatasetPath, 'utf8'));
-        console.log('Dataset structure:');
-        console.log(`- datasetId: ${dataset.datasetId}`);
-        console.log(`- datasetType: ${dataset.datasetType}`);
+        console.log("Dataset structure:");
+        console.log(`- datasetId: ${dataset.datasetId || 'undefined'}`);
+        console.log(`- format: ${dataset.format || 'undefined'}`);
         console.log(`- captchas count: ${dataset.captchas?.length || 0}`);
-        console.log(`- format: ${dataset.format}`);
         
         // Check asset files
-        if (dataset.captchas?.length > 0) {
-            const assetDirPath = join(datasetPath, datasetFiles[0].replace('dataset.json', ''), 'assets');
-            console.log(`Checking asset directory: ${assetDirPath}`);
-            
-            if (existsSync(assetDirPath)) {
-                const assetFiles = readdirSync(assetDirPath);
-                console.log(`Found ${assetFiles.length} asset files in directory`);
-            } else {
-                console.log(`Asset directory not found!`);
-            }
+        const assetDir = join(dirname(firstDatasetPath), 'assets');
+        console.log(`Checking asset directory: ${assetDir}`);
+        try {
+            const assetFiles = readdirSync(assetDir);
+            console.log(`Found ${assetFiles.length} asset files in directory`);
+        } catch (error) {
+            console.error(`Error reading asset directory: ${error instanceof Error ? error.message : String(error)}`);
         }
     } catch (error) {
-        console.error(`Error reading dataset file: ${error.message}`);
+        console.error(`Error reading dataset file: ${error instanceof Error ? error.message : String(error)}`);
     }
 } else {
     console.log('No dataset files found to read');
