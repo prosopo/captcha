@@ -86,6 +86,15 @@ const responsiveFont = css`
 		display: flex;
 		font-size: 16px;
 	}
+	@container (min-width: 275px) {
+		font-size: 12px;
+	}
+	@container (min-width: 280px) {
+		font-size: 14px;
+	}
+	@container (min-width: 300px) {
+		font-size: 16px;
+	}
 `;
 
 export const Checkbox: FC<CheckboxProps> = ({
@@ -124,6 +133,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 				display: "inline-flex",
 				alignItems: "center",
 				minHeight: "58px",
+				containerType: "normal",
 			}}
 		>
 			{loading ? (
