@@ -16,7 +16,7 @@ This package is written in vanilla JS, so in case there is no integration for yo
 directly:
 
 ```typescript
-import {type ProcaptchaRenderOptions, renderProcaptcha} from "@prosopo/procaptcha-wrapper";
+import { type ProcaptchaRenderOptions, renderProcaptcha} from "@prosopo/procaptcha-wrapper";
 
 const container = document.querySelector('#your-element');
 

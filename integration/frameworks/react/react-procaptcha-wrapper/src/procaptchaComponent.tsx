@@ -17,10 +17,10 @@ import {
 	renderProcaptcha,
 } from "@prosopo/procaptcha-wrapper";
 import {
-	type MutableRefObject,
-	type ReactNode,
 	type DetailedHTMLProps,
 	type HTMLAttributes,
+	type MutableRefObject,
+	type ReactNode,
 	useEffect,
 	useRef,
 } from "react";

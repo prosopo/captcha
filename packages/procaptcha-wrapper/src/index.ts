@@ -14,14 +14,15 @@
 
 import type { Languages } from "@prosopo/locale";
 import type { CaptchaType, ProcaptchaRenderOptions } from "@prosopo/types";
-import { type RendererFunction, createRenderer } from "./renderer.js";
+import type { RendererFunction } from "./render/renderFunction.js";
+import { createRenderer } from "./render/renderer.js";
 
-export const renderProcaptcha: RendererFunction = createRenderer(
+export const renderProcaptcha: RendererFunction = createRenderer({
 	// @ts-expect-error
-	import.meta.env.VITE_RENDER_SCRIPT_URL,
+	scriptUrl: import.meta.env.VITE_RENDER_SCRIPT_URL,
 	// @ts-expect-error
-	import.meta.env.VITE_RENDER_SCRIPT_ID,
-);
+	scriptId: import.meta.env.VITE_RENDER_SCRIPT_ID,
+});
 
 export type {
 	ProcaptchaRenderOptions,
