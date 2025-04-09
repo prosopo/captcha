@@ -14,6 +14,41 @@
 
 import z from "zod";
 
-export const Languages = ["de", "en", "es", "fr", "it", "pt", "pt-BR"] as const;
+export const Languages = {
+	arabic: "ar",
+	azerbaijani: "az",
+	czech: "cs",
+	german: "de",
+	greek: "el",
+	english: "en",
+	spanish: "es",
+	finnish: "fi",
+	french: "fr",
+	hindi: "hi",
+	hungarian: "hu",
+	indonesian: "id",
+	italian: "it",
+	japanese: "ja",
+	javanese: "jv",
+	korean: "ko",
+	malayalam: "ml",
+	malay: "ms",
+	dutch: "nl",
+	norwegian: "no",
+	polish: "pl",
+	portugeseBrazil: "pt-BR",
+	portuguese: "pt",
+	romanian: "ro",
+	russian: "ru",
+	serbian: "sr",
+	swedish: "sv",
+	thai: "th",
+	turkish: "tr",
+	ukrainian: "uk",
+	vietnamese: "vi",
+	chinese: "zh",
+} as const;
 
-export const LanguageSchema = z.enum(Languages);
+export const LanguageSchema = z.enum(
+	Object.values(Languages) as [string, ...string[]],
+);
