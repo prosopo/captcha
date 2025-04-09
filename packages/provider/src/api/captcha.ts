@@ -698,6 +698,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					flatten(req.headers),
 					ipAddress,
 					req.ja4,
+					0,
 					sessionId,
 				);
 				

@@ -222,59 +222,44 @@ export class SliderCaptchaManager extends CaptchaManager {
 	 * @param {string} ja4 - browser fingerprint
 	 * @param {string} sessionId - optional session ID for frictionless flow
 	 */
-	async getSliderCaptchaChallenge(
+	public async getSliderCaptchaChallenge(
 		userAccount: string,
 		dappAccount: string,
 		headers: RequestHeaders,
 		ipAddress: IPAddress,
 		ja4: string,
+		requestedAtTimestamp: number,
 		sessionId?: string,
 	): Promise<GetSliderCaptchaResponse> {
-		const requestedAtTimestamp = Date.now();
-		
-		// Generate a unique ID for this challenge
-		const id = randomUUID();
-		
-		// Check if we should use shaped captchas
-		if (this.canUseShapedCaptchas()) {
-			// Log which dataset source we're using
-			if (this.hasDatabaseDatasets) {
-				this.logger.info('Using shaped slider captchas from database');
-			} else {
-				this.logger.info('Using shaped slider captchas from filesystem');
-			}
-			
-			return this.getShapedSliderCaptcha(
-				id,
-				userAccount,
-				dappAccount,
-				headers,
-				ipAddress,
-				ja4,
-				requestedAtTimestamp,
-				sessionId
-			);
-		} else {
-			// Use traditional simple slider captcha
-			this.logger.info('No shaped slider captchas available, using simple slider captcha');
-			return this.getSimpleSliderCaptcha(
-				id,
-				userAccount,
-				dappAccount,
-				headers,
-				ipAddress,
-				ja4,
-				requestedAtTimestamp,
-				sessionId
-			);
+		// Check if we have any slider datasets available
+		const datasets = await this.availableDatasets;
+		if (datasets.length === 0) {
+			throw new ProsopoApiError("CAPTCHA.NO_DATASET_AVAILABLE", {
+				context: {
+					failedFuncName: this.getSliderCaptchaChallenge.name,
+					datasetType: "slider",
+					userAccount,
+					dappAccount,
+				},
+			});
 		}
+
+		// Get a shaped slider captcha
+		return this.getShapedSliderCaptcha(
+			userAccount,
+			dappAccount,
+			headers,
+			ipAddress,
+			ja4,
+			requestedAtTimestamp,
+			sessionId
+		);
 	}
 	
 	/**
 	 * Get a pre-generated shaped slider captcha from a dataset
 	 */
 	private async getShapedSliderCaptcha(
-		id: string,
 		userAccount: string,
 		dappAccount: string,
 		headers: RequestHeaders,
@@ -315,6 +300,9 @@ export class SliderCaptchaManager extends CaptchaManager {
 					if (!targetPosition) {
 						throw new Error('Captcha puzzle piece has no position');
 					}
+
+					// create new random id
+					const id = randomUUID();
 					
 					// Generate a challenge signature
 					const challengeString = `${id}-${userAccount}-${dappAccount}-${JSON.stringify(targetPosition)}`;
@@ -323,8 +311,12 @@ export class SliderCaptchaManager extends CaptchaManager {
 					// Create the response object
 					const response: GetSliderCaptchaResponse = {
 						status: "ok",
-						baseImageUrl: `${assetBaseUrl}/${captcha.baseImage.data}`,
-						puzzlePieceUrl: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
+						baseImageUrl: captcha.baseImage.data.startsWith('file://') 
+							? `/assets/slider-datasets/dataset/assets/${captcha.baseImage.data.split('/').pop()}` 
+							: `${assetBaseUrl}/${captcha.baseImage.data}`,
+						puzzlePieceUrl: captcha.puzzlePiece.data.startsWith('file://') 
+							? `/assets/slider-datasets/dataset/assets/${captcha.puzzlePiece.data.split('/').pop()}` 
+							: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
 						targetPosition: targetPosition,
 						timestamp: requestedAtTimestamp.toString(),
 						challengeId: id,
@@ -428,6 +420,9 @@ export class SliderCaptchaManager extends CaptchaManager {
 				throw new Error('Captcha puzzle piece has no position');
 			}
 			
+			// create new random id
+			const id = randomUUID();
+			
 			// Generate a challenge signature
 			const challengeString = `${id}-${userAccount}-${dappAccount}-${JSON.stringify(targetPosition)}`;
 			const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challengeString)));
@@ -435,8 +430,12 @@ export class SliderCaptchaManager extends CaptchaManager {
 			// Create the response object
 			const response: GetSliderCaptchaResponse = {
 				status: "ok",
-				baseImageUrl: `${assetBaseUrl}/${captcha.baseImage.data}`,
-				puzzlePieceUrl: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
+				baseImageUrl: captcha.baseImage.data.startsWith('file://') 
+					? `/assets/slider-datasets/dataset/assets/${captcha.baseImage.data.split('/').pop()}` 
+					: `${assetBaseUrl}/${captcha.baseImage.data}`,
+				puzzlePieceUrl: captcha.puzzlePiece.data.startsWith('file://') 
+					? `/assets/slider-datasets/dataset/assets/${captcha.puzzlePiece.data.split('/').pop()}` 
+					: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
 				targetPosition: targetPosition,
 				timestamp: requestedAtTimestamp.toString(),
 				challengeId: id,
@@ -494,16 +493,15 @@ export class SliderCaptchaManager extends CaptchaManager {
 			
 			return response;
 		} catch (error) {
-			this.logger.error("Error creating shaped slider captcha challenge, falling back to simple slider", { 
+			this.logger.error("Error creating shaped slider captcha challenge, retrying", { 
 				error 
 			});
-			// Fallback to simple slider captcha
-			return this.getSimpleSliderCaptcha(
-				id,
+			// Retry with shaped slider captcha
+			return this.getShapedSliderCaptcha(
 				userAccount,
 				dappAccount,
 				headers,
-				ipAddress,
+				ipAddress, 
 				ja4,
 				requestedAtTimestamp,
 				sessionId
@@ -511,97 +509,6 @@ export class SliderCaptchaManager extends CaptchaManager {
 		}
 	}
 	
-	/**
-	 * Get a simple slider captcha with a random image
-	 */
-	private async getSimpleSliderCaptcha(
-		id: string,
-		userAccount: string,
-		dappAccount: string,
-		headers: RequestHeaders,
-		ipAddress: IPAddress,
-		ja4: string,
-		requestedAtTimestamp: number,
-		sessionId?: string,
-	): Promise<GetSliderCaptchaResponse> {
-		// Generate a random target position
-		const targetPositionX = Math.floor(Math.random() * 280) + 20; // Between 20-300
-		
-		// Generate a random image URL
-		const imageUrl = getRandomImageUrl();
-		
-		// Generate a challenge signature
-		const challengeString = `${id}-${userAccount}-${dappAccount}-${targetPositionX}`;
-		const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challengeString)));
-		
-		// Create a response object
-		const response: GetSliderCaptchaResponse = {
-			status: "ok",
-			baseImageUrl: imageUrl, // Use imageUrl as baseImageUrl for compatibility
-			puzzlePieceUrl: imageUrl, // Use the same image as a placeholder
-			targetPosition: {
-				x: targetPositionX,
-				y: 0 // Simple slider only uses x-axis
-			},
-			timestamp: requestedAtTimestamp.toString(),
-			challengeId: id,
-			signature: {
-				provider: {
-					challenge: challengeSignature,
-				},
-			},
-		};
-		
-		// Store the challenge in the database
-		// Convert ipAddress to bigint as required by the schema
-		const ipAddressBigInt = this.convertIpAddressToBigInt(ipAddress);
-		
-		const sliderCaptcha: SliderCaptchaStored = {
-			id,
-			dappAccount,
-			userAccount,
-			targetPosition: targetPositionX, // Store as simple number for backward compatibility
-			imageUrl, // Keep imageUrl for backward compatibility
-			requestedAtTimestamp,
-			ipAddress: ipAddressBigInt,
-			headers,
-			ja4,
-			result: { status: CaptchaStatus.pending },
-			userSubmitted: false,
-			serverChecked: false,
-		};
-		
-		try {
-			// Let's check if we need to attach this to a frictionless token
-			let frictionlessTokenId;
-			if (sessionId) {
-				const session = await this.db.getSessionRecordBySessionId(sessionId);
-				if (session && session.tokenId) {
-					frictionlessTokenId = session.tokenId;
-					sliderCaptcha.frictionlessTokenId = frictionlessTokenId;
-				}
-			}
-			
-			// Store the new slider captcha record
-			await this.db.storeSliderCaptchaRecord(sliderCaptcha);
-			this.logger.info("Simple slider captcha challenge created", {
-				id,
-				userAccount,
-				dappAccount,
-				hasFrictionlessToken: !!frictionlessTokenId,
-			});
-			
-			return response;
-		} catch (error) {
-			this.logger.error("Failed to create slider captcha challenge", {
-				error,
-				userAccount,
-				dappAccount,
-			});
-			throw error;
-		}
-	}
-
 	/**
 	 * Verifies a Slider Captcha solution
 	 *

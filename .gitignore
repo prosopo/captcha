@@ -153,3 +153,6 @@ captcha.json
 **/stats.html
 
 *.angular
+
+# ignore slider captcha dataset PNG assets
+**/assets/**/*.png
