@@ -93,6 +93,18 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY,
 			),
+			"import.meta.env.PROSOPO_SITE_KEY_IMAGE": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_IMAGE,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_SLIDER": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_SLIDER,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_POW,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_FRICTIONLESS,
+			),
 			"import.meta.env.PROSOPO_SERVER_URL": JSON.stringify(
 				process.env.PROSOPO_SERVER_URL,
 			),

@@ -25,10 +25,12 @@ interface CaptchaTypeDetails {
 	exists: boolean;
 }
 
+interface CaptchaType {
+	[key: string]: CaptchaTypeDetails;
+}
+
 interface CaptchaTypes {
-	[key: string]: {
-		[key: string]: CaptchaTypeDetails;
-	};
+	[key: string]: CaptchaType;
 }
 
 export default function navigationInjector(): Plugin {
@@ -177,11 +179,10 @@ export default function navigationInjector(): Plugin {
       .collapsed .nav-content {
         opacity: 0;
       }
-      .nav-row {
+      .nav-sections {
         display: flex;
         flex-wrap: wrap;
         gap: 20px;
-        margin-bottom: 20px;
       }
       .nav-section {
         flex: 1;
@@ -249,12 +250,15 @@ export default function navigationInjector(): Plugin {
         .nav-title-hint {
           display: none;
         }
-        .nav-row {
+        .nav-sections {
           flex-direction: column;
           gap: 16px;
         }
         .nav-section {
           min-width: 100%;
+        }
+        .nav-section h3 {
+          font-size: 0.875rem;
         }
         .nav-group {
           padding: 10px;
@@ -280,6 +284,81 @@ export default function navigationInjector(): Plugin {
         }
         .nav-toggle {
           padding: 6px 10px;
+        }
+      }
+      
+      .nav-group-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .nav-group-dropdown-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-weight: 500;
+        padding: 6px 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+      }
+      
+      .nav-group-dropdown-btn:hover {
+        background-color: rgba(255,255,255,0.2);
+      }
+      
+      .nav-group-dropdown-btn svg {
+        width: 16px;
+        height: 16px;
+        transition: transform 0.2s ease;
+      }
+      
+      .nav-group-dropdown-btn.open svg {
+        transform: rotate(180deg);
+      }
+      
+      .nav-group-dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: rgba(33, 150, 243, 0.95);
+        min-width: 160px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        z-index: 1;
+        border-radius: 4px;
+        padding: 8px 0;
+        margin-top: 4px;
+      }
+      
+      .nav-group-dropdown-btn.open + .nav-group-dropdown-content {
+        display: block;
+      }
+      
+      .nav-group-dropdown-content a {
+        color: white;
+        padding: 8px 16px;
+        text-decoration: none;
+        display: block;
+        transition: background-color 0.2s ease;
+      }
+      
+      .nav-group-dropdown-content a:hover {
+        background-color: rgba(255,255,255,0.2);
+      }
+      
+      .nav-group-dropdown-content a.active {
+        background-color: rgba(255,255,255,0.2);
+        font-weight: 600;
+      }
+      
+      @media (max-width: 768px) {
+        .nav-group-dropdown-content {
+          position: static;
+          box-shadow: none;
+          background-color: rgba(255,255,255,0.1);
+          margin-top: 8px;
         }
       }
     </style>
@@ -361,6 +440,23 @@ export default function navigationInjector(): Plugin {
             }
           }
         });
+        
+        // Handle dropdown toggles
+        document.querySelectorAll('.nav-group-dropdown-btn').forEach(button => {
+          button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.classList.toggle('open');
+          });
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.nav-group-dropdown')) {
+            document.querySelectorAll('.nav-group-dropdown-btn').forEach(button => {
+              button.classList.remove('open');
+            });
+          }
+        });
       });
     </script>
   `;
@@ -424,7 +520,7 @@ export default function navigationInjector(): Plugin {
                 </button>
               </div>
               <div class="nav-content">
-                <div class="nav-row">
+                <div class="nav-sections">
                   ${standardNav}
                   ${invisibleNav}
                 </div>
@@ -432,28 +528,6 @@ export default function navigationInjector(): Plugin {
             </div>
           </div>
         `;
-
-				// Replace environment variables
-				const bundleUrl =
-					process.env.VITE_BUNDLE_URL ||
-					"https://staging-js.prosopo.io/js/procaptcha.bundle.js";
-
-				console.log(`Using bundle URL: ${bundleUrl}`);
-				html = html.replace(/%VITE_BUNDLE_URL%/g, bundleUrl);
-
-				// Replace other environment variables
-				if (process.env.PROSOPO_SITE_KEY) {
-					html = html.replace(
-						/%PROSOPO_SITE_KEY%/g,
-						process.env.PROSOPO_SITE_KEY,
-					);
-				}
-				if (process.env.PROSOPO_SERVER_URL) {
-					html = html.replace(
-						/%PROSOPO_SERVER_URL%/g,
-						process.env.PROSOPO_SERVER_URL,
-					);
-				}
 
 				// Inject navigation after <body> tag and script before </body>
 				if (html.includes("<body>") && html.includes("</body>")) {
@@ -480,49 +554,42 @@ export default function navigationInjector(): Plugin {
 			const typeTitle = typeName.charAt(0).toUpperCase() + typeName.slice(1);
 			const links: string[] = [];
 
-			for (const [implName, implDetails] of Object.entries(captchaType)) {
+			// Create simple buttons for each implementation
+			for (const [implName, implDetails] of Object.entries(captchaType as CaptchaType)) {
 				const pagePath = implDetails.path;
 				const pageExists = implDetails.exists;
+				const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
 
 				// Calculate relative path
 				let href: string;
 				if (currentPath.includes("/")) {
-					// We're in a subdirectory
 					const depth = (currentPath.match(/\//g) || []).length;
 					href = "../".repeat(depth) + pagePath;
 				} else {
-					// We're in the src root
 					href = pagePath;
 				}
 
-				// Mark current page as active and check if the file exists
-				const isActive = currentPath === pagePath;
-				const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
-
-				let linkHtml: string;
 				if (pageExists) {
-					const activeClass = isActive ? ' class="active"' : "";
-					linkHtml = `<a href="${href}"${activeClass}>${implTitle}</a>`;
+					const activeClass = currentPath === pagePath ? ' class="active"' : '';
+					links.push(`<a href="${href}"${activeClass}>${implTitle}</a>`);
 				} else {
-					linkHtml = `<span class="disabled" title="Coming Soon">${implTitle}</span>`;
+					links.push(`<span class="disabled" title="Coming Soon">${implTitle}</span>`);
 				}
-
-				links.push(`<li>${linkHtml}</li>`);
 			}
 
 			navGroups.push(`
         <div class="nav-group">
           <div class="nav-group-title">${typeTitle}</div>
-          <ul class="nav-group-links">
-            ${links.join("\n            ")}
-          </ul>
+          <div class="nav-group-links">
+            ${links.join('\n            ')}
+          </div>
         </div>
       `);
 		}
 
 		return `
       <div class="nav-section">
-        <h3 style="color: white; margin: 0 0 10px 0;">${title}</h3>
+        <h3>${title}</h3>
         <div class="nav-row">
           ${navGroups.join("\n          ")}
         </div>

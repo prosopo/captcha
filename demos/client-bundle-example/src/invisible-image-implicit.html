@@ -65,6 +65,14 @@
             // Prevent actual form submission
             return false;
         }
+
+        // Render the CAPTCHA
+        const widgetId = render(document.getElementById('procaptcha-container'), {
+            siteKey: "%PROSOPO_SITE_KEY_IMAGE%",
+            captchaType: CaptchaType.image,
+            callback: handleCaptchaResponse,
+            "failed-callback": handleCaptchaFailed
+        });
     </script>
 </head>
 <body>

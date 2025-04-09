@@ -93,7 +93,7 @@ import { CaptchaType } from "@prosopo/types";
 
 // Render CAPTCHA
 const widgetId = render(document.getElementById('procaptcha-container'), {
-    siteKey: "%PROSOPO_SITE_KEY%",
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
     captchaType: CaptchaType.image,
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed
@@ -154,7 +154,7 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
         
         // Render the CAPTCHA
         const widgetId = render(document.getElementById('procaptcha-container'), {
-            siteKey: "%PROSOPO_SITE_KEY%",
+            siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
             captchaType: CaptchaType.image,
             callback: handleCaptchaResponse,
             "failed-callback": handleCaptchaFailed
