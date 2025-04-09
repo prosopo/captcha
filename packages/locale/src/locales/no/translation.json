@@ -21,6 +21,7 @@
 		"ENVIRONMENT_NOT_READY": "Miljøet ikke klart",
 		"INVALID_SIGNATURE": "Ugyldig signatur",
 		"SITE_KEY_MISSING": "SITE KEY mangler",
+		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
 		"INVALID_TIMESTAMP": "Ugyldig tidsstempel"
 	},
 	"CONTRACT": {
