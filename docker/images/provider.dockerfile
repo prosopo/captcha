@@ -11,7 +11,7 @@ COPY ./packages/locale/dist/locales/ ./locales/
 
 # make the provider cli executable
 # create a package.json file for the provider cli to force it to run in module mode and set the binary for npx
-RUN echo '#!/usr/bin/env node' | cat - provider.cli.bundle.js > temp && mv temp provider.cli.bundle.js && \
+RUN echo '' | cat - provider.cli.bundle.js > temp && mv temp provider.cli.bundle.js && \
     echo '{ "name": "prosopo-provider", "bin": { "provider": "./provider.cli.bundle.js" }, "type": "module" }' > /usr/src/app/package.json
 
 # install the provider cli binary
