@@ -36,7 +36,7 @@ export const Languages = {
 	dutch: "nl",
 	norwegian: "no",
 	polish: "pl",
-	portugeseBrazil: "pt-BR",
+	portugeseBrazil: "pt-br",
 	portuguese: "pt",
 	romanian: "ro",
 	russian: "ru",
