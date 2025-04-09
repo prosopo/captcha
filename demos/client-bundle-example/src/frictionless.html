@@ -148,16 +148,15 @@
 
     // Get the Element using elementId
     const captchaContainer = document.getElementById('procaptcha-container')
-    // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
-    render(captchaContainer, {
-        siteKey: import.meta.env.PROSOPO_SITE_KEY,
-        captchaType: import.meta.env.CAPTCHA_TYPE || CaptchaType.frictionless,
-        theme: 'dark',
+    // Render the CAPTCHA
+    const widgetId = render(captchaContainer, {
+        siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%",
+        captchaType: CaptchaType.frictionless,
         callback: onCaptchaVerified,
         "failed-callback": function () {
             console.log('Challenge failed')
         }
-    })
+    });
 </script>
 </body>
 </html>

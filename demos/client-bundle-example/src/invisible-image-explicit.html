@@ -130,11 +130,11 @@
             console.log('Procaptcha script loaded, initializing explicit rendering');
             
             // Render the Procaptcha widget
-            window.procaptcha.render(document.getElementById('procaptcha-container'), {
-                'siteKey': '%PROSOPO_SITE_KEY%',
-                'callback': onSubmit,
-                'captchaType': 'image',
-                'size': 'invisible'
+            const widgetId = render(document.getElementById('procaptcha-container'), {
+                siteKey: "%PROSOPO_SITE_KEY_IMAGE%",
+                captchaType: CaptchaType.image,
+                callback: onSubmit,
+                "failed-callback": handleCaptchaFailed
             });
             
             document.getElementById('submit-button').addEventListener('click', validate);

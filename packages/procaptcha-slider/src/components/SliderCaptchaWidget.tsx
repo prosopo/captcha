@@ -65,21 +65,6 @@ const slideInAnimation = keyframes`
   100% { opacity: 1; transform: translateY(0); }
 `;
 
-const shakeAnimation = keyframes`
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-10px); }
-  40% { transform: translateX(10px); }
-  60% { transform: translateX(-7px); }
-  80% { transform: translateX(7px); }
-`;
-
-const fadeInOutAnimation = keyframes`
-  0% { opacity: 0; transform: translateY(10px); }
-  20% { opacity: 1; transform: translateY(0); }
-  80% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-5px); }
-`;
-
 // Modern color palette
 const colors = {
 	primary: "#4361ee",
@@ -425,60 +410,6 @@ const styles = {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-	`,
-	failureContainer: css`
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		z-index: 20;
-		animation: ${fadeInOutAnimation} 2.2s ease forwards;
-		pointer-events: none;
-	`,
-	failureIcon: css`
-		font-size: 50px;
-		color: ${colors.error};
-		margin-bottom: 10px;
-		animation: ${shakeAnimation} 0.5s ease;
-	`,
-	failureText: css`
-		font-size: 16px;
-		color: ${colors.error};
-		font-weight: 600;
-		text-align: center;
-		margin-top: 8px;
-		text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-	`,
-	canvasContainerError: css`
-		position: relative;
-		width: 320px;
-		height: 160px;
-		background-color: ${colors.backgroundDark};
-		overflow: hidden;
-		transition: all 0.3s ease;
-		border-bottom: 1px solid ${colors.border};
-		animation: ${shakeAnimation} 0.5s ease;
-		
-		&:hover {
-			transform: translateY(-1px);
-		}
-	`,
-	sliderContainerError: css`
-		position: relative;
-		width: 320px;
-		height: 40px;
-		background-color: rgba(220, 53, 69, 0.15);
-		margin: 0;
-		overflow: hidden;
-		box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
-		transition: all 0.3s ease;
-		border-bottom-left-radius: 12px;
-		border-bottom-right-radius: 12px;
 	`,
 };
 
@@ -1063,22 +994,29 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		return true;
 	};
 
-	// Add a state to track failure animation
-	const [showFailureAnimation, setShowFailureAnimation] = useState(false);
+	const handleVerificationFailure = () => {
+		console.error("[SliderCaptcha] Verification failed");
+		setSliderClass("sliderContainer sliderContainer_fail");
+		setIsFailed(true);
 
-	// Add the failure animation component
-	const FailureAnimation = () => (
-		<div css={styles.failureContainer}>
-			<div css={styles.failureIcon}>✗</div>
-			<div css={styles.failureText}>Verification failed</div>
-			<div css={styles.failureText}>Please try again</div>
-		</div>
-	);
+		// Reset after delay
+		setTimeout(async () => {
+			// First close the modal and reset all state
+			handleCloseModal();
+			
+			// Small additional delay to ensure state is cleared
+			setTimeout(() => {
+				// Find and click the checkbox to start fresh
+				const checkbox = document.querySelector('.slider-captcha input[type="checkbox"]') as HTMLInputElement;
+				if (checkbox) {
+					checkbox.click();
+				} else {
+					console.error("[SliderCaptcha] Could not find checkbox to restart verification");
+				}
+			}, 100);
+		}, 1000);
+	};
 
-	// Add a loading state for verification
-	const [verificationInProgress, setVerificationInProgress] = useState(false);
-
-	// Update handleDragEnd to set verification in progress and wait for response
 	const handleDragEnd = (e: MouseEvent | TouchEvent) => {
 		if (!isMouseDownRef.current) return false;
 		isMouseDownRef.current = false;
@@ -1086,13 +1024,9 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 		// No movement case
 		if (sliderLeft === 0) return false;
 
-		// Set verification in progress - this will prevent resetting until we get a response
-		setVerificationInProgress(true);
-		
-		// Change slider class to indicate verification is in progress
-		setSliderClass("sliderContainer sliderContainer_active");
+		setSliderClass("sliderContainer");
 
-		// Get the target position from state or destX (for logging purposes only)
+		// Get the target position from state or destX
 		const targetPosition = state?.challenge?.targetPosition || destX;
 		
 		// Get the challenge ID from the state
@@ -1104,14 +1038,20 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 			return false;
 		}
 
-		// Submit to provider for verification regardless of position
+		// Check if puzzle piece is in correct position (within 50px tolerance)
+		const isInPosition = Math.abs(sliderLeft - targetPosition) <= 50;
+		
+		if (!isInPosition) {
+			console.error("[SliderCaptcha] Puzzle piece not in correct position");
+			handleVerificationFailure();
+			return false;
+		}
+
+		// Submit to provider for verification
 		console.log("[SliderCaptcha] Submitting solution to provider");
 
 		// Always pass to manager for provider verification
 		manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => {
-			// We now have a response, so verification is no longer in progress
-			setVerificationInProgress(false);
-			
 			if (isVerified) {
 				// Server verified successfully
 				setSliderClass("sliderContainer sliderContainer_success");
@@ -1119,48 +1059,15 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 				setIsVerified(true);
 				setShowSuccessIcon(true);
 			} else {
-				// Server rejected the verification - show failure animation
+				// Server rejected the verification
 				handleVerificationFailure();
 			}
 		}).catch((error) => {
-			// Error handling the verification - no longer in progress
-			setVerificationInProgress(false);
 			console.error("[SliderCaptcha] Error submitting solution:", error);
 			handleVerificationFailure();
 		});
 
 		return true;
-	};
-
-	// Update handleVerificationFailure to restart the captcha but not close the modal
-	const handleVerificationFailure = () => {
-		console.error("[SliderCaptcha] Verification failed");
-		setSliderClass("sliderContainer sliderContainer_fail");
-		setIsFailed(true);
-		
-		// Show the failure animation
-		setShowFailureAnimation(true);
-		
-		// Reset after animation completes
-		setTimeout(() => {
-			setShowFailureAnimation(false);
-		}, 2200); // Match animation duration
-		
-		// Reset after delay, but keep the captcha open
-		setTimeout(() => {
-			// Reset slider position and class
-			setSliderLeft(0);
-			if (blockRef.current) {
-				blockRef.current.style.left = '0px';
-			}
-			
-			// Reset class but keep modal open
-			setSliderClass("sliderContainer");
-			setIsFailed(false);
-			
-			// Request a new challenge (reset puzzle but keep modal open)
-			resetPuzzle();
-		}, 2500);
 	};
 
 	// Remove separate mouse/touch event handlers and use container-level handling
@@ -1446,7 +1353,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 							Drag the puzzle piece into position
 						</div>
 
-						<div css={isFailed ? styles.canvasContainerError : styles.canvasContainer}>
+						<div css={styles.canvasContainer}>
 							<canvas
 								css={styles.canvas}
 								ref={canvasRef}
@@ -1476,11 +1383,10 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 								↻
 							</div>
 							{showSuccessIcon && <SuccessIcon />}
-							{showFailureAnimation && <FailureAnimation />}
 						</div>
 
 						<div
-							css={isFailed ? styles.sliderContainerError : styles.sliderContainer}
+							css={styles.sliderContainer}
 							ref={sliderRef}
 							className={sliderClass}
 						>
@@ -1516,13 +1422,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 								return;
 							}
 
-							// Set verification in progress
-							setVerificationInProgress(true);
-							
-							// Change slider class to indicate verification is in progress
-							setSliderClass("sliderContainer sliderContainer_active");
-
-							// Get the target position depending on format (for logging only)
+							// Get the target position depending on format
 							let targetPosition: number;
 							if (typeof challenge.targetPosition === 'number') {
 								// Simple number format
@@ -1538,14 +1438,20 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 								targetPosition = destX;
 							}
 
-							// Submit to provider for verification regardless of position
+							// Check if puzzle piece is in correct position (within 50px tolerance)
+							const isInPosition = Math.abs(sliderLeft - targetPosition) <= 50;
+							
+							if (!isInPosition) {
+								console.error("[SliderCaptcha] Puzzle piece not in correct position");
+								handleVerificationFailure();
+								return;
+							}
+
+							// Submit to provider for verification
 							console.log("[SliderCaptcha] Submitting solution to provider");
 
 							// Always pass to manager for provider verification
 							manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => {
-								// Verification response received
-								setVerificationInProgress(false);
-								
 								if (isVerified) {
 									// Server verified successfully
 									setSliderClass("sliderContainer sliderContainer_success");
@@ -1553,12 +1459,10 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 									setIsVerified(true);
 									setShowSuccessIcon(true);
 								} else {
-									// Server rejected the verification - show failure animation
+									// Server rejected the verification
 									handleVerificationFailure();
 								}
 							}).catch((error) => {
-								// Error handling the verification
-								setVerificationInProgress(false);
 								console.error("[SliderCaptcha] Error submitting solution:", error);
 								handleVerificationFailure();
 							});
@@ -1588,7 +1492,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 							Drag the puzzle piece into position
 						</div>
 
-						<div css={isFailed ? styles.canvasContainerError : styles.canvasContainer}>
+						<div css={styles.canvasContainer}>
 							<canvas
 								css={styles.canvas}
 								ref={canvasRef}
@@ -1618,11 +1522,10 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 								↻
 							</div>
 							{showSuccessIcon && <SuccessIcon />}
-							{showFailureAnimation && <FailureAnimation />}
 						</div>
 
 						<div
-							css={isFailed ? styles.sliderContainerError : styles.sliderContainer}
+							css={styles.sliderContainer}
 							ref={sliderRef}
 							className={sliderClass}
 						>
@@ -1658,13 +1561,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 								return;
 							}
 
-							// Set verification in progress
-							setVerificationInProgress(true);
-							
-							// Change slider class to indicate verification is in progress
-							setSliderClass("sliderContainer sliderContainer_active");
-
-							// Get the target position depending on format (for logging only)
+							// Get the target position depending on format
 							let targetPosition: number;
 							if (typeof challenge.targetPosition === 'number') {
 								// Simple number format
@@ -1680,14 +1577,20 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 								targetPosition = destX;
 							}
 
-							// Submit to provider for verification regardless of position
+							// Check if puzzle piece is in correct position (within 50px tolerance)
+							const isInPosition = Math.abs(sliderLeft - targetPosition) <= 50;
+							
+							if (!isInPosition) {
+								console.error("[SliderCaptcha] Puzzle piece not in correct position");
+								handleVerificationFailure();
+								return;
+							}
+
+							// Submit to provider for verification
 							console.log("[SliderCaptcha] Submitting solution to provider");
 
 							// Always pass to manager for provider verification
 							manager.onSuccess(sliderLeft, targetPosition).then((isVerified) => {
-								// Verification response received
-								setVerificationInProgress(false);
-								
 								if (isVerified) {
 									// Server verified successfully
 									setSliderClass("sliderContainer sliderContainer_success");
@@ -1695,12 +1598,10 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 									setIsVerified(true);
 									setShowSuccessIcon(true);
 								} else {
-									// Server rejected the verification - show failure animation
+									// Server rejected the verification
 									handleVerificationFailure();
 								}
 							}).catch((error) => {
-								// Error handling the verification
-								setVerificationInProgress(false);
 								console.error("[SliderCaptcha] Error submitting solution:", error);
 								handleVerificationFailure();
 							});
