@@ -1,0 +1,15 @@
+name: "npm"
+
+runs:
+    using: "composite"
+    steps:
+
+      - uses: ../restore_npm_cache
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
+          
+      - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+
+      - run: npm ci
