@@ -104,6 +104,7 @@ function getWidgetStyles(theme: Theme): string {
     display: flex;
     flex-direction: column;
     height: ${WIDGET_OUTER_HEIGHT}px;
+    min-width: 220px;
 }
 
 .widget__inner {
