@@ -4,7 +4,7 @@ runs:
     using: "composite"
     steps:
 
-      - uses: ../restore_npm_cache
+      - uses: ../restore_npm_cache/action.yml
 
       - uses: actions/setup-node@v4
         with:
