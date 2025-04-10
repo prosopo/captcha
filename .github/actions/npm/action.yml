@@ -4,7 +4,7 @@ runs:
     using: "composite"
     steps:
 
-      - uses: prosopo/restore_npm_cache@gha
+      - uses: prosopo/captcha/.github/actions/print_contexts@gha
 
       - uses: actions/setup-node@v4
         with:
