@@ -8,6 +8,8 @@ runs:
         with:
           node-version-file: 'package.json'
           
+      - uses: prosopo/captcha/.github/actions/restore_npm_cache@gha
+
       - name: install npm
         shell: bash
         run: |
