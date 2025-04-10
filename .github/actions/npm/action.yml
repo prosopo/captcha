@@ -4,8 +4,6 @@ runs:
     using: "composite"
     steps:
 
-      - uses: prosopo/captcha/.github/actions/print_contexts@gha
-
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
