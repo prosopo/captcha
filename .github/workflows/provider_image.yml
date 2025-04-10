@@ -108,8 +108,3 @@ jobs:
                     cat provider.log
                     grep -oE "Version: \\\\\".*\\\\\"" provider.log || (cat provider.log && exit 1)
 
-            - name: Build the provider-mock package
-              id: build_provider_mock_package
-              run: |
-                  echo "Building the provider-mock package..."
-                  npm run -w @prosopo/provider-mock build
