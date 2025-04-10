@@ -97,22 +97,18 @@ export const Checkbox: FC<CheckboxProps> = ({
 		display: flex;
 		cursor: pointer;
 		user-select: none;
-		overflow: hidden;
-		/* fallback style */
-		font-size: 16px;
-		width: 300px;
 		
-		@container widget (min-width: 0px, max-width: 219px) {
+		@container widget (max-width: 219px) {
 			display: none;
-			width: inherit;
 		}
-		@container widget (min-width: 220px, max-width: 269px) {
+		@container widget (min-width: 220px) {
+			font-size: 12px;
+		}
+		@container widget (min-width: 250px) {
 			font-size: 14px;
-			width: inherit;
 		}
 		@container widget (min-width: 270px) {
 			font-size: 16px;
-			width: inherit;
 		}
 	`;
 
