@@ -13,6 +13,7 @@ runs:
 
       # checks the cache is valid and compresses it
       - name: Verify npm cache
+        shell: bash
         run: |
           npm cache verify
 
