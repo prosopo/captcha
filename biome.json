@@ -39,20 +39,5 @@
 		"parser": {
 			"unsafeParameterDecoratorsEnabled": true
 		}
-	},
-	"overrides": [
-		{
-			"include": [
-				"packages/angular-procaptcha-wrapper/**",
-				"demos/client-angular-example/**"
-			],
-			"linter": {
-				"rules": {
-					"style": {
-						"useImportType": "off"
-					}
-				}
-			}
-		}
-	]
+	}
 }
