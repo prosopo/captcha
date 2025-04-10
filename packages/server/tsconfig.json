@@ -18,6 +18,9 @@
 		},
 		{
 			"path": "../types"
+		},
+		{
+			"path": "../load-balancer"
 		}
 	]
 }

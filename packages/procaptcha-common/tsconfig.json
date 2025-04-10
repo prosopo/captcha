@@ -23,6 +23,9 @@
 		},
 		{
 			"path": "../widget-skeleton"
+		},
+		{
+			"path": "../account"
 		}
 	]
 }
