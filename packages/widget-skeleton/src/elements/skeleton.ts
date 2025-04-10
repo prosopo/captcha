@@ -100,6 +100,7 @@ function getWidgetStyles(theme: Theme): string {
 
 .widget__wrapper {
     container-type: size;
+    container-name: widget;
     display: flex;
     flex-direction: column;
     height: ${WIDGET_OUTER_HEIGHT}px;
