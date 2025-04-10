@@ -4,7 +4,7 @@ runs:
     using: "composite"
     steps:
 
-      - uses: ./../restore_npm_cache
+      - uses: prosopo/restore_npm_cache@gha
 
       - uses: actions/setup-node@v4
         with:
