@@ -26,6 +26,7 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
+		"@prosopo/account": "2.5.5",
 		"@prosopo/common": "2.5.5",
 		"@prosopo/load-balancer": "2.5.5",
 		"@prosopo/types": "2.5.5",
