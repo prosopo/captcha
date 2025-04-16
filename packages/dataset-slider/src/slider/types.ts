@@ -12,4 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaItemTypes } from "@prosopo/types";
-export { type SliderCaptchaItem, type SliderCaptchaWithoutId, type SliderCaptcha } from "@prosopo/types"; 
+export {
+	type SliderCaptchaItem,
+	type SliderCaptchaWithoutId,
+	type SliderCaptcha,
+} from "@prosopo/types";

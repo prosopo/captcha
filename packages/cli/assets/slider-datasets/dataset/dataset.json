@@ -1,101 +1,101 @@
 {
-  "datasetId": "f9905a21ddb1e707218547b23bb585767576267301f414759b8f7a1617548bb1",
-  "captchas": [
-    {
-      "salt": "7acb7fe954470fc9b69d2f05c972537e6d8f6d7d4f09d844f94f725564c31194",
-      "baseImage": {
-        "hash": "9c285e4b2ba5cbc7b0623846de258322cf362d758e40a5eea8dcc9a130a9488d",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786828_9cfe6755.png",
-        "type": "sliderBase"
-      },
-      "puzzlePiece": {
-        "hash": "b9c4bd630ceb9c4c95e55dbfa280fd14d28f1308d546f29125140f6099839ac6",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786828_9cfe6755.png",
-        "type": "sliderPiece",
-        "position": {
-          "x": 58,
-          "y": 62
-        }
-      },
-      "solved": false,
-      "timeLimitMs": 30000
-    },
-    {
-      "salt": "5e07aa63a0ae888780315a351cb01ddf7cc7bfa7bc240fa1ac8938fb8c2da58c",
-      "baseImage": {
-        "hash": "937ba93c3a255a0a699125025edd10092e29610c729f65871aabad9006519990",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786851_7b856497.png",
-        "type": "sliderBase"
-      },
-      "puzzlePiece": {
-        "hash": "1ef518e47de7d95d3d81d391b32ac170f9732911ccdd3d4ab24c2109f3bf4d80",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786851_7b856497.png",
-        "type": "sliderPiece",
-        "position": {
-          "x": 54,
-          "y": 68
-        }
-      },
-      "solved": false,
-      "timeLimitMs": 30000
-    },
-    {
-      "salt": "bd8deb3a6755ab7ab10d7f588ecd15df745a98708b9d9711837835912f152757",
-      "baseImage": {
-        "hash": "f7cb2308c761e684dd3fe39e5266adf07c10dc2f9819e00c8c624fb61879611c",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786859_7fec6001.png",
-        "type": "sliderBase"
-      },
-      "puzzlePiece": {
-        "hash": "8c9bbac1f632247d8af2bdbe5543d60737c90882a71331c9a6387317fec25623",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786859_7fec6001.png",
-        "type": "sliderPiece",
-        "position": {
-          "x": 72,
-          "y": 88
-        }
-      },
-      "solved": false,
-      "timeLimitMs": 30000
-    },
-    {
-      "salt": "9793c3f81a9e43ff9b979016ed746c6cc7e5a07269b0536e761d71ccefeec4bf",
-      "baseImage": {
-        "hash": "ee12012697fdfbab9daa45426d392beef4be9d0f1599fae213f28622acbd0388",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786866_ff060637.png",
-        "type": "sliderBase"
-      },
-      "puzzlePiece": {
-        "hash": "0067058b13928247944f9c6b6a0a3214bc3dc3eb48ffcbf566226cd6cf66cb5f",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786866_ff060637.png",
-        "type": "sliderPiece",
-        "position": {
-          "x": 11,
-          "y": 54
-        }
-      },
-      "solved": false,
-      "timeLimitMs": 30000
-    },
-    {
-      "salt": "6cf2766a18431bceea17fbc2aebc3c27464572afc93e61e06e0c4f6f2e4d9b89",
-      "baseImage": {
-        "hash": "3a2eeed1bed15c31cf68309a3fea2fb3db8caa977ee1770ebb08fd612b22e544",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786873_edc600ee.png",
-        "type": "sliderBase"
-      },
-      "puzzlePiece": {
-        "hash": "cb2ec5c8405195641141b7c80496195912583107cabc29f5981ee3e4977b1b91",
-        "data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786873_edc600ee.png",
-        "type": "sliderPiece",
-        "position": {
-          "x": 203,
-          "y": 64
-        }
-      },
-      "solved": false,
-      "timeLimitMs": 30000
-    }
-  ],
-  "format": "slider"
+	"datasetId": "f9905a21ddb1e707218547b23bb585767576267301f414759b8f7a1617548bb1",
+	"captchas": [
+		{
+			"salt": "7acb7fe954470fc9b69d2f05c972537e6d8f6d7d4f09d844f94f725564c31194",
+			"baseImage": {
+				"hash": "9c285e4b2ba5cbc7b0623846de258322cf362d758e40a5eea8dcc9a130a9488d",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786828_9cfe6755.png",
+				"type": "sliderBase"
+			},
+			"puzzlePiece": {
+				"hash": "b9c4bd630ceb9c4c95e55dbfa280fd14d28f1308d546f29125140f6099839ac6",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786828_9cfe6755.png",
+				"type": "sliderPiece",
+				"position": {
+					"x": 58,
+					"y": 62
+				}
+			},
+			"solved": false,
+			"timeLimitMs": 30000
+		},
+		{
+			"salt": "5e07aa63a0ae888780315a351cb01ddf7cc7bfa7bc240fa1ac8938fb8c2da58c",
+			"baseImage": {
+				"hash": "937ba93c3a255a0a699125025edd10092e29610c729f65871aabad9006519990",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786851_7b856497.png",
+				"type": "sliderBase"
+			},
+			"puzzlePiece": {
+				"hash": "1ef518e47de7d95d3d81d391b32ac170f9732911ccdd3d4ab24c2109f3bf4d80",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786851_7b856497.png",
+				"type": "sliderPiece",
+				"position": {
+					"x": 54,
+					"y": 68
+				}
+			},
+			"solved": false,
+			"timeLimitMs": 30000
+		},
+		{
+			"salt": "bd8deb3a6755ab7ab10d7f588ecd15df745a98708b9d9711837835912f152757",
+			"baseImage": {
+				"hash": "f7cb2308c761e684dd3fe39e5266adf07c10dc2f9819e00c8c624fb61879611c",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786859_7fec6001.png",
+				"type": "sliderBase"
+			},
+			"puzzlePiece": {
+				"hash": "8c9bbac1f632247d8af2bdbe5543d60737c90882a71331c9a6387317fec25623",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786859_7fec6001.png",
+				"type": "sliderPiece",
+				"position": {
+					"x": 72,
+					"y": 88
+				}
+			},
+			"solved": false,
+			"timeLimitMs": 30000
+		},
+		{
+			"salt": "9793c3f81a9e43ff9b979016ed746c6cc7e5a07269b0536e761d71ccefeec4bf",
+			"baseImage": {
+				"hash": "ee12012697fdfbab9daa45426d392beef4be9d0f1599fae213f28622acbd0388",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786866_ff060637.png",
+				"type": "sliderBase"
+			},
+			"puzzlePiece": {
+				"hash": "0067058b13928247944f9c6b6a0a3214bc3dc3eb48ffcbf566226cd6cf66cb5f",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786866_ff060637.png",
+				"type": "sliderPiece",
+				"position": {
+					"x": 11,
+					"y": 54
+				}
+			},
+			"solved": false,
+			"timeLimitMs": 30000
+		},
+		{
+			"salt": "6cf2766a18431bceea17fbc2aebc3c27464572afc93e61e06e0c4f6f2e4d9b89",
+			"baseImage": {
+				"hash": "3a2eeed1bed15c31cf68309a3fea2fb3db8caa977ee1770ebb08fd612b22e544",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/base_1744119786873_edc600ee.png",
+				"type": "sliderBase"
+			},
+			"puzzlePiece": {
+				"hash": "cb2ec5c8405195641141b7c80496195912583107cabc29f5981ee3e4977b1b91",
+				"data": "file:///home/hugh/prosopo/captcha-private/captcha/packages/dataset-slider/./output/assets/piece_1744119786873_edc600ee.png",
+				"type": "sliderPiece",
+				"position": {
+					"x": 203,
+					"y": 64
+				}
+			},
+			"solved": false,
+			"timeLimitMs": 30000
+		}
+	],
+	"format": "slider"
 }

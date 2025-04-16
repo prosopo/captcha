@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { CaptchaResult } from "@prosopo/types";
-import type { DatasetBase, Dataset, DatasetWithIds } from "@prosopo/types";
+import type { Dataset, DatasetBase, DatasetWithIds } from "@prosopo/types";
 import type { Hash } from "@prosopo/types";
 import type { IDatabase } from "./mongo.js";
 import type {
@@ -34,9 +34,11 @@ export interface IProviderDatabase extends IDatabase {
 	storeDataset(dataset: Dataset): Promise<void>;
 	getSolutions(datasetId: string): Promise<SolutionRecord[]>;
 	getDataset(datasetId: string): Promise<DatasetWithIds>;
-	getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>;
+	getDatasetDetails(
+		datasetId: Hash | string | Uint8Array,
+	): Promise<DatasetBase>;
 	getDatasetByType(datasetType: string): Promise<DatasetBase[] | undefined>;
-	
+
 	// Slider Captcha methods
 	storeSliderCaptchaRecord(sliderCaptcha: SliderCaptchaStored): Promise<void>;
 	getSliderCaptchaRecordById(id: string): Promise<SliderCaptchaRecord | null>;
@@ -51,4 +53,4 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 	markSliderCaptchaChecked(id: string): Promise<void>;
 	getSessionRecordBySessionId(sessionId: string): Promise<SessionRecord | null>;
-} 
+}

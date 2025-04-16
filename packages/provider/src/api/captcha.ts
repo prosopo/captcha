@@ -692,16 +692,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				}
 
 				// Use our SliderCaptchaManager to create and store the challenge
-				const sliderCaptchaResponse = await tasks.sliderCaptchaManager.getSliderCaptchaChallenge(
-					user,
-					dapp,
-					flatten(req.headers),
-					ipAddress,
-					req.ja4,
-					0,
-					sessionId,
-				);
-				
+				const sliderCaptchaResponse =
+					await tasks.sliderCaptchaManager.getSliderCaptchaChallenge(
+						user,
+						dapp,
+						flatten(req.headers),
+						ipAddress,
+						req.ja4,
+						0,
+						sessionId,
+					);
+
 				return res.json(sliderCaptchaResponse);
 			} catch (err) {
 				req.logger.error({ err, body: req.body });
@@ -760,7 +761,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const { user, dapp, position, targetPosition, mouseMovements, solveTime, signature, challengeId } = parsed;
+			const {
+				user,
+				dapp,
+				position,
+				targetPosition,
+				mouseMovements,
+				solveTime,
+				signature,
+				challengeId,
+			} = parsed;
 
 			validiateSiteKey(dapp);
 			validateAddr(user);
@@ -779,15 +789,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				}
 
 				// Use our SliderCaptchaManager to verify the solution
-				const verified = await tasks.sliderCaptchaManager.verifySliderCaptchaSolution(
-					challengeId,
-					position,
-					mouseMovements,
-					solveTime,
-					signature.user.timestamp || "",
-					ipAddress,
-					flatten(req.headers),
-				);
+				const verified =
+					await tasks.sliderCaptchaManager.verifySliderCaptchaSolution(
+						challengeId,
+						position,
+						mouseMovements,
+						solveTime,
+						signature.user.timestamp || "",
+						ipAddress,
+						flatten(req.headers),
+					);
 
 				const response: SliderCaptchaSolutionResponse = {
 					status: "ok",
@@ -841,12 +852,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			const { token, dappSignature, verifiedTimeout } = parsed;
 
 			try {
-				const verificationResult = await tasks.sliderCaptchaManager.serverVerifySliderCaptchaSolution(
-					token.dapp,
-					token.challenge,
-					verifiedTimeout || 600000, // Default 10 minutes if not specified
-				);
-				
+				const verificationResult =
+					await tasks.sliderCaptchaManager.serverVerifySliderCaptchaSolution(
+						token.dapp,
+						token.challenge,
+						verifiedTimeout || 600000, // Default 10 minutes if not specified
+					);
+
 				return res.json({
 					status: "ok",
 					verified: verificationResult.verified,

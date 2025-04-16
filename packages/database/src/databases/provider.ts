@@ -1539,17 +1539,21 @@ export class ProviderDatabase
 	 * @param {SliderCaptchaStored} sliderCaptcha The slider captcha data
 	 * @returns {Promise<void>} A promise that resolves when the record is added.
 	 */
-	async storeSliderCaptchaRecord(sliderCaptcha: SliderCaptchaStored): Promise<void> {
+	async storeSliderCaptchaRecord(
+		sliderCaptcha: SliderCaptchaStored,
+	): Promise<void> {
 		try {
 			await this.tables.slidercaptcha.create({
 				...sliderCaptcha,
 				storedAtTimestamp: new Date(),
 			});
-			this.logger.info("Slider captcha record stored", { id: sliderCaptcha.id });
+			this.logger.info("Slider captcha record stored", {
+				id: sliderCaptcha.id,
+			});
 		} catch (err) {
-			this.logger.error("Failed to store slider captcha record", { 
+			this.logger.error("Failed to store slider captcha record", {
 				err,
-				id: sliderCaptcha.id
+				id: sliderCaptcha.id,
 			});
 			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_STORE_FAILED", {
 				context: { err },
@@ -1562,7 +1566,9 @@ export class ProviderDatabase
 	 * @param {string} id The ID of the slider captcha record.
 	 * @returns {Promise<SliderCaptchaRecord | null>} A promise that resolves to the record or null if not found.
 	 */
-	async getSliderCaptchaRecordById(id: string): Promise<SliderCaptchaRecord | null> {
+	async getSliderCaptchaRecordById(
+		id: string,
+	): Promise<SliderCaptchaRecord | null> {
 		try {
 			return await this.tables.slidercaptcha.findOne({ id });
 		} catch (err) {
@@ -1594,35 +1600,36 @@ export class ProviderDatabase
 		userSignature?: string,
 	): Promise<void> {
 		try {
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			const update: any = {
 				result,
 				serverChecked,
 				userSubmitted,
 				lastUpdatedTimestamp: Date.now(),
 			};
-			
+
 			if (position !== undefined) {
 				update.position = position;
 			}
-			
+
 			if (solveTime !== undefined) {
 				update.solveTime = solveTime;
 			}
-			
+
 			if (userSignature) {
 				update.userSignature = userSignature;
 			}
-			
+
 			const updatedRecord = await this.tables.slidercaptcha.findOneAndUpdate(
 				{ id },
 				{ $set: update },
-				{ new: true }
+				{ new: true },
 			);
-			
+
 			if (!updatedRecord) {
 				throw new Error(`Slider captcha record with id ${id} not found`);
 			}
-			
+
 			this.logger.info("Slider captcha record updated", { id });
 		} catch (err) {
 			this.logger.error("Failed to update slider captcha record", { err, id });
@@ -1642,23 +1649,28 @@ export class ProviderDatabase
 			const updatedRecord = await this.tables.slidercaptcha.findOneAndUpdate(
 				{ id },
 				{ $set: { serverChecked: true, lastUpdatedTimestamp: Date.now() } },
-				{ new: true }
+				{ new: true },
 			);
-			
+
 			if (!updatedRecord) {
 				throw new Error(`Slider captcha record with id ${id} not found`);
 			}
-			
+
 			this.logger.info("Slider captcha marked as checked", { id });
 		} catch (err) {
-			this.logger.error("Failed to mark slider captcha as checked", { err, id });
+			this.logger.error("Failed to mark slider captcha as checked", {
+				err,
+				id,
+			});
 			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_MARK_CHECKED_FAILED", {
 				context: { err },
 			});
 		}
 	}
 
-	async getSessionRecordBySessionId(sessionId: string): Promise<SessionRecord | null> {
+	async getSessionRecordBySessionId(
+		sessionId: string,
+	): Promise<SessionRecord | null> {
 		try {
 			return await this.tables.sessions.findOne({ sessionId });
 		} catch (err) {
@@ -1673,14 +1685,16 @@ export class ProviderDatabase
 	 * @description Get datasets by type
 	 * @param {string} datasetType - The type of dataset to get (e.g., 'slider')
 	 */
-	async getDatasetByType(datasetType: string): Promise<DatasetBase[] | undefined> {
+	async getDatasetByType(
+		datasetType: string,
+	): Promise<DatasetBase[] | undefined> {
 		const filter = { datasetType };
 		const docs = await this.tables?.dataset.find(filter).lean<DatasetBase[]>();
-		
+
 		if (docs && docs.length > 0) {
 			return docs;
 		}
-		
+
 		return undefined;
 	}
 }

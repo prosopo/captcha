@@ -39,7 +39,9 @@ export const ProcaptchaResponse = object({
  * The state of Procaptcha. This is mutated as required to reflect the captcha
  * process.
  */
-export interface ProcaptchaState<T extends CaptchaResponseBody = CaptchaResponseBody> {
+export interface ProcaptchaState<
+	T extends CaptchaResponseBody = CaptchaResponseBody,
+> {
 	isHuman: boolean; // is the user human?
 	index: number; // the index of the captcha round currently being shown
 	solutions: string[][]; // the solutions for each captcha round
@@ -64,7 +66,9 @@ export interface ProcaptchaState<T extends CaptchaResponseBody = CaptchaResponse
  * are defined and using values from the current state for any undefined state
  * variables.
  */
-export type ProcaptchaStateUpdateFn<T extends CaptchaResponseBody = CaptchaResponseBody> = (state: Partial<ProcaptchaState<T>>) => void;
+export type ProcaptchaStateUpdateFn<
+	T extends CaptchaResponseBody = CaptchaResponseBody,
+> = (state: Partial<ProcaptchaState<T>>) => void;
 
 /** List of callbacks that Procaptcha widgets must implement. */
 export interface Callbacks {

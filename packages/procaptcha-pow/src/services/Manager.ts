@@ -200,7 +200,6 @@ export const Manager = (
 				}
 
 				let getRandomProviderResponse = undefined;
-
 				if (frictionlessState?.provider) {
 					getRandomProviderResponse = frictionlessState.provider;
 				} else {

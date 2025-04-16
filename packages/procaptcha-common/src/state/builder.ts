@@ -23,10 +23,11 @@ import type {
 type useRefType = <T>(defaultValue: T) => { current: T };
 type useStateType = <T>(defaultValue: T) => [T, (value: T) => void];
 
-export const buildUpdateState = <T extends CaptchaResponseBody>(
-	state: ProcaptchaState<T>,
-	onStateUpdate: ProcaptchaStateUpdateFn<T>,
-) =>
+export const buildUpdateState =
+	<T extends CaptchaResponseBody>(
+		state: ProcaptchaState<T>,
+		onStateUpdate: ProcaptchaStateUpdateFn<T>,
+	) =>
 	(nextState: Partial<ProcaptchaState<T>>) => {
 		// mutate the current state. Note that this is in order of properties in the nextState object.
 		// e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.

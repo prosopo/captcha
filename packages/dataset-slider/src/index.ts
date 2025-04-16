@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./slider/index.js";
-export * from "./types.js"; 
+export * from "./types.js";
