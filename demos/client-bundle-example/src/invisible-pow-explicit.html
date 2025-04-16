@@ -1,9 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Procaptcha Invisible POW Mode - Explicit Rendering</title>
+    <title>Procaptcha Invisible Mode - Explicit Rendering</title>
     <!-- Load the Procaptcha script with explicit rendering -->
-    <script type="module" src="%VITE_BUNDLE_URL%?render=explicit" async defer></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -125,30 +124,11 @@
                 console.log = originalConsoleLog;
             }, 1000);
         }
-        
-        function onloadCallback() {
-            console.log('Procaptcha script loaded, initializing explicit rendering');
-            
-            // Render the Procaptcha widget
-            const widgetId = render(document.getElementById('procaptcha-container'), {
-                siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
-                captchaType: CaptchaType.pow,
-                callback: onSubmit,
-                "failed-callback": handleCaptchaFailed
-            });
-            
-            document.getElementById('submit-button').addEventListener('click', validate);
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up the onload callback for Procaptcha
-            window.onProcaptchaLoad = onloadCallback;
-        });
     </script>
 </head>
 <body>
-    <h1>Procaptcha Invisible POW Mode</h1>
-    <p>This example demonstrates how to use Procaptcha in invisible POW mode with explicit rendering.</p>
+    <h1>Procaptcha Invisible Mode</h1>
+    <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering.</p>
     
     <form id="demo-form" action="javascript:void(0);" method="POST">
         <div>
@@ -176,7 +156,7 @@
     
     <div style="margin-top: 20px;">
         <h2>How It Works</h2>
-        <p>This example demonstrates how to use Procaptcha in invisible POW mode with explicit rendering:</p>
+        <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering:</p>
         <ol>
             <li>Include the Procaptcha script with <code>?render=explicit</code> parameter</li>
             <li>Create a container div with <code>data-size="invisible"</code></li>
@@ -195,8 +175,7 @@
 window.procaptcha.render('procaptcha-container', {
     'siteKey': 'your_site_key',
     'callback': onSubmit,
-    'size': 'invisible',
-    'captchaType': 'pow'
+    'size': 'invisible'
 });
 
 // Execute the verification
@@ -228,6 +207,20 @@ window.procaptcha.execute();
     <!-- Initialize Procaptcha with onload callback -->
     <script type="module">
         import { render } from "%VITE_BUNDLE_URL%";
+
+        function onloadCallback() {
+            console.log('Procaptcha script loaded, initializing explicit rendering');
+            
+            // Render the Procaptcha widget
+            const widgetId = render(document.getElementById('procaptcha-container'), {
+                siteKey: "%PROSOPO_SITE_KEY_POW%", 
+                captchaType: "pow",
+                callback: onSubmit,
+                size: "invisible"
+            });
+            
+            document.getElementById('submit-button').addEventListener('click', validate);
+        }
         
         // Wait for the script to load
         document.addEventListener('DOMContentLoaded', function() {

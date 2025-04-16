@@ -39,6 +39,9 @@ export interface SliderCaptchaResponseBody extends CaptchaResponseBody {
 		y: number;
 	};
 	
+	// Provider information
+	providerUrl?: string;
+	
 	// Common field (always required)
 	challengeId: string;
 }
