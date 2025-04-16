@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
@@ -25,8 +27,6 @@ import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
 import { SliderCaptchaManager } from "./sliderCaptcha/sliderTasks.js";
-import { join } from "path";
-import { existsSync } from "fs";
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -89,12 +89,12 @@ export class Tasks {
 		);
 
 		// Define paths for the slider captcha datasets
-		const sliderDatasetPath = join(process.cwd(), 'assets/slider-datasets');
-		const sliderAssetPath = '/assets/slider-datasets';
-		
+		const sliderDatasetPath = join(process.cwd(), "assets/slider-datasets");
+		const sliderAssetPath = "/assets/slider-datasets";
+
 		this.logger.info("Initializing SliderCaptchaManager", {
 			sliderDatasetPath,
-			sliderAssetPath
+			sliderAssetPath,
 		});
 
 		// Initialize SliderCaptchaManager without requiring config flag
@@ -105,10 +105,10 @@ export class Tasks {
 			this.logger,
 			{
 				datasetPath: sliderDatasetPath,
-				assetPath: sliderAssetPath
-			}
+				assetPath: sliderAssetPath,
+			},
 		);
-		
+
 		// Initialize the DatasetManager with the SliderCaptchaManager instance
 		// This allows the DatasetManager to handle slider captcha datasets
 		this.datasetManager = new DatasetManager(
@@ -116,7 +116,7 @@ export class Tasks {
 			this.logger,
 			this.captchaConfig,
 			this.db,
-			this.sliderCaptchaManager
+			this.sliderCaptchaManager,
 		);
 	}
 }

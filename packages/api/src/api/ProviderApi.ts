@@ -1,3 +1,4 @@
+import { LogLevel } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +49,6 @@ import {
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import HttpClientBase from "./HttpClientBase.js";
-import { LogLevel } from "@prosopo/common";
 
 export default class ProviderApi
 	extends HttpClientBase
@@ -342,7 +342,7 @@ export default class ProviderApi
 		timestamp: string,
 		signature: { user: { timestamp: string }; provider: { challenge: string } },
 		fingerprint: string,
-		challengeId: string
+		challengeId: string,
 	): Promise<SliderCaptchaSolutionResponse> {
 		const body = {
 			[ApiParams.user]: userAccount,
@@ -356,7 +356,7 @@ export default class ProviderApi
 			signature,
 			fingerprint,
 		};
-		
+
 		return this.post(ClientApiPaths.SubmitSliderCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,

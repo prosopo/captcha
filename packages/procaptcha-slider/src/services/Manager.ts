@@ -54,6 +54,7 @@ const ApiParams = {
 
 // Add debug function at the top of the file (after imports)
 const DEBUG_PREFIX = "[SliderCaptcha Manager]";
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 const debug = (message: string, data?: any) => {
 	if (data) {
 		console.log(`${DEBUG_PREFIX} ${message}`, data);
@@ -467,8 +468,7 @@ export const Manager = (
 			}
 
 			resetState();
-			updateState({
-			});
+			updateState({});
 
 			// Increment attempt counter
 			const newAttemptCount = state.attemptCount + 1;
@@ -520,8 +520,7 @@ export const Manager = (
 			});
 			updateState({ dappAccount: config.account.address });
 
-			// Get a random provider
-			let providerResponse;
+			let providerResponse = undefined;
 			if (frictionlessState?.provider) {
 				providerResponse = frictionlessState.provider;
 			} else {
@@ -570,17 +569,27 @@ export const Manager = (
 						},
 					},
 					// Handle different targetPosition formats
-					targetPosition: typeof sliderCaptchaResponse.targetPosition === 'object' 
-						? (sliderCaptchaResponse.targetPosition as {x: number, y: number}).x 
-						: sliderCaptchaResponse.targetPosition as number,
+					targetPosition:
+						typeof sliderCaptchaResponse.targetPosition === "object"
+							? (
+									sliderCaptchaResponse.targetPosition as {
+										x: number;
+										y: number;
+									}
+								).x
+							: (sliderCaptchaResponse.targetPosition as number),
 					// Include new properties for shaped slider captchas
 					baseImageUrl: sliderCaptchaResponse.baseImageUrl,
 					puzzlePieceUrl: sliderCaptchaResponse.puzzlePieceUrl,
 					shape: sliderCaptchaResponse.shape,
 					// Store the original target position as 2D if available
-					targetPosition2D: typeof sliderCaptchaResponse.targetPosition === 'object' 
-						? sliderCaptchaResponse.targetPosition as {x: number, y: number}
-						: undefined,
+					targetPosition2D:
+						typeof sliderCaptchaResponse.targetPosition === "object"
+							? (sliderCaptchaResponse.targetPosition as {
+									x: number;
+									y: number;
+								})
+							: undefined,
 					imageUrl: sliderCaptchaResponse.imageUrl,
 					challengeId: sliderCaptchaResponse.challengeId,
 					// Store the provider URL for later use
@@ -662,7 +671,7 @@ export const Manager = (
 			const solveTime = Date.now() - (state.captchaStartTime || Date.now());
 
 			// Get provider URL from frictionless state or get a new one
-			let providerUrl;
+			let providerUrl = undefined;
 			if (frictionlessState?.provider) {
 				providerUrl = frictionlessState.provider.provider.url;
 			} else if (state.challenge?.providerUrl) {
@@ -706,7 +715,7 @@ export const Manager = (
 					},
 				},
 				fingerprint,
-				state.challenge?.challengeId || ""
+				state.challenge?.challengeId || "",
 			);
 
 			debug("Received slider solution verification", response);
@@ -721,7 +730,7 @@ export const Manager = (
 			// Server verified the solution, set user as human
 			updateState({
 				isHuman: true,
-				loading: false
+				loading: false,
 				// Don't close modal here - we'll do it after showing success animation
 			});
 
@@ -764,8 +773,8 @@ export const Manager = (
 			// Wait for animation to complete before closing modal
 			setTimeout(() => {
 				debug("Closing modal after success animation");
-				updateState({ 
-					showModal: false 
+				updateState({
+					showModal: false,
 				});
 			}, 1500);
 

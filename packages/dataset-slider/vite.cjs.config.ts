@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { defineConfig } from "vite";
-import { resolve } from "path";
 
 export default defineConfig({
 	build: {
@@ -24,4 +24,4 @@ export default defineConfig({
 		outDir: "dist/cjs",
 		emptyOutDir: false,
 	},
-}); 
+});

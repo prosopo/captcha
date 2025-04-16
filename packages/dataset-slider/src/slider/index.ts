@@ -13,4 +13,4 @@
 // limitations under the License.
 export * from "./generator.js";
 export * from "./validator.js";
-export * from "./types.js"; 
+export * from "./types.js";

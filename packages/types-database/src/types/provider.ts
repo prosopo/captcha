@@ -631,12 +631,12 @@ export interface IProviderDatabase extends IDatabase {
 	getDetectorKeys(): Promise<string[]>;
 
 	removeDetectorKey(detectorKey: string): Promise<void>;
-	
+
 	// Slider Captcha methods
 	storeSliderCaptchaRecord(sliderCaptcha: SliderCaptchaStored): Promise<void>;
-	
+
 	getSliderCaptchaRecordById(id: string): Promise<SliderCaptchaRecord | null>;
-	
+
 	updateSliderCaptchaRecord(
 		id: string,
 		result: CaptchaResult,
@@ -646,9 +646,9 @@ export interface IProviderDatabase extends IDatabase {
 		solveTime?: number,
 		userSignature?: string,
 	): Promise<void>;
-	
+
 	markSliderCaptchaChecked(id: string): Promise<void>;
-	
+
 	getSessionRecordBySessionId(sessionId: string): Promise<SessionRecord | null>;
 
 	getDatasetByType(datasetType: string): Promise<DatasetBase[] | undefined>;
@@ -659,7 +659,7 @@ export type SliderCaptchaStored = {
 	id: string; // Unique ID for this slider challenge
 	dappAccount: string;
 	userAccount: string;
-	targetPosition: number | { x: number; y: number; }; // Support both simple number and position object
+	targetPosition: number | { x: number; y: number }; // Support both simple number and position object
 	imageUrl?: string; // Original implementation used random image URLs
 	// Add shape-based captcha support
 	baseImageUrl?: string; // URL to the base image with cutout
@@ -676,7 +676,7 @@ export type SliderCaptchaStored = {
 	userSubmitted: boolean;
 	serverChecked: boolean;
 	solveTime?: number;
-	position?: number | { x: number; y: number; }; // User's submitted position
+	position?: number | { x: number; y: number }; // User's submitted position
 	storedAtTimestamp?: Date;
 	frictionlessTokenId?: ObjectId;
 };
@@ -722,4 +722,7 @@ export const SliderCaptchaRecordSchema = new Schema<SliderCaptchaRecord>({
 // Set indexes for performance
 SliderCaptchaRecordSchema.index({ id: 1 });
 SliderCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
-SliderCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
+SliderCaptchaRecordSchema.index({
+	storedAtTimestamp: 1,
+	lastUpdatedTimestamp: 1,
+});

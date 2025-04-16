@@ -15,23 +15,24 @@
 /** @jsxImportSource @emotion/react */
 
 import { css } from "@emotion/react";
-import React, { useEffect, useRef } from "react";
+import type React from "react";
+import { useEffect, useRef } from "react";
 
 // Define colors directly to avoid import issues
 const colors = {
-  primary: "#4361ee",
-  primaryDark: "#3f37c9",
-  text: "#212529"
+	primary: "#4361ee",
+	primaryDark: "#3f37c9",
+	text: "#212529",
 };
 
 interface CaptchaCheckboxProps {
-  isHuman: boolean;
-  onClick: () => void;
-  text?: string;
+	isHuman: boolean;
+	onClick: () => void;
+	text?: string;
 }
 
 const checkboxStyles = {
-  container: css`
+	container: css`
     display: flex;
     align-items: center;
     font-family: "Roboto", sans-serif;
@@ -39,7 +40,7 @@ const checkboxStyles = {
     cursor: pointer;
     user-select: none;
   `,
-  checkbox: css`
+	checkbox: css`
     width: 20px;
     height: 20px;
     border: 2px solid ${colors.primary};
@@ -61,7 +62,7 @@ const checkboxStyles = {
       background-color: ${colors.primary};
     }
   `,
-  checkmark: css`
+	checkmark: css`
     color: white;
     opacity: 0;
     transform: scale(0.5);
@@ -72,7 +73,7 @@ const checkboxStyles = {
       transform: scale(1);
     }
   `,
-  label: css`
+	label: css`
     font-size: 14px;
     color: ${colors.text};
   `,
@@ -81,50 +82,49 @@ const checkboxStyles = {
 /**
  * A checkbox component that shows verified status
  */
-export const CaptchaCheckbox: React.FC<CaptchaCheckboxProps> = ({ 
-  isHuman, 
-  onClick, 
-  text = "I'm human"
+export const CaptchaCheckbox: React.FC<CaptchaCheckboxProps> = ({
+	isHuman,
+	onClick,
+	text = "I'm human",
 }) => {
-  const checkboxRef = useRef<HTMLDivElement>(null);
-  
-  // When isHuman changes to true, check the checkbox
-  useEffect(() => {
-    if (isHuman && checkboxRef.current) {
-      checkboxRef.current.classList.add("checked");
-    } else if (checkboxRef.current) {
-      checkboxRef.current.classList.remove("checked");
-    }
-  }, [isHuman]);
-  
-  return (
-    <div css={checkboxStyles.container} onClick={onClick}>
-      <div 
-        css={checkboxStyles.checkbox} 
-        ref={checkboxRef}
-        className={isHuman ? "checked" : ""}
-        role="checkbox"
-        aria-checked={isHuman}
-        tabIndex={0}
-      >
-        <svg 
-          css={checkboxStyles.checkmark}
-          className={isHuman ? "checked" : ""} 
-          width="16" 
-          height="16" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path 
-            d="M9.00016 16.1698L4.83016 11.9998L3.41016 13.4098L9.00016 18.9998L21.0002 6.99984L19.5902 5.58984L9.00016 16.1698Z" 
-            fill="currentColor"
-          />
-        </svg>
-      </div>
-      <span css={checkboxStyles.label}>{text}</span>
-    </div>
-  );
+	const checkboxRef = useRef<HTMLDivElement>(null);
+
+	// When isHuman changes to true, check the checkbox
+	useEffect(() => {
+		if (isHuman && checkboxRef.current) {
+			checkboxRef.current.classList.add("checked");
+		} else if (checkboxRef.current) {
+			checkboxRef.current.classList.remove("checked");
+		}
+	}, [isHuman]);
+
+	return (
+		<div css={checkboxStyles.container} onClick={onClick}>
+			<div
+				css={checkboxStyles.checkbox}
+				ref={checkboxRef}
+				className={isHuman ? "checked" : ""}
+				aria-checked={isHuman}
+			>
+				<svg
+					css={checkboxStyles.checkmark}
+					className={isHuman ? "checked" : ""}
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<title>Checkbox</title>
+					<path
+						d="M9.00016 16.1698L4.83016 11.9998L3.41016 13.4098L9.00016 18.9998L21.0002 6.99984L19.5902 5.58984L9.00016 16.1698Z"
+						fill="currentColor"
+					/>
+				</svg>
+			</div>
+			<span css={checkboxStyles.label}>{text}</span>
+		</div>
+	);
 };
 
-export default CaptchaCheckbox; 
+export default CaptchaCheckbox;

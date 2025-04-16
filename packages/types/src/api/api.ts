@@ -20,14 +20,14 @@ import type {
 	CaptchaResponseBody,
 	CaptchaSolutionResponse,
 	GetPowCaptchaResponse,
+	GetSliderCaptchaResponse,
 	ImageVerificationResponse,
 	PowCaptchaSolutionResponse,
 	Provider,
 	ProviderRegistered,
 	RandomProvider,
-	UpdateProviderClientsResponse,
-	GetSliderCaptchaResponse,
 	SliderCaptchaSolutionResponse,
+	UpdateProviderClientsResponse,
 } from "../provider/index.js";
 
 export interface ProviderApiInterface {

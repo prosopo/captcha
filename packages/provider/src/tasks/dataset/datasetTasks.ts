@@ -1,3 +1,4 @@
+import type { KeyringPair } from "@polkadot/keyring/types";
 import type { Logger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
@@ -19,9 +20,8 @@ import type {
 	ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import { providerValidateDataset } from "./datasetTasksUtils.js";
 import { SliderCaptchaManager } from "../sliderCaptcha/sliderTasks.js";
-import type { KeyringPair } from "@polkadot/keyring/types";
+import { providerValidateDataset } from "./datasetTasksUtils.js";
 
 export class DatasetManager {
 	config: ProsopoConfigOutput;
@@ -35,7 +35,7 @@ export class DatasetManager {
 		logger: Logger,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		db: IProviderDatabase,
-		sliderCaptchaManager?: SliderCaptchaManager
+		sliderCaptchaManager?: SliderCaptchaManager,
 	) {
 		this.config = config;
 		this.logger = logger;
@@ -43,7 +43,7 @@ export class DatasetManager {
 		this.db = db;
 		this.sliderCaptchaManager = sliderCaptchaManager;
 	}
-	
+
 	/**
 	 * Create a slider captcha manager if needed
 	 * @param pair The provider's key pair
@@ -54,7 +54,7 @@ export class DatasetManager {
 			this.sliderCaptchaManager = new SliderCaptchaManager(
 				this.db,
 				pair,
-				this.logger
+				this.logger,
 			);
 		}
 		return this.sliderCaptchaManager;
@@ -66,24 +66,29 @@ export class DatasetManager {
 	 * @param file JSON of the captcha dataset
 	 * @param pair The provider's key pair (needed for slider captcha)
 	 */
-	async providerSetDatasetFromFile(file: JSON, pair?: KeyringPair): Promise<void> {
+	async providerSetDatasetFromFile(
+		file: JSON,
+		pair?: KeyringPair,
+	): Promise<void> {
 		const datasetRaw = parseCaptchaDataset(file);
-		
+
 		// Check if this is a slider captcha dataset
-		if (datasetRaw.datasetType === 'slider') {
+		if (datasetRaw.datasetType === "slider") {
 			if (!pair) {
-				throw new Error('Provider key pair is required for loading slider captcha datasets');
+				throw new Error(
+					"Provider key pair is required for loading slider captcha datasets",
+				);
 			}
-			this.logger.info('Detected slider captcha dataset');
-			
+			this.logger.info("Detected slider captcha dataset");
+
 			// Process as a slider captcha dataset
 			const sliderManager = this.getSliderCaptchaManager(pair);
 			await sliderManager.loadDatasetFromJson(datasetRaw);
 			return;
 		}
-		
+
 		// Otherwise handle as a regular image captcha dataset
-		this.logger.info('Processing image captcha dataset');
+		this.logger.info("Processing image captcha dataset");
 		return await this.providerSetDataset(datasetRaw);
 	}
 

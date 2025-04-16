@@ -555,7 +555,9 @@ export default function navigationInjector(): Plugin {
 			const links: string[] = [];
 
 			// Create simple buttons for each implementation
-			for (const [implName, implDetails] of Object.entries(captchaType as CaptchaType)) {
+			for (const [implName, implDetails] of Object.entries(
+				captchaType as CaptchaType,
+			)) {
 				const pagePath = implDetails.path;
 				const pageExists = implDetails.exists;
 				const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
@@ -570,10 +572,12 @@ export default function navigationInjector(): Plugin {
 				}
 
 				if (pageExists) {
-					const activeClass = currentPath === pagePath ? ' class="active"' : '';
+					const activeClass = currentPath === pagePath ? ' class="active"' : "";
 					links.push(`<a href="${href}"${activeClass}>${implTitle}</a>`);
 				} else {
-					links.push(`<span class="disabled" title="Coming Soon">${implTitle}</span>`);
+					links.push(
+						`<span class="disabled" title="Coming Soon">${implTitle}</span>`,
+					);
 				}
 			}
 
@@ -581,7 +585,7 @@ export default function navigationInjector(): Plugin {
         <div class="nav-group">
           <div class="nav-group-title">${typeTitle}</div>
           <div class="nav-group-links">
-            ${links.join('\n            ')}
+            ${links.join("\n            ")}
           </div>
         </div>
       `);

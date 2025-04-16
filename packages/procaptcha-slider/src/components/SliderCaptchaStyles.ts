@@ -412,4 +412,4 @@ export const sliderFailClass = `
 	30%, 50%, 70% { transform: translateX(-2px); }
 	40%, 60% { transform: translateX(2px); }
 }
-`; 
+`;

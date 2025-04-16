@@ -1,98 +1,94 @@
 {
-    "name": "@prosopo/dataset-slider",
-    "version": "2.5.5",
-    "author": "PROSOPO LIMITED <info@prosopo.io>",
-    "license": "Apache-2.0",
-    "private": false,
-    "engines": {
-        "node": "20",
-        "npm": "10.8.2"
-    },
-    "scripts": {
-        "clean": "tsc --build --clean",
-        "build": "tsc --build --verbose",
-        "build:cjs": "node ./node_modules/vite/bin/vite.js --config vite.cjs.config.ts build",
-        "test": "NODE_ENV=${NODE_ENV:-test}; node ./node_modules/vitest/vitest.mjs run --config ./vite.test.config.ts",
-        "cli": "node ./dist/cli.js",
-        "prebuild": "npm run clean",
-        "pregenerate": "npm run build",
-        "predeploy": "npm run build",
-        "preinit-provider": "npm run build",
-        "presetup": "npm run build",
-        "generate": "node ./dist/cli.js",
-        "generate:test": "node ./dist/cli.js --test",
-        "deploy": "node ./dist/scripts/deploy.js",
-        "init-provider": "node ./dist/cli.js init-provider",
-        "setup": "node ./dist/scripts/setup.js",
-        "prepack": "npm run clean && npm run build",
-        "typecheck": "tsc --noEmit",
-        "lint": "biome check src"
-    },
-    "bin": {
-        "dataset-slider": "./dist/cli.js"
-    },
-    "main": "./dist/index.js",
-    "type": "module",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "import": "./dist/index.js",
-            "require": "./dist/cjs/index.cjs"
-        },
-        "./slider": {
-            "types": "./dist/slider/index.d.ts",
-            "import": "./dist/slider/index.js",
-            "require": "./dist/cjs/slider/index.cjs",
-            "default": "./dist/slider/index.js"
-        }
-    },
-    "typesVersions": {
-        "*": {
-            "types": [
-                "dist/types"
-            ],
-            "slider": [
-                "dist/slider"
-            ]
-        }
-    },
-    "dependencies": {
-        "@polkadot/util": "12.6.2",
-        "@prosopo/common": "2.5.5",
-        "@prosopo/types": "2.5.5",
-        "@prosopo/util": "2.5.5",
-        "express": "4.21.2",
-        "sharp": "^0.33.2",
-        "yargs": "^17.7.2"
-    },
-    "devDependencies": {
-        "@prosopo/config": "2.5.5",
-        "@types/yargs": "^17.0.32",
-        "@vitest/coverage-v8": "3.0.9",
-        "concurrently": "9.0.1",
-        "del-cli": "6.0.0",
-        "dotenv": "16.4.5",
-        "npm-run-all": "2.1.0",
-        "tslib": "2.7.0",
-        "tsx": "4.19.1",
-        "typescript": "5.6.2",
-        "vite": "6.2.3",
-        "vitest": "3.0.9"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/prosopo/captcha.git"
-    },
-    "bugs": {
-        "url": "https://github.com/prosopo/captcha/issues"
-    },
-    "homepage": "https://github.com/prosopo/captcha#readme",
-    "publishConfig": {
-        "registry": "https://registry.npmjs.org"
-    },
-    "description": "Slider captcha dataset generation and management",
-    "directories": {
-        "test": "tests"
-    },
-    "sideEffects": false
+	"name": "@prosopo/dataset-slider",
+	"version": "2.5.5",
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"private": false,
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"scripts": {
+		"clean": "tsc --build --clean",
+		"build": "tsc --build --verbose",
+		"build:cjs": "node ./node_modules/vite/bin/vite.js --config vite.cjs.config.ts build",
+		"test": "NODE_ENV=${NODE_ENV:-test}; node ./node_modules/vitest/vitest.mjs run --config ./vite.test.config.ts",
+		"cli": "node ./dist/cli.js",
+		"prebuild": "npm run clean",
+		"pregenerate": "npm run build",
+		"predeploy": "npm run build",
+		"preinit-provider": "npm run build",
+		"presetup": "npm run build",
+		"generate": "node ./dist/cli.js",
+		"generate:test": "node ./dist/cli.js --test",
+		"deploy": "node ./dist/scripts/deploy.js",
+		"init-provider": "node ./dist/cli.js init-provider",
+		"setup": "node ./dist/scripts/setup.js",
+		"prepack": "npm run clean && npm run build",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check src"
+	},
+	"bin": {
+		"dataset-slider": "./dist/cli.js"
+	},
+	"main": "./dist/index.js",
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		},
+		"./slider": {
+			"types": "./dist/slider/index.d.ts",
+			"import": "./dist/slider/index.js",
+			"require": "./dist/cjs/slider/index.cjs",
+			"default": "./dist/slider/index.js"
+		}
+	},
+	"typesVersions": {
+		"*": {
+			"types": ["dist/types"],
+			"slider": ["dist/slider"]
+		}
+	},
+	"dependencies": {
+		"@polkadot/util": "12.6.2",
+		"@prosopo/common": "2.5.5",
+		"@prosopo/types": "2.5.5",
+		"@prosopo/util": "2.5.5",
+		"express": "4.21.2",
+		"sharp": "^0.33.2",
+		"yargs": "^17.7.2"
+	},
+	"devDependencies": {
+		"@prosopo/config": "2.5.5",
+		"@types/yargs": "^17.0.32",
+		"@vitest/coverage-v8": "3.0.9",
+		"concurrently": "9.0.1",
+		"del-cli": "6.0.0",
+		"dotenv": "16.4.5",
+		"npm-run-all": "2.1.0",
+		"tslib": "2.7.0",
+		"tsx": "4.19.1",
+		"typescript": "5.6.2",
+		"vite": "6.2.3",
+		"vitest": "3.0.9"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git"
+	},
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org"
+	},
+	"description": "Slider captcha dataset generation and management",
+	"directories": {
+		"test": "tests"
+	},
+	"sideEffects": false
 }

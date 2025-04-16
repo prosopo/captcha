@@ -5,4 +5,4 @@
 		"outDir": "./dist/cjs",
 		"moduleResolution": "node"
 	}
-} 
+}
