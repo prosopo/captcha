@@ -3,7 +3,6 @@
 <head>
     <title>Procaptcha Invisible Mode - Explicit Rendering</title>
     <!-- Load the Procaptcha script with explicit rendering -->
-    <script type="module" src="%VITE_BUNDLE_URL%?render=explicit" async defer></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -125,25 +124,6 @@
                 console.log = originalConsoleLog;
             }, 1000);
         }
-        
-        function onloadCallback() {
-            console.log('Procaptcha script loaded, initializing explicit rendering');
-            
-            // Render the Procaptcha widget
-            const widgetId = render(document.getElementById('procaptcha-container'), {
-                siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%",
-                captchaType: CaptchaType.frictionless,
-                callback: onSubmit,
-                "failed-callback": handleCaptchaFailed
-            });
-            
-            document.getElementById('submit-button').addEventListener('click', validate);
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up the onload callback for Procaptcha
-            window.onProcaptchaLoad = onloadCallback;
-        });
     </script>
 </head>
 <body>
@@ -227,6 +207,20 @@ window.procaptcha.execute();
     <!-- Initialize Procaptcha with onload callback -->
     <script type="module">
         import { render } from "%VITE_BUNDLE_URL%";
+
+        function onloadCallback() {
+            console.log('Procaptcha script loaded, initializing explicit rendering');
+            
+            // Render the Procaptcha widget
+            const widgetId = render(document.getElementById('procaptcha-container'), {
+                siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%", 
+                captchaType: "frictionless",
+                callback: onSubmit,
+                size: "invisible"
+            });
+            
+            document.getElementById('submit-button').addEventListener('click', validate);
+        }
         
         // Wait for the script to load
         document.addEventListener('DOMContentLoaded', function() {

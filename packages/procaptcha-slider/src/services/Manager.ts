@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Extension, ExtensionWeb2 } from "@prosopo/account";
+import { ExtensionWeb2 } from "@prosopo/account";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import { getFingerprint } from "@prosopo/fingerprint";
 import {
-	ExtensionLoader,
-	buildUpdateState,
 	getDefaultEvents,
 	getRandomActiveProvider,
 } from "@prosopo/procaptcha-common";
@@ -31,18 +29,12 @@ import {
 	type ProcaptchaSliderState,
 	type ProcaptchaSliderStateUpdateFn,
 	type SliderCaptchaResponseBody,
-	type SliderVerificationResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { sleep } from "@prosopo/util";
 
-// The minimum time (in milliseconds) a human should spend solving a slider captcha
 const MIN_SOLVE_TIME = 1000;
-
-// The maximum time (in milliseconds) a verified solution is valid (10 minutes)
 const VERIFIED_TIMEOUT = 10 * 60 * 1000;
-
-// The maximum time (in milliseconds) a user is allowed to solve a slider captcha (2 minutes)
 const SOLUTION_TIMEOUT = 2 * 60 * 1000;
 
 // A custom API parameter constants similar to what's used in other captcha modules
@@ -85,12 +77,16 @@ const buildSliderUpdateState =
 			callbacks: state.callbacks,
 			mouseMovements: state.mouseMovements,
 			attemptCount: state.attemptCount,
+			account: state.account,
 		};
 
-		onStateUpdate({
+		const updatedState = {
 			...preservedState,
 			...newState,
-		});
+		};
+
+		debug("Updated state", updatedState);
+		onStateUpdate(updatedState);
 	};
 
 /**
@@ -104,7 +100,7 @@ export const Manager = (
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
 ) => {
-	debug("Initializing Slider Captcha Manager", {
+	debug("Initializing Slidasdfasdfasdfer Captcha Manager", {
 		web2: configInput.web2,
 		hasUserAccount: !!configInput.userAccountAddress,
 	});
@@ -196,15 +192,16 @@ export const Manager = (
 	 */
 	const getAccount = () => {
 		debug("Getting account");
-		if (!state.account) {
+		if (!state.account?.account.address) {
 			debug("Account not found in state");
+			debug("State", state);
 			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
 				context: { error: "Account not loaded" },
 			});
 		}
 
 		debug("Account found", { address: state.account.account.address });
-		return { account: state.account };
+		return state.account.account.address;
 	};
 
 	/**
@@ -212,18 +209,19 @@ export const Manager = (
 	 */
 	const getDappAccount = () => {
 		debug("Getting dapp account");
-		if (!state.dappAccount) {
+		if (!state.config.account.address) {
 			debug("Dapp account not found");
 			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 		}
 
-		debug("Dapp account found", { dappAccount: state.dappAccount });
-		return state.dappAccount;
+		debug("Dapp account found", { dappAccount: state.config.account.address });
+		return state.config.account.address;
 	};
 
 	// Wrap the update state function with debug logging
 	const updateState = (newState: Partial<ProcaptchaSliderState>) => {
 		debug("Updating state", newState);
+		debug("State", state);
 		return buildSliderUpdateState(state, onStateUpdate)(newState);
 	};
 
@@ -514,6 +512,7 @@ export const Manager = (
 			updateState({
 				account: { account: { address: userAccount } },
 			});
+			state.account = { account: { address: userAccount } };
 
 			// Set dapp account in state
 			debug("Setting dapp account in state", {
@@ -541,6 +540,9 @@ export const Manager = (
 			}
 
 			const providerApi = new ProviderApi(providerUrl, config.account.address);
+			if (state.challenge) {
+				state.challenge.providerUrl = providerUrl;
+			}
 			debug("Created provider API client");
 
 			try {
@@ -581,7 +583,11 @@ export const Manager = (
 						: undefined,
 					imageUrl: sliderCaptchaResponse.imageUrl,
 					challengeId: sliderCaptchaResponse.challengeId,
+					// Store the provider URL for later use
+					providerUrl: providerUrl,
 				};
+
+				state.challenge = widgetChallenge;
 
 				// Store the challenge in state so the widget can use the image URL
 				updateState({
@@ -590,8 +596,7 @@ export const Manager = (
 			} catch (err) {
 				debug("Error getting slider captcha challenge", err);
 				console.error("Failed to get slider captcha challenge", err);
-				// Fall back to client-side generation only if API fails
-				debug("Falling back to client-side captcha generation");
+				throw err;
 			}
 
 			// Let UI catch up with loading state
@@ -647,7 +652,7 @@ export const Manager = (
 		try {
 			// Get config and accounts
 			const config = getConfig();
-			const userAccount = getAccount().account.account.address;
+			const userAccount = getAccount();
 			const dappAccount = getDappAccount();
 
 			// Generate a fingerprint for the user
@@ -660,10 +665,10 @@ export const Manager = (
 			let providerUrl;
 			if (frictionlessState?.provider) {
 				providerUrl = frictionlessState.provider.provider.url;
+			} else if (state.challenge?.providerUrl) {
+				providerUrl = state.challenge.providerUrl;
 			} else {
-				// Get a new provider
-				const randomProvider = await getRandomActiveProvider(getConfig());
-				providerUrl = randomProvider.provider.url;
+				providerUrl = "http://localhost:9229";
 			}
 
 			// Create provider API client
@@ -716,8 +721,8 @@ export const Manager = (
 			// Server verified the solution, set user as human
 			updateState({
 				isHuman: true,
-				loading: false,
-				showModal: false,
+				loading: false
+				// Don't close modal here - we'll do it after showing success animation
 			});
 
 			// Generate a token with verification data
@@ -754,72 +759,22 @@ export const Manager = (
 			debug("Setting verification validity timeout");
 			setValidChallengeTimeout();
 
+			// Show success animation, then close modal
+			debug("Showing success animation before closing modal");
+			// Wait for animation to complete before closing modal
+			setTimeout(() => {
+				debug("Closing modal after success animation");
+				updateState({ 
+					showModal: false 
+				});
+			}, 1500);
+
 			debug("Success handling complete");
 			return true;
 		} catch (err) {
 			debug("Error submitting slider solution", err);
 			console.error("Failed to submit slider solution", err);
-
-			// Try client-side verification as fallback only if server verification fails
-			debug("Falling back to client-side verification due to server error");
-			const isVerified = await verifySolution(sliderPosition, targetPosition);
-
-			if (isVerified) {
-				debug("Client-side fallback verification successful");
-
-				// Set user as human
-				updateState({
-					isHuman: true,
-					loading: false,
-					showModal: false,
-				});
-
-				// Generate a token with verification data (client-side generated)
-				debug("Generating client-side verification token");
-				const fingerprint = await getFingerprint();
-				debug("Fingerprint for token generated", {
-					fingerprintPrefix: `${fingerprint.substring(0, 8)}...`,
-				});
-
-				const verificationToken = encodeProcaptchaOutput({
-					user: getAccount().account.account.address,
-					dapp: getDappAccount(),
-					challenge: targetPosition.toString(),
-					timestamp: Date.now().toString(),
-					signature: {
-						provider: {
-							// Provider signature fields
-							challenge: "client-verified",
-							requestHash: undefined,
-							timestamp: undefined,
-						},
-						user: {
-							// User signature fields
-							challenge: undefined,
-							requestHash: undefined,
-							timestamp: fingerprint, // Use fingerprint as timestamp signature for web2
-						},
-					},
-				});
-				debug("Client-side verification token generated", {
-					tokenLength: verificationToken.length,
-				});
-
-				// Call onHuman callback with token
-				debug("Calling onHuman event handler with client-side token");
-				events.onHuman(verificationToken);
-
-				// Set timeout for how long verification is valid
-				debug("Setting verification validity timeout");
-				setValidChallengeTimeout();
-
-				debug("Client-side success handling complete");
-				return true;
-			}
-			debug("Client-side verification failed");
-			// Client-side verification failed
-			onFailed();
-			return false;
+			throw err;
 		}
 	};
 

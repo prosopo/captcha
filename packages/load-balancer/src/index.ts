@@ -31,23 +31,23 @@ const convertHostedProvider = (
 export const loadBalancer = async (
 	environment: EnvironmentTypes,
 ): Promise<HardcodedProvider[]> => {
-	if (environment === "production") {
-		const providers: hostedProviders = await fetch(
-			"https://provider-list.prosopo.io/",
-			{
-				method: "GET",
-				mode: "cors",
-			},
-		).then((res) => res.json());
-		return convertHostedProvider(providers);
-	}
-	if (environment === "staging") {
-		const providers: hostedProviders = await fetch(
-			"https://provider-list.prosopo.io/staging.json",
-			{ method: "GET", mode: "cors" },
-		).then((res) => res.json());
-		return convertHostedProvider(providers);
-	}
+	// if (environment === "production") {
+	// 	const providers: hostedProviders = await fetch(
+	// 		"https://provider-list.prosopo.io/",
+	// 		{
+	// 			method: "GET",
+	// 			mode: "cors",
+	// 		},
+	// 	).then((res) => res.json());
+	// 	return convertHostedProvider(providers);
+	// }
+	// if (environment === "staging") {
+	// 	const providers: hostedProviders = await fetch(
+	// 		"https://provider-list.prosopo.io/staging.json",
+	// 		{ method: "GET", mode: "cors" },
+	// 	).then((res) => res.json());
+	// 	return convertHostedProvider(providers);
+	// }
 	if (environment === "development") {
 		return [
 			{
