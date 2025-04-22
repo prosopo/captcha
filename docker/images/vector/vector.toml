@@ -65,7 +65,7 @@ batch.max_events = 100000 # max number of events per batch
 [sinks.prosopo_provider2]
 type = "http"
 inputs = ["caddy_format"]
-uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
+uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
@@ -160,7 +160,7 @@ batch.max_events = 100000 # max number of events per batch
 [sinks.prosopo_docker2]
 type = "http"
 inputs = ["caddy_format"]
-uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
+uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
