@@ -151,6 +151,7 @@ inputs = ["caddy"]
 source = '''
 .=parse_json!(string!(.message))
 .host="$OO_HOST"
+.request_id = get!(.resp_headers, ["X-Request-Id"])[0]
 del(.timestamp)
 del(._timestamp)
 del(.ts)
