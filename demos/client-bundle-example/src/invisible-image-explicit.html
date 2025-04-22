@@ -1,50 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Procaptcha Invisible Mode - Explicit Rendering</title>
-    <!-- Load the Procaptcha script with explicit rendering -->
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha demo: Invisible Image - Explicit Rendering</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        form {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"],
-        input[type="email"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #result {
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-            display: none;
-        }
         .console-output {
             margin-top: 20px;
             padding: 10px;
@@ -62,39 +21,63 @@
             padding: 15px;
             margin: 20px 0;
         }
-    </style>
-    <script type="text/javascript">
-        function onSubmit(token) {
-            console.log('Procaptcha verified, token:', token);
-            
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            
-            const resultElement = document.getElementById('result');
-            resultElement.textContent = `Form submitted with:
-- Name: ${name}
-- Email: ${email}
-- Procaptcha verified: Yes`;
-            resultElement.style.display = 'block';
-            
-            return false;
+        .explanation {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #ddd;
         }
-        
-        function validate(event) {
-            event.preventDefault();
-            
-            // Simple form validation
-            if (!document.getElementById('name').value) {
-                alert("Please enter your name");
-                return;
-            }
-            
-            if (!document.getElementById('email').value) {
-                alert("Please enter your email");
-                return;
-            }
-            
-            document.getElementById('console-output').innerHTML = '';
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        .captcha-status {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .status-item {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .status-success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .status-error {
+            color: #F44336;
+            font-weight: bold;
+        }
+        .status-info {
+            color: #2196F3;
+        }
+        .status-warning {
+            color: #FF9800;
+        }
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #2196F3;
+            padding-bottom: 5px;
+        }
+    </style>
+    <script type="module">
+        // Override console.log to capture output
+        function setupConsoleCapture() {
             const originalConsoleLog = console.log;
             const consoleOutput = document.getElementById('console-output');
             
@@ -117,109 +100,195 @@
                 consoleOutput.style.display = 'block';
             };
             
-            console.log('Executing Procaptcha verification...');
-            window.procaptcha.execute();
-            
-            setTimeout(() => {
-                console.log = originalConsoleLog;
-            }, 1000);
+            console.log("Console logging captured and redirected to display");
         }
+
+        // Function to update CAPTCHA status display
+        function updateCaptchaStatus(message, type = 'info') {
+            const statusContainer = document.getElementById('captcha-status');
+            if (!statusContainer) return;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const statusItem = document.createElement('div');
+            statusItem.className = `status-item status-${type}`;
+            statusItem.innerHTML = `[${timestamp}] ${message}`;
+            statusContainer.appendChild(statusItem);
+            
+            // Also log to console
+            console.log(`CAPTCHA Status: ${message}`);
+        }
+        
+        // Define the submit callback
+        window.onSubmit = function(token) {
+            console.log('Procaptcha verified, token:', token);
+            updateCaptchaStatus('Challenge passed successfully!', 'success');
+            updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
+            
+            // Get form values
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            
+            const resultElement = document.getElementById('result');
+            resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
+- Name: ${name}<br>
+- Email: ${email}<br>
+- Procaptcha verified: Yes`;
+            resultElement.style.display = 'block';
+            
+            updateCaptchaStatus('Form submission completed', 'success');
+            
+            return false;
+        }
+        
+        // Validate form and execute CAPTCHA
+        window.validate = function(event) {
+            if (event) event.preventDefault();
+            
+            // Simple form validation
+            if (!document.getElementById('name').value) {
+                updateCaptchaStatus('Validation failed: Name is required', 'error');
+                alert("Please enter your name");
+                return;
+            }
+            
+            if (!document.getElementById('email').value) {
+                updateCaptchaStatus('Validation failed: Email is required', 'error');
+                alert("Please enter your email");
+                return;
+            }
+            
+            updateCaptchaStatus('Form validated, executing CAPTCHA verification...', 'info');
+            
+            // Execute the CAPTCHA verification
+            window.procaptcha.execute();
+        }
+
+        // Track DOM initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            setupConsoleCapture();
+            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
+            
+            // Monitor DOM for CAPTCHA initialization
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            const node = mutation.addedNodes[i];
+                            if (node.classList && (node.classList.contains('procaptcha') || 
+                                  node.querySelector && node.querySelector('.procaptcha'))) {
+                                updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
+                                observer.disconnect();
+                                break;
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+        
+        // Create a method to show CAPTCHA execution events
+        document.addEventListener('procaptcha:execute', function(e) {
+            updateCaptchaStatus(`CAPTCHA execution started: type=image, mode=invisible`, 'info');
+            updateCaptchaStatus(`Container: ${e.detail.containerId}, timestamp: ${new Date(e.detail.timestamp).toLocaleTimeString()}`, 'info');
+        });
     </script>
+    <!-- Load the Procaptcha script with explicit rendering parameter -->
+    <script type="module" src="%VITE_BUNDLE_URL%?render=explicit" async defer></script>
 </head>
 <body>
-    <h1>Procaptcha Invisible Mode</h1>
-    <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering.</p>
-    
-    <form id="demo-form" action="javascript:void(0);" method="POST">
-        <div>
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" placeholder="Your name" required />
+    <div class="mui-container">
+        <h1>Invisible Image CAPTCHA - Explicit Rendering</h1>
+        <p>This example demonstrates how to use Procaptcha in invisible Image mode with explicit rendering.</p>
+        
+        <!-- CAPTCHA Status Display -->
+        <div id="captcha-status" class="captcha-status">
+            <div class="status-title">CAPTCHA Status Log</div>
         </div>
         
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Your email" required />
-        </div>
+        <form id="demo-form" action="javascript:void(0);" method="POST" class="mui-form">
+            <h2>Example Form</h2>
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required />
+            </div>
+            
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required />
+            </div>
+            
+            <!-- Invisible Procaptcha container -->
+            <div id="procaptcha-container" data-size="invisible"></div>
+            
+            <!-- Regular submit button (not directly tied to Procaptcha) -->
+            <button id="submit-button" type="button" class="mui-btn mui-btn--raised">Submit</button>
+        </form>
         
-        <!-- Invisible Procaptcha container -->
-        <div id="procaptcha-container" data-size="invisible"></div>
+        <div id="result" class="info-box" style="display: none;"></div>
         
-        <!-- Regular submit button (not directly tied to Procaptcha) -->
-        <button id="submit-button" type="button">Submit</button>
-    </form>
-    
-    <!-- Result display area -->
-    <div id="result"></div>
-    
-    <!-- Console output display area -->
-    <div id="console-output" class="console-output" style="display: none;"></div>
-    
-    <div style="margin-top: 20px;">
-        <h2>How It Works</h2>
-        <p>This example demonstrates how to use Procaptcha in invisible mode with explicit rendering:</p>
-        <ol>
-            <li>Include the Procaptcha script with <code>?render=explicit</code> parameter</li>
-            <li>Create a container div with <code>data-size="invisible"</code></li>
-            <li>Define an <code>onloadCallback</code> function that renders the Procaptcha widget</li>
-            <li>Add a click handler to your submit button that validates the form and executes Procaptcha</li>
-            <li>When Procaptcha verification succeeds, your callback function is called</li>
-        </ol>
-        <p>The key elements are:</p>
-        <pre>
-&lt;script type="module" src="./assets/procaptcha.bundle.js?render=explicit" async defer&gt;&lt;/script&gt;
-
+        <!-- Console output display area -->
+        <div id="console-output" class="console-output" style="display: none;"></div>
+        
+        <div class="explanation">
+            <h2>How Invisible Image CAPTCHA Works (Explicit Rendering)</h2>
+            
+            <h3>Implementation Details</h3>
+            <p>This demo shows how to implement invisible Image CAPTCHA with explicit rendering:</p>
+            <ol>
+                <li>Include the Procaptcha script</li>
+                <li>Create a container div with <code>data-size="invisible"</code></li>
+                <li>Define an <code>onloadCallback</code> function that renders the Procaptcha widget</li>
+                <li>Add a click handler to your submit button that validates the form and executes Procaptcha</li>
+                <li>When Procaptcha verification succeeds, your callback function is called</li>
+            </ol>
+            
+            <h3>Key Elements</h3>
+            <pre>
 &lt;div id="procaptcha-container" data-size="invisible"&gt;&lt;/div&gt;
 
 &lt;script&gt;
 // Render the widget
-window.procaptcha.render('procaptcha-container', {
-    'siteKey': 'your_site_key',
-    'callback': onSubmit,
-    'size': 'invisible'
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: "%PROSOPO_SITE_KEY_IMAGE%", 
+    captchaType: "image",
+    callback: onSubmit,
+    size: "invisible"
 });
 
-// Execute the verification
+// Execute the verification when needed
 window.procaptcha.execute();
-&lt;/script&gt;
-        </pre>
-        
-        <h3>Console Output</h3>
-        <p>When you click the Submit button, the <code>execute()</code> function will:</p>
-        <ol>
-            <li>Find all Procaptcha containers on the page</li>
-            <li>Log each container and its attributes to the console</li>
-            <li>Log all child elements of each container</li>
-            <li>Dispatch a custom <code>procaptcha:execute</code> event to show the modal</li>
-        </ol>
-        <p>This helps debug and understand how the invisible Procaptcha is structured in the DOM.</p>
-        
-        <h3>Event-Based Communication System</h3>
-        <p>To connect the vanilla JavaScript bundle with the React components, we use a custom event system:</p>
-        <ol>
-            <li>When <code>window.procaptcha.execute()</code> is called, it dispatches a <code>procaptcha:execute</code> event</li>
-            <li>The ProcaptchaWidget React component listens for this event</li>
-            <li>When the event is received, the component sets <code>state.showModal = true</code></li>
-            <li>This causes the CAPTCHA modal to appear and verification to begin</li>
-        </ol>
-        <p>This decoupled approach allows the JavaScript bundle to communicate with React components without direct references.</p>
+&lt;/script&gt;</pre>
+            
+            <h3>Execution Flow</h3>
+            <ol>
+                <li>The script loads and renders the CAPTCHA into the specified container</li>
+                <li>When the submit button is clicked, the form data is validated</li>
+                <li>If validation passes, <code>procaptcha.execute()</code> is called</li>
+                <li>This dispatches a <code>procaptcha:execute</code> event</li>
+                <li>The CAPTCHA verification happens invisibly in the background</li>
+                <li>When verification completes, your callback receives the token</li>
+            </ol>
+        </div>
     </div>
     
     <!-- Initialize Procaptcha with onload callback -->
     <script type="module">
-        import { render } from "%VITE_BUNDLE_URL%";
-
         function onloadCallback() {
-            console.log('Procaptcha script loaded, initializing explicit rendering');
+            updateCaptchaStatus('Procaptcha script loaded, initializing explicit rendering', 'info');
             
-            // Render the Procaptcha widget
-            const widgetId = render(document.getElementById('procaptcha-container'), {
+            // Render the Procaptcha widget using the global procaptcha object
+            const widgetId = window.procaptcha.render('procaptcha-container', {
                 siteKey: "%PROSOPO_SITE_KEY_IMAGE%", 
                 captchaType: "image",
-                callback: onSubmit,
+                callback: window.onSubmit,
                 size: "invisible"
             });
             
-            document.getElementById('submit-button').addEventListener('click', validate);
+            document.getElementById('submit-button').addEventListener('click', window.validate);
+            
+            updateCaptchaStatus('CAPTCHA initialized with widget ID: ' + widgetId, 'info');
         }
         
         // Wait for the script to load
@@ -230,7 +299,13 @@ window.procaptcha.execute();
                 // Set up a listener for when the script loads
                 const script = document.querySelector('script[src*="procaptcha.bundle.js"]');
                 if (script) {
-                    script.addEventListener('load', onloadCallback);
+                    script.addEventListener('load', function() {
+                        // Give a small delay to ensure the script is fully initialized
+                        setTimeout(onloadCallback, 100);
+                    });
+                    updateCaptchaStatus('Waiting for CAPTCHA script to load...', 'info');
+                } else {
+                    updateCaptchaStatus('Error: CAPTCHA script not found on the page', 'error');
                 }
             }
         });

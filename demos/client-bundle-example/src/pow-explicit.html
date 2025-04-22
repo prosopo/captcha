@@ -1,48 +1,78 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Procaptcha POW Mode - Explicit Rendering</title>
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha Proof of Work Mode - Explicit Rendering</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        form {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"],
-        input[type="email"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #result {
-            margin-top: 15px;
+        .console-output {
+            margin-top: 20px;
             padding: 10px;
+            background-color: #f5f5f5;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .info-box {
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 20px;
             background-color: #f9f9f9;
-            display: none;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        .captcha-status {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .status-item {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .status-success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .status-error {
+            color: #F44336;
+            font-weight: bold;
+        }
+        .status-info {
+            color: #2196F3;
+        }
+        .status-warning {
+            color: #FF9800;
+        }
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #2196F3;
+            padding-bottom: 5px;
         }
         #error {
             color: red;
@@ -50,55 +80,147 @@
             display: none;
         }
     </style>
+    <script type="module">
+        // Override console.log to capture output
+        function setupConsoleCapture() {
+            const originalConsoleLog = console.log;
+            const consoleOutput = document.getElementById('console-output');
+            
+            console.log = function() {
+                originalConsoleLog.apply(console, arguments);
+                
+                // Format and display the arguments in our custom console
+                const args = Array.from(arguments).map(arg => {
+                    if (typeof arg === 'object') {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return "[Object cannot be stringified]";
+                        }
+                    }
+                    return String(arg);
+                });
+                
+                consoleOutput.innerHTML += args.join(' ') + '<br>';
+                consoleOutput.style.display = 'block';
+            };
+            
+            console.log("Console logging captured and redirected to display");
+        }
+
+        // Function to update CAPTCHA status display
+        function updateCaptchaStatus(message, type = 'info') {
+            const statusContainer = document.getElementById('captcha-status');
+            if (!statusContainer) return;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const statusItem = document.createElement('div');
+            statusItem.className = `status-item status-${type}`;
+            statusItem.innerHTML = `[${timestamp}] ${message}`;
+            statusContainer.appendChild(statusItem);
+            
+            // Also log to console
+            console.log(`CAPTCHA Status: ${message}`);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            setupConsoleCapture();
+            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
+            
+            // Monitor DOM for CAPTCHA initialization
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            const node = mutation.addedNodes[i];
+                            if (node.classList && (node.classList.contains('procaptcha') || 
+                                  node.querySelector && node.querySelector('.procaptcha'))) {
+                                updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
+                                observer.disconnect();
+                                break;
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+        
+        // Make updateCaptchaStatus available globally
+        window.updateCaptchaStatus = updateCaptchaStatus;
+    </script>
 </head>
 <body>
-    <h1>Procaptcha POW Mode</h1>
-    <p>This example demonstrates how to use Procaptcha in POW mode with explicit rendering.</p>
-    
-    <form id="demo-form">
-        <div>
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" placeholder="Your name" required />
+    <div class="mui-container">
+        <h1>Procaptcha Proof of Work Mode - Explicit Rendering</h1>
+        <p>This example demonstrates how to use Procaptcha in Proof of Work mode with explicit rendering.</p>
+        
+        <!-- CAPTCHA Status Display -->
+        <div id="captcha-status" class="captcha-status">
+            <div class="status-title">CAPTCHA Status Log</div>
         </div>
         
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Your email" required />
-        </div>
+        <form id="demo-form" class="mui-form">
+            <h2>Example Form</h2>
+            
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required />
+            </div>
+            
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required />
+            </div>
+            
+            <!-- The container for the CAPTCHA -->
+            <div id="procaptcha-container"></div>
+            
+            <button type="submit" class="mui-btn mui-btn--raised">Submit</button>
+            
+            <div id="error"></div>
+        </form>
         
-        <!-- The container for the CAPTCHA -->
-        <div id="procaptcha-container"></div>
+        <div id="result" class="info-box" style="display: none;"></div>
         
-        <button type="submit">Submit</button>
+        <!-- Console output display area -->
+        <div id="console-output" class="console-output" style="display: none;"></div>
         
-        <div id="error"></div>
-    </form>
-    
-    <div id="result"></div>
-    
-    <div style="margin-top: 20px;">
-        <h2>How It Works</h2>
-        <p>This example demonstrates how to use Procaptcha in POW mode with explicit rendering:</p>
-        <ol>
-            <li>Import the Procaptcha render function</li>
-            <li>Create a container for the CAPTCHA</li>
-            <li>Render the CAPTCHA explicitly</li>
-            <li>Handle the verification result in the callback function</li>
-        </ol>
-        <p>The key elements are:</p>
-        <pre>
+        <div class="explanation">
+            <h2>How Proof of Work CAPTCHA Works (Explicit Rendering)</h2>
+            
+            <h3>Implementation Details</h3>
+            <p>This example demonstrates how to use Procaptcha in Proof of Work mode with explicit rendering:</p>
+            <ol>
+                <li>Import the Procaptcha render function</li>
+                <li>Create a container for the CAPTCHA</li>
+                <li>Render the CAPTCHA explicitly</li>
+                <li>Handle the verification result in the callback function</li>
+            </ol>
+            
+            <h3>Key Code Example</h3>
+            <pre>
 // Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
 import { CaptchaType } from "@prosopo/types";
 
 // Render CAPTCHA
 const widgetId = render(document.getElementById('procaptcha-container'), {
-    siteKey: "%PROSOPO_SITE_KEY%",
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
     captchaType: CaptchaType.pow,
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed
-});
-        </pre>
+});</pre>
+            
+            <h3>Execution Flow</h3>
+            <ol>
+                <li>On page load, the render function is called to initialize the CAPTCHA</li>
+                <li>The CAPTCHA challenge is rendered in the specified container</li>
+                <li>When the user completes the challenge, the callback function is called</li>
+                <li>On successful verification, the form can be submitted with the token</li>
+            </ol>
+        </div>
     </div>
     
     <script type="module">
@@ -114,6 +236,7 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
             if (!nameInput.value || !emailInput.value) {
                 errorDisplay.textContent = 'Please fill out all fields';
                 errorDisplay.style.display = 'block';
+                window.updateCaptchaStatus('Form validation failed: Empty fields', 'error');
                 return false;
             }
             
@@ -122,50 +245,66 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
             if (!emailPattern.test(emailInput.value)) {
                 errorDisplay.textContent = 'Please enter a valid email address';
                 errorDisplay.style.display = 'block';
+                window.updateCaptchaStatus('Form validation failed: Invalid email format', 'error');
                 return false;
             }
             
             errorDisplay.style.display = 'none';
+            window.updateCaptchaStatus('Form validation passed', 'info');
             return true;
         }
         
         // Callback for successful CAPTCHA verification
         function handleCaptchaResponse(token) {
             console.log('Procaptcha verified, token:', token);
+            window.updateCaptchaStatus('Challenge passed successfully!', 'success');
+            window.updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
             
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             
             // Display result
             const resultElement = document.getElementById('result');
-            resultElement.textContent = `Form submitted with:
-- Name: ${name}
-- Email: ${email}
+            resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
+- Name: ${name}<br>
+- Email: ${email}<br>
 - Procaptcha verified: Yes`;
             resultElement.style.display = 'block';
+            
+            window.updateCaptchaStatus('Form submission completed', 'success');
         }
         
         // Callback for failed CAPTCHA verification
         function handleCaptchaFailed() {
             console.log('Captcha verification failed');
+            window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
             document.getElementById('error').textContent = 'CAPTCHA verification failed. Please try again.';
             document.getElementById('error').style.display = 'block';
         }
         
-        // Render the CAPTCHA
-        const widgetId = render(document.getElementById('procaptcha-container'), {
-            siteKey: "%PROSOPO_SITE_KEY%",
-            captchaType: CaptchaType.pow,
-            callback: handleCaptchaResponse,
-            "failed-callback": handleCaptchaFailed
-        });
-        
-        // Add form submit handler
-        document.getElementById('demo-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (validateForm()) {
-                // Form is valid, CAPTCHA verification will be handled by the callback
-            }
+        // Wait for DOM content to be loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
+            
+            // Render the CAPTCHA
+            const widgetId = render(document.getElementById('procaptcha-container'), {
+                siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
+                captchaType: CaptchaType.pow,
+                callback: handleCaptchaResponse,
+                "failed-callback": handleCaptchaFailed
+            });
+            
+            window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
+            
+            // Add form submit handler
+            document.getElementById('demo-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                window.updateCaptchaStatus('Form submission attempted', 'info');
+                if (validateForm()) {
+                    // Form is valid, CAPTCHA verification will be handled by the callback
+                    window.updateCaptchaStatus('Waiting for CAPTCHA verification', 'info');
+                }
+            });
         });
     </script>
 </body>
