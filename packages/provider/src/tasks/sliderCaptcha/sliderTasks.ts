@@ -23,66 +23,38 @@ import {
 } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
 import {
-	ApiParams,
-	type CaptchaResult,
 	CaptchaStatus,
 	type DatasetBase,
 	type GetSliderCaptchaResponse,
 	type IPAddress,
 	type MouseMovement,
 	type RequestHeaders,
-	type SliderCaptcha,
 	type SliderCaptchaItem,
 	type SliderCaptchaWithoutId,
 } from "@prosopo/types";
 import type {
-	FrictionlessTokenId,
 	IProviderDatabase,
 	SliderCaptchaStored,
 } from "@prosopo/types-database";
-import { verifyRecency } from "@prosopo/util";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 
 // Tolerance in pixels for slider positioning
 const SLIDER_POSITION_TOLERANCE = 50;
 
-// The minimum variance in Y-axis mouse movements for human detection
-const MOUSE_MOVEMENT_Y_VARIANCE_THRESHOLD = 2;
-
-// Minimum required mouse movements for verification
-const MIN_MOUSE_MOVEMENTS = 3;
-
-// The minimum time (in ms) a human should spend solving a slider captcha
-const MIN_SOLVE_TIME = 500;
-
-// Extend SliderCaptchaItem to support shape property
 interface ShapedSliderCaptchaItem extends SliderCaptchaItem {
 	shape?: string;
 }
 
-// Extend SliderCaptchaWithoutId to use ShapedSliderCaptchaItem
 interface ShapedSliderCaptchaWithoutId
 	extends Omit<SliderCaptchaWithoutId, "puzzlePiece"> {
 	puzzlePiece: ShapedSliderCaptchaItem;
 }
 
-// Interface for slider dataset
 interface SliderDataset extends DatasetBase {
 	captchas: ShapedSliderCaptchaWithoutId[];
 	datasetId: string;
 }
-
-// Helper function to get random image URL
-const getRandomImageUrl = () => {
-	// Use a more reliable CORS-friendly image service
-	const width = 320;
-	const height = 160;
-	const imageId = Math.floor(Math.random() * 1000) + 1;
-
-	// Use picsum.photos which typically has proper CORS headers
-	return `https://picsum.photos/id/${imageId}/${width}/${height}`;
-};
 
 export class SliderCaptchaManager extends CaptchaManager {
 	private datasetPath?: string;
@@ -104,13 +76,8 @@ export class SliderCaptchaManager extends CaptchaManager {
 		this.datasetPath = options?.datasetPath;
 		this.assetPath = options?.assetPath;
 
-		// Check for shaped datasets in the database
 		this.checkForDatabaseDatasets();
-
-		// Also check for datasets in the filesystem as fallback
 		this.checkForFilesystemDatasets();
-
-		// Log detailed information about dataset availability
 		this.logDatasetAvailability();
 	}
 
@@ -119,7 +86,6 @@ export class SliderCaptchaManager extends CaptchaManager {
 	 * This is done asynchronously so it won't block construction
 	 */
 	private checkForDatabaseDatasets(): void {
-		// This will be done asynchronously to avoid blocking construction
 		this.db
 			.getDatasetByType("slider")
 			.then((datasets: DatasetBase[] | undefined) => {
@@ -188,9 +154,6 @@ export class SliderCaptchaManager extends CaptchaManager {
 		}
 	}
 
-	/**
-	 * Log detailed information about dataset availability
-	 */
 	private logDatasetAvailability(): void {
 		this.logger.info("Slider captcha dataset availability:", {
 			hasDatabaseDatasets: this.hasDatabaseDatasets,
@@ -201,24 +164,13 @@ export class SliderCaptchaManager extends CaptchaManager {
 		});
 	}
 
-	/**
-	 * Check if we can use shaped captchas
-	 * @returns true if shaped captchas can be used
-	 */
 	private canUseShapedCaptchas(): boolean {
 		return this.hasDatabaseDatasets || this.hasFilesystemDatasets;
 	}
 
-	/**
-	 * Helper method to safely convert an IP address to bigint
-	 * @param ipAddress IP address object
-	 * @returns bigint representation of the IP address
-	 */
 	private convertIpAddressToBigInt(ipAddress: IPAddress): bigint {
 		try {
-			// Handle both IPv4 and IPv6 addresses
 			if (ipAddress.address) {
-				// Use a safe fallback value if conversion fails
 				const ipValue = ipAddress.address.replace(/[^0-9]/g, "");
 				return ipValue ? BigInt(ipValue.substring(0, 16)) : BigInt(0);
 			}
@@ -233,13 +185,6 @@ export class SliderCaptchaManager extends CaptchaManager {
 
 	/**
 	 * Generates a Slider Captcha for a given user and dapp
-	 *
-	 * @param {string} userAccount - user that is solving the captcha
-	 * @param {string} dappAccount - dapp that is requesting the captcha
-	 * @param {RequestHeaders} headers - request headers
-	 * @param {IPAddress} ipAddress - IP address
-	 * @param {string} ja4 - browser fingerprint
-	 * @param {string} sessionId - optional session ID for frictionless flow
 	 */
 	public async getSliderCaptchaChallenge(
 		userAccount: string,
@@ -251,7 +196,7 @@ export class SliderCaptchaManager extends CaptchaManager {
 		sessionId?: string,
 	): Promise<GetSliderCaptchaResponse> {
 		// Check if we have any slider datasets available
-		const datasets = await this.availableDatasets;
+		const datasets = this.availableDatasets;
 		if (datasets.length === 0) {
 			throw new ProsopoApiError("CAPTCHA.NO_DATASET_AVAILABLE", {
 				context: {
@@ -263,7 +208,6 @@ export class SliderCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		// Get a shaped slider captcha
 		return this.getShapedSliderCaptcha(
 			userAccount,
 			dappAccount,
@@ -291,7 +235,6 @@ export class SliderCaptchaManager extends CaptchaManager {
 			// First try to get a captcha from the database
 			if (this.hasDatabaseDatasets) {
 				try {
-					// Get a random dataset from the database
 					const datasets = await this.db.getDatasetByType("slider");
 					if (!datasets || datasets.length === 0) {
 						throw new Error("No slider captcha datasets available");
@@ -302,7 +245,6 @@ export class SliderCaptchaManager extends CaptchaManager {
 						throw new Error("Invalid dataset format");
 					}
 
-					// Get a random captcha from the dataset
 					const captchaIndex = Math.floor(
 						Math.random() * dataset.captchas.length,
 					);
@@ -325,9 +267,7 @@ export class SliderCaptchaManager extends CaptchaManager {
 
 					// create new random id
 					const id = randomUUID();
-
-					// Generate a challenge signature
-					const challengeString = `${id}-${userAccount}-${dappAccount}-${JSON.stringify(targetPosition)}`;
+					const challengeString = `${id}-${userAccount}-${dappAccount}`;
 					const challengeSignature = u8aToHex(
 						this.pair.sign(stringToHex(challengeString)),
 					);
@@ -341,20 +281,12 @@ export class SliderCaptchaManager extends CaptchaManager {
 						puzzlePieceUrl: captcha.puzzlePiece.data.startsWith("file://")
 							? `/assets/slider-datasets/dataset/assets/${captcha.puzzlePiece.data.split("/").pop()}`
 							: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
-						targetPosition: targetPosition,
 						timestamp: requestedAtTimestamp.toString(),
 						challengeId: id,
-						signature: {
-							provider: {
-								challenge: challengeSignature,
-							},
-						},
-						// Add the shape as a custom property (compatible with original interface)
+						signature: challengeSignature,
 						shape: captcha.puzzlePiece.shape,
 					};
 
-					// Store the challenge in the database
-					// Convert ipAddress to bigint as required by the schema
 					const ipAddressBigInt = this.convertIpAddressToBigInt(ipAddress);
 
 					const sliderCaptcha: SliderCaptchaStored = {
@@ -463,15 +395,9 @@ export class SliderCaptchaManager extends CaptchaManager {
 				puzzlePieceUrl: captcha.puzzlePiece.data.startsWith("file://")
 					? `/assets/slider-datasets/dataset/assets/${captcha.puzzlePiece.data.split("/").pop()}`
 					: `${assetBaseUrl}/${captcha.puzzlePiece.data}`,
-				targetPosition: targetPosition,
 				timestamp: requestedAtTimestamp.toString(),
 				challengeId: id,
-				signature: {
-					provider: {
-						challenge: challengeSignature,
-					},
-				},
-				// Add the shape as a custom property (compatible with original interface)
+				signature: challengeSignature,
 				shape: captcha.puzzlePiece.shape,
 			};
 

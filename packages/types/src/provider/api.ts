@@ -416,28 +416,15 @@ export interface GetSliderCaptchaResponse extends ApiResponse {
 	baseImageUrl?: string;
 	puzzlePieceUrl?: string;
 	imageUrl?: string; // For backward compatibility
-	targetPosition: {
-		x: number;
-		y: number;
-	};
 	shape?: string; // Optional shape name for shaped puzzle pieces
 	timestamp: string;
 	challengeId: string;
-	signature: {
-		provider: {
-			challenge: string;
-		};
-	};
+	signature: string;
 }
 
 export type SliderCaptchaSolutionResponse = {
 	status: "ok" | "error";
 	verified: boolean;
-	signature?: {
-		provider: {
-			timestamp: string;
-		};
-	};
 };
 
 export const GetSliderCaptchaChallengeRequestBody = object({

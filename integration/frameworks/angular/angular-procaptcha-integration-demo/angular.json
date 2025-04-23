@@ -5,8 +5,7 @@
 	"cli": {
 		"cache": {
 			"enabled": false
-    },
-    "analytics": false
+		}
 	},
 	"projects": {
 		"@prosopo/angular-procaptcha-integration-demo": {

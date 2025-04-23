@@ -203,7 +203,7 @@ export default async function (
 						modulesOnly: true,
 					}),
 					visualizer({
-						open: false,
+						open: true,
 						template: "treemap", //'list',
 						gzipSize: true,
 						brotliSize: true,

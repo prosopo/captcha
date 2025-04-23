@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** @jsxImportSource @emotion/react */
-
-import { css, keyframes } from "@emotion/react";
 import { useTranslation } from "@prosopo/locale";
-import { useProcaptcha } from "@prosopo/procaptcha-common";
+import { Checkbox, useProcaptcha } from "@prosopo/procaptcha-common";
 import {
 	ApiParams,
 	ProcaptchaConfigSchema,
@@ -27,7 +24,6 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Manager } from "../services/Manager.js";
-import { CaptchaCheckbox } from "./CaptchaCheckbox.js";
 import Modal from "./Modal.js";
 import {
 	sliderActiveClass,
@@ -44,10 +40,7 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	const frictionlessState = props.frictionlessState;
 	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
-	const [baseState, updateBaseState] = useProcaptcha<SliderCaptchaResponseBody>(
-		useState,
-		useRef,
-	);
+	const [baseState, updateBaseState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	const [imageLoading, setImageLoading] = useState(true);
 	const [isVerifying, setIsVerifying] = useState(false);
@@ -1149,10 +1142,13 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 	if (config.mode === "invisible") {
 		return (
 			<div ref={containerRef}>
-				<CaptchaCheckbox
-					isHuman={baseState.isHuman}
+				<Checkbox
+					checked={baseState.isHuman}
 					onClick={handleCheckboxClick}
-					text={t("WIDGET.I_AM_HUMAN")}
+					labelText={t("WIDGET.I_AM_HUMAN")}
+					theme={theme}
+					onChange={handleCheckboxClick}
+					loading={baseState.loading}
 				/>
 				<Modal show={stateRef.current.showModal}>
 					<div css={styles.modalContent}>
@@ -1241,10 +1237,13 @@ export const SliderCaptchaWidget = (props: ProcaptchaProps) => {
 
 	return (
 		<div ref={containerRef} className={"slider-captcha"}>
-			<CaptchaCheckbox
-				isHuman={baseState.isHuman}
+			<Checkbox
+				checked={baseState.isHuman}
 				onClick={handleCheckboxClick}
-				text={t("WIDGET.I_AM_HUMAN")}
+				labelText={t("WIDGET.I_AM_HUMAN")}
+				theme={theme}
+				onChange={handleCheckboxClick}
+				loading={baseState.loading}
 			/>
 			<Modal show={stateRef.current.showModal}>
 				<div css={styles.modalContent}>

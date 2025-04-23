@@ -336,25 +336,17 @@ export default class ProviderApi
 		userAccount: string,
 		dappAccount: string,
 		position: number,
-		targetPosition: number,
 		mouseMovements: Array<{ x: number; y: number; time: number }>,
-		solveTime: number,
-		timestamp: string,
-		signature: { user: { timestamp: string }; provider: { challenge: string } },
-		fingerprint: string,
+		signature: string,
 		challengeId: string,
 	): Promise<SliderCaptchaSolutionResponse> {
 		const body = {
 			[ApiParams.user]: userAccount,
 			[ApiParams.dapp]: dappAccount,
 			position,
-			targetPosition,
 			mouseMovements,
-			solveTime,
 			challengeId,
-			timestamp,
 			signature,
-			fingerprint,
 		};
 
 		return this.post(ClientApiPaths.SubmitSliderCaptchaSolution, body, {

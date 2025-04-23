@@ -1581,14 +1581,6 @@ export class ProviderDatabase
 
 	/**
 	 * @description Updates a Slider Captcha record in the database.
-	 * @param {string} id The ID of the slider captcha to be updated.
-	 * @param {CaptchaResult} result The verification result.
-	 * @param {boolean} serverChecked Whether the captcha has been server-checked.
-	 * @param {boolean} userSubmitted Whether the user has submitted the captcha.
-	 * @param {number} position The position value submitted by the user.
-	 * @param {number} solveTime The time taken to solve the captcha.
-	 * @param {string} userSignature The user's signature.
-	 * @returns {Promise<void>} A promise that resolves when the record is updated.
 	 */
 	async updateSliderCaptchaRecord(
 		id: string,
@@ -1641,8 +1633,6 @@ export class ProviderDatabase
 
 	/**
 	 * @description Marks a Slider Captcha as checked by the server.
-	 * @param {string} id The ID of the slider captcha.
-	 * @returns {Promise<void>} A promise that resolves when the operation is complete.
 	 */
 	async markSliderCaptchaChecked(id: string): Promise<void> {
 		try {

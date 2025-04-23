@@ -29,7 +29,7 @@ export interface PuzzleShape {
 }
 
 /**
- * Collection of puzzle piece shapes
+ * Demo puzzle piece shapes
  */
 export const PUZZLE_SHAPES: PuzzleShape[] = [
 	// 1. Classic puzzle piece
@@ -277,8 +277,7 @@ export function getRandomShape(): PuzzleShape {
 	}
 
 	const index = Math.floor(Math.random() * PUZZLE_SHAPES.length);
-	// Use non-null assertion since we know the index is within bounds
-	// biome-ignore lint/style/noNonNullAssertion: <explanation>
+	// biome-ignore lint/style/noNonNullAssertion: we know the index is within bounds
 	return PUZZLE_SHAPES[index]!;
 }
 
