@@ -141,7 +141,6 @@ export default defineConfig(({ command, mode }) => {
 						"src/invisible-image-implicit.html",
 					),
 					pow: path.resolve(__dirname, "src/pow.html"),
-					frictionless: path.resolve(__dirname, "src/frictionless.html"),
 					"invisible-frictionless-implicit": path.resolve(
 						__dirname,
 						"src/invisible-frictionless-implicit.html",
