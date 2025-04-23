@@ -23,27 +23,17 @@ import type { CaptchaResponseBody } from "../provider/api.js";
  * Extended CaptchaResponseBody specifically for slider captcha
  */
 export interface SliderCaptchaResponseBody extends CaptchaResponseBody {
-	// Image properties (one of the sets is required)
-	// Legacy fields for simple slider
 	imageUrl?: string;
 	targetPosition?: number;
-
-	// Fields for both simple and shaped slider
 	baseImageUrl?: string;
 	puzzlePieceUrl?: string;
 	shape?: string;
-
-	// 2D target position (used by shaped slider)
 	targetPosition2D?: {
 		x: number;
 		y: number;
 	};
-
-	// Provider information
 	providerUrl?: string;
-
-	// Common field (always required)
-	challengeId: string;
+	challengeId?: string;
 }
 
 /**

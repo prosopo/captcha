@@ -1,12 +1,3 @@
-import { randomBytes } from "node:crypto";
-import { createHash } from "node:crypto";
-import { access, mkdir, readdir, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
-import {
-	CaptchaItemTypes,
-	type SliderCaptchaItem,
-	type SliderCaptchaWithoutId,
-} from "@prosopo/types";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,15 +11,19 @@ import {
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
+import { access, mkdir, readdir, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import {
+	CaptchaItemTypes,
+	type SliderCaptchaItem,
+	type SliderCaptchaWithoutId,
+} from "@prosopo/types";
 import sharp from "sharp";
 import type { SliderDatasetGenerationOptions } from "../types.js";
-import {
-	PUZZLE_SHAPES,
-	type PuzzleShape,
-	createPieceSVG,
-	createShapeSVG,
-	getRandomShape,
-} from "./shapes.js";
+import { PUZZLE_SHAPES, type PuzzleShape, getRandomShape } from "./shapes.js";
 
 export class SliderDatasetGenerator {
 	private options: SliderDatasetGenerationOptions;
@@ -46,7 +41,6 @@ export class SliderDatasetGenerator {
 		const { selectedShapeName } = this.options;
 
 		if (selectedShapeName) {
-			// Find the shape with the matching name
 			const selectedShape = PUZZLE_SHAPES.find(
 				(shape) => shape.name === selectedShapeName,
 			);
@@ -72,10 +66,7 @@ export class SliderDatasetGenerator {
 			timeLimitMs,
 		} = this.options;
 
-		// Create output directory if it doesn't exist
 		await mkdir(outputDir, { recursive: true });
-
-		// Create assets directory within output directory
 		const assetsDir = join(outputDir, "assets");
 		await mkdir(assetsDir, { recursive: true });
 

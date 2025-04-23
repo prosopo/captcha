@@ -24,11 +24,8 @@ type useRefType = <T>(defaultValue: T) => { current: T };
 type useStateType = <T>(defaultValue: T) => [T, (value: T) => void];
 
 export const buildUpdateState =
-	<T extends CaptchaResponseBody>(
-		state: ProcaptchaState<T>,
-		onStateUpdate: ProcaptchaStateUpdateFn<T>,
-	) =>
-	(nextState: Partial<ProcaptchaState<T>>) => {
+	(state: ProcaptchaState, onStateUpdate: ProcaptchaStateUpdateFn) =>
+	(nextState: Partial<ProcaptchaState>) => {
 		// mutate the current state. Note that this is in order of properties in the nextState object.
 		// e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
 		Object.assign(state, nextState);
@@ -54,10 +51,10 @@ const useRefAsState = <T>(
 	return [value, setter];
 };
 
-export const useProcaptcha = <T extends CaptchaResponseBody>(
+export const useProcaptcha = (
 	useState: useStateType,
 	useRef: useRefType,
-): [ProcaptchaState<T>, ProcaptchaStateUpdateFn<T>] => {
+): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
 	const [isHuman, setIsHuman] = useState(false);
 	const [index, setIndex] = useState(0);
 	const [solutions, setSolutions] = useState([] as string[][]);
@@ -65,7 +62,9 @@ export const useProcaptcha = <T extends CaptchaResponseBody>(
 		ProcaptchaApiInterface | undefined
 	>(useRef, undefined);
 	const [showModal, setShowModal] = useState(false);
-	const [challenge, setChallenge] = useState<T | undefined>(undefined);
+	const [challenge, setChallenge] = useState<CaptchaResponseBody | undefined>(
+		undefined,
+	);
 	const [loading, setLoading] = useState(false);
 	const [account, setAccount] = useState<Account | undefined>(undefined);
 	const [dappAccount, setDappAccount] = useState<string | undefined>(undefined);
@@ -105,7 +104,7 @@ export const useProcaptcha = <T extends CaptchaResponseBody>(
 			sessionId,
 		},
 		// and method to update the state
-		(nextState: Partial<ProcaptchaState<T>>) => {
+		(nextState: Partial<ProcaptchaState>) => {
 			if (nextState.account !== undefined) setAccount(nextState.account);
 			if (nextState.isHuman !== undefined) setIsHuman(nextState.isHuman);
 			if (nextState.index !== undefined) setIndex(nextState.index);

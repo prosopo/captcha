@@ -29,7 +29,7 @@ import {
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;
 	checked: boolean;
-	onChange: () => Promise<void>;
+	onChange: () => Promise<void> | void;
 	labelText: string;
 	error?: string;
 	loading: boolean;

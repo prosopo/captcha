@@ -70,19 +70,8 @@ export interface ProviderApiInterface {
 		userAccount: string,
 		dappAccount: string,
 		position: number,
-		targetPosition: number,
 		mouseMovements: Array<{ x: number; y: number; time: number }>,
-		solveTime: number,
-		timestamp: string,
-		signature: {
-			user: {
-				timestamp: string;
-			};
-			provider: {
-				challenge: string;
-			};
-		},
-		fingerprint: string,
+		signature: string,
 		challengeId: string,
 	): Promise<SliderCaptchaSolutionResponse>;
 	submitUserEvents(

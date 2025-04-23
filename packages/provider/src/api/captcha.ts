@@ -724,13 +724,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 	/**
 	 * Verifies a user's Slider captcha solution
-	 *
-	 * @param {string} user - User address
-	 * @param {string} dapp - Dapp address
-	 * @param {number} position - Final slider position
-	 * @param {number} targetPosition - Target slider position
-	 * @param {Array} mouseMovements - Array of mouse movement records
-	 * @param {number} solveTime - Time taken to solve the captcha in ms
 	 */
 	router.post(
 		ClientApiPaths.SubmitSliderCaptchaSolution,
@@ -765,7 +758,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				user,
 				dapp,
 				position,
-				targetPosition,
 				mouseMovements,
 				solveTime,
 				signature,
@@ -788,7 +780,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				// Use our SliderCaptchaManager to verify the solution
 				const verified =
 					await tasks.sliderCaptchaManager.verifySliderCaptchaSolution(
 						challengeId,
@@ -803,11 +794,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const response: SliderCaptchaSolutionResponse = {
 					status: "ok",
 					verified,
-					signature: {
-						provider: {
-							timestamp: Date.now().toString(),
-						},
-					},
 				};
 
 				return res.json(response);

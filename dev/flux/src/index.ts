@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");

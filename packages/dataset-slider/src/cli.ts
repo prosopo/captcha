@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createHash } from "node:crypto";
 import fs from "node:fs";
-import { access, copyFile, mkdir, readdir, stat } from "node:fs/promises";
+import { access, mkdir, readdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import path from "node:path";
 import sharp from "sharp";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
