@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // Vite plugin to inject navigation into HTML files
-import fs from "node:fs";
 import path from "node:path";
 import {
 	type IndexHtmlTransformContext,
@@ -49,10 +48,10 @@ export default function navigationInjector(): Plugin {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
-			slider: {
-				implicit: { path: "slider-implicit.html", exists: true },
-				explicit: { path: "slider-explicit.html", exists: true },
-			},
+			// slider: {
+			// 	implicit: { path: "slider-implicit.html", exists: true },
+			// 	explicit: { path: "slider-explicit.html", exists: true },
+			// },
 		},
 		invisible: {
 			image: {
@@ -73,10 +72,10 @@ export default function navigationInjector(): Plugin {
 					exists: true,
 				},
 			},
-			slider: {
-				implicit: { path: "invisible-slider-implicit.html", exists: true },
-				explicit: { path: "invisible-slider-explicit.html", exists: true },
-			},
+			// slider: {
+			// 	implicit: { path: "invisible-slider-implicit.html", exists: true },
+			// 	explicit: { path: "invisible-slider-explicit.html", exists: true },
+			// },
 		},
 	};
 
