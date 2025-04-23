@@ -16,9 +16,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
-import navigationInjector from "./src/plugins/navigation-injector.js";
-import formFillerInjector from "./src/plugins/form-filler-injector.js";
 import explanationInjector from "./src/plugins/explanation-injector.js";
+import formFillerInjector from "./src/plugins/form-filler-injector.js";
+import navigationInjector from "./src/plugins/navigation-injector.js";
 
 // Function to copy contents of a directory to another directory
 function copyDirContents(src: string, dest: string) {

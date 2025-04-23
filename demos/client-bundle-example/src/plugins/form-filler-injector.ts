@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // Vite plugin to inject a form filler button into HTML files
-import { type IndexHtmlTransformContext, type Plugin } from "vite";
+import type { IndexHtmlTransformContext, Plugin } from "vite";
 
 export default function formFillerInjector(): Plugin {
 	// Style for the form filler button
