@@ -36,12 +36,8 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": [
-				"dist/types"
-			],
-			"slider": [
-				"dist/slider"
-			]
+			"types": ["dist/types"],
+			"slider": ["dist/slider"]
 		}
 	},
 	"dependencies": {
