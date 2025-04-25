@@ -387,6 +387,8 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
 }
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
@@ -416,6 +418,8 @@ export type Session = {
 	createdAt: Date;
 	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -620,9 +624,25 @@ export interface IProviderDatabase extends IDatabase {
 		token: string,
 	): Promise<FrictionlessTokenRecord | undefined>;
 
+	getUnstoredFrictionlessTokenRecords(
+		limit: number,
+		skip: number,
+	): Promise<FrictionlessTokenRecord[]>;
+
+	markFrictionlessTokenRecordsStored(
+		tokenIds: FrictionlessTokenId[],
+	): Promise<void>;
+
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getUnstoredSessionRecords(
+		limit: number,
+		skip: number,
+	): Promise<SessionRecord[]>;
+
+	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
 
 	getUserAccessRulesStorage(): RulesStorage;
 

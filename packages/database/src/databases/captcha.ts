@@ -14,9 +14,13 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
+	type FrictionlessTokenRecord,
+	FrictionlessTokenRecordSchema,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type SessionRecord,
+	SessionRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -25,11 +29,23 @@ import { MongoDatabase } from "../base/index.js";
 const logger = getLoggerDefault();
 
 enum TableNames {
+	frictionlessToken = "frictionlessToken",
+	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 }
 
 const CAPTCHA_TABLES = [
+	{
+		collectionName: TableNames.frictionlessToken,
+		modelName: "FrictionlessToken",
+		schema: FrictionlessTokenRecordSchema,
+	},
+	{
+		collectionName: TableNames.session,
+		modelName: "Session",
+		schema: SessionRecordSchema,
+	},
 	{
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
@@ -75,10 +91,46 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async saveCaptchas(
+		sessionEvents: SessionRecord[],
+		frictionlessTokenEvents: FrictionlessTokenRecord[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
 		await this.connect();
+		if (sessionEvents.length) {
+			const result = await this.tables.session.bulkWrite(
+				sessionEvents.map((doc) => {
+					// remove the _id field to avoid problems when upserting
+					const { _id, ...safeDoc } = doc;
+					return {
+						updateOne: {
+							filter: { id: safeDoc.id },
+							update: { $set: safeDoc },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved Session Events", result.upsertedCount);
+		}
+
+		if (frictionlessTokenEvents.length) {
+			const result = await this.tables.frictionlessToken.bulkWrite(
+				frictionlessTokenEvents.map((doc) => {
+					// remove the _id field to avoid problems when upserting
+					const { _id, ...safeDoc } = doc;
+					return {
+						updateOne: {
+							filter: { id: safeDoc.id },
+							update: { $set: safeDoc },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved Token Events", result.upsertedCount);
+		}
+
 		if (imageCaptchaEvents.length) {
 			const result = await this.tables.commitment.bulkWrite(
 				imageCaptchaEvents.map((doc) => {

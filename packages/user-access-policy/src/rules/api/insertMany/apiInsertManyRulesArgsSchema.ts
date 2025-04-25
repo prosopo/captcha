@@ -23,6 +23,7 @@ const apiInsertManyRulesArgsSchema = object({
 		v4: string().array().optional(),
 		v6: string().array().optional(),
 	}), // block multiple user ip ranges
+	headerHash: string().optional(), // block multiple header hashes
 	userIpMasks: object({
 		v4: object({
 			min: string(),

@@ -24,8 +24,10 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
+	FrictionlessTokenRecord,
 	IProviderDatabase,
 	PoWCaptchaStored,
+	SessionRecord,
 	UserCommitment,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
@@ -60,7 +62,7 @@ export class ClientTaskManager {
 	}
 
 	/**
-	 * @description Store commitments externally in the database
+	 * @description Store commitments externally in the database (Sends image captcha data to the big Mongo Cloud DB)
 	 * @returns Promise<void>
 	 */
 	async storeCommitmentsExternal(): Promise<void> {
@@ -100,11 +102,11 @@ export class ClientTaskManager {
 				async (batch) => {
 					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((commitment) => this.isCommitmentUpdated(commitment))
+						? batch.filter((commitment) => this.isRecordUpdated(commitment))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatch, []);
+						await captchaDB.saveCaptchas([], [], filteredBatch, []);
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
 						);
@@ -124,11 +126,11 @@ export class ClientTaskManager {
 				async (batch) => {
 					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((record) => this.isCommitmentUpdated(record))
+						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], filteredBatch);
+						await captchaDB.saveCaptchas([], [], [], filteredBatch);
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
 						);
@@ -137,11 +139,58 @@ export class ClientTaskManager {
 				},
 			);
 
+			// process frictionless token records with cursor
+			let processedFrictionlessTokenRecords = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredFrictionlessTokenRecords(
+						BATCH_SIZE,
+						skip,
+					),
+				async (batch) => {
+					const lastUpdated = lastTask?.updated || 0;
+					const filteredBatch = lastTask?.updated
+						? batch.filter((record) => this.isRecordUpdated(record))
+						: batch;
+
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas([], filteredBatch, [], []);
+						await this.providerDB.markFrictionlessTokenRecordsStored(
+							filteredBatch.map((record) => record.id),
+						);
+					}
+					processedFrictionlessTokenRecords += filteredBatch.length;
+				},
+			);
+
+			// process session records with cursor
+			let processedSessionRecords = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, skip),
+				async (batch) => {
+					const lastUpdated = lastTask?.updated || 0;
+					const filteredBatch = lastTask?.updated
+						? batch.filter((record) => this.isRecordUpdated(record))
+						: batch;
+
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas(filteredBatch, [], [], []);
+						await this.providerDB.markSessionRecordsStored(
+							filteredBatch.map((record) => record.id),
+						);
+					}
+					processedSessionRecords += filteredBatch.length;
+				},
+			);
+
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
+						processedSessionRecords,
+						processedFrictionlessTokenRecords,
 						processedCommitments,
 						processedPowRecords,
 					},
@@ -280,10 +329,14 @@ export class ClientTaskManager {
 		}
 	}
 
-	private isCommitmentUpdated(
-		commitment: UserCommitment | PoWCaptchaStored,
+	private isRecordUpdated(
+		record:
+			| UserCommitment
+			| PoWCaptchaStored
+			| FrictionlessTokenRecord
+			| SessionRecord,
 	): boolean {
-		const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
+		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (
 			!lastUpdatedTimestamp ||
 			!storedAtTimestamp ||

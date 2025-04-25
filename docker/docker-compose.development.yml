@@ -9,3 +9,9 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=root
             - MONGO_INITDB_DATABASE=prosopo
+    redis:
+        image: redis:7.0.12
+        ports:
+            - '6379:6379'
+        environment:
+            - REDIS_PASSWORD=redispassword
