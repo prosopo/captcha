@@ -12,17 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { IDatabase } from "./mongo.js";
-import type {
+import {
+	type FrictionlessTokenId,
 	FrictionlessTokenRecord,
-	PoWCaptchaRecord,
-	SessionRecord,
-	UserCommitmentRecord,
+	type PoWCaptchaRecord,
+	type ScoreComponents,
+	type SessionRecord,
+	type UserCommitmentRecord,
 } from "./provider.js";
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
 		sessionEvents: SessionRecord[],
-		frictionlessTokenEvents: FrictionlessTokenRecord[],
+		frictionlessTokenEvents: {
+			_id: FrictionlessTokenId;
+			score: number;
+			scoreComponents: ScoreComponents;
+			threshold: number;
+		}[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	): Promise<void>;

@@ -32,6 +32,7 @@ import type {
 } from "@prosopo/types-database";
 import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
+import type { OptionalId } from "mongodb";
 import { validiateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
@@ -151,8 +152,17 @@ export class ClientTaskManager {
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
+					// drop fields other than `score`, `scoreComponents`, and `threshold`
+					const trimmedFilteredBatch = batch.map((record) => ({
+						...record,
+						_id: record._id as FrictionlessTokenId, // token Mongo ID is referenced in other docs so need to keep this
+						score: record.score,
+						scoreComponents: record.scoreComponents,
+						threshold: record.threshold,
+					}));
+
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], filteredBatch, [], []);
+						await captchaDB.saveCaptchas([], trimmedFilteredBatch, [], []);
 						await this.providerDB.markFrictionlessTokenRecordsStored(
 							filteredBatch.map((record) => record._id as FrictionlessTokenId),
 						);
