@@ -151,8 +151,16 @@ export class ClientTaskManager {
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
+					// drop fields other than `score`, `scoreComponents`, and `threshold`
+					const trimmedFilteredBatch = batch.map((record) => ({
+						...record,
+						score: record.score,
+						scoreComponents: record.scoreComponents,
+						threshold: record.threshold,
+					}));
+
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], filteredBatch, [], []);
+						await captchaDB.saveCaptchas([], trimmedFilteredBatch, [], []);
 						await this.providerDB.markFrictionlessTokenRecordsStored(
 							filteredBatch.map((record) => record._id as FrictionlessTokenId),
 						);

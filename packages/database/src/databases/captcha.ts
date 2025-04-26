@@ -92,7 +92,10 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 	async saveCaptchas(
 		sessionEvents: SessionRecord[],
-		frictionlessTokenEvents: FrictionlessTokenRecord[],
+		frictionlessTokenEvents: Pick<
+			FrictionlessTokenRecord,
+			"score" | "scoreComponents" | "threshold"
+		>[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
@@ -100,13 +103,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (sessionEvents.length) {
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((doc) => {
-					// remove the _id field to avoid problems when upserting
+					// remove the _id field to avoid problems when inserting
 					const { _id, ...safeDoc } = doc;
 					return {
-						updateOne: {
-							filter: { sessionId: safeDoc.sessionId },
-							update: { $set: safeDoc },
-							upsert: true,
+						insertOne: {
+							document: safeDoc,
 						},
 					};
 				}),
@@ -116,14 +117,10 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 		if (frictionlessTokenEvents.length) {
 			const result = await this.tables.frictionlessToken.bulkWrite(
-				frictionlessTokenEvents.map((doc) => {
-					// remove the _id field to avoid problems when upserting
-					const { _id, ...safeDoc } = doc;
+				frictionlessTokenEvents.map((document) => {
 					return {
-						updateOne: {
-							filter: { token: safeDoc.token },
-							update: { $set: safeDoc },
-							upsert: true,
+						insertOne: {
+							document,
 						},
 					};
 				}),
