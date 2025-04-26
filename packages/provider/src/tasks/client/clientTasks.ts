@@ -156,7 +156,7 @@ export class ClientTaskManager {
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, [], []);
 						await this.providerDB.markFrictionlessTokenRecordsStored(
-							filteredBatch.map((record) => record.id),
+							filteredBatch.map((record) => record._id),
 						);
 					}
 					processedFrictionlessTokenRecords += filteredBatch.length;
@@ -177,7 +177,7 @@ export class ClientTaskManager {
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas(filteredBatch, [], [], []);
 						await this.providerDB.markSessionRecordsStored(
-							filteredBatch.map((record) => record.id),
+							filteredBatch.map((record) => record.sessionId),
 						);
 					}
 					processedSessionRecords += filteredBatch.length;
