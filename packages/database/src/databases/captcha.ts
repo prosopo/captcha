@@ -14,11 +14,13 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
+	type FrictionlessTokenId,
 	type FrictionlessTokenRecord,
 	FrictionlessTokenRecordSchema,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type ScoreComponents,
 	type SessionRecord,
 	SessionRecordSchema,
 	type Tables,
@@ -92,10 +94,12 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 	async saveCaptchas(
 		sessionEvents: SessionRecord[],
-		frictionlessTokenEvents: Pick<
-			FrictionlessTokenRecord,
-			"_id" | "score" | "scoreComponents" | "threshold"
-		>[],
+		frictionlessTokenEvents: {
+			_id: FrictionlessTokenId;
+			score: number;
+			scoreComponents: ScoreComponents;
+			threshold: number;
+		}[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
