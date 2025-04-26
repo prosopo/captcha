@@ -409,6 +409,8 @@ export const FrictionlessTokenRecordSchema =
 			accessPolicy: { type: Number, required: false },
 		},
 		createdAt: { type: Date, default: Date.now, expires: ONE_HOUR },
+		storedAtTimestamp: { type: Date, required: false },
+		lastUpdatedTimestamp: { type: Date, required: false },
 	});
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
@@ -431,6 +433,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 	},
 	captchaType: { type: String, enum: CaptchaType, required: true },
+	storedAtTimestamp: { type: Date, required: false },
+	lastUpdatedTimestamp: { type: Date, required: false },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
