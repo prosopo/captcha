@@ -387,6 +387,8 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
 }
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
@@ -407,15 +409,20 @@ export const FrictionlessTokenRecordSchema =
 			accessPolicy: { type: Number, required: false },
 		},
 		createdAt: { type: Date, default: Date.now, expires: ONE_HOUR },
+		storedAtTimestamp: { type: Date, required: false },
+		lastUpdatedTimestamp: { type: Date, required: false },
 	});
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
 	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -427,9 +434,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 	},
 	captchaType: { type: String, enum: CaptchaType, required: true },
+	storedAtTimestamp: { type: Date, required: false },
+	lastUpdatedTimestamp: { type: Date, required: false },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+SessionRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -620,9 +630,25 @@ export interface IProviderDatabase extends IDatabase {
 		token: string,
 	): Promise<FrictionlessTokenRecord | undefined>;
 
+	getUnstoredFrictionlessTokenRecords(
+		limit: number,
+		skip: number,
+	): Promise<FrictionlessTokenRecord[]>;
+
+	markFrictionlessTokenRecordsStored(
+		tokenIds: FrictionlessTokenId[],
+	): Promise<void>;
+
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getUnstoredSessionRecords(
+		limit: number,
+		skip: number,
+	): Promise<SessionRecord[]>;
+
+	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
 
 	getUserAccessRulesStorage(): RulesStorage;
 

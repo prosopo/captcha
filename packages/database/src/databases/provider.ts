@@ -34,7 +34,10 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { FrictionlessTokenRecord } from "@prosopo/types-database";
+import type {
+	FrictionlessTokenRecord,
+	SessionRecord,
+} from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientRecord,
@@ -57,7 +60,6 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
-	type SessionRecord,
 	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
@@ -959,6 +961,70 @@ export class ProviderDatabase
 		return record || undefined;
 	}
 
+	/** Get unstored frictionless token records */
+	async getUnstoredFrictionlessTokenRecords(
+		limit = 1000,
+		skip = 0,
+	): Promise<FrictionlessTokenRecord[]> {
+		const filterNoStoredTimestamp: {
+			[key in keyof Pick<FrictionlessTokenRecord, "storedAtTimestamp">]: {
+				$exists: boolean;
+			};
+		} = { storedAtTimestamp: { $exists: false } };
+		const docs =
+			await this.tables?.frictionlessToken.aggregate<FrictionlessTokenRecord>([
+				{
+					$match: {
+						$or: [
+							filterNoStoredTimestamp,
+							{
+								$expr: {
+									$lt: [
+										{
+											$convert: {
+												input: "$storedAtTimestamp",
+												to: "date",
+											},
+										},
+										{
+											$convert: {
+												input: "$lastUpdatedTimestamp",
+												to: "date",
+											},
+										},
+									],
+								},
+							},
+						],
+					},
+				},
+				{
+					$sort: { _id: 1 },
+				},
+				{
+					$skip: skip,
+				},
+				{
+					$limit: limit,
+				},
+			]);
+		return docs || [];
+	}
+
+	/** Mark a list of frictionless token records as stored */
+	async markFrictionlessTokenRecordsStored(
+		tokenIds: FrictionlessTokenId[],
+	): Promise<void> {
+		const updateDoc: Pick<FrictionlessTokenRecord, "storedAtTimestamp"> = {
+			storedAtTimestamp: Date.now(),
+		};
+		await this.tables?.frictionlessToken.updateMany(
+			{ _id: { $in: tokenIds } },
+			{ $set: updateDoc },
+			{ upsert: false },
+		);
+	}
+
 	/**
 	 * Store a new session record
 	 */
@@ -994,6 +1060,69 @@ export class ProviderDatabase
 				logger: this.logger,
 			});
 		}
+	}
+
+	/** Get unstored session records
+	 * @description Get session records that have not been stored yet
+	 * @param limit
+	 * @param skip
+	 */
+	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+		const filterNoStoredTimestamp: {
+			[key in keyof Pick<SessionRecord, "storedAtTimestamp">]: {
+				$exists: boolean;
+			};
+		} = { storedAtTimestamp: { $exists: false } };
+		return this.tables?.session
+			.aggregate<SessionRecord>([
+				{
+					$match: {
+						$or: [
+							filterNoStoredTimestamp,
+							{
+								$expr: {
+									$lt: [
+										{
+											$convert: {
+												input: "$storedAtTimestamp",
+												to: "date",
+											},
+										},
+										{
+											$convert: {
+												input: "$lastUpdatedTimestamp",
+												to: "date",
+											},
+										},
+									],
+								},
+							},
+						],
+					},
+				},
+				{
+					$sort: { _id: 1 },
+				},
+				{
+					$skip: skip,
+				},
+				{
+					$limit: limit,
+				},
+			])
+			.then((docs) => docs || []);
+	}
+
+	/** Mark a list of session records as stored */
+	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
+		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
+			storedAtTimestamp: Date.now(),
+		};
+		await this.tables?.session.updateMany(
+			{ sessionId: { $in: sessionIds } },
+			{ $set: updateDoc },
+			{ upsert: false },
+		);
 	}
 
 	/**
