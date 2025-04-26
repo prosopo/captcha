@@ -414,6 +414,7 @@ export const FrictionlessTokenRecordSchema =
 	});
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type Session = {
 	sessionId: string;
@@ -438,6 +439,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+SessionRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
