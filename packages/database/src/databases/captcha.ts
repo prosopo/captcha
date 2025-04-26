@@ -104,7 +104,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					const { _id, ...safeDoc } = doc;
 					return {
 						updateOne: {
-							filter: { id: safeDoc.id },
+							filter: { sessionId: safeDoc.sessionId },
 							update: { $set: safeDoc },
 							upsert: true,
 						},
@@ -121,7 +121,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					const { _id, ...safeDoc } = doc;
 					return {
 						updateOne: {
-							filter: { id: safeDoc.id },
+							filter: { token: safeDoc.token },
 							update: { $set: safeDoc },
 							upsert: true,
 						},
