@@ -30,6 +30,7 @@ import type {
 	SessionRecord,
 	UserCommitment,
 } from "@prosopo/types-database";
+import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import { validiateSiteKey } from "../../api/validateAddress.js";
 
@@ -156,7 +157,7 @@ export class ClientTaskManager {
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, [], []);
 						await this.providerDB.markFrictionlessTokenRecordsStored(
-							filteredBatch.map((record) => record._id),
+							filteredBatch.map((record) => record._id as FrictionlessTokenId),
 						);
 					}
 					processedFrictionlessTokenRecords += filteredBatch.length;
