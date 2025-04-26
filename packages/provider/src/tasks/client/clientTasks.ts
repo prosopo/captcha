@@ -101,7 +101,6 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
 						? batch.filter((commitment) => this.isRecordUpdated(commitment))
 						: batch;
@@ -125,7 +124,6 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
@@ -149,7 +147,6 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
@@ -170,7 +167,6 @@ export class ClientTaskManager {
 				async (skip: number) =>
 					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, skip),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
