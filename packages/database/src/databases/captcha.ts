@@ -94,7 +94,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		sessionEvents: SessionRecord[],
 		frictionlessTokenEvents: Pick<
 			FrictionlessTokenRecord,
-			"score" | "scoreComponents" | "threshold"
+			"_id" | "score" | "scoreComponents" | "threshold"
 		>[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],

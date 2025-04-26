@@ -154,6 +154,7 @@ export class ClientTaskManager {
 					// drop fields other than `score`, `scoreComponents`, and `threshold`
 					const trimmedFilteredBatch = batch.map((record) => ({
 						...record,
+						_id: record._id, // token Mongo ID is referenced in other docs so need to keep this
 						score: record.score,
 						scoreComponents: record.scoreComponents,
 						threshold: record.threshold,
