@@ -408,7 +408,7 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
-		createdAt: { type: Date, default: Date.now, expires: ONE_HOUR },
+		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 		storedAtTimestamp: { type: Date, required: false },
 		lastUpdatedTimestamp: { type: Date, required: false },
 	});
