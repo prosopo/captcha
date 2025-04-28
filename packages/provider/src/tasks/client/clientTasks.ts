@@ -155,10 +155,14 @@ export class ClientTaskManager {
 						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
 							filteredBatch.map((record) => record.tokenId),
 						);
+					this.logger.info(
+						`Frictionless token records: ${frictionlessTokenRecords.length}`,
+					);
 					// attach scores to session records
 					const filteredBatchWithScores = filteredBatch.map((record) => {
 						const tokenRecord = frictionlessTokenRecords.find(
-							(tokenRecord) => tokenRecord._id === record.tokenId,
+							(tokenRecord) =>
+								tokenRecord._id?.toString() === record.tokenId.toString(),
 						);
 						if (!tokenRecord) {
 							this.logger.error({

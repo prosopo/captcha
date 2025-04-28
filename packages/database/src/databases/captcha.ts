@@ -17,7 +17,6 @@ import {
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
-	SessionRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
 	type Tables,
@@ -92,17 +91,15 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		await this.connect();
 		if (sessionEvents.length) {
 			const result = await this.tables.session.bulkWrite(
-				sessionEvents.map((doc) => {
-					// remove the _id field to avoid problems when inserting
-					const { _id, ...safeDoc } = doc;
+				sessionEvents.map((document) => {
 					return {
 						insertOne: {
-							document: safeDoc,
+							document: document,
 						},
 					};
 				}),
 			);
-			logger.info("Mongo Saved Session Events", result.upsertedCount);
+			logger.info("Mongo Saved Session Events", result.insertedCount);
 		}
 
 		if (imageCaptchaEvents.length) {

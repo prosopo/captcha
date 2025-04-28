@@ -1003,7 +1003,10 @@ export class ProviderDatabase
 		};
 		try {
 			const session = await this.tables.session
-				.findOneAndUpdate<SessionRecord>(filter, { deleted: true })
+				.findOneAndUpdate<SessionRecord>(filter, {
+					deleted: true,
+					lastUpdatedTimestamp: Date.now(),
+				})
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {

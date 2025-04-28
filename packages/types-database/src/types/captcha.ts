@@ -1,4 +1,3 @@
-import { Schema } from "mongoose";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +11,11 @@ import { Schema } from "mongoose";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+import type mongoose from "mongoose";
+import { Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
-	FrictionlessTokenId,
+	FrictionlessTokenRecordSchema,
 	type PoWCaptchaRecord,
 	type ScoreComponents,
 	type SessionRecord,
@@ -23,25 +23,24 @@ import {
 	type UserCommitmentRecord,
 } from "./provider.js";
 
-export type StoredSession = SessionRecord & {
+export type StoredSession = Pick<
+	SessionRecord,
+	"sessionId" | "createdAt" | "captchaType" | "deleted"
+> & {
 	score: number;
 	scoreComponents: ScoreComponents;
 	threshold: number;
 };
 
-export const StoredSessionRecordSchema = new Schema<StoredSession>({
-	score: { type: Number, required: true },
-	scoreComponents: {
-		type: new Schema<ScoreComponents>({
-			[Symbol.for("scoreComponents")]: {
-				type: Object,
-				required: true,
-			},
-		}),
-		required: true,
-	},
-	threshold: { type: Number, required: true },
-}).add(SessionRecordSchema.obj);
+export const StoredSessionRecordSchema: Schema = new Schema({
+	sessionId: SessionRecordSchema.obj.sessionId,
+	createdAt: SessionRecordSchema.obj.createdAt,
+	captchaType: SessionRecordSchema.obj.captchaType,
+	deleted: SessionRecordSchema.obj.deleted,
+	score: FrictionlessTokenRecordSchema.obj.score,
+	scoreComponents: FrictionlessTokenRecordSchema.obj.scoreComponents,
+	threshold: FrictionlessTokenRecordSchema.obj.threshold,
+});
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
