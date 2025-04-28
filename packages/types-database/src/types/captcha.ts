@@ -1,3 +1,4 @@
+import { Schema } from "mongoose";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +16,16 @@ import type { IDatabase } from "./mongo.js";
 import {
 	type FrictionlessTokenId,
 	FrictionlessTokenRecord,
+	FrictionlessTokenRecordSchema,
 	type PoWCaptchaRecord,
 	type ScoreComponents,
 	type SessionRecord,
 	type UserCommitmentRecord,
 } from "./provider.js";
+
+// Use a custom schema for FrictionlessToken to avoid storing `token` externally
+export const FrictionlessTokenStoredRecordSchema =
+	FrictionlessTokenRecordSchema.omit(["token", "createdAt"]);
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(

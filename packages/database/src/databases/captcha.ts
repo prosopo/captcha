@@ -15,8 +15,7 @@
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
 	type FrictionlessTokenId,
-	type FrictionlessTokenRecord,
-	FrictionlessTokenRecordSchema,
+	FrictionlessTokenStoredRecordSchema,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
@@ -41,7 +40,7 @@ const CAPTCHA_TABLES = [
 	{
 		collectionName: TableNames.frictionlessToken,
 		modelName: "FrictionlessToken",
-		schema: FrictionlessTokenRecordSchema,
+		schema: FrictionlessTokenStoredRecordSchema,
 	},
 	{
 		collectionName: TableNames.session,
