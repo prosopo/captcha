@@ -25,7 +25,7 @@ import {
 
 export type StoredSession = Pick<
 	SessionRecord,
-	"sessionId" | "createdAt" | "captchaType" | "deleted"
+	"sessionId" | "createdAt" | "captchaType" | "deleted" | "tokenId"
 > & {
 	score: number;
 	scoreComponents: ScoreComponents;
@@ -36,6 +36,7 @@ export const StoredSessionRecordSchema: Schema = new Schema({
 	sessionId: SessionRecordSchema.obj.sessionId,
 	createdAt: SessionRecordSchema.obj.createdAt,
 	captchaType: SessionRecordSchema.obj.captchaType,
+	tokenId: SessionRecordSchema.obj.tokenId,
 	deleted: SessionRecordSchema.obj.deleted,
 	score: FrictionlessTokenRecordSchema.obj.score,
 	scoreComponents: FrictionlessTokenRecordSchema.obj.scoreComponents,
