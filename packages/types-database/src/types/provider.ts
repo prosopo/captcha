@@ -423,6 +423,7 @@ export type Session = {
 	captchaType: CaptchaType;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
+	deleted?: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -436,10 +437,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	captchaType: { type: String, enum: CaptchaType, required: true },
 	storedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
+	deleted: { type: Boolean, required: false },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ storedAtTimestamp: 1 });
+SessionRecordSchema.index({ deleted: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;

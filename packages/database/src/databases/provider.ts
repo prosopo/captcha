@@ -1041,17 +1041,20 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Check if a session exists and remove it if it does
+	 * Check if a session exists and mark it as removed
 	 * @returns The session record if it existed, undefined otherwise
 	 */
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
 		this.logger.debug({ action: "checking and removing", sessionId });
-		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		const filter: Pick<SessionRecord, "sessionId" | "deleted"> = {
+			sessionId,
+			deleted: false,
+		};
 		try {
 			const session = await this.tables.session
-				.findOneAndDelete<SessionRecord>(filter)
+				.findOneAndUpdate<SessionRecord>(filter, { deleted: true })
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {

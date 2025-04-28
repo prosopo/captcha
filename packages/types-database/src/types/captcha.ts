@@ -12,10 +12,10 @@ import { Schema } from "mongoose";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { IDatabase } from "./mongo.js";
 import {
 	type FrictionlessTokenId,
-	FrictionlessTokenRecord,
 	FrictionlessTokenRecordSchema,
 	type PoWCaptchaRecord,
 	type ScoreComponents,
