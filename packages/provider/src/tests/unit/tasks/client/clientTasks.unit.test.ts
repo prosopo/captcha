@@ -322,7 +322,6 @@ describe("ClientTaskManager", () => {
 			{
 				data: {
 					processedSessionRecords: 0,
-					processedFrictionlessTokenRecords: 0,
 					processedCommitments: 0,
 					processedPowRecords: 1,
 				},
@@ -372,7 +371,7 @@ describe("ClientTaskManager", () => {
 			{
 				data: {
 					processedSessionRecords: 0,
-					processedFrictionlessTokenRecords: 0,
+
 					processedCommitments: 0,
 					processedPowRecords: 0,
 				},
