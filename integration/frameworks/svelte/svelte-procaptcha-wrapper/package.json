@@ -1,0 +1,41 @@
+{
+	"name": "@prosopo/svelte-procaptcha-wrapper",
+	"version": "1.0.0",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"clean": "del-cli ./dist && del-cli ./.svelte-kit",
+		"package": "svelte-package -i ./src -o ./dist",
+		"build": "npm run package && del-cli ./.svelte-kit",
+		"dev": "npm run package -- -w"
+	},
+	"dependencies": {
+		"@prosopo/procaptcha-wrapper": ">=2.5.4"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"@sveltejs/package": "2.3.10",
+		"del-cli": "6.0.0"
+	},
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"sideEffects": false
+}

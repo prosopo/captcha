@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { css } from "@emotion/react";
+import styled from "@emotion/styled";
 import {
 	type Theme,
 	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
@@ -72,17 +73,9 @@ const generateRandomId = () => {
 	).join("");
 };
 
-const responsiveFont = css`
-	display: none;
-	@media (min-width: 216px) {
-		display: flex;
-		font-size: 12px;
-	}
-	@media (min-width: 268px) {
-		display: flex;
-		font-size: 16px;
-	}
-`;
+interface ResponsiveLabelProps {
+	htmFor?: string;
+}
 
 export const Checkbox: FC<CheckboxProps> = ({
 	theme,
@@ -98,6 +91,27 @@ export const Checkbox: FC<CheckboxProps> = ({
 	};
 	const [hover, setHover] = useState(false);
 
+	const ResponsiveLabel = styled.label<ResponsiveLabelProps>`
+		color: ${theme.palette.background.contrastText};
+		position: relative;
+		display: flex;
+		cursor: pointer;
+		user-select: none;
+		
+		@container widget (max-width: 219px) {
+			display: none;
+		}
+		@container widget (min-width: 220px) {
+			font-size: 12px;
+		}
+		@container widget (min-width: 250px) {
+			font-size: 14px;
+		}
+		@container widget (min-width: 270px) {
+			font-size: 16px;
+		}
+	`;
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
 		return {
@@ -108,8 +122,8 @@ export const Checkbox: FC<CheckboxProps> = ({
 			appearance: checked ? "auto" : "none",
 			flex: 1,
 			margin: "15px",
-			minWidth: "14px",
-			minHeight: "14px",
+			minWidth: "28px",
+			minHeight: "28px",
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
@@ -123,18 +137,10 @@ export const Checkbox: FC<CheckboxProps> = ({
 			}}
 		>
 			{loading ? (
-				<div className="checkbox__outer">
-					<div className="checkbox__wrapper">
-						<div className="checkbox__inner">
-							<div className="checkbox__content">
-								<div
-									className={WIDGET_CHECKBOX_SPINNER_CSS_CLASS}
-									aria-label="Loading spinner"
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
+				<div
+					className={WIDGET_CHECKBOX_SPINNER_CSS_CLASS}
+					aria-label="Loading spinner"
+				/>
 			) : (
 				<input
 					name={id}
@@ -159,17 +165,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 				/>
 			)}
 			{error ? (
-				<label
-					css={{
-						color: theme.palette.error.main,
-						position: "relative",
-						display: "flex",
-						cursor: "pointer",
-						userSelect: "none",
-						...responsiveFont,
-					}}
-					htmlFor={id}
-				>
+				<ResponsiveLabel htmFor={id}>
 					<a
 						css={{
 							color: theme.palette.error.main,
@@ -178,21 +174,9 @@ export const Checkbox: FC<CheckboxProps> = ({
 					>
 						{error}
 					</a>
-				</label>
+				</ResponsiveLabel>
 			) : (
-				<label
-					css={{
-						color: theme.palette.background.contrastText,
-						position: "relative",
-						display: "flex",
-						cursor: "pointer",
-						userSelect: "none",
-						...responsiveFont,
-					}}
-					htmlFor={id}
-				>
-					{labelText}
-				</label>
+				<ResponsiveLabel htmFor={id}>{labelText}</ResponsiveLabel>
 			)}
 		</span>
 	);

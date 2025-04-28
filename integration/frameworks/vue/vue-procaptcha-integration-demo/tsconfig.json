@@ -1,0 +1,16 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["./src"],
+	"references": [
+		{
+			"path": "../vue-procaptcha-wrapper"
+		},
+		{
+			"path": "../../../procaptcha-integration-build-config"
+		}
+	]
+}

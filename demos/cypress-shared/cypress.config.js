@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { builtinModules } from "node:module";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 
+const allExternal = [
+	...builtinModules,
+	...builtinModules.map((m) => `node:${m}`),
+];
 loadEnv();
 
 export default defineConfig({
@@ -43,13 +47,10 @@ export default defineConfig({
 					build: {
 						ssr: false,
 						modulePreload: { polyfill: true },
+						rollupOptions: {
+							external: allExternal,
+						},
 					},
-					plugins: [
-						nodePolyfills({
-							// Whether to polyfill `node:` protocol imports.
-							protocolImports: true,
-						}),
-					],
 				}),
 			);
 			// Add task event for logging to the terminal
