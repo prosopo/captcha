@@ -14,14 +14,12 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
-	type FrictionlessTokenId,
-	FrictionlessTokenStoredRecordSchema,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
-	type ScoreComponents,
-	type SessionRecord,
 	SessionRecordSchema,
+	type StoredSession,
+	StoredSessionRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -38,14 +36,9 @@ enum TableNames {
 
 const CAPTCHA_TABLES = [
 	{
-		collectionName: TableNames.frictionlessToken,
-		modelName: "FrictionlessToken",
-		schema: FrictionlessTokenStoredRecordSchema,
-	},
-	{
 		collectionName: TableNames.session,
 		modelName: "Session",
-		schema: SessionRecordSchema,
+		schema: StoredSessionRecordSchema,
 	},
 	{
 		collectionName: TableNames.powcaptcha,
@@ -92,13 +85,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async saveCaptchas(
-		sessionEvents: SessionRecord[],
-		frictionlessTokenEvents: {
-			_id: FrictionlessTokenId;
-			score: number;
-			scoreComponents: ScoreComponents;
-			threshold: number;
-		}[],
+		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
@@ -116,19 +103,6 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				}),
 			);
 			logger.info("Mongo Saved Session Events", result.upsertedCount);
-		}
-
-		if (frictionlessTokenEvents.length) {
-			const result = await this.tables.frictionlessToken.bulkWrite(
-				frictionlessTokenEvents.map((document) => {
-					return {
-						insertOne: {
-							document,
-						},
-					};
-				}),
-			);
-			logger.info("Mongo Saved Token Events", result.upsertedCount);
 		}
 
 		if (imageCaptchaEvents.length) {

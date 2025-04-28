@@ -629,18 +629,13 @@ export interface IProviderDatabase extends IDatabase {
 		tokenId: FrictionlessTokenId,
 	): Promise<FrictionlessTokenRecord | undefined>;
 
+	getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]>;
+
 	getFrictionlessTokenRecordByToken(
 		token: string,
 	): Promise<FrictionlessTokenRecord | undefined>;
-
-	getUnstoredFrictionlessTokenRecords(
-		limit: number,
-		skip: number,
-	): Promise<FrictionlessTokenRecord[]>;
-
-	markFrictionlessTokenRecordsStored(
-		tokenIds: FrictionlessTokenId[],
-	): Promise<void>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 

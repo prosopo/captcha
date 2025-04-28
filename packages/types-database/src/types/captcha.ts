@@ -15,27 +15,37 @@ import { Schema } from "mongoose";
 
 import type { IDatabase } from "./mongo.js";
 import {
-	type FrictionlessTokenId,
-	FrictionlessTokenRecordSchema,
+	FrictionlessTokenId,
 	type PoWCaptchaRecord,
 	type ScoreComponents,
 	type SessionRecord,
+	SessionRecordSchema,
 	type UserCommitmentRecord,
 } from "./provider.js";
 
-// Use a custom schema for FrictionlessToken to avoid storing `token` externally
-export const FrictionlessTokenStoredRecordSchema =
-	FrictionlessTokenRecordSchema.omit(["token", "createdAt"]);
+export type StoredSession = SessionRecord & {
+	score: number;
+	scoreComponents: ScoreComponents;
+	threshold: number;
+};
+
+export const StoredSessionRecordSchema = new Schema<StoredSession>({
+	score: { type: Number, required: true },
+	scoreComponents: {
+		type: new Schema<ScoreComponents>({
+			[Symbol.for("scoreComponents")]: {
+				type: Object,
+				required: true,
+			},
+		}),
+		required: true,
+	},
+	threshold: { type: Number, required: true },
+}).add(SessionRecordSchema.obj);
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
-		sessionEvents: SessionRecord[],
-		frictionlessTokenEvents: {
-			_id: FrictionlessTokenId;
-			score: number;
-			scoreComponents: ScoreComponents;
-			threshold: number;
-		}[],
+		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	): Promise<void>;

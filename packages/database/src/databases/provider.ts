@@ -945,6 +945,15 @@ export class ProviderDatabase
 			);
 		return doc ? doc : undefined;
 	}
+	/** Get many frictionless token records */
+	async getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = {
+			_id: { $in: tokenId },
+		};
+		return this.tables.frictionlessToken.find<FrictionlessTokenRecord>(filter);
+	}
 
 	/**
 	 * Check if a frictionless token record exists.
@@ -959,70 +968,6 @@ export class ProviderDatabase
 				filter,
 			);
 		return record || undefined;
-	}
-
-	/** Get unstored frictionless token records */
-	async getUnstoredFrictionlessTokenRecords(
-		limit = 1000,
-		skip = 0,
-	): Promise<FrictionlessTokenRecord[]> {
-		const filterNoStoredTimestamp: {
-			[key in keyof Pick<FrictionlessTokenRecord, "storedAtTimestamp">]: {
-				$exists: boolean;
-			};
-		} = { storedAtTimestamp: { $exists: false } };
-		const docs =
-			await this.tables?.frictionlessToken.aggregate<FrictionlessTokenRecord>([
-				{
-					$match: {
-						$or: [
-							filterNoStoredTimestamp,
-							{
-								$expr: {
-									$lt: [
-										{
-											$convert: {
-												input: "$storedAtTimestamp",
-												to: "date",
-											},
-										},
-										{
-											$convert: {
-												input: "$lastUpdatedTimestamp",
-												to: "date",
-											},
-										},
-									],
-								},
-							},
-						],
-					},
-				},
-				{
-					$sort: { _id: 1 },
-				},
-				{
-					$skip: skip,
-				},
-				{
-					$limit: limit,
-				},
-			]);
-		return docs || [];
-	}
-
-	/** Mark a list of frictionless token records as stored */
-	async markFrictionlessTokenRecordsStored(
-		tokenIds: FrictionlessTokenId[],
-	): Promise<void> {
-		const updateDoc: Pick<FrictionlessTokenRecord, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
-		};
-		await this.tables?.frictionlessToken.updateMany(
-			{ _id: { $in: tokenIds } },
-			{ $set: updateDoc },
-			{ upsert: false },
-		);
 	}
 
 	/**
@@ -1048,9 +993,13 @@ export class ProviderDatabase
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
 		this.logger.debug({ action: "checking and removing", sessionId });
-		const filter: Pick<SessionRecord, "sessionId" | "deleted"> = {
+		const filter: {
+			[key in keyof Pick<SessionRecord, "sessionId" | "deleted">]:
+				| string
+				| { $exists: boolean };
+		} = {
 			sessionId,
-			deleted: false,
+			deleted: { $exists: false },
 		};
 		try {
 			const session = await this.tables.session

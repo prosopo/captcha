@@ -22,13 +22,15 @@ import {
 	ScheduledTaskStatus,
 	type Tier,
 } from "@prosopo/types";
-import type {
-	ClientRecord,
+import {
+	type ClientRecord,
 	FrictionlessTokenRecord,
-	IProviderDatabase,
-	PoWCaptchaStored,
-	SessionRecord,
-	UserCommitment,
+	type IProviderDatabase,
+	type PoWCaptchaStored,
+	type ScoreComponents,
+	type SessionRecord,
+	type StoredSession,
+	type UserCommitment,
 } from "@prosopo/types-database";
 import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
@@ -107,7 +109,7 @@ export class ClientTaskManager {
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], [], filteredBatch, []);
+						await captchaDB.saveCaptchas([], filteredBatch, []);
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
 						);
@@ -130,44 +132,12 @@ export class ClientTaskManager {
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], [], [], filteredBatch);
+						await captchaDB.saveCaptchas([], [], filteredBatch);
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
 						);
 					}
 					processedPowRecords += filteredBatch.length;
-				},
-			);
-
-			// process frictionless token records with cursor
-			let processedFrictionlessTokenRecords = 0;
-			await this.processBatchesWithCursor(
-				async (skip: number) =>
-					await this.providerDB.getUnstoredFrictionlessTokenRecords(
-						BATCH_SIZE,
-						skip,
-					),
-				async (batch) => {
-					const filteredBatch = lastTask?.updated
-						? batch.filter((record) => this.isRecordUpdated(record))
-						: batch;
-
-					// drop fields other than `score`, `scoreComponents`, and `threshold`
-					const trimmedFilteredBatch = batch.map((record) => ({
-						...record,
-						_id: record._id as FrictionlessTokenId, // token Mongo ID is referenced in other docs so need to keep this
-						score: record.score,
-						scoreComponents: record.scoreComponents,
-						threshold: record.threshold,
-					}));
-
-					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], trimmedFilteredBatch, [], []);
-						await this.providerDB.markFrictionlessTokenRecordsStored(
-							filteredBatch.map((record) => record._id as FrictionlessTokenId),
-						);
-					}
-					processedFrictionlessTokenRecords += filteredBatch.length;
 				},
 			);
 
@@ -180,9 +150,40 @@ export class ClientTaskManager {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
+					// get corresponding frictionless scores
+					const frictionlessTokenRecords =
+						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
+							filteredBatch.map((record) => record.tokenId),
+						);
+					// attach scores to session records
+					const filteredBatchWithScores = filteredBatch.map((record) => {
+						const tokenRecord = frictionlessTokenRecords.find(
+							(tokenRecord) => tokenRecord._id === record.tokenId,
+						);
+						if (!tokenRecord) {
+							this.logger.error({
+								message: "No token record found",
+								context: { tokenId: record.tokenId },
+							});
+							return {
+								...record,
+								score: 0,
+								scoreComponents: {
+									baseScore: 0,
+								},
+								threshold: 0,
+							} as StoredSession;
+						}
+						return {
+							...record,
+							score: tokenRecord?.score || 0,
+							scoreComponents: tokenRecord?.scoreComponents,
+							threshold: tokenRecord?.threshold || 0,
+						} as StoredSession;
+					});
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatch, [], [], []);
+						await captchaDB.saveCaptchas(filteredBatchWithScores, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
 						);
@@ -197,7 +198,6 @@ export class ClientTaskManager {
 				{
 					data: {
 						processedSessionRecords,
-						processedFrictionlessTokenRecords,
 						processedCommitments,
 						processedPowRecords,
 					},
@@ -337,11 +337,7 @@ export class ClientTaskManager {
 	}
 
 	private isRecordUpdated(
-		record:
-			| UserCommitment
-			| PoWCaptchaStored
-			| FrictionlessTokenRecord
-			| SessionRecord,
+		record: UserCommitment | PoWCaptchaStored | SessionRecord,
 	): boolean {
 		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (
