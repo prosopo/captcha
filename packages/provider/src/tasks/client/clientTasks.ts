@@ -55,7 +55,7 @@ export class ClientTaskManager {
 	config: ProsopoConfigOutput;
 	logger: Logger;
 	providerDB: IProviderDatabase;
-	_captchaDB: CaptchaDatabase | undefined;
+	captchaDB: CaptchaDatabase | undefined;
 	constructor(
 		config: ProsopoConfigOutput,
 		logger: Logger,
@@ -71,18 +71,18 @@ export class ClientTaskManager {
 	 * @returns CaptchaDatabase
 	 */
 	getCaptchaDB(mongoCaptchaUri: string): CaptchaDatabase {
-		if (this._captchaDB) {
-			return this._captchaDB;
+		if (this.captchaDB) {
+			return this.captchaDB;
 		}
-		if (!this._captchaDB) {
-			this._captchaDB = new CaptchaDatabase(
+		if (!this.captchaDB) {
+			this.captchaDB = new CaptchaDatabase(
 				mongoCaptchaUri,
 				undefined,
 				undefined,
 				this.logger,
 			);
 		}
-		return this._captchaDB;
+		return this.captchaDB;
 	}
 
 	/**
