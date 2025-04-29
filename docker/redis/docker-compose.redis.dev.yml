@@ -1,0 +1,11 @@
+services:
+  redis:
+    image: redis/redis-stack:latest
+    volumes:
+      - ./data:/data
+      - ./redis.conf:/redis-stack.conf
+    ports:
+      - '6379:6379' # DB
+      - '8001:8001' # Insight tool
+    environment:
+      - REDIS_ARGS=--requirepass root

@@ -1,3 +1,6 @@
+include:
+    - ./redis/docker-compose.redis.dev.yml
+
 services:
     database:
         image: mongo:6.0.17
