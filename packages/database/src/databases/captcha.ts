@@ -17,6 +17,8 @@ import {
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type StoredSession,
+	StoredSessionRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -25,11 +27,18 @@ import { MongoDatabase } from "../base/index.js";
 const logger = getLoggerDefault();
 
 enum TableNames {
+	frictionlessToken = "frictionlessToken",
+	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 }
 
 const CAPTCHA_TABLES = [
+	{
+		collectionName: TableNames.session,
+		modelName: "Session",
+		schema: StoredSessionRecordSchema,
+	},
 	{
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
@@ -75,10 +84,24 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async saveCaptchas(
+		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
 		await this.connect();
+		if (sessionEvents.length) {
+			const result = await this.tables.session.bulkWrite(
+				sessionEvents.map((document) => {
+					return {
+						insertOne: {
+							document: document,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved Session Events", result.insertedCount);
+		}
+
 		if (imageCaptchaEvents.length) {
 			const result = await this.tables.commitment.bulkWrite(
 				imageCaptchaEvents.map((doc) => {

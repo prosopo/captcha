@@ -112,6 +112,10 @@ describe("ClientTaskManager", () => {
 
 		providerDB = {
 			storeDataset: vi.fn(),
+			getUnstoredFrictionlessTokenRecords: vi.fn().mockResolvedValue([]),
+			markFrictionlessTokenRecordsStored: vi.fn(),
+			getUnstoredSessionRecords: vi.fn().mockResolvedValue([]),
+			markSessionRecordsStored: vi.fn(),
 			getUnstoredDappUserCommitments: vi.fn().mockResolvedValue([]),
 			markDappUserCommitmentsStored: vi.fn(),
 			markDappUserPoWCommitmentsStored: vi.fn(),
@@ -317,6 +321,7 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
+					processedSessionRecords: 0,
 					processedCommitments: 0,
 					processedPowRecords: 1,
 				},
@@ -365,6 +370,8 @@ describe("ClientTaskManager", () => {
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
+					processedSessionRecords: 0,
+
 					processedCommitments: 0,
 					processedPowRecords: 0,
 				},

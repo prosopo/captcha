@@ -22,13 +22,19 @@ import {
 	ScheduledTaskStatus,
 	type Tier,
 } from "@prosopo/types";
-import type {
-	ClientRecord,
-	IProviderDatabase,
-	PoWCaptchaStored,
-	UserCommitment,
+import {
+	type ClientRecord,
+	FrictionlessTokenRecord,
+	type IProviderDatabase,
+	type PoWCaptchaStored,
+	type ScoreComponents,
+	type SessionRecord,
+	type StoredSession,
+	type UserCommitment,
 } from "@prosopo/types-database";
+import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
+import type { OptionalId } from "mongodb";
 import { validiateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
@@ -60,7 +66,7 @@ export class ClientTaskManager {
 	}
 
 	/**
-	 * @description Store commitments externally in the database
+	 * @description Store commitments externally in the database (Sends image captcha data to the big Mongo Cloud DB)
 	 * @returns Promise<void>
 	 */
 	async storeCommitmentsExternal(): Promise<void> {
@@ -98,13 +104,12 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((commitment) => this.isCommitmentUpdated(commitment))
+						? batch.filter((commitment) => this.isRecordUpdated(commitment))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatch, []);
+						await captchaDB.saveCaptchas([], filteredBatch, []);
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
 						);
@@ -122,13 +127,12 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((record) => this.isCommitmentUpdated(record))
+						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], filteredBatch);
+						await captchaDB.saveCaptchas([], [], filteredBatch);
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
 						);
@@ -137,11 +141,67 @@ export class ClientTaskManager {
 				},
 			);
 
+			// process session records with cursor
+			let processedSessionRecords = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, skip),
+				async (batch) => {
+					const filteredBatch = lastTask?.updated
+						? batch.filter((record) => this.isRecordUpdated(record))
+						: batch;
+					// get corresponding frictionless scores
+					const frictionlessTokenRecords =
+						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
+							filteredBatch.map((record) => record.tokenId),
+						);
+					this.logger.info(
+						`Frictionless token records: ${frictionlessTokenRecords.length}`,
+					);
+					// attach scores to session records
+					const filteredBatchWithScores = filteredBatch.map((record) => {
+						const tokenRecord = frictionlessTokenRecords.find(
+							(tokenRecord) =>
+								tokenRecord._id?.toString() === record.tokenId.toString(),
+						);
+						if (!tokenRecord) {
+							this.logger.error({
+								message: "No token record found",
+								context: { tokenId: record.tokenId },
+							});
+							return {
+								...record,
+								score: 0,
+								scoreComponents: {
+									baseScore: 0,
+								},
+								threshold: 0,
+							} as StoredSession;
+						}
+						return {
+							...record,
+							score: tokenRecord?.score || 0,
+							scoreComponents: tokenRecord?.scoreComponents,
+							threshold: tokenRecord?.threshold || 0,
+						} as StoredSession;
+					});
+
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas(filteredBatchWithScores, [], []);
+						await this.providerDB.markSessionRecordsStored(
+							filteredBatch.map((record) => record.sessionId),
+						);
+					}
+					processedSessionRecords += filteredBatch.length;
+				},
+			);
+
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
+						processedSessionRecords,
 						processedCommitments,
 						processedPowRecords,
 					},
@@ -280,10 +340,10 @@ export class ClientTaskManager {
 		}
 	}
 
-	private isCommitmentUpdated(
-		commitment: UserCommitment | PoWCaptchaStored,
+	private isRecordUpdated(
+		record: UserCommitment | PoWCaptchaStored | SessionRecord,
 	): boolean {
-		const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
+		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (
 			!lastUpdatedTimestamp ||
 			!storedAtTimestamp ||
