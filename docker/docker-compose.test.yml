@@ -1,5 +1,5 @@
 include:
-    - ./redis/docker-compose.redis.dev.yml
+    - ./redis/redis-stack.docker-compose.yml
 
 services:
     database:

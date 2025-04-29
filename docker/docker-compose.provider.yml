@@ -1,3 +1,6 @@
+include:
+    - ./redis/redis-stack-server.docker-compose.yml
+
 services:
     provider-dev:
         container_name: provider

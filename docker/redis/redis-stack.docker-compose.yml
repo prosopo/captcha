@@ -1,5 +1,7 @@
 services:
-  redis:
+  redis-stack:
+    container_name: redis-stack
+    # unlike "redis/redis-stack-server" this image includes Insights
     image: redis/redis-stack:latest
     volumes:
       - ./data:/data
