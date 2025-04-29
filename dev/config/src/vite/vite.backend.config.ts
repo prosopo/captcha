@@ -101,7 +101,7 @@ export default async function (
 		esbuild: {
 			platform: "node",
 			target: "node18",
-			drop,
+			// drop,
 			legalComments: "none",
 		},
 		define,
