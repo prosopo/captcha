@@ -74,14 +74,22 @@
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npm-check-updates --deep",
 		"deps:upgrade": "npm-check-updates --deep --interactive --format group",
-		"prepare": "husky"
+		"prepare": "husky",
+		"changesets:empty": "npx @changesets/cli add --empty",
+		"changesets:add": "npx @changesets/cli add",
+		"changesets": "npx @changesets/cli status --verbose",
+		"changesets:version": "npx @changesets/cli version"
 	},
 	"private": true,
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"workspaces": ["dev/*", "packages/*", "demos/*"],
+	"workspaces": [
+		"dev/*",
+		"packages/*",
+		"demos/*"
+	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
