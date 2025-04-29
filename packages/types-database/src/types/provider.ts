@@ -408,7 +408,7 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
-		createdAt: { type: Date, default: Date.now, expires: ONE_HOUR },
+		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 		storedAtTimestamp: { type: Date, required: false },
 		lastUpdatedTimestamp: { type: Date, required: false },
 	});
@@ -423,6 +423,7 @@ export type Session = {
 	captchaType: CaptchaType;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
+	deleted?: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -436,10 +437,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	captchaType: { type: String, enum: CaptchaType, required: true },
 	storedAtTimestamp: { type: Date, required: false },
 	lastUpdatedTimestamp: { type: Date, required: false },
+	deleted: { type: Boolean, required: false },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ storedAtTimestamp: 1 });
+SessionRecordSchema.index({ deleted: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -626,18 +629,13 @@ export interface IProviderDatabase extends IDatabase {
 		tokenId: FrictionlessTokenId,
 	): Promise<FrictionlessTokenRecord | undefined>;
 
+	getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]>;
+
 	getFrictionlessTokenRecordByToken(
 		token: string,
 	): Promise<FrictionlessTokenRecord | undefined>;
-
-	getUnstoredFrictionlessTokenRecords(
-		limit: number,
-		skip: number,
-	): Promise<FrictionlessTokenRecord[]>;
-
-	markFrictionlessTokenRecordsStored(
-		tokenIds: FrictionlessTokenId[],
-	): Promise<void>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 

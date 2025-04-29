@@ -14,15 +14,11 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
-	type FrictionlessTokenId,
-	type FrictionlessTokenRecord,
-	FrictionlessTokenRecordSchema,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
-	type ScoreComponents,
-	type SessionRecord,
-	SessionRecordSchema,
+	type StoredSession,
+	StoredSessionRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -39,14 +35,9 @@ enum TableNames {
 
 const CAPTCHA_TABLES = [
 	{
-		collectionName: TableNames.frictionlessToken,
-		modelName: "FrictionlessToken",
-		schema: FrictionlessTokenRecordSchema,
-	},
-	{
 		collectionName: TableNames.session,
 		modelName: "Session",
-		schema: SessionRecordSchema,
+		schema: StoredSessionRecordSchema,
 	},
 	{
 		collectionName: TableNames.powcaptcha,
@@ -93,43 +84,22 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async saveCaptchas(
-		sessionEvents: SessionRecord[],
-		frictionlessTokenEvents: {
-			_id: FrictionlessTokenId;
-			score: number;
-			scoreComponents: ScoreComponents;
-			threshold: number;
-		}[],
+		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
 			const result = await this.tables.session.bulkWrite(
-				sessionEvents.map((doc) => {
-					// remove the _id field to avoid problems when inserting
-					const { _id, ...safeDoc } = doc;
+				sessionEvents.map((document) => {
 					return {
 						insertOne: {
-							document: safeDoc,
+							document: document,
 						},
 					};
 				}),
 			);
-			logger.info("Mongo Saved Session Events", result.upsertedCount);
-		}
-
-		if (frictionlessTokenEvents.length) {
-			const result = await this.tables.frictionlessToken.bulkWrite(
-				frictionlessTokenEvents.map((document) => {
-					return {
-						insertOne: {
-							document,
-						},
-					};
-				}),
-			);
-			logger.info("Mongo Saved Token Events", result.upsertedCount);
+			logger.info("Mongo Saved Session Events", result.insertedCount);
 		}
 
 		if (imageCaptchaEvents.length) {
