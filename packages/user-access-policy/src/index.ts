@@ -14,7 +14,6 @@
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
-import type { Model } from "mongoose";
 import type { BlacklistInspector } from "./blacklistInspector.js";
 import { apiRulePaths } from "./rules/api/apiRulePaths.js";
 import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
@@ -23,39 +22,15 @@ import type {
 	ApiInsertManyRulesArgsOutputSchema,
 	ApiInsertManyRulesArgsSchema,
 } from "./rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
-import { BlacklistRulesInspector } from "./rules/blacklistRulesInspector.js";
-import { ImageCaptchaConfigRulesResolver } from "./rules/imageCaptchaConfigRulesResolver.js";
-import { RulesMongooseStorage } from "./rules/mongoose/rulesMongooseStorage.js";
 import { getRuleMongooseSchema } from "./rules/mongoose/schemas/getRuleMongooseSchema.js";
 import type { Rule } from "./rules/rule/rule.js";
 import type { RulesStorage } from "./rules/storage/rulesStorage.js";
-
-const createBlacklistInspector = (
-	rulesStorage: RulesStorage,
-	logger: Logger,
-): BlacklistInspector => {
-	return new BlacklistRulesInspector(rulesStorage, logger);
-};
-
-const createImageCaptchaConfigResolver = (
-	rulesStorage: RulesStorage,
-	logger: Logger,
-): ImageCaptchaConfigRulesResolver => {
-	return new ImageCaptchaConfigRulesResolver(rulesStorage, logger);
-};
+import { createAccessPolicyResolver } from "./accessPolicyResolver.js";
 
 const createApiRuleRoutesProvider = (
 	rulesStorage: RulesStorage,
 ): ApiRoutesProvider => {
 	return new ApiRuleRoutesProvider(rulesStorage);
-};
-
-const createMongooseRulesStorage = (
-	logger: Logger,
-	readingModel: Model<Rule> | null,
-	writingModel: Model<Rule> | null = null,
-): RulesStorage => {
-	return new RulesMongooseStorage(logger, readingModel, writingModel);
 };
 
 export {
@@ -64,9 +39,7 @@ export {
 	type BlacklistInspector,
 	type ApiInsertManyRulesArgsSchema,
 	type ApiInsertManyRulesArgsOutputSchema,
-	createMongooseRulesStorage,
-	createImageCaptchaConfigResolver,
-	createBlacklistInspector,
+	createAccessPolicyResolver,
 	createApiRuleRoutesProvider,
 	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
