@@ -12,18 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Schema } from "mongoose";
-import type { RuleConfig } from "../../../rule/config/ruleConfig.js";
-import { imageCaptchaConfigMongooseSchema } from "./imageCaptchaConfigMongooseSchema.js";
+import type { UserAttributes } from "./userAttributes.js";
+import type { AccessRule } from "../../../../packages/user-access-policy/src/userAccessRule.js";
 
-const configMongooseSchema = new Schema<RuleConfig>(
-	{
-		imageCaptcha: {
-			type: imageCaptchaConfigMongooseSchema,
-			required: false,
-		},
-	},
-	{ _id: false },
-);
-
-export { configMongooseSchema };
+export type resolveUserAccess = (
+	userAttributes: UserAttributes,
+	clientId: string,
+) => Promise<AccessRule | undefined>;

@@ -90,13 +90,13 @@
 		"integration/frameworks/*/*"
 	],
 	"devDependencies": {
-		"commitizen": "4.3.1",
-		"cz-conventional-changelog": "3.3.0",
 		"@biomejs/biome": "1.9.1",
 		"@taplo/cli": "0.7.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
+		"commitizen": "4.3.1",
 		"concurrently": "9.0.1",
+		"cz-conventional-changelog": "3.3.0",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
 		"htmlhint": "1.1.4",
