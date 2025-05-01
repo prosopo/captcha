@@ -67,6 +67,12 @@ vi.mock(
 					console.log("mock of savecaptchas");
 				});
 			}
+
+			close() {
+				return vi.fn(() => {
+					console.log("mock of close");
+				});
+			}
 		}
 
 		return {
