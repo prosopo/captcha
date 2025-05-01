@@ -176,14 +176,24 @@ export async function start(
 	// Get rid of any scheduled task records from previous runs
 	env.cleanup();
 
-	//Start the scheduled jobs
+	// Start the scheduled jobs if they are defined
 	if (env.pair) {
-		storeCaptchasExternally(env.pair, env.config).catch((err) => {
-			console.error("Failed to start scheduler:", err);
-		});
-		getClientList(env.pair, env.config).catch((err) => {
-			console.error("Failed to get client list:", err);
-		});
+		const cronScheduleStorage =
+			env.config.scheduledTasks?.captchaScheduler?.schedule;
+		if (cronScheduleStorage) {
+			storeCaptchasExternally(env.pair, cronScheduleStorage, env.config).catch(
+				(err) => {
+					console.error("Failed to start scheduler:", err);
+				},
+			);
+		}
+		const cronScheduleClient =
+			env.config.scheduledTasks?.clientListScheduler?.schedule;
+		if (cronScheduleClient) {
+			getClientList(env.pair, cronScheduleClient, env.config).catch((err) => {
+				console.error("Failed to get client list:", err);
+			});
+		}
 	}
 
 	return startApi(env, admin, port);
