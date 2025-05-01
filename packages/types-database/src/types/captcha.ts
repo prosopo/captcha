@@ -43,6 +43,9 @@ export const StoredSessionRecordSchema: Schema = new Schema({
 	threshold: FrictionlessTokenRecordSchema.obj.threshold,
 });
 
+// Redefine the index for sessionId to make it non-unique (there were collisions)
+StoredSessionRecordSchema.index({ sessionId: 1 });
+
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
 		sessionEvents: StoredSession[],
