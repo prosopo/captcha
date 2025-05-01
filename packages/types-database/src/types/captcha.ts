@@ -25,7 +25,7 @@ import {
 
 export type StoredSession = Pick<
 	SessionRecord,
-	"sessionId" | "createdAt" | "captchaType" | "deleted" | "tokenId"
+	"_id" | "sessionId" | "createdAt" | "captchaType" | "deleted" | "tokenId"
 > & {
 	score: number;
 	scoreComponents: ScoreComponents;

@@ -222,8 +222,10 @@ export class ClientTaskManager {
 					},
 				},
 			);
+			this.captchaDB?.close();
 		} catch (e: unknown) {
 			this.logger.error(e);
+			this.captchaDB?.close();
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
