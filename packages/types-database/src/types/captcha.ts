@@ -17,10 +17,12 @@ import type { IDatabase } from "./mongo.js";
 import {
 	FrictionlessTokenRecordSchema,
 	type PoWCaptchaRecord,
+	PoWCaptchaRecordSchema,
 	type ScoreComponents,
 	type SessionRecord,
 	SessionRecordSchema,
 	type UserCommitmentRecord,
+	UserCommitmentRecordSchema,
 } from "./provider.js";
 
 export type StoredSession = Pick<
@@ -43,8 +45,19 @@ export const StoredSessionRecordSchema: Schema = new Schema({
 	threshold: FrictionlessTokenRecordSchema.obj.threshold,
 });
 
+export const StoredUserCommitmentRecordSchema: Schema = new Schema({
+	...UserCommitmentRecordSchema.obj,
+});
+StoredUserCommitmentRecordSchema.index({ frictionlessTokenId: 1 });
+
+export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
+	...PoWCaptchaRecordSchema.obj,
+});
+StoredPoWCaptchaRecordSchema.index({ frictionlessTokenId: 1 });
+
 // Redefine the index for sessionId to make it non-unique (there were collisions)
 StoredSessionRecordSchema.index({ sessionId: 1 });
+StoredSessionRecordSchema.index({ tokenId: 1 });
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
