@@ -2,7 +2,7 @@ import { z } from "zod";
 import { accessPolicySchema } from "../accessPolicy.js";
 import { userAttributesSchema } from "../userAttributes.js";
 
-const accessRuleSchema = z
+export const accessRuleSchema = z
 	.object({
 		clientId: z.string().optional(),
 		ipRangeMin: z.number().optional(),

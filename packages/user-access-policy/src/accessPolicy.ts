@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { userAttributesSchema } from "./userAttributes.js";
 
 export const accessPolicySchema = z.object({
 	isUserBlocked: z.boolean().optional(),
@@ -8,3 +9,10 @@ export const accessPolicySchema = z.object({
 });
 
 export type AccessPolicy = z.infer<typeof accessPolicySchema>;
+
+export const accessPolicyScope = z.object({
+	clientId: z.string().optional(),
+	userAttributes: userAttributesSchema.optional(),
+});
+
+export type AccessPolicyScope = z.infer<typeof accessPolicyScope>;
