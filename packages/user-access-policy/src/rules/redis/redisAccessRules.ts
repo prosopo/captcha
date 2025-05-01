@@ -1,90 +1,115 @@
-import type { AccessRule } from "../accessRule.js";
+import { type AccessRule, accessRuleSchema } from "../accessRule.js";
 import type { RedisClientType } from "redis";
+import type { SearchReply } from "@redis/search";
 import type { AccessRulesReader, AccessRulesWriter } from "../accessRules.js";
 import type { AccessPolicyScope } from "../../accessPolicy.js";
-import type { UserAttributes } from "../../userAttributes.js";
+import type { Logger } from "@prosopo/common";
+import {
+	getAccessRulesQuery,
+	accessRulesSearchOptions,
+} from "./redisAccessRulesIndex.js";
 
-export const createRedisAccessRulesReader = (
+export const createAccessRulesReader = (
 	redisClient: RedisClientType,
+	indexName: string,
+	logger: Logger,
 ): AccessRulesReader => {
-	// todo.
-
 	return {
-		findRules: (policyScope: AccessPolicyScope): Promise<AccessRule[]> => {
-			redisClient.ft.search("idx:user-access-policy:rules", "*");
+		findRules: async (
+			policyScope: AccessPolicyScope,
+		): Promise<AccessRule[]> => {
+			const query = getAccessRulesQuery(policyScope);
+
+			const searchReply = await redisClient.ft.search(
+				indexName,
+				query,
+				accessRulesSearchOptions,
+			);
+
+			const accessRules = extractRulesFromSearchReply(searchReply, logger);
+
+			logger.debug("found access rules", {
+				accessRules: accessRules,
+				policyScope: policyScope,
+				query: query,
+			});
+
+			return accessRules;
 		},
 
-		countRules: (): Promise<number> => {
-			return Promise.resolve(0);
+		findRuleIds: async (policyScope: AccessPolicyScope): Promise<string[]> => {
+			const query = getAccessRulesQuery(policyScope);
+
+			const records = await redisClient.ft.searchNoContent(
+				indexName,
+				query,
+				accessRulesSearchOptions,
+			);
+
+			const ruleIds = records.documents;
+
+			logger.debug("found access rule ids", {
+				ruleIds: ruleIds,
+				policyScope: policyScope,
+				query: query,
+			});
+
+			return ruleIds;
 		},
 	};
 };
 
-export const createRedisAccessRulesWriter = (
+// fixme
+/*import * as crypto from "node:crypto";
+const getObjectHash = (algorithm: string, rule: AccessRule): string => {
+	return crypto
+		.createHash(algorithm)
+		.update(JSON.stringify(rule))
+		.digest("hex");
+};*/
+
+export const createAccessRulesWriter = (
 	redisClient: RedisClientType,
+	resolveRuleKey: (rule: AccessRule) => string,
 ): AccessRulesWriter => {
-	// todo.
-
 	return {
-		insertRules: (rules: AccessRule[]): Promise<string[]> => {
-			return Promise.resolve([]);
+		insertRule: async (
+			rule: AccessRule,
+			expirationTimestamp?: number,
+		): Promise<void> => {
+			const ruleKey = resolveRuleKey(rule);
+
+			await redisClient.hSet(ruleKey, rule);
+
+			if (expirationTimestamp) {
+				await redisClient.expireAt(ruleKey, expirationTimestamp);
+			}
 		},
 
-		deleteRules: (policyScope: AccessPolicyScope): Promise<void> => {
-			return Promise.resolve(undefined);
+		deleteRules: async (ruleIds: string[]): Promise<void> => {
+			await redisClient.del(ruleIds);
 		},
 	};
 };
 
-/*
- *
- * ft.dropindex index:test
- * FT.CREATE index:test
- * ON HASH
- * SCHEMA
- * clientId TAG INDEXMISSING
- * id TAG
- * ip NUMERIC
- * ja4Fingerprint TAG
- * headersFingerprint TAG
- *
- * ft.search index:test "(ismissing(@clientId) | @clientId:{value})
- * (@ip:[value] | (@ipRangeMin:[-inf value] @ipRangeMax:[value +inf]))
- * @id:{value} @ja4Fingerprint:{value} headersFingerprint:{value}"
- * DIALECT 2
- * */
+const extractRulesFromSearchReply = (
+	searchReply: SearchReply,
+	logger: Logger,
+): AccessRule[] => {
+	const accessRules: AccessRule[] = [];
 
-const getPolicyScopeFilter = (policyScope: AccessPolicyScope): string => {
-	const { clientId, userAttributes } = policyScope;
+	searchReply.documents.map((document) => {
+		const parsedDocument = accessRuleSchema.safeParse(document);
 
-	const clientIdFilter =
-		"string" === typeof clientId
-			? // when clientId is set, we look among his + "global" rules.
-				`( @clientId:${clientId}) | ismissing(@clientId) )`
-			: // when clientId is not set, we look among "global" only rules.
-				"ismissing(@clientId)";
+		if (parsedDocument.success) {
+			accessRules.push(parsedDocument.data);
+		} else {
+			logger.debug("failed to parse access rule", {
+				document: document,
+				error: parsedDocument.error,
+			});
+		}
+	});
 
-	if (userAttributes && Object.keys(userAttributes).length > 0) {
-		const userAttributesFilter = Object.entries(userAttributes)
-			.map(([field, value]) => getUserAttributeFilter(field, value))
-			// we support a partial user attribute match, so join by the logical "OR"
-			.join(" | ");
-
-		return `${clientIdFilter} ( ${userAttributesFilter} )`;
-	}
-
-	return clientIdFilter;
-};
-
-const getUserAttributeFilter = (field: string, value: unknown): string => {
-	type SpecialFilterRecord = Record<string, (value: unknown) => string>;
-
-	const specialFilters: SpecialFilterRecord = {
-		ip: (value) =>
-			`( @ip:[${value}] | ( @ipRangeMin:[-inf ${value}] @ipRangeMax:[${value} +inf] ) )`,
-	};
-
-	return "function" === typeof specialFilters[field]
-		? specialFilters[field](value)
-		: `@${field}:{${value}}`;
+	return accessRules;
 };

@@ -4,11 +4,11 @@ import type { AccessPolicyScope } from "../accessPolicy.js";
 export type AccessRulesReader = {
 	findRules(policyScope: AccessPolicyScope): Promise<AccessRule[]>;
 
-	countRules(): Promise<number>;
+	findRuleIds(policyScope: AccessPolicyScope): Promise<string[]>;
 };
 
 export type AccessRulesWriter = {
-	insertRules(rules: AccessRule[]): Promise<string[]>;
+	insertRule(rule: AccessRule, expirationTimestamp?: number): Promise<void>;
 
-	deleteRules(policyScope: AccessPolicyScope): Promise<void>;
+	deleteRules(ruleIds: string[]): Promise<void>;
 };
