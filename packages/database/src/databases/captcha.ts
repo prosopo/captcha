@@ -92,9 +92,10 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (sessionEvents.length) {
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
+					const { _id, ...safeDoc } = document;
 					return {
 						insertOne: {
-							document: document,
+							document: safeDoc,
 						},
 					};
 				}),
