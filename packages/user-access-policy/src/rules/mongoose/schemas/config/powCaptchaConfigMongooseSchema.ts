@@ -13,22 +13,15 @@
 // limitations under the License.
 
 import { Schema } from "mongoose";
-import type { RuleConfig } from "../../../rule/config/ruleConfig.js";
-import { imageCaptchaConfigMongooseSchema } from "./imageCaptchaConfigMongooseSchema.js";
-import { powCaptchaConfigMongooseSchema } from "./powCaptchaConfigMongooseSchema.js";
+import type { PoWCaptchaConfig } from "../../../rule/config/pow/powCaptchaConfig.js";
 
-const configMongooseSchema: Schema<RuleConfig> = new Schema<RuleConfig>(
+const powCaptchaConfigMongooseSchema = new Schema<PoWCaptchaConfig>(
 	{
-		image: {
-			type: imageCaptchaConfigMongooseSchema,
-			required: false,
-		},
-		pow: {
-			type: powCaptchaConfigMongooseSchema,
-			required: false,
+		difficulty: {
+			type: Number,
 		},
 	},
 	{ _id: false },
 );
 
-export { configMongooseSchema };
+export { powCaptchaConfigMongooseSchema };
