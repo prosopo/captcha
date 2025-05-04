@@ -16,9 +16,9 @@ import { Schema } from "mongoose";
 import type { RuleConfig } from "../../../rule/config/ruleConfig.js";
 import { imageCaptchaConfigMongooseSchema } from "./imageCaptchaConfigMongooseSchema.js";
 
-const configMongooseSchema = new Schema<RuleConfig>(
+const configMongooseSchema: Schema<RuleConfig> = new Schema<RuleConfig>(
 	{
-		imageCaptcha: {
+		image: {
 			type: imageCaptchaConfigMongooseSchema,
 			required: false,
 		},

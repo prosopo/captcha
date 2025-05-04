@@ -18,7 +18,7 @@ import type {
 	ProsopoCaptchaCountConfigSchemaOutput,
 } from "@prosopo/types";
 import type { ImageCaptchaConfigResolver } from "../imageCaptchaConfigResolver.js";
-import type { ImageCaptchaConfig } from "./rule/config/imageCaptcha/imageCaptchaConfig.js";
+import type { ImageCaptchaConfig } from "./rule/config/image/imageCaptchaConfig.js";
 import type { Rule } from "./rule/rule.js";
 import type { RulesStorage } from "./storage/rulesStorage.js";
 
@@ -46,7 +46,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			clientId,
 		);
 
-		const imageCaptchaConfig = accessRule?.config?.imageCaptcha || null;
+		const imageCaptchaConfig = accessRule?.config?.image || null;
 
 		const configDefined = null !== imageCaptchaConfig;
 
@@ -95,7 +95,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			return defaults;
 		}
 
-		const imageCaptchaConfig = this.accessRule.config?.imageCaptcha || {};
+		const imageCaptchaConfig = this.accessRule.config?.image || {};
 
 		const config = this.getImageCaptchaConfig(defaults, imageCaptchaConfig);
 

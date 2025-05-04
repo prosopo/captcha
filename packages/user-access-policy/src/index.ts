@@ -18,15 +18,22 @@ import type { Model } from "mongoose";
 import type { BlacklistInspector } from "./blacklistInspector.js";
 import { apiRulePaths } from "./rules/api/apiRulePaths.js";
 import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
+import { apiDeleteManyRulesArgsSchema } from "./rules/api/deleteMany/apiDeleteManyRulesArgsSchema.js";
 import { getExpressApiRuleRateLimits } from "./rules/api/getExpressApiRuleRateLimits.js";
-import type {
-	ApiInsertManyRulesArgsOutputSchema,
-	ApiInsertManyRulesArgsSchema,
-} from "./rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
+import {
+	type ApiInsertManyRulesArgs,
+	type ApiInsertManyRulesArgsOutputSchema,
+	apiInsertManyRulesArgsSchema,
+} from "./rules/api/insertMany/apiInsertManyRulesArgs.js";
 import { BlacklistRulesInspector } from "./rules/blacklistRulesInspector.js";
 import { ImageCaptchaConfigRulesResolver } from "./rules/imageCaptchaConfigRulesResolver.js";
+import type { RuleMongooseRecord } from "./rules/mongoose/ruleMongooseRecord.js";
 import { RulesMongooseStorage } from "./rules/mongoose/rulesMongooseStorage.js";
 import { getRuleMongooseSchema } from "./rules/mongoose/schemas/getRuleMongooseSchema.js";
+import { imageCaptchaConfigSchema } from "./rules/rule/config/image/imageCaptchaConfigSchema.js";
+import { powCaptchaConfigSchema } from "./rules/rule/config/pow/powCaptchaConfigSchema.js";
+import { ruleConfigSchema } from "./rules/rule/config/ruleConfigSchema.js";
+import { ruleIpSchema } from "./rules/rule/ip/ruleIpSchema.js";
 import type { Rule } from "./rules/rule/rule.js";
 import type { RulesStorage } from "./rules/storage/rulesStorage.js";
 
@@ -60,9 +67,10 @@ const createMongooseRulesStorage = (
 
 export {
 	type Rule,
+	type RuleMongooseRecord,
 	type RulesStorage,
 	type BlacklistInspector,
-	type ApiInsertManyRulesArgsSchema,
+	type ApiInsertManyRulesArgs,
 	type ApiInsertManyRulesArgsOutputSchema,
 	createMongooseRulesStorage,
 	createImageCaptchaConfigResolver,
@@ -70,5 +78,11 @@ export {
 	createApiRuleRoutesProvider,
 	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
+	apiInsertManyRulesArgsSchema,
+	apiDeleteManyRulesArgsSchema,
+	imageCaptchaConfigSchema,
+	powCaptchaConfigSchema,
+	ruleConfigSchema,
+	ruleIpSchema,
 	apiRulePaths,
 };

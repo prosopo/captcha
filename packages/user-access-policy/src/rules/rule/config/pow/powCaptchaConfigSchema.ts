@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { object, z } from "zod";
-import { imageCaptchaConfigSchema } from "./image/imageCaptchaConfigSchema.js";
-import { powCaptchaConfigSchema } from "./pow/powCaptchaConfigSchema.js";
+import { number, object } from "zod";
 
-const ruleConfigSchema = object({
-	captchaType: z.enum(["pow" as const, "image" as const]),
-	image: imageCaptchaConfigSchema.optional(),
-	pow: powCaptchaConfigSchema.optional(),
+const powCaptchaConfigSchema = object({
+	difficulty: number(),
 });
 
-export { ruleConfigSchema };
+export { powCaptchaConfigSchema };

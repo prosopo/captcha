@@ -23,17 +23,17 @@ import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
 import type { Rule } from "../../rule/rule.js";
 import type { RulesStorage } from "../../storage/rulesStorage.js";
 import {
-	type ApiInsertManyRulesArgsSchema,
+	type ApiInsertManyRulesArgs,
 	apiInsertManyRulesArgsSchema,
-} from "./apiInsertManyRulesArgsSchema.js";
+} from "./apiInsertManyRulesArgs.js";
 
 class ApiInsertManyRulesEndpoint
-	implements ApiEndpoint<ApiInsertManyRulesArgsSchema>
+	implements ApiEndpoint<ApiInsertManyRulesArgs>
 {
 	public constructor(private readonly rulesStorage: RulesStorage) {}
 
 	async processRequest(
-		args: z.infer<ApiInsertManyRulesArgsSchema>,
+		args: z.infer<ApiInsertManyRulesArgs>,
 	): Promise<ApiEndpointResponse> {
 		const singleRule = this.getSingleRule(args);
 		const rules: Rule[] = [
@@ -66,13 +66,11 @@ class ApiInsertManyRulesEndpoint
 		});
 	}
 
-	public getRequestArgsSchema(): ApiInsertManyRulesArgsSchema {
+	public getRequestArgsSchema(): ApiInsertManyRulesArgs {
 		return apiInsertManyRulesArgsSchema;
 	}
 
-	protected getUserIpRules(
-		args: z.infer<ApiInsertManyRulesArgsSchema>,
-	): Rule[] {
+	protected getUserIpRules(args: z.infer<ApiInsertManyRulesArgs>): Rule[] {
 		const rules: Rule[] = [];
 
 		const userIps = args.userIps || [];
@@ -112,9 +110,7 @@ class ApiInsertManyRulesEndpoint
 		return rules;
 	}
 
-	protected getUserIPMaskRules(
-		args: z.infer<ApiInsertManyRulesArgsSchema>,
-	): Rule[] {
+	protected getUserIPMaskRules(args: z.infer<ApiInsertManyRulesArgs>): Rule[] {
 		const rules: Rule[] = [];
 		const userIpMasks = args.userIpMasks || [];
 		for (const userMask of userIpMasks.v4 || []) {
@@ -164,9 +160,7 @@ class ApiInsertManyRulesEndpoint
 		return rules;
 	}
 
-	protected getUserIdRules(
-		args: z.infer<ApiInsertManyRulesArgsSchema>,
-	): Rule[] {
+	protected getUserIdRules(args: z.infer<ApiInsertManyRulesArgs>): Rule[] {
 		const rules: Rule[] = [];
 
 		const userIds = args.userIds || [];
@@ -185,7 +179,7 @@ class ApiInsertManyRulesEndpoint
 		return rules;
 	}
 
-	protected getJa4Rules(args: z.infer<ApiInsertManyRulesArgsSchema>): Rule[] {
+	protected getJa4Rules(args: z.infer<ApiInsertManyRulesArgs>): Rule[] {
 		const rules: Rule[] = [];
 
 		const ja4s = args.ja4s || [];
@@ -205,7 +199,7 @@ class ApiInsertManyRulesEndpoint
 	}
 
 	protected getSingleRule(
-		args: z.infer<ApiInsertManyRulesArgsSchema>,
+		args: z.infer<ApiInsertManyRulesArgs>,
 	): Rule | undefined {
 		if (!args.userIp && !args.userId && !args.ja4) {
 			return undefined;

@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProsopoCaptchaCountConfigSchemaOutput } from "@prosopo/types";
+import {
+	CaptchaType,
+	type ProsopoCaptchaCountConfigSchemaOutput,
+} from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import { ImageCaptchaConfigRulesResolver } from "../../rules/imageCaptchaConfigRulesResolver.js";
@@ -20,13 +23,14 @@ import type { RuleRecord } from "../../rules/storage/ruleRecord.js";
 import { loggerMockedInstance } from "./loggerMockedInstance.js";
 import { TestRulesStorage } from "./storage/testRulesStorage.js";
 
-describe("ImageCaptchaConfigResolver", () => {
+describe("imageConfigResolver", () => {
 	it("resolvesFromUserAccessRule", async () => {
 		// given
 		const userAccessRuleRecord: RuleRecord = {
 			isUserBlocked: false,
 			config: {
-				imageCaptcha: {
+				captchaType: CaptchaType.image,
+				image: {
 					solvedCount: 10,
 					unsolvedCount: 11,
 				},
@@ -56,10 +60,10 @@ describe("ImageCaptchaConfigResolver", () => {
 
 		// then
 		expect(resolvedConfig.solved.count).toBe(
-			userAccessRuleRecord.config?.imageCaptcha?.solvedCount,
+			userAccessRuleRecord.config?.image?.solvedCount,
 		);
 		expect(resolvedConfig.unsolved.count).toBe(
-			userAccessRuleRecord.config?.imageCaptcha?.unsolvedCount,
+			userAccessRuleRecord.config?.image?.unsolvedCount,
 		);
 	});
 
@@ -68,7 +72,8 @@ describe("ImageCaptchaConfigResolver", () => {
 		const globalUserAccessRuleRecord: RuleRecord = {
 			isUserBlocked: false,
 			config: {
-				imageCaptcha: {
+				captchaType: CaptchaType.image,
+				image: {
 					solvedCount: 20,
 					unsolvedCount: 21,
 				},
@@ -79,7 +84,8 @@ describe("ImageCaptchaConfigResolver", () => {
 			isUserBlocked: false,
 			clientId: "client",
 			config: {
-				imageCaptcha: {
+				captchaType: CaptchaType.image,
+				image: {
 					solvedCount: 10,
 					unsolvedCount: 11,
 				},
@@ -112,10 +118,10 @@ describe("ImageCaptchaConfigResolver", () => {
 
 		// then
 		expect(resolvedConfig.solved.count).toBe(
-			clientUserAccessRuleRecord.config?.imageCaptcha?.solvedCount,
+			clientUserAccessRuleRecord.config?.image?.solvedCount,
 		);
 		expect(resolvedConfig.unsolved.count).toBe(
-			clientUserAccessRuleRecord.config?.imageCaptcha?.unsolvedCount,
+			clientUserAccessRuleRecord.config?.image?.unsolvedCount,
 		);
 	});
 

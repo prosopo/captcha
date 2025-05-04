@@ -16,7 +16,6 @@ import {
 	ApiParams,
 	type ApiResponse,
 	type CaptchaRequestBodyType,
-	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
@@ -34,7 +33,6 @@ import {
 	type ProviderRegistered,
 	PublicApiPaths,
 	type RandomProvider,
-	RegisterSitekeyBody,
 	type RegisterSitekeyBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
@@ -45,6 +43,12 @@ import {
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
+import {
+	type ApiInsertManyRulesArgs,
+	apiDeleteManyRulesArgsSchema,
+	apiInsertManyRulesArgsSchema,
+	apiRulePaths,
+} from "@prosopo/user-access-policy";
 import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi
@@ -298,6 +302,42 @@ export default class ProviderApi
 		return this.post(
 			AdminApiPaths.RemoveDetectorKey,
 			UpdateDetectorKeyBody.parse({ detectorKey }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
+
+	public insertUserAccessPolicies(
+		rules: ApiInsertManyRulesArgs,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			apiRulePaths.INSERT_MANY,
+			apiInsertManyRulesArgsSchema.parse(rules),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
+
+	public deleteUserAccessPolicies(
+		rules: ApiInsertManyRulesArgs,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			apiRulePaths.DELETE_MANY,
+			apiDeleteManyRulesArgsSchema.parse(rules),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

@@ -50,7 +50,7 @@ const apiInsertManyRulesArgsSchema = object({
 	score: number().optional(),
 });
 
-type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
+type ApiInsertManyRulesArgs = typeof apiInsertManyRulesArgsSchema;
 
 type ApiInsertManyRulesArgsOutputSchema = output<
 	typeof apiInsertManyRulesArgsSchema
@@ -58,6 +58,6 @@ type ApiInsertManyRulesArgsOutputSchema = output<
 
 export {
 	apiInsertManyRulesArgsSchema,
-	type ApiInsertManyRulesArgsSchema,
+	type ApiInsertManyRulesArgs,
 	type ApiInsertManyRulesArgsOutputSchema,
 };

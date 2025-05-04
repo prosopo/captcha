@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { Schema } from "mongoose";
-import type { ImageCaptchaConfig } from "../../../rule/config/imageCaptcha/imageCaptchaConfig.js";
+import type { ImageCaptchaConfig } from "../../../rule/config/image/imageCaptchaConfig.js";
 
 const imageCaptchaConfigMongooseSchema = new Schema<ImageCaptchaConfig>(
 	{
