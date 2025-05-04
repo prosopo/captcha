@@ -16,14 +16,12 @@ import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
-	PoWCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
 	StoredUserCommitmentRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import { MongoDatabase } from "../base/index.js";
 const logger = getLoggerDefault();

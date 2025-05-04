@@ -45,6 +45,7 @@ import {
 } from "@prosopo/types";
 import {
 	type ApiInsertManyRulesArgs,
+	type ApiInsertManyRulesArgsOutputSchema,
 	apiDeleteManyRulesArgsSchema,
 	apiInsertManyRulesArgsSchema,
 	apiRulePaths,
@@ -313,7 +314,7 @@ export default class ProviderApi
 	}
 
 	public insertUserAccessPolicies(
-		rules: ApiInsertManyRulesArgs,
+		rules: ApiInsertManyRulesArgsOutputSchema,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
@@ -331,7 +332,7 @@ export default class ProviderApi
 	}
 
 	public deleteUserAccessPolicies(
-		rules: ApiInsertManyRulesArgs,
+		rules: ApiInsertManyRulesArgsOutputSchema,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
