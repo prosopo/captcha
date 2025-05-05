@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
 import { ViteTestConfig } from "@prosopo/config";
 
 export default () => {
@@ -30,6 +31,11 @@ export default () => {
 					...testConfig.test.poolOptions.forks,
 					singleFork: true,
 				},
+			},
+		},
+		resolve: {
+			alias: {
+				"#policy": path.resolve("./src"),
 			},
 		},
 	};

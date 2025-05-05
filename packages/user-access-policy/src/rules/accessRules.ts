@@ -1,5 +1,5 @@
-import type { AccessRule } from "./accessRule.js";
-import type { AccessPolicyScope } from "../accessPolicy.js";
+import type { AccessPolicyScope } from "#policy/accessPolicy.js";
+import type { AccessRule } from "#policy/rules/accessRule.js";
 
 export type AccessRulesReader = {
 	findRules(policyScope: AccessPolicyScope): Promise<AccessRule[]>;

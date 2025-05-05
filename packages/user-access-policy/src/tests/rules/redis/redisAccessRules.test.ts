@@ -1,50 +1,112 @@
-import {describe, test, beforeAll, afterAll, expect} from "vitest";
-import {createClient, type RedisClientType} from "redis";
+import { type RedisClientType, createClient } from "redis";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { AccessPolicyType } from "#policy/accessPolicy.js";
+import type {
+	AccessRulesReader,
+	AccessRulesWriter,
+} from "#policy/rules/accessRules.js";
+import {
+	createAccessRulesReader,
+	createAccessRulesWriter,
+} from "#policy/rules/redis/redisAccessRules.js";
+import {
+	createAccessRulesIndex,
+	getAccessRuleKey,
+} from "#policy/rules/redis/redisAccessRulesIndex.js";
+import { mockedLogger } from "#policy/tests/rules/mockedLogger.js";
 
 describe("redisAccessRules", () => {
-    let client: RedisClientType;
+	let redisClient: RedisClientType;
 
-    beforeAll(async () => {
-        client = await createClient({
-            // /docker/redis/redis-stack.docker-compose.yml
-            url: "redis://localhost:6379",
-            password: "root"
-        })
-            .on("error", (err) => console.log("Redis Client Error", err))
-            .connect() as RedisClientType;
+	beforeAll(async () => {
+		redisClient = (await createClient({
+			// /docker/redis/redis-stack.docker-compose.yml
+			url: "redis://localhost:6379",
+			password: "root",
+		})
+			.on("error", (err) => console.log("Redis Client Error", err))
+			.connect()) as RedisClientType;
 
-        // fixme create index.
+		await createAccessRulesIndex(redisClient);
 
-        await client.flushAll();
-    });
+		await redisClient.flushAll();
+	});
 
-    describe('reader', () => {
-        test("finds rules", async () => {
+	describe("writer", () => {
+		let writer: AccessRulesWriter;
 
-        });
+		beforeAll(() => {
+			writer = createAccessRulesWriter(redisClient);
+		});
 
-        test("finds rule ids", () => {
-            // todo reuse
-        });
-    });
+		test("inserts rule", async () => {
+			// given
+			const accessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "_clientId",
+			};
+			const accessRuleKey = getAccessRuleKey(accessRule);
 
-    describe('writer', () => {
-        test("inserts rule", async () => {
-            await client.hSet("name", {
-                field: "value"
-            });
+			// when
+			await writer.insertRule(accessRule);
 
-            expect(await client.hGet("name", "field")).toBe("value");
-        });
+			// then
+			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
 
-        test("inserts rule with expiration", () => {
-        });
+			expect(insertedAccessRule).toEqual(accessRule);
+		});
 
-        test("deletes rules", () => {
-        });
-    });
+		test("inserts rule with expiration", async () => {
+			// given
+			const accessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "_clientId",
+			};
+			const accessRuleKey = getAccessRuleKey(accessRule);
+			// 1 hour from now.
+			const expirationTimestamp = Math.floor(Date.now() / 1000) + 60 * 60;
 
-    afterAll(async () => {
-        await client.flushAll();
-    });
+			// when
+			await writer.insertRule(accessRule, expirationTimestamp);
+
+			// then
+			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+			const insertedExpirationTimestamp =
+				await redisClient.expireTime(accessRuleKey);
+
+			expect(insertedAccessRule).toEqual(accessRule);
+			expect(insertedExpirationTimestamp).toBe(expirationTimestamp);
+		});
+
+		test("deletes rules", () => {
+			// fixme
+		});
+
+		test("deletes all rules", () => {
+			// fixme
+		});
+	});
+
+	describe("reader", () => {
+		let reader: AccessRulesReader;
+
+		beforeAll(() => {
+			// fixme
+			reader = createAccessRulesReader(redisClient, mockedLogger);
+		});
+
+		test("finds rules", async () => {
+			// fixme
+		});
+
+		// fixme cover all variations
+
+		test("finds rule ids", () => {
+			// fixme reuse
+		});
+	});
+
+	afterAll(async () => {
+		await redisClient.flushAll();
+	});
 });

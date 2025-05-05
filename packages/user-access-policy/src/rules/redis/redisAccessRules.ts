@@ -1,112 +1,117 @@
-import {type AccessRule, accessRuleSchema} from "../accessRule.js";
-import type {RedisClientType} from "redis";
-import type {SearchReply} from "@redis/search";
-import type {AccessRulesReader, AccessRulesWriter} from "../accessRules.js";
-import type {AccessPolicyScope} from "../../accessPolicy.js";
-import type {Logger} from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
+import type { SearchReply } from "@redis/search";
+import type { RedisClientType } from "redis";
+import type { AccessPolicyScope } from "#policy/accessPolicy.js";
+import { type AccessRule, accessRuleSchema } from "#policy/rules/accessRule.js";
+import type {
+	AccessRulesReader,
+	AccessRulesWriter,
+} from "#policy/rules/accessRules.js";
 import {
-    getAccessRulesQuery,
-    accessRulesSearchOptions,
-} from "./index/redisAccessRulesIndex.js";
+	accessRuleIndexName,
+	accessRuleKeyPrefix,
+	accessRuleSearchOptions,
+	getAccessRuleKey,
+	getAccessRulesQuery,
+} from "#policy/rules/redis/redisAccessRulesIndex.js";
 
 export const createAccessRulesReader = (
-    client: RedisClientType,
-    indexName: string,
-    logger: Logger,
+	client: RedisClientType,
+	logger: Logger,
 ): AccessRulesReader => {
-    return {
-        findRules: async (
-            policyScope: AccessPolicyScope,
-        ): Promise<AccessRule[]> => {
-            const query = getAccessRulesQuery(policyScope);
+	return {
+		findRules: async (
+			policyScope: AccessPolicyScope,
+		): Promise<AccessRule[]> => {
+			const query = getAccessRulesQuery(policyScope);
 
-            const searchReply = await client.ft.search(
-                indexName,
-                query,
-                accessRulesSearchOptions,
-            );
+			const searchReply = await client.ft.search(
+				accessRuleIndexName,
+				query,
+				accessRuleSearchOptions,
+			);
 
-            const accessRules = extractRulesFromSearchReply(searchReply, logger);
+			const accessRules = extractRulesFromSearchReply(searchReply, logger);
 
-            logger.debug("found access rules", {
-                accessRules: accessRules,
-                policyScope: policyScope,
-                query: query,
-            });
+			logger.debug("found access rules", {
+				accessRules: accessRules,
+				policyScope: policyScope,
+				query: query,
+			});
 
-            return accessRules;
-        },
+			return accessRules;
+		},
 
-        findRuleIds: async (policyScope: AccessPolicyScope): Promise<string[]> => {
-            const query = getAccessRulesQuery(policyScope);
+		findRuleIds: async (policyScope: AccessPolicyScope): Promise<string[]> => {
+			const query = getAccessRulesQuery(policyScope);
 
-            const records = await client.ft.searchNoContent(
-                indexName,
-                query,
-                accessRulesSearchOptions,
-            );
+			const records = await client.ft.searchNoContent(
+				accessRuleIndexName,
+				query,
+				accessRuleSearchOptions,
+			);
 
-            const ruleIds = records.documents;
+			const ruleIds = records.documents;
 
-            logger.debug("found access rule ids", {
-                ruleIds: ruleIds,
-                policyScope: policyScope,
-                query: query,
-            });
+			logger.debug("found access rule ids", {
+				ruleIds: ruleIds,
+				policyScope: policyScope,
+				query: query,
+			});
 
-            return ruleIds;
-        },
-    };
+			return ruleIds;
+		},
+	};
 };
 
 export const createAccessRulesWriter = (
-    client: RedisClientType,
-    keyPrefix: string,
-    resolveRuleKey: (rule: AccessRule) => string,
+	client: RedisClientType,
 ): AccessRulesWriter => {
-    return {
-        insertRule:
-            async (rule: AccessRule, expirationTimestamp?: number): Promise<void> => {
-                const ruleKey = resolveRuleKey(rule);
+	return {
+		insertRule: async (
+			rule: AccessRule,
+			expirationTimestamp?: number,
+		): Promise<void> => {
+			const ruleKey = getAccessRuleKey(rule);
 
-                await client.hSet(ruleKey, rule);
+			await client.hSet(ruleKey, rule);
 
-                if (expirationTimestamp) {
-                    await client.expireAt(ruleKey, expirationTimestamp);
-                }
-            },
+			if (expirationTimestamp) {
+				await client.expireAt(ruleKey, expirationTimestamp);
+			}
+		},
 
-        deleteRules: async (ruleIds: string[]): Promise<void> =>
-            void await client.del(ruleIds),
+		deleteRules: async (ruleIds: string[]): Promise<void> =>
+			void (await client.del(ruleIds)),
 
-        deleteAllRules: async (): Promise<void> => {
-            const keys = await client.keys(keyPrefix);
+		deleteAllRules: async (): Promise<void> => {
+			const keys = await client.keys(accessRuleKeyPrefix);
 
-            if (keys.length > 0) {
-                await client.del(keys);
-            }
-        }
-    };
+			if (keys.length > 0) {
+				await client.del(keys);
+			}
+		},
+	};
 };
 
 const extractRulesFromSearchReply = (
-    searchReply: SearchReply,
-    logger: Logger,
+	searchReply: SearchReply,
+	logger: Logger,
 ): AccessRule[] => {
-    const accessRules: AccessRule[] = [];
+	const accessRules: AccessRule[] = [];
 
-    searchReply.documents.map((document) => {
-        const parsedDocument = accessRuleSchema.safeParse(document);
+	searchReply.documents.map((document) => {
+		const parsedDocument = accessRuleSchema.safeParse(document);
 
-        if (parsedDocument.success) {
-            accessRules.push(parsedDocument.data);
-        } else {
-            logger.debug("failed to parse access rule", {
-                document: document,
-                error: parsedDocument.error,
-            });
-        }
-    });
+		if (parsedDocument.success) {
+			accessRules.push(parsedDocument.data);
+		} else {
+			logger.debug("failed to parse access rule", {
+				document: document,
+				error: parsedDocument.error,
+			});
+		}
+	});
 
-    return accessRules;
+	return accessRules;
 };

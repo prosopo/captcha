@@ -1,7 +1,7 @@
-import type { AccessPolicy, AccessPolicyScope } from "./accessPolicy.js";
-import type { AccessRulesReader } from "./rules/accessRules.js";
-import type { AccessRule } from "./rules/accessRule.js";
 import type { Logger } from "@prosopo/common";
+import type { AccessPolicy, AccessPolicyScope } from "#policy/accessPolicy.js";
+import type { AccessRule } from "#policy/rules/accessRule.js";
+import type { AccessRulesReader } from "#policy/rules/accessRules.js";
 
 export type ResolveAccessPolicy = (
 	policyScope: AccessPolicyScope,

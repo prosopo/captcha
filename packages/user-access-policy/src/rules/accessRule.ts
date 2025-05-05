@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { accessPolicySchema } from "../accessPolicy.js";
-import { userAttributesSchema } from "../userAttributes.js";
+import { accessPolicySchema } from "#policy/accessPolicy.js";
+import { userAttributesSchema } from "#policy/userAttributes.js";
 
 export const accessRuleSchema = z
 	.object({

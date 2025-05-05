@@ -1,19 +1,26 @@
 {
-	"extends": "../../tsconfig.cjs.json",
-	"compilerOptions": {
-		"rootDir": "./src",
-		"outDir": "./dist/cjs"
-	},
-	"include": ["./src"],
-	"references": [
-		{
-			"path": "../common/tsconfig.cjs.json"
-		},
-		{
-			"path": "../types/tsconfig.cjs.json"
-		},
-		{
-			"path": "../api-route/tsconfig.cjs.json"
-		}
-	]
+  "extends": "../../tsconfig.cjs.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist/cjs",
+    "paths": {
+      "#policy/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "./src"
+  ],
+  "references": [
+    {
+      "path": "../common/tsconfig.cjs.json"
+    },
+    {
+      "path": "../types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../api-route/tsconfig.cjs.json"
+    }
+  ]
 }

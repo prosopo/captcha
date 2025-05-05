@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { userAttributesSchema } from "./userAttributes.js";
+import { userAttributesSchema } from "#policy/userAttributes.js";
 
 export enum AccessPolicyType {
-	Block = 1,
-	Restrict = 2,
+	Block = "1",
+	Restrict = "2",
 }
 
 export const accessPolicySchema = z.object({

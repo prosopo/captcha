@@ -19,7 +19,6 @@ import type {
 	ApiInsertManyRulesArgsSchema,
 } from "./api/insertMany/apiInsertManyRulesArgsSchema.js";
 
-
 export {
 	type ApiInsertManyRulesArgsSchema,
 	type ApiInsertManyRulesArgsOutputSchema,
