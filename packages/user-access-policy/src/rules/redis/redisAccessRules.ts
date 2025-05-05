@@ -61,28 +61,30 @@ export const createAccessRulesReader = (
 
 export const createAccessRulesWriter = (
     client: RedisClientType,
+    keyPrefix: string,
     resolveRuleKey: (rule: AccessRule) => string,
 ): AccessRulesWriter => {
     return {
-        insertRule: async (
-            rule: AccessRule,
-            expirationTimestamp?: number,
-        ): Promise<void> => {
-            const ruleKey = resolveRuleKey(rule);
+        insertRule:
+            async (rule: AccessRule, expirationTimestamp?: number): Promise<void> => {
+                const ruleKey = resolveRuleKey(rule);
 
-            await client.hSet(ruleKey, rule);
+                await client.hSet(ruleKey, rule);
 
-            if (expirationTimestamp) {
-                await client.expireAt(ruleKey, expirationTimestamp);
+                if (expirationTimestamp) {
+                    await client.expireAt(ruleKey, expirationTimestamp);
+                }
+            },
+
+        deleteRules: async (ruleIds: string[]): Promise<void> =>
+            void await client.del(ruleIds),
+
+        deleteAllRules: async (): Promise<void> => {
+            const keys = await client.keys(keyPrefix);
+
+            if (keys.length > 0) {
+                await client.del(keys);
             }
-        },
-
-        deleteRules: async (ruleIds: string[]): Promise<void> => {
-            await client.del(ruleIds);
-        },
-
-        deleteAllRules(): Promise<void> {
-            // todo.
         }
     };
 };

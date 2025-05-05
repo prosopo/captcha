@@ -12,36 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoutesProvider } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
-import type { BlacklistInspector } from "./blacklistInspector.js";
-import { apiRulePaths } from "./rules/api/apiRulePaths.js";
-import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
-import { getExpressApiRuleRateLimits } from "./rules/api/getExpressApiRuleRateLimits.js";
+import { apiRulePaths } from "./api/apiRulePaths.js";
+import { getExpressApiRuleRateLimits } from "./api/getExpressApiRuleRateLimits.js";
 import type {
 	ApiInsertManyRulesArgsOutputSchema,
 	ApiInsertManyRulesArgsSchema,
-} from "./rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
-import { getRuleMongooseSchema } from "./rules/mongoose/schemas/getRuleMongooseSchema.js";
-import type { Rule } from "./rules/rule/rule.js";
-import type { RulesStorage } from "./rules/storage/rulesStorage.js";
-import { createAccessPolicyResolver } from "./accessPolicyResolver.js";
+} from "./api/insertMany/apiInsertManyRulesArgsSchema.js";
 
-const createApiRuleRoutesProvider = (
-	rulesStorage: RulesStorage,
-): ApiRoutesProvider => {
-	return new ApiRuleRoutesProvider(rulesStorage);
-};
 
 export {
-	type Rule,
-	type RulesStorage,
-	type BlacklistInspector,
 	type ApiInsertManyRulesArgsSchema,
 	type ApiInsertManyRulesArgsOutputSchema,
-	createAccessPolicyResolver,
-	createApiRuleRoutesProvider,
-	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
 	apiRulePaths,
 };
