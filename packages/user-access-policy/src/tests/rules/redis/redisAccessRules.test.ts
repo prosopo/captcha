@@ -33,33 +33,37 @@ describe("redisAccessRules", () => {
 	});
 
 	describe("writer", () => {
-		let writer: AccessRulesWriter;
+		let accessRulesWriter: AccessRulesWriter;
 
 		beforeAll(() => {
-			writer = createAccessRulesWriter(redisClient);
+			accessRulesWriter = createAccessRulesWriter(redisClient);
 		});
 
 		test("inserts rule", async () => {
 			// given
 			const accessRule = {
 				type: AccessPolicyType.Block,
+				// fixme random string, so it gets a unique key
 				clientId: "_clientId",
 			};
 			const accessRuleKey = getAccessRuleKey(accessRule);
 
 			// when
-			await writer.insertRule(accessRule);
+			await accessRulesWriter.insertRule(accessRule);
 
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
 
 			expect(insertedAccessRule).toEqual(accessRule);
+
+			// fixme check presence in the index
 		});
 
-		test("inserts rule with expiration", async () => {
+		test("inserts time limited rule", async () => {
 			// given
 			const accessRule = {
 				type: AccessPolicyType.Block,
+				// fixme random string, so it gets a unique key
 				clientId: "_clientId",
 			};
 			const accessRuleKey = getAccessRuleKey(accessRule);
@@ -67,7 +71,7 @@ describe("redisAccessRules", () => {
 			const expirationTimestamp = Math.floor(Date.now() / 1000) + 60 * 60;
 
 			// when
-			await writer.insertRule(accessRule, expirationTimestamp);
+			await accessRulesWriter.insertRule(accessRule, expirationTimestamp);
 
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
@@ -76,6 +80,8 @@ describe("redisAccessRules", () => {
 
 			expect(insertedAccessRule).toEqual(accessRule);
 			expect(insertedExpirationTimestamp).toBe(expirationTimestamp);
+
+			// fixme check presence in the index
 		});
 
 		test("deletes rules", () => {
@@ -88,18 +94,18 @@ describe("redisAccessRules", () => {
 	});
 
 	describe("reader", () => {
-		let reader: AccessRulesReader;
+		let accessRulesReader: AccessRulesReader;
 
 		beforeAll(() => {
 			// fixme
-			reader = createAccessRulesReader(redisClient, mockedLogger);
+			accessRulesReader = createAccessRulesReader(redisClient, mockedLogger);
 		});
 
 		test("finds rules", async () => {
 			// fixme
 		});
 
-		// fixme cover all variations
+		// fixme cover all key search variations
 
 		test("finds rule ids", () => {
 			// fixme reuse
