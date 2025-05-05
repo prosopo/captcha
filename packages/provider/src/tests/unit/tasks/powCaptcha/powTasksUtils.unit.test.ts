@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,9 +91,10 @@ describe("Validation Functions", () => {
 			).toThrow(
 				new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
 					context: {
-						ERROR: "Provider signature is invalid for this message",
+						ERROR: "Signature is invalid for this message: undefined",
 						failedFuncName: "checkPowSignature",
 						signature,
+						signatureType: undefined,
 					},
 				}),
 			);

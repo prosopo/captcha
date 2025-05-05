@@ -24,6 +24,12 @@
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../widget-skeleton/tsconfig.cjs.json"
+		},
+		{
+			"path": "../account/tsconfig.cjs.json"
 		}
 	]
 }

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,11 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import consola, {
+
+import {
 	LogLevels as ConsolaLogLevels,
-	createConsola,
 	type ConsolaOptions,
 	type LogObject,
+	createConsola,
 } from "consola/browser";
 import { enum as zEnum, type infer as zInfer } from "zod";
 import { ProsopoEnvError } from "./error.js";
@@ -42,9 +43,13 @@ export const LogLevel = zEnum([
 ]);
 export type LogLevel = zInfer<typeof LogLevel>;
 
-// Create a new logger with the given level and scope
-export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
-	return getLoggerAdapterConsola(getLogLevel(logLevel), scope);
+// Create a new logger with the given level and scope and optional request ID
+export function getLogger(
+	logLevel: LogLevel | string,
+	scope: string,
+	requestId?: string,
+): Logger {
+	return getLoggerAdapterConsola(getLogLevel(logLevel), scope, requestId);
 }
 
 // Get the default logger (i.e. the global logger)
@@ -53,23 +58,48 @@ export function getLoggerDefault(): Logger {
 }
 
 const JSONReporter = (
-	message: LogObject,
+	logObject: LogObject,
 	context: {
 		options: ConsolaOptions;
 	},
 ) => {
-	if (context.options.level === ConsolaLogLevels.error) {
-		process.stderr.write(`${JSON.stringify(message)}\n`);
+	// https://stackoverflow.com/a/65886224
+	const writer = process?.stdout
+		? process.stdout.write.bind(process.stdout)
+		: console.info;
+	const writerError = process?.stderr
+		? process.stderr.write.bind(process.stderr)
+		: console.error;
+	if (logObject.type === LogLevel.enum.error) {
+		if (logObject.args.length > 0 && logObject.args[0] instanceof Error) {
+			const error = logObject.args[0] as Error;
+			const logObjectError = {
+				...logObject,
+				args: [error.message],
+			};
+			writerError(`${JSON.stringify(logObjectError)}\n`);
+		} else {
+			writerError(`${JSON.stringify(logObject)}\n`);
+		}
 	} else {
-		process.stdout.write(`${JSON.stringify(message)}\n`);
+		writer(`${JSON.stringify(logObject)}\n`);
 	}
 };
 
-const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
+const getLoggerAdapterConsola = (
+	logLevel: LogLevel,
+	scope: string,
+	requestId?: string,
+): Logger => {
 	const logger = createConsola({
 		reporters: [
 			{
-				log: JSONReporter,
+				log: (logObj, ctx) => {
+					const reporter = JSONReporter;
+					// Attach requestId to the log object before passing it to JSONReporter
+					const enhancedLogObj = { ...logObj, requestId };
+					reporter(enhancedLogObj, ctx);
+				},
 			},
 		],
 		formatOptions: { colors: true, date: true },

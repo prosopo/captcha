@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Procaptcha Invisible Image Mode - Implicit Rendering</title>
+    <!-- Load the Procaptcha script -->
+    <script type="module" src="%VITE_BUNDLE_URL%" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        function onSubmit(token) {
+            console.log('Procaptcha verified, token: ' + token);
+            
+            // Get form values
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = `Form submitted with:
+- Name: ${name}
+- Email: ${email}
+- Procaptcha verified: Yes`;
+            resultElement.style.display = 'block';
+            
+            // Prevent actual form submission
+            return false;
+        }
+    </script>
+</head>
+<body>
+    <h1>Procaptcha Invisible Image Mode</h1>
+    <p>This example demonstrates how to use Procaptcha in invisible image mode with implicit rendering.</p>
+    
+    <form id="demo-form" action="javascript:void(0);" method="POST">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+        </div>
+        
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Your email" required />
+        </div>
+        
+        <!-- Submit button with Procaptcha attributes -->
+        <!-- The p-procaptcha class and data-sitekey attribute are required -->
+        <button 
+            class="p-procaptcha" 
+            data-sitekey="%PROSOPO_SITE_KEY%" 
+            data-callback="onSubmit"
+            data-captcha-type="image">
+            Submit
+        </button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <div style="margin-top: 20px;">
+        <h2>How It Works</h2>
+        <p>This example demonstrates how to use Procaptcha in invisible image mode with implicit rendering:</p>
+        <ol>
+            <li>Include the Procaptcha script in the head of your document</li>
+            <li>Add the <code>p-procaptcha</code> class to your submit button</li>
+            <li>Add the <code>data-sitekey</code> attribute with your site key</li>
+            <li>Add the <code>data-callback</code> attribute with the name of your callback function</li>
+            <li>The CAPTCHA verification happens invisibly when the user clicks the button</li>
+        </ol>
+        <p>The key elements are:</p>
+        <pre>
+&lt;script type="module" src="./assets/procaptcha.bundle.js" async defer&gt;&lt;/script&gt;
+
+&lt;button 
+    class="p-procaptcha" 
+    data-sitekey="%PROSOPO_SITE_KEY%" 
+    data-callback="onSubmit"
+    data-captcha-type="image"&gt;
+    Submit
+&lt;/button&gt;
+        </pre>
+    </div>
+</body>
+</html> 

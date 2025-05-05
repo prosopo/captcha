@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,28 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { env } from "node:process";
-import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import z from "zod";
+
+const argv = await yargs(hideBin(process.argv))
+	.option("file", {
+		alias: "f",
+		description: "Path to package.json file",
+		type: "string",
+		demandOption: true,
+	})
+	.option("excluded", {
+		alias: "e",
+		description: "Excluded namespaces pattern",
+		type: "string",
+	})
+	.parse();
 
 const main = async (args: {
 	pkgJsonPath: string;
+	excluded?: string;
 }) => {
 	console.log("Checking", args.pkgJsonPath);
 	// read the pkg json file
@@ -32,12 +47,16 @@ const main = async (args: {
 
 	const version = z.string().parse(pkgJson.version);
 
+	const allWorkspaces = z.string().array().parse(pkgJson.workspaces);
+
+	const workspaces = allWorkspaces.filter(
+		(workspace) => !workspace.startsWith(args.excluded || ""),
+	);
+
 	// for each package in the workspace, check their version matches the workspace version
-	const globs = z
-		.string()
-		.array()
-		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkgJsonPath)}/${g}/package.json`);
+	const globs = workspaces.map(
+		(g) => `${path.dirname(args.pkgJsonPath)}/${g}/package.json`,
+	);
 	const pkgJsonPaths = fg.globSync(globs);
 	for (const pkgJsonPath of pkgJsonPaths) {
 		console.log("Checking", pkgJsonPath);
@@ -77,7 +96,8 @@ const main = async (args: {
 };
 
 main({
-	pkgJsonPath: z.string().parse(process.argv[2]),
+	pkgJsonPath: z.string().parse(argv.file),
+	excluded: argv.excluded,
 }).catch((err) => {
 	console.error(err);
 	process.exit(1);

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,33 +20,26 @@ import { getPairAsync } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
+	CaptchaType,
 	type IUserSettings,
+	type RegisterSitekeyBodyTypeOutput,
+	Tier,
 } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
+let captchaType: CaptchaType;
+
 describe("Captchas", () => {
-	before(async () => {
-		const timestamp = new Date().getTime();
-		const pair = await getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
-		const signature = u8aToHex(pair.sign(timestamp.toString()));
-		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
-		const settings: IUserSettings = {
-			captchaType: "pow",
-			domains: ["0.0.0.0"],
-			frictionlessThreshold: 0.5,
-			powDifficulty: 2,
-		};
-		await fetch(adminSiteKeyURL, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				signature: signature,
-				timestamp: timestamp.toString(),
-			},
-			body: JSON.stringify({
-				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-				settings,
-			}),
+	before(() => {
+		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+		// Call registerSiteKey and handle response here
+		return cy.registerSiteKey(captchaType).then((response) => {
+			// Log the response status and body using cy.task()
+			cy.task("log", `Response status: ${response.status}`);
+			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
+
+			// Ensure the request was successful
+			expect(response.status).to.equal(200);
 		});
 	});
 
@@ -73,6 +66,10 @@ describe("Captchas", () => {
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
 		});
+	});
+
+	after(() => {
+		cy.registerSiteKey(CaptchaType.image);
 	});
 
 	it("Selecting the correct images passes the captcha and signs up the user", () => {

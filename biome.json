@@ -34,5 +34,10 @@
 				"useKeyWithClickEvents": "off"
 			}
 		}
+	},
+	"javascript": {
+		"parser": {
+			"unsafeParameterDecoratorsEnabled": true
+		}
 	}
 }

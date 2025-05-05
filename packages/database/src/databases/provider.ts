@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
-import { type Logger, ProsopoDBError, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
@@ -27,7 +27,6 @@ import {
 	type DatasetWithIdsAndTree,
 	DatasetWithIdsAndTreeSchema,
 	type Hash,
-	type PendingCaptchaRequest,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type RequestHeaders,
@@ -35,17 +34,24 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
+import type {
+	FrictionlessTokenRecord,
+	SessionRecord,
+} from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	DetectorRecordSchema,
+	type DetectorSchema,
 	type FrictionlessToken,
+	type FrictionlessTokenId,
 	FrictionlessTokenRecordSchema,
-	type IPBlockRuleRecord,
-	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
+	type PendingCaptchaRequest,
+	type PendingCaptchaRequestMongoose,
 	PendingRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
@@ -54,7 +60,6 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
-	type SessionRecord,
 	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
@@ -62,9 +67,6 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
-	type UserAccountBlockRule,
-	type UserAccountBlockRuleRecord,
-	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -72,12 +74,13 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type {
-	FrictionlessTokenRecord,
-	IPBlockRuleMongo,
-} from "@prosopo/types-database";
-import type { DeleteResult } from "mongodb";
-import type { ObjectId } from "mongoose";
+import {
+	type Rule,
+	type RulesStorage,
+	createMongooseRulesStorage,
+	getRuleMongooseSchema,
+} from "@prosopo/user-access-policy";
+import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -92,8 +95,8 @@ enum TableNames {
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	ipblockrules = "ipblockrules",
-	userblockrules = "userblockrules",
+	userAccessRules = "userAccessRules",
+	detector = "detector",
 }
 
 const PROVIDER_TABLES = [
@@ -153,14 +156,14 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.ipblockrules,
-		modelName: "IPBlockRules",
-		schema: IPBlockRuleRecordSchema,
+		collectionName: TableNames.userAccessRules,
+		modelName: "UserAccessRules",
+		schema: getRuleMongooseSchema(),
 	},
 	{
-		collectionName: TableNames.userblockrules,
-		modelName: "UserAccountBlockRules",
-		schema: UserAccountBlockRuleSchema,
+		collectionName: TableNames.detector,
+		modelName: "Detector",
+		schema: DetectorRecordSchema,
 	},
 ];
 
@@ -169,6 +172,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
+	private userAccessRulesDbStorage: RulesStorage | null;
 
 	constructor(
 		url: string,
@@ -178,11 +182,19 @@ export class ProviderDatabase
 	) {
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
+
+		this.userAccessRulesDbStorage = null;
 	}
 
 	override async connect(): Promise<void> {
 		await super.connect();
+
 		this.loadTables();
+
+		this.userAccessRulesDbStorage = createMongooseRulesStorage(
+			this.logger,
+			<Model<Rule>>this.tables.userAccessRules,
+		);
 	}
 
 	loadTables() {
@@ -203,6 +215,14 @@ export class ProviderDatabase
 			});
 		}
 		return this.tables;
+	}
+
+	public getUserAccessRulesStorage(): RulesStorage {
+		if (null === this.userAccessRulesDbStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED");
+		}
+
+		return this.userAccessRulesDbStorage;
 	}
 
 	/**
@@ -493,7 +513,7 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's captcha solution commitment
 	 */
-	async storeDappUserSolution(
+	async storeUserImageCaptchaSolution(
 		captchas: CaptchaSolution[],
 		commit: UserCommitment,
 	): Promise<void> {
@@ -539,6 +559,9 @@ export class ProviderDatabase
 	 * @param difficulty
 	 * @param providerSignature
 	 * @param ipAddress
+	 * @param headers
+	 * @param ja4
+	 * @param frictionlessTokenId
 	 * @param serverChecked
 	 * @param userSubmitted
 	 * @param storedStatus
@@ -552,6 +575,8 @@ export class ProviderDatabase
 		providerSignature: string,
 		ipAddress: bigint,
 		headers: RequestHeaders,
+		ja4: string,
+		frictionlessTokenId?: FrictionlessTokenId,
 		serverChecked = false,
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -564,6 +589,7 @@ export class ProviderDatabase
 			...components,
 			ipAddress,
 			headers,
+			ja4,
 			result: { status: CaptchaStatus.pending },
 			userSubmitted,
 			serverChecked,
@@ -571,6 +597,7 @@ export class ProviderDatabase
 			providerSignature,
 			userSignature,
 			lastUpdatedTimestamp: Date.now(),
+			frictionlessTokenId,
 		};
 
 		try {
@@ -611,7 +638,7 @@ export class ProviderDatabase
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null> {
 		if (!this.tables) {
-			throw new ProsopoEnvError("DATABASE.DATABASE_UNDEFINED", {
+			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
 				context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
 				logger: this.logger,
 			});
@@ -748,20 +775,7 @@ export class ProviderDatabase
 						filterNoStoredTimestamp,
 						{
 							$expr: {
-								$lt: [
-									{
-										$convert: {
-											input: "$storedAtTimestamp",
-											to: "date",
-										},
-									},
-									{
-										$convert: {
-											input: "$lastUpdatedTimestamp",
-											to: "date",
-										},
-									},
-								],
+								$lt: ["$storedAtTimestamp", "$lastUpdatedTimestamp"],
 							},
 						},
 					],
@@ -911,17 +925,49 @@ export class ProviderDatabase
 		return doc._id;
 	}
 
+	/** Update a frictionless token record */
+	async updateFrictionlessTokenRecord(
+		tokenId: FrictionlessTokenId,
+		updates: Partial<FrictionlessTokenRecord>,
+	): Promise<void> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		await this.tables.frictionlessToken.updateOne(filter, updates);
+	}
+
+	/** Get a frictionless token record */
+	async getFrictionlessTokenRecordByTokenId(
+		tokenId: FrictionlessTokenId,
+	): Promise<FrictionlessTokenRecord | undefined> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
+		const doc =
+			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
+				filter,
+			);
+		return doc ? doc : undefined;
+	}
+	/** Get many frictionless token records */
+	async getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = {
+			_id: { $in: tokenId },
+		};
+		return this.tables.frictionlessToken.find<FrictionlessTokenRecord>(filter);
+	}
+
 	/**
 	 * Check if a frictionless token record exists.
 	 * Used to ensure that a token is not used more than once.
 	 */
-	async checkFrictionlessTokenRecord(token: string): Promise<boolean> {
+	async getFrictionlessTokenRecordByToken(
+		token: string,
+	): Promise<FrictionlessTokenRecord | undefined> {
 		const filter: Pick<FrictionlessTokenRecord, "token"> = { token };
 		const record =
 			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
 				filter,
 			);
-		return !!record;
+		return record || undefined;
 	}
 
 	/**
@@ -929,6 +975,7 @@ export class ProviderDatabase
 	 */
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
+			this.logger.debug({ action: "storing", sessionRecord });
 			await this.tables.session.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
@@ -939,16 +986,27 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Check if a session exists and remove it if it does
+	 * Check if a session exists and mark it as removed
 	 * @returns The session record if it existed, undefined otherwise
 	 */
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
-		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		this.logger.debug({ action: "checking and removing", sessionId });
+		const filter: {
+			[key in keyof Pick<SessionRecord, "sessionId" | "deleted">]:
+				| string
+				| { $exists: boolean };
+		} = {
+			sessionId,
+			deleted: { $exists: false },
+		};
 		try {
 			const session = await this.tables.session
-				.findOneAndDelete<SessionRecord>(filter)
+				.findOneAndUpdate<SessionRecord>(filter, {
+					deleted: true,
+					lastUpdatedTimestamp: Date.now(),
+				})
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
@@ -959,33 +1017,98 @@ export class ProviderDatabase
 		}
 	}
 
+	/** Get unstored session records
+	 * @description Get session records that have not been stored yet
+	 * @param limit
+	 * @param skip
+	 */
+	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+		const filterNoStoredTimestamp: {
+			[key in keyof Pick<SessionRecord, "storedAtTimestamp">]: {
+				$exists: boolean;
+			};
+		} = { storedAtTimestamp: { $exists: false } };
+		return this.tables?.session
+			.aggregate<SessionRecord>([
+				{
+					$match: {
+						$or: [
+							filterNoStoredTimestamp,
+							{
+								$expr: {
+									$lt: [
+										{
+											$convert: {
+												input: "$storedAtTimestamp",
+												to: "date",
+											},
+										},
+										{
+											$convert: {
+												input: "$lastUpdatedTimestamp",
+												to: "date",
+											},
+										},
+									],
+								},
+							},
+						],
+					},
+				},
+				{
+					$sort: { _id: 1 },
+				},
+				{
+					$skip: skip,
+				},
+				{
+					$limit: limit,
+				},
+			])
+			.then((docs) => docs || []);
+	}
+
+	/** Mark a list of session records as stored */
+	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
+		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
+			storedAtTimestamp: Date.now(),
+		};
+		await this.tables?.session.updateMany(
+			{ sessionId: { $in: sessionIds } },
+			{ $set: updateDoc },
+			{ upsert: false },
+		);
+	}
+
 	/**
 	 * @description Store a Dapp User's pending record
 	 */
-	async storeDappUserPending(
+	async storePendingImageCommitment(
 		userAccount: string,
 		requestHash: string,
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.storeDappUserPending.name,
+					failedFuncName: this.storePendingImageCommitment.name,
 					requestHash,
 				},
 			});
 		}
-		const pendingRecord = {
+		const pendingRecord: PendingCaptchaRequestMongoose = {
 			accountId: userAccount,
 			pending: true,
 			salt,
 			requestHash,
 			deadlineTimestamp,
-			requestedAtTimestamp,
+			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
+			frictionlessTokenId,
 		};
 		await this.tables?.pending.updateOne(
 			{ requestHash: requestHash },
@@ -997,12 +1120,15 @@ export class ProviderDatabase
 	/**
 	 * @description Get a Dapp user's pending record
 	 */
-	async getDappUserPending(
+	async getPendingImageCommitment(
 		requestHash: string,
 	): Promise<PendingCaptchaRequest> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
-				context: { failedFuncName: this.getDappUserPending.name, requestHash },
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+				context: {
+					failedFuncName: this.getPendingImageCommitment.name,
+					requestHash,
+				},
 			});
 		}
 		// @ts-ignore
@@ -1017,19 +1143,22 @@ export class ProviderDatabase
 			return doc;
 		}
 
-		throw new ProsopoEnvError("DATABASE.PENDING_RECORD_NOT_FOUND", {
-			context: { failedFuncName: this.getDappUserPending.name, requestHash },
+		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
+			context: {
+				failedFuncName: this.getPendingImageCommitment.name,
+				requestHash,
+			},
 		});
 	}
 
 	/**
 	 * @description Mark a pending request as used
 	 */
-	async updateDappUserPendingStatus(requestHash: string): Promise<void> {
+	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoEnvError("DATABASE.INVALID_HASH", {
+			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
-					failedFuncName: this.updateDappUserPendingStatus.name,
+					failedFuncName: this.updatePendingImageCommitmentStatus.name,
 					requestHash,
 				},
 			});
@@ -1069,7 +1198,7 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
 	}
 
 	/**
@@ -1093,7 +1222,7 @@ export class ProviderDatabase
 			) as UserSolutionRecord[];
 		}
 
-		throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED");
+		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED");
 	}
 
 	async getDatasetIdWithSolvedCaptchasOfSizeN(
@@ -1408,6 +1537,16 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Clean up the scheduled task status records
+	 */
+	async cleanupScheduledTaskStatus(status: ScheduledTaskStatus): Promise<void> {
+		const filter: Pick<ScheduledTaskRecord, "status"> = {
+			status,
+		};
+		await this.tables?.scheduler.deleteMany(filter);
+	}
+
+	/**
 	 * @description Update the client records
 	 */
 	async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
@@ -1415,6 +1554,7 @@ export class ProviderDatabase
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
+				tier: record.tier,
 			};
 			const filter: Pick<IUserDataSlim, "account"> = {
 				account: record.account,
@@ -1442,100 +1582,30 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Check if a request has a blocking rule associated with it
+	 * @description Store a detector key
 	 */
-	async getIPBlockRuleRecord(
-		ipAddress: bigint,
-	): Promise<IPBlockRuleMongo | undefined> {
-		const filter: Pick<IPBlockRuleRecord, "ip"> = { ip: Number(ipAddress) };
-		const doc = await this.tables?.ipblockrules
-			.findOne(filter)
-			.lean<IPBlockRuleMongo>();
-		return doc ? doc : undefined;
+	async storeDetectorKey(detectorKey: string): Promise<void> {
+		return this.tables?.detector.create({
+			detectorKey,
+			createdAt: new Date(),
+		});
+	}
+
+	/** @description Remove a detector key */
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
+		await this.tables?.detector.deleteOne(filter);
 	}
 
 	/**
-	 * @description Store IP blocking rule records
+	 * @description Get valid detector keys
 	 */
-	async storeIPBlockRuleRecords(rules: IPBlockRuleRecord[]) {
-		await this.tables?.ipblockrules.bulkWrite(
-			rules.map((rule) => ({
-				updateOne: {
-					filter: { ip: rule.ip } as Pick<IPBlockRuleRecord, "ip">,
-					update: { $set: rule },
-					upsert: true,
-				},
-			})),
-		);
-	}
+	async getDetectorKeys(): Promise<string[]> {
+		const keyRecords = await this.tables?.detector
+			.find({}, { detectorKey: 1 })
+			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
+			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
-	/**
-	 * @description Remove IP blocking rule records
-	 */
-	async removeIPBlockRuleRecords(ipAddresses: bigint[], dappAccount?: string) {
-		const filter: {
-			[key in keyof Pick<IPBlockRuleRecord, "ip">]: { $in: number[] };
-		} & {
-			[key in keyof Pick<IPBlockRuleRecord, "dappAccount">]?: string; // Optional `dappAccount` key
-		} = { ip: { $in: ipAddresses.map(Number) } };
-		if (dappAccount) {
-			filter.dappAccount = dappAccount;
-		}
-		await this.tables?.ipblockrules.deleteMany(filter);
-	}
-
-	/**
-	 * @description Check if a request has a blocking rule associated with it
-	 */
-	async getUserBlockRuleRecord(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserAccountBlockRuleRecord | undefined> {
-		const filter: Pick<UserAccountBlockRule, "dappAccount" | "userAccount"> = {
-			dappAccount,
-			userAccount,
-		};
-		const doc = await this.tables?.userblockrules
-			.findOne(filter)
-			.lean<UserAccountBlockRuleRecord>();
-		return doc ? doc : undefined;
-	}
-
-	/**
-	 * @description Check if a request has a blocking rule associated with it
-	 */
-	async storeUserBlockRuleRecords(rules: UserAccountBlockRule[]) {
-		await this.tables?.userblockrules.bulkWrite(
-			rules.map((rule) => ({
-				updateOne: {
-					filter: {
-						dappAccount: rule.dappAccount,
-						userAccount: rule.userAccount,
-					} as Pick<UserAccountBlockRule, "dappAccount" | "userAccount">,
-					update: { $set: rule },
-					upsert: true,
-				},
-			})),
-		);
-	}
-
-	/**
-	 * @description Remove user blocking rule records
-	 */
-	async removeUserBlockRuleRecords(
-		userAccounts: string[],
-		dappAccount?: string,
-	) {
-		const filter: {
-			[key in keyof Pick<UserAccountBlockRule, "userAccount">]: {
-				$in: string[];
-			};
-		} & {
-			[key in keyof Pick<UserAccountBlockRule, "dappAccount">]?: string; // Optional `dappAccount` key
-		} = { userAccount: { $in: userAccounts } };
-		if (dappAccount) {
-			filter.dappAccount = dappAccount;
-		}
-		await this.tables?.userblockrules.deleteMany(filter);
+		return (keyRecords || []).map((record) => record.detectorKey);
 	}
 }

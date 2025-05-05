@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["./src", "express.d.ts"],
+	"references": [
+		{
+			"path": "../api-route"
+		},
+		{
+			"path": "../common"
+		}
+	]
+}

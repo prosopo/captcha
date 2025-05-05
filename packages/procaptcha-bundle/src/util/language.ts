@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LanguageSchema } from "@prosopo/locale";
+import { LanguageSchema, type Languages } from "@prosopo/locale";
 import type {
 	ProcaptchaClientConfigInput,
 	ProcaptchaRenderOptions,
@@ -43,9 +43,7 @@ export const setLanguage = (
 	}
 };
 
-const validateLanguage = (
-	languageAttribute: string | typeof LanguageSchema,
-) => {
+const validateLanguage = (languageAttribute: string | typeof Languages) => {
 	try {
 		return LanguageSchema.parse(languageAttribute);
 	} catch (error) {

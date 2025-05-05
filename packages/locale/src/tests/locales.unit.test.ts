@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,18 +20,18 @@ import { Languages } from "../index.js";
 describe("logging", () => {
 	test("Make sure the number of files present in the locales folder is the same size as the Languages array", () => {
 		const locales = fs.readdirSync(path.resolve("./src/locales"));
-		expect(locales.length).to.equal(Languages.length);
+		expect(locales.length).to.equal(Object.keys(Languages).length);
 	});
 
 	test("Get all locale JSON files and ensure the keys are identical in each one", () => {
-		const locales = Languages;
+		const locales = Object.values(Languages);
 		const sectionKeys = new Set<string>();
 		console.log("Local test running at ", path.resolve("."));
 		const sectionKeysObj: { [key: string]: Set<string> } = {};
 		const innerKeysObj: { [key: string]: { [key: string]: Set<string> } } = {};
 		for (const locale of locales) {
 			const localeData = fs.readFileSync(
-				path.resolve(`./src/locales/${locale}.json`),
+				path.resolve(`./src/locales/${locale}/translation.json`),
 				"utf8",
 			);
 			const localeKeys = Object.keys(JSON.parse(localeData));

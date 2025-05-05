@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProviderDatabase } from "@prosopo/database";
+import type { CaptchaType } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 
-export const registerSiteKey = async (siteKey: string): Promise<void> => {
+export const registerSiteKey = async (
+	siteKey: string,
+	captchaType: CaptchaType,
+): Promise<void> => {
 	try {
 		const username = process.env.PROSOPO_DATABASE_USERNAME || "root";
 		const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
@@ -31,8 +35,8 @@ export const registerSiteKey = async (siteKey: string): Promise<void> => {
 			{
 				account: siteKey,
 				settings: {
-					captchaType: "pow",
-					domains: ["example.com"],
+					captchaType: captchaType,
+					domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
 					frictionlessThreshold: 0.5,
 					powDifficulty: 4,
 				},

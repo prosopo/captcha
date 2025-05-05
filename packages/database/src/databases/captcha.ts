@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,22 +18,30 @@ import {
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
-	PoWCaptchaStored,
+	type StoredSession,
+	StoredSessionRecordSchema,
 	type Tables,
-	UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
+
 const logger = getLoggerDefault();
 
 enum TableNames {
+	frictionlessToken = "frictionlessToken",
+	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 }
 
 const CAPTCHA_TABLES = [
+	{
+		collectionName: TableNames.session,
+		modelName: "Session",
+		schema: StoredSessionRecordSchema,
+	},
 	{
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
@@ -79,10 +87,24 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async saveCaptchas(
+		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	) {
 		await this.connect();
+		if (sessionEvents.length) {
+			const result = await this.tables.session.bulkWrite(
+				sessionEvents.map((document) => {
+					return {
+						insertOne: {
+							document: document,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved Session Events", result.insertedCount);
+		}
+
 		if (imageCaptchaEvents.length) {
 			const result = await this.tables.commitment.bulkWrite(
 				imageCaptchaEvents.map((doc) => {

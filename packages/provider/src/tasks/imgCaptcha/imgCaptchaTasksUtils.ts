@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,15 +16,7 @@ import {
 	CaptchaMerkleTree,
 	computeCaptchaSolutionHash,
 } from "@prosopo/datasets";
-import type {
-	CaptchaSolution,
-	IPAddress,
-	ProsopoCaptchaCountConfigSchemaOutput,
-	ProsopoConfigOutput,
-} from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
-import { checkIpRules } from "../../rules/ip.js";
-import { checkUserRules } from "../../rules/user.js";
+import type { CaptchaSolution } from "@prosopo/types";
 
 /**
  * Build merkle tree and get commitment from contract, returning the tree, commitment, and commitmentId
@@ -54,50 +46,4 @@ export const buildTreeAndGetCommitmentId = (
 	}
 
 	return { tree, commitmentId };
-};
-
-/**
- * Get the captcha config for the user and ip address or return the default captcha config
- * @param db
- * @param config
- * @param ipAddress
- * @param user
- * @param dapp
- */
-export const getCaptchaConfig = async (
-	db: IProviderDatabase,
-	config: ProsopoConfigOutput,
-	ipAddress: IPAddress,
-	user: string,
-	dapp: string,
-): Promise<ProsopoCaptchaCountConfigSchemaOutput> => {
-	const ipRule = await checkIpRules(db, ipAddress, dapp);
-	if (ipRule) {
-		return {
-			solved: {
-				count:
-					ipRule?.captchaConfig?.solved.count || config.captchas.solved.count,
-			},
-			unsolved: {
-				count:
-					ipRule?.captchaConfig?.unsolved.count ||
-					config.captchas.unsolved.count,
-			},
-		};
-	}
-	const userRule = await checkUserRules(db, user, dapp);
-	if (userRule) {
-		return {
-			solved: {
-				count:
-					userRule?.captchaConfig?.solved.count || config.captchas.solved.count,
-			},
-			unsolved: {
-				count:
-					userRule?.captchaConfig?.unsolved.count ||
-					config.captchas.unsolved.count,
-			},
-		};
-	}
-	return config.captchas;
 };

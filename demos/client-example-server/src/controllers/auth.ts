@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,12 +61,13 @@ const verify = async (
 			}),
 		});
 
-		const verified = (await response.json()).verified;
-		console.log("Verified", verified);
-		return verified;
+		const verifiedResponse = await response.json();
+		console.log(verifiedResponse);
+		return verifiedResponse.verified;
 	}
 	// verify using the TypeScript library
 	const verified = await prosopoServer.isVerified(token);
+	console.log(verified);
 	return verified;
 };
 

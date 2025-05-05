@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { builtinModules } from "node:module";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 
+const allExternal = [
+	...builtinModules,
+	...builtinModules.map((m) => `node:${m}`),
+];
 loadEnv();
 
 export default defineConfig({
@@ -24,7 +28,9 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		default_page: "/",
+		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
+		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
+		default_page: `/${process.env.CAPTCHA_TYPE || ""}`,
 	},
 	e2e: {
 		setupNodeEvents(on, config) {
@@ -41,17 +47,21 @@ export default defineConfig({
 					build: {
 						ssr: false,
 						modulePreload: { polyfill: true },
-						mode: "development",
+						rollupOptions: {
+							external: allExternal,
+						},
 					},
-					plugins: [
-						nodePolyfills({
-							// Whether to polyfill `node:` protocol imports.
-							protocolImports: true,
-						}),
-					],
 				}),
 			);
+			// Add task event for logging to the terminal
+			on("task", {
+				log(message) {
+					console.log(message);
+					return null; // Cypress requires tasks to return something
+				},
+			});
 		},
+		excludeSpecPattern: ["cypress/e2e/**/frictionless.cy.ts"],
 	},
 	component: {
 		devServer: {

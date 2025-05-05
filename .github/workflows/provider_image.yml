@@ -32,64 +32,19 @@ jobs:
         if: github.event.pull_request.draft == false
         steps:
             - name: Print contexts
-              env:
-                  GITHUB_CONTEXT: ${{ toJson(github) }}
-                  ENV_CONTEXT: ${{ toJson(env) }}
-                  VARS_CONTEXT: ${{ toJson(vars) }}
-                  JOB_CONTEXT: ${{ toJson(job) }}
-                  STEPS_CONTEXT: ${{ toJson(steps) }}
-                  RUNNER_CONTEXT: ${{ toJson(runner) }}
-                  SECRETS_CONTEXT: ${{ toJson(secrets) }}
-                  STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-                  MATRIX_CONTEXT: ${{ toJson(matrix) }}
-                  NEEDS_CONTEXT: ${{ toJson(needs) }}
-                  INPUTS_CONTEXT: ${{ toJson(inputs) }}
-              run: |
-                  echo "******************************"
-                  echo "github:" "$GITHUB_CONTEXT"
-                  echo "******************************"
-                  echo "env:" "$ENV_CONTEXT"
-                  echo "******************************"
-                  echo "vars:" "$VARS_CONTEXT"
-                  echo "******************************"
-                  echo "job:" "$JOB_CONTEXT"
-                  echo "******************************"
-                  echo "steps:" "$STEPS_CONTEXT"
-                  echo "******************************"
-                  echo "runner:" "$RUNNER_CONTEXT"
-                  echo "******************************"
-                  echo "secrets:" "$SECRETS_CONTEXT"
-                  echo "******************************"
-                  echo "strategy:" "$STRATEGY_CONTEXT"
-                  echo "******************************"
-                  echo "matrix:" "$MATRIX_CONTEXT"
-                  echo "******************************"
-                  echo "needs:" "$NEEDS_CONTEXT"
-                  echo "******************************"
-                  echo "inputs:" "$INPUTS_CONTEXT"
-                  echo "******************************"
+              uses: prosopo/captcha/.github/actions/print_contexts@gha
+              with:
+                INPUTS_CONTEXT: ${{ toJson(inputs) }}
+                NEEDS_CONTEXT: ${{ toJson(needs) }}
+                VARS_CONTEXT: ${{ toJson(vars) }}
+                SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
             - uses: actions/checkout@v4
               with:
                   submodules: "recursive"
 
-            - run: mkdir -p ~/.npm
-            - run: mkdir -p ~/.cache/Cypress
-
             - name: Restore npm cache
-              if: ${{ runner.environment != 'self-hosted' }} # don't restore cache on self-hosted runners, network speed not good enough
-              uses: actions/cache/restore@v4
-              with:
-                  # must restore all cache dirs, and they must exist ahead of this!
-                  path: |
-                      ~/.npm
-                      ~/.cache/Cypress
-                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
-                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
-                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
-                  key: some-unused-cache-key
-                  restore-keys: |
-                      npm-${{ runner.os }}-${{ runner.arch }}-
+              uses: prosopo/captcha/.github/actions/restore_npm_cache@gha
 
             - uses: actions/setup-node@v4
               with:
@@ -152,57 +107,4 @@ jobs:
                     docker logs "$CONTAINER" >& provider.log
                     cat provider.log
                     grep -oE "Version: \\\\\".*\\\\\"" provider.log || (cat provider.log && exit 1)
-
-            - name: Build the provider-mock package
-              id: build_provider_mock_package
-              run: |
-                  echo "Building the provider-mock package..."
-                  npm run -w @prosopo/provider-mock build
-
-            - name: Get the latest released version of npm packages
-              id: npm_released
-              run: |
-                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-                  RELEASED_VERSION="$(npm view @prosopo/util | grep latest | cut -f2 -d ' ')"
-                  VERSION="$(jq -r .engines.npm < package.json)"
-                  if [[ "$RELEASED_VERSION" != "$VERSION" ]]; then
-                      # shellcheck disable=SC2086
-                      echo "npm_released=false" >> $GITHUB_ENV
-                  elif [[ "$RELEASED_VERSION" == "$VERSION" ]]; then
-                      # shellcheck disable=SC2086
-                      echo "npm_released=true" >> $GITHUB_ENV
-                  else
-                    echo "cannot determine if npm_released"
-                    exit 1
-                  fi
-
-            # create the provider mock image for AMD64
-            - name: Build the Provider Mock Container
-              if: steps.npm_released.outputs.npm_released == 'true'
-              id: build_docker_provider_mock_amd64
-              continue-on-error: false
-              uses: docker/build-push-action@v5
-              with:
-                  context: ${{github.workspace}}
-                  file: ${{github.workspace}}/docker/images/provider.mock.dockerfile
-                  platforms: linux/amd64
-                  push: false
-                  tags: prosopo/provider-mock:dev
-                  outputs: type=docker,dest=provider-mock-amd64.tar
-
-            # load the provider-mock AMD64 image
-            - name: Load the Provider Container
-              if: steps.npm_released.outputs.npm_released == 'true'
-              run: docker load -i provider-mock-amd64.tar
-
-            # Check that the version command works when running the bundle in the provider image
-            - name: Check provider mock container runs
-              if: steps.npm_released.outputs.npm_released == 'true'
-              run: |
-                  CONTAINER="$(docker run -d -p 9229:9229 prosopo/provider-mock:dev)"
-                  sleep 10s
-                  docker logs "$CONTAINER" >& provider-mock.log
-                  cat provider-mock.log
-                  RESPONSE=$(curl --location 'http://localhost:9229/v1/prosopo/provider/image/dapp/verify' --header 'Content-Type: application/json' --data '{"token": "0x0000c03543346872666a7739446a585a547a56334d777a727241723950314d4a685372765747577169316553757955706e684dc03547727776614546357a58623236467a397263517044575335374374455248704e6568584350634e6f48474b75745159010000000000", "dappUserSignature":"0x8656e1566313c6b707c41cdf333789b138509c1202a245f42d7d6652878c54030a8d660e04580bb565d5738c6578f5e69a066ecf8847856da3ba83dfd5701a8f"}' | jq --raw-output '.status')
-                  if [ "$RESPONSE" = "User verified" ]; then exit 0; else exit 1; fi
 

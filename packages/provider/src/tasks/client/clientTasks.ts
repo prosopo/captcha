@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,30 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto/address";
+import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
-	type AddBlockRulesIP,
-	type AddBlockRulesUser,
-	BlockRuleType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
-	type RemoveBlockRulesIP,
-	type RemoveBlockRulesUser,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
+	type Tier,
 } from "@prosopo/types";
-import type {
-	ClientRecord,
-	IPAddressBlockRule,
-	IProviderDatabase,
-	PoWCaptchaStored,
-	UserAccountBlockRule,
-	UserCommitment,
+import {
+	type ClientRecord,
+	FrictionlessTokenRecord,
+	type IProviderDatabase,
+	type PoWCaptchaStored,
+	type ScoreComponents,
+	type SessionRecord,
+	type StoredSession,
+	type UserCommitment,
 } from "@prosopo/types-database";
+import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
-import { getIPAddress } from "../../util.js";
+import type { OptionalId } from "mongodb";
+import { validiateSiteKey } from "../../api/validateAddress.js";
+
+const isValidPrivateKey = (privateKeyString: string) => {
+	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
+	try {
+		createPrivateKey({
+			key: privateKey,
+			format: "pem",
+			type: "pkcs8",
+		});
+		return true;
+	} catch (error) {
+		return false;
+	}
+};
 
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
@@ -52,7 +66,7 @@ export class ClientTaskManager {
 	}
 
 	/**
-	 * @description Store commitments externally in the database
+	 * @description Store commitments externally in the database (Sends image captcha data to the big Mongo Cloud DB)
 	 * @returns Promise<void>
 	 */
 	async storeCommitmentsExternal(): Promise<void> {
@@ -90,13 +104,12 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((commitment) => this.isCommitmentUpdated(commitment))
+						? batch.filter((commitment) => this.isRecordUpdated(commitment))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatch, []);
+						await captchaDB.saveCaptchas([], filteredBatch, []);
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
 						);
@@ -114,13 +127,12 @@ export class ClientTaskManager {
 						skip,
 					),
 				async (batch) => {
-					const lastUpdated = lastTask?.updated || 0;
 					const filteredBatch = lastTask?.updated
-						? batch.filter((record) => this.isCommitmentUpdated(record))
+						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], filteredBatch);
+						await captchaDB.saveCaptchas([], [], filteredBatch);
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
 						);
@@ -129,11 +141,67 @@ export class ClientTaskManager {
 				},
 			);
 
+			// process session records with cursor
+			let processedSessionRecords = 0;
+			await this.processBatchesWithCursor(
+				async (skip: number) =>
+					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, skip),
+				async (batch) => {
+					const filteredBatch = lastTask?.updated
+						? batch.filter((record) => this.isRecordUpdated(record))
+						: batch;
+					// get corresponding frictionless scores
+					const frictionlessTokenRecords =
+						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
+							filteredBatch.map((record) => record.tokenId),
+						);
+					this.logger.info(
+						`Frictionless token records: ${frictionlessTokenRecords.length}`,
+					);
+					// attach scores to session records
+					const filteredBatchWithScores = filteredBatch.map((record) => {
+						const tokenRecord = frictionlessTokenRecords.find(
+							(tokenRecord) =>
+								tokenRecord._id?.toString() === record.tokenId.toString(),
+						);
+						if (!tokenRecord) {
+							this.logger.error({
+								message: "No token record found",
+								context: { tokenId: record.tokenId },
+							});
+							return {
+								...record,
+								score: 0,
+								scoreComponents: {
+									baseScore: 0,
+								},
+								threshold: 0,
+							} as StoredSession;
+						}
+						return {
+							...record,
+							score: tokenRecord?.score || 0,
+							scoreComponents: tokenRecord?.scoreComponents,
+							threshold: tokenRecord?.threshold || 0,
+						} as StoredSession;
+					});
+
+					if (filteredBatch.length > 0) {
+						await captchaDB.saveCaptchas(filteredBatchWithScores, [], []);
+						await this.providerDB.markSessionRecordsStored(
+							filteredBatch.map((record) => record.sessionId),
+						);
+					}
+					processedSessionRecords += filteredBatch.length;
+				},
+			);
+
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
+						processedSessionRecords,
 						processedCommitments,
 						processedPowRecords,
 					},
@@ -178,10 +246,14 @@ export class ClientTaskManager {
 			);
 
 			// Get updated client records within a ten minute window of the last completed task
-			const tenMinuteWindow = new Date().getTime() - 10 * 60 * 1000;
+			const tenMinuteWindow = 10 * 60 * 1000;
 			const updatedAtTimestamp = lastTask?.updated
 				? lastTask.updated - tenMinuteWindow || 0
 				: 0;
+
+			this.logger.info({
+				message: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
+			});
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
@@ -215,87 +287,37 @@ export class ClientTaskManager {
 
 	async registerSiteKey(
 		siteKey: string,
+		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
+		validiateSiteKey(siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
+				tier: tier,
 				settings: settings,
 			} as ClientRecord,
 		]);
 	}
 
-	/**
-	 * @description Add IP block rules to the database. Allows specifying mutiple IPs for a single configuration
-	 * @param {AddBlockRulesIP} rulesets
-	 */
-	async addIPBlockRules(rulesets: AddBlockRulesIP): Promise<void> {
-		for (const ruleset of rulesets) {
-			const rules: IPAddressBlockRule[] = ruleset.ips.map((ip) => {
-				return {
-					ip: Number(getIPAddress(ip).bigInt()),
-					global: ruleset.global,
-					type: BlockRuleType.ipAddress,
-					dappAccount: ruleset.dappAccount,
-					hardBlock: ruleset.hardBlock,
-					...(ruleset.captchaConfig && {
-						captchaConfig: ruleset.captchaConfig,
-					}),
-				};
+	async updateDetectorKey(detectorKey: string): Promise<void> {
+		if (!isValidPrivateKey(detectorKey)) {
+			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+				context: { detectorKey },
+				logger: this.logger,
 			});
-			await this.providerDB.storeIPBlockRuleRecords(rules);
 		}
+		await this.providerDB.storeDetectorKey(detectorKey);
 	}
 
-	/**
-	 * @description Remove IP block rules from the database by IP address and optionally dapp account
-	 * @param {RemoveBlockRulesIP} opts
-	 */
-	async removeIPBlockRules(opts: RemoveBlockRulesIP): Promise<void> {
-		await this.providerDB.removeIPBlockRuleRecords(
-			opts.ips.map((ip) => getIPAddress(ip).bigInt()),
-			opts.dappAccount,
-		);
-	}
-
-	/**
-	 * @description Add user block rules to the database. Allows specifying multiple users for a single configuration
-	 * @param {AddBlockRulesUser} rulesets
-	 */
-	async addUserBlockRules(rulesets: AddBlockRulesUser): Promise<void> {
-		for (const ruleset of rulesets) {
-			validateAddress(ruleset.dappAccount, false, 42);
-			const rules: UserAccountBlockRule[] = ruleset.users.map((userAccount) => {
-				validateAddress(userAccount, false, 42);
-				return {
-					dappAccount: ruleset.dappAccount,
-					userAccount,
-					type: BlockRuleType.userAccount,
-					global: ruleset.global,
-					hardBlock: ruleset.hardBlock,
-					...(ruleset.captchaConfig && {
-						captchaConfig: ruleset.captchaConfig,
-					}),
-				};
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		if (!isValidPrivateKey(detectorKey)) {
+			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
+				context: { detectorKey },
+				logger: this.logger,
 			});
-			await this.providerDB.storeUserBlockRuleRecords(rules);
 		}
-	}
-
-	/**
-	 * @description Remove user block rules from the database by user account and optionally dapp account
-	 * @param {RemoveBlockRulesUser} opts
-	 */
-	async removeUserBlockRules(opts: RemoveBlockRulesUser): Promise<void> {
-		if (opts.dappAccount) {
-			validateAddress(opts.dappAccount, false, 42);
-			await this.providerDB.removeUserBlockRuleRecords(
-				opts.users,
-				opts.dappAccount,
-			);
-		} else {
-			await this.providerDB.removeUserBlockRuleRecords(opts.users);
-		}
+		await this.providerDB.removeDetectorKey(detectorKey);
 	}
 
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
@@ -304,9 +326,6 @@ export class ClientTaskManager {
 		try {
 			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
 			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
-
-			// Special case for localhost
-			if (referrerDomain === "localhost") return true;
 
 			return (
 				referrerDomain === allowedDomain ||
@@ -321,10 +340,10 @@ export class ClientTaskManager {
 		}
 	}
 
-	private isCommitmentUpdated(
-		commitment: UserCommitment | PoWCaptchaStored,
+	private isRecordUpdated(
+		record: UserCommitment | PoWCaptchaStored | SessionRecord,
 	): boolean {
-		const { lastUpdatedTimestamp, storedAtTimestamp } = commitment;
+		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (
 			!lastUpdatedTimestamp ||
 			!storedAtTimestamp ||
@@ -344,21 +363,5 @@ export class ClientTaskManager {
 			await processBatch(batch);
 			skip += batch.length;
 		}
-	}
-
-	private cleanReferrer(referrer: string): string {
-		const lowered = referrer.toLowerCase().trim();
-
-		// Remove trailing slashes safely
-		let cleaned = lowered;
-		const MAX_SLASHES = 10;
-		let slashCount = 0;
-
-		while (cleaned.endsWith("/") && slashCount < MAX_SLASHES) {
-			cleaned = cleaned.slice(0, -1);
-			slashCount++;
-		}
-
-		return cleaned;
 	}
 }

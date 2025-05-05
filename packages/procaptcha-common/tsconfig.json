@@ -20,6 +20,12 @@
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../widget-skeleton"
+		},
+		{
+			"path": "../account"
 		}
 	]
 }

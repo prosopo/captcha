@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,16 +18,26 @@ export const getURLProtocol = (url: URL) => {
 	return "https";
 };
 
-export const parseUrl = (domain: string) =>
-	new URL(`https://${domain.replace(/^https?:\/\//, "")}`);
+export const parseUrl = (domain: string) => {
+	//check the url is not an email address
+	if (domain.match(/@/)) {
+		throw new Error("Invalid domain");
+	}
+
+	return new URL(
+		`https://${domain.replace(/^https?:\/\//, "").replace(/^www\./, "")}`,
+	);
+};
 
 export const validateDomain = (domain: string): boolean => {
-	if (domain.length > 253) return false;
+	if (domain.length > 253) {
+		return false;
+	}
 
 	// https://stackoverflow.com/a/57129472/1178971
 	if (
 		!domain.match(
-			/^(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})$/,
+			/^\s*(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25})(\s*,\s*(?!.*?_.*?)(?!(?:[\d\w]+?\.)?\-[\w\d\.\-]*?)(?![\w\d]+?\-\.(?:[\d\w\.\-]+?))(?=[\w\d])(?=[\w\d\.\-]*?\.+[\w\d\.\-]*?)(?![\w\d\.\-]{254})(?!(?:\.?[\w\d\-\.]*?[\w\d\-]{64,}\.)+?)[\w\d\.\-]+?(?<![\w\d\-\.]*?\.[\d]+?)(?<=[\w\d\-]{2,})(?<![\w\d\-]{25}))*$/,
 		)
 	) {
 		return false;
@@ -41,3 +51,6 @@ export const validateDomain = (domain: string): boolean => {
 
 	return true;
 };
+
+export const domainIsLocalhost = (domain: string) =>
+	domain === "localhost" || domain === "127.0.0.1";

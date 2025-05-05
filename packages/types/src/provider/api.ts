@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ import {
 	type infer as zInfer,
 } from "zod";
 import { ApiParams } from "../api/params.js";
+import type { CaptchaType } from "../client/captchaType/captchaType.js";
+import { ClientSettingsSchema, Tier } from "../client/index.js";
 import {
 	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -57,7 +59,7 @@ export const ApiPrefix = "/v1/prosopo" as const;
 
 export type IPAddress = Address4 | Address6;
 
-export enum ApiPaths {
+export enum ClientApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
 	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
@@ -66,48 +68,53 @@ export enum ApiPaths {
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
-	GetProviderDetails = "/v1/prosopo/provider/public/details",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 }
 
+export enum PublicApiPaths {
+	GetProviderDetails = "/v1/prosopo/provider/public/details",
+}
+
 export type TGetImageCaptchaChallengePathAndParams =
-	`${ApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
+	`${ClientApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
 
 export type TGetImageCaptchaChallengeURL =
 	`${string}${TGetImageCaptchaChallengePathAndParams}`;
 
 export type TGetPowCaptchaChallengeURL =
-	`${string}${ApiPaths.GetPowCaptchaChallenge}`;
+	`${string}${ClientApiPaths.GetPowCaptchaChallenge}`;
 
 export type TSubmitPowCaptchaSolutionURL =
-	`${string}${ApiPaths.SubmitPowCaptchaSolution}`;
+	`${string}${ClientApiPaths.SubmitPowCaptchaSolution}`;
 
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
-	BlockRuleIPAdd = "/v1/prosopo/provider/admin/blockrule/ip/add",
-	BlockRuleIPRemove = "/v1/prosopo/provider/admin/blockrule/ip/remove",
-	BlocKRuleUserAdd = "/v1/prosopo/provider/admin/blockrule/user/add",
-	BlockRuleUserRemove = "/v1/prosopo/provider/admin/blockrule/user/remove",
+	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
+	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 }
 
-export type CombinedApiPaths = ApiPaths | AdminApiPaths;
+export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 
 export const ProviderDefaultRateLimits = {
-	[ApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
-	[ApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.GetFrictionlessCaptchaChallenge]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.VerifyImageCaptchaSolutionDapp]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
-	[ApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
+	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
+		windowMs: 60000,
+		limit: 60,
+	},
+	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		windowMs: 60000,
+		limit: 60,
+	},
+	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
+	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlockRuleIPAdd]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlockRuleIPRemove]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlocKRuleUserAdd]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.BlockRuleUserRemove]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -183,6 +190,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.user]: string(),
 	[ApiParams.dapp]: string(),
 	[ApiParams.datasetId]: union([string(), array(number())]),
+	[ApiParams.sessionId]: string().optional(),
 });
 
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
@@ -222,17 +230,6 @@ export const VerifySolutionBody = object({
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
 export type VerifySolutionBodyTypeOutput = output<typeof VerifySolutionBody>;
 
-export interface PendingCaptchaRequest {
-	accountId: string;
-	pending: boolean;
-	salt: string;
-	[ApiParams.requestHash]: string;
-	deadlineTimestamp: number; // unix timestamp
-	requestedAtTimestamp: number; // unix timestamp
-	ipAddress: bigint;
-	headers: RequestHeaders;
-}
-
 export interface UpdateProviderClientsResponse extends ApiResponse {
 	message: string;
 }
@@ -248,6 +245,7 @@ export interface ApiResponse {
 
 export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
+	[ApiParams.score]?: number;
 }
 
 export interface ImageVerificationResponse extends VerificationResponse {
@@ -264,7 +262,7 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]: "pow" | "image";
+	[ApiParams.captchaType]: CaptchaType.pow | CaptchaType.image;
 	[ApiParams.sessionId]?: string;
 }
 
@@ -347,13 +345,15 @@ export const VerifyPowCaptchaSolutionBody = object({
 
 export const RegisterSitekeyBody = object({
 	[ApiParams.siteKey]: string(),
-	[ApiParams.settings]: object({
-		[ApiParams.captchaType]: string(),
-		[ApiParams.domains]: array(string()),
-		[ApiParams.frictionlessThreshold]: number(),
-		[ApiParams.powDifficulty]: number(),
-	}).optional(),
+	[ApiParams.tier]: nativeEnum(Tier),
+	[ApiParams.settings]: ClientSettingsSchema.optional(),
 });
+
+export const UpdateDetectorKeyBody = object({
+	[ApiParams.detectorKey]: string(),
+});
+
+export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({
@@ -392,42 +392,6 @@ export const BlockRuleSpec = object({
 });
 
 export type BlockRule = zInfer<typeof BlockRuleSpec>;
-
-export const AddBlockRulesIPSpec = array(
-	BlockRuleSpec.merge(
-		object({
-			ips: array(string()),
-		}),
-	),
-);
-
-export type AddBlockRulesIP = zInfer<typeof AddBlockRulesIPSpec>;
-
-export const RemoveBlockRulesIPSpec = object({
-	ips: array(string()),
-	dappAccount: string().optional(),
-});
-
-export type RemoveBlockRulesIP = zInfer<typeof RemoveBlockRulesIPSpec>;
-
-export const BlockRuleIPAddBody = array(AddBlockRulesIPSpec);
-
-export const AddBlockRulesUserSpec = array(
-	BlockRuleSpec.merge(
-		object({
-			users: array(string()),
-		}),
-	),
-);
-
-export type AddBlockRulesUser = zInfer<typeof AddBlockRulesUserSpec>;
-
-export const RemoveBlockRulesUserSpec = object({
-	users: array(string()),
-	dappAccount: string().optional(),
-});
-
-export type RemoveBlockRulesUser = zInfer<typeof RemoveBlockRulesUserSpec>;
 
 export const DappDomainRequestBody = object({
 	[ApiParams.dapp]: string(),

@@ -1,4 +1,4 @@
-// Copyright 2021-2024 Prosopo (UK) Ltd.
+// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { LanguageSchema } from "@prosopo/locale";
-import type { ProcaptchaToken } from "@prosopo/types";
+import type { Languages } from "@prosopo/locale";
+import type { CaptchaType } from "@prosopo/types";
 
-export enum FeaturesEnum {
-	Image = "image",
-	Pow = "pow",
-	Frictionless = "frictionless",
-}
+export type Features = `${CaptchaType}`;
 
-export type Features = `${FeaturesEnum}`;
-
+// note: do not use any Zod-related types inside the interface,
+// as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
 export interface ProcaptchaRenderOptions {
 	siteKey: string;
 	theme?: "light" | "dark";
 	captchaType?: Features;
-	callback?: string | ((token: ProcaptchaToken) => void);
+	callback?: string | ((token: string) => void);
 	"challenge-valid-length"?: string; // seconds for successful challenge to be valid
 	"chalexpired-callback"?: string | (() => void);
 	"expired-callback"?: string | (() => void);
@@ -36,5 +32,6 @@ export interface ProcaptchaRenderOptions {
 	"error-callback"?: string | (() => void);
 	"failed-callback"?: string | (() => void);
 	"reset-callback"?: string | (() => void);
-	language?: typeof LanguageSchema;
+	language?: (typeof Languages)[keyof typeof Languages];
+	size?: "invisible";
 }
