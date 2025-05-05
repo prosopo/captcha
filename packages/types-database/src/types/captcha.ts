@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { RootFilterQuery, Schema } from "mongoose";
+import type { PoWCaptcha } from "@prosopo/types";
+import { type RootFilterQuery, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
 	FrictionlessTokenRecordSchema,
@@ -20,10 +21,9 @@ import {
 	type ScoreComponents,
 	type SessionRecord,
 	SessionRecordSchema,
-	UserCommitment,
+	type UserCommitment,
 	type UserCommitmentRecord,
 } from "./provider.js";
-import { PoWCaptcha } from "@prosopo/types";
 
 export type StoredSession = Pick<
 	SessionRecord,
