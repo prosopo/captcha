@@ -207,9 +207,9 @@ const getOutExtension = (fileExtension: string) => {
 	}
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 const getOutDir = (
 	file: string,
+	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 	tsconfig: { [key: string]: any },
 	packageDir: string,
 ) => {
