@@ -62,6 +62,22 @@ batch.timeout_secs = 10 # time to wait before sending a batch
 batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
 batch.max_events = 100000 # max number of events per batch
 
+[sinks.prosopo_provider2]
+type = "http"
+inputs = ["caddy_format"]
+uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
+
 # listen to docker events for containers starting+ending
 [sources.docker]
 type = "exec"
@@ -141,6 +157,22 @@ batch.timeout_secs = 10 # time to wait before sending a batch
 batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
 batch.max_events = 100000 # max number of events per batch
 
+[sinks.prosopo_docker2]
+type = "http"
+inputs = ["caddy_format"]
+uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
+
 [sources.caddy]
 type = "docker_logs"
 include_labels = ["vector.caddy=true"]
@@ -185,6 +217,22 @@ batch.max_events = 100000 # max number of events per batch
 type = "http"
 inputs = ["caddy_format"]
 uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "$OO_USERNAME"
+auth.password = "$OO_PASSWORD"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 10 # time to wait before sending a batch
+batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
+batch.max_events = 100000 # max number of events per batch
+
+[sinks.prosopo_caddy2]
+type = "http"
+inputs = ["caddy_format"]
+uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "$OO_USERNAME"
