@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MongooseConnectionCleaner } from "./connectionCleaner/mongooseConnectionCleaner.js";
-import { RulesStorageBenchmark } from "./rulesStorageBenchmark.js";
-import { MongooseRulesStorageFactory } from "./storageFactory/mongooseRulesStorageFactory.js";
+import { vi } from "vitest";
 
-const rulesStorageFactory = new MongooseRulesStorageFactory();
-const connectionCleaner = new MongooseConnectionCleaner();
+const mockedLogger = {
+	trace: vi.fn(),
+	debug: vi.fn(),
+	info: vi.fn(),
+	warn: vi.fn(),
+	error: vi.fn(),
+	fatal: vi.fn(),
+	log: vi.fn(),
+	setLogLevel: vi.fn(),
+	getLogLevel: vi.fn(),
+};
 
-const benchmark = new RulesStorageBenchmark(
-	rulesStorageFactory,
-	connectionCleaner,
-);
-
-await benchmark.processInput();
+export { mockedLogger };

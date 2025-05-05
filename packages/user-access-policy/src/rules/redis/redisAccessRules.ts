@@ -7,10 +7,10 @@ import type { Logger } from "@prosopo/common";
 import {
 	getAccessRulesQuery,
 	accessRulesSearchOptions,
-} from "./redisAccessRulesIndex.js";
+} from "./index/redisAccessRulesIndex.js";
 
 export const createAccessRulesReader = (
-	redisClient: RedisClientType,
+	client: RedisClientType,
 	indexName: string,
 	logger: Logger,
 ): AccessRulesReader => {
@@ -20,7 +20,7 @@ export const createAccessRulesReader = (
 		): Promise<AccessRule[]> => {
 			const query = getAccessRulesQuery(policyScope);
 
-			const searchReply = await redisClient.ft.search(
+			const searchReply = await client.ft.search(
 				indexName,
 				query,
 				accessRulesSearchOptions,
@@ -40,7 +40,7 @@ export const createAccessRulesReader = (
 		findRuleIds: async (policyScope: AccessPolicyScope): Promise<string[]> => {
 			const query = getAccessRulesQuery(policyScope);
 
-			const records = await redisClient.ft.searchNoContent(
+			const records = await client.ft.searchNoContent(
 				indexName,
 				query,
 				accessRulesSearchOptions,
@@ -59,17 +59,8 @@ export const createAccessRulesReader = (
 	};
 };
 
-// fixme
-/*import * as crypto from "node:crypto";
-const getObjectHash = (algorithm: string, rule: AccessRule): string => {
-	return crypto
-		.createHash(algorithm)
-		.update(JSON.stringify(rule))
-		.digest("hex");
-};*/
-
 export const createAccessRulesWriter = (
-	redisClient: RedisClientType,
+	client: RedisClientType,
 	resolveRuleKey: (rule: AccessRule) => string,
 ): AccessRulesWriter => {
 	return {
@@ -79,15 +70,15 @@ export const createAccessRulesWriter = (
 		): Promise<void> => {
 			const ruleKey = resolveRuleKey(rule);
 
-			await redisClient.hSet(ruleKey, rule);
+			await client.hSet(ruleKey, rule);
 
 			if (expirationTimestamp) {
-				await redisClient.expireAt(ruleKey, expirationTimestamp);
+				await client.expireAt(ruleKey, expirationTimestamp);
 			}
 		},
 
 		deleteRules: async (ruleIds: string[]): Promise<void> => {
-			await redisClient.del(ruleIds);
+			await client.del(ruleIds);
 		},
 	};
 };
