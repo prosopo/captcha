@@ -55,6 +55,7 @@ export class ClientTaskManager {
 	config: ProsopoConfigOutput;
 	logger: Logger;
 	providerDB: IProviderDatabase;
+	captchaDB: CaptchaDatabase | undefined;
 	constructor(
 		config: ProsopoConfigOutput,
 		logger: Logger,
@@ -63,6 +64,25 @@ export class ClientTaskManager {
 		this.config = config;
 		this.logger = logger;
 		this.providerDB = db;
+	}
+
+	/**
+	 * @description Get the captcha database connection or create a new one
+	 * @returns CaptchaDatabase
+	 */
+	getCaptchaDB(mongoCaptchaUri: string): CaptchaDatabase {
+		if (this.captchaDB) {
+			return this.captchaDB;
+		}
+		if (!this.captchaDB) {
+			this.captchaDB = new CaptchaDatabase(
+				mongoCaptchaUri,
+				undefined,
+				undefined,
+				this.logger,
+			);
+		}
+		return this.captchaDB;
 	}
 
 	/**
@@ -87,12 +107,7 @@ export class ClientTaskManager {
 
 		try {
 			const BATCH_SIZE = 1000;
-			const captchaDB = new CaptchaDatabase(
-				this.config.mongoCaptchaUri,
-				undefined,
-				undefined,
-				this.logger,
-			);
+			const captchaDB = this.getCaptchaDB(this.config.mongoCaptchaUri);
 
 			// Process image commitments with cursor
 			let processedCommitments = 0;
@@ -207,8 +222,10 @@ export class ClientTaskManager {
 					},
 				},
 			);
+			this.captchaDB?.close();
 		} catch (e: unknown) {
 			this.logger.error(e);
+			this.captchaDB?.close();
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
