@@ -17,8 +17,10 @@ import {
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	StoredPoWCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
+	StoredUserCommitmentRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -42,12 +44,12 @@ const CAPTCHA_TABLES = [
 	{
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
-		schema: PoWCaptchaRecordSchema,
+		schema: StoredPoWCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
-		schema: UserCommitmentRecordSchema,
+		schema: StoredUserCommitmentRecordSchema,
 	},
 ];
 
@@ -92,9 +94,10 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (sessionEvents.length) {
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
+					const { _id, ...safeDoc } = document;
 					return {
 						insertOne: {
-							document: document,
+							document: safeDoc,
 						},
 					};
 				}),
