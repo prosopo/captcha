@@ -22,24 +22,18 @@ import { checkIfTaskIsRunning } from "../util.js";
 /**
  * Get the list of registered clients that have access to the product on a schedule.
  * @param pair
+ * @param cronSchedule
  * @param config
  */
 export async function getClientList(
 	pair: KeyringPair,
+	cronSchedule: string,
 	config: ProsopoConfigOutput,
 ) {
 	const env = new ProviderEnvironment(config, pair);
 	await env.isReady();
 
 	const tasks = new Tasks(env);
-
-	// Set the cron schedule to run on user configured schedule or every hour
-	const defaultSchedule = "0 * * * *";
-	const cronSchedule = config.scheduledTasks?.clientListScheduler
-		? config.scheduledTasks.clientListScheduler.schedule
-			? config.scheduledTasks.clientListScheduler.schedule
-			: defaultSchedule
-		: defaultSchedule;
 
 	const job = new CronJob(cronSchedule, async () => {
 		const taskRunning = await checkIfTaskIsRunning(
