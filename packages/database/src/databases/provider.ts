@@ -98,7 +98,7 @@ enum TableNames {
 	slidercaptcha = "slidercaptcha",
 	client = "client",
 	frictionlessToken = "frictionlessToken",
-	sessions = "sessions",
+	session = "session",
 	userAccessRules = "userAccessRules",
 	detector = "detector",
 }
@@ -160,7 +160,7 @@ const PROVIDER_TABLES = [
 		schema: FrictionlessTokenRecordSchema,
 	},
 	{
-		collectionName: TableNames.sessions,
+		collectionName: TableNames.session,
 		modelName: "Session",
 		schema: SessionRecordSchema,
 	},
@@ -985,7 +985,7 @@ export class ProviderDatabase
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
 			this.logger.debug({ action: "storing", sessionRecord });
-			await this.tables.sessions.create(sessionRecord);
+			await this.tables.session.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
 				context: { error: err, sessionId: sessionRecord.sessionId },
@@ -1746,7 +1746,7 @@ export class ProviderDatabase
 		sessionId: string,
 	): Promise<SessionRecord | null> {
 		try {
-			return await this.tables.sessions.findOne({ sessionId });
+			return await this.tables.session.findOne({ sessionId });
 		} catch (err) {
 			this.logger.error("Failed to get session record", { err, sessionId });
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
