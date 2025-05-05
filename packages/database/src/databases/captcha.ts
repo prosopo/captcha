@@ -14,19 +14,28 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
+	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
-	type SliderCaptchaRecord,
+	SliderCaptchaRecord,
 	SliderCaptchaRecordSchema,
+	StoredPoWCaptchaRecordSchema,
+	type StoredSession,
+	StoredSessionRecordSchema,
+	StoredUserCommitmentRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
+import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
+
 const logger = getLoggerDefault();
 
 enum TableNames {
+	frictionlessToken = "frictionlessToken",
+	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 	slidercaptcha = "slidercaptcha",
@@ -34,14 +43,19 @@ enum TableNames {
 
 const CAPTCHA_TABLES = [
 	{
+		collectionName: TableNames.session,
+		modelName: "Session",
+		schema: StoredSessionRecordSchema,
+	},
+	{
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
-		schema: PoWCaptchaRecordSchema,
+		schema: StoredPoWCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
-		schema: UserCommitmentRecordSchema,
+		schema: StoredUserCommitmentRecordSchema,
 	},
 	{
 		collectionName: TableNames.slidercaptcha,
@@ -83,11 +97,26 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async saveCaptchas(
+		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		sliderCaptchaEvents: SliderCaptchaRecord[] = [],
 	) {
 		await this.connect();
+		if (sessionEvents.length) {
+			const result = await this.tables.session.bulkWrite(
+				sessionEvents.map((document) => {
+					const { _id, ...safeDoc } = document;
+					return {
+						insertOne: {
+							document: safeDoc,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved Session Events", result.insertedCount);
+		}
+
 		if (imageCaptchaEvents.length) {
 			const result = await this.tables.commitment.bulkWrite(
 				imageCaptchaEvents.map((doc) => {
@@ -138,5 +167,44 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		}
 
 		await this.close();
+	}
+
+	async getCaptchas(
+		filter: RootFilterQuery<CaptchaProperties> = {},
+		limit = 100,
+	): Promise<{
+		userCommitmentRecords: UserCommitmentRecord[];
+		powCaptchaRecords: PoWCaptchaRecord[];
+	}> {
+		await this.connect();
+
+		try {
+			const commitmentResults = await this.tables.commitment
+				.find(filter)
+				.limit(limit)
+				.lean<UserCommitmentRecord[]>();
+
+			const powCaptchaResults = await this.tables.powcaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<PoWCaptchaRecord[]>();
+
+			return {
+				userCommitmentRecords: commitmentResults,
+				powCaptchaRecords: powCaptchaResults,
+			};
+		} catch (error) {
+			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {
+				context: {
+					error,
+					filter,
+					limit,
+					failedFuncName: this.getCaptchas.name,
+				},
+				logger: this.logger,
+			});
+		} finally {
+			await this.close();
+		}
 	}
 }
