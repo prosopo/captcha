@@ -9,21 +9,30 @@ import {createRedisIndex, type RedisIndex} from "./redisIndex.js";
 
 const accessRulesIndex: RedisIndex = {
     name: "index:user-access-rules",
+    /**
+     * Note on the field type decision
+     *
+     * TAG is designed for the exact value matching
+     * TEXT is designed for the word-based and pattern matching
+     *
+     * For our goal TAG fits perfectly and, more performant
+     */
     schema: {
         clientId: {
             type: SCHEMA_FIELD_TYPE.TAG,
             // necessary to make possible use of the ismissing() function on this field in the search
             INDEXMISSING: true,
         },
-        id: SCHEMA_FIELD_TYPE.TAG,
+        userId: SCHEMA_FIELD_TYPE.TAG,
         ip: SCHEMA_FIELD_TYPE.NUMERIC,
-        ja4Fingerprint: SCHEMA_FIELD_TYPE.TAG,
-        headersFingerprint: SCHEMA_FIELD_TYPE.TAG
+        ja4Hash: SCHEMA_FIELD_TYPE.TAG,
+        headersHash: SCHEMA_FIELD_TYPE.TAG,
+        userAgentHash: SCHEMA_FIELD_TYPE.TAG,
     } satisfies Partial<Record<keyof AccessRule, string | object>>,
     // the satisfy statement is to guarantee that the keys are right
     options: {
         ON: "HASH" as const,
-        // index names take space as well, so long-tailed ones take extra space in the large sets
+        // index names take space, so we use an acronym instead of the long-tailed one
         PREFIX: "uar:",
     },
 }

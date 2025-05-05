@@ -11,4 +11,6 @@ export type AccessRulesWriter = {
 	insertRule(rule: AccessRule, expirationTimestamp?: number): Promise<void>;
 
 	deleteRules(ruleIds: string[]): Promise<void>;
+
+	deleteAllRules(): Promise<void>;
 };
