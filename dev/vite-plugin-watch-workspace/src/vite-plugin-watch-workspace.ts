@@ -25,7 +25,11 @@ type PackageDirPath = string;
 
 type FilePath = string;
 
-type ExternalFile<Key extends PropertyKey, Value, AdditionalInfo> = [Key, Value, AdditionalInfo];
+type ExternalFile<Key extends PropertyKey, Value, AdditionalInfo> = [
+	Key,
+	Value,
+	AdditionalInfo,
+];
 
 type ExternalFiles = Record<FilePath, [TsConfigPath, PackageDirPath]>;
 
@@ -84,7 +88,7 @@ const getFilesAndTsConfigs = async (
 		? currentPackage
 		: `${currentPackage}/**/*`;
 	const tsconfig = getTsConfigFollowExtends(tsConfigPath);
-	const rootDir = tsconfig.compilerOptions.rootDir ?? '.';
+	const rootDir = tsconfig.compilerOptions.rootDir ?? ".";
 	const files = await fg(
 		path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`),
 		{
@@ -114,7 +118,7 @@ const getExternalFileLists = async (
 	const filesConfigs: ExternalFile<FilePath, TsConfigPath, PackageDirPath>[] = (
 		await Promise.all(
 			workspaces.map(async (workspace: string) => {
-				if(workspace.indexOf('*') >= 0) {
+				if (workspace.indexOf("*") >= 0) {
 					// get directories in each workspace
 					const workspacePath = path.resolve(
 						workspaceRoot,
@@ -141,26 +145,26 @@ const getExternalFileLists = async (
 								),
 						),
 					);
-				} else {
-					const packages = [ path.resolve(workspaceRoot, workspace) ]
-					log('reading single package', workspace);
-					return await Promise.all(
-						packages.map(async (packageDir) => 
+				}
+				const packages = [path.resolve(workspaceRoot, workspace)];
+				log("reading single package", workspace);
+				return await Promise.all(
+					packages.map(
+						async (packageDir) =>
 							await getFilesAndTsConfigs(
 								workspace,
 								currentPackage,
 								packageDir,
 								fileTypes,
-								ignorePaths
-								)
-						)
-					);
-				}
+								ignorePaths,
+							),
+					),
+				);
 			}),
 		)
 	).flatMap((filesConfigs) => filesConfigs.flat());
 	for (const [file, tsconfig, packageDir] of filesConfigs) {
-		externalFiles[file] = [ tsconfig, packageDir ];
+		externalFiles[file] = [tsconfig, packageDir];
 	}
 	return externalFiles;
 };
@@ -203,24 +207,21 @@ const getOutExtension = (fileExtension: string) => {
 	}
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-const getOutDir = (file: string, tsconfig: { [key: string]: any }, packageDir: string) => {
-	const rootDir = tsconfig.compilerOptions.rootDir ?? '.'
-	const outDir = tsconfig.compilerOptions.outDir ?? 'dist'
+const getOutDir = (
+	file: string,
+	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
+	tsconfig: { [key: string]: any },
+	packageDir: string,
+) => {
+	const rootDir = tsconfig.compilerOptions.rootDir ?? ".";
+	const outDir = tsconfig.compilerOptions.outDir ?? "dist";
 
-	if(rootDir === '.') {
-		return path.dirname(file).replace(packageDir, packageDir + '/' + outDir);
-	} else {
-	const rootFolder = rootDir.replace(
-		RELATIVE_PATH_REGEX,
-		"",
-	);
-	const outFolder = outDir.replace(
-		RELATIVE_PATH_REGEX,
-		"",
-	);
-	return path.dirname(file).replace(rootFolder, outFolder);
+	if (rootDir === ".") {
+		return path.dirname(file).replace(packageDir, `${packageDir}/${outDir}`);
 	}
+	const rootFolder = rootDir.replace(RELATIVE_PATH_REGEX, "");
+	const outFolder = outDir.replace(RELATIVE_PATH_REGEX, "");
+	return path.dirname(file).replace(rootFolder, outFolder);
 };
 
 const getOutFile = (outdir: string, file: string, fileExtension: string) => {
