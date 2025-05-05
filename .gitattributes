@@ -1,0 +1,2 @@
+# choose remote package-lock.json on merge
+**/package-lock.json merge=theirs
