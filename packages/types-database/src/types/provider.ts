@@ -103,6 +103,8 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	geolocation?: string;
+	vpn?: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 	frictionlessTokenId?: FrictionlessTokenId;
@@ -209,6 +211,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	geolocation: { type: String, required: false },
+	vpn: { type: Boolean, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -244,6 +248,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Number, required: false },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
+	geolocation: { type: String, required: false },
+	vpn: { type: Boolean, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
