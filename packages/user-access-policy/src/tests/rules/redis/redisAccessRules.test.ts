@@ -58,7 +58,7 @@ describe("redisAccessRules", () => {
 	});
 
 	beforeEach(async () => {
-		const keys = await redisClient.keys(accessRuleIndexName);
+		const keys = await redisClient.keys("*");
 
 		if (keys.length > 0) {
 			await redisClient.del(keys);
@@ -298,65 +298,86 @@ describe("redisAccessRules", () => {
 			expect(foundAccessRules).toEqual([johnIpAccessRule, globalJa4AccessRule]);
 		});
 
-		// fixme finds client and global rules by ip mask
-		test("finds rules by ip mask", async () => {
+		test("finds client and global rules by ip", async () => {
 			// given
-			const ipMask_0_100_AccessRule: AccessRule = {
+			const johnId = getUniqueString();
+
+			const johnIpMask_0_100_AccessRule: AccessRule = {
+				clientId: johnId,
 				type: AccessPolicyType.Block,
 				numericIpMaskMin: "0",
 				numericIpMaskMax: "100",
 			};
-			const ipMask_0_100_AccessRuleKey = getAccessRuleKey(
-				ipMask_0_100_AccessRule,
+			const johnIpMask_0_100_AccessRuleKey = getAccessRuleKey(
+				johnIpMask_0_100_AccessRule,
 			);
 
-			const ip_100_AccessRule: AccessRule = {
+			const johnIp_100_AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				numericIp: "100",
 			};
-			const ip_100_AccessRuleKey = getAccessRuleKey(ip_100_AccessRule);
+			const johnIp_100_AccessRuleKey = getAccessRuleKey(johnIp_100_AccessRule);
 
-			const ipMask_100_200_AccessRule: AccessRule = {
+			const globalIpMask_100_200_AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				numericIpMaskMin: "100",
 				numericIpMaskMax: "200",
 			};
-			const ipMask_100_200_AccessRuleKey = getAccessRuleKey(
-				ipMask_100_200_AccessRule,
+			const globalIpMask_100_200_AccessRuleKey = getAccessRuleKey(
+				globalIpMask_100_200_AccessRule,
+			);
+
+			const doeIpMask_200_300AccessRule: AccessRule = {
+				clientId: getUniqueString(),
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: "200",
+				numericIpMaskMax: "300",
+			};
+			const doeIpMask_200_300AccessRuleKey = getAccessRuleKey(
+				doeIpMask_200_300AccessRule,
 			);
 
 			await redisClient.hSet(
-				ipMask_0_100_AccessRuleKey,
-				ipMask_0_100_AccessRule,
+				johnIpMask_0_100_AccessRuleKey,
+				johnIpMask_0_100_AccessRule,
 			);
-			await redisClient.hSet(ip_100_AccessRuleKey, ip_100_AccessRule);
+			await redisClient.hSet(johnIp_100_AccessRuleKey, johnIp_100_AccessRule);
 			await redisClient.hSet(
-				ipMask_100_200_AccessRuleKey,
-				ipMask_100_200_AccessRule,
+				globalIpMask_100_200_AccessRuleKey,
+				globalIpMask_100_200_AccessRule,
+			);
+			await redisClient.hSet(
+				doeIpMask_200_300AccessRuleKey,
+				doeIpMask_200_300AccessRule,
 			);
 
 			// when
 			const ip_0_AccessRules = await accessRulesReader.findRules({
+				clientId: johnId,
 				userAttributes: {
 					numericIp: "0",
 				},
 			});
 			const ip_99_AccessRules = await accessRulesReader.findRules({
+				clientId: johnId,
 				userAttributes: {
 					numericIp: "99",
 				},
 			});
 			const ip_100_AccessRules = await accessRulesReader.findRules({
+				clientId: johnId,
 				userAttributes: {
 					numericIp: "100",
 				},
 			});
 			const ip_101_AccessRules = await accessRulesReader.findRules({
+				clientId: johnId,
 				userAttributes: {
 					numericIp: "101",
 				},
 			});
 			const ip_201_AccessRules = await accessRulesReader.findRules({
+				clientId: johnId,
 				userAttributes: {
 					numericIp: "201",
 				},
@@ -365,16 +386,16 @@ describe("redisAccessRules", () => {
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();
 
-			expect(indexRecordsCount).toBe(3);
+			expect(indexRecordsCount).toBe(4);
 
-			expect(ip_0_AccessRules).toEqual([ipMask_0_100_AccessRule]);
-			expect(ip_99_AccessRules).toEqual([ipMask_0_100_AccessRule]);
+			expect(ip_0_AccessRules).toEqual([johnIpMask_0_100_AccessRule]);
+			expect(ip_99_AccessRules).toEqual([johnIpMask_0_100_AccessRule]);
 			expect(ip_100_AccessRules).toEqual([
-				ipMask_0_100_AccessRule,
-				ip_100_AccessRule,
-				ipMask_100_200_AccessRule,
+				johnIpMask_0_100_AccessRule,
+				johnIp_100_AccessRule,
+				globalIpMask_100_200_AccessRule,
 			]);
-			expect(ip_101_AccessRules).toEqual([ipMask_100_200_AccessRule]);
+			expect(ip_101_AccessRules).toEqual([globalIpMask_100_200_AccessRule]);
 			expect(ip_201_AccessRules).toEqual([]);
 		});
 	});

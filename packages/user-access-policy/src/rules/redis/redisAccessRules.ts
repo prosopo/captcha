@@ -120,7 +120,7 @@ export const createAccessRulesWriter = (
 			void (await client.del(ruleIds)),
 
 		deleteAllRules: async (): Promise<void> => {
-			const keys = await client.keys(accessRuleKeyPrefix);
+			const keys = await client.keys(`${accessRuleKeyPrefix}*`);
 
 			if (keys.length > 0) {
 				await client.del(keys);
