@@ -21,6 +21,7 @@ import {
 	type RedisIndex,
 	createRedisIndex,
 } from "#policy/rules/redis/redisIndex.js";
+import type { UserAttributes } from "#policy/userAttributes.js";
 
 export const accessRuleIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
@@ -44,7 +45,9 @@ const accessRulesIndex: RedisIndex = {
 			INDEXMISSING: true,
 		},
 		userId: SCHEMA_FIELD_TYPE.TAG,
-		ip: SCHEMA_FIELD_TYPE.NUMERIC,
+		numericIp: SCHEMA_FIELD_TYPE.NUMERIC,
+		numericIpMaskMin: SCHEMA_FIELD_TYPE.NUMERIC,
+		numericIpMaskMax: SCHEMA_FIELD_TYPE.NUMERIC,
 		ja4Hash: SCHEMA_FIELD_TYPE.TAG,
 		headersHash: SCHEMA_FIELD_TYPE.TAG,
 		userAgentHash: SCHEMA_FIELD_TYPE.TAG,
@@ -86,8 +89,13 @@ export const getAccessRulesQuery = (policyScope: AccessPolicyScope): string => {
 				"ismissing(@clientId)";
 
 	if (userAttributes && Object.keys(userAttributes).length > 0) {
-		const userAttributesFilter = Object.entries(userAttributes)
-			.map(([field, value]) => getUserAttributeQuery(field, value))
+		const userAttributeEntries = Object.entries(userAttributes) as Array<
+			[keyof UserAttributes, unknown]
+		>;
+		const userAttributesFilter = userAttributeEntries
+			.map(([attributeName, attributeValue]) =>
+				getUserAttributeQuery(attributeName, attributeValue),
+			)
 			// to support a partial user attribute match join by the logical "OR"
 			.join(" | ");
 
@@ -97,17 +105,23 @@ export const getAccessRulesQuery = (policyScope: AccessPolicyScope): string => {
 	return clientIdFilter;
 };
 
-const getUserAttributeQuery = (field: string, value: unknown): string => {
-	type CustomAttribute = Record<string, (value: unknown) => string>;
+const getUserAttributeQuery = (
+	attributeName: keyof UserAttributes,
+	attributeValue: unknown,
+): string => {
+	type CustomUserAttributes = Record<
+		keyof UserAttributes,
+		(value: unknown) => string
+	>;
 
-	const customAttributes: CustomAttribute = {
-		ip: (value) =>
-			`( @ip:[${value}] | ( @ipRangeMin:[-inf ${value}] @ipRangeMax:[${value} +inf] ) )`,
+	const customAttributes: Partial<CustomUserAttributes> = {
+		numericIp: (value) =>
+			`( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`,
 	};
 
-	return "function" === typeof customAttributes[field]
-		? customAttributes[field](value)
-		: `@${field}:{${value}}`;
+	return "function" === typeof customAttributes[attributeName]
+		? customAttributes[attributeName](attributeValue)
+		: `@${attributeName}:{${attributeValue}}`;
 };
 
 export const getAccessRuleKey = (rule: AccessRule): string =>

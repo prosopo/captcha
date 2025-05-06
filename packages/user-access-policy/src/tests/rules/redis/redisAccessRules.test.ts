@@ -117,53 +117,51 @@ describe("redisAccessRules", () => {
 
 		test("deletes rules", async () => {
 			// given
-			const firstAccessRule: AccessRule = {
+			const johnAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const firstAccessRuleKey = getAccessRuleKey(firstAccessRule);
-			const secondAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const secondAccessRuleKey = getAccessRuleKey(secondAccessRule);
+			const johnAccessRuleKey = getAccessRuleKey(johnAccessRule);
 
-			await redisClient.hSet(firstAccessRuleKey, firstAccessRule);
-			await redisClient.hSet(secondAccessRuleKey, secondAccessRule);
+			const doeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const doeAccessRuleKey = getAccessRuleKey(doeAccessRule);
+
+			await redisClient.hSet(johnAccessRuleKey, johnAccessRule);
+			await redisClient.hSet(doeAccessRuleKey, doeAccessRule);
 
 			// when
-			await accessRulesWriter.deleteRules([firstAccessRuleKey]);
+			await accessRulesWriter.deleteRules([johnAccessRuleKey]);
 
 			// then
-			const presentSecondAccessRule =
-				await redisClient.hGetAll(secondAccessRuleKey);
+			const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
 			const indexRecordsCount = await getIndexRecordsCount();
 
-			expect(presentSecondAccessRule).toEqual(secondAccessRule);
+			expect(presentAccessRule).toEqual(doeAccessRule);
 			expect(indexRecordsCount).toBe(1);
 		});
 
 		test("deletes all rules", async () => {
 			// given
-			const firstAccessRule: AccessRule = {
+			const johnAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const firstAccessRuleKey = getAccessRuleKey(firstAccessRule);
-			const secondAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const secondAccessRuleKey = getAccessRuleKey(secondAccessRule);
+			const johnAccessRuleKey = getAccessRuleKey(johnAccessRule);
 
-			await redisClient.hSet(firstAccessRuleKey, firstAccessRule);
-			await redisClient.hSet(secondAccessRuleKey, secondAccessRule);
+			const doeAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const doeAccessRuleKey = getAccessRuleKey(doeAccessRule);
+
+			await redisClient.hSet(johnAccessRuleKey, johnAccessRule);
+			await redisClient.hSet(doeAccessRuleKey, doeAccessRule);
 
 			// when
-			await accessRulesWriter.deleteRules([
-				firstAccessRuleKey,
-				secondAccessRuleKey,
-			]);
+			await accessRulesWriter.deleteAllRules();
 
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();
@@ -215,7 +213,7 @@ describe("redisAccessRules", () => {
 			expect(foundAccessRules).toEqual([johnAccessRule, globalAccessRule]);
 		});
 
-		test("finds global rules when client id is not defined", async () => {
+		test("finds global only rules when client id is not defined", async () => {
 			// given
 			const johnAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
@@ -248,48 +246,136 @@ describe("redisAccessRules", () => {
 			expect(foundAccessRules).toEqual([globalAccessRule]);
 		});
 
-		test("finds rules when any user attribute matches", async () => {
+		test("finds client and global rules by [any] user attribute match", async () => {
 			// given
 
-			const ipAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				ip: 100,
-			};
-			const ipAccessRuleKey = getAccessRuleKey(ipAccessRule);
+			const johnId = getUniqueString();
 
-			const headerAccessRule: AccessRule = {
+			const johnIpAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: johnId,
+				numericIp: "100",
+			};
+			const johnIpAccessRuleKey = getAccessRuleKey(johnIpAccessRule);
+
+			const doeIpAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+				numericIp: "100",
+			};
+			const doeIpAccessRuleKey = getAccessRuleKey(doeIpAccessRule);
+
+			const johnHeaderAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				headersHash: "chrome",
 			};
-			const headerAccessRuleKey = getAccessRuleKey(headerAccessRule);
+			const johnHeaderAccessRuleKey = getAccessRuleKey(johnHeaderAccessRule);
 
-			const ja4AccessRule: AccessRule = {
+			const globalJa4AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				ja4Hash: "windows",
 			};
-			const ja4AccessRuleKey = getAccessRuleKey(ja4AccessRule);
+			const globalJa4AccessRuleKey = getAccessRuleKey(globalJa4AccessRule);
 
-			await redisClient.hSet(ipAccessRuleKey, ipAccessRule);
-			await redisClient.hSet(headerAccessRuleKey, headerAccessRule);
-			await redisClient.hSet(ja4AccessRuleKey, ja4AccessRule);
+			await redisClient.hSet(johnIpAccessRuleKey, johnIpAccessRule);
+			await redisClient.hSet(doeIpAccessRuleKey, doeIpAccessRule);
+			await redisClient.hSet(johnHeaderAccessRuleKey, johnHeaderAccessRule);
+			await redisClient.hSet(globalJa4AccessRuleKey, globalJa4AccessRule);
 
 			// when
 			const foundAccessRules = await accessRulesReader.findRules({
-				ip: 100,
-				ja4Hash: "windows",
+				clientId: johnId,
+				userAttributes: {
+					numericIp: "100",
+					ja4Hash: "windows",
+				},
+			});
+
+			// then
+			const indexRecordsCount = await getIndexRecordsCount();
+
+			expect(indexRecordsCount).toBe(4);
+			expect(foundAccessRules).toEqual([johnIpAccessRule, globalJa4AccessRule]);
+		});
+
+		// fixme finds client and global rules by ip mask
+		test("finds rules by ip mask", async () => {
+			// given
+			const ipMask_0_100_AccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: "0",
+				numericIpMaskMax: "100",
+			};
+			const ipMask_0_100_AccessRuleKey = getAccessRuleKey(
+				ipMask_0_100_AccessRule,
+			);
+
+			const ip_100_AccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp: "100",
+			};
+			const ip_100_AccessRuleKey = getAccessRuleKey(ip_100_AccessRule);
+
+			const ipMask_100_200_AccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: "100",
+				numericIpMaskMax: "200",
+			};
+			const ipMask_100_200_AccessRuleKey = getAccessRuleKey(
+				ipMask_100_200_AccessRule,
+			);
+
+			await redisClient.hSet(
+				ipMask_0_100_AccessRuleKey,
+				ipMask_0_100_AccessRule,
+			);
+			await redisClient.hSet(ip_100_AccessRuleKey, ip_100_AccessRule);
+			await redisClient.hSet(
+				ipMask_100_200_AccessRuleKey,
+				ipMask_100_200_AccessRule,
+			);
+
+			// when
+			const ip_0_AccessRules = await accessRulesReader.findRules({
+				userAttributes: {
+					numericIp: "0",
+				},
+			});
+			const ip_99_AccessRules = await accessRulesReader.findRules({
+				userAttributes: {
+					numericIp: "99",
+				},
+			});
+			const ip_100_AccessRules = await accessRulesReader.findRules({
+				userAttributes: {
+					numericIp: "100",
+				},
+			});
+			const ip_101_AccessRules = await accessRulesReader.findRules({
+				userAttributes: {
+					numericIp: "101",
+				},
+			});
+			const ip_201_AccessRules = await accessRulesReader.findRules({
+				userAttributes: {
+					numericIp: "201",
+				},
 			});
 
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();
 
 			expect(indexRecordsCount).toBe(3);
-			expect(foundAccessRules).toEqual([ipAccessRule, globalAccessRule]);
-		});
 
-		// fixme cover all key search variations
-
-		test("finds rule ids", () => {
-			// fixme reuse
+			expect(ip_0_AccessRules).toEqual([ipMask_0_100_AccessRule]);
+			expect(ip_99_AccessRules).toEqual([ipMask_0_100_AccessRule]);
+			expect(ip_100_AccessRules).toEqual([
+				ipMask_0_100_AccessRule,
+				ip_100_AccessRule,
+				ipMask_100_200_AccessRule,
+			]);
+			expect(ip_101_AccessRules).toEqual([ipMask_100_200_AccessRule]);
+			expect(ip_201_AccessRules).toEqual([]);
 		});
 	});
 

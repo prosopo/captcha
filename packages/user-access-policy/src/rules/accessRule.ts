@@ -19,8 +19,8 @@ import { userAttributesSchema } from "#policy/userAttributes.js";
 export const accessRuleSchema = z
 	.object({
 		clientId: z.string().optional(),
-		ipRangeMin: z.number().optional(),
-		ipRangeMax: z.number().optional(),
+		numericIpMaskMin: z.string().optional(),
+		numericIpMaskMax: z.string().optional(),
 	})
 	.merge(accessPolicySchema)
 	.merge(userAttributesSchema);
