@@ -14,8 +14,8 @@
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import type { BlacklistInspector } from "@prosopo/user-access-policy";
+import { getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
-import { getIPAddress } from "../util.js";
 
 class BlacklistRequestInspector {
 	public constructor(

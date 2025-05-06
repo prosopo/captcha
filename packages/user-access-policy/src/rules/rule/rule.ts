@@ -12,18 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { z } from "zod";
 import type { RuleConfig } from "./config/ruleConfig.js";
+import { ruleConfigSchema } from "./config/ruleConfigSchema.js";
 import type { RuleIp } from "./ip/ruleIp.js";
+import { ruleIpSchema } from "./ip/ruleIpSchema.js";
 
-interface Rule {
-	isUserBlocked: boolean;
-	clientId?: string;
-	description?: string;
-	userIp?: RuleIp;
-	ja4?: string;
-	userId?: string;
-	config?: RuleConfig;
-	score?: number;
-}
+const RuleSchema = z.object({
+	isUserBlocked: z.boolean(),
+	clientId: z.string().optional(),
+	description: z.string().optional(),
+	userIp: ruleIpSchema.optional(),
+	ja4: z.string().optional(),
+	userId: z.string().optional(),
+	config: ruleConfigSchema.optional(),
+	score: z.number().optional(),
+});
 
-export type { Rule };
+type Rule = z.infer<typeof RuleSchema>;
+
+export { type Rule, RuleSchema };

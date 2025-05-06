@@ -26,14 +26,13 @@ import type {
 	IProviderDatabase,
 	PoWCaptchaStored,
 } from "@prosopo/types-database";
-import { verifyRecency } from "@prosopo/util";
+import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
-import { getIPAddress } from "../../../../util.js";
 
 vi.mock("@polkadot/util-crypto", () => ({
 	signatureVerify: vi.fn(),

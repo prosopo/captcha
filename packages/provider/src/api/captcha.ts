@@ -37,12 +37,11 @@ import {
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
-import { flatten } from "@prosopo/util";
+import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
-import { getIPAddress } from "../util.js";
 import { validateAddr, validiateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;

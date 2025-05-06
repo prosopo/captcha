@@ -34,8 +34,9 @@ import { imageCaptchaConfigSchema } from "./rules/rule/config/image/imageCaptcha
 import { powCaptchaConfigSchema } from "./rules/rule/config/pow/powCaptchaConfigSchema.js";
 import { ruleConfigSchema } from "./rules/rule/config/ruleConfigSchema.js";
 import { ruleIpSchema } from "./rules/rule/ip/ruleIpSchema.js";
-import type { Rule } from "./rules/rule/rule.js";
+import { type Rule, RuleSchema } from "./rules/rule/rule.js";
 import type { RulesStorage } from "./rules/storage/rulesStorage.js";
+import { createIpV4MaskRule, createIpV4Rule } from "./rules/util.js";
 
 const createBlacklistInspector = (
 	rulesStorage: RulesStorage,
@@ -76,12 +77,15 @@ export {
 	createImageCaptchaConfigResolver,
 	createBlacklistInspector,
 	createApiRuleRoutesProvider,
+	createIpV4MaskRule,
+	createIpV4Rule,
 	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
 	apiInsertManyRulesArgsSchema,
 	apiDeleteManyRulesArgsSchema,
 	imageCaptchaConfigSchema,
 	powCaptchaConfigSchema,
+	RuleSchema,
 	ruleConfigSchema,
 	ruleIpSchema,
 	apiRulePaths,
