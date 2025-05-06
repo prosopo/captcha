@@ -81,7 +81,7 @@ export const getAccessRulesQuery = (policyScope: AccessPolicyScope): string => {
 	const clientIdFilter =
 		"string" === typeof clientId
 			? // when clientId is set, we look among his + "global" rules.
-				`( @clientId:${clientId}) | ismissing(@clientId) )`
+				`( @clientId:{${clientId}} | ismissing(@clientId) )`
 			: // when clientId is not set, we look among "global" only rules.
 				"ismissing(@clientId)";
 

@@ -14,6 +14,7 @@
 
 import type { Logger } from "@prosopo/common";
 import type { SearchReply } from "@redis/search";
+import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
 import type { RedisClientType } from "redis";
 import type { AccessPolicyScope } from "#policy/accessPolicy.js";
 import { type AccessRule, accessRuleSchema } from "#policy/rules/accessRule.js";
@@ -39,13 +40,20 @@ export const createAccessRulesReader = (
 		): Promise<AccessRule[]> => {
 			const query = getAccessRulesQuery(policyScope);
 
-			// fixme move into function
+			let searchReply: SearchReply;
+
 			try {
-				const searchReply = await client.ft.search(
+				searchReply = await client.ft.search(
 					accessRuleIndexName,
 					query,
 					accessRuleSearchOptions,
 				);
+
+				logger.debug("executed search query", {
+					policyScope: policyScope,
+					searchReply: searchReply,
+					query: query,
+				});
 			} catch (e) {
 				logger.error("failed to execute search query", {
 					query: query,
@@ -55,35 +63,36 @@ export const createAccessRulesReader = (
 				return [];
 			}
 
-			const accessRules = extractRulesFromSearchReply(searchReply, logger);
-
-			logger.debug("found access rules", {
-				policyScope: policyScope,
-				accessRules: accessRules,
-				query: query,
-			});
-
-			return accessRules;
+			return extractRulesFromSearchReply(searchReply, logger);
 		},
 
 		findRuleIds: async (policyScope: AccessPolicyScope): Promise<string[]> => {
 			const query = getAccessRulesQuery(policyScope);
 
-			const records = await client.ft.searchNoContent(
-				accessRuleIndexName,
-				query,
-				accessRuleSearchOptions,
-			);
+			let searchReply: SearchNoContentReply;
 
-			const ruleIds = records.documents;
+			try {
+				searchReply = await client.ft.searchNoContent(
+					accessRuleIndexName,
+					query,
+					accessRuleSearchOptions,
+				);
 
-			logger.debug("found access rule ids", {
-				ruleIds: ruleIds,
-				policyScope: policyScope,
-				query: query,
-			});
+				logger.debug("executed searchNoContent query", {
+					policyScope: policyScope,
+					searchReply: searchReply,
+					query: query,
+				});
+			} catch (e) {
+				logger.error("failed to execute searchNoContent query", {
+					query: query,
+					policyScope: policyScope,
+				});
 
-			return ruleIds;
+				return [];
+			}
+
+			return searchReply.documents;
 		},
 	};
 };
@@ -126,7 +135,7 @@ const extractRulesFromSearchReply = (
 ): AccessRule[] => {
 	const accessRules: AccessRule[] = [];
 
-	searchReply.documents.map((document) => {
+	searchReply.documents.map(({ id, value: document }) => {
 		const parsedDocument = accessRuleSchema.safeParse(document);
 
 		if (parsedDocument.success) {

@@ -41,6 +41,8 @@ describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
 
 	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
+	const getIndexRecordsCount = async (): Promise<number> =>
+		(await redisClient.ft.info(accessRuleIndexName)).num_docs;
 
 	beforeAll(async () => {
 		redisClient = (await createClient({
@@ -82,10 +84,10 @@ describe("redisAccessRules", () => {
 
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
+			const indexRecordsCount = await getIndexRecordsCount();
 
 			expect(insertedAccessRule).toEqual(accessRule);
-			expect(indexInfo.num_docs).toEqual(1);
+			expect(indexRecordsCount).toEqual(1);
 		});
 
 		test("inserts time limited rule", async () => {
@@ -105,11 +107,11 @@ describe("redisAccessRules", () => {
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
 			const insertedExpirationTimestamp =
 				await redisClient.expireTime(accessRuleKey);
-			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
+			const indexRecordsCount = await getIndexRecordsCount();
 
 			expect(insertedAccessRule).toEqual(accessRule);
 			expect(insertedExpirationTimestamp).toBe(expirationTimestamp);
-			expect(indexInfo.num_docs).toBe(1);
+			expect(indexRecordsCount).toBe(1);
 		});
 
 		test("deletes rules", async () => {
@@ -134,10 +136,10 @@ describe("redisAccessRules", () => {
 			// then
 			const presentSecondAccessRule =
 				await redisClient.hGetAll(secondAccessRuleKey);
-			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
+			const indexRecordsCount = await getIndexRecordsCount();
 
 			expect(presentSecondAccessRule).toEqual(secondAccessRule);
-			expect(indexInfo.num_docs).toBe(1);
+			expect(indexRecordsCount).toBe(1);
 		});
 
 		test("deletes all rules", async () => {
@@ -163,9 +165,9 @@ describe("redisAccessRules", () => {
 			]);
 
 			// then
-			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
+			const indexRecordsCount = await getIndexRecordsCount();
 
-			expect(indexInfo.num_docs).toBe(0);
+			expect(indexRecordsCount).toBe(0);
 		});
 	});
 
@@ -181,7 +183,7 @@ describe("redisAccessRules", () => {
 			const clientId = getUniqueString();
 			const accessRule = {
 				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
+				clientId: clientId,
 			};
 			const accessRuleKey = getAccessRuleKey(accessRule);
 
@@ -193,7 +195,14 @@ describe("redisAccessRules", () => {
 			});
 
 			// then
+			const indexRecordsCount = await getIndexRecordsCount();
+
+			expect(indexRecordsCount).toBe(1);
 			expect(foundAccessRules).toEqual([accessRule]);
+		});
+
+		test("finds global rule by client id", async () => {
+			// fixme
 		});
 
 		// fixme cover all key search variations
