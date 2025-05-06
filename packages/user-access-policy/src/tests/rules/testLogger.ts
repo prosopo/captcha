@@ -12,18 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { vi } from "vitest";
+import { getLogger } from "@prosopo/common";
 
-const mockedLogger = {
-	trace: vi.fn(),
-	debug: vi.fn(),
-	info: vi.fn(),
-	warn: vi.fn(),
-	error: vi.fn(),
-	fatal: vi.fn(),
-	log: vi.fn(),
-	setLogLevel: vi.fn(),
-	getLogLevel: vi.fn(),
-};
-
-export { mockedLogger };
+export const testLogger = getLogger("debug", "test");

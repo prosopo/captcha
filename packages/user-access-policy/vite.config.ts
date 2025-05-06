@@ -12,14 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
+import config from "./vite.cjs.config.js";
 
-export const userAttributesSchema = z.object({
-	userId: z.string().optional(),
-	ip: z.number().optional(),
-	ja4Hash: z.string().optional(),
-	headersHash: z.string().optional(),
-	userAgentHash: z.string().optional(),
-});
-
-export type UserAttributes = z.infer<typeof userAttributesSchema>;
+export default config;

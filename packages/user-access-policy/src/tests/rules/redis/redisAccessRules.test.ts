@@ -1,5 +1,26 @@
+// Copyright 2021-2025 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import { type RedisClientType, createClient } from "redis";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	test,
+} from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
 import type {
 	AccessRulesReader,
@@ -10,13 +31,16 @@ import {
 	createAccessRulesWriter,
 } from "#policy/rules/redis/redisAccessRules.js";
 import {
+	accessRuleIndexName,
 	createAccessRulesIndex,
 	getAccessRuleKey,
 } from "#policy/rules/redis/redisAccessRulesIndex.js";
-import { mockedLogger } from "#policy/tests/rules/mockedLogger.js";
+import { testLogger } from "#policy/tests/rules/testLogger.js";
 
 describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
+
+	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
 
 	beforeAll(async () => {
 		redisClient = (await createClient({
@@ -28,8 +52,14 @@ describe("redisAccessRules", () => {
 			.connect()) as RedisClientType;
 
 		await createAccessRulesIndex(redisClient);
+	});
 
-		await redisClient.flushAll();
+	beforeEach(async () => {
+		const keys = await redisClient.keys(accessRuleIndexName);
+
+		if (keys.length > 0) {
+			await redisClient.del(keys);
+		}
 	});
 
 	describe("writer", () => {
@@ -43,8 +73,7 @@ describe("redisAccessRules", () => {
 			// given
 			const accessRule = {
 				type: AccessPolicyType.Block,
-				// fixme random string, so it gets a unique key
-				clientId: "_clientId",
+				clientId: "clientId",
 			};
 			const accessRuleKey = getAccessRuleKey(accessRule);
 
@@ -53,18 +82,17 @@ describe("redisAccessRules", () => {
 
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
 
 			expect(insertedAccessRule).toEqual(accessRule);
-
-			// fixme check presence in the index
+			expect(indexInfo.num_docs).toEqual(1);
 		});
 
 		test("inserts time limited rule", async () => {
 			// given
 			const accessRule = {
 				type: AccessPolicyType.Block,
-				// fixme random string, so it gets a unique key
-				clientId: "_clientId",
+				clientId: "clientId",
 			};
 			const accessRuleKey = getAccessRuleKey(accessRule);
 			// 1 hour from now.
@@ -77,19 +105,67 @@ describe("redisAccessRules", () => {
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
 			const insertedExpirationTimestamp =
 				await redisClient.expireTime(accessRuleKey);
+			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
 
 			expect(insertedAccessRule).toEqual(accessRule);
 			expect(insertedExpirationTimestamp).toBe(expirationTimestamp);
-
-			// fixme check presence in the index
+			expect(indexInfo.num_docs).toBe(1);
 		});
 
-		test("deletes rules", () => {
-			// fixme
+		test("deletes rules", async () => {
+			// given
+			const firstAccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const firstAccessRuleKey = getAccessRuleKey(firstAccessRule);
+			const secondAccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const secondAccessRuleKey = getAccessRuleKey(secondAccessRule);
+
+			await redisClient.hSet(firstAccessRuleKey, firstAccessRule);
+			await redisClient.hSet(secondAccessRuleKey, secondAccessRule);
+
+			// when
+			await accessRulesWriter.deleteRules([firstAccessRuleKey]);
+
+			// then
+			const presentSecondAccessRule =
+				await redisClient.hGetAll(secondAccessRuleKey);
+			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
+
+			expect(presentSecondAccessRule).toEqual(secondAccessRule);
+			expect(indexInfo.num_docs).toBe(1);
 		});
 
-		test("deletes all rules", () => {
-			// fixme
+		test("deletes all rules", async () => {
+			// given
+			const firstAccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const firstAccessRuleKey = getAccessRuleKey(firstAccessRule);
+			const secondAccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const secondAccessRuleKey = getAccessRuleKey(secondAccessRule);
+
+			await redisClient.hSet(firstAccessRuleKey, firstAccessRule);
+			await redisClient.hSet(secondAccessRuleKey, secondAccessRule);
+
+			// when
+			await accessRulesWriter.deleteRules([
+				firstAccessRuleKey,
+				secondAccessRuleKey,
+			]);
+
+			// then
+			const indexInfo = await redisClient.ft.info(accessRuleIndexName);
+
+			expect(indexInfo.num_docs).toBe(0);
 		});
 	});
 
@@ -97,12 +173,27 @@ describe("redisAccessRules", () => {
 		let accessRulesReader: AccessRulesReader;
 
 		beforeAll(() => {
-			// fixme
-			accessRulesReader = createAccessRulesReader(redisClient, mockedLogger);
+			accessRulesReader = createAccessRulesReader(redisClient, testLogger);
 		});
 
-		test("finds rules", async () => {
-			// fixme
+		test("finds rule by client id", async () => {
+			// given
+			const clientId = getUniqueString();
+			const accessRule = {
+				type: AccessPolicyType.Block,
+				clientId: getUniqueString(),
+			};
+			const accessRuleKey = getAccessRuleKey(accessRule);
+
+			await redisClient.hSet(accessRuleKey, accessRule);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				clientId: clientId,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([accessRule]);
 		});
 
 		// fixme cover all key search variations
