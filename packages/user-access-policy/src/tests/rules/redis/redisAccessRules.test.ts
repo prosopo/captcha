@@ -36,6 +36,7 @@ import {
 	createAccessRulesIndex,
 	getAccessRuleKey,
 } from "#policy/rules/redis/redisAccessRulesIndex.js";
+import { createTestRedisClient } from "#policy/tests/rules/redis/testRedisClient.js";
 import { testLogger } from "#policy/tests/rules/testLogger.js";
 
 describe("redisAccessRules", () => {
@@ -46,13 +47,7 @@ describe("redisAccessRules", () => {
 		(await redisClient.ft.info(accessRuleIndexName)).num_docs;
 
 	beforeAll(async () => {
-		redisClient = (await createClient({
-			// /docker/redis/redis-stack.docker-compose.yml
-			url: "redis://localhost:6379",
-			password: "root",
-		})
-			.on("error", (err) => console.log("Redis Client Error", err))
-			.connect()) as RedisClientType;
+		redisClient = await createTestRedisClient();
 
 		await createAccessRulesIndex(redisClient);
 	});
