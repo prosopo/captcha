@@ -63,9 +63,12 @@ export enum ClientApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
 	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
+	GetSliderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/slider",
 	SubmitImageCaptchaSolution = "/v1/prosopo/provider/client/solution",
 	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
+	SubmitSliderCaptchaSolution = "/v1/prosopo/provider/client/slider/solution",
 	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
+	VerifySliderCaptchaSolution = "/v1/prosopo/provider/client/slider/verify",
 	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
@@ -87,6 +90,15 @@ export type TGetPowCaptchaChallengeURL =
 export type TSubmitPowCaptchaSolutionURL =
 	`${string}${ClientApiPaths.SubmitPowCaptchaSolution}`;
 
+export type TGetSliderCaptchaChallengeURL =
+	`${string}${ClientApiPaths.GetSliderCaptchaChallenge}`;
+
+export type TSubmitSliderCaptchaSolutionURL =
+	`${string}${ClientApiPaths.SubmitSliderCaptchaSolution}`;
+
+export type TVerifySliderCaptchaSolutionURL =
+	`${string}${ClientApiPaths.VerifySliderCaptchaSolution}`;
+
 export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
@@ -98,13 +110,16 @@ export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 export const ProviderDefaultRateLimits = {
 	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 30 },
 	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetSliderCaptchaChallenge]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitImageCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 		windowMs: 60000,
 		limit: 60,
 	},
 	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.SubmitSliderCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.VerifySliderCaptchaSolution]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
 		limit: 60,
@@ -396,3 +411,114 @@ export type BlockRule = zInfer<typeof BlockRuleSpec>;
 export const DappDomainRequestBody = object({
 	[ApiParams.dapp]: string(),
 });
+
+export interface GetSliderCaptchaResponse extends ApiResponse {
+	baseImageUrl?: string;
+	puzzlePieceUrl?: string;
+	imageUrl?: string; // For backward compatibility
+	shape?: string; // Optional shape name for shaped puzzle pieces
+	timestamp: string;
+	challengeId: string;
+	signature: string;
+}
+
+export type SliderCaptchaSolutionResponse = {
+	status: "ok" | "error";
+	verified: boolean;
+};
+
+export const GetSliderCaptchaChallengeRequestBody = object({
+	[ApiParams.user]: string(),
+	[ApiParams.dapp]: string(),
+	[ApiParams.sessionId]: string().optional(),
+});
+
+export type GetSliderCaptchaChallengeRequestBodyType = zInfer<
+	typeof GetSliderCaptchaChallengeRequestBody
+>;
+
+export type GetSliderCaptchaChallengeRequestBodyTypeOutput = output<
+	typeof GetSliderCaptchaChallengeRequestBody
+>;
+
+export const SubmitSliderCaptchaSolutionBody = object({
+	user: string(),
+	dapp: string(),
+	position: number(),
+	targetPosition: number(),
+	mouseMovements: array(
+		object({
+			x: number(),
+			y: number(),
+			time: number(),
+		}),
+	),
+	solveTime: number(),
+	timestamp: string(),
+	signature: object({
+		user: object({
+			timestamp: string().optional(),
+		}),
+		provider: object({
+			challenge: string().optional(),
+		}),
+	}),
+	fingerprint: string().optional(),
+	challengeId: string(),
+});
+
+export type SubmitSliderCaptchaSolutionBodyType = zInfer<
+	typeof SubmitSliderCaptchaSolutionBody
+>;
+
+export type SubmitSliderCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitSliderCaptchaSolutionBody
+>;
+
+export type VerifySliderCaptchaSolutionBody = {
+	token: {
+		user: string;
+		dapp: string;
+		challenge: string;
+		timestamp: string;
+		signature: {
+			provider: {
+				challenge: string;
+			};
+			user?: {
+				solution: string;
+			};
+		};
+	};
+	dappSignature: string;
+	verifiedTimeout?: number;
+};
+
+export const VerifySliderCaptchaSolutionBody = object({
+	token: object({
+		user: string(),
+		dapp: string(),
+		challenge: string(),
+		timestamp: string(),
+		signature: object({
+			provider: object({
+				challenge: string(),
+			}),
+			user: object({
+				solution: string(),
+			}).optional(),
+		}),
+	}),
+	dappSignature: string(),
+	verifiedTimeout: number()
+		.optional()
+		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+});
+
+export type VerifySliderCaptchaSolutionBodyType = zInfer<
+	typeof VerifySliderCaptchaSolutionBody
+>;
+
+export type VerifySliderCaptchaSolutionBodyTypeOutput = output<
+	typeof VerifySliderCaptchaSolutionBody
+>;

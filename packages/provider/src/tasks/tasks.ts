@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
@@ -24,6 +26,7 @@ import { DatasetManager } from "./dataset/datasetTasks.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
+import { SliderCaptchaManager } from "./sliderCaptcha/sliderTasks.js";
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -39,6 +42,8 @@ export class Tasks {
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
 	frictionlessManager: FrictionlessManager;
+	sliderCaptchaManager: SliderCaptchaManager;
+	clientManager: ClientTaskManager;
 
 	constructor(env: ProviderEnvironment) {
 		this.config = env.config;
@@ -47,38 +52,71 @@ export class Tasks {
 		this.logger = getLogger(env.config.logLevel, "Tasks");
 		if (!env.pair) {
 			throw new ProsopoEnvError("DEVELOPER.MISSING_PROVIDER_PAIR", {
-				context: { failedFuncName: "Tasks.constructor" },
+				context: { error: "No account was set" },
 			});
 		}
 		this.pair = env.pair;
+
+		// Create basic managers first
+		this.frictionlessManager = new FrictionlessManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
+		);
 
 		this.powCaptchaManager = new PowCaptchaManager(
 			this.db,
 			this.pair,
 			this.logger,
 		);
-		this.datasetManager = new DatasetManager(
+
+		this.clientTaskManager = new ClientTaskManager(
 			this.config,
 			this.logger,
-			this.captchaConfig,
 			this.db,
 		);
+
+		// ClientManager is an alias of ClientTaskManager
+		this.clientManager = this.clientTaskManager;
+
+		// Create captcha-related managers
 		this.imgCaptchaManager = new ImgCaptchaManager(
 			this.db,
 			this.pair,
 			this.config,
 			this.logger,
 		);
-		this.clientTaskManager = new ClientTaskManager(
-			this.config,
-			this.logger,
-			this.db,
-		);
-		this.frictionlessManager = new FrictionlessManager(
+
+		// Define paths for the slider captcha datasets
+		const sliderDatasetPath = join(process.cwd(), "assets/slider-datasets");
+		const sliderAssetPath = "/assets/slider-datasets";
+
+		this.logger.info("Initializing SliderCaptchaManager", {
+			sliderDatasetPath,
+			sliderAssetPath,
+		});
+
+		// Initialize SliderCaptchaManager without requiring config flag
+		// It will automatically detect available datasets in both database and filesystem
+		this.sliderCaptchaManager = new SliderCaptchaManager(
 			this.db,
 			this.pair,
+			this.logger,
+			{
+				datasetPath: sliderDatasetPath,
+				assetPath: sliderAssetPath,
+			},
+		);
+
+		// Initialize the DatasetManager with the SliderCaptchaManager instance
+		// This allows the DatasetManager to handle slider captcha datasets
+		this.datasetManager = new DatasetManager(
 			this.config,
 			this.logger,
+			this.captchaConfig,
+			this.db,
+			this.sliderCaptchaManager,
 		);
 	}
 }

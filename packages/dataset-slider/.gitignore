@@ -1,0 +1,24 @@
+# Build output
+dist/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Test directories
+test-images/
+test-output/
+
+# Generated files
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo 

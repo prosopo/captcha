@@ -37,6 +37,7 @@ export interface Dataset extends DatasetBase {
 
 export interface DatasetRaw extends DatasetBase {
 	captchas: CaptchaWithoutId[];
+	datasetType?: string;
 }
 
 export type DatasetWithIds = {
@@ -46,6 +47,7 @@ export type DatasetWithIds = {
 	format: CaptchaTypes;
 	contentTree?: string[][];
 	solutionTree?: string[][];
+	datasetType?: string;
 };
 
 export interface DatasetWithIdsAndTree extends DatasetWithIds {
@@ -62,6 +64,7 @@ export const DatasetSchema = object({
 	solutionTree: array(array(string())).optional(),
 	contentTree: array(array(string())).optional(),
 	timeLimit: number().optional(),
+	datasetType: string().optional(),
 });
 
 export const DatasetWithNumericSolutionSchema = DatasetSchema.extend({
@@ -75,6 +78,7 @@ export const DatasetWithIdsSchema = object({
 	format: nativeEnum(CaptchaTypes),
 	solutionTree: array(array(string())).optional(),
 	contentTree: array(array(string())).optional(),
+	datasetType: string().optional(),
 });
 
 export const DatasetWithIdsAndTreeSchema = DatasetWithIdsSchema.extend({

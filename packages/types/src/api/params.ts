@@ -49,4 +49,10 @@ export enum ApiParams {
 	score = "score",
 	tier = "tier",
 	detectorKey = "detectorKey",
+	imageUrl = "imageUrl",
+	targetPosition = "targetPosition",
+	position = "position",
+	mouseMovements = "mouseMovements",
+	solveTime = "solveTime",
+	fingerprint = "fingerprint",
 }

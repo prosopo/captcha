@@ -31,9 +31,17 @@ import {
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
+	GetSliderCaptchaChallengeRequestBody,
+	type GetSliderCaptchaChallengeRequestBodyTypeOutput,
+	type GetSliderCaptchaResponse,
 	type PowCaptchaSolutionResponse,
+	type SliderCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
+	SubmitSliderCaptchaSolutionBody,
+	type SubmitSliderCaptchaSolutionBodyTypeOutput,
+	VerifySliderCaptchaSolutionBody,
+	type VerifySliderCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
@@ -622,6 +630,234 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: err },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
+
+	/**
+	 * Supplies a Slider captcha challenge to a Dapp User
+	 *
+	 * @param {string} userAccount - User address
+	 * @param {string} dappAccount - Dapp address
+	 */
+	router.post(
+		ClientApiPaths.GetSliderCaptchaChallenge,
+		async (req, res, next) => {
+			let parsed: GetSliderCaptchaChallengeRequestBodyTypeOutput;
+
+			if (!req.ip) {
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 400, error: "IP address not found" },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const ipAddress = getIPAddress(req.ip || "");
+
+			try {
+				parsed = GetSliderCaptchaChallengeRequestBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const { user, dapp, sessionId } = parsed;
+
+			validiateSiteKey(dapp);
+			validateAddr(user);
+
+			try {
+				const clientSettings = await tasks.db.getClientRecord(dapp);
+
+				if (!clientSettings) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
+				// Use our SliderCaptchaManager to create and store the challenge
+				const sliderCaptchaResponse =
+					await tasks.sliderCaptchaManager.getSliderCaptchaChallenge(
+						user,
+						dapp,
+						flatten(req.headers),
+						ipAddress,
+						req.ja4,
+						0,
+						sessionId,
+					);
+
+				return res.json(sliderCaptchaResponse);
+			} catch (err) {
+				req.logger.error({ err, body: req.body });
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							code: 500,
+							siteKey: req.body.dapp,
+							user: req.body.user,
+							error: err,
+						},
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
+
+	/**
+	 * Verifies a user's Slider captcha solution
+	 */
+	router.post(
+		ClientApiPaths.SubmitSliderCaptchaSolution,
+		async (req, res, next) => {
+			let parsed: SubmitSliderCaptchaSolutionBodyTypeOutput;
+
+			if (!req.ip) {
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: { code: 400, error: "IP address not found" },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const ipAddress = getIPAddress(req.ip || "");
+
+			try {
+				parsed = SubmitSliderCaptchaSolutionBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err, body: req.body },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const {
+				user,
+				dapp,
+				position,
+				mouseMovements,
+				solveTime,
+				signature,
+				challengeId,
+			} = parsed;
+
+			validiateSiteKey(dapp);
+			validateAddr(user);
+
+			try {
+				const clientRecord = await tasks.db.getClientRecord(dapp);
+
+				if (!clientRecord) {
+					return next(
+						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+							context: { code: 400, siteKey: dapp },
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
+
+				const verified =
+					await tasks.sliderCaptchaManager.verifySliderCaptchaSolution(
+						challengeId,
+						position,
+						mouseMovements,
+						solveTime,
+						signature.user.timestamp || "",
+						ipAddress,
+						flatten(req.headers),
+					);
+
+				const response: SliderCaptchaSolutionResponse = {
+					status: "ok",
+					verified,
+				};
+
+				return res.json(response);
+			} catch (err) {
+				req.logger.error({ err, body: req.body });
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							code: 500,
+							siteKey: dapp,
+							user,
+							error: err,
+						},
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+		},
+	);
+
+	/**
+	 * Verifies a slider captcha solution token from a dapp
+	 */
+	router.post(
+		ClientApiPaths.VerifySliderCaptchaSolution,
+		async (req, res, next) => {
+			let parsed: VerifySliderCaptchaSolutionBodyTypeOutput;
+
+			try {
+				parsed = VerifySliderCaptchaSolutionBody.parse(req.body);
+			} catch (err) {
+				return next(
+					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+						context: { code: 400, error: err },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			const { token, dappSignature, verifiedTimeout } = parsed;
+
+			try {
+				const verificationResult =
+					await tasks.sliderCaptchaManager.serverVerifySliderCaptchaSolution(
+						token.dapp,
+						token.challenge,
+						verifiedTimeout || 600000, // Default 10 minutes if not specified
+					);
+
+				return res.json({
+					status: "ok",
+					verified: verificationResult.verified,
+					score: verificationResult.score,
+				});
+			} catch (err) {
+				req.logger.error({ err, body: req.body });
+				return next(
+					new ProsopoApiError("API.BAD_REQUEST", {
+						context: {
+							code: 500,
+							error: err,
+						},
 						i18n: req.i18n,
 						logger: req.logger,
 					}),

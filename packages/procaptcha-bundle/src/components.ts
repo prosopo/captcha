@@ -15,4 +15,5 @@
 export * from "./util/captcha/components/frictionlessCaptcha.js";
 export * from "./util/captcha/components/powCaptcha.js";
 export * from "./util/captcha/components/imageCaptcha.js";
+export * from "./util/captcha/components/sliderCaptcha.js";
 export * from "./util/captcha/captchaComponentProvider.js";

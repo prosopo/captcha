@@ -23,6 +23,9 @@
 			"path": "../procaptcha-react"
 		},
 		{
+			"path": "../procaptcha-slider"
+		},
+		{
 			"path": "../types"
 		},
 		{

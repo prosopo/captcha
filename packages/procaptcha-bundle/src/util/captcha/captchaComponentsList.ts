@@ -18,6 +18,7 @@ import type { CaptchaProps } from "./captchaProps.js";
 import { FrictionlessCaptcha } from "./components/frictionlessCaptcha.js";
 import { ImageCaptcha } from "./components/imageCaptcha.js";
 import { PowCaptcha } from "./components/powCaptcha.js";
+import { SliderCaptcha } from "./components/sliderCaptcha.js";
 
 const captchaComponentsList: Record<
 	CaptchaType,
@@ -26,6 +27,7 @@ const captchaComponentsList: Record<
 	[CaptchaType.image]: ImageCaptcha,
 	[CaptchaType.pow]: PowCaptcha,
 	[CaptchaType.frictionless]: FrictionlessCaptcha,
+	[CaptchaType.slider]: SliderCaptcha,
 };
 
 export { captchaComponentsList };

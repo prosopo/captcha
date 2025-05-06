@@ -1,3 +1,4 @@
+import { LogLevel } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +26,7 @@ import {
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	type GetSliderCaptchaResponse,
 	type IUserSettings,
 	type ImageVerificationResponse,
 	type PowCaptchaSolutionResponse,
@@ -37,6 +39,7 @@ import {
 	RegisterSitekeyBody,
 	type RegisterSitekeyBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
+	type SliderCaptchaSolutionResponse,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
@@ -306,5 +309,51 @@ export default class ProviderApi
 				},
 			},
 		);
+	}
+
+	public getSliderCaptchaChallenge(
+		userAccount: string,
+		dappAccount: string,
+		sessionId?: string,
+	): Promise<GetSliderCaptchaResponse> {
+		const body = {
+			[ApiParams.user]: userAccount,
+			[ApiParams.dapp]: dappAccount,
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+		};
+		return this.post(ClientApiPaths.GetSliderCaptchaChallenge, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
+	/**
+	 * Submit a solution to a slider captcha challenge
+	 */
+	public async submitSliderCaptchaSolution(
+		userAccount: string,
+		dappAccount: string,
+		position: number,
+		mouseMovements: Array<{ x: number; y: number; time: number }>,
+		signature: string,
+		challengeId: string,
+	): Promise<SliderCaptchaSolutionResponse> {
+		const body = {
+			[ApiParams.user]: userAccount,
+			[ApiParams.dapp]: dappAccount,
+			position,
+			mouseMovements,
+			challengeId,
+			signature,
+		};
+
+		return this.post(ClientApiPaths.SubmitSliderCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
 	}
 }

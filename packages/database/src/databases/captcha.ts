@@ -18,6 +18,8 @@ import {
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	SliderCaptchaRecord,
+	SliderCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
@@ -36,6 +38,7 @@ enum TableNames {
 	session = "session",
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
+	slidercaptcha = "slidercaptcha",
 }
 
 const CAPTCHA_TABLES = [
@@ -53,6 +56,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
 		schema: StoredUserCommitmentRecordSchema,
+	},
+	{
+		collectionName: TableNames.slidercaptcha,
+		modelName: "SliderCaptcha",
+		schema: SliderCaptchaRecordSchema,
 	},
 ];
 
@@ -92,6 +100,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		sessionEvents: StoredSession[],
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
+		sliderCaptchaEvents: SliderCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
@@ -139,6 +148,22 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				}),
 			);
 			logger.info("Mongo Saved PoW Events", result.upsertedCount);
+		}
+		if (sliderCaptchaEvents.length) {
+			const result = await this.tables.slidercaptcha.bulkWrite(
+				sliderCaptchaEvents.map((doc) => {
+					// remove the _id field to avoid problems when upserting
+					const { _id, ...safeDoc } = doc;
+					return {
+						updateOne: {
+							filter: { id: safeDoc.id },
+							update: { $set: safeDoc },
+							upsert: true,
+						},
+					};
+				}),
+			);
+			logger.info("Mongo Saved Slider Events", result.upsertedCount);
 		}
 
 		await this.close();

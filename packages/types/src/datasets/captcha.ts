@@ -32,6 +32,8 @@ export enum CaptchaTypes {
 export enum CaptchaItemTypes {
 	Text = "text",
 	Image = "image",
+	SliderBase = "sliderBase",
+	SliderPiece = "sliderPiece",
 }
 export enum CaptchaStates {
 	Solved = "solved",
@@ -233,3 +235,56 @@ export const CaptchasContainerSchema = object({
 export const LabelsContainerSchema = object({
 	labels: array(string()),
 });
+
+export interface SliderCaptchaItem {
+	hash: string;
+	data: string;
+	type: CaptchaItemTypes.SliderBase | CaptchaItemTypes.SliderPiece;
+	position?: {
+		x: number;
+		y: number;
+	};
+}
+
+export interface SliderCaptchaWithoutId {
+	salt: string;
+	baseImage: SliderCaptchaItem;
+	puzzlePiece: SliderCaptchaItem;
+	solved?: boolean;
+	timeLimitMs?: number;
+}
+
+export interface SliderCaptcha extends SliderCaptchaWithoutId {
+	captchaId: string;
+	captchaContentId: string;
+	assetURI?: string;
+	datasetId?: string;
+	datasetContentId?: string;
+}
+
+export interface SliderCaptchas {
+	captchas: SliderCaptchaWithoutId[];
+	format: CaptchaTypes;
+}
+
+export const SliderCaptchaItemSchema = object({
+	hash: string(),
+	data: string(),
+	type: nativeEnum(CaptchaItemTypes),
+	position: object({
+		x: number(),
+		y: number(),
+	}).optional(),
+});
+
+export const SliderCaptchaSchema = object({
+	captchaId: union([string(), zUndefined()]),
+	captchaContentId: union([string(), zUndefined()]),
+	salt: string().min(34),
+	baseImage: SliderCaptchaItemSchema,
+	puzzlePiece: SliderCaptchaItemSchema,
+	unlabelled: number().array().optional(),
+	timeLimit: number().optional(),
+});
+
+export const SliderCaptchasSchema = array(SliderCaptchaSchema);

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <title>Procaptcha demo: Simple page</title>
+    <title>Procaptcha demo: Slider Captcha Explicit</title>
     <script type="text/javascript">
         window.onCaptchaFailed = function () {
             console.log('Challenge failed')
@@ -113,7 +113,7 @@
 
 <div class="mui-container">
     <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
-        <h1>Example Login Form</h1>
+        <h1>Slider Captcha - Explicit Rendering</h1>
         <div class="mui-textfield mui-textfield--float-label">
             <label for="name">Name</label>
             <input id="name" type="text" name="name" required/>
@@ -140,18 +140,15 @@
 
     // Define a callback function to be called when the CAPTCHA is verified
     function onCaptchaVerified(output) {
-        console.log('Challenge passed')
+        console.log('Captcha verified, output: ' + JSON.stringify(output))
     }
-
-    // Do not set on the window, we want to ensure that the function passed in via `render` is called
-    // window.onCaptchaVerified = onCaptchaVerified
 
     // Get the Element using elementId
     const captchaContainer = document.getElementById('procaptcha-container')
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
     render(captchaContainer, {
-        siteKey: import.meta.env.PROSOPO_SITE_KEY,
-        captchaType: import.meta.env.CAPTCHA_TYPE || CaptchaType.frictionless,
+        siteKey: import.meta.env.PROSOPO_SITE_KEY_SLIDER,
+        captchaType: CaptchaType.slider,
         theme: 'dark',
         callback: onCaptchaVerified,
         "failed-callback": function () {
@@ -160,4 +157,4 @@
     })
 </script>
 </body>
-</html>
+</html> 

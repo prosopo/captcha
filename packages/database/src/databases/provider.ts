@@ -61,6 +61,9 @@ import {
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
 	SessionRecordSchema,
+	type SliderCaptchaRecord,
+	SliderCaptchaRecordSchema,
+	type SliderCaptchaStored,
 	type SolutionRecord,
 	SolutionRecordSchema,
 	type StoredCaptcha,
@@ -92,6 +95,7 @@ enum TableNames {
 	pending = "pending",
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
+	slidercaptcha = "slidercaptcha",
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
@@ -109,6 +113,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.powcaptcha,
 		modelName: "PowCaptcha",
 		schema: PoWCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.slidercaptcha,
+		modelName: "SliderCaptcha",
+		schema: SliderCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.dataset,
@@ -1607,5 +1616,159 @@ export class ProviderDatabase
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
 		return (keyRecords || []).map((record) => record.detectorKey);
+	}
+
+	/**
+	 * @description Adds a new Slider Captcha record to the database.
+	 * @param {SliderCaptchaStored} sliderCaptcha The slider captcha data
+	 * @returns {Promise<void>} A promise that resolves when the record is added.
+	 */
+	async storeSliderCaptchaRecord(
+		sliderCaptcha: SliderCaptchaStored,
+	): Promise<void> {
+		try {
+			await this.tables.slidercaptcha.create({
+				...sliderCaptcha,
+				storedAtTimestamp: new Date(),
+			});
+			this.logger.info("Slider captcha record stored", {
+				id: sliderCaptcha.id,
+			});
+		} catch (err) {
+			this.logger.error("Failed to store slider captcha record", {
+				err,
+				id: sliderCaptcha.id,
+			});
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_STORE_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	/**
+	 * @description Gets a Slider Captcha record by its ID.
+	 * @param {string} id The ID of the slider captcha record.
+	 * @returns {Promise<SliderCaptchaRecord | null>} A promise that resolves to the record or null if not found.
+	 */
+	async getSliderCaptchaRecordById(
+		id: string,
+	): Promise<SliderCaptchaRecord | null> {
+		try {
+			return await this.tables.slidercaptcha.findOne({ id });
+		} catch (err) {
+			this.logger.error("Failed to get slider captcha record", { err, id });
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_GET_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	/**
+	 * @description Updates a Slider Captcha record in the database.
+	 */
+	async updateSliderCaptchaRecord(
+		id: string,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		position?: number,
+		solveTime?: number,
+		userSignature?: string,
+	): Promise<void> {
+		try {
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			const update: any = {
+				result,
+				serverChecked,
+				userSubmitted,
+				lastUpdatedTimestamp: Date.now(),
+			};
+
+			if (position !== undefined) {
+				update.position = position;
+			}
+
+			if (solveTime !== undefined) {
+				update.solveTime = solveTime;
+			}
+
+			if (userSignature) {
+				update.userSignature = userSignature;
+			}
+
+			const updatedRecord = await this.tables.slidercaptcha.findOneAndUpdate(
+				{ id },
+				{ $set: update },
+				{ new: true },
+			);
+
+			if (!updatedRecord) {
+				throw new Error(`Slider captcha record with id ${id} not found`);
+			}
+
+			this.logger.info("Slider captcha record updated", { id });
+		} catch (err) {
+			this.logger.error("Failed to update slider captcha record", { err, id });
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_UPDATE_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	/**
+	 * @description Marks a Slider Captcha as checked by the server.
+	 */
+	async markSliderCaptchaChecked(id: string): Promise<void> {
+		try {
+			const updatedRecord = await this.tables.slidercaptcha.findOneAndUpdate(
+				{ id },
+				{ $set: { serverChecked: true, lastUpdatedTimestamp: Date.now() } },
+				{ new: true },
+			);
+
+			if (!updatedRecord) {
+				throw new Error(`Slider captcha record with id ${id} not found`);
+			}
+
+			this.logger.info("Slider captcha marked as checked", { id });
+		} catch (err) {
+			this.logger.error("Failed to mark slider captcha as checked", {
+				err,
+				id,
+			});
+			throw new ProsopoDBError("DATABASE.SLIDER_CAPTCHA_MARK_CHECKED_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	async getSessionRecordBySessionId(
+		sessionId: string,
+	): Promise<SessionRecord | null> {
+		try {
+			return await this.tables.session.findOne({ sessionId });
+		} catch (err) {
+			this.logger.error("Failed to get session record", { err, sessionId });
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { err },
+			});
+		}
+	}
+
+	/**
+	 * @description Get datasets by type
+	 * @param {string} datasetType - The type of dataset to get (e.g., 'slider')
+	 */
+	async getDatasetByType(
+		datasetType: string,
+	): Promise<DatasetBase[] | undefined> {
+		const filter = { datasetType };
+		const docs = await this.tables?.dataset.find(filter).lean<DatasetBase[]>();
+
+		if (docs && docs.length > 0) {
+			return docs;
+		}
+
+		return undefined;
 	}
 }

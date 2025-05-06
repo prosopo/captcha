@@ -23,6 +23,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_GET_POW_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_POW_CAPTCHA_CHALLENGE_LIMIT,
 		},
+		[ClientApiPaths.GetSliderCaptchaChallenge]: {
+			windowMs: process.env.PROSOPO_GET_SLIDER_CAPTCHA_CHALLENGE_WINDOW,
+			limit: process.env.PROSOPO_GET_SLIDER_CAPTCHA_CHALLENGE_LIMIT,
+		},
 		[ClientApiPaths.SubmitImageCaptchaSolution]: {
 			windowMs: process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_IMAGE_CAPTCHA_SOLUTION_LIMIT,
@@ -31,9 +35,17 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_SUBMIT_POW_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_SUBMIT_POW_CAPTCHA_SOLUTION_LIMIT,
 		},
+		[ClientApiPaths.SubmitSliderCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_SUBMIT_SLIDER_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_SUBMIT_SLIDER_CAPTCHA_SOLUTION_LIMIT,
+		},
 		[ClientApiPaths.VerifyPowCaptchaSolution]: {
 			windowMs: process.env.PROSOPO_VERIFY_POW_CAPTCHA_SOLUTION_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_POW_CAPTCHA_SOLUTION_LIMIT,
+		},
+		[ClientApiPaths.VerifySliderCaptchaSolution]: {
+			windowMs: process.env.PROSOPO_VERIFY_SLIDER_CAPTCHA_SOLUTION_WINDOW,
+			limit: process.env.PROSOPO_VERIFY_SLIDER_CAPTCHA_SOLUTION_LIMIT,
 		},
 		[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 			windowMs: process.env.PROSOPO_VERIFY_IMAGE_CAPTCHA_SOLUTION_DAPP_WINDOW,
