@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { z } from "zod";
-import { userAttributesSchema } from "#policy/userAttributes.js";
 
 export enum AccessPolicyType {
 	Block = "1",
@@ -21,6 +20,7 @@ export enum AccessPolicyType {
 }
 
 export const accessPolicySchema = z.object({
+	clientId: z.string().optional(),
 	type: z.nativeEnum(AccessPolicyType),
 	solvedImagesCount: z.number().optional(),
 	unsolvedImagesCount: z.number().optional(),
@@ -29,9 +29,23 @@ export const accessPolicySchema = z.object({
 
 export type AccessPolicy = z.infer<typeof accessPolicySchema>;
 
-export const accessPolicyScope = z.object({
-	clientId: z.string().optional(),
-	userAttributes: userAttributesSchema.optional(),
+export const userAttributesSchema = z.object({
+	userId: z.string().optional(),
+	numericIp: z.string().optional(),
+	ja4Hash: z.string().optional(),
+	headersHash: z.string().optional(),
+	userAgentHash: z.string().optional(),
+});
+
+export type UserAttributes = z.infer<typeof userAttributesSchema>;
+
+export const accessPolicyScope = userAttributesSchema.extend({
+	numericIpMaskMin: z.string().optional(),
+	numericIpMaskMax: z.string().optional(),
 });
 
 export type AccessPolicyScope = z.infer<typeof accessPolicyScope>;
+
+export const accessRuleSchema = accessPolicySchema.merge(accessPolicyScope);
+
+export type AccessRule = z.infer<typeof accessRuleSchema>;

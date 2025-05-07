@@ -19,9 +19,7 @@ import {
 } from "@prosopo/api-route";
 import { Address4, Address6 } from "ip-address";
 import type { z } from "zod";
-import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
-import type { Rule } from "../../rule/rule.js";
-import type { RulesStorage } from "../../storage/rulesStorage.js";
+import type { AccessRulesWriter } from "#policy/rules/accessRules.js";
 import {
 	type ApiInsertManyRulesArgsSchema,
 	apiInsertManyRulesArgsSchema,
@@ -30,7 +28,7 @@ import {
 class ApiInsertManyRulesEndpoint
 	implements ApiEndpoint<ApiInsertManyRulesArgsSchema>
 {
-	public constructor(private readonly rulesStorage: RulesStorage) {}
+	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
 
 	async processRequest(
 		args: z.infer<ApiInsertManyRulesArgsSchema>,

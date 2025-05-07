@@ -16,21 +16,24 @@ import type { Logger } from "@prosopo/common";
 import type { SearchReply } from "@redis/search";
 import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
 import type { RedisClientType } from "redis";
-import type { AccessPolicyScope } from "#policy/accessPolicy.js";
-import { type AccessRule, accessRuleSchema } from "#policy/rules/accessRule.js";
+import {
+	type AccessPolicyScope,
+	type AccessRule,
+	accessRuleSchema,
+} from "#policy/accessPolicy.js";
 import type {
 	AccessRulesReader,
 	AccessRulesWriter,
-} from "#policy/rules/accessRules.js";
+} from "#policy/accessRules.js";
 import {
-	accessRuleIndexName,
-	accessRuleKeyPrefix,
-	accessRuleSearchOptions,
-	getAccessRuleKey,
-	getAccessRulesQuery,
-} from "#policy/rules/redis/redisAccessRulesIndex.js";
+	getRedisAccessRuleKey,
+	getRedisAccessRulesQuery,
+	redisAccessRuleIndexName,
+	redisAccessRuleKeyPrefix,
+	redisAccessRuleSearchOptions,
+} from "#policy/redis/redisAccessRulesIndex.js";
 
-export const createAccessRulesReader = (
+export const createRedisAccessRulesReader = (
 	client: RedisClientType,
 	logger: Logger,
 ): AccessRulesReader => {
@@ -38,15 +41,15 @@ export const createAccessRulesReader = (
 		findRules: async (
 			policyScope: AccessPolicyScope,
 		): Promise<AccessRule[]> => {
-			const query = getAccessRulesQuery(policyScope);
+			const query = getRedisAccessRulesQuery(policyScope);
 
 			let searchReply: SearchReply;
 
 			try {
 				searchReply = await client.ft.search(
-					accessRuleIndexName,
+					redisAccessRuleIndexName,
 					query,
-					accessRuleSearchOptions,
+					redisAccessRuleSearchOptions,
 				);
 
 				logger.debug("executed search query", {
@@ -63,19 +66,19 @@ export const createAccessRulesReader = (
 				return [];
 			}
 
-			return extractRulesFromSearchReply(searchReply, logger);
+			return extractAccessRulesFromSearchReply(searchReply, logger);
 		},
 
 		findRuleIds: async (policyScope: AccessPolicyScope): Promise<string[]> => {
-			const query = getAccessRulesQuery(policyScope);
+			const query = getRedisAccessRulesQuery(policyScope);
 
 			let searchReply: SearchNoContentReply;
 
 			try {
 				searchReply = await client.ft.searchNoContent(
-					accessRuleIndexName,
+					redisAccessRuleIndexName,
 					query,
-					accessRuleSearchOptions,
+					redisAccessRuleSearchOptions,
 				);
 
 				logger.debug("executed searchNoContent query", {
@@ -97,7 +100,7 @@ export const createAccessRulesReader = (
 	};
 };
 
-export const createAccessRulesWriter = (
+export const createRedisAccessRulesWriter = (
 	client: RedisClientType,
 ): AccessRulesWriter => {
 	return {
@@ -105,7 +108,7 @@ export const createAccessRulesWriter = (
 			rule: AccessRule,
 			expirationTimestamp?: number,
 		): Promise<string> => {
-			const ruleKey = getAccessRuleKey(rule);
+			const ruleKey = getRedisAccessRuleKey(rule);
 
 			await client.hSet(ruleKey, rule);
 
@@ -120,7 +123,7 @@ export const createAccessRulesWriter = (
 			void (await client.del(ruleIds)),
 
 		deleteAllRules: async (): Promise<void> => {
-			const keys = await client.keys(`${accessRuleKeyPrefix}*`);
+			const keys = await client.keys(`${redisAccessRuleKeyPrefix}*`);
 
 			if (keys.length > 0) {
 				await client.del(keys);
@@ -129,7 +132,7 @@ export const createAccessRulesWriter = (
 	};
 };
 
-const extractRulesFromSearchReply = (
+const extractAccessRulesFromSearchReply = (
 	searchReply: SearchReply,
 	logger: Logger,
 ): AccessRule[] => {

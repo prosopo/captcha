@@ -15,21 +15,16 @@
 import crypto from "node:crypto";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import type { AccessPolicyScope } from "#policy/accessPolicy.js";
-import type { AccessRule } from "#policy/rules/accessRule.js";
-import {
-	type RedisIndex,
-	createRedisIndex,
-} from "#policy/rules/redis/redisIndex.js";
-import type { UserAttributes } from "#policy/userAttributes.js";
+import type { AccessPolicyScope, AccessRule } from "#policy/accessPolicy.js";
+import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
-export const accessRuleIndexName = "index:user-access-rules";
+export const redisAccessRuleIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
-export const accessRuleKeyPrefix = "uar:";
-const accessRuleContentHashAlgorithm = "md5";
+export const redisAccessRuleKeyPrefix = "uar:";
+const redisAccessRuleContentHashAlgorithm = "md5";
 
-const accessRulesIndex: RedisIndex = {
-	name: accessRuleIndexName,
+const redisAccessRulesIndex: RedisIndex = {
+	name: redisAccessRuleIndexName,
 	/**
 	 * Note on the field type decision
 	 *
@@ -44,10 +39,10 @@ const accessRulesIndex: RedisIndex = {
 			// necessary to make possible use of the ismissing() function on this field in the search
 			INDEXMISSING: true,
 		},
-		userId: SCHEMA_FIELD_TYPE.TAG,
-		numericIp: SCHEMA_FIELD_TYPE.NUMERIC,
 		numericIpMaskMin: SCHEMA_FIELD_TYPE.NUMERIC,
 		numericIpMaskMax: SCHEMA_FIELD_TYPE.NUMERIC,
+		userId: SCHEMA_FIELD_TYPE.TAG,
+		numericIp: SCHEMA_FIELD_TYPE.NUMERIC,
 		ja4Hash: SCHEMA_FIELD_TYPE.TAG,
 		headersHash: SCHEMA_FIELD_TYPE.TAG,
 		userAgentHash: SCHEMA_FIELD_TYPE.TAG,
@@ -55,15 +50,15 @@ const accessRulesIndex: RedisIndex = {
 	// the satisfy statement is to guarantee that the keys are right
 	options: {
 		ON: "HASH" as const,
-		PREFIX: accessRuleKeyPrefix,
+		PREFIX: redisAccessRuleKeyPrefix,
 	},
 };
 
-export const createAccessRulesIndex = async (
+export const createRedisAccessRulesIndex = async (
 	client: RedisClientType,
-): Promise<void> => createRedisIndex(client, accessRulesIndex);
+): Promise<void> => createRedisIndex(client, redisAccessRulesIndex);
 
-export const accessRuleSearchOptions: FtSearchOptions = {
+export const redisAccessRuleSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
 };
@@ -78,9 +73,10 @@ export const accessRuleSearchOptions: FtSearchOptions = {
  * )
  * DIALECT 2 # must have when the ismissing() function in use
  * */
-export const getAccessRulesQuery = (policyScope: AccessPolicyScope): string => {
-	const { clientId, userAttributes } = policyScope;
-
+export const getRedisAccessRulesQuery = (
+	policyScope: AccessPolicyScope,
+	clientId?: string,
+): string => {
 	const clientIdFilter =
 		"string" === typeof clientId
 			? // when clientId is set, we look among his + "global" rules.
@@ -88,45 +84,45 @@ export const getAccessRulesQuery = (policyScope: AccessPolicyScope): string => {
 			: // when clientId is not set, we look among "global" only rules.
 				"ismissing(@clientId)";
 
-	if (userAttributes && Object.keys(userAttributes).length > 0) {
-		const userAttributeEntries = Object.entries(userAttributes) as Array<
-			[keyof UserAttributes, unknown]
+	if (Object.keys(policyScope).length > 0) {
+		const policyScopeEntries = Object.entries(policyScope) as Array<
+			[keyof AccessPolicyScope, unknown]
 		>;
-		const userAttributesFilter = userAttributeEntries
-			.map(([attributeName, attributeValue]) =>
-				getUserAttributeQuery(attributeName, attributeValue),
+		const policyScopeFilter = policyScopeEntries
+			.map(([scopeName, scopeValue]) =>
+				getAccessRuleScopeQuery(scopeName, scopeValue),
 			)
 			// to support a partial user attribute match join by the logical "OR"
 			.join(" | ");
 
-		return `${clientIdFilter} ( ${userAttributesFilter} )`;
+		return `${clientIdFilter} ( ${policyScopeFilter} )`;
 	}
 
 	return clientIdFilter;
 };
 
-const getUserAttributeQuery = (
-	attributeName: keyof UserAttributes,
-	attributeValue: unknown,
+const getAccessRuleScopeQuery = (
+	scopeName: keyof AccessPolicyScope,
+	scopeValue: unknown,
 ): string => {
-	type CustomUserAttributes = Record<
-		keyof UserAttributes,
+	type CustomScopeComparisons = Record<
+		keyof AccessPolicyScope,
 		(value: unknown) => string
 	>;
 
-	const customAttributes: Partial<CustomUserAttributes> = {
+	const customScopes: Partial<CustomScopeComparisons> = {
 		numericIp: (value) =>
 			`( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`,
 	};
 
-	return "function" === typeof customAttributes[attributeName]
-		? customAttributes[attributeName](attributeValue)
-		: `@${attributeName}:{${attributeValue}}`;
+	return "function" === typeof customScopes[scopeName]
+		? customScopes[scopeName](scopeValue)
+		: `@${scopeName}:{${scopeValue}}`;
 };
 
-export const getAccessRuleKey = (rule: AccessRule): string =>
-	accessRuleKeyPrefix +
+export const getRedisAccessRuleKey = (rule: AccessRule): string =>
+	redisAccessRuleKeyPrefix +
 	crypto
-		.createHash(accessRuleContentHashAlgorithm)
+		.createHash(redisAccessRuleContentHashAlgorithm)
 		.update(JSON.stringify(rule))
 		.digest("hex");

@@ -38,8 +38,8 @@ export type RedisIndex = {
  * Index re-creation is a priceful operation, especially on the large sets.
  * Using index hashes we avoid re-creation when the index definition is the same.
  */
-const indexHashesRecordKey = "_index_hashes";
-const indexHashAlgorithm = "sha256";
+const redisIndexHashesRecordKey = "_index_hashes";
+const redisIndexHashAlgorithm = "sha256";
 
 export const createRedisIndex = async (
 	client: RedisClientType,
@@ -66,17 +66,18 @@ export const createRedisIndex = async (
 
 const createIndexHash = (index: RedisIndex): string =>
 	crypto
-		.createHash(indexHashAlgorithm)
+		.createHash(redisIndexHashAlgorithm)
 		.update(JSON.stringify(index))
 		.digest("hex");
 
 const fetchIndexHash = async (
 	client: RedisClientType,
 	indexName: string,
-): Promise<string | null> => client.hGet(indexHashesRecordKey, indexName);
+): Promise<string | null> => client.hGet(redisIndexHashesRecordKey, indexName);
 
 const saveIndexHash = async (
 	client: RedisClientType,
 	indexName: string,
 	indexHash: string,
-): Promise<number> => client.hSet(indexHashesRecordKey, indexName, indexHash);
+): Promise<number> =>
+	client.hSet(redisIndexHashesRecordKey, indexName, indexHash);

@@ -22,11 +22,8 @@ import {
 	expect,
 	test,
 } from "vitest";
-import {
-	type RedisIndex,
-	createRedisIndex,
-} from "#policy/rules/redis/redisIndex.js";
-import { createTestRedisClient } from "#policy/tests/rules/redis/testRedisClient.js";
+import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
+import { createTestRedisClient } from "#policy/tests/redis/testRedisClient.js";
 
 describe("redisIndex", () => {
 	let redisClient: RedisClientType;

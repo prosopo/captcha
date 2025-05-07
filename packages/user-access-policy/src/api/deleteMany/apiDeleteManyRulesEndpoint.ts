@@ -18,7 +18,7 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import type { z } from "zod";
-import type { RulesStorage } from "../../storage/rulesStorage.js";
+import type { AccessRulesWriter } from "#policy/rules/accessRules.js";
 import {
 	type ApiDeleteManyRulesArgsSchema,
 	apiDeleteManyRulesArgsSchema,
@@ -27,7 +27,7 @@ import {
 class ApiDeleteManyRulesEndpoint
 	implements ApiEndpoint<ApiDeleteManyRulesArgsSchema>
 {
-	public constructor(private readonly rulesStorage: RulesStorage) {}
+	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
 
 	async processRequest(
 		args: z.infer<ApiDeleteManyRulesArgsSchema>,
