@@ -34,7 +34,10 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { FrictionlessTokenRecord } from "@prosopo/types-database";
+import type {
+	FrictionlessTokenRecord,
+	SessionRecord,
+} from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientRecord,
@@ -57,7 +60,6 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
-	type SessionRecord,
 	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
@@ -943,6 +945,15 @@ export class ProviderDatabase
 			);
 		return doc ? doc : undefined;
 	}
+	/** Get many frictionless token records */
+	async getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = {
+			_id: { $in: tokenId },
+		};
+		return this.tables.frictionlessToken.find<FrictionlessTokenRecord>(filter);
+	}
 
 	/**
 	 * Check if a frictionless token record exists.
@@ -975,17 +986,27 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Check if a session exists and remove it if it does
+	 * Check if a session exists and mark it as removed
 	 * @returns The session record if it existed, undefined otherwise
 	 */
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
 		this.logger.debug({ action: "checking and removing", sessionId });
-		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		const filter: {
+			[key in keyof Pick<SessionRecord, "sessionId" | "deleted">]:
+				| string
+				| { $exists: boolean };
+		} = {
+			sessionId,
+			deleted: { $exists: false },
+		};
 		try {
 			const session = await this.tables.session
-				.findOneAndDelete<SessionRecord>(filter)
+				.findOneAndUpdate<SessionRecord>(filter, {
+					deleted: true,
+					lastUpdatedTimestamp: Date.now(),
+				})
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
@@ -994,6 +1015,69 @@ export class ProviderDatabase
 				logger: this.logger,
 			});
 		}
+	}
+
+	/** Get unstored session records
+	 * @description Get session records that have not been stored yet
+	 * @param limit
+	 * @param skip
+	 */
+	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+		const filterNoStoredTimestamp: {
+			[key in keyof Pick<SessionRecord, "storedAtTimestamp">]: {
+				$exists: boolean;
+			};
+		} = { storedAtTimestamp: { $exists: false } };
+		return this.tables?.session
+			.aggregate<SessionRecord>([
+				{
+					$match: {
+						$or: [
+							filterNoStoredTimestamp,
+							{
+								$expr: {
+									$lt: [
+										{
+											$convert: {
+												input: "$storedAtTimestamp",
+												to: "date",
+											},
+										},
+										{
+											$convert: {
+												input: "$lastUpdatedTimestamp",
+												to: "date",
+											},
+										},
+									],
+								},
+							},
+						],
+					},
+				},
+				{
+					$sort: { _id: 1 },
+				},
+				{
+					$skip: skip,
+				},
+				{
+					$limit: limit,
+				},
+			])
+			.then((docs) => docs || []);
+	}
+
+	/** Mark a list of session records as stored */
+	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
+		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
+			storedAtTimestamp: Date.now(),
+		};
+		await this.tables?.session.updateMany(
+			{ sessionId: { $in: sessionIds } },
+			{ $set: updateDoc },
+			{ upsert: false },
+		);
 	}
 
 	/**

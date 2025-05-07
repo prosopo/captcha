@@ -103,6 +103,8 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	geolocation?: string;
+	vpn?: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 	frictionlessTokenId?: FrictionlessTokenId;
@@ -209,6 +211,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	geolocation: { type: String, required: false },
+	vpn: { type: Boolean, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -244,6 +248,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Number, required: false },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
+	geolocation: { type: String, required: false },
+	vpn: { type: Boolean, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -387,6 +393,8 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
 }
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
@@ -406,16 +414,22 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
-		createdAt: { type: Date, default: Date.now, expires: ONE_HOUR },
+		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
+		storedAtTimestamp: { type: Date, required: false },
+		lastUpdatedTimestamp: { type: Date, required: false },
 	});
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
 	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
+	deleted?: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -427,9 +441,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 	},
 	captchaType: { type: String, enum: CaptchaType, required: true },
+	storedAtTimestamp: { type: Date, required: false },
+	lastUpdatedTimestamp: { type: Date, required: false },
+	deleted: { type: Boolean, required: false },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+SessionRecordSchema.index({ storedAtTimestamp: 1 });
+SessionRecordSchema.index({ deleted: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -616,6 +635,10 @@ export interface IProviderDatabase extends IDatabase {
 		tokenId: FrictionlessTokenId,
 	): Promise<FrictionlessTokenRecord | undefined>;
 
+	getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]>;
+
 	getFrictionlessTokenRecordByToken(
 		token: string,
 	): Promise<FrictionlessTokenRecord | undefined>;
@@ -623,6 +646,13 @@ export interface IProviderDatabase extends IDatabase {
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getUnstoredSessionRecords(
+		limit: number,
+		skip: number,
+	): Promise<SessionRecord[]>;
+
+	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
 
 	getUserAccessRulesStorage(): RulesStorage;
 
