@@ -229,7 +229,7 @@ describe("redisAccessRules", () => {
 			await redisClient.hSet(globalAccessRuleKey, globalAccessRule);
 
 			// when
-			const foundAccessRules = await accessRulesReader.findRules({});
+			const foundAccessRules = await accessRulesReader.findRules({}, undefined);
 
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();
@@ -347,36 +347,36 @@ describe("redisAccessRules", () => {
 			);
 
 			// when
-			const ip_0_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
-				userAttributes: {
+			const ip_0_AccessRules = await accessRulesReader.findRules(
+				{
 					numericIp: "0",
 				},
-			});
-			const ip_99_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
-				userAttributes: {
+				johnId,
+			);
+			const ip_99_AccessRules = await accessRulesReader.findRules(
+				{
 					numericIp: "99",
 				},
-			});
-			const ip_100_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
-				userAttributes: {
+				johnId,
+			);
+			const ip_100_AccessRules = await accessRulesReader.findRules(
+				{
 					numericIp: "100",
 				},
-			});
-			const ip_101_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
-				userAttributes: {
+				johnId,
+			);
+			const ip_101_AccessRules = await accessRulesReader.findRules(
+				{
 					numericIp: "101",
 				},
-			});
-			const ip_201_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
-				userAttributes: {
+				johnId,
+			);
+			const ip_201_AccessRules = await accessRulesReader.findRules(
+				{
 					numericIp: "201",
 				},
-			});
+				johnId,
+			);
 
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();

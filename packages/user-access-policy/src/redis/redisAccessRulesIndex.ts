@@ -75,7 +75,7 @@ export const redisAccessRuleSearchOptions: FtSearchOptions = {
  * */
 export const getRedisAccessRulesQuery = (
 	policyScope: AccessPolicyScope,
-	clientId?: string,
+	clientId: string | undefined,
 ): string => {
 	const clientIdFilter =
 		"string" === typeof clientId

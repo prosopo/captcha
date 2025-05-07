@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
-import type { AccessRulesWriter } from "#policy/rules/accessRules.js";
+import type { AccessRulesWriter } from "#policy/accessRules.js";
 import { apiRulePaths } from "./apiRulePaths.js";
 import { ApiDeleteManyRulesEndpoint } from "./deleteMany/apiDeleteManyRulesEndpoint.js";
 import { ApiInsertManyRulesEndpoint } from "./insertMany/apiInsertManyRulesEndpoint.js";

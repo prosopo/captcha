@@ -17,12 +17,12 @@ import type { AccessPolicyScope, AccessRule } from "#policy/accessPolicy.js";
 export type AccessRulesReader = {
 	findRules(
 		policyScope: AccessPolicyScope,
-		clientId?: string,
+		clientId: string | undefined,
 	): Promise<AccessRule[]>;
 
 	findRuleIds(
 		policyScope: AccessPolicyScope,
-		clientId?: string,
+		clientId: string | undefined,
 	): Promise<string[]>;
 };
 

@@ -18,7 +18,10 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import type { z } from "zod";
-import type { AccessRulesWriter } from "#policy/rules/accessRules.js";
+import type {
+	AccessRulesReader,
+	AccessRulesWriter,
+} from "#policy/accessRules.js";
 import {
 	type ApiDeleteManyRulesArgsSchema,
 	apiDeleteManyRulesArgsSchema,
@@ -27,12 +30,22 @@ import {
 class ApiDeleteManyRulesEndpoint
 	implements ApiEndpoint<ApiDeleteManyRulesArgsSchema>
 {
-	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
+	public constructor(
+		private readonly accessRulesReader: AccessRulesReader,
+		private readonly accessRulesWriter: AccessRulesWriter,
+	) {}
 
 	async processRequest(
 		args: z.infer<ApiDeleteManyRulesArgsSchema>,
 	): Promise<ApiEndpointResponse> {
-		await this.rulesStorage.deleteMany(args);
+		args.map(async (item) => {
+			const ruleIds = await this.accessRulesReader.findRuleIds(
+				item,
+				item.clientId || "",
+			);
+
+			await this.accessRulesWriter.deleteRules(ruleIds);
+		});
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,

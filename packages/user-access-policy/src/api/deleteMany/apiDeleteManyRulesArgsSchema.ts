@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { array, object, string } from "zod";
-import { ruleIpSchema } from "../../rule/ip/ruleIpSchema.js";
+import { z } from "zod";
+import { accessPolicyScope } from "#policy/accessPolicy.js";
 
-const apiDeleteManyRulesArgsSchema = array(
-	object({
-		clientId: string().optional(),
-		userIp: ruleIpSchema.optional(),
-		userId: string().optional(),
-		ja4: string().optional(),
+const apiDeleteManyRulesArgsSchema = z.array(
+	z.object({
+		// fixme join into the object.
+		clientId: z.string().optional(),
+		policyScope: accessPolicyScope.optional(),
 	}),
 );
 

@@ -40,8 +40,9 @@ export const createRedisAccessRulesReader = (
 	return {
 		findRules: async (
 			policyScope: AccessPolicyScope,
+			clientId: string | undefined,
 		): Promise<AccessRule[]> => {
-			const query = getRedisAccessRulesQuery(policyScope);
+			const query = getRedisAccessRulesQuery(policyScope, clientId);
 
 			let searchReply: SearchReply;
 
@@ -69,8 +70,11 @@ export const createRedisAccessRulesReader = (
 			return extractAccessRulesFromSearchReply(searchReply, logger);
 		},
 
-		findRuleIds: async (policyScope: AccessPolicyScope): Promise<string[]> => {
-			const query = getRedisAccessRulesQuery(policyScope);
+		findRuleIds: async (
+			policyScope: AccessPolicyScope,
+			clientId: string | undefined,
+		): Promise<string[]> => {
+			const query = getRedisAccessRulesQuery(policyScope, clientId);
 
 			let searchReply: SearchNoContentReply;
 
