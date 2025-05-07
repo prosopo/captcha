@@ -25,9 +25,9 @@ import type {
 import {
 	type ApiDeleteManyRulesArgsSchema,
 	apiDeleteManyRulesArgsSchema,
-} from "./apiDeleteManyRulesArgsSchema.js";
+} from "#policy/api/deleteMany/apiDeleteManyRulesArgsSchema.js";
 
-class ApiDeleteManyRulesEndpoint
+export class ApiDeleteManyRulesEndpoint
 	implements ApiEndpoint<ApiDeleteManyRulesArgsSchema>
 {
 	public constructor(
@@ -38,14 +38,13 @@ class ApiDeleteManyRulesEndpoint
 	async processRequest(
 		args: z.infer<ApiDeleteManyRulesArgsSchema>,
 	): Promise<ApiEndpointResponse> {
-		args.map(async (item) => {
-			const ruleIds = await this.accessRulesReader.findRuleIds(
-				item,
-				item.clientId || "",
-			);
+		for (const accessRuleFilter of args) {
+			// fixme rangeMin & rangeMax case
+			const ruleIds =
+				await this.accessRulesReader.findRuleIds(accessRuleFilter);
 
 			await this.accessRulesWriter.deleteRules(ruleIds);
-		});
+		}
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
@@ -56,5 +55,3 @@ class ApiDeleteManyRulesEndpoint
 		return apiDeleteManyRulesArgsSchema;
 	}
 }
-
-export { ApiDeleteManyRulesEndpoint };

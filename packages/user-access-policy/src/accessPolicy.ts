@@ -20,16 +20,13 @@ export enum AccessPolicyType {
 }
 
 export const accessPolicySchema = z.object({
-	clientId: z.string().optional(),
 	type: z.nativeEnum(AccessPolicyType),
 	solvedImagesCount: z.number().optional(),
 	unsolvedImagesCount: z.number().optional(),
 	frictionlessScore: z.number().optional(),
 });
 
-export type AccessPolicy = z.infer<typeof accessPolicySchema>;
-
-export const userAttributesSchema = z.object({
+export const userAccessAttributesSchema = z.object({
 	userId: z.string().optional(),
 	numericIp: z.string().optional(),
 	ja4Hash: z.string().optional(),
@@ -37,15 +34,28 @@ export const userAttributesSchema = z.object({
 	userAgentHash: z.string().optional(),
 });
 
-export type UserAttributes = z.infer<typeof userAttributesSchema>;
-
-export const accessPolicyScope = userAttributesSchema.extend({
+export const accessPolicyScopeSchema = userAccessAttributesSchema.extend({
 	numericIpMaskMin: z.string().optional(),
 	numericIpMaskMax: z.string().optional(),
 });
 
-export type AccessPolicyScope = z.infer<typeof accessPolicyScope>;
+const accessRuleScopeSchema = z.object({
+	clientId: z.string().optional(),
+});
 
-export const accessRuleSchema = accessPolicySchema.merge(accessPolicyScope);
+export const accessRuleSchema = z.object({
+	// flat structure is used to fit the Redis requirements
+	...accessPolicySchema.shape,
+	...accessRuleScopeSchema.shape,
+	...accessPolicyScopeSchema.shape,
+});
 
+export const accessRulesFilterSchema = accessRuleScopeSchema.extend({
+	policyScope: accessPolicyScopeSchema.optional(),
+});
+
+export type AccessPolicy = z.infer<typeof accessPolicySchema>;
+export type UserAccessAttributes = z.infer<typeof userAccessAttributesSchema>;
+export type AccessPolicyScope = z.infer<typeof accessPolicyScopeSchema>;
 export type AccessRule = z.infer<typeof accessRuleSchema>;
+export type AccessRulesFilter = z.infer<typeof accessRulesFilterSchema>;

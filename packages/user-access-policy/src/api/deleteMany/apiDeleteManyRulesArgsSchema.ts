@@ -13,16 +13,8 @@
 // limitations under the License.
 
 import { z } from "zod";
-import { accessPolicyScope } from "#policy/accessPolicy.js";
+import { accessRulesFilterSchema } from "#policy/accessPolicy.js";
 
-const apiDeleteManyRulesArgsSchema = z.array(
-	z.object({
-		// fixme join into the object.
-		clientId: z.string().optional(),
-		policyScope: accessPolicyScope.optional(),
-	}),
-);
+export const apiDeleteManyRulesArgsSchema = z.array(accessRulesFilterSchema);
 
-type ApiDeleteManyRulesArgsSchema = typeof apiDeleteManyRulesArgsSchema;
-
-export { apiDeleteManyRulesArgsSchema, type ApiDeleteManyRulesArgsSchema };
+export type ApiDeleteManyRulesArgsSchema = typeof apiDeleteManyRulesArgsSchema;

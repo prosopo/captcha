@@ -15,7 +15,11 @@
 import crypto from "node:crypto";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import type { AccessPolicyScope, AccessRule } from "#policy/accessPolicy.js";
+import type {
+	AccessPolicyScope,
+	AccessRule,
+	AccessRulesFilter,
+} from "#policy/accessPolicy.js";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
 export const redisAccessRuleIndexName = "index:user-access-rules";
@@ -74,34 +78,35 @@ export const redisAccessRuleSearchOptions: FtSearchOptions = {
  * DIALECT 2 # must have when the ismissing() function in use
  * */
 export const getRedisAccessRulesQuery = (
-	policyScope: AccessPolicyScope,
-	clientId: string | undefined,
+	rulesFilter: AccessRulesFilter,
 ): string => {
-	const clientIdFilter =
+	const { clientId, policyScope } = rulesFilter;
+
+	const ruleScopeFilter =
 		"string" === typeof clientId
 			? // when clientId is set, we look among his + "global" rules.
 				`( @clientId:{${clientId}} | ismissing(@clientId) )`
 			: // when clientId is not set, we look among "global" only rules.
 				"ismissing(@clientId)";
 
-	if (Object.keys(policyScope).length > 0) {
+	if (policyScope && Object.keys(policyScope).length > 0) {
 		const policyScopeEntries = Object.entries(policyScope) as Array<
 			[keyof AccessPolicyScope, unknown]
 		>;
 		const policyScopeFilter = policyScopeEntries
 			.map(([scopeName, scopeValue]) =>
-				getAccessRuleScopeQuery(scopeName, scopeValue),
+				getPolicyScopeQuery(scopeName, scopeValue),
 			)
 			// to support a partial user attribute match join by the logical "OR"
 			.join(" | ");
 
-		return `${clientIdFilter} ( ${policyScopeFilter} )`;
+		return `${ruleScopeFilter} ( ${policyScopeFilter} )`;
 	}
 
-	return clientIdFilter;
+	return ruleScopeFilter;
 };
 
-const getAccessRuleScopeQuery = (
+const getPolicyScopeQuery = (
 	scopeName: keyof AccessPolicyScope,
 	scopeValue: unknown,
 ): string => {

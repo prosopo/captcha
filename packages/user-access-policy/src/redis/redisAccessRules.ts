@@ -17,8 +17,8 @@ import type { SearchReply } from "@redis/search";
 import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
 import type { RedisClientType } from "redis";
 import {
-	type AccessPolicyScope,
 	type AccessRule,
+	type AccessRulesFilter,
 	accessRuleSchema,
 } from "#policy/accessPolicy.js";
 import type {
@@ -39,10 +39,9 @@ export const createRedisAccessRulesReader = (
 ): AccessRulesReader => {
 	return {
 		findRules: async (
-			policyScope: AccessPolicyScope,
-			clientId: string | undefined,
+			rulesFilter: AccessRulesFilter,
 		): Promise<AccessRule[]> => {
-			const query = getRedisAccessRulesQuery(policyScope, clientId);
+			const query = getRedisAccessRulesQuery(rulesFilter);
 
 			let searchReply: SearchReply;
 
@@ -54,14 +53,14 @@ export const createRedisAccessRulesReader = (
 				);
 
 				logger.debug("executed search query", {
-					policyScope: policyScope,
+					rulesFilter: rulesFilter,
 					searchReply: searchReply,
 					query: query,
 				});
 			} catch (e) {
 				logger.error("failed to execute search query", {
 					query: query,
-					policyScope: policyScope,
+					rulesFilter: rulesFilter,
 				});
 
 				return [];
@@ -70,11 +69,8 @@ export const createRedisAccessRulesReader = (
 			return extractAccessRulesFromSearchReply(searchReply, logger);
 		},
 
-		findRuleIds: async (
-			policyScope: AccessPolicyScope,
-			clientId: string | undefined,
-		): Promise<string[]> => {
-			const query = getRedisAccessRulesQuery(policyScope, clientId);
+		findRuleIds: async (rulesFilter: AccessRulesFilter): Promise<string[]> => {
+			const query = getRedisAccessRulesQuery(rulesFilter);
 
 			let searchReply: SearchNoContentReply;
 
@@ -86,14 +82,14 @@ export const createRedisAccessRulesReader = (
 				);
 
 				logger.debug("executed searchNoContent query", {
-					policyScope: policyScope,
+					rulesFilter: rulesFilter,
 					searchReply: searchReply,
 					query: query,
 				});
 			} catch (e) {
 				logger.error("failed to execute searchNoContent query", {
 					query: query,
-					policyScope: policyScope,
+					rulesFilter: rulesFilter,
 				});
 
 				return [];
