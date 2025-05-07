@@ -15,10 +15,11 @@
 import crypto from "node:crypto";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import type {
-	AccessPolicyScope,
-	AccessRule,
-	AccessRulesFilter,
+import {
+	AccessPolicyMatch,
+	type AccessPolicyScope,
+	type AccessRule,
+	type AccessRulesFilter,
 } from "#policy/accessPolicy.js";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
@@ -80,7 +81,10 @@ export const redisAccessRuleSearchOptions: FtSearchOptions = {
 export const getRedisAccessRulesQuery = (
 	rulesFilter: AccessRulesFilter,
 ): string => {
-	const { clientId, policyScope } = rulesFilter;
+	const { clientId, policyScope, policyMatch } = rulesFilter;
+
+	const policyScopeMatch =
+		AccessPolicyMatch.STRICT === policyMatch ? " " : " | ";
 
 	const ruleScopeFilter =
 		"string" === typeof clientId
@@ -97,8 +101,7 @@ export const getRedisAccessRulesQuery = (
 			.map(([scopeName, scopeValue]) =>
 				getPolicyScopeQuery(scopeName, scopeValue),
 			)
-			// to support a partial user attribute match join by the logical "OR"
-			.join(" | ");
+			.join(policyScopeMatch);
 
 		return `${ruleScopeFilter} ( ${policyScopeFilter} )`;
 	}

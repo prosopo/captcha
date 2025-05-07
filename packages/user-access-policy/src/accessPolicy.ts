@@ -19,6 +19,11 @@ export enum AccessPolicyType {
 	Restrict = "2",
 }
 
+export enum AccessPolicyMatch {
+	STRICT = "STRICT",
+	PARTIAL = "PARTIAL",
+}
+
 export const accessPolicySchema = z.object({
 	type: z.nativeEnum(AccessPolicyType),
 	solvedImagesCount: z.number().optional(),
@@ -34,10 +39,12 @@ export const userAccessAttributesSchema = z.object({
 	userAgentHash: z.string().optional(),
 });
 
-export const accessPolicyScopeSchema = userAccessAttributesSchema.extend({
-	numericIpMaskMin: z.string().optional(),
-	numericIpMaskMax: z.string().optional(),
-});
+export const accessPolicyScopeSchema = z
+	.object({
+		numericIpMaskMin: z.string().optional(),
+		numericIpMaskMax: z.string().optional(),
+	})
+	.merge(userAccessAttributesSchema);
 
 const accessRuleScopeSchema = z.object({
 	clientId: z.string().optional(),
@@ -50,9 +57,12 @@ export const accessRuleSchema = z.object({
 	...accessPolicyScopeSchema.shape,
 });
 
-export const accessRulesFilterSchema = accessRuleScopeSchema.extend({
-	policyScope: accessPolicyScopeSchema.optional(),
-});
+export const accessRulesFilterSchema = z
+	.object({
+		policyScope: accessPolicyScopeSchema.optional(),
+		policyMatch: z.nativeEnum(AccessPolicyMatch).optional(),
+	})
+	.merge(accessRuleScopeSchema);
 
 export type AccessPolicy = z.infer<typeof accessPolicySchema>;
 export type UserAccessAttributes = z.infer<typeof userAccessAttributesSchema>;

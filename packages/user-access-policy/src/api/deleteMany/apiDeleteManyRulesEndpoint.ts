@@ -39,7 +39,6 @@ export class ApiDeleteManyRulesEndpoint
 		args: z.infer<ApiDeleteManyRulesArgsSchema>,
 	): Promise<ApiEndpointResponse> {
 		for (const accessRuleFilter of args) {
-			// fixme rangeMin & rangeMax case
 			const ruleIds =
 				await this.accessRulesReader.findRuleIds(accessRuleFilter);
 

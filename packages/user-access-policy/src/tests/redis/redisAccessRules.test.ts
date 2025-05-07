@@ -240,6 +240,7 @@ describe("redisAccessRules", () => {
 			expect(foundAccessRules).toEqual([globalAccessRule]);
 		});
 
+		// fixme STRICT/PARTIAL match
 		test("finds client and global rules by [any] user attribute match", async () => {
 			// given
 
