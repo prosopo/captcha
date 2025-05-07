@@ -13,13 +13,19 @@
 // limitations under the License.
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
-import type { AccessRulesWriter } from "#policy/accessRules.js";
+import type {
+	AccessRulesReader,
+	AccessRulesWriter,
+} from "#policy/accessRules.js";
 import { apiRulePaths } from "./apiRulePaths.js";
 import { ApiDeleteManyRulesEndpoint } from "./deleteMany/apiDeleteManyRulesEndpoint.js";
 import { ApiInsertManyRulesEndpoint } from "./insertMany/apiInsertManyRulesEndpoint.js";
 
 class ApiRuleRoutesProvider implements ApiRoutesProvider {
-	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
+	public constructor(
+		private readonly accessRulesReader: AccessRulesReader,
+		private readonly accessRulesWriter: AccessRulesWriter,
+	) {}
 
 	public getRoutes(): ApiRoute[] {
 		return [
@@ -29,7 +35,10 @@ class ApiRuleRoutesProvider implements ApiRoutesProvider {
 			},
 			{
 				path: apiRulePaths.DELETE_MANY,
-				endpoint: new ApiDeleteManyRulesEndpoint(this.accessRulesWriter),
+				endpoint: new ApiDeleteManyRulesEndpoint(
+					this.accessRulesReader,
+					this.accessRulesWriter,
+				),
 			},
 		];
 	}

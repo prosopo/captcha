@@ -59,8 +59,9 @@ export const accessRuleSchema = z.object({
 
 export const accessRulesFilterSchema = z
 	.object({
+		ruleScopeMatch: z.nativeEnum(AccessPolicyMatch).optional(),
 		policyScope: accessPolicyScopeSchema.optional(),
-		policyMatch: z.nativeEnum(AccessPolicyMatch).optional(),
+		policyScopeMatch: z.nativeEnum(AccessPolicyMatch).optional(),
 	})
 	.merge(accessRuleScopeSchema);
 

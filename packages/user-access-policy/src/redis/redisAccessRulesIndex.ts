@@ -81,27 +81,18 @@ export const redisAccessRuleSearchOptions: FtSearchOptions = {
 export const getRedisAccessRulesQuery = (
 	rulesFilter: AccessRulesFilter,
 ): string => {
-	const { clientId, policyScope, policyMatch } = rulesFilter;
+	const { policyScope } = rulesFilter;
 
-	const policyScopeMatch =
-		AccessPolicyMatch.STRICT === policyMatch ? " " : " | ";
-
-	const ruleScopeFilter =
-		"string" === typeof clientId
-			? // when clientId is set, we look among his + "global" rules.
-				`( @clientId:{${clientId}} | ismissing(@clientId) )`
-			: // when clientId is not set, we look among "global" only rules.
-				"ismissing(@clientId)";
+	const ruleScopeFilter = getRuleScopeQuery(rulesFilter);
 
 	if (policyScope && Object.keys(policyScope).length > 0) {
-		const policyScopeEntries = Object.entries(policyScope) as Array<
-			[keyof AccessPolicyScope, unknown]
-		>;
-		const policyScopeFilter = policyScopeEntries
-			.map(([scopeName, scopeValue]) =>
-				getPolicyScopeQuery(scopeName, scopeValue),
-			)
-			.join(policyScopeMatch);
+		const policyScopeJoinType =
+			AccessPolicyMatch.STRICT === rulesFilter.policyScopeMatch ? " " : " | ";
+
+		const policyScopeFilter = getPolicyScopeQuery(
+			policyScope,
+			policyScopeJoinType,
+		);
 
 		return `${ruleScopeFilter} ( ${policyScopeFilter} )`;
 	}
@@ -109,23 +100,52 @@ export const getRedisAccessRulesQuery = (
 	return ruleScopeFilter;
 };
 
+const getRuleScopeQuery = (rulesFilter: AccessRulesFilter): string => {
+	const { clientId, ruleScopeMatch } = rulesFilter;
+
+	if ("string" === typeof clientId) {
+		if (AccessPolicyMatch.STRICT === ruleScopeMatch) {
+			return `@clientId:{${clientId}}`;
+		}
+
+		return `( @clientId:{${clientId}} | ismissing(@clientId) )`;
+	}
+
+	return "ismissing(@clientId)";
+};
+
 const getPolicyScopeQuery = (
-	scopeName: keyof AccessPolicyScope,
-	scopeValue: unknown,
+	policyScope: AccessPolicyScope,
+	policyScopeJoinType: string,
 ): string => {
-	type CustomScopeComparisons = Record<
+	const policyScopeEntries = Object.entries(policyScope) as Array<
+		[keyof AccessPolicyScope, unknown]
+	>;
+
+	return policyScopeEntries
+		.map(([scopeName, scopeValue]) =>
+			getPolicyScopeFieldQuery(scopeName, scopeValue),
+		)
+		.join(policyScopeJoinType);
+};
+
+const getPolicyScopeFieldQuery = (
+	scopeFieldName: keyof AccessPolicyScope,
+	scopeFieldValue: unknown,
+): string => {
+	type CustomScopeFieldComparisons = Record<
 		keyof AccessPolicyScope,
 		(value: unknown) => string
 	>;
 
-	const customScopes: Partial<CustomScopeComparisons> = {
+	const customFieldComparisons: Partial<CustomScopeFieldComparisons> = {
 		numericIp: (value) =>
 			`( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`,
 	};
 
-	return "function" === typeof customScopes[scopeName]
-		? customScopes[scopeName](scopeValue)
-		: `@${scopeName}:{${scopeValue}}`;
+	return "function" === typeof customFieldComparisons[scopeFieldName]
+		? customFieldComparisons[scopeFieldName](scopeFieldValue)
+		: `@${scopeFieldName}:{${scopeFieldValue}}`;
 };
 
 export const getRedisAccessRuleKey = (rule: AccessRule): string =>

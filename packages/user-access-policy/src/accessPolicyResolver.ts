@@ -15,14 +15,13 @@
 import type { Logger } from "@prosopo/common";
 import type {
 	AccessPolicy,
-	AccessPolicyScope,
 	AccessRule,
+	AccessRulesFilter,
 } from "#policy/accessPolicy.js";
 import type { AccessRulesReader } from "#policy/accessRules.js";
 
 export type ResolveAccessPolicy = (
-	policyScope: AccessPolicyScope,
-	clientId?: string,
+	rulesFilter: AccessRulesFilter,
 ) => Promise<AccessPolicy | undefined>;
 
 export const createAccessPolicyResolver = (
@@ -30,18 +29,14 @@ export const createAccessPolicyResolver = (
 	logger: Logger,
 ): ResolveAccessPolicy => {
 	return async (
-		policyScope: AccessPolicyScope,
-		clientId?: string,
+		rulesFilter: AccessRulesFilter,
 	): Promise<AccessPolicy | undefined> => {
-		const accessRules = await accessRulesReader.findRules(
-			policyScope,
-			clientId,
-		);
+		const accessRules = await accessRulesReader.findRules(rulesFilter);
 
 		const primaryAccessRule = resolvePrimaryAccessRule(accessRules);
 
 		logger.debug("Resolved access policy", {
-			policyScope: policyScope,
+			rulesFilter: rulesFilter,
 			accessRules: accessRules,
 			primaryAccessRule: primaryAccessRule,
 		});
