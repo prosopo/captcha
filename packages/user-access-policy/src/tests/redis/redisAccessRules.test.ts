@@ -200,19 +200,30 @@ describe("redisAccessRules", () => {
 			await redisClient.hSet(globalAccessRuleKey, globalAccessRule);
 
 			// when
-			const foundAccessRules = await accessRulesReader.findRules({
+			const foundByClientAccessRules = await accessRulesReader.findRules({
 				ruleScopeMatch: AccessPolicyMatch.PARTIAL,
 				clientId: johnId,
+			});
+			const foundAccessRules = await accessRulesReader.findRules({
+				ruleScopeMatch: AccessPolicyMatch.PARTIAL,
 			});
 
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();
 
 			expect(indexRecordsCount).toBe(3);
-			expect(foundAccessRules).toEqual([johnAccessRule, globalAccessRule]);
+			expect(foundByClientAccessRules).toEqual([
+				johnAccessRule,
+				globalAccessRule,
+			]);
+			expect(foundAccessRules).toEqual([
+				johnAccessRule,
+				doeAccessRule,
+				globalAccessRule,
+			]);
 		});
 
-		test("finds client only rules by strict rule scope match", async () => {
+		test("finds client or global rules by strict rule scope match", async () => {
 			// given
 			const johnId = getUniqueString();
 			const johnAccessRule: AccessRule = {
@@ -237,49 +248,20 @@ describe("redisAccessRules", () => {
 			await redisClient.hSet(globalAccessRuleKey, globalAccessRule);
 
 			// when
-			const foundAccessRules = await accessRulesReader.findRules({
+			const foundClientAccessRules = await accessRulesReader.findRules({
 				ruleScopeMatch: AccessPolicyMatch.STRICT,
 				clientId: johnId,
+			});
+			const foundGlobalAccessRules = await accessRulesReader.findRules({
+				ruleScopeMatch: AccessPolicyMatch.STRICT,
 			});
 
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();
 
 			expect(indexRecordsCount).toBe(3);
-			expect(foundAccessRules).toEqual([johnAccessRule]);
-		});
-
-		test("finds global only rules when client id is not defined", async () => {
-			// given
-			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const johnAccessRuleKey = getRedisAccessRuleKey(johnAccessRule);
-
-			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const doeAccessRuleKey = getRedisAccessRuleKey(doeAccessRule);
-
-			const globalAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-			};
-			const globalAccessRuleKey = getRedisAccessRuleKey(globalAccessRule);
-
-			await redisClient.hSet(johnAccessRuleKey, johnAccessRule);
-			await redisClient.hSet(doeAccessRuleKey, doeAccessRule);
-			await redisClient.hSet(globalAccessRuleKey, globalAccessRule);
-
-			// when
-			const foundAccessRules = await accessRulesReader.findRules({});
-
-			// then
-			const indexRecordsCount = await getIndexRecordsCount();
-
-			expect(indexRecordsCount).toBe(3);
-			expect(foundAccessRules).toEqual([globalAccessRule]);
+			expect(foundClientAccessRules).toEqual([johnAccessRule]);
+			expect(foundGlobalAccessRules).toEqual([globalAccessRule]);
 		});
 
 		test("finds rules by partial policy scope match", async () => {

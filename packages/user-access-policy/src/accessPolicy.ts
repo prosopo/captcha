@@ -59,9 +59,17 @@ export const accessRuleSchema = z.object({
 
 export const accessRulesFilterSchema = z
 	.object({
-		ruleScopeMatch: z.nativeEnum(AccessPolicyMatch).optional(),
 		policyScope: accessPolicyScopeSchema.optional(),
+		/**
+		 * STRICT: finds rules where all the given fields matches. Used by the API
+		 * PARTIAL: finds rules where any of the given fields match. Used by the Express middleware
+		 */
 		policyScopeMatch: z.nativeEnum(AccessPolicyMatch).optional(),
+		/**
+		 * STRICT: "clientId" => client rules, "undefined" => global rules. Used by the API
+		 * PARTIAL: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
+		 */
+		ruleScopeMatch: z.nativeEnum(AccessPolicyMatch).optional(),
 	})
 	.merge(accessRuleScopeSchema);
 

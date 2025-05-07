@@ -86,47 +86,47 @@ export const getRedisAccessRulesQuery = (
 	const ruleScopeFilter = getRuleScopeQuery(rulesFilter);
 
 	if (policyScope && Object.keys(policyScope).length > 0) {
-		const policyScopeJoinType =
-			AccessPolicyMatch.STRICT === rulesFilter.policyScopeMatch ? " " : " | ";
-
 		const policyScopeFilter = getPolicyScopeQuery(
 			policyScope,
-			policyScopeJoinType,
+			rulesFilter.policyScopeMatch,
 		);
 
 		return `${ruleScopeFilter} ( ${policyScopeFilter} )`;
 	}
 
-	return ruleScopeFilter;
+	return ruleScopeFilter ? ruleScopeFilter : "*";
 };
 
 const getRuleScopeQuery = (rulesFilter: AccessRulesFilter): string => {
 	const { clientId, ruleScopeMatch } = rulesFilter;
 
 	if ("string" === typeof clientId) {
-		if (AccessPolicyMatch.STRICT === ruleScopeMatch) {
-			return `@clientId:{${clientId}}`;
-		}
-
-		return `( @clientId:{${clientId}} | ismissing(@clientId) )`;
+		return AccessPolicyMatch.STRICT === ruleScopeMatch
+			? `@clientId:{${clientId}}`
+			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
 	}
 
-	return "ismissing(@clientId)";
+	return AccessPolicyMatch.STRICT === ruleScopeMatch
+		? "ismissing(@clientId)"
+		: "";
 };
 
 const getPolicyScopeQuery = (
 	policyScope: AccessPolicyScope,
-	policyScopeJoinType: string,
+	policyScopeMatch: AccessPolicyMatch | undefined,
 ): string => {
-	const policyScopeEntries = Object.entries(policyScope) as Array<
+	const scopeEntries = Object.entries(policyScope) as Array<
 		[keyof AccessPolicyScope, unknown]
 	>;
 
-	return policyScopeEntries
-		.map(([scopeName, scopeValue]) =>
-			getPolicyScopeFieldQuery(scopeName, scopeValue),
+	const scopeJoinType =
+		AccessPolicyMatch.STRICT === policyScopeMatch ? " " : " | ";
+
+	return scopeEntries
+		.map(([scopeFieldName, scopeFieldValue]) =>
+			getPolicyScopeFieldQuery(scopeFieldName, scopeFieldValue),
 		)
-		.join(policyScopeJoinType);
+		.join(scopeJoinType);
 };
 
 const getPolicyScopeFieldQuery = (
