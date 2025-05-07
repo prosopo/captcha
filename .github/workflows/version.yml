@@ -1,0 +1,98 @@
+# process changesets to bump package versions, then pr them back into the branch
+
+name: version
+
+on:
+    push:
+        branches: # on push to these branches
+            - main
+            - build/*
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: false # queue the new runs until previous have finished. This avoids version bumps overlapping with each other
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    version:
+        name: version
+        runs-on: ubuntu-latest
+        steps:
+            - name: Print contexts
+              uses: prosopo/captcha/.github/actions/print_contexts@gha
+              with:
+                    INPUTS_CONTEXT: ${{ toJson(inputs) }}
+                    NEEDS_CONTEXT: ${{ toJson(needs) }}
+                    VARS_CONTEXT: ${{ toJson(vars) }}
+                    SECRETS_CONTEXT: ${{ toJson(secrets) }}
+        
+            - name: Authenticate GitHub CLI
+              run: echo "${{ secrets.PROSOPONATOR_PAT }}" | gh auth login --with-token
+
+            - uses: actions/checkout@v4
+              with:
+                  submodules: 'recursive'
+                  token: ${{ secrets.PROSOPONATOR_PAT }}
+                  fetch-depth: 0 # fetch all history
+
+            - uses: prosopo/captcha/.github/actions/npm@gha
+
+            - name: git config
+              run: |
+                set -x
+                git config user.name "prosoponator[bot]"
+                git config user.email "dev@prosopo.io"
+
+            - name: check for changesets
+              run: |
+                set -x
+                set +e
+                (npm run changesets)
+                echo "changesets_exit_code=$?" >> $GITHUB_ENV
+
+            - name: set prerelease mode
+              if: env.changesets_exit_code == '0'
+              run: |
+                set -x
+                tag=$(echo "${GITHUB_REF#refs/heads/}" | cut -d'/' -f2-)
+                # enter prerelease mode if the branch is not main
+                # exit prerelease mode if the branch is main
+                if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
+                  if [[ -f .changeset/pre.json ]]; then
+                    # exit prerelease mode if not already
+                    npx changeset pre exit
+                  fi
+                elif [[ ! -f .changeset/pre.json ]]; then
+                  # enter prerelease mode if not already
+                  npx changeset pre enter $tag
+                fi
+
+            - name: apply changesets
+              if: env.changesets_exit_code == '0'
+              run: |
+                # apply changesets to bump package versions
+                npm run changesets:version
+
+            - name: pr changes
+              if: env.changesets_exit_code == '0'
+              run: |
+                # check if there are any changes
+                if [[ -n $(git status --porcelain) ]]; then
+                  # create a new branch for the changes
+                  branch="version/${{ github.run_id }}"
+                  git checkout -b $branch
+                  # add all changes to git
+                  git add .
+                  # commit the changes
+                  git commit -m "version bump"
+                  # push the changes to the new branch
+                  git push origin $branch
+                  # create a pull request
+                  gh pr create --base ${GITHUB_REF#refs/heads/} --fill
+                else
+                  echo "No changes to commit"
+                fi
