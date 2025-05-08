@@ -37,8 +37,8 @@ import {
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
-	AccessRuleMatchType,
 	type ResolveAccessPolicy,
+	ScopeMatch,
 	createAccessPolicyResolver,
 } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
@@ -126,16 +126,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					dapp,*/
 
 				const userAccessPolicy = await resolveAccessPolicy({
-					ruleScope: {
+					policyScope: {
 						clientId: dapp,
 					},
-					ruleScopeMatch: AccessRuleMatchType.GREEDY,
-					policyScope: {
+					policyScopeMatch: ScopeMatch.Greedy,
+					userScope: {
 						userId: user,
 						ja4Hash: req.ja4,
-						numericIp: ipAddress.bigInt,
+						numericIp: ipAddress.bigInt(),
 					},
-					policyScopeMatch: AccessRuleMatchType.GREEDY,
+					userScopeMatch: ScopeMatch.Greedy,
 				});
 
 				const { valid, reason, frictionlessTokenId } =

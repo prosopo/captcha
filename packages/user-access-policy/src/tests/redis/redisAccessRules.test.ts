@@ -21,23 +21,23 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { bigint } from "zod";
-import { AccessPolicyType } from "#policy/accessPolicy.js";
-import { AccessPolicyMatch } from "#policy/accessPolicyResolver.js";
+import { PolicyType } from "#policy/accessPolicy.js";
+import { ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type {
 	AccessRule,
 	AccessRulesReader,
 	AccessRulesWriter,
 } from "#policy/accessRules.js";
 import {
-	createRedisAccessRuleIndex,
-	getRedisAccessRuleKey,
-	redisAccessRuleIndexName,
-} from "#policy/redis/redisAccessRule.js";
-import {
 	createRedisAccessRulesReader,
 	createRedisAccessRulesWriter,
 } from "#policy/redis/redisAccessRules.js";
+import {
+	createRedisAccessRulesIndex,
+	getRedisAccessRuleKey,
+	getRedisAccessRuleValue,
+	redisAccessRulesIndexName,
+} from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "#policy/tests/redis/testRedisClient.js";
 import { testLogger } from "#policy/tests/testLogger.js";
 
@@ -46,12 +46,19 @@ describe("redisAccessRules", () => {
 
 	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
 	const getIndexRecordsCount = async (): Promise<number> =>
-		(await redisClient.ft.info(redisAccessRuleIndexName)).num_docs;
+		(await redisClient.ft.info(redisAccessRulesIndexName)).num_docs;
+
+	const insertRule = async (rule: AccessRule) => {
+		const ruleKey = getRedisAccessRuleKey(rule);
+		const ruleValue = getRedisAccessRuleValue(rule);
+
+		await redisClient.hSet(ruleKey, ruleValue);
+	};
 
 	beforeAll(async () => {
 		redisClient = await createTestRedisClient();
 
-		await createRedisAccessRuleIndex(redisClient);
+		await createRedisAccessRulesIndex(redisClient);
 	});
 
 	beforeEach(async () => {
@@ -72,7 +79,7 @@ describe("redisAccessRules", () => {
 		test("inserts rule", async () => {
 			// given
 			const accessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: "clientId",
 			};
 			const accessRuleKey = getRedisAccessRuleKey(accessRule);
@@ -91,7 +98,7 @@ describe("redisAccessRules", () => {
 		test("inserts time limited rule", async () => {
 			// given
 			const accessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: "clientId",
 			};
 			const accessRuleKey = getRedisAccessRuleKey(accessRule);
@@ -115,19 +122,19 @@ describe("redisAccessRules", () => {
 		test("deletes rules", async () => {
 			// given
 			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 			};
 			const johnAccessRuleKey = getRedisAccessRuleKey(johnAccessRule);
 
 			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 			};
 			const doeAccessRuleKey = getRedisAccessRuleKey(doeAccessRule);
 
-			await redisClient.hSet(johnAccessRuleKey, johnAccessRule);
-			await redisClient.hSet(doeAccessRuleKey, doeAccessRule);
+			await insertRule(johnAccessRule);
+			await insertRule(doeAccessRule);
 
 			// when
 			await accessRulesWriter.deleteRules([johnAccessRuleKey]);
@@ -143,19 +150,16 @@ describe("redisAccessRules", () => {
 		test("deletes all rules", async () => {
 			// given
 			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const johnAccessRuleKey = getRedisAccessRuleKey(johnAccessRule);
-
 			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const doeAccessRuleKey = getRedisAccessRuleKey(doeAccessRule);
 
-			await redisClient.hSet(johnAccessRuleKey, johnAccessRule);
-			await redisClient.hSet(doeAccessRuleKey, doeAccessRule);
+			await insertRule(johnAccessRule);
+			await insertRule(doeAccessRule);
 
 			// when
 			await accessRulesWriter.deleteAllRules();
@@ -174,39 +178,34 @@ describe("redisAccessRules", () => {
 			accessRulesReader = createRedisAccessRulesReader(redisClient, testLogger);
 		});
 
-		test("finds client and global rules by greedy rule scope match", async () => {
+		test("finds client and global rules by greedy policy scope match", async () => {
 			// given
 			const johnId = getUniqueString();
 			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: johnId,
 			};
-			const johnAccessRuleKey = getRedisAccessRuleKey(johnAccessRule);
-
 			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const doeAccessRuleKey = getRedisAccessRuleKey(doeAccessRule);
-
 			const globalAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 			};
-			const globalAccessRuleKey = getRedisAccessRuleKey(globalAccessRule);
 
-			await redisClient.hSet(johnAccessRuleKey, johnAccessRule);
-			await redisClient.hSet(doeAccessRuleKey, doeAccessRule);
-			await redisClient.hSet(globalAccessRuleKey, globalAccessRule);
+			await insertRule(johnAccessRule);
+			await insertRule(doeAccessRule);
+			await insertRule(globalAccessRule);
 
 			// when
 			const foundByClientAccessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
-				policyScopeMatch: AccessPolicyMatch.GREEDY,
+				policyScopeMatch: ScopeMatch.Greedy,
 			});
 			const foundAccessRules = await accessRulesReader.findRules({
-				policyScopeMatch: AccessPolicyMatch.GREEDY,
+				policyScopeMatch: ScopeMatch.Greedy,
 			});
 
 			// then
@@ -224,39 +223,35 @@ describe("redisAccessRules", () => {
 			]);
 		});
 
-		test("finds client or global rules by exact rule scope match", async () => {
+		test("finds client or global rules by exact policy scope match", async () => {
 			// given
 			const johnId = getUniqueString();
+
 			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: johnId,
 			};
-			const johnAccessRuleKey = getRedisAccessRuleKey(johnAccessRule);
-
 			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const doeAccessRuleKey = getRedisAccessRuleKey(doeAccessRule);
-
 			const globalAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 			};
-			const globalAccessRuleKey = getRedisAccessRuleKey(globalAccessRule);
 
-			await redisClient.hSet(johnAccessRuleKey, johnAccessRule);
-			await redisClient.hSet(doeAccessRuleKey, doeAccessRule);
-			await redisClient.hSet(globalAccessRuleKey, globalAccessRule);
+			await insertRule(johnAccessRule);
+			await insertRule(doeAccessRule);
+			await insertRule(globalAccessRule);
 
 			// when
 			const foundClientAccessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
-				policyScopeMatch: AccessPolicyMatch.EXACT,
+				policyScopeMatch: ScopeMatch.Exact,
 			});
 			const foundGlobalAccessRules = await accessRulesReader.findRules({
-				policyScopeMatch: AccessPolicyMatch.EXACT,
+				policyScopeMatch: ScopeMatch.Exact,
 			});
 
 			// then
@@ -267,42 +262,33 @@ describe("redisAccessRules", () => {
 			expect(foundGlobalAccessRules).toEqual([globalAccessRule]);
 		});
 
-		test("finds rules by greedy policy scope match", async () => {
+		test("finds rules by greedy user scope match", async () => {
 			// given
 
 			const johnId = getUniqueString();
-
 			const johnIpAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: johnId,
 				numericIp: BigInt(100),
 			};
-			const johnIpAccessRuleKey = getRedisAccessRuleKey(johnIpAccessRule);
-
 			const doeIpAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 				numericIp: BigInt(100),
 			};
-			const doeIpAccessRuleKey = getRedisAccessRuleKey(doeIpAccessRule);
-
 			const johnHeaderAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				headersHash: "chrome",
 			};
-			const johnHeaderAccessRuleKey =
-				getRedisAccessRuleKey(johnHeaderAccessRule);
-
 			const globalJa4AccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				ja4Hash: "windows",
 			};
-			const globalJa4AccessRuleKey = getRedisAccessRuleKey(globalJa4AccessRule);
 
-			await redisClient.hSet(johnIpAccessRuleKey, johnIpAccessRule);
-			await redisClient.hSet(doeIpAccessRuleKey, doeIpAccessRule);
-			await redisClient.hSet(johnHeaderAccessRuleKey, johnHeaderAccessRule);
-			await redisClient.hSet(globalJa4AccessRuleKey, globalJa4AccessRule);
+			await insertRule(johnIpAccessRule);
+			await insertRule(doeIpAccessRule);
+			await insertRule(johnHeaderAccessRule);
+			await insertRule(globalJa4AccessRule);
 
 			// when
 			const foundAccessRules = await accessRulesReader.findRules({
@@ -313,7 +299,7 @@ describe("redisAccessRules", () => {
 					numericIp: BigInt(100),
 					ja4Hash: "windows",
 				},
-				userScopeMatch: AccessPolicyMatch.GREEDY,
+				userScopeMatch: ScopeMatch.Greedy,
 			});
 
 			// then
@@ -323,55 +309,46 @@ describe("redisAccessRules", () => {
 			expect(foundAccessRules).toEqual([johnIpAccessRule, globalJa4AccessRule]);
 		});
 
-		test("finds rules by exact policy scope match", async () => {
+		test("finds rules by exact user scope match", async () => {
 			// given
 
 			const johnId = getUniqueString();
 
 			const johnTargetAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: johnId,
 				numericIp: BigInt(100),
 				ja4Hash: "windows",
 			};
-			const johnTargetAccessRuleKey =
-				getRedisAccessRuleKey(johnTargetAccessRule);
 
 			const doeTargetAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				clientId: getUniqueString(),
 				numericIp: BigInt(100),
 				ja4Hash: "windows",
 			};
-			const doeTargetAccessRuleKey = getRedisAccessRuleKey(doeTargetAccessRule);
 
 			const johnHeaderAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				headersHash: "chrome",
 			};
-			const johnHeaderAccessRuleKey =
-				getRedisAccessRuleKey(johnHeaderAccessRule);
 
 			const globalTargetAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				numericIp: BigInt(100),
 				ja4Hash: "windows",
 			};
-			const globalTargetAccessRuleKey = getRedisAccessRuleKey(
-				globalTargetAccessRule,
-			);
 
 			const globalJa4AccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				ja4Hash: "windows",
 			};
-			const globalJa4AccessRuleKey = getRedisAccessRuleKey(globalJa4AccessRule);
 
-			await redisClient.hSet(johnTargetAccessRuleKey, johnTargetAccessRule);
-			await redisClient.hSet(doeTargetAccessRuleKey, doeTargetAccessRule);
-			await redisClient.hSet(johnHeaderAccessRuleKey, johnHeaderAccessRule);
-			await redisClient.hSet(globalTargetAccessRuleKey, globalTargetAccessRule);
-			await redisClient.hSet(globalJa4AccessRuleKey, globalJa4AccessRule);
+			await insertRule(johnTargetAccessRule);
+			await insertRule(doeTargetAccessRule);
+			await insertRule(johnHeaderAccessRule);
+			await insertRule(globalTargetAccessRule);
+			await insertRule(globalJa4AccessRule);
 
 			// when
 			const foundAccessRules = await accessRulesReader.findRules({
@@ -382,7 +359,7 @@ describe("redisAccessRules", () => {
 					numericIp: BigInt(100),
 					ja4Hash: "windows",
 				},
-				userScopeMatch: AccessPolicyMatch.EXACT,
+				userScopeMatch: ScopeMatch.Exact,
 			});
 
 			// then
@@ -401,54 +378,30 @@ describe("redisAccessRules", () => {
 
 			const johnIpMask_0_100_AccessRule: AccessRule = {
 				clientId: johnId,
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				numericIpMaskMin: BigInt(0),
 				numericIpMaskMax: BigInt(100),
 			};
-			const johnIpMask_0_100_AccessRuleKey = getRedisAccessRuleKey(
-				johnIpMask_0_100_AccessRule,
-			);
-
 			const johnIp_100_AccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				numericIp: BigInt(100),
 			};
-			const johnIp_100_AccessRuleKey = getRedisAccessRuleKey(
-				johnIp_100_AccessRule,
-			);
-
 			const globalIpMask_100_200_AccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				numericIpMaskMin: BigInt(100),
 				numericIpMaskMax: BigInt(200),
 			};
-			const globalIpMask_100_200_AccessRuleKey = getRedisAccessRuleKey(
-				globalIpMask_100_200_AccessRule,
-			);
-
 			const doeIpMask_200_300AccessRule: AccessRule = {
 				clientId: getUniqueString(),
-				type: AccessPolicyType.Block,
+				type: PolicyType.Block,
 				numericIpMaskMin: BigInt(200),
 				numericIpMaskMax: BigInt(300),
 			};
-			const doeIpMask_200_300AccessRuleKey = getRedisAccessRuleKey(
-				doeIpMask_200_300AccessRule,
-			);
 
-			await redisClient.hSet(
-				johnIpMask_0_100_AccessRuleKey,
-				johnIpMask_0_100_AccessRule,
-			);
-			await redisClient.hSet(johnIp_100_AccessRuleKey, johnIp_100_AccessRule);
-			await redisClient.hSet(
-				globalIpMask_100_200_AccessRuleKey,
-				globalIpMask_100_200_AccessRule,
-			);
-			await redisClient.hSet(
-				doeIpMask_200_300AccessRuleKey,
-				doeIpMask_200_300AccessRule,
-			);
+			await insertRule(johnIpMask_0_100_AccessRule);
+			await insertRule(johnIp_100_AccessRule);
+			await insertRule(globalIpMask_100_200_AccessRule);
+			await insertRule(doeIpMask_200_300AccessRule);
 
 			// when
 			const ip_0_AccessRules = await accessRulesReader.findRules({

@@ -15,14 +15,14 @@
 import { z } from "zod";
 import {
 	accessPolicySchema,
-	accessPolicyScopeSchema,
+	policyScopeSchema,
+	userScopeSchema,
 } from "#policy/accessPolicy.js";
-import { accessRuleScopeSchema } from "#policy/accessRule.js";
 
 export const apiInsertManyRulesArgsSchema = z.object({
 	policy: accessPolicySchema,
-	ruleScope: accessRuleScopeSchema.optional(),
-	policyScopes: z.array(accessPolicyScopeSchema),
+	policyScope: policyScopeSchema.optional(),
+	userScopes: z.array(userScopeSchema),
 });
 
 export type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;

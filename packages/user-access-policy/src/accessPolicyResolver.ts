@@ -12,63 +12,66 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
 import { z } from "zod";
 import {
 	type AccessPolicy,
-	accessPolicyScopeSchema,
+	policyScopeSchema,
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
 import type { AccessRule, AccessRulesReader } from "#policy/accessRules.js";
 
-export enum AccessPolicyMatch {
-	EXACT = "exact",
-	GREEDY = "greedy",
+export enum ScopeMatch {
+	Exact = "exact",
+	Greedy = "greedy",
 }
 
-export const accessPolicyFilterSchema = z.object({
-	policyScope: accessPolicyScopeSchema.optional(),
+export const policyFilterSchema = z.object({
+	policyScope: policyScopeSchema.optional(),
 	/**
-	 * exact: "clientId" => client rules, "undefined" => global rules. Used by the API
-	 * greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
+	 * Exact: "clientId" => client rules, "undefined" => global rules. Used by the API
+	 * Greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
 	 */
 	policyScopeMatch: z
-		.nativeEnum(AccessPolicyMatch)
-		.default(AccessPolicyMatch.EXACT)
+		.nativeEnum(ScopeMatch)
+		.default(ScopeMatch.Exact)
 		.optional(),
 	userScope: userScopeSchema.optional(),
 	/**
-	 * exact: finds rules where all the given fields matches. Used by the API
-	 * greedy: finds rules where any of the given fields match. Used by the Express middleware
+	 * Exact: finds rules where all the given fields matches. Used by the API
+	 * Greedy: finds rules where any of the given fields match. Used by the Express middleware
 	 */
-	userScopeMatch: z
-		.nativeEnum(AccessPolicyMatch)
-		.default(AccessPolicyMatch.EXACT)
-		.optional(),
+	userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact).optional(),
 });
 
-export type AccessPolicyFilter = z.infer<typeof accessPolicyFilterSchema>;
+export type PolicyFilter = z.infer<typeof policyFilterSchema>;
 
 export type ResolveAccessPolicy = (
-	filter: AccessPolicyFilter,
+	filter: PolicyFilter,
 ) => Promise<AccessPolicy | undefined>;
 
 export const createAccessPolicyResolver = (
 	accessRulesReader: AccessRulesReader,
 	logger: Logger,
 ): ResolveAccessPolicy => {
-	return async (
-		filter: AccessPolicyFilter,
-	): Promise<AccessPolicy | undefined> => {
+	return async (filter: PolicyFilter): Promise<AccessPolicy | undefined> => {
 		const accessRules = await accessRulesReader.findRules(filter);
 
 		const primaryAccessRule = resolvePrimaryAccessRule(accessRules);
 
-		logger.debug("Resolved access policy", {
-			filter: filter,
-			accessRules: accessRules,
-			primaryAccessRule: primaryAccessRule,
-		});
+		logger.debug(
+			"Resolved access policy",
+			// filter contains BigInt, which can't be handled directly via logger.
+			util.inspect(
+				{
+					filter: filter,
+					accessRules: accessRules,
+					primaryAccessRule: primaryAccessRule,
+				},
+				{ depth: null },
+			),
+		);
 
 		return primaryAccessRule;
 	};

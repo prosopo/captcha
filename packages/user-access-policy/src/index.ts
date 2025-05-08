@@ -17,10 +17,8 @@ import {
 	type ResolveAccessPolicy,
 	createAccessPolicyResolver,
 } from "#policy/accessPolicyResolver.js";
-import {
-	AccessPolicyMatchType,
-	type AccessRuleFilter,
-} from "#policy/accessRule.js";
+
+import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { apiRulePaths } from "#policy/api/apiRulePaths.js";
 import { ApiRuleRoutesProvider } from "#policy/api/apiRuleRoutesProvider.js";
@@ -36,10 +34,10 @@ export const createApiRuleRoutesProvider = (
 export {
 	type AccessRulesStorage,
 	type ResolveAccessPolicy,
-	type AccessRuleFilter,
+	type PolicyFilter,
 	createRedisAccessRulesStorage,
 	createAccessPolicyResolver,
 	getExpressApiRuleRateLimits,
 	apiRulePaths,
-	AccessPolicyMatchType,
+	ScopeMatch,
 };

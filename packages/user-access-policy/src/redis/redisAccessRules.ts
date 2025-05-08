@@ -12,52 +12,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
 import type { SearchReply } from "@redis/search";
 import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
 import type { RedisClientType } from "redis";
-import type { AccessPolicyFilter } from "#policy/accessPolicyResolver.js";
-import { type AccessRule, accessRuleSchema } from "#policy/accessRule.js";
-import type {
-	AccessRulesReader,
-	AccessRulesStorage,
-	AccessRulesWriter,
+import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
+import {
+	type AccessRule,
+	type AccessRulesReader,
+	type AccessRulesStorage,
+	type AccessRulesWriter,
+	accessRuleSchema,
 } from "#policy/accessRules.js";
 import {
 	getRedisAccessRuleKey,
-	getRedisAccessRuleQuery,
-	redisAccessRuleIndexName,
+	getRedisAccessRuleValue,
+	getRedisAccessRulesQuery,
 	redisAccessRuleKeyPrefix,
 	redisAccessRuleSearchOptions,
-} from "#policy/redis/redisAccessRule.js";
+	redisAccessRulesIndexName,
+} from "#policy/redis/redisAccessRulesIndex.js";
 
 export const createRedisAccessRulesReader = (
 	client: RedisClientType,
 	logger: Logger,
 ): AccessRulesReader => {
 	return {
-		findRules: async (filter: AccessPolicyFilter): Promise<AccessRule[]> => {
-			const query = getRedisAccessRuleQuery(filter);
+		findRules: async (filter: PolicyFilter): Promise<AccessRule[]> => {
+			const query = getRedisAccessRulesQuery(filter);
 
 			let searchReply: SearchReply;
 
 			try {
 				searchReply = await client.ft.search(
-					redisAccessRuleIndexName,
+					redisAccessRulesIndexName,
 					query,
 					redisAccessRuleSearchOptions,
 				);
 
-				logger.debug("executed search query", {
-					filter: filter,
-					searchReply: searchReply,
-					query: query,
-				});
+				logger.debug(
+					"executed search query",
+					// filter contains BigInt, which can't be handled directly via logger.
+					util.inspect(
+						{
+							filter: filter,
+							searchReply: searchReply,
+							query: query,
+						},
+						{ depth: null },
+					),
+				);
 			} catch (e) {
-				logger.error("failed to execute search query", {
-					query: query,
-					filter: filter,
-				});
+				logger.error(
+					"failed to execute search query",
+					util.inspect(
+						{
+							query: query,
+							filter: filter,
+						},
+						{
+							depth: null,
+						},
+					),
+				);
 
 				return [];
 			}
@@ -65,28 +83,43 @@ export const createRedisAccessRulesReader = (
 			return extractAccessRulesFromSearchReply(searchReply, logger);
 		},
 
-		findRuleIds: async (filter: AccessPolicyFilter): Promise<string[]> => {
-			const query = getRedisAccessRuleQuery(filter);
+		findRuleIds: async (filter: PolicyFilter): Promise<string[]> => {
+			const query = getRedisAccessRulesQuery(filter);
 
 			let searchReply: SearchNoContentReply;
 
 			try {
 				searchReply = await client.ft.searchNoContent(
-					redisAccessRuleIndexName,
+					redisAccessRulesIndexName,
 					query,
 					redisAccessRuleSearchOptions,
 				);
 
-				logger.debug("executed searchNoContent query", {
-					filter: filter,
-					searchReply: searchReply,
-					query: query,
-				});
+				logger.debug(
+					"executed searchNoContent query",
+					// filter contains BigInt, which can't be handled directly via logger.
+					util.inspect(
+						{
+							filter: filter,
+							searchReply: searchReply,
+							query: query,
+						},
+						{
+							depth: null,
+						},
+					),
+				);
 			} catch (e) {
-				logger.error("failed to execute searchNoContent query", {
-					query: query,
-					filter: filter,
-				});
+				logger.error(
+					"failed to execute searchNoContent query",
+					util.inspect(
+						{
+							query: query,
+							filter: filter,
+						},
+						{ depth: null },
+					),
+				);
 
 				return [];
 			}
@@ -105,12 +138,9 @@ export const createRedisAccessRulesWriter = (
 			expirationTimestamp?: number,
 		): Promise<string> => {
 			const ruleKey = getRedisAccessRuleKey(rule);
+			const ruleValue = getRedisAccessRuleValue(rule);
 
-			const stringifiedRule = Object.fromEntries(
-				Object.entries(rule).map(([key, value]) => [key, String(value)]),
-			);
-
-			await client.hSet(ruleKey, stringifiedRule);
+			await client.hSet(ruleKey, ruleValue);
 
 			if (expirationTimestamp) {
 				await client.expireAt(ruleKey, expirationTimestamp);

@@ -15,24 +15,24 @@
 import { z } from "zod";
 import {
 	accessPolicySchema,
-	accessPolicyScopeSchema,
+	policyScopeSchema,
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
-import type { AccessPolicyFilter } from "#policy/accessPolicyResolver.js";
+import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
 
 export const accessRuleSchema = z.object({
 	// flat structure is used to fit the Redis requirements
 	...accessPolicySchema.shape,
-	...accessPolicyScopeSchema.shape,
+	...policyScopeSchema.shape,
 	...userScopeSchema.shape,
 });
 
 export type AccessRule = z.infer<typeof accessRuleSchema>;
 
 export type AccessRulesReader = {
-	findRules(filter: AccessPolicyFilter): Promise<AccessRule[]>;
+	findRules(filter: PolicyFilter): Promise<AccessRule[]>;
 
-	findRuleIds(filter: AccessPolicyFilter): Promise<string[]>;
+	findRuleIds(filter: PolicyFilter): Promise<string[]>;
 };
 
 export type AccessRulesWriter = {

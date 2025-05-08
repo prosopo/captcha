@@ -14,13 +14,13 @@
 
 import { z } from "zod";
 
-export enum AccessPolicyType {
+export enum PolicyType {
 	Block = "block",
 	Restrict = "restrict",
 }
 
 export const accessPolicySchema = z.object({
-	type: z.nativeEnum(AccessPolicyType),
+	type: z.nativeEnum(PolicyType),
 	description: z.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),
@@ -28,7 +28,7 @@ export const accessPolicySchema = z.object({
 	frictionlessScore: z.coerce.number().optional(),
 });
 
-export const accessPolicyScopeSchema = z.object({
+export const policyScopeSchema = z.object({
 	clientId: z.string().optional(),
 });
 
@@ -43,5 +43,5 @@ export const userScopeSchema = z.object({
 });
 
 export type AccessPolicy = z.infer<typeof accessPolicySchema>;
-export type AccessPolicyScope = z.infer<typeof accessPolicyScopeSchema>;
+export type PolicyScope = z.infer<typeof policyScopeSchema>;
 export type UserScope = z.infer<typeof userScopeSchema>;

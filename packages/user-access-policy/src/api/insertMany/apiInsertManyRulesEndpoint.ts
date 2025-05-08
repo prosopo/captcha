@@ -18,9 +18,13 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import type { z } from "zod";
+import type {
+	AccessPolicy,
+	PolicyScope,
+	UserScope,
+} from "#policy/accessPolicy.js";
 import type { AccessRulesWriter } from "#policy/accessRules.js";
 import {
-	type ApiInsertManyRulesArgsInputSchema,
 	type ApiInsertManyRulesArgsSchema,
 	apiInsertManyRulesArgsSchema,
 } from "./apiInsertManyRulesArgsSchema.js";
@@ -41,7 +45,9 @@ class ApiInsertManyRulesEndpoint
 				});
 			}, 5000);
 
-			this.insertRules(args)
+			const policyScope = args.policyScope || {};
+
+			this.createRules(args.policy, policyScope, args.userScopes)
 				.then(() => {
 					resolve({
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -59,17 +65,17 @@ class ApiInsertManyRulesEndpoint
 		return apiInsertManyRulesArgsSchema;
 	}
 
-	protected async insertRules(
-		rulesInput: ApiInsertManyRulesArgsInputSchema,
+	protected async createRules(
+		accessPolicy: AccessPolicy,
+		policyScope: PolicyScope,
+		userScopes: UserScope[],
 	): Promise<void> {
-		for (const policyScope of rulesInput.policyScopes) {
-			const rule = {
-				...rulesInput.policy,
-				...(rulesInput.ruleScope || {}),
+		for (const userScope of userScopes) {
+			await this.accessRulesWriter.insertRule({
+				...accessPolicy,
 				...policyScope,
-			};
-
-			await this.accessRulesWriter.insertRule(rule);
+				...userScope,
+			});
 		}
 	}
 }

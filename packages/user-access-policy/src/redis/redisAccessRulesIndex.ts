@@ -15,21 +15,18 @@
 import crypto from "node:crypto";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import type { AccessPolicyScope } from "#policy/accessPolicy.js";
-import {
-	type AccessPolicyFilter,
-	AccessPolicyMatch,
-} from "#policy/accessPolicyResolver.js";
-import type { AccessRule, AccessRuleScope } from "#policy/accessRule.js";
+import type { PolicyScope, UserScope } from "#policy/accessPolicy.js";
+import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
+import type { AccessRule } from "#policy/accessRules.js";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
-export const redisAccessRuleIndexName = "index:user-access-rules";
+export const redisAccessRulesIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
 export const redisAccessRuleKeyPrefix = "uar:";
 const redisAccessRuleContentHashAlgorithm = "md5";
 
-const redisAccessRule: RedisIndex = {
-	name: redisAccessRuleIndexName,
+const redisAccessRulesIndex: RedisIndex = {
+	name: redisAccessRulesIndexName,
 	/**
 	 * Note on the field type decision
 	 *
@@ -59,9 +56,9 @@ const redisAccessRule: RedisIndex = {
 	},
 };
 
-export const createRedisAccessRuleIndex = async (
+export const createRedisAccessRulesIndex = async (
 	client: RedisClientType,
-): Promise<void> => createRedisIndex(client, redisAccessRule);
+): Promise<void> => createRedisIndex(client, redisAccessRulesIndex);
 
 export const redisAccessRuleSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
@@ -78,80 +75,86 @@ export const redisAccessRuleSearchOptions: FtSearchOptions = {
  * )
  * DIALECT 2 # must have when the ismissing() function in use
  * */
-export const getRedisAccessRuleQuery = (filter: AccessPolicyFilter): string => {
-	const { ruleScope, policyScope } = filter;
+export const getRedisAccessRulesQuery = (filter: PolicyFilter): string => {
+	const { policyScope, userScope } = filter;
 
-	const ruleScopeFilter = getRuleScopeQuery(ruleScope, filter.ruleScopeMatch);
+	const policyScopeFilter = getPolicyScopeQuery(
+		policyScope,
+		filter.policyScopeMatch,
+	);
 
-	if (policyScope && Object.keys(policyScope).length > 0) {
-		const policyScopeFilter = getPolicyScopeQuery(
-			policyScope,
-			filter.policyScopeMatch,
-		);
+	if (userScope && Object.keys(userScope).length > 0) {
+		const userScopeFilter = getUserScopeQuery(userScope, filter.userScopeMatch);
 
-		return `${ruleScopeFilter} ( ${policyScopeFilter} )`;
+		return `${policyScopeFilter} ( ${userScopeFilter} )`;
 	}
 
-	return ruleScopeFilter ? ruleScopeFilter : "*";
+	return policyScopeFilter ? policyScopeFilter : "*";
 };
 
-const getRuleScopeQuery = (
-	ruleScope: AccessRuleScope | undefined,
-	scopeMatchType: AccessPolicyMatch | undefined,
+const getPolicyScopeQuery = (
+	policyScope: PolicyScope | undefined,
+	scopeMatchType: ScopeMatch | undefined,
 ): string => {
-	const clientId = ruleScope?.clientId;
+	const clientId = policyScope?.clientId;
 
 	if ("string" === typeof clientId) {
-		return AccessPolicyMatch.EXACT === scopeMatchType
+		return ScopeMatch.Exact === scopeMatchType
 			? `@clientId:{${clientId}}`
 			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
 	}
 
-	return AccessPolicyMatch.EXACT === scopeMatchType
-		? "ismissing(@clientId)"
-		: "";
+	return ScopeMatch.Exact === scopeMatchType ? "ismissing(@clientId)" : "";
 };
 
-const getPolicyScopeQuery = (
-	policyScope: AccessPolicyScope,
-	scopeMatchType: AccessPolicyMatch | undefined,
+const getUserScopeQuery = (
+	userScope: UserScope,
+	scopeMatchType: ScopeMatch | undefined,
 ): string => {
-	const scopeEntries = Object.entries(policyScope) as Array<
-		[keyof AccessPolicyScope, unknown]
+	const scopeEntries = Object.entries(userScope) as Array<
+		[keyof UserScope, unknown]
 	>;
 
-	const scopeJoinType =
-		AccessPolicyMatch.EXACT === scopeMatchType ? " " : " | ";
+	const scopeJoinType = ScopeMatch.Exact === scopeMatchType ? " " : " | ";
 
 	return scopeEntries
 		.map(([scopeFieldName, scopeFieldValue]) =>
-			getPolicyScopeFieldQuery(scopeFieldName, scopeFieldValue),
+			getUserScopeFieldQuery(scopeFieldName, scopeFieldValue),
 		)
 		.join(scopeJoinType);
 };
 
-const getPolicyScopeFieldQuery = (
-	scopeFieldName: keyof AccessPolicyScope,
-	scopeFieldValue: unknown,
+const getUserScopeFieldQuery = (
+	fieldName: keyof UserScope,
+	fieldValue: unknown,
 ): string => {
-	type CustomScopeFieldComparisons = Record<
-		keyof AccessPolicyScope,
-		(value: unknown) => string
-	>;
+	type CustomComparisons = Record<keyof UserScope, (value: unknown) => string>;
 
-	const customFieldComparisons: Partial<CustomScopeFieldComparisons> = {
+	const customComparisons: Partial<CustomComparisons> = {
 		numericIp: (value) =>
 			`( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`,
 	};
 
-	return "function" === typeof customFieldComparisons[scopeFieldName]
-		? customFieldComparisons[scopeFieldName](scopeFieldValue)
-		: `@${scopeFieldName}:{${scopeFieldValue}}`;
+	return "function" === typeof customComparisons[fieldName]
+		? customComparisons[fieldName](fieldValue)
+		: `@${fieldName}:{${fieldValue}}`;
 };
 
 export const getRedisAccessRuleKey = (rule: AccessRule): string =>
 	redisAccessRuleKeyPrefix +
 	crypto
 		.createHash(redisAccessRuleContentHashAlgorithm)
-		.update(JSON.stringify(rule))
+		.update(
+			JSON.stringify(rule, (key, value) =>
+				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
+				"bigint" === typeof value ? value.toString() : value,
+			),
+		)
 		.digest("hex");
+
+export const getRedisAccessRuleValue = (
+	rule: AccessRule,
+): Record<string, string> =>
+	Object.fromEntries(
+		Object.entries(rule).map(([key, value]) => [key, String(value)]),
+	);
