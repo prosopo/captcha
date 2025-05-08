@@ -12,31 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteTestConfig } from "@prosopo/config";
+import { z } from "zod";
+import {
+	accessPolicySchema,
+	policyScopeSchema,
+	userScopeSchema,
+} from "#policy/accessPolicy.js";
 
-export default () => {
-	const testConfig = ViteTestConfig();
+export const apiInsertManyRulesArgsSchema = z.object({
+	policy: accessPolicySchema,
+	policyScope: policyScopeSchema.optional(),
+	userScopes: z.array(userScopeSchema),
+});
 
-	return {
-		...testConfig,
-		test: {
-			// @ts-ignore
-			...testConfig.test,
-			poolOptions: {
-				// @ts-ignore
-				...testConfig.test.poolOptions,
-				forks: {
-					// @ts-ignore
-					...testConfig.test.poolOptions.forks,
-					singleFork: true,
-				},
-			},
-		},
-		resolve: {
-			alias: {
-				"#policy": path.resolve("./src"),
-			},
-		},
-	};
-};
+export type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
+
+export type ApiInsertManyRulesArgsInputSchema = z.input<
+	typeof apiInsertManyRulesArgsSchema
+>;
+
+export type ApiInsertManyRulesArgsOutputSchema = z.output<
+	typeof apiInsertManyRulesArgsSchema
+>;

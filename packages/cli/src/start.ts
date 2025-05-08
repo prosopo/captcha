@@ -46,7 +46,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { apiRulePaths } from "@prosopo/user-access-policy";
 import cors from "cors";
-import express, { type RequestHandler } from "express";
+import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";

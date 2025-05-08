@@ -12,31 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteTestConfig } from "@prosopo/config";
+import { apiRulePaths } from "./apiRulePaths.js";
 
-export default () => {
-	const testConfig = ViteTestConfig();
+export const getExpressApiRuleRateLimits = () => {
+	const defaultWindowsMs = 60000;
+	const defaultLimit = 5;
 
 	return {
-		...testConfig,
-		test: {
-			// @ts-ignore
-			...testConfig.test,
-			poolOptions: {
-				// @ts-ignore
-				...testConfig.test.poolOptions,
-				forks: {
-					// @ts-ignore
-					...testConfig.test.poolOptions.forks,
-					singleFork: true,
-				},
-			},
+		[apiRulePaths.INSERT_MANY]: {
+			windowMs:
+				process.env.PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_WINDOW ||
+				defaultWindowsMs,
+			limit:
+				process.env.PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_LIMIT ||
+				defaultLimit,
 		},
-		resolve: {
-			alias: {
-				"#policy": path.resolve("./src"),
-			},
+		[apiRulePaths.DELETE_MANY]: {
+			windowMs:
+				process.env.PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_WINDOW ||
+				defaultWindowsMs,
+			limit:
+				process.env.PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_LIMIT ||
+				defaultLimit,
 		},
 	};
 };

@@ -13,62 +13,34 @@
 // limitations under the License.
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
-import type { Model } from "mongoose";
-import type { BlacklistInspector } from "./blacklistInspector.js";
-import { apiRulePaths } from "./rules/api/apiRulePaths.js";
-import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
-import { getExpressApiRuleRateLimits } from "./rules/api/getExpressApiRuleRateLimits.js";
-import type {
-	ApiInsertManyRulesArgsOutputSchema,
-	ApiInsertManyRulesArgsSchema,
-} from "./rules/api/insertMany/apiInsertManyRulesArgsSchema.js";
-import { BlacklistRulesInspector } from "./rules/blacklistRulesInspector.js";
-import { ImageCaptchaConfigRulesResolver } from "./rules/imageCaptchaConfigRulesResolver.js";
-import { RulesMongooseStorage } from "./rules/mongoose/rulesMongooseStorage.js";
-import { getRuleMongooseSchema } from "./rules/mongoose/schemas/getRuleMongooseSchema.js";
-import type { Rule } from "./rules/rule/rule.js";
-import type { RulesStorage } from "./rules/storage/rulesStorage.js";
+import {
+	type ResolveAccessPolicy,
+	createAccessPolicyResolver,
+} from "#policy/accessPolicyResolver.js";
 
-const createBlacklistInspector = (
-	rulesStorage: RulesStorage,
-	logger: Logger,
-): BlacklistInspector => {
-	return new BlacklistRulesInspector(rulesStorage, logger);
-};
+import { type AccessPolicy, AccessPolicyType } from "#policy/accessPolicy.js";
+import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
+import type { AccessRulesStorage } from "#policy/accessRules.js";
+import { apiRulePaths } from "#policy/api/apiRulePaths.js";
+import { ApiRuleRoutesProvider } from "#policy/api/apiRuleRoutesProvider.js";
+import { getExpressApiRuleRateLimits } from "#policy/api/getExpressApiRuleRateLimits.js";
+import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
 
-const createImageCaptchaConfigResolver = (
-	rulesStorage: RulesStorage,
-	logger: Logger,
-): ImageCaptchaConfigRulesResolver => {
-	return new ImageCaptchaConfigRulesResolver(rulesStorage, logger);
-};
-
-const createApiRuleRoutesProvider = (
-	rulesStorage: RulesStorage,
+export const createApiRuleRoutesProvider = (
+	rulesStorage: AccessRulesStorage,
 ): ApiRoutesProvider => {
 	return new ApiRuleRoutesProvider(rulesStorage);
 };
 
-const createMongooseRulesStorage = (
-	logger: Logger,
-	readingModel: Model<Rule> | null,
-	writingModel: Model<Rule> | null = null,
-): RulesStorage => {
-	return new RulesMongooseStorage(logger, readingModel, writingModel);
-};
-
 export {
-	type Rule,
-	type RulesStorage,
-	type BlacklistInspector,
-	type ApiInsertManyRulesArgsSchema,
-	type ApiInsertManyRulesArgsOutputSchema,
-	createMongooseRulesStorage,
-	createImageCaptchaConfigResolver,
-	createBlacklistInspector,
-	createApiRuleRoutesProvider,
-	getRuleMongooseSchema,
+	type AccessPolicy,
+	type AccessRulesStorage,
+	type ResolveAccessPolicy,
+	type PolicyFilter,
+	createRedisAccessRulesStorage,
+	createAccessPolicyResolver,
 	getExpressApiRuleRateLimits,
 	apiRulePaths,
+	AccessPolicyType,
+	ScopeMatch,
 };

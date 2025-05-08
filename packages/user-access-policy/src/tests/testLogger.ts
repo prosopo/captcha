@@ -12,31 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteTestConfig } from "@prosopo/config";
+import { getLogger } from "@prosopo/common";
 
-export default () => {
-	const testConfig = ViteTestConfig();
-
-	return {
-		...testConfig,
-		test: {
-			// @ts-ignore
-			...testConfig.test,
-			poolOptions: {
-				// @ts-ignore
-				...testConfig.test.poolOptions,
-				forks: {
-					// @ts-ignore
-					...testConfig.test.poolOptions.forks,
-					singleFork: true,
-				},
-			},
-		},
-		resolve: {
-			alias: {
-				"#policy": path.resolve("./src"),
-			},
-		},
-	};
-};
+export const testLogger = getLogger("debug", "test");

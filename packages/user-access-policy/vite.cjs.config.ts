@@ -15,9 +15,16 @@
 import path from "node:path";
 import { ViteCommonJSConfig } from "@prosopo/config";
 
-export default function () {
-	return ViteCommonJSConfig(
+export default async function () {
+	const config = await ViteCommonJSConfig(
 		"user-access-policy",
 		path.resolve("./tsconfig.cjs.json"),
 	);
+
+	config.resolve = config.resolve || {};
+	config.resolve.alias = {
+		"#policy": path.resolve("./src"),
+	};
+
+	return config;
 }
