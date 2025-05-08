@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
@@ -74,8 +75,12 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import type { Model, ObjectId } from "mongoose";
+import {
+	type AccessRulesStorage,
+	createRedisAccessRulesStorage,
+} from "@prosopo/user-access-policy";
+import type { ObjectId } from "mongoose";
+import { type RedisClientType, createClient } from "redis";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -180,7 +185,23 @@ export class ProviderDatabase
 
 		this.loadTables();
 
-		// fixme
+		const redisClient = await this.createRedisClient();
+
+		this.userAccessRulesStorage = createRedisAccessRulesStorage(
+			redisClient,
+			this.logger,
+		);
+	}
+
+	protected async createRedisClient(): Promise<RedisClientType> {
+		return (await createClient({
+			// fixme add to the "packages/cli/src/prosopo.config.ts" and bring here
+			// /docker/redis/redis-stack.docker-compose.yml
+			url: "redis://localhost:6379",
+			password: "root",
+		})
+			.on("error", (error) => this.logger.error("Redis Client Error", error))
+			.connect()) as RedisClientType;
 	}
 
 	loadTables() {
