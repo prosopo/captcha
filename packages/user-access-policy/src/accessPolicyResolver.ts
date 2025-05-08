@@ -13,12 +13,44 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { AccessPolicy } from "#policy/accessPolicy.js";
-import type { AccessRule, AccessRuleFilter } from "#policy/accessRule.js";
-import type { AccessRulesReader } from "#policy/accessRules.js";
+import { z } from "zod";
+import {
+	type AccessPolicy,
+	accessPolicyScopeSchema,
+	userScopeSchema,
+} from "#policy/accessPolicy.js";
+import type { AccessRule, AccessRulesReader } from "#policy/accessRules.js";
+
+export enum AccessPolicyMatch {
+	EXACT = "exact",
+	GREEDY = "greedy",
+}
+
+export const accessPolicyFilterSchema = z.object({
+	policyScope: accessPolicyScopeSchema.optional(),
+	/**
+	 * exact: "clientId" => client rules, "undefined" => global rules. Used by the API
+	 * greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
+	 */
+	policyScopeMatch: z
+		.nativeEnum(AccessPolicyMatch)
+		.default(AccessPolicyMatch.EXACT)
+		.optional(),
+	userScope: userScopeSchema.optional(),
+	/**
+	 * exact: finds rules where all the given fields matches. Used by the API
+	 * greedy: finds rules where any of the given fields match. Used by the Express middleware
+	 */
+	userScopeMatch: z
+		.nativeEnum(AccessPolicyMatch)
+		.default(AccessPolicyMatch.EXACT)
+		.optional(),
+});
+
+export type AccessPolicyFilter = z.infer<typeof accessPolicyFilterSchema>;
 
 export type ResolveAccessPolicy = (
-	ruleFilter: AccessRuleFilter,
+	filter: AccessPolicyFilter,
 ) => Promise<AccessPolicy | undefined>;
 
 export const createAccessPolicyResolver = (
@@ -26,14 +58,14 @@ export const createAccessPolicyResolver = (
 	logger: Logger,
 ): ResolveAccessPolicy => {
 	return async (
-		ruleFilter: AccessRuleFilter,
+		filter: AccessPolicyFilter,
 	): Promise<AccessPolicy | undefined> => {
-		const accessRules = await accessRulesReader.findRules(ruleFilter);
+		const accessRules = await accessRulesReader.findRules(filter);
 
 		const primaryAccessRule = resolvePrimaryAccessRule(accessRules);
 
 		logger.debug("Resolved access policy", {
-			ruleFilter: ruleFilter,
+			filter: filter,
 			accessRules: accessRules,
 			primaryAccessRule: primaryAccessRule,
 		});

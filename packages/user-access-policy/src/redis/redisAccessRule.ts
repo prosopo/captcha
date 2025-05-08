@@ -17,11 +17,10 @@ import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
 import type { AccessPolicyScope } from "#policy/accessPolicy.js";
 import {
-	type AccessRule,
-	type AccessRuleFilter,
-	AccessRuleMatchType,
-	type AccessRuleScope,
-} from "#policy/accessRule.js";
+	type AccessPolicyFilter,
+	AccessPolicyMatch,
+} from "#policy/accessPolicyResolver.js";
+import type { AccessRule, AccessRuleScope } from "#policy/accessRule.js";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
 export const redisAccessRuleIndexName = "index:user-access-rules";
@@ -79,20 +78,15 @@ export const redisAccessRuleSearchOptions: FtSearchOptions = {
  * )
  * DIALECT 2 # must have when the ismissing() function in use
  * */
-export const getRedisAccessRuleQuery = (
-	ruleFilter: AccessRuleFilter,
-): string => {
-	const { ruleScope, policyScope } = ruleFilter;
+export const getRedisAccessRuleQuery = (filter: AccessPolicyFilter): string => {
+	const { ruleScope, policyScope } = filter;
 
-	const ruleScopeFilter = getRuleScopeQuery(
-		ruleScope,
-		ruleFilter.ruleScopeMatch,
-	);
+	const ruleScopeFilter = getRuleScopeQuery(ruleScope, filter.ruleScopeMatch);
 
 	if (policyScope && Object.keys(policyScope).length > 0) {
 		const policyScopeFilter = getPolicyScopeQuery(
 			policyScope,
-			ruleFilter.policyScopeMatch,
+			filter.policyScopeMatch,
 		);
 
 		return `${ruleScopeFilter} ( ${policyScopeFilter} )`;
@@ -103,31 +97,31 @@ export const getRedisAccessRuleQuery = (
 
 const getRuleScopeQuery = (
 	ruleScope: AccessRuleScope | undefined,
-	scopeMatchType: AccessRuleMatchType | undefined,
+	scopeMatchType: AccessPolicyMatch | undefined,
 ): string => {
 	const clientId = ruleScope?.clientId;
 
 	if ("string" === typeof clientId) {
-		return AccessRuleMatchType.EXACT === scopeMatchType
+		return AccessPolicyMatch.EXACT === scopeMatchType
 			? `@clientId:{${clientId}}`
 			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
 	}
 
-	return AccessRuleMatchType.EXACT === scopeMatchType
+	return AccessPolicyMatch.EXACT === scopeMatchType
 		? "ismissing(@clientId)"
 		: "";
 };
 
 const getPolicyScopeQuery = (
 	policyScope: AccessPolicyScope,
-	scopeMatchType: AccessRuleMatchType | undefined,
+	scopeMatchType: AccessPolicyMatch | undefined,
 ): string => {
 	const scopeEntries = Object.entries(policyScope) as Array<
 		[keyof AccessPolicyScope, unknown]
 	>;
 
 	const scopeJoinType =
-		AccessRuleMatchType.EXACT === scopeMatchType ? " " : " | ";
+		AccessPolicyMatch.EXACT === scopeMatchType ? " " : " | ";
 
 	return scopeEntries
 		.map(([scopeFieldName, scopeFieldValue]) =>

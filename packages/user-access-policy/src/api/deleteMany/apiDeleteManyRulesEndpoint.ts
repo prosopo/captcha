@@ -20,6 +20,7 @@ import {
 import type { z } from "zod";
 import type {
 	AccessRulesReader,
+	AccessRulesStorage,
 	AccessRulesWriter,
 } from "#policy/accessRules.js";
 import {
@@ -30,19 +31,16 @@ import {
 export class ApiDeleteManyRulesEndpoint
 	implements ApiEndpoint<ApiDeleteManyRulesArgsSchema>
 {
-	public constructor(
-		private readonly accessRulesReader: AccessRulesReader,
-		private readonly accessRulesWriter: AccessRulesWriter,
-	) {}
+	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
 
 	async processRequest(
 		args: z.infer<ApiDeleteManyRulesArgsSchema>,
 	): Promise<ApiEndpointResponse> {
 		for (const accessRuleFilter of args) {
 			const ruleIds =
-				await this.accessRulesReader.findRuleIds(accessRuleFilter);
+				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
 
-			await this.accessRulesWriter.deleteRules(ruleIds);
+			await this.accessRulesStorage.deleteRules(ruleIds);
 		}
 
 		return {

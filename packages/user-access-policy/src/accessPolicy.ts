@@ -28,20 +28,20 @@ export const accessPolicySchema = z.object({
 	frictionlessScore: z.coerce.number().optional(),
 });
 
-export const userAccessAttributesSchema = z.object({
+export const accessPolicyScopeSchema = z.object({
+	clientId: z.string().optional(),
+});
+
+export const userScopeSchema = z.object({
 	userId: z.string().optional(),
-	numericIp: z.coerce.number().optional(),
+	numericIp: z.coerce.bigint().optional(),
+	numericIpMaskMin: z.coerce.bigint().optional(),
+	numericIpMaskMax: z.coerce.bigint().optional(),
 	ja4Hash: z.string().optional(),
 	headersHash: z.string().optional(),
 	userAgentHash: z.string().optional(),
 });
 
-export const accessPolicyScopeSchema = z.object({
-	...userAccessAttributesSchema.shape,
-	numericIpMaskMin: z.coerce.number().optional(),
-	numericIpMaskMax: z.coerce.number().optional(),
-});
-
 export type AccessPolicy = z.infer<typeof accessPolicySchema>;
-export type UserAccessAttributes = z.infer<typeof userAccessAttributesSchema>;
 export type AccessPolicyScope = z.infer<typeof accessPolicyScopeSchema>;
+export type UserScope = z.infer<typeof userScopeSchema>;

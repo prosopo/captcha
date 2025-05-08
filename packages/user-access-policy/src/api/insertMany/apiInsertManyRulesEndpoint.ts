@@ -65,10 +65,9 @@ class ApiInsertManyRulesEndpoint
 		for (const policyScope of rulesInput.policyScopes) {
 			const rule = {
 				...rulesInput.policy,
+				...(rulesInput.ruleScope || {}),
 				...policyScope,
 			};
-
-			// fixme clientId
 
 			await this.accessRulesWriter.insertRule(rule);
 		}

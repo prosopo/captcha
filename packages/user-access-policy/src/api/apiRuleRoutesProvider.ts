@@ -15,33 +15,26 @@
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type {
 	AccessRulesReader,
+	AccessRulesStorage,
 	AccessRulesWriter,
 } from "#policy/accessRules.js";
 import { apiRulePaths } from "./apiRulePaths.js";
 import { ApiDeleteManyRulesEndpoint } from "./deleteMany/apiDeleteManyRulesEndpoint.js";
 import { ApiInsertManyRulesEndpoint } from "./insertMany/apiInsertManyRulesEndpoint.js";
 
-class ApiRuleRoutesProvider implements ApiRoutesProvider {
-	public constructor(
-		private readonly accessRulesReader: AccessRulesReader,
-		private readonly accessRulesWriter: AccessRulesWriter,
-	) {}
+export class ApiRuleRoutesProvider implements ApiRoutesProvider {
+	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
 
 	public getRoutes(): ApiRoute[] {
 		return [
 			{
 				path: apiRulePaths.INSERT_MANY,
-				endpoint: new ApiInsertManyRulesEndpoint(this.accessRulesWriter),
+				endpoint: new ApiInsertManyRulesEndpoint(this.accessRulesStorage),
 			},
 			{
 				path: apiRulePaths.DELETE_MANY,
-				endpoint: new ApiDeleteManyRulesEndpoint(
-					this.accessRulesReader,
-					this.accessRulesWriter,
-				),
+				endpoint: new ApiDeleteManyRulesEndpoint(this.accessRulesStorage),
 			},
 		];
 	}
 }
-
-export { ApiRuleRoutesProvider };

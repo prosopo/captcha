@@ -12,16 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { apiRulePaths } from "./api/apiRulePaths.js";
-import { getExpressApiRuleRateLimits } from "./api/getExpressApiRuleRateLimits.js";
-import type {
-	ApiInsertManyRulesArgsOutputSchema,
-	ApiInsertManyRulesArgsSchema,
-} from "./api/insertMany/apiInsertManyRulesArgsSchema.js";
+import type { ApiRoutesProvider } from "@prosopo/api-route";
+import {
+	type ResolveAccessPolicy,
+	createAccessPolicyResolver,
+} from "#policy/accessPolicyResolver.js";
+import {
+	AccessPolicyMatchType,
+	type AccessRuleFilter,
+} from "#policy/accessRule.js";
+import type { AccessRulesStorage } from "#policy/accessRules.js";
+import { apiRulePaths } from "#policy/api/apiRulePaths.js";
+import { ApiRuleRoutesProvider } from "#policy/api/apiRuleRoutesProvider.js";
+import { getExpressApiRuleRateLimits } from "#policy/api/getExpressApiRuleRateLimits.js";
+import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
+
+export const createApiRuleRoutesProvider = (
+	rulesStorage: AccessRulesStorage,
+): ApiRoutesProvider => {
+	return new ApiRuleRoutesProvider(rulesStorage);
+};
 
 export {
-	type ApiInsertManyRulesArgsSchema,
-	type ApiInsertManyRulesArgsOutputSchema,
+	type AccessRulesStorage,
+	type ResolveAccessPolicy,
+	type AccessRuleFilter,
+	createRedisAccessRulesStorage,
+	createAccessPolicyResolver,
 	getExpressApiRuleRateLimits,
 	apiRulePaths,
+	AccessPolicyMatchType,
 };

@@ -36,7 +36,11 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
+import {
+	AccessRuleMatchType,
+	type ResolveAccessPolicy,
+	createAccessPolicyResolver,
+} from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
@@ -112,18 +116,27 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
-					userAccessRulesStorage,
-					req.logger,
-				);
+				const resolveAccessPolicy: ResolveAccessPolicy =
+					createAccessPolicyResolver(userAccessRulesStorage, req.logger);
 
-				const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
-					env.config.captchas,
+				/*fixme env.config.captchas,
 					ipAddress,
 					req.ja4,
 					user,
-					dapp,
-				);
+					dapp,*/
+
+				const userAccessPolicy = await resolveAccessPolicy({
+					ruleScope: {
+						clientId: dapp,
+					},
+					ruleScopeMatch: AccessRuleMatchType.GREEDY,
+					policyScope: {
+						userId: user,
+						ja4Hash: req.ja4,
+						numericIp: ipAddress.bigInt,
+					},
+					policyScopeMatch: AccessRuleMatchType.GREEDY,
+				});
 
 				const { valid, reason, frictionlessTokenId } =
 					await tasks.imgCaptchaManager.isValidRequest(

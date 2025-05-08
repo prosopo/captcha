@@ -20,8 +20,8 @@ import {
 import { accessRuleScopeSchema } from "#policy/accessRule.js";
 
 export const apiInsertManyRulesArgsSchema = z.object({
-	...accessRuleScopeSchema.shape,
 	policy: accessPolicySchema,
+	ruleScope: accessRuleScopeSchema.optional(),
 	policyScopes: z.array(accessPolicyScopeSchema),
 });
 

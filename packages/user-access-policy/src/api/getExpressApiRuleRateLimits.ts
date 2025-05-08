@@ -14,7 +14,7 @@
 
 import { apiRulePaths } from "./apiRulePaths.js";
 
-const getExpressApiRuleRateLimits = () => {
+export const getExpressApiRuleRateLimits = () => {
 	const defaultWindowsMs = 60000;
 	const defaultLimit = 5;
 
@@ -37,5 +37,3 @@ const getExpressApiRuleRateLimits = () => {
 		},
 	};
 };
-
-export { getExpressApiRuleRateLimits };

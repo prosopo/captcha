@@ -12,12 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { AccessRule, AccessRuleFilter } from "#policy/accessRule.js";
+import { z } from "zod";
+import {
+	accessPolicySchema,
+	accessPolicyScopeSchema,
+	userScopeSchema,
+} from "#policy/accessPolicy.js";
+import type { AccessPolicyFilter } from "#policy/accessPolicyResolver.js";
+
+export const accessRuleSchema = z.object({
+	// flat structure is used to fit the Redis requirements
+	...accessPolicySchema.shape,
+	...accessPolicyScopeSchema.shape,
+	...userScopeSchema.shape,
+});
+
+export type AccessRule = z.infer<typeof accessRuleSchema>;
 
 export type AccessRulesReader = {
-	findRules(ruleFilter: AccessRuleFilter): Promise<AccessRule[]>;
+	findRules(filter: AccessPolicyFilter): Promise<AccessRule[]>;
 
-	findRuleIds(ruleFilter: AccessRuleFilter): Promise<string[]>;
+	findRuleIds(filter: AccessPolicyFilter): Promise<string[]>;
 };
 
 export type AccessRulesWriter = {
@@ -27,3 +42,5 @@ export type AccessRulesWriter = {
 
 	deleteAllRules(): Promise<void>;
 };
+
+export type AccessRulesStorage = AccessRulesReader & AccessRulesWriter;

@@ -15,8 +15,6 @@
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import { CaptchaType, Tier } from "@prosopo/types";
 import {
-	type BlockRule,
-	BlockRuleType,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -40,7 +38,7 @@ import {
 	type Timestamp,
 	TimestampSchema,
 } from "@prosopo/types";
-import type { RulesStorage } from "@prosopo/user-access-policy";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
@@ -654,7 +652,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
 
-	getUserAccessRulesStorage(): RulesStorage;
+	getUserAccessRulesStorage(): AccessRulesStorage;
 
 	storeDetectorKey(detectorKey: string): Promise<void>;
 

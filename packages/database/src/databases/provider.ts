@@ -74,12 +74,7 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import {
-	type Rule,
-	type RulesStorage,
-	createMongooseRulesStorage,
-	getRuleMongooseSchema,
-} from "@prosopo/user-access-policy";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
@@ -95,7 +90,6 @@ enum TableNames {
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	userAccessRules = "userAccessRules",
 	detector = "detector",
 }
 
@@ -156,11 +150,6 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.userAccessRules,
-		modelName: "UserAccessRules",
-		schema: getRuleMongooseSchema(),
-	},
-	{
 		collectionName: TableNames.detector,
 		modelName: "Detector",
 		schema: DetectorRecordSchema,
@@ -172,7 +161,7 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private userAccessRulesDbStorage: RulesStorage | null;
+	private userAccessRulesStorage: AccessRulesStorage | null;
 
 	constructor(
 		url: string,
@@ -183,7 +172,7 @@ export class ProviderDatabase
 		super(url, dbname, authSource, logger);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRulesDbStorage = null;
+		this.userAccessRulesStorage = null;
 	}
 
 	override async connect(): Promise<void> {
@@ -191,10 +180,7 @@ export class ProviderDatabase
 
 		this.loadTables();
 
-		this.userAccessRulesDbStorage = createMongooseRulesStorage(
-			this.logger,
-			<Model<Rule>>this.tables.userAccessRules,
-		);
+		// fixme
 	}
 
 	loadTables() {
@@ -217,12 +203,12 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
-	public getUserAccessRulesStorage(): RulesStorage {
-		if (null === this.userAccessRulesDbStorage) {
-			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED");
+	public getUserAccessRulesStorage(): AccessRulesStorage {
+		if (null === this.userAccessRulesStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED");
 		}
 
-		return this.userAccessRulesDbStorage;
+		return this.userAccessRulesStorage;
 	}
 
 	/**
