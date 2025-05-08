@@ -15,72 +15,33 @@
 import { z } from "zod";
 
 export enum AccessPolicyType {
-	Block = "1",
-	Restrict = "2",
-}
-
-export enum AccessPolicyMatch {
-	STRICT = "STRICT",
-	PARTIAL = "PARTIAL",
+	Block = "block",
+	Restrict = "restrict",
 }
 
 export const accessPolicySchema = z.object({
 	type: z.nativeEnum(AccessPolicyType),
-	solvedImagesCount: z.number().optional(),
-	unsolvedImagesCount: z.number().optional(),
-	frictionlessScore: z.number().optional(),
+	description: z.string().optional(),
+	// Redis stores values as strings, so coerce is needed to parse properly
+	solvedImagesCount: z.coerce.number().optional(),
+	unsolvedImagesCount: z.coerce.number().optional(),
+	frictionlessScore: z.coerce.number().optional(),
 });
 
 export const userAccessAttributesSchema = z.object({
 	userId: z.string().optional(),
-	numericIp: z.string().optional(),
+	numericIp: z.coerce.number().optional(),
 	ja4Hash: z.string().optional(),
 	headersHash: z.string().optional(),
 	userAgentHash: z.string().optional(),
 });
 
-export const accessPolicyScopeSchema = z
-	.object({
-		numericIpMaskMin: z.string().optional(),
-		numericIpMaskMax: z.string().optional(),
-	})
-	.merge(userAccessAttributesSchema);
-
-const accessRuleScopeSchema = z.object({
-	clientId: z.string().optional(),
+export const accessPolicyScopeSchema = z.object({
+	...userAccessAttributesSchema.shape,
+	numericIpMaskMin: z.coerce.number().optional(),
+	numericIpMaskMax: z.coerce.number().optional(),
 });
-
-export const accessRuleSchema = z.object({
-	// flat structure is used to fit the Redis requirements
-	...accessPolicySchema.shape,
-	...accessRuleScopeSchema.shape,
-	...accessPolicyScopeSchema.shape,
-});
-
-export const accessRulesFilterSchema = z
-	.object({
-		policyScope: accessPolicyScopeSchema.optional(),
-		/**
-		 * STRICT: finds rules where all the given fields matches. Used by the API
-		 * PARTIAL: finds rules where any of the given fields match. Used by the Express middleware
-		 */
-		policyScopeMatch: z
-			.nativeEnum(AccessPolicyMatch)
-			.default(AccessPolicyMatch.STRICT)
-			.optional(),
-		/**
-		 * STRICT: "clientId" => client rules, "undefined" => global rules. Used by the API
-		 * PARTIAL: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
-		 */
-		ruleScopeMatch: z
-			.nativeEnum(AccessPolicyMatch)
-			.default(AccessPolicyMatch.STRICT)
-			.optional(),
-	})
-	.merge(accessRuleScopeSchema);
 
 export type AccessPolicy = z.infer<typeof accessPolicySchema>;
 export type UserAccessAttributes = z.infer<typeof userAccessAttributesSchema>;
 export type AccessPolicyScope = z.infer<typeof accessPolicyScopeSchema>;
-export type AccessRule = z.infer<typeof accessRuleSchema>;
-export type AccessRulesFilter = z.infer<typeof accessRulesFilterSchema>;

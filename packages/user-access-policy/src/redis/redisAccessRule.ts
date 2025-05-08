@@ -15,12 +15,13 @@
 import crypto from "node:crypto";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
+import type { AccessPolicyScope } from "#policy/accessPolicy.js";
 import {
-	AccessPolicyMatch,
-	type AccessPolicyScope,
 	type AccessRule,
-	type AccessRulesFilter,
-} from "#policy/accessPolicy.js";
+	type AccessRuleFilter,
+	AccessRuleMatchType,
+	type AccessRuleScope,
+} from "#policy/accessRule.js";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
 export const redisAccessRuleIndexName = "index:user-access-rules";
@@ -28,7 +29,7 @@ export const redisAccessRuleIndexName = "index:user-access-rules";
 export const redisAccessRuleKeyPrefix = "uar:";
 const redisAccessRuleContentHashAlgorithm = "md5";
 
-const redisAccessRulesIndex: RedisIndex = {
+const redisAccessRule: RedisIndex = {
 	name: redisAccessRuleIndexName,
 	/**
 	 * Note on the field type decision
@@ -59,9 +60,9 @@ const redisAccessRulesIndex: RedisIndex = {
 	},
 };
 
-export const createRedisAccessRulesIndex = async (
+export const createRedisAccessRuleIndex = async (
 	client: RedisClientType,
-): Promise<void> => createRedisIndex(client, redisAccessRulesIndex);
+): Promise<void> => createRedisIndex(client, redisAccessRule);
 
 export const redisAccessRuleSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
@@ -78,17 +79,20 @@ export const redisAccessRuleSearchOptions: FtSearchOptions = {
  * )
  * DIALECT 2 # must have when the ismissing() function in use
  * */
-export const getRedisAccessRulesQuery = (
-	rulesFilter: AccessRulesFilter,
+export const getRedisAccessRuleQuery = (
+	ruleFilter: AccessRuleFilter,
 ): string => {
-	const { policyScope } = rulesFilter;
+	const { ruleScope, policyScope } = ruleFilter;
 
-	const ruleScopeFilter = getRuleScopeQuery(rulesFilter);
+	const ruleScopeFilter = getRuleScopeQuery(
+		ruleScope,
+		ruleFilter.ruleScopeMatch,
+	);
 
 	if (policyScope && Object.keys(policyScope).length > 0) {
 		const policyScopeFilter = getPolicyScopeQuery(
 			policyScope,
-			rulesFilter.policyScopeMatch,
+			ruleFilter.policyScopeMatch,
 		);
 
 		return `${ruleScopeFilter} ( ${policyScopeFilter} )`;
@@ -97,30 +101,33 @@ export const getRedisAccessRulesQuery = (
 	return ruleScopeFilter ? ruleScopeFilter : "*";
 };
 
-const getRuleScopeQuery = (rulesFilter: AccessRulesFilter): string => {
-	const { clientId, ruleScopeMatch } = rulesFilter;
+const getRuleScopeQuery = (
+	ruleScope: AccessRuleScope | undefined,
+	scopeMatchType: AccessRuleMatchType | undefined,
+): string => {
+	const clientId = ruleScope?.clientId;
 
 	if ("string" === typeof clientId) {
-		return AccessPolicyMatch.STRICT === ruleScopeMatch
+		return AccessRuleMatchType.EXACT === scopeMatchType
 			? `@clientId:{${clientId}}`
 			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
 	}
 
-	return AccessPolicyMatch.STRICT === ruleScopeMatch
+	return AccessRuleMatchType.EXACT === scopeMatchType
 		? "ismissing(@clientId)"
 		: "";
 };
 
 const getPolicyScopeQuery = (
 	policyScope: AccessPolicyScope,
-	policyScopeMatch: AccessPolicyMatch | undefined,
+	scopeMatchType: AccessRuleMatchType | undefined,
 ): string => {
 	const scopeEntries = Object.entries(policyScope) as Array<
 		[keyof AccessPolicyScope, unknown]
 	>;
 
 	const scopeJoinType =
-		AccessPolicyMatch.STRICT === policyScopeMatch ? " " : " | ";
+		AccessRuleMatchType.EXACT === scopeMatchType ? " " : " | ";
 
 	return scopeEntries
 		.map(([scopeFieldName, scopeFieldValue]) =>

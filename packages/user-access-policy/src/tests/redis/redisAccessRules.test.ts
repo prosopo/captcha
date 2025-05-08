@@ -21,24 +21,21 @@ import {
 	expect,
 	test,
 } from "vitest";
-import {
-	AccessPolicyMatch,
-	AccessPolicyType,
-	type AccessRule,
-} from "#policy/accessPolicy.js";
+import { AccessPolicyType } from "#policy/accessPolicy.js";
+import { type AccessRule, AccessRuleMatchType } from "#policy/accessRule.js";
 import type {
 	AccessRulesReader,
 	AccessRulesWriter,
 } from "#policy/accessRules.js";
 import {
+	createRedisAccessRuleIndex,
+	getRedisAccessRuleKey,
+	redisAccessRuleIndexName,
+} from "#policy/redis/redisAccessRule.js";
+import {
 	createRedisAccessRulesReader,
 	createRedisAccessRulesWriter,
 } from "#policy/redis/redisAccessRules.js";
-import {
-	createRedisAccessRulesIndex,
-	getRedisAccessRuleKey,
-	redisAccessRuleIndexName,
-} from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "#policy/tests/redis/testRedisClient.js";
 import { testLogger } from "#policy/tests/testLogger.js";
 
@@ -52,7 +49,7 @@ describe("redisAccessRules", () => {
 	beforeAll(async () => {
 		redisClient = await createTestRedisClient();
 
-		await createRedisAccessRulesIndex(redisClient);
+		await createRedisAccessRuleIndex(redisClient);
 	});
 
 	beforeEach(async () => {
@@ -175,7 +172,7 @@ describe("redisAccessRules", () => {
 			accessRulesReader = createRedisAccessRulesReader(redisClient, testLogger);
 		});
 
-		test("finds client and global rules by partial rule scope match", async () => {
+		test("finds client and global rules by greedy rule scope match", async () => {
 			// given
 			const johnId = getUniqueString();
 			const johnAccessRule: AccessRule = {
@@ -201,11 +198,13 @@ describe("redisAccessRules", () => {
 
 			// when
 			const foundByClientAccessRules = await accessRulesReader.findRules({
-				ruleScopeMatch: AccessPolicyMatch.PARTIAL,
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
+				ruleScopeMatch: AccessRuleMatchType.GREEDY,
 			});
 			const foundAccessRules = await accessRulesReader.findRules({
-				ruleScopeMatch: AccessPolicyMatch.PARTIAL,
+				ruleScopeMatch: AccessRuleMatchType.GREEDY,
 			});
 
 			// then
@@ -223,7 +222,7 @@ describe("redisAccessRules", () => {
 			]);
 		});
 
-		test("finds client or global rules by strict rule scope match", async () => {
+		test("finds client or global rules by exact rule scope match", async () => {
 			// given
 			const johnId = getUniqueString();
 			const johnAccessRule: AccessRule = {
@@ -249,11 +248,13 @@ describe("redisAccessRules", () => {
 
 			// when
 			const foundClientAccessRules = await accessRulesReader.findRules({
-				ruleScopeMatch: AccessPolicyMatch.STRICT,
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
+				ruleScopeMatch: AccessRuleMatchType.EXACT,
 			});
 			const foundGlobalAccessRules = await accessRulesReader.findRules({
-				ruleScopeMatch: AccessPolicyMatch.STRICT,
+				ruleScopeMatch: AccessRuleMatchType.EXACT,
 			});
 
 			// then
@@ -264,7 +265,7 @@ describe("redisAccessRules", () => {
 			expect(foundGlobalAccessRules).toEqual([globalAccessRule]);
 		});
 
-		test("finds rules by partial policy scope match", async () => {
+		test("finds rules by greedy policy scope match", async () => {
 			// given
 
 			const johnId = getUniqueString();
@@ -272,14 +273,14 @@ describe("redisAccessRules", () => {
 			const johnIpAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: johnId,
-				numericIp: "100",
+				numericIp: 100,
 			};
 			const johnIpAccessRuleKey = getRedisAccessRuleKey(johnIpAccessRule);
 
 			const doeIpAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
-				numericIp: "100",
+				numericIp: 100,
 			};
 			const doeIpAccessRuleKey = getRedisAccessRuleKey(doeIpAccessRule);
 
@@ -303,12 +304,14 @@ describe("redisAccessRules", () => {
 
 			// when
 			const foundAccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
 				policyScope: {
-					numericIp: "100",
+					numericIp: 100,
 					ja4Hash: "windows",
 				},
-				policyScopeMatch: AccessPolicyMatch.PARTIAL,
+				policyScopeMatch: AccessRuleMatchType.GREEDY,
 			});
 
 			// then
@@ -318,7 +321,7 @@ describe("redisAccessRules", () => {
 			expect(foundAccessRules).toEqual([johnIpAccessRule, globalJa4AccessRule]);
 		});
 
-		test("finds rules by strict policy scope match", async () => {
+		test("finds rules by exact policy scope match", async () => {
 			// given
 
 			const johnId = getUniqueString();
@@ -326,7 +329,7 @@ describe("redisAccessRules", () => {
 			const johnTargetAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: johnId,
-				numericIp: "100",
+				numericIp: 100,
 				ja4Hash: "windows",
 			};
 			const johnTargetAccessRuleKey =
@@ -335,7 +338,7 @@ describe("redisAccessRules", () => {
 			const doeTargetAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
-				numericIp: "100",
+				numericIp: 100,
 				ja4Hash: "windows",
 			};
 			const doeTargetAccessRuleKey = getRedisAccessRuleKey(doeTargetAccessRule);
@@ -349,7 +352,7 @@ describe("redisAccessRules", () => {
 
 			const globalTargetAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				numericIp: "100",
+				numericIp: 100,
 				ja4Hash: "windows",
 			};
 			const globalTargetAccessRuleKey = getRedisAccessRuleKey(
@@ -370,12 +373,14 @@ describe("redisAccessRules", () => {
 
 			// when
 			const foundAccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
 				policyScope: {
-					numericIp: "100",
+					numericIp: 100,
 					ja4Hash: "windows",
 				},
-				policyScopeMatch: AccessPolicyMatch.STRICT,
+				policyScopeMatch: AccessRuleMatchType.EXACT,
 			});
 
 			// then
@@ -395,8 +400,8 @@ describe("redisAccessRules", () => {
 			const johnIpMask_0_100_AccessRule: AccessRule = {
 				clientId: johnId,
 				type: AccessPolicyType.Block,
-				numericIpMaskMin: "0",
-				numericIpMaskMax: "100",
+				numericIpMaskMin: 0,
+				numericIpMaskMax: 100,
 			};
 			const johnIpMask_0_100_AccessRuleKey = getRedisAccessRuleKey(
 				johnIpMask_0_100_AccessRule,
@@ -404,7 +409,7 @@ describe("redisAccessRules", () => {
 
 			const johnIp_100_AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				numericIp: "100",
+				numericIp: 100,
 			};
 			const johnIp_100_AccessRuleKey = getRedisAccessRuleKey(
 				johnIp_100_AccessRule,
@@ -412,8 +417,8 @@ describe("redisAccessRules", () => {
 
 			const globalIpMask_100_200_AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				numericIpMaskMin: "100",
-				numericIpMaskMax: "200",
+				numericIpMaskMin: 100,
+				numericIpMaskMax: 200,
 			};
 			const globalIpMask_100_200_AccessRuleKey = getRedisAccessRuleKey(
 				globalIpMask_100_200_AccessRule,
@@ -422,8 +427,8 @@ describe("redisAccessRules", () => {
 			const doeIpMask_200_300AccessRule: AccessRule = {
 				clientId: getUniqueString(),
 				type: AccessPolicyType.Block,
-				numericIpMaskMin: "200",
-				numericIpMaskMax: "300",
+				numericIpMaskMin: 200,
+				numericIpMaskMax: 300,
 			};
 			const doeIpMask_200_300AccessRuleKey = getRedisAccessRuleKey(
 				doeIpMask_200_300AccessRule,
@@ -445,33 +450,43 @@ describe("redisAccessRules", () => {
 
 			// when
 			const ip_0_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
 				policyScope: {
-					numericIp: "0",
+					numericIp: 0,
 				},
 			});
 			const ip_99_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
 				policyScope: {
-					numericIp: "99",
+					numericIp: 99,
 				},
 			});
 			const ip_100_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
 				policyScope: {
-					numericIp: "100",
+					numericIp: 100,
 				},
 			});
 			const ip_101_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
 				policyScope: {
-					numericIp: "101",
+					numericIp: 101,
 				},
 			});
 			const ip_201_AccessRules = await accessRulesReader.findRules({
-				clientId: johnId,
+				ruleScope: {
+					clientId: johnId,
+				},
 				policyScope: {
-					numericIp: "201",
+					numericIp: 201,
 				},
 			});
 

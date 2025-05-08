@@ -12,52 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { boolean, number, object, type output, string } from "zod";
-import { ruleConfigSchema } from "../../rule/config/ruleConfigSchema.js";
+import { z } from "zod";
+import {
+	accessPolicySchema,
+	accessPolicyScopeSchema,
+} from "#policy/accessPolicy.js";
+import { accessRuleScopeSchema } from "#policy/accessRule.js";
 
-const apiInsertManyRulesArgsSchema = object({
-	isUserBlocked: boolean(),
-	clientId: string().optional(),
-	description: string().optional(),
-	userIps: object({
-		v4: string().array().optional(),
-		v6: string().array().optional(),
-	}), // block multiple user ip ranges
-	userIpMasks: object({
-		v4: object({
-			min: string(),
-			max: string(),
-		})
-			.array()
-			.optional(),
-		v6: object({
-			min: string(),
-			max: string(),
-		})
-			.array()
-			.optional(),
-	}), // block multiple user ip ranges
-	userIds: string().array().optional(), // block multiple user ids
-	ja4s: string().array().optional(), // block multiple ja4s
-	// setting individual rule values overrides any array values for the same type
-	userIp: object({
-		v4: string().optional(),
-		v6: string().optional(),
-	}).optional(),
-	userId: string().optional(),
-	ja4: string().optional(),
-	config: ruleConfigSchema.optional(),
-	score: number().optional(),
+export const apiInsertManyRulesArgsSchema = z.object({
+	...accessRuleScopeSchema.shape,
+	policy: accessPolicySchema,
+	policyScopes: z.array(accessPolicyScopeSchema),
 });
 
-type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
+export type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
 
-type ApiInsertManyRulesArgsOutputSchema = output<
+export type ApiInsertManyRulesArgsInputSchema = z.input<
 	typeof apiInsertManyRulesArgsSchema
 >;
 
-export {
-	apiInsertManyRulesArgsSchema,
-	type ApiInsertManyRulesArgsSchema,
-	type ApiInsertManyRulesArgsOutputSchema,
-};
+export type ApiInsertManyRulesArgsOutputSchema = z.output<
+	typeof apiInsertManyRulesArgsSchema
+>;

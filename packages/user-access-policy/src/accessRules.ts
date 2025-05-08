@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { AccessRule, AccessRulesFilter } from "#policy/accessPolicy.js";
+import type { AccessRule, AccessRuleFilter } from "#policy/accessRule.js";
 
 export type AccessRulesReader = {
-	findRules(rulesFilter: AccessRulesFilter): Promise<AccessRule[]>;
+	findRules(ruleFilter: AccessRuleFilter): Promise<AccessRule[]>;
 
-	findRuleIds(rulesFilter: AccessRulesFilter): Promise<string[]>;
+	findRuleIds(ruleFilter: AccessRuleFilter): Promise<string[]>;
 };
 
 export type AccessRulesWriter = {

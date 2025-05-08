@@ -13,15 +13,12 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type {
-	AccessPolicy,
-	AccessRule,
-	AccessRulesFilter,
-} from "#policy/accessPolicy.js";
+import type { AccessPolicy } from "#policy/accessPolicy.js";
+import type { AccessRule, AccessRuleFilter } from "#policy/accessRule.js";
 import type { AccessRulesReader } from "#policy/accessRules.js";
 
 export type ResolveAccessPolicy = (
-	rulesFilter: AccessRulesFilter,
+	ruleFilter: AccessRuleFilter,
 ) => Promise<AccessPolicy | undefined>;
 
 export const createAccessPolicyResolver = (
@@ -29,14 +26,14 @@ export const createAccessPolicyResolver = (
 	logger: Logger,
 ): ResolveAccessPolicy => {
 	return async (
-		rulesFilter: AccessRulesFilter,
+		ruleFilter: AccessRuleFilter,
 	): Promise<AccessPolicy | undefined> => {
-		const accessRules = await accessRulesReader.findRules(rulesFilter);
+		const accessRules = await accessRulesReader.findRules(ruleFilter);
 
 		const primaryAccessRule = resolvePrimaryAccessRule(accessRules);
 
 		logger.debug("Resolved access policy", {
-			rulesFilter: rulesFilter,
+			ruleFilter: ruleFilter,
 			accessRules: accessRules,
 			primaryAccessRule: primaryAccessRule,
 		});

@@ -18,30 +18,28 @@ import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARC
 import type { RedisClientType } from "redis";
 import {
 	type AccessRule,
-	type AccessRulesFilter,
+	type AccessRuleFilter,
 	accessRuleSchema,
-} from "#policy/accessPolicy.js";
+} from "#policy/accessRule.js";
 import type {
 	AccessRulesReader,
 	AccessRulesWriter,
 } from "#policy/accessRules.js";
 import {
 	getRedisAccessRuleKey,
-	getRedisAccessRulesQuery,
+	getRedisAccessRuleQuery,
 	redisAccessRuleIndexName,
 	redisAccessRuleKeyPrefix,
 	redisAccessRuleSearchOptions,
-} from "#policy/redis/redisAccessRulesIndex.js";
+} from "#policy/redis/redisAccessRule.js";
 
 export const createRedisAccessRulesReader = (
 	client: RedisClientType,
 	logger: Logger,
 ): AccessRulesReader => {
 	return {
-		findRules: async (
-			rulesFilter: AccessRulesFilter,
-		): Promise<AccessRule[]> => {
-			const query = getRedisAccessRulesQuery(rulesFilter);
+		findRules: async (ruleFilter: AccessRuleFilter): Promise<AccessRule[]> => {
+			const query = getRedisAccessRuleQuery(ruleFilter);
 
 			let searchReply: SearchReply;
 
@@ -53,14 +51,14 @@ export const createRedisAccessRulesReader = (
 				);
 
 				logger.debug("executed search query", {
-					rulesFilter: rulesFilter,
+					ruleFilter: ruleFilter,
 					searchReply: searchReply,
 					query: query,
 				});
 			} catch (e) {
 				logger.error("failed to execute search query", {
 					query: query,
-					rulesFilter: rulesFilter,
+					ruleFilter: ruleFilter,
 				});
 
 				return [];
@@ -69,8 +67,8 @@ export const createRedisAccessRulesReader = (
 			return extractAccessRulesFromSearchReply(searchReply, logger);
 		},
 
-		findRuleIds: async (rulesFilter: AccessRulesFilter): Promise<string[]> => {
-			const query = getRedisAccessRulesQuery(rulesFilter);
+		findRuleIds: async (ruleFilter: AccessRuleFilter): Promise<string[]> => {
+			const query = getRedisAccessRuleQuery(ruleFilter);
 
 			let searchReply: SearchNoContentReply;
 
@@ -82,14 +80,14 @@ export const createRedisAccessRulesReader = (
 				);
 
 				logger.debug("executed searchNoContent query", {
-					rulesFilter: rulesFilter,
+					ruleFilter: ruleFilter,
 					searchReply: searchReply,
 					query: query,
 				});
 			} catch (e) {
 				logger.error("failed to execute searchNoContent query", {
 					query: query,
-					rulesFilter: rulesFilter,
+					ruleFilter: ruleFilter,
 				});
 
 				return [];

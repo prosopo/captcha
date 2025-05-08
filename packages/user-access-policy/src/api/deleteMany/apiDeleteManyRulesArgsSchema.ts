@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { z } from "zod";
-import { accessRulesFilterSchema } from "#policy/accessPolicy.js";
+import { accessRuleFilterSchema } from "#policy/accessRule.js";
 
-export const apiDeleteManyRulesArgsSchema = z.array(accessRulesFilterSchema);
+export const apiDeleteManyRulesArgsSchema = z.array(accessRuleFilterSchema);
 
 export type ApiDeleteManyRulesArgsSchema = typeof apiDeleteManyRulesArgsSchema;
