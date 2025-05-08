@@ -17,6 +17,7 @@ import type { Logger } from "@prosopo/common";
 import { z } from "zod";
 import {
 	type AccessPolicy,
+	AccessPolicyType,
 	policyScopeSchema,
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
@@ -58,7 +59,7 @@ export const createAccessPolicyResolver = (
 	return async (filter: PolicyFilter): Promise<AccessPolicy | undefined> => {
 		const accessRules = await accessRulesReader.findRules(filter);
 
-		const primaryAccessRule = resolvePrimaryAccessRule(accessRules);
+		const primaryAccessRule = resolvePrimaryRule(accessRules);
 
 		logger.debug(
 			"Resolved access policy",
@@ -77,15 +78,26 @@ export const createAccessPolicyResolver = (
 	};
 };
 
-const resolvePrimaryAccessRule = (
-	accessRules: AccessRule[],
-): AccessRule | undefined => {
-	const clientRules = accessRules.filter(
-		(accessRule) => "string" === typeof accessRule.clientId,
-	);
-	const globalRules = accessRules.filter(
-		(accessRule) => undefined === accessRule.clientId,
+const resolvePrimaryRule = (rules: AccessRule[]): AccessRule | undefined => {
+	// blocking rules have priority over restricting
+	const blockingRules = rules.filter(
+		(accessRule) => AccessPolicyType.Block === accessRule.type,
 	);
 
-	return clientRules.length > 0 ? clientRules.shift() : globalRules.shift();
+	const rulesToEvaluate = blockingRules.length > 0 ? blockingRules : rules;
+
+	return resolveMostLocalRule(rulesToEvaluate);
+};
+
+const resolveMostLocalRule = (rules: AccessRule[]): AccessRule | undefined => {
+	// client rules have priority over global
+	const clientRules = rules.filter(
+		(accessRule) => "string" === typeof accessRule.clientId,
+	);
+
+	if (clientRules.length > 0) {
+		return clientRules.shift();
+	}
+
+	return rules.shift();
 };

@@ -14,13 +14,13 @@
 
 import { z } from "zod";
 
-export enum PolicyType {
+export enum AccessPolicyType {
 	Block = "block",
 	Restrict = "restrict",
 }
 
 export const accessPolicySchema = z.object({
-	type: z.nativeEnum(PolicyType),
+	type: z.nativeEnum(AccessPolicyType),
 	description: z.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),

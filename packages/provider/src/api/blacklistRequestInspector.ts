@@ -13,15 +13,18 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
-import type { BlacklistInspector } from "@prosopo/user-access-policy";
+import {
+	type ResolveAccessPolicy,
+	ScopeMatch,
+} from "@prosopo/user-access-policy";
+import { AccessPolicyType } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getIPAddress } from "../util.js";
 
-class BlacklistRequestInspector {
+export class BlacklistRequestInspector {
 	public constructor(
-		private readonly blacklistInspector: BlacklistInspector,
+		private readonly resolveAccessPolicy: ResolveAccessPolicy,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
-		private readonly logger: Logger,
 	) {}
 
 	public async abortRequestForBlockedUsers(
@@ -84,12 +87,20 @@ class BlacklistRequestInspector {
 				requestBody,
 			);
 
-			return await this.blacklistInspector.isUserBlacklisted(
-				clientId,
-				userIpAddress,
-				ja4,
-				userId,
-			);
+			const accessPolicy = await this.resolveAccessPolicy({
+				policyScope: {
+					clientId: clientId,
+				},
+				policyScopeMatch: ScopeMatch.Greedy,
+				userScope: {
+					userId: userId,
+					numericIp: userIpAddress.bigInt(),
+					ja4Hash: ja4,
+				},
+				userScopeMatch: ScopeMatch.Greedy,
+			});
+
+			return AccessPolicyType.Block === accessPolicy?.type;
 		} catch (err) {
 			logger.error("Block Middleware Error:", err);
 
@@ -130,5 +141,3 @@ class BlacklistRequestInspector {
 		return object[key];
 	}
 }
-
-export { BlacklistRequestInspector };

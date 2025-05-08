@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { KeyringPair } from "@polkadot/keyring/types";
 import type { Logger } from "@prosopo/common";
 import { CaptchaType, type ProsopoConfigOutput } from "@prosopo/types";
@@ -20,6 +21,7 @@ import type {
 	IProviderDatabase,
 	Session,
 } from "@prosopo/types-database";
+import type { AccessPolicy } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
@@ -83,13 +85,14 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async scoreIncreaseAccessPolicy(
-		accessRuleFrictionlessScore: number | null,
+		accessPolicy: AccessPolicy | undefined,
 		baseBotScore: number,
 		botScore: number,
 		tokenId: FrictionlessTokenId,
 	) {
 		const accessPolicyPenalty =
-			accessRuleFrictionlessScore || this.config.penalties.PENALTY_ACCESS_RULE;
+			accessPolicy?.frictionlessScore ||
+			this.config.penalties.PENALTY_ACCESS_RULE;
 		botScore += accessPolicyPenalty;
 		this.logger.info({
 			message: "Address has an image captcha config defined",

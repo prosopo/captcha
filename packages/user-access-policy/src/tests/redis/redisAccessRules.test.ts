@@ -21,7 +21,7 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { PolicyType } from "#policy/accessPolicy.js";
+import { AccessPolicyType } from "#policy/accessPolicy.js";
 import { ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type {
 	AccessRule,
@@ -79,7 +79,7 @@ describe("redisAccessRules", () => {
 		test("inserts rule", async () => {
 			// given
 			const accessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: "clientId",
 			};
 			const accessRuleKey = getRedisAccessRuleKey(accessRule);
@@ -98,7 +98,7 @@ describe("redisAccessRules", () => {
 		test("inserts time limited rule", async () => {
 			// given
 			const accessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: "clientId",
 			};
 			const accessRuleKey = getRedisAccessRuleKey(accessRule);
@@ -122,13 +122,13 @@ describe("redisAccessRules", () => {
 		test("deletes rules", async () => {
 			// given
 			const johnAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
 			const johnAccessRuleKey = getRedisAccessRuleKey(johnAccessRule);
 
 			const doeAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
 			const doeAccessRuleKey = getRedisAccessRuleKey(doeAccessRule);
@@ -150,11 +150,11 @@ describe("redisAccessRules", () => {
 		test("deletes all rules", async () => {
 			// given
 			const johnAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
 			const doeAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
 
@@ -182,15 +182,15 @@ describe("redisAccessRules", () => {
 			// given
 			const johnId = getUniqueString();
 			const johnAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: johnId,
 			};
 			const doeAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
 			const globalAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 			};
 
 			await insertRule(johnAccessRule);
@@ -228,15 +228,15 @@ describe("redisAccessRules", () => {
 			const johnId = getUniqueString();
 
 			const johnAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: johnId,
 			};
 			const doeAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
 			const globalAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 			};
 
 			await insertRule(johnAccessRule);
@@ -267,21 +267,21 @@ describe("redisAccessRules", () => {
 
 			const johnId = getUniqueString();
 			const johnIpAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: johnId,
 				numericIp: BigInt(100),
 			};
 			const doeIpAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 				numericIp: BigInt(100),
 			};
 			const johnHeaderAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				headersHash: "chrome",
 			};
 			const globalJa4AccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				ja4Hash: "windows",
 			};
 
@@ -315,32 +315,32 @@ describe("redisAccessRules", () => {
 			const johnId = getUniqueString();
 
 			const johnTargetAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: johnId,
 				numericIp: BigInt(100),
 				ja4Hash: "windows",
 			};
 
 			const doeTargetAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 				numericIp: BigInt(100),
 				ja4Hash: "windows",
 			};
 
 			const johnHeaderAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				headersHash: "chrome",
 			};
 
 			const globalTargetAccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				numericIp: BigInt(100),
 				ja4Hash: "windows",
 			};
 
 			const globalJa4AccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				ja4Hash: "windows",
 			};
 
@@ -378,22 +378,22 @@ describe("redisAccessRules", () => {
 
 			const johnIpMask_0_100_AccessRule: AccessRule = {
 				clientId: johnId,
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				numericIpMaskMin: BigInt(0),
 				numericIpMaskMax: BigInt(100),
 			};
 			const johnIp_100_AccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				numericIp: BigInt(100),
 			};
 			const globalIpMask_100_200_AccessRule: AccessRule = {
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				numericIpMaskMin: BigInt(100),
 				numericIpMaskMax: BigInt(200),
 			};
 			const doeIpMask_200_300AccessRule: AccessRule = {
 				clientId: getUniqueString(),
-				type: PolicyType.Block,
+				type: AccessPolicyType.Block,
 				numericIpMaskMin: BigInt(200),
 				numericIpMaskMax: BigInt(300),
 			};

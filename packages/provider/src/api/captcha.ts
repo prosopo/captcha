@@ -32,6 +32,7 @@ import {
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
+	type ProsopoCaptchaCountConfigSchemaOutput,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
@@ -116,28 +117,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const resolveAccessPolicy: ResolveAccessPolicy =
-					createAccessPolicyResolver(userAccessRulesStorage, req.logger);
-
-				/*fixme env.config.captchas,
-					ipAddress,
-					req.ja4,
-					user,
-					dapp,*/
-
-				const userAccessPolicy = await resolveAccessPolicy({
-					policyScope: {
-						clientId: dapp,
-					},
-					policyScopeMatch: ScopeMatch.Greedy,
-					userScope: {
-						userId: user,
-						ja4Hash: req.ja4,
-						numericIp: ipAddress.bigInt(),
-					},
-					userScopeMatch: ScopeMatch.Greedy,
-				});
-
 				const { valid, reason, frictionlessTokenId } =
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
@@ -158,6 +137,36 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
+
+				const resolveAccessPolicy = createAccessPolicyResolver(
+					userAccessRulesStorage,
+					req.logger,
+				);
+
+				const userAccessPolicy = await resolveAccessPolicy({
+					policyScope: {
+						clientId: dapp,
+					},
+					policyScopeMatch: ScopeMatch.Greedy,
+					userScope: {
+						userId: user,
+						ja4Hash: req.ja4,
+						numericIp: ipAddress.bigInt(),
+					},
+					userScopeMatch: ScopeMatch.Greedy,
+				});
+				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
+					solved: {
+						count:
+							userAccessPolicy?.solvedImagesCount ||
+							env.config.captchas.solved.count,
+					},
+					unsolved: {
+						count:
+							userAccessPolicy?.unsolvedImagesCount ||
+							env.config.captchas.unsolved.count,
+					},
+				};
 
 				const taskData =
 					await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
@@ -590,23 +599,30 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
-				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
+				const resolveAccessPolicy = createAccessPolicyResolver(
 					userAccessRulesStorage,
 					req.logger,
 				);
+				const accessPolicy = await resolveAccessPolicy({
+					policyScope: {
+						clientId: dapp,
+					},
+					policyScopeMatch: ScopeMatch.Greedy,
+					userScope: {
+						userId: user,
+						ja4Hash: req.ja4,
+						numericIp: ipAddress.bigInt(),
+					},
+					userScopeMatch: ScopeMatch.Greedy,
+				});
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
-				const imageCaptchaConfigDefined =
-					await imageCaptchaConfigResolver.isConfigDefined(
-						dapp,
-						ipAddress,
-						req.ja4,
-						user,
-					);
-
-				if (imageCaptchaConfigDefined) {
+				if (
+					accessPolicy?.solvedImagesCount ||
+					accessPolicy?.unsolvedImagesCount
+				) {
 					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
-						imageCaptchaConfigResolver.accessRule,
+						accessPolicy,
 						baseBotScore,
 						botScore,
 						tokenId,

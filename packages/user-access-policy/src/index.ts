@@ -18,6 +18,7 @@ import {
 	createAccessPolicyResolver,
 } from "#policy/accessPolicyResolver.js";
 
+import { type AccessPolicy, AccessPolicyType } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { apiRulePaths } from "#policy/api/apiRulePaths.js";
@@ -32,6 +33,7 @@ export const createApiRuleRoutesProvider = (
 };
 
 export {
+	type AccessPolicy,
 	type AccessRulesStorage,
 	type ResolveAccessPolicy,
 	type PolicyFilter,
@@ -39,5 +41,6 @@ export {
 	createAccessPolicyResolver,
 	getExpressApiRuleRateLimits,
 	apiRulePaths,
+	AccessPolicyType,
 	ScopeMatch,
 };
