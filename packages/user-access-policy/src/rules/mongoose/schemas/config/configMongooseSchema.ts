@@ -19,6 +19,11 @@ import { powCaptchaConfigMongooseSchema } from "./powCaptchaConfigMongooseSchema
 
 const configMongooseSchema: Schema<RuleConfig> = new Schema<RuleConfig>(
 	{
+		captchaType: {
+			type: String,
+			enum: ["image", "pow"],
+			required: true,
+		},
 		image: {
 			type: imageCaptchaConfigMongooseSchema,
 			required: false,

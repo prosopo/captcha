@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { bigint, number, object } from "zod";
+import { bigint, number, object, type z } from "zod";
 
 const ruleIpV4MaskSchema = object({
 	rangeMinAsNumeric: bigint(),
@@ -20,4 +20,6 @@ const ruleIpV4MaskSchema = object({
 	asNumeric: number(),
 });
 
-export { ruleIpV4MaskSchema };
+type RuleIpV4Mask = z.infer<typeof ruleIpV4MaskSchema>;
+
+export { ruleIpV4MaskSchema, type RuleIpV4Mask };

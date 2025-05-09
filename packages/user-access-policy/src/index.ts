@@ -36,7 +36,11 @@ import { ruleConfigSchema } from "./rules/rule/config/ruleConfigSchema.js";
 import { ruleIpSchema } from "./rules/rule/ip/ruleIpSchema.js";
 import { type Rule, RuleSchema } from "./rules/rule/rule.js";
 import type { RulesStorage } from "./rules/storage/rulesStorage.js";
-import { createIpV4MaskRule, createIpV4Rule } from "./rules/util.js";
+import {
+	createIpV4MaskRule,
+	createIpV4Rule,
+	getIpMaskString,
+} from "./rules/util.js";
 
 const createBlacklistInspector = (
 	rulesStorage: RulesStorage,
@@ -81,6 +85,7 @@ export {
 	createIpV4Rule,
 	getRuleMongooseSchema,
 	getExpressApiRuleRateLimits,
+	getIpMaskString,
 	apiInsertManyRulesArgsSchema,
 	apiDeleteManyRulesArgsSchema,
 	imageCaptchaConfigSchema,
