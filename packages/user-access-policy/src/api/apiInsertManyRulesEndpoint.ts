@@ -17,19 +17,28 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { z } from "zod";
-import type {
-	AccessPolicy,
-	PolicyScope,
-	UserScope,
+import { z } from "zod";
+import {
+	accessPolicySchema,
+	policyScopeSchema,
+	userScopeSchema,
 } from "#policy/accessPolicy.js";
 import type { AccessRulesWriter } from "#policy/accessRules.js";
-import {
-	type ApiInsertManyRulesArgsSchema,
-	apiInsertManyRulesArgsSchema,
-} from "./apiInsertManyRulesArgsSchema.js";
 
-class ApiInsertManyRulesEndpoint
+export const apiInsertManyRulesArgsSchema = z.object({
+	policy: accessPolicySchema,
+	policyScope: policyScopeSchema.optional(),
+	userScopes: z.array(userScopeSchema),
+	expirationTimestampSeconds: z.number().optional(),
+});
+
+export type ApiInsertManyRulesArgsSchema = typeof apiInsertManyRulesArgsSchema;
+
+export type ApiInsertManyRulesArgsOutputSchema = z.output<
+	typeof apiInsertManyRulesArgsSchema
+>;
+
+export class ApiInsertManyRulesEndpoint
 	implements ApiEndpoint<ApiInsertManyRulesArgsSchema>
 {
 	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
@@ -45,9 +54,7 @@ class ApiInsertManyRulesEndpoint
 				});
 			}, 5000);
 
-			const policyScope = args.policyScope || {};
-
-			this.createRules(args.policy, policyScope, args.userScopes)
+			this.createRules(args)
 				.then(() => {
 					resolve({
 						status: ApiEndpointResponseStatus.SUCCESS,
@@ -66,18 +73,19 @@ class ApiInsertManyRulesEndpoint
 	}
 
 	protected async createRules(
-		accessPolicy: AccessPolicy,
-		policyScope: PolicyScope,
-		userScopes: UserScope[],
+		args: ApiInsertManyRulesArgsOutputSchema,
 	): Promise<void> {
-		for (const userScope of userScopes) {
-			await this.accessRulesWriter.insertRule({
-				...accessPolicy,
-				...policyScope,
-				...userScope,
-			});
+		const policyScope = args.policyScope || {};
+
+		for (const userScope of args.userScopes) {
+			await this.accessRulesWriter.insertRule(
+				{
+					...args.policy,
+					...policyScope,
+					...userScope,
+				},
+				args.expirationTimestampSeconds,
+			);
 		}
 	}
 }
-
-export { ApiInsertManyRulesEndpoint };

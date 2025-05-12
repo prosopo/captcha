@@ -14,13 +14,11 @@
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type {
-	AccessRulesReader,
 	AccessRulesStorage,
-	AccessRulesWriter,
 } from "#policy/accessRules.js";
 import { apiRulePaths } from "./apiRulePaths.js";
-import { ApiDeleteManyRulesEndpoint } from "./deleteMany/apiDeleteManyRulesEndpoint.js";
-import { ApiInsertManyRulesEndpoint } from "./insertMany/apiInsertManyRulesEndpoint.js";
+import { ApiDeleteManyRulesEndpoint } from "./apiDeleteManyRulesEndpoint.js";
+import { ApiInsertManyRulesEndpoint } from "./apiInsertManyRulesEndpoint.js";
 
 export class ApiRuleRoutesProvider implements ApiRoutesProvider {
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}

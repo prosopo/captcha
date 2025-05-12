@@ -13,18 +13,18 @@
 // limitations under the License.
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
+import { type AccessPolicy, AccessPolicyType } from "#policy/accessPolicy.js";
 import {
 	type ResolveAccessPolicy,
 	createAccessPolicyResolver,
 } from "#policy/accessPolicyResolver.js";
-
-import { type AccessPolicy, AccessPolicyType } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { apiRulePaths } from "#policy/api/apiRulePaths.js";
 import { ApiRuleRoutesProvider } from "#policy/api/apiRuleRoutesProvider.js";
 import { getExpressApiRuleRateLimits } from "#policy/api/getExpressApiRuleRateLimits.js";
 import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
+import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
 
 export const createApiRuleRoutesProvider = (
 	rulesStorage: AccessRulesStorage,
@@ -37,6 +37,7 @@ export {
 	type AccessRulesStorage,
 	type ResolveAccessPolicy,
 	type PolicyFilter,
+	createRedisAccessRulesIndex,
 	createRedisAccessRulesStorage,
 	createAccessPolicyResolver,
 	getExpressApiRuleRateLimits,

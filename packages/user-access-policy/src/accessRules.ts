@@ -36,7 +36,10 @@ export type AccessRulesReader = {
 };
 
 export type AccessRulesWriter = {
-	insertRule(rule: AccessRule, expirationTimestamp?: number): Promise<string>;
+	insertRule(
+		rule: AccessRule,
+		expirationTimestampSeconds?: number,
+	): Promise<string>;
 
 	deleteRules(ruleIds: string[]): Promise<void>;
 

@@ -77,6 +77,7 @@ import {
 } from "@prosopo/types-database";
 import {
 	type AccessRulesStorage,
+	createRedisAccessRulesIndex,
 	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
@@ -185,7 +186,13 @@ export class ProviderDatabase
 
 		this.loadTables();
 
+		await this.setupRedis();
+	}
+
+	protected async setupRedis(): Promise<void> {
 		const redisClient = await this.createRedisClient();
+
+		await createRedisAccessRulesIndex(redisClient);
 
 		this.userAccessRulesStorage = createRedisAccessRulesStorage(
 			redisClient,
