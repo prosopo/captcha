@@ -326,6 +326,21 @@ export class ProviderDatabase
 		return docs ? docs : [];
 	}
 
+	/** @description Get solutions by captchaIds
+	 * @param {string[]} captchaIds
+	 */
+	async getSolutionsByCaptchaIds(
+		captchaIds: string[],
+	): Promise<SolutionRecord[]> {
+		const filter: {
+			[key in keyof Pick<SolutionRecord, "captchaId">]: { $in: string[] };
+		} = { captchaId: { $in: captchaIds } };
+		const docs = await this.tables?.solution
+			.find(filter)
+			.lean<SolutionRecord[]>();
+		return docs ? docs : [];
+	}
+
 	/** @description Get a dataset from the database
 	 * @param {string} datasetId
 	 */
@@ -1298,21 +1313,21 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Get dapp user solution by ID
-	 * @param {string[]} commitmentId
+	 * @description Get dapp user solutions by commitmentId
+	 * @param {string} commitmentId
 	 */
 	async getDappUserSolutionById(
 		commitmentId: string,
-	): Promise<UserSolutionRecord | undefined> {
+	): Promise<UserSolutionRecord[] | undefined> {
 		const filter: Pick<UserSolutionRecord, "commitmentId"> = {
 			commitmentId: commitmentId,
 		};
 		const project = { projection: { _id: 0 } };
-		const cursor = this.tables?.usersolution?.findOne(filter, project).lean();
+		const cursor = this.tables?.usersolution?.find(filter, project).lean();
 		const doc = await cursor;
 
 		if (doc) {
-			return doc as unknown as UserSolutionRecord;
+			return doc as unknown as UserSolutionRecord[];
 		}
 
 		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {

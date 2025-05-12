@@ -28,3 +28,4 @@ export * from "./api/admin/createApiAdminRoutesProvider.js";
 export * from "./api/requestLoggerMiddleware.js";
 export * from "./api/ignoreMiddleware.js";
 export * from "./api/robotsMiddleware.js";
+export * from "./tasks/imgCaptcha/imgCaptchaTasksUtils.js";

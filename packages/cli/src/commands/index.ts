@@ -16,3 +16,4 @@ export { default as commandStoreCaptchasExternally } from "./storeCaptchasExtern
 export { default as commandVersion } from "./version.js";
 export { default as commandSiteKeyRegister } from "./siteKeyRegister.js";
 export { default as commandSiteKeyRegisterApi } from "./siteKeyRegisterApi.js";
+export { default as commandDumpCaptchas } from "./dumpCaptchas.js";
