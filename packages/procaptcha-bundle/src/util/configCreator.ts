@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { LanguageSchema } from "@prosopo/locale";
+import type { Languages } from "@prosopo/locale";
 import {
 	EnvironmentTypesSchema,
 	type ProcaptchaClientConfigOutput,
@@ -22,7 +22,7 @@ import {
 function createConfig(
 	siteKey?: string,
 	theme: "light" | "dark" = "light",
-	language?: typeof LanguageSchema,
+	language?: (typeof Languages)[keyof typeof Languages],
 	web2 = true,
 	invisible = false,
 ): ProcaptchaClientConfigOutput {
