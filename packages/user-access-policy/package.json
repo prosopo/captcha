@@ -14,10 +14,10 @@
 		}
 	},
 	"scripts": {
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"build": "npx vite build --config vite.config.ts && tsc --emitDeclarationOnly",
 		"clean": "tsc --build --clean",
-		"build": "tsc --noEmit && npx vite build --config vite.config.ts",
-		"build:cjs": "npx vite build --config vite.cjs.config.ts"
+		"build:cjs": "npx vite build --config vite.cjs.config.ts",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
 		"@prosopo/api-route": "2.5.5",
