@@ -1,0 +1,41 @@
+{
+	"name": "@prosopo/angular-procaptcha-wrapper",
+	"version": "1.0.0",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
+	"typings": "dist/index.d.ts",
+	"module": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs"
+		}
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"clean": "del-cli ./dist",
+		"build": "ng-packagr -p ng-package.json",
+		"dev": "npm run build -- --watch"
+	},
+	"dependencies": {
+		"@prosopo/procaptcha-wrapper": ">=2.5.4"
+	},
+	"peerDependencies": {
+		"@angular/core": "^19.2.0"
+	},
+	"devDependencies": {
+		"del-cli": "6.0.0",
+		"ng-packagr": "19.2.0"
+	},
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"sideEffects": false
+}
