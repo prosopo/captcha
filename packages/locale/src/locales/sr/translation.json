@@ -1,128 +1,21 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Polkadot ekstenzija nije pronađena"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Izaberite sve što sadrži sledeće",
-		"IF_NONE_CLICK_NEXT": "Ako nema ništa, kliknite Sledeće",
-		"NEXT": "Sledeće",
-		"SUBMIT": "Potvrdi",
-		"CANCEL": "Otkaži",
-		"I_AM_HUMAN": "Ja sam čovek",
-		"NO_ACCOUNTS_FOUND": "Nema pronađenih naloga",
-		"ACCOUNT_NOT_FOUND": "Nalog nije pronađen",
-		"NO_EXTENSION_FOUND": "Nema pronađenih ekstenzija"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Neuspelo učitavanje JSON datoteke",
-		"MNEMONIC_UNDEFINED": "Mnemonic nedefinisan. Molimo postavite mnemonic u okruženjske promenljive",
-		"NO_MNEMONIC_OR_SEED": "Nije dostavljen mnemonic ili ključ",
-		"CANT_FIND_KEYRINGPAIR": "Nije moguće pronaći keyringpair za {{address}}",
-		"ENVIRONMENT_NOT_READY": "Okruženje nije spremno",
-		"INVALID_SIGNATURE": "Nevažeći potpis",
-		"SITE_KEY_MISSING": "SITE KEY nedostaje",
-		"ACCOUNT_NOT_FOUND": "Nalog nije pronađen",
-		"INVALID_TIMESTAMP": "Nevažeće vreme"
-	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Nemogućnost kodiranja nevažeće adrese",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Obavezna izjava za captcha rešenje ne postoji",
-		"SIGNER_UNDEFINED": "Definicija potpisnika je nedostajuća",
-		"CANNOT_FIND_KEYPAIR": "Nemogućnost pronalaženja ključnog para",
-		"INVALID_DATA_FORMAT": "Nevažeći format podataka"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Zahtevano nepoznato okruženje",
-		"INVALID_CAPTCHA_NUMBER": "Konfigurišite captcha postavke na pravilan način",
-		"INVALID_LOG_LEVEL": "Nevažeći nivo dnevnika",
-		"INVALID_PACKAGE_DIR": "Nevažeći direktorijum paketa"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Greška prilikom analize skupa podataka",
-		"SOLUTION_PARSE_ERROR": "Greška prilikom analize rešenja",
-		"HASH_ERROR": "Greška prilikom hešovanja skupa podataka",
-		"DATASET_ID_UNDEFINED": "ID skupa podataka nije definisan",
-		"NOT_ENOUGH_LABELS": "Nedovoljno oznaka",
-		"NOT_ENOUGH_IMAGES": "Nedovoljno slika",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Broj captche u skupu podataka je manji od konfigurisanog broja captcha",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Broj rešenja u skupu podataka je manji od konfigurisanog broja rešenja",
-		"DUPLICATE_IMAGE": "Detektovana duplikatna slika",
-		"MERKLE_ERROR": "Greška pri kreiranju Merkle stabla"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Neuspešan uvoz baze podataka",
-		"DATABASE_UNDEFINED": "Klijent baze podataka nije povezan",
-		"DATABASE_HOST_UNDEFINED": "Adresa domaćina baze podataka nije definisana",
-		"DATASET_LOAD_FAILED": "Neuspešno učitavanje skupa podataka",
-		"DATASET_GET_FAILED": "Neuspešno dobijanje skupa podataka",
-		"CAPTCHA_GET_FAILED": "Neuspešno dobijanje captche",
-		"CAPTCHA_UPDATE_FAILED": "Neuspešno ažuriranje captche",
-		"IMAGE_GET_FAILED": "Neuspešno dobijanje slike",
-		"PENDING_RECORD_NOT_FOUND": "Nema pronađenog očekivanog zapisa",
-		"INVALID_HASH": "Nevažeći heš",
-		"SOLUTION_GET_FAILED": "Neuspešno dobijanje rešenja",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nije pronađen nijedan skup podataka sa potrebnim brojem rešenja",
-		"SOLUTION_APPROVE_FAILED": "Neuspešno odobrenje rešenja",
-		"SOLUTION_FLAG_FAILED": "Neuspešno obeležavanje rešenja kao obrađeno",
-		"TABLES_UNDEFINED": "Tabele nisu definisane",
-		"CONNECTION_UNDEFINED": "Veza nije definisana",
-		"COMMITMENT_FLAG_FAILED": "Neuspešno obeležavanje obaveze kao obrađene",
-		"UNKNOWN": "Nepoznata greška baze podataka"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Greška prilikom analize captche",
-		"INVALID_CAPTCHA_ID": "Nevažeći ID captche-a",
-		"INVALID_ITEM_FORMAT": "Dozvoljeni su samo tipovi stavki slike i teksta",
-		"INVALID_SOLUTION_TYPE": "Nevažeći tip rešenja",
-		"INVALID_ITEM_HASH": "Nevažeći heš stavke",
-		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
-		"ID_MISMATCH": "captcha id mismatch",
-		"MISSING_ITEM_HASH": "missing item hash",
-		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
-		"NO_CAPTCHA": "No captcha found",
-		"NO_SESSION_FOUND": "No session found",
-		"INVALID_TOKEN": "Invalid token",
-		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
-		"CAPTCHA_PASSED": "You correctly answered the captchas",
-		"BAD_REQUEST": "BadRequest",
-		"USER_VERIFIED": "User verified",
-		"USER_NOT_VERIFIED": "User not verified",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
-		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
-		"UNKNOWN": "Unknown API error",
-		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
-		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
-		"INVALID_SITE_KEY": "Invalid site key",
-		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
-		"INVALID_IP": "Invalid IP",
-		"INVALID_URL": "Invalid URL",
-		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
-	},
-	"CLI": {
-		"PARAMETER_ERROR": "Invalid parameter"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
-		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
-		"MISSING_PROVIDER_PAIR": "Missing provider pair",
-		"MISSING_ENV_VARIABLE": "Missing environment variable",
-		"GENERAL": "General Dev Error, see context",
-		"MISSING_SECRET_KEY": "Missing secret key",
-		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "File not found",
-		"FILE_ALREADY_EXISTS": "File already exists",
-		"INVALID_DIR_FORMAT": "Invalid directory format"
-	},
 	"TARGET": {
+		"airplanes": "طائرات",
+		"american-flag": "العلم الأمريكي",
+		"bonsai": "بونساي",
+		"buddha": "بوذا",
+		"cannon": "مدفع",
+		"coffee-mug": "كوب قهوة",
+		"flashlight": "مصباح يدوي",
+		"floppy-disk": "قرص مرن",
+		"football-helmet": "خوذة كرة القدم",
+		"grand-piano": "بيانو كبير",
+		"jesus-christ": "يسوع المسيح",
+		"knife": "سكين",
+		"leopards": "نمور",
+		"sword": "سيف",
+		"syringe": "حقنة",
+		"tambourine": "دف",
 		"bird": "bird",
 		"bus": "bus",
 		"car": "car",
@@ -404,5 +297,128 @@
 		"xylophone": "كسلوفون",
 		"yo-yo": "يويو",
 		"zebra": "حمار وحشي"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Polkadot ekstenzija nije pronađena"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Izaberite sve što sadrži sledeće",
+		"IF_NONE_CLICK_NEXT": "Ako nema ništa, kliknite Sledeće",
+		"NEXT": "Sledeće",
+		"SUBMIT": "Potvrdi",
+		"CANCEL": "Otkaži",
+		"I_AM_HUMAN": "Ja sam čovek",
+		"NO_ACCOUNTS_FOUND": "Nema pronađenih naloga",
+		"ACCOUNT_NOT_FOUND": "Nalog nije pronađen",
+		"NO_EXTENSION_FOUND": "Nema pronađenih ekstenzija"
+	},
+	"GENERAL": {
+		"JSON_LOAD_FAILED": "Neuspelo učitavanje JSON datoteke",
+		"MNEMONIC_UNDEFINED": "Mnemonic nedefinisan. Molimo postavite mnemonic u okruženjske promenljive",
+		"NO_MNEMONIC_OR_SEED": "Nije dostavljen mnemonic ili ključ",
+		"CANT_FIND_KEYRINGPAIR": "Nije moguće pronaći keyringpair za {{address}}",
+		"ENVIRONMENT_NOT_READY": "Okruženje nije spremno",
+		"INVALID_SIGNATURE": "Nevažeći potpis",
+		"SITE_KEY_MISSING": "SITE KEY nedostaje",
+		"ACCOUNT_NOT_FOUND": "Nalog nije pronađen",
+		"INVALID_TIMESTAMP": "Nevažeće vreme"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Nemogućnost kodiranja nevažeće adrese",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Obavezna izjava za captcha rešenje ne postoji",
+		"SIGNER_UNDEFINED": "Definicija potpisnika je nedostajuća",
+		"CANNOT_FIND_KEYPAIR": "Nemogućnost pronalaženja ključnog para",
+		"INVALID_DATA_FORMAT": "Nevažeći format podataka"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Zahtevano nepoznato okruženje",
+		"INVALID_CAPTCHA_NUMBER": "Konfigurišite captcha postavke na pravilan način",
+		"INVALID_LOG_LEVEL": "Nevažeći nivo dnevnika",
+		"INVALID_PACKAGE_DIR": "Nevažeći direktorijum paketa"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Greška prilikom analize skupa podataka",
+		"SOLUTION_PARSE_ERROR": "Greška prilikom analize rešenja",
+		"HASH_ERROR": "Greška prilikom hešovanja skupa podataka",
+		"DATASET_ID_UNDEFINED": "ID skupa podataka nije definisan",
+		"NOT_ENOUGH_LABELS": "Nedovoljno oznaka",
+		"NOT_ENOUGH_IMAGES": "Nedovoljno slika",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Broj captche u skupu podataka je manji od konfigurisanog broja captcha",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Broj rešenja u skupu podataka je manji od konfigurisanog broja rešenja",
+		"DUPLICATE_IMAGE": "Detektovana duplikatna slika",
+		"MERKLE_ERROR": "Greška pri kreiranju Merkle stabla"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Neuspešan uvoz baze podataka",
+		"DATABASE_UNDEFINED": "Klijent baze podataka nije povezan",
+		"DATABASE_HOST_UNDEFINED": "Adresa domaćina baze podataka nije definisana",
+		"DATASET_LOAD_FAILED": "Neuspešno učitavanje skupa podataka",
+		"DATASET_GET_FAILED": "Neuspešno dobijanje skupa podataka",
+		"CAPTCHA_GET_FAILED": "Neuspešno dobijanje captche",
+		"CAPTCHA_UPDATE_FAILED": "Neuspešno ažuriranje captche",
+		"IMAGE_GET_FAILED": "Neuspešno dobijanje slike",
+		"PENDING_RECORD_NOT_FOUND": "Nema pronađenog očekivanog zapisa",
+		"INVALID_HASH": "Nevažeći heš",
+		"SOLUTION_GET_FAILED": "Neuspešno dobijanje rešenja",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nije pronađen nijedan skup podataka sa potrebnim brojem rešenja",
+		"SOLUTION_APPROVE_FAILED": "Neuspešno odobrenje rešenja",
+		"SOLUTION_FLAG_FAILED": "Neuspešno obeležavanje rešenja kao obrađeno",
+		"TABLES_UNDEFINED": "Tabele nisu definisane",
+		"CONNECTION_UNDEFINED": "Veza nije definisana",
+		"COMMITMENT_FLAG_FAILED": "Neuspešno obeležavanje obaveze kao obrađene",
+		"UNKNOWN": "Nepoznata greška baze podataka"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Greška prilikom analize captche",
+		"INVALID_CAPTCHA_ID": "Nevažeći ID captche-a",
+		"INVALID_ITEM_FORMAT": "Dozvoljeni su samo tipovi stavki slike i teksta",
+		"INVALID_SOLUTION_TYPE": "Nevažeći tip rešenja",
+		"INVALID_ITEM_HASH": "Nevažeći heš stavke",
+		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
+		"ID_MISMATCH": "captcha id mismatch",
+		"MISSING_ITEM_HASH": "missing item hash",
+		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
+		"NO_CAPTCHA": "No captcha found",
+		"NO_SESSION_FOUND": "No session found",
+		"INVALID_TOKEN": "Invalid token",
+		"INVALID_SOLUTION": "Invalid solution",
+		"DECRYPTION_ERROR": "Error decrypting"
+	},
+	"API": {
+		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
+		"CAPTCHA_PASSED": "You correctly answered the captchas",
+		"BAD_REQUEST": "BadRequest",
+		"USER_VERIFIED": "User verified",
+		"USER_NOT_VERIFIED": "User not verified",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
+		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
+		"UNKNOWN": "Unknown API error",
+		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
+		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
+		"INVALID_SITE_KEY": "Invalid site key",
+		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
+		"INVALID_IP": "Invalid IP",
+		"INVALID_URL": "Invalid URL",
+		"INVALID_BODY": "Invalid body",
+		"PARSE_ERROR": "Error parsing request"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Invalid parameter"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
+		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
+		"MISSING_PROVIDER_PAIR": "Missing provider pair",
+		"MISSING_ENV_VARIABLE": "Missing environment variable",
+		"GENERAL": "General Dev Error, see context",
+		"MISSING_SECRET_KEY": "Missing secret key",
+		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "File not found",
+		"FILE_ALREADY_EXISTS": "File already exists",
+		"INVALID_DIR_FORMAT": "Invalid directory format"
 	}
 }
