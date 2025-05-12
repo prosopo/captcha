@@ -470,6 +470,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	getSolutions(datasetId: string): Promise<SolutionRecord[]>;
 
+	getSolutionsByCaptchaIds(captchaIds: string[]): Promise<SolutionRecord[]>;
+
 	getDataset(datasetId: string): Promise<DatasetWithIds>;
 
 	getRandomCaptcha(
@@ -529,7 +531,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	getDappUserSolutionById(
 		commitmentId: string,
-	): Promise<UserSolutionRecord | undefined>;
+	): Promise<UserSolutionRecord[] | undefined>;
 
 	getDappUserCommitmentById(
 		commitmentId: string,
