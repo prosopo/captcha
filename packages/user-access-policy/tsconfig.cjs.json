@@ -5,7 +5,8 @@
 		"outDir": "./dist/cjs",
 		"paths": {
 			"#policy/*": ["./src/*"]
-		}
+		},
+		"emitDeclarationOnly": true
 	},
 	"include": ["./src"],
 	"references": [
