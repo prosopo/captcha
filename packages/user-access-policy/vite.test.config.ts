@@ -16,7 +16,7 @@ import path from "node:path";
 import { ViteTestConfig } from "@prosopo/config";
 
 export default () => {
-	const testConfig = ViteTestConfig();
+	const testConfig = ViteTestConfig(path.resolve("./tsconfig.json"));
 
 	return {
 		...testConfig,
@@ -31,11 +31,6 @@ export default () => {
 					...testConfig.test.poolOptions.forks,
 					singleFork: true,
 				},
-			},
-		},
-		resolve: {
-			alias: {
-				"#policy": path.resolve("./src"),
 			},
 		},
 	};

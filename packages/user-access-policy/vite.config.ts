@@ -12,6 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import config from "./vite.cjs.config.js";
+import * as path from "node:path";
+import { ViteCommonJSConfig } from "@prosopo/config";
+import { defineConfig } from "vite";
 
-export default config;
+// Vite is used for building instead of the vanilla 'tsc --build' command as
+// we need to turn the TypeScript aliases (#policy) into relative file paths,
+// so it can be used by bundling script from the cli package.
+export default async () => {
+	const viteConfig = await ViteCommonJSConfig(
+		"user-access-policy",
+		path.resolve("./tsconfig.json"),
+	);
+
+	return defineConfig({
+		...viteConfig,
+		build: {
+			...viteConfig.build,
+			outDir: "dist",
+			lib: {
+				...viteConfig.build?.lib,
+				formats: ["es"],
+			},
+		},
+	});
+};
