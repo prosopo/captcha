@@ -38,6 +38,28 @@ jobs:
                   submodules: 'recursive'
                   token: ${{ secrets.PROSOPONATOR_PAT }}
                   fetch-depth: 0 # fetch all history
+            
+            - name: Detect version branch name
+              run: |
+                set -x
+                # get the branch name from the ref
+                branch=$(echo "${GITHUB_REF#refs/heads/}" | cut -d'/' -f2-)
+                # set the branch name as an environment variable
+                # this is the branch that the version bump will work on
+                echo "version_branch=version/$branch" >> $GITHUB_ENV
+
+            - name: Check for pending version bump
+              id: check_pending
+              run: |
+                set -x
+                # change for version branch on the remote
+                if git ls-remote --exit-code --heads origin ${{ env.version_branch }}; then
+                  echo "Branch ${env.version_branch} exists, pending version bump is in progress"
+                  echo "Merge the pending version bump branch or delete it to trigger further version bumps"
+                  echo "Exiting due to pending version bump"
+                  exit 0
+                fi
+                echo "No pending version bump branch found, continuing"
 
             - uses: prosopo/captcha/.github/actions/npm@gha
 
