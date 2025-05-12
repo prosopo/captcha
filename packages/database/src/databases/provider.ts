@@ -162,6 +162,19 @@ const PROVIDER_TABLES = [
 	},
 ];
 
+type ProviderDatabaseOptions = {
+	mongo: {
+		url: string;
+		dbname?: string;
+		authSource?: string;
+	};
+	redis: {
+		url: string;
+		password: string;
+	};
+	logger?: Logger;
+};
+
 export class ProviderDatabase
 	extends MongoDatabase
 	implements IProviderDatabase
@@ -169,13 +182,13 @@ export class ProviderDatabase
 	tables = {} as Tables<TableNames>;
 	private userAccessRulesStorage: AccessRulesStorage | null;
 
-	constructor(
-		url: string,
-		dbname?: string,
-		authSource?: string,
-		logger?: Logger,
-	) {
-		super(url, dbname, authSource, logger);
+	constructor(private readonly options: ProviderDatabaseOptions) {
+		super(
+			options.mongo.url,
+			options.mongo.dbname,
+			options.mongo.authSource,
+			options.logger,
+		);
 		this.tables = {} as Tables<TableNames>;
 
 		this.userAccessRulesStorage = null;
@@ -202,10 +215,8 @@ export class ProviderDatabase
 
 	protected async createRedisClient(): Promise<RedisClientType> {
 		return (await createClient({
-			// fixme add to the "packages/cli/src/prosopo.config.ts" and bring here
-			// /docker/redis/redis-stack.docker-compose.yml
-			url: "redis://localhost:6379",
-			password: "root",
+			url: this.options.redis.url,
+			password: this.options.redis.password,
 		})
 			.on("error", (error) => this.logger.error("Redis Client Error", error))
 			.connect()) as RedisClientType;

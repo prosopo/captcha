@@ -18,8 +18,8 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { z } from "zod";
-import type {AccessRulesStorage,} from "#policy/accessRules.js";
 import { policyFilterSchema } from "#policy/accessPolicyResolver.js";
+import type { AccessRulesStorage } from "#policy/accessRules.js";
 
 export const apiDeleteManyRulesArgsSchema = z.array(policyFilterSchema);
 
