@@ -105,8 +105,7 @@ jobs:
                 # check if there are any changes
                 if [[ -n $(git status --porcelain) ]]; then
                   # create a new branch for the changes
-                  branch="version/${{ github.run_id }}"
-                  git checkout -b $branch
+                  git checkout -b ${{env.version_branch}}
                   # add all changes to git
                   git add .
                   # commit the changes
