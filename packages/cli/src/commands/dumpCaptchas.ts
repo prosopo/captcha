@@ -98,7 +98,7 @@ export default (
 
 				// dump the captchasWithSolutions to the directory as a JSON file
 				const filePath = path.join(commitmentDir, `${commitmentId}.json`);
-				console.log("writing to", filePath);
+				logger.info("Writing to", filePath);
 				fs.writeFileSync(
 					filePath,
 					JSON.stringify(captchasWithSolutions, null, 2),
@@ -147,7 +147,7 @@ export default (
 								`${imageHash}${solution}${userSolution}.jpg`,
 							);
 
-							console.log("writing to", imageFilePath);
+							logger.info("Writing to", imageFilePath);
 							fs.writeFileSync(imageFilePath, imageBuffer);
 						}
 					}
