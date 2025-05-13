@@ -12,25 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import {
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
+} from "@prosopo/api-route";
+import { z } from "zod";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
-import { ApiDeleteManyRulesEndpoint } from "./apiDeleteManyRulesEndpoint.js";
-import { ApiInsertManyRulesEndpoint } from "./apiInsertManyRulesEndpoint.js";
-import { apiRulePaths } from "./apiRulePaths.js";
 
-export class ApiRuleRoutesProvider implements ApiRoutesProvider {
+export const apiDeleteAllRulesArgsSchema = z.object({});
+
+export type ApiDeleteAllRulesArgsSchema = typeof apiDeleteAllRulesArgsSchema;
+
+export class ApiDeleteAllRulesEndpoint
+	implements ApiEndpoint<ApiDeleteAllRulesArgsSchema>
+{
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
 
-	public getRoutes(): ApiRoute[] {
-		return [
-			{
-				path: apiRulePaths.INSERT_MANY,
-				endpoint: new ApiInsertManyRulesEndpoint(this.accessRulesStorage),
-			},
-			{
-				path: apiRulePaths.DELETE_MANY,
-				endpoint: new ApiDeleteManyRulesEndpoint(this.accessRulesStorage),
-			},
-		];
+	async processRequest(
+		args: z.infer<ApiDeleteAllRulesArgsSchema>,
+	): Promise<ApiEndpointResponse> {
+		await this.accessRulesStorage.deleteAllRules();
+
+		return {
+			status: ApiEndpointResponseStatus.SUCCESS,
+		};
+	}
+
+	getRequestArgsSchema(): ApiDeleteAllRulesArgsSchema {
+		return apiDeleteAllRulesArgsSchema;
 	}
 }

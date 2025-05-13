@@ -1,0 +1,98 @@
+// Copyright 2021-2025 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import type { AccessRulesStorage } from "#policy/accessRules.js";
+import { ApiDeleteAllRulesEndpoint } from "#policy/api/apiDeleteAllRulesEndpoint.js";
+import { ApiDeleteManyRulesEndpoint } from "./apiDeleteManyRulesEndpoint.js";
+import { ApiInsertManyRulesEndpoint } from "./apiInsertManyRulesEndpoint.js";
+
+enum apiRulePaths {
+	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
+	DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
+	DELETE_ALL = "/v1/prosopo/user-access-policy/rules/delete-all",
+}
+
+type ApiRulePath = `${apiRulePaths}`;
+
+export class ApiRuleRoutes implements ApiRoutesProvider {
+	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
+
+	public getRoutes(): ApiRoute[] {
+		return [
+			{
+				path: apiRulePaths.INSERT_MANY,
+				endpoint: new ApiInsertManyRulesEndpoint(this.accessRulesStorage),
+			},
+			{
+				path: apiRulePaths.DELETE_MANY,
+				endpoint: new ApiDeleteManyRulesEndpoint(this.accessRulesStorage),
+			},
+			{
+				path: apiRulePaths.DELETE_ALL,
+				endpoint: new ApiDeleteAllRulesEndpoint(this.accessRulesStorage),
+			},
+		] satisfies Array<{ path: ApiRulePath; [key: string]: unknown }>;
+	}
+}
+
+export const getExpressApiRuleRateLimits = () => {
+	const defaultWindowsMs = 60000;
+	const defaultLimit = 5;
+
+	return {
+		[apiRulePaths.INSERT_MANY]: {
+			windowMs:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_WINDOW",
+				) || defaultWindowsMs,
+			limit:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_LIMIT",
+				) || defaultLimit,
+		},
+		[apiRulePaths.DELETE_MANY]: {
+			windowMs:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_WINDOW",
+				) || defaultWindowsMs,
+			limit:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_LIMIT",
+				) || defaultLimit,
+		},
+		[apiRulePaths.DELETE_ALL]: {
+			windowMs:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_WINDOW",
+				) || defaultWindowsMs,
+			limit:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_LIMIT",
+				) || defaultLimit,
+		},
+	} satisfies Record<ApiRulePath, Record<string, number>>;
+};
+
+const getIntEnvironmentVariable = (
+	variableName: string,
+): number | undefined => {
+	const variableValue = process.env[variableName];
+
+	const numericValue = variableValue
+		? Number.parseInt(variableValue)
+		: Number.NaN;
+
+	return Number.isInteger(numericValue) ? numericValue : undefined;
+};
