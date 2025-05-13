@@ -90,7 +90,7 @@ const getFilesAndTsConfigs = async (
 	const tsconfig = getTsConfigFollowExtends(tsConfigPath);
 	const rootDir = tsconfig.compilerOptions.rootDir ?? ".";
 	const files = await fg(
-		path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`),
+		fg.convertPathToPattern(path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`)),
 		{
 			ignore: [
 				"**/node_modules/**",
