@@ -37,9 +37,6 @@ enum Mode {
  * Finds the workspace root directory (captcha-private)
  */
 const findWorkspaceRoot = (): string => {
-	// For this specific project, we know the structure:
-	// The lint package is at captcha/dev/lint
-	// First approach: check if we're in the lint package
 	const currentDir = process.cwd();
 	const lintDirPattern = /(.+)\/captcha\/dev\/lint$/;
 	const match = currentDir.match(lintDirPattern);
@@ -48,14 +45,11 @@ const findWorkspaceRoot = (): string => {
 		return match[1];
 	}
 
-	// Second approach: look for prosopo-website directory
-	// Test if this is already the root by checking for packages/prosopo-website
 	const websitePath = path.join(currentDir, "packages", "prosopo-website");
 	if (fs.existsSync(websitePath)) {
 		return currentDir;
 	}
 
-	// Third approach: look for parent with package.json that has the right name
 	let dir = currentDir;
 	const maxDepth = 5;
 
