@@ -90,8 +90,6 @@ jobs:
                 done
 
                 echo "affected=$affected"
-                affected=$(echo "$affected" | jq -c '[.[] | select(.name == "@prosopo/testpkg")]')
-                echo "affected=$affected"
 
                 # put the list of affected pkgs into the env
                 echo "affected=$affected" >> $GITHUB_ENV
