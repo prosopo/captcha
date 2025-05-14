@@ -1,0 +1,57 @@
+---
+"@prosopo/client-bundle-example": minor
+"@prosopo/client-example-server": minor
+"@prosopo/cypress-shared": minor
+"@prosopo/provider-mock": minor
+"@prosopo/config": minor
+"@prosopo/flux": minor
+"@prosopo/gh-actions": minor
+"@prosopo/lint": minor
+"@prosopo/prosoponator-bot": minor
+"@prosopo/scripts": minor
+"@prosopo/ts-brand": minor
+"@prosopo/vite-plugin-watch-workspace": minor
+"@prosopo/angular-procaptcha-integration-demo": minor
+"@prosopo/angular-procaptcha-wrapper": minor
+"@prosopo/react-procaptcha-integration-demo": minor
+"@prosopo/react-procaptcha-wrapper": minor
+"@prosopo/svelte-procaptcha-integration-demo": minor
+"@prosopo/svelte-procaptcha-wrapper": minor
+"@prosopo/vue-procaptcha-integration-demo": minor
+"@prosopo/vue-procaptcha-wrapper": minor
+"@prosopo/procaptcha-integration-build-config": minor
+"@prosopo/account": minor
+"@prosopo/api": minor
+"@prosopo/api-express-router": minor
+"@prosopo/api-route": minor
+"@prosopo/cli": minor
+"@prosopo/common": minor
+"@prosopo/database": minor
+"@prosopo/datasets": minor
+"@prosopo/datasets-fs": minor
+"@prosopo/detector": minor
+"@prosopo/dotenv": minor
+"@prosopo/env": minor
+"@prosopo/file-server": minor
+"@prosopo/fingerprint": minor
+"@prosopo/keyring": minor
+"@prosopo/load-balancer": minor
+"@prosopo/locale": minor
+"@prosopo/procaptcha": minor
+"@prosopo/procaptcha-bundle": minor
+"@prosopo/procaptcha-common": minor
+"@prosopo/procaptcha-frictionless": minor
+"@prosopo/procaptcha-pow": minor
+"@prosopo/procaptcha-react": minor
+"@prosopo/procaptcha-wrapper": minor
+"@prosopo/provider": minor
+"@prosopo/server": minor
+"@prosopo/types": minor
+"@prosopo/types-database": minor
+"@prosopo/types-env": minor
+"@prosopo/user-access-policy": minor
+"@prosopo/util": minor
+"@prosopo/widget-skeleton": minor
+---
+
+bump all pkg versions since independent versioning applied
