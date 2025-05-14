@@ -21,16 +21,17 @@ import {
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import {
-	ApiRuleRoutes,
+	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
-} from "#policy/api/apiRuleRoutes.js";
+	accessRuleApiPaths
+} from "#policy/api/accessRuleApiRoutes.js";
 import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
 import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
 
 export const createApiRuleRoutesProvider = (
 	rulesStorage: AccessRulesStorage,
 ): ApiRoutesProvider => {
-	return new ApiRuleRoutes(rulesStorage);
+	return new AccessRuleApiRoutes(rulesStorage);
 };
 
 export {
@@ -44,4 +45,5 @@ export {
 	getExpressApiRuleRateLimits,
 	AccessPolicyType,
 	ScopeMatch,
+	accessRuleApiPaths
 };

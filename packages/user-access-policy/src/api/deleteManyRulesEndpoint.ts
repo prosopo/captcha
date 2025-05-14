@@ -25,7 +25,7 @@ export const apiDeleteManyRulesArgsSchema = z.array(policyFilterSchema);
 
 export type ApiDeleteManyRulesArgsSchema = typeof apiDeleteManyRulesArgsSchema;
 
-export class ApiDeleteManyRulesEndpoint
+export class DeleteManyRulesEndpoint
 	implements ApiEndpoint<ApiDeleteManyRulesArgsSchema>
 {
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}

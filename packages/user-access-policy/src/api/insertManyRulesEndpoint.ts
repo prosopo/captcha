@@ -38,7 +38,7 @@ export type ApiInsertManyRulesArgsOutputSchema = z.output<
 	typeof apiInsertManyRulesArgsSchema
 >;
 
-export class ApiInsertManyRulesEndpoint
+export class InsertManyRulesEndpoint
 	implements ApiEndpoint<ApiInsertManyRulesArgsSchema>
 {
 	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}

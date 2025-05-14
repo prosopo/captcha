@@ -24,7 +24,7 @@ export const apiDeleteAllRulesArgsSchema = z.object({});
 
 export type ApiDeleteAllRulesArgsSchema = typeof apiDeleteAllRulesArgsSchema;
 
-export class ApiDeleteAllRulesEndpoint
+export class DeleteAllRulesEndpoint
 	implements ApiEndpoint<ApiDeleteAllRulesArgsSchema>
 {
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}

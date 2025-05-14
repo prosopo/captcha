@@ -14,36 +14,36 @@
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
-import { ApiDeleteAllRulesEndpoint } from "#policy/api/apiDeleteAllRulesEndpoint.js";
-import { ApiDeleteManyRulesEndpoint } from "./apiDeleteManyRulesEndpoint.js";
-import { ApiInsertManyRulesEndpoint } from "./apiInsertManyRulesEndpoint.js";
+import { DeleteAllRulesEndpoint } from "#policy/api/deleteAllRulesEndpoint.js";
+import { DeleteManyRulesEndpoint } from "./deleteManyRulesEndpoint.js";
+import { InsertManyRulesEndpoint } from "./insertManyRulesEndpoint.js";
 
-enum apiRulePaths {
+export enum accessRuleApiPaths {
 	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
 	DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
 	DELETE_ALL = "/v1/prosopo/user-access-policy/rules/delete-all",
 }
 
-type ApiRulePath = `${apiRulePaths}`;
+type RuleApiPath = `${accessRuleApiPaths}`;
 
-export class ApiRuleRoutes implements ApiRoutesProvider {
+export class AccessRuleApiRoutes implements ApiRoutesProvider {
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
 
 	public getRoutes(): ApiRoute[] {
 		return [
 			{
-				path: apiRulePaths.INSERT_MANY,
-				endpoint: new ApiInsertManyRulesEndpoint(this.accessRulesStorage),
+				path: accessRuleApiPaths.INSERT_MANY,
+				endpoint: new InsertManyRulesEndpoint(this.accessRulesStorage),
 			},
 			{
-				path: apiRulePaths.DELETE_MANY,
-				endpoint: new ApiDeleteManyRulesEndpoint(this.accessRulesStorage),
+				path: accessRuleApiPaths.DELETE_MANY,
+				endpoint: new DeleteManyRulesEndpoint(this.accessRulesStorage),
 			},
 			{
-				path: apiRulePaths.DELETE_ALL,
-				endpoint: new ApiDeleteAllRulesEndpoint(this.accessRulesStorage),
+				path: accessRuleApiPaths.DELETE_ALL,
+				endpoint: new DeleteAllRulesEndpoint(this.accessRulesStorage),
 			},
-		] satisfies Array<{ path: ApiRulePath; [key: string]: unknown }>;
+		] satisfies Array<{ path: RuleApiPath; [key: string]: unknown }>;
 	}
 }
 
@@ -52,7 +52,7 @@ export const getExpressApiRuleRateLimits = () => {
 	const defaultLimit = 5;
 
 	return {
-		[apiRulePaths.INSERT_MANY]: {
+		[accessRuleApiPaths.INSERT_MANY]: {
 			windowMs:
 				getIntEnvironmentVariable(
 					"PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_WINDOW",
@@ -62,7 +62,7 @@ export const getExpressApiRuleRateLimits = () => {
 					"PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_LIMIT",
 				) || defaultLimit,
 		},
-		[apiRulePaths.DELETE_MANY]: {
+		[accessRuleApiPaths.DELETE_MANY]: {
 			windowMs:
 				getIntEnvironmentVariable(
 					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_WINDOW",
@@ -72,7 +72,7 @@ export const getExpressApiRuleRateLimits = () => {
 					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_LIMIT",
 				) || defaultLimit,
 		},
-		[apiRulePaths.DELETE_ALL]: {
+		[accessRuleApiPaths.DELETE_ALL]: {
 			windowMs:
 				getIntEnvironmentVariable(
 					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_WINDOW",
@@ -82,7 +82,7 @@ export const getExpressApiRuleRateLimits = () => {
 					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_LIMIT",
 				) || defaultLimit,
 		},
-	} satisfies Record<ApiRulePath, Record<string, number>>;
+	} satisfies Record<RuleApiPath, Record<string, number>>;
 };
 
 const getIntEnvironmentVariable = (
