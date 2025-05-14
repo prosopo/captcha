@@ -11,8 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type mongoose from "mongoose";
-import { Schema } from "mongoose";
+
+import type { PoWCaptcha } from "@prosopo/types";
+import { type RootFilterQuery, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
 	FrictionlessTokenRecordSchema,
@@ -21,6 +22,7 @@ import {
 	type ScoreComponents,
 	type SessionRecord,
 	SessionRecordSchema,
+	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "./provider.js";
@@ -65,4 +67,14 @@ export interface ICaptchaDatabase extends IDatabase {
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 	): Promise<void>;
+	getCaptchas(
+		filter: RootFilterQuery<CaptchaProperties>,
+		limit: number,
+	): Promise<{
+		userCommitmentRecords: UserCommitmentRecord[];
+		powCaptchaRecords: PoWCaptchaRecord[];
+	}>;
 }
+
+export interface CaptchaProperties
+	extends Partial<UserCommitment & PoWCaptcha> {}

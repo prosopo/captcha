@@ -6,4 +6,5 @@ RUN CGO_ENABLED=1 xcaddy build \
     --with github.com/lolPants/caddy-requestid
 FROM caddy:2
 RUN apk update && apk add libpcap
+RUN apk add --no-cache curl
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy

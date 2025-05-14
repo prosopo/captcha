@@ -14,6 +14,7 @@
 
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
 import {
+	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	StoredPoWCaptchaRecordSchema,
@@ -23,7 +24,9 @@ import {
 	type Tables,
 	type UserCommitmentRecord,
 } from "@prosopo/types-database";
+import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
+
 const logger = getLoggerDefault();
 
 enum TableNames {
@@ -137,5 +140,44 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		}
 
 		await this.close();
+	}
+
+	async getCaptchas(
+		filter: RootFilterQuery<CaptchaProperties> = {},
+		limit = 100,
+	): Promise<{
+		userCommitmentRecords: UserCommitmentRecord[];
+		powCaptchaRecords: PoWCaptchaRecord[];
+	}> {
+		await this.connect();
+
+		try {
+			const commitmentResults = await this.tables.commitment
+				.find(filter)
+				.limit(limit)
+				.lean<UserCommitmentRecord[]>();
+
+			const powCaptchaResults = await this.tables.powcaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<PoWCaptchaRecord[]>();
+
+			return {
+				userCommitmentRecords: commitmentResults,
+				powCaptchaRecords: powCaptchaResults,
+			};
+		} catch (error) {
+			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {
+				context: {
+					error,
+					filter,
+					limit,
+					failedFuncName: this.getCaptchas.name,
+				},
+				logger: this.logger,
+			});
+		} finally {
+			await this.close();
+		}
 	}
 }
