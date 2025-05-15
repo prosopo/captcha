@@ -15,8 +15,8 @@
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { DeleteAllRulesEndpoint } from "#policy/api/deleteAllRulesEndpoint.js";
-import { DeleteManyRulesEndpoint } from "./deleteManyRulesEndpoint.js";
-import { InsertManyRulesEndpoint } from "./insertManyRulesEndpoint.js";
+import { DeleteRulesEndpoint } from "./deleteRulesEndpoint.js";
+import { InsertRulesEndpoint } from "./insertRulesEndpoint.js";
 
 export enum accessRuleApiPaths {
 	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
@@ -33,11 +33,11 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 		return [
 			{
 				path: accessRuleApiPaths.INSERT_MANY,
-				endpoint: new InsertManyRulesEndpoint(this.accessRulesStorage),
+				endpoint: new InsertRulesEndpoint(this.accessRulesStorage),
 			},
 			{
 				path: accessRuleApiPaths.DELETE_MANY,
-				endpoint: new DeleteManyRulesEndpoint(this.accessRulesStorage),
+				endpoint: new DeleteRulesEndpoint(this.accessRulesStorage),
 			},
 			{
 				path: accessRuleApiPaths.DELETE_ALL,

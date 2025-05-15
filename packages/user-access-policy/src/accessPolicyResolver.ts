@@ -19,7 +19,7 @@ import {
 	type AccessPolicy,
 	AccessPolicyType,
 	policyScopeSchema,
-	userScopeSchema,
+	userScopeInputSchema,
 } from "#policy/accessPolicy.js";
 import type { AccessRule, AccessRulesReader } from "#policy/accessRules.js";
 
@@ -38,7 +38,7 @@ export const policyFilterSchema = z.object({
 		.nativeEnum(ScopeMatch)
 		.default(ScopeMatch.Exact)
 		.optional(),
-	userScope: userScopeSchema.optional(),
+	userScope: userScopeInputSchema.optional(),
 	/**
 	 * Exact: finds rules where all the given fields matches. Used by the API
 	 * Greedy: finds rules where any of the given fields match. Used by the Express middleware

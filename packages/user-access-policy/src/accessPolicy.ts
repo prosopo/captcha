@@ -12,36 +12,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
+import {z} from "zod";
+import {Address4} from "ip-address";
 
 export enum AccessPolicyType {
-	Block = "block",
-	Restrict = "restrict",
+    Block = "block",
+    Restrict = "restrict",
 }
 
 export const accessPolicySchema = z.object({
-	type: z.nativeEnum(AccessPolicyType),
-	description: z.string().optional(),
-	// Redis stores values as strings, so coerce is needed to parse properly
-	solvedImagesCount: z.coerce.number().optional(),
-	unsolvedImagesCount: z.coerce.number().optional(),
-	frictionlessScore: z.coerce.number().optional(),
+    type: z.nativeEnum(AccessPolicyType),
+    description: z.string().optional(),
+    // Redis stores values as strings, so coerce is needed to parse properly
+    solvedImagesCount: z.coerce.number().optional(),
+    unsolvedImagesCount: z.coerce.number().optional(),
+    frictionlessScore: z.coerce.number().optional(),
 });
 
 export const policyScopeSchema = z.object({
-	clientId: z.string().optional(),
+    clientId: z.string().optional(),
 });
 
 export const userScopeSchema = z.object({
-	userId: z.string().optional(),
-	numericIp: z.coerce.bigint().optional(),
-	numericIpMaskMin: z.coerce.bigint().optional(),
-	numericIpMaskMax: z.coerce.bigint().optional(),
-	ja4Hash: z.string().optional(),
-	headersHash: z.string().optional(),
-	userAgentHash: z.string().optional(),
+    userId: z.string().optional(),
+    numericIp: z.coerce.bigint().optional(),
+    numericIpMaskMin: z.coerce.bigint().optional(),
+    numericIpMaskMax: z.coerce.bigint().optional(),
+    ja4Hash: z.string().optional(),
+    headersHash: z.string().optional(),
+    userAgentHash: z.string().optional(),
+    // human-friendly ip versions. If present, then converted to numeric and removed from the object
+    ip: z.string().optional(),
+    ipMask: z.string().optional(),
+}).transform((inputUserScope) => {
+    const {ip, ipMask, ...userScope} = inputUserScope;
+
+    if ("string" === typeof ip) {
+        userScope.numericIp = new Address4(ip).bigInt();
+    }
+
+    if ("string" === typeof ipMask) {
+        const ipObject = new Address4(ipMask);
+
+        userScope.numericIpMaskMin = ipObject.startAddress().bigInt();
+        userScope.numericIpMaskMax = ipObject.endAddress().bigInt();
+    }
+
+    return userScope;
 });
 
-export type AccessPolicy = z.infer<typeof accessPolicySchema>;
-export type PolicyScope = z.infer<typeof policyScopeSchema>;
-export type UserScope = z.infer<typeof userScopeSchema>;
+export type AccessPolicy = z.output<typeof accessPolicySchema>;
+export type PolicyScope = z.output<typeof policyScopeSchema>;
+export type UserScope = z.output<typeof userScopeSchema>;

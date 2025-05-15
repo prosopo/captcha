@@ -20,17 +20,17 @@ import {
 import { z } from "zod";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 
-export const apiDeleteAllRulesArgsSchema = z.object({});
+export const deleteAllRulesEndpointSchema = z.object({});
 
-export type ApiDeleteAllRulesArgsSchema = typeof apiDeleteAllRulesArgsSchema;
+export type DeleteAllRulesEndpointSchema = typeof deleteAllRulesEndpointSchema;
 
 export class DeleteAllRulesEndpoint
-	implements ApiEndpoint<ApiDeleteAllRulesArgsSchema>
+	implements ApiEndpoint<DeleteAllRulesEndpointSchema>
 {
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
 
 	async processRequest(
-		args: z.infer<ApiDeleteAllRulesArgsSchema>,
+		args: z.infer<DeleteAllRulesEndpointSchema>,
 	): Promise<ApiEndpointResponse> {
 		await this.accessRulesStorage.deleteAllRules();
 
@@ -39,7 +39,7 @@ export class DeleteAllRulesEndpoint
 		};
 	}
 
-	getRequestArgsSchema(): ApiDeleteAllRulesArgsSchema {
-		return apiDeleteAllRulesArgsSchema;
+	getRequestArgsSchema(): DeleteAllRulesEndpointSchema {
+		return deleteAllRulesEndpointSchema;
 	}
 }
