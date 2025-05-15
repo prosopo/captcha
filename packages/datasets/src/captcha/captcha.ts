@@ -177,9 +177,7 @@ export function compareCaptchaSolutions(
 
 		// Ensure target solution exists
 		if (!targetSolution) {
-			throw new ProsopoDatasetError("CAPTCHA.SOLUTION_NOT_FOUND", {
-				context: { captchaId: captcha.captchaId },
-			});
+			return false;
 		}
 
 		// Count incorrect and missing solutions
