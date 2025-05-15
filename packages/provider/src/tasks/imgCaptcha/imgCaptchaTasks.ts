@@ -277,10 +277,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const solutionRecords = await Promise.all(storedCaptchas.map(async (captcha) => {
 				const solutionRecord = await this.db.getSolutionByCaptchaId(captcha.captchaId);
 				if (!solutionRecord) {
-					console.log("\n\n-------\n\n");
-					console.log("storedCaptchas", storedCaptchas);
-					console.log("solutionRecord not found for captchaId", captcha.captchaId);
-					console.log("\n\n-------\n\n");
 					throw new ProsopoEnvError("CAPTCHA.SOLUTION_NOT_FOUND", {
 						context: { failedFuncName: this.dappUserSolution.name },
 					});
