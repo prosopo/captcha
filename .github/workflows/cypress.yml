@@ -56,7 +56,7 @@ jobs:
 
             # build all packages in workspace
             - run: npm run -w @prosopo/config build
-            - run: npm run build:all:cjs
+            - run: npm run -w @prosopo/dotenv build
             - run: npm run build:all
 
             - name: Setup env
