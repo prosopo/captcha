@@ -148,43 +148,32 @@ export function compareCaptchaSolutions(
 	totalImages: number,
 	threshold: number,
 ): boolean {
-	console.log("\n\n===== DEBUG: compareCaptchaSolutions =====");
-	console.log(`Input parameters: totalImages=${totalImages}, threshold=${threshold}`);
-	
 	// Sort both with captchaSort
 	received.sort(captchaSort);
 	solutions.sort(captchaSort);
-	console.log("\n----- DEBUG: After sorting -----");
-	console.log("received", JSON.stringify(received, null, 2));
-	console.log("solutions", JSON.stringify(solutions, null, 2));
+	console.log("\n\n-------\n\n");
+	console.log("received", received);
+	console.log("solutions", solutions);
+	console.log("\n\n-------\n\n");
 
 	// If length of received is not equal to length of solutions, throw an error
 	if (received.length !== solutions.length) {
-		console.log("\n----- DEBUG: Length mismatch detected -----");
-		console.log(`Received length: ${received.length}, Solutions length: ${solutions.length}`);
-		console.log("received", JSON.stringify(received, null, 2));
-		console.log("solutions", JSON.stringify(solutions, null, 2));
+		console.log("\n\n-------\n\n");
+		console.log("received", received);
+		console.log("solutions", solutions);
+		console.log("\n\n-------\n\n");
 		throw new ProsopoDatasetError("CAPTCHA.LENGTH_MISMATCH", {
 			context: { receivedLength: received.length, solutionsLength: solutions.length },
 		});
 	}
 
-	console.log(`\n----- DEBUG: Starting verification of ${received.length} captchas -----`);
-	
 	// For each captcha in received, check if the solution is the same as the solution in solutions
 	const verified = received.map((captcha, index) => {
-		console.log(`\n----- DEBUG: Verifying captcha ${index + 1}/${received.length} -----`);
-		console.log(`CaptchaId: ${captcha.captchaId}`);
-		
 		const sortedReceivedSolution = captcha.solution.sort();
 		const targetSolution = solutions[index]?.solution.sort();
-		
-		console.log(`Received solution (sorted): ${JSON.stringify(sortedReceivedSolution)}`);
-		console.log(`Target solution (sorted): ${JSON.stringify(targetSolution)}`);
 
 		// If targetSolution is undefined, throw an error
 		if (!targetSolution) {
-			console.log(`ERROR: No target solution found for captchaId: ${captcha.captchaId}`);
 			throw new ProsopoDatasetError("CAPTCHA.SOLUTION_NOT_FOUND", {
 				context: { captchaId: captcha.captchaId },
 			});
@@ -192,13 +181,13 @@ export function compareCaptchaSolutions(
 
 		// Count the number of solutions that are the same
 		const incorrectSolutions = sortedReceivedSolution.map((solution) => {
-			const isIncorrect = !targetSolution.includes(solution);
-			console.log(`Solution ${solution}: ${isIncorrect ? 'INCORRECT' : 'correct'}`);
-			return isIncorrect;
+			if (targetSolution.includes(solution)) {
+				return false;
+			}
+			return true;
 		});
 
-		const missingSolutions = targetSolution.filter((solution) => !sortedReceivedSolution.includes(solution));
-		console.log(`Missing solutions: ${JSON.stringify(missingSolutions)}`);
+		const missingSolutions = sortedReceivedSolution.filter((solution) => !targetSolution.includes(solution));
 
 		const incorrectSolutionsCount = incorrectSolutions.reduce((acc, curr) => {
 			if (curr) {
@@ -207,30 +196,23 @@ export function compareCaptchaSolutions(
 			return acc;
 		}, 0);
 
-		const missingSolutionsCount = missingSolutions.length;
-		
-		console.log(`Incorrect solutions count: ${incorrectSolutionsCount}`);
-		console.log(`Missing solutions count: ${missingSolutionsCount}`);
+		const missingSolutionsCount = missingSolutions.reduce((acc, curr) => {
+			if (curr) {
+				return acc + 1;
+			}
+			return acc;
+		}, 0);
 
 		const totalIncorrect = incorrectSolutionsCount + missingSolutionsCount;
 		const percentageIncorrect = totalIncorrect / totalImages;
 		const percentageCorrect = 1 - percentageIncorrect;
-		
-		console.log(`Total incorrect: ${totalIncorrect} / ${totalImages}`);
-		console.log(`Percentage correct: ${(percentageCorrect * 100).toFixed(2)}% (threshold: ${(threshold * 100).toFixed(2)}%)`);
 
 		const verified = percentageCorrect >= threshold;
-		console.log(`Verification result: ${verified ? 'PASSED' : 'FAILED'}`);
 
 		return verified;
 	});
 
-	const finalResult = verified.every((v) => v);
-	console.log(`\n----- DEBUG: Final verification result: ${finalResult ? 'ALL PASSED' : 'SOME FAILED'} -----`);
-	console.log(`Individual results: ${JSON.stringify(verified)}`);
-	console.log("===== DEBUG: compareCaptchaSolutions end =====\n\n");
-
-	return finalResult;
+	return verified.every((verified) => verified);
 }
 
 /**
