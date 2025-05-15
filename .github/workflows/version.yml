@@ -110,10 +110,8 @@ jobs:
                   git add .
                   # commit the changes
                   git commit -m "version bump"
-                  # set origin branch
-                  git branch --set-upstream-to=origin/${{env.version_branch}} ${{env.version_branch}}
                   # push the changes to the new branch
-                  git push origin ${{env.version_branch}}
+                  git push -u origin ${{env.version_branch}}
                   # create a pull request
                   gh pr create --base ${GITHUB_REF#refs/heads/} --fill
                 else
