@@ -1,16 +1,21 @@
 {
-	"GENERAL": {
-		"ACCOUNT_NOT_FOUND": "계정을 찾을 수 없습니다",
-		"JSON_LOAD_FAILED": "JSON 파일을 불러오는 데 실패함",
-		"MNEMONIC_UNDEFINED": "니모닉이 정의되지 않았습니다. 환경 변수에 니모닉을 설정하세요",
-		"NO_MNEMONIC_OR_SEED": "니모닉 또는 시드가 제공되지 않았음",
-		"CANT_FIND_KEYRINGPAIR": "{{address}}의 키링 페어를 찾을 수 없음",
-		"ENVIRONMENT_NOT_READY": "환경이 준비되지 않음",
-		"INVALID_SIGNATURE": "잘못된 서명",
-		"SITE_KEY_MISSING": "SITE KEY가 누락됨",
-		"INVALID_TIMESTAMP": "잘못된 타임스탬프"
-	},
 	"TARGET": {
+		"airplanes": "비행기",
+		"american-flag": "미국 국기",
+		"bonsai": "분재",
+		"buddha": "부처",
+		"cannon": "대포",
+		"coffee-mug": "커피잔",
+		"flashlight": "손전등",
+		"floppy-disk": "플로피 디스크",
+		"football-helmet": "풋볼 헬멧",
+		"grand-piano": "그랜드 피아노",
+		"jesus-christ": "예수 그리스도",
+		"knife": "칼",
+		"leopards": "표범",
+		"sword": "검",
+		"syringe": "주사기",
+		"tambourine": "탬버린",
 		"animals": "동물",
 		"antelope": "예단",
 		"backpack": "배낭",
@@ -292,6 +297,17 @@
 		"xylophone": "실로폰",
 		"yo-yo": "요요",
 		"zebra": "얼룩말"
+	},
+	"GENERAL": {
+		"ACCOUNT_NOT_FOUND": "계정을 찾을 수 없습니다",
+		"JSON_LOAD_FAILED": "JSON 파일을 불러오는 데 실패함",
+		"MNEMONIC_UNDEFINED": "니모닉이 정의되지 않았습니다. 환경 변수에 니모닉을 설정하세요",
+		"NO_MNEMONIC_OR_SEED": "니모닉 또는 시드가 제공되지 않았음",
+		"CANT_FIND_KEYRINGPAIR": "{{address}}의 키링 페어를 찾을 수 없음",
+		"ENVIRONMENT_NOT_READY": "환경이 준비되지 않음",
+		"INVALID_SIGNATURE": "잘못된 서명",
+		"SITE_KEY_MISSING": "SITE KEY가 누락됨",
+		"INVALID_TIMESTAMP": "잘못된 타임스탬프"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot 확장 프로그램을 찾을 수 없습니다"

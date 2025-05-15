@@ -1,128 +1,21 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Polkadot laajennusta ei löytynyt"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Valitse kaikki seuraavaa sisältävät",
-		"IF_NONE_CLICK_NEXT": "Jos ei ole yhtään, klikkaa Seuraava",
-		"NEXT": "Seuraava",
-		"SUBMIT": "Lähetä",
-		"CANCEL": "Peruuta",
-		"I_AM_HUMAN": "Olen ihminen",
-		"NO_ACCOUNTS_FOUND": "Ei tilejä löytynyt",
-		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
-		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "JSON-tiedoston lataaminen epäonnistui",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Aseta mnemonic ympäristömuuttujiin",
-		"NO_MNEMONIC_OR_SEED": "Ei annettu mnemonicia tai siemenavainta",
-		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{osoite}}",
-		"ENVIRONMENT_NOT_READY": "Ympäristö ei ole valmis",
-		"INVALID_SIGNATURE": "Virheellinen allekirjoitus",
-		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
-		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
-		"INVALID_TIMESTAMP": "Virheellinen aikaleima"
-	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Epäonnistui koodata virheellinen osoite",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-ratkaisuun sitoutuminen ei ole olemassa",
-		"SIGNER_UNDEFINED": "Allekirjoittajaa ei ole määritetty",
-		"CANNOT_FIND_KEYPAIR": "Avainta ei löydy",
-		"INVALID_DATA_FORMAT": "Virheellinen tiedon muoto"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Tuntematon ympäristö pyydetty",
-		"INVALID_CAPTCHA_NUMBER": "Määritä captcha-konfiguraatiot oikein",
-		"INVALID_LOG_LEVEL": "Virheellinen lokitaso",
-		"INVALID_PACKAGE_DIR": "Virheellinen paketin hakemisto"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Virhe datan parsimisessa",
-		"SOLUTION_PARSE_ERROR": "Virhe ratkaisun parsimisessa",
-		"HASH_ERROR": "Virhe datan käsittelyssä",
-		"DATASET_ID_UNDEFINED": "Datatunnus määrittelemätön",
-		"NOT_ENOUGH_LABELS": "Ei tarpeeksi merkintöjä",
-		"NOT_ENOUGH_IMAGES": "Ei tarpeeksi kuvia",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Captcha-kuvien määrä on pienempi kuin konfiguroidun captcha-määrän",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Ratkaisujen määrä on pienempi kuin konfiguroidun ratkaisujen määrän",
-		"DUPLICATE_IMAGE": "Duplikaattikuva havaittu",
-		"MERKLE_ERROR": "Virhe merkle-puun luonnissa"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Tietokannan moottorin tuonti epäonnistui",
-		"DATABASE_UNDEFINED": "Tietokantayhteys ei ole käytettävissä",
-		"DATABASE_HOST_UNDEFINED": "Tietokannan palvelinosoite ei ole määritelty",
-		"DATASET_LOAD_FAILED": "Dataryhmän lataus epäonnistui",
-		"DATASET_GET_FAILED": "Dataryhmän noutaminen epäonnistui",
-		"CAPTCHA_GET_FAILED": "Captcha-tiedon noutaminen epäonnistui",
-		"CAPTCHA_UPDATE_FAILED": "Captcha-tiedon päivitys epäonnistui",
-		"IMAGE_GET_FAILED": "Kuvan noutaminen epäonnistui",
-		"PENDING_RECORD_NOT_FOUND": "Odottavaa tietuetta ei löytynyt",
-		"INVALID_HASH": "Virheellinen hajautusarvo",
-		"SOLUTION_GET_FAILED": "Ratkaisun noutaminen epäonnistui",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Ei löydy dataryhmiä tarvittavalla ratkaisujen määrällä",
-		"SOLUTION_APPROVE_FAILED": "Ratkaisun hyväksyminen epäonnistui",
-		"SOLUTION_FLAG_FAILED": "Ratkaisun merkitseminen käsitellyksi epäonnistui",
-		"TABLES_UNDEFINED": "Tauluja ei määritelty",
-		"CONNECTION_UNDEFINED": "Yhteyttä ei määritelty",
-		"COMMITMENT_FLAG_FAILED": "Sitoumuksen merkitseminen käsitellyksi epäonnistui",
-		"UNKNOWN": "Tuntematon tietokantavirhe"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Virhe captchaa parsittaessa",
-		"INVALID_CAPTCHA_ID": "Virheellinen captcha-tunnus",
-		"INVALID_ITEM_FORMAT": "Vain kuvan ja tekstin tyyppiset kohteet sallittu",
-		"INVALID_SOLUTION_TYPE": "Virheellinen ratkaisun tyyppi",
-		"INVALID_ITEM_HASH": "Virheellinen kohteen hajautusarvo",
-		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
-		"ID_MISMATCH": "captcha id mismatch",
-		"MISSING_ITEM_HASH": "missing item hash",
-		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
-		"NO_CAPTCHA": "No captcha found",
-		"NO_SESSION_FOUND": "No session found",
-		"INVALID_TOKEN": "Invalid token",
-		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
-		"CAPTCHA_PASSED": "You correctly answered the captchas",
-		"BAD_REQUEST": "BadRequest",
-		"USER_VERIFIED": "User verified",
-		"USER_NOT_VERIFIED": "User not verified",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
-		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
-		"UNKNOWN": "Unknown API error",
-		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
-		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
-		"INVALID_SITE_KEY": "Invalid site key",
-		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
-		"INVALID_IP": "Invalid IP",
-		"INVALID_URL": "Invalid URL",
-		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
-	},
-	"CLI": {
-		"PARAMETER_ERROR": "Invalid parameter"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
-		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
-		"MISSING_PROVIDER_PAIR": "Missing provider pair",
-		"MISSING_ENV_VARIABLE": "Missing environment variable",
-		"GENERAL": "General Dev Error, see context",
-		"MISSING_SECRET_KEY": "Missing secret key",
-		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "File not found",
-		"FILE_ALREADY_EXISTS": "File already exists",
-		"INVALID_DIR_FORMAT": "Invalid directory format"
-	},
 	"TARGET": {
+		"airplanes": "ilmailukoneet",
+		"american-flag": "Amerikan lippu",
+		"bonsai": "bonsai",
+		"buddha": "Buddha",
+		"cannon": "tykki",
+		"coffee-mug": "kahvimuki",
+		"flashlight": "taskulamppu",
+		"floppy-disk": "diskettilaite",
+		"football-helmet": "jalkapallokypärä",
+		"grand-piano": "flyygeli",
+		"jesus-christ": "Jeesus Kristus",
+		"knife": "veitsi",
+		"leopards": "leopardit",
+		"sword": "miekka",
+		"syringe": "ruisku",
+		"tambourine": "tamburiini",
 		"bird": "bird",
 		"bus": "bus",
 		"car": "car",
@@ -404,5 +297,128 @@
 		"xylophone": "ksylofoni",
 		"yo-yo": "jojo",
 		"zebra": "seepra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Polkadot laajennusta ei löytynyt"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Valitse kaikki seuraavaa sisältävät",
+		"IF_NONE_CLICK_NEXT": "Jos ei ole yhtään, klikkaa Seuraava",
+		"NEXT": "Seuraava",
+		"SUBMIT": "Lähetä",
+		"CANCEL": "Peruuta",
+		"I_AM_HUMAN": "Olen ihminen",
+		"NO_ACCOUNTS_FOUND": "Ei tilejä löytynyt",
+		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
+		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt"
+	},
+	"GENERAL": {
+		"JSON_LOAD_FAILED": "JSON-tiedoston lataaminen epäonnistui",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Aseta mnemonic ympäristömuuttujiin",
+		"NO_MNEMONIC_OR_SEED": "Ei annettu mnemonicia tai siemenavainta",
+		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{osoite}}",
+		"ENVIRONMENT_NOT_READY": "Ympäristö ei ole valmis",
+		"INVALID_SIGNATURE": "Virheellinen allekirjoitus",
+		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
+		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
+		"INVALID_TIMESTAMP": "Virheellinen aikaleima"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Epäonnistui koodata virheellinen osoite",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-ratkaisuun sitoutuminen ei ole olemassa",
+		"SIGNER_UNDEFINED": "Allekirjoittajaa ei ole määritetty",
+		"CANNOT_FIND_KEYPAIR": "Avainta ei löydy",
+		"INVALID_DATA_FORMAT": "Virheellinen tiedon muoto"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Tuntematon ympäristö pyydetty",
+		"INVALID_CAPTCHA_NUMBER": "Määritä captcha-konfiguraatiot oikein",
+		"INVALID_LOG_LEVEL": "Virheellinen lokitaso",
+		"INVALID_PACKAGE_DIR": "Virheellinen paketin hakemisto"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Virhe datan parsimisessa",
+		"SOLUTION_PARSE_ERROR": "Virhe ratkaisun parsimisessa",
+		"HASH_ERROR": "Virhe datan käsittelyssä",
+		"DATASET_ID_UNDEFINED": "Datatunnus määrittelemätön",
+		"NOT_ENOUGH_LABELS": "Ei tarpeeksi merkintöjä",
+		"NOT_ENOUGH_IMAGES": "Ei tarpeeksi kuvia",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Captcha-kuvien määrä on pienempi kuin konfiguroidun captcha-määrän",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Ratkaisujen määrä on pienempi kuin konfiguroidun ratkaisujen määrän",
+		"DUPLICATE_IMAGE": "Duplikaattikuva havaittu",
+		"MERKLE_ERROR": "Virhe merkle-puun luonnissa"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Tietokannan moottorin tuonti epäonnistui",
+		"DATABASE_UNDEFINED": "Tietokantayhteys ei ole käytettävissä",
+		"DATABASE_HOST_UNDEFINED": "Tietokannan palvelinosoite ei ole määritelty",
+		"DATASET_LOAD_FAILED": "Dataryhmän lataus epäonnistui",
+		"DATASET_GET_FAILED": "Dataryhmän noutaminen epäonnistui",
+		"CAPTCHA_GET_FAILED": "Captcha-tiedon noutaminen epäonnistui",
+		"CAPTCHA_UPDATE_FAILED": "Captcha-tiedon päivitys epäonnistui",
+		"IMAGE_GET_FAILED": "Kuvan noutaminen epäonnistui",
+		"PENDING_RECORD_NOT_FOUND": "Odottavaa tietuetta ei löytynyt",
+		"INVALID_HASH": "Virheellinen hajautusarvo",
+		"SOLUTION_GET_FAILED": "Ratkaisun noutaminen epäonnistui",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Ei löydy dataryhmiä tarvittavalla ratkaisujen määrällä",
+		"SOLUTION_APPROVE_FAILED": "Ratkaisun hyväksyminen epäonnistui",
+		"SOLUTION_FLAG_FAILED": "Ratkaisun merkitseminen käsitellyksi epäonnistui",
+		"TABLES_UNDEFINED": "Tauluja ei määritelty",
+		"CONNECTION_UNDEFINED": "Yhteyttä ei määritelty",
+		"COMMITMENT_FLAG_FAILED": "Sitoumuksen merkitseminen käsitellyksi epäonnistui",
+		"UNKNOWN": "Tuntematon tietokantavirhe"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Virhe captchaa parsittaessa",
+		"INVALID_CAPTCHA_ID": "Virheellinen captcha-tunnus",
+		"INVALID_ITEM_FORMAT": "Vain kuvan ja tekstin tyyppiset kohteet sallittu",
+		"INVALID_SOLUTION_TYPE": "Virheellinen ratkaisun tyyppi",
+		"INVALID_ITEM_HASH": "Virheellinen kohteen hajautusarvo",
+		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
+		"ID_MISMATCH": "captcha id mismatch",
+		"MISSING_ITEM_HASH": "missing item hash",
+		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
+		"NO_CAPTCHA": "No captcha found",
+		"NO_SESSION_FOUND": "No session found",
+		"INVALID_TOKEN": "Invalid token",
+		"INVALID_SOLUTION": "Invalid solution",
+		"DECRYPTION_ERROR": "Error decrypting"
+	},
+	"API": {
+		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
+		"CAPTCHA_PASSED": "You correctly answered the captchas",
+		"BAD_REQUEST": "BadRequest",
+		"USER_VERIFIED": "User verified",
+		"USER_NOT_VERIFIED": "User not verified",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
+		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
+		"UNKNOWN": "Unknown API error",
+		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
+		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
+		"INVALID_SITE_KEY": "Invalid site key",
+		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
+		"INVALID_IP": "Invalid IP",
+		"INVALID_URL": "Invalid URL",
+		"INVALID_BODY": "Invalid body",
+		"PARSE_ERROR": "Error parsing request"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Invalid parameter"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
+		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
+		"MISSING_PROVIDER_PAIR": "Missing provider pair",
+		"MISSING_ENV_VARIABLE": "Missing environment variable",
+		"GENERAL": "General Dev Error, see context",
+		"MISSING_SECRET_KEY": "Missing secret key",
+		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "File not found",
+		"FILE_ALREADY_EXISTS": "File already exists",
+		"INVALID_DIR_FORMAT": "Invalid directory format"
 	}
 }
