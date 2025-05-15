@@ -329,9 +329,13 @@ export class ProviderDatabase
 	/** @description Get a solution by captcha id
 	 * @param {string} captchaId
 	 */
-	async getSolutionByCaptchaId(captchaId: string): Promise<SolutionRecord | null> {
+	async getSolutionByCaptchaId(
+		captchaId: string,
+	): Promise<SolutionRecord | null> {
 		const filter: Pick<SolutionRecord, "captchaId"> = { captchaId };
-		const doc = await this.tables?.solution.findOne(filter).lean<SolutionRecord>();
+		const doc = await this.tables?.solution
+			.findOne(filter)
+			.lean<SolutionRecord>();
 		return doc || null;
 	}
 

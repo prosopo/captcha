@@ -274,19 +274,30 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
-			const solutionRecords = await Promise.all(storedCaptchas.map(async (captcha) => {
-				const solutionRecord = await this.db.getSolutionByCaptchaId(captcha.captchaId);
-				if (!solutionRecord) {
-					throw new ProsopoEnvError("CAPTCHA.SOLUTION_NOT_FOUND", {
-						context: { failedFuncName: this.dappUserSolution.name },
-					});
-				}
-				return solutionRecord;
-			}));
+			const solutionRecords = await Promise.all(
+				storedCaptchas.map(async (captcha) => {
+					const solutionRecord = await this.db.getSolutionByCaptchaId(
+						captcha.captchaId,
+					);
+					if (!solutionRecord) {
+						throw new ProsopoEnvError("CAPTCHA.SOLUTION_NOT_FOUND", {
+							context: { failedFuncName: this.dappUserSolution.name },
+						});
+					}
+					return solutionRecord;
+				}),
+			);
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
-			if (compareCaptchaSolutions(receivedCaptchas, solutionRecords, totalImages, pendingRecord.threshold)) {
+			if (
+				compareCaptchaSolutions(
+					receivedCaptchas,
+					solutionRecords,
+					totalImages,
+					pendingRecord.threshold,
+				)
+			) {
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,

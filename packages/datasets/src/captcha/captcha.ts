@@ -32,7 +32,7 @@ import {
 	type Item,
 	type RawSolution,
 } from "@prosopo/types";
-import { SolutionRecord } from "@prosopo/types-database";
+import type { SolutionRecord } from "@prosopo/types-database";
 import { at, consoleTableWithWrapping } from "@prosopo/util";
 import { downloadImage } from "./util.js";
 
@@ -135,7 +135,8 @@ export function sortAndComputeHashes(
 /**
  * Take an array of CaptchaSolutions and Captchas and check if the solutions are the same for each pair
  * @param  {CaptchaSolution[]} received
- * @param  {Captcha[]} stored
+ * @param solutions
+ * @param totalImages
  * @param  {number} threshold the percentage of captchas that must be correct to return true
  * @return {boolean}
  */
@@ -151,9 +152,22 @@ export function compareCaptchaSolutions(
 
 	// Check if lengths match
 	if (received.length !== solutions.length) {
-		throw new ProsopoDatasetError("CAPTCHA.LENGTH_MISMATCH", {
-			context: { receivedLength: received.length, solutionsLength: solutions.length },
-		});
+		return false;
+	}
+
+	if (
+		received.length &&
+		solutions.length &&
+		received.length === solutions.length
+	) {
+		// make sure captchaId matches in each pair
+		const captchaIdMismatch = received.some(
+			(captcha, index) =>
+				solutions[index] && captcha.captchaId !== solutions[index].captchaId,
+		);
+		if (captchaIdMismatch) {
+			return false;
+		}
 	}
 
 	// Verify each captcha solution against expected solution
@@ -169,13 +183,17 @@ export function compareCaptchaSolutions(
 		}
 
 		// Count incorrect and missing solutions
-		const incorrectCount = sortedReceivedSolution.filter(solution => !targetSolution.includes(solution)).length;
-		const missingCount = targetSolution.filter(solution => !sortedReceivedSolution.includes(solution)).length;
-		
+		const incorrectCount = sortedReceivedSolution.filter(
+			(solution) => !targetSolution.includes(solution),
+		).length;
+		const missingCount = targetSolution.filter(
+			(solution) => !sortedReceivedSolution.includes(solution),
+		).length;
+
 		// Calculate correctness percentage
 		const totalIncorrect = incorrectCount + missingCount;
-		const percentageCorrect = 1 - (totalIncorrect / totalImages);
-		
+		const percentageCorrect = 1 - totalIncorrect / totalImages;
+
 		// Return whether solution meets threshold
 		return percentageCorrect >= threshold;
 	});
@@ -284,7 +302,7 @@ export function matchItemsToSolutions(
  * @param  {CaptchaSolution} captcha
  * @return {string} the hex string hash
  */
-export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
+export function computeCaptchaSolutionHash(captcha: CaptchaSolution): string {
 	return hexHashArray([
 		captcha.captchaId,
 		captcha.captchaContentId,

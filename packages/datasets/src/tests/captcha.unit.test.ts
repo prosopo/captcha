@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import path from "node:path";
 import {
 	type Captcha,
 	CaptchaItemTypes,
@@ -23,6 +24,7 @@ import {
 	type Item,
 	type MerkleProof,
 } from "@prosopo/types";
+import type { SolutionRecord } from "@prosopo/types-database";
 import { at, get } from "@prosopo/util";
 import { beforeAll, describe, expect, test } from "vitest";
 import { NO_SOLUTION_VALUE, getSolutionValueToHash } from "../captcha/index.js";
@@ -43,7 +45,11 @@ describe("CAPTCHA FUNCTIONS", async () => {
 	let MOCK_ITEMS: Item[];
 	let DATASET: Dataset;
 	let RECEIVED: CaptchaSolution[];
-	let STORED: Captcha[];
+	let STORED: (SolutionRecord &
+		Pick<
+			Captcha,
+			"items" | "target" | "solved" | "datasetId" | "datasetContentId"
+		>)[];
 	beforeAll(async () => {
 		MOCK_ITEMS = await Promise.all(
 			new Array(9).fill(0).map((_, i) =>
@@ -148,19 +154,25 @@ describe("CAPTCHA FUNCTIONS", async () => {
 
 		STORED = [
 			{
+				datasetId: "0x",
+				datasetContentId: "0x",
 				captchaId:
 					"0x21eaa7d782eaf2930d5e1f0800328fb3be125936b18086efb20f9300c5d6f6f8",
 				captchaContentId: "0x01",
 				salt: "0x01010101010101010101010101010101",
+				solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
 				items: MOCK_ITEMS,
 				target: "",
 				solved: true,
 			},
 			{
+				datasetId: "0x",
+				datasetContentId: "0x",
 				captchaId:
 					"0x9c2a2b6a556d83cf74c275cd9fdb8a30fdd7bbef8d09c83af7b1d08d91bc50a0",
 				captchaContentId: "0x01",
 				salt: "0x02020202020202020202020202020202",
+				solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
 				items: MOCK_ITEMS,
 				target: "",
 				solved: true,
@@ -269,7 +281,8 @@ describe("CAPTCHA FUNCTIONS", async () => {
 	});
 
 	test("Matching captcha solutions are correctly compared, returning true", () => {
-		// expect(compareCaptchaSolutions(RECEIVED, STORED, 0.8)).to.be.true;
+		expect(compareCaptchaSolutions(RECEIVED, STORED, MOCK_ITEMS.length, 0.8)).to
+			.be.true;
 	});
 
 	test("Non-matching captcha solutions are correctly compared, throwing an error", () => {
@@ -282,7 +295,8 @@ describe("CAPTCHA FUNCTIONS", async () => {
 			at(STORED, 1),
 		];
 
-		// expect(() => compareCaptchaSolutions(RECEIVED, stored, 0.8)).to.throw();
+		expect(compareCaptchaSolutions(RECEIVED, stored, MOCK_ITEMS.length, 0.8)).to
+			.be.false;
 	});
 
 	test("Mismatched length captcha solutions returns false", () => {
@@ -298,6 +312,8 @@ describe("CAPTCHA FUNCTIONS", async () => {
 		];
 		const stored = [
 			{
+				datasetId: "0x",
+				datasetContentId: "0x",
 				captchaId:
 					"0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb",
 				captchaContentId: "",
@@ -305,11 +321,13 @@ describe("CAPTCHA FUNCTIONS", async () => {
 				items: [],
 				target: "",
 				solved: true,
+				solution: [],
 			},
 			at(STORED, 0),
 		];
 
-		// expect(compareCaptchaSolutions(received, stored, 0.8)).to.be.false;
+		expect(compareCaptchaSolutions(received, stored, MOCK_ITEMS.length, 0.8)).to
+			.be.false;
 	});
 
 	test("Captchas with mismatching solution lengths are marked as incorrect", () => {
