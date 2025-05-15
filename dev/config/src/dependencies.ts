@@ -16,7 +16,6 @@ import child_process from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
-import { at } from "@prosopo/util";
 import type { ProjectReference } from "typescript";
 import { getLogger } from "./logger.js";
 
@@ -197,13 +196,13 @@ export async function getDependencies(
 			//  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
 			const parts = line.match(peerDepsRegex);
 			if (parts && parts.length > 1) {
-				peerDeps.push(at(parts, 1));
+				peerDeps.push(parts[1] as string);
 			}
 		} else {
 			//  │ │ │ ├─┬ mongodb-memory-server-core@8.15.1
 			const parts = line.match(depsRegex);
 			if (parts && parts.length > 1) {
-				deps.push(at(parts, 1));
+				deps.push(parts[1] as string);
 			}
 		}
 	}

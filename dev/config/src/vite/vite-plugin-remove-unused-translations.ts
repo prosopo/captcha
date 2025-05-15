@@ -12,13 +12,58 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import fs from "node:fs/promises";
-import { flatten, unflatten } from "@prosopo/util";
 import glob from "fast-glob";
 import type { Plugin } from "vite";
 import { getLogger } from "../logger.js";
 
 const used = new Set<string>();
 const log = getLogger("config.vite.vite-plugin-removed-unused-translations.js");
+
+export const flatten = (obj: object, prefix = ""): Record<string, string> => {
+	const flattenedObj: Record<string, string> = {};
+	for (const [key, value] of Object.entries(obj)) {
+		if (value instanceof Object) {
+			Object.assign(flattenedObj, flatten(value, `${prefix + key}.`));
+		} else {
+			flattenedObj[prefix + key] = value;
+		}
+	}
+	return flattenedObj;
+};
+
+type UnflattenObject =
+	| Record<string, string | number | boolean | undefined>
+	| string[]
+	| number[]
+	| boolean[];
+
+export const unflatten = (
+	obj: Record<string, string | number | boolean>,
+): Record<string, string | number | boolean | UnflattenObject> => {
+	const result: Record<string, string | number | boolean | UnflattenObject> =
+		{};
+
+	for (const [key, value] of Object.entries(obj)) {
+		const keys = key.split(".");
+		keys.reduce((acc, k, i) => {
+			if (i === keys.length - 1) {
+				(acc as Record<string, string | number | boolean | UnflattenObject>)[
+					k
+				] = value;
+			} else {
+				if (!acc[k]) {
+					acc[k] = Number.isNaN(Number(keys[i + 1])) ? {} : [];
+				}
+			}
+			return acc[k] as Record<
+				string,
+				string | number | boolean | UnflattenObject
+			>;
+		}, result);
+	}
+
+	return result;
+};
 
 export default function VitePluginRemoveUnusedTranslations(
 	translationKeys: string[],
