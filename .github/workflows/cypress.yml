@@ -55,6 +55,7 @@ jobs:
             - run: npm ci
 
             # build all packages in workspace
+            - run: npm run build:all:cjs
             - run: npm run build:all
 
             - name: Setup env
