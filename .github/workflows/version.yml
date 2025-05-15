@@ -111,7 +111,7 @@ jobs:
                   # commit the changes
                   git commit -m "version bump"
                   # push the changes to the new branch
-                  git push origin $branch
+                  git push -u origin ${{env.version_branch}}
                   # create a pull request
                   gh pr create --base ${GITHUB_REF#refs/heads/} --fill
                 else
