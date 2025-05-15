@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vue-procaptcha-integration-demo",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -15,10 +15,10 @@
 		"dev": "npx vite dev --port=9331"
 	},
 	"dependencies": {
-		"@prosopo/vue-procaptcha-wrapper": "1.0.0"
+		"@prosopo/vue-procaptcha-wrapper": "1.1.0"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.0.0",
+		"@prosopo/procaptcha-integration-build-config": "1.1.0",
 		"@vitejs/plugin-vue": "5.2.3",
 		"del-cli": "6.0.0"
 	},
