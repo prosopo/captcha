@@ -16,11 +16,11 @@ import child_process from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
-import { ProsopoEnvError, getLogger } from "@prosopo/common";
 import { at } from "@prosopo/util";
 import type { ProjectReference } from "typescript";
+import { getLogger } from "./logger.js";
 
-const logger = getLogger("Info", "config.dependencies.js");
+const logger = getLogger("config.dependencies.js");
 const exec = util.promisify(child_process.exec);
 // find a tScOnFiG.json file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/;
@@ -37,9 +37,7 @@ async function getPackageDir(packageName: string): Promise<string> {
 	// get package directory
 	const { stdout: packageDir, stderr } = await exec(pkgCommand);
 	if (stderr) {
-		throw new ProsopoEnvError("CONFIG.INVALID_PACKAGE_DIR", {
-			context: { stderr },
-		});
+		throw new Error("CONFIG.INVALID_PACKAGE_DIR");
 	}
 	return packageDir.trim() || path.resolve();
 }
@@ -189,9 +187,7 @@ export async function getDependencies(
 
 	const { stdout, stderr } = await exec(cmd);
 	if (stderr) {
-		throw new ProsopoEnvError("CONFIG.INVALID_PACKAGE_DIR", {
-			context: { stderr },
-		});
+		throw new Error("CONFIG.INVALID_PACKAGE_DIR");
 	}
 	const deps: string[] = [];
 	const peerDeps: string[] = [];

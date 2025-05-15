@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import fs from "node:fs/promises";
-import { getLogger } from "@prosopo/common";
 import { flatten, unflatten } from "@prosopo/util";
 import glob from "fast-glob";
 import type { Plugin } from "vite";
+import { getLogger } from "../logger.js";
 
 const used = new Set<string>();
-const log = getLogger(
-	"Info",
-	"config.vite.vite-plugin-removed-unused-translations.js",
-);
+const log = getLogger("config.vite.vite-plugin-removed-unused-translations.js");
 
 export default function VitePluginRemoveUnusedTranslations(
 	translationKeys: string[],

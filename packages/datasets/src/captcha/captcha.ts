@@ -32,6 +32,10 @@ import {
 	type Item,
 	type RawSolution,
 } from "@prosopo/types";
+<<<<<<< Updated upstream
+=======
+import type { SolutionRecord } from "@prosopo/types-database";
+>>>>>>> Stashed changes
 import { at } from "@prosopo/util";
 import { downloadImage } from "./util.js";
 
