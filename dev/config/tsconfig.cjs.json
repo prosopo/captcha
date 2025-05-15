@@ -5,10 +5,5 @@
 		"outDir": "./dist",
 		"types": ["vite/client"]
 	},
-	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
-	"references": [
-		{
-			"path": "../../packages/util/tsconfig.cjs.json"
-		}
-	]
+	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"]
 }
