@@ -1,11 +1,14 @@
+include:
+  - ./redis/redis-stack.docker-compose.yml
+
 services:
-    database:
-        image: mongo:6.0.17
-        # volumes:
-        #   - ./db:/data/db
-        ports:
-            - '27017:27017'
-        environment:
-            - MONGO_INITDB_ROOT_USERNAME=root
-            - MONGO_INITDB_ROOT_PASSWORD=root
-            - MONGO_INITDB_DATABASE=prosopo
+  database:
+    image: mongo:6.0.17
+    # volumes:
+    #   - ./db:/data/db
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_DATABASE=prosopo

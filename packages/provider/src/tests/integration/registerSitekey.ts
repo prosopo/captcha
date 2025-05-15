@@ -24,11 +24,17 @@ export const registerSiteKey = async (
 		const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
 		const host = process.env.PROSOPO_DATABASE_HOST || "localhost";
 		const port = process.env.PROSOPO_DATABASE_PORT || 27017;
-		const db = new ProviderDatabase(
-			`mongodb://${username}:${pw}@${host}:${port}`,
-			process.env.PROSOPO_DATABASE_NAME || "prosopo",
-			process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
-		);
+		const db = new ProviderDatabase({
+			mongo: {
+				url: `mongodb://${username}:${pw}@${host}:${port}`,
+				dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo",
+				authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
+			},
+			redis: {
+				url: process.env.REDIS_CONNECTION_URL || "",
+				password: process.env.REDIS_CONNECTION_PASSWORD || "",
+			},
+		});
 		await db.connect();
 		console.log("Registering site key", siteKey);
 		await db.updateClientRecords([

@@ -44,9 +44,8 @@ import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy";
-import { apiRulePaths } from "@prosopo/user-access-policy";
 import cors from "cors";
-import express, { type RequestHandler } from "express";
+import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
@@ -115,8 +114,12 @@ async function startApi(
 	// Admin routes
 	env.logger.info("Enabling admin auth middleware");
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
-	apiApp.use(apiRulePaths.INSERT_MANY, authMiddleware(env));
-	apiApp.use(apiRulePaths.DELETE_MANY, authMiddleware(env));
+
+	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
+	for (const userAccessRuleRoute of userAccessRuleRoutes) {
+		apiApp.use(userAccessRuleRoute.path, authMiddleware(env));
+	}
+
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiRuleRoutesProvider,
