@@ -54,7 +54,7 @@ jobs:
                 set -x
                 # change for version branch on the remote
                 if git ls-remote --exit-code --heads origin ${{ env.version_branch }}; then
-                  echo "Branch ${env.version_branch} exists, pending version bump is in progress"
+                  echo "Branch ${{env.version_branch}} exists, pending version bump is in progress"
                   echo "Merge the pending version bump branch or delete it to trigger further version bumps"
                   echo "Exiting due to pending version bump"
                   exit 0
