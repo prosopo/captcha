@@ -8,12 +8,6 @@
 	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
 	"references": [
 		{
-			"path": "../../packages/common/tsconfig.cjs.json"
-		},
-		{
-			"path": "../../packages/types/tsconfig.cjs.json"
-		},
-		{
 			"path": "../../packages/util/tsconfig.cjs.json"
 		}
 	]
