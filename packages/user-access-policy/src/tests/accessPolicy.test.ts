@@ -12,41 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-    describe,
-    expect,
-    test,
-} from "vitest";
-import {userScopeInputSchema} from "#policy/accessPolicy.js";
+import { describe, expect, test } from "vitest";
+import { userScopeInputSchema } from "#policy/accessPolicy.js";
 
 describe("accessPolicy", () => {
+	describe("userScopeInputSchema", () => {
+		test("turns ip into numericIp", () => {
+			const userScope = userScopeInputSchema.parse({
+				ip: "127.0.0.1",
+				numericIp: "123",
+			});
 
-    describe("userScopeInputSchema", () => {
+			expect(userScope).toEqual({
+				numericIp: BigInt(2130706433),
+			});
+		});
 
-        test("turns ip into numericIp", () => {
-            const userScope = userScopeInputSchema.parse({
-                ip: "127.0.0.1",
-                numericIp: "123",
-            });
+		test("turns ipMask into numericIpMask", () => {
+			const userScope = userScopeInputSchema.parse({
+				ipMask: "127.0.0.1/24",
+				numericIpMaskMin: 1,
+				numericIpMaskMax: 2,
+			});
 
-            expect(userScope).toEqual({
-                numericIp: BigInt(2130706433),
-            });
-        });
-
-        test('turns ipMask into numericIpMask', () => {
-            const userScope = userScopeInputSchema.parse({
-                ipMask: "127.0.0.1/24",
-                numericIpMaskMin: 1,
-                numericIpMaskMax: 2,
-            });
-
-            expect(userScope).toEqual({
-                numericIpMaskMin: BigInt(2130706433),
-                numericIpMaskMax: BigInt(2130706687),
-            });
-        });
-
-    });
-
+			expect(userScope).toEqual({
+				numericIpMaskMin: BigInt(2130706433),
+				numericIpMaskMax: BigInt(2130706687),
+			});
+		});
+	});
 });

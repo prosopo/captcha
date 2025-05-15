@@ -13,91 +13,89 @@
 // limitations under the License.
 
 import * as util from "node:util";
-import type {Logger} from "@prosopo/common";
-import {z} from "zod";
+import type { Logger } from "@prosopo/common";
+import { z } from "zod";
 import {
-    type AccessPolicy,
-    AccessPolicyType,
-    policyScopeSchema,
-    userScopeInputSchema,
+	type AccessPolicy,
+	AccessPolicyType,
+	policyScopeSchema,
+	userScopeInputSchema,
 } from "#policy/accessPolicy.js";
-import type {AccessRule, AccessRulesReader} from "#policy/accessRules.js";
+import type { AccessRule, AccessRulesReader } from "#policy/accessRules.js";
 
 export enum ScopeMatch {
-    Exact = "exact",
-    Greedy = "greedy",
+	Exact = "exact",
+	Greedy = "greedy",
 }
 
 export const policyFilterSchema = z.object({
-    policyScope: policyScopeSchema.optional(),
-    /**
-     * Exact: "clientId" => client rules, "undefined" => global rules. Used by the API
-     * Greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
-     */
-    policyScopeMatch: z
-        .nativeEnum(ScopeMatch)
-        .default(ScopeMatch.Exact),
-    userScope: userScopeInputSchema.optional(),
-    /**
-     * Exact: finds rules where all the given fields matches. Used by the API
-     * Greedy: finds rules where any of the given fields match. Used by the Express middleware
-     */
-    userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
+	policyScope: policyScopeSchema.optional(),
+	/**
+	 * Exact: "clientId" => client rules, "undefined" => global rules. Used by the API
+	 * Greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
+	 */
+	policyScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
+	userScope: userScopeInputSchema.optional(),
+	/**
+	 * Exact: finds rules where all the given fields matches. Used by the API
+	 * Greedy: finds rules where any of the given fields match. Used by the Express middleware
+	 */
+	userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
 });
 
 // we infer using 'z.input()', as '.output()' already have .default() field values, making them required
 export type PolicyFilter = z.input<typeof policyFilterSchema>;
 
 export type ResolveAccessPolicy = (
-    filter: PolicyFilter,
+	filter: PolicyFilter,
 ) => Promise<AccessPolicy | undefined>;
 
 export const createAccessPolicyResolver = (
-    accessRulesReader: AccessRulesReader,
-    logger: Logger,
+	accessRulesReader: AccessRulesReader,
+	logger: Logger,
 ): ResolveAccessPolicy => {
-    return async (filter: PolicyFilter): Promise<AccessPolicy | undefined> => {
-        const accessRules = await accessRulesReader.findRules(filter);
+	return async (filter: PolicyFilter): Promise<AccessPolicy | undefined> => {
+		const accessRules = await accessRulesReader.findRules(filter);
 
-        const primaryAccessRule = resolvePrimaryRule(accessRules);
+		const primaryAccessRule = resolvePrimaryRule(accessRules);
 
-        logger.debug(
-            "Resolved access policy",
-            // filter contains BigInt, which can't be handled directly via logger.
-            util.inspect(
-                {
-                    filter: filter,
-                    accessRules: accessRules,
-                    primaryAccessRule: primaryAccessRule,
-                },
-                {depth: null},
-            ),
-        );
+		logger.debug(
+			"Resolved access policy",
+			// filter contains BigInt, which can't be handled directly via logger.
+			util.inspect(
+				{
+					filter: filter,
+					accessRules: accessRules,
+					primaryAccessRule: primaryAccessRule,
+				},
+				{ depth: null },
+			),
+		);
 
-        return primaryAccessRule;
-    };
+		return primaryAccessRule;
+	};
 };
 
 const resolvePrimaryRule = (rules: AccessRule[]): AccessRule | undefined => {
-    // blocking rules have priority over restricting
-    const blockingRules = rules.filter(
-        (accessRule) => AccessPolicyType.Block === accessRule.type,
-    );
+	// blocking rules have priority over restricting
+	const blockingRules = rules.filter(
+		(accessRule) => AccessPolicyType.Block === accessRule.type,
+	);
 
-    const rulesToEvaluate = blockingRules.length > 0 ? blockingRules : rules;
+	const rulesToEvaluate = blockingRules.length > 0 ? blockingRules : rules;
 
-    return resolveMostLocalRule(rulesToEvaluate);
+	return resolveMostLocalRule(rulesToEvaluate);
 };
 
 const resolveMostLocalRule = (rules: AccessRule[]): AccessRule | undefined => {
-    // client rules have priority over global
-    const clientRules = rules.filter(
-        (accessRule) => "string" === typeof accessRule.clientId,
-    );
+	// client rules have priority over global
+	const clientRules = rules.filter(
+		(accessRule) => "string" === typeof accessRule.clientId,
+	);
 
-    if (clientRules.length > 0) {
-        return clientRules.shift();
-    }
+	if (clientRules.length > 0) {
+		return clientRules.shift();
+	}
 
-    return rules.shift();
+	return rules.shift();
 };

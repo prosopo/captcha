@@ -13,79 +13,79 @@
 // limitations under the License.
 
 import {
-    type ApiEndpoint,
-    type ApiEndpointResponse,
-    ApiEndpointResponseStatus,
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import {z} from "zod";
+import { z } from "zod";
 import {
-    accessPolicySchema,
-    policyScopeSchema,
-    userScopeInputSchema,
+	accessPolicySchema,
+	policyScopeSchema,
+	userScopeInputSchema,
 } from "#policy/accessPolicy.js";
-import type {AccessRulesWriter} from "#policy/accessRules.js";
+import type { AccessRulesWriter } from "#policy/accessRules.js";
 
 export const insertRulesEndpointSchema = z.object({
-    policy: accessPolicySchema,
-    policyScope: policyScopeSchema.optional(),
-    userScopes: z.array(userScopeInputSchema),
-    expirationTimestampSeconds: z.number().optional(),
+	policy: accessPolicySchema,
+	policyScope: policyScopeSchema.optional(),
+	userScopes: z.array(userScopeInputSchema),
+	expirationTimestampSeconds: z.number().optional(),
 });
 
 export type InsertRulesEndpointSchema = typeof insertRulesEndpointSchema;
 
 export type InsertManyRulesEndpointOutputSchema = z.output<
-    typeof insertRulesEndpointSchema
+	typeof insertRulesEndpointSchema
 >;
 
 export class InsertRulesEndpoint
-    implements ApiEndpoint<InsertRulesEndpointSchema> {
-    public constructor(private readonly accessRulesWriter: AccessRulesWriter) {
-    }
+	implements ApiEndpoint<InsertRulesEndpointSchema>
+{
+	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
 
-    async processRequest(
-        args: z.infer<InsertRulesEndpointSchema>,
-    ): Promise<ApiEndpointResponse> {
-        return new Promise((resolve) => {
-            // either return after 5s or when the rules are inserted or fail to insert
-            setTimeout(() => {
-                resolve({
-                    status: ApiEndpointResponseStatus.PROCESSING,
-                });
-            }, 5000);
+	async processRequest(
+		args: z.infer<InsertRulesEndpointSchema>,
+	): Promise<ApiEndpointResponse> {
+		return new Promise((resolve) => {
+			// either return after 5s or when the rules are inserted or fail to insert
+			setTimeout(() => {
+				resolve({
+					status: ApiEndpointResponseStatus.PROCESSING,
+				});
+			}, 5000);
 
-            this.createRules(args)
-                .then(() => {
-                    resolve({
-                        status: ApiEndpointResponseStatus.SUCCESS,
-                    });
-                })
-                .catch((e) => {
-                    resolve({
-                        status: ApiEndpointResponseStatus.FAIL,
-                    });
-                });
-        });
-    }
+			this.createRules(args)
+				.then(() => {
+					resolve({
+						status: ApiEndpointResponseStatus.SUCCESS,
+					});
+				})
+				.catch((e) => {
+					resolve({
+						status: ApiEndpointResponseStatus.FAIL,
+					});
+				});
+		});
+	}
 
-    public getRequestArgsSchema(): InsertRulesEndpointSchema {
-        return insertRulesEndpointSchema;
-    }
+	public getRequestArgsSchema(): InsertRulesEndpointSchema {
+		return insertRulesEndpointSchema;
+	}
 
-    protected async createRules(
-        args: InsertManyRulesEndpointOutputSchema,
-    ): Promise<void> {
-        const policyScope = args.policyScope || {};
+	protected async createRules(
+		args: InsertManyRulesEndpointOutputSchema,
+	): Promise<void> {
+		const policyScope = args.policyScope || {};
 
-        for (const userScope of args.userScopes) {
-            await this.accessRulesWriter.insertRule(
-                {
-                    ...args.policy,
-                    ...policyScope,
-                    ...userScope,
-                },
-                args.expirationTimestampSeconds,
-            );
-        }
-    }
+		for (const userScope of args.userScopes) {
+			await this.accessRulesWriter.insertRule(
+				{
+					...args.policy,
+					...policyScope,
+					...userScope,
+				},
+				args.expirationTimestampSeconds,
+			);
+		}
+	}
 }

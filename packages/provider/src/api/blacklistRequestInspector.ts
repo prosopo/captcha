@@ -116,8 +116,8 @@ export class BlacklistRequestInspector {
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 	): {
-		userId: string|undefined;
-		clientId: string|undefined;
+		userId: string | undefined;
+		clientId: string | undefined;
 	} {
 		const userId =
 			this.getObjectValue(requestHeaders, "Prosopo-User") ||

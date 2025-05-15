@@ -12,38 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {z} from "zod";
+import { z } from "zod";
 import {
-    accessPolicySchema,
-    policyScopeSchema,
-    userScopeSchema,
+	accessPolicySchema,
+	policyScopeSchema,
+	userScopeSchema,
 } from "#policy/accessPolicy.js";
-import type {PolicyFilter} from "#policy/accessPolicyResolver.js";
+import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
 
 export const accessRuleSchema = z.object({
-    // flat structure is used to fit the Redis requirements
-    ...accessPolicySchema.shape,
-    ...policyScopeSchema.shape,
-    ...userScopeSchema.shape,
+	// flat structure is used to fit the Redis requirements
+	...accessPolicySchema.shape,
+	...policyScopeSchema.shape,
+	...userScopeSchema.shape,
 });
 
 export type AccessRule = z.infer<typeof accessRuleSchema>;
 
 export type AccessRulesReader = {
-    findRules(filter: PolicyFilter): Promise<AccessRule[]>;
+	findRules(filter: PolicyFilter): Promise<AccessRule[]>;
 
-    findRuleIds(filter: PolicyFilter): Promise<string[]>;
+	findRuleIds(filter: PolicyFilter): Promise<string[]>;
 };
 
 export type AccessRulesWriter = {
-    insertRule(
-        rule: AccessRule,
-        expirationTimestampSeconds?: number,
-    ): Promise<string>;
+	insertRule(
+		rule: AccessRule,
+		expirationTimestampSeconds?: number,
+	): Promise<string>;
 
-    deleteRules(ruleIds: string[]): Promise<void>;
+	deleteRules(ruleIds: string[]): Promise<void>;
 
-    deleteAllRules(): Promise<void>;
+	deleteAllRules(): Promise<void>;
 };
 
 export type AccessRulesStorage = AccessRulesReader & AccessRulesWriter;
