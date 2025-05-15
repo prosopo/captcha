@@ -57,7 +57,7 @@ jobs:
                   echo "Branch ${{env.version_branch}} exists, pending version bump is in progress"
                   echo "Merge the pending version bump branch or delete it to trigger further version bumps"
                   echo "Exiting due to pending version bump"
-                  exit 0
+                  exit 1
                 fi
                 echo "No pending version bump branch found, continuing"
 
