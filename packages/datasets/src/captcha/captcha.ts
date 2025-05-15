@@ -135,15 +135,18 @@ export function sortAndComputeHashes(
  * Take an array of CaptchaSolutions and Captchas and check if the solutions are the same for each pair
  * @param  {CaptchaSolution[]} received
  * @param  {Captcha[]} stored
+ * @param  {number} threshold the percentage of captchas that must be correct to return true
  * @return {boolean}
  */
 export function compareCaptchaSolutions(
 	received: CaptchaSolution[],
 	stored: Captcha[],
+	threshold: number,
 ): boolean {
 	if (received.length && stored.length && received.length === stored.length) {
 		const hashes = sortAndComputeHashes(received, stored);
-		return hashes.every(({ hash, captchaId }) => hash === captchaId);
+		const correct = hashes.filter(({ hash, captchaId }) => hash === captchaId);
+		return correct.length / hashes.length >= threshold;
 	}
 
 	return false;
