@@ -116,21 +116,19 @@ export class BlacklistRequestInspector {
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 	): {
-		userId: string;
-		clientId: string;
+		userId: string|undefined;
+		clientId: string|undefined;
 	} {
 		const userId =
 			this.getObjectValue(requestHeaders, "Prosopo-User") ||
-			this.getObjectValue(requestBody, "user") ||
-			"";
+			this.getObjectValue(requestBody, "user");
 		const clientId =
 			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
-			this.getObjectValue(requestBody, "dapp") ||
-			"";
+			this.getObjectValue(requestBody, "dapp");
 
 		return {
-			userId: "string" === typeof userId ? userId : "",
-			clientId: "string" === typeof clientId ? clientId : "",
+			userId: "string" === typeof userId ? userId : undefined,
+			clientId: "string" === typeof clientId ? clientId : undefined,
 		};
 	}
 

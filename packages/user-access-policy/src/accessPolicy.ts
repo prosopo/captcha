@@ -22,7 +22,7 @@ export enum AccessPolicyType {
 
 export const accessPolicySchema = z.object({
     type: z.nativeEnum(AccessPolicyType),
-    description: z.string().optional(),
+    description: z.coerce.string().optional(),
     // Redis stores values as strings, so coerce is needed to parse properly
     solvedImagesCount: z.coerce.number().optional(),
     unsolvedImagesCount: z.coerce.number().optional(),
@@ -30,17 +30,18 @@ export const accessPolicySchema = z.object({
 });
 
 export const policyScopeSchema = z.object({
-    clientId: z.string().optional(),
+    clientId: z.coerce.string().optional(),
 });
 
 export const userScopeSchema = z.object({
-    userId: z.string().optional(),
+    // coerce is used for safety, as e.g., incoming userId can be digital
+    userId: z.coerce.string().optional(),
     numericIp: z.coerce.bigint().optional(),
     numericIpMaskMin: z.coerce.bigint().optional(),
     numericIpMaskMax: z.coerce.bigint().optional(),
-    ja4Hash: z.string().optional(),
-    headersHash: z.string().optional(),
-    userAgentHash: z.string().optional(),
+    ja4Hash: z.coerce.string().optional(),
+    headersHash: z.coerce.string().optional(),
+    userAgentHash: z.coerce.string().optional(),
 });
 
 export const userScopeInputSchema = userScopeSchema.extend({

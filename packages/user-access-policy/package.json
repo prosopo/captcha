@@ -14,7 +14,7 @@
 		}
 	},
 	"scripts": {
-		"build": "npx vite build --config vite.config.ts && tsc --emitDeclarationOnly",
+		"build": "npx vite build --config vite.config.ts && tsc --build --emitDeclarationOnly --force",
 		"clean": "tsc --build --clean",
 		"build:cjs": "npx vite build --config vite.cjs.config.ts",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"

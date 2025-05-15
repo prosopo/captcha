@@ -13,39 +13,47 @@
 // limitations under the License.
 
 import {
-	type ApiEndpoint,
-	type ApiEndpointResponse,
-	ApiEndpointResponseStatus,
+    type ApiEndpoint,
+    type ApiEndpointResponse,
+    ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { z } from "zod";
-import { policyFilterSchema } from "#policy/accessPolicyResolver.js";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import {z} from "zod";
+import {policyFilterSchema} from "#policy/accessPolicyResolver.js";
+import type {AccessRulesStorage} from "#policy/accessRules.js";
 
 export const deleteRulesEndpointSchema = z.array(policyFilterSchema);
 
 export type DeleteRulesEndpointSchema = typeof deleteRulesEndpointSchema;
 
 export class DeleteRulesEndpoint
-	implements ApiEndpoint<DeleteRulesEndpointSchema>
-{
-	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
+    implements ApiEndpoint<DeleteRulesEndpointSchema> {
+    public constructor(private readonly accessRulesStorage: AccessRulesStorage) {
+    }
 
-	async processRequest(
-		args: z.infer<DeleteRulesEndpointSchema>,
-	): Promise<ApiEndpointResponse> {
-		for (const accessRuleFilter of args) {
-			const ruleIds =
-				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
+    async processRequest(
+        args: z.infer<DeleteRulesEndpointSchema>,
+    ): Promise<ApiEndpointResponse> {
+        const allRuleIds = [];
 
-			await this.accessRulesStorage.deleteRules(ruleIds);
-		}
+        for (const accessRuleFilter of args) {
+            const foundRuleIds = await this.accessRulesStorage.findRuleIds(accessRuleFilter);
 
-		return {
-			status: ApiEndpointResponseStatus.SUCCESS,
-		};
-	}
+            allRuleIds.push(...foundRuleIds);
+        }
 
-	public getRequestArgsSchema(): DeleteRulesEndpointSchema {
-		return deleteRulesEndpointSchema;
-	}
+        if (allRuleIds.length > 0) {
+            // Set() automatically removes duplicates
+            const uniqueRuleIds = [...new Set(allRuleIds)];
+
+            await this.accessRulesStorage.deleteRules(uniqueRuleIds);
+        }
+
+        return {
+            status: ApiEndpointResponseStatus.SUCCESS,
+        };
+    }
+
+    public getRequestArgsSchema(): DeleteRulesEndpointSchema {
+        return deleteRulesEndpointSchema;
+    }
 }
