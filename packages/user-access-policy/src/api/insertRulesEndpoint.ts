@@ -21,14 +21,14 @@ import {z} from "zod";
 import {
     accessPolicySchema,
     policyScopeSchema,
-    userScopeSchema,
+    userScopeInputSchema,
 } from "#policy/accessPolicy.js";
 import type {AccessRulesWriter} from "#policy/accessRules.js";
 
 export const insertRulesEndpointSchema = z.object({
     policy: accessPolicySchema,
     policyScope: policyScopeSchema.optional(),
-    userScopes: z.array(userScopeSchema),
+    userScopes: z.array(userScopeInputSchema),
     expirationTimestampSeconds: z.number().optional(),
 });
 

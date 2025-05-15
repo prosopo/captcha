@@ -41,10 +41,16 @@ export const userScopeSchema = z.object({
     ja4Hash: z.string().optional(),
     headersHash: z.string().optional(),
     userAgentHash: z.string().optional(),
+});
+
+export const userScopeInputSchema = userScopeSchema.extend({
     // human-friendly ip versions. If present, then converted to numeric and removed from the object
+    // 127.0.0.1
     ip: z.string().optional(),
+    // 127.0.0.1/24
     ipMask: z.string().optional(),
 }).transform((inputUserScope) => {
+    // this line creates a new "userScope", without ip and ipMask
     const {ip, ipMask, ...userScope} = inputUserScope;
 
     if ("string" === typeof ip) {
@@ -54,7 +60,7 @@ export const userScopeSchema = z.object({
     if ("string" === typeof ipMask) {
         const ipObject = new Address4(ipMask);
 
-        userScope.numericIpMaskMin = ipObject.startAddress().bigInt();
+        userScope.numericIpMaskMin = ipObject.bigInt();
         userScope.numericIpMaskMax = ipObject.endAddress().bigInt();
     }
 
