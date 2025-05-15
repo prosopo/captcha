@@ -20,13 +20,13 @@ import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRule } from "#policy/accessRules.js";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
-export const redisAccessRulesIndexName = "index:user-access-rules";
+export const accessRulesRedisIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
-export const redisAccessRuleKeyPrefix = "uar:";
-const redisAccessRuleContentHashAlgorithm = "md5";
+export const accessRuleRedisKeyPrefix = "uar:";
+const accessRuleContentHashAlgorithm = "md5";
 
-const redisAccessRulesIndex: RedisIndex = {
-	name: redisAccessRulesIndexName,
+const accessRulesIndex: RedisIndex = {
+	name: accessRulesRedisIndexName,
 	/**
 	 * Note on the field type decision
 	 *
@@ -52,15 +52,31 @@ const redisAccessRulesIndex: RedisIndex = {
 	// the satisfy statement is to guarantee that the keys are right
 	options: {
 		ON: "HASH" as const,
-		PREFIX: redisAccessRuleKeyPrefix,
+		PREFIX: accessRuleRedisKeyPrefix,
 	},
 };
 
 export const createRedisAccessRulesIndex = async (
 	client: RedisClientType,
-): Promise<void> => createRedisIndex(client, redisAccessRulesIndex);
+): Promise<void> => createRedisIndex(client, accessRulesIndex);
 
-export const redisAccessRuleSearchOptions: FtSearchOptions = {
+const numericIndexFields: Array<keyof AccessRule> = [
+	"numericIp",
+	"numericIpMaskMin",
+	"numericIpMaskMax",
+];
+
+type CustomFieldComparisons = Record<
+	keyof AccessRule,
+	(value: unknown) => string
+>;
+
+const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
+	numericIp: (value) =>
+		`( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`,
+};
+
+export const accessRulesRedisSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
 };
@@ -121,7 +137,7 @@ const getUserScopeQuery = (
 
 	return scopeEntries
 		.map(([scopeFieldName, scopeFieldValue]) =>
-			getUserScopeFieldQuery(scopeFieldName, scopeFieldValue),
+			getUserScopeFieldQuery(scopeFieldName, scopeFieldValue, scopeMatchType),
 		)
 		.join(scopeJoinType);
 };
@@ -129,23 +145,24 @@ const getUserScopeQuery = (
 const getUserScopeFieldQuery = (
 	fieldName: keyof UserScope,
 	fieldValue: unknown,
+	matchType: ScopeMatch | undefined,
 ): string => {
-	type CustomComparisons = Record<keyof UserScope, (value: unknown) => string>;
+	if (
+		ScopeMatch.Greedy === matchType &&
+		"function" === typeof greedyFieldComparisons[fieldName]
+	) {
+		return greedyFieldComparisons[fieldName](fieldValue);
+	}
 
-	const customComparisons: Partial<CustomComparisons> = {
-		numericIp: (value) =>
-			`( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`,
-	};
-
-	return "function" === typeof customComparisons[fieldName]
-		? customComparisons[fieldName](fieldValue)
+	return numericIndexFields.includes(fieldName)
+		? `@${fieldName}:[${fieldValue}]`
 		: `@${fieldName}:{${fieldValue}}`;
 };
 
 export const getRedisAccessRuleKey = (rule: AccessRule): string =>
-	redisAccessRuleKeyPrefix +
+	accessRuleRedisKeyPrefix +
 	crypto
-		.createHash(redisAccessRuleContentHashAlgorithm)
+		.createHash(accessRuleContentHashAlgorithm)
 		.update(
 			JSON.stringify(rule, (key, value) =>
 				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"

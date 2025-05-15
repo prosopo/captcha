@@ -42,15 +42,18 @@ export class DeleteRulesEndpoint
 			allRuleIds.push(...foundRuleIds);
 		}
 
-		if (allRuleIds.length > 0) {
-			// Set() automatically removes duplicates
-			const uniqueRuleIds = [...new Set(allRuleIds)];
+		// Set() automatically removes duplicates
+		const uniqueRuleIds = [...new Set(allRuleIds)];
 
+		if (uniqueRuleIds.length > 0) {
 			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
 		}
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
+			data: {
+				deleted_count: uniqueRuleIds.length,
+			},
 		};
 	}
 

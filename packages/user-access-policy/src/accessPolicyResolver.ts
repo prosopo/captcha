@@ -37,8 +37,8 @@ export const policyFilterSchema = z.object({
 	policyScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
 	userScope: userScopeInputSchema.optional(),
 	/**
-	 * Exact: finds rules where all the given fields matches. Used by the API
-	 * Greedy: finds rules where any of the given fields match. Used by the Express middleware
+	 * Exact: finds rules where all the given fields matches and doesn't check IP against masks. Used by the API
+	 * Greedy: finds rules where any of the given fields match and checks IP against masks. Used by the Express middleware
 	 */
 	userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
 });

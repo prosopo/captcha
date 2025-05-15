@@ -32,10 +32,13 @@ export class DeleteAllRulesEndpoint
 	async processRequest(
 		args: z.infer<DeleteAllRulesEndpointSchema>,
 	): Promise<ApiEndpointResponse> {
-		await this.accessRulesStorage.deleteAllRules();
+		const deletedCount = await this.accessRulesStorage.deleteAllRules();
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
+			data: {
+				deleted_count: deletedCount,
+			},
 		};
 	}
 

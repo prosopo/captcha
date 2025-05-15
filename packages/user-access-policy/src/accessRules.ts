@@ -43,7 +43,7 @@ export type AccessRulesWriter = {
 
 	deleteRules(ruleIds: string[]): Promise<void>;
 
-	deleteAllRules(): Promise<void>;
+	deleteAllRules(): Promise<number>;
 };
 
 export type AccessRulesStorage = AccessRulesReader & AccessRulesWriter;

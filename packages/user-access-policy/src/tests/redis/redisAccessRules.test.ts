@@ -33,10 +33,10 @@ import {
 	createRedisAccessRulesWriter,
 } from "#policy/redis/redisAccessRules.js";
 import {
+	accessRulesRedisIndexName,
 	createRedisAccessRulesIndex,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
-	redisAccessRulesIndexName,
 } from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "#policy/tests/redis/testRedisClient.js";
 import { testLogger } from "#policy/tests/testLogger.js";
@@ -46,7 +46,7 @@ describe("redisAccessRules", () => {
 
 	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
 	const getIndexRecordsCount = async (): Promise<number> =>
-		(await redisClient.ft.info(redisAccessRulesIndexName)).num_docs;
+		(await redisClient.ft.info(accessRulesRedisIndexName)).num_docs;
 
 	const insertRule = async (rule: AccessRule) => {
 		const ruleKey = getRedisAccessRuleKey(rule);
@@ -372,7 +372,7 @@ describe("redisAccessRules", () => {
 			]);
 		});
 
-		test("finds rules by ip", async () => {
+		test("finds rules by greedy ip match", async () => {
 			// given
 			const johnId = getUniqueString();
 
@@ -383,6 +383,7 @@ describe("redisAccessRules", () => {
 				numericIpMaskMax: BigInt(100),
 			};
 			const johnIp_100_AccessRule: AccessRule = {
+				clientId: johnId,
 				type: AccessPolicyType.Block,
 				numericIp: BigInt(100),
 			};
@@ -404,45 +405,50 @@ describe("redisAccessRules", () => {
 			await insertRule(doeIpMask_200_300AccessRule);
 
 			// when
-			const ip_0_AccessRules = await accessRulesReader.findRules({
+			const ip_0_accessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
 				userScope: {
 					numericIp: BigInt(0),
 				},
+				userScopeMatch: ScopeMatch.Greedy,
 			});
-			const ip_99_AccessRules = await accessRulesReader.findRules({
+			const ip_99_accessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
 				userScope: {
 					numericIp: BigInt(99),
 				},
+				userScopeMatch: ScopeMatch.Greedy,
 			});
-			const ip_100_AccessRules = await accessRulesReader.findRules({
+			const ip_100_accessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
 				userScope: {
 					numericIp: BigInt(100),
 				},
+				userScopeMatch: ScopeMatch.Greedy,
 			});
-			const ip_101_AccessRules = await accessRulesReader.findRules({
+			const ip_101_accessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
 				userScope: {
 					numericIp: BigInt(101),
 				},
+				userScopeMatch: ScopeMatch.Greedy,
 			});
-			const ip_201_AccessRules = await accessRulesReader.findRules({
+			const ip_201_accessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
 				userScope: {
 					numericIp: BigInt(201),
 				},
+				userScopeMatch: ScopeMatch.Greedy,
 			});
 
 			// then
@@ -450,15 +456,77 @@ describe("redisAccessRules", () => {
 
 			expect(indexRecordsCount).toBe(4);
 
-			expect(ip_0_AccessRules).toEqual([johnIpMask_0_100_AccessRule]);
-			expect(ip_99_AccessRules).toEqual([johnIpMask_0_100_AccessRule]);
-			expect(ip_100_AccessRules).toEqual([
+			expect(ip_0_accessRules).toEqual([johnIpMask_0_100_AccessRule]);
+			expect(ip_99_accessRules).toEqual([johnIpMask_0_100_AccessRule]);
+			expect(ip_100_accessRules).toEqual([
 				johnIpMask_0_100_AccessRule,
 				johnIp_100_AccessRule,
 				globalIpMask_100_200_AccessRule,
 			]);
-			expect(ip_101_AccessRules).toEqual([globalIpMask_100_200_AccessRule]);
-			expect(ip_201_AccessRules).toEqual([]);
+			expect(ip_101_accessRules).toEqual([globalIpMask_100_200_AccessRule]);
+			expect(ip_201_accessRules).toEqual([]);
+		});
+
+		test("finds rules by exact ip match", async () => {
+			// given
+			const johnId = getUniqueString();
+
+			const johnIpMask_0_100_AccessRule: AccessRule = {
+				clientId: johnId,
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: BigInt(0),
+				numericIpMaskMax: BigInt(100),
+			};
+			const johnIp_100_AccessRule: AccessRule = {
+				clientId: johnId,
+				type: AccessPolicyType.Block,
+				numericIp: BigInt(100),
+			};
+			const globalIpMask_100_200_AccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: BigInt(100),
+				numericIpMaskMax: BigInt(200),
+			};
+			const globalIp_100_AccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp: BigInt(100),
+			};
+
+			await insertRule(johnIpMask_0_100_AccessRule);
+			await insertRule(johnIp_100_AccessRule);
+			await insertRule(globalIpMask_100_200_AccessRule);
+			await insertRule(globalIp_100_AccessRule);
+
+			// when
+			const ip_0_accessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: johnId,
+				},
+				userScope: {
+					numericIp: BigInt(0),
+				},
+				userScopeMatch: ScopeMatch.Exact,
+			});
+			const ip_100_accessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: johnId,
+				},
+				userScope: {
+					numericIp: BigInt(100),
+				},
+				userScopeMatch: ScopeMatch.Exact,
+			});
+
+			// then
+			const indexRecordsCount = await getIndexRecordsCount();
+
+			expect(indexRecordsCount).toBe(4);
+
+			expect(ip_0_accessRules).toEqual([]);
+			expect(ip_100_accessRules).toEqual([
+				johnIp_100_AccessRule,
+				globalIp_100_AccessRule,
+			]);
 		});
 	});
 

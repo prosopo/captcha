@@ -26,12 +26,12 @@ import {
 	accessRuleSchema,
 } from "#policy/accessRules.js";
 import {
+	accessRuleRedisKeyPrefix,
+	accessRulesRedisIndexName,
+	accessRulesRedisSearchOptions,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
 	getRedisAccessRulesQuery,
-	redisAccessRuleKeyPrefix,
-	redisAccessRuleSearchOptions,
-	redisAccessRulesIndexName,
 } from "#policy/redis/redisAccessRulesIndex.js";
 
 export const createRedisAccessRulesReader = (
@@ -46,9 +46,9 @@ export const createRedisAccessRulesReader = (
 
 			try {
 				searchReply = await client.ft.search(
-					redisAccessRulesIndexName,
+					accessRulesRedisIndexName,
 					query,
-					redisAccessRuleSearchOptions,
+					accessRulesRedisSearchOptions,
 				);
 
 				logger.debug(
@@ -90,9 +90,9 @@ export const createRedisAccessRulesReader = (
 
 			try {
 				searchReply = await client.ft.searchNoContent(
-					redisAccessRulesIndexName,
+					accessRulesRedisIndexName,
 					query,
-					redisAccessRuleSearchOptions,
+					accessRulesRedisSearchOptions,
 				);
 
 				logger.debug(
@@ -152,12 +152,10 @@ export const createRedisAccessRulesWriter = (
 		deleteRules: async (ruleIds: string[]): Promise<void> =>
 			void (await client.del(ruleIds)),
 
-		deleteAllRules: async (): Promise<void> => {
-			const keys = await client.keys(`${redisAccessRuleKeyPrefix}*`);
+		deleteAllRules: async (): Promise<number> => {
+			const keys = await client.keys(`${accessRuleRedisKeyPrefix}*`);
 
-			if (keys.length > 0) {
-				await client.del(keys);
-			}
+			return keys.length > 0 ? await client.del(keys) : 0;
 		},
 	};
 };
