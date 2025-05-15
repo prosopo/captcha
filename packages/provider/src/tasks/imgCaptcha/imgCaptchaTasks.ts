@@ -87,6 +87,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		userAccount: string,
 		ipAddress: IPAddress,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
+		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<{
 		captchas: Captcha[];
@@ -153,6 +154,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			deadlineTs,
 			currentTime,
 			ipAddress.bigInt(),
+			threshold,
 			frictionlessTokenId,
 		);
 		return {
@@ -174,6 +176,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param threshold the percentage of captchas that must be correct to return true
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -271,7 +274,23 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
-			if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+			const solutionRecords = await Promise.all(storedCaptchas.map(async (captcha) => {
+				const solutionRecord = await this.db.getSolutionByCaptchaId(captcha.captchaId);
+				if (!solutionRecord) {
+					console.log("\n\n-------\n\n");
+					console.log("storedCaptchas", storedCaptchas);
+					console.log("solutionRecord not found for captchaId", captcha.captchaId);
+					console.log("\n\n-------\n\n");
+					throw new ProsopoEnvError("CAPTCHA.SOLUTION_NOT_FOUND", {
+						context: { failedFuncName: this.dappUserSolution.name },
+					});
+				}
+				return solutionRecord;
+			}));
+
+			const totalImages = storedCaptchas[0]?.items.length || 0;
+
+			if (compareCaptchaSolutions(receivedCaptchas, solutionRecords, totalImages, pendingRecord.threshold)) {
 				response = {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,

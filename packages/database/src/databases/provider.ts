@@ -326,6 +326,15 @@ export class ProviderDatabase
 		return docs ? docs : [];
 	}
 
+	/** @description Get a solution by captcha id
+	 * @param {string} captchaId
+	 */
+	async getSolutionByCaptchaId(captchaId: string): Promise<SolutionRecord | null> {
+		const filter: Pick<SolutionRecord, "captchaId"> = { captchaId };
+		const doc = await this.tables?.solution.findOne(filter).lean<SolutionRecord>();
+		return doc || null;
+	}
+
 	/** @description Get a dataset from the database
 	 * @param {string} datasetId
 	 */
@@ -1090,6 +1099,7 @@ export class ProviderDatabase
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
@@ -1109,6 +1119,7 @@ export class ProviderDatabase
 			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
 			frictionlessTokenId,
+			threshold,
 		};
 		await this.tables?.pending.updateOne(
 			{ requestHash: requestHash },

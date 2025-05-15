@@ -32,6 +32,7 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 	frictionless_threshold: z.number().max(1).min(0),
 	pow_difficulty: z.number(),
 	domains: z.array(z.string()),
+	image_threshold: z.number().max(1).min(0),
 });
 
 export default (
@@ -76,6 +77,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "POW difficulty for settings",
+				} as const)
+				.option("image_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image threshold for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -88,6 +94,7 @@ export default (
 					frictionless_threshold,
 					pow_difficulty,
 					domains,
+					image_threshold,
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
@@ -95,6 +102,7 @@ export default (
 					frictionlessThreshold: frictionless_threshold as number,
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
+					imageThreshold: image_threshold as number,
 				});
 				logger.info(`Site Key ${argv.sitekey} registered`);
 			} catch (err) {
