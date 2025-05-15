@@ -241,4 +241,4 @@ jobs:
                 # send a slack notification
                 curl -X POST -H 'Content-type: application/json' --data "{
                   \"text\": \"${emoji} Release ${status} for ````$tags````",
-                }" ${{ secrets.SLACK_WEBHOOK }}
+                }" ${{ secrets.SLACKBOT_DEVOPS }}
