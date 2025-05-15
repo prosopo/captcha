@@ -113,9 +113,6 @@ export function sortAndComputeHashes(
 			if (captchaId !== item.captchaId) {
 				throw new ProsopoEnvError("CAPTCHA.ID_MISMATCH");
 			}
-			console.log("\n\n-------\n\n");
-			console.log("item.solution", item.solution);
-			console.log("\n\n-------\n\n");
 
 			return {
 				hash: computeCaptchaHash(
