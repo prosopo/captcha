@@ -148,71 +148,40 @@ export function compareCaptchaSolutions(
 	totalImages: number,
 	threshold: number,
 ): boolean {
-	// Sort both with captchaSort
+	// Sort both arrays by captchaId
 	received.sort(captchaSort);
 	solutions.sort(captchaSort);
-	console.log("\n\n-------\n\n");
-	console.log("received", received);
-	console.log("solutions", solutions);
-	console.log("\n\n-------\n\n");
 
-	// If length of received is not equal to length of solutions, throw an error
+	// Check if lengths match
 	if (received.length !== solutions.length) {
-		console.log("\n\n-------\n\n");
-		console.log("received", received);
-		console.log("solutions", solutions);
-		console.log("\n\n-------\n\n");
 		throw new ProsopoDatasetError("CAPTCHA.LENGTH_MISMATCH", {
 			context: { receivedLength: received.length, solutionsLength: solutions.length },
 		});
 	}
 
-	// For each captcha in received, check if the solution is the same as the solution in solutions
-	const verified = received.map((captcha, index) => {
+	// Verify each captcha solution against expected solution
+	return received.every((captcha, index) => {
 		const sortedReceivedSolution = captcha.solution.sort();
 		const targetSolution = solutions[index]?.solution.sort();
 
-		// If targetSolution is undefined, throw an error
+		// Ensure target solution exists
 		if (!targetSolution) {
 			throw new ProsopoDatasetError("CAPTCHA.SOLUTION_NOT_FOUND", {
 				context: { captchaId: captcha.captchaId },
 			});
 		}
 
-		// Count the number of solutions that are the same
-		const incorrectSolutions = sortedReceivedSolution.map((solution) => {
-			if (targetSolution.includes(solution)) {
-				return false;
-			}
-			return true;
-		});
-
-		const missingSolutions = sortedReceivedSolution.filter((solution) => !targetSolution.includes(solution));
-
-		const incorrectSolutionsCount = incorrectSolutions.reduce((acc, curr) => {
-			if (curr) {
-				return acc + 1;
-			}
-			return acc;
-		}, 0);
-
-		const missingSolutionsCount = missingSolutions.reduce((acc, curr) => {
-			if (curr) {
-				return acc + 1;
-			}
-			return acc;
-		}, 0);
-
-		const totalIncorrect = incorrectSolutionsCount + missingSolutionsCount;
-		const percentageIncorrect = totalIncorrect / totalImages;
-		const percentageCorrect = 1 - percentageIncorrect;
-
-		const verified = percentageCorrect >= threshold;
-
-		return verified;
+		// Count incorrect and missing solutions
+		const incorrectCount = sortedReceivedSolution.filter(solution => !targetSolution.includes(solution)).length;
+		const missingCount = targetSolution.filter(solution => !sortedReceivedSolution.includes(solution)).length;
+		
+		// Calculate correctness percentage
+		const totalIncorrect = incorrectCount + missingCount;
+		const percentageCorrect = 1 - (totalIncorrect / totalImages);
+		
+		// Return whether solution meets threshold
+		return percentageCorrect >= threshold;
 	});
-
-	return verified.every((verified) => verified);
 }
 
 /**
