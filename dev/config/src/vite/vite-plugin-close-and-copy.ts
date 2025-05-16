@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-import { getLogger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +11,18 @@ import { getLogger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import path from "node:path";
 import type { Plugin } from "vite";
+import { getLogger } from "../logger.js";
 
 export interface ClosePluginOptions {
 	srcDir: string;
 	destDir: string[];
 }
 
-const log = getLogger("Info", "config.vite.vite-plugin-close.js");
+const log = getLogger("config.vite.vite-plugin-close.js");
 
 /**
  *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.

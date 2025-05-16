@@ -14,17 +14,17 @@
 
 import { builtinModules } from "node:module";
 import path from "node:path";
-import { getLogger } from "@prosopo/common";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { wasm } from "@rollup/plugin-wasm";
 import type { Drop } from "esbuild";
 import css from "rollup-plugin-import-css";
 import type { UserConfig } from "vite";
 import { filterDependencies, getDependencies } from "../dependencies.js";
+import { getLogger } from "../logger.js";
 import { default as ClosePlugin } from "./vite-plugin-close-and-copy.js";
 import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js";
 
-const logger = getLogger("Info", "vite.backend.config.js");
+const logger = getLogger("vite.backend.config.js");
 
 export default async function (
 	packageName: string,
