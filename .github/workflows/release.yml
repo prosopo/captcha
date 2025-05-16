@@ -94,27 +94,6 @@ jobs:
                 # put the list of affected pkgs into the env
                 echo "affected=$affected" >> $GITHUB_ENV
 
-            - name: create tags
-              run: |
-                set -x
-                # create a tag for each of the affected packages
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                for pkg in $affected; do
-                  # get the package tag
-                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
-                  # create the tag
-                  git tag -a "$tag" -m "Release $tag"
-                done
-
-                # push all tags to the remote
-                set +e
-                git push --tags
-                # if pushing tags fails then one or more of the pkgs have already been published at their version
-                # this could be:
-                # 1. the package has been published by someone else, in which case you need to merge their new version in before processing changesets
-                # 2. this workflow has run before and already published this version and no changesets have been processed since. If you weren't expecting a version bump, this is the expected behaviour. If you were then you have forgotten to add some changesets.
-
             - name: check tags available on registries
               run: |
                 set -x
@@ -154,6 +133,26 @@ jobs:
                   npm run build:cjs -w "$pkg" --if-present
                   npm run bundle -w "$pkg" --if-present
                 done
+
+            - name: create tags
+              run: |
+                set -x
+                # create a tag for each of the affected packages
+                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+
+                for pkg in $affected; do
+                  # get the package tag
+                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
+                  # create the tag
+                  git tag -a "$tag" -m "Release $tag"
+                done
+
+                # push all tags to the remote
+                git push --tags
+                # if pushing tags fails then one or more of the pkgs have already been published at their version
+                # this could be:
+                # 1. the package has been published by someone else, in which case you need to merge their new version in before processing changesets
+                # 2. this workflow has run before and already published this version and no changesets have been processed since. If you weren't expecting a version bump, this is the expected behaviour. If you were then you have forgotten to add some changesets.
 
             # add repo url + pkg path to each pkg
             # required for pkg to be associated with a repo in the gh registry
