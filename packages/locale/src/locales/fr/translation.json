@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Extension Polkadot non trouvée"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Sélectionnez tout contenant ce qui suit",
+		"SELECT_ALL": "Sélectionnez les images correspondants à",
 		"IF_NONE_CLICK_NEXT": "S'il n'y en a pas, cliquez sur Suivant",
 		"NEXT": "Suivant",
 		"SUBMIT": "Soumettre",
@@ -403,6 +403,22 @@
 		"woodpecker": "pic-vert",
 		"xylophone": "xylophone",
 		"yo-yo": "yo-yo",
-		"zebra": "zèbre"
+		"zebra": "zèbre",
+		"airplanes": "avions",
+		"american-flag": "drapeau américain",
+		"bonsai": "bonsaï",
+		"buddha": "bouddha",
+		"cannon": "canon",
+		"coffee-mug": "tasse à café",
+		"flashlight": "lampe de poche",
+		"floppy-disk": "disquette",
+		"football-helmet": "casque de football américain",
+		"grand-piano": "piano à queue",
+		"jesus-christ": "jésus-christ",
+		"knife": "couteau",
+		"leopards": "léopards",
+		"sword": "épée",
+		"syringe": "seringue",
+		"tambourine": "tambourin"
 	}
 }
