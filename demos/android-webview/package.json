@@ -1,0 +1,18 @@
+{
+	"name": "@prosopo/android-webview",
+	"version": "2.6.0",
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"private": false,
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"scripts": {
+		"clean": "./gradlew clean",
+		"build": "./gradlew assembleDebug",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"type": "module",
+	"sideEffects": false
+}
