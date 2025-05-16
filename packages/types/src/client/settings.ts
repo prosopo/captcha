@@ -21,9 +21,13 @@ export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 
 export const ClientSettingsSchema = object({
-	captchaType: CaptchaTypeSpec.default(captchaTypeDefault),
-	domains: array(string()).default([...domainsDefault]),
-	frictionlessThreshold: number().default(frictionlessThresholdDefault),
-	powDifficulty: number().default(powDifficultyDefault),
+	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
+	domains: array(string())
+		.optional()
+		.default([...domainsDefault]),
+	frictionlessThreshold: number()
+		.optional()
+		.default(frictionlessThresholdDefault),
+	powDifficulty: number().optional().default(powDifficultyDefault),
 });
 export type IUserSettings = output<typeof ClientSettingsSchema>;
