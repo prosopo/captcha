@@ -218,7 +218,7 @@ jobs:
             # packages set to private are no longer private at this point!
 
             - name: slack notification
-              if: always()
+              if: always() && env.affected != '[]'
               run: |
                 set -x
                 # get the list of affected package names
