@@ -338,6 +338,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
+	threshold: { type: Number, required: true, default: 0.8 },
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -470,6 +471,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	getSolutions(datasetId: string): Promise<SolutionRecord[]>;
 
+	getSolutionByCaptchaId(captchaId: string): Promise<SolutionRecord | null>;
+
 	getDataset(datasetId: string): Promise<DatasetWithIds>;
 
 	getRandomCaptcha(
@@ -500,6 +503,7 @@ export interface IProviderDatabase extends IDatabase {
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
 

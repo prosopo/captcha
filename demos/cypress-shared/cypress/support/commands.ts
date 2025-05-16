@@ -197,6 +197,7 @@ function registerSiteKey(captchaType: CaptchaType) {
 					domains: ["0.0.0.0", "localhost", "*"],
 					frictionlessThreshold: 0.5,
 					powDifficulty: 2,
+					imageThreshold: 0.8,
 				};
 
 				// Use cy.request() to ensure Cypress correctly queues the request

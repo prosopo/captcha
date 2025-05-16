@@ -32,7 +32,8 @@ import {
 	type Item,
 	type RawSolution,
 } from "@prosopo/types";
-import { at } from "@prosopo/util";
+import type { SolutionRecord } from "@prosopo/types-database";
+import { at, consoleTableWithWrapping } from "@prosopo/util";
 import { downloadImage } from "./util.js";
 
 export const NO_SOLUTION_VALUE = "NO_SOLUTION";
@@ -134,19 +135,66 @@ export function sortAndComputeHashes(
 /**
  * Take an array of CaptchaSolutions and Captchas and check if the solutions are the same for each pair
  * @param  {CaptchaSolution[]} received
- * @param  {Captcha[]} stored
+ * @param solutions
+ * @param totalImages
+ * @param  {number} threshold the percentage of captchas that must be correct to return true
  * @return {boolean}
  */
 export function compareCaptchaSolutions(
 	received: CaptchaSolution[],
-	stored: Captcha[],
+	solutions: SolutionRecord[],
+	totalImages: number,
+	threshold: number,
 ): boolean {
-	if (received.length && stored.length && received.length === stored.length) {
-		const hashes = sortAndComputeHashes(received, stored);
-		return hashes.every(({ hash, captchaId }) => hash === captchaId);
+	// Sort both arrays by captchaId
+	received.sort(captchaSort);
+	solutions.sort(captchaSort);
+
+	// Check if lengths match
+	if (received.length !== solutions.length) {
+		return false;
 	}
 
-	return false;
+	if (
+		received.length &&
+		solutions.length &&
+		received.length === solutions.length
+	) {
+		// make sure captchaId matches in each pair
+		const captchaIdMismatch = received.some(
+			(captcha, index) =>
+				solutions[index] && captcha.captchaId !== solutions[index].captchaId,
+		);
+		if (captchaIdMismatch) {
+			return false;
+		}
+	}
+
+	// Verify each captcha solution against expected solution
+	return received.every((captcha, index) => {
+		const sortedReceivedSolution = captcha.solution.sort();
+		const targetSolution = solutions[index]?.solution.sort();
+
+		// Ensure target solution exists
+		if (!targetSolution) {
+			return false;
+		}
+
+		// Count incorrect and missing solutions
+		const incorrectCount = sortedReceivedSolution.filter(
+			(solution) => !targetSolution.includes(solution),
+		).length;
+		const missingCount = targetSolution.filter(
+			(solution) => !sortedReceivedSolution.includes(solution),
+		).length;
+
+		// Calculate correctness percentage
+		const totalIncorrect = incorrectCount + missingCount;
+		const percentageCorrect = 1 - totalIncorrect / totalImages;
+
+		// Return whether solution meets threshold
+		return percentageCorrect >= threshold;
+	});
 }
 
 /**
@@ -252,7 +300,7 @@ export function matchItemsToSolutions(
  * @param  {CaptchaSolution} captcha
  * @return {string} the hex string hash
  */
-export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
+export function computeCaptchaSolutionHash(captcha: CaptchaSolution): string {
 	return hexHashArray([
 		captcha.captchaId,
 		captcha.captchaContentId,
