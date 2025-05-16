@@ -12,9 +12,9 @@ Common:
 Client-side (browser):
 
 * `procaptcha-bundle` - Displaying captcha widget
-    - `procaptcha-frictionless`
+    - `procaptcha-frictionless` (Dynamic CAPTCHA that does client-side detection to determine whether to serve PoW/Image)
     - `procaptcha-react` (image)
-    - `procaptcha-pow`
+    - `procaptcha-pow` (Proof-of-Work)
 
 * `widget-skeleton` - Widget skeleton wrapped into the web component
 
@@ -74,13 +74,13 @@ cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 The DB is necessary for all kind of the tests. Since the DB is docked, to start the DB service run the following:
 
 ```
-sudo docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
 ```
 
 Note: After the testing is done, stop it using the `down` command:
 
 ```
-sudo docker compose --file ./docker/docker-compose.test.yml down
+docker compose --file ./docker/docker-compose.test.yml down
 ```
 
 ### 4.3) DB population

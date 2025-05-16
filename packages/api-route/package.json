@@ -20,6 +20,7 @@
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
 	"dependencies": {
+		"@prosopo/common": "2.6.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
