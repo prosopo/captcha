@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.5.5",
+	"version": "2.6.0",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -14,9 +14,9 @@
 		"build": "npx vite build"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.0.0",
+		"@prosopo/procaptcha-integration-build-config": "1.1.0",
 		"del-cli": "6.0.0",
-		"@prosopo/types": "2.5.5"
+		"@prosopo/types": "2.6.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
