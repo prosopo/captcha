@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.5.5",
+	"version": "2.6.0",
 	"description": "",
 	"private": true,
 	"scripts": {
@@ -13,6 +13,8 @@
 		"scripts": "node dist/scripts.js",
 		"license": "node dist/license.js check",
 		"license:fix": "node dist/license.js license",
+		"redirects": "node dist/redirects.js",
+		"redirects:fix": "node dist/redirects.js fix",
 		"build:cjs": "echo 'no cjs build'"
 	},
 	"author": "",
@@ -36,7 +38,7 @@
 		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/util": "2.5.5",
+		"@prosopo/util": "2.6.0",
 		"express": "4.21.2",
 		"fast-glob": "3.3.2",
 		"yargs": "17.7.2",
