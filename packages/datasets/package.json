@@ -32,14 +32,19 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": [
+				"dist/types"
+			],
+			"captcha": [
+				"dist/captcha"
+			]
 		}
 	},
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "2.6.0",
 		"@prosopo/types": "2.6.0",
+		"@prosopo/types-database": "2.6.0",
 		"@prosopo/util": "2.6.0",
 		"express": "4.21.2"
 	},
