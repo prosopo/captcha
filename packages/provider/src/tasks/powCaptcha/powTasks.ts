@@ -111,13 +111,6 @@ export class PowCaptchaManager extends CaptchaManager {
 		const timestamp = Number.parseInt(at(challengeSplit, 0));
 		const userAccount = at(challengeSplit, 1);
 
-		checkPowSignature(
-			timestamp.toString(),
-			userTimestampSignature,
-			userAccount,
-			ApiParams.timestamp,
-		);
-
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
