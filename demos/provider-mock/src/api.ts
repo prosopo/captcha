@@ -221,6 +221,7 @@ export function prosopoRouter(): Router {
 				.map((ext) => ext.toString(16).padStart(4, "0"))
 				.sort()
 				.join(",");
+			console.log("Sorted Extensions:", sortedExtensions);
 			const extensionHash = createHash("sha256")
 				.update(sortedExtensions)
 				.digest("hex")
