@@ -19,11 +19,13 @@ export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
+export const imageThresholdDefault = 0.8;
 
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.default(captchaTypeDefault),
 	domains: array(string()).default([...domainsDefault]),
 	frictionlessThreshold: number().default(frictionlessThresholdDefault),
 	powDifficulty: number().default(powDifficultyDefault),
+	imageThreshold: number().default(imageThresholdDefault),
 });
 export type IUserSettings = output<typeof ClientSettingsSchema>;
