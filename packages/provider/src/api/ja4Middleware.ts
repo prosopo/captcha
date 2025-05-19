@@ -111,13 +111,15 @@ const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 			.digest("hex")
 			.slice(0, 12);
 
-		// Hash of sorted extensions
-		const sortedExtensions = extensions
-			.map((ext) => ext.toString(16).padStart(4, "0"))
-			.sort()
-			.join(",");
+		// Convert to decimal, sort numerically, join with dashes
+		const decimalString = extensions
+			.map((ext) => ext.toString(10)) // decimal (not hex)
+			.sort((a, b) => Number(a) - Number(b))
+			.join("-");
+
+		// Create SHA256 hash and truncate
 		const extensionHash = createHash("sha256")
-			.update(sortedExtensions)
+			.update(decimalString)
 			.digest("hex")
 			.slice(0, 12);
 
