@@ -14,10 +14,8 @@
 		"build": "npx vite build"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": ">=2.6.0"
-	},
-	"peerDependencies": {
-		"vue": "^3.5.13"
+		"@prosopo/procaptcha-wrapper": "2.6.0",
+		"vue": "3.5.13"
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.0",
