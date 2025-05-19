@@ -29,6 +29,7 @@ const defaultUserSettings: IUserSettings = {
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
+	imageThreshold: 0.8,
 };
 
 describe("CaptchaManager", () => {
