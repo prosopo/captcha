@@ -111,10 +111,10 @@ const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 			.digest("hex")
 			.slice(0, 12);
 
-		// Convert to decimal, sort numerically, join with dashes
+		// Sort numerically, convert to decimal strings, join with dashes
 		const decimalString = extensions
-			.map((ext) => ext.toString(10)) // decimal (not hex)
-			.sort((a, b) => Number(a) - Number(b))
+			.sort((a, b) => a - b) // sort as numbers
+			.map((ext) => ext.toString(10)) // convert to decimal strings
 			.join("-");
 
 		// Create SHA256 hash and truncate
