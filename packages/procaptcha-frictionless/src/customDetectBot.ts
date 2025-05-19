@@ -23,13 +23,6 @@ import type {
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
 
-/**
- * Helper function to add timeout to async operations
- * @param promise The promise to timeout
- * @param ms Timeout in milliseconds
- * @param errorMessage Custom error message for timeout
- * @returns The promise result or throws timeout error
- */
 export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
