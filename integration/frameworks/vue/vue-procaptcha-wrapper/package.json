@@ -11,7 +11,8 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "npx vite build"
+		"build": "vue-tsc",
+		"bundle": "vite build"
 	},
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": "2.6.0",
