@@ -1,5 +1,13 @@
 # @prosopo/cypress-shared
 
+## 2.6.1
+
+### Patch Changes
+
+- 52feffc: Adjustable difficulty img captcha
+- Updated dependencies [52feffc]
+  - @prosopo/types@2.6.1
+
 ## 2.6.0
 
 ### Minor Changes
