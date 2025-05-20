@@ -136,7 +136,6 @@
 <script type="module">
     // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
     import { render } from "%VITE_BUNDLE_URL%"
-    import { CaptchaType } from "@prosopo/types";
 
     // Define a callback function to be called when the CAPTCHA is verified
     function onCaptchaVerified(output) {
@@ -151,7 +150,7 @@
     // Render the CAPTCHA explicitly on a container with id "procaptcha-container"
     render(captchaContainer, {
         siteKey: import.meta.env.PROSOPO_SITE_KEY,
-        captchaType: import.meta.env.CAPTCHA_TYPE || CaptchaType.frictionless,
+        captchaType: import.meta.env.CAPTCHA_TYPE || "frictionless",
         theme: 'dark',
         callback: onCaptchaVerified,
         "failed-callback": function () {
