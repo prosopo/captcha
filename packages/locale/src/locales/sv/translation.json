@@ -1,128 +1,21 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Polkadot-förlängning hittades inte"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Välj alla som innehåller följande",
-		"IF_NONE_CLICK_NEXT": "Om det inte finns några, klicka på Nästa",
-		"NEXT": "Nästa",
-		"SUBMIT": "Skicka in",
-		"CANCEL": "Avbryt",
-		"I_AM_HUMAN": "Jag är en människa",
-		"NO_ACCOUNTS_FOUND": "Inga konton hittades",
-		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
-		"NO_EXTENSION_FOUND": "Ingen förlängning hittades"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Misslyckades att ladda JSON-fil",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vänligen ange mnemonic i miljövariabler",
-		"NO_MNEMONIC_OR_SEED": "Ingen mnemonic eller seed angiven",
-		"CANT_FIND_KEYRINGPAIR": "Kan inte hitta keyringpair för {{address}}",
-		"ENVIRONMENT_NOT_READY": "Miljön är inte redo",
-		"INVALID_SIGNATURE": "Ogiltig signatur",
-		"SITE_KEY_MISSING": "SITE KEY saknas",
-		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
-		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
-	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Misslyckades att koda ogiltig adress",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-lösningens åtagande finns inte",
-		"SIGNER_UNDEFINED": "Signerare ospecificerad",
-		"CANNOT_FIND_KEYPAIR": "Kan inte hitta keypair",
-		"INVALID_DATA_FORMAT": "Ogiltigt dataformat"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Okänd miljö begärd",
-		"INVALID_CAPTCHA_NUMBER": "Vänligen konfigurera captcha-konfigurationer korrekt",
-		"INVALID_LOG_LEVEL": "Ogiltig loggnivå",
-		"INVALID_PACKAGE_DIR": "Ogiltig paketkatalog"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Fel vid tolkning av dataset",
-		"SOLUTION_PARSE_ERROR": "Fel vid tolkning av dataset",
-		"HASH_ERROR": "Fel vid hasning av dataset",
-		"DATASET_ID_UNDEFINED": "Dataset-id ospecificerat",
-		"NOT_ENOUGH_LABELS": "Inte tillräckligt med etiketter",
-		"NOT_ENOUGH_IMAGES": "Inte tillräckligt med bilder",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Antalet captchas i dataset är mindre än konfigurerat antal captchas",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Antalet lösningar i dataset är mindre än konfigurerat antal lösningar",
-		"DUPLICATE_IMAGE": "Duplikatbild upptäckt",
-		"MERKLE_ERROR": "Fel vid skapande av Merkle-träd"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Misslyckades att importera databasmotor",
-		"DATABASE_UNDEFINED": "Databasclienten är inte ansluten",
-		"DATABASE_HOST_UNDEFINED": "Databasens värdadress är inte definierad",
-		"DATASET_LOAD_FAILED": "Datasetladdning misslyckades",
-		"DATASET_GET_FAILED": "Misslyckades att hämta dataset",
-		"CAPTCHA_GET_FAILED": "Misslyckades att hämta captcha",
-		"CAPTCHA_UPDATE_FAILED": "Misslyckades att uppdatera captcha",
-		"IMAGE_GET_FAILED": "Misslyckades att hämta bild",
-		"PENDING_RECORD_NOT_FOUND": "Inget väntande post hittades",
-		"INVALID_HASH": "Ogiltig hash",
-		"SOLUTION_GET_FAILED": "Misslyckades att hämta lösning",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Inga dataset hittades med nödvändigt antal lösningar",
-		"SOLUTION_APPROVE_FAILED": "Misslyckades att godkänna lösning",
-		"SOLUTION_FLAG_FAILED": "Misslyckades att flagga lösning som behandlad",
-		"TABLES_UNDEFINED": "Tabeller ospecificerade",
-		"CONNECTION_UNDEFINED": "Anslutning ospecificerad",
-		"COMMITMENT_FLAG_FAILED": "Misslyckades att flagga åtagande som behandlad",
-		"UNKNOWN": "Okänt databasfel"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Fel vid tolkning av captcha",
-		"INVALID_CAPTCHA_ID": "Ogiltigt captcha-id",
-		"INVALID_ITEM_FORMAT": "Endast bild- och textföremålstyper tillåtna",
-		"INVALID_SOLUTION_TYPE": "Ogiltig lösningstyp",
-		"INVALID_ITEM_HASH": "Ogiltig föremålshash",
-		"DIFFERENT_DATASET_IDS": "Dataset-IDs-en-matchar-inte",
-		"ID_MISMATCH": "captcha-id-matchning",
-		"MISSING_ITEM_HASH": "saknad-artikel-hash",
-		"INVALID_CAPTCHA_CHALLENGE": "Ogiltig CAPTCHA-utmaning",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp-användarösning-hittades-inte",
-		"NO_CAPTCHA": "Ingen CAPTCHA hittades",
-		"NO_SESSION_FOUND": "Inget-session-hittades",
-		"INVALID_TOKEN": "Ogiltig token",
-		"INVALID_SOLUTION": "Ogiltig lösning",
-		"DECRYPTION_ERROR": "Fel vid avkryptering"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Du svarade fel på en eller flera CAPTCHA: er. Försök igen",
-		"CAPTCHA_PASSED": "Du svarade korrekt på CAPTCHA: erna",
-		"BAD_REQUEST": "Felaktig-begäran",
-		"USER_VERIFIED": "Användaren-verifierad",
-		"USER_NOT_VERIFIED": "Användaren-inte-verifierad",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Användaren-inte-verifierad. Captcha-lösningen har gått ut.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Användaren-inte-verifierad. Ingen captcha-lösning hittades.",
-		"USER_ALREADY_VERIFIED": "Denna lösning har redan verifierats. Användaren bör slutföra en ny captcha",
-		"UNKNOWN": "Okänt API-fel",
-		"SITE_KEY_NOT_REGISTERED": "Site-nyckel-inte-registrerad",
-		"INCORRECT_CAPTCHA_TYPE": "Fel CAPTCHA-typ",
-		"INVALID_SITE_KEY": "Ogiltig site-nyckel",
-		"UNAUTHORIZED_ORIGIN_URL": "Obehörig ursprungs-URL",
-		"INVALID_IP": "Ogiltig IP",
-		"INVALID_URL": "Ogiltig URL",
-		"INVALID_BODY": "Ogiltig body",
-		"PARSE_ERROR": "Fel vid tolkning av förfrågan"
-	},
-	"CLI": {
-		"PARAMETER_ERROR": "Ogiltig parameter"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY-saknas-i-.env-filen",
-		"PROVIDER_NO_CAPTCHA": "Inga captchas returnerades från leverantören",
-		"MISSING_PROVIDER_PAIR": "Saknad-leverantör-par",
-		"MISSING_ENV_VARIABLE": "Saknad-miljövariabel",
-		"GENERAL": "Allmänt utvecklarfel, se sammanhang",
-		"MISSING_SECRET_KEY": "Saknad hemlig nyckel",
-		"METHOD_NOT_IMPLEMENTED": "Metod-inte-implementerad"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "Fil-inte-hittad",
-		"FILE_ALREADY_EXISTS": "Fil-redan-existerar",
-		"INVALID_DIR_FORMAT": "Ogiltigt mappformat"
-	},
 	"TARGET": {
+		"airplanes": "flygplan",
+		"american-flag": "amerikanska flaggan",
+		"bonsai": "bonsai",
+		"buddha": "Buddha",
+		"cannon": "kanon",
+		"coffee-mug": "kaffemugg",
+		"flashlight": "ficklampa",
+		"floppy-disk": "diskett",
+		"football-helmet": "fotbollshjälm",
+		"grand-piano": "flygel",
+		"jesus-christ": "Jesus Kristus",
+		"knife": "kniv",
+		"leopards": "leoparder",
+		"sword": "svärd",
+		"syringe": "spruta",
+		"tambourine": "tamburin",
 		"bird": "fågel",
 		"bus": "buss",
 		"car": "bil",
@@ -404,5 +297,128 @@
 		"xylophone": "xylofon",
 		"yo-yo": "jojo",
 		"zebra": "zebra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Polkadot-förlängning hittades inte"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Välj alla som innehåller följande",
+		"IF_NONE_CLICK_NEXT": "Om det inte finns några, klicka på Nästa",
+		"NEXT": "Nästa",
+		"SUBMIT": "Skicka in",
+		"CANCEL": "Avbryt",
+		"I_AM_HUMAN": "Jag är en människa",
+		"NO_ACCOUNTS_FOUND": "Inga konton hittades",
+		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
+		"NO_EXTENSION_FOUND": "Ingen förlängning hittades"
+	},
+	"GENERAL": {
+		"JSON_LOAD_FAILED": "Misslyckades att ladda JSON-fil",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vänligen ange mnemonic i miljövariabler",
+		"NO_MNEMONIC_OR_SEED": "Ingen mnemonic eller seed angiven",
+		"CANT_FIND_KEYRINGPAIR": "Kan inte hitta keyringpair för {{address}}",
+		"ENVIRONMENT_NOT_READY": "Miljön är inte redo",
+		"INVALID_SIGNATURE": "Ogiltig signatur",
+		"SITE_KEY_MISSING": "SITE KEY saknas",
+		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
+		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Misslyckades att koda ogiltig adress",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-lösningens åtagande finns inte",
+		"SIGNER_UNDEFINED": "Signerare ospecificerad",
+		"CANNOT_FIND_KEYPAIR": "Kan inte hitta keypair",
+		"INVALID_DATA_FORMAT": "Ogiltigt dataformat"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Okänd miljö begärd",
+		"INVALID_CAPTCHA_NUMBER": "Vänligen konfigurera captcha-konfigurationer korrekt",
+		"INVALID_LOG_LEVEL": "Ogiltig loggnivå",
+		"INVALID_PACKAGE_DIR": "Ogiltig paketkatalog"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Fel vid tolkning av dataset",
+		"SOLUTION_PARSE_ERROR": "Fel vid tolkning av dataset",
+		"HASH_ERROR": "Fel vid hasning av dataset",
+		"DATASET_ID_UNDEFINED": "Dataset-id ospecificerat",
+		"NOT_ENOUGH_LABELS": "Inte tillräckligt med etiketter",
+		"NOT_ENOUGH_IMAGES": "Inte tillräckligt med bilder",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Antalet captchas i dataset är mindre än konfigurerat antal captchas",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Antalet lösningar i dataset är mindre än konfigurerat antal lösningar",
+		"DUPLICATE_IMAGE": "Duplikatbild upptäckt",
+		"MERKLE_ERROR": "Fel vid skapande av Merkle-träd"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Misslyckades att importera databasmotor",
+		"DATABASE_UNDEFINED": "Databasclienten är inte ansluten",
+		"DATABASE_HOST_UNDEFINED": "Databasens värdadress är inte definierad",
+		"DATASET_LOAD_FAILED": "Datasetladdning misslyckades",
+		"DATASET_GET_FAILED": "Misslyckades att hämta dataset",
+		"CAPTCHA_GET_FAILED": "Misslyckades att hämta captcha",
+		"CAPTCHA_UPDATE_FAILED": "Misslyckades att uppdatera captcha",
+		"IMAGE_GET_FAILED": "Misslyckades att hämta bild",
+		"PENDING_RECORD_NOT_FOUND": "Inget väntande post hittades",
+		"INVALID_HASH": "Ogiltig hash",
+		"SOLUTION_GET_FAILED": "Misslyckades att hämta lösning",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Inga dataset hittades med nödvändigt antal lösningar",
+		"SOLUTION_APPROVE_FAILED": "Misslyckades att godkänna lösning",
+		"SOLUTION_FLAG_FAILED": "Misslyckades att flagga lösning som behandlad",
+		"TABLES_UNDEFINED": "Tabeller ospecificerade",
+		"CONNECTION_UNDEFINED": "Anslutning ospecificerad",
+		"COMMITMENT_FLAG_FAILED": "Misslyckades att flagga åtagande som behandlad",
+		"UNKNOWN": "Okänt databasfel"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Fel vid tolkning av captcha",
+		"INVALID_CAPTCHA_ID": "Ogiltigt captcha-id",
+		"INVALID_ITEM_FORMAT": "Endast bild- och textföremålstyper tillåtna",
+		"INVALID_SOLUTION_TYPE": "Ogiltig lösningstyp",
+		"INVALID_ITEM_HASH": "Ogiltig föremålshash",
+		"DIFFERENT_DATASET_IDS": "Dataset-IDs-en-matchar-inte",
+		"ID_MISMATCH": "captcha-id-matchning",
+		"MISSING_ITEM_HASH": "saknad-artikel-hash",
+		"INVALID_CAPTCHA_CHALLENGE": "Ogiltig CAPTCHA-utmaning",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp-användarösning-hittades-inte",
+		"NO_CAPTCHA": "Ingen CAPTCHA hittades",
+		"NO_SESSION_FOUND": "Inget-session-hittades",
+		"INVALID_TOKEN": "Ogiltig token",
+		"INVALID_SOLUTION": "Ogiltig lösning",
+		"DECRYPTION_ERROR": "Fel vid avkryptering"
+	},
+	"API": {
+		"CAPTCHA_FAILED": "Du svarade fel på en eller flera CAPTCHA: er. Försök igen",
+		"CAPTCHA_PASSED": "Du svarade korrekt på CAPTCHA: erna",
+		"BAD_REQUEST": "Felaktig-begäran",
+		"USER_VERIFIED": "Användaren-verifierad",
+		"USER_NOT_VERIFIED": "Användaren-inte-verifierad",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Användaren-inte-verifierad. Captcha-lösningen har gått ut.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Användaren-inte-verifierad. Ingen captcha-lösning hittades.",
+		"USER_ALREADY_VERIFIED": "Denna lösning har redan verifierats. Användaren bör slutföra en ny captcha",
+		"UNKNOWN": "Okänt API-fel",
+		"SITE_KEY_NOT_REGISTERED": "Site-nyckel-inte-registrerad",
+		"INCORRECT_CAPTCHA_TYPE": "Fel CAPTCHA-typ",
+		"INVALID_SITE_KEY": "Ogiltig site-nyckel",
+		"UNAUTHORIZED_ORIGIN_URL": "Obehörig ursprungs-URL",
+		"INVALID_IP": "Ogiltig IP",
+		"INVALID_URL": "Ogiltig URL",
+		"INVALID_BODY": "Ogiltig body",
+		"PARSE_ERROR": "Fel vid tolkning av förfrågan"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Ogiltig parameter"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY-saknas-i-.env-filen",
+		"PROVIDER_NO_CAPTCHA": "Inga captchas returnerades från leverantören",
+		"MISSING_PROVIDER_PAIR": "Saknad-leverantör-par",
+		"MISSING_ENV_VARIABLE": "Saknad-miljövariabel",
+		"GENERAL": "Allmänt utvecklarfel, se sammanhang",
+		"MISSING_SECRET_KEY": "Saknad hemlig nyckel",
+		"METHOD_NOT_IMPLEMENTED": "Metod-inte-implementerad"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Fil-inte-hittad",
+		"FILE_ALREADY_EXISTS": "Fil-redan-existerar",
+		"INVALID_DIR_FORMAT": "Ogiltigt mappformat"
 	}
 }

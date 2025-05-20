@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // Vite plugin to inject navigation into HTML files
-import fs from "node:fs";
+
 import path from "node:path";
 import {
 	type IndexHtmlTransformContext,

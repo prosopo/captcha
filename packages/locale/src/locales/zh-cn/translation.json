@@ -1,128 +1,21 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "找不到Polkadot插件"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "选择所有包含以下内容",
-		"IF_NONE_CLICK_NEXT": "如果没有，请点击下一个",
-		"NEXT": "下一个",
-		"SUBMIT": "提交",
-		"CANCEL": "取消",
-		"I_AM_HUMAN": "我是人类",
-		"NO_ACCOUNTS_FOUND": "找不到帐户",
-		"ACCOUNT_NOT_FOUND": "找不到帐户",
-		"NO_EXTENSION_FOUND": "找不到扩展"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "无法加载JSON文件",
-		"MNEMONIC_UNDEFINED": "未定义助记词。请在环境变量中设置助记词",
-		"NO_MNEMONIC_OR_SEED": "没有提供助记词或种子",
-		"CANT_FIND_KEYRINGPAIR": "找不到{{address}}的密钥对",
-		"ENVIRONMENT_NOT_READY": "环境尚未准备好",
-		"INVALID_SIGNATURE": "无效的签名",
-		"SITE_KEY_MISSING": "缺少SITE KEY",
-		"ACCOUNT_NOT_FOUND": "找不到帐户",
-		"INVALID_TIMESTAMP": "无效的时间戳"
-	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "无法编码无效地址",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "验证码解决方案承诺不存在",
-		"SIGNER_UNDEFINED": "签署者未定义",
-		"CANNOT_FIND_KEYPAIR": "找不到密钥对",
-		"INVALID_DATA_FORMAT": "无效的数据格式"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "请求的环境未知",
-		"INVALID_CAPTCHA_NUMBER": "请正确配置验证码配置",
-		"INVALID_LOG_LEVEL": "无效的日志级别",
-		"INVALID_PACKAGE_DIR": "无效的包目录"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "解析数据集时出错",
-		"SOLUTION_PARSE_ERROR": "解析数据集时出错",
-		"HASH_ERROR": "哈希数据集时出错",
-		"DATASET_ID_UNDEFINED": "数据集ID未定义",
-		"NOT_ENOUGH_LABELS": "标签不足",
-		"NOT_ENOUGH_IMAGES": "图像不足",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "数据集中的验证码数量少于配置的验证码数量",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "数据集中的解决方案数量少于配置的解决方案数量",
-		"DUPLICATE_IMAGE": "检测到重复图像",
-		"MERKLE_ERROR": "创建默克尔树时出错"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "导入数据库引擎失败",
-		"DATABASE_UNDEFINED": "数据库客户端未连接",
-		"DATABASE_HOST_UNDEFINED": "未定义数据库主机地址",
-		"DATASET_LOAD_FAILED": "数据集加载失败",
-		"DATASET_GET_FAILED": "获取数据集失败",
-		"CAPTCHA_GET_FAILED": "获取验证码失败",
-		"CAPTCHA_UPDATE_FAILED": "更新验证码失败",
-		"IMAGE_GET_FAILED": "获取图像失败",
-		"PENDING_RECORD_NOT_FOUND": "未找到待处理记录",
-		"INVALID_HASH": "无效的哈希",
-		"SOLUTION_GET_FAILED": "获取解决方案失败",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "找不到具有所需数量解决方案的数据集",
-		"SOLUTION_APPROVE_FAILED": "批准解决方案失败",
-		"SOLUTION_FLAG_FAILED": "标记解决方案为已处理失败",
-		"TABLES_UNDEFINED": "未定义表",
-		"CONNECTION_UNDEFINED": "连接未定义",
-		"COMMITMENT_FLAG_FAILED": "标记承诺为已处理失败",
-		"UNKNOWN": "未知数据库错误"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "解析验证码时出错",
-		"INVALID_CAPTCHA_ID": "无效的验证码ID",
-		"INVALID_ITEM_FORMAT": "仅允许图像和文本项目类型",
-		"INVALID_SOLUTION_TYPE": "无效的解决方案类型",
-		"INVALID_ITEM_HASH": "无效的项目哈希",
-		"DIFFERENT_DATASET_IDS": "数据集ID不匹配",
-		"ID_MISMATCH": "验证码ID不匹配",
-		"MISSING_ITEM_HASH": "缺少项目哈希",
-		"INVALID_CAPTCHA_CHALLENGE": "无效的验证码挑战",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "找不到Dapp用户解决方案",
-		"NO_CAPTCHA": "找不到验证码",
-		"NO_SESSION_FOUND": "找不到会话",
-		"INVALID_TOKEN": "无效的令牌",
-		"INVALID_SOLUTION": "无效的解决方案",
-		"DECRYPTION_ERROR": "解密错误"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "您回答了一个或多个验证码不正确。请重试",
-		"CAPTCHA_PASSED": "您正确回答了验证码",
-		"BAD_REQUEST": "错误的请求",
-		"USER_VERIFIED": "用户已验证",
-		"USER_NOT_VERIFIED": "用户未验证",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "用户未验证。验证码解决方案已过期。",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "用户未验证。找不到验证码解决方案。",
-		"USER_ALREADY_VERIFIED": "此解决方案已经验证。用户应完成新的验证码。",
-		"UNKNOWN": "未知API错误",
-		"SITE_KEY_NOT_REGISTERED": "站点密钥未注册",
-		"INCORRECT_CAPTCHA_TYPE": "CAPTCHA类型不正确",
-		"INVALID_SITE_KEY": "无效的站点密钥",
-		"UNAUTHORIZED_ORIGIN_URL": "未授权的来源URL",
-		"INVALID_IP": "无效的IP",
-		"INVALID_URL": "无效的URL",
-		"INVALID_BODY": "无效的主体",
-		"PARSE_ERROR": "解析请求时出错"
-	},
-	"CLI": {
-		"PARAMETER_ERROR": "无效的参数"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "在.env文件中未设置PROSOPO_SITE_KEY",
-		"PROVIDER_NO_CAPTCHA": "提供商未返回验证码",
-		"MISSING_PROVIDER_PAIR": "缺少提供商对",
-		"MISSING_ENV_VARIABLE": "缺少环境变量",
-		"GENERAL": "一般开发错误，请参考上下文",
-		"MISSING_SECRET_KEY": "缺少秘钥",
-		"METHOD_NOT_IMPLEMENTED": "方法未实现"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "未找到文件",
-		"FILE_ALREADY_EXISTS": "文件已存在",
-		"INVALID_DIR_FORMAT": "无效的目录格式"
-	},
 	"TARGET": {
+		"airplanes": "飞机",
+		"american-flag": "美国国旗",
+		"bonsai": "盆景",
+		"buddha": "佛陀",
+		"cannon": "大炮",
+		"coffee-mug": "咖啡杯",
+		"flashlight": "手电筒",
+		"floppy-disk": "软盘",
+		"football-helmet": "橄榄球头盔",
+		"grand-piano": "大钢琴",
+		"jesus-christ": "耶稣基督",
+		"knife": "刀",
+		"leopards": "豹子",
+		"sword": "剑",
+		"syringe": "注射器",
+		"tambourine": "铃鼓",
 		"bird": "鸟",
 		"bus": "公共汽车",
 		"car": "轿车",
@@ -404,5 +297,128 @@
 		"xylophone": "木琴",
 		"yo-yo": "悠悠球",
 		"zebra": "斑马"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "找不到Polkadot插件"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "选择所有包含以下内容",
+		"IF_NONE_CLICK_NEXT": "如果没有，请点击下一个",
+		"NEXT": "下一个",
+		"SUBMIT": "提交",
+		"CANCEL": "取消",
+		"I_AM_HUMAN": "我是人类",
+		"NO_ACCOUNTS_FOUND": "找不到帐户",
+		"ACCOUNT_NOT_FOUND": "找不到帐户",
+		"NO_EXTENSION_FOUND": "找不到扩展"
+	},
+	"GENERAL": {
+		"JSON_LOAD_FAILED": "无法加载JSON文件",
+		"MNEMONIC_UNDEFINED": "未定义助记词。请在环境变量中设置助记词",
+		"NO_MNEMONIC_OR_SEED": "没有提供助记词或种子",
+		"CANT_FIND_KEYRINGPAIR": "找不到{{address}}的密钥对",
+		"ENVIRONMENT_NOT_READY": "环境尚未准备好",
+		"INVALID_SIGNATURE": "无效的签名",
+		"SITE_KEY_MISSING": "缺少SITE KEY",
+		"ACCOUNT_NOT_FOUND": "找不到帐户",
+		"INVALID_TIMESTAMP": "无效的时间戳"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "无法编码无效地址",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "验证码解决方案承诺不存在",
+		"SIGNER_UNDEFINED": "签署者未定义",
+		"CANNOT_FIND_KEYPAIR": "找不到密钥对",
+		"INVALID_DATA_FORMAT": "无效的数据格式"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "请求的环境未知",
+		"INVALID_CAPTCHA_NUMBER": "请正确配置验证码配置",
+		"INVALID_LOG_LEVEL": "无效的日志级别",
+		"INVALID_PACKAGE_DIR": "无效的包目录"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "解析数据集时出错",
+		"SOLUTION_PARSE_ERROR": "解析数据集时出错",
+		"HASH_ERROR": "哈希数据集时出错",
+		"DATASET_ID_UNDEFINED": "数据集ID未定义",
+		"NOT_ENOUGH_LABELS": "标签不足",
+		"NOT_ENOUGH_IMAGES": "图像不足",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "数据集中的验证码数量少于配置的验证码数量",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "数据集中的解决方案数量少于配置的解决方案数量",
+		"DUPLICATE_IMAGE": "检测到重复图像",
+		"MERKLE_ERROR": "创建默克尔树时出错"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "导入数据库引擎失败",
+		"DATABASE_UNDEFINED": "数据库客户端未连接",
+		"DATABASE_HOST_UNDEFINED": "未定义数据库主机地址",
+		"DATASET_LOAD_FAILED": "数据集加载失败",
+		"DATASET_GET_FAILED": "获取数据集失败",
+		"CAPTCHA_GET_FAILED": "获取验证码失败",
+		"CAPTCHA_UPDATE_FAILED": "更新验证码失败",
+		"IMAGE_GET_FAILED": "获取图像失败",
+		"PENDING_RECORD_NOT_FOUND": "未找到待处理记录",
+		"INVALID_HASH": "无效的哈希",
+		"SOLUTION_GET_FAILED": "获取解决方案失败",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "找不到具有所需数量解决方案的数据集",
+		"SOLUTION_APPROVE_FAILED": "批准解决方案失败",
+		"SOLUTION_FLAG_FAILED": "标记解决方案为已处理失败",
+		"TABLES_UNDEFINED": "未定义表",
+		"CONNECTION_UNDEFINED": "连接未定义",
+		"COMMITMENT_FLAG_FAILED": "标记承诺为已处理失败",
+		"UNKNOWN": "未知数据库错误"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "解析验证码时出错",
+		"INVALID_CAPTCHA_ID": "无效的验证码ID",
+		"INVALID_ITEM_FORMAT": "仅允许图像和文本项目类型",
+		"INVALID_SOLUTION_TYPE": "无效的解决方案类型",
+		"INVALID_ITEM_HASH": "无效的项目哈希",
+		"DIFFERENT_DATASET_IDS": "数据集ID不匹配",
+		"ID_MISMATCH": "验证码ID不匹配",
+		"MISSING_ITEM_HASH": "缺少项目哈希",
+		"INVALID_CAPTCHA_CHALLENGE": "无效的验证码挑战",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "找不到Dapp用户解决方案",
+		"NO_CAPTCHA": "找不到验证码",
+		"NO_SESSION_FOUND": "找不到会话",
+		"INVALID_TOKEN": "无效的令牌",
+		"INVALID_SOLUTION": "无效的解决方案",
+		"DECRYPTION_ERROR": "解密错误"
+	},
+	"API": {
+		"CAPTCHA_FAILED": "您回答了一个或多个验证码不正确。请重试",
+		"CAPTCHA_PASSED": "您正确回答了验证码",
+		"BAD_REQUEST": "错误的请求",
+		"USER_VERIFIED": "用户已验证",
+		"USER_NOT_VERIFIED": "用户未验证",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "用户未验证。验证码解决方案已过期。",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "用户未验证。找不到验证码解决方案。",
+		"USER_ALREADY_VERIFIED": "此解决方案已经验证。用户应完成新的验证码。",
+		"UNKNOWN": "未知API错误",
+		"SITE_KEY_NOT_REGISTERED": "站点密钥未注册",
+		"INCORRECT_CAPTCHA_TYPE": "CAPTCHA类型不正确",
+		"INVALID_SITE_KEY": "无效的站点密钥",
+		"UNAUTHORIZED_ORIGIN_URL": "未授权的来源URL",
+		"INVALID_IP": "无效的IP",
+		"INVALID_URL": "无效的URL",
+		"INVALID_BODY": "无效的主体",
+		"PARSE_ERROR": "解析请求时出错"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "无效的参数"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "在.env文件中未设置PROSOPO_SITE_KEY",
+		"PROVIDER_NO_CAPTCHA": "提供商未返回验证码",
+		"MISSING_PROVIDER_PAIR": "缺少提供商对",
+		"MISSING_ENV_VARIABLE": "缺少环境变量",
+		"GENERAL": "一般开发错误，请参考上下文",
+		"MISSING_SECRET_KEY": "缺少秘钥",
+		"METHOD_NOT_IMPLEMENTED": "方法未实现"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "未找到文件",
+		"FILE_ALREADY_EXISTS": "文件已存在",
+		"INVALID_DIR_FORMAT": "无效的目录格式"
 	}
 }
