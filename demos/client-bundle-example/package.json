@@ -15,7 +15,8 @@
 	},
 	"version": "2.6.0",
 	"dependencies": {
-		"@prosopo/types": "2.6.0"
+		"@prosopo/types": "2.6.0",
+		"@prosopo/locale": "2.6.0"
 	},
 	"devDependencies": {
 		"@prosopo/dotenv": "2.6.0",
