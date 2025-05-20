@@ -1,5 +1,19 @@
 # @prosopo/cli
 
+## 2.6.1
+
+### Patch Changes
+
+- 52feffc: Adjustable difficulty img captcha
+- Updated dependencies [52feffc]
+- Updated dependencies [39a9826]
+  - @prosopo/provider@2.7.0
+  - @prosopo/types@2.6.1
+  - @prosopo/env@2.6.1
+  - @prosopo/api@2.6.1
+  - @prosopo/keyring@2.6.1
+  - @prosopo/user-access-policy@2.6.1
+
 ## 2.6.0
 
 ### Minor Changes

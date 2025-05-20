@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 2.6.1
+
+### Patch Changes
+
+- 52feffc: Adjustable difficulty img captcha
+
 ## 2.6.0
 
 ### Minor Changes

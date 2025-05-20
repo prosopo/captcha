@@ -1,5 +1,22 @@
 # @prosopo/scripts
 
+## 2.6.1
+
+### Patch Changes
+
+- 52feffc: Adjustable difficulty img captcha
+- Updated dependencies [52feffc]
+- Updated dependencies [39a9826]
+  - @prosopo/types-database@2.6.1
+  - @prosopo/datasets@2.6.1
+  - @prosopo/provider@2.7.0
+  - @prosopo/types@2.6.1
+  - @prosopo/cli@2.6.1
+  - @prosopo/env@2.6.1
+  - @prosopo/types-env@2.6.1
+  - @prosopo/account@2.6.1
+  - @prosopo/keyring@2.6.1
+
 ## 2.6.0
 
 ### Minor Changes

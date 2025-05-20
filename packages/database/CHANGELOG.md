@@ -1,5 +1,15 @@
 # @prosopo/database
 
+## 2.6.1
+
+### Patch Changes
+
+- 52feffc: Adjustable difficulty img captcha
+- Updated dependencies [52feffc]
+  - @prosopo/types-database@2.6.1
+  - @prosopo/types@2.6.1
+  - @prosopo/user-access-policy@2.6.1
+
 ## 2.6.0
 
 ### Minor Changes
