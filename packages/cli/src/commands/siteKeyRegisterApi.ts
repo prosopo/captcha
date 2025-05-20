@@ -80,6 +80,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "POW difficulty for settings",
+				} as const)
+				.option("image_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image threshold for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -92,6 +97,7 @@ export default (
 					url,
 					domains,
 					pow_difficulty,
+					image_threshold,
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
 				const timestamp = new Date().getTime().toString();
@@ -104,6 +110,7 @@ export default (
 						frictionlessThreshold: frictionless_threshold as number,
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
+						imageThreshold: image_threshold as number,
 					},
 					timestamp,
 					signature,

@@ -40,6 +40,7 @@ jobs:
               with:
                   submodules: 'recursive'
                   token: ${{ secrets.PROSOPONATOR_PAT }}
+                  fetch-depth: 0 # fetch all history so we can tag the commits
 
             - name: git config
               run: |
@@ -81,7 +82,7 @@ jobs:
                   # construct the tag
                   tag="$name@$version"
                   # check if the tag exists
-                  if git rev-parse "$tag" >/dev/null 2>&1; then
+                  if git rev-parse "$tag"; then
                     continue
                   else
                     # tag does not exist, add it to the list of packages to publish
@@ -93,27 +94,6 @@ jobs:
 
                 # put the list of affected pkgs into the env
                 echo "affected=$affected" >> $GITHUB_ENV
-
-            - name: create tags
-              run: |
-                set -x
-                # create a tag for each of the affected packages
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                for pkg in $affected; do
-                  # get the package tag
-                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
-                  # create the tag
-                  git tag -a "$tag" -m "Release $tag"
-                done
-
-                # push all tags to the remote
-                set +e
-                git push --tags
-                # if pushing tags fails then one or more of the pkgs have already been published at their version
-                # this could be:
-                # 1. the package has been published by someone else, in which case you need to merge their new version in before processing changesets
-                # 2. this workflow has run before and already published this version and no changesets have been processed since. If you weren't expecting a version bump, this is the expected behaviour. If you were then you have forgotten to add some changesets.
 
             - name: check tags available on registries
               run: |
@@ -139,6 +119,15 @@ jobs:
                   fi
                 done
 
+            # chuck all vars into the env for building
+            - name: vars to env
+              run: |
+                set -x
+                for key in $(echo '${{ toJson(vars) }}' | jq -r 'keys[]'); do
+                  value=$(echo '${{ toJson(vars) }}' | jq -r --arg k "$key" '.[$k]')
+                  echo "$key=$value" >> $GITHUB_ENV
+                done
+
             # build each of those packages
             - name: build packages
               run: |
@@ -154,6 +143,26 @@ jobs:
                   npm run build:cjs -w "$pkg" --if-present
                   npm run bundle -w "$pkg" --if-present
                 done
+
+            - name: create tags
+              run: |
+                set -x
+                # create a tag for each of the affected packages
+                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+
+                for pkg in $affected; do
+                  # get the package tag
+                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
+                  # create the tag
+                  git tag -a "$tag" -m "Release $tag"
+                done
+
+                # push all tags to the remote
+                git push --tags
+                # if pushing tags fails then one or more of the pkgs have already been published at their version
+                # this could be:
+                # 1. the package has been published by someone else, in which case you need to merge their new version in before processing changesets
+                # 2. this workflow has run before and already published this version and no changesets have been processed since. If you weren't expecting a version bump, this is the expected behaviour. If you were then you have forgotten to add some changesets.
 
             # add repo url + pkg path to each pkg
             # required for pkg to be associated with a repo in the gh registry
@@ -218,7 +227,7 @@ jobs:
             # packages set to private are no longer private at this point!
 
             - name: slack notification
-              if: always()
+              if: always() && env.affected != '[]'
               run: |
                 set -x
                 # get the list of affected package names

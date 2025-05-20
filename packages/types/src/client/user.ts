@@ -49,6 +49,6 @@ export interface IUserData {
 	tierRequestQuota: number; // how many requests the user is entitled to in this tier (note this may vary for the same tier, e.g. pro @ 100k, pro @ 200k, etc)
 	marketingPreferences: boolean;
 	originUrl: string;
-	settings?: IUserSettings;
+	settings: IUserSettings;
 	updatedAtTimestamp?: Timestamp;
 }
