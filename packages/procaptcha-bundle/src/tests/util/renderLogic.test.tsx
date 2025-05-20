@@ -13,22 +13,35 @@
 // limitations under the License.
 
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
-import { getWidgetSkeleton } from "@prosopo/widget-skeleton";
+import {
+	type Callbacks,
+	ProcaptchaConfigSchema,
+	type ProcaptchaProps,
+} from "@prosopo/types";
 import { type DOMWindow, JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WidgetFactory } from "../../util/widgetFactory.js";
 import { WidgetThemeResolver } from "../../util/widgetThemeResolver.js";
 
-const widgetFactory = new WidgetFactory(
-	getWidgetSkeleton().getFactory(),
-	new WidgetThemeResolver(),
-);
+const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 
 interface TestContext {
 	document?: Document;
 	window?: DOMWindow;
 }
+
+const callbacks: Callbacks = {
+	onHuman: () => console.log("onHuman"),
+	onChallengeExpired: () => console.log("onChallengeExpired"),
+	onExpired: () => console.log("onExpired"),
+	onError: () => console.log("onError"),
+	onClose: () => console.log("onClose"),
+	onOpen: () => console.log("onOpen"),
+	onFailed: () => console.log("onFailed"),
+	onReset: () => console.log("onReset"),
+	onExtensionNotFound: () => console.log("onExtensionNotFound"),
+	onReload: () => console.log("onReload"),
+};
 
 vi.mock("@prosopo/detector", async () => {
 	return {
@@ -144,15 +157,6 @@ describe("Config utility functions", () => {
 		script["data-reset-callback"] = "onReset";
 		document.body.appendChild(script);
 
-		const onHuman = () => console.log("onHuman");
-		const onChallengeExpired = () => console.log("onChallengeExpired");
-		const onExpired = () => console.log("onExpired");
-		const onError = () => console.log("onError");
-		const onClose = () => console.log("onClose");
-		const onOpen = () => console.log("onOpen");
-		const onFailed = () => console.log("onFailed");
-		const onReset = () => console.log("onReset");
-
 		expect(ctx.window).toBeDefined();
 
 		if (!ctx.window) {
@@ -160,25 +164,16 @@ describe("Config utility functions", () => {
 			return;
 		}
 
-		ctx.window.onHuman = onHuman;
-		ctx.window.onChallengeExpired = onChallengeExpired;
-		ctx.window.onExpired = onExpired;
-		ctx.window.onError = onError;
-		ctx.window.onClose = onClose;
-		ctx.window.onOpen = onOpen;
-		ctx.window.onFailed = onFailed;
-		ctx.window.onReset = onReset;
-
-		const callbacks = {
-			onHuman,
-			onChallengeExpired,
-			onExpired,
-			onError,
-			onClose,
-			onOpen,
-			onFailed,
-			onReset,
-		};
+		ctx.window.onHuman = callbacks.onHuman;
+		ctx.window.onChallengeExpired = callbacks.onChallengeExpired;
+		ctx.window.onExpired = callbacks.onExpired;
+		ctx.window.onError = callbacks.onError;
+		ctx.window.onClose = callbacks.onClose;
+		ctx.window.onOpen = callbacks.onOpen;
+		ctx.window.onFailed = callbacks.onFailed;
+		ctx.window.onReset = callbacks.onReset;
+		ctx.window.onExtensionNotFound = callbacks.onExtensionNotFound;
+		ctx.window.onReload = callbacks.onReload;
 
 		const config = ProcaptchaConfigSchema.parse({
 			account: { address: "1234" },

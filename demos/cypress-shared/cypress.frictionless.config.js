@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { builtinModules } from "node:module";
 import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 loadEnv();
+
+const allExternal = [
+	...builtinModules,
+	...builtinModules.map((m) => `node:${m}`),
+];
 
 export default defineConfig({
 	video: true,
@@ -43,15 +48,20 @@ export default defineConfig({
 					build: {
 						ssr: false,
 						modulePreload: { polyfill: true },
+						rollupOptions: {
+							external: allExternal,
+						},
 					},
-					plugins: [
-						nodePolyfills({
-							// Whether to polyfill `node:` protocol imports.
-							protocolImports: true,
-						}),
-					],
+					plugins: [],
 				}),
 			);
+			// Add task event for logging to the terminal
+			on("task", {
+				log(message) {
+					console.log(message);
+					return null; // Cypress requires tasks to return something
+				},
+			});
 		},
 		specPattern: ["cypress/e2e/**/frictionless.cy.ts"],
 	},

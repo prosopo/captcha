@@ -135,13 +135,16 @@
 </div>
 <script type="module">
     // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-    import { render } from './assets/procaptcha.bundle.js'
+    import { render } from "%VITE_BUNDLE_URL%"
     import { CaptchaType } from "@prosopo/types";
 
     // Define a callback function to be called when the CAPTCHA is verified
     function onCaptchaVerified(output) {
-        console.log('Captcha verified, output: ' + JSON.stringify(output))
+        console.log('Challenge passed')
     }
+
+    // Do not set on the window, we want to ensure that the function passed in via `render` is called
+    // window.onCaptchaVerified = onCaptchaVerified
 
     // Get the Element using elementId
     const captchaContainer = document.getElementById('procaptcha-container')

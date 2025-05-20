@@ -64,7 +64,8 @@ export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
 export type ClientRecord = IUserDataSlim & Document;
 
-const ONE_DAY = 60 * 60 * 24;
+const ONE_HOUR = 60 * 60;
+const ONE_DAY = ONE_HOUR * 24;
 const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
 
@@ -102,6 +103,8 @@ export interface StoredCaptcha {
 	ja4: string;
 	userSubmitted: boolean;
 	serverChecked: boolean;
+	geolocation?: string;
+	vpn?: boolean;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 	frictionlessTokenId?: FrictionlessTokenId;
@@ -210,6 +213,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	geolocation: { type: String, required: false },
+	vpn: { type: Boolean, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -245,6 +250,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	storedAtTimestamp: { type: Number, required: false },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
+	geolocation: { type: String, required: false },
+	vpn: { type: Boolean, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -333,6 +340,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
+	threshold: { type: Number, required: true, default: 0.8 },
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -388,6 +396,8 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
 }
 
 export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
@@ -408,15 +418,21 @@ export const FrictionlessTokenRecordSchema =
 			accessPolicy: { type: Number, required: false },
 		},
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
+		storedAtTimestamp: { type: Date, required: false },
+		lastUpdatedTimestamp: { type: Date, required: false },
 	});
 
 FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
+FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
 	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
+	storedAtTimestamp?: Timestamp;
+	lastUpdatedTimestamp?: Timestamp;
+	deleted?: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -428,62 +444,26 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 	},
 	captchaType: { type: String, enum: CaptchaType, required: true },
+	storedAtTimestamp: { type: Date, required: false },
+	lastUpdatedTimestamp: { type: Date, required: false },
+	deleted: { type: Boolean, required: false },
 });
 
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+SessionRecordSchema.index({ storedAtTimestamp: 1 });
+SessionRecordSchema.index({ deleted: 1 });
 
-export interface IPAddressBlockRule extends BlockRule {
-	ip: number;
-	dappAccount?: string;
-}
-
-export interface UserAccountBlockRule extends BlockRule {
-	dappAccount?: string;
-	userAccount: string;
-}
-
-// A rule to block users based on headers such as IP. Global rules apply to all clients.
-export type IPBlockRuleRecord = mongoose.Document & IPAddressBlockRule;
-export type UserAccountBlockRuleRecord = mongoose.Document &
-	UserAccountBlockRule;
-
-export type IPBlockRuleMongo = Omit<IPBlockRuleRecord, "ip"> & {
-	ip: number;
+export type DetectorKey = {
+	detectorKey: string;
+	createdAt: Date;
 };
 
-export const IPBlockRuleRecordSchema = new Schema<IPBlockRuleRecord>({
-	ip: { type: Number, required: true, unique: true },
-	global: { type: Boolean, required: true },
-	type: { type: String, enum: BlockRuleType, required: true },
-	dappAccount: { type: String, required: false },
-	hardBlock: { type: Boolean, required: false },
-	captchaConfig: {
-		solved: { count: { type: Number, required: false } },
-		unsolved: { count: { type: Number, required: false } },
-	},
+export type DetectorSchema = mongoose.Document & DetectorKey;
+export const DetectorRecordSchema = new Schema<DetectorSchema>({
+	createdAt: { type: Date, required: true },
+	detectorKey: { type: String, required: true },
 });
-
-IPBlockRuleRecordSchema.index({ ip: 1 }, { unique: true });
-IPBlockRuleRecordSchema.index({ ip: 1, dappAccount: 1 }, { unique: true });
-
-export const UserAccountBlockRuleSchema =
-	new Schema<UserAccountBlockRuleRecord>({
-		dappAccount: { type: String, required: false },
-		userAccount: { type: String, required: true },
-		global: { type: Boolean, required: true },
-		hardBlock: { type: Boolean, required: false },
-		type: { type: String, enum: BlockRuleType, required: true },
-		captchaConfig: {
-			solved: { count: { type: Number, required: false } },
-			unsolved: { count: { type: Number, required: false } },
-		},
-	});
-
-UserAccountBlockRuleSchema.index({ userAccount: 1 }, { unique: true });
-UserAccountBlockRuleSchema.index(
-	{ dappAccount: 1, userAccount: 1 },
-	{ unique: true },
-);
+DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -492,6 +472,8 @@ export interface IProviderDatabase extends IDatabase {
 	storeDataset(dataset: Dataset): Promise<void>;
 
 	getSolutions(datasetId: string): Promise<SolutionRecord[]>;
+
+	getSolutionByCaptchaId(captchaId: string): Promise<SolutionRecord | null>;
 
 	getDataset(datasetId: string): Promise<DatasetWithIds>;
 
@@ -524,6 +506,7 @@ export interface IProviderDatabase extends IDatabase {
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
 
@@ -659,6 +642,10 @@ export interface IProviderDatabase extends IDatabase {
 		tokenId: FrictionlessTokenId,
 	): Promise<FrictionlessTokenRecord | undefined>;
 
+	getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]>;
+
 	getFrictionlessTokenRecordByToken(
 		token: string,
 	): Promise<FrictionlessTokenRecord | undefined>;
@@ -667,9 +654,18 @@ export interface IProviderDatabase extends IDatabase {
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
+	getUnstoredSessionRecords(
+		limit: number,
+		skip: number,
+	): Promise<SessionRecord[]>;
+
+	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
+
 	getUserAccessRulesStorage(): RulesStorage;
 
-	getAllIpBlockRules(): Promise<IPBlockRuleRecord[]>;
+	storeDetectorKey(detectorKey: string): Promise<void>;
 
-	getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]>;
+	getDetectorKeys(): Promise<string[]>;
+
+	removeDetectorKey(detectorKey: string): Promise<void>;
 }

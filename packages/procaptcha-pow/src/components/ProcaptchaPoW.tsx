@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaCallbacks } from "@prosopo/types";
+import type { ProcaptchaCallbacks, ProcaptchaProps } from "@prosopo/types";
 import { type LazyExoticComponent, Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 
-type ProcaptchaProps = React.ComponentProps<typeof ProcaptchaWidget>;
-// https://github.com/microsoft/TypeScript/issues/42873
-const ProcaptchaWidget: LazyExoticComponent<
-	// biome-ignore lint/suspicious/noExplicitAny: TODO remove any
-	(props: any, callbacks: ProcaptchaCallbacks) => ReactElement
-> = lazy(async () => import("./ProcaptchaWidget.js"));
+// Define the function signature more precisely
+type ProcaptchaWidgetComponent = (
+	props: ProcaptchaProps,
+) => ReactElement | null;
+
+// Lazy load the widget with the correct type signature
+const ProcaptchaWidget: LazyExoticComponent<ProcaptchaWidgetComponent> = lazy(
+	async () => import("./ProcaptchaWidget.js"),
+);
 
 export const ProcaptchaPow = (props: ProcaptchaProps) => (
 	<Suspense>
@@ -29,6 +32,7 @@ export const ProcaptchaPow = (props: ProcaptchaProps) => (
 			config={props.config}
 			callbacks={props.callbacks}
 			frictionlessState={props.frictionlessState}
+			i18n={props.i18n}
 		/>
 	</Suspense>
 );

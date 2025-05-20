@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { css } from "@emotion/react";
-import { type Theme, getWidgetSkeleton } from "@prosopo/widget-skeleton";
+import styled from "@emotion/styled";
+import {
+	type Theme,
+	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
+} from "@prosopo/widget-skeleton";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
@@ -25,9 +29,10 @@ import {
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;
 	checked: boolean;
-	onChange: () => void;
+	onChange: () => Promise<void>;
 	labelText: string;
 	error?: string;
+	loading: boolean;
 }
 
 const checkboxBefore = css`{
@@ -68,17 +73,9 @@ const generateRandomId = () => {
 	).join("");
 };
 
-const responsiveFont = css`
-	display: none;
-	@media (min-width: 216px) {
-		display: flex;
-		font-size: 12px;
-	}
-	@media (min-width: 268px) {
-		display: flex;
-		font-size: 16px;
-	}
-`;
+interface ResponsiveLabelProps {
+	htmFor?: string;
+}
 
 export const Checkbox: FC<CheckboxProps> = ({
 	theme,
@@ -86,6 +83,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 	checked,
 	labelText,
 	error,
+	loading,
 }: CheckboxProps) => {
 	const checkboxStyleBase: CSSProperties = {
 		...baseStyle,
@@ -93,55 +91,81 @@ export const Checkbox: FC<CheckboxProps> = ({
 	};
 	const [hover, setHover] = useState(false);
 
+	const ResponsiveLabel = styled.label<ResponsiveLabelProps>`
+		color: ${theme.palette.background.contrastText};
+		position: relative;
+		display: flex;
+		cursor: pointer;
+		user-select: none;
+		
+		@container widget (max-width: 219px) {
+			display: none;
+		}
+		@container widget (min-width: 220px) {
+			font-size: 12px;
+		}
+		@container widget (min-width: 250px) {
+			font-size: 14px;
+		}
+		@container widget (min-width: 270px) {
+			font-size: 16px;
+		}
+	`;
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
 		return {
 			...checkboxStyleBase,
 			borderColor: hover
 				? theme.palette.background.contrastText
-				: theme.palette.grey[400],
+				: theme.palette.border,
 			appearance: checked ? "auto" : "none",
 			flex: 1,
 			margin: "15px",
-			minWidth: "14px",
-			minHeight: "14px",
+			minWidth: "28px",
+			minHeight: "28px",
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
 
-	const widgetSkeleton = getWidgetSkeleton();
-
 	return (
 		<span
-			style={{ display: "inline-flex", alignItems: "center" }}
-			data-cy={widgetSkeleton.isInDevelopmentMode() && "captcha-checkbox"}
+			style={{
+				display: "inline-flex",
+				alignItems: "center",
+				minHeight: "58px",
+			}}
 		>
-			<input
-				name={id}
-				id={id}
-				onMouseEnter={() => setHover(true)}
-				onMouseLeave={() => setHover(false)}
-				css={checkboxBefore}
-				type={"checkbox"}
-				aria-live={"assertive"}
-				aria-label={labelText}
-				onChange={onChange}
-				checked={checked}
-				style={checkboxStyle}
-				disabled={error !== undefined}
-			/>
-			{error ? (
-				<label
-					css={{
-						color: theme.palette.error.main,
-						position: "relative",
-						display: "flex",
-						cursor: "pointer",
-						userSelect: "none",
-						...responsiveFont,
+			{loading ? (
+				<div
+					className={WIDGET_CHECKBOX_SPINNER_CSS_CLASS}
+					aria-label="Loading spinner"
+				/>
+			) : (
+				<input
+					name={id}
+					id={id}
+					onMouseEnter={() => setHover(true)}
+					onMouseLeave={() => setHover(false)}
+					css={checkboxBefore}
+					type={"checkbox"}
+					aria-live={"assertive"}
+					aria-label={labelText}
+					onChange={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						setHover(false);
+						onChange();
 					}}
-					htmlFor={id}
-				>
+					checked={checked}
+					style={checkboxStyle}
+					disabled={error !== undefined}
+					className={loading ? "checkbox__loading-spinner" : ""}
+					data-cy={"captcha-checkbox"}
+				/>
+			)}
+			{error ? (
+				<ResponsiveLabel htmFor={id}>
 					<a
 						css={{
 							color: theme.palette.error.main,
@@ -150,21 +174,9 @@ export const Checkbox: FC<CheckboxProps> = ({
 					>
 						{error}
 					</a>
-				</label>
+				</ResponsiveLabel>
 			) : (
-				<label
-					css={{
-						color: theme.palette.background.contrastText,
-						position: "relative",
-						display: "flex",
-						cursor: "pointer",
-						userSelect: "none",
-						...responsiveFont,
-					}}
-					htmlFor={id}
-				>
-					{labelText}
-				</label>
+				<ResponsiveLabel htmFor={id}>{labelText}</ResponsiveLabel>
 			)}
 		</span>
 	);

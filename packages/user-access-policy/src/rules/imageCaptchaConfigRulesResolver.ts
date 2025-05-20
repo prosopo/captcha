@@ -57,6 +57,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 				userIpAddress: userIpAddress.toString(),
 				userId: userId,
 				imageCaptchaConfig: imageCaptchaConfig,
+				ja4,
 			});
 		}
 
@@ -75,6 +76,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			userId: userId,
 			clientId: clientId,
 			defaults: defaults,
+			ja4,
 		};
 
 		this._accessRule = await this.fetchUserAccessRule(
@@ -125,6 +127,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			userIpAddress: userIpAddress.address.toString(),
 			userId: userId,
 			clientId: clientId,
+			ja4,
 		});
 
 		return this.selectPrimaryUserAccessRule(accessRules);

@@ -1,0 +1,28 @@
+{
+	"name": "@prosopo/procaptcha-integration-build-config",
+	"version": "1.1.0",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"clean": "tsc --build --clean",
+		"build": "tsc --build --verbose"
+	},
+	"dependencies": {
+		"deepmerge": "4.3.1",
+		"vite": "6.2.3",
+		"vite-plugin-dts": "4.5.3"
+	},
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"sideEffects": false
+}

@@ -35,16 +35,20 @@ import {
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
 } from "@prosopo/types";
+import type {
+	FrictionlessTokenRecord,
+	SessionRecord,
+} from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
+	DetectorRecordSchema,
+	type DetectorSchema,
 	type FrictionlessToken,
 	type FrictionlessTokenId,
 	FrictionlessTokenRecordSchema,
-	type IPBlockRuleRecord,
-	IPBlockRuleRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type PendingCaptchaRequest,
@@ -57,7 +61,6 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
-	type SessionRecord,
 	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
@@ -65,8 +68,6 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 	type Tables,
-	type UserAccountBlockRuleRecord,
-	UserAccountBlockRuleSchema,
 	type UserCommitment,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
@@ -74,7 +75,6 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
-import type { FrictionlessTokenRecord } from "@prosopo/types-database";
 import {
 	type Rule,
 	type RulesStorage,
@@ -83,7 +83,6 @@ import {
 } from "@prosopo/user-access-policy";
 import { lodash } from "@prosopo/util/lodash";
 import type { Model, ObjectId } from "mongoose";
-import { bigint, string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -98,9 +97,8 @@ enum TableNames {
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	ipblockrules = "ipblockrules",
-	userblockrules = "userblockrules",
 	userAccessRules = "userAccessRules",
+	detector = "detector",
 }
 
 const PROVIDER_TABLES = [
@@ -160,19 +158,14 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.ipblockrules,
-		modelName: "IPBlockRules",
-		schema: IPBlockRuleRecordSchema,
-	},
-	{
-		collectionName: TableNames.userblockrules,
-		modelName: "UserAccountBlockRules",
-		schema: UserAccountBlockRuleSchema,
-	},
-	{
 		collectionName: TableNames.userAccessRules,
 		modelName: "UserAccessRules",
 		schema: getRuleMongooseSchema(),
+	},
+	{
+		collectionName: TableNames.detector,
+		modelName: "Detector",
+		schema: DetectorRecordSchema,
 	},
 ];
 
@@ -333,6 +326,19 @@ export class ProviderDatabase
 			.find(filter)
 			.lean<SolutionRecord[]>();
 		return docs ? docs : [];
+	}
+
+	/** @description Get a solution by captcha id
+	 * @param {string} captchaId
+	 */
+	async getSolutionByCaptchaId(
+		captchaId: string,
+	): Promise<SolutionRecord | null> {
+		const filter: Pick<SolutionRecord, "captchaId"> = { captchaId };
+		const doc = await this.tables?.solution
+			.findOne(filter)
+			.lean<SolutionRecord>();
+		return doc || null;
 	}
 
 	/** @description Get a dataset from the database
@@ -968,6 +974,15 @@ export class ProviderDatabase
 			);
 		return doc ? doc : undefined;
 	}
+	/** Get many frictionless token records */
+	async getFrictionlessTokenRecordsByTokenIds(
+		tokenId: FrictionlessTokenId[],
+	): Promise<FrictionlessTokenRecord[]> {
+		const filter: Pick<FrictionlessTokenRecord, "_id"> = {
+			_id: { $in: tokenId },
+		};
+		return this.tables.frictionlessToken.find<FrictionlessTokenRecord>(filter);
+	}
 
 	/**
 	 * Check if a frictionless token record exists.
@@ -1000,17 +1015,27 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Check if a session exists and remove it if it does
+	 * Check if a session exists and mark it as removed
 	 * @returns The session record if it existed, undefined otherwise
 	 */
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
 		this.logger.debug({ action: "checking and removing", sessionId });
-		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		const filter: {
+			[key in keyof Pick<SessionRecord, "sessionId" | "deleted">]:
+				| string
+				| { $exists: boolean };
+		} = {
+			sessionId,
+			deleted: { $exists: false },
+		};
 		try {
 			const session = await this.tables.session
-				.findOneAndDelete<SessionRecord>(filter)
+				.findOneAndUpdate<SessionRecord>(filter, {
+					deleted: true,
+					lastUpdatedTimestamp: Date.now(),
+				})
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
@@ -1019,6 +1044,69 @@ export class ProviderDatabase
 				logger: this.logger,
 			});
 		}
+	}
+
+	/** Get unstored session records
+	 * @description Get session records that have not been stored yet
+	 * @param limit
+	 * @param skip
+	 */
+	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+		const filterNoStoredTimestamp: {
+			[key in keyof Pick<SessionRecord, "storedAtTimestamp">]: {
+				$exists: boolean;
+			};
+		} = { storedAtTimestamp: { $exists: false } };
+		return this.tables?.session
+			.aggregate<SessionRecord>([
+				{
+					$match: {
+						$or: [
+							filterNoStoredTimestamp,
+							{
+								$expr: {
+									$lt: [
+										{
+											$convert: {
+												input: "$storedAtTimestamp",
+												to: "date",
+											},
+										},
+										{
+											$convert: {
+												input: "$lastUpdatedTimestamp",
+												to: "date",
+											},
+										},
+									],
+								},
+							},
+						],
+					},
+				},
+				{
+					$sort: { _id: 1 },
+				},
+				{
+					$skip: skip,
+				},
+				{
+					$limit: limit,
+				},
+			])
+			.then((docs) => docs || []);
+	}
+
+	/** Mark a list of session records as stored */
+	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
+		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
+			storedAtTimestamp: Date.now(),
+		};
+		await this.tables?.session.updateMany(
+			{ sessionId: { $in: sessionIds } },
+			{ $set: updateDoc },
+			{ upsert: false },
+		);
 	}
 
 	/**
@@ -1031,6 +1119,7 @@ export class ProviderDatabase
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
@@ -1050,6 +1139,7 @@ export class ProviderDatabase
 			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
 			frictionlessTokenId,
+			threshold,
 		};
 		await this.tables?.pending.updateOne(
 			{ requestHash: requestHash },
@@ -1522,19 +1612,31 @@ export class ProviderDatabase
 		return doc ? doc : undefined;
 	}
 
-	async getAllIpBlockRules(): Promise<IPBlockRuleRecord[]> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
-		}
-
-		return await this.tables.ipblockrules.find().exec();
+	/**
+	 * @description Store a detector key
+	 */
+	async storeDetectorKey(detectorKey: string): Promise<void> {
+		return this.tables?.detector.create({
+			detectorKey,
+			createdAt: new Date(),
+		});
 	}
 
-	async getAllUserAccountBlockRules(): Promise<UserAccountBlockRuleRecord[]> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_NOT_INITIALIZED");
-		}
+	/** @description Remove a detector key */
+	async removeDetectorKey(detectorKey: string): Promise<void> {
+		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
+		await this.tables?.detector.deleteOne(filter);
+	}
 
-		return await this.tables.userblockrules.find().exec();
+	/**
+	 * @description Get valid detector keys
+	 */
+	async getDetectorKeys(): Promise<string[]> {
+		const keyRecords = await this.tables?.detector
+			.find({}, { detectorKey: 1 })
+			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
+			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
+
+		return (keyRecords || []).map((record) => record.detectorKey);
 	}
 }

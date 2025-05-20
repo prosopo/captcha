@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.5.1",
+	"version": "2.6.0",
 	"description": "Non business logic utilities for web applications",
 	"main": "dist/index.js",
 	"type": "module",
@@ -30,17 +30,23 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
+	"dependencies": {
+		"@emotion/react": "11.13.3",
+		"@emotion/styled": "11.13.0",
+		"express": "4.21.2",
+		"react": "18.3.1"
+	},
 	"devDependencies": {
-		"@prosopo/config": "2.5.1",
-		"@vitest/coverage-v8": "2.1.1",
+		"@prosopo/config": "2.6.0",
+		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "2.1.0",
 		"tslib": "2.7.0",
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
-		"vite": "5.4.6",
-		"vitest": "2.1.1"
+		"vite": "6.2.3",
+		"vitest": "3.0.9"
 	},
 	"sideEffects": false
 }

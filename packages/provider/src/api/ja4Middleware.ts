@@ -21,9 +21,9 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { readTlsClientHello } from "read-tls-client-hello";
 
-const DEFAULT_JA4 = "ja4";
+export const DEFAULT_JA4 = "ja4";
 
-const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
+export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 	logger = logger || getLoggerDefault();
 
 	// Default JA4+ fingerprint for development
@@ -111,13 +111,15 @@ const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 			.digest("hex")
 			.slice(0, 12);
 
-		// Hash of sorted extensions
-		const sortedExtensions = extensions
-			.map((ext) => ext.toString(16).padStart(4, "0"))
-			.sort()
-			.join(",");
+		// Sort numerically, convert to decimal strings, join with dashes
+		const decimalString = extensions
+			.sort((a, b) => a - b) // sort as numbers
+			.map((ext) => ext.toString(10)) // convert to decimal strings
+			.join("-");
+
+		// Create SHA256 hash and truncate
 		const extensionHash = createHash("sha256")
-			.update(sortedExtensions)
+			.update(decimalString)
 			.digest("hex")
 			.slice(0, 12);
 
@@ -134,7 +136,7 @@ const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 export const ja4Middleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const ja4 = await getJA4(req.headers, env.logger);
+			const ja4 = await getJA4(req.headers, req.logger);
 
 			req.ja4 = ja4.ja4PlusFingerprint || "";
 			next();

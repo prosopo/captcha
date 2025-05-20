@@ -14,7 +14,6 @@
 
 import { builtinModules } from "node:module";
 import path from "node:path";
-import { getLogger } from "@prosopo/common";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import { wasm } from "@rollup/plugin-wasm";
@@ -25,9 +24,11 @@ import css from "rollup-plugin-import-css";
 import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
 import { filterDependencies, getDependencies } from "../dependencies.js";
+import { getLogger } from "../logger.js";
 import { VitePluginCloseAndCopy } from "./index.js";
 import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
-const logger = getLogger("Info", "vite.config.js");
+
+const logger = getLogger("vite.frontend.config.ts");
 
 export default async function (
 	packageName: string,

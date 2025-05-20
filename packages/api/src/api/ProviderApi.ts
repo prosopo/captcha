@@ -40,6 +40,7 @@ import {
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
+	UpdateDetectorKeyBody,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -269,5 +270,41 @@ export default class ProviderApi
 				signature,
 			},
 		});
+	}
+
+	public updateDetectorKey(
+		detectorKey: string,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.UpdateDetectorKey,
+			UpdateDetectorKeyBody.parse({ detectorKey }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
+
+	public removeDetectorKey(
+		detectorKey: string,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.RemoveDetectorKey,
+			UpdateDetectorKeyBody.parse({ detectorKey }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
 	}
 }
