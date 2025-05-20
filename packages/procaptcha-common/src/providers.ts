@@ -11,12 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { loadBalancer } from "@prosopo/load-balancer";
+import { type HardcodedProvider, loadBalancer } from "@prosopo/load-balancer";
 import type {
 	ProcaptchaClientConfigOutput,
 	RandomProvider,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
+
+let providers: HardcodedProvider[] = [];
 
 export const getRandomActiveProvider = async (
 	config: ProcaptchaClientConfigOutput,
@@ -27,11 +29,14 @@ export const getRandomActiveProvider = async (
 	// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
 	//  to ensure that the random selection was completed within a certain timeframe
 
-	const PROVIDERS = await loadBalancer(config.defaultEnvironment);
+	if (providers.length === 0) {
+		// only get the providers JSON once
+		providers = await loadBalancer(config.defaultEnvironment);
+	}
 
 	const randomProvderObj = at(
-		PROVIDERS,
-		randomIntBetween(0, PROVIDERS.length - 1),
+		providers,
+		randomIntBetween(0, providers.length - 1),
 	);
 	return {
 		providerAccount: randomProvderObj.address,

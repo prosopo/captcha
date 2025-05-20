@@ -18,7 +18,7 @@ import { useState } from "react";
 import type { CaptchaProps } from "../captchaProps.js";
 
 const FrictionlessCaptcha = (props: CaptchaProps) => {
-	const { config, callbacks } = props;
+	const { config, callbacks, i18n } = props;
 
 	const [componentKey, setComponentKey] = useState(0);
 
@@ -32,6 +32,7 @@ const FrictionlessCaptcha = (props: CaptchaProps) => {
 			config={config}
 			callbacks={getDefaultEvents(callbacks)}
 			restart={restart}
+			i18n={i18n}
 		/>
 	);
 };

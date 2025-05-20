@@ -79,7 +79,9 @@ export const useProcaptcha = (
 		useRefAsState<NodeJS.Timeout | undefined>(useRef, undefined);
 	const [sendData, setSendData] = useState(false);
 	const [attemptCount, setAttemptCount] = useState(0);
-	const [error, setError] = useState<string | undefined>(undefined);
+	const [error, setError] = useState<
+		{ message: string; key: string } | undefined
+	>(undefined);
 	const [sessionId, setSessionId] = useState<string | undefined>(undefined);
 	return [
 		// the state

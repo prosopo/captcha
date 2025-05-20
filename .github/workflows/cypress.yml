@@ -54,6 +54,10 @@ jobs:
 
             - run: npm ci
 
+            # build the packages required by vite build commands first
+            - run: npm run -w @prosopo/config build
+            - run: npm run -w @prosopo/dotenv build
+
             # build all packages in workspace
             - run: npm run build:all
 
@@ -62,8 +66,7 @@ jobs:
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
                     cp demos/client-example-server/env.development demos/client-example-server/.env.test
-                    cp demos/client-example/env.development demos/client-example/.env.test
-                    cp demos/client-bundle-example/env.development demos/client-example/.env.test
+                    cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
                     cp dev/scripts/env.test .env.test
                     cp dev/scripts/env.test dev/scripts/.env.test
                     cp dev/scripts/env.test packages/cli/.env.test
@@ -83,10 +86,6 @@ jobs:
             # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
             # by the cypress tests to find the elements they need to interact with
             - run: NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
-
-            - name: Run the cypress tests on client-example
-              run: |
-                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:demo" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-example" --success "first" --kill-others
 
             - name: Run the cypress tests on client-bundle-example
               run: |

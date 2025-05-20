@@ -23,7 +23,6 @@ import {
 	commandStoreCaptchasExternally,
 	commandVersion,
 } from "./commands/index.js";
-import { MigrateBlockRuleDbRecordsToUserAccessPolicyCommand } from "./commands/migrateBlockRulesToUserAccessRules.js";
 
 export type AwaitedProcessedArgs = {
 	[x: string]: unknown;
@@ -44,7 +43,6 @@ function getCommands(
 		commandSiteKeyRegister(pair, config, { logger }),
 		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
 		commandVersion(pair, config, { logger }),
-		new MigrateBlockRuleDbRecordsToUserAccessPolicyCommand(pair, config),
 	];
 }
 

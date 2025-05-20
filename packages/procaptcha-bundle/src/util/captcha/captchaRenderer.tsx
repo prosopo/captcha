@@ -14,10 +14,7 @@
 
 import createCache, { type EmotionCache } from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
-import {
-	getDefaultCallbacks,
-	setUserCallbacks,
-} from "@prosopo/procaptcha-common";
+import type { Ti18n } from "@prosopo/locale";
 import type {
 	Callbacks,
 	ProcaptchaClientConfigOutput,
@@ -49,16 +46,23 @@ class CaptchaRenderer {
 		settings: RenderSettings,
 		container: HTMLElement,
 		renderOptions: ProcaptchaRenderOptions,
+		callbacks: Callbacks,
 		isWeb2: boolean,
+		i18n: Ti18n,
+		invisible = false,
 	): Root {
-		const callbacks = getDefaultCallbacks(container);
 		const captchaType =
 			(renderOptions?.captchaType as CaptchaType) ||
 			settings.defaultCaptchaType;
 
-		const config = createConfig(renderOptions.siteKey, isWeb2);
-
-		this.readAndValidateSettings(container, callbacks, config, renderOptions);
+		const config = createConfig(
+			renderOptions.siteKey,
+			renderOptions.theme,
+			renderOptions.language,
+			isWeb2,
+			invisible,
+		);
+		this.readAndValidateSettings(container, config, renderOptions);
 
 		const reactRoot = this.createReactRoot(
 			container,
@@ -74,7 +78,8 @@ class CaptchaRenderer {
 			captchaType,
 			{
 				config: config,
-				callbacks: callbacks,
+				i18n: i18n,
+				callbacks,
 			},
 		);
 
@@ -85,11 +90,9 @@ class CaptchaRenderer {
 
 	protected readAndValidateSettings(
 		element: Element,
-		callbacks: Callbacks,
 		config: ProcaptchaClientConfigOutput,
 		renderOptions: ProcaptchaRenderOptions,
 	): void {
-		setUserCallbacks(renderOptions, callbacks, element);
 		setValidChallengeLength(renderOptions, element, config);
 		setLanguage(renderOptions, element, config);
 	}

@@ -240,11 +240,19 @@ export type ProsopoClientConfigOutput = output<
 
 const ThemeType = union([literal("light"), literal("dark")]);
 
+export enum ModeEnum {
+	visible = "visible",
+	invisible = "invisible",
+}
+export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
+export type ModeType = zInfer<typeof Mode>;
+
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
 		theme: ThemeType.optional().default("light"),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
+		mode: Mode.optional().default(ModeEnum.visible),
 	}),
 );
 

@@ -304,6 +304,7 @@ describe("ImgCaptchaManager", () => {
 				userAccount,
 				ipAddress,
 				captchaConfig,
+				0.8,
 			);
 
 			expect(result).toEqual({
@@ -329,6 +330,7 @@ describe("ImgCaptchaManager", () => {
 					userAccount,
 					ipAddress,
 					{ solved: { count: 1 }, unsolved: { count: 1 } },
+					0.8,
 				),
 			).rejects.toThrow(
 				new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", {

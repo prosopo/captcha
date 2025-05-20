@@ -13,22 +13,24 @@
 // limitations under the License.
 
 import { validateAddress } from "@polkadot/util-crypto/address";
-import { ProsopoApiError } from "@prosopo/common";
+import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 
-export const validiateSiteKey = (siteKey: string) => {
-	return validateAddr(siteKey, "API.INVALID_SITE_KEY");
+export const validiateSiteKey = (siteKey: string, logger?: Logger) => {
+	return validateAddr(siteKey, "API.INVALID_SITE_KEY", logger);
 };
 
 export const validateAddr = (
 	address: string,
 	translationKey: TranslationKey = "CONTRACT.INVALID_ADDRESS",
+	logger?: Logger,
 ) => {
 	try {
 		return validateAddress(address, false, 42);
 	} catch (err) {
 		throw new ProsopoApiError(translationKey, {
 			context: { code: 400, error: err, siteKey: address },
+			logger,
 		});
 	}
 };

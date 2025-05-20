@@ -21,20 +21,13 @@ import { checkIfTaskIsRunning } from "../util.js";
 
 export async function storeCaptchasExternally(
 	pair: KeyringPair,
+	cronSchedule: string,
 	config: ProsopoConfigOutput,
 ) {
 	const env = new ProviderEnvironment(config, pair);
 	await env.isReady();
 
 	const tasks = new Tasks(env);
-
-	// Set the cron schedule to run on user configured schedule or every hour
-	const defaultSchedule = "0 * * * *";
-	const cronSchedule = config.scheduledTasks?.captchaScheduler
-		? config.scheduledTasks.captchaScheduler.schedule
-			? config.scheduledTasks.captchaScheduler.schedule
-			: defaultSchedule
-		: defaultSchedule;
 
 	const job = new CronJob(cronSchedule, async () => {
 		const taskRunning = await checkIfTaskIsRunning(

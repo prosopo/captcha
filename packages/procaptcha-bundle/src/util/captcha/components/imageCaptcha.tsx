@@ -17,9 +17,15 @@ import { Procaptcha } from "@prosopo/procaptcha-react";
 import type { CaptchaProps } from "../captchaProps.js";
 
 const ImageCaptcha = (props: CaptchaProps) => {
-	const { config, callbacks } = props;
+	const { config, callbacks, i18n } = props;
 
-	return <Procaptcha config={config} callbacks={getDefaultEvents(callbacks)} />;
+	return (
+		<Procaptcha
+			config={config}
+			callbacks={getDefaultEvents(callbacks)}
+			i18n={i18n}
+		/>
+	);
 };
 
 export { ImageCaptcha };

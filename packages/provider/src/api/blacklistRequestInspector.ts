@@ -31,7 +31,7 @@ class BlacklistRequestInspector {
 	): Promise<void> {
 		const rawIp = request.ip || "";
 
-		this.logger.debug("JA4", request.ja4);
+		request.logger.debug("JA4", request.ja4);
 
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
@@ -39,6 +39,7 @@ class BlacklistRequestInspector {
 			request.ja4,
 			request.headers,
 			request.body,
+			request.logger,
 		);
 
 		if (shouldAbortRequest) {
@@ -55,6 +56,7 @@ class BlacklistRequestInspector {
 		ja4: string,
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
+		logger: Logger,
 	): Promise<boolean> {
 		// Skip this middleware for non-api routes like /json /favicon.ico etc
 		if (this.isApiUnrelatedRoute(requestedRoute)) {
@@ -63,7 +65,7 @@ class BlacklistRequestInspector {
 
 		// block if no IP is present
 		if (!rawIp) {
-			this.logger.info("Request without IP", {
+			logger.info("Request without IP", {
 				requestedRoute: requestedRoute,
 				requestHeaders: requestHeaders,
 				requestBody: requestBody,
@@ -89,7 +91,7 @@ class BlacklistRequestInspector {
 				userId,
 			);
 		} catch (err) {
-			this.logger.error("Block Middleware Error:", err);
+			logger.error("Block Middleware Error:", err);
 
 			return true;
 		}

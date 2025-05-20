@@ -70,6 +70,7 @@ const otherIndexes: MongooseIndex[] = [
 		},
 		options: {
 			unique: true,
+			sparse: true,
 		},
 	},
 	{
@@ -78,6 +79,7 @@ const otherIndexes: MongooseIndex[] = [
 		},
 		options: {
 			unique: true,
+			sparse: true,
 		},
 	},
 ];

@@ -63,6 +63,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -85,6 +86,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp, user },
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
@@ -103,7 +105,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						parsed.maxVerifiedTime,
 					);
 
-				tasks.logger.debug(response);
+				req.logger.debug(response);
 				const verificationResponse: ImageVerificationResponse =
 					tasks.imgCaptchaManager.getVerificationResponse(
 						response[ApiParams.verified],
@@ -114,11 +116,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					);
 				res.json(verificationResponse);
 			} catch (err) {
-				tasks.logger.error({ err, body: req.body });
+				req.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -144,6 +147,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -167,6 +171,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp },
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
@@ -202,11 +207,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 				return res.json(verificationResponse);
 			} catch (err) {
-				tasks.logger.error({ err, body: req.body });
+				req.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}

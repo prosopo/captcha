@@ -25,3 +25,4 @@ export const WIDGET_DIMENSIONS = {
 export const WIDGET_BORDER_RADIUS = "8px";
 export const WIDGET_PADDING = "2px";
 export const WIDGET_BORDER = "1px solid";
+export const WIDGET_CHECKBOX_SPINNER_CSS_CLASS = "checkbox__loading-spinner";

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LanguageSchema } from "@prosopo/locale";
+import { LanguageSchema, type Languages } from "@prosopo/locale";
 import type {
 	ProcaptchaClientConfigInput,
 	ProcaptchaRenderOptions,
@@ -43,9 +43,7 @@ export const setLanguage = (
 	}
 };
 
-const validateLanguage = (
-	languageAttribute: string | typeof LanguageSchema,
-) => {
+const validateLanguage = (languageAttribute: string | typeof Languages) => {
 	try {
 		return LanguageSchema.parse(languageAttribute);
 	} catch (error) {

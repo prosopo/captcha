@@ -26,9 +26,12 @@ import {
 	domainMiddleware,
 	getClientList,
 	headerCheckMiddleware,
+	ignoreMiddleware,
 	prosopoRouter,
 	prosopoVerifyRouter,
 	publicRouter,
+	requestLoggerMiddleware,
+	robotsMiddleware,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import {
@@ -43,7 +46,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { apiRulePaths } from "@prosopo/user-access-policy";
 import cors from "cors";
-import express from "express";
+import express, { type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
@@ -65,7 +68,9 @@ async function startApi(
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
 
-	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(env.logger);
+	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
+		env.config.logLevel,
+	);
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
 	);
@@ -87,6 +92,9 @@ async function startApi(
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 	const i18Middleware = await i18nMiddleware({});
+	apiApp.use(robotsMiddleware());
+	apiApp.use(ignoreMiddleware());
+	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 
@@ -119,7 +127,7 @@ async function startApi(
 		apiExpressRouterFactory.createRouter(
 			apiAdminRoutesProvider,
 			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(env.logger, 400),
+			createApiExpressDefaultEndpointAdapter(env.config.logLevel, 400),
 		),
 	);
 
@@ -168,14 +176,24 @@ export async function start(
 	// Get rid of any scheduled task records from previous runs
 	env.cleanup();
 
-	//Start the scheduled jobs
+	// Start the scheduled jobs if they are defined
 	if (env.pair) {
-		storeCaptchasExternally(env.pair, env.config).catch((err) => {
-			console.error("Failed to start scheduler:", err);
-		});
-		getClientList(env.pair, env.config).catch((err) => {
-			console.error("Failed to get client list:", err);
-		});
+		const cronScheduleStorage =
+			env.config.scheduledTasks?.captchaScheduler?.schedule;
+		if (cronScheduleStorage) {
+			storeCaptchasExternally(env.pair, cronScheduleStorage, env.config).catch(
+				(err) => {
+					console.error("Failed to start scheduler:", err);
+				},
+			);
+		}
+		const cronScheduleClient =
+			env.config.scheduledTasks?.clientListScheduler?.schedule;
+		if (cronScheduleClient) {
+			getClientList(env.pair, cronScheduleClient, env.config).catch((err) => {
+				console.error("Failed to get client list:", err);
+			});
+		}
 	}
 
 	return startApi(env, admin, port);

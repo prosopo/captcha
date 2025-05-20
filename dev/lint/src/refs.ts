@@ -12,194 +12,225 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import fs, { read } from "node:fs";
+import fs from "node:fs";
 import path from "node:path";
-import { at, get } from "@prosopo/util";
+import { inspect } from "node:util";
+import { get } from "@prosopo/util";
 import fg from "fast-glob";
 import z from "zod";
 
+// covers both package.json and tsconfig.json fields
+const packageConfigSchema = z.object({
+	name: z.string().optional(),
+	version: z.string().optional(),
+	dependencies: z.record(z.string()).optional(),
+	devDependencies: z.record(z.string()).optional(),
+	workspaces: z.array(z.string()).optional(),
+	references: z.array(z.record(z.string())).optional(),
+});
+
+type PackageConfig = z.infer<typeof packageConfigSchema>;
+
 // file consists of a path to the file or the content of the file if already read
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-type File = { path: string; content: any };
+type File = { path: string; content: PackageConfig };
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-const readJson = (filePath: string): any => {
-	return JSON.parse(fs.readFileSync(filePath, "utf8"));
-};
+const parsePackageConfig = (filePath: string): PackageConfig =>
+	packageConfigSchema.parse(JSON.parse(fs.readFileSync(filePath, "utf8")));
 
-const readFile = (filePath: string): File => {
-	return {
-		path: filePath,
-		content: readJson(filePath),
-	};
-};
+const loadPackageConfig = (filePath: string): File => ({
+	path: filePath,
+	content: parsePackageConfig(filePath),
+});
 
-const readFileWhy = (filePath: string, msg: string): File => {
+const loadPackageConfigWithErrorContext = (
+	filePath: string,
+	errorContext: string,
+): File => {
 	try {
-		return readFile(filePath);
+		return loadPackageConfig(filePath);
 	} catch (err) {
-		throw new Error(`Failed to read file ${filePath}: ${msg}`);
+		throw new Error(`Failed to read file ${filePath}: ${errorContext}`);
 	}
 };
 
-const getPkgJsonPaths = (wsPkgJson: File) => {
+const findWorkspacePackageJsons = (workspacePackageJson: File) =>
 	// get the workspace globs
-	const globs = z
+	z
 		.string()
 		.array()
 		.catch([])
-		.parse(wsPkgJson.content.workspaces)
-		.map((g) => `${path.dirname(wsPkgJson.path)}/${g}/package.json`);
-	// glob the workspace paths
-	// add package.json to the dirs and filter out any that don't exist (e.g. packages/* may match packages/some-dir but if some-dir doesn't have a package.json we don't want it)
-	const pkgJsons = globs
-		.map((g) => fg.globSync(g))
+		.parse(workspacePackageJson.content.workspaces)
+		.map(
+			(pattern) =>
+				`${path.dirname(workspacePackageJson.path)}/${pattern}/package.json`,
+		)
+		// glob the workspace paths
+		// add package.json to the dirs and filter out any that don't exist (e.g. packages/* may match packages/some-dir but if some-dir doesn't have a package.json we don't want it)
+
+		.map((pattern) => fg.globSync(pattern))
 		.reduce((acc, val) => acc.concat(val), []);
-	return pkgJsons;
+
+const getAllDependencies = (packageJson: File) => {
+	const regularDependencies = Object.keys(
+		z.record(z.string()).catch({}).parse(packageJson.content.dependencies),
+	);
+	const developmentDependencies = Object.keys(
+		z.record(z.string()).catch({}).parse(packageJson.content.devDependencies),
+	);
+	return [...new Set([...regularDependencies, ...developmentDependencies])];
 };
 
-const getDeps = (pkgJson: File) => {
-	const deps = Object.keys(
-		z.record(z.string()).catch({}).parse(pkgJson.content.dependencies),
+const getWorkspacePackageNames = (workspacePackagePaths: string[]) =>
+	workspacePackagePaths.map((packagePath) =>
+		z.string().parse(loadPackageConfig(packagePath).content.name),
 	);
-	const devDeps = Object.keys(
-		z.record(z.string()).catch({}).parse(pkgJson.content.devDependencies),
-	);
-	return [...new Set([...deps, ...devDeps])];
-};
 
-const getWsPkgNames = (wsPkgJsons: string[]) => {
-	const wsPkgNames = wsPkgJsons.map((p) =>
-		z.string().parse(readFile(p).content.name),
-	);
-	return wsPkgNames;
-};
-
-const getRefs = (tsconfigJson: File) => {
-	const refs = z
+const getTsConfigReferences = (tsConfigJson: File) =>
+	z
 		.array(z.record(z.string()))
 		.catch([])
-		.parse(tsconfigJson.content.references);
-	return refs
-		.map((r) => get(r, "path"))
-		.map((p) => {
+		.parse(tsConfigJson.content.references)
+		.map((reference) => get(reference, "path"))
+		.map((referencePath) =>
 			// ref paths can point at a tsconfig OR a dir containing a tsconfig. If it's a dir, add /tsconfig.json
-			if (p.endsWith(".json")) {
-				return p;
-			}
-			return `${p}/tsconfig.json`;
-		});
-};
+			referencePath.endsWith(".json")
+				? referencePath
+				: `${referencePath}/tsconfig.json`,
+		);
 
-const getPkgName = (pkgJson: File) => {
-	return z.string().parse(pkgJson.content.name);
-};
+const getPackageName = (packageJson: File) =>
+	z.string().parse(packageJson.content.name);
 
-const main = async (args: {
-	pkgJsonPath: string;
+interface InvalidPackage {
+	packageJsonPath: string;
+	invalidTsConfigs: InvalidTsConfig[];
+}
+
+const validateWorkspace = async (args: {
+	packageJsonPath: string;
 }) => {
-	// pkgJsonPath points to the package.json file
-	const pkgJsonPath = args.pkgJsonPath;
-	const pkgJson = readFile(pkgJsonPath);
+	const workspacePackagePath = args.packageJsonPath;
+	const workspacePackage = loadPackageConfig(workspacePackagePath);
 
-	// check the pkg json is a workspace
-	if (pkgJson.content.workspaces === undefined) {
-		throw new Error(`${pkgJson.path} is not a workspace`);
+	// check the package json is a workspace
+	if (workspacePackage.content.workspaces === undefined) {
+		throw new Error(`${workspacePackage.path} is not a workspace`);
 	}
 
-	// list all the pkgs in the workspace
-	const wsPkgNames = getWsPkgNames(getPkgJsonPaths(pkgJson));
+	// list all the packages in the workspace
+	const workspacePackageNames = getWorkspacePackageNames(
+		findWorkspacePackageJsons(workspacePackage),
+	);
 
 	// for each package in the workspace, check their version matches the workspace version
-	const globs = [
-		pkgJsonPath, // include the workspace package.json
+	const packagePatterns = [
+		workspacePackagePath, // include the workspace package.json
 		...z
 			.string()
 			.array()
-			.parse(pkgJson.content.workspaces)
-			.map((g) => `${path.dirname(pkgJsonPath)}/${g}/package.json`),
+			.parse(workspacePackage.content.workspaces)
+			.map(
+				(pattern) =>
+					`${path.dirname(workspacePackagePath)}/${pattern}/package.json`,
+			),
 	];
-	const pths = fg.globSync(globs);
-	let ok = true;
-	for (const pth of pths) {
-		const result = await check({
-			pkgJson: readFile(pth),
-			wsPkgNames,
-		});
-		ok = ok && result;
-	}
-	if (!ok) {
-		throw new Error("Refs and deps not in sync - see above for details");
-	}
-};
+	const packagePaths = fg.globSync(packagePatterns);
 
-const check = async (args: {
-	pkgJson: File;
-	wsPkgNames: string[];
-}) => {
-	const pkgJson = args.pkgJson;
-	const wsPkgNames = args.wsPkgNames;
-	const pkgDir = path.dirname(pkgJson.path);
-	// get the deps for this package
-	// filter deps to those in the workspace
-	const deps = getDeps(pkgJson)
-		.filter((d) => {
-			return wsPkgNames.includes(d);
-		})
-		.filter((d) => {
-			// ignore @prosopo/config pkg bc circular dep
-			return d !== "@prosopo/config";
+	const invalidPackages: InvalidPackage[] = [];
+
+	for (const packagePath of packagePaths) {
+		const invalidTsConfigs = await validateDependencies({
+			packageJson: loadPackageConfig(packagePath),
+			workspacePackageNames,
 		});
 
-	let ok = true;
-	// find all tsconfig files in the same dir as the package.json
-	const tsconfigPaths = fg.globSync(`${pkgDir}/tsconfig{,.cjs}.json`);
-	for (const tsconfigPath of tsconfigPaths) {
-		console.log(`Checking ${tsconfigPath} against ${pkgJson.path}`);
-		// read the tsconfig json
-		const tsconfigJson = readFile(tsconfigPath);
-		// get the tsconfig references
-		const refs = getRefs(tsconfigJson);
-		// convert them to package names, e.g. ../common => @prosopo/common
-		const refPkgNames = refs
-			.map((p) => {
-				// get the dir for the package
-				const refPath = path.dirname(p);
-				// read the package.json in the dir
-				const pkgJson = readFileWhy(
-					`${pkgDir}/${refPath}/package.json`,
-					`specified in ${tsconfigPath}`,
-				);
-				return getPkgName(pkgJson);
-			})
-			.filter((p) => {
-				// ignore @prosopo/config pkg bc circular dep
-				return p !== "@prosopo/config";
+		if (invalidTsConfigs.length > 0) {
+			invalidPackages.push({
+				packageJsonPath: packagePath,
+				invalidTsConfigs: invalidTsConfigs,
 			});
-		// console.log('refPkgNames', refPkgNames)
-		// check all the refs are in the deps
-		// e.g. a dep might be in the pkg json but not specified in the tsconfig
-		const missingRefs: string[] = refPkgNames.filter((r) => !deps.includes(r));
-		// check all the deps are in the refs
-		// e.g. a ref might be in the tsconfig but not in the pkg json
-		const missingDeps: string[] = deps.filter((d) => !refPkgNames.includes(d));
-		for (const missingRef of missingRefs) {
-			console.log(`${missingRef} ref not needed in ${tsconfigPath}`);
-		}
-		for (const missingDep of missingDeps) {
-			console.log(`${missingDep} ref missing from ${tsconfigPath}`);
-		}
-		ok = ok && missingRefs.length === 0 && missingDeps.length === 0;
-		if (missingDeps.length > 0 || missingRefs.length > 0) {
-			console.log({ name: pkgJson.path, missingRefs, missingDeps });
 		}
 	}
 
-	if (!ok) {
+	if (0 === invalidPackages.length) {
+		return;
 	}
-	return ok;
+
+	console.log(
+		"Found invalid packages",
+		inspect(invalidPackages, {
+			depth: null,
+			colors: true,
+		}),
+	);
+
+	throw new Error(
+		"References and dependencies are not in sync - see above for details",
+	);
 };
 
-main({
-	pkgJsonPath: z.string().parse(process.argv[2]),
+interface InvalidTsConfig {
+	tsConfigPath: string;
+	unnecessaryReferences: string[];
+	missingReferences: string[];
+}
+
+const validateDependencies = async (args: {
+	packageJson: File;
+	workspacePackageNames: string[];
+}): Promise<InvalidTsConfig[]> => {
+	const packageJson = args.packageJson;
+	const workspacePackageNames = args.workspacePackageNames;
+	const packageDirectory = path.dirname(packageJson.path);
+
+	// get the dependencies for this package that are in the workspace
+	const workspaceDependencies = getAllDependencies(packageJson)
+		.filter((dependency) => workspacePackageNames.includes(dependency))
+		// ignore @prosopo/config package because of circular dependency
+		.filter((dependency) => dependency !== "@prosopo/config");
+
+	const wrongTsConfigs: InvalidTsConfig[] = [];
+
+	// find all tsconfig files in the same directory as the package.json
+	const tsConfigPaths = fg.globSync(`${packageDirectory}/tsconfig{,.cjs}.json`);
+	for (const tsConfigPath of tsConfigPaths) {
+		const tsConfigJson = loadPackageConfig(tsConfigPath);
+		const tsConfigReferences = getTsConfigReferences(tsConfigJson);
+
+		// convert references to package names, e.g. ../common => @prosopo/common
+		const referencedPackageNames = tsConfigReferences
+			.map((referencePath) => {
+				const referenceDirectory = path.dirname(referencePath);
+				const referencedPackage = loadPackageConfigWithErrorContext(
+					`${packageDirectory}/${referenceDirectory}/package.json`,
+					`specified in ${tsConfigPath}`,
+				);
+				return getPackageName(referencedPackage);
+			})
+			// ignore @prosopo/config package because of circular dependency
+			.filter((packageName) => packageName !== "@prosopo/config");
+
+		// validate references against dependencies
+		const unnecessaryReferences: string[] = referencedPackageNames.filter(
+			(ref) => !workspaceDependencies.includes(ref),
+		);
+		const missingReferences: string[] = workspaceDependencies.filter(
+			(dep) => !referencedPackageNames.includes(dep),
+		);
+
+		if (0 === unnecessaryReferences.length && 0 === missingReferences.length)
+			continue;
+
+		wrongTsConfigs.push({
+			tsConfigPath: tsConfigPath,
+			unnecessaryReferences: unnecessaryReferences,
+			missingReferences: missingReferences,
+		});
+	}
+
+	return wrongTsConfigs;
+};
+
+validateWorkspace({
+	packageJsonPath: z.string().parse(process.argv[2]),
 });

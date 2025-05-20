@@ -139,6 +139,10 @@ export class CaptchaManager {
 		};
 	}
 
+	async getDetectorKeys(): Promise<string[]> {
+		return await this.db.getDetectorKeys();
+	}
+
 	static canClientSeeScore(tier: Tier, score?: number) {
 		return score && tier && tier !== Tier.Free;
 	}

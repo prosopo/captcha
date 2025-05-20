@@ -6,7 +6,7 @@
             import {CaptchaType} from "@prosopo/types";
 
             async function captchaLoaded() {
-                const render = (await import('./assets/procaptcha.bundle.js')).render
+                const render = (await import("%VITE_BUNDLE_URL%")).render
                 console.log('Captcha loaded')
                 // Get the Element using elementId
                 const captchaContainer = document.getElementById('procaptcha-container')
@@ -23,11 +23,13 @@
             function onCaptchaVerified(output) {
                 console.log('Captcha verified, output: ' + JSON.stringify(output))
             }
+
+            window.onCaptchaVerified = onCaptchaVerified
         </script>
         <script
             id="procaptchaScript"
             type="module"
-            src="./assets/procaptcha.bundle.js?onload=captchaLoaded&render=explicit"
+            src="%VITE_BUNDLE_URL%?onload=captchaLoaded&render=explicit"
             async
             defer
         ></script>

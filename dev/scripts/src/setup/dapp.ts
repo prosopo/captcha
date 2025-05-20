@@ -31,6 +31,7 @@ export async function registerSiteKey(
 			frictionlessThreshold: 0.8,
 			powDifficulty: 4,
 			domains: ["localhost", "0.0.0.0"],
+			imageThreshold: 0.8,
 		},
 	);
 }

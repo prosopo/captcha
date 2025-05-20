@@ -5,7 +5,7 @@ name: tests
 on:
   pull_request:
     branches: [main, dev, staging, release/*]
-    types: 
+    types:
       - opened # when a PR is opened
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
@@ -54,9 +54,13 @@ jobs:
 
       - run: npm ci
 
+      # build the packages required by vite build commands first
+      - run: npm run -w @prosopo/config build
+      - run: npm run -w @prosopo/dotenv build
+
       # build all packages in workspace
-      - run: npm run build:all
       - run: npm run build:all:cjs
+      - run: npm run build:all
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
@@ -84,7 +88,6 @@ jobs:
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
             cp demos/client-example-server/env.development demos/client-example-server/.env.test
-            cp demos/client-example/env.development demos/client-example/.env.test
             cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
             cp dev/scripts/env.test .env.test
             cp dev/scripts/env.test dev/scripts/.env.test

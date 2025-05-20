@@ -41,11 +41,24 @@ class RulesMongooseStorage implements RulesStorage {
 			throw this.modelNotSetProsopoError();
 		}
 
-		let document = await this.writingModel.findOneAndUpdate(record);
+		const filter = {
+			...(record.clientId && { clientId: record.clientId }),
+			...(record.userIp && { userIp: record.userIp }),
+			...(record.userId && { userId: record.userId }),
+			...(record.ja4 && { ja4: record.ja4 }),
+		};
 
-		if (!document) {
-			document = await this.writingModel.create(record);
+		// Validate record manually
+		const validationError = new this.writingModel(record).validateSync();
+		if (validationError) {
+			throw validationError; // Reject invalid input before DB call
 		}
+
+		const document = await this.writingModel.findOneAndUpdate(
+			filter,
+			record,
+			{ new: true, upsert: true, runValidators: true }, // 🔥 Enforce schema validation!
+		);
 
 		const ruleRecord = this.convertMongooseRecordToRuleRecord(
 			document.toObject(),
@@ -58,18 +71,32 @@ class RulesMongooseStorage implements RulesStorage {
 		if (!this.writingModel) {
 			throw this.modelNotSetProsopoError();
 		}
+		if (!this.readingModel) {
+			throw this.modelNotSetProsopoError();
+		}
+
+		const beforeDelete = await this.writingModel.find({});
+		this.logger.debug("Before deletion, DB records:", beforeDelete.length);
 
 		// Delete the existing ip records to avoid duplicates.
 		await this.writingModel.bulkWrite(
-			records.map((record) => ({
-				deleteOne: {
-					filter: {
-						clientId: record.clientId,
-						userIp: record.userIp,
-					} as Pick<Rule, "userId" | "userIp" | "clientId">,
-				},
-			})),
+			records.map((record) => {
+				const filter = {
+					...(record.clientId && { clientId: record.clientId }),
+					...(record.userIp && { userIp: record.userIp }),
+					...(record.userId && { userId: record.userId }),
+					...(record.ja4 && { ja4: record.ja4 }),
+				};
+				return {
+					deleteOne: {
+						filter,
+					},
+				};
+			}),
 		);
+		this.logger.debug("After deletion");
+		const afterDelete = await this.readingModel.find({});
+		this.logger.debug("After deletion, DB records:", afterDelete.length);
 
 		const documents = await this.writingModel.insertMany(records);
 		const objectDocuments = documents.map((document) => document.toObject());

@@ -60,8 +60,9 @@ export const CaptchaWidget = ({
 				flexDirection: "row",
 				flexWrap: "wrap",
 				justifyContent: "space-between",
-				paddingBottom: halfSpacing,
-				paddingRight: halfSpacing,
+				paddingBottom: fullSpacing,
+				paddingTop: fullSpacing,
+				gap: "10px",
 			}}
 		>
 			{items.map((item, index) => {
@@ -70,11 +71,9 @@ export const CaptchaWidget = ({
 					// enable the items in the grid to grow in width to use up excess space
 					flexGrow: 1,
 					// make the width of each item 1/3rd of the width overall, i.e. 3 columns
-					flexBasis: "33.3333%",
+					flexBasis: "calc(33.333% - 10px)",
 					// include the padding / margin / border in the width
 					boxSizing: "border-box",
-					paddingLeft: halfSpacing,
-					paddingTop: halfSpacing,
 				};
 				return (
 					<div style={imageStyle} key={item.hash}>
@@ -84,22 +83,22 @@ export const CaptchaWidget = ({
 								cursor: "pointer",
 								height: "100%",
 								width: "100%",
-								border: 1,
 								padding: 0,
 								margin: 0,
-								borderStyle: "solid",
-								borderColor: theme.palette.grey[300],
 							}}
 							onClick={() => onClick(hash)}
 						>
 							<img
 								style={{
 									width: "100%", // image should be full width / height of the item
-									backgroundColor: theme.palette.grey[300], // colour of the bands when letterboxing and image
 									display: "block", // removes whitespace below imgs
-									objectFit: "contain", // contain the entire image in the img tag
+									objectFit: "cover", // contain the entire image in the img tag
 									aspectRatio: "1/1", // force AR to be 1, letterboxing images with different aspect ratios
 									height: "auto", // make the img tag responsive to its container
+									overflow: "hidden",
+									borderStyle: "solid",
+									borderWidth: "1px",
+									borderColor: theme.palette.grey[300],
 								}}
 								src={item.data}
 								// biome-ignore lint/a11y/noRedundantAlt: has to contain image

@@ -21,11 +21,17 @@ import type { Plugin } from "vite";
 
 type TsConfigPath = string;
 
+type PackageDirPath = string;
+
 type FilePath = string;
 
-type ExternalFile<Key extends PropertyKey, Value> = [Key, Value];
+type ExternalFile<Key extends PropertyKey, Value, AdditionalInfo> = [
+	Key,
+	Value,
+	AdditionalInfo,
+];
 
-type ExternalFiles = Record<FilePath, TsConfigPath>;
+type ExternalFiles = Record<FilePath, [TsConfigPath, PackageDirPath]>;
 
 type VitePluginWatchExternalOptions = {
 	// path
@@ -74,7 +80,7 @@ const getFilesAndTsConfigs = async (
 	packageDir: string,
 	fileTypes: string[],
 	ignorePaths?: string[],
-): Promise<ExternalFile<FilePath, TsConfigPath>[]> => {
+): Promise<ExternalFile<FilePath, TsConfigPath, PackageDirPath>[]> => {
 	const packagePath = path.resolve(workspacePath, packageDir);
 	const tsConfigPath = path.resolve(packagePath, "tsconfig.json");
 	// check whether the user has passed a glob
@@ -82,9 +88,11 @@ const getFilesAndTsConfigs = async (
 		? currentPackage
 		: `${currentPackage}/**/*`;
 	const tsconfig = getTsConfigFollowExtends(tsConfigPath);
-	const rootDir = tsconfig.compilerOptions.rootDir;
+	const rootDir = tsconfig.compilerOptions.rootDir ?? ".";
 	const files = await fg(
-		path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`),
+		fg.convertPathToPattern(
+			path.resolve(packagePath, `${rootDir}/**/*.(${fileTypes.join("|")})`),
+		),
 		{
 			ignore: [
 				"**/node_modules/**",
@@ -94,7 +102,7 @@ const getFilesAndTsConfigs = async (
 		},
 	);
 	// keep the tsconfig path beside each file to avoid looking for file ids in arrays later
-	return files.map((file: string) => [file, tsConfigPath]);
+	return files.map((file: string) => [file, tsConfigPath, packageDir]);
 };
 
 const getExternalFileLists = async (
@@ -109,28 +117,44 @@ const getExternalFileLists = async (
 	).workspaces;
 	log(workspaces);
 	const externalFiles: ExternalFiles = {};
-	const filesConfigs: ExternalFile<FilePath, TsConfigPath>[] = (
+	const filesConfigs: ExternalFile<FilePath, TsConfigPath, PackageDirPath>[] = (
 		await Promise.all(
 			workspaces.map(async (workspace: string) => {
-				// get directories in each workspace
-				const workspacePath = path.resolve(
-					workspaceRoot,
-					workspace.replace("*", ""),
-				);
-				log(workspacePath);
-				// get directories in workSpacePath
-				const packages = fs
-					.readdirSync(workspacePath)
-					.filter((dir) =>
-						fs.lstatSync(path.join(workspacePath, dir)).isDirectory(),
+				if (workspace.indexOf("*") >= 0) {
+					// get directories in each workspace
+					const workspacePath = path.resolve(
+						workspaceRoot,
+						workspace.replace("*", ""),
 					);
-				log(packages);
-				// get files and tsconfigs in each package
+					log(workspacePath);
+					// get directories in workSpacePath
+					const packages = fs
+						.readdirSync(workspacePath)
+						.filter((dir) =>
+							fs.lstatSync(path.join(workspacePath, dir)).isDirectory(),
+						);
+					log(packages);
+					// get files and tsconfigs in each package
+					return await Promise.all(
+						packages.map(
+							async (packageDir: string) =>
+								await getFilesAndTsConfigs(
+									workspacePath,
+									currentPackage,
+									packageDir,
+									fileTypes,
+									ignorePaths,
+								),
+						),
+					);
+				}
+				const packages = [path.resolve(workspaceRoot, workspace)];
+				log("reading single package", workspace);
 				return await Promise.all(
 					packages.map(
-						async (packageDir: string) =>
+						async (packageDir) =>
 							await getFilesAndTsConfigs(
-								workspacePath,
+								workspace,
 								currentPackage,
 								packageDir,
 								fileTypes,
@@ -141,8 +165,8 @@ const getExternalFileLists = async (
 			}),
 		)
 	).flatMap((filesConfigs) => filesConfigs.flat());
-	for (const [file, tsconfig] of filesConfigs) {
-		externalFiles[file] = tsconfig;
+	for (const [file, tsconfig, packageDir] of filesConfigs) {
+		externalFiles[file] = [tsconfig, packageDir];
 	}
 	return externalFiles;
 };
@@ -185,16 +209,20 @@ const getOutExtension = (fileExtension: string) => {
 	}
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-const getOutDir = (file: string, tsconfig: { [key: string]: any }) => {
-	const rootFolder = tsconfig.compilerOptions.rootDir.replace(
-		RELATIVE_PATH_REGEX,
-		"",
-	);
-	const outFolder = tsconfig.compilerOptions.outDir.replace(
-		RELATIVE_PATH_REGEX,
-		"",
-	);
+const getOutDir = (
+	file: string,
+	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
+	tsconfig: { [key: string]: any },
+	packageDir: string,
+) => {
+	const rootDir = tsconfig.compilerOptions.rootDir ?? ".";
+	const outDir = tsconfig.compilerOptions.outDir ?? "dist";
+
+	if (rootDir === ".") {
+		return path.dirname(file).replace(packageDir, `${packageDir}/${outDir}`);
+	}
+	const rootFolder = rootDir.replace(RELATIVE_PATH_REGEX, "");
+	const outFolder = outDir.replace(RELATIVE_PATH_REGEX, "");
 	return path.dirname(file).replace(rootFolder, outFolder);
 };
 
@@ -237,15 +265,17 @@ export const VitePluginWatchWorkspace = async (
 		async handleHotUpdate({ file, server }) {
 			log(`File', ${file}`);
 
-			const tsconfigPath = externalFiles[file];
-			if (!tsconfigPath) {
+			const fileConfig = externalFiles[file];
+			if (!fileConfig) {
 				log(`tsconfigPath not found for file ${file}`);
 				return;
 			}
+			const [tsconfigPath, packageDir] = fileConfig;
+
 			const tsconfig = getTsConfigFollowExtends(tsconfigPath);
 			const fileExtension = path.extname(file);
 			const loader = getLoader(fileExtension);
-			const outdir = getOutDir(file, tsconfig);
+			const outdir = getOutDir(file, tsconfig, packageDir);
 			const outfile = getOutFile(outdir, file, fileExtension);
 			log(`Outfile ${outfile}, loader ${loader}`);
 			const buildResult = await build({

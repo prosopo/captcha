@@ -40,7 +40,6 @@ import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
 import { flatten } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
-import { getBotScore } from "../tasks/detection/getBotScore.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
@@ -59,10 +58,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	const tasks = new Tasks(env);
 
 	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
-	const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
-		userAccessRulesStorage,
-		env.logger,
-	);
 
 	/**
 	 * Provides a Captcha puzzle to a Dapp User
@@ -80,6 +75,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: "IP address not found" },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -93,6 +89,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -110,9 +107,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp },
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
+
+				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
+					userAccessRulesStorage,
+					req.logger,
+				);
 
 				const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
 					env.config.captchas,
@@ -138,6 +141,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 								user,
 							},
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
@@ -148,12 +152,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						user,
 						ipAddress,
 						captchaConfig,
+						clientRecord.settings.imageThreshold,
 						frictionlessTokenId,
 					);
 				const captchaResponse: CaptchaResponseBody = {
 					[ApiParams.status]: "ok",
 					[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 						...captcha,
+						target: req.t(`TARGET.${captcha.target}`),
 						items: captcha.items.map((item) =>
 							parseCaptchaAssets(item, env.assetsResolver),
 						),
@@ -168,7 +174,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(captchaResponse);
 			} catch (err) {
-				tasks.logger.error({ err, params: req.params });
+				req.logger.error({ err, params: req.params });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -179,6 +185,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							context: err,
 						},
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -204,6 +211,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -221,6 +229,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp },
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
@@ -248,7 +257,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(returnValue);
 			} catch (err) {
-				tasks.logger.error({ err, body: req.body });
+				req.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -257,6 +266,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							error: err,
 						},
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -279,6 +289,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err },
 					i18n: req.i18n,
+					logger: req.logger,
 				}),
 			);
 		}
@@ -296,6 +307,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 						context: { code: 400, siteKey: dapp },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -316,6 +328,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							user,
 						},
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -332,6 +345,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							user,
 						},
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -372,7 +386,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
-			tasks.logger.error({ err, body: req.body });
+			req.logger.error({ err, body: req.body });
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
@@ -382,6 +396,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						error: err,
 					},
 					i18n: req.i18n,
+					logger: req.logger,
 				}),
 			);
 		}
@@ -408,6 +423,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 						context: { code: 400, error: err, body: req.body },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -433,6 +449,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp },
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
@@ -450,7 +467,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 				return res.json(response);
 			} catch (err) {
-				tasks.logger.error({ err, body: req.body });
+				req.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -459,6 +476,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							error: err,
 						},
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
@@ -480,7 +498,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.db.getFrictionlessTokenRecordByToken(token);
 
 				if (existingToken) {
-					tasks.logger.info(`Token ${existingToken} has already been used`);
+					req.logger.info(`Token ${existingToken} has already been used`);
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
 							existingToken._id as ObjectId,
@@ -492,7 +510,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp } = await getBotScore(token);
+				const { baseBotScore, timestamp } =
+					await tasks.frictionlessManager.decryptPayload(token);
 
 				const botScore = baseBotScore + lScore;
 
@@ -503,6 +522,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
 							context: { code: 400, siteKey: dapp },
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
@@ -522,6 +542,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 								user,
 							},
 							i18n: req.i18n,
+							logger: req.logger,
 						}),
 					);
 				}
@@ -557,6 +578,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
+				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
+					userAccessRulesStorage,
+					req.logger,
+				);
+
 				// If the user or IP address has an image captcha config defined, send an image captcha
 				const imageCaptchaConfigDefined =
 					await imageCaptchaConfigResolver.isConfigDefined(
@@ -580,7 +606,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
-					tasks.logger.info({
+					req.logger.info({
 						message: `Bot score ${botScore} is greater than threshold ${botThreshold}`,
 					});
 					return res.json(
@@ -593,11 +619,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
 				);
 			} catch (err) {
-				tasks.logger.error("Error in frictionless captcha challenge:", err);
+				req.logger.error("Error in frictionless captcha challenge:", err);
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: err },
 						i18n: req.i18n,
+						logger: req.logger,
 					}),
 				);
 			}
