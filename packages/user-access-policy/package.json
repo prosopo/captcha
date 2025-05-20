@@ -25,7 +25,7 @@
 	"dependencies": {
 		"@prosopo/api-route": "2.6.0",
 		"@prosopo/common": "2.6.0",
-        "@prosopo/util": "2.6.0",
+		"@prosopo/util": "2.6.0",
 		"@prosopo/types": "2.6.1",
 		"ip-address": "10.0.1",
 		"mongoose": "8.6.2",

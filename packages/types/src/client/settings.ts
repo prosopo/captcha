@@ -30,7 +30,6 @@ export const ClientSettingsSchema = object({
 		.optional()
 		.default(frictionlessThresholdDefault),
 	powDifficulty: number().optional().default(powDifficultyDefault),
-		imageThreshold: number().optional().default(imageThresholdDefault),
-
+	imageThreshold: number().optional().default(imageThresholdDefault),
 });
 export type IUserSettings = output<typeof ClientSettingsSchema>;
