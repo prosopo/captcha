@@ -11,12 +11,6 @@
 	"references": [
 		{
 			"path": "../../packages/dotenv"
-		},
-		{
-			"path": "../../packages/types"
-		},
-		{
-			"path": "../../packages/locale"
 		}
 	]
 }
