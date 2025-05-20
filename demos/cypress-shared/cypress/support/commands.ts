@@ -50,7 +50,7 @@ declare global {
 				captchaType?: CaptchaType,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
-			
+
 			// Wait for the procaptcha script to load and be ready
 			waitForProcaptchaScript(): Cypress.Chainable<void>;
 		}
@@ -59,9 +59,9 @@ declare global {
 
 // Extend the AUTWindow interface to include the procaptcha property
 declare global {
-    interface Window {
-        procaptcha?: unknown;
-    }
+	interface Window {
+		procaptcha?: unknown;
+	}
 }
 
 export const checkboxClass = '[type="checkbox"]';
@@ -102,7 +102,9 @@ function waitForProcaptchaScript(): Cypress.Chainable<void> {
 				elapsed += checkInterval;
 				if (elapsed >= maxWaitTime) {
 					// If max wait time exceeded, continue anyway - test will likely fail but this avoids hanging
-					cy.log('Warning: procaptcha script did not load within the expected time');
+					cy.log(
+						"Warning: procaptcha script did not load within the expected time",
+					);
 					resolve();
 					return;
 				}

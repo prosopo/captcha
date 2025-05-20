@@ -75,10 +75,10 @@ describe("Captchas", () => {
 			expect(response.status).to.equal(200);
 		});
 		cy.visit(Cypress.env("default_page"));
-		
+
 		// Wait for the procaptcha script to be loaded after navigation
 		cy.waitForProcaptchaScript();
-		
+
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"getCaptcha",
 		);
@@ -95,10 +95,10 @@ describe("Captchas", () => {
 
 	it("Captchas load when 'I am human' is pressed", () => {
 		cy.visit(Cypress.env("default_page"));
-		
+
 		// Wait for the procaptcha script to be loaded after navigation
 		cy.waitForProcaptchaScript();
-		
+
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless").as(
 			"frictionless",
 		);
