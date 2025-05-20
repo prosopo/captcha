@@ -62,6 +62,9 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(Cypress.env("default_page")).then(() => {
+			// Wait for the procaptcha script to be loaded
+			// This ensures tests work with both async and non-async script loading
+			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
