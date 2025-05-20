@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-pow",
-	"version": "2.6.0",
+	"version": "2.6.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -24,16 +24,18 @@
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
-		"@prosopo/account": "2.6.0",
-		"@prosopo/api": "2.6.0",
+		"@prosopo/account": "2.6.1",
+		"@prosopo/api": "2.6.1",
 		"@prosopo/common": "2.6.0",
 		"@prosopo/locale": "2.6.0",
-		"@prosopo/procaptcha": "2.6.0",
-		"@prosopo/procaptcha-common": "2.6.0",
-		"@prosopo/types": "2.6.0",
+		"@prosopo/procaptcha": "2.6.1",
+		"@prosopo/procaptcha-common": "2.6.1",
+		"@prosopo/types": "2.6.1",
 		"@prosopo/util": "2.6.0",
 		"@prosopo/widget-skeleton": "2.6.0",
 		"express": "4.21.2",

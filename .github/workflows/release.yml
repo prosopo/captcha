@@ -119,6 +119,15 @@ jobs:
                   fi
                 done
 
+            # chuck all vars into the env for building
+            - name: vars to env
+              run: |
+                set -x
+                for key in $(echo '${{ toJson(vars) }}' | jq -r 'keys[]'); do
+                  value=$(echo '${{ toJson(vars) }}' | jq -r --arg k "$key" '.[$k]')
+                  echo "$key=$value" >> $GITHUB_ENV
+                done
+
             # build each of those packages
             - name: build packages
               run: |
