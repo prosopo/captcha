@@ -1,5 +1,20 @@
 # @prosopo/scripts
 
+## 2.6.2
+
+### Patch Changes
+
+- Updated dependencies [6ff193a]
+  - @prosopo/datasets@2.6.2
+  - @prosopo/types@2.6.2
+  - @prosopo/provider@2.7.1
+  - @prosopo/account@2.6.2
+  - @prosopo/cli@2.6.2
+  - @prosopo/env@2.6.2
+  - @prosopo/keyring@2.6.2
+  - @prosopo/types-database@2.6.2
+  - @prosopo/types-env@2.6.2
+
 ## 2.6.1
 
 ### Patch Changes

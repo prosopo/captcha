@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-common
 
+## 2.6.2
+
+### Patch Changes
+
+- 6ff193a: Change settings type
+- Updated dependencies [6ff193a]
+  - @prosopo/types@2.6.2
+  - @prosopo/account@2.6.2
+  - @prosopo/load-balancer@2.6.2
+
 ## 2.6.1
 
 ### Patch Changes

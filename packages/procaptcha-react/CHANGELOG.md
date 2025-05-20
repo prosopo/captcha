@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-react
 
+## 2.6.2
+
+### Patch Changes
+
+- 6ff193a: Change settings type
+- Updated dependencies [6ff193a]
+  - @prosopo/procaptcha-common@2.6.2
+  - @prosopo/types@2.6.2
+  - @prosopo/procaptcha@2.6.2
+
 ## 2.6.1
 
 ### Patch Changes
