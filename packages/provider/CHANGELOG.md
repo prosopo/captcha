@@ -1,5 +1,19 @@
 # @prosopo/provider
 
+## 2.7.1
+
+### Patch Changes
+
+- Updated dependencies [6ff193a]
+  - @prosopo/datasets@2.6.2
+  - @prosopo/types@2.6.2
+  - @prosopo/database@2.6.2
+  - @prosopo/env@2.6.2
+  - @prosopo/keyring@2.6.2
+  - @prosopo/types-database@2.6.2
+  - @prosopo/types-env@2.6.2
+  - @prosopo/user-access-policy@2.6.2
+
 ## 2.7.0
 
 ### Minor Changes

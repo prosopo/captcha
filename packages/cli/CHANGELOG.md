@@ -1,5 +1,17 @@
 # @prosopo/cli
 
+## 2.6.2
+
+### Patch Changes
+
+- Updated dependencies [6ff193a]
+  - @prosopo/types@2.6.2
+  - @prosopo/provider@2.7.1
+  - @prosopo/api@2.6.2
+  - @prosopo/env@2.6.2
+  - @prosopo/keyring@2.6.2
+  - @prosopo/user-access-policy@2.6.2
+
 ## 2.6.1
 
 ### Patch Changes

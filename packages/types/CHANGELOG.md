@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 2.6.2
+
+### Patch Changes
+
+- 6ff193a: Change settings type
+
 ## 2.6.1
 
 ### Patch Changes

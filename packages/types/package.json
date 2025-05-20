@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types",
-	"version": "2.6.1",
+	"version": "2.6.2",
 	"description": "Types for prosopo TypeScript packages",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
