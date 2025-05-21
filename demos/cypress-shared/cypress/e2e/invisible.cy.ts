@@ -64,7 +64,7 @@ describe("Captchas", () => {
 		cy.get("input[name='name']").type("John Doe");
 		cy.get("input[name='email']").type("john.doe@example.com");
 
-        // Wait for form validation to settle
+		// Wait for form validation to settle
 		cy.wait(200);
 
 		// Click the submit button
