@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
@@ -75,12 +76,12 @@ import {
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
 import {
-	type Rule,
-	type RulesStorage,
-	createMongooseRulesStorage,
-	getRuleMongooseSchema,
+	type AccessRulesStorage,
+	createRedisAccessRulesIndex,
+	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import type { Model, ObjectId } from "mongoose";
+import type { ObjectId } from "mongoose";
+import { type RedisClientType, createClient } from "redis";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -95,7 +96,6 @@ enum TableNames {
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	userAccessRules = "userAccessRules",
 	detector = "detector",
 }
 
@@ -156,34 +156,42 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.userAccessRules,
-		modelName: "UserAccessRules",
-		schema: getRuleMongooseSchema(),
-	},
-	{
 		collectionName: TableNames.detector,
 		modelName: "Detector",
 		schema: DetectorRecordSchema,
 	},
 ];
 
+type ProviderDatabaseOptions = {
+	mongo: {
+		url: string;
+		dbname?: string;
+		authSource?: string;
+	};
+	redis: {
+		url: string;
+		password: string;
+	};
+	logger?: Logger;
+};
+
 export class ProviderDatabase
 	extends MongoDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private userAccessRulesDbStorage: RulesStorage | null;
+	private userAccessRulesStorage: AccessRulesStorage | null;
 
-	constructor(
-		url: string,
-		dbname?: string,
-		authSource?: string,
-		logger?: Logger,
-	) {
-		super(url, dbname, authSource, logger);
+	constructor(private readonly options: ProviderDatabaseOptions) {
+		super(
+			options.mongo.url,
+			options.mongo.dbname,
+			options.mongo.authSource,
+			options.logger,
+		);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRulesDbStorage = null;
+		this.userAccessRulesStorage = null;
 	}
 
 	override async connect(): Promise<void> {
@@ -191,10 +199,27 @@ export class ProviderDatabase
 
 		this.loadTables();
 
-		this.userAccessRulesDbStorage = createMongooseRulesStorage(
+		await this.setupRedis();
+	}
+
+	protected async setupRedis(): Promise<void> {
+		const redisClient = await this.createRedisClient();
+
+		await createRedisAccessRulesIndex(redisClient);
+
+		this.userAccessRulesStorage = createRedisAccessRulesStorage(
+			redisClient,
 			this.logger,
-			<Model<Rule>>this.tables.userAccessRules,
 		);
+	}
+
+	protected async createRedisClient(): Promise<RedisClientType> {
+		return (await createClient({
+			url: this.options.redis.url,
+			password: this.options.redis.password,
+		})
+			.on("error", (error) => this.logger.error("Redis Client Error", error))
+			.connect()) as RedisClientType;
 	}
 
 	loadTables() {
@@ -217,12 +242,12 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
-	public getUserAccessRulesStorage(): RulesStorage {
-		if (null === this.userAccessRulesDbStorage) {
-			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED");
+	public getUserAccessRulesStorage(): AccessRulesStorage {
+		if (null === this.userAccessRulesStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED");
 		}
 
-		return this.userAccessRulesDbStorage;
+		return this.userAccessRulesStorage;
 	}
 
 	/**

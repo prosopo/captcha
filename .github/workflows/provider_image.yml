@@ -53,10 +53,10 @@ jobs:
 
             - run: npm ci
 
-            # build the packages
+            # build all the packages in the workspace to prepare assets for the next cli bundle command
             - name: Build packages
               run: |
-                  npm run -w @prosopo/scripts build
+                npm run build:all
 
             # build the cli production bundle
             - name: Build cli production bundle

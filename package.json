@@ -40,10 +40,9 @@
 		"start:provider": "npm -w @prosopo/cli run start",
 		"start:provider:admin": "npm -w @prosopo/cli run start:admin",
 		"start:server": "npm -w @prosopo/client-example-server run start",
-		"start:demo": "npm -w @prosopo/client-example run start",
 		"start:bundle": "npm -w @prosopo/client-bundle-example run start",
-		"start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
-		"start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
+		"start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:bundle\" --kill-others",
+		"start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:bundle\" --kill-others",
 		"populate-data": "npm -w @prosopo/provider run populate-data",
 		"test": "npm run ws -- test",
 		"lint:license": "npm run -w @prosopo/lint license -- $(pwd)",
@@ -164,5 +163,6 @@
 		"commitizen": {
 			"path": "./node_modules/cz-conventional-changelog"
 		}
-	}
+	},
+	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

@@ -13,85 +13,45 @@
 // limitations under the License.
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
-import type { Model } from "mongoose";
-import type { BlacklistInspector } from "./blacklistInspector.js";
-import { apiRulePaths } from "./rules/api/apiRulePaths.js";
-import { ApiRuleRoutesProvider } from "./rules/api/apiRuleRoutesProvider.js";
-import { apiDeleteManyRulesArgsSchema } from "./rules/api/deleteMany/apiDeleteManyRulesArgsSchema.js";
-import { getExpressApiRuleRateLimits } from "./rules/api/getExpressApiRuleRateLimits.js";
+import { type AccessPolicy, AccessPolicyType } from "#policy/accessPolicy.js";
 import {
-	type ApiInsertManyRulesArgs,
-	type ApiInsertManyRulesArgsOutputSchema,
-	apiInsertManyRulesArgsSchema,
-} from "./rules/api/insertMany/apiInsertManyRulesArgs.js";
-import { BlacklistRulesInspector } from "./rules/blacklistRulesInspector.js";
-import { ImageCaptchaConfigRulesResolver } from "./rules/imageCaptchaConfigRulesResolver.js";
-import type { RuleMongooseRecord } from "./rules/mongoose/ruleMongooseRecord.js";
-import { RulesMongooseStorage } from "./rules/mongoose/rulesMongooseStorage.js";
-import { getRuleMongooseSchema } from "./rules/mongoose/schemas/getRuleMongooseSchema.js";
-import { imageCaptchaConfigSchema } from "./rules/rule/config/image/imageCaptchaConfigSchema.js";
-import { powCaptchaConfigSchema } from "./rules/rule/config/pow/powCaptchaConfigSchema.js";
-import { ruleConfigSchema } from "./rules/rule/config/ruleConfigSchema.js";
-import { ruleIpSchema } from "./rules/rule/ip/ruleIpSchema.js";
-import { type Rule, RuleSchema } from "./rules/rule/rule.js";
-import type { RulesStorage } from "./rules/storage/rulesStorage.js";
+	type ResolveAccessPolicy,
+	createAccessPolicyResolver,
+} from "#policy/accessPolicyResolver.js";
+import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
+import type { AccessRulesStorage } from "#policy/accessRules.js";
 import {
-	createIpV4MaskRule,
-	createIpV4Rule,
-	getIpMaskString,
-} from "./rules/util.js";
+	AccessRuleApiRoutes,
+	accessRuleApiPaths,
+	getExpressApiRuleRateLimits,
+} from "#policy/api/accessRuleApiRoutes.js";
+import { deleteAllRulesEndpointSchema } from "#policy/api/deleteAllRulesEndpoint.js";
+import { deleteRulesEndpointSchema } from "#policy/api/deleteRulesEndpoint.js";
+import { insertRulesEndpointSchema } from "#policy/api/insertRulesEndpoint.js";
+import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
+import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
 
-const createBlacklistInspector = (
-	rulesStorage: RulesStorage,
-	logger: Logger,
-): BlacklistInspector => {
-	return new BlacklistRulesInspector(rulesStorage, logger);
-};
-
-const createImageCaptchaConfigResolver = (
-	rulesStorage: RulesStorage,
-	logger: Logger,
-): ImageCaptchaConfigRulesResolver => {
-	return new ImageCaptchaConfigRulesResolver(rulesStorage, logger);
-};
-
-const createApiRuleRoutesProvider = (
-	rulesStorage: RulesStorage,
+export const createApiRuleRoutesProvider = (
+	rulesStorage: AccessRulesStorage,
 ): ApiRoutesProvider => {
-	return new ApiRuleRoutesProvider(rulesStorage);
-};
-
-const createMongooseRulesStorage = (
-	logger: Logger,
-	readingModel: Model<Rule> | null,
-	writingModel: Model<Rule> | null = null,
-): RulesStorage => {
-	return new RulesMongooseStorage(logger, readingModel, writingModel);
+	return new AccessRuleApiRoutes(rulesStorage);
 };
 
 export {
-	type Rule,
-	type RuleMongooseRecord,
-	type RulesStorage,
-	type BlacklistInspector,
-	type ApiInsertManyRulesArgs,
-	type ApiInsertManyRulesArgsOutputSchema,
-	createMongooseRulesStorage,
-	createImageCaptchaConfigResolver,
-	createBlacklistInspector,
-	createApiRuleRoutesProvider,
-	createIpV4MaskRule,
-	createIpV4Rule,
-	getRuleMongooseSchema,
+	type AccessPolicy,
+	type AccessRulesStorage,
+	type ResolveAccessPolicy,
+	type PolicyFilter,
+	createAccessPolicyResolver,
+	AccessPolicyType,
+	ScopeMatch,
+	// redis
+	createRedisAccessRulesIndex,
+	createRedisAccessRulesStorage,
+	// api
+	accessRuleApiPaths,
+	insertRulesEndpointSchema,
+	deleteAllRulesEndpointSchema,
+	deleteRulesEndpointSchema,
 	getExpressApiRuleRateLimits,
-	getIpMaskString,
-	apiInsertManyRulesArgsSchema,
-	apiDeleteManyRulesArgsSchema,
-	imageCaptchaConfigSchema,
-	powCaptchaConfigSchema,
-	RuleSchema,
-	ruleConfigSchema,
-	ruleIpSchema,
-	apiRulePaths,
 };

@@ -13,15 +13,18 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
-import type { BlacklistInspector } from "@prosopo/user-access-policy";
+import {
+	type ResolveAccessPolicy,
+	ScopeMatch,
+} from "@prosopo/user-access-policy";
+import { AccessPolicyType } from "@prosopo/user-access-policy";
 import { getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 
-class BlacklistRequestInspector {
+export class BlacklistRequestInspector {
 	public constructor(
-		private readonly blacklistInspector: BlacklistInspector,
+		private readonly resolveAccessPolicy: ResolveAccessPolicy,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
-		private readonly logger: Logger,
 	) {}
 
 	public async abortRequestForBlockedUsers(
@@ -84,12 +87,20 @@ class BlacklistRequestInspector {
 				requestBody,
 			);
 
-			return await this.blacklistInspector.isUserBlacklisted(
-				clientId,
-				userIpAddress,
-				ja4,
-				userId,
-			);
+			const accessPolicy = await this.resolveAccessPolicy({
+				policyScope: {
+					clientId: clientId,
+				},
+				policyScopeMatch: ScopeMatch.Greedy,
+				userScope: {
+					userId: userId,
+					numericIp: userIpAddress.bigInt(),
+					ja4Hash: ja4,
+				},
+				userScopeMatch: ScopeMatch.Greedy,
+			});
+
+			return AccessPolicyType.Block === accessPolicy?.type;
 		} catch (err) {
 			logger.error("Block Middleware Error:", err);
 
@@ -105,21 +116,19 @@ class BlacklistRequestInspector {
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 	): {
-		userId: string;
-		clientId: string;
+		userId: string | undefined;
+		clientId: string | undefined;
 	} {
 		const userId =
 			this.getObjectValue(requestHeaders, "Prosopo-User") ||
-			this.getObjectValue(requestBody, "user") ||
-			"";
+			this.getObjectValue(requestBody, "user");
 		const clientId =
 			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
-			this.getObjectValue(requestBody, "dapp") ||
-			"";
+			this.getObjectValue(requestBody, "dapp");
 
 		return {
-			userId: "string" === typeof userId ? userId : "",
-			clientId: "string" === typeof clientId ? clientId : "",
+			userId: "string" === typeof userId ? userId : undefined,
+			clientId: "string" === typeof clientId ? clientId : undefined,
 		};
 	}
 
@@ -130,5 +139,3 @@ class BlacklistRequestInspector {
 		return object[key];
 	}
 }
-
-export { BlacklistRequestInspector };
