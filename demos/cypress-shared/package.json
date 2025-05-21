@@ -38,6 +38,8 @@
 		"cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress open",
 		"cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --browser chrome",
 		"cypress:open:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.frictionless.config.js",
-		"cypress:run:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.frictionless.config.js --browser chrome"
+		"cypress:run:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.frictionless.config.js --browser chrome",
+		"cypress:open:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.pow.config.js",
+		"cypress:run:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.pow.config.js --browser chrome"
 	}
 }
