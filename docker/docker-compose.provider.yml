@@ -8,8 +8,6 @@ services:
             dockerfile: ./docker/images/provider.dockerfile
         env_file:
             - ../dev/scripts/.env.development
-        ports:
-            - '9229:9229'
         networks:
             external:
             internal:
@@ -42,8 +40,6 @@ services:
         pull_policy: always
         env_file:
             - ../.env.1.${NODE_ENV}
-        expose:
-            - '9229'
         networks:
             internal:
                 ipv4_address: 172.18.0.3
@@ -83,8 +79,6 @@ services:
         pull_policy: always
         env_file:
             - ../.env.2.${NODE_ENV}
-        expose:
-            - '9339'
         networks:
             external:
             internal:
@@ -119,8 +113,6 @@ services:
         image: mongo:6.0.17
         # volumes:
         #   - ./db:/data/db
-        ports:
-            - '27017:27017'
         env_file:
             - ../dev/scripts/.env.development
         networks:
@@ -154,8 +146,6 @@ services:
         pull_policy: always
         volumes:
             - /data/db:/data/db
-        expose:
-            - '27017'
         env_file:
             - ../.env.${NODE_ENV}
         networks:
@@ -193,7 +183,7 @@ services:
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
-        ports:
+        ports: # expose ports to the host
             - '80:80'
             - '443:443'
             - '443:443/udp'
@@ -257,8 +247,11 @@ services:
             - 1.1.1.1
             - 208.67.222.222
         stop_grace_period: 0s # will discard some logs that haven't been pushed up, but will stop the container immediately
+
 networks:
     internal:
+        # any service on this network can talk to any other service on this network via any port!
+        # outside world cannot access this network
         name: internal
         internal: true
         driver: bridge
@@ -267,6 +260,8 @@ networks:
                 - subnet: 172.18.0.0/16
                   gateway: 172.18.0.1
     external:
+        # any service on this network can talk to any other service on this network via any port!
+        # outside world can access this network, but only via the ports exposed in the services
         name: external
         driver: bridge
         ipam:
