@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <title>Procaptcha demo: Invisible Frictionless - Implicit Rendering</title>
+    <title>Procaptcha demo: PoW - Implicit Rendering</title>
     <style>
         .console-output {
             margin-top: 20px;
@@ -118,78 +118,9 @@
             console.log(`CAPTCHA Status: ${message}`);
         }
 
-        // Define callbacks directly on window object so they're globally accessible
-        window.onCaptchaFailed = function () {
-            updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
-        }
-
-        window.onCaptchaVerified = function(output) {
-            updateCaptchaStatus('Challenge passed successfully!', 'success');
-            updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
-        }
-
-        window.onActionHandler = function(token) {
-            updateCaptchaStatus('CAPTCHA callback executed with token', 'success');
-            
-            if (!token) {
-                updateCaptchaStatus('Error: No token received from CAPTCHA', 'error');
-                alert("Must complete captcha");
-                return;
-            }
-
-            updateCaptchaStatus('Form submission initiated with valid CAPTCHA token', 'info');
-            const payload = {
-                email: document.getElementById('email').value,
-                name: document.getElementById('name').value,
-                password: document.getElementById('password').value,
-                "procaptcha-response": token,
-            };
-            const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;
-            console.log("Posting to", url, "with payload", payload);
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-                contentType: "application/json",
-            }).then((response) => {
-                return new Promise((resolve) => response.json()
-                    .then((json) => resolve({
-                        status: response.status,
-                        ok: response.ok,
-                        json,
-                    })))
-            })
-                .then(async ({status, json, ok}) => {
-                    console.log("Response status:", status, "message:", json.message, "ok:", ok);
-                    console.log("Full response:", json);
-                    try {
-                        if (status !== 200) {
-                            window.setIsError(true);
-                            window.setMessage(json.message);
-                            updateCaptchaStatus(`API Error: ${json.message}`, 'error');
-                        } else {
-                            window.setIsError(false);
-                            window.setMessage(json.message);
-                            updateCaptchaStatus(`API Success: ${json.message}`, 'success');
-                        }
-                    } catch (err) {
-                        console.log("Error processing response:", err);
-                        updateCaptchaStatus(`Error processing response: ${err}`, 'error');
-                    }
-                })
-                .catch((err) => {
-                    console.log("Fetch error:", err);
-                    window.setIsError(true);
-                    window.setMessage("Error: " + err);
-                    updateCaptchaStatus(`Fetch error: ${err}`, 'error');
-                });
-        };
-
         window.addEventListener('load', () => {
             setupConsoleCapture();
-            
+
             window.setIsError = (isError) => {
                 const messageContainer = document.getElementById('messageContainer');
                 messageContainer.style.color = isError ? 'red' : 'black';
@@ -201,6 +132,7 @@
             };
 
             window.onLoggedIn = (token) => {
+                updateCaptchaStatus('Logged in, fetching private resource', 'info');
                 const url = new URL("/private", config.serverUrl).href;
                 console.log("getting private resource with token ", token, "at", url);
                 fetch(url, {
@@ -215,14 +147,82 @@
                         try {
                             const jsonRes = await res.json();
                             if (res.status === 200) {
+                                updateCaptchaStatus(`Successfully accessed private resource`, 'success');
                                 setMessage(jsonRes.message);
+                            } else {
+                                updateCaptchaStatus(`Failed to access private resource: ${res.status}`, 'error');
                             }
                         } catch (err) {
                             console.log(err);
+                            updateCaptchaStatus(`Error parsing response: ${err}`, 'error');
                         }
                     })
                     .catch((err) => {
                         console.log(err);
+                        updateCaptchaStatus(`Fetch error: ${err}`, 'error');
+                    });
+            };
+
+            window.onActionHandler = () => {
+                updateCaptchaStatus('Form submission initiated', 'info');
+                
+                const procaptchaElements = document.getElementsByName('procaptcha-response');
+
+                if (!procaptchaElements.length) {
+                    updateCaptchaStatus('Error: No CAPTCHA response found', 'error');
+                    alert("Must complete captcha");
+                    return
+                }
+
+                const procaptchaToken = procaptchaElements[0].value;
+                updateCaptchaStatus(`Token received: ${procaptchaToken.substring(0, 15)}...`, 'success');
+
+                const payload = {
+                    email: document.getElementById('email').value,
+                    name: document.getElementById('name').value,
+                    password: document.getElementById('password').value,
+                    "procaptcha-response": procaptchaToken,
+                };
+                const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;
+                console.log("posting to", url, "with payload", payload);
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                    contentType: "application/json",
+                }).then((response) => {
+                    return new Promise((resolve) => response.json()
+                        .then((json) => resolve({
+                            status: response.status,
+                            ok: response.ok,
+                            json,
+                        })))
+                })
+                    .then(async ({status, json, ok}) => {
+                        console.log("status", status, "json", json.message, "ok", ok);
+                        console.log("json", json)
+                        try {
+                            if (status !== 200) {
+                                updateCaptchaStatus(`API Error: ${json.message}`, 'error');
+                                setIsError(true);
+                                setMessage(json.message);
+                            } else {
+                                updateCaptchaStatus(`API Success: ${json.message}`, 'success');
+                                setIsError(false);
+                                setMessage(json.message);
+                            }
+                        } catch (err) {
+                            console.log(err);
+                            updateCaptchaStatus(`Error processing response: ${err}`, 'error');
+                        }
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        updateCaptchaStatus(`Fetch error: ${err}`, 'error');
+                        setIsError(true);
+                        setMessage("Error: " + err);
                     });
             };
             
@@ -247,12 +247,18 @@
             
             observer.observe(document.body, { childList: true, subtree: true });
         });
-        
-        // Create a method to show CAPTCHA execution events
-        document.addEventListener('procaptcha:execute', function(e) {
-            updateCaptchaStatus(`CAPTCHA execution started: type=frictionless, mode=invisible`, 'info');
-            updateCaptchaStatus(`Container: ${e.detail.containerId}, timestamp: ${new Date(e.detail.timestamp).toLocaleTimeString()}`, 'info');
-        });
+
+
+        window.onCaptchaFailed = function () {
+            console.log('Challenge failed');
+            updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+        }
+
+        window.onCaptchaVerified = (output) => {
+            console.log('Challenge passed');
+            updateCaptchaStatus('Challenge passed successfully!', 'success');
+            updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
+        }
         
         // Add custom event listener for CAPTCHA verification stages
         document.addEventListener('DOMContentLoaded', function() {
@@ -267,8 +273,8 @@
 <body>
 
 <div class="mui-container">
-    <h1>Invisible Frictionless CAPTCHA - Implicit Rendering</h1>
-    <p>This example demonstrates how to use Procaptcha in invisible frictionless mode with implicit rendering directly on a button.</p>
+    <h1>Proof of Work CAPTCHA - Implicit Rendering</h1>
+    <p>This example demonstrates how to use Procaptcha in Proof of Work mode with implicit rendering.</p>
     
     <!-- CAPTCHA Status Display -->
     <div id="captcha-status" class="captcha-status">
@@ -290,83 +296,56 @@
             <input id="password" type="password" name="password" required/>
         </div>
         <div class="mui-textfield mui-textfield--float-label">
-            <!-- The div here was empty, we don't need it for invisible mode -->
+            <!-- Dev sitekey -->
+            <div
+                    class="procaptcha"
+                    data-theme="light"
+                    data-sitekey="%PROSOPO_SITE_KEY_POW%"
+                    data-failed-callback="onCaptchaFailed"
+                    data-callback="onCaptchaVerified"
+                    data-captcha-type="pow"
+            ></div>
         </div>
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
-        <button 
-            type="button" 
-            class="mui-btn mui-btn--raised procaptcha" 
-            data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%" 
-            data-callback="onActionHandler"
-            data-failed-callback="onCaptchaFailed"
-            data-captcha-type="frictionless"
-            data-size="invisible"
-            data-cy="submit-button">
-            Submit
-        </button>
+        <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
     </form>
     
     <!-- Console output display area -->
     <div id="console-output" class="console-output" style="display: none;"></div>
     
     <div class="explanation">
-        <h2>How Invisible Frictionless CAPTCHA Works (Implicit Rendering)</h2>
+        <h2>How Proof of Work CAPTCHA Works (Implicit Rendering)</h2>
         
         <h3>Implementation Details</h3>
-        <p>This demo shows how to implement invisible frictionless CAPTCHA directly on a button using implicit rendering:</p>
+        <p>This demo shows how to implement Proof of Work CAPTCHA using implicit rendering:</p>
         <ol>
-            <li>Include the Procaptcha script</li>
-            <li>Add the <code>procaptcha</code> class to your submit button</li>
-            <li>Set <code>data-sitekey</code> with your frictionless site key</li>
-            <li>Set <code>data-callback</code> to the function that will receive the token</li>
-            <li>Add <code>data-captcha-type="frictionless"</code> to specify the type</li>
-            <li>Add <code>data-size="invisible"</code> to enable invisible mode</li>
+            <li>Include the Procaptcha script in your document</li>
+            <li>Add a div with the <code>procaptcha</code> class</li>
+            <li>Set <code>data-sitekey</code> with your PoW site key</li>
+            <li>Set the <code>data-callback</code> and <code>data-failed-callback</code> attributes</li>
+            <li>Add <code>data-captcha-type="pow"</code> to specify the type</li>
         </ol>
         
-        <h3>Key Button Attributes</h3>
+        <h3>Key CAPTCHA Attributes</h3>
         <pre>
-&lt;button 
-    class="mui-btn mui-btn--raised procaptcha"
-    data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%" 
-    data-callback="onActionHandler"
+&lt;div
+    class="procaptcha"
+    data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_POW%"
     data-failed-callback="onCaptchaFailed"
-    data-captcha-type="frictionless"
-    data-size="invisible"&gt;
-    Submit
-&lt;/button&gt;</pre>
+    data-callback="onCaptchaVerified"
+    data-captcha-type="pow"
+&gt;&lt;/div&gt;</pre>
         
         <h3>Execution Flow</h3>
         <ol>
             <li>When the page loads, Procaptcha scans for elements with the <code>procaptcha</code> class</li>
-            <li>For buttons, it adds an event listener that triggers on click</li>
-            <li>When the button is clicked, the default action is prevented</li>
-            <li>Procaptcha dispatches a <code>procaptcha:execute</code> event</li>
-            <li>This event triggers the verification flow in the background</li>
-            <li>Once verified, the <code>data-callback</code> function is called with the token</li>
+            <li>The PoW CAPTCHA is rendered in the container</li>
+            <li>User completes the proof of work challenge</li>
+            <li>On successful completion, the <code>data-callback</code> function is called with the token</li>
+            <li>The token is stored in a hidden input named <code>procaptcha-response</code></li>
+            <li>When the form is submitted, the token is included in the request</li>
         </ol>
-        
-        <h3>Behind the Scenes</h3>
-        <p>When the button is clicked, these internal steps happen:</p>
-        <ol>
-            <li>The script identifies all CAPTCHA containers based on: 
-                <ul>
-                    <li>Elements with <code>data-size="invisible"</code></li>
-                    <li>Elements with specific IDs (like <code>procaptcha-container</code>)</li>
-                    <li>Elements with class <code>p-procaptcha</code></li>
-                </ul>
-            </li>
-            <li>It dispatches a <code>procaptcha:execute</code> event with container details</li>
-            <li>The frictionless CAPTCHA verification happens invisibly</li>
-            <li>When completed, your callback function receives the verification token</li>
-        </ol>
-        
-        <h3>Callback Functions</h3>
-        <p>Important: Callback functions must be defined directly on the window object, not inside event listeners or other closures, so they're accessible when the CAPTCHA system initializes.</p>
-        <pre>
-window.onActionHandler = function(token) {
-    console.log('Procaptcha token received:', token);
-    // Handle form submission with the token
-};</pre>
     </div>
 </div>
 </body>

@@ -3,16 +3,19 @@
     <head>
         <title>Procaptcha demo: Live Test</title>
         <script type="module">
+            import {CaptchaType} from "@prosopo/types";
+
             async function captchaLoaded() {
                 const render = (await import("%VITE_BUNDLE_URL%")).render
                 console.log('Captcha loaded')
                 // Get the Element using elementId
                 const captchaContainer = document.getElementById('procaptcha-container')
-                render(captchaContainer, {
-                    siteKey: import.meta.env.PROSOPO_SITE_KEY,
+                const widgetId = render(captchaContainer, {
+                    siteKey: "%PROSOPO_SITE_KEY_POW%",
                     theme: 'dark',
-                    callback: onCaptchaVerified,
-                    captchaType: "pow",
+                    callback: handleCaptchaResponse,
+                    "failed-callback": handleCaptchaFailed,
+                    captchaType: CaptchaType.pow,
                 })
             }
             window.captchaLoaded = captchaLoaded
