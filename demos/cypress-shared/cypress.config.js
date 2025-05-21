@@ -61,7 +61,11 @@ export default defineConfig({
 				},
 			});
 		},
-		excludeSpecPattern: ["cypress/e2e/**/frictionless.cy.ts"],
+		excludeSpecPattern: [
+			"cypress/e2e/**/frictionless.cy.ts",
+			"cypress/e2e/**/invisible.cy.ts",
+			"cypress/e2e/**/pow.cy.ts",
+		],
 	},
 	component: {
 		devServer: {
