@@ -200,7 +200,7 @@
     // Render the CAPTCHA
     const widgetId = render(captchaContainer, {
         siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%",
-        captchaType: CaptchaType.frictionless,
+        captchaType: "frictionless",
         callback: onCaptchaVerified,
         "failed-callback": function () {
             console.log('Challenge failed');

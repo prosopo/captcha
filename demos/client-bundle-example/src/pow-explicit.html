@@ -135,7 +135,7 @@
             // Render the CAPTCHA
             const widgetId = render(document.getElementById('procaptcha-container'), {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
-                captchaType: CaptchaType.pow,
+                captchaType: "pow",
                 callback: handleCaptchaResponse,
                 "failed-callback": handleCaptchaFailed
             });
