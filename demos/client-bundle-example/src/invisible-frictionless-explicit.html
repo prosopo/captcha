@@ -5,33 +5,6 @@
     <title>Procaptcha Frictionless Mode - Explicit Rendering</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <script type="module">
-        // Override console.log to capture output
-        function setupConsoleCapture() {
-            const originalConsoleLog = console.log;
-            const consoleOutput = document.getElementById('console-output');
-            
-            console.log = function() {
-                originalConsoleLog.apply(console, arguments);
-                
-                // Format and display the arguments in our custom console
-                const args = Array.from(arguments).map(arg => {
-                    if (typeof arg === 'object') {
-                        try {
-                            return JSON.stringify(arg, null, 2);
-                        } catch (e) {
-                            return "[Object cannot be stringified]";
-                        }
-                    }
-                    return String(arg);
-                });
-                
-                consoleOutput.innerHTML += args.join(' ') + '<br>';
-                consoleOutput.style.display = 'block';
-            };
-            
-            console.log("Console logging captured and redirected to display");
-        }
-
         // Function to update CAPTCHA status display
         function updateCaptchaStatus(message, type = 'info') {
             const statusContainer = document.getElementById('captcha-status');
@@ -48,7 +21,7 @@
         }
         
         document.addEventListener('DOMContentLoaded', function() {
-            setupConsoleCapture();
+            
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
             
             // Monitor DOM for CAPTCHA initialization
