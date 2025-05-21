@@ -106,14 +106,14 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`
-		: `<div
+		: `&lt;div
     class="procaptcha"
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"
     data-captcha-type="frictionless"${isInvisible ? '\n    data-size="invisible"' : ""}
-></div>`
+&gt;&lt;/div&gt;`
 }</pre>
 		
 		<h3>Execution Flow</h3>
@@ -162,14 +162,14 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`
-		: `<div
+		: `&lt;div
     class="procaptcha"
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_IMAGE%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"
     data-captcha-type="image"${isInvisible ? '\n    data-size="invisible"' : ""}
-></div>`
+&gt;&lt;/div&gt;`
 }</pre>
 		
 		<h3>Execution Flow</h3>
@@ -218,14 +218,14 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     callback: handleCaptchaResponse,
     "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
 });`
-		: `<div
+		: `&lt;div
     class="procaptcha"
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_POW%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"
     data-captcha-type="pow"${isInvisible ? '\n    data-size="invisible"' : ""}
-></div>`
+&gt;&lt;/div&gt;`
 }</pre>
 		
 		<h3>Execution Flow</h3>
