@@ -1,70 +1,70 @@
 .console-output {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: monospace;
-    white-space: pre-wrap;
-    max-height: 200px;
-    overflow-y: auto;
+	margin-top: 20px;
+	padding: 10px;
+	background-color: #f5f5f5;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-family: monospace;
+	white-space: pre-wrap;
+	max-height: 200px;
+	overflow-y: auto;
 }
 .info-box {
-    background-color: #e7f3fe;
-    border-left: 4px solid #2196F3;
-    padding: 15px;
-    margin: 20px 0;
+	background-color: #e7f3fe;
+	border-left: 4px solid #2196f3;
+	padding: 15px;
+	margin: 20px 0;
 }
 .explanation {
-    margin: 20px 0;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-    border: 1px solid #ddd;
+	margin: 20px 0;
+	padding: 20px;
+	background-color: #f9f9f9;
+	border-radius: 5px;
+	border: 1px solid #ddd;
 }
 code {
-    background-color: #f0f0f0;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-family: monospace;
+	background-color: #f0f0f0;
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-family: monospace;
 }
 pre {
-    background-color: #f5f5f5;
-    padding: 10px;
-    border-radius: 5px;
-    overflow-x: auto;
-    border: 1px solid #ddd;
+	background-color: #f5f5f5;
+	padding: 10px;
+	border-radius: 5px;
+	overflow-x: auto;
+	border: 1px solid #ddd;
 }
 .captcha-status {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #f0f8ff;
-    border: 2px solid #2196F3;
-    border-radius: 5px;
-    font-family: monospace;
-    font-size: 14px;
+	margin-top: 20px;
+	padding: 15px;
+	background-color: #f0f8ff;
+	border: 2px solid #2196f3;
+	border-radius: 5px;
+	font-family: monospace;
+	font-size: 14px;
 }
 .status-item {
-    margin: 5px 0;
-    padding: 5px;
+	margin: 5px 0;
+	padding: 5px;
 }
 .status-success {
-    color: #4CAF50;
-    font-weight: bold;
+	color: #4caf50;
+	font-weight: bold;
 }
 .status-error {
-    color: #F44336;
-    font-weight: bold;
+	color: #f44336;
+	font-weight: bold;
 }
 .status-info {
-    color: #2196F3;
+	color: #2196f3;
 }
 .status-warning {
-    color: #FF9800;
+	color: #ff9800;
 }
 .status-title {
-    font-weight: bold;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #2196F3;
-    padding-bottom: 5px;
-} 
+	font-weight: bold;
+	margin-bottom: 10px;
+	border-bottom: 1px solid #2196f3;
+	padding-bottom: 5px;
+}

@@ -184,17 +184,16 @@ export default function statusLogInjector(): Plugin {
 
 				// Add CSS to head
 				let updatedHtml = html.replace("</head>", `${statusLogCss}</head>`);
-				
+
 				// Add JavaScript to head
 				updatedHtml = updatedHtml.replace("</head>", `${statusLogJs}</head>`);
-				
+
 				// Add status log container after the form or before the closing body if no form
-				if (updatedHtml.includes('</form>')) {
-					return updatedHtml.replace('</form>', `</form>${statusLogHtml}`);
-				} else {
-					return updatedHtml.replace('</body>', `${statusLogHtml}</body>`);
+				if (updatedHtml.includes("</form>")) {
+					return updatedHtml.replace("</form>", `</form>${statusLogHtml}`);
 				}
+				return updatedHtml.replace("</body>", `${statusLogHtml}</body>`);
 			},
 		},
 	};
-} 
+}

@@ -28,37 +28,41 @@ export default function explanationInjector(): Plugin {
 				// Extract the current page name from the context
 				const url = ctx.filename || "";
 				const pageName = url.split("/").pop()?.split(".")[0] || "";
-				
+
 				// Determine CAPTCHA type from filename
 				const isFrictionless = pageName.includes("frictionless");
 				const isImage = pageName.includes("image");
 				const isPow = pageName.includes("pow");
 				const isInvisible = pageName.includes("invisible");
 				const isExplicit = pageName.includes("explicit");
-				
+
 				// Generate the appropriate explanation based on CAPTCHA type
 				let explanationHtml = "";
-				
+
 				if (isFrictionless) {
-					explanationHtml = generateFrictionlessExplanation(isExplicit, isInvisible);
+					explanationHtml = generateFrictionlessExplanation(
+						isExplicit,
+						isInvisible,
+					);
 				} else if (isImage) {
 					explanationHtml = generateImageExplanation(isExplicit, isInvisible);
 				} else if (isPow) {
 					explanationHtml = generatePowExplanation(isExplicit, isInvisible);
 				}
-				
+
 				// No explanation needed or couldn't determine type
 				if (!explanationHtml) {
 					return html;
 				}
-				
+
 				// Look for an existing explanation div to replace
 				if (html.includes('<div class="explanation">')) {
 					// Replace the existing explanation
-					const explRegex = /<div class="explanation">[\s\S]*?<\/div>\s*<\/div>/;
+					const explRegex =
+						/<div class="explanation">[\s\S]*?<\/div>\s*<\/div>/;
 					return html.replace(explRegex, explanationHtml);
 				}
-				
+
 				// Otherwise insert before the closing body tag
 				return html.replace("</body>", `${explanationHtml}</body>`);
 			},
@@ -67,10 +71,13 @@ export default function explanationInjector(): Plugin {
 }
 
 // Helper functions to generate explanations for different CAPTCHA types
-function generateFrictionlessExplanation(isExplicit: boolean, isInvisible: boolean): string {
+function generateFrictionlessExplanation(
+	isExplicit: boolean,
+	isInvisible: boolean,
+): string {
 	const renderType = isExplicit ? "Explicit" : "Implicit";
 	const modeDesc = isInvisible ? "invisible" : "normal";
-	
+
 	return `
 	<div class="explanation">
 		<h2>How ${isInvisible ? "Invisible " : ""}Frictionless CAPTCHA Works (${renderType} Rendering)</h2>
@@ -86,7 +93,9 @@ function generateFrictionlessExplanation(isExplicit: boolean, isInvisible: boole
 		
 		<h3>Key Code Example</h3>
 		<pre>
-${isExplicit ? `// Import the render function
+${
+	isExplicit
+		? `// Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
 import { CaptchaType } from "@prosopo/types";
 
@@ -95,17 +104,17 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
     captchaType: CaptchaType.frictionless,
     callback: handleCaptchaResponse,
-    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ''}
-});` 
-: 
-`<div
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
+});`
+		: `<div
     class="procaptcha"
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"
-    data-captcha-type="frictionless"${isInvisible ? '\n    data-size="invisible"' : ''}
-></div>`}</pre>
+    data-captcha-type="frictionless"${isInvisible ? '\n    data-size="invisible"' : ""}
+></div>`
+}</pre>
 		
 		<h3>Execution Flow</h3>
 		<ol>
@@ -118,10 +127,13 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
 	`;
 }
 
-function generateImageExplanation(isExplicit: boolean, isInvisible: boolean): string {
+function generateImageExplanation(
+	isExplicit: boolean,
+	isInvisible: boolean,
+): string {
 	const renderType = isExplicit ? "Explicit" : "Implicit";
 	const modeDesc = isInvisible ? "invisible" : "visible";
-	
+
 	return `
 	<div class="explanation">
 		<h2>How ${isInvisible ? "Invisible " : ""}Image CAPTCHA Works (${renderType} Rendering)</h2>
@@ -137,7 +149,9 @@ function generateImageExplanation(isExplicit: boolean, isInvisible: boolean): st
 		
 		<h3>Key Code Example</h3>
 		<pre>
-${isExplicit ? `// Import the render function
+${
+	isExplicit
+		? `// Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
 import { CaptchaType } from "@prosopo/types";
 
@@ -146,17 +160,17 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
     captchaType: CaptchaType.image,
     callback: handleCaptchaResponse,
-    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ''}
-});` 
-: 
-`<div
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
+});`
+		: `<div
     class="procaptcha"
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_IMAGE%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"
-    data-captcha-type="image"${isInvisible ? '\n    data-size="invisible"' : ''}
-></div>`}</pre>
+    data-captcha-type="image"${isInvisible ? '\n    data-size="invisible"' : ""}
+></div>`
+}</pre>
 		
 		<h3>Execution Flow</h3>
 		<ol>
@@ -169,10 +183,13 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
 	`;
 }
 
-function generatePowExplanation(isExplicit: boolean, isInvisible: boolean): string {
+function generatePowExplanation(
+	isExplicit: boolean,
+	isInvisible: boolean,
+): string {
 	const renderType = isExplicit ? "Explicit" : "Implicit";
 	const modeDesc = isInvisible ? "invisible" : "visible";
-	
+
 	return `
 	<div class="explanation">
 		<h2>How ${isInvisible ? "Invisible " : ""}Proof of Work CAPTCHA Works (${renderType} Rendering)</h2>
@@ -188,7 +205,9 @@ function generatePowExplanation(isExplicit: boolean, isInvisible: boolean): stri
 		
 		<h3>Key Code Example</h3>
 		<pre>
-${isExplicit ? `// Import the render function
+${
+	isExplicit
+		? `// Import the render function
 import { render } from "%VITE_BUNDLE_URL%"
 import { CaptchaType } from "@prosopo/types";
 
@@ -197,17 +216,17 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
     siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
     captchaType: CaptchaType.pow,
     callback: handleCaptchaResponse,
-    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ''}
-});` 
-: 
-`<div
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
+});`
+		: `<div
     class="procaptcha"
     data-theme="light"
     data-sitekey="%PROSOPO_SITE_KEY_POW%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"
-    data-captcha-type="pow"${isInvisible ? '\n    data-size="invisible"' : ''}
-></div>`}</pre>
+    data-captcha-type="pow"${isInvisible ? '\n    data-size="invisible"' : ""}
+></div>`
+}</pre>
 		
 		<h3>Execution Flow</h3>
 		<ol>
@@ -218,4 +237,4 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
 		</ol>
 	</div>
 	`;
-} 
+}
