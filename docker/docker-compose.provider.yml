@@ -1,34 +1,4 @@
 services:
-    provider-dev:
-        container_name: provider
-        profiles:
-            - development
-        build:
-            context: ..
-            dockerfile: ./docker/images/provider.dockerfile
-        env_file:
-            - ../dev/scripts/.env.development
-        ports:
-            - '9229:9229'
-        networks:
-            external:
-            internal:
-                ipv4_address: 172.18.0.2
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/public/details" ]
-            interval: 10s
-            retries: 3
-            start_period: 10s
-            timeout: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
     provider1:
         container_name: provider1
         profiles:
@@ -112,35 +82,6 @@ services:
                 condition: service_healthy
             vector:
                 condition: service_healthy
-    database-dev:
-        container_name: database
-        profiles:
-            - development
-        image: mongo:6.0.17
-        # volumes:
-        #   - ./db:/data/db
-        ports:
-            - '27017:27017'
-        env_file:
-            - ../dev/scripts/.env.development
-        networks:
-            internal:
-                ipv4_address: 172.18.0.4
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        healthcheck:
-            test: [ "CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })", "--quiet" ] # ping the mongo server
-            interval: 10s
-            retries: 3
-            start_period: 10s
-            timeout: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
     database:
         container_name: database
         profiles:
