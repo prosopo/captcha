@@ -8,6 +8,7 @@
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
+		"build": "echo 'no build'",
 		"build:vite": "vite build",
 		"build:cjs": "echo 'no cjs build'",
 		"start": "vite serve ./src --port 9232 --config vite.config.ts",
