@@ -5,20 +5,7 @@
     <title>Procaptcha demo: Invisible image - Implicit Rendering</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <script type="module">
-        // Function to update CAPTCHA status display
-        function updateCaptchaStatus(message, type = 'info') {
-            const statusContainer = document.getElementById('captcha-status');
-            if (!statusContainer) return;
-            
-            const timestamp = new Date().toLocaleTimeString();
-            const statusItem = document.createElement('div');
-            statusItem.className = `status-item status-${type}`;
-            statusItem.innerHTML = `[${timestamp}] ${message}`;
-            statusContainer.appendChild(statusItem);
-            
-            // Also log to console
-            console.log(`CAPTCHA Status: ${message}`);
-        }
+        // Function to update CAPTCHA status display is now provided by status-log-injector
 
         // Define callbacks directly on window object so they're globally accessible
         window.onCaptchaFailed = function () {
@@ -171,10 +158,7 @@
     <h1>Invisible image CAPTCHA - Implicit Rendering</h1>
     <p>This example demonstrates how to use Procaptcha in invisible image mode with implicit rendering directly on a button.</p>
     
-    <!-- CAPTCHA Status Display -->
-    <div id="captcha-status" class="captcha-status">
-        <div class="status-title">CAPTCHA Status Log</div>
-    </div>
+    <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
     
     <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
         <h2>Example Login Form</h2>

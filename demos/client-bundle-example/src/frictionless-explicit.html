@@ -11,20 +11,7 @@
         }
     </script>
     <script type="module">
-        // Function to update CAPTCHA status display
-        function updateCaptchaStatus(message, type = 'info') {
-            const statusContainer = document.getElementById('captcha-status');
-            if (!statusContainer) return;
-            
-            const timestamp = new Date().toLocaleTimeString();
-            const statusItem = document.createElement('div');
-            statusItem.className = `status-item status-${type}`;
-            statusItem.innerHTML = `[${timestamp}] ${message}`;
-            statusContainer.appendChild(statusItem);
-            
-            // Also log to console
-            console.log(`CAPTCHA Status: ${message}`);
-        }
+        // Function to update CAPTCHA status display is now provided by status-log-injector
 
         window.addEventListener('load', () => {
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
@@ -154,8 +141,7 @@
             observer.observe(document.body, { childList: true, subtree: true });
         });
 
-        // Make updateCaptchaStatus available globally
-        window.updateCaptchaStatus = updateCaptchaStatus;
+        // updateCaptchaStatus is now provided by status-log-injector
     </script>
 </head>
 <body>
@@ -164,10 +150,7 @@
     <h1>Frictionless CAPTCHA - Explicit Rendering</h1>
     <p>This example demonstrates how to use Procaptcha in frictionless mode with explicit rendering.</p>
     
-    <!-- CAPTCHA Status Display -->
-    <div id="captcha-status" class="captcha-status">
-        <div class="status-title">CAPTCHA Status Log</div>
-    </div>
+    <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
     
     <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
         <h2>Example Login Form</h2>
