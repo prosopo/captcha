@@ -5,6 +5,7 @@
 services:
     provider1:
         profiles: null
+        ports: '9229:9229'
         depends_on: 
             database:
                 condition: service_healthy
@@ -12,6 +13,7 @@ services:
             # no vector
     provider2:
         profiles: null
+        ports: '9339:9339'
         depends_on:
             database:
                 condition: service_healthy
@@ -19,6 +21,7 @@ services:
             # no vector
     database:
         container_name: database
+        ports: '21017:21017'
         profiles: null
         depends_on: []
             # no caddy
