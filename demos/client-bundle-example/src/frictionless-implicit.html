@@ -193,46 +193,7 @@
     <!-- Console output display area -->
     <div id="console-output" class="console-output" style="display: none;"></div>
     
-    <div class="explanation">
-        <h2>How Frictionless CAPTCHA Works (Explicit Rendering)</h2>
-        
-        <h3>Implementation Details</h3>
-        <p>This demo shows how to implement frictionless CAPTCHA using explicit rendering:</p>
-        <ol>
-            <li>Import the Procaptcha render function</li>
-            <li>Create a container div where the CAPTCHA will be rendered</li>
-            <li>Call the render function with the container and configuration options</li>
-            <li>Specify callback functions for verification and failure</li>
-        </ol>
-        
-        <h3>Key Code Example</h3>
-        <pre>
-import { render } from "%VITE_BUNDLE_URL%"
-import { CaptchaType } from "@prosopo/types";
-
-function onCaptchaVerified(output) {
-    console.log('Challenge passed')
-}
-
-const captchaContainer = document.getElementById('procaptcha-container')
-const widgetId = render(captchaContainer, {
-    siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%",
-    captchaType: CaptchaType.frictionless,
-    callback: onCaptchaVerified,
-    "failed-callback": function () {
-        console.log('Challenge failed')
-    }
-});</pre>
-        
-        <h3>Execution Flow</h3>
-        <ol>
-            <li>On page load, the render function is called to initialize the CAPTCHA</li>
-            <li>The CAPTCHA verification happens invisibly in the background</li>
-            <li>When verification is complete, the callback function is called with the token</li>
-            <li>The token is stored in a hidden input with name='procaptcha-response'</li>
-            <li>When the form is submitted, the token is included in the request</li>
-        </ol>
-    </div>
+    <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
 <script type="module">
     // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call

@@ -210,65 +210,7 @@
     <!-- Console output display area -->
     <div id="console-output" class="console-output" style="display: none;"></div>
     
-    <div class="explanation">
-        <h2>How Invisible image CAPTCHA Works (Implicit Rendering)</h2>
-        
-        <h3>Implementation Details</h3>
-        <p>This demo shows how to implement invisible image CAPTCHA directly on a button using implicit rendering:</p>
-        <ol>
-            <li>Include the Procaptcha script</li>
-            <li>Add the <code>procaptcha</code> class to your submit button</li>
-            <li>Set <code>data-sitekey</code> with your image site key</li>
-            <li>Set <code>data-callback</code> to the function that will receive the token</li>
-            <li>Add <code>data-captcha-type="image"</code> to specify the type</li>
-            <li>Add <code>data-size="invisible"</code> to enable invisible mode</li>
-        </ol>
-        
-        <h3>Key Button Attributes</h3>
-        <pre>
-&lt;button 
-    class="mui-btn mui-btn--raised procaptcha"
-    data-sitekey="%PROSOPO_SITE_KEY_image%" 
-    data-callback="onActionHandler"
-    data-failed-callback="onCaptchaFailed"
-    data-captcha-type="image"
-    data-size="invisible"&gt;
-    Submit
-&lt;/button&gt;</pre>
-        
-        <h3>Execution Flow</h3>
-        <ol>
-            <li>When the page loads, Procaptcha scans for elements with the <code>procaptcha</code> class</li>
-            <li>For buttons, it adds an event listener that triggers on click</li>
-            <li>When the button is clicked, the default action is prevented</li>
-            <li>Procaptcha dispatches a <code>procaptcha:execute</code> event</li>
-            <li>This event triggers the verification flow in the background</li>
-            <li>Once verified, the <code>data-callback</code> function is called with the token</li>
-        </ol>
-        
-        <h3>Behind the Scenes</h3>
-        <p>When the button is clicked, these internal steps happen:</p>
-        <ol>
-            <li>The script identifies all CAPTCHA containers based on: 
-                <ul>
-                    <li>Elements with <code>data-size="invisible"</code></li>
-                    <li>Elements with specific IDs (like <code>procaptcha-container</code>)</li>
-                    <li>Elements with class <code>p-procaptcha</code></li>
-                </ul>
-            </li>
-            <li>It dispatches a <code>procaptcha:execute</code> event with container details</li>
-            <li>The image CAPTCHA verification happens invisibly</li>
-            <li>When completed, your callback function receives the verification token</li>
-        </ol>
-        
-        <h3>Callback Functions</h3>
-        <p>Important: Callback functions must be defined directly on the window object, not inside event listeners or other closures, so they're accessible when the CAPTCHA system initializes.</p>
-        <pre>
-window.onActionHandler = function(token) {
-    console.log('Procaptcha token received:', token);
-    // Handle form submission with the token
-};</pre>
-    </div>
+    <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
 </body>
 </html>

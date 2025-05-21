@@ -214,40 +214,7 @@
     <!-- Console output display area -->
     <div id="console-output" class="console-output" style="display: none;"></div>
     
-    <div class="explanation">
-        <h2>How Proof of Work CAPTCHA Works (Implicit Rendering)</h2>
-        
-        <h3>Implementation Details</h3>
-        <p>This demo shows how to implement Proof of Work CAPTCHA using implicit rendering:</p>
-        <ol>
-            <li>Include the Procaptcha script in your document</li>
-            <li>Add a div with the <code>procaptcha</code> class</li>
-            <li>Set <code>data-sitekey</code> with your Image site key</li>
-            <li>Set the <code>data-callback</code> and <code>data-failed-callback</code> attributes</li>
-            <li>Add <code>data-captcha-type="image"</code> to specify the type</li>
-        </ol>
-        
-        <h3>Key CAPTCHA Attributes</h3>
-        <pre>
-&lt;div
-    class="procaptcha"
-    data-theme="light"
-    data-sitekey="%PROSOPO_SITE_KEY_IMAGE%"
-    data-failed-callback="onCaptchaFailed"
-    data-callback="onCaptchaVerified"
-    data-captcha-type="image"
-&gt;&lt;/div&gt;</pre>
-        
-        <h3>Execution Flow</h3>
-        <ol>
-            <li>When the page loads, Procaptcha scans for elements with the <code>procaptcha</code> class</li>
-            <li>The Image CAPTCHA is rendered in the container</li>
-            <li>User completes the image challenge</li>
-            <li>On successful completion, the <code>data-callback</code> function is called with the token</li>
-            <li>The token is stored in a hidden input named <code>procaptcha-response</code></li>
-            <li>When the form is submitted, the token is included in the request</li>
-        </ol>
-    </div>
+    <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
 </body>
 </html>

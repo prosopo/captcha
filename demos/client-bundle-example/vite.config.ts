@@ -19,6 +19,7 @@ import { type UserConfig, defineConfig } from "vite";
 import explanationInjector from "./src/plugins/explanation-injector.js";
 import formFillerInjector from "./src/plugins/form-filler-injector.js";
 import navigationInjector from "./src/plugins/navigation-injector.js";
+import statusLogInjector from "./src/plugins/status-log-injector.js";
 
 // Function to copy contents of a directory to another directory
 function copyDirContents(src: string, dest: string) {
@@ -140,7 +141,6 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-image-implicit.html",
 					),
-					pow: path.resolve(__dirname, "src/pow.html"),
 					"invisible-frictionless-implicit": path.resolve(
 						__dirname,
 						"src/invisible-frictionless-implicit.html",
@@ -156,6 +156,7 @@ export default defineConfig(({ command, mode }) => {
 			navigationInjector(),
 			formFillerInjector(),
 			explanationInjector(),
+			statusLogInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {

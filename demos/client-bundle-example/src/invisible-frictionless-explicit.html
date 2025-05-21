@@ -4,59 +4,14 @@
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
     <title>Procaptcha Frictionless Mode - Explicit Rendering</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
-    <script type="module">
-        // Function to update CAPTCHA status display
-        function updateCaptchaStatus(message, type = 'info') {
-            const statusContainer = document.getElementById('captcha-status');
-            if (!statusContainer) return;
-            
-            const timestamp = new Date().toLocaleTimeString();
-            const statusItem = document.createElement('div');
-            statusItem.className = `status-item status-${type}`;
-            statusItem.innerHTML = `[${timestamp}] ${message}`;
-            statusContainer.appendChild(statusItem);
-            
-            // Also log to console
-            console.log(`CAPTCHA Status: ${message}`);
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
-            
-            // Monitor DOM for CAPTCHA initialization
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.addedNodes.length) {
-                        for (let i = 0; i < mutation.addedNodes.length; i++) {
-                            const node = mutation.addedNodes[i];
-                            if (node.classList && (node.classList.contains('procaptcha') || 
-                                  node.querySelector && node.querySelector('.procaptcha'))) {
-                                updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
-                                observer.disconnect();
-                                break;
-                            }
-                        }
-                    }
-                });
-            });
-            
-            observer.observe(document.body, { childList: true, subtree: true });
-        });
-        
-        // Make updateCaptchaStatus available globally
-        window.updateCaptchaStatus = updateCaptchaStatus;
-    </script>
+    <!-- Status log will be injected by the status-log-injector plugin -->
 </head>
 <body>
     <div class="mui-container">
         <h1>Procaptcha Frictionless Mode - Explicit Rendering</h1>
         <p>This example demonstrates how to use Procaptcha in frictionless mode with explicit rendering.</p>
         
-        <!-- CAPTCHA Status Display -->
-        <div id="captcha-status" class="captcha-status">
-            <div class="status-title">CAPTCHA Status Log</div>
-        </div>
+        <!-- Status log will be injected by the status-log-injector plugin -->
         
         <form id="demo-form" class="mui-form">
             <h2>Example Form</h2>
@@ -80,44 +35,9 @@
         </form>
         
         <div id="result" class="info-box" style="display: none;"></div>
-        
-        <!-- Console output display area -->
-        <div id="console-output" class="console-output" style="display: none;"></div>
-        
-        <div class="explanation">
-            <h2>How Frictionless CAPTCHA Works (Explicit Rendering)</h2>
-            
-            <h3>Implementation Details</h3>
-            <p>This example demonstrates how to use Procaptcha in frictionless mode with explicit rendering:</p>
-            <ol>
-                <li>Import the Procaptcha render function</li>
-                <li>Create a container for the CAPTCHA</li>
-                <li>Render the CAPTCHA explicitly</li>
-                <li>Handle the verification result in the callback function</li>
-            </ol>
-            
-            <h3>Key Code Example</h3>
-            <pre>
-// Import the render function
-import { render } from "%VITE_BUNDLE_URL%"
-import { CaptchaType } from "@prosopo/types";
 
-// Render CAPTCHA
-const widgetId = render(document.getElementById('procaptcha-container'), {
-    siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
-    captchaType: CaptchaType.frictionless,
-    callback: handleCaptchaResponse,
-    "failed-callback": handleCaptchaFailed
-});</pre>
-            
-            <h3>Execution Flow</h3>
-            <ol>
-                <li>On page load, the render function is called to initialize the CAPTCHA</li>
-                <li>The CAPTCHA challenge is rendered in the specified container</li>
-                <li>When the user completes the challenge, the callback function is called</li>
-                <li>On successful verification, the form can be submitted with the token</li>
-            </ol>
-        </div>
+        
+        <!-- Explanation will be injected by the explanation-injector plugin -->
     </div>
     
     <script type="module">

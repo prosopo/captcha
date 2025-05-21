@@ -15,147 +15,6 @@
 import type { IndexHtmlTransformContext, Plugin } from "vite";
 
 export default function explanationInjector(): Plugin {
-	// CAPTCHA Status checker CSS for index.html
-	const captchaStatusStyle = `
-	<style>
-		.captcha-status {
-			margin-top: 20px;
-			padding: 15px;
-			background-color: #f0f8ff;
-			border: 2px solid #2196F3;
-			border-radius: 5px;
-			font-family: monospace;
-			font-size: 14px;
-		}
-		.status-item {
-			margin: 5px 0;
-			padding: 5px;
-		}
-		.status-success {
-			color: #4CAF50;
-			font-weight: bold;
-		}
-		.status-error {
-			color: #F44336;
-			font-weight: bold;
-		}
-		.status-info {
-			color: #2196F3;
-		}
-		.status-warning {
-			color: #FF9800;
-		}
-		.status-title {
-			font-weight: bold;
-			margin-bottom: 10px;
-			border-bottom: 1px solid #2196F3;
-			padding-bottom: 5px;
-		}
-		.console-output {
-			margin-top: 20px;
-			padding: 10px;
-			background-color: #f5f5f5;
-			border: 1px solid #ddd;
-			border-radius: 4px;
-			font-family: monospace;
-			white-space: pre-wrap;
-			max-height: 200px;
-			overflow-y: auto;
-		}
-	</style>
-  `;
-
-	// CAPTCHA Status checker script for index.html
-	const captchaStatusScript = `
-	<script type="module">
-		// Function to update CAPTCHA status display
-		function updateCaptchaStatus(message, type = 'info') {
-			const statusContainer = document.getElementById('captcha-status');
-			if (!statusContainer) return;
-			
-			const timestamp = new Date().toLocaleTimeString();
-			const statusItem = document.createElement('div');
-			statusItem.className = \`status-item status-\${type}\`;
-			statusItem.innerHTML = \`[\${timestamp}] \${message}\`;
-			statusContainer.appendChild(statusItem);
-			
-			// Also log to console
-			console.log(\`CAPTCHA Status: \${message}\`);
-		}
-
-		// Make updateCaptchaStatus available globally
-		window.updateCaptchaStatus = updateCaptchaStatus;
-
-		// Override the original callbacks with enhanced versions that use status logging
-		const originalOnCaptchaFailed = window.onCaptchaFailed;
-		window.onCaptchaFailed = function() {
-			updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
-			if (originalOnCaptchaFailed) originalOnCaptchaFailed();
-		};
-
-		const originalOnCaptchaVerified = window.onCaptchaVerified;
-		window.onCaptchaVerified = function(output) {
-			updateCaptchaStatus('Challenge passed successfully!', 'success');
-			updateCaptchaStatus(\`Token generated: \${output.substring(0, 15)}...\`, 'success');
-			if (originalOnCaptchaVerified) originalOnCaptchaVerified(output);
-		};
-
-		const originalOnActionHandler = window.onActionHandler;
-		window.onActionHandler = function() {
-			const procaptchaElements = document.getElementsByName('procaptcha-response');
-			
-			if (!procaptchaElements.length) {
-				updateCaptchaStatus('Error: No CAPTCHA response token found', 'error');
-				alert("Must complete captcha");
-				return;
-			}
-			
-			updateCaptchaStatus('Form submission initiated with valid CAPTCHA token', 'info');
-			if (originalOnActionHandler) originalOnActionHandler();
-		};
-
-		document.addEventListener('DOMContentLoaded', function() {
-			updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
-			
-			// Monitor DOM for CAPTCHA initialization
-			const observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-					if (mutation.addedNodes.length) {
-						for (let i = 0; i < mutation.addedNodes.length; i++) {
-							const node = mutation.addedNodes[i];
-							if (node.classList && (node.classList.contains('procaptcha') || 
-								node.querySelector && node.querySelector('.procaptcha'))) {
-								updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
-								observer.disconnect();
-								break;
-							}
-						}
-					}
-				});
-			});
-			
-			observer.observe(document.body, { childList: true, subtree: true });
-		});
-		
-		// Create a method to show CAPTCHA execution events
-		document.addEventListener('procaptcha:execute', function(e) {
-			updateCaptchaStatus(\`CAPTCHA execution started: type=image\`, 'info');
-			updateCaptchaStatus(\`Container: \${e.detail.containerId}, timestamp: \${new Date(e.detail.timestamp).toLocaleTimeString()}\`, 'info');
-		});
-	</script>
-  `;
-
-	// CAPTCHA Status HTML for index.html
-	const captchaStatusHtml = `
-	<!-- CAPTCHA Status Display -->
-	<div id="captcha-status" class="captcha-status">
-		<div class="status-title">CAPTCHA Status Log</div>
-	</div>
-	
-	<!-- Console output display area -->
-	<div id="console-output" class="console-output" style="display: none;"></div>
-  `;
-
 	return {
 		name: "explanation-injector",
 		transformIndexHtml: {
@@ -169,34 +28,194 @@ export default function explanationInjector(): Plugin {
 				// Extract the current page name from the context
 				const url = ctx.filename || "";
 				const pageName = url.split("/").pop()?.split(".")[0] || "";
-
-				// Logic for index.html
-				if (pageName === "index") {
-					// Add style to head
-					let updatedHtml = html.replace(
-						"</head>",
-						`${captchaStatusStyle}</head>`,
-					);
-
-					// Add script to head
-					updatedHtml = updatedHtml.replace(
-						"</head>",
-						`${captchaStatusScript}</head>`,
-					);
-
-					// Add status display after form
-					if (updatedHtml.includes("</form>")) {
-						return updatedHtml.replace(
-							"</form>",
-							`</form>${captchaStatusHtml}`,
-						);
-					}
-
-					return updatedHtml;
+				
+				// Determine CAPTCHA type from filename
+				const isFrictionless = pageName.includes("frictionless");
+				const isImage = pageName.includes("image");
+				const isPow = pageName.includes("pow");
+				const isInvisible = pageName.includes("invisible");
+				const isExplicit = pageName.includes("explicit");
+				
+				// Generate the appropriate explanation based on CAPTCHA type
+				let explanationHtml = "";
+				
+				if (isFrictionless) {
+					explanationHtml = generateFrictionlessExplanation(isExplicit, isInvisible);
+				} else if (isImage) {
+					explanationHtml = generateImageExplanation(isExplicit, isInvisible);
+				} else if (isPow) {
+					explanationHtml = generatePowExplanation(isExplicit, isInvisible);
 				}
-
-				return html;
+				
+				// No explanation needed or couldn't determine type
+				if (!explanationHtml) {
+					return html;
+				}
+				
+				// Look for an existing explanation div to replace
+				if (html.includes('<div class="explanation">')) {
+					// Replace the existing explanation
+					const explRegex = /<div class="explanation">[\s\S]*?<\/div>\s*<\/div>/;
+					return html.replace(explRegex, explanationHtml);
+				}
+				
+				// Otherwise insert before the closing body tag
+				return html.replace("</body>", `${explanationHtml}</body>`);
 			},
 		},
 	};
 }
+
+// Helper functions to generate explanations for different CAPTCHA types
+function generateFrictionlessExplanation(isExplicit: boolean, isInvisible: boolean): string {
+	const renderType = isExplicit ? "Explicit" : "Implicit";
+	const modeDesc = isInvisible ? "invisible" : "normal";
+	
+	return `
+	<div class="explanation">
+		<h2>How ${isInvisible ? "Invisible " : ""}Frictionless CAPTCHA Works (${renderType} Rendering)</h2>
+		
+		<h3>Implementation Details</h3>
+		<p>This example demonstrates how to use Procaptcha in frictionless mode with ${renderType.toLowerCase()} rendering:</p>
+		<ol>
+			<li>Import the Procaptcha ${isExplicit ? "render function" : "script"}</li>
+			<li>${isExplicit ? "Create a container for the CAPTCHA" : "Add a div with the procaptcha class"}</li>
+			<li>${isExplicit ? "Render the CAPTCHA explicitly" : "Set data-* attributes to configure the CAPTCHA"}</li>
+			<li>Handle the verification result in the callback function</li>
+		</ol>
+		
+		<h3>Key Code Example</h3>
+		<pre>
+${isExplicit ? `// Import the render function
+import { render } from "%VITE_BUNDLE_URL%"
+import { CaptchaType } from "@prosopo/types";
+
+// Render CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
+    captchaType: CaptchaType.frictionless,
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ''}
+});` 
+: 
+`<div
+    class="procaptcha"
+    data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%"
+    data-failed-callback="onCaptchaFailed"
+    data-callback="onCaptchaVerified"
+    data-captcha-type="frictionless"${isInvisible ? '\n    data-size="invisible"' : ''}
+></div>`}</pre>
+		
+		<h3>Execution Flow</h3>
+		<ol>
+			<li>On page load, ${isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class"}</li>
+			<li>The CAPTCHA verification happens ${isInvisible ? "invisibly in the background" : "when the user interacts with it"}</li>
+			<li>When verification is complete, the callback function is called with the token</li>
+			<li>On successful verification, the form can be submitted with the token</li>
+		</ol>
+	</div>
+	`;
+}
+
+function generateImageExplanation(isExplicit: boolean, isInvisible: boolean): string {
+	const renderType = isExplicit ? "Explicit" : "Implicit";
+	const modeDesc = isInvisible ? "invisible" : "visible";
+	
+	return `
+	<div class="explanation">
+		<h2>How ${isInvisible ? "Invisible " : ""}Image CAPTCHA Works (${renderType} Rendering)</h2>
+		
+		<h3>Implementation Details</h3>
+		<p>This example demonstrates how to use Procaptcha in image mode with ${renderType.toLowerCase()} rendering:</p>
+		<ol>
+			<li>Import the Procaptcha ${isExplicit ? "render function" : "script"}</li>
+			<li>${isExplicit ? "Create a container for the CAPTCHA" : "Add a div with the procaptcha class"}</li>
+			<li>${isExplicit ? "Render the CAPTCHA explicitly" : "Set data-* attributes to configure the CAPTCHA"}</li>
+			<li>Handle the verification result in the callback function</li>
+		</ol>
+		
+		<h3>Key Code Example</h3>
+		<pre>
+${isExplicit ? `// Import the render function
+import { render } from "%VITE_BUNDLE_URL%"
+import { CaptchaType } from "@prosopo/types";
+
+// Render CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
+    captchaType: CaptchaType.image,
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ''}
+});` 
+: 
+`<div
+    class="procaptcha"
+    data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_IMAGE%"
+    data-failed-callback="onCaptchaFailed"
+    data-callback="onCaptchaVerified"
+    data-captcha-type="image"${isInvisible ? '\n    data-size="invisible"' : ''}
+></div>`}</pre>
+		
+		<h3>Execution Flow</h3>
+		<ol>
+			<li>On page load, ${isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class"}</li>
+			<li>The CAPTCHA challenge is rendered ${isInvisible ? "only when needed" : "in the specified container"}</li>
+			<li>When the user completes the challenge, the callback function is called</li>
+			<li>On successful verification, the form can be submitted with the token</li>
+		</ol>
+	</div>
+	`;
+}
+
+function generatePowExplanation(isExplicit: boolean, isInvisible: boolean): string {
+	const renderType = isExplicit ? "Explicit" : "Implicit";
+	const modeDesc = isInvisible ? "invisible" : "visible";
+	
+	return `
+	<div class="explanation">
+		<h2>How ${isInvisible ? "Invisible " : ""}Proof of Work CAPTCHA Works (${renderType} Rendering)</h2>
+		
+		<h3>Implementation Details</h3>
+		<p>This example demonstrates how to use Procaptcha in Proof of Work mode with ${renderType.toLowerCase()} rendering:</p>
+		<ol>
+			<li>Import the Procaptcha ${isExplicit ? "render function" : "script"}</li>
+			<li>${isExplicit ? "Create a container for the CAPTCHA" : "Add a div with the procaptcha class"}</li>
+			<li>${isExplicit ? "Render the CAPTCHA explicitly" : "Set data-* attributes to configure the CAPTCHA"}</li>
+			<li>Handle the verification result in the callback function</li>
+		</ol>
+		
+		<h3>Key Code Example</h3>
+		<pre>
+${isExplicit ? `// Import the render function
+import { render } from "%VITE_BUNDLE_URL%"
+import { CaptchaType } from "@prosopo/types";
+
+// Render CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
+    captchaType: CaptchaType.pow,
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ''}
+});` 
+: 
+`<div
+    class="procaptcha"
+    data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_POW%"
+    data-failed-callback="onCaptchaFailed"
+    data-callback="onCaptchaVerified"
+    data-captcha-type="pow"${isInvisible ? '\n    data-size="invisible"' : ''}
+></div>`}</pre>
+		
+		<h3>Execution Flow</h3>
+		<ol>
+			<li>On page load, ${isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class"}</li>
+			<li>The Proof of Work computation happens in the browser</li>
+			<li>When the computation is complete, the callback function is called</li>
+			<li>On successful verification, the form can be submitted with the token</li>
+		</ol>
+	</div>
+	`;
+} 

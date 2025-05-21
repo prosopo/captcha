@@ -84,40 +84,7 @@
         <!-- Console output display area -->
         <div id="console-output" class="console-output" style="display: none;"></div>
         
-        <div class="explanation">
-            <h2>How PoW CAPTCHA Works (Explicit Rendering)</h2>
-            
-            <h3>Implementation Details</h3>
-            <p>This example demonstrates how to use Procaptcha in pow mode with explicit rendering:</p>
-            <ol>
-                <li>Import the Procaptcha render function</li>
-                <li>Create a container for the CAPTCHA</li>
-                <li>Render the CAPTCHA explicitly</li>
-                <li>Handle the verification result in the callback function</li>
-            </ol>
-            
-            <h3>Key Code Example</h3>
-            <pre>
-// Import the render function
-import { render } from "%VITE_BUNDLE_URL%"
-import { CaptchaType } from "@prosopo/types";
-
-// Render CAPTCHA
-const widgetId = render(document.getElementById('procaptcha-container'), {
-    siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
-    captchaType: CaptchaType.pow,
-    callback: handleCaptchaResponse,
-    "failed-callback": handleCaptchaFailed
-});</pre>
-            
-            <h3>Execution Flow</h3>
-            <ol>
-                <li>On page load, the render function is called to initialize the CAPTCHA</li>
-                <li>The CAPTCHA challenge is rendered in the specified container</li>
-                <li>When the user completes the challenge, the callback function is called</li>
-                <li>On successful verification, the form can be submitted with the token</li>
-            </ol>
-        </div>
+        <!-- Explanation will be injected by the explanation-injector plugin -->
     </div>
     
     <script type="module">
