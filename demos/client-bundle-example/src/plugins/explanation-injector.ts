@@ -15,45 +15,6 @@
 import type { IndexHtmlTransformContext, Plugin } from "vite";
 
 export default function explanationInjector(): Plugin {
-	// Explanation content for Invisible POW CAPTCHA (Implicit Rendering)
-	const powImplicitExplanation = `
-    <div class="explanation">
-        <h2>How Invisible Proof of Work CAPTCHA Works (Implicit Rendering)</h2>
-        
-        <h3>Implementation Details</h3>
-        <p>This demo shows how to implement invisible Proof of Work CAPTCHA directly on a button using implicit rendering:</p>
-        <ol>
-            <li>Include the Procaptcha script</li>
-            <li>Add the <code>procaptcha</code> class to your submit button</li>
-            <li>Set <code>data-sitekey</code> with your PoW site key</li>
-            <li>Set <code>data-callback</code> to the function that will receive the token</li>
-            <li>Add <code>data-captcha-type="pow"</code> to specify the type</li>
-            <li>Add <code>data-size="invisible"</code> to enable invisible mode</li>
-        </ol>
-        
-        <h3>Key Button Attributes</h3>
-        <pre>
-&lt;button 
-    class="mui-btn mui-btn--raised procaptcha" 
-    data-sitekey="%PROSOPO_SITE_KEY_POW%" 
-    data-callback="onSubmit"
-    data-captcha-type="pow"
-    data-size="invisible"&gt;
-    Submit
-&lt;/button&gt;</pre>
-        
-        <h3>Execution Flow</h3>
-        <ol>
-            <li>When the page loads, Procaptcha scans for elements with the <code>procaptcha</code> class</li>
-            <li>For buttons, it adds an event listener that triggers on click</li>
-            <li>When the button is clicked, the Proof of Work challenge starts invisibly</li>
-            <li>The script dispatches a <code>procaptcha:execute</code> event</li>
-            <li>When verification is complete, the <code>data-callback</code> function is called with the token</li>
-            <li>Your callback function can then handle the form submission with the token</li>
-        </ol>
-    </div>
-  `;
-
 	// CAPTCHA Status checker CSS for index.html
 	const captchaStatusStyle = `
 	<style>
@@ -236,17 +197,6 @@ export default function explanationInjector(): Plugin {
 				// Extract the current page name from the context
 				const url = ctx.filename || "";
 				const pageName = url.split("/").pop()?.split(".")[0] || "";
-
-				// Logic for invisible-pow-explicit.html
-				if (pageName === "invisible-pow-explicit") {
-					// For invisible-pow-explicit.html, replace its current explanation with the POW implicit one
-					if (html.includes('<div style="margin-top: 20px;">')) {
-						return html.replace(
-							/<div style="margin-top: 20px;">[\s\S]*?<h3>Event-Based Communication System[\s\S]*?<\/div>/,
-							powImplicitExplanation,
-						);
-					}
-				}
 
 				// Logic for index.html
 				if (pageName === "index") {

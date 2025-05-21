@@ -2,67 +2,7 @@
 <html lang="en">
 <head>
     <title>Procaptcha Invisible Mode - Explicit Rendering</title>
-    <!-- Load the Procaptcha script with explicit rendering -->
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        form {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"],
-        input[type="email"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #result {
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-            display: none;
-        }
-        .console-output {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .info-box {
-            background-color: #e7f3fe;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            margin: 20px 0;
-        }
-    </style>
+<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript">
         function onSubmit(token) {
             console.log('Procaptcha verified, token:', token);
