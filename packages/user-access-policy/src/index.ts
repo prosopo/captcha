@@ -26,8 +26,14 @@ import {
 	getExpressApiRuleRateLimits,
 } from "#policy/api/accessRuleApiRoutes.js";
 import { deleteAllRulesEndpointSchema } from "#policy/api/deleteAllRulesEndpoint.js";
-import { deleteRulesEndpointSchema } from "#policy/api/deleteRulesEndpoint.js";
-import { insertRulesEndpointSchema } from "#policy/api/insertRulesEndpoint.js";
+import {
+	type DeleteRulesEndpointSchemaOutput,
+	deleteRulesEndpointSchema,
+} from "#policy/api/deleteRulesEndpoint.js";
+import {
+	type InsertManyRulesEndpointOutputSchema,
+	insertRulesEndpointSchema,
+} from "#policy/api/insertRulesEndpoint.js";
 import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
 import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
 
@@ -42,6 +48,8 @@ export {
 	type AccessRulesStorage,
 	type ResolveAccessPolicy,
 	type PolicyFilter,
+	type DeleteRulesEndpointSchemaOutput,
+	type InsertManyRulesEndpointOutputSchema,
 	createAccessPolicyResolver,
 	AccessPolicyType,
 	ScopeMatch,

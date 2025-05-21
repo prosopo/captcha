@@ -23,6 +23,10 @@ import type { AccessRulesStorage } from "#policy/accessRules.js";
 
 export const deleteRulesEndpointSchema = z.array(policyFilterSchema);
 
+export type DeleteRulesEndpointSchemaOutput = z.output<
+	typeof deleteRulesEndpointSchema
+>;
+
 export type DeleteRulesEndpointSchema = typeof deleteRulesEndpointSchema;
 
 export class DeleteRulesEndpoint

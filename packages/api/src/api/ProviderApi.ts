@@ -44,11 +44,11 @@ import {
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import {
-	type ApiInsertManyRulesArgs,
-	type ApiInsertManyRulesArgsOutputSchema,
-	apiDeleteManyRulesArgsSchema,
-	apiInsertManyRulesArgsSchema,
-	apiRulePaths,
+	type DeleteRulesEndpointSchemaOutput,
+	type InsertManyRulesEndpointOutputSchema,
+	accessRuleApiPaths,
+	deleteRulesEndpointSchema,
+	insertRulesEndpointSchema,
 } from "@prosopo/user-access-policy";
 import HttpClientBase from "./HttpClientBase.js";
 
@@ -301,7 +301,7 @@ export default class ProviderApi
 		signature: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.RemoveDetectorKey,
+			accessRuleApiPaths.RemoveDetectorKey,
 			UpdateDetectorKeyBody.parse({ detectorKey }),
 			{
 				headers: {
@@ -314,13 +314,13 @@ export default class ProviderApi
 	}
 
 	public insertUserAccessPolicies(
-		rules: ApiInsertManyRulesArgsOutputSchema,
+		rules: InsertManyRulesEndpointOutputSchema,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			apiRulePaths.INSERT_MANY,
-			apiInsertManyRulesArgsSchema.parse(rules),
+			accessRuleApiPaths.INSERT_MANY,
+			insertRulesEndpointSchema.parse(rules),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
@@ -332,13 +332,13 @@ export default class ProviderApi
 	}
 
 	public deleteUserAccessPolicies(
-		rules: ApiInsertManyRulesArgsOutputSchema,
+		rules: DeleteRulesEndpointSchemaOutput,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			apiRulePaths.DELETE_MANY,
-			apiDeleteManyRulesArgsSchema.parse(rules),
+			accessRuleApiPaths.DELETE_MANY,
+			deleteRulesEndpointSchema.parse(rules),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

@@ -25,7 +25,13 @@ export const accessPolicySchema = z.object({
 	description: z.coerce.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),
+	// the percentage of image panels that must be solved per image CAPTCHA
+	imageThreshold: z.coerce.number().optional(),
+	// the Proof-of-Work difficulty level
+	powDifficulty: z.coerce.number().optional(),
+	// the number of unsolved image CAPTCHA challenges to serve
 	unsolvedImagesCount: z.coerce.number().optional(),
+	// used to increase the user's score
 	frictionlessScore: z.coerce.number().optional(),
 });
 
@@ -43,6 +49,11 @@ export const userScopeSchema = z.object({
 	headersHash: z.coerce.string().optional(),
 	userAgentHash: z.coerce.string().optional(),
 });
+
+export type AccessUserScope = z.output<typeof userScopeSchema>;
+
+// export type RuleIpV4Mask =
+// 	`${number | "*"}.${number | "*"}.${number | "*"}.${number | "*"}`;
 
 export const userScopeInputSchema = userScopeSchema
 	.extend({
