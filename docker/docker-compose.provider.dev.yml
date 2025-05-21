@@ -1,0 +1,33 @@
+# usage:
+# docker-compose -f docker-compose.provider.yml -f docker-compose.provider.dev.yml up
+# this overrides the docker-compose.provider.yml file with the definitions below
+
+services:
+    provider1:
+        profiles: null
+        depends_on: 
+            database:
+                condition: service_healthy
+            # no caddy
+            # no vector
+    provider2:
+        profiles: null
+        depends_on:
+            database:
+                condition: service_healthy
+            # no caddy
+            # no vector
+    database:
+        container_name: database
+        profiles: null
+        depends_on: []
+            # no caddy
+            # no vector
+    caddy:
+        container_name: caddy
+        profiles:
+            - disabled # disable caddy
+    vector:
+        container_name: vector
+        profiles:
+            - disabled # disable vector
