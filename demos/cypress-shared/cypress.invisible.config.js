@@ -29,7 +29,7 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		default_page: "/invisible-frictionless-explicit.html",
+		default_page: "/invisible-image-explicit.html",
 	},
 	e2e: {
 		setupNodeEvents(on, config) {

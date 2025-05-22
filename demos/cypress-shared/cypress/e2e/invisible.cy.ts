@@ -24,7 +24,7 @@ let captchaType: CaptchaType;
 
 describe("Captchas", () => {
 	beforeEach(() => {
-		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+		captchaType = "image" as CaptchaType;
 		cy.registerSiteKey(captchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
