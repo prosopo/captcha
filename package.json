@@ -44,6 +44,7 @@
 		"start:bundle": "npm -w @prosopo/client-bundle-example run start",
 		"start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
 		"start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
+		"serve:bundle": "npm -w @prosopo/procaptcha-bundle run serve",
 		"populate-data": "npm -w @prosopo/provider run populate-data",
 		"test": "npm run ws -- test",
 		"lint:license": "npm run -w @prosopo/lint license -- $(pwd)",

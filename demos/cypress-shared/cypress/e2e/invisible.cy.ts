@@ -65,10 +65,10 @@ describe("Captchas", () => {
 		cy.get("input[name='email']").type("john.doe@example.com");
 
 		// Wait for form validation to settle
-		cy.wait(200);
+		cy.wait(500);
 
 		// Click the submit button
-		cy.get("button.mui-btn.mui-btn--raised[type='submit']").click();
+		cy.get('[data-cy="submit-button"]').click();
 
 		// Wait for the captcha to load
 		cy.wait(2000);

@@ -112,7 +112,8 @@ export default defineConfig(({ command, mode }) => {
 				process.env.PROSOPO_SERVER_URL,
 			),
 			"import.meta.env.VITE_BUNDLE_URL": JSON.stringify(
-				process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js",
+				process.env.VITE_BUNDLE_URL ||
+					"http://localhost:9269/procaptcha.bundle.js",
 			),
 		},
 		optimizeDeps: {
