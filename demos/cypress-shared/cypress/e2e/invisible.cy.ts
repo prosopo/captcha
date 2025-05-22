@@ -68,7 +68,7 @@ describe("Captchas", () => {
 		cy.wait(200);
 
 		// Click the submit button
-		cy.get("button[type='submit']").click();
+		cy.get("button.mui-btn.mui-btn--raised[type='submit']").click();
 
 		// Wait for the captcha to load
 		cy.wait(2000);
