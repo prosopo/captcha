@@ -92,15 +92,6 @@ export default defineConfig(({ command, mode }) => {
 			host: true,
 			cors: true,
 		},
-		resolve: {
-			// Ensure proper resolution of @prosopo/types
-			alias: {
-				"@prosopo/types": path.resolve(
-					__dirname,
-					"node_modules/@prosopo/types/dist/index.js",
-				),
-			},
-		},
 		define: {
 			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY,
@@ -127,7 +118,7 @@ export default defineConfig(({ command, mode }) => {
 		},
 		optimizeDeps: {
 			noDiscovery: true,
-			include: ["void-elements", "react", "bn.js", "@prosopo/types"],
+			include: ["void-elements", "react", "bn.js"],
 		},
 		build: {
 			outDir: "dist",
