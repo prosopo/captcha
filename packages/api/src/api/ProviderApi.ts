@@ -301,7 +301,7 @@ export default class ProviderApi
 		signature: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			accessRuleApiPaths.RemoveDetectorKey,
+			AdminApiPaths.RemoveDetectorKey,
 			UpdateDetectorKeyBody.parse({ detectorKey }),
 			{
 				headers: {
