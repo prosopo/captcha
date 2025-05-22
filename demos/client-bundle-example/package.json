@@ -14,9 +14,6 @@
 		"clean": "echo 'nothing to clean'"
 	},
 	"version": "2.7.0",
-	"dependencies": {
-		"@prosopo/types": "2.7.0"
-	},
 	"devDependencies": {
 		"@prosopo/dotenv": "2.6.0",
 		"@types/node": "22.5.5",
