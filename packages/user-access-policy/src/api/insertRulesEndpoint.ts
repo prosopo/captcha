@@ -34,6 +34,10 @@ export const insertRulesEndpointSchema = z.object({
 
 export type InsertRulesEndpointSchema = typeof insertRulesEndpointSchema;
 
+export type InsertManyRulesEndpointInputSchema = z.input<
+	typeof insertRulesEndpointSchema
+>;
+
 export type InsertManyRulesEndpointOutputSchema = z.output<
 	typeof insertRulesEndpointSchema
 >;

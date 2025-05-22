@@ -13,13 +13,20 @@
 // limitations under the License.
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
-import { type AccessPolicy, AccessPolicyType } from "#policy/accessPolicy.js";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+	type AccessRuleExtended,
+	type UserScopeApiInput,
+	type UserScopeApiOutput,
+	policyScopeSchema,
+} from "#policy/accessPolicy.js";
 import {
 	type ResolveAccessPolicy,
 	createAccessPolicyResolver,
 } from "#policy/accessPolicyResolver.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { AccessRule, AccessRulesStorage } from "#policy/accessRules.js";
 import {
 	AccessRuleApiRoutes,
 	accessRuleApiPaths,
@@ -31,11 +38,13 @@ import {
 	deleteRulesEndpointSchema,
 } from "#policy/api/deleteRulesEndpoint.js";
 import {
+	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
 	insertRulesEndpointSchema,
 } from "#policy/api/insertRulesEndpoint.js";
 import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
 import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
+import { createIpMaskRule } from "./rules/util.js";
 
 export const createApiRuleRoutesProvider = (
 	rulesStorage: AccessRulesStorage,
@@ -49,7 +58,12 @@ export {
 	type ResolveAccessPolicy,
 	type PolicyFilter,
 	type DeleteRulesEndpointSchemaOutput,
+	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
+	type AccessRule,
+	type UserScopeApiInput,
+	type UserScopeApiOutput,
+	type AccessRuleExtended,
 	createAccessPolicyResolver,
 	AccessPolicyType,
 	ScopeMatch,
@@ -58,8 +72,11 @@ export {
 	createRedisAccessRulesStorage,
 	// api
 	accessRuleApiPaths,
+	policyScopeSchema,
 	insertRulesEndpointSchema,
 	deleteAllRulesEndpointSchema,
 	deleteRulesEndpointSchema,
 	getExpressApiRuleRateLimits,
+	// util
+	createIpMaskRule,
 };
