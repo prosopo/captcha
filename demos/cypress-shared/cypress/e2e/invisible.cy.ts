@@ -22,7 +22,7 @@ import { getWidgetElement } from "../support/commands.js";
 
 let captchaType: CaptchaType;
 
-describe("Captchas", () => {
+describe("Captchas", () =>  {
 	beforeEach(() => {
 		captchaType = "image" as CaptchaType;
 		cy.registerSiteKey(captchaType).then((response) => {
