@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import crypto from "node:crypto";
+import { sha256 } from "@noble/hashes/sha256";
 import { CaptchaTypeSchema } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { type ZodRawShape, z } from "zod";
@@ -68,10 +70,12 @@ export const userScopeInputSchema = userScopeSchema
 		ip: z.string().optional(),
 		// 127.0.0.1/24
 		ipMask: z.string().optional(),
+		// human friendly user agent
+		userAgent: z.string().optional(),
 	})
 	.transform((inputUserScope) => {
 		// this line creates a new "userScope", without ip and ipMask
-		const { ip, ipMask, ...userScope } = inputUserScope;
+		const { ip, ipMask, userAgent, ...userScope } = inputUserScope;
 
 		if ("string" === typeof ip) {
 			userScope.numericIp = new Address4(ip).bigInt();
@@ -82,6 +86,13 @@ export const userScopeInputSchema = userScopeSchema
 
 			userScope.numericIpMaskMin = ipObject.bigInt();
 			userScope.numericIpMaskMax = ipObject.endAddress().bigInt();
+		}
+
+		if ("string" === typeof userAgent) {
+			userScope.userAgentHash = crypto
+				.createHash("sha256")
+				.update(userAgent)
+				.digest("hex");
 		}
 
 		return userScope;
