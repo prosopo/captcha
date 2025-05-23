@@ -1,5 +1,11 @@
 # @prosopo/procaptcha
 
+## 2.6.3
+
+### Patch Changes
+
+- @prosopo/datasets@2.6.3
+
 ## 2.6.2
 
 ### Patch Changes

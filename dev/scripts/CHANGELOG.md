@@ -1,5 +1,17 @@
 # @prosopo/scripts
 
+## 2.6.3
+
+### Patch Changes
+
+- Updated dependencies [cf59998]
+  - @prosopo/types-database@2.7.0
+  - @prosopo/provider@2.8.0
+  - @prosopo/datasets@2.6.3
+  - @prosopo/env@2.6.3
+  - @prosopo/types-env@2.6.3
+  - @prosopo/cli@2.6.3
+
 ## 2.6.2
 
 ### Patch Changes
