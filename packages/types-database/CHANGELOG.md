@@ -1,5 +1,11 @@
 # @prosopo/types-database
 
+## 2.7.0
+
+### Minor Changes
+
+- cf59998: Update DB schema
+
 ## 2.6.2
 
 ### Patch Changes

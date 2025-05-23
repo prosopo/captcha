@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "2.6.2",
+	"version": "2.6.3",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"type": "module",
@@ -34,7 +34,7 @@
 		"@prosopo/common": "2.6.0",
 		"@prosopo/config": "2.6.0",
 		"@prosopo/types": "2.6.2",
-		"@prosopo/types-database": "2.6.2",
+		"@prosopo/types-database": "2.7.0",
 		"@prosopo/user-access-policy": "2.6.2",
 		"express": "4.21.2",
 		"mongodb": "6.9.0",
