@@ -19,6 +19,7 @@ import {
 	type AccessRuleExtended,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
+	accessPolicySchema,
 	policyScopeSchema,
 } from "#policy/accessPolicy.js";
 import {
@@ -72,6 +73,7 @@ export {
 	createRedisAccessRulesStorage,
 	// api
 	accessRuleApiPaths,
+	accessPolicySchema,
 	policyScopeSchema,
 	insertRulesEndpointSchema,
 	deleteAllRulesEndpointSchema,

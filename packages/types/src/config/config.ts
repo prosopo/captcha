@@ -208,6 +208,18 @@ export type CaptchaTimeoutInput = input<typeof CaptchaTimeoutSchema>;
 
 export type CaptchaTimeoutOutput = output<typeof CaptchaTimeoutSchema>;
 
+export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
+	object({
+		serverUrl: string().url().optional(),
+		timeouts: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+	}),
+);
+
+export type ProsopoServerConfigInput = input<typeof ProsopoServerConfigSchema>;
+export type ProsopoServerConfigOutput = output<
+	typeof ProsopoServerConfigSchema
+>;
+
 export const AccountCreatorConfigSchema = object({
 	area: object({
 		width: number().positive(),
@@ -285,15 +297,3 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 
 export type ProsopoConfigInput = input<typeof ProsopoConfigSchema>;
 export type ProsopoConfigOutput = output<typeof ProsopoConfigSchema>;
-
-export const ProsopoServerConfigSchema = ProsopoConfigSchema.merge(
-	object({
-		serverUrl: string().url().optional(),
-		timeouts: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
-	}),
-);
-
-export type ProsopoServerConfigInput = input<typeof ProsopoServerConfigSchema>;
-export type ProsopoServerConfigOutput = output<
-	typeof ProsopoServerConfigSchema
->;

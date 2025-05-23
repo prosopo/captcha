@@ -168,7 +168,7 @@ type ProviderDatabaseOptions = {
 		dbname?: string;
 		authSource?: string;
 	};
-	redis: {
+	redis?: {
 		url: string;
 		password: string;
 	};
@@ -215,8 +215,8 @@ export class ProviderDatabase
 
 	protected async createRedisClient(): Promise<RedisClientType> {
 		return (await createClient({
-			url: this.options.redis.url,
-			password: this.options.redis.password,
+			url: this.options.redis?.url,
+			password: this.options.redis?.password,
 		})
 			.on("error", (error) => this.logger.error("Redis Client Error", error))
 			.connect()) as RedisClientType;

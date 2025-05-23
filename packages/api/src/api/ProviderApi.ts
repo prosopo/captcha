@@ -45,6 +45,7 @@ import {
 } from "@prosopo/types";
 import {
 	type DeleteRulesEndpointSchemaOutput,
+	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
 	accessRuleApiPaths,
 	deleteRulesEndpointSchema,
@@ -314,21 +315,17 @@ export default class ProviderApi
 	}
 
 	public insertUserAccessPolicies(
-		rules: InsertManyRulesEndpointOutputSchema,
+		rules: InsertManyRulesEndpointInputSchema,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
-		return this.post(
-			accessRuleApiPaths.INSERT_MANY,
-			insertRulesEndpointSchema.parse(rules),
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
+		return this.post(accessRuleApiPaths.INSERT_MANY, rules, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
 			},
-		);
+		});
 	}
 
 	public deleteUserAccessPolicies(

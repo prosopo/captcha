@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { z } from "zod";
+
 enum CaptchaType {
 	image = "image",
 	pow = "pow",
 	frictionless = "frictionless",
 }
 
-export { CaptchaType };
+const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
+
+export { CaptchaType, CaptchaTypeSchema };

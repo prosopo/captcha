@@ -25,7 +25,12 @@ import {
 } from "#policy/accessPolicy.js";
 import type { AccessRulesWriter } from "#policy/accessRules.js";
 
-export const insertRulesEndpointSchema = z.object({
+export const insertRulesEndpointSchema: z.ZodType<{
+	policy: z.infer<typeof accessPolicySchema>;
+	policyScope?: z.infer<typeof policyScopeSchema>;
+	userScopes: z.input<typeof userScopeInputSchema>[];
+	expirationTimestampSeconds?: number;
+}> = z.object({
 	policy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
 	userScopes: z.array(userScopeInputSchema),

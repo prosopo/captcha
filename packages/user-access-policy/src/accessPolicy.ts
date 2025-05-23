@@ -12,16 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { CaptchaTypeSchema } from "@prosopo/types";
 import { Address4 } from "ip-address";
-import { z } from "zod";
+import { type ZodRawShape, z } from "zod";
 
 export enum AccessPolicyType {
 	Block = "block",
 	Restrict = "restrict",
 }
 
-export const accessPolicySchema = z.object({
+export const accessPolicySchema: z.ZodObject<{
+	type: ZodRawShape["type"];
+	captchaType: ZodRawShape["captchaType"];
+	description: ZodRawShape["description"];
+	solvedImagesCount: ZodRawShape["solvedImagesCount"];
+	imageThreshold: ZodRawShape["imageThreshold"];
+	powDifficulty: ZodRawShape["powDifficulty"];
+	unsolvedImagesCount: ZodRawShape["unsolvedImagesCount"];
+	frictionlessScore: ZodRawShape["frictionlessScore"];
+}> = z.object({
 	type: z.nativeEnum(AccessPolicyType),
+	captchaType: CaptchaTypeSchema.optional(),
 	description: z.coerce.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),
@@ -50,11 +61,6 @@ export const userScopeSchema = z.object({
 	userAgentHash: z.coerce.string().optional(),
 });
 
-export type AccessUserScope = z.output<typeof userScopeSchema>;
-
-// export type RuleIpV4Mask =
-// 	`${number | "*"}.${number | "*"}.${number | "*"}.${number | "*"}`;
-
 export const userScopeInputSchema = userScopeSchema
 	.extend({
 		// human-friendly ip versions. If present, then converted to numeric and removed from the object
@@ -72,7 +78,7 @@ export const userScopeInputSchema = userScopeSchema
 		}
 
 		if ("string" === typeof ipMask) {
-			const ipObject = new Address4(ipMask);
+			const ipObject = new Address4(ipMask.replaceAll("*", "0"));
 
 			userScope.numericIpMaskMin = ipObject.bigInt();
 			userScope.numericIpMaskMax = ipObject.endAddress().bigInt();
@@ -87,11 +93,16 @@ export type UserScope = z.output<typeof userScopeSchema>;
 export type UserScopeApiInput = z.input<typeof userScopeInputSchema>;
 export type UserScopeApiOutput = z.output<typeof userScopeInputSchema>;
 
-export const accessRuleSchemaExtended = z.object({
-	// flat structure is used to fit the Redis requirements
-	...accessPolicySchema.shape,
-	...policyScopeSchema.shape,
-	...userScopeInputSchema._def.schema.shape,
-});
-
-export type AccessRuleExtended = z.infer<typeof accessRuleSchemaExtended>;
+export const accessRuleSchemaExtended = z
+	.object({
+		// flat structure is used to fit the Redis requirements
+		...accessPolicySchema.shape,
+		...policyScopeSchema.shape,
+		...userScopeInputSchema._def.schema.shape,
+	})
+	.omit({
+		numericIp: true,
+		numericIpMaskMin: true,
+		numericIpMaskMax: true,
+	});
+export type AccessRuleExtended = z.input<typeof accessRuleSchemaExtended>;

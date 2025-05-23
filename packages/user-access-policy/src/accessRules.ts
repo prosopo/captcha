@@ -20,7 +20,11 @@ import {
 } from "#policy/accessPolicy.js";
 import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
 
-export const accessRuleSchema = z.object({
+export const accessRuleSchema: z.ZodObject<
+	typeof accessPolicySchema.shape &
+		typeof policyScopeSchema.shape &
+		typeof userScopeSchema.shape
+> = z.object({
 	// flat structure is used to fit the Redis requirements
 	...accessPolicySchema.shape,
 	...policyScopeSchema.shape,
