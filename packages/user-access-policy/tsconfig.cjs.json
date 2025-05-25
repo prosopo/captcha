@@ -18,6 +18,9 @@
 		},
 		{
 			"path": "../api-route/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util/tsconfig.cjs.json"
 		}
 	]
 }

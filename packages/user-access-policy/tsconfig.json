@@ -18,6 +18,9 @@
 		},
 		{
 			"path": "../api-route"
+		},
+		{
+			"path": "../util"
 		}
 	]
 }
