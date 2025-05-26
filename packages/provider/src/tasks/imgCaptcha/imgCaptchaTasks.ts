@@ -44,7 +44,11 @@ import type {
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { checkLangRules } from "../../rules/lang.js";
-import { shuffleArray } from "../../util.js";
+import {
+	getIPAddress,
+	getIPAddressFromBigInt,
+	shuffleArray,
+} from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -444,6 +448,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		dapp: string,
 		commitmentId: string | undefined,
 		maxVerifiedTime?: number,
+		ip?: string,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -453,6 +458,20 @@ export class ImgCaptchaManager extends CaptchaManager {
 		if (!solution) {
 			this.logger.debug("Not verified - no solution found");
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
+		}
+
+		if (ip) {
+			const ipV4Address = getIPAddress(ip);
+			if (!ipV4Address) {
+				this.logger.debug(`Invalid IP address: ${ip}`);
+				return { status: "API.USER_NOT_VERIFIED", verified: false };
+			}
+			if (solution.ipAddress !== ipV4Address.bigInt()) {
+				this.logger.debug(
+					`IP address mismatch: ${getIPAddressFromBigInt(solution.ipAddress).address} !== ${ip}`,
+				);
+				return { status: "API.USER_NOT_VERIFIED", verified: false };
+			}
 		}
 
 		if (solution.serverChecked) {
