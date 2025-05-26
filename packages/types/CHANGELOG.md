@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 2.7.0
+
+### Minor Changes
+
+- 6e1aef6: Add IP check when verifying
+
 ## 2.6.2
 
 ### Patch Changes

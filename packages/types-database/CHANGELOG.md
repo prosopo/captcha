@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 2.7.1
+
+### Patch Changes
+
+- Updated dependencies [6e1aef6]
+  - @prosopo/types@2.7.0
+  - @prosopo/user-access-policy@2.6.3
+
 ## 2.7.0
 
 ### Minor Changes
