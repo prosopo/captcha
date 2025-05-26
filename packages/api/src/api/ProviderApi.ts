@@ -46,10 +46,8 @@ import {
 import {
 	type DeleteRulesEndpointSchemaOutput,
 	type InsertManyRulesEndpointInputSchema,
-	type InsertManyRulesEndpointOutputSchema,
 	accessRuleApiPaths,
 	deleteRulesEndpointSchema,
-	insertRulesEndpointSchema,
 } from "@prosopo/user-access-policy";
 import HttpClientBase from "./HttpClientBase.js";
 
