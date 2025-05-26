@@ -44,7 +44,11 @@ import type {
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { checkLangRules } from "../../rules/lang.js";
-import { getIPAddress, shuffleArray } from "../../util.js";
+import {
+	getIPAddress,
+	getIPAddressFromBigInt,
+	shuffleArray,
+} from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -464,7 +468,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 			if (solution.ipAddress !== ipV4Address.bigInt()) {
 				this.logger.debug(
-					`IP address mismatch: ${ipV4Address} !== ${solution.ipAddress}`,
+					`IP address mismatch: ${getIPAddressFromBigInt(solution.ipAddress).address} !== ${ip}`,
 				);
 				return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}

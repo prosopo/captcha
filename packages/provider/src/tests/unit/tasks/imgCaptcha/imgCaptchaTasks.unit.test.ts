@@ -31,9 +31,14 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
+import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
-import { getIPAddress, shuffleArray } from "../../../../util.js";
+import {
+	getIPAddress,
+	getIPAddressFromBigInt,
+	shuffleArray,
+} from "../../../../util.js";
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -173,6 +178,7 @@ describe("ImgCaptchaManager", () => {
 		logger = {
 			info: vi.fn(),
 			error: vi.fn(),
+			debug: vi.fn(),
 		} as unknown as Logger;
 
 		captchaConfig = {
@@ -514,5 +520,42 @@ describe("ImgCaptchaManager", () => {
 		);
 
 		expect(result).toBeUndefined();
+	});
+
+	it("should fail the user if an ip is passed up and it does not match the ip address stored in the commitment", async () => {
+		const userAccount = "userAccount";
+		const dappAccount = "dappAccount";
+		const ipAddress = "1.1.1.1";
+		const dappUserCommitment: UserCommitment = {
+			id: "commitmentId",
+			userAccount,
+			dappAccount,
+			providerAccount: "providerAccount",
+			datasetId: "datasetId",
+			result: { status: CaptchaStatus.approved },
+			userSignature: "",
+			userSubmitted: true,
+			serverChecked: false,
+			requestedAtTimestamp: 0,
+			ipAddress: getIPAddress("8.8.8.8").bigInt(),
+			headers: { a: "1", b: "2", c: "3" },
+			ja4: "ja4",
+		};
+
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		(db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
+
+		const verifyResult = await imgCaptchaManager.verifyImageCaptchaSolution(
+			userAccount,
+			dappAccount,
+			"commitmentId",
+			undefined,
+			ipAddress,
+		);
+		expect(verifyResult.verified).toBe(false);
+
+		expect(logger.debug).toHaveBeenCalledWith(
+			`IP address mismatch: ${getIPAddressFromBigInt(dappUserCommitment.ipAddress).address} !== ${ipAddress}`,
+		);
 	});
 });

@@ -32,7 +32,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
-import { getIPAddress } from "../../util.js";
+import { getIPAddress, getIPAddressFromBigInt } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -169,6 +169,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} dappAccount - the dapp that is requesting the captcha
 	 * @param {string} challenge - the starting string for the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+	 * @param ip
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -192,7 +193,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 			if (challengeRecord.ipAddress !== ipV4Address.bigInt()) {
 				this.logger.debug(
-					`IP address mismatch: ${ipV4Address} !== ${challengeRecord.ipAddress}`,
+					`IP address mismatch: ${getIPAddressFromBigInt(challengeRecord.ipAddress).address} !== ${ip}`,
 				);
 				return { verified: false };
 			}
