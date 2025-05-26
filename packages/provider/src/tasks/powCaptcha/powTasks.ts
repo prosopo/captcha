@@ -31,7 +31,7 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import { at, verifyRecency } from "@prosopo/util";
+import { at, getIPAddress, verifyRecency } from "@prosopo/util";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -173,6 +173,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
+		ip?: string,
 	): Promise<{ verified: boolean; score?: number }> {
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
@@ -180,6 +181,20 @@ export class PowCaptchaManager extends CaptchaManager {
 		if (!challengeRecord) {
 			this.logger.debug(`No record of this challenge: ${challenge}`);
 			return { verified: false };
+		}
+
+		if (ip) {
+			const ipV4Address = getIPAddress(ip);
+			if (!ipV4Address) {
+				this.logger.debug(`Invalid IP address: ${ip}`);
+				return { verified: false };
+			}
+			if (challengeRecord.ipAddress !== ipV4Address.bigInt()) {
+				this.logger.debug(
+					`IP address mismatch: ${ipV4Address} !== ${challengeRecord.ipAddress}`,
+				);
+				return { verified: false };
+			}
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {

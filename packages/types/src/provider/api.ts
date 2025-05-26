@@ -225,6 +225,7 @@ export const VerifySolutionBody = object({
 	[ApiParams.maxVerifiedTime]: number()
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
+	[ApiParams.ip]: string().optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -283,6 +284,7 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.verifiedTimeout]: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.ip]: string().optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
