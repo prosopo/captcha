@@ -173,7 +173,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						user,
 						ipAddress,
 						captchaConfig,
-						clientRecord.settings.imageThreshold,
+						clientRecord.settings.imageThreshold ?? 0.8,
 						frictionlessTokenId,
 					);
 				const captchaResponse: CaptchaResponseBody = {
