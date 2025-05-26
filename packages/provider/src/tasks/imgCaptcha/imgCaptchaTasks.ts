@@ -42,9 +42,9 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { at, getIPAddress } from "@prosopo/util";
+import { at } from "@prosopo/util";
 import { checkLangRules } from "../../rules/lang.js";
-import { shuffleArray } from "../../util.js";
+import { getIPAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";

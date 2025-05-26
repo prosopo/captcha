@@ -31,7 +31,8 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import { at, getIPAddress, verifyRecency } from "@prosopo/util";
+import { at, verifyRecency } from "@prosopo/util";
+import { getIPAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
