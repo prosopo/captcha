@@ -14,7 +14,6 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaStatus,

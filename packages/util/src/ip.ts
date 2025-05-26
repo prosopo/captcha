@@ -11,9 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { IPAddress } from "@prosopo/types";
 import { Address4, Address6 } from "ip-address";
 
-export const getIPAddress = (ipAddressString: string) => {
+export const getIPAddress = (ipAddressString: string): IPAddress => {
 	try {
 		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
 			return new Address4(ipAddressString);
@@ -22,4 +24,8 @@ export const getIPAddress = (ipAddressString: string) => {
 	} catch (e) {
 		throw new Error("API.INVALID_IP");
 	}
+};
+
+export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
+	return Address4.fromBigInt(ipAddressBigInt);
 };

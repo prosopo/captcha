@@ -31,7 +31,7 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { getIPAddress } from "@prosopo/util";
+import { getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
