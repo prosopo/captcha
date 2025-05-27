@@ -1,5 +1,11 @@
 # @prosopo/procaptcha-common
 
+## 2.6.6
+
+### Patch Changes
+
+- bc892fa: lint
+
 ## 2.6.5
 
 ### Patch Changes

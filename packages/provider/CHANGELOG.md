@@ -1,5 +1,12 @@
 # @prosopo/provider
 
+## 2.9.3
+
+### Patch Changes
+
+- Updated dependencies [bc892fa]
+  - @prosopo/datasets@2.6.7
+
 ## 2.9.2
 
 ### Patch Changes

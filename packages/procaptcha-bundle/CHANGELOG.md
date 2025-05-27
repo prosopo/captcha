@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-bundle
 
+## 2.6.7
+
+### Patch Changes
+
+- bc892fa: lint
+- Updated dependencies [bc892fa]
+  - @prosopo/procaptcha-frictionless@2.6.7
+  - @prosopo/procaptcha-react@2.6.7
+  - @prosopo/procaptcha-pow@2.6.7
+
 ## 2.6.6
 
 ### Patch Changes
