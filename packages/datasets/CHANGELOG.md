@@ -1,5 +1,12 @@
 # @prosopo/datasets
 
+## 2.6.5
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+- 5656b0c: Adding all client examples to bundle example
+
 ## 2.6.4
 
 ### Patch Changes
