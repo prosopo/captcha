@@ -4,7 +4,8 @@ inputs:
   npm_ci:
     description: 'Run npm ci'
     required: false
-    default: 'true'
+    type: boolean
+    default: true
   npm_ci_args:
     description: 'npm ci args'
     required: false
@@ -12,7 +13,8 @@ inputs:
   restore_npm_cache:
     description: 'Restore npm cache'
     required: false
-    default: 'true'
+    default: true
+    type: boolean
 
 runs:
     using: "composite"
@@ -23,7 +25,7 @@ runs:
           node-version-file: 'package.json'
 
       - uses: prosopo/captcha/.github/actions/restore_npm_cache@gha
-        if: ${{ inputs.restore_npm_cache == 'true' }}
+        if: ${{ inputs.restore_npm_cache }}
 
       - name: install npm
         shell: bash
@@ -32,6 +34,6 @@ runs:
 
       - name: install project
         shell: bash
-        if: ${{ inputs.npm_ci == 'true' }}
+        if: ${{ inputs.npm_ci }}
         run: |
           npm ci ${{ inputs.npm_ci_args }}
