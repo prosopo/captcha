@@ -1,5 +1,12 @@
 # @prosopo/client-bundle-example
 
+## 2.8.1
+
+### Patch Changes
+
+- 84fc39f: async defer and proper frictionless implicit
+- 84fc39f: lint
+
 ## 2.8.0
 
 ### Minor Changes
