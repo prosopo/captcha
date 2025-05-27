@@ -186,12 +186,8 @@
         window.updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
     }
 
-    // Do not set on the window, we want to ensure that the function passed in via `render` is called
-    // window.onCaptchaVerified = onCaptchaVerified
-
     // Get the Element using elementId
     const captchaContainer = document.getElementById('procaptcha-container');
-    window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
     
     // Render the CAPTCHA
     const widgetId = render(captchaContainer, {
@@ -204,7 +200,6 @@
         }
     });
     
-    window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
 </script>
 </body>
 </html>
