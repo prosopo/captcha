@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-common
 
+## 2.6.4
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+- 5656b0c: Adding all client examples to bundle example
+
 ## 2.6.3
 
 ### Patch Changes
