@@ -2,12 +2,19 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <title>Procaptcha demo: PoW - Implicit Rendering</title>
+    <title>Procaptcha demo: Frictionless CAPTCHA</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript">
+        window.onCaptchaFailed = function () {
+            console.log('Challenge failed');
+            updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+        }
+    </script>
     <script type="module">
         // Function to update CAPTCHA status display is now provided by status-log-injector
 
         window.addEventListener('load', () => {
+            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
 
             window.setIsError = (isError) => {
                 const messageContainer = document.getElementById('messageContainer');
@@ -53,7 +60,7 @@
 
             window.onActionHandler = () => {
                 updateCaptchaStatus('Form submission initiated', 'info');
-                
+
                 const procaptchaElements = document.getElementsByName('procaptcha-response');
 
                 if (!procaptchaElements.length) {
@@ -88,33 +95,31 @@
                             json,
                         })))
                 })
-                    .then(async ({status, json, ok}) => {
-                        console.log("status", status, "json", json.message, "ok", ok);
-                        console.log("json", json)
-                        try {
-                            if (status !== 200) {
-                                updateCaptchaStatus(`API Error: ${json.message}`, 'error');
-                                setIsError(true);
-                                setMessage(json.message);
-                            } else {
-                                updateCaptchaStatus(`API Success: ${json.message}`, 'success');
-                                setIsError(false);
-                                setMessage(json.message);
-                            }
-                        } catch (err) {
-                            console.log(err);
-                            updateCaptchaStatus(`Error processing response: ${err}`, 'error');
+                .then(async ({status, json, ok}) => {
+                    console.log("status", status, "json", json.message, "ok", ok);
+                    console.log("json", json)
+                    try {
+                        if (status !== 200) {
+                            updateCaptchaStatus(`API Error: ${json.message}`, 'error');
+                            setIsError(true);
+                            setMessage(json.message);
+                        } else {
+                            updateCaptchaStatus(`API Success: ${json.message}`, 'success');
+                            setIsError(false);
+                            setMessage(json.message);
                         }
-                    })
-                    .catch((err) => {
+                    } catch (err) {
                         console.log(err);
-                        updateCaptchaStatus(`Fetch error: ${err}`, 'error');
-                        setIsError(true);
-                        setMessage("Error: " + err);
-                    });
+                        updateCaptchaStatus(`Error processing response: ${err}`, 'error');
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                    updateCaptchaStatus(`Fetch error: ${err}`, 'error');
+                    setIsError(true);
+                    setMessage("Error: " + err);
+                });
             };
-            
-            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
             
             // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
@@ -136,33 +141,14 @@
             observer.observe(document.body, { childList: true, subtree: true });
         });
 
-
-        window.onCaptchaFailed = function () {
-            console.log('Challenge failed');
-            updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
-        }
-
-        window.onCaptchaVerified = (output) => {
-            console.log('Challenge passed');
-            updateCaptchaStatus('Challenge passed successfully!', 'success');
-            updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
-        }
-        
-        // Add custom event listener for CAPTCHA verification stages
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                updateCaptchaStatus('CAPTCHA script loaded and initialized', 'info');
-                updateCaptchaStatus('Waiting for user interaction...', 'info');
-            }, 500);
-        });
+        // updateCaptchaStatus is now provided by status-log-injector
     </script>
-    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%"></script>
 </head>
 <body>
 
 <div class="mui-container">
-    <h1>Proof of Work CAPTCHA - Implicit Rendering</h1>
-    <p>This example demonstrates how to use Procaptcha in Proof of Work mode with implicit rendering.</p>
+    <h1>Frictionless CAPTCHA - Explicit Rendering</h1>
+    <p>This example demonstrates how to use Procaptcha in frictionless mode with explicit rendering.</p>
     
     <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
     
@@ -181,15 +167,7 @@
             <input id="password" type="password" name="password" required/>
         </div>
         <div class="mui-textfield mui-textfield--float-label">
-            <!-- Dev sitekey -->
-            <div
-                    class="procaptcha"
-                    data-theme="light"
-                    data-sitekey="%PROSOPO_SITE_KEY_IMAGE%"
-                    data-failed-callback="onCaptchaFailed"
-                    data-callback="onCaptchaVerified"
-                    data-captcha-type="image"
-            ></div>
+            <div id="procaptcha-container"></div>
         </div>
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
         <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
@@ -200,5 +178,36 @@
     
     <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
+<script type="module">
+    // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
+    import { render } from "%VITE_BUNDLE_URL%"
+
+    // Define a callback function to be called when the CAPTCHA is verified
+    function onCaptchaVerified(output) {
+        console.log('Challenge passed');
+        window.updateCaptchaStatus('Challenge passed successfully!', 'success');
+        window.updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
+    }
+
+    // Do not set on the window, we want to ensure that the function passed in via `render` is called
+    // window.onCaptchaVerified = onCaptchaVerified
+
+    // Get the Element using elementId
+    const captchaContainer = document.getElementById('procaptcha-container');
+    window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
+    
+    // Render the CAPTCHA
+    const widgetId = render(captchaContainer, {
+        siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%",
+        captchaType: "frictionless",
+        callback: onCaptchaVerified,
+        "failed-callback": function () {
+            console.log('Challenge failed');
+            window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+        }
+    });
+    
+    window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
+</script>
 </body>
 </html>

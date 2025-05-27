@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <title>Procaptcha Image Mode - Explicit Rendering</title>
+    <title>Procaptcha Proof of Work Mode - Explicit Rendering</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <script type="module">
         // Function to update CAPTCHA status display is now provided by status-log-injector
         
         document.addEventListener('DOMContentLoaded', function() {
-            
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
             
             // Monitor DOM for CAPTCHA initialization
@@ -36,8 +35,8 @@
 </head>
 <body>
     <div class="mui-container">
-        <h1>Procaptcha Image Mode - Explicit Rendering</h1>
-        <p>This example demonstrates how to use Procaptcha in image mode with explicit rendering.</p>
+        <h1>Procaptcha Proof of Work Mode - Explicit Rendering</h1>
+        <p>This example demonstrates how to use Procaptcha in Proof of Work mode with explicit rendering.</p>
         
         <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
         
@@ -57,7 +56,7 @@
             <!-- The container for the CAPTCHA -->
             <div id="procaptcha-container"></div>
             
-            <button type="submit" class="mui-btn mui-btn--raised" data-cy="submit-button">Submit</button>
+            <button type="submit" class="mui-btn mui-btn--raised">Submit</button>
             
             <div id="error"></div>
         </form>
@@ -71,7 +70,7 @@
     </div>
     
     <script type="module">
-        import { render, execute } from "%VITE_BUNDLE_URL%"
+        import { render } from "%VITE_BUNDLE_URL%"
         
         // Form validation function
         function validateForm() {
@@ -134,11 +133,10 @@
             
             // Render the CAPTCHA
             const widgetId = render(document.getElementById('procaptcha-container'), {
-                siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
-                captchaType: "image",
+                siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
+                captchaType: "pow",
                 callback: handleCaptchaResponse,
-                "failed-callback": handleCaptchaFailed,
-                size: "invisible"
+                "failed-callback": handleCaptchaFailed
             });
             
             window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
@@ -150,7 +148,6 @@
                 if (validateForm()) {
                     // Form is valid, CAPTCHA verification will be handled by the callback
                     window.updateCaptchaStatus('Waiting for CAPTCHA verification', 'info');
-                    execute();
                 }
             });
         });
