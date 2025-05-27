@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cypress-shared",
-	"version": "2.6.0",
+	"version": "2.7.3",
 	"private": true,
 	"type": "module",
 	"engines": {
@@ -8,15 +8,15 @@
 		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/types": "2.6.0",
+		"@prosopo/types": "2.7.0",
 		"@prosopo/util": "2.6.0",
 		"express": "4.21.2"
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
 		"@prosopo/common": "2.6.0",
-		"@prosopo/datasets": "2.6.0",
-		"@prosopo/types-database": "2.6.0",
+		"@prosopo/datasets": "2.6.5",
+		"@prosopo/types-database": "2.7.1",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
@@ -38,6 +38,10 @@
 		"cypress:open:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress open",
 		"cypress:run:client-bundle-example": "CYPRESS_BASE_URL='http://localhost:9232' cypress run --browser chrome",
 		"cypress:open:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.frictionless.config.js",
-		"cypress:run:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.frictionless.config.js --browser chrome"
+		"cypress:run:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.frictionless.config.js --browser chrome",
+		"cypress:open:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.pow.config.js",
+		"cypress:run:client-bundle-example:pow": "CAPTCHA_TYPE=pow CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.pow.config.js --browser chrome",
+		"cypress:open:client-bundle-example:invisible": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.invisible.config.js",
+		"cypress:run:client-bundle-example:invisible": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress run --config-file cypress.invisible.config.js --browser chrome"
 	}
 }

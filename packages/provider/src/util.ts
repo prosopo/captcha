@@ -85,3 +85,7 @@ export const getIPAddress = (ipAddressString: string): IPAddress => {
 		throw new ProsopoEnvError("API.INVALID_IP");
 	}
 };
+
+export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
+	return Address4.fromBigInt(ipAddressBigInt);
+};
