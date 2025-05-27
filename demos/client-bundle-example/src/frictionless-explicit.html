@@ -4,14 +4,11 @@
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
     <title>Procaptcha demo: Frictionless CAPTCHA</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
-    <script type="text/javascript">
+    <script type="module">
         window.onCaptchaFailed = function () {
             console.log('Challenge failed');
             updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
         }
-    </script>
-    <script type="module">
-        // Function to update CAPTCHA status display is now provided by status-log-injector
 
         window.addEventListener('load', () => {
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
