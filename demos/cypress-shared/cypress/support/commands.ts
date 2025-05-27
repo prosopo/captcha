@@ -50,7 +50,17 @@ declare global {
 				captchaType?: CaptchaType,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
+
+			// Wait for the procaptcha script to load and be ready
+			waitForProcaptchaScript(): Cypress.Chainable<void>;
 		}
+	}
+}
+
+// Extend the AUTWindow interface to include the procaptcha property
+declare global {
+	interface Window {
+		procaptcha?: unknown;
 	}
 }
 
@@ -65,38 +75,83 @@ export function getWidgetElement(
 	return cy.get(selector, options);
 }
 
-function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
-	cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-		"getCaptcha",
-	);
-	getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+/**
+ * Wait for the procaptcha script to be loaded, handling async defer scripts
+ * This is especially important when the script has async and defer attributes
+ */
+function waitForProcaptchaScript(): Cypress.Chainable<void> {
+	return cy.window().then((win) => {
+		return new Cypress.Promise<void>((resolve) => {
+			// Check if procaptcha is already loaded
+			if (win.procaptcha) {
+				resolve();
+				return;
+			}
 
-	return cy
-		.wait("@getCaptcha", { timeout: 36000 })
-		.its("response")
-		.then((response) => {
-			expect(response).to.not.be.undefined;
-			expect(response?.statusCode).to.equal(200);
-			expect(response?.body).to.have.property("captchas");
-			const captchas = response?.body.captchas;
-			console.log(
-				"-----------------------------captchas",
-				captchas,
-				"length",
-				captchas.length,
-			);
-			expect(captchas).to.have.lengthOf(2);
-			expect(captchas[0]).to.have.property("items");
-			console.log(
-				"-----------------------------captchas[0].items",
-				captchas[0].items,
-				"length",
-				captchas[0].items.length,
-			);
-			expect(captchas[0].items).to.have.lengthOf(9);
-			return captchas;
-		})
-		.as("captchas");
+			// If not loaded yet, set up a check that runs repeatedly
+			const checkInterval = 100; // ms
+			const maxWaitTime = 10000; // 10 seconds max wait
+			let elapsed = 0;
+
+			const checkForProcaptcha = () => {
+				if (win.procaptcha) {
+					resolve();
+					return;
+				}
+
+				elapsed += checkInterval;
+				if (elapsed >= maxWaitTime) {
+					// If max wait time exceeded, continue anyway - test will likely fail but this avoids hanging
+					cy.log(
+						"Warning: procaptcha script did not load within the expected time",
+					);
+					resolve();
+					return;
+				}
+
+				setTimeout(checkForProcaptcha, checkInterval);
+			};
+
+			checkForProcaptcha();
+		});
+	});
+}
+
+function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
+	// First wait for the procaptcha script to be loaded
+	return cy.waitForProcaptchaScript().then(() => {
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+			"getCaptcha",
+		);
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+
+		return cy
+			.wait("@getCaptcha", { timeout: 36000 })
+			.its("response")
+			.then((response) => {
+				expect(response).to.not.be.undefined;
+				expect(response?.statusCode).to.equal(200);
+				expect(response?.body).to.have.property("captchas");
+				const captchas = response?.body.captchas;
+				console.log(
+					"-----------------------------captchas",
+					captchas,
+					"length",
+					captchas.length,
+				);
+				expect(captchas).to.have.lengthOf(2);
+				expect(captchas[0]).to.have.property("items");
+				console.log(
+					"-----------------------------captchas[0].items",
+					captchas[0].items,
+					"length",
+					captchas[0].items.length,
+				);
+				expect(captchas[0].items).to.have.lengthOf(9);
+				return captchas;
+			})
+			.as("captchas");
+	});
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
@@ -229,4 +284,5 @@ Cypress.Commands.addAll({
 	clickNextButton,
 	elementExists,
 	registerSiteKey,
+	waitForProcaptchaScript,
 });

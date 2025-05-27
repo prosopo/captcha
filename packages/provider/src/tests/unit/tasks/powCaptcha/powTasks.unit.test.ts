@@ -339,5 +339,38 @@ describe("PowCaptchaManager", () => {
 
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 		});
+
+		it("should return verified:false if an ip is received and it does not match the one on the challenge record", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = "8.8.8.8";
+			const challengeRecord = {
+				challenge,
+				dappAccount,
+				userAccount,
+				timestamp,
+				checked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getIPAddress("1.1.1.1").bigInt(),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				ipAddress,
+			);
+
+			expect(result.verified).toBe(false);
+		});
 	});
 });
