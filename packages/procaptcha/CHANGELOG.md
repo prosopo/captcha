@@ -1,5 +1,13 @@
 # @prosopo/procaptcha
 
+## 2.6.7
+
+### Patch Changes
+
+- Updated dependencies [bc892fa]
+  - @prosopo/procaptcha-common@2.6.6
+  - @prosopo/datasets@2.6.7
+
 ## 2.6.6
 
 ### Patch Changes

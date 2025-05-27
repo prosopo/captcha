@@ -1,5 +1,11 @@
 # @prosopo/datasets
 
+## 2.6.7
+
+### Patch Changes
+
+- bc892fa: lint
+
 ## 2.6.6
 
 ### Patch Changes

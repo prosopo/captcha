@@ -1,5 +1,14 @@
 # @prosopo/scripts
 
+## 2.6.7
+
+### Patch Changes
+
+- Updated dependencies [bc892fa]
+  - @prosopo/datasets@2.6.7
+  - @prosopo/provider@2.9.3
+  - @prosopo/cli@2.6.7
+
 ## 2.6.6
 
 ### Patch Changes

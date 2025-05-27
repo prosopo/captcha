@@ -1,5 +1,11 @@
 # @prosopo/client-bundle-example
 
+## 2.8.2
+
+### Patch Changes
+
+- bc892fa: lint
+
 ## 2.8.1
 
 ### Patch Changes
