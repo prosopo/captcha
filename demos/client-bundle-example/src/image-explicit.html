@@ -8,7 +8,6 @@
         // Function to update CAPTCHA status display is now provided by status-log-injector
         
         document.addEventListener('DOMContentLoaded', function() {
-            
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
             
             // Monitor DOM for CAPTCHA initialization
@@ -57,7 +56,7 @@
             <!-- The container for the CAPTCHA -->
             <div id="procaptcha-container"></div>
             
-            <button type="submit" class="mui-btn mui-btn--raised" data-cy="submit-button">Submit</button>
+            <button type="submit" class="mui-btn mui-btn--raised">Submit</button>
             
             <div id="error"></div>
         </form>
@@ -71,7 +70,7 @@
     </div>
     
     <script type="module">
-        import { render, execute } from "%VITE_BUNDLE_URL%"
+        import { render } from "%VITE_BUNDLE_URL%"
         
         // Form validation function
         function validateForm() {
@@ -137,8 +136,7 @@
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
                 captchaType: "image",
                 callback: handleCaptchaResponse,
-                "failed-callback": handleCaptchaFailed,
-                size: "invisible"
+                "failed-callback": handleCaptchaFailed
             });
             
             window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
@@ -150,7 +148,6 @@
                 if (validateForm()) {
                     // Form is valid, CAPTCHA verification will be handled by the callback
                     window.updateCaptchaStatus('Waiting for CAPTCHA verification', 'info');
-                    execute();
                 }
             });
         });

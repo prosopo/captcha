@@ -16,7 +16,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
+import explanationInjector from "./src/plugins/explanation-injector.js";
+import formFillerInjector from "./src/plugins/form-filler-injector.js";
 import navigationInjector from "./src/plugins/navigation-injector.js";
+import statusLogInjector from "./src/plugins/status-log-injector.js";
 
 // Function to copy contents of a directory to another directory
 function copyDirContents(src: string, dest: string) {
@@ -93,11 +96,24 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SITE_KEY": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY,
 			),
+			"import.meta.env.PROSOPO_SITE_KEY_IMAGE": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_IMAGE,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_SLIDER": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_SLIDER,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_POW,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_FRICTIONLESS,
+			),
 			"import.meta.env.PROSOPO_SERVER_URL": JSON.stringify(
 				process.env.PROSOPO_SERVER_URL,
 			),
 			"import.meta.env.VITE_BUNDLE_URL": JSON.stringify(
-				process.env.VITE_BUNDLE_URL || "./assets/procaptcha.bundle.js",
+				process.env.VITE_BUNDLE_URL ||
+					"http://localhost:9269/procaptcha.bundle.js",
 			),
 		},
 		optimizeDeps: {
@@ -110,6 +126,18 @@ export default defineConfig(({ command, mode }) => {
 			rollupOptions: {
 				input: {
 					index: path.resolve(__dirname, "src/index.html"),
+					"pow-explicit": path.resolve(__dirname, "src/pow-explicit.html"),
+					"image-explicit": path.resolve(__dirname, "src/image-explicit.html"),
+					"pow-implicit": path.resolve(__dirname, "src/pow-implicit.html"),
+					"image-implicit": path.resolve(__dirname, "src/index.html"),
+					"frictionless-implicit": path.resolve(
+						__dirname,
+						"src/frictionless-implicit.html",
+					),
+					"frictionless-explicit": path.resolve(
+						__dirname,
+						"src/frictionless-explicit.html",
+					),
 					"invisible-pow-explicit": path.resolve(
 						__dirname,
 						"src/invisible-pow-explicit.html",
@@ -126,8 +154,6 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-image-implicit.html",
 					),
-					pow: path.resolve(__dirname, "src/pow.html"),
-					frictionless: path.resolve(__dirname, "src/frictionless.html"),
 					"invisible-frictionless-implicit": path.resolve(
 						__dirname,
 						"src/invisible-frictionless-implicit.html",
@@ -141,6 +167,9 @@ export default defineConfig(({ command, mode }) => {
 		},
 		plugins: [
 			navigationInjector(),
+			formFillerInjector(),
+			explanationInjector(),
+			statusLogInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {
