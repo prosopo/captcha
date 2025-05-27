@@ -1,5 +1,19 @@
 name: "npm"
 
+inputs:
+  npm_ci:
+    description: 'Run npm ci'
+    required: false
+    default: 'true'
+  npm_ci_args:
+    description: 'npm ci args'
+    required: false
+    default: ''
+  restore_npm_cache:
+    description: 'Restore npm cache'
+    required: false
+    default: 'true'
+
 runs:
     using: "composite"
     steps:
@@ -7,15 +21,17 @@ runs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: 'package.json'
-          
+
       - uses: prosopo/captcha/.github/actions/restore_npm_cache@gha
+        if: ${{ inputs.restore_npm_cache == 'true' }}
 
       - name: install npm
         shell: bash
         run: |
-          npm i -g "npm@$(jq -r .engines.npm < package.json)"
+          npm i -g "npm@$(jq -r '.engines.npm // "latest"' < package.json)"
 
       - name: install project
         shell: bash
+        if: ${{ inputs.npm_ci == 'true' }}
         run: |
-          npm ci
+          npm ci ${{ inputs.npm_ci_args }}
