@@ -1,5 +1,38 @@
 # @prosopo/provider
 
+## 2.9.0
+
+### Minor Changes
+
+- 6e1aef6: Add IP check when verifying
+
+### Patch Changes
+
+- Updated dependencies [6e1aef6]
+  - @prosopo/types@2.7.0
+  - @prosopo/database@2.6.4
+  - @prosopo/datasets@2.6.4
+  - @prosopo/env@2.6.4
+  - @prosopo/keyring@2.6.3
+  - @prosopo/types-database@2.7.1
+  - @prosopo/types-env@2.6.4
+  - @prosopo/user-access-policy@2.6.3
+
+## 2.8.0
+
+### Minor Changes
+
+- cf59998: Update DB schema
+
+### Patch Changes
+
+- Updated dependencies [cf59998]
+  - @prosopo/types-database@2.7.0
+  - @prosopo/database@2.6.3
+  - @prosopo/datasets@2.6.3
+  - @prosopo/env@2.6.3
+  - @prosopo/types-env@2.6.3
+
 ## 2.7.1
 
 ### Patch Changes
