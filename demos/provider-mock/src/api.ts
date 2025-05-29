@@ -92,8 +92,8 @@ export function prosopoRouter(): Router {
 	router.get("/test", async (req, res) => {
 		try {
 			const logger = getLoggerDefault();
-			const ja4PlusFingerprint = getJA4(req.headers, logger);
-			return res.json({ ja4PlusFingerprint });
+			const ja4PlusFingerprint = await getJA4(req.headers, logger);
+			return res.json(ja4PlusFingerprint);
 		} catch (e) {
 			console.error("Error parsing ClientHello:", e);
 			return res.status(500).send("Error parsing ClientHello.");
