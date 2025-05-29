@@ -13,8 +13,11 @@
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
+	"imports": {
+		"#policy/*": "./dist/*"
+	},
 	"scripts": {
-		"build": "npx vite build --config vite.config.ts && tsc --build --emitDeclarationOnly --force",
+		"build": "tsc --build --verbose",
 		"clean": "tsc --build --clean",
 		"build:cjs": "npx vite build --config vite.cjs.config.ts",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
