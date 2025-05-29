@@ -1,5 +1,34 @@
 # @prosopo/procaptcha-react
 
+## 2.6.7
+
+### Patch Changes
+
+- bc892fa: lint
+- Updated dependencies [bc892fa]
+  - @prosopo/procaptcha-common@2.6.6
+  - @prosopo/procaptcha@2.6.7
+
+## 2.6.6
+
+### Patch Changes
+
+- 84fc39f: lint
+- Updated dependencies [84fc39f]
+  - @prosopo/procaptcha-common@2.6.5
+  - @prosopo/procaptcha@2.6.6
+
+## 2.6.5
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+- 5656b0c: Adding all client examples to bundle example
+- Updated dependencies [5656b0c]
+- Updated dependencies [5656b0c]
+  - @prosopo/procaptcha-common@2.6.4
+  - @prosopo/procaptcha@2.6.5
+
 ## 2.6.4
 
 ### Patch Changes

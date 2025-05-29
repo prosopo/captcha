@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-react",
-	"version": "2.6.4",
+	"version": "2.6.7",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -30,8 +30,8 @@
 	"dependencies": {
 		"@prosopo/common": "2.6.0",
 		"@prosopo/locale": "2.6.0",
-		"@prosopo/procaptcha": "2.6.4",
-		"@prosopo/procaptcha-common": "2.6.3",
+		"@prosopo/procaptcha": "2.6.7",
+		"@prosopo/procaptcha-common": "2.6.6",
 		"@prosopo/types": "2.7.0",
 		"@prosopo/util": "2.6.0",
 		"@prosopo/widget-skeleton": "2.6.0",

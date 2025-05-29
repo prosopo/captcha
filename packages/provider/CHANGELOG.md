@@ -1,5 +1,29 @@
 # @prosopo/provider
 
+## 2.9.3
+
+### Patch Changes
+
+- Updated dependencies [bc892fa]
+  - @prosopo/datasets@2.6.7
+
+## 2.9.2
+
+### Patch Changes
+
+- Updated dependencies [84fc39f]
+  - @prosopo/datasets@2.6.6
+
+## 2.9.1
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+- 5656b0c: Adding all client examples to bundle example
+- Updated dependencies [5656b0c]
+- Updated dependencies [5656b0c]
+  - @prosopo/datasets@2.6.5
+
 ## 2.9.0
 
 ### Minor Changes

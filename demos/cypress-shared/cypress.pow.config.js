@@ -17,20 +17,19 @@ import { loadEnv } from "@prosopo/dotenv";
 import { defineConfig } from "cypress";
 import vitePreprocessor from "cypress-vite";
 
+loadEnv();
+
 const allExternal = [
 	...builtinModules,
 	...builtinModules.map((m) => `node:${m}`),
 ];
-loadEnv();
 
 export default defineConfig({
 	video: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	env: {
 		...process.env,
-		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
-		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: `/${process.env.CAPTCHA_TYPE || ""}`,
+		default_page: "/pow-explicit.html",
 	},
 	e2e: {
 		setupNodeEvents(on, config) {
@@ -51,6 +50,7 @@ export default defineConfig({
 							external: allExternal,
 						},
 					},
+					plugins: [],
 				}),
 			);
 			// Add task event for logging to the terminal
@@ -61,11 +61,7 @@ export default defineConfig({
 				},
 			});
 		},
-		excludeSpecPattern: [
-			"cypress/e2e/**/frictionless.cy.ts",
-			"cypress/e2e/**/invisible.cy.ts",
-			"cypress/e2e/**/pow.cy.ts",
-		],
+		specPattern: ["cypress/e2e/**/pow.cy.ts"],
 	},
 	component: {
 		devServer: {

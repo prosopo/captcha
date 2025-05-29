@@ -1,5 +1,24 @@
 # @prosopo/datasets
 
+## 2.6.7
+
+### Patch Changes
+
+- bc892fa: lint
+
+## 2.6.6
+
+### Patch Changes
+
+- 84fc39f: lint
+
+## 2.6.5
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+- 5656b0c: Adding all client examples to bundle example
+
 ## 2.6.4
 
 ### Patch Changes
