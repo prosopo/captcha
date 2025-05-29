@@ -1,6 +1,6 @@
 FROM node:20
 
-COPY ./demos/provider-mock/dist/bundle/ ./
+COPY ./demos/provider-mock/dist/bundle/ /usr/src/app
 
 EXPOSE 9229 9339 80 443
 
