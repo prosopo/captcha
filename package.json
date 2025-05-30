@@ -8,7 +8,7 @@
 		"url": "git+https://github.com/prosopo/captcha.git"
 	},
 	"scripts": {
-		"hostid": "dig +short %s.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
+		"hostid": "dig +short ${HOSTNAME}.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
 		"build:all": "nx run-many --target=build",
 		"build:all:cjs": "nx run-many --target=build:cjs",
 		"bundle:all": "nx run-many --target=bundle",
