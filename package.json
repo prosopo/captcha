@@ -35,7 +35,7 @@
 		"start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
 		"serve:bundle": "npm -w @prosopo/procaptcha-bundle run serve",
 		"populate-data": "npm -w @prosopo/provider run populate-data",
-		"test:all": "npm run ws -- test",
+		"test:all": "nx run-many --target=test",
 		"lint:license": "npm run -w @prosopo/lint license -- $(pwd)",
 		"lint-fix:license": "npm run -w @prosopo/lint license:fix -- $(pwd)",
 		"lint:js": "biome check .",
