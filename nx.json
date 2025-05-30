@@ -16,6 +16,10 @@
 		"test": {
 			"dependsOn": ["build", "build:cjs", "bundle"],
 			"cache": false
+		},
+		"typecheck": {
+			"dependsOn": ["^build"],
+			"cache": false
 		}
 	},
 	"defaultBase": "main",
