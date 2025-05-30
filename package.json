@@ -19,6 +19,7 @@
 		"clean-ts:buildinfo": "del-cli --verbose '**/*.tsbuildinfo' '!**/node_modules'",
 		"clean-ts:dist": "del-cli --verbose '**/dist' '!**/node_modules'",
 		"clean:ts": "run-p clean-ts:*",
+		"clean:nx": "nx reset",
 		"clean:all": "nx run-many --target=clean",
 		"clean": "run-s \"clean-*:*\"",
 		"i": "npm i",
