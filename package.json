@@ -50,7 +50,7 @@
 		"lint:scripts": "npm run -w @prosopo/lint scripts -- $(pwd)/package.json",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
 		"postinstall": "npm run removePolkadotJSWarnings",
-		"depcheck": "npm run --workspaces npx depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",
+		"depcheck": "npx --workspaces depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npm-check-updates --deep",
 		"deps:upgrade": "npm-check-updates --deep --interactive --format group",
