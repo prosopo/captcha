@@ -26,7 +26,6 @@ jobs:
     check:
         name: check
         runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false && !startsWith(github.head_ref, 'version/') # Exclude source branches starting with 'version/'
         steps:
             - name: Print contexts
               uses: prosopo/captcha/.github/actions/print_contexts@gha
