@@ -59,8 +59,8 @@ jobs:
       - run: npm run -w @prosopo/dotenv build
 
       # build all packages in workspace
-      - run: npm run build:all:cjs
       - run: npm run build:all
+      - run: npm run build:all:cjs
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
