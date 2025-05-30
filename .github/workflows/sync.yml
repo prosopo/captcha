@@ -50,4 +50,4 @@ jobs:
               run: |
 
                 # check that the changesets are present for each package which has been modified
-                npx nx sync
+                npx nx sync:check
