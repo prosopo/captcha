@@ -59,8 +59,8 @@ jobs:
       - run: npm run -w @prosopo/dotenv build
 
       # build all packages in workspace
-      - run: npm run build:all:cjs
       - run: npm run build:all
+      - run: npm run build:all:cjs
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
@@ -103,7 +103,7 @@ jobs:
         run: |
           npx concurrently \
           "NODE_ENV=test npm run start:provider" \
-          "sleep 10s && NODE_ENV=test npm run test" \
+          "sleep 10s && NODE_ENV=test npm run test:all" \
            --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down

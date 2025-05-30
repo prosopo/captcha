@@ -26,7 +26,6 @@ jobs:
     check:
         name: check
         runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false && !startsWith(github.head_ref, 'version/') # Exclude source branches starting with 'version/'
         steps:
             - name: Print contexts
               uses: prosopo/captcha/.github/actions/print_contexts@gha
@@ -39,20 +38,15 @@ jobs:
             - uses: actions/checkout@v4
               with:
                   submodules: 'recursive'
+                  fetch-depth: 0 # required for comparing changesets to the base branch
 
             - uses: prosopo/captcha/.github/actions/npm@gha
-
-            # checkout the base and head refs
-            # ensures we have history for both
-            - name: Checkout base ref
-              run: git fetch origin ${{ github.base_ref }} && git checkout ${{ github.base_ref }}
-
-            - name: Checkout head ref
-              run: git fetch origin ${{ github.head_ref }} && git checkout ${{ github.head_ref }}
+              with:
+                npm_ci_args: '--include=dev'
 
             # if this fails, you need to run `npm run changesets:add` (preferred!) or `npm run changesets:empty` for an empty changeset (avoid if possible)
             - name: check changesets
               run: |
 
                 # check that the changesets are present for each package which has been modified
-                npm run changesets -- --since ${{ github.base_ref }}
+                npx nx release plan:check --base ${{ github.event.before }} --head ${{ github.event.after }} --verbose
