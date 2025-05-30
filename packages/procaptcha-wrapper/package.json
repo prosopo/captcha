@@ -15,7 +15,7 @@
 		"bundle": "vite build"
 	},
 	"dependencies": {
-		"@prosopo/types": "2.6.0",
+		"@prosopo/types": "2.7.0",
 		"@prosopo/locale": "2.6.0"
 	},
 	"devDependencies": {
