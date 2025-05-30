@@ -153,3 +153,8 @@ captcha.json
 **/stats.html
 
 *.angular
+
+.nx/cache
+.nx/workspace-data
+
+.github/instructions/

@@ -1,5 +1,36 @@
 # @prosopo/types-database
 
+## 2.7.1
+
+### Patch Changes
+
+- Updated dependencies [6e1aef6]
+  - @prosopo/types@2.7.0
+  - @prosopo/user-access-policy@2.6.3
+
+## 2.7.0
+
+### Minor Changes
+
+- cf59998: Update DB schema
+
+## 2.6.2
+
+### Patch Changes
+
+- Updated dependencies [6ff193a]
+  - @prosopo/types@2.6.2
+  - @prosopo/user-access-policy@2.6.2
+
+## 2.6.1
+
+### Patch Changes
+
+- 52feffc: Adjustable difficulty img captcha
+- Updated dependencies [52feffc]
+  - @prosopo/types@2.6.1
+  - @prosopo/user-access-policy@2.6.1
+
 ## 2.6.0
 
 ### Minor Changes

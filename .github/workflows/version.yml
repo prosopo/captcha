@@ -30,36 +30,18 @@ jobs:
                     VARS_CONTEXT: ${{ toJson(vars) }}
                     SECRETS_CONTEXT: ${{ toJson(secrets) }}
         
-            - name: Authenticate GitHub CLI
-              run: echo "${{ secrets.PROSOPONATOR_PAT }}" | gh auth login --with-token
+            - name: Get token for gh app
+              id: app_token
+              uses: peter-murray/workflow-application-token-action@v3
+              with:
+                application_id: ${{ vars.PROSOPONATOR_APP_ID }}
+                application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
 
             - uses: actions/checkout@v4
               with:
                   submodules: 'recursive'
-                  token: ${{ secrets.PROSOPONATOR_PAT }}
+                  token: ${{ steps.app_token.outputs.token }}
                   fetch-depth: 0 # fetch all history
-            
-            - name: Detect version branch name
-              run: |
-                set -x
-                # get the branch name from the ref
-                branch=$(echo "${GITHUB_REF#refs/heads/}" | cut -d'/' -f2-)
-                # set the branch name as an environment variable
-                # this is the branch that the version bump will work on
-                echo "version_branch=version/$branch" >> $GITHUB_ENV
-
-            - name: Check for pending version bump
-              id: check_pending
-              run: |
-                set -x
-                # change for version branch on the remote
-                if git ls-remote --exit-code --heads origin ${{ env.version_branch }}; then
-                  echo "Branch ${{env.version_branch}} exists, pending version bump is in progress"
-                  echo "Merge the pending version bump branch or delete it to trigger further version bumps"
-                  echo "Exiting due to pending version bump"
-                  exit 1
-                fi
-                echo "No pending version bump branch found, continuing"
 
             - uses: prosopo/captcha/.github/actions/npm@gha
 
@@ -69,51 +51,50 @@ jobs:
                 git config user.name "prosoponator[bot]"
                 git config user.email "dev@prosopo.io"
 
-            - name: check for changesets
-              run: |
-                set -x
-                set +e
-                (npm run changesets)
-                echo "changesets_exit_code=$?" >> $GITHUB_ENV
-
             - name: set prerelease mode
-              if: env.changesets_exit_code == '0'
               run: |
                 set -x
-                tag=$(echo "${GITHUB_REF#refs/heads/}" | cut -d'/' -f2-)
-                # enter prerelease mode if the branch is not main
-                # exit prerelease mode if the branch is main
-                if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
-                  if [[ -f .changeset/pre.json ]]; then
-                    # exit prerelease mode if not already
-                    npx changeset pre exit
+                # if there are changesets present (i.e. any *.md files in .changeset)
+                # then we need to consider prerelease mode
+                # else there's no changesets, so we can skip this step
+                if find .changeset -maxdepth 1 -name "*.md" | grep -q .; then
+                  echo "Changesets found, configuring pre-release mode"
+                  tag=$(echo "${GITHUB_REF#refs/heads/}" | cut -d'/' -f2-)
+                  # enter prerelease mode if the branch is not main
+                  # exit prerelease mode if the branch is main
+                  if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
+                    if [[ -f .changeset/pre.json ]]; then
+                      # exit prerelease mode if not already
+                      echo "Exiting prerelease mode"
+                      npx changeset pre exit
+                    else
+                      echo "Already in non-prerelease mode"
+                    fi
+                  else
+                    if [[ ! -f .changeset/pre.json ]]; then
+                      # enter prerelease mode if not already
+                      echo "Entering prerelease mode"
+                      npx changeset pre enter $tag
+                    else
+                      echo "Already in prerelease mode"
+                    fi
                   fi
-                elif [[ ! -f .changeset/pre.json ]]; then
-                  # enter prerelease mode if not already
-                  npx changeset pre enter $tag
                 fi
 
             - name: apply changesets
-              if: env.changesets_exit_code == '0'
               run: |
                 # apply changesets to bump package versions
                 npm run changesets:version
 
-            - name: pr changes
-              if: env.changesets_exit_code == '0'
+            - name: push changes
+              env:
+                GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+                BRANCH_PROTECTION_DISABLED: true
               run: |
-                # check if there are any changes
-                if [[ -n $(git status --porcelain) ]]; then
-                  # create a new branch for the changes
-                  git checkout -b ${{env.version_branch}}
-                  # add all changes to git
-                  git add .
-                  # commit the changes
-                  git commit -m "version bump"
-                  # push the changes to the new branch
-                  git push -u origin ${{env.version_branch}}
-                  # create a pull request
-                  gh pr create --base ${GITHUB_REF#refs/heads/} --fill
-                else
+                if [[ -z $(git status --porcelain) ]]; then
                   echo "No changes to commit"
+                  exit 0
                 fi
+                git add .
+                git commit -m "version bump"
+                git push
