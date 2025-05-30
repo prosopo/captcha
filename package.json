@@ -20,6 +20,7 @@
 		"clean-ts:dist": "del-cli --verbose '**/dist' '!**/node_modules'",
 		"clean:ts": "run-p clean-ts:*",
 		"clean:all": "nx run-many --target=clean",
+		"clean": "run-s clean:*",
 		"i": "npm i",
 		"nuke": "run-s clean:ts clean:npm i",
 		"cli": "npm -w @prosopo/cli run cli",
