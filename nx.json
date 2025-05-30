@@ -3,19 +3,19 @@
 	"targetDefaults": {
 		"build": {
 			"dependsOn": ["^build", "^build:cjs", "^bundle"],
-			"cache": true
+			"cache": false
 		},
 		"bundle": {
 			"dependsOn": ["build", "build:cjs"],
-			"cache": true
+			"cache": false
 		},
 		"build:cjs": {
 			"dependsOn": ["build"],
-			"cache": true
+			"cache": false
 		},
 		"test": {
 			"dependsOn": ["build", "build:cjs", "bundle"],
-			"cache": true
+			"cache": false
 		}
 	},
 	"defaultBase": "main",
