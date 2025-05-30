@@ -36,6 +36,12 @@
 	"pluginsConfig": {
 		"@nx/js": {
 			"projectsAffectedByDependencyUpdates": "auto"
+		},
+		"plugin": "@nx/js/typescript",
+		"options": {
+			"typecheck": {
+				"targetName": "typecheck"
+			}
 		}
 	},
 	"neverConnectToCloud": true,
