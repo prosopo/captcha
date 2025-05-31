@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createHash } from "node:crypto";
-import { Readable } from "node:stream";
 import { ProsopoApiError, getLoggerDefault } from "@prosopo/common";
 import { getJA4 } from "@prosopo/provider";
 import {
@@ -23,7 +21,7 @@ import {
 } from "@prosopo/types";
 import type { VerifySolutionBodyTypeOutput } from "@prosopo/types";
 import express, { type Router } from "express";
-import { readTlsClientHello } from "read-tls-client-hello";
+import { JA4Database } from "./db.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -32,6 +30,11 @@ import { readTlsClientHello } from "read-tls-client-hello";
  */
 export function prosopoRouter(): Router {
 	const router = express.Router();
+	const db = new JA4Database(
+		process.env.MONGO_URL || "mongodb://localhost:27017",
+		process.env.MONGO_DBNAME || "client",
+		process.env.MONGO_AUTH_SOURCE || "admin",
+	);
 
 	/**
 	 * Verifies a user's solution as being approved or not
@@ -93,7 +96,16 @@ export function prosopoRouter(): Router {
 		try {
 			const logger = getLoggerDefault();
 			const ja4PlusFingerprint = await getJA4(req.headers, logger);
-			return res.json(ja4PlusFingerprint);
+			await db.connect();
+			await db.addOrUpdateJA4Record({
+				ja4_fingerprint: ja4PlusFingerprint.ja4PlusFingerprint,
+				user_agent_string: req.headers["user-agent"] || "",
+			});
+			await db.close();
+			return res.json({
+				ja4: ja4PlusFingerprint,
+				ua: req.headers["user-agent"],
+			});
 		} catch (e) {
 			console.error("Error parsing ClientHello:", e);
 			return res.status(500).send("Error parsing ClientHello.");
