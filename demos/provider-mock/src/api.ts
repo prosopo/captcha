@@ -103,7 +103,7 @@ export function prosopoRouter(): Router {
 			});
 			await db.close();
 			return res.json({
-				ja4: ja4PlusFingerprint,
+				ja4: ja4PlusFingerprint.ja4PlusFingerprint,
 				ua: req.headers["user-agent"],
 			});
 		} catch (e) {
