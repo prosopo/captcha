@@ -11,7 +11,7 @@ services:
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
-            - ../.env.1.${NODE_ENV}
+            - ../.env.${NODE_ENV}
         ports:
             - '9229:9229'
         networks:
