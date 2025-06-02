@@ -113,12 +113,12 @@ jobs:
 
             - name: Apply version bumps
               env: 
-                GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+                GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
               run: |
                 # if there are changesets, apply them
                 if find .nx/version-plans -type f -print -quit | grep -q .; then
                   echo "Found changeset files"
-                  npx nx release
+                  npx nx release --skip-publish
                   git status
                   git push
                   git push --tags
