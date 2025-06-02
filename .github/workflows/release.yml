@@ -113,7 +113,7 @@ jobs:
 
             - name: Apply version bumps
               env: 
-                GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+                GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
               run: |
                 # if there are changesets, apply them
                 if find .nx/version-plans -type f -print -quit | grep -q .; then
