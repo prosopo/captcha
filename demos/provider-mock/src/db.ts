@@ -54,7 +54,7 @@ const JA4Schema = new Schema({
 	observation_count: { type: Number, default: 1 },
 	verified: { type: Boolean, default: false },
 	notes: { type: String, default: "" },
-	ja4_fingerprint: { type: String, required: true, unique: true },
+	ja4_fingerprint: { type: String, required: true },
 	ja4_fingerprint_string: String,
 	ja4s_fingerprint: String,
 	ja4h_fingerprint: String,
@@ -63,6 +63,8 @@ const JA4Schema = new Schema({
 	ja4ts_fingerprint: String,
 	ja4tscan_fingerprint: String,
 });
+
+JA4Schema.index({ ja4_fingerprint: 1, user_agent_string: 1 }, { unique: true });
 
 const DATA_TABLES = [
 	{
@@ -105,24 +107,25 @@ export class JA4Database extends MongoDatabase {
 	}
 
 	async getJA4Records(): Promise<JA4Record[]> {
-		const ja4Records = await this.tables.ja4.find<JA4Record>({});
-		return ja4Records;
+		return this.tables.ja4.find<JA4Record>({});
 	}
 
-	async getJA4RecordByFingerprint(
+	async getJA4RecordByFingerprintAndUserAgent(
 		ja4Fingerprint: string,
+		userAgentString: string,
 	): Promise<JA4Record | null> {
-		const ja4Record = await this.tables.ja4.findOne<JA4Record>({
+		return this.tables.ja4.findOne<JA4Record>({
 			ja4_fingerprint: ja4Fingerprint,
+			user_agent_string: userAgentString,
 		});
-		return ja4Record;
 	}
 
 	// add a ja4 record or update an existing one if the user agent string and ja4 fingerprint match, incrementing the observation count
 
 	async addOrUpdateJA4Record(ja4Record: JA4Data): Promise<JA4Record | null> {
-		const existingRecord = await this.getJA4RecordByFingerprint(
+		const existingRecord = await this.getJA4RecordByFingerprintAndUserAgent(
 			ja4Record.ja4_fingerprint,
+			ja4Record.user_agent_string ? ja4Record.user_agent_string : "",
 		);
 		if (existingRecord) {
 			existingRecord.observation_count =
