@@ -70,6 +70,7 @@ export interface Captcha extends CaptchaWithoutId {
 	assetURI?: string;
 	datasetId?: string;
 	datasetContentId?: string;
+	randomSeed?: number;
 }
 
 export interface CaptchaResult {
@@ -168,6 +169,7 @@ export const CaptchaSchema = object({
 	solution: number().array().optional(),
 	unlabelled: number().array().optional(),
 	timeLimit: number().optional(),
+	randomSeed: number().optional(),
 });
 
 export const CaptchaItemSchema = object({

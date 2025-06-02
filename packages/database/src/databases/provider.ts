@@ -13,6 +13,7 @@
 // limitations under the License.
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
+import { getRandomCaptchaSeed } from "@prosopo/datasets";
 import type { TranslationKey } from "@prosopo/locale";
 import {
 	ApiParams,
@@ -80,6 +81,7 @@ import {
 	createMongooseRulesStorage,
 	getRuleMongooseSchema,
 } from "@prosopo/user-access-policy";
+import { lodash } from "@prosopo/util/lodash";
 import type { Model, ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
@@ -370,6 +372,7 @@ export class ProviderDatabase
 				format,
 				contentTree: contentTree || [],
 				solutionTree: solutionTree || [],
+				randomMax: datasetDoc.randomMax,
 				captchas: captchas.map((captchaDoc) => {
 					const { captchaId, captchaContentId, items, target, salt, solved } =
 						captchaDoc;
@@ -396,10 +399,12 @@ export class ProviderDatabase
 	 * @param {boolean}  solved    `true` when captcha is solved
 	 * @param {string}   datasetId  the id of the data set
 	 * @param {number}   size       the number of records to be returned
+	 * @param {number}   randomMax
 	 */
 	async getRandomCaptcha(
 		solved: boolean,
 		datasetId: Hash,
+		randomMax: number,
 		size?: number,
 	): Promise<Captcha[] | undefined> {
 		if (!isHex(datasetId)) {
@@ -408,7 +413,16 @@ export class ProviderDatabase
 			});
 		}
 		const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
-		const filter: Pick<Captcha, "datasetId" | "solved"> = { datasetId, solved };
+		const randomRange = {
+			$gte: getRandomCaptchaSeed(randomMax),
+		};
+		const filter: Pick<Captcha, "datasetId" | "solved"> & {
+			randomSeed: { $gte: number };
+		} = {
+			datasetId,
+			solved,
+			randomSeed: randomRange,
+		};
 		const cursor = this.tables?.captcha.aggregate([
 			{ $match: filter },
 			{ $sample: { size: sampleSize } },
@@ -436,6 +450,8 @@ export class ProviderDatabase
 				solved,
 				datasetId,
 				size,
+				randomRange,
+				randomMax,
 			},
 		});
 	}
