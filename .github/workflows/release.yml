@@ -1,5 +1,4 @@
-# release newly bumped packages to the registry
-# this workflow does not bump the version numbers or handle anything to do with that!
+# do version bump and publish pkgs
 
 name: release
 
@@ -18,10 +17,14 @@ defaults:
     run:
         shell: bash
 
+env:
+    BRANCH_PROTECTION_DISABLE: true
+
 jobs:
     release:
         name: release
         runs-on: ubuntu-latest
+        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         steps:
             - name: Print contexts
               uses: prosopo/captcha/.github/actions/print_contexts@gha
@@ -30,7 +33,18 @@ jobs:
                     NEEDS_CONTEXT: ${{ toJson(needs) }}
                     VARS_CONTEXT: ${{ toJson(vars) }}
                     SECRETS_CONTEXT: ${{ toJson(secrets) }}
+
+            - name: Get token for gh app token
+              id: app_token
+              uses: peter-murray/workflow-application-token-action@v3
+              with:
+                application_id: ${{ vars.PROSOPONATOR_APP_ID }}
+                application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
         
+            - name: Export vars to env
+              run: |
+                echo '${{ toJson(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+
             - name: Authenticate GitHub CLI
               run: |
                 set -x
@@ -49,12 +63,14 @@ jobs:
                 git config user.email "dev@prosopo.io"
 
             - uses: prosopo/captcha/.github/actions/npm@gha
+              with:
+                npm_ci_args: '--include=dev'
 
             - name: setup npm registry
               run: |
                 set -x
-                echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-                echo "//npm.pkg.github.com/:_authToken=${{ secrets.PROSOPONATOR_PAT }}" >> .npmrc
+                echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+                echo "//npm.pkg.github.com/:_authToken=${{ secrets.PROSOPONATOR_PAT }}" >> ~/.npmrc
 
             - name: authenticate npm registry
               run: |
@@ -66,181 +82,129 @@ jobs:
                 set -x
                 npm whoami --registry https://npm.pkg.github.com/
 
-            # find all pkgs that have changed version
-            - name: find bumped packages
+            - name: copy changesets
               run: |
-                set -x
-                # find the packages in the workspace, excluding those from submodules (as these are managed in their own repos)
-                pkgs=$(npm run --workspaces env | grep npm_package_json | cut -d '=' -f 2 | grep -vE "$(git config --file .gitmodules --get-regexp path | awk '{print $2}' | xargs printf "$(pwd)/%s\n" | sed 's|^|^|; s|$|/|' | paste -sd'|' -)")
+                # copy the changesets from the changesets folder to the version-plans folder
+                # this is needed because the release plan command expects them in the version-plans folder
+                # the old changesets command puts them in the .changeset folder, so migrate them over
+                mkdir -p .nx/version-plans
+                cp -r .changeset/*.md .nx/version-plans/ || true
+                rm .changeset/*.md || true
 
-                affected="[]"
-                for pkg in $pkgs; do
-                  # get the package name
-                  name=$(cat "$pkg" | jq -r '.name')
-                  # get the package version
-                  version=$(cat "$pkg" | jq -r '.version')
-                  # construct the tag
-                  tag="$name@$version"
-                  # check if the tag exists
-                  if git rev-parse "$tag"; then
-                    continue
-                  else
-                    # tag does not exist, add it to the list of packages to publish
-                    affected=$(echo "$affected" | jq -c --arg name "$name" --arg version "$version" --arg tag "$tag" --arg path "$pkg" '. + [{name: $name, version: $version, tag: $tag, path: $path}]')
-                  fi
-                done
-
-                echo "affected=$affected"
-
-                # put the list of affected pkgs into the env
-                echo "affected=$affected" >> $GITHUB_ENV
-
-            - name: check tags available on registries
+            - name: Pre-release
               run: |
-                set -x
-                # check if the tags are available on npm
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                for pkg in $affected; do
-                  # get the package tag
-                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
-                  # check if the tag exists on npm
-                  if ! npm view "$tag" --registry https://registry.npmjs.org/ >/dev/null 2>&1; then
-                    echo "Tag $tag is available on npm"
-                  else
-                    echo "Error: Tag $tag already exists on npm"
-                    exit 1
-                  fi
-                  if ! npm view "$tag" --registry https://npm.pkg.github.com/ >/dev/null 2>&1; then
-                    echo "Tag $tag is available on gh"
-                  else
-                    echo "Error: Tag $tag already exists on gh"
-                    exit 1
-                  fi
-                done
-
-            # chuck all vars into the env for building
-            - name: vars to env
-              run: |
-                set -x
-                for key in $(echo '${{ toJson(vars) }}' | jq -r 'keys[]'); do
-                  value=$(echo '${{ toJson(vars) }}' | jq -r --arg k "$key" '.[$k]')
-                  echo "$key=$value" >> $GITHUB_ENV
-                done
-
-            # build each of those packages
-            - name: build packages
-              run: |
-                set -x
-                echo '${{ toJson(env) }}'
-                echo "affected='${{ env.affected }}'"
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                # build each package
-                for pkg in $affected; do
-                  npm run build -w "$pkg" --if-present
-                  npm run build:cjs -w "$pkg" --if-present
-                  npm run bundle -w "$pkg" --if-present
-                done
-
-            - name: create tags
-              run: |
-                set -x
-                # create a tag for each of the affected packages
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                for pkg in $affected; do
-                  # get the package tag
-                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
-                  # create the tag
-                  git tag -a "$tag" -m "Release $tag"
-                done
-
-                # push all tags to the remote
-                git push --tags
-                # if pushing tags fails then one or more of the pkgs have already been published at their version
-                # this could be:
-                # 1. the package has been published by someone else, in which case you need to merge their new version in before processing changesets
-                # 2. this workflow has run before and already published this version and no changesets have been processed since. If you weren't expecting a version bump, this is the expected behaviour. If you were then you have forgotten to add some changesets.
-
-            # add repo url + pkg path to each pkg
-            # required for pkg to be associated with a repo in the gh registry
-            - name: set repo details in all pkgs
-              run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                # set the repo details in each package
-                for pkg in $affected; do
-                  # get the package path
-                  path=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .path')
-                  # set the repo details (necessary to associate the published pkg with the repo)
-                  npm pkg -w "$pkg" set repository.type=git
-                  npm pkg -w "$pkg" set repository.url="git+https://github.com/${{ github.repository }}.git"
-                  dir=$(realpath --relative-to="$(pwd)" "$(dirname $path)")
-                  npm pkg -w "$pkg" set repository.directory="$dir"
-                done
-
-            - name: detect pre-release mode
-              run: |
-                set -x
-                # check if we are in pre-release mode
-                # this is done by checking if the pre.json file exists
-                if [[ -f .changeset/pre.json ]]; then
-                  echo "pre_release=true" >> $GITHUB_ENV
+                # if we're on main branch
+                if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+                  echo "On main branch, exiting prerelease mode"
+                  onMain=true
                 else
-                  echo "pre_release=false" >> $GITHUB_ENV
+                  echo "Not on main branch, entering prerelease mode"
+                  onMain=false
                 fi
-
-            # publish each of those packages to npmjs
-            - name: publish to npmjs registry
-              # only publish to npmjs if we are not in pre-release mode
-              if: env.pre_release == 'false'
-              run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                # publish each package
-                for pkg in $affected; do
-                  npm publish --access public --registry https://registry.npmjs.org/ -w "$pkg"
+                find .nx/version-plans -type f -name '*.md' | while read -r file; do
+                  if [[ "$onMain" == "true" ]]; then
+                    # in all changeset files, migrate prerelease bumps to normal bumps
+                    sed -i -E '/^---$/,/^---$/ s/pre(patch|minor|major)/\1/g; /^---$/,/^---$/ s/prerelease/major/g' "$file"
+                  else
+                    # in all changeset files, migrate normal bumps to prerelease bumps
+                    sed -i -E '/^---$/,/^---$/ s/(patch|minor|major)/pre\1/g' "$file"
+                  fi
                 done
 
-            # publish each of those packages to gh
-            - name: publish to gh registry
+            - name: Apply version bumps
+              env: 
+                GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
               run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-
-                # publish each package
-                for pkg in $affected; do
-                  # set the package to be non-private
-                  # packages need to be non-private in order to publish to the gh registry
-                  # but the gh registry keeps access restricted so only we can access it
-                  npm pkg delete private -w "$pkg"
-                  npm publish --access restricted --registry https://npm.pkg.github.com/ -w "$pkg"
-                done
-
-            # packages set to private are no longer private at this point!
-
-            - name: slack notification
-              if: always() && env.affected != '[]'
-              run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-                # get the tags
-                # format tags separated by newline
-                tags=$(echo '${{ env.affected }}' | jq -r '.[].tag' | tr ' ' '\n')
-                # get the status of this workflow
-                status=$(echo '${{ job.status }}')
-                emoji=":x:"
-                if [[ $status == "success" ]]; then
-                  emoji=":rocket:"
+                # if there are changesets, apply them
+                if find .nx/version-plans -type f -print -quit | grep -q .; then
+                  echo "Found changeset files"
+                  npx nx release
+                  git status
+                  git push
+                  git push --tags
+                else
+                  echo "No changeset files found"
                 fi
 
-                # send a slack notification
-                curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"${emoji} Release ${status} for \`\`\`$tags\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+            - name: affected
+              run: |
+                affected=$(npx nx show projects --json --affected --base=${{ github.sha }} --head=HEAD)
+                echo "affected: $affected"
+                echo "affected=$affected" >> $GITHUB_ENV
+              
+            - name: build+bundle
+              run: |
+                echo "Building and bundling affected packages"
+                npx nx run-many --target=bundle --projects=$(echo $affected | jq -r 'keys | join(",")')
+
+            - name: publish to npm
+              id: publish
+              run: |
+                # for each affected package
+                output="[]"
+                for pkg in $(echo $affected | jq -r '.[]'); do
+                    echo "Publishing $pkg to npm"
+                    set +e
+                    npm publish -w "$pkg" --access public --registry https://registry.npmjs.org
+                    result_npm=$?
+                    set -e
+                    echo ""
+
+                    echo "Publishing $pkg to gh"
+                    # make the package non-private so it can be published to gh
+                    npm pkg --workspace $pkg delete private
+                    set +e
+                    npm publish -w "$pkg" --access public --registry https://npm.pkg.github.com
+                    result_gh=$?
+                    set -e
+                    echo ""
+
+                    output=$(echo "$output" | jq -c ". += [{\"package\": \"$pkg\", \"npm\": $result_npm, \"gh\": $result_gh}]")
+                done
+
+                echo "output: $output"
+                echo "output=$output" >> $GITHUB_OUTPUT
+
+                failed=$(echo "$output" | jq '[.[] | select((.npm!=0) or (.gh!=0))] | length')
+                if [ "$failed" -gt 0 ]; then
+                    echo "Some packages failed to publish to GitHub Packages"
+                    exit 1
+                fi
+
+            - name: print output
+              if: always()
+              run: |
+                echo "output: ${{ steps.publish.outputs.output }}"
+                
+                npm_success=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.npm == 0) | .package')
+                gh_success=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.gh == 0) | .package')
+                npm_failure=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.npm != 0) | .package')
+                gh_failure=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.gh != 0) | .package')
+
+                if [ -n "$npm_success" ]; then
+                  echo "Successfully published to npm:"
+                  echo "$npm_success"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to npm: \`\`\`$npm_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
+                if [ -n "$gh_success" ]; then
+                  echo "Successfully published to GitHub Packages:"
+                  echo "$gh_success"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to gh: \`\`\`$gh_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+                
+                if [ -n "$npm_failure" ]; then
+                  echo "Failed to publish to npm:"
+                  echo "$npm_failure"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to npm: \`\`\`$npm_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
+                if [ -n "$gh_failure" ]; then
+                  echo "Failed to publish to GitHub Packages:"
+                  echo "$gh_failure"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to gh: \`\`\`$gh_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi

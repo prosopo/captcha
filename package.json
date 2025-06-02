@@ -19,8 +19,9 @@
 		"clean-ts:buildinfo": "del-cli --verbose '**/*.tsbuildinfo' '!**/node_modules'",
 		"clean-ts:dist": "del-cli --verbose '**/dist' '!**/node_modules'",
 		"clean:ts": "run-p clean-ts:*",
+		"clean:nx": "nx reset",
 		"clean:all": "nx run-many --target=clean",
-		"clean": "run-s clean:*",
+		"clean": "run-s \"clean-*:*\"",
 		"i": "npm i",
 		"nuke": "run-s clean i",
 		"cli": "npm -w @prosopo/cli run cli",
@@ -72,9 +73,12 @@
 		"integration/frameworks/*/*"
 	],
 	"devDependencies": {
+		"@angular-devkit/core": "~19.2.0",
 		"@biomejs/biome": "1.9.1",
 		"@changesets/cli": "2.29.4",
+		"@nx/angular": "21.1.2",
 		"@nx/js": "21.1.2",
+		"@nx/vue": "21.1.2",
 		"@swc-node/register": "1.10.10",
 		"@swc/core": "1.11.29",
 		"@taplo/cli": "0.7.0",
@@ -140,11 +144,13 @@
 	],
 	"license": "Apache-2.0",
 	"dependencies": {
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"vue": "^3.5.13"
 	},
 	"config": {
 		"commitizen": {
 			"path": "./node_modules/cz-conventional-changelog"
 		}
-	}
+	},
+	"nx": {}
 }
