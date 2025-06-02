@@ -53,7 +53,7 @@ jobs:
             - uses: actions/checkout@v4
               with:
                   submodules: 'recursive'
-                  token: ${{ secrets.PROSOPONATOR_PAT }}
+                  token: ${{ steps.app_token.outputs.token }} # checkout as the GitHub App to allow changes to be pushed later
                   fetch-depth: 0 # fetch all history so we can tag the commits
 
             - name: git config
