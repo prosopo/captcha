@@ -17,9 +17,9 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist && del-cli ./.svelte-kit",
-		"package": "svelte-package -i ./src -o ./dist",
-		"build": "npm run package && del-cli ./.svelte-kit",
-		"dev": "npm run package -- -w"
+		"svpkg": "svelte-package -i ./src -o ./dist",
+		"build": "npm run svpkg && del-cli ./.svelte-kit",
+		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": ">=2.6.0"
