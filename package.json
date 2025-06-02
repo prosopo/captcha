@@ -21,7 +21,7 @@
 		"clean:ts": "run-p clean-ts:*",
 		"clean:nx": "nx reset",
 		"clean:all": "nx run-many --target=clean",
-		"clean": "run-s clean:*",
+		"clean": "run-s \"clean-*:*\"",
 		"i": "npm i",
 		"nuke": "run-s clean i",
 		"cli": "npm -w @prosopo/cli run cli",
