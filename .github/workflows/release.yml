@@ -1,5 +1,3 @@
-# do version bump and publish pkgs
-
 name: release
 
 on:
@@ -11,20 +9,21 @@ on:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: false # queue the new runs until previous have finished. This avoids publishing multiple builds at the same time, which may cause issues with the registry
+    cancel-in-progress: false # queue the new runs until previous have finished. This avoids version bumps overlapping with each other
 
 defaults:
     run:
         shell: bash
 
 env:
-    BRANCH_PROTECTION_DISABLED: true
+  affected: '[]' # default to empty array
+  prerelease: 'false' # default to false, will be set to true if there are changesets and not on main branch
+  BRANCH_PROTECTION_DISABLED='true' # bypass husky check
 
 jobs:
     release:
         name: release
         runs-on: ubuntu-latest
-        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         steps:
             - name: Print contexts
               uses: prosopo/captcha/.github/actions/print_contexts@gha
@@ -40,31 +39,12 @@ jobs:
               with:
                 application_id: ${{ vars.PROSOPONATOR_APP_ID }}
                 application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
-        
-            - name: Export vars to env
-              run: |
-                echo '${{ toJson(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
-
-            - name: Authenticate GitHub CLI
-              run: |
-                set -x
-                echo "${{ secrets.PROSOPONATOR_PAT }}" | gh auth login --with-token
 
             - uses: actions/checkout@v4
               with:
                   submodules: 'recursive'
-                  token: ${{ steps.app_token.outputs.token }} # checkout as the GitHub App to allow changes to be pushed later
-                  fetch-depth: 0 # fetch all history so we can tag the commits
-
-            - name: git config
-              run: |
-                set -x
-                git config user.name "prosoponator[bot]"
-                git config user.email "dev@prosopo.io"
-
-            - uses: prosopo/captcha/.github/actions/npm@gha
-              with:
-                npm_ci_args: '--include=dev'
+                  token: ${{ steps.app_token.outputs.token }}
+                  fetch-depth: 0 # fetch all history
 
             - name: setup npm registry
               run: |
@@ -82,82 +62,119 @@ jobs:
                 set -x
                 npm whoami --registry https://npm.pkg.github.com/
 
-            - name: copy changesets
+            - name: Export vars to env
               run: |
-                # copy the changesets from the changesets folder to the version-plans folder
-                # this is needed because the release plan command expects them in the version-plans folder
-                # the old changesets command puts them in the .changeset folder, so migrate them over
-                mkdir -p .nx/version-plans
-                cp -r .changeset/*.md .nx/version-plans/ || true
-                rm .changeset/*.md || true
+                echo '${{ toJson(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
 
-            - name: Pre-release
+            - name: git config
               run: |
-                # if we're on main branch
-                if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-                  echo "On main branch, exiting prerelease mode"
-                  onMain=true
-                else
-                  echo "Not on main branch, entering prerelease mode"
-                  onMain=false
-                fi
-                find .nx/version-plans -type f -name '*.md' | while read -r file; do
-                  if [[ "$onMain" == "true" ]]; then
-                    # in all changeset files, migrate prerelease bumps to normal bumps
-                    sed -i -E '/^---$/,/^---$/ s/pre(patch|minor|major)/\1/g; /^---$/,/^---$/ s/prerelease/major/g' "$file"
+                set -x
+                git config user.name "prosoponator[bot]"
+                git config user.email "dev@prosopo.io"
+
+            - run: npm ci
+
+            - name: prerelease
+              run: |
+                # if there are changesets
+                if find .changeset -name "*.md" | grep -q . ; then
+                  echo "Found changesets"
+                  if [ "${GITHUB_REF##*/}" = "main" ]; then
+                    echo "On main branch, exiting prerelease mode"
+                    # remove pre.json to exit prerelease mode
+                    npx @changesets/cli pre exit || true
                   else
-                    # in all changeset files, migrate normal bumps to prerelease bumps
-                    sed -i -E '/^---$/,/^---$/ s/(patch|minor|major)/pre\1/g' "$file"
+                    echo "Not on main branch, entering prerelease mode"
+                    # pre.json puts changesets into prerelease mode
+                    branch_name="${GITHUB_REF##*/}"
+                    # sanitize branch name to be safe for changesets
+                    # replace unsafe characters with '-'
+                    # e.g. my/branch?is#unsafe -> my-branch-is-unsafe
+                    safe_branch_name=$(echo "$branch_name" | tr '/\\:;*?"<>|@#%&=+,$' '-')
+                    npx @changesets/cli pre enter "$safe_branch_name"
+                    echo "prerelease=true" >> $GITHUB_ENV
                   fi
-                done
-
-            - name: Apply version bumps
-              env: 
-                GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
-              run: |
-                # if there are changesets, apply them
-                if find .nx/version-plans -type f -print -quit | grep -q .; then
-                  echo "Found changeset files"
-                  npx nx release --skip-publish
-                  git status
-                  git push
-                  git push --tags
                 else
-                  echo "No changeset files found"
+                  echo "No changesets found"
                 fi
 
-            - name: affected
+            - name: version
               run: |
+                npx @changesets/cli version --verbose
+                git status
+                if [ -z "$(git status --porcelain)" ]; then
+                    echo "No changes to commit"
+                    exit 0
+                fi
+                git add -u .
+                git commit -m "chore: version bump"
+                git status
+
                 affected=$(npx nx show projects --json --affected --base=${{ github.sha }} --head=HEAD)
                 echo "affected: $affected"
                 echo "affected=$affected" >> $GITHUB_ENV
+
+            - name: tag
+              if: ${{ env.affected != '[]' }}
+              run: |
+                # tag each affected package with the new version
+                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
+                    version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
+                    echo "Tagging $pkg with version $version"
+                    git tag "$pkg@$version"
+                    echo
+                done
               
             - name: build+bundle
+              if: ${{ env.affected != '[]' }}
               run: |
                 echo "Building and bundling affected packages"
-                npx nx run-many --target=bundle --projects=$(echo $affected | jq -r 'keys | join(",")')
+                set -x
+                npx nx run-many --target=build,build:cjs,bundle --projects=$(echo $affected | jq -r 'join(",")')
 
-            - name: publish to npm
+            - name: push
+              if: ${{ env.affected != '[]' }}
+              env:
+                GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+              run: |
+                # allow the push to fail if there are no changes to push
+                git push
+                git push --tags
+
+            - name: publish
+              if: ${{ env.affected != '[]' }}
               id: publish
               run: |
                 # for each affected package
                 output="[]"
-                for pkg in $(echo $affected | jq -r '.[]'); do
+                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
+                    # skip the workspace root
+                    if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+                        echo "Skipping workspace root package"
+                        continue
+                    fi
+
                     echo "Publishing $pkg to npm"
-                    set +e
-                    npm publish -w "$pkg" --access public --registry https://registry.npmjs.org
-                    result_npm=$?
-                    set -e
-                    echo ""
+                    result_npm=0
+                    if [ "${{ env.prerelease }}" = "false" ]; then
+                      set +e
+                      npm publish -w "$pkg" --access public --registry https://registry.npmjs.org/
+                      result_npm=$?
+                      set -e
+                    else
+                      echo "Skipping npm publish for prerelease"
+                    fi
+                    echo
 
                     echo "Publishing $pkg to gh"
+                    result_gh=0
                     # make the package non-private so it can be published to gh
                     npm pkg --workspace $pkg delete private
                     set +e
                     npm publish -w "$pkg" --access public --registry https://npm.pkg.github.com
                     result_gh=$?
                     set -e
-                    echo ""
+                    echo
 
                     output=$(echo "$output" | jq -c ". += [{\"package\": \"$pkg\", \"npm\": $result_npm, \"gh\": $result_gh}]")
                 done
