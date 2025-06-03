@@ -57,8 +57,9 @@
 		"deps:status": "npm-check-updates --deep",
 		"deps:upgrade": "npm-check-updates --deep --interactive --format group",
 		"prepare": "husky",
-		"changesets:add": "nx release plan",
-		"changesets": "nx release plan:check --verbose"
+		"changesets:empty": "npx @changesets/cli add --empty",
+		"changesets:add": "npx @changesets/cli add",
+		"changesets": "npx @changesets/cli status --verbose"
 	},
 	"private": true,
 	"engines": {
