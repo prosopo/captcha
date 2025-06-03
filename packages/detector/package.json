@@ -3,8 +3,8 @@
 	"version": "2.6.1",
 	"main": "src/index.js",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^20",
+		"npm": "^10"
 	},
 	"exports": {
 		".": {

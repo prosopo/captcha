@@ -7,8 +7,8 @@
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^20",
+		"npm": "^10"
 	},
 	"exports": {
 		".": {
@@ -24,7 +24,9 @@
 		"build": "tsc --build --verbose",
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/detector": "2.6.1",
 		"@prosopo/locale": "2.6.0",
