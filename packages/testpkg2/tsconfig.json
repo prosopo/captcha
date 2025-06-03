@@ -4,10 +4,5 @@
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},
-	"include": ["src", "src/**/*.json"],
-	"references": [
-		{
-			"path": "../types"
-		}
-	]
+	"include": ["src", "src/**/*.json"]
 }

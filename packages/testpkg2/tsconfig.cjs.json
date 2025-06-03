@@ -9,10 +9,5 @@
 		"./src/**/*.json",
 		"./src/**/*.d.ts",
 		"./src/**/*.tsx"
-	],
-	"references": [
-		{
-			"path": "../types/tsconfig.cjs.json"
-		}
 	]
 }
