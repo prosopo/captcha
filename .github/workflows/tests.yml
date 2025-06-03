@@ -48,10 +48,6 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
-      # build the packages required by vite build commands first
-      - run: npm run -w @prosopo/config build
-      - run: npm run -w @prosopo/dotenv build
-
       # build all packages in workspace
       - run: npm run build:all
       - run: npm run build:all:cjs
