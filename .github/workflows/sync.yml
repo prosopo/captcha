@@ -1,8 +1,9 @@
+# check projects are in sync wrt deps, configs, etc
 # check there are changesets present for each package which has been modified, fail if not
 # this is run on each pr to ensure changes have a corresponding changeset with a version bump (major/minor/patch) for automatic versioning
 # note the versioning is not applied here, this just checks the necessary files (i.e. changesets) are present for versioning once the pr is merged into a versioned branch (e.g. main)
 
-name: changesets
+name: sync
 
 on:
     pull_request:
@@ -44,9 +45,9 @@ jobs:
               with:
                 npm_ci_args: '--include=dev'
 
-            # if this fails, you need to run `npm run changesets:add` (preferred!) or `npm run changesets:empty` for an empty changeset (avoid if possible)
-            - name: check changesets
+            # if this fails, you need to run `npx nx sync` as something is out of sync wrt deps, configs, etc
+            - name: sync check
               run: |
 
                 # check that the changesets are present for each package which has been modified
-                npx nx release plan:check --base ${{ github.event.pull_request.base.sha }} --head ${{ github.event.pull_request.head.sha }} --verbose
+                npx nx sync:check
