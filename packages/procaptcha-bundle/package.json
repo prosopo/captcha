@@ -7,8 +7,8 @@
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^20",
+		"npm": "^10"
 	},
 	"exports": {
 		".": {
@@ -32,7 +32,9 @@
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode $NODE_ENV",
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/dotenv": "2.6.0",
 		"@prosopo/locale": "2.6.0",

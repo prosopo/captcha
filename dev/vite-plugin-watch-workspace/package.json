@@ -17,8 +17,8 @@
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^20",
+		"npm": "^10"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
