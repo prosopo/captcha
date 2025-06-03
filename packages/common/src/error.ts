@@ -196,9 +196,9 @@ export const unwrapError = (
 	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;
 
-	let message = i18n.t(err.message); // should be translated already
+	const message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
-	let statusMessage = err.message;
+	const statusMessage = "Bad Request";
 	jsonError.message = message;
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
@@ -219,8 +219,6 @@ export const unwrapError = (
 	}
 
 	if (isZodError(err)) {
-		message = i18n.t("API.PARSE_ERROR");
-		statusMessage = message;
 		if (typeof err.message === "object") {
 			jsonError = err.message;
 		} else {
