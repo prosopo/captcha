@@ -144,7 +144,7 @@ describe("PoW Integration Tests", () => {
 			});
 
 			expect(response.status).toBe(400);
-			expect(response.statusText).toBe("Unauthorized origin URL");
+			expect(response.statusText).toBe("Bad Request");
 		});
 	});
 	describe("SubmitPowCaptchaSolution", () => {
