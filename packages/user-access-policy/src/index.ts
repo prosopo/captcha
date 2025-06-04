@@ -17,6 +17,7 @@ import {
 	type AccessPolicy,
 	AccessPolicyType,
 	type AccessRuleExtended,
+	type PolicyScope,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
 	accessPolicySchema,
@@ -55,6 +56,7 @@ export const createApiRuleRoutesProvider = (
 
 export {
 	type AccessPolicy,
+	type PolicyScope,
 	type AccessRulesStorage,
 	type ResolveAccessPolicy,
 	type PolicyFilter,

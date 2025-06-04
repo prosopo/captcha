@@ -26,12 +26,12 @@ import {
 import type { AccessRulesWriter } from "#policy/accessRules.js";
 
 export const insertRulesEndpointSchema: z.ZodType<{
-	policy: z.infer<typeof accessPolicySchema>;
+	accessPolicy: z.infer<typeof accessPolicySchema>;
 	policyScope?: z.infer<typeof policyScopeSchema>;
 	userScopes: z.input<typeof userScopeInputSchema>[];
 	expirationTimestampSeconds?: number;
 }> = z.object({
-	policy: accessPolicySchema,
+	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
 	userScopes: z.array(userScopeInputSchema),
 	expirationTimestampSeconds: z.number().optional(),
@@ -87,12 +87,14 @@ export class InsertRulesEndpoint
 		const policyScope = args.policyScope || {};
 
 		for (const userScope of args.userScopes) {
+			const rule = {
+				...args.accessPolicy,
+				...policyScope,
+				...userScope,
+			};
+
 			await this.accessRulesWriter.insertRule(
-				{
-					...args.policy,
-					...policyScope,
-					...userScope,
-				},
+				rule,
 				args.expirationTimestampSeconds,
 			);
 		}
