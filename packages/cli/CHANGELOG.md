@@ -1,5 +1,11 @@
 # @prosopo/cli
 
+## 2.6.9
+
+### Patch Changes
+
+- @prosopo/provider@2.9.5
+
 ## 2.6.8
 
 ### Patch Changes
