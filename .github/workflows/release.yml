@@ -110,6 +110,9 @@ jobs:
                 git commit -m "chore: version bump"
                 git status
 
+            - name: affected
+              run: |
+
                 # Find all package.json files changed in the last commit (by changesets version bump)
                 changed_pkg_jsons=$(git diff --name-only HEAD~1 HEAD | grep 'package.json$' || true)
                 package_files=""
@@ -121,7 +124,6 @@ jobs:
                 done
                 affected='[]'
                 if [ -n "$package_files" ]; then
-                    affected='[]'
                     for file in $package_files; do
                         name=$(jq -r '.name' "$file")
                         affected=$(echo "$affected" | jq -c --arg name "$name" '. + [$name]')
@@ -131,6 +133,11 @@ jobs:
                 fi
                 echo "affected: $affected"
                 echo "affected=$affected" >> $GITHUB_ENV
+
+            - name: lint
+              run: |
+                npm run build -w @prosopo/lint
+                npm run lint
 
             - name: tag
               if: ${{ env.affected != '[]' }}
@@ -198,7 +205,7 @@ jobs:
                     set -e
                     echo
 
-                    output=$(echo "$output" | jq -c ". += [{\"package\": \"$pkg\", \"npm\": $result_npm, \"gh\": $result_gh}]")
+                    output=$(echo "$output" | jq -c --arg pkg "$pkg" --argjson npm "$result_npm" --argjson gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
                 done
 
                 echo "output: $output"
