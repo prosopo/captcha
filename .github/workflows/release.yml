@@ -124,7 +124,7 @@ jobs:
                     affected='[]'
                     for file in $package_files; do
                         name=$(jq -r '.name' "$file")
-                        affected=$(echo "$affected" | jq -r --arg name "$name" '. + [$name]')
+                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [$name]')
                     done
                 else 
                     echo "No package.json files changed, no affected packages"
