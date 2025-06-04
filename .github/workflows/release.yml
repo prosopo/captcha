@@ -121,7 +121,11 @@ jobs:
                 done
                 affected='[]'
                 if [ -n "$package_files" ]; then
-                    affected=$(echo "$package_files" | xargs -I{} jq -r '.name' {} | jq -R -s -c 'split(" ") | map(select(. != ""))')
+                    affected='[]'
+                    for file in $package_files; do
+                        name=$(jq -r '.name' "$file")
+                        affected=$(echo "$affected" | jq --arg name "$name" '. + [$name]')
+                    done
                 else 
                     echo "No package.json files changed, no affected packages"
                 fi
