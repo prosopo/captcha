@@ -205,7 +205,7 @@ jobs:
                     set -e
                     echo
 
-                    output=$(echo "$output" | jq -c --arg pkg "$pkg" --arg npm "$result_npm" --arg gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
+                    output=$(echo "$output" | jq -c --arg pkg "$pkg" --argjson npm "$result_npm" --argjson gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
                 done
 
                 echo "output: $output"
