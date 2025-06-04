@@ -8,8 +8,8 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^20",
+		"npm": "^10"
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",

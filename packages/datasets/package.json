@@ -5,8 +5,8 @@
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^20",
+		"npm": "^10"
 	},
 	"scripts": {
 		"clean": "tsc --build --clean",
@@ -32,8 +32,12 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": [
+				"dist/types"
+			],
+			"captcha": [
+				"dist/captcha"
+			]
 		}
 	},
 	"dependencies": {
