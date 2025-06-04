@@ -115,7 +115,7 @@ jobs:
                 package_files=""
                 for file in $changed_pkg_jsons; do
                   # Check if the version property changed in this package.json
-                  if git diff HEAD~1 HEAD -- "$file" | grep -q '+\s"version":'; then
+                  if git diff HEAD~1 HEAD -- "$file" | grep -q '+[[:space:]]"version":'; then
                     package_files="$package_files $file"
                   fi
                 done
