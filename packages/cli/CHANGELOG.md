@@ -1,5 +1,20 @@
 # @prosopo/cli
 
+## 2.6.8
+
+### Patch Changes
+
+- Updated dependencies [04cc7ee]
+  - @prosopo/common@2.6.1
+  - @prosopo/api-express-router@2.6.1
+  - @prosopo/dotenv@2.6.1
+  - @prosopo/env@2.6.5
+  - @prosopo/keyring@2.6.4
+  - @prosopo/provider@2.9.4
+  - @prosopo/types@2.7.1
+  - @prosopo/user-access-policy@2.6.4
+  - @prosopo/api@2.6.4
+
 ## 2.6.7
 
 ### Patch Changes
