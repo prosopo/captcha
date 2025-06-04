@@ -119,7 +119,7 @@ jobs:
               run: |
                 # tag each affected package with the new version
                 for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
-                    if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+                    if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                       version=$(npm pkg get version | jq -r '.')
                     else  
                       version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
