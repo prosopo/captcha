@@ -1,6 +1,3 @@
-include:
-  - ./redis/redis-stack.docker-compose.yml
-
 services:
   database:
     image: mongo:6.0.17
@@ -12,3 +9,15 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
       - MONGO_INITDB_DATABASE=prosopo
+  redis-stack:
+    container_name: redis-stack
+    # unlike "redis/redis-stack-server" this image includes Insights
+    image: redis/redis-stack:latest
+    volumes:
+      # - ./data:/data we don't need a persistent storage for Tests
+      - ./redis.conf:/redis-stack.conf
+    ports:
+      - '6379:6379' # DB
+      - '8001:8001' # Insight tool
+    environment:
+      - REDIS_ARGS=--requirepass root
