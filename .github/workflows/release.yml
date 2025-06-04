@@ -111,10 +111,17 @@ jobs:
                 git status
 
                 # Find all package.json files changed in the last commit (by changesets version bump)
-                package_files=$(git diff --name-only HEAD~1 HEAD | grep 'package.json$' || true)
+                changed_pkg_jsons=$(git diff --name-only HEAD~1 HEAD | grep 'package.json$' || true)
+                package_files=""
+                for file in $changed_pkg_jsons; do
+                  # Check if the version property changed in this package.json
+                  if git diff HEAD~1 HEAD -- "$file" | grep -q '+\s"version":'; then
+                    package_files="$package_files $file"
+                  fi
+                done
                 affected='[]'
                 if [ -n "$package_files" ]; then
-                    affected=$(echo "$package_files" | xargs -I{} jq -r '.name' {} | jq -R -s -c 'split("\n")[:-1]')
+                    affected=$(echo "$package_files" | xargs -I{} jq -r '.name' {} | jq -R -s -c 'split(" ")[:-1]')
                 else 
                     echo "No package.json files changed, no affected packages"
                 fi
