@@ -12,27 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	LogLevels as ConsolaLogLevels,
-	type ConsolaOptions,
-	type LogObject,
-	createConsola,
-} from "consola/browser";
-import { enum as zEnum, type infer as zInfer } from "zod";
-import { ProsopoEnvError } from "./error.js";
+import { z } from "zod";
+import pino from "pino";
 
-// allows access to log levels via index, e.g. myLogger[LogLevel.enum.debug](...) or myLogger['error'](...), etc
-type LoggerLevelFns = {
-	[key in LogLevel]: (message: unknown, ...args: unknown[]) => void;
-};
+export type LogObject = Omit<{
+	[key: string | number | symbol]: unknown;
+}, "message">
 
 export type Logger = {
-	setLogLevel(level: LogLevel | string): void;
-
+	setLogLevel(level: LogLevel): void;
 	getLogLevel(): LogLevel;
-} & LoggerLevelFns;
+	getScope(): string;
+	info(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void;
+	debug(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void;
+	trace(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void;
+	warn(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void;
+	error(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void;
+	fatal(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void;
+	log(level: LogLevel, obj: LogObject, msg?: string, ...msgArgs: unknown[]): void;
+	/**
+	 * Creates a new logger instance which includes the given object in every log message. Akin to a child logger.
+	 * This is useful for adding context to log messages, such as user IDs, request IDs, etc.
+	 * @param obj An object to log, which will be added to every log message.
+	 */
+	with(obj: LogObject): Logger;
+};
 
-export const LogLevel = zEnum([
+export const LogLevel = z.enum([
 	"trace",
 	"debug",
 	"info",
@@ -41,157 +47,128 @@ export const LogLevel = zEnum([
 	"fatal",
 	"log",
 ]);
-export type LogLevel = zInfer<typeof LogLevel>;
+export type LogLevel = z.infer<typeof LogLevel>;
 
-// Create a new logger with the given level and scope and optional request ID
+// Create a new logger with the given level and scope
 export function getLogger(
-	logLevel: LogLevel | string,
-	scope: string,
-	requestId?: string,
-): Logger {
-	return getLoggerAdapterConsola(getLogLevel(logLevel), scope, requestId);
-}
-
-// Get the default logger (i.e. the global logger)
-export function getLoggerDefault(): Logger {
-	return defaultLogger;
-}
-
-const JSONReporter = (
-	logObject: LogObject,
-	context: {
-		options: ConsolaOptions;
-	},
-) => {
-	// https://stackoverflow.com/a/65886224
-	const writer = process?.stdout
-		? process.stdout.write.bind(process.stdout)
-		: console.info;
-	const writerError = process?.stderr
-		? process.stderr.write.bind(process.stderr)
-		: console.error;
-	if (logObject.type === LogLevel.enum.error) {
-		if (logObject.args.length > 0 && logObject.args[0] instanceof Error) {
-			const error = logObject.args[0] as Error;
-			const logObjectError = {
-				...logObject,
-				args: [error.message],
-			};
-			writerError(`${JSON.stringify(logObjectError)}\n`);
-		} else {
-			writerError(`${JSON.stringify(logObject)}\n`);
-		}
-	} else {
-		writer(`${JSON.stringify(logObject)}\n`);
-	}
-};
-
-const getLoggerAdapterConsola = (
 	logLevel: LogLevel,
-	scope: string,
-	requestId?: string,
-): Logger => {
-	const logger = createConsola({
-		reporters: [
-			{
-				log: (logObj, ctx) => {
-					const reporter = JSONReporter;
-					// Attach requestId to the log object before passing it to JSONReporter
-					const enhancedLogObj = { ...logObj, requestId };
-					reporter(enhancedLogObj, ctx);
-				},
-			},
-		],
-		formatOptions: { colors: true, date: true },
-	}).withTag(scope);
-	let currentLevel = logLevel;
-	const result = {
-		log: logger.log,
-		info: logger.info,
-		debug: logger.debug,
-		trace: logger.trace,
-		warn: logger.warn,
-		error: logger.error,
-		fatal: logger.fatal,
-		setLogLevel: (level: LogLevel | string) => {
-			let logLevel = Number.NaN;
-			const levelSafe = getLogLevel(level); // sanitise
-			switch (levelSafe) {
-				case LogLevel.enum.trace:
-					logLevel = ConsolaLogLevels.trace;
-					break;
-				case LogLevel.enum.debug:
-					logLevel = ConsolaLogLevels.debug;
-					break;
-				case LogLevel.enum.info:
-					logLevel = ConsolaLogLevels.info;
-					break;
-				case LogLevel.enum.warn:
-					logLevel = ConsolaLogLevels.warn;
-					break;
-				case LogLevel.enum.error:
-					logLevel = ConsolaLogLevels.error;
-					break;
-				case LogLevel.enum.fatal:
-					logLevel = ConsolaLogLevels.fatal;
-					break;
-				case LogLevel.enum.log:
-					logLevel = ConsolaLogLevels.log;
-					break;
-				default:
-					// this cannot be a ProsopoEnvError. The default logger calls this method, which creates a new ProsopoEnvError, which requires the default logger, which hasn't been constructed yet, leading to ts not being able to find getLoggerDefault() during runtime as it has not completed yet (I think).
-					// Either way, this should never happen in runtime, this error is just an edge case, every log level should be translated properly.
-					throw new Error(
-						`Invalid log level translation to consola's log level: ${level}`,
-					);
-			}
-			logger.level = logLevel;
-			currentLevel = levelSafe;
-		},
-		getLogLevel: () => {
-			return currentLevel;
-		},
-	};
-	result.setLogLevel(logLevel);
-	return result;
-};
+	scope: string
+): Logger {
+	const logger = new PinoLogger(scope)
+	logger.setLogLevel(logLevel);
+	return logger
+}
 
-/**
- * Get the log level from the passed value or from environment variables or a default of `info`.
- * @param logLevel
- */
-export function getLogLevel(logLevel?: string | LogLevel): LogLevel {
-	const logLevelLocal = logLevel || process.env.PROSOPO_LOG_LEVEL || "Info";
-	const logLevelStr = logLevelLocal.toString().toLowerCase();
-	try {
-		return LogLevel.parse(logLevelStr);
-	} catch (e) {
-		throw new ProsopoEnvError("CONFIG.INVALID_LOG_LEVEL", {
-			context: { logLevel },
+export class PinoLogger implements Logger {
+	private logger: pino.Logger;
+
+	constructor(scope: string) {
+		this.logger = pino.default({
+			name: scope,
+			nestedKey: "data",
+			browser: {
+				asObject: true,
+			}
 		});
 	}
+
+	with(obj: LogObject): Logger {
+		const newLogger = this.logger.child(obj);
+		const child = new PinoLogger('');
+		child.logger = newLogger;
+		child.setLogLevel(this.getLogLevel());
+		return child
+	}
+
+	getScope(): string {
+		return this.logger.bindings().name || "default";
+	}
+
+	setLogLevel(level: LogLevel | string): void {
+		this.logger.level = level;
+	}
+
+	getLogLevel(): LogLevel {
+		switch (this.logger.level) {
+			case "trace":
+				return "trace";
+			case "debug":
+				return "debug";
+			case "info":
+				return "info";
+			case "warn":
+				return "warn";
+			case "error":
+				return "error";
+			case "fatal":
+				return "fatal";
+			default:
+				throw new Error(`Unknown log level: ${this.logger.level}`);
+		}
+	}
+
+	info(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void {
+		this.logger.info({ obj }, msg, ...msgArgs);
+	}
+
+	debug(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void {
+		this.logger.debug({ obj }, msg, ...msgArgs);
+	}
+
+	trace(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void {
+		this.logger.trace({ obj }, msg, ...msgArgs);
+	}
+
+	warn(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void {
+		this.logger.warn({ obj }, msg, ...msgArgs);
+	}
+
+	error(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void {
+		this.logger.error({ obj }, msg, ...msgArgs);
+	}
+
+	fatal(obj: LogObject, msg?: string, ...msgArgs: unknown[]): void {
+		this.logger.fatal({ obj }, msg, ...msgArgs);
+	}
+
+	log(level: LogLevel, obj: LogObject, msg?: string, ...msgArgs: unknown[]): void {
+		switch (level) {
+			case "trace":
+				this.trace(obj, msg, ...msgArgs);
+				break;
+			case "debug":
+				this.debug(obj, msg, ...msgArgs);
+				break;
+			case "info":
+				this.info(obj, msg, ...msgArgs);
+				break;
+			case "warn":
+				this.warn(obj, msg, ...msgArgs);
+				break;
+			case "error":
+				this.error(obj, msg, ...msgArgs);
+				break;
+			case "fatal":
+				this.fatal(obj, msg, ...msgArgs);
+				break;
+			default:
+				throw new Error(`Unknown log level: ${level}`);
+		}
+	}
 }
 
-const defaultLogger = getLoggerAdapterConsola(LogLevel.enum.info, "global");
+// export class Loggable {
+// 	#logger: Logger;
 
-export class Loggable {
-	#logger: Logger;
+// 	constructor() {
+// 		this.#logger = getLoggerDefault();
+// 	}
 
-	constructor() {
-		this.#logger = getLoggerDefault();
-	}
+// 	public get logger(): Logger {
+// 		return this.#logger;
+// 	}
 
-	public get logger(): Logger {
-		return this.#logger;
-	}
-
-	public set logger(logger: Logger) {
-		this.#logger = logger;
-	}
-}
-
-export const logError = (err: unknown, logger: Logger): void => {
-	logger.error(
-		typeof err === "object" && err ? ("stack" in err ? err.stack : err) : err,
-	);
-};
+// 	public set logger(logger: Logger) {
+// 		this.#logger = logger;
+// 	}
+// }
