@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "2.6.8",
+	"version": "2.6.9",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -32,8 +32,12 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": [
+				"dist/types"
+			],
+			"captcha": [
+				"dist/captcha"
+			]
 		}
 	},
 	"dependencies": {
