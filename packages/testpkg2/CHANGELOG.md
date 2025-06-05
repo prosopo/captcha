@@ -1,5 +1,11 @@
 # @prosopo/testpkg2
 
+## 1.0.2
+
+### Patch Changes
+
+- ea38a1c: test bump
+
 ## 1.0.1
 
 ### Patch Changes
