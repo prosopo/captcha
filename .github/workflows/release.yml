@@ -74,10 +74,20 @@ jobs:
 
             - run: npm ci
 
+            - name: detect changesets
+              run: |
+                if find .changeset -name "*.md" | grep -q . ; then
+                  echo "Found changesets"
+                  echo "changesets=true" >> $GITHUB_ENV
+                else
+                  echo "No changesets found"
+                  echo "changesets=false" >> $GITHUB_ENV
+                fi
+
             - name: prerelease
               run: |
                 # if there are changesets
-                if find .changeset -name "*.md" | grep -q . ; then
+                if [ "${{ env.changesets }}" = "true" ]; then
                   echo "Found changesets"
                   if [ "${GITHUB_REF##*/}" = "main" ]; then
                     echo "On main branch, exiting prerelease mode"
@@ -111,6 +121,7 @@ jobs:
                 git status
 
             - name: affected
+              if: ${{ env.changesets == 'true' }}
               run: |
 
                 # Find all package.json files changed in the last commit (by changesets version bump)
@@ -135,6 +146,7 @@ jobs:
                 echo "affected=$affected" >> $GITHUB_ENV
 
             - name: lint
+              if: ${{ env.affected != '[]' }}
               run: |
                 npm run build -w @prosopo/lint
                 npm run lint-fix
