@@ -243,14 +243,14 @@ jobs:
 
                 if [ "${{ env.prerelease }}" = "false" ]; then
                   # expect publish to npm
-                  if [ "$(echo '$affected' | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
+                  if [ "$(echo "$affected" | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
                     echo "Some packages failed to publish to npm"
                     exit 1
                   fi
                 fi
 
                 # expect always publish to GitHub Packages
-                if [ "$(echo '$affected' | jq '[.[] | select(.gh != 0)] | length')" -gt 0 ]; then
+                if [ "$(echo "$affected" | jq '[.[] | select(.gh != 0)] | length')" -gt 0 ]; then
                     echo "Some packages failed to publish to GitHub Packages"
                     exit 1
                 fi
