@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
 import { defineConfig } from "vitest/config";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
@@ -23,6 +24,35 @@ export default function () {
 	// If we drop ^, there's a chance the tests with no type specified get ignored by accident, which we want to avoid. Ergo, include them by default.
 	const testTypeGlob = `@(|${testTypes.map((t) => (t ? `.${t.trim()}` : "")).join("|")})`;
 	console.log(`Filtering tests by type: ${testTypeGlob}`);
+	
+	// Determine coverage include paths based on current working directory
+	const cwd = process.cwd();
+	const isRunningFromPackage = cwd.includes("/packages/") && cwd.includes("/src") === false;
+	
+	// If running from a package directory, include local src files
+	// If running from repo root, include all package src files
+	const coverageInclude = isRunningFromPackage 
+		? ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"]
+		: ["packages/*/src/**", "captcha/packages/*/src/**"];
+	
+	const coverageExclude = isRunningFromPackage
+		? [
+			"src/tests/**/*",
+			"src/**/*.d.ts", 
+			"src/**/*.test.ts",
+			"src/**/*.spec.ts",
+			"src/**/*.test.tsx",
+			"src/**/*.spec.tsx"
+		]
+		: [
+			"**/tests/**/*",
+			"**/*.d.ts",
+			"**/*.test.*",
+			"**/*.spec.*",
+			"**/node_modules/**",
+			"**/dist/**"
+		];
+
 	return defineConfig({
 		build: {
 			minify: false,
@@ -46,7 +76,8 @@ export default function () {
 			logHeapUsage: true,
 			coverage: {
 				enabled: true,
-				include: ["packages/*/src/**"],
+				include: coverageInclude,
+				exclude: coverageExclude,
 			},
 			typecheck: {
 				enabled: true,
