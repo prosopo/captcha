@@ -1,5 +1,11 @@
 # @prosopo/datasets
 
+## 2.6.10
+
+### Patch Changes
+
+- d17c67f: lint
+
 ## 2.6.9
 
 ### Patch Changes

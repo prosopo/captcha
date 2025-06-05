@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.10
+
+### Patch Changes
+
+- d17c67f: lint
+- Updated dependencies [d17c67f]
+  - @prosopo/procaptcha-react@2.6.10
+  - @prosopo/procaptcha-pow@2.6.10
+
 ## 2.6.9
 
 ### Patch Changes
