@@ -4,7 +4,7 @@
 		"@changesets/cli/changelog",
 		"@changesets/changelog-git"
 	],
-	"commit": true,
+	"commit": false,
 	"prettier": false,
 	"fixed": [],
 	"linked": [],
