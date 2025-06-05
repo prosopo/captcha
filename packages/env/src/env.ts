@@ -14,7 +14,7 @@
 
 import { Keyring } from "@polkadot/keyring";
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { type Logger, ProsopoEnvError, getLogger, parseLogLevel } from "@prosopo/common";
 import { Databases, ProviderDatabase } from "@prosopo/database";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
@@ -41,7 +41,7 @@ export class Environment implements ProsopoEnvironment {
 		this.defaultEnvironment = this.config.defaultEnvironment;
 		this.pair = pair;
 		this.authAccount = authAccount;
-		this.logger = getLogger(this.config.logLevel, "ProsopoEnvironment");
+		this.logger = getLogger(parseLogLevel(this.config.logLevel), "ProsopoEnvironment");
 
 		this.keyring = new Keyring({
 			type: "sr25519",
@@ -105,11 +105,9 @@ export class Environment implements ProsopoEnvironment {
 				await this.importDatabase();
 			}
 			if (this.db && !this.db.connected) {
-				this.logger.warn(
-					`Database connection is not ready (state: ${this.db.connection?.readyState}), reconnecting...`,
-				);
+				this.logger.warn({}, `Database connection is not ready (state: ${this.db.connection?.readyState}), reconnecting...`);
 				await this.db.connect();
-				this.logger.info("Connected to db");
+				this.logger.info({}, "Connected to db");
 			}
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {

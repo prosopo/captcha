@@ -34,11 +34,11 @@ export async function storeCaptchasExternally(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			env.getDb(),
 		);
-		env.logger.info(
+		env.logger.info({},
 			`${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
 		);
 		if (!taskRunning) {
-			env.logger.info(
+			env.logger.info({},
 				`${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
 			);
 			await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {

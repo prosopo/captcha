@@ -53,7 +53,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 			});
 			return;
 		} catch (err) {
-			req.logger.error("Auth Middleware Error:", err);
+			req.logger.error({ err }, "Auth Middleware Error");
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
 		}

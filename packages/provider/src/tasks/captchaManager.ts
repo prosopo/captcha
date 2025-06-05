@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { KeyringPair } from "@polkadot/keyring/types";
-import { type Logger, getLoggerDefault } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
 import type {
@@ -32,7 +32,7 @@ export class CaptchaManager {
 	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
 		this.pair = pair;
 		this.db = db;
-		this.logger = logger || getLoggerDefault();
+		this.logger = logger || getLogger('info', import.meta.url);
 	}
 
 	async getFrictionlessTokenIdFromSession(sessionRecord: Session) {

@@ -108,9 +108,9 @@ if (isMain(import.meta.url)) {
 	sign(message, keypair)
 		.then((sig) => {
 			const hexSig = u8aToHex(sig);
-			logger.info(`Hex Signature   : ${hexSig}`);
-			logger.info(`Public Key: ${publicKey}`);
-			logger.info(`Base64 Signature: ${base64Encode(hexSig)}`);
+			logger.info({ hexSig }, "Hex Signature");
+			logger.info({ publicKey }, "Public Key");
+			logger.info({ signature: base64Encode(hexSig) }, "Base64 Signature");
 			process.exit();
 		})
 		.catch((error) => {

@@ -50,6 +50,7 @@ import express, { type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+import { parseLogLevel } from "@prosopo/common";
 
 const getClientApiPathsExcludingVerify = () => {
 	const paths = Object.values(ClientApiPaths).filter(
@@ -63,13 +64,13 @@ async function startApi(
 	admin = false,
 	port?: number,
 ): Promise<Server> {
-	env.logger.info("Starting Prosopo API");
+	env.logger.info({}, "Starting Prosopo API");
 
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
 
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
-		env.config.logLevel,
+		parseLogLevel(env.config.logLevel),
 	);
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
@@ -113,7 +114,7 @@ async function startApi(
 	apiApp.use(publicRouter(env));
 
 	// Admin routes
-	env.logger.info("Enabling admin auth middleware");
+	env.logger.info({}, "Enabling admin auth middleware");
 	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
 	apiApp.use(apiRulePaths.INSERT_MANY, authMiddleware(env));
 	apiApp.use(apiRulePaths.DELETE_MANY, authMiddleware(env));
@@ -127,7 +128,7 @@ async function startApi(
 		apiExpressRouterFactory.createRouter(
 			apiAdminRoutesProvider,
 			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(env.config.logLevel, 400),
+			createApiExpressDefaultEndpointAdapter(parseLogLevel(env.config.logLevel), 400),
 		),
 	);
 
@@ -140,7 +141,7 @@ async function startApi(
 	}
 
 	return apiApp.listen(apiPort, () => {
-		env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
+		env.logger.info({ apiPort }, "Prosopo app listening at http://localhost:%s", apiPort);
 	});
 }
 
@@ -168,7 +169,7 @@ export async function start(
 		);
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
-		env.logger.debug("Env already defined");
+		env.logger.debug({}, "Env already defined");
 	}
 
 	await env.isReady();

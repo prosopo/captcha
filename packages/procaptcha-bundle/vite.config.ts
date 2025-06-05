@@ -14,7 +14,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { getLoggerDefault } from "@prosopo/common";
+import { getLogger } from "@prosopo/common";
 import {
 	ViteFrontendConfig,
 	VitePluginRemoveUnusedTranslations,
@@ -27,7 +27,7 @@ import { defineConfig } from "vite";
 // load env using our util because vite loadEnv is not working for .env.development
 loadEnv();
 
-const logger = getLoggerDefault();
+const logger = getLogger('info', import.meta.url);
 
 // Vite doesn't find the tsconfig for some reason
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
@@ -39,9 +39,9 @@ const packageName = "@prosopo/procaptcha-bundle";
 const entry = "./src/index.ts";
 const copyOptions = copyTo
 	? {
-			srcDir: "./dist/bundle",
-			destDir: copyTo,
-		}
+		srcDir: "./dist/bundle",
+		destDir: copyTo,
+	}
 	: undefined;
 const tsConfigPaths = [path.resolve("./tsconfig.json")];
 const packagesDir = path.resolve("..");

@@ -27,7 +27,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		private readonly rulesStorage: RulesStorage,
 		private readonly logger: Logger,
 		private _accessRule: Rule | null = null,
-	) {}
+	) { }
 
 	get accessRule(): Rule | null {
 		return this._accessRule;
@@ -87,7 +87,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		);
 
 		if (null === this.accessRule) {
-			this.logger.debug("ImageCaptchaConfigRulesResolver.resolveConfig", {
+			this.logger.debug({}, "ImageCaptchaConfigRulesResolver.resolveConfig", {
 				configDefined: false,
 				...logArgs,
 			});
@@ -99,12 +99,12 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 		const config = this.getImageCaptchaConfig(defaults, imageCaptchaConfig);
 
-		this.logger.info("ImageCaptchaConfigRulesResolver.resolveConfig", {
+		this.logger.info({
 			configDefined: true,
 			imageCaptchaConfig: imageCaptchaConfig,
 			config: config,
 			...logArgs,
-		});
+		}, "ImageCaptchaConfigRulesResolver.resolveConfig");
 
 		return config;
 	}
@@ -122,13 +122,13 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			clientId,
 		);
 
-		this.logger.debug("ImageCaptchaConfigRulesResolver.fetchUserAccessRule", {
+		this.logger.debug({
 			accessRules: accessRules.length,
 			userIpAddress: userIpAddress.address.toString(),
 			userId: userId,
 			clientId: clientId,
 			ja4,
-		});
+		}, "ImageCaptchaConfigRulesResolver.fetchUserAccessRule");
 
 		return this.selectPrimaryUserAccessRule(accessRules);
 	}

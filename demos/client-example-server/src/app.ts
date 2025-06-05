@@ -12,7 +12,7 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError, getLoggerDefault } from "@prosopo/common";
+import { ProsopoEnvError, getLogger, parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getServerConfig } from "@prosopo/server";
 import { at } from "@prosopo/util";
@@ -35,7 +35,7 @@ enum ProsopoVerificationType {
 }
 
 async function main() {
-	const logger = getLoggerDefault();
+	const logger = getLogger('info', import.meta.url);
 	loadEnv();
 
 	const apiPrefix =

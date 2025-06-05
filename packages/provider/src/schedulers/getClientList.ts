@@ -40,11 +40,10 @@ export async function getClientList(
 			ScheduledTaskNames.GetClientList,
 			env.getDb(),
 		);
-		env.logger.info(
-			`${ScheduledTaskNames.GetClientList} task running: ${taskRunning}`,
+		env.logger.info({}, `${ScheduledTaskNames.GetClientList} task running: ${taskRunning}`,
 		);
 		if (!taskRunning) {
-			env.logger.info(`${ScheduledTaskNames.GetClientList} task....`);
+			env.logger.info({}, `${ScheduledTaskNames.GetClientList} task....`);
 			await tasks.clientTaskManager.getClientList().catch((err) => {
 				env.logger.error(err);
 			});

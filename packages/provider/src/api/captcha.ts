@@ -498,7 +498,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.db.getFrictionlessTokenRecordByToken(token);
 
 				if (existingToken) {
-					req.logger.info(`Token ${existingToken} has already been used`);
+					req.logger.info({ token: existingToken }, "Token has already been used");
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
 							existingToken._id as ObjectId,
@@ -619,7 +619,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
 				);
 			} catch (err) {
-				req.logger.error("Error in frictionless captcha challenge:", err);
+				req.logger.error({ err }, "Error in frictionless captcha challenge");
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: err },

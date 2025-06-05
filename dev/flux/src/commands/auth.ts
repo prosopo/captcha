@@ -61,7 +61,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
 					nodeSignature: result.nodeSignature,
 				});
 			} catch (err) {
-				logger.error(err);
+				logger.error({ err });
 			}
 		},
 		middlewares: [],

@@ -26,7 +26,7 @@ import {
 } from "./captcha.js";
 import { CaptchaMerkleTree } from "./merkle.js";
 
-const logger = getLogger("Info", "dataset.ts");
+const logger = getLogger("info", import.meta.url);
 
 export async function hashDatasetItems(
 	datasetRaw: Dataset | DatasetRaw,
@@ -75,9 +75,9 @@ export async function validateDatasetContent(
 }
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-	logger.debug("Adding solution hashes to dataset");
+	logger.debug({}, "Adding solution hashes to dataset");
 	const dataset = await addSolutionHashesToDataset(datasetRaw);
-	logger.debug("Building dataset merkle trees");
+	logger.debug({}, "Building dataset merkle trees");
 	const contentTree = await buildCaptchaTree(dataset, false, false, true);
 	const solutionTree = await buildCaptchaTree(dataset, true, true, false);
 	dataset.captchas = dataset.captchas.map(

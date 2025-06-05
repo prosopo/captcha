@@ -25,7 +25,7 @@ describe("ja4Middleware", () => {
 		const mockReq: {
 			ja4?: string;
 			logger?: {
-				error: (message: string) => void;
+				error: (obj: object, message: string) => void;
 			};
 		} & Request = {
 			headers: {},

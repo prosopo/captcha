@@ -22,7 +22,7 @@ class BlacklistRequestInspector {
 		private readonly blacklistInspector: BlacklistInspector,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 		private readonly logger: Logger,
-	) {}
+	) { }
 
 	public async abortRequestForBlockedUsers(
 		request: Request,
@@ -31,7 +31,7 @@ class BlacklistRequestInspector {
 	): Promise<void> {
 		const rawIp = request.ip || "";
 
-		request.logger.debug("JA4", request.ja4);
+		request.logger.debug({ ja4: request.ja4 });
 
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
@@ -65,11 +65,11 @@ class BlacklistRequestInspector {
 
 		// block if no IP is present
 		if (!rawIp) {
-			logger.info("Request without IP", {
+			logger.info({
 				requestedRoute: requestedRoute,
 				requestHeaders: requestHeaders,
 				requestBody: requestBody,
-			});
+			}, "Request without IP");
 
 			return true;
 		}
@@ -91,7 +91,7 @@ class BlacklistRequestInspector {
 				userId,
 			);
 		} catch (err) {
-			logger.error("Block Middleware Error:", err);
+			logger.error({ err }, "Block Middleware Error");
 
 			return true;
 		}
