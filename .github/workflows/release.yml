@@ -137,7 +137,7 @@ jobs:
             - name: lint
               run: |
                 npm run build -w @prosopo/lint
-                npm run lint
+                npm run lint-fix
 
             - name: tag
               if: ${{ env.affected != '[]' }}
