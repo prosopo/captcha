@@ -46,8 +46,7 @@ export async function main(
 
 		const socket = io(socketUrl.href);
 		socket.on("connect", () => {
-			logger.info("connected");
-			logger.info(socket.id);
+			logger.info({ socketId: socket.id }, "connected");
 		});
 		socket.on("message", (message) => {
 			socket.emit("message", {
@@ -56,15 +55,14 @@ export async function main(
 			});
 		});
 		socket.on("connect_error", (err) => {
-			logger.info(`connect_error due to ${err.message}`);
-			console.error(err);
+			logger.error(err);
 		});
 		socket.on("disconnect", () => {
-			logger.info("disconnected");
+			logger.info({}, "disconnected");
 			running = false;
 		});
 		socket.on("error", (e) => {
-			logger.info("error", e);
+			logger.error(e);
 			running = false;
 		});
 		while (running) {

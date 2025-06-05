@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, getLogger, parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { generateMnemonic } from "@prosopo/keyring";
 import { updateEnvFile } from "../setup/index.js";
 
 loadEnv();
 const logger = getLogger(
-	process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info,
-	"generateMnemonic",
+	parseLogLevel(process.env.PROSOPO_LOG_LEVEL),
+	import.meta.url,
 );
 
 async function mnemonic(addToEnv: boolean) {
 	const [mnemonic, address] = await generateMnemonic();
-	logger.info(`Address: ${address}`);
-	logger.info(`Mnemonic: ${mnemonic}`);
+	logger.info({ address }, "Address generated");
+	logger.info({ mnemonic }, "Mnemonic generated");
 	if (addToEnv) {
 		await updateEnvFile({
 			PROSOPO_PROVIDER_MNEMONIC: `"${mnemonic}"`,

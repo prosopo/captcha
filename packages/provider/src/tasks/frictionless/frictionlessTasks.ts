@@ -111,7 +111,7 @@ export class FrictionlessManager extends CaptchaManager {
 		botScore: number,
 		tokenId: FrictionlessTokenId,
 	) {
-		this.logger.info("Timestamp is older than 10 minutes", new Date(timestamp));
+		this.logger.info({ timestamp: new Date(timestamp) }, "Timestamp is older than 10 minutes");
 		botScore += this.config.penalties.PENALTY_OLD_TIMESTAMP;
 		await this.db.updateFrictionlessTokenRecord(tokenId, {
 			score: botScore,

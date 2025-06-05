@@ -91,7 +91,7 @@ export class ClientTaskManager {
 	 */
 	async storeCommitmentsExternal(): Promise<void> {
 		if (!this.config.mongoCaptchaUri) {
-			this.logger.info("Mongo env not set");
+			this.logger.info({}, "Mongo env not set");
 			return;
 		}
 
@@ -170,8 +170,7 @@ export class ClientTaskManager {
 						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
 							filteredBatch.map((record) => record.tokenId),
 						);
-					this.logger.info(
-						`Frictionless token records: ${frictionlessTokenRecords.length}`,
+					this.logger.info({}, `Frictionless token records: ${frictionlessTokenRecords.length}`,
 					);
 					// attach scores to session records
 					const filteredBatchWithScores = filteredBatch.map((record) => {
@@ -224,7 +223,7 @@ export class ClientTaskManager {
 			);
 			this.captchaDB?.close();
 		} catch (e: unknown) {
-			this.logger.error(e);
+			this.logger.error({ err: e });
 			this.captchaDB?.close();
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -240,7 +239,7 @@ export class ClientTaskManager {
 	 */
 	async getClientList(): Promise<void> {
 		if (!this.config.mongoClientUri) {
-			this.logger.info("Mongo env not set");
+			this.logger.info({}, "Mongo env not set");
 			return;
 		}
 
@@ -293,7 +292,7 @@ export class ClientTaskManager {
 				context: { error: e },
 				logger: this.logger,
 			});
-			this.logger.error(getClientListError, { context: { error: e } });
+			this.logger.error(getClientListError);
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,

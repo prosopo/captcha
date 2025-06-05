@@ -43,7 +43,7 @@ export class InputCliCommand<
 	}
 
 	public override async _check(args: InputArgs) {
-		this.logger.debug("input _check");
+		this.logger.debug({}, "input _check");
 		await super._check(args);
 		// input must exist
 		if (!fs.existsSync(args.input)) {

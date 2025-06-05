@@ -55,9 +55,9 @@ export default (cmdArgs?: { logger?: Logger }) => {
 					logger.info(dapp.nodes);
 					return;
 				}
-				logger.info(JSON.stringify(dapp, null, 2));
+				logger.info(dapp);
 			} catch (err) {
-				logger.error(err);
+				logger.error({ err });
 			}
 		},
 		middlewares: [],

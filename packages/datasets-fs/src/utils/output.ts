@@ -55,7 +55,7 @@ export class OutputCliCommand<
 	}
 
 	public override async _check(args: OutputArgs) {
-		this.logger.debug("Output _check");
+		this.logger.debug({}, "Output _check");
 		await super._check(args);
 
 		// record whether output already exists
@@ -75,11 +75,11 @@ export class OutputCliCommand<
 	}
 
 	public override async _run(args: OutputArgs) {
-		this.logger.debug("Output run");
+		this.logger.debug({}, "Output run");
 		await super._run(args);
 		if (args.overwrite && this.outputExists()) {
 			// if overwrite is true, delete the output directory
-			this.logger.info("cleaning output directory...");
+			this.logger.info({}, "cleaning output directory...");
 			fs.rmSync(args.output, { recursive: true });
 		}
 	}

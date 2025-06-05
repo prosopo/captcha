@@ -91,7 +91,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
 					writeLogs(parsedArgs.file, result);
 				}
 			} catch (err) {
-				logger.error(err);
+				logger.error({ err });
 			}
 		},
 		middlewares: [],

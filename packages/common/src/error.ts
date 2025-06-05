@@ -15,7 +15,7 @@
 import type { TranslationKey } from "@prosopo/locale";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
-import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
+import { type LogLevel, type Logger, getLogger } from "./logger.js";
 import type { ApiJsonError } from "./types.js";
 
 type BaseErrorOptions<ContextType> = {
@@ -56,7 +56,7 @@ export abstract class ProsopoBaseError<
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
-		const logger = options?.logger || getLoggerDefault();
+		const logger = options?.logger || getLogger('info', import.meta.url);
 		const logLevel = options?.logLevel || "error";
 		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
@@ -80,9 +80,10 @@ export abstract class ProsopoBaseError<
 		const errorParams = { error: this.message, context: this.context };
 		const errorMessage = { errorType: errorName || this.name, errorParams };
 		if (logLevel === "debug") {
-			logger.debug(this.stack);
+			logger.debug({ ...errorMessage, stack: this.stack });
+			return
 		}
-		logger[logLevel](errorMessage);
+		logger.log(logLevel, errorMessage);
 	}
 }
 

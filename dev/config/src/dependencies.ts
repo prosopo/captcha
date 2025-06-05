@@ -130,7 +130,7 @@ export async function getExternalsFromReferences(
 	ignorePatterns: RegExp[] = [],
 ): Promise<string[]> {
 	const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns, [], false);
-	logger.debug("tsConfigPaths", tsConfigPaths);
+	logger.debug({ tsConfigPaths });
 	const promises: Promise<string>[] = [];
 	for (const refTsConfigPath of tsConfigPaths) {
 		const packageJsonPath = path.resolve(
@@ -161,7 +161,7 @@ export async function getExternalsFromReferences(
 		);
 	}
 	const externals = await Promise.all(promises);
-	logger.debug("externals", externals);
+	logger.debug({ externals });
 	return externals;
 }
 

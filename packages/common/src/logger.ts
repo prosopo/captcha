@@ -15,9 +15,7 @@
 import { z } from "zod";
 import pino from "pino";
 
-export type LogObject = Omit<{
-	[key: string | number | symbol]: unknown;
-}, "message">
+export type LogObject = object | Error;
 
 export type Logger = {
 	setLogLevel(level: LogLevel): void;
@@ -38,16 +36,30 @@ export type Logger = {
 	with(obj: LogObject): Logger;
 };
 
+export const InfoLevel = 'info'
+export const DebugLevel = 'debug'
+export const TraceLevel = 'trace'
+export const WarnLevel = 'warn'
+export const ErrorLevel = 'error'
+export const FatalLevel = 'fatal'
+
 export const LogLevel = z.enum([
-	"trace",
-	"debug",
-	"info",
-	"warn",
-	"error",
-	"fatal",
-	"log",
+	InfoLevel,
+	DebugLevel,
+	TraceLevel,
+	WarnLevel,
+	ErrorLevel,
+	FatalLevel
 ]);
 export type LogLevel = z.infer<typeof LogLevel>;
+
+export function parseLogLevel(
+	level: string | undefined,
+	or: LogLevel = InfoLevel,
+): LogLevel {
+	const result = LogLevel.safeParse(level)
+	return result.success ? result.data : or;
+}
 
 // Create a new logger with the given level and scope
 export function getLogger(
@@ -157,18 +169,3 @@ export class PinoLogger implements Logger {
 	}
 }
 
-// export class Loggable {
-// 	#logger: Logger;
-
-// 	constructor() {
-// 		this.#logger = getLoggerDefault();
-// 	}
-
-// 	public get logger(): Logger {
-// 		return this.#logger;
-// 	}
-
-// 	public set logger(logger: Logger) {
-// 		this.#logger = logger;
-// 	}
-// }

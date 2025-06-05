@@ -34,8 +34,7 @@ async function main() {
 	});
 
 	if (config.devOnlyWatchEvents) {
-		log.warn(
-			`
+		log.warn({}, `
         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
         EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
@@ -53,7 +52,7 @@ async function main() {
 		config.authAccount.address,
 	);
 
-	log.info(`Pair address: ${pair.address}`);
+	log.info({ pairAddress: pair.address });
 
 	const processedArgs = await processArgs(
 		process.argv,
@@ -68,13 +67,13 @@ async function main() {
 			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.startDev()
 				.then(() => {
-					log.info("Reloading API started...");
+					log.info({}, "Reloading API started...");
 				});
 		} else {
 			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.start()
 				.then(() => {
-					log.info("Reloading API started...");
+					log.info({}, "Reloading API started...");
 				});
 		}
 	} else {
@@ -87,10 +86,10 @@ if (isMain(import.meta.url, "provider")) {
 	loadI18next(true).then(() => {
 		main()
 			.then(() => {
-				log.info("Running main process...");
+				log.info({}, "Running main process...");
 			})
 			.catch((error) => {
-				log.error(error);
+				log.error({ error });
 			});
 	});
 }

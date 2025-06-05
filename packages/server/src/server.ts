@@ -77,7 +77,7 @@ export class ProsopoServer {
 		user: string,
 		challenge?: string,
 	): Promise<VerificationResponse> {
-		this.logger.info(`Verifying with provider: ${providerUrl}`);
+		this.logger.info({ providerUrl }, `Verifying with provider`);
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
 			throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
@@ -91,7 +91,7 @@ export class ProsopoServer {
 			const powTimeout = this.config.timeouts.pow.cachedTimeout;
 			const recent = timestamp ? Date.now() - timestamp < powTimeout : false;
 			if (!recent) {
-				this.logger.error("PoW captcha is not recent");
+				this.logger.error({ timestamp }, "PoW captcha is not recent");
 				return {
 					verified: false,
 					status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
@@ -107,7 +107,7 @@ export class ProsopoServer {
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
 		const recent = timestamp ? Date.now() - timestamp < imageTimeout : false;
 		if (!recent) {
-			this.logger.error("Image captcha is not recent");
+			this.logger.error({ timestamp }, "Image captcha is not recent");
 			return {
 				verified: false,
 				status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
@@ -143,7 +143,7 @@ export class ProsopoServer {
 
 			// if the provider is not found, return an error
 			if (!provider) {
-				this.logger.error("Provider not found");
+				this.logger.error({ providerUrl }, "Provider not found");
 				return {
 					verified: false,
 					status: i18n.t("API.USER_NOT_VERIFIED"),

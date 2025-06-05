@@ -28,6 +28,6 @@ export async function setupProvider(
 	}
 	const logger = env.logger;
 	const tasks = new Tasks(env);
-	logger.info("   - providerSetDataset");
+	logger.info({}, "   - providerSetDataset");
 	await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
 }

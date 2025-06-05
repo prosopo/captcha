@@ -104,9 +104,9 @@ export default (
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
 				});
-				logger.info(`Site Key ${argv.sitekey} registered`);
+				logger.info({ sitekey }, `Site Key registered`);
 			} catch (err) {
-				logger.error(err);
+				logger.error({ err });
 			}
 		},
 		middlewares: [validateSiteKey],

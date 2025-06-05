@@ -16,7 +16,7 @@ import { stringToHex, u8aToHex } from "@polkadot/util";
 import {
 	ProsopoApiError,
 	ProsopoEnvError,
-	getLoggerDefault,
+	getLogger,
 } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
 import {
@@ -123,7 +123,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug("No record of this challenge");
+			this.logger.debug({}, "No record of this challenge");
 			// no record of this challenge
 			return false;
 		}
@@ -181,20 +181,21 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(`No record of this challenge: ${challenge}`);
+			this.logger.debug({ challenge }, `No record of this challenge`);
 			return { verified: false };
 		}
 
 		if (ip) {
 			const ipV4Address = getIPAddress(ip);
 			if (!ipV4Address) {
-				this.logger.debug(`Invalid IP address: ${ip}`);
+				this.logger.debug({ ip }, `Invalid IP address`);
 				return { verified: false };
 			}
 			if (challengeRecord.ipAddress !== ipV4Address.bigInt()) {
-				this.logger.debug(
-					`IP address mismatch: ${getIPAddressFromBigInt(challengeRecord.ipAddress).address} !== ${ip}`,
-				);
+				this.logger.debug({
+					expected: getIPAddressFromBigInt(challengeRecord.ipAddress).address,
+					actual: ip
+				}, `IP address mismatch`);
 				return { verified: false };
 			}
 		}

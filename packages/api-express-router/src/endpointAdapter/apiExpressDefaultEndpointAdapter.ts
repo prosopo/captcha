@@ -22,7 +22,7 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 	public constructor(
 		private readonly logLevel: LogLevel,
 		private readonly errorStatusCode: number,
-	) {}
+	) { }
 
 	public async handleRequest(
 		endpoint: ApiEndpoint<ZodType | undefined>,
@@ -49,7 +49,7 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 
 			response.json(apiEndpointResponse);
 		} catch (error) {
-			request.logger.error((error as Error).message);
+			request.logger.error({ err: error });
 
 			response.status(500).send("An internal server error occurred.");
 		}

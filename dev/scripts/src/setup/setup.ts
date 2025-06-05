@@ -37,7 +37,7 @@ const __dirname = path.resolve();
 function getRootDir() {
 	const rootDir =
 		process.env.PROSOPO_ROOT_DIR || path.resolve(__dirname, "../..");
-	logger.info("Root dir:", rootDir);
+	logger.info({ rootDir, }, "Root dir");
 	return rootDir;
 }
 
@@ -45,7 +45,7 @@ function getDatasetFilePath() {
 	const datasetFile =
 		process.env.PROSOPO_PROVIDER_DATASET_FILE ||
 		path.resolve("../data/captchas.json");
-	logger.info("Dataset file:", datasetFile);
+	logger.info({ datasetFile }, "Dataset file");
 	return datasetFile;
 }
 
@@ -81,7 +81,7 @@ async function copyEnvFile() {
 		const envFile = getEnvFile(tplLocation, ".env");
 		await fse.copy(tplEnvFile, envFile, { overwrite: false });
 	} catch (err) {
-		logger.debug(err);
+		logger.debug({ err });
 	}
 }
 
@@ -102,7 +102,7 @@ export async function updateEnvFile(vars: Record<string, string>) {
 	for (const key in vars) {
 		readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key));
 	}
-	logger.info(`Updating ${envFile}`);
+	logger.info({ envFile }, "Updating env file");
 	await fse.writeFile(envFile, readEnvFile);
 }
 
@@ -113,15 +113,15 @@ export async function setup(force: boolean) {
 	if (defaultProvider.secret) {
 		const hasProviderAccount =
 			defaultProvider.address && defaultProvider.secret;
-		logger.debug("ENVIRONMENT", process.env.NODE_ENV);
+		logger.debug({ nodeEnv: process.env.NODE_ENV });
 
 		const [mnemonic, address] = !hasProviderAccount
 			? await generateMnemonic()
 			: [defaultProvider.secret, defaultProvider.address];
 
-		logger.debug(`Address: ${address}`);
-		logger.debug(`Mnemonic: ${mnemonic}`);
-		logger.debug("Writing .env file...");
+		logger.debug({ address });
+		logger.debug({ mnemonic });
+		logger.debug({}, "Writing .env file...");
 		await copyEnvFile();
 
 		if (!process.env.PROSOPO_SITE_KEY) {
@@ -138,7 +138,7 @@ export async function setup(force: boolean) {
 
 		defaultProvider.secret = mnemonic;
 
-		env.logger.info(`Registering provider... ${defaultProvider.address}`);
+		env.logger.info({ address: defaultProvider.address }, "Registering provider...");
 
 		defaultProvider.pair = await getPairAsync(providerSecret);
 
@@ -146,7 +146,7 @@ export async function setup(force: boolean) {
 
 		await setupProvider(env, defaultProvider);
 
-		env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`);
+		env.logger.info({ address: defaultDapp.pair.address }, "Registering dapp...");
 
 		await registerSiteKey(env, defaultDapp.pair.address);
 
@@ -156,7 +156,7 @@ export async function setup(force: boolean) {
 				PROVIDER_ADDRESS: address,
 			});
 		}
-		env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
+		env.logger.debug({}, "Updating env files with PROSOPO_SITE_KEY");
 		await updateDemoHTMLFiles(
 			[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
 			defaultDapp.pair.address,

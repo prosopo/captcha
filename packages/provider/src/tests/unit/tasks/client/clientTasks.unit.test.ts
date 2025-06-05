@@ -236,25 +236,25 @@ describe("ClientTaskManager", () => {
 			UserCommitment,
 			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				id: "commitment1",
-				// Image commitments were stored at time 1
-				lastUpdatedTimestamp: 1,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					id: "commitment1",
+					// Image commitments were stored at time 1
+					lastUpdatedTimestamp: 1,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
 			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				challenge: "1234567___userAccount___dappAccount",
-				// PoW commitments were stored at time 3
-				lastUpdatedTimestamp: 3,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					challenge: "1234567___userAccount___dappAccount",
+					// PoW commitments were stored at time 3
+					lastUpdatedTimestamp: 3,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		// Create a mock last scheduled task
 		const mockLastScheduledTask: Pick<
@@ -274,10 +274,10 @@ describe("ClientTaskManager", () => {
 		// Update the next ID and time (time is used as a timestamp)
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
-		logger.info("Test: Collections state updated", {
+		logger.info({
 			nextID: collections.schedulers.nextID,
 			currentTime: collections.schedulers.time,
-		});
+		}, "Test: Collections state updated");
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
@@ -287,29 +287,29 @@ describe("ClientTaskManager", () => {
 		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
 			mockPoWCommitments,
 		);
-		logger.info("Test: Mock DB responses configured");
+		logger.info({}, "Test: Mock DB responses configured");
 
 		await clientTaskManager.storeCommitmentsExternal();
-		logger.info("Test: storeCommitmentsExternal completed");
+		logger.info({}, "Test: storeCommitmentsExternal completed");
 
 		// Verification steps with logging
 		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
-		logger.info("Test: Verified DB queries were made");
+		logger.info({}, "Test: Verified DB queries were made");
 
 		expect(providerDB.getLastScheduledTaskStatus).toHaveReturnedWith(
 			mockLastScheduledTask,
 		);
-		logger.info("Test: Verified last scheduled task status");
+		logger.info({}, "Test: Verified last scheduled task status");
 
 		expect(providerDB.createScheduledTaskStatus).toHaveBeenCalledWith(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
 		);
-		logger.info("Test: Verified task status creation");
+		logger.info({}, "Test: Verified task status creation");
 
 		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
-		logger.info(
+		logger.info({},
 			"Test: Verified no image commitments were marked as stored (expected as they're old)",
 		);
 
@@ -317,7 +317,7 @@ describe("ClientTaskManager", () => {
 		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
 			expectedPoWChallenges,
 		);
-		logger.info("Test: Verified PoW commitments were marked as stored", {
+		logger.info({}, "Test: Verified PoW commitments were marked as stored", {
 			expectedPoWChallenges,
 		});
 

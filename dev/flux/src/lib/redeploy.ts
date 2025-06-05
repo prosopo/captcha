@@ -16,7 +16,7 @@ import { errorHandler } from "../errorHandler.js";
 import { main as authMain, verifyLogin } from "./auth.js";
 import { getZelIdAuthHeader } from "./url.js";
 
-const log = getLogger("Info", "deploy.js");
+const log = getLogger("info", import.meta.url);
 
 interface ResponseSoftRedeploy {
 	status: string;
@@ -73,7 +73,7 @@ export const main = async (
 		log.info(redeployResponse);
 		process.exit(0);
 	} catch (error) {
-		log.error("An error occurred:", error);
+		log.error({ error }, "An error occurred");
 		process.exit(1);
 	}
 };

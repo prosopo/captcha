@@ -131,7 +131,7 @@ export default async function (
 
 	const rollupExternal: ExternalOption = allExternal;
 
-	logger.info("Bundle name", bundleName);
+	logger.info({ bundleName }, "Bundle name");
 	return {
 		server: {
 			host: "127.0.0.1",

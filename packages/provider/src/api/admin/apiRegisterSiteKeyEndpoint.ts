@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type Logger, getLoggerDefault } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import { ClientSettingsSchema, RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -25,9 +25,8 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type RegisterSitekeyBodyType = typeof RegisterSitekeyBody;
 
 class ApiRegisterSiteKeyEndpoint
-	implements ApiEndpoint<RegisterSitekeyBodyType>
-{
-	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
+	implements ApiEndpoint<RegisterSitekeyBodyType> {
+	public constructor(private readonly clientTaskManager: ClientTaskManager) { }
 
 	async processRequest(
 		args: z.infer<RegisterSitekeyBodyType>,
@@ -35,15 +34,15 @@ class ApiRegisterSiteKeyEndpoint
 	): Promise<ApiEndpointResponse> {
 		const { siteKey, tier, settings } = args;
 
-		logger = logger || getLoggerDefault();
+		logger = logger || getLogger('info', import.meta.url);
 
 		const temp = settings || ClientSettingsSchema.parse({});
 
-		logger.info(`Registering site key: ${siteKey}`);
+		logger.info({ siteKey }, `Registering site key`);
 
 		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
 
-		logger.info("Site key registered");
+		logger.info({}, "Site key registered");
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
