@@ -241,7 +241,7 @@ jobs:
                 echo "affected: $affected"
                 echo "affected=$affected" >> $GITHUB_ENV
 
-                if [ "${{ env.prerelease }}" = "false" ]; then
+                if [ "$prerelease" = "false" ]; then
                   # expect publish to npm
                   if [ "$(echo "$affected" | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
                     echo "Some packages failed to publish to npm"
