@@ -166,7 +166,8 @@ jobs:
                     else  
                       version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
                     fi
-                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')              echo "Tagging $pkg with version $version"
+                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')
+                    echo "Tagging $pkg with version $version"
                     set +e
                     git tag "$pkg@$version"
                     result=$?
