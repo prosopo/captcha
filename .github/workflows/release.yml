@@ -74,10 +74,20 @@ jobs:
 
             - run: npm ci
 
+            - name: detect changesets
+              run: |
+                if find .changeset -name "*.md" | grep -q . ; then
+                  echo "Found changesets"
+                  echo "changesets=true" >> $GITHUB_ENV
+                else
+                  echo "No changesets found"
+                  echo "changesets=false" >> $GITHUB_ENV
+                fi
+
             - name: prerelease
               run: |
                 # if there are changesets
-                if find .changeset -name "*.md" | grep -q . ; then
+                if [ "${{ env.changesets }}" = "true" ]; then
                   echo "Found changesets"
                   if [ "${GITHUB_REF##*/}" = "main" ]; then
                     echo "On main branch, exiting prerelease mode"
@@ -111,6 +121,7 @@ jobs:
                 git status
 
             - name: affected
+              if: ${{ env.changesets == 'true' }}
               run: |
 
                 # Find all package.json files changed in the last commit (by changesets version bump)
@@ -126,7 +137,7 @@ jobs:
                 if [ -n "$package_files" ]; then
                     for file in $package_files; do
                         name=$(jq -r '.name' "$file")
-                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [$name]')
+                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, gh: 1, npm: 1, tag: 1, version: ""}]')
                     done
                 else 
                     echo "No package.json files changed, no affected packages"
@@ -135,38 +146,58 @@ jobs:
                 echo "affected=$affected" >> $GITHUB_ENV
 
             - name: lint
+              if: ${{ env.affected != '[]' }}
               run: |
                 npm run build -w @prosopo/lint
                 npm run lint-fix
+                # Amend the previous commit with any lint fixes
+                if [ -n "$(git status --porcelain)" ]; then
+                  git add -u .
+                  git commit --amend --no-edit
+                fi
 
             - name: tag
               if: ${{ env.affected != '[]' }}
               run: |
                 # tag each affected package with the new version
-                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
+                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
                     if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                       version=$(npm pkg get version | jq -r '.')
                     else  
                       version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
                     fi
+                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')
                     echo "Tagging $pkg with version $version"
+                    set +e
                     git tag "$pkg@$version"
+                    result=$?
+                    set -e
+                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag} else . end)')
                     echo
                 done
-              
+
+                echo "affected: $affected"
+                echo "affected=$affected" >> $GITHUB_ENV
+
+                # Check if any package failed to tag and exit if so
+                tag_failed=$(echo "$affected" | jq '[.[] | select(.tag != 0)] | length')
+                if [ "$tag_failed" -gt 0 ]; then
+                  echo "Some packages failed to tag"
+                  exit 1
+                fi                
+
             - name: build+bundle
               if: ${{ env.affected != '[]' }}
               run: |
                 echo "Building and bundling affected packages"
                 set -x
-                npx nx run-many --target=build,build:cjs,bundle --projects=$(echo $affected | jq -r 'join(",")')
+                npx nx run-many --target=build,build:cjs,bundle --projects=$(echo $affected | jq -r '[.[].name] | join(",")')
 
             - name: push
               if: ${{ env.affected != '[]' }}
               env:
                 GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
               run: |
-                # allow the push to fail if there are no changes to push
                 git push
                 git push --tags
 
@@ -175,8 +206,7 @@ jobs:
               id: publish
               run: |
                 # for each affected package
-                output="[]"
-                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
+                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
                     # skip the workspace root
                     if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
                         echo "Skipping workspace root package"
@@ -205,33 +235,62 @@ jobs:
                     set -e
                     echo
 
-                    output=$(echo "$output" | jq -c --arg pkg "$pkg" --argjson npm "$result_npm" --argjson gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
+                    version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
+                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg@$version" --argjson npm "$result_npm" --argjson gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
                 done
 
-                echo "output: $output"
-                echo "output=$output" >> $GITHUB_OUTPUT
+                echo "affected: $affected"
+                echo "affected=$affected" >> $GITHUB_ENV
 
-                failed=$(echo "$output" | jq '[.[] | select((.npm!=0) or (.gh!=0))] | length')
+                failed=$(echo "$affected" | jq '[.[] | select((.npm!=0) or (.gh!=0))] | length')
                 if [ "$failed" -gt 0 ]; then
                     echo "Some packages failed to publish to GitHub Packages"
                     exit 1
                 fi
 
-            - name: print output
+            - name: handle result
               if: always()
               run: |
-                echo "output: ${{ steps.publish.outputs.output }}"
+                echo "affected: ${{ env.affected }}"
 
-                npm_success=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.npm == 0) | .package')
-                gh_success=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.gh == 0) | .package')
-                npm_failure=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.npm != 0) | .package')
-                gh_failure=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.gh != 0) | .package')
+                if [ "${{ job.status }}" == "failure" ]; then
+                  echo "Workflow failed, notifying Slack"
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rotating_light: Release workflow *failed* for branch \`${GITHUB_REF##*/}\` <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
+                npm_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm == 0) | .name  + "@" + .version')
+                gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh == 0) | .name  + "@" + .version')
+                tag_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag == 0) | .name  + "@" + .version')
+                npm_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != 0) | .name  + "@" + .version')
+                gh_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != 0) | .name  + "@" + .version')
+                tag_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != 0) | .name  + "@" + .version')
+
+                if [ -n "$tag_success" ]; then
+                  echo "Successfully tagged packages:"
+                  echo "$tag_success"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully tagged packages: \`\`\`$tag_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
+                if [ -n "$tag_failure" ]; then
+                  echo "Failed to tag packages:"
+                  echo "$tag_failure"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to tag packages: \`\`\`$tag_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
 
                 if [ -n "$npm_success" ]; then
                   echo "Successfully published to npm:"
                   echo "$npm_success"
                   echo ""
                   curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to npm: \`\`\`$npm_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
+                if [ -n "$npm_failure" ]; then
+                  echo "Failed to publish to npm:"
+                  echo "$npm_failure"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to npm: \`\`\`$npm_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
                 fi
 
                 if [ -n "$gh_success" ]; then
@@ -241,13 +300,6 @@ jobs:
                   curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to gh: \`\`\`$gh_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
                 fi
                 
-                if [ -n "$npm_failure" ]; then
-                  echo "Failed to publish to npm:"
-                  echo "$npm_failure"
-                  echo ""
-                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to npm: \`\`\`$npm_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
-                fi
-
                 if [ -n "$gh_failure" ]; then
                   echo "Failed to publish to GitHub Packages:"
                   echo "$gh_failure"
