@@ -172,7 +172,7 @@ jobs:
                     git tag "$pkg@$version"
                     result=$?
                     set -e
-                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
+                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
                     echo
                 done
 
