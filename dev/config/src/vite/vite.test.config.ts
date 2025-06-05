@@ -24,34 +24,35 @@ export default function () {
 	// If we drop ^, there's a chance the tests with no type specified get ignored by accident, which we want to avoid. Ergo, include them by default.
 	const testTypeGlob = `@(|${testTypes.map((t) => (t ? `.${t.trim()}` : "")).join("|")})`;
 	console.log(`Filtering tests by type: ${testTypeGlob}`);
-	
+
 	// Determine coverage include paths based on current working directory
 	const cwd = process.cwd();
-	const isRunningFromPackage = cwd.includes("/packages/") && cwd.includes("/src") === false;
-	
+	const isRunningFromPackage =
+		cwd.includes("/packages/") && cwd.includes("/src") === false;
+
 	// If running from a package directory, include local src files
 	// If running from repo root, include all package src files
-	const coverageInclude = isRunningFromPackage 
+	const coverageInclude = isRunningFromPackage
 		? ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"]
 		: ["packages/*/src/**", "captcha/packages/*/src/**"];
-	
+
 	const coverageExclude = isRunningFromPackage
 		? [
-			"src/tests/**/*",
-			"src/**/*.d.ts", 
-			"src/**/*.test.ts",
-			"src/**/*.spec.ts",
-			"src/**/*.test.tsx",
-			"src/**/*.spec.tsx"
-		]
+				"src/tests/**/*",
+				"src/**/*.d.ts",
+				"src/**/*.test.ts",
+				"src/**/*.spec.ts",
+				"src/**/*.test.tsx",
+				"src/**/*.spec.tsx",
+			]
 		: [
-			"**/tests/**/*",
-			"**/*.d.ts",
-			"**/*.test.*",
-			"**/*.spec.*",
-			"**/node_modules/**",
-			"**/dist/**"
-		];
+				"**/tests/**/*",
+				"**/*.d.ts",
+				"**/*.test.*",
+				"**/*.spec.*",
+				"**/node_modules/**",
+				"**/dist/**",
+			];
 
 	return defineConfig({
 		build: {
