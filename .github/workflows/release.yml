@@ -257,12 +257,12 @@ jobs:
                   curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rotating_light: Release workflow *failed* for branch \`${GITHUB_REF##*/}\` <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>\"}" ${{ secrets.SLACKBOT_DEVOPS }}
                 fi
 
-                npm_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm == 0) | select(.name == "b") | .name  + "@" + .version')
-                gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh == 0) | select(.name == "b") | .name  + "@" + .version')
-                tag_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag == 0) | select(.name == "b") | .name  + "@" + .version')
-                npm_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != 0) | select(.name == "b") | .name  + "@" + .version')
-                gh_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != 0) | select(.name == "b") | .name  + "@" + .version')
-                tag_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != 0) | select(.name == "b") | .name  + "@" + .version')
+                npm_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm == 0) | .name  + "@" + .version')
+                gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh == 0) | .name  + "@" + .version')
+                tag_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag == 0) | .name  + "@" + .version')
+                npm_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != 0) | .name  + "@" + .version')
+                gh_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != 0) | .name  + "@" + .version')
+                tag_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != 0) | .name  + "@" + .version')
 
                 if [ -n "$tag_success" ]; then
                   echo "Successfully tagged packages:"
