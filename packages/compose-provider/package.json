@@ -1,0 +1,20 @@
+{
+	"name": "@prosopo/compose-provider",
+	"version": "2.4.0",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": ">=9"
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"build": "docker compose config --quiet src/docker-compose.yml && cp -r src dist"
+	},
+	"author": "Prosopo Limited",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"sideEffects": false
+}
