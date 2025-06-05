@@ -1,5 +1,20 @@
 # @prosopo/datasets
 
+## 2.6.9
+
+### Patch Changes
+
+- 0d194f2: lint
+
+## 2.6.8
+
+### Patch Changes
+
+- Updated dependencies [04cc7ee]
+  - @prosopo/common@2.6.1
+  - @prosopo/types@2.7.1
+  - @prosopo/types-database@2.7.2
+
 ## 2.6.7
 
 ### Patch Changes

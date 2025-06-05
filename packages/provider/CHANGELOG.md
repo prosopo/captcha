@@ -1,5 +1,29 @@
 # @prosopo/provider
 
+## 2.9.5
+
+### Patch Changes
+
+- Updated dependencies [0d194f2]
+  - @prosopo/datasets@2.6.9
+
+## 2.9.4
+
+### Patch Changes
+
+- Updated dependencies [04cc7ee]
+  - @prosopo/common@2.6.1
+  - @prosopo/api-express-router@2.6.1
+  - @prosopo/api-route@2.6.1
+  - @prosopo/database@2.6.5
+  - @prosopo/datasets@2.6.8
+  - @prosopo/env@2.6.5
+  - @prosopo/keyring@2.6.4
+  - @prosopo/types@2.7.1
+  - @prosopo/types-database@2.7.2
+  - @prosopo/types-env@2.6.5
+  - @prosopo/user-access-policy@2.6.4
+
 ## 2.9.3
 
 ### Patch Changes
