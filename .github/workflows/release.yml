@@ -217,7 +217,8 @@ jobs:
                     set -e
                     echo
 
-                    output=$(echo "$output" | jq -c --arg pkg "$pkg" --argjson npm "$result_npm" --argjson gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
+                    version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
+                    output=$(echo "$output" | jq -c --arg pkg "$pkg@$version" --argjson npm "$result_npm" --argjson gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
                 done
 
                 echo "output: $output"
