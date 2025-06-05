@@ -1,5 +1,11 @@
 # @prosopo/datasets
 
+## 2.6.12
+
+### Patch Changes
+
+- ea38a1c: lint
+
 ## 2.6.11
 
 ### Patch Changes

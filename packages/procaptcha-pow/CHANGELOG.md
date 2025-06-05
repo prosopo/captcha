@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-pow
 
+## 2.6.12
+
+### Patch Changes
+
+- ea38a1c: lint
+- Updated dependencies [ea38a1c]
+  - @prosopo/procaptcha-common@2.6.11
+  - @prosopo/procaptcha@2.6.12
+
 ## 2.6.11
 
 ### Patch Changes

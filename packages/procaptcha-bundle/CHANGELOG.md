@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-bundle
 
+## 2.6.12
+
+### Patch Changes
+
+- ea38a1c: lint
+- Updated dependencies [ea38a1c]
+  - @prosopo/procaptcha-frictionless@2.6.12
+  - @prosopo/procaptcha-react@2.6.12
+  - @prosopo/procaptcha-pow@2.6.12
+
 ## 2.6.11
 
 ### Patch Changes
