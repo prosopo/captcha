@@ -84,7 +84,7 @@
 		"vite": "6.2.3",
 		"vitest": "3.0.9",
 		"webpack-cli": "5.1.4",
-		"webpack-dev-server": "5.1.0"
+		"webpack-dev-server": "5.2.1"
 	},
 	"repository": {
 		"type": "git",
