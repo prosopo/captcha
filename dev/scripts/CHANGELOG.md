@@ -1,5 +1,14 @@
 # @prosopo/scripts
 
+## 2.6.11
+
+### Patch Changes
+
+- Updated dependencies [b2ae723]
+  - @prosopo/datasets@2.6.11
+  - @prosopo/provider@2.9.7
+  - @prosopo/cli@2.6.11
+
 ## 2.6.10
 
 ### Patch Changes
