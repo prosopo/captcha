@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
+import type { IDatabase } from "@prosopo/types-database";
 import { ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
 
@@ -26,13 +27,14 @@ const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017";
  * @param {string} dbname       The database name
  * @return {MongoDatabase}    Database layer
  */
-export class MongoDatabase {
+export class MongoDatabase implements IDatabase {
 	protected readonly _url: string;
 	safeURL: string;
 	dbname: string;
 	connection?: Connection;
 	logger: Logger;
 	connected = false;
+	private connecting?: Promise<void>;
 
 	constructor(
 		url: string,
@@ -73,68 +75,59 @@ export class MongoDatabase {
 	 */
 	async connect(): Promise<void> {
 		this.logger.info(`Mongo url: ${this.safeURL}`);
-		try {
-			if (this.connected) {
-				this.logger.info(`Database connection to ${this.safeURL} already open`);
-				return;
-			}
-			this.connection = await new Promise((resolve, reject) => {
-				const connection = mongoose.createConnection(this.url, {
-					dbName: this.dbname,
-					serverApi: ServerApiVersion.v1,
-				});
 
-				connection.on("open", () => {
-					this.logger.info(`Database connection to ${this.safeURL} opened`);
-					this.connected = true;
-					resolve(connection);
-				});
-
-				connection.on("error", (err) => {
-					this.connected = false;
-					this.logger.error(`Database error: ${err}`);
-					reject(err);
-				});
-
-				connection.on("connected", () => {
-					this.logger.info(`Database connected to ${this.safeURL}`);
-					this.connected = true;
-					resolve(connection);
-				});
-
-				connection.on("disconnected", () => {
-					this.connected = false;
-					this.logger.info(`Database disconnected from ${this.safeURL}`);
-				});
-
-				connection.on("reconnected", () => {
-					this.logger.info(`Database reconnected to ${this.safeURL}`);
-					this.connected = true;
-					resolve(connection);
-				});
-
-				connection.on("reconnectFailed", () => {
-					this.connected = false;
-					this.logger.error(`Database reconnect failed to ${this.safeURL}`);
-				});
-
-				connection.on("close", () => {
-					this.connected = false;
-					this.logger.info(`Database connection to ${this.safeURL} closed`);
-				});
-
-				connection.on("fullsetup", () => {
-					this.connected = true;
-					this.logger.info(
-						`Database connection to ${this.safeURL} is fully setup`,
-					);
-					resolve(connection);
-				});
-			});
-		} catch (e) {
-			this.logger.error(`Database connection error: ${e}`);
-			throw e;
+		// Already connected
+		if (this.connected) {
+			this.logger.info(`Database connection to ${this.safeURL} already open`);
+			return;
 		}
+
+		// If a connection is in progress, await it
+		if (this.connecting) {
+			this.logger.info(
+				"Connection in progress, awaiting existing connection...",
+			);
+			return this.connecting;
+		}
+
+		// Start a new connection
+		this.connecting = new Promise((resolve, reject) => {
+			const connection = mongoose.createConnection(this.url, {
+				dbName: this.dbname,
+				serverApi: ServerApiVersion.v1,
+			});
+
+			const onConnected = () => {
+				this.logger.info(`Database connected to ${this.safeURL}`);
+				this.connected = true;
+				this.connection = connection;
+				this.connecting = undefined;
+				resolve();
+			};
+
+			const onError = (err: unknown) => {
+				this.logger.error(`Database connection error: ${err}`);
+				this.connected = false;
+				this.connecting = undefined;
+				reject(err);
+			};
+
+			connection.once("open", onConnected);
+			connection.once("error", onError);
+
+			// Optional: handle other events
+			connection.on("disconnected", () => {
+				this.connected = false;
+				this.logger.info(`Database disconnected from ${this.safeURL}`);
+			});
+
+			connection.on("reconnected", () => {
+				this.connected = true;
+				this.logger.info(`Database reconnected to ${this.safeURL}`);
+			});
+		});
+
+		return this.connecting;
 	}
 
 	/** Close connection to the database */
