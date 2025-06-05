@@ -150,6 +150,11 @@ jobs:
               run: |
                 npm run build -w @prosopo/lint
                 npm run lint-fix
+                # Amend the previous commit with any lint fixes
+                if [ -n "$(git status --porcelain)" ]; then
+                  git add -u .
+                  git commit --amend --no-edit
+                fi
 
             - name: tag
               if: ${{ env.affected != '[]' }}
