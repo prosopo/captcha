@@ -137,7 +137,7 @@ jobs:
                 if [ -n "$package_files" ]; then
                     for file in $package_files; do
                         name=$(jq -r '.name' "$file")
-                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, gh: -1, npm: -1, tag: -1, version: "unknown"}]')
+                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, gh: "unknown", npm: "unknown", tag: "unknown", version: "unknown"}]')
                     done
                 else 
                     echo "No package.json files changed, no affected packages"
