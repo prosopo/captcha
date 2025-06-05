@@ -137,7 +137,7 @@ jobs:
                 if [ -n "$package_files" ]; then
                     for file in $package_files; do
                         name=$(jq -r '.name' "$file")
-                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, gh: 1, npm: 1, tag: 1, version: ""}]')
+                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, gh: "unknown", npm: "unknown", tag: "unknown", version: "unknown"}]')
                     done
                 else 
                     echo "No package.json files changed, no affected packages"
@@ -172,7 +172,7 @@ jobs:
                     git tag "$pkg@$version"
                     result=$?
                     set -e
-                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag} else . end)')
+                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
                     echo
                 done
 
@@ -235,15 +235,22 @@ jobs:
                     set -e
                     echo
 
-                    version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
-                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg@$version" --argjson npm "$result_npm" --argjson gh "$result_gh" '. += [{"package": $pkg, "npm": $npm, "gh": $gh}]')
+                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson npm "$result_npm" --argjson gh "$result_gh" 'map(if .name == $pkg then . + {npm: $npm, gh: $gh} else . end)')
                 done
 
                 echo "affected: $affected"
                 echo "affected=$affected" >> $GITHUB_ENV
 
-                failed=$(echo "$affected" | jq '[.[] | select((.npm!=0) or (.gh!=0))] | length')
-                if [ "$failed" -gt 0 ]; then
+                if [ "$prerelease" = "false" ]; then
+                  # expect publish to npm
+                  if [ "$(echo "$affected" | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
+                    echo "Some packages failed to publish to npm"
+                    exit 1
+                  fi
+                fi
+
+                # expect always publish to GitHub Packages
+                if [ "$(echo "$affected" | jq '[.[] | select(.gh != 0)] | length')" -gt 0 ]; then
                     echo "Some packages failed to publish to GitHub Packages"
                     exit 1
                 fi
