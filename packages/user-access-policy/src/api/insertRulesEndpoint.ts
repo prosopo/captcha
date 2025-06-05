@@ -17,6 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { LogLevel, type Logger, getLoggerDefault } from "@prosopo/common";
 import { z } from "zod";
 import {
 	accessPolicySchema,
@@ -34,7 +35,10 @@ export const insertRulesEndpointSchema: z.ZodType<{
 	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
 	userScopes: z.array(userScopeInputSchema),
-	expirationTimestampSeconds: z.number().optional(),
+	expirationTimestampSeconds: z
+		.number()
+		.optional()
+		.transform((val) => (val !== undefined ? Math.floor(val) : val)),
 });
 
 export type InsertRulesEndpointSchema = typeof insertRulesEndpointSchema;
@@ -54,7 +58,10 @@ export class InsertRulesEndpoint
 
 	async processRequest(
 		args: z.infer<InsertRulesEndpointSchema>,
+		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
+		logger = logger || getLoggerDefault();
+
 		return new Promise((resolve) => {
 			// either return after 5s or when the rules are inserted or fail to insert
 			setTimeout(() => {
@@ -69,7 +76,10 @@ export class InsertRulesEndpoint
 						status: ApiEndpointResponseStatus.SUCCESS,
 					});
 				})
-				.catch((e) => {
+				.catch((error) => {
+					if (logger?.getLogLevel() === LogLevel.enum.debug) {
+						logger.error({ error });
+					}
 					resolve({
 						status: ApiEndpointResponseStatus.FAIL,
 					});
