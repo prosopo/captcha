@@ -1,5 +1,53 @@
 # @prosopo/provider
 
+## 2.9.5
+
+### Patch Changes
+
+- Updated dependencies [0d194f2]
+  - @prosopo/datasets@2.6.9
+
+## 2.9.4
+
+### Patch Changes
+
+- Updated dependencies [04cc7ee]
+  - @prosopo/common@2.6.1
+  - @prosopo/api-express-router@2.6.1
+  - @prosopo/api-route@2.6.1
+  - @prosopo/database@2.6.5
+  - @prosopo/datasets@2.6.8
+  - @prosopo/env@2.6.5
+  - @prosopo/keyring@2.6.4
+  - @prosopo/types@2.7.1
+  - @prosopo/types-database@2.7.2
+  - @prosopo/types-env@2.6.5
+  - @prosopo/user-access-policy@2.6.4
+
+## 2.9.3
+
+### Patch Changes
+
+- Updated dependencies [bc892fa]
+  - @prosopo/datasets@2.6.7
+
+## 2.9.2
+
+### Patch Changes
+
+- Updated dependencies [84fc39f]
+  - @prosopo/datasets@2.6.6
+
+## 2.9.1
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+- 5656b0c: Adding all client examples to bundle example
+- Updated dependencies [5656b0c]
+- Updated dependencies [5656b0c]
+  - @prosopo/datasets@2.6.5
+
 ## 2.9.0
 
 ### Minor Changes

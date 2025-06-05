@@ -43,15 +43,9 @@ jobs:
               with:
                   submodules: "recursive"
 
-            - name: Restore npm cache
-              uses: prosopo/captcha/.github/actions/restore_npm_cache@gha
-
-            - uses: actions/setup-node@v4
+            - uses: prosopo/captcha/.github/actions/npm@gha
               with:
-                  node-version-file: 'package.json'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
-
-            - run: npm ci
+                npm_ci_args: '--include=dev'
 
             # build the packages
             - name: Build packages

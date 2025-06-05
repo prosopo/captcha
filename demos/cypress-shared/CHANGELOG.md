@@ -1,5 +1,17 @@
 # @prosopo/cypress-shared
 
+## 2.7.4
+
+### Patch Changes
+
+- @prosopo/types@2.7.1
+
+## 2.7.3
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+
 ## 2.7.2
 
 ### Patch Changes

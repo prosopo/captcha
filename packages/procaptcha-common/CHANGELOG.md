@@ -1,5 +1,40 @@
 # @prosopo/procaptcha-common
 
+## 2.6.8
+
+### Patch Changes
+
+- 0d194f2: lint
+
+## 2.6.7
+
+### Patch Changes
+
+- Updated dependencies [04cc7ee]
+  - @prosopo/common@2.6.1
+  - @prosopo/account@2.6.4
+  - @prosopo/load-balancer@2.6.4
+  - @prosopo/types@2.7.1
+
+## 2.6.6
+
+### Patch Changes
+
+- bc892fa: lint
+
+## 2.6.5
+
+### Patch Changes
+
+- 84fc39f: lint
+
+## 2.6.4
+
+### Patch Changes
+
+- 5656b0c: Adding cypress tests for invisible
+- 5656b0c: Adding all client examples to bundle example
+
 ## 2.6.3
 
 ### Patch Changes
