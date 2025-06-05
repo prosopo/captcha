@@ -221,11 +221,11 @@ jobs:
               if: always()
               run: |
                 echo "output: ${{ steps.publish.outputs.output }}"
-                
-                npm_success=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.npm == 0) | .package')
-                gh_success=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.gh == 0) | .package')
-                npm_failure=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.npm != 0) | .package')
-                gh_failure=$(echo "${{ steps.publish.outputs.output }}" | jq -r '.[] | select(.gh != 0) | .package')
+
+                npm_success=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.npm == 0) | .package')
+                gh_success=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.gh == 0) | .package')
+                npm_failure=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.npm != 0) | .package')
+                gh_failure=$(echo '${{ steps.publish.outputs.output }}' | jq -r '.[] | select(.gh != 0) | .package')
 
                 if [ -n "$npm_success" ]; then
                   echo "Successfully published to npm:"
