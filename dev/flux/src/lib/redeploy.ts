@@ -70,10 +70,10 @@ export const main = async (
 			hard,
 		);
 
-		log.info(redeployResponse);
+		log.info(() => ({ data: { redeployResponse }, msg: "Redeploy response" }));
 		process.exit(0);
 	} catch (error) {
-		log.error({ error }, "An error occurred");
+		log.error(() => ({ error, msg: "An error occurred" }));
 		process.exit(1);
 	}
 };

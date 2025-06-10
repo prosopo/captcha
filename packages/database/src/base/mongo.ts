@@ -72,10 +72,15 @@ export class MongoDatabase {
 	 * @description Connect to the database and set the various tables
 	 */
 	async connect(): Promise<void> {
-		this.logger.info({ mongoUrl: this.safeURL });
+		this.logger.info(() => ({
+			data: { mongoUrl: this.safeURL }
+		}));
 		try {
 			if (this.connected) {
-				this.logger.info({ mongoUrl: this.safeURL }, "Database connection already open");
+				this.logger.info(() => ({
+					data: { mongoUrl: this.safeURL },
+					msg: "Database connection already open"
+				}));
 				return;
 			}
 			this.connection = await new Promise((resolve, reject) => {
@@ -85,59 +90,91 @@ export class MongoDatabase {
 				});
 
 				connection.on("open", () => {
-					this.logger.info({ mongoUrl: this.safeURL }, "Database connection opened");
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database connection opened"
+					}));
 					this.connected = true;
 					resolve(connection);
 				});
 
 				connection.on("error", (err) => {
 					this.connected = false;
-					this.logger.error({ err }, "Database error");
+					this.logger.error(() => ({
+						err,
+						data: { mongoUrl: this.safeURL },
+						msg: "Database error",
+					}));
 					reject(err);
 				});
 
 				connection.on("connected", () => {
-					this.logger.info({ mongoUrl: this.safeURL }, "Database connected");
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database connected"
+					}));
 					this.connected = true;
 					resolve(connection);
 				});
 
 				connection.on("disconnected", () => {
 					this.connected = false;
-					this.logger.info({ mongoUrl: this.safeURL }, "Database disconnected");
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database disconnected"
+					}));
 				});
 
 				connection.on("reconnected", () => {
-					this.logger.info({ mongoUrl: this.safeURL }, "Database reconnected");
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database reconnected"
+					}));
 					this.connected = true;
 					resolve(connection);
 				});
 
 				connection.on("reconnectFailed", () => {
 					this.connected = false;
-					this.logger.error({ mongoUrl: this.safeURL }, "Database reconnect failed");
+					this.logger.error(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database reconnect failed"
+					}));
 				});
 
 				connection.on("close", () => {
 					this.connected = false;
-					this.logger.info({ mongoUrl: this.safeURL }, "Database connection closed");
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database connection closed"
+					}));
 				});
 
 				connection.on("fullsetup", () => {
 					this.connected = true;
-					this.logger.info({ mongoUrl: this.safeURL }, "Database connection is fully setup");
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database connection is fully setup"
+					}));
 					resolve(connection);
 				});
 			});
 		} catch (e) {
-			this.logger.error({ err: e }, "Database connection error");
+			this.logger.error(() => ({
+				err: e,
+				data: { mongoUrl: this.safeURL },
+				msg: "Database connection error"
+			}));
 			throw e;
 		}
 	}
 
 	/** Close connection to the database */
 	async close(): Promise<void> {
-		this.logger.debug({ mongoUrl: this.safeURL }, "Closing connection");
+		this.logger.debug(() => ({
+			data: { mongoUrl: this.safeURL },
+			msg: "Closing connection"
+		}));
 		await this.connection?.close();
 	}
 }

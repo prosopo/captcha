@@ -38,11 +38,11 @@ class ApiRegisterSiteKeyEndpoint
 
 		const temp = settings || ClientSettingsSchema.parse({});
 
-		logger.info({ siteKey }, `Registering site key`);
+		logger.info(() => ({ data: { siteKey }, msg: "`Registering site key" }));
 
 		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
 
-		logger.info({}, "Site key registered");
+		logger.info(() => ({ msg: "Site key registered" }));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,

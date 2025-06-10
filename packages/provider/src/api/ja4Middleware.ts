@@ -43,17 +43,23 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		const clientHelloBuffer = Buffer.from(xTlsClientHello, "base64");
 
 		// Debug: Check first few bytes
-		logger.debug({ data: clientHelloBuffer.subarray(0, 5).toString("hex") },
-			"ClientHello First Bytes"
-		);
+		logger.debug(() => ({
+			data: { data: clientHelloBuffer.subarray(0, 5).toString("hex") },
+			msg: "ClientHello First Bytes"
+		}));
 
 		// Check first byte after the initial 5
 		if (clientHelloBuffer[5] !== 0x01) {
-			logger.warn({}, "Invalid ClientHello message: First byte is not 0x01");
+			logger.warn(() => ({
+				msg: "Invalid ClientHello message: First byte is not 0x01"
+			}));
 			return { ja4PlusFingerprint: DEFAULT_JA4 };
 		}
 
-		logger.debug({ xTlsVersion }, "Headers TLS Version");
+		logger.debug(() => ({
+			data: { xTlsVersion },
+			msg: "Headers TLS Version"
+		}));
 
 		//`tls1.3` becomes `13` etc.
 		const tlsVersion = xTlsVersion.replace(/(tls)|\./g, "");
@@ -127,7 +133,9 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 
 		return { ja4PlusFingerprint };
 	} catch (err) {
-		logger.error({ err }, "Error generating JA4+ fingerprint");
+		logger.error(() => {
+			return { err, msg: "Error generating JA4+ fingerprint" };
+		});
 		return { ja4PlusFingerprint: DEFAULT_JA4 };
 	}
 };

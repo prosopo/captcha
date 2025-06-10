@@ -32,7 +32,7 @@ export async function findEnvFiles(logger: Logger, cwd?: string) {
 	const env = getEnv();
 	const fileName = `.env.${env}`;
 	// options is optional
-	logger.info({}, "Searching for files");
+	logger.info(() => ({ msg: "Searching for files" }));
 	return await fg(`${cwd || "../.."}/**/${fileName}`, {
 		ignore,
 	});
@@ -47,7 +47,7 @@ export async function updateDemoHTMLFiles(
 	const files = await fg("../../demos/**/*.html", {
 		ignore: ignore,
 	});
-	logger.info({ files }, "HTML files found");
+	logger.info(() => ({ data: { files }, msg: "HTML files found" }));
 	// biome-ignore lint/complexity/noForEach: TODO fix
 	files.forEach((file) => {
 		// the following code loads a .env file, searches for the variable and replaces it
@@ -60,7 +60,7 @@ export async function updateDemoHTMLFiles(
 			if (matches) {
 				// replace the site key
 				const matchedVar = at(matches, 1);
-				logger.info({ matchedVar }, "matchedVar");
+				logger.info(() => ({ data: { matchedVar }, msg: "matchedVar" }));
 				newContents = contents.replaceAll(matchedVar, varValue);
 				break;
 			}
@@ -80,7 +80,7 @@ export async function updateEnvFiles(
 	cwd?: string,
 ) {
 	const files = await findEnvFiles(logger, cwd);
-	logger.info({ files }, "Env files found");
+	logger.info(() => ({ data: { files }, msg: "Env files found" }));
 	// biome-ignore lint/complexity/noForEach: TODO fix
 	files.forEach((file) => {
 		let write = false;

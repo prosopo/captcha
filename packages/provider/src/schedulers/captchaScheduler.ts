@@ -34,15 +34,19 @@ export async function storeCaptchasExternally(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			env.getDb(),
 		);
-		env.logger.info({},
-			`${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
-		);
+		env.logger.info(() => ({
+			data: { taskRunning },
+			msg: `${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
+		}));
 		if (!taskRunning) {
-			env.logger.info({},
-				`${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
-			);
+			env.logger.info(() => ({
+				msg: `${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
+			}));
 			await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {
-				env.logger.error(err);
+				env.logger.error(() => ({
+					err,
+					msg: "Error storing commitments externally"
+				}));
 			});
 		}
 	});

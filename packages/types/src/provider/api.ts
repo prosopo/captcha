@@ -253,10 +253,6 @@ export interface ImageVerificationResponse extends VerificationResponse {
 	[ApiParams.commitmentId]?: Hash;
 }
 
-// biome-ignore lint/style/noNonNullAssertion: <explanation>
-const b: ImageVerificationResponse = null!
-const a: LogObject = b
-
 export interface GetPowCaptchaResponse extends ApiResponse {
 	[ApiParams.challenge]: PoWChallengeId;
 	[ApiParams.difficulty]: number;

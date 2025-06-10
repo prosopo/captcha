@@ -73,7 +73,7 @@ export const main = async (
 			ips.push(prefixIPAddress(ip));
 		} else {
 			if (dapp.nodes !== undefined) {
-				log.info(dapp.nodes);
+				log.info(() => ({ data: { nodes: dapp.nodes } }));
 				// take the fluxos urls from the dapp (these are different to the API URLs)
 				ips = ips.concat(
 					Object.values(dapp.nodes).map(
@@ -133,7 +133,7 @@ export const main = async (
 
 		return await Promise.all(logPromises);
 	} catch (error) {
-		log.error({ err: error });
+		log.error(() => ({ err: error }));
 		process.exit(1);
 	}
 };

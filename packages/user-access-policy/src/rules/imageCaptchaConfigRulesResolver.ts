@@ -51,14 +51,16 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		const configDefined = null !== imageCaptchaConfig;
 
 		if (configDefined) {
-			this.logger.info({
-				configDefined: configDefined,
-				clientId: clientId,
-				userIpAddress: userIpAddress.toString(),
-				userId: userId,
-				imageCaptchaConfig: imageCaptchaConfig,
-				ja4,
-			});
+			this.logger.info(() => ({
+				data: {
+					configDefined: configDefined,
+					clientId: clientId,
+					userIpAddress: userIpAddress.toString(),
+					userId: userId,
+					imageCaptchaConfig: imageCaptchaConfig,
+					ja4: ja4,
+				}
+			}));
 		}
 
 		return configDefined;
@@ -87,10 +89,13 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		);
 
 		if (null === this.accessRule) {
-			this.logger.debug({}, "ImageCaptchaConfigRulesResolver.resolveConfig", {
-				configDefined: false,
-				...logArgs,
-			});
+			this.logger.debug(() => ({
+				data: {
+					...logArgs,
+					configDefined: false,
+				},
+				msg: "ImageCaptchaConfigRulesResolver.resolveConfig"
+			}));
 
 			return defaults;
 		}
@@ -99,12 +104,15 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 
 		const config = this.getImageCaptchaConfig(defaults, imageCaptchaConfig);
 
-		this.logger.info({
-			configDefined: true,
-			imageCaptchaConfig: imageCaptchaConfig,
-			config: config,
-			...logArgs,
-		}, "ImageCaptchaConfigRulesResolver.resolveConfig");
+		this.logger.info(() => ({
+			data: {
+				configDefined: true,
+				imageCaptchaConfig: imageCaptchaConfig,
+				config: config,
+				...logArgs,
+			},
+			msg: "ImageCaptchaConfigRulesResolver.resolveConfig"
+		}));
 
 		return config;
 	}
@@ -122,13 +130,16 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 			clientId,
 		);
 
-		this.logger.debug({
-			accessRules: accessRules.length,
-			userIpAddress: userIpAddress.address.toString(),
-			userId: userId,
-			clientId: clientId,
-			ja4,
-		}, "ImageCaptchaConfigRulesResolver.fetchUserAccessRule");
+		this.logger.debug(() => ({
+			data: {
+				accessRules: accessRules.length,
+				userIpAddress: userIpAddress.address.toString(),
+				userId: userId,
+				clientId: clientId,
+				ja4,
+			},
+			msg: "ImageCaptchaConfigRulesResolver.fetchUserAccessRule"
+		}));
 
 		return this.selectPrimaryUserAccessRule(accessRules);
 	}

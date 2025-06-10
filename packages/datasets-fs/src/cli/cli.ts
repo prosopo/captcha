@@ -50,7 +50,7 @@ export class Cli {
 				builder: command.getOptions(),
 				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 				handler: async (argv: any) => {
-					this.logger.debug({}, `running ${command.getCommandName()}}`);
+					this.logger.debug(() => ({ msg: `running ${command.getCommandName()}` }));
 					const args = await command.parse(argv);
 					await command.exec(args);
 				},
@@ -79,7 +79,7 @@ export class Cli {
 
 	public async exec(args: string[] = process.argv.slice(2)) {
 		const config = this.config();
-		this.logger.debug({ args }, "parsing");
+		this.logger.debug(() => ({ data: { args }, msg: "parsing" }));
 		await config.parse(args);
 	}
 }

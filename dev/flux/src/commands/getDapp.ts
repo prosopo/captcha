@@ -52,12 +52,12 @@ export default (cmdArgs?: { logger?: Logger }) => {
 					loginPhrase,
 				);
 				if (parsedArgs.nodes) {
-					logger.info(dapp.nodes);
+					logger.info(() => ({ data: { nodes: dapp.nodes } }));
 					return;
 				}
-				logger.info(dapp);
+				logger.info(() => ({ data: { dapp } }));
 			} catch (err) {
-				logger.error({ err });
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

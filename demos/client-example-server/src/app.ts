@@ -34,8 +34,9 @@ enum ProsopoVerificationType {
 	local = "local",
 }
 
+const logger = getLogger('info', import.meta.url);
+
 async function main() {
-	const logger = getLogger('info', import.meta.url);
 	loadEnv();
 
 	const apiPrefix =
@@ -78,7 +79,7 @@ async function main() {
 	});
 
 	const uri = await memoryServerSetup();
-	console.log("mongo uri", uri);
+	logger.info(() => ({ msg: "mongo uri", data: { uri } }));
 	const mongoose = connectionFactory(uri);
 	if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
 		const mnemonicError = new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
@@ -86,12 +87,12 @@ async function main() {
 			logger,
 		});
 
-		logger.error(mnemonicError);
+		logger.error(() => ({ err: mnemonicError }));
 	}
 
 	const config = getServerConfig();
 
-	console.log("Config", config);
+	logger.info(() => ({ msg: "Config", data: { config } }));
 
 	app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType));
 
@@ -104,9 +105,9 @@ async function main() {
 
 main()
 	.then(() => {
-		console.log("Server started");
+		logger.info(() => ({ msg: "Server started" }));
 	})
 	.catch((err) => {
-		console.log(err);
+		logger.error(() => ({ err }));
 		process.exit();
 	});

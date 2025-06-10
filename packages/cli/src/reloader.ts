@@ -55,7 +55,7 @@ export default class ReloadingAPI {
 	}
 
 	public async start(reloadEnv = false) {
-		log.info({}, "Starting API");
+		log.info(() => ({ msg: "Starting API" }));
 		this._envWatcher = await this._watchEnv();
 		loadEnv();
 		if (!this._env && reloadEnv) {
@@ -71,7 +71,7 @@ export default class ReloadingAPI {
 	}
 
 	public async startDev() {
-		log.info({}, "Starting API");
+		log.info(() => ({ msg: "Starting API" }));
 		this._envWatcher = await this._watchEnv();
 		loadEnv();
 		const env = new ProviderEnvironment(
@@ -84,7 +84,7 @@ export default class ReloadingAPI {
 	}
 
 	public async stop() {
-		log.info({}, "Stopping API");
+		log.info(() => ({ msg: "Stopping API" }));
 		return new Promise((resolve) => {
 			if (this.api) {
 				this.api.close(resolve);
@@ -94,7 +94,7 @@ export default class ReloadingAPI {
 
 	private async _watchEnv() {
 		return fs.watchFile(this._envPath, async () => {
-			log.info({ restarting: this._restarting }, "env file change detected. Restarting");
+			log.info(() => ({ data: { restarting: this._restarting }, msg: "env file change detected. Restarting" }));
 			if (!this._restarting) {
 				this._restarting = true;
 				await this.stop();

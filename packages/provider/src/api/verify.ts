@@ -106,7 +106,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						ip,
 					);
 
-				req.logger.debug(response);
+				req.logger.debug(() => ({ data: { ...response } }));
 				const verificationResponse: ImageVerificationResponse =
 					tasks.imgCaptchaManager.getVerificationResponse(
 						response[ApiParams.verified],
@@ -117,7 +117,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					);
 				res.json(verificationResponse);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({
+					err,
+					data: { body: req.body },
+					msg: "Error in image captcha verification"
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
@@ -209,7 +213,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 				return res.json(verificationResponse);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({
+					err,
+					data: { body: req.body },
+					msg: "Error in image captcha verification"
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },

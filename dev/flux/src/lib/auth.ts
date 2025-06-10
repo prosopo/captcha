@@ -123,8 +123,7 @@ export const verifyLogin = async (
 		signature,
 		loginPhrase,
 	});
-	log.info({ data }, "Data");
-	log.info({ apiUrl }, "apiUrl");
+	log.info(() => ({ data: { apiUrl: apiUrl, requestBody: data }, msg: "Data" }));
 	const response = await fetch(apiUrl, {
 		method: "POST",
 		body: data,
@@ -135,7 +134,7 @@ export const verifyLogin = async (
 
 const getLoginPhrase = async (url: URL): Promise<string> => {
 	const apiURL = new URL("id/loginphrase", url);
-	log.info({ apiURL: apiURL.href }, "Calling");
+	log.info(() => ({ data: { apiURL: apiURL.href }, msg: "Calling" }));
 	const response = await fetch(apiURL.toString());
 	return (await errorHandler<ResponseLoginPhrase>(response)).data;
 };
@@ -170,10 +169,10 @@ const getFluxOSURLs = async (
 export const getAuth = async (secretKey: Uint8Array, url: URL) => {
 	// Get Flux login phrase
 	const loginPhrase = await getLoginPhrase(url);
-	log.info({ loginPhrase }, "Login Phrase");
+	log.info(() => ({ data: { loginPhrase }, msg: "Login Phrase" }));
 
 	const signature = base64Encode(await sign(loginPhrase, { secretKey }));
-	log.info({ signature }, "Signature");
+	log.info(() => ({ data: { signature }, msg: "Signature" }));
 	return { signature, loginPhrase };
 };
 
@@ -190,7 +189,7 @@ const getNode = async (
 		signature,
 		loginPhrase,
 	);
-	log.info({ individualNodeIPs }, "Individual Node IPs");
+	log.info(() => ({ data: { individualNodeIPs }, msg: "Individual Node IPs" }));
 
 	// Choose a node at random from individualNodeIPs
 	const node =
@@ -205,7 +204,7 @@ const getNode = async (
 			},
 		});
 	}
-	log.info({ node }, "Node");
+	log.info(() => ({ data: { node }, msg: "Node" }));
 	// http as node is an IP address
 	return prefixIPAddress(node);
 };
@@ -242,13 +241,13 @@ export async function main(
 
 	// Get a login token from the node
 	const nodeLoginPhrase = await getLoginPhrase(nodeAPIURL);
-	log.info({ nodeLoginPhrase }, "Node Login Phrase");
+	log.info(() => ({ data: { nodeLoginPhrase }, msg: "Node Login Phrase" }));
 
 	// Sign the login token with zelcore private key
 	const nodeSignature = base64Encode(
 		await sign(nodeLoginPhrase, { secretKey: privateKey }),
 	);
-	log.info({ nodeSignature }, "Node Signature");
+	log.info(() => ({ data: { nodeSignature }, msg: "Node Signature" }));
 
 	return { nodeUIURL, nodeAPIURL, nodeLoginPhrase, nodeSignature };
 }

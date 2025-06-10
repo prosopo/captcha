@@ -25,8 +25,8 @@ const logger = getLogger(
 
 async function mnemonic(addToEnv: boolean) {
 	const [mnemonic, address] = await generateMnemonic();
-	logger.info({ address }, "Address generated");
-	logger.info({ mnemonic }, "Mnemonic generated");
+	logger.info(() => ({ data: { address }, msg: "Address generated" }));
+	logger.info(() => ({ data: { mnemonic }, msg: "Mnemonic generated" }));
 	if (addToEnv) {
 		await updateEnvFile({
 			PROSOPO_PROVIDER_MNEMONIC: `"${mnemonic}"`,

@@ -31,7 +31,9 @@ class BlacklistRequestInspector {
 	): Promise<void> {
 		const rawIp = request.ip || "";
 
-		request.logger.debug({ ja4: request.ja4 });
+		request.logger.debug(() => ({
+			data: { ja4: request.ja4 }
+		}));
 
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
@@ -65,11 +67,14 @@ class BlacklistRequestInspector {
 
 		// block if no IP is present
 		if (!rawIp) {
-			logger.info({
-				requestedRoute: requestedRoute,
-				requestHeaders: requestHeaders,
-				requestBody: requestBody,
-			}, "Request without IP");
+			logger.info(() => ({
+				data: {
+					requestedRoute: requestedRoute,
+					requestHeaders: requestHeaders,
+					requestBody: requestBody,
+				},
+				msg: "Request without IP",
+			}));
 
 			return true;
 		}
@@ -91,7 +96,10 @@ class BlacklistRequestInspector {
 				userId,
 			);
 		} catch (err) {
-			logger.error({ err }, "Block Middleware Error");
+			logger.error(() => ({
+				err,
+				msg: "Block Middleware Error",
+			}));
 
 			return true;
 		}

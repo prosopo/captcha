@@ -32,11 +32,11 @@ async function startApi() {
 	apiApp.use(handleErrors);
 
 	apiApp.listen(apiPort, () => {
-		logger.info({}, `Prosopo app listening at http://localhost:${apiPort}`);
+		logger.info(() => ({ msg: `Prosopo app listening at http://localhost:${apiPort}` }));
 	});
 }
 
 startApi().catch((error) => {
-	logger.error({ error }, "Failed to start API");
+	logger.error(() => ({ err: error, msg: "Failed to start API" }));
 	process.exit(1);
 });

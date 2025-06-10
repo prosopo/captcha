@@ -104,9 +104,15 @@ export default (
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
 				});
-				logger.info({ sitekey }, `Site Key registered`);
+				logger.info(() => ({
+					data: { sitekey },
+					msg: "Site Key registered",
+				}));
 			} catch (err) {
-				logger.error({ err });
+				logger.error(() => ({
+					err,
+					msg: "Error registering Site Key",
+				}));
 			}
 		},
 		middlewares: [validateSiteKey],

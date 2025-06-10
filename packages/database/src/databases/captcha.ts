@@ -105,7 +105,10 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info({ insertedCount: result.insertedCount }, "Mongo Saved Session Events");
+			logger.info(() => ({
+				data: { insertedCount: result.insertedCount },
+				msg: "Mongo Saved Session Events",
+			}));
 		}
 
 		if (imageCaptchaEvents.length) {
@@ -122,7 +125,10 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info({ upsertedCount: result.upsertedCount }, "Mongo Saved Image Events");
+			logger.info(() => ({
+				data: { upsertedCount: result.upsertedCount },
+				msg: "Mongo Saved Image Events",
+			}));
 		}
 		if (powCaptchaEvents.length) {
 			const result = await this.tables.powcaptcha.bulkWrite(
@@ -138,7 +144,10 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info({ upsertedCount: result.upsertedCount }, "Mongo Saved PoW Events");
+			logger.info(() => ({
+				data: { upsertedCount: result.upsertedCount },
+				msg: "Mongo Saved PoW Events",
+			}));
 		}
 
 		await this.close();

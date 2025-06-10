@@ -52,11 +52,13 @@ export class CaptchaManager {
 		frictionlessTokenId?: FrictionlessTokenId;
 		type: CaptchaType;
 	}> {
-		this.logger.debug({
-			message: "Validating request",
-			captchaType,
-			sessionId,
-		});
+		this.logger.debug(() => ({
+			msg: "Validating request",
+			data: {
+				captchaType,
+				sessionId,
+			},
+		}));
 
 		// Session ID
 
@@ -65,11 +67,13 @@ export class CaptchaManager {
 			if (clientSettings?.settings?.captchaType === CaptchaType.frictionless) {
 				const sessionRecord = await this.db.checkAndRemoveSession(sessionId);
 				if (!sessionRecord) {
-					this.logger.warn({
-						message: "No frictionless session found",
-						account: clientSettings.account,
-						sessionId: sessionId,
-					});
+					this.logger.warn(() => ({
+						msg: "No frictionless session found",
+						data: {
+							account: clientSettings.account,
+							sessionId: sessionId,
+						}
+					}));
 					return {
 						valid: false,
 						reason: "CAPTCHA.NO_SESSION_FOUND",
@@ -87,12 +91,14 @@ export class CaptchaManager {
 
 			// If the user somehow has a sessionId but the client settings do not specify frictionless then the request is
 			// invalid. This could occur if the client settings were changed after the user received a sessionId.
-			this.logger.warn({
-				message: "Invalid frictionless request",
-				account: clientSettings.account,
-				sessionId: sessionId,
-				settingsCaptchaType: clientSettings?.settings?.captchaType,
-			});
+			this.logger.warn(() => ({
+				msg: "Invalid frictionless request",
+				data: {
+					account: clientSettings.account,
+					sessionId: sessionId,
+					settingsCaptchaType: clientSettings?.settings?.captchaType,
+				}
+			}));
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",
@@ -107,12 +113,14 @@ export class CaptchaManager {
 		// - If `captchaType` is `pow` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `pow`
 		// - If `captchaType` is `frictionless` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `frictionless`
 		if (clientSettings?.settings?.captchaType !== captchaType) {
-			this.logger.warn({
-				message: `Invalid ${captchaType} request`,
-				account: clientSettings.account,
-				requestedCaptchaType: captchaType,
-				settingsCaptchaType: clientSettings?.settings?.captchaType,
-			});
+			this.logger.warn(() => ({
+				msg: `Invalid ${captchaType} request`,
+				data: {
+					account: clientSettings.account,
+					requestedCaptchaType: captchaType,
+					settingsCaptchaType: clientSettings?.settings?.captchaType,
+				}
+			}));
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",

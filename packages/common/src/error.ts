@@ -80,10 +80,13 @@ export abstract class ProsopoBaseError<
 		const errorParams = { error: this.message, context: this.context };
 		const errorMessage = { errorType: errorName || this.name, errorParams };
 		if (logLevel === "debug") {
-			logger.debug({ ...errorMessage, stack: this.stack });
-			return
+			logger.debug(() => ({ data: { ...errorMessage, stack: this.stack } }));
+			return;
 		}
-		logger.log(logLevel, errorMessage);
+		logger.log(logLevel, () => ({
+			data: errorMessage,
+			stack: this.stack,
+		}));
 	}
 }
 

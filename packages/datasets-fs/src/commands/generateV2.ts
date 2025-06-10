@@ -277,10 +277,10 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 		};
 
 		// verify the output
-		this.logger.info({}, "verifying data");
+		this.logger.info(() => ({ msg: "verifying data" }));
 		CaptchasContainerSchema.parse(output);
 
-		this.logger.info({}, "writing data");
+		this.logger.info(() => ({ msg: "writing data" }));
 		fs.mkdirSync(args.output.split("/").slice(0, -1).join("/"), {
 			recursive: true,
 		});

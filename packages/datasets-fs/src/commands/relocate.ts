@@ -71,9 +71,9 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
 						const value = get(obj, key);
 						if (typeof value === "string") {
 							if (value.startsWith(from)) {
-								this.logger.debug({}, "replacing", value);
+								this.logger.debug(() => ({ msg: "replacing", data: { value } }));
 								obj[key] = to + value.slice(from.length);
-								this.logger.debug({}, "replaced", obj[key]);
+								this.logger.debug(() => ({ msg: "replaced", data: { value: obj[key] } }));
 							}
 						}
 					} else {
@@ -85,7 +85,7 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
 		};
 
 		const file: string = args.input;
-		this.logger.info(args, "relocate");
+		this.logger.info(() => ({ data: args, msg: "relocate" }));
 		// read the file
 		let data = JSON.parse(fs.readFileSync(file, "utf8"));
 		// replace the urls by recursively traversing the data

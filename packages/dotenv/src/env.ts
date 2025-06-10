@@ -46,7 +46,10 @@ export function loadEnv(
 		nodeEnv,
 	);
 	const args = { path: envPath, override };
-	logger.info({ envPath }, "Loading env");
+	logger.info(() => ({
+		data: { envPath },
+		msg: "Loading env"
+	}));
 	dotenv.config(args);
 	return envPath;
 }
@@ -70,7 +73,10 @@ export function getEnvFile(
 
 	let searchPath = path.resolve(rootDir || ".");
 
-	logger.info({ "fileName": fileNameFull, "searchPath": searchPath }, "Searching");
+	logger.info(() => ({
+		data: { "fileName": fileNameFull, "searchPath": searchPath },
+		msg: "Searching"
+	}));
 
 	let levelCount = 0;
 
@@ -80,18 +86,20 @@ export function getEnvFile(
 				fs.readFileSync(path.join(searchPath, "package.json"), "utf8"),
 			);
 			if (pkgJson.name === "@prosopo/captcha-private") {
-				logger.info(
-					{ fileNameFull }, "Reached the workspace root package.json, stopping search."
-				);
+				logger.info(() => ({
+					data: { fileName: fileNameFull },
+					msg: "Reached the workspace root package.json, stopping search."
+				}));
 				break;
 			}
 		}
 		searchPath = path.resolve(searchPath, "..");
 		levelCount += 1;
 		if (levelCount > 10) {
-			logger.warn(
-				{ fileNameFull, levelCount }, "Checked directories above, stopping search."
-			);
+			logger.warn(() => ({
+				data: { fileName: fileNameFull, levelCount },
+				msg: "Checked directories above, stopping search."
+			}));
 			break;
 		}
 	}

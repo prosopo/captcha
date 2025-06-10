@@ -42,7 +42,7 @@ class ApiUpdateDetectorKeyEndpoint
 
 			logger = logger || getLogger('info', '');
 
-			logger.info({}, "Updating detector key");
+			logger.info(() => ({ msg: "Updating detector key" }));
 
 			await this.clientTaskManager.updateDetectorKey(detectorKey);
 
@@ -50,7 +50,7 @@ class ApiUpdateDetectorKeyEndpoint
 				status: ApiEndpointResponseStatus.SUCCESS,
 			};
 		} catch (error) {
-			logger.error({}, "Error updating detector key", error);
+			logger.error(() => ({ msg: "Error updating detector key", err: error }));
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
 				error: (error as ProsopoApiError).message,

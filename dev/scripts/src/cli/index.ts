@@ -63,7 +63,7 @@ export async function processArgs(args: string[]) {
 				}),
 
 			handler: async (argv) => {
-				log.info({ argv }, "Running setup scripts");
+				log.info(() => ({ data: { argv }, msg: "Running setup scripts" }));
 				await setup(!!argv.force);
 			},
 		})
@@ -106,11 +106,11 @@ export async function processArgs(args: string[]) {
 				}),
 			handler: async (argv) => {
 				if (!isHex(argv.token)) {
-					log.debug({}, "Encoding token to hex");
-					log.info({ argv, result: encodeProcaptchaOutput(JSON.parse(argv.token)) });
+					log.debug(() => ({ msg: "Encoding token to hex" }));
+					log.info(() => ({ data: { argv, result: encodeProcaptchaOutput(JSON.parse(argv.token)) } }));
 				} else {
-					log.debug({}, "Decoding token from hex");
-					log.info({ argv, result: decodeProcaptchaOutput(argv.token) });
+					log.debug(() => ({ msg: "Decoding token from hex" }));
+					log.info(() => ({ data: { argv, result: decodeProcaptchaOutput(argv.token) } }));
 				}
 			},
 		}).argv;

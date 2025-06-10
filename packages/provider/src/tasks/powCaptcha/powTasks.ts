@@ -123,7 +123,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug({}, "No record of this challenge");
+			this.logger.debug(() => ({ msg: "No record of this challenge" }));
 			// no record of this challenge
 			return false;
 		}
@@ -181,21 +181,24 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug({ challenge }, `No record of this challenge`);
+			this.logger.debug(() => ({ data: { challenge }, msg: "No record of this challenge" }));
 			return { verified: false };
 		}
 
 		if (ip) {
 			const ipV4Address = getIPAddress(ip);
 			if (!ipV4Address) {
-				this.logger.debug({ ip }, `Invalid IP address`);
+				this.logger.debug(() => ({ data: { ip }, msg: "Invalid IP address" }));
 				return { verified: false };
 			}
 			if (challengeRecord.ipAddress !== ipV4Address.bigInt()) {
-				this.logger.debug({
-					expected: getIPAddressFromBigInt(challengeRecord.ipAddress).address,
-					actual: ip
-				}, `IP address mismatch`);
+				this.logger.debug(() => ({
+					data: {
+						expected: getIPAddressFromBigInt(challengeRecord.ipAddress).address,
+						actual: ip
+					},
+					msg: "IP address mismatch"
+				}));
 				return { verified: false };
 			}
 		}
@@ -236,10 +239,12 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 			if (tokenRecord) {
 				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
-				this.logger.info({
-					tscoreComponents: tokenRecord?.scoreComponents,
-					score: score,
-				});
+				this.logger.info(() => ({
+					data: {
+						tscoreComponents: tokenRecord?.scoreComponents,
+						score: score,
+					}
+				}));
 			}
 		}
 

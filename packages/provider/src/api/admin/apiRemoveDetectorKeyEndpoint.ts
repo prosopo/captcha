@@ -42,7 +42,7 @@ class ApiRemoveDetectorKeyEndpoint
 
 			logger = logger || getLogger('info', import.meta.url);
 
-			logger.info({ message: "Removing detector key" });
+			logger.info(() => ({ msg: "Removing detector key" }));
 
 			await this.clientTaskManager.removeDetectorKey(detectorKey);
 
@@ -50,7 +50,7 @@ class ApiRemoveDetectorKeyEndpoint
 				status: ApiEndpointResponseStatus.SUCCESS,
 			};
 		} catch (error: unknown) {
-			logger.error({ message: "Error updating detector key", error });
+			logger.error(() => ({ err: error, msg: "Error updating detector key" }));
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
 				error: (error as ProsopoApiError).message,

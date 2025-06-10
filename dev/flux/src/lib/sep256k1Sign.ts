@@ -102,19 +102,22 @@ if (isMain(import.meta.url)) {
 	const keypair: Keypair = { secretKey, publicKey };
 	const message = at(process.argv.slice(2), 0).trim();
 	if (message.length === 0) {
-		console.error("No message provided");
+		logger.error(() => ({
+			msg: "No message provided",
+			data: { args: process.argv.slice(2) },
+		}));
 		process.exit();
 	}
 	sign(message, keypair)
 		.then((sig) => {
 			const hexSig = u8aToHex(sig);
-			logger.info({ hexSig }, "Hex Signature");
-			logger.info({ publicKey }, "Public Key");
-			logger.info({ signature: base64Encode(hexSig) }, "Base64 Signature");
+			logger.info(() => ({ data: { hexSig }, msg: "Hex Signature" }));
+			logger.info(() => ({ data: { publicKey }, msg: "Public Key" }));
+			logger.info(() => ({ data: { signature: base64Encode(hexSig) }, msg: "Base64 Signature" }));
 			process.exit();
 		})
 		.catch((error) => {
-			console.error(error);
+			logger.error(() => ({ err: error }));
 			process.exit();
 		});
 }

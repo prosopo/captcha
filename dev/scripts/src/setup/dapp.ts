@@ -22,7 +22,7 @@ export async function registerSiteKey(
 ): Promise<void> {
 	const logger = env.logger;
 	const tasks = new Tasks(env);
-	logger.info({}, "   - siteKeyRegister");
+	logger.info(() => ({ msg: "   - siteKeyRegister" }));
 	await tasks.clientTaskManager.registerSiteKey(
 		siteKey as string,
 		Tier.Professional,

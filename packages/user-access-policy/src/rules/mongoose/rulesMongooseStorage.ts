@@ -76,7 +76,10 @@ class RulesMongooseStorage implements RulesStorage {
 		}
 
 		const beforeDelete = await this.writingModel.find({});
-		this.logger.debug({ length: beforeDelete.length }, "Before deletion, DB records");
+		this.logger.debug(() => ({
+			data: { length: beforeDelete.length },
+			msg: "Before deletion, DB records"
+		}));
 
 		// Delete the existing ip records to avoid duplicates.
 		await this.writingModel.bulkWrite(
@@ -94,9 +97,15 @@ class RulesMongooseStorage implements RulesStorage {
 				};
 			}),
 		);
-		this.logger.debug({}, "After deletion");
+		this.logger.debug(() => ({
+			data: {},
+			msg: "After deletion"
+		}));
 		const afterDelete = await this.readingModel.find({});
-		this.logger.debug({ length: afterDelete.length }, "After deletion, DB records");
+		this.logger.debug(() => ({
+			data: { length: afterDelete.length },
+			msg: "After deletion, DB records"
+		}));
 
 		const documents = await this.writingModel.insertMany(records);
 		const objectDocuments = documents.map((document) => document.toObject());
