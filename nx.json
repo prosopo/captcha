@@ -2,24 +2,22 @@
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build", "^build:cjs", "^bundle"],
-			"cache": false
+			"dependsOn": ["^build", "^build:cjs", "^bundle"]
 		},
 		"bundle": {
-			"dependsOn": ["build", "build:cjs"],
-			"cache": false
+			"dependsOn": ["build", "build:cjs"]
 		},
 		"build:cjs": {
-			"dependsOn": ["build"],
-			"cache": false
+			"dependsOn": ["build"]
 		},
 		"test": {
-			"dependsOn": ["build", "build:cjs", "bundle"],
-			"cache": false
+			"dependsOn": ["build", "build:cjs", "bundle"]
 		},
 		"typecheck": {
-			"dependsOn": ["^build"],
-			"cache": false
+			"dependsOn": ["^build"]
+		},
+		"*": {
+			"cache": true
 		}
 	},
 	"defaultBase": "main",
@@ -47,5 +45,6 @@
 	"neverConnectToCloud": true,
 	"sync": {
 		"applyChanges": true
-	}
+	},
+	"useDaemonProcess": false
 }

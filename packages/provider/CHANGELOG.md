@@ -1,5 +1,26 @@
 # @prosopo/provider
 
+## 2.9.8
+
+### Patch Changes
+
+- Updated dependencies [ea38a1c]
+  - @prosopo/datasets@2.6.12
+
+## 2.9.7
+
+### Patch Changes
+
+- Updated dependencies [b2ae723]
+  - @prosopo/datasets@2.6.11
+
+## 2.9.6
+
+### Patch Changes
+
+- Updated dependencies [d17c67f]
+  - @prosopo/datasets@2.6.10
+
 ## 2.9.5
 
 ### Patch Changes
