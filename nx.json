@@ -45,5 +45,6 @@
 	"neverConnectToCloud": true,
 	"sync": {
 		"applyChanges": true
-	}
+	},
+	"useDaemonProcess": false
 }
