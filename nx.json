@@ -2,29 +2,46 @@
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build", "^build:cjs", "^bundle"],
+			"dependsOn": [
+				"^build",
+				"^build:cjs",
+				"^bundle"
+			],
 			"cache": false
 		},
 		"bundle": {
-			"dependsOn": ["build", "build:cjs"],
+			"dependsOn": [
+				"build",
+				"build:cjs"
+			],
 			"cache": false
 		},
 		"build:cjs": {
-			"dependsOn": ["build"],
+			"dependsOn": [
+				"build"
+			],
 			"cache": false
 		},
 		"test": {
-			"dependsOn": ["build", "build:cjs", "bundle"],
+			"dependsOn": [
+				"build",
+				"build:cjs",
+				"bundle"
+			],
 			"cache": false
 		},
 		"typecheck": {
-			"dependsOn": ["^build"],
+			"dependsOn": [
+				"^build"
+			],
 			"cache": false
 		}
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": ["*"],
+		"projects": [
+			"*"
+		],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
@@ -32,7 +49,7 @@
 			"automaticFromRef": true
 		}
 	},
-	"parallel": 4,
+	"parallel": 8,
 	"pluginsConfig": {
 		"@nx/js": {
 			"projectsAffectedByDependencyUpdates": "auto"
