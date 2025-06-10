@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogLevel } from "@prosopo/common";
+import { parseLogLevel } from "@prosopo/common";
 import {
 	DatabaseTypes,
 	EnvironmentTypesSchema,
@@ -56,7 +56,7 @@ export default function getConfig(
 	admin = "ADMIN",
 ): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
-		logLevel: getLogLevel(),
+		logLevel: parseLogLevel(process.env.PROSOPO_LOG_LEVEL, 'info'),
 		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
 			? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
 			: EnvironmentTypesSchema.enum.development,

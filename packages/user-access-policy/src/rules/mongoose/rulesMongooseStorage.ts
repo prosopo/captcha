@@ -76,7 +76,10 @@ class RulesMongooseStorage implements RulesStorage {
 		}
 
 		const beforeDelete = await this.writingModel.find({});
-		this.logger.debug("Before deletion, DB records:", beforeDelete.length);
+		this.logger.debug(() => ({
+			data: { length: beforeDelete.length },
+			msg: "Before deletion, DB records"
+		}));
 
 		// Delete the existing ip records to avoid duplicates.
 		await this.writingModel.bulkWrite(
@@ -94,9 +97,15 @@ class RulesMongooseStorage implements RulesStorage {
 				};
 			}),
 		);
-		this.logger.debug("After deletion");
+		this.logger.debug(() => ({
+			data: {},
+			msg: "After deletion"
+		}));
 		const afterDelete = await this.readingModel.find({});
-		this.logger.debug("After deletion, DB records:", afterDelete.length);
+		this.logger.debug(() => ({
+			data: { length: afterDelete.length },
+			msg: "After deletion, DB records"
+		}));
 
 		const documents = await this.writingModel.insertMany(records);
 		const objectDocuments = documents.map((document) => document.toObject());
@@ -208,8 +217,8 @@ class RulesMongooseStorage implements RulesStorage {
 
 		return includeRecordsWithoutClientId
 			? {
-					$or: [clientIdFilter, { clientId: { $exists: false } }],
-				}
+				$or: [clientIdFilter, { clientId: { $exists: false } }],
+			}
 			: clientIdFilter;
 	}
 
@@ -227,10 +236,10 @@ class RulesMongooseStorage implements RulesStorage {
 		const userIpAsNumeric = isIpV4
 			? userIpAddress.bigInt()
 			: // we must have the exact same string length to guarantee the right comparison.
-				userIpAddress
-					.bigInt()
-					.toString()
-					.padStart(RULE_IPV6_NUMERIC_MAX_LENGTH, "0");
+			userIpAddress
+				.bigInt()
+				.toString()
+				.padStart(RULE_IPV6_NUMERIC_MAX_LENGTH, "0");
 
 		const userIpKey =
 			userIpVersion === RuleIpVersion.v4

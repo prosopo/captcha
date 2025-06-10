@@ -44,8 +44,8 @@ export default async function processArgs(args: string[]) {
 
 processArgs(process.argv)
 	.then((result) => {
-		logger.info(result);
+		logger.info(() => ({ data: result }));
 	})
 	.catch((error) => {
-		logger.error(error);
+		logger.error(() => ({ err: error }));
 	});

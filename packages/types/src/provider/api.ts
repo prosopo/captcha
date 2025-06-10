@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiJsonError } from "@prosopo/common";
+import type { ApiJsonError, LogObject } from "@prosopo/common";
 import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
@@ -179,7 +179,7 @@ export interface DappUserSolutionResult {
 
 export interface CaptchaSolutionResponse
 	extends ApiResponse,
-		DappUserSolutionResult {}
+	DappUserSolutionResult { }
 
 export interface CaptchaIdAndProof {
 	captchaId: string;

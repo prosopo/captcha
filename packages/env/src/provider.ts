@@ -22,7 +22,11 @@ export class ProviderEnvironment extends Environment {
 		this.getDb()
 			.cleanupScheduledTaskStatus(ScheduledTaskStatus.Running)
 			.catch((err) => {
-				this.logger.error("Failed to cleanup scheduled tasks", err);
+				this.logger.error(() => ({
+					msg: "Failed to cleanup running scheduled tasks",
+					err,
+					data: { failedFuncName: this.cleanup.name },
+				}));
 			});
 	}
 }
