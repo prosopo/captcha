@@ -114,7 +114,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					// remove the _id field to avoid problems when upserting
 					const { _id, ...safeDoc } = doc;
 					return {
-						updateOne: {
+						updateMany: {
 							filter: { id: safeDoc.id },
 							update: { $set: safeDoc },
 							upsert: true,
@@ -130,7 +130,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					// remove the _id field to avoid problems when upserting
 					const { _id, ...safeDoc } = doc;
 					return {
-						updateOne: {
+						updateMany: {
 							filter: { challenge: safeDoc.challenge },
 							update: { $set: safeDoc },
 							upsert: true,
