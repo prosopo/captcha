@@ -2,7 +2,14 @@
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build", "^build:cjs", "^bundle"]
+			"dependsOn": [
+				"^build",
+				"^build:cjs",
+				"^bundle",
+				"typecheck",
+				"^typecheck",
+				"lint"
+			]
 		},
 		"bundle": {
 			"dependsOn": ["build", "build:cjs"]
@@ -15,9 +22,6 @@
 		},
 		"typecheck": {
 			"dependsOn": ["^build"]
-		},
-		"*": {
-			"cache": true
 		}
 	},
 	"defaultBase": "main",
