@@ -26,55 +26,76 @@ runs:
         run: |
             echo "**** github ****"
             cat <<'EOF'
-            ${{ toJson(github) }}
+            echo "::group::github"
+            echo '${{ toJson(github) }}'
+            echo "::endgroup::"
             EOF
             
             echo "**** env ****"
             cat <<'EOF'
-            ${{ toJson(env) }}
+            echo "::group::env"
+            echo '${{ toJson(env) }}'
+            echo "::endgroup::"
             EOF
             
             echo "**** vars ****"
             cat <<'EOF'
-            ${{ inputs.VARS_CONTEXT }}
+            echo "::group::vars"
+            echo '${{ inputs.VARS_CONTEXT }}'
+            echo "::endgroup::"
             EOF
 
             echo "**** job ****"
             cat <<'EOF'
-            ${{ toJson(job) }}
+            echo "::group::job"
+            echo '${{ toJson(job) }}'
+            echo "::endgroup::"
             EOF
 
             echo "**** runner ****"
             cat <<'EOF'
-            ${{ toJson(runner) }}
+            echo "::group::runner"
+            echo '${{ toJson(runner) }}'
+            echo "::endgroup::"
             EOF
 
             echo "**** secrets ****"
             cat <<'EOF'
-            ${{ inputs.SECRETS_CONTEXT }}
+            echo "::group::secrets"
+            echo '${{ inputs.SECRETS_CONTEXT }}'
+            echo "::endgroup::"
             EOF
 
             echo "**** strategy ****"
             cat <<'EOF'
-            ${{ toJson(strategy) }}
+            echo "::group::strategy"
+            echo '${{ toJson(strategy) }}'
             EOF
 
             echo "**** matrix ****"
             cat <<'EOF'
-            ${{ toJson(matrix)}}
+            echo "::group::matrix"
+            echo '${{ toJson(matrix) }}'
+            echo "::endgroup::"
             EOF
 
             echo "**** needs ****"
             cat <<'EOF'
-            ${{ inputs.NEEDS_CONTEXT }}
+            echo "::group::needs"
+            echo '${{ inputs.NEEDS_CONTEXT }}'
+            echo "::endgroup::"
             EOF
 
             echo "**** inputs ****"
             cat <<'EOF'
-            ${{ inputs.INPUTS_CONTEXT }}
+            echo "::group::inputs"
+            echo '${{ inputs.INPUTS_CONTEXT }}'
+            echo "::endgroup::"
             EOF
 
             echo "**** steps ****"
             cat <<'EOF'
-            ${{ inputs.STEPS_CONTEXT }}
+            echo "::group::steps"
+            echo '${{ inputs.STEPS_CONTEXT }}'
+            echo "::endgroup::"
             EOF
