@@ -49,4 +49,4 @@ jobs:
               run: |
 
                 # check that the changesets are present for each package which has been modified
-                npx @changesets/cli status --since ${{ github.event.pull_request.base.sha }} --verbose
+                npm run changesets -- --since ${{ github.base_ref }}
