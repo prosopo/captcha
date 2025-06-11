@@ -1,5 +1,39 @@
 # @prosopo/procaptcha-common
 
+## 2.6.11
+
+### Patch Changes
+
+- ea38a1c: lint
+
+## 2.6.10
+
+### Patch Changes
+
+- b2ae723: lint
+
+## 2.6.9
+
+### Patch Changes
+
+- d17c67f: lint
+
+## 2.6.8
+
+### Patch Changes
+
+- 0d194f2: lint
+
+## 2.6.7
+
+### Patch Changes
+
+- Updated dependencies [04cc7ee]
+  - @prosopo/common@2.6.1
+  - @prosopo/account@2.6.4
+  - @prosopo/load-balancer@2.6.4
+  - @prosopo/types@2.7.1
+
 ## 2.6.6
 
 ### Patch Changes

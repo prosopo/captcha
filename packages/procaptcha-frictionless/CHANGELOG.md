@@ -1,5 +1,49 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.12
+
+### Patch Changes
+
+- ea38a1c: lint
+- Updated dependencies [ea38a1c]
+  - @prosopo/procaptcha-react@2.6.12
+  - @prosopo/procaptcha-pow@2.6.12
+
+## 2.6.11
+
+### Patch Changes
+
+- b2ae723: lint
+- Updated dependencies [b2ae723]
+  - @prosopo/procaptcha-react@2.6.11
+  - @prosopo/procaptcha-pow@2.6.11
+
+## 2.6.10
+
+### Patch Changes
+
+- d17c67f: lint
+- Updated dependencies [d17c67f]
+  - @prosopo/procaptcha-react@2.6.10
+  - @prosopo/procaptcha-pow@2.6.10
+
+## 2.6.9
+
+### Patch Changes
+
+- 0d194f2: lint
+- Updated dependencies [0d194f2]
+  - @prosopo/procaptcha-react@2.6.9
+  - @prosopo/procaptcha-pow@2.6.9
+
+## 2.6.8
+
+### Patch Changes
+
+- @prosopo/procaptcha-pow@2.6.8
+- @prosopo/procaptcha-react@2.6.8
+- @prosopo/types@2.7.1
+
 ## 2.6.7
 
 ### Patch Changes
