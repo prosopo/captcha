@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
+import { type Logger, ProsopoDBError, getLogger, getLoggerDefault } from "@prosopo/common";
 import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
@@ -29,7 +29,7 @@ import {
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
 
-const logger = getLoggerDefault();
+const logger = getLogger('info', import.meta.url);
 
 enum TableNames {
 	frictionlessToken = "frictionlessToken",
@@ -105,7 +105,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info("Mongo Saved Session Events", result.insertedCount);
+			logger.info("Mongo Saved Session Events", result);
 		}
 
 		if (imageCaptchaEvents.length) {
@@ -122,7 +122,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info("Mongo Saved Image Events", result.upsertedCount);
+			logger.info("Mongo Saved Image Events", result);
 		}
 		if (powCaptchaEvents.length) {
 			const result = await this.tables.powcaptcha.bulkWrite(
@@ -138,7 +138,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 					};
 				}),
 			);
-			logger.info("Mongo Saved PoW Events", result.upsertedCount);
+			logger.info("Mongo Saved PoW Events", result);
 		}
 
 		await this.close();
