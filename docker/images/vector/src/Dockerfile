@@ -24,7 +24,7 @@ $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY docker/images/vector/vector.toml /etc/vector/vector.toml
+COPY vector.toml /etc/vector/vector.toml
 
 # script for substituting env vars into the vector config
 RUN cat <<EOF > /main.sh
