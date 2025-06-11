@@ -14,7 +14,7 @@ services:
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: always
         env_file:
-            - ../.env.1.${NODE_ENV}
+            - ./.env.1.${NODE_ENV}
         ports:
             - '9229:9229'
         networks:
@@ -48,7 +48,7 @@ services:
         restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: build
         env_file:
-            - ../.env.2.${NODE_ENV}
+            - ./.env.2.${NODE_ENV}
         ports:
             - '9339:9339'
         networks:
@@ -85,7 +85,7 @@ services:
         ports:
             - '27017:27017'
         env_file:
-            - ../.env.1.${NODE_ENV}
+            - ./.env.1.${NODE_ENV}
         networks:
             external:
             internal:
@@ -112,7 +112,7 @@ services:
             - staging
         image: prosopo/caddy:${CADDY_IMAGE}
         env_file:
-            - ../.env.1.${NODE_ENV}
+            - ./.env.1.${NODE_ENV}
         labels:
             - "vector.caddy=true" # enable logging as caddy
             - "vector.docker=true" # log docker events
@@ -149,7 +149,7 @@ services:
         # unlike "redis/redis-stack-server" this image includes Insights
         image: redis/redis-stack:latest
         env_file:
-            - ../.env.1.${NODE_ENV}
+            - ./.env.1.${NODE_ENV}
         volumes:
             # - ./data:/data we don't need a persistent storage for Tests
             - ./redis.conf:/redis-stack.conf
@@ -169,7 +169,7 @@ services:
             - staging
         image: prosopo/vector:${VECTOR_IMAGE}
         env_file:
-            - ../.env.1.${NODE_ENV}
+            - ./.env.1.${NODE_ENV}
         labels:
             - "vector.docker=true" # log docker events
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
