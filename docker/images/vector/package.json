@@ -1,5 +1,5 @@
 {
-  "name": "@prosopo/docker-vector",
+  "name": "@prosopo/vector-docker",
   "version": "2.5.5",
   "scripts": {
     "docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('docker-','')\"):$(node -p \"require('./package.json').version\")",
