@@ -23,6 +23,7 @@ import type { ExternalOption } from "rollup";
 import css from "rollup-plugin-import-css";
 import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
 import { getLogger } from "../logger.js";
 import { VitePluginCloseAndCopy } from "./index.js";
@@ -193,6 +194,9 @@ export default async function (
 				},
 
 				plugins: [
+					nodePolyfills({
+						include: ["crypto"],
+					}),
 					css(),
 					wasm(),
 					// @ts-ignore
