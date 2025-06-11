@@ -1,9 +1,0 @@
-{
-	"name": "@prosopo/provider-container",
-	"type": "module",
-	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
-	},
-	"version": "2.5.5"
-}
