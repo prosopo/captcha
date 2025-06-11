@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
-import { sha256 } from "@noble/hashes/sha256";
 import { CaptchaTypeSchema } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { type ZodRawShape, z } from "zod";
@@ -50,6 +49,7 @@ export const accessPolicySchema: z.ZodObject<{
 
 export const policyScopeSchema = z.object({
 	clientId: z.coerce.string().optional(),
+	ruleGroupId: z.coerce.string().optional(),
 });
 
 export const userScopeSchema = z.object({
