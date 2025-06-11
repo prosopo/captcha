@@ -225,6 +225,14 @@ jobs:
                     fi
                     echo
 
+                    echo "Publishing $pkg to dockerhub"
+                    result_dockerhub=0
+                    set +e
+                    npm publish:docker --if-present -w "$pkg"
+                    result_dockerhub=$?
+                    set -e
+                    echo
+
                     echo "Publishing $pkg to gh"
                     result_gh=0
                     # make the package non-private so it can be published to gh
