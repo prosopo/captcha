@@ -2,7 +2,7 @@
   "name": "@prosopo/docker-vector",
   "version": "2.5.5",
   "scripts": {
-    "docker-tag": "echo prosopo/vector:$(node -p \"require('./package.json').version\")",
+    "docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('docker-','')\"):$(node -p \"require('./package.json').version\")",
     "build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
     "clean": "del-cli dist",
     "test": "echo \"Error: no test specified\" && exit 1",
