@@ -81,10 +81,16 @@ export const userScopeInputSchema = userScopeSchema
 			userScope.numericIp = new Address4(ip).bigInt();
 		}
 
+		// Assuming ipMask is already validated to be a string in CIDR format
 		if ("string" === typeof ipMask) {
-			const ipObject = new Address4(ipMask.replaceAll("*", "0"));
+			// Create an Address4 object from the CIDR string.
+			// Address4 automatically understands CIDR notation and represents the entire network range.
+			const ipObject = new Address4(ipMask);
 
-			userScope.numericIpMaskMin = ipObject.bigInt();
+			// The minimum IP in the CIDR range is the start address of the network.
+			userScope.numericIpMaskMin = ipObject.startAddress().bigInt();
+
+			// The maximum IP in the CIDR range is the end address of the network.
 			userScope.numericIpMaskMax = ipObject.endAddress().bigInt();
 		}
 
