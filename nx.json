@@ -12,34 +12,21 @@
 			]
 		},
 		"bundle": {
-			"dependsOn": [
-				"build",
-				"build:cjs"
-			]
+			"dependsOn": ["build", "build:cjs"]
 		},
 		"build:cjs": {
-			"dependsOn": [
-				"build"
-			]
+			"dependsOn": ["build"]
 		},
 		"test": {
-			"dependsOn": [
-				"build",
-				"build:cjs",
-				"bundle"
-			]
+			"dependsOn": ["build", "build:cjs", "bundle"]
 		},
 		"typecheck": {
-			"dependsOn": [
-				"^build"
-			]
+			"dependsOn": ["^build"]
 		}
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": [
-			"*"
-		],
+		"projects": ["*"],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
