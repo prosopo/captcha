@@ -199,8 +199,6 @@ jobs:
                 set -x
                 npx nx run-many --target=build,build:cjs,bundle --projects=$(echo $affected | jq -r '[.[].name] | join(",")')
 
-            - name: 
-
             - name: push
               if: ${{ env.affected != '[]' }}
               env:
