@@ -36,7 +36,7 @@ describe("accessPolicy", () => {
 			});
 
 			expect(userScope).toEqual({
-				numericIpMaskMin: BigInt(2130706433),
+				numericIpMaskMin: BigInt(2130706432),
 				numericIpMaskMax: BigInt(2130706687),
 			});
 		});
