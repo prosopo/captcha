@@ -143,7 +143,7 @@ jobs:
                 if [ -n "$package_files" ]; then
                     for file in $package_files; do
                         name=$(jq -r '.name' "$file")
-                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, gh: "unknown", npm: "unknown", tag: "unknown", version: "unknown"}]')
+                        affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, version: "unknown"}]')
                     done
                 else 
                     echo "No package.json files changed, no affected packages"
@@ -207,9 +207,8 @@ jobs:
                 git push
                 git push --tags
 
-            - name: publish
-              if: ${{ env.affected != '[]' }}
-              id: publish
+            - name: publish to npm
+              if: ${{ env.affected != '[]' }} && ${{ env.prerelease == 'false' }}
               run: |
                 # for each affected package
                 for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
@@ -220,27 +219,37 @@ jobs:
                     fi
 
                     echo "Publishing $pkg to npm"
-                    result_npm=0
-                    if [ "${{ env.prerelease }}" = "false" ]; then
-                      set +e
-                      npm publish -w "$pkg" --access public --registry https://registry.npmjs.org/
-                      result_npm=$?
-                      set -e
-                    else
-                      echo "Skipping npm publish for prerelease"
-                    fi
-                    echo
-
-                    echo "Publishing $pkg to dockerhub"
-                    result_dockerhub=0
+                    result=0
                     set +e
-                    npm publish:docker --if-present -w "$pkg"
-                    result_dockerhub=$?
+                    npm publish -w "$pkg" --access public --registry https://registry.npmjs.org/
+                    result=$?
                     set -e
                     echo
 
+                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson npm "$result" 'map(if .name == $pkg then . + {npm: $npm} else . end)')
+                done
+
+                echo "affected: $affected"
+                echo "affected=$affected" >> $GITHUB_ENV
+
+                if [ "$(echo "$affected" | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
+                  echo "Some packages failed to publish to npm"
+                  exit 1
+                fi
+            
+            - name: publish to gh
+              if: ${{ env.affected != '[]' }}
+              run: |
+                # for each affected package
+                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
+                    # skip the workspace root
+                    if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+                        echo "Skipping workspace root package"
+                        continue
+                    fi
+
                     echo "Publishing $pkg to gh"
-                    result_gh=0
+                    result=0
                     # make the package non-private so it can be published to gh
                     npm pkg --workspace $pkg delete private
                     set +e
@@ -249,23 +258,55 @@ jobs:
                     set -e
                     echo
 
-                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson npm "$result_npm" --argjson gh "$result_gh" 'map(if .name == $pkg then . + {npm: $npm, gh: $gh} else . end)')
+                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson gh "$result" 'map(if .name == $pkg then . + {gh: $gh} else . end)')
                 done
 
                 echo "affected: $affected"
                 echo "affected=$affected" >> $GITHUB_ENV
 
-                if [ "$prerelease" = "false" ]; then
-                  # expect publish to npm
-                  if [ "$(echo "$affected" | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
-                    echo "Some packages failed to publish to npm"
-                    exit 1
-                  fi
-                fi
-
                 # expect always publish to GitHub Packages
                 if [ "$(echo "$affected" | jq '[.[] | select(.gh != 0)] | length')" -gt 0 ]; then
                     echo "Some packages failed to publish to GitHub Packages"
+                    exit 1
+                fi
+
+            
+            - name: publish to dockerhub
+              if: ${{ env.affected != '[]' }}
+              run: |
+                # for each affected package
+                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
+                    # skip the workspace root
+                    if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+                        echo "Skipping workspace root package"
+                        continue
+                    fi
+
+                    echo "Publishing $pkg to dockerhub"
+                    result=0
+                    # if the package has a publish:docker script, run it
+                    # else it isn't a docker package
+                    if cat $(npx -w "$pkg" node -p "process.cwd()+'/package.json'") | jq -r '.scripts["publish:docker"] or error("missing script")'; then
+                        echo "Package $pkg has a publish:docker script, publishing to Docker Hub"
+                    else
+                        echo "Package $pkg does not have a publish:docker script, skipping"
+                        continue
+                    fi
+                    set +e
+                    npm publish:docker -w "$pkg"
+                    result=$?
+                    set -e
+                    echo
+
+                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson dockerhub "$result" 'map(if .name == $pkg then . + {dockerhub: $dockerhub} else . end)')
+                done
+
+                echo "affected: $affected"
+                echo "affected=$affected" >> $GITHUB_ENV
+
+                # expect always publish to Docker Hub
+                if [ "$(echo "$affected" | jq '[.[] | select(.dockerhub != 0)] | length')" -gt 0 ]; then
+                    echo "Some packages failed to publish to Docker Hub"
                     exit 1
                 fi
 
@@ -279,12 +320,14 @@ jobs:
                   curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rotating_light: Release workflow *failed* for branch \`${GITHUB_REF##*/}\` <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>\"}" ${{ secrets.SLACKBOT_DEVOPS }}
                 fi
 
-                npm_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm == 0) | .name  + "@" + .version')
-                gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh == 0) | .name  + "@" + .version')
-                tag_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag == 0) | .name  + "@" + .version')
-                npm_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != 0) | .name  + "@" + .version')
-                gh_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != 0) | .name  + "@" + .version')
-                tag_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != 0) | .name  + "@" + .version')
+                npm_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != null) | select(.npm == 0) | .name  + "@" + .version')
+                gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != null) | select(.gh == 0) | .name  + "@" + .version')
+                tag_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != null) | select(.tag == 0) | .name  + "@" + .version')
+                dockerhub_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.dockerhub != null) | select(.dockerhub == 0) | .name  + "@" + .version')
+                npm_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != null) | select(.npm != 0) | .name  + "@" + .version')
+                gh_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != null) | select(.gh != 0) | .name  + "@" + .version')
+                tag_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != null) | select(.tag != 0) | .name  + "@" + .version')
+                dockerhub_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.dockerhub != null) | select(.dockerhub != 0) | .name  + "@" + .version')
 
                 if [ -n "$tag_success" ]; then
                   echo "Successfully tagged packages:"
@@ -326,4 +369,18 @@ jobs:
                   echo "$gh_failure"
                   echo ""
                   curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to gh: \`\`\`$gh_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
+                if [ -n "$dockerhub_success" ]; then
+                  echo "Successfully published to Docker Hub:"
+                  echo "$dockerhub_success"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to Docker Hub: \`\`\`$dockerhub_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+                fi
+
+                if [ -n "$dockerhub_failure" ]; then
+                  echo "Failed to publish to Docker Hub:"
+                  echo "$dockerhub_failure"
+                  echo ""
+                  curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to Docker Hub: \`\`\`$dockerhub_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
                 fi
