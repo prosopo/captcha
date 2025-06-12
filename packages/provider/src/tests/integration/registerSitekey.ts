@@ -31,8 +31,8 @@ export const registerSiteKey = async (
 				authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
 			},
 			redis: {
-				url: process.env.REDIS_CONNECTION_URL || "",
-				password: process.env.REDIS_CONNECTION_PASSWORD || "",
+				url: process.env.REDIS_CONNECTION_URL || "redis://localhost:6379",
+				password: process.env.REDIS_CONNECTION_PASSWORD || "root",
 			},
 		});
 		await db.connect();
