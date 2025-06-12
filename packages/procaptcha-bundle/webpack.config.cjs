@@ -47,8 +47,8 @@ const bundleWebpackConfig = {
 	},
 	externals: {
 		...webpackConfig.externals,
-		'node:crypto': 'commonjs crypto',
-		'node:util': 'commonjs util',
+		"node:crypto": "commonjs crypto",
+		"node:util": "commonjs util",
 	},
 };
 console.log(bundleWebpackConfig);
