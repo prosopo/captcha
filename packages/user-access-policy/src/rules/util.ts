@@ -41,12 +41,3 @@ export const createIpMaskRule = (ipMaskString: string) => {
 		numericIpMaskMax: maxIpAddress.bigInt(),
 	};
 };
-
-/**
- * Takes an ipMaskIntegerMin and returns the corresponding mask string.
- * @param ipMaskIntegerMin
- */
-export const getIpMaskString = (ipMaskIntegerMin: bigint) => {
-	const ip = Address4.fromBigInt(ipMaskIntegerMin);
-	return ip.address.replace(/0/g, "*");
-};
