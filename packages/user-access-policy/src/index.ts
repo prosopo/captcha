@@ -36,7 +36,7 @@ import {
 } from "#policy/api/accessRuleApiRoutes.js";
 import { deleteAllRulesEndpointSchema } from "#policy/api/deleteAllRulesEndpoint.js";
 import {
-	DeleteRulesEndpointSchemaInput,
+	type DeleteRulesEndpointSchemaInput,
 	type DeleteRulesEndpointSchemaOutput,
 	deleteRulesEndpointSchema,
 } from "#policy/api/deleteRulesEndpoint.js";

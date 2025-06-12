@@ -49,8 +49,8 @@ import {
 	accessRuleApiPaths,
 	deleteRulesEndpointSchema,
 } from "@prosopo/user-access-policy";
-import HttpClientBase from "./HttpClientBase.js";
 import { DeleteRulesEndpointSchema } from "../../../user-access-policy/src/api/deleteRulesEndpoint.js";
+import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi
 	extends HttpClientBase
@@ -332,16 +332,12 @@ export default class ProviderApi
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
-		return this.post(
-			accessRuleApiPaths.DELETE_MANY,
-			rules,
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
+		return this.post(accessRuleApiPaths.DELETE_MANY, rules, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
 			},
-		);
+		});
 	}
 }
