@@ -207,6 +207,27 @@ jobs:
                 git push
                 git push --tags
 
+            - name: set repo link
+              run: |
+                # set the repository field to link the package with the repo
+
+                # get the workspace dir
+                workspace_dir=$(pwd)
+                echo "Workspace directory: $workspace_dir"
+
+                # for each affected package
+                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
+                    echo "Setting repository field for $pkg"
+                    pkg_dir="$(npx -w "$pkg" -- node -p 'process.cwd()')"
+                    echo "Package directory: $pkg_dir"
+                    rel_dir=$(realpath --relative-to="$workspace_dir" "$pkg_dir")
+                    echo "Relative directory: $rel_dir"
+                    # set the repository field to the relative path
+                    npm pkg --workspace $pkg set repository.directory="$rel_dir"
+                    npm pkg --workspace $pkg set repository.url="https://github.com/${{ github.repository }}.git"
+                    npm pkg --workspace $pkg set repository.type="git"
+                done
+
             - name: publish to npm
               if: ${{ env.affected != '[]' }} && ${{ env.prerelease == 'false' }}
               run: |
