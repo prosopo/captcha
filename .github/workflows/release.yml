@@ -33,6 +33,9 @@ jobs:
                     VARS_CONTEXT: ${{ toJson(vars) }}
                     SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
+            - name: Set NX_PARALLEL environment variable
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
             - name: Get token for gh app token
               id: app_token
               uses: peter-murray/workflow-application-token-action@v3
