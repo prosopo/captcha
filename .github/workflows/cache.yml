@@ -40,15 +40,12 @@ jobs:
             # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
             - run: npm cache clean --force
 
+            - uses: prosopo/captcha/.github/actions/npm@gha
+              with:
+                npm_ci_args: '--include=dev'
+
             # clean the nx cache
             - run: npx nx reset
-
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: 'package.json'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
-
-            - run: npm ci
 
             # install cypress so we don't have to do that every time
             - run: npx cypress install
