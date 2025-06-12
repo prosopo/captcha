@@ -144,7 +144,7 @@ services:
     redis-stack:
         container_name: redis-stack
         # unlike "redis/redis-stack-server" this image includes Insights
-        image: redis/redis-stack:latest
+        image: redis/redis-stack:${REDIS_IMAGE}
         env_file:
             - ../.env.1.${NODE_ENV}
         volumes:
