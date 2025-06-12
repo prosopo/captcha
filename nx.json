@@ -3,12 +3,13 @@
 	"targetDefaults": {
 		"build": {
 			"dependsOn": [
+				"^lint",
+				"^typecheck",
 				"^build",
 				"^build:cjs",
 				"^bundle",
-				"typecheck",
-				"^typecheck",
-				"lint"
+				"lint",
+				"typecheck"
 			]
 		},
 		"bundle": {
@@ -20,8 +21,9 @@
 		"test": {
 			"dependsOn": ["build", "build:cjs", "bundle"]
 		},
-		"typecheck": {
-			"dependsOn": ["^build"]
+		"typecheck": {},
+		"*": {
+			"cache": true
 		}
 	},
 	"defaultBase": "main",
@@ -34,16 +36,16 @@
 			"automaticFromRef": true
 		}
 	},
-	"parallel": 4,
+	"parallel": 8,
 	"pluginsConfig": {
 		"@nx/js": {
 			"projectsAffectedByDependencyUpdates": "auto"
-		},
-		"plugin": "@nx/js/typescript",
-		"options": {
-			"typecheck": {
-				"targetName": "typecheck"
-			}
+		}
+	},
+	"plugin": "@nx/js/typescript",
+	"options": {
+		"typecheck": {
+			"targetName": "typecheck"
 		}
 	},
 	"neverConnectToCloud": true,
