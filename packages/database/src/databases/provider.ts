@@ -218,7 +218,9 @@ export class ProviderDatabase
 			url: this.options.redis?.url,
 			password: this.options.redis?.password,
 		})
-			.on("error", (error) => this.logger.error("Redis Client Error", error))
+			.on("error", (error) => {
+				this.logger.error("Redis Client Error", error);
+			})
 			.connect()) as RedisClientType;
 	}
 
