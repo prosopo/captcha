@@ -218,7 +218,7 @@ jobs:
                 # for each affected package
                 for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
                     echo "Setting repository field for $pkg"
-                    pkg_dir="$(npx -w $pkg -- node -p 'process.cwd()')"
+                    pkg_dir="$(npx -w "$pkg" -- node -p 'process.cwd()')"
                     echo "Package directory: $pkg_dir"
                     rel_dir=$(realpath --relative-to="$workspace_dir" "$pkg_dir")
                     echo "Relative directory: $rel_dir"
