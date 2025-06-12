@@ -47,7 +47,6 @@ import {
 } from "#policy/api/insertRulesEndpoint.js";
 import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
 import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
-import { createIpMaskRule } from "./rules/util.js";
 import { userScopeInputSchema } from "./accessPolicy.js";
 
 export const createApiRuleRoutesProvider = (
@@ -85,7 +84,4 @@ export {
 	deleteRulesEndpointSchema,
 	getExpressApiRuleRateLimits,
 	userScopeInputSchema,
-
-	// util
-	createIpMaskRule,
 };
