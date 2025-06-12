@@ -41,7 +41,7 @@ jobs:
                 SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
             - name: Set NX_PARALLEL environment variable
-                run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
             - uses: actions/checkout@v4
               with:
