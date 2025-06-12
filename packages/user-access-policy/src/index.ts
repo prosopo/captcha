@@ -36,6 +36,7 @@ import {
 } from "#policy/api/accessRuleApiRoutes.js";
 import { deleteAllRulesEndpointSchema } from "#policy/api/deleteAllRulesEndpoint.js";
 import {
+	DeleteRulesEndpointSchemaInput,
 	type DeleteRulesEndpointSchemaOutput,
 	deleteRulesEndpointSchema,
 } from "#policy/api/deleteRulesEndpoint.js";
@@ -47,6 +48,7 @@ import {
 import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
 import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
 import { createIpMaskRule } from "./rules/util.js";
+import { userScopeInputSchema } from "./accessPolicy.js";
 
 export const createApiRuleRoutesProvider = (
 	rulesStorage: AccessRulesStorage,
@@ -61,6 +63,7 @@ export {
 	type ResolveAccessPolicy,
 	type PolicyFilter,
 	type DeleteRulesEndpointSchemaOutput,
+	type DeleteRulesEndpointSchemaInput,
 	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
 	type AccessRule,
@@ -81,6 +84,8 @@ export {
 	deleteAllRulesEndpointSchema,
 	deleteRulesEndpointSchema,
 	getExpressApiRuleRateLimits,
+	userScopeInputSchema,
+
 	// util
 	createIpMaskRule,
 };

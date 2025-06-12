@@ -27,6 +27,10 @@ export type DeleteRulesEndpointSchemaOutput = z.output<
 	typeof deleteRulesEndpointSchema
 >;
 
+export type DeleteRulesEndpointSchemaInput = z.input<
+	typeof deleteRulesEndpointSchema
+>;
+
 export type DeleteRulesEndpointSchema = typeof deleteRulesEndpointSchema;
 
 export class DeleteRulesEndpoint
@@ -35,13 +39,14 @@ export class DeleteRulesEndpoint
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
 
 	async processRequest(
-		args: z.infer<DeleteRulesEndpointSchema>,
+		args: DeleteRulesEndpointSchemaInput,
 	): Promise<ApiEndpointResponse> {
 		const allRuleIds = [];
 
 		for (const accessRuleFilter of args) {
+			const parsedRules = policyFilterSchema.parse(accessRuleFilter);
 			const foundRuleIds =
-				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
+				await this.accessRulesStorage.findRuleIds(parsedRules);
 
 			allRuleIds.push(...foundRuleIds);
 		}

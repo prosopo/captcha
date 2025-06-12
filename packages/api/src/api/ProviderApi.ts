@@ -44,12 +44,13 @@ import {
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import {
-	type DeleteRulesEndpointSchemaOutput,
+	type DeleteRulesEndpointSchemaInput,
 	type InsertManyRulesEndpointInputSchema,
 	accessRuleApiPaths,
 	deleteRulesEndpointSchema,
 } from "@prosopo/user-access-policy";
 import HttpClientBase from "./HttpClientBase.js";
+import { DeleteRulesEndpointSchema } from "../../../user-access-policy/src/api/deleteRulesEndpoint.js";
 
 export default class ProviderApi
 	extends HttpClientBase
@@ -327,13 +328,13 @@ export default class ProviderApi
 	}
 
 	public deleteUserAccessPolicies(
-		rules: DeleteRulesEndpointSchemaOutput,
+		rules: DeleteRulesEndpointSchemaInput,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
 		return this.post(
 			accessRuleApiPaths.DELETE_MANY,
-			deleteRulesEndpointSchema.parse(rules),
+			rules,
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
