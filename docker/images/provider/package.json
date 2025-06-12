@@ -1,9 +1,15 @@
 {
-	"name": "@prosopo/provider-container",
-	"type": "module",
-	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+	"name": "@prosopo/provider-docker",
+	"version": "2.6.7",
+	"scripts": {
+		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
+		"build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
+		"clean": "del-cli dist",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"publish:docker": "docker push $(npm run --silent docker-tag)"
 	},
-	"version": "2.5.5"
+	"dependencies": {
+		"@prosopo/locale": "2.6.0",
+		"@prosopo/cli": "2.6.12"
+	}
 }
