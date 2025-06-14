@@ -61,7 +61,6 @@ To set up the environment for testing, run the following commands:
 
 ```
 cp demos/client-example-server/env.development demos/client-example-server/.env.test
-cp demos/client-example/env.development demos/client-example/.env.test
 cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
 cp dev/scripts/env.test .env.test
 cp dev/scripts/env.test dev/scripts/.env.test
