@@ -15,6 +15,7 @@
 import type { Server } from "node:net";
 import {
 	apiExpressRouterFactory,
+	authMiddleware,
 	createApiExpressDefaultEndpointAdapter,
 } from "@prosopo/api-express-router";
 import { loadEnv } from "@prosopo/dotenv";
@@ -34,11 +35,7 @@ import {
 	robotsMiddleware,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
-import {
-	authMiddleware,
-	blockMiddleware,
-	ja4Middleware,
-} from "@prosopo/provider";
+import { blockMiddleware, ja4Middleware } from "@prosopo/provider";
 import { ClientApiPaths, type CombinedApiPaths } from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
@@ -113,11 +110,17 @@ async function startApi(
 
 	// Admin routes
 	env.logger.info("Enabling admin auth middleware");
-	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
+	apiApp.use(
+		"/v1/prosopo/provider/admin",
+		authMiddleware(env.pair, env.authAccount),
+	);
 
 	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 	for (const userAccessRuleRoute of userAccessRuleRoutes) {
-		apiApp.use(userAccessRuleRoute.path, authMiddleware(env));
+		apiApp.use(
+			userAccessRuleRoute.path,
+			authMiddleware(env.pair, env.authAccount),
+		);
 	}
 
 	apiApp.use(

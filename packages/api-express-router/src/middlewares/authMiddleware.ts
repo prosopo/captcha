@@ -19,7 +19,7 @@ import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = (
 	pair: KeyringPair | undefined,
-	authAccount: KeyringPair | undefined,
+	authAccount?: KeyringPair | undefined,
 ) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
