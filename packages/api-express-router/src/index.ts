@@ -34,3 +34,4 @@ export {
 
 export * from "./errorHandler.js";
 export * from "./middlewares/authMiddleware.js";
+export * from "./middlewares/requestLoggerMiddleware.js";
