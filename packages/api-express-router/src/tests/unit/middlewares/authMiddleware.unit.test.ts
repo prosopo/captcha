@@ -1,8 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, isHex } from "@polkadot/util";
-import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { NextFunction, Request, Response } from "express";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +11,13 @@ import type { NextFunction, Request, Response } from "express";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { hexToU8a, isHex } from "@polkadot/util";
+import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
-import { authMiddleware } from "../../../api/authMiddleware.js";
-import type { Tasks } from "../../../tasks/tasks.js";
+import { authMiddleware } from "../../../middlewares/authMiddleware.js";
 
 vi.mock("@polkadot/util", () => ({
 	hexToU8a: vi.fn(),
@@ -30,7 +29,6 @@ const mockLogger = {
 	error: vi.fn(),
 	warn: vi.fn(),
 } as unknown as Logger;
-const mockTasks = {} as Tasks;
 const mockPair = {
 	publicKey: "mockPublicKey",
 	verify: vi.fn(),
@@ -39,7 +37,7 @@ const mockEnv = {
 	pair: mockPair,
 	authAccount: mockPair,
 	logger: mockLogger,
-} as ProviderEnvironment;
+};
 
 describe("authMiddleware", () => {
 	it("should call next() if signature is valid", async () => {
@@ -64,7 +62,7 @@ describe("authMiddleware", () => {
 		vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
 		vi.mocked(mockPair.verify).mockReturnValue(true);
 
-		const middleware = authMiddleware(mockEnv);
+		const middleware = authMiddleware(mockEnv.pair, mockEnv.authAccount);
 		await middleware(mockReq, mockRes, mockNext);
 
 		expect(mockNext).toHaveBeenCalled();
@@ -93,7 +91,7 @@ describe("authMiddleware", () => {
 		vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
 		vi.mocked(mockPair.verify).mockReturnValue(false);
 
-		const middleware = authMiddleware(mockEnv);
+		const middleware = authMiddleware(mockEnv.pair, mockEnv.authAccount);
 		await middleware(mockReq, mockRes, mockNext);
 
 		expect(mockNext).not.toHaveBeenCalled();
@@ -122,11 +120,7 @@ describe("authMiddleware", () => {
 
 		const mockNext = vi.fn() as unknown as NextFunction;
 
-		const invalidEnv = {
-			pair: null,
-		} as unknown as ProviderEnvironment;
-
-		const middleware = authMiddleware(invalidEnv);
+		const middleware = authMiddleware(undefined, undefined);
 		await middleware(mockReq, mockRes, mockNext);
 
 		expect(mockNext).not.toHaveBeenCalled();
@@ -135,32 +129,5 @@ describe("authMiddleware", () => {
 			error: "Unauthorized",
 			message: expect.any(ProsopoEnvError),
 		});
-	});
-
-	it("should 404 if url does not contain /v1/prosopo", async () => {
-		const mockReq = {
-			url: "/favicon.ico",
-			originalUrl: "/favicon.ico",
-			headers: {
-				signature: "0x1234",
-				timestamp: new Date().getTime(),
-			},
-			logger: mockLogger,
-		} as unknown as Request;
-
-		const mockRes = {
-			status: vi.fn().mockReturnThis(),
-			statusCode: 404,
-			json: vi.fn(),
-		} as unknown as Response;
-
-		const mockNext = vi.fn(() => {
-			console.log("mock next function");
-		}) as unknown as NextFunction;
-
-		const middleware = authMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
-
-		expect(mockRes.statusCode).toBe(404);
 	});
 });

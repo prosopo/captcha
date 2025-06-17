@@ -11,23 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import { ApiPrefix } from "@prosopo/types";
-import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
-export const authMiddleware = (env: ProviderEnvironment) => {
+export const authMiddleware = (
+	pair: KeyringPair | undefined,
+	authAccount: KeyringPair | undefined,
+) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const { signature, timestamp } = extractHeaders(req);
 
 			let error: ProsopoApiError | undefined;
 
-			if (env.authAccount) {
+			if (authAccount) {
 				try {
-					verifySignature(signature, timestamp, env.authAccount);
+					verifySignature(signature, timestamp, authAccount);
 					next();
 					return;
 				} catch (e: unknown) {
@@ -35,14 +37,14 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 					req.logger.warn({
 						message: (e as ProsopoApiError).message,
 						code: (e as ProsopoApiError).code,
-						account: env.authAccount.address,
+						account: authAccount.address,
 					});
 					error = e as ProsopoApiError;
 				}
 			}
 
-			if (env.pair) {
-				verifySignature(signature, timestamp, env.pair);
+			if (pair) {
+				verifySignature(signature, timestamp, pair);
 				next();
 				return;
 			}
