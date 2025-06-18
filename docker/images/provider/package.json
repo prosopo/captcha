@@ -1,9 +1,9 @@
 {
 	"name": "@prosopo/provider-docker",
-	"version": "2.6.7",
+	"version": "staging",
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
-		"build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
+		"build": "npm run clean && cp -r src dist && docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
 		"clean": "del-cli dist",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
