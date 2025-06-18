@@ -93,9 +93,10 @@ export class InsertRulesEndpoint
 
 	protected async createRules(
 		args: InsertManyRulesEndpointOutputSchema,
-	): Promise<void> {
+	): Promise<string[]> {
 		const policyScope = args.policyScope || {};
 
+		const createPromises = [];
 		for (const userScope of args.userScopes) {
 			const rule = {
 				...args.accessPolicy,
@@ -103,10 +104,13 @@ export class InsertRulesEndpoint
 				...userScope,
 			};
 
-			await this.accessRulesWriter.insertRule(
-				rule,
-				args.expirationTimestampSeconds,
+			createPromises.push(
+				this.accessRulesWriter.insertRule(
+					rule,
+					args.expirationTimestampSeconds,
+				),
 			);
 		}
+		return Promise.all(createPromises);
 	}
 }
