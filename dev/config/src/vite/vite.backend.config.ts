@@ -31,10 +31,10 @@ export default async function (
 	packageVersion: string,
 	bundleName: string,
 	packageDir: string,
-	entry: string,
+	entry: string | string[],
 	command?: string,
 	mode?: string,
-	optionalBaseDir = "../..",
+	outputDir?: string,
 ): Promise<UserConfig> {
 	const isProduction = mode === "production";
 
@@ -42,8 +42,10 @@ export default async function (
 	const { dependencies: deps, optionalPeerDependencies } =
 		await getDependencies(packageName, true);
 
-	// Output directory is relative to directory of the package
-	const outDir = path.resolve(packageDir, "dist/bundle");
+	// Output directory is custom or relative to directory of the package
+	const outDir = outputDir
+		? path.resolve(outputDir)
+		: path.resolve(packageDir, "dist/bundle");
 
 	// Get rid of any dependencies we don't want to bundle
 	const { external, internal } = filterDependencies(deps, [
@@ -79,7 +81,14 @@ export default async function (
 
 	logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
 
-	const entryAbsolute = path.resolve(packageDir, entry);
+	let entriesAbsolute: string[];
+	if (typeof entry === "string") {
+		entriesAbsolute = [path.resolve(packageDir, entry)];
+		logger.info(`Entry point: ${entriesAbsolute}`);
+	} else {
+		entriesAbsolute = entry.map((e) => path.resolve(packageDir, e));
+		logger.info(`Entry points: ${entriesAbsolute}`);
+	}
 
 	// drop console logs if in production mode
 	const drop: Drop[] | undefined =
@@ -111,7 +120,7 @@ export default async function (
 			ssr: true,
 			target: "node18",
 			lib: {
-				entry: entryAbsolute,
+				entry: entriesAbsolute,
 				name: bundleName,
 				fileName: `${bundleName}.[name].bundle.js`,
 				formats: ["es"],
