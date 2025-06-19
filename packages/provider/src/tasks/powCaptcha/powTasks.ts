@@ -13,11 +13,7 @@
 // limitations under the License.
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import {
-	ProsopoApiError,
-	ProsopoEnvError,
-	getLoggerDefault,
-} from "@prosopo/common";
+import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
 import {
 	ApiParams,
@@ -27,12 +23,15 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import { at, verifyRecency } from "@prosopo/util";
-import { getIPAddress, getIPAddressFromBigInt } from "../../util.js";
+import {
+	at,
+	getIPAddress,
+	getIPAddressFromBigInt,
+	verifyRecency,
+} from "@prosopo/util";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";

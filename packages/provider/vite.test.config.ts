@@ -17,4 +17,4 @@ import { loadEnv } from "@prosopo/dotenv";
 
 loadEnv();
 
-export default ViteTestConfig;
+export default ViteTestConfig();

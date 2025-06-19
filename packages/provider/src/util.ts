@@ -74,18 +74,3 @@ export async function checkIfTaskIsRunning(
 	}
 	return false;
 }
-
-export const getIPAddress = (ipAddressString: string): IPAddress => {
-	try {
-		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
-			return new Address4(ipAddressString);
-		}
-		return new Address6(ipAddressString);
-	} catch (e) {
-		throw new ProsopoEnvError("API.INVALID_IP");
-	}
-};
-
-export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
-	return Address4.fromBigInt(ipAddressBigInt);
-};

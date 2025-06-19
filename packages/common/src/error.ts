@@ -82,6 +82,8 @@ export abstract class ProsopoBaseError<
 		if (logLevel === "debug") {
 			logger.debug(this.stack);
 		}
+		console.log("logging error");
+		console.log("context", this.context?.error);
 		logger[logLevel](errorMessage);
 	}
 }
