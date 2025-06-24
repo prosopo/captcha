@@ -19,6 +19,7 @@ import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import { DEV_PHRASE, generateMnemonic, getPair } from "@prosopo/keyring";
 import {
+	CaptchaType,
 	ClientSettingsSchema,
 	type IProviderAccount,
 	type ISite,
@@ -64,31 +65,31 @@ function getDefaultProvider(): IProviderAccount {
 export function getDefaultSiteKeys(): ISite[] {
 	return [
 		{
-			secret: `${DEV_PHRASE}//image`,
+			secret: `${DEV_PHRASE}//${CaptchaType.image}`,
 			address: "5DWuxC3covEaAsPcMt1zcpibGLsHAqMcfAzi2fzuWtQupFgq",
 			settings: ClientSettingsSchema.parse({
-				captchaType: "image",
+				captchaType: CaptchaType.image,
 			}),
 		},
 		{
-			secret: `${DEV_PHRASE}//pow`,
+			secret: `${DEV_PHRASE}//${CaptchaType.pow}`,
 			address: "5GWr5T3bCvBZMG9H9CDM5ynYS1zo7vcwS24Dg4DismRmsD8P",
 			settings: ClientSettingsSchema.parse({
-				captchaType: "pow",
+				captchaType: CaptchaType.pow,
 			}),
 		},
 		{
-			secret: `${DEV_PHRASE}//frictionless`,
+			secret: `${DEV_PHRASE}//${CaptchaType.frictionless}`,
 			address: "5Do7mgno9VQCDPn6abR1UgB9jUjaEmqVQb5paB5fHNabvRDE",
 			settings: ClientSettingsSchema.parse({
-				captchaType: "frictionless",
+				captchaType: CaptchaType.frictionless,
 			}),
 		},
 		{
-			secret: `${DEV_PHRASE}//invisible`,
+			secret: `${DEV_PHRASE}//${CaptchaType.invisible}`,
 			address: "5FNFBC97JQoJu7LBapycXbT66N9xzQH2tyFv1yNvBxqa8tQR",
 			settings: ClientSettingsSchema.parse({
-				captchaType: "invisible",
+				captchaType: CaptchaType.invisible,
 			}),
 		},
 	];
