@@ -60,7 +60,7 @@ export class ExtensionWeb2 extends Extension {
 			const signature = account.keypair.sign(payload.data);
 			return {
 				id: 1, // the id of the request to sign. This should be incremented each time and adjust the signature, but we're hacking around this. Hence the signature will always be the same given the same payload.
-				signature: `0x${u8aToHex(signature)}`,
+				signature: u8aToHex(signature) as `0x${string}`,
 			};
 		};
 
