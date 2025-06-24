@@ -17,8 +17,9 @@
 //
 //
 
-import { expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
+// biome-ignore lint/suspicious/noExportsInTest: <explanation>
 export const TEST_DATA = [
 	[
 		"givKPH4F/eDcIEUZcws1+BIWqcnx35Ul4qkA7Ilxj1c=",
@@ -4630,4 +4631,8 @@ export const TEST_DATA = [
 	],
 ];
 
-expect(true).to.be.true;
+describe("fake test", () => {
+	it("should pass", () => {
+		expect(true).to.be.true;
+	});
+});
