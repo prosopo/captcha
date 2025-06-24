@@ -64,12 +64,14 @@ const JSONReporter = (
 	},
 ) => {
 	// https://stackoverflow.com/a/65886224
-	const writer = process?.stdout
-		? process.stdout.write.bind(process.stdout)
-		: console.info;
-	const writerError = process?.stderr
-		? process.stderr.write.bind(process.stderr)
-		: console.error;
+	const writer =
+		typeof process !== "undefined" && process?.stdout
+			? process.stdout.write.bind(process.stdout)
+			: console.info;
+	const writerError =
+		typeof process !== "undefined" && process?.stderr
+			? process.stderr.write.bind(process.stderr)
+			: console.error;
 	if (logObject.type === LogLevel.enum.error) {
 		if (logObject.args.length > 0 && logObject.args[0] instanceof Error) {
 			const error = logObject.args[0] as Error;
