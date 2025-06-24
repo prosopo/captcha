@@ -40,6 +40,9 @@ jobs:
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
+      - name: Set NX_PARALLEL environment variable
+        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
       - uses: actions/checkout@v4
         with:
             submodules: "recursive"
@@ -47,10 +50,6 @@ jobs:
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
           npm_ci_args: '--include=dev'
-
-      # build the packages required by vite build commands first
-      - run: npm run -w @prosopo/config build
-      - run: npm run -w @prosopo/dotenv build
 
       # build all packages in workspace
       - run: npm run build:all
@@ -94,6 +93,8 @@ jobs:
 
 
       - name: Start services and run tests
+        env:
+          NX_PARALLEL: "1"
         run: |
           npx concurrently \
           "NODE_ENV=test npm run start:provider" \
