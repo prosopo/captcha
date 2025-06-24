@@ -18,13 +18,11 @@ import {
 	type Captcha,
 	type CaptchaType,
 	type IUserSettings,
-	type RegisterSitekeyBodyTypeOutput,
 	Tier,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { u8aToHex } from "@polkadot/util";
-import type { ApiEndpointResponse } from "@prosopo/api-route";
 import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
@@ -47,6 +45,7 @@ declare global {
 			elementExists(element: string): Chainable<Subject>;
 
 			registerSiteKey(
+				baseCaptchaType: CaptchaType,
 				captchaType?: CaptchaType,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
@@ -238,7 +237,23 @@ function elementExists(selector: string) {
 		.then(($window) => $window.document.querySelector(selector));
 }
 
-function registerSiteKey(captchaType: CaptchaType) {
+function registerSiteKey(
+	baseCaptchaType: CaptchaType,
+	captchaType?: CaptchaType,
+) {
+	const siteKey = Cypress.env(
+		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
+	);
+	if (!siteKey) {
+		throw new Error(
+			`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()} is not set in the environment variables.`,
+		);
+	}
+
+	cy.task(
+		"log",
+		`Registering site key  ${siteKey} for captcha type: ${captchaType || baseCaptchaType}`,
+	);
 	const timestamp = new Date().getTime();
 
 	return cy.then(() => {
@@ -247,7 +262,7 @@ function registerSiteKey(captchaType: CaptchaType) {
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
 		const settings: IUserSettings = {
-			captchaType: captchaType,
+			captchaType: captchaType || baseCaptchaType,
 			domains: ["0.0.0.0", "localhost", "*"],
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
@@ -264,7 +279,7 @@ function registerSiteKey(captchaType: CaptchaType) {
 				timestamp: timestamp.toString(),
 			},
 			body: {
-				siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+				siteKey: siteKey,
 				tier: Tier.Free,
 				settings,
 			},

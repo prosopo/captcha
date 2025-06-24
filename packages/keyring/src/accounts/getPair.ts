@@ -35,15 +35,12 @@ export function getPair(
 	}
 	if (secret && typeof secret === "string") {
 		if (mnemonicValidate(secret)) {
-			console.log("Adding from mnemonic:", secret);
 			return keyring.addFromMnemonic(secret);
 		}
 		if (isHex(secret)) {
-			console.log("Adding from seed", secret);
 			return keyring.addFromSeed(hexToU8a(secret));
 		}
-		if (secret.startsWith("//")) {
-			console.log("Adding from URI:", secret);
+		if (secret.includes("//")) {
 			return keyring.addFromUri(secret);
 		}
 		try {

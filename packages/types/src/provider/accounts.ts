@@ -28,6 +28,7 @@ export interface IProviderAccount extends IUserAccount {
 
 export interface ISite {
 	secret: string;
+	address: string;
 	settings: IUserSettings;
 	pair?: KeyringPair;
 }

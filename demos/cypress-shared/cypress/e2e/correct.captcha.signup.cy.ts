@@ -13,27 +13,17 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import "@cypress/xpath";
-import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { getPair } from "@prosopo/keyring";
-import {
-	AdminApiPaths,
-	type Captcha,
-	CaptchaType,
-	type IUserSettings,
-	type RegisterSitekeyBodyTypeOutput,
-	Tier,
-} from "@prosopo/types";
+import type { Captcha, CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-let captchaType: CaptchaType;
+const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
-		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 		// Call registerSiteKey and handle response here
-		return cy.registerSiteKey(captchaType).then((response) => {
+		return cy.registerSiteKey(baseCaptchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
 			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
@@ -72,7 +62,7 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		cy.registerSiteKey(CaptchaType.image);
+		cy.registerSiteKey(baseCaptchaType);
 	});
 
 	it("Selecting the correct images passes the captcha and signs up the user", () => {

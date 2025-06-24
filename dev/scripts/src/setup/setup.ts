@@ -17,7 +17,7 @@ import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
-import { generateMnemonic, getPair } from "@prosopo/keyring";
+import { DEV_PHRASE, generateMnemonic, getPair } from "@prosopo/keyring";
 import {
 	ClientSettingsSchema,
 	type IProviderAccount,
@@ -26,8 +26,8 @@ import {
 import { get } from "@prosopo/util";
 import fse from "fs-extra";
 import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
-import { registerSiteKey } from "./dapp.js";
 import { setupProvider } from "./provider.js";
+import { registerSiteKey } from "./site.js";
 
 const logger = getLogger(LogLevel.enum.info, "setup");
 const __dirname = path.resolve();
@@ -60,35 +60,35 @@ function getDefaultProvider(): IProviderAccount {
 		captchaDatasetId: "",
 	};
 }
-//sr25519 keys
-//Alice 	5FNbd8gUaaELCYEokaSjoGix7gemMDw8hYKsqqiuShbEwzyJ
-//Bob 		5DYppMzkmbFRzby1De3e1JarZ9E7Zf7aTBSawMboVuYGXPLd
-//Charlie 	5FK6iHMmHWnRBupU1p36f5yE5NmqrgCVsc1xAhZpuc5fHasz
-//Eve 		5DTfajcJzAjKfpw87tBwELRs13xAEzJ9mykRH6ggaaMiiW1e
-function getDefaultSiteKeys(): ISite[] {
+//sr25519 dev site keys
+export function getDefaultSiteKeys(): ISite[] {
 	return [
 		{
-			secret: "//Alice",
+			secret: `${DEV_PHRASE}//image`,
+			address: "5DWuxC3covEaAsPcMt1zcpibGLsHAqMcfAzi2fzuWtQupFgq",
 			settings: ClientSettingsSchema.parse({
-				captchaType: "frictionless",
+				captchaType: "image",
 			}),
 		},
 		{
-			secret: "//Bob",
+			secret: `${DEV_PHRASE}//pow`,
+			address: "5GWr5T3bCvBZMG9H9CDM5ynYS1zo7vcwS24Dg4DismRmsD8P",
 			settings: ClientSettingsSchema.parse({
 				captchaType: "pow",
 			}),
 		},
 		{
-			secret: "//Charlie",
+			secret: `${DEV_PHRASE}//frictionless`,
+			address: "5Do7mgno9VQCDPn6abR1UgB9jUjaEmqVQb5paB5fHNabvRDE",
 			settings: ClientSettingsSchema.parse({
-				captchaType: "invisible",
+				captchaType: "frictionless",
 			}),
 		},
 		{
-			secret: "//Eve",
+			secret: `${DEV_PHRASE}//invisible`,
+			address: "5FNFBC97JQoJu7LBapycXbT66N9xzQH2tyFv1yNvBxqa8tQR",
 			settings: ClientSettingsSchema.parse({
-				captchaType: "image",
+				captchaType: "invisible",
 			}),
 		},
 	];
