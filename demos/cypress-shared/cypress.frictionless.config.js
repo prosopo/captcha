@@ -24,8 +24,6 @@ const allExternal = [
 	...builtinModules.map((m) => `node:${m}`),
 ];
 
-console.log(process.env);
-
 export default defineConfig({
 	video: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
