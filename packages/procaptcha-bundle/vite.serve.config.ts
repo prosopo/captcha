@@ -18,6 +18,8 @@ import { defineConfig } from "vite";
 export default defineConfig({
 	server: {
 		port: 9269,
+		host: true,
+		cors: true,
 	},
 	// Change the default public directory if needed
 	publicDir: "dist/bundle", // assets in the "assets" folder at the project root will be served
