@@ -130,7 +130,6 @@ export async function updateEnvFile(vars: Record<string, string>) {
 
 export async function setup(force: boolean) {
 	const defaultProvider = getDefaultProvider();
-	const defaultDapp = getDefaultSiteKeys();
 
 	if (defaultProvider.secret) {
 		const hasProviderAccount =
