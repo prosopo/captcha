@@ -115,12 +115,23 @@ export default defineConfig(({ command, mode }) => {
 				process.env.VITE_BUNDLE_URL ||
 					"http://localhost:9269/procaptcha.bundle.js",
 			),
+			"import.meta.env.PROSOPO_WEB2": JSON.stringify(
+				process.env.PROSOPO_WEB2 || "true",
+			),
 		},
 		optimizeDeps: {
 			noDiscovery: true,
-			include: ["void-elements", "react", "bn.js"],
+			include: [
+				"void-elements",
+				"react",
+				"bn.js",
+				"@polkadot/wasm-crypto-wasm",
+			],
 		},
 		build: {
+			commonjsOptions: {
+				transformMixedEsModules: true,
+			},
 			outDir: "dist",
 			emptyOutDir: true,
 			rollupOptions: {
