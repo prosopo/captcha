@@ -70,6 +70,6 @@ describe("vrf sign and verify", (): void => {
 				new Uint8Array(99),
 				new Uint8Array(32),
 			),
-		).to.throw(/Invalid vrfSign/);
+		).toThrow(/Invalid vrfSign/);
 	});
 });
