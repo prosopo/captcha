@@ -89,9 +89,7 @@ export class ExtensionWeb2 extends Extension {
 		const browserEntropy = await getFingerprint();
 
 		// hash the entropy and remove 0x
-		console.log("hexHash(browserEntropy, 128)", hexHash(browserEntropy, 128));
 		const entropy = hexHash(browserEntropy, 128).slice(2);
-		console.log("Entropy for account generation:", entropy);
 
 		const u8Entropy = stringToU8a(entropy);
 		const entropyToMnemonic = await EntropyToMnemonicLoader();

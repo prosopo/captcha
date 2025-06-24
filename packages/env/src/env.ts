@@ -13,18 +13,12 @@
 // limitations under the License.
 
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
-<<<<<<< Updated upstream
-import { Databases, ProviderDatabase } from "@prosopo/database";
-=======
 import { ProviderDatabase } from "@prosopo/database";
 import { Keyring } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
->>>>>>> Stashed changes
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
-import type { IDatabase } from "@prosopo/types-database";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
-import { get } from "@prosopo/util";
 
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;

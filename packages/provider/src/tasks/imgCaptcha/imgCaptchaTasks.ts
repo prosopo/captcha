@@ -41,18 +41,11 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-<<<<<<< Updated upstream
 import { at } from "@prosopo/util";
-=======
-import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
->>>>>>> Stashed changes
 import { checkLangRules } from "../../rules/lang.js";
-import {
-	getIPAddress,
-	getIPAddressFromBigInt,
-	shuffleArray,
-} from "../../util.js";
+import { getIPAddress, getIPAddressFromBigInt } from "../../util.js";
+import { shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";

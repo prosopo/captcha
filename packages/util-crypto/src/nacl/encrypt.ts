@@ -1,12 +1,12 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { randomAsU8a } from '../random/asU8a.js';
-import { naclSecretbox } from './tweetnacl.js';
+import { randomAsU8a } from "../random/asU8a.js";
+import { naclSecretbox } from "./tweetnacl.js";
 
 interface Encrypted {
-  encrypted: Uint8Array;
-  nonce: Uint8Array;
+	encrypted: Uint8Array;
+	nonce: Uint8Array;
 }
 
 /**
@@ -23,9 +23,13 @@ interface Encrypted {
  * naclEncrypt([...], [...]); // => [...]
  * ```
  */
-export function naclEncrypt (message: Uint8Array, secret: Uint8Array, nonce: Uint8Array = randomAsU8a(24)): Encrypted {
-  return {
-    encrypted: naclSecretbox(message, nonce, secret),
-    nonce
-  };
+export function naclEncrypt(
+	message: Uint8Array,
+	secret: Uint8Array,
+	nonce: Uint8Array = randomAsU8a(24),
+): Encrypted {
+	return {
+		encrypted: naclSecretbox(message, nonce, secret),
+		nonce,
+	};
 }

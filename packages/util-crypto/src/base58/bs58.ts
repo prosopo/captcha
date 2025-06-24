@@ -1,15 +1,20 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { base58 } from '@scure/base';
+import { base58 } from "@scure/base";
 
-import { createDecode, createEncode, createIs, createValidate } from '../base32/helpers.js';
+import {
+	createDecode,
+	createEncode,
+	createIs,
+	createValidate,
+} from "../base32/helpers.js";
 
 const config = {
-  chars: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
-  coder: base58,
-  ipfs: 'z',
-  type: 'base58'
+	chars: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+	coder: base58,
+	ipfs: "z",
+	type: "base58",
 };
 
 /**
@@ -29,15 +34,15 @@ export const base58Validate = /*#__PURE__*/ createValidate(config);
 export const base58Decode = /*#__PURE__*/ createDecode(config, base58Validate);
 
 /**
-* @name base58Encode
-* @summary Creates a base58 value.
-* @description
-* From the provided input, create the base58 and return the result as a string.
-*/
+ * @name base58Encode
+ * @summary Creates a base58 value.
+ * @description
+ * From the provided input, create the base58 and return the result as a string.
+ */
 export const base58Encode = /*#__PURE__*/ createEncode(config);
 
 /**
-* @name isBase58
-* @description Checks if the input is in base58, returning true/false
-*/
+ * @name isBase58
+ * @description Checks if the input is in base58, returning true/false
+ */
 export const isBase58 = /*#__PURE__*/ createIs(base58Validate);

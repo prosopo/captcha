@@ -1,15 +1,20 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { base64 } from '@scure/base';
+import { base64 } from "@scure/base";
 
-import { createDecode, createEncode, createIs, createValidate } from '../base32/helpers.js';
+import {
+	createDecode,
+	createEncode,
+	createIs,
+	createValidate,
+} from "../base32/helpers.js";
 
 const config = {
-  chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
-  coder: base64,
-  type: 'base64',
-  withPadding: true
+	chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+	coder: base64,
+	type: "base64",
+	withPadding: true,
 };
 
 /**

@@ -29,20 +29,12 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-<<<<<<< Updated upstream
-import { Address4 } from "ip-address";
-=======
 import { u8aToHex } from "@prosopo/util";
-import { getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
->>>>>>> Stashed changes
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
-import {
-	getIPAddress,
-	getIPAddressFromBigInt,
-	shuffleArray,
-} from "../../../../util.js";
+import { getIPAddress, getIPAddressFromBigInt } from "../../../../util.js";
+import { shuffleArray } from "../../../../util.js";
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({

@@ -1,9 +1,9 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { BN, hexToBn } from '@polkadot/util';
+import { BN, hexToBn } from "@polkadot/util";
 
-import { randomAsHex } from './asU8a.js';
+import { randomAsHex } from "./asU8a.js";
 
 const BN_53 = new BN(0b11111111111111111111111111111111111111111111111111111);
 
@@ -21,8 +21,6 @@ const BN_53 = new BN(0b11111111111111111111111111111111111111111111111111111);
  * randomAsNumber(); // => <random number>
  * ```
  */
-export function randomAsNumber (): number {
-  return hexToBn(
-    randomAsHex(8)
-  ).and(BN_53).toNumber();
+export function randomAsNumber(): number {
+	return hexToBn(randomAsHex(8)).and(BN_53).toNumber();
 }

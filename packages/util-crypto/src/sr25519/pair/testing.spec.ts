@@ -157,5 +157,5 @@ it("has a test", (): void => {
 	expect(true).toEqual(true);
 });
 
-// eslint-disable-next-line jest/no-export
+// biome-ignore lint/suspicious/noExportsInTest: <explanation>
 export default tests;

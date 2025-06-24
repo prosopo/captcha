@@ -13,11 +13,7 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-<<<<<<< Updated upstream
-import { ProsopoEnvError } from "@prosopo/common";
-=======
 import type { KeyringPair } from "@prosopo/types";
->>>>>>> Stashed changes
 import {
 	ApiParams,
 	CaptchaStatus,

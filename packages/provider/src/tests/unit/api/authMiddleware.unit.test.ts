@@ -1,8 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, isHex } from "@polkadot/util";
-import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { NextFunction, Request, Response } from "express";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +11,12 @@ import type { NextFunction, Request, Response } from "express";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-<<<<<<< Updated upstream:packages/provider/src/tests/unit/api/authMiddleware.unit.test.ts
-=======
 
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { hexToU8a, isHex } from "@polkadot/util";
 import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
-import { hexToU8a, isHex } from "@prosopo/util";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
->>>>>>> Stashed changes:packages/api-express-router/src/tests/unit/middlewares/authMiddleware.unit.test.ts
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../api/authMiddleware.js";
 import type { Tasks } from "../../../tasks/tasks.js";

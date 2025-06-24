@@ -14,11 +14,16 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import { ProsopoContractError } from "@prosopo/common";
-import { type ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
+import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import {
+	type IPAddress,
+	type ScheduledTaskNames,
+	ScheduledTaskStatus,
+} from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
+import { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 
 export function encodeStringAddress(address: string) {

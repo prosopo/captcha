@@ -1,9 +1,9 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { getRandomValues } from '@polkadot/x-randomvalues';
+import { getRandomValues } from "@polkadot/x-randomvalues";
 
-import { createAsHex } from '../helpers.js';
+import { createAsHex } from "../helpers.js";
 
 /**
  * @name randomAsU8a
@@ -19,8 +19,8 @@ import { createAsHex } from '../helpers.js';
  * randomAsU8a(); // => Uint8Array([...])
  * ```
  */
-export function randomAsU8a (length = 32): Uint8Array {
-  return getRandomValues(new Uint8Array(length));
+export function randomAsU8a(length = 32): Uint8Array {
+	return getRandomValues(new Uint8Array(length));
 }
 
 /**
