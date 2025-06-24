@@ -143,31 +143,4 @@ describe("authMiddleware", () => {
 			message: expect.any(ProsopoEnvError),
 		});
 	});
-
-	it("should 404 if url does not contain /v1/prosopo", async () => {
-		const mockReq = {
-			url: "/favicon.ico",
-			originalUrl: "/favicon.ico",
-			headers: {
-				signature: "0x1234",
-				timestamp: new Date().getTime(),
-			},
-			logger: mockLogger,
-		} as unknown as Request;
-
-		const mockRes = {
-			status: vi.fn().mockReturnThis(),
-			statusCode: 404,
-			json: vi.fn(),
-		} as unknown as Response;
-
-		const mockNext = vi.fn(() => {
-			console.log("mock next function");
-		}) as unknown as NextFunction;
-
-		const middleware = authMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
-
-		expect(mockRes.statusCode).toBe(404);
-	});
 });

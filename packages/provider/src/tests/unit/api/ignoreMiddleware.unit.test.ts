@@ -28,7 +28,7 @@ const mockLogger = {
 	warn: vi.fn(),
 } as unknown as Logger;
 
-describe("authMiddleware", () => {
+describe("ignoreMiddleware", () => {
 	it("should 404 if url does not contain /v1/prosopo", async () => {
 		const mockReq = {
 			url: "/favicon.ico",
@@ -44,6 +44,7 @@ describe("authMiddleware", () => {
 			status: vi.fn().mockReturnThis(),
 			statusCode: 404,
 			json: vi.fn(),
+			send: vi.fn(),
 		} as unknown as Response;
 
 		const mockNext = vi.fn(() => {
