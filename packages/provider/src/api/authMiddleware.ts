@@ -11,11 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+<<<<<<< Updated upstream:packages/provider/src/api/authMiddleware.ts
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+=======
+
+import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
+import { hexToU8a, isHex } from "@prosopo/util";
+>>>>>>> Stashed changes:packages/api-express-router/src/middlewares/authMiddleware.ts
 import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = (env: ProviderEnvironment) => {

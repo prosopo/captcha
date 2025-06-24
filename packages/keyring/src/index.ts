@@ -12,3 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./accounts/index.js";
+export * from "./keyring/index.js";
+export * from "./pair/index.js";

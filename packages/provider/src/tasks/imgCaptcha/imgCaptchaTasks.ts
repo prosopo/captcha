@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { randomAsHex, signatureVerify } from "@polkadot/util-crypto";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	ApiParams,
 	type Captcha,
@@ -42,7 +41,12 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
+<<<<<<< Updated upstream
 import { at } from "@prosopo/util";
+=======
+import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
+>>>>>>> Stashed changes
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	getIPAddress,

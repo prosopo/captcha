@@ -1,4 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +11,7 @@ import type { KeyringPair } from "@polkadot/keyring/types";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { BN } from "@polkadot/util/bn";
+import type { KeyringPair } from "@prosopo/types";
 
 //temp
 export enum Payee {
@@ -29,7 +28,6 @@ export interface IProviderAccount extends IUserAccount {
 	url: string;
 	fee: number;
 	datasetFile: string;
-	stake: BN;
 	payee: Payee.dapp;
 	captchaDatasetId: string;
 	pair?: KeyringPair;
@@ -37,6 +35,5 @@ export interface IProviderAccount extends IUserAccount {
 
 export interface IDappAccount {
 	secret: string;
-	fundAmount: BN;
 	pair?: KeyringPair;
 }

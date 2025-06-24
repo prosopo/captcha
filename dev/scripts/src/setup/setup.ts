@@ -18,7 +18,7 @@ import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
-import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
+import { generateMnemonic, getPair } from "@prosopo/keyring";
 import {
 	type IDappAccount,
 	type IProviderAccount,
@@ -57,7 +57,6 @@ function getDefaultProvider(): IProviderAccount {
 			: `http://${host}:9229`,
 		fee: 10,
 		payee: Payee.dapp,
-		stake: new BN(10 ** 13),
 		datasetFile: getDatasetFilePath(),
 		address: process.env.PROSOPO_PROVIDER_ADDRESS || "",
 		secret: getSecret(),
@@ -68,7 +67,6 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
 	return {
 		secret: "//Eve",
-		fundAmount: new BN(10 ** 12),
 	};
 }
 
@@ -130,8 +128,8 @@ export async function setup(force: boolean) {
 
 		const config = defaultConfig();
 		const providerSecret = config.account.secret;
-		const pair = await getPairAsync(providerSecret);
-		const authAccount = await getPairAsync(config.authAccount.secret);
+		const pair = getPair(providerSecret);
+		const authAccount = getPair(config.authAccount.secret);
 
 		const env = new ProviderEnvironment(defaultConfig(), pair, authAccount);
 		await env.isReady();
@@ -140,9 +138,9 @@ export async function setup(force: boolean) {
 
 		env.logger.info(`Registering provider... ${defaultProvider.address}`);
 
-		defaultProvider.pair = await getPairAsync(providerSecret);
+		defaultProvider.pair = getPair(providerSecret);
 
-		defaultDapp.pair = await getPairAsync(defaultDapp.secret);
+		defaultDapp.pair = getPair(defaultDapp.secret);
 
 		await setupProvider(env, defaultProvider);
 

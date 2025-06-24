@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
+<<<<<<< Updated upstream
 import { ProsopoEnvError } from "@prosopo/common";
+=======
+import type { KeyringPair } from "@prosopo/types";
+>>>>>>> Stashed changes
 import {
 	ApiParams,
 	CaptchaStatus,
@@ -35,11 +38,11 @@ import {
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 import { getIPAddress } from "../../../../util.js";
 
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
 }));
 
-vi.mock("@polkadot/util", () => ({
+vi.mock("@prosopo/util", () => ({
 	u8aToHex: vi.fn(),
 	stringToHex: vi.fn(),
 }));

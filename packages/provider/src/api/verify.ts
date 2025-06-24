@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< Updated upstream
 import { validateAddress } from "@polkadot/util-crypto/address";
 import { handleErrors } from "@prosopo/api-express-router";
+=======
+import { handleErrors, verifySignature } from "@prosopo/api-express-router";
+>>>>>>> Stashed changes
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
@@ -27,6 +31,7 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";

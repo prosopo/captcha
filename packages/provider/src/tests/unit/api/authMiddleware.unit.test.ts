@@ -16,11 +16,19 @@ import type { NextFunction, Request, Response } from "express";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+<<<<<<< Updated upstream:packages/provider/src/tests/unit/api/authMiddleware.unit.test.ts
+=======
+
+import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
+import { hexToU8a, isHex } from "@prosopo/util";
+import type { NextFunction, Request, Response } from "express";
+>>>>>>> Stashed changes:packages/api-express-router/src/tests/unit/middlewares/authMiddleware.unit.test.ts
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../api/authMiddleware.js";
 import type { Tasks } from "../../../tasks/tasks.js";
 
-vi.mock("@polkadot/util", () => ({
+vi.mock("@prosopo/util", () => ({
 	hexToU8a: vi.fn(),
 	isHex: vi.fn(),
 }));

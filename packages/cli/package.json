@@ -26,9 +26,7 @@
 		"start:dev": "node ./dist/cli.js --api --dev"
 	},
 	"dependencies": {
-		"@polkadot/keyring": "12.6.2",
 		"@polkadot/types-codec": "10.13.1",
-		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/api": "2.6.4",
 		"@prosopo/api-express-router": "2.6.1",
 		"@prosopo/common": "2.6.1",
@@ -41,6 +39,7 @@
 		"@prosopo/types": "2.7.1",
 		"@prosopo/user-access-policy": "2.6.4",
 		"@prosopo/util": "2.6.0",
+		"@prosopo/util-crypto": "13.3.2-0-x",
 		"cors": "2.8.5",
 		"cron-parser": "4.9.0",
 		"dotenv": "16.4.5",

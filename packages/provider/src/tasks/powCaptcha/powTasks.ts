@@ -1,3 +1,6 @@
+import { stringToHex, u8aToHex } from "@polkadot/util";
+import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,6 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+<<<<<<< Updated upstream
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import {
@@ -19,6 +23,9 @@ import {
 	getLoggerDefault,
 } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
+=======
+import type { KeyringPair } from "@prosopo/types";
+>>>>>>> Stashed changes
 import {
 	ApiParams,
 	type CaptchaResult,

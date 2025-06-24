@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+<<<<<<< Updated upstream
 import { Databases, ProviderDatabase } from "@prosopo/database";
+=======
+import { ProviderDatabase } from "@prosopo/database";
+import { Keyring } from "@prosopo/keyring";
+import type { KeyringPair } from "@prosopo/types";
+>>>>>>> Stashed changes
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
 import type { IDatabase } from "@prosopo/types-database";

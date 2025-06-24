@@ -56,3 +56,5 @@ export class ExtensionWeb3 extends Extension {
 		});
 	}
 }
+
+export default ExtensionWeb3;

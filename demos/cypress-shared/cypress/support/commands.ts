@@ -25,7 +25,7 @@ import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { u8aToHex } from "@polkadot/util";
 import type { ApiEndpointResponse } from "@prosopo/api-route";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
 declare global {
@@ -242,37 +242,35 @@ function registerSiteKey(captchaType: CaptchaType) {
 	const timestamp = new Date().getTime();
 
 	return cy.then(() => {
-		return getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then(
-			(pair) => {
-				const signature = u8aToHex(pair.sign(timestamp.toString()));
-				const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		return getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then((pair) => {
+			const signature = u8aToHex(pair.sign(timestamp.toString()));
+			const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
-				const settings: IUserSettings = {
-					captchaType: captchaType,
-					domains: ["0.0.0.0", "localhost", "*"],
-					frictionlessThreshold: 0.5,
-					powDifficulty: 2,
-					imageThreshold: 0.8,
-				};
+			const settings: IUserSettings = {
+				captchaType: captchaType,
+				domains: ["0.0.0.0", "localhost", "*"],
+				frictionlessThreshold: 0.5,
+				powDifficulty: 2,
+				imageThreshold: 0.8,
+			};
 
-				// Use cy.request() to ensure Cypress correctly queues the request
-				return cy.request({
-					method: "POST",
-					url: adminSiteKeyURL,
-					headers: {
-						"Content-Type": "application/json",
-						signature: signature,
-						timestamp: timestamp.toString(),
-					},
-					body: {
-						siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-						tier: Tier.Free,
-						settings,
-					},
-					failOnStatusCode: false, // Allow handling of non-200 responses manually
-				});
-			},
-		);
+			// Use cy.request() to ensure Cypress correctly queues the request
+			return cy.request({
+				method: "POST",
+				url: adminSiteKeyURL,
+				headers: {
+					"Content-Type": "application/json",
+					signature: signature,
+					timestamp: timestamp.toString(),
+				},
+				body: {
+					siteKey: Cypress.env("PROSOPO_SITE_KEY"),
+					tier: Tier.Free,
+					settings,
+				},
+				failOnStatusCode: false, // Allow handling of non-200 responses manually
+			});
+		});
 	});
 }
 

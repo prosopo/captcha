@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto/address";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
+import { validateAddress } from "@prosopo/util-crypto";
 
 export const validiateSiteKey = (siteKey: string, logger?: Logger) => {
 	return validateAddr(siteKey, "API.INVALID_SITE_KEY", logger);
