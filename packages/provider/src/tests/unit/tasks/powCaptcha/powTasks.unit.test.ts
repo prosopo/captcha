@@ -38,7 +38,7 @@ vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
 }));
 
-vi.mock("@prosopo/util", () => ({
+vi.mock("@polkadot/util", () => ({
 	u8aToHex: vi.fn(),
 	stringToHex: vi.fn(),
 }));

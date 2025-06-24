@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { u8aToHex } from "@polkadot/util";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
 	computePendingRequestHash,
@@ -29,7 +30,6 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { u8aToHex } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
@@ -46,7 +46,7 @@ vi.mock("@prosopo/util-crypto", () => ({
 	randomAsHex: vi.fn(),
 	signatureVerify: vi.fn(),
 }));
-vi.mock("@prosopo/util", () => ({
+vi.mock("@polkadot/util", () => ({
 	u8aToHex: vi.fn(),
 	stringToHex: vi.fn(),
 }));

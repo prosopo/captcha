@@ -21,10 +21,16 @@ import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../api/authMiddleware.js";
 import type { Tasks } from "../../../tasks/tasks.js";
 
-vi.mock("@prosopo/util", () => ({
-	hexToU8a: vi.fn(),
-	isHex: vi.fn(),
-}));
+vi.mock("@polkadot/util", async (importOriginal) => {
+	const actual = await importOriginal();
+
+	return {
+		// @ts-ignore
+		...actual,
+		hexToU8a: vi.fn(),
+		isHex: vi.fn(),
+	};
+});
 
 const mockLogger = {
 	info: vi.fn(),

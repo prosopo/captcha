@@ -111,7 +111,6 @@ export function entropyToMnemonic(
 	entropy: Uint8Array,
 	wordlist: string[] = DEFAULT_WORDLIST,
 ): string {
-	console.log("entropyToMnemonic", entropy);
 	// 128 <= ENT <= 256
 	if (entropy.length % 4 !== 0 || entropy.length < 16 || entropy.length > 32) {
 		throw new Error(INVALID_ENTROPY);
