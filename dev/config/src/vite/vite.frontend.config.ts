@@ -188,47 +188,6 @@ export default async function (
 				watch: false,
 
 				output: {
-					manualChunks(id) {
-						if (id.includes("wasm-crypto-wasm")) {
-							return "web3Chunk";
-						}
-
-						// Split up the extension code into 2 chunks
-						if (id.includes("packages/account/dist/extension")) {
-							if (id.includes("ExtensionWeb3.js")) {
-								return "web3Chunk";
-							}
-							return "extensionChunk";
-						}
-
-						if (id.includes("packages/common/dist")) {
-							return "commonChunk";
-						}
-
-						if (id.includes("zod")) {
-							return "zodChunk";
-						}
-
-						if (id.includes("@polkadot/extension-dapp")) {
-							return "web3Chunk";
-						}
-						if (id.includes("@polkadot/keyring")) {
-							return "web3Chunk";
-						}
-						if (id.includes("packages/util-crypto/dist")) {
-							return "utilCryptoChunk";
-						}
-						if (id.includes("@noble/hash") || id.includes("@noble/curves")) {
-							return "nobleChunk";
-						}
-						if (id.includes("@polkadot/util") && !id.includes("util-crypto")) {
-							return "utilChunk";
-						}
-						if (id.includes("bn.js")) {
-							return "bnChunk";
-						}
-						return undefined;
-					},
 					dir: path.resolve(dir, "dist/bundle"),
 					entryFileNames: `${bundleName}.bundle.js`,
 				},
