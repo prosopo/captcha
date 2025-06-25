@@ -136,6 +136,7 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 export const ja4Middleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			req.logger.debug({ url: req.url });
 			const ja4 = await getJA4(req.headers, req.logger);
 
 			req.ja4 = ja4.ja4PlusFingerprint || "";
