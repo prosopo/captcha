@@ -70,8 +70,7 @@
 		"packages/*",
 		"demos/*",
 		"integration/*",
-		"integration/frameworks/*/*",
-		"docker/images/*"
+		"integration/frameworks/*/*"
 	],
 	"devDependencies": {
 		"@angular-devkit/core": "~19.2.0",
