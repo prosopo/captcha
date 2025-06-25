@@ -13,22 +13,25 @@
 // limitations under the License.
 
 import path from "node:path";
-import { BN } from "@polkadot/util";
 import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
 import {
-	type IDappAccount,
+	CaptchaType,
+	ClientSettingsSchema,
 	type IProviderAccount,
-	Payee,
+	type ISite,
 } from "@prosopo/types";
 import { get } from "@prosopo/util";
 import fse from "fs-extra";
 import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
-import { registerSiteKey } from "./dapp.js";
 import { setupProvider } from "./provider.js";
+import { registerSiteKey } from "./site.js";
+
+const DEV_PHRASE =
+	"bottom drive obey lake curtain smoke basket hold race lonely fit walk";
 
 const logger = getLogger(LogLevel.enum.info, "setup");
 const __dirname = path.resolve();
@@ -55,21 +58,44 @@ function getDefaultProvider(): IProviderAccount {
 		url: process.env.PROSOPO_API_PORT
 			? `http://${host}:${process.env.PROSOPO_API_PORT}`
 			: `http://${host}:9229`,
-		fee: 10,
-		payee: Payee.dapp,
-		stake: new BN(10 ** 13),
 		datasetFile: getDatasetFilePath(),
 		address: process.env.PROSOPO_PROVIDER_ADDRESS || "",
 		secret: getSecret(),
 		captchaDatasetId: "",
 	};
 }
-
-function getDefaultDapp(): IDappAccount {
-	return {
-		secret: "//Eve",
-		fundAmount: new BN(10 ** 12),
-	};
+//sr25519 dev site keys
+export function getDefaultSiteKeys(): ISite[] {
+	return [
+		{
+			secret: `${DEV_PHRASE}//${CaptchaType.image}`,
+			address: "5DWuxC3covEaAsPcMt1zcpibGLsHAqMcfAzi2fzuWtQupFgq",
+			settings: ClientSettingsSchema.parse({
+				captchaType: CaptchaType.image,
+			}),
+		},
+		{
+			secret: `${DEV_PHRASE}//${CaptchaType.pow}`,
+			address: "5GWr5T3bCvBZMG9H9CDM5ynYS1zo7vcwS24Dg4DismRmsD8P",
+			settings: ClientSettingsSchema.parse({
+				captchaType: CaptchaType.pow,
+			}),
+		},
+		{
+			secret: `${DEV_PHRASE}//${CaptchaType.frictionless}`,
+			address: "5Do7mgno9VQCDPn6abR1UgB9jUjaEmqVQb5paB5fHNabvRDE",
+			settings: ClientSettingsSchema.parse({
+				captchaType: CaptchaType.frictionless,
+			}),
+		},
+		// {
+		// 	secret: `${DEV_PHRASE}//${CaptchaType.invisible}`,
+		// 	address: "5FNFBC97JQoJu7LBapycXbT66N9xzQH2tyFv1yNvBxqa8tQR",
+		// 	settings: ClientSettingsSchema.parse({
+		// 		captchaType: CaptchaType.invisible,
+		// 	}),
+		// },
+	];
 }
 
 async function copyEnvFile() {
@@ -106,9 +132,13 @@ export async function updateEnvFile(vars: Record<string, string>) {
 	await fse.writeFile(envFile, readEnvFile);
 }
 
-export async function setup(force: boolean) {
+export async function setup(provider: boolean, sites: boolean) {
+	if (!provider && !sites) {
+		logger.info("No setup required, exiting.");
+		process.exit(0);
+	}
+
 	const defaultProvider = getDefaultProvider();
-	const defaultDapp = getDefaultDapp();
 
 	if (defaultProvider.secret) {
 		const hasProviderAccount =
@@ -142,31 +172,46 @@ export async function setup(force: boolean) {
 
 		defaultProvider.pair = await getPairAsync(providerSecret);
 
-		defaultDapp.pair = await getPairAsync(defaultDapp.secret);
+		if (provider) {
+			await setupProvider(env, defaultProvider);
 
-		await setupProvider(env, defaultProvider);
-
-		env.logger.info(`Registering dapp... ${defaultDapp.pair.address}`);
-
-		await registerSiteKey(env, defaultDapp.pair.address);
-
-		if (!hasProviderAccount) {
-			await updateEnvFile({
-				PROVIDER_MNEMONIC: `"${mnemonic}"`,
-				PROVIDER_ADDRESS: address,
-			});
+			if (!hasProviderAccount) {
+				await updateEnvFile({
+					PROVIDER_MNEMONIC: `"${mnemonic}"`,
+					PROVIDER_ADDRESS: address,
+				});
+			}
 		}
-		env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
-		await updateDemoHTMLFiles(
-			[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
-			defaultDapp.pair.address,
-			env.logger,
-		);
-		await updateEnvFiles(
-			["NEXT_PUBLIC_PROSOPO_SITE_KEY", "PROSOPO_SITE_KEY"],
-			defaultDapp.pair.address,
-			env.logger,
-		);
+		if (sites) {
+			for (const siteKey of getDefaultSiteKeys()) {
+				siteKey.pair = await getPairAsync(siteKey.secret);
+
+				env.logger.info(
+					`Registering ${siteKey.secret} siteKey ... ${siteKey.pair.address}`,
+				);
+
+				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
+
+				env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
+				await updateDemoHTMLFiles(
+					[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
+					siteKey.pair.address,
+					env.logger,
+				);
+
+				const envVarNames =
+					siteKey.settings.captchaType === "image"
+						? [
+								"PROSOPO_SITE_KEY",
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							]
+						: [
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							];
+
+				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
+			}
+		}
 		process.exit();
 	} else {
 		console.error("no secret found in .env file");
