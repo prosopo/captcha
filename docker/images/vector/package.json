@@ -1,6 +1,10 @@
 {
 	"name": "@prosopo/vector-docker",
 	"version": "2.5.5",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
 		"build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
