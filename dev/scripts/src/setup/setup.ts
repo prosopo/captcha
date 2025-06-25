@@ -132,7 +132,12 @@ export async function updateEnvFile(vars: Record<string, string>) {
 	await fse.writeFile(envFile, readEnvFile);
 }
 
-export async function setup(force: boolean) {
+export async function setup(provider: boolean, sites: boolean) {
+	if (!provider && !sites) {
+		logger.info("No setup required, exiting.");
+		process.exit(0);
+	}
+
 	const defaultProvider = getDefaultProvider();
 
 	if (defaultProvider.secret) {
@@ -167,40 +172,45 @@ export async function setup(force: boolean) {
 
 		defaultProvider.pair = await getPairAsync(providerSecret);
 
-		await setupProvider(env, defaultProvider);
+		if (provider) {
+			await setupProvider(env, defaultProvider);
 
-		if (!hasProviderAccount) {
-			await updateEnvFile({
-				PROVIDER_MNEMONIC: `"${mnemonic}"`,
-				PROVIDER_ADDRESS: address,
-			});
+			if (!hasProviderAccount) {
+				await updateEnvFile({
+					PROVIDER_MNEMONIC: `"${mnemonic}"`,
+					PROVIDER_ADDRESS: address,
+				});
+			}
 		}
+		if (sites) {
+			for (const siteKey of getDefaultSiteKeys()) {
+				siteKey.pair = await getPairAsync(siteKey.secret);
 
-		for (const siteKey of getDefaultSiteKeys()) {
-			siteKey.pair = await getPairAsync(siteKey.secret);
+				env.logger.info(
+					`Registering ${siteKey.secret} siteKey ... ${siteKey.pair.address}`,
+				);
 
-			env.logger.info(
-				`Registering ${siteKey.secret} siteKey ... ${siteKey.pair.address}`,
-			);
+				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
 
-			await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
+				env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
+				await updateDemoHTMLFiles(
+					[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
+					siteKey.pair.address,
+					env.logger,
+				);
 
-			env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
-			await updateDemoHTMLFiles(
-				[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
-				siteKey.pair.address,
-				env.logger,
-			);
+				const envVarNames =
+					siteKey.settings.captchaType === "image"
+						? [
+								"PROSOPO_SITE_KEY",
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							]
+						: [
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							];
 
-			const envVarNames =
-				siteKey.settings.captchaType === "image"
-					? [
-							"PROSOPO_SITE_KEY",
-							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-						]
-					: [`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`];
-
-			await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
+				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
+			}
 		}
 		process.exit();
 	} else {
