@@ -86,7 +86,6 @@ function moveDirectoryContents(
 }
 
 export default defineConfig(({ command, mode }) => {
-	loadEnv();
 	return {
 		watch: false,
 		mode: "development",

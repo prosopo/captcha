@@ -37,7 +37,7 @@ export default function navigationInjector(): Plugin {
 	const pageDefinitions = {
 		standard: {
 			image: {
-				implicit: { path: "image-implicit.html", exists: true },
+				implicit: { path: "index.html", exists: true },
 				explicit: { path: "image-explicit.html", exists: true },
 			},
 			pow: {
