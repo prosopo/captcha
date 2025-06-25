@@ -1,6 +1,10 @@
 {
 	"name": "@prosopo/provider-docker",
 	"version": "2.6.8",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
 		"build": "npm run clean && cp -r src dist && docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
