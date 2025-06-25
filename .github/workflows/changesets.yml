@@ -35,6 +35,9 @@ jobs:
                     VARS_CONTEXT: ${{ toJson(vars) }}
                     SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
+            - name: Set NX_PARALLEL environment variable
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
             - uses: actions/checkout@v4
               with:
                   submodules: 'recursive'
@@ -44,9 +47,17 @@ jobs:
               with:
                 npm_ci_args: '--include=dev'
 
+            # checkout the base and head refs
+            # ensures we have history for both
+            - name: Checkout base ref
+              run: git fetch origin ${{ github.base_ref }} && git checkout ${{ github.base_ref }}
+
+            - name: Checkout head ref
+              run: git fetch origin ${{ github.head_ref }} && git checkout ${{ github.head_ref }}
+
             # if this fails, you need to run `npm run changesets:add` (preferred!) or `npm run changesets:empty` for an empty changeset (avoid if possible)
             - name: check changesets
               run: |
 
                 # check that the changesets are present for each package which has been modified
-                npx @changesets/cli status --since ${{ github.event.pull_request.base.sha }} --verbose
+                npm run changesets -- --since ${{ github.base_ref }}

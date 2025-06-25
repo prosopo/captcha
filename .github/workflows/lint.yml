@@ -39,6 +39,9 @@ jobs:
                 VARS_CONTEXT: ${{ toJson(vars) }}
                 SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
+            - name: Set NX_PARALLEL environment variable
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
             - uses: actions/checkout@v4
               with:
                   submodules: "recursive"
@@ -46,6 +49,13 @@ jobs:
             - uses: prosopo/captcha/.github/actions/npm@gha
               with:
                 npm_ci_args: '--include=dev'
+
+            # if this fails, you need to run `npx nx sync` as something is out of sync wrt deps, configs, etc
+            - name: sync check
+              run: |
+
+                # check that the changesets are present for each package which has been modified
+                npx nx sync:check
 
             - run: npm run -w @prosopo/lint build
 
