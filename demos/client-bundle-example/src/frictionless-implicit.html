@@ -120,14 +120,14 @@
                     setMessage("Error: " + err);
                 });
             };
-            
+
             // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
                         for (let i = 0; i < mutation.addedNodes.length; i++) {
                             const node = mutation.addedNodes[i];
-                            if (node.classList && (node.classList.contains('procaptcha') || 
+                            if (node.classList && (node.classList.contains('procaptcha') ||
                                   node.querySelector && node.querySelector('.procaptcha'))) {
                                 updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
                                 observer.disconnect();
@@ -137,7 +137,7 @@
                     }
                 });
             });
-            
+
             observer.observe(document.body, { childList: true, subtree: true });
         });
 
@@ -149,9 +149,9 @@
 <div class="mui-container">
     <h1>Frictionless CAPTCHA - Explicit Rendering</h1>
     <p>This example demonstrates how to use Procaptcha in frictionless mode with explicit rendering.</p>
-    
+
     <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
-    
+
     <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
         <h2>Example Login Form</h2>
         <div class="mui-textfield mui-textfield--float-label">
@@ -172,7 +172,7 @@
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
         <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
     </form>
-    
+
 </div>
 <script type="module">
     // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
@@ -186,8 +186,7 @@
     }
 
     const captchaContainer = document.getElementById('procaptcha-container');
-    window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
-    
+
     // Render the CAPTCHA
     const widgetId = render(captchaContainer, {
         siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%",
@@ -198,7 +197,7 @@
             window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
         }
     });
-    
+
     window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
 </script>
 </body>
