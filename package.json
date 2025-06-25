@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.5.6",
+	"version": "2.6.8",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -71,7 +71,8 @@
 		"packages/*",
 		"demos/*",
 		"integration/*",
-		"integration/frameworks/*/*"
+		"integration/frameworks/*/*",
+		"docker/images/*"
 	],
 	"devDependencies": {
 		"@angular-devkit/core": "~19.2.0",

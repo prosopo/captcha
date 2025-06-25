@@ -5,9 +5,9 @@ WORKDIR /usr/src/app
 # set shell to bash and error on any failure, unset variables, and pipefail
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-COPY ../../../packages/cli/dist/bundle/ ./
+COPY ./packages/cli/dist/bundle/ ./
 
-COPY ../../../packages/locale/dist/locales/ ./locales/
+COPY ./packages/locale/dist/locales/ ./locales/
 
 # make the provider cli executable
 # create a package.json file for the provider cli to force it to run in module mode and set the binary for npx
