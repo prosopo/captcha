@@ -21,6 +21,8 @@ import formFillerInjector from "./src/plugins/form-filler-injector.js";
 import navigationInjector from "./src/plugins/navigation-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
+loadEnv();
+
 // Function to copy contents of a directory to another directory
 function copyDirContents(src: string, dest: string) {
 	if (!fs.existsSync(dest)) {
