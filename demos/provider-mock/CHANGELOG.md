@@ -1,5 +1,10 @@
 # @prosopo/provider-mock
 
+## 2.7.0
+### Minor Changes
+
+- 6f3d993: Add docker packages to workspace. Release 2.6.8
+
 ## 2.6.12
 
 ### Patch Changes
