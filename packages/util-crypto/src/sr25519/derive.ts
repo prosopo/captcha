@@ -19,6 +19,6 @@ export function createDeriveFn(
 		const derivedSecret = derive(keypair.secretKey, chainCode);
 		const publicKey = getPublicKey(derivedSecret);
 
-		return sr25519PairFromU8a(new Uint8Array([...derivedSecret, ...publicKey]));
+		return sr25519PairFromU8a(u8aConcat(derivedSecret, publicKey));
 	};
 }
