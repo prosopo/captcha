@@ -15,7 +15,7 @@
 import path from "node:path";
 import { isHex } from "@polkadot/util";
 import { LogLevel, getLogger } from "@prosopo/common";
-import { getLogLevel } from "@prosopo/common";
+import { parseLogLevel } from "@prosopo/common";
 import { getScriptsPkgDir } from "@prosopo/config";
 import { getEnv, loadEnv } from "@prosopo/dotenv";
 import { decodeProcaptchaOutput, encodeProcaptchaOutput } from "@prosopo/types";
@@ -35,7 +35,7 @@ export async function processArgs(args: string[]) {
 		choices: Object.keys(LogLevel.enum),
 	}).argv;
 
-	const log = getLogger(getLogLevel(parsed.logLevel), "CLI");
+	const log = getLogger(parseLogLevel(parsed.logLevel), "CLI");
 
 	await yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")
@@ -71,7 +71,7 @@ export async function processArgs(args: string[]) {
 					}),
 
 			handler: async (argv) => {
-				log.info("Running setup scripts");
+				log.info(() => ({ msg: "Running setup scripts" }));
 				await setup(argv.provider, argv.sites);
 			},
 		})
@@ -114,11 +114,11 @@ export async function processArgs(args: string[]) {
 				}),
 			handler: async (argv) => {
 				if (!isHex(argv.token)) {
-					log.debug("Encoding token to hex");
-					log.info(encodeProcaptchaOutput(JSON.parse(argv.token)));
+					log.debug(() => ({ msg: "Encoding token to hex" }));
+					log.info(() => ({ data: { ...encodeProcaptchaOutput(JSON.parse(argv.token)) } }));
 				} else {
-					log.debug("Decoding token from hex");
-					log.info(decodeProcaptchaOutput(argv.token));
+					log.debug(() => ({ msg: "Decoding token from hex" }));
+					log.info(() => ({ data: { ...decodeProcaptchaOutput(argv.token) } }));
 				}
 			},
 		}).argv;

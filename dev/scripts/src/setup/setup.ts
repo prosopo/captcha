@@ -37,7 +37,7 @@ const __dirname = path.resolve();
 function getRootDir() {
 	const rootDir =
 		process.env.PROSOPO_ROOT_DIR || path.resolve(__dirname, "../..");
-	logger.info("Root dir:", rootDir);
+	logger.info(() => ({ msg: "Root dir:", data: { rootDir } }));
 	return rootDir;
 }
 
@@ -45,7 +45,7 @@ function getDatasetFilePath() {
 	const datasetFile =
 		process.env.PROSOPO_PROVIDER_DATASET_FILE ||
 		path.resolve("../data/captchas.json");
-	logger.info("Dataset file:", datasetFile);
+	logger.info(() => ({ msg: "Dataset file:", data: { datasetFile } }));
 	return datasetFile;
 }
 
@@ -104,7 +104,7 @@ async function copyEnvFile() {
 		const envFile = getEnvFile(tplLocation, ".env");
 		await fse.copy(tplEnvFile, envFile, { overwrite: false });
 	} catch (err) {
-		logger.debug(err);
+		logger.debug(() => ({ msg: "Error copying env file", err }));
 	}
 }
 
@@ -125,13 +125,13 @@ export async function updateEnvFile(vars: Record<string, string>) {
 	for (const key in vars) {
 		readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key));
 	}
-	logger.info(`Updating ${envFile}`);
+	logger.info(() => ({ msg: `Updating ${envFile}` }));
 	await fse.writeFile(envFile, readEnvFile);
 }
 
 export async function setup(provider: boolean, sites: boolean) {
 	if (!provider && !sites) {
-		logger.info("No setup required, exiting.");
+		logger.info(() => ({ msg: "No setup required, exiting." }));
 		process.exit(0);
 	}
 
@@ -140,15 +140,15 @@ export async function setup(provider: boolean, sites: boolean) {
 	if (defaultProvider.secret) {
 		const hasProviderAccount =
 			defaultProvider.address && defaultProvider.secret;
-		logger.debug("ENVIRONMENT", process.env.NODE_ENV);
+		logger.debug(() => ({ msg: "ENVIRONMENT", data: { nodeEnv: process.env.NODE_ENV } }));
 
 		const [mnemonic, address] = !hasProviderAccount
 			? await generateMnemonic()
 			: [defaultProvider.secret, defaultProvider.address];
 
-		logger.debug(`Address: ${address}`);
-		logger.debug(`Mnemonic: ${mnemonic}`);
-		logger.debug("Writing .env file...");
+		logger.debug(() => ({ msg: `Address: ${address}` }));
+		logger.debug(() => ({ msg: `Mnemonic: ${mnemonic}` }));
+		logger.debug(() => ({ msg: "Writing .env file..." }));
 		await copyEnvFile();
 
 		if (!process.env.PROSOPO_SITE_KEY) {
@@ -165,7 +165,7 @@ export async function setup(provider: boolean, sites: boolean) {
 
 		defaultProvider.secret = mnemonic;
 
-		env.logger.info(`Registering provider... ${defaultProvider.address}`);
+		env.logger.info(() => ({ msg: `Registering provider... ${defaultProvider.address}` }));
 
 		defaultProvider.pair = getPair(providerSecret);
 		if (provider) {
@@ -183,12 +183,12 @@ export async function setup(provider: boolean, sites: boolean) {
 				siteKey.pair = getPair(siteKey.secret);
 
 				env.logger.info(
-					`Registering ${siteKey.secret} siteKey ... ${siteKey.pair.address}`,
+					() => ({ msg: `Registering ${siteKey.secret} siteKey ... ${siteKey.pair?.address}` }),
 				);
 
 				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
 
-				env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
+				env.logger.debug(() => ({ msg: "Updating env files with PROSOPO_SITE_KEY" }));
 				await updateDemoHTMLFiles(
 					[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
 					siteKey.pair.address,
@@ -198,12 +198,12 @@ export async function setup(provider: boolean, sites: boolean) {
 				const envVarNames =
 					siteKey.settings.captchaType === "image"
 						? [
-								"PROSOPO_SITE_KEY",
-								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-							]
+							"PROSOPO_SITE_KEY",
+							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+						]
 						: [
-								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-							];
+							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+						];
 
 				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
 			}

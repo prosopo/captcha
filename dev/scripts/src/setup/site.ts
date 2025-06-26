@@ -29,7 +29,7 @@ export async function registerSiteKey(
 	const logger = env.logger;
 	const tasks = new Tasks(env);
 	logger.info(
-		`registerSiteKey: ${siteKey}  captchaType: ${settings.captchaType}`,
+		() => ({ msg: "registerSiteKey", data: { siteKey, captchaType: settings.captchaType } }),
 	);
 	await tasks.clientTaskManager.registerSiteKey(
 		siteKey as string,
