@@ -11,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { u8aToHex } from "@polkadot/util";
+
 import { ProviderApi } from "@prosopo/api";
 import {
 	type LogLevel,
@@ -22,7 +20,9 @@ import {
 	ProsopoContractError,
 	getLogger,
 } from "@prosopo/common";
+import { Keyring } from "@prosopo/keyring";
 import { loadBalancer } from "@prosopo/load-balancer";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
 	ProcaptchaOutputSchema,
@@ -31,6 +31,7 @@ import {
 	type VerificationResponse,
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
 import i18n from "i18next";
 
 export class ProsopoServer {

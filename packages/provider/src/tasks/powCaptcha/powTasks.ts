@@ -11,14 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
+
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import {
-	ProsopoApiError,
-	ProsopoEnvError,
-	getLoggerDefault,
-} from "@prosopo/common";
+import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -27,7 +24,6 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";

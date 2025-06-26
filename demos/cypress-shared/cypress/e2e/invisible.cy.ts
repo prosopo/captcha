@@ -20,12 +20,11 @@ import { type Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { getWidgetElement } from "../support/commands.js";
 
-let captchaType: CaptchaType;
+const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	beforeEach(() => {
-		captchaType = "image" as CaptchaType;
-		cy.registerSiteKey(captchaType).then((response) => {
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
 			cy.task("log", `Response: ${JSON.stringify(response.body)}`);

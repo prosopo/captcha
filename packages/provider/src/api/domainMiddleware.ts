@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";

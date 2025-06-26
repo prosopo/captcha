@@ -11,9 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
-import { CaptchaType, type ProsopoConfigOutput } from "@prosopo/types";
+
+import type { Logger } from "@prosopo/common";
+import {
+	CaptchaType,
+	type KeyringPair,
+	type ProsopoConfigOutput,
+} from "@prosopo/types";
 import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
 import type {
 	FrictionlessTokenId,

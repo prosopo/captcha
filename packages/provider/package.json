@@ -24,9 +24,7 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "1.5.0",
-		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
-		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/api-express-router": "2.6.1",
 		"@prosopo/api-route": "2.6.1",
 		"@prosopo/common": "2.6.1",
@@ -40,6 +38,7 @@
 		"@prosopo/types-env": "2.6.5",
 		"@prosopo/user-access-policy": "2.6.4",
 		"@prosopo/util": "2.6.0",
+		"@prosopo/util-crypto": "13.3.2-0-x",
 		"cron": "3.1.7",
 		"express": "4.21.2",
 		"ip-address": "10.0.1",

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { ProviderEnvironment } from "@prosopo/env";
+import type { KeyringPair } from "@prosopo/types";
 import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
 import { CronJob } from "cron";
 import { Tasks } from "../tasks/tasks.js";

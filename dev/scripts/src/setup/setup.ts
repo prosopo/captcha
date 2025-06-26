@@ -17,7 +17,7 @@ import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
-import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
+import { DEV_PHRASE, generateMnemonic, getPair } from "@prosopo/keyring";
 import {
 	CaptchaType,
 	ClientSettingsSchema,
@@ -29,9 +29,6 @@ import fse from "fs-extra";
 import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
 import { setupProvider } from "./provider.js";
 import { registerSiteKey } from "./site.js";
-
-const DEV_PHRASE =
-	"bottom drive obey lake curtain smoke basket hold race lonely fit walk";
 
 const logger = getLogger(LogLevel.enum.info, "setup");
 const __dirname = path.resolve();
@@ -88,13 +85,13 @@ export function getDefaultSiteKeys(): ISite[] {
 				captchaType: CaptchaType.frictionless,
 			}),
 		},
-		// {
-		// 	secret: `${DEV_PHRASE}//${CaptchaType.invisible}`,
-		// 	address: "5FNFBC97JQoJu7LBapycXbT66N9xzQH2tyFv1yNvBxqa8tQR",
-		// 	settings: ClientSettingsSchema.parse({
-		// 		captchaType: CaptchaType.invisible,
-		// 	}),
-		// },
+		{
+			secret: `${DEV_PHRASE}//${CaptchaType.invisible}`,
+			address: "5FNFBC97JQoJu7LBapycXbT66N9xzQH2tyFv1yNvBxqa8tQR",
+			settings: ClientSettingsSchema.parse({
+				captchaType: CaptchaType.invisible,
+			}),
+		},
 	];
 }
 
@@ -160,8 +157,8 @@ export async function setup(provider: boolean, sites: boolean) {
 
 		const config = defaultConfig();
 		const providerSecret = config.account.secret;
-		const pair = await getPairAsync(providerSecret);
-		const authAccount = await getPairAsync(config.authAccount.secret);
+		const pair = getPair(providerSecret);
+		const authAccount = getPair(config.authAccount.secret);
 
 		const env = new ProviderEnvironment(defaultConfig(), pair, authAccount);
 		await env.isReady();
@@ -170,8 +167,7 @@ export async function setup(provider: boolean, sites: boolean) {
 
 		env.logger.info(`Registering provider... ${defaultProvider.address}`);
 
-		defaultProvider.pair = await getPairAsync(providerSecret);
-
+		defaultProvider.pair = getPair(providerSecret);
 		if (provider) {
 			await setupProvider(env, defaultProvider);
 
@@ -184,7 +180,7 @@ export async function setup(provider: boolean, sites: boolean) {
 		}
 		if (sites) {
 			for (const siteKey of getDefaultSiteKeys()) {
-				siteKey.pair = await getPairAsync(siteKey.secret);
+				siteKey.pair = getPair(siteKey.secret);
 
 				env.logger.info(
 					`Registering ${siteKey.secret} siteKey ... ${siteKey.pair.address}`,

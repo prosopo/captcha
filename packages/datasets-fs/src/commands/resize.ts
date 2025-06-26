@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import { blake2b } from "@noble/hashes/blake2b";
-import { u8aToHex } from "@polkadot/util/u8a";
 import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import { type Data, DataSchema, type Item } from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
 import { lodash } from "@prosopo/util/lodash";
 import cliProgress from "cli-progress";
 import sharp from "sharp";

@@ -16,6 +16,7 @@ enum CaptchaType {
 	image = "image",
 	pow = "pow",
 	frictionless = "frictionless",
+	invisible = "invisible",
 }
 
 export { CaptchaType };

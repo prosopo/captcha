@@ -12,6 +12,16 @@
 		".": {
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./extension/ExtensionWeb2": {
+			"import": "./dist/extension/ExtensionWeb2.js",
+			"require": "./dist/cjs/extension/ExtensionWeb2.cjs",
+			"default": "./dist/extension/ExtensionWeb2.js"
+		},
+		"./extension/ExtensionWeb3": {
+			"import": "./dist/extension/ExtensionWeb3.js",
+			"require": "./dist/cjs/extension/ExtensionWeb3.cjs",
+			"default": "./dist/extension/ExtensionWeb3.js"
 		}
 	},
 	"scripts": {
@@ -34,15 +44,13 @@
 		"@polkadot/extension-base": "0.46.9",
 		"@polkadot/extension-dapp": "0.46.9",
 		"@polkadot/extension-inject": "0.46.9",
-		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
-		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/common": "2.6.1",
 		"@prosopo/fingerprint": "2.6.0",
+		"@prosopo/keyring": "2.6.4",
 		"@prosopo/types": "2.7.1",
 		"@prosopo/util": "2.6.0",
-		"express": "4.21.2",
-		"react": "18.3.1"
+		"@prosopo/util-crypto": "13.3.2-0-x"
 	},
 	"devDependencies": {
 		"@prosopo/config": "2.6.0",

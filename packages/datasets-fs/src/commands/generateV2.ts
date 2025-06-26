@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import { blake2AsHex } from "@polkadot/util-crypto/blake2";
 import { ProsopoDatasetError } from "@prosopo/common";
 import {
 	CaptchaTypes,
@@ -24,6 +23,7 @@ import {
 	type RawSolution,
 } from "@prosopo/types";
 import { at, get } from "@prosopo/util";
+import { blake2AsHex } from "@prosopo/util-crypto";
 import { lodash } from "@prosopo/util/lodash";
 import bcrypt from "bcrypt";
 import cliProgress from "cli-progress";

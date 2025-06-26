@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
+import { generateMnemonic, getPair } from "@prosopo/keyring";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
@@ -228,12 +229,9 @@ describe("Image Captcha Integration Tests", () => {
 
 	describe("SubmitImageCaptchaSolution", () => {
 		it("should verify a correctly completed image captcha as true", async () => {
-			const pair = await getPairAsync(
-				dummyUserAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
+			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
+
+			await registerSiteKey(pair.address, CaptchaType.image);
 
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";

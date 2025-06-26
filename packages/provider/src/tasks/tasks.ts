@@ -1,5 +1,5 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
