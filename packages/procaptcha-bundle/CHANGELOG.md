@@ -1,5 +1,21 @@
 # @prosopo/procaptcha-bundle
 
+## 2.7.0
+### Minor Changes
+
+- 8f0644a: Taking required functions from polkadot/keyring and polkadot/util-crypto in-house and removing WASM dependencies. Adding @scure JS-based sr25519 function instead.
+
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/procaptcha-pow@2.7.0
+  - @prosopo/util-crypto@13.4.0
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/procaptcha-react@2.6.14
+  - @prosopo/procaptcha-frictionless@2.6.14
+  - @prosopo/dotenv@2.6.2
+
 ## 2.6.13
 ### Patch Changes
 

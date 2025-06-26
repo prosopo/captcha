@@ -1,5 +1,11 @@
 # @prosopo/dotenv
 
+## 2.6.2
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/common@2.7.0
+
 ## 2.6.1
 
 ### Patch Changes
