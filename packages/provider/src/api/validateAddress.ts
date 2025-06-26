@@ -25,7 +25,16 @@ export const validateAddr = (
 	translationKey: TranslationKey = "CONTRACT.INVALID_ADDRESS",
 	logger?: Logger,
 ) => {
-	if (!validateAddress(address, false, 42)) {
+	try {
+		const valid = validateAddress(address, false, 42);
+
+		if (!valid) {
+			throw new ProsopoApiError(translationKey, {
+				context: { code: 400, siteKey: address },
+				logger,
+			});
+		}
+	} catch (err) {
 		throw new ProsopoApiError(translationKey, {
 			context: { code: 400, siteKey: address },
 			logger,
