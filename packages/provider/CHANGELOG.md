@@ -1,5 +1,26 @@
 # @prosopo/provider
 
+## 2.11.0
+### Minor Changes
+
+- 30bb383: Making sure verify works and derived accounts
+
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/util-crypto@13.5.0
+  - @prosopo/keyring@2.8.0
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/datasets@2.7.1
+  - @prosopo/database@2.6.7
+  - @prosopo/env@2.7.1
+  - @prosopo/types-database@2.7.4
+  - @prosopo/types-env@2.7.1
+  - @prosopo/user-access-policy@2.6.6
+  - @prosopo/api-express-router@2.6.3
+  - @prosopo/api-route@2.6.3
+
 ## 2.10.0
 ### Minor Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/flux
 
+## 2.6.3
+### Patch Changes
+
+  - @prosopo/common@2.7.1
+  - @prosopo/dotenv@2.6.3
+
 ## 2.6.2
 ### Patch Changes
 

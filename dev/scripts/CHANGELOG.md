@@ -1,5 +1,25 @@
 # @prosopo/scripts
 
+## 2.8.0
+### Minor Changes
+
+- 30bb383: Making sure verify works and derived accounts
+
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/provider@2.11.0
+  - @prosopo/keyring@2.8.0
+  - @prosopo/types@2.9.0
+  - @prosopo/account@2.7.1
+  - @prosopo/cli@2.7.1
+  - @prosopo/common@2.7.1
+  - @prosopo/datasets@2.7.1
+  - @prosopo/env@2.7.1
+  - @prosopo/types-database@2.7.4
+  - @prosopo/types-env@2.7.1
+  - @prosopo/dotenv@2.6.3
+
 ## 2.7.0
 ### Minor Changes
 
