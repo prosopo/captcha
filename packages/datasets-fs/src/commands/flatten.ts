@@ -1,16 +1,3 @@
-import fs from "node:fs";
-import { blake2b } from "@noble/hashes/blake2b";
-import { u8aToHex } from "@polkadot/util/u8a";
-import { ProsopoDatasetError } from "@prosopo/common";
-import {
-	CaptchaItemTypes,
-	type Data,
-	DataSchema,
-	type LabelledItem,
-} from "@prosopo/types";
-import { at } from "@prosopo/util";
-import { lodash } from "@prosopo/util/lodash";
-import cliProgress from "cli-progress";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +11,20 @@ import cliProgress from "cli-progress";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import { blake2b } from "@noble/hashes/blake2b";
+import { ProsopoDatasetError } from "@prosopo/common";
+import {
+	CaptchaItemTypes,
+	type Data,
+	DataSchema,
+	type LabelledItem,
+} from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
+import { at } from "@prosopo/util";
+import { lodash } from "@prosopo/util/lodash";
+import cliProgress from "cli-progress";
 import * as z from "zod";
 import {
 	InputOutputArgsSchema,

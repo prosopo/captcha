@@ -1,6 +1,3 @@
-import { ProsopoEnvError } from "@prosopo/common";
-import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { Tasks } from "@prosopo/provider";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +11,10 @@ import { Tasks } from "@prosopo/provider";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { ProsopoEnvError } from "@prosopo/common";
+import { datasetWithSolutionHashes } from "@prosopo/datasets";
+import { Tasks } from "@prosopo/provider";
 import type { IProviderAccount } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 

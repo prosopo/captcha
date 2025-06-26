@@ -1,5 +1,54 @@
 # @prosopo/provider
 
+## 2.10.0
+### Minor Changes
+
+- 8f0644a: Taking required functions from polkadot/keyring and polkadot/util-crypto in-house and removing WASM dependencies. Adding @scure JS-based sr25519 function instead.
+
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/util-crypto@13.4.0
+  - @prosopo/types-env@2.7.0
+  - @prosopo/datasets@2.7.0
+  - @prosopo/keyring@2.7.0
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/env@2.7.0
+  - @prosopo/api-express-router@2.6.2
+  - @prosopo/api-route@2.6.2
+  - @prosopo/database@2.6.6
+  - @prosopo/types-database@2.7.3
+  - @prosopo/user-access-policy@2.6.5
+
+## 2.9.8
+
+### Patch Changes
+
+- Updated dependencies [ea38a1c]
+  - @prosopo/datasets@2.6.12
+
+## 2.9.7
+
+### Patch Changes
+
+- Updated dependencies [b2ae723]
+  - @prosopo/datasets@2.6.11
+
+## 2.9.6
+
+### Patch Changes
+
+- Updated dependencies [d17c67f]
+  - @prosopo/datasets@2.6.10
+
+## 2.9.5
+
+### Patch Changes
+
+- Updated dependencies [0d194f2]
+  - @prosopo/datasets@2.6.9
+
 ## 2.9.4
 
 ### Patch Changes

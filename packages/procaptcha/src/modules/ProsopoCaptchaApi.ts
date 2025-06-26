@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ContractSubmittableResult } from "@polkadot/api-contract/base/Contract";
 import type { ProviderApi } from "@prosopo/api";
 import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import {
@@ -109,8 +108,6 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 
 		const commitmentId = tree.root.hash;
 
-		const tx: ContractSubmittableResult | undefined = undefined;
-
 		let result: CaptchaSolutionResponse;
 
 		try {
@@ -128,7 +125,7 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 			});
 		}
 
-		return [result, commitmentId, tx];
+		return [result, commitmentId];
 	}
 }
 

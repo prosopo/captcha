@@ -13,7 +13,7 @@ import { stringToU8a, u8aToHex } from "@polkadot/util";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { KeypairType } from "@polkadot/util-crypto/types";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -49,7 +49,7 @@ const main = async () => {
 	const type = argv.type as KeypairType;
 	const ss58Format = argv.ss58Format;
 
-	const keypair = await getPairAsync(mnemonic, undefined, type, ss58Format);
+	const keypair = await getPair(mnemonic, undefined, type, ss58Format);
 
 	const sig = keypair.sign(stringToU8a(message));
 	console.log(`hex sig: ${u8aToHex(sig)}`);

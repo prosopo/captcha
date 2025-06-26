@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
+
 import { hexToU8a, isHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import { ApiPrefix } from "@prosopo/types";
+import type { KeyringPair } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 

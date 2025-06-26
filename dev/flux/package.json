@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/flux",
-	"version": "2.6.1",
+	"version": "2.6.2",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
 	"bin": {
@@ -24,9 +24,9 @@
 		"@noble/curves": "1.6.0",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "2.6.1",
+		"@prosopo/common": "2.7.0",
 		"@prosopo/config": "2.6.0",
-		"@prosopo/dotenv": "2.6.1",
+		"@prosopo/dotenv": "2.6.2",
 		"@prosopo/util": "2.6.0",
 		"express": "4.21.2",
 		"openpgp": "5.11.2",

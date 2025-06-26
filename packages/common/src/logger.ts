@@ -301,4 +301,3 @@ export class NativeLogger implements Logger {
 		}
 	}
 }
-

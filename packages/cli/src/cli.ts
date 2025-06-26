@@ -14,7 +14,7 @@
 import process from "node:process";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import { loadI18next } from "@prosopo/locale";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
@@ -43,12 +43,9 @@ async function main() {
 		}));
 	}
 
-	const pair = await getPairAsync(
-		config.account.secret,
-		config.account.address,
-	);
+	const pair = getPair(config.account.secret, config.account.address);
 
-	const authAccount = await getPairAsync(
+	const authAccount = getPair(
 		config.authAccount.secret,
 		config.authAccount.address,
 	);

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto/address";
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
@@ -27,6 +26,7 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";
@@ -106,7 +106,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						ip,
 					);
 
-				req.logger.debug(() => ({ data: { ...response } }));
+				req.logger.debug(response);
 				const verificationResponse: ImageVerificationResponse =
 					tasks.imgCaptchaManager.getVerificationResponse(
 						response[ApiParams.verified],
@@ -117,11 +117,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					);
 				res.json(verificationResponse);
 			} catch (err) {
-				req.logger.error(() => ({
-					err,
-					data: { body: req.body },
-					msg: "Error in image captcha verification"
-				}));
+				req.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
@@ -213,11 +209,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 				return res.json(verificationResponse);
 			} catch (err) {
-				req.logger.error(() => ({
-					err,
-					data: { body: req.body },
-					msg: "Error in image captcha verification"
-				}));
+				console.error("\nError in verifyPowCaptchaSolution:", err);
+				req.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },

@@ -1,3 +1,4 @@
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,8 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { version } from "@prosopo/util";
 
