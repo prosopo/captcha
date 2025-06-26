@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util-crypto",
-	"version": "13.3.2-0-x",
+	"version": "13.4.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -22,7 +22,6 @@
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
-
 		"./mnemonic/bip39": {
 			"types": "./dist/mnemonic/bip39.d.ts",
 			"import": "./dist/mnemonic/bip39.js",
