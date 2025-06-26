@@ -32,7 +32,7 @@ export class CaptchaManager {
 	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
 		this.pair = pair;
 		this.db = db;
-		this.logger = logger || getLogger('info', import.meta.url);
+		this.logger = logger || getLogger("info", import.meta.url);
 	}
 
 	async getFrictionlessTokenIdFromSession(sessionRecord: Session) {
@@ -72,7 +72,7 @@ export class CaptchaManager {
 						data: {
 							account: clientSettings.account,
 							sessionId: sessionId,
-						}
+						},
 					}));
 					return {
 						valid: false,

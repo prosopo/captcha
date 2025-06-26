@@ -115,10 +115,14 @@ export async function processArgs(args: string[]) {
 			handler: async (argv) => {
 				if (!isHex(argv.token)) {
 					log.debug(() => ({ msg: "Encoding token to hex" }));
-					log.info(() => ({ data: { ...encodeProcaptchaOutput(JSON.parse(argv.token)) } }));
+					log.info(() => ({
+						data: { result: encodeProcaptchaOutput(JSON.parse(argv.token)) },
+					}));
 				} else {
 					log.debug(() => ({ msg: "Decoding token from hex" }));
-					log.info(() => ({ data: { ...decodeProcaptchaOutput(argv.token) } }));
+					log.info(() => ({
+						data: { result: decodeProcaptchaOutput(argv.token) },
+					}));
 				}
 			},
 		}).argv;

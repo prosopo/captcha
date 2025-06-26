@@ -60,7 +60,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
 						nodeAPIURL: result.nodeAPIURL.href,
 						nodeLoginPhrase: result.nodeLoginPhrase,
 						nodeSignature: result.nodeSignature,
-					}
+					},
 				}));
 			} catch (err) {
 				logger.error(() => ({ err }));

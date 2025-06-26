@@ -32,7 +32,9 @@ async function startApi() {
 	apiApp.use(handleErrors);
 
 	apiApp.listen(apiPort, () => {
-		logger.info(() => ({ msg: `Prosopo app listening at http://localhost:${apiPort}` }));
+		logger.info(() => ({
+			msg: `Prosopo app listening at http://localhost:${apiPort}`,
+		}));
 	});
 }
 

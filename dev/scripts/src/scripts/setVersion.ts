@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "@iarna/toml";
-import { parseLogLevel, getLogger } from "@prosopo/common";
+import { getLogger, parseLogLevel } from "@prosopo/common";
 import { getRootDir } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 
@@ -102,7 +102,10 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 				for (const key of Object.keys(obj)) {
 					if (key.startsWith("@prosopo") && !key.includes("typechain")) {
 						// and replace version
-						log.debug(() => ({ data: { key, version, pth }, msg: "setting dependency version" }));
+						log.debug(() => ({
+							data: { key, version, pth },
+							msg: "setting dependency version",
+						}));
 						obj[key] = version;
 					}
 				}
@@ -142,7 +145,10 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 	files
 		.filter((pth) => path.extname(pth) === ".toml")
 		.forEach((pth) => {
-			log.debug(() => ({ data: { pth }, msg: "setting dependency versions in" }));
+			log.debug(() => ({
+				data: { pth },
+				msg: "setting dependency versions in",
+			}));
 			const content = fs.readFileSync(pth, "utf8");
 			// replace version in all toml files
 			const tomlContent = parse(content);

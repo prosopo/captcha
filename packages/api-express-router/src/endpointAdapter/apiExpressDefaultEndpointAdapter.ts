@@ -22,7 +22,7 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 	public constructor(
 		private readonly logLevel: LogLevel,
 		private readonly errorStatusCode: number,
-	) { }
+	) {}
 
 	public async handleRequest(
 		endpoint: ApiEndpoint<ZodType | undefined>,

@@ -45,7 +45,7 @@ export async function storeCaptchasExternally(
 			await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {
 				env.logger.error(() => ({
 					err,
-					msg: "Error storing commitments externally"
+					msg: "Error storing commitments externally",
 				}));
 			});
 		}

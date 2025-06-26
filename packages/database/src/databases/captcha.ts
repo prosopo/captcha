@@ -29,7 +29,7 @@ import {
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
 
-const logger = getLogger('info', import.meta.url);
+const logger = getLogger("info", import.meta.url);
 
 enum TableNames {
 	frictionlessToken = "frictionlessToken",

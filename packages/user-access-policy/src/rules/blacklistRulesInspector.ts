@@ -21,7 +21,7 @@ class BlacklistRulesInspector implements BlacklistInspector {
 	public constructor(
 		private readonly rulesStorage: RulesStorage,
 		private readonly logger: Logger,
-	) { }
+	) {}
 
 	public async isUserBlacklisted(
 		clientId: string,
@@ -65,7 +65,7 @@ class BlacklistRulesInspector implements BlacklistInspector {
 					userId: userId,
 					accessRules: accessRules.length,
 					blockingRules: blockingRules.length,
-				}
+				},
 			}));
 		}
 

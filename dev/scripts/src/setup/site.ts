@@ -28,9 +28,10 @@ export async function registerSiteKey(
 ): Promise<void> {
 	const logger = env.logger;
 	const tasks = new Tasks(env);
-	logger.info(
-		() => ({ msg: "registerSiteKey", data: { siteKey, captchaType: settings.captchaType } }),
-	);
+	logger.info(() => ({
+		msg: "registerSiteKey",
+		data: { siteKey, captchaType: settings.captchaType },
+	}));
 	await tasks.clientTaskManager.registerSiteKey(
 		siteKey as string,
 		Tier.Professional,

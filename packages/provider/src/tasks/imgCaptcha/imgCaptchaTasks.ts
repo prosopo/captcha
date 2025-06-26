@@ -202,10 +202,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			const err = new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: { failedFuncName: this.dappUserSolution.name, userAccount },
-			})
+			});
 			this.logger.info(() => ({
 				err,
-				msg: "Invalid user timestamp signature"
+				msg: "Invalid user timestamp signature",
 			}));
 			throw err;
 		}
@@ -228,9 +228,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 			});
 			this.logger.info(() => ({
 				err,
-				msg: "Invalid provider requestHash signature"
+				msg: "Invalid provider requestHash signature",
 			}));
-			throw err
+			throw err;
 		}
 
 		let response: DappUserSolutionResult = {
@@ -330,7 +330,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		} else {
 			this.logger.info(() => ({
-				msg: "Request hash not found"
+				msg: "Request hash not found",
 			}));
 		}
 		return response;
@@ -393,7 +393,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// only proceed if there is a pending record
 		if (!pendingRecord) {
 			this.logger.info(() => ({
-				msg: "No pending record found"
+				msg: "No pending record found",
 			}));
 			return false;
 		}
@@ -401,7 +401,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		if (pendingRecord.deadlineTimestamp < currentTime) {
 			// deadline for responding to the captcha has expired
 			this.logger.info(() => ({
-				msg: "Deadline for responding to captcha has expired"
+				msg: "Deadline for responding to captcha has expired",
 			}));
 			return false;
 		}
@@ -468,7 +468,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// No solution exists
 		if (!solution) {
 			this.logger.debug(() => ({
-				msg: "Not verified - no solution found"
+				msg: "Not verified - no solution found",
 			}));
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
@@ -478,14 +478,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			if (!ipV4Address) {
 				this.logger.debug(() => ({
 					data: { ip },
-					msg: "Invalid IP address"
+					msg: "Invalid IP address",
 				}));
 				return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 			if (solution.ipAddress !== ipV4Address.bigInt()) {
 				this.logger.debug(() => ({
-					data: { ip, solutionIp: getIPAddressFromBigInt(solution.ipAddress).address },
-					msg: "IP address mismatch"
+					data: {
+						ip,
+						solutionIp: getIPAddressFromBigInt(solution.ipAddress).address,
+					},
+					msg: "IP address mismatch",
 				}));
 				return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
@@ -512,7 +515,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// A solution exists but has timed out
 			if (timeSinceCompletion > maxVerifiedTime) {
 				this.logger.debug(() => ({
-					msg: "Not verified - timed out"
+					msg: "Not verified - timed out",
 				}));
 				return {
 					status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
@@ -534,7 +537,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					data: {
 						tscoreComponents: tokenRecord?.scoreComponents,
 						score: score,
-					}
+					},
 				}));
 			}
 		}

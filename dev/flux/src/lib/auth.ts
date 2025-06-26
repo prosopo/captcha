@@ -123,7 +123,10 @@ export const verifyLogin = async (
 		signature,
 		loginPhrase,
 	});
-	log.info(() => ({ data: { apiUrl: apiUrl, requestBody: data }, msg: "Data" }));
+	log.info(() => ({
+		data: { apiUrl: apiUrl, requestBody: data },
+		msg: "Data",
+	}));
 	const response = await fetch(apiUrl, {
 		method: "POST",
 		body: data,

@@ -179,7 +179,7 @@ export interface DappUserSolutionResult {
 
 export interface CaptchaSolutionResponse
 	extends ApiResponse,
-	DappUserSolutionResult { }
+		DappUserSolutionResult {}
 
 export interface CaptchaIdAndProof {
 	captchaId: string;

@@ -56,7 +56,7 @@ export default function getConfig(
 	admin = "ADMIN",
 ): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
-		logLevel: parseLogLevel(process.env.PROSOPO_LOG_LEVEL, 'info'),
+		logLevel: parseLogLevel(process.env.PROSOPO_LOG_LEVEL, "info"),
 		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
 			? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
 			: EnvironmentTypesSchema.enum.development,

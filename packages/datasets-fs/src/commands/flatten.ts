@@ -113,7 +113,10 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 				if (fs.existsSync(`${imageDir}/${name}`)) {
 					for (const item of items) {
 						if (item.hash === hex) {
-							this.logger.info(() => ({ msg: `\ndupe: ${label}/${image}`, data: { item } }));
+							this.logger.info(() => ({
+								msg: `\ndupe: ${label}/${image}`,
+								data: { item },
+							}));
 						}
 					}
 					if (!args.allowDuplicates) {

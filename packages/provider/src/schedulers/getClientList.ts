@@ -43,17 +43,16 @@ export async function getClientList(
 		env.logger.info(() => ({
 			msg: `${ScheduledTaskNames.GetClientList} task running: ${taskRunning}`,
 			data: { taskRunning },
-		}),
-		);
+		}));
 		if (!taskRunning) {
 			env.logger.info(() => ({
 				msg: `${ScheduledTaskNames.GetClientList} task....`,
-				data: {}
+				data: {},
 			}));
 			await tasks.clientTaskManager.getClientList().catch((err) => {
 				env.logger.error(() => ({
 					err,
-					msg: "Error getting client list"
+					msg: "Error getting client list",
 				}));
 			});
 		}

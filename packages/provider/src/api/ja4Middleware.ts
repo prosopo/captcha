@@ -24,7 +24,7 @@ import { readTlsClientHello } from "read-tls-client-hello";
 export const DEFAULT_JA4 = "ja4";
 
 export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
-	logger = logger || getLogger('info', import.meta.url);
+	logger = logger || getLogger("info", import.meta.url);
 
 	// Default JA4+ fingerprint for development
 	if (process.env.NODE_ENV === "development") {
@@ -50,11 +50,16 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 
 		// Check first byte after the initial 5
 		if (clientHelloBuffer[5] !== 0x01) {
-			logger.debug(() => ({ msg: "Invalid ClientHello message: First byte is not 0x01" }));
+			logger.debug(() => ({
+				msg: "Invalid ClientHello message: First byte is not 0x01",
+			}));
 			return { ja4PlusFingerprint: DEFAULT_JA4 };
 		}
 
-		logger.debug(() => ({ msg: "Headers TLS Version:", data: { xTlsVersion } }));
+		logger.debug(() => ({
+			msg: "Headers TLS Version:",
+			data: { xTlsVersion },
+		}));
 
 		//`tls1.3` becomes `13` etc.
 		const tlsVersion = xTlsVersion.replace(/(tls)|\./g, "");
@@ -128,7 +133,10 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 
 		return { ja4PlusFingerprint };
 	} catch (e) {
-		logger.error(() => ({ msg: "Error generating JA4+ fingerprint:", err: e instanceof Error ? e : new Error(String(e)) }));
+		logger.error(() => ({
+			msg: "Error generating JA4+ fingerprint:",
+			err: e instanceof Error ? e : new Error(String(e)),
+		}));
 		return { ja4PlusFingerprint: DEFAULT_JA4 };
 	}
 };

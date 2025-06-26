@@ -52,7 +52,10 @@ export default (cmdArgs?: { logger?: Logger }) => {
 				if (parsedArgs.write) {
 					const writePath = path.resolve(parsedArgs.write);
 					fs.writeFileSync(writePath, formattedEnv);
-					logger.info(() => ({ data: { writePath }, msg: "Formatted env written to" }));
+					logger.info(() => ({
+						data: { writePath },
+						msg: "Formatted env written to",
+					}));
 				}
 			} catch (err) {
 				logger.error(() => ({ err }));

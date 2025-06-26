@@ -17,6 +17,7 @@ import {
 	apiExpressRouterFactory,
 	createApiExpressDefaultEndpointAdapter,
 } from "@prosopo/api-express-router";
+import { parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import { getPair } from "@prosopo/keyring";
@@ -50,7 +51,6 @@ import express, { type RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
-import { parseLogLevel } from "@prosopo/common";
 
 const getClientApiPathsExcludingVerify = () => {
 	const paths = Object.values(ClientApiPaths).filter(
@@ -128,7 +128,10 @@ async function startApi(
 		apiExpressRouterFactory.createRouter(
 			apiAdminRoutesProvider,
 			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(parseLogLevel(env.config.logLevel), 400),
+			createApiExpressDefaultEndpointAdapter(
+				parseLogLevel(env.config.logLevel),
+				400,
+			),
 		),
 	);
 
@@ -141,7 +144,10 @@ async function startApi(
 	}
 
 	return apiApp.listen(apiPort, () => {
-		env.logger.info(() => ({ data: { apiPort }, msg: "Prosopo app listening" }));
+		env.logger.info(() => ({
+			data: { apiPort },
+			msg: "Prosopo app listening",
+		}));
 	});
 }
 

@@ -37,7 +37,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 						data: {
 							account: env.authAccount?.address,
 						},
-					}))
+					}));
 					error = e as ProsopoApiError;
 				}
 			}

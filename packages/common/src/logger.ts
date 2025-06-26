@@ -19,7 +19,7 @@ export type LogRecord = {
 	err?: Error | unknown;
 	data?: LogObject;
 	msg?: string;
-}
+};
 export type LogRecordFn = () => LogRecord;
 
 export type Logger = {
@@ -41,12 +41,12 @@ export type Logger = {
 	with(obj: LogObject): Logger;
 };
 
-export const InfoLevel = 'info'
-export const DebugLevel = 'debug'
-export const TraceLevel = 'trace'
-export const WarnLevel = 'warn'
-export const ErrorLevel = 'error'
-export const FatalLevel = 'fatal'
+export const InfoLevel = "info";
+export const DebugLevel = "debug";
+export const TraceLevel = "trace";
+export const WarnLevel = "warn";
+export const ErrorLevel = "error";
+export const FatalLevel = "fatal";
 
 export const LogLevel = z.enum([
 	InfoLevel,
@@ -54,13 +54,13 @@ export const LogLevel = z.enum([
 	TraceLevel,
 	WarnLevel,
 	ErrorLevel,
-	FatalLevel
+	FatalLevel,
 ]);
 export type LogLevel = z.infer<typeof LogLevel>;
 
 export type LevelMap = {
-	[K in LogLevel]: number
-}
+	[K in LogLevel]: number;
+};
 
 const logLevelMap: LevelMap = {
 	[TraceLevel]: 5,
@@ -68,31 +68,29 @@ const logLevelMap: LevelMap = {
 	[InfoLevel]: 3,
 	[WarnLevel]: 2,
 	[ErrorLevel]: 1,
-	[FatalLevel]: 0
+	[FatalLevel]: 0,
 };
 
 export function parseLogLevel(
 	level: string | undefined,
 	or: LogLevel = InfoLevel,
 ): LogLevel {
-	const result = LogLevel.safeParse(level)
+	const result = LogLevel.safeParse(level);
 	return result.success ? result.data : or;
 }
 
 // Create a new logger with the given level and scope
-export function getLogger(
-	logLevel: LogLevel,
-	scope: string
-): Logger {
-	const logger = new NativeLogger(scope)
+export function getLogger(logLevel: LogLevel, scope: string): Logger {
+	const logger = new NativeLogger(scope);
 	logger.setLogLevel(logLevel);
-	return logger
+	return logger;
 }
 
-const inBrowser = typeof window !== "undefined" && typeof window.document !== "undefined";
+const inBrowser =
+	typeof window !== "undefined" && typeof window.document !== "undefined";
 
-export const FormatJson = 'json';
-export const FormatPlain = 'plain';
+export const FormatJson = "json";
+export const FormatPlain = "plain";
 export const Format = z.enum([FormatJson, FormatPlain]);
 export type Format = z.infer<typeof Format>;
 
@@ -100,17 +98,19 @@ export type Format = z.infer<typeof Format>;
  * Native logger which uses console.log, console.error, etc, without any libraries.
  */
 export class NativeLogger implements Logger {
-
 	// the default data to be logged
 	// this provides utility for adding properties to every log message
-	private defaultData = {}
+	private defaultData = {};
 	private level: LogLevel;
 	private levelNum: number;
 	private pretty = 0; // pretty print indentation level - 0 = no pretty print, 2 = 2 spaces, etc
 	private printStack = false; // whether to print the stack trace in the log
 	private format: Format = FormatJson;
 
-	constructor(private scope: string, private levelMap: LevelMap = logLevelMap) {
+	constructor(
+		private scope: string,
+		private levelMap: LevelMap = logLevelMap,
+	) {
 		this.level = InfoLevel; // default log level
 		this.levelNum = this.levelMap[this.level];
 	}
@@ -159,9 +159,7 @@ export class NativeLogger implements Logger {
 		return this.level;
 	}
 
-	private unpackError(
-		err: Error,
-	): LogObject {
+	private unpackError(err: Error): LogObject {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const e: any = err; // allow additional properties
 		const data: LogObject = { err: err.message, name: err.name };
@@ -213,11 +211,15 @@ export class NativeLogger implements Logger {
 		return data;
 	}
 
-	private print(dest: (...args: unknown[]) => void, fn: LogRecordFn, level: LogLevel): void {
+	private print(
+		dest: (...args: unknown[]) => void,
+		fn: LogRecordFn,
+		level: LogLevel,
+	): void {
 		if (this.levelMap[level] > this.levelNum) {
 			return; // skip logging if the level is higher than the current log level
 		}
-		const dateTime = new Date().toISOString()
+		const dateTime = new Date().toISOString();
 		let { data, msg, err } = fn();
 		const errData = err instanceof Error ? this.unpackError(err) : {};
 		if (!msg && errData.message) {
@@ -235,7 +237,7 @@ export class NativeLogger implements Logger {
 				dest(baseRecord);
 			}
 		} else {
-			let output = ''
+			let output = "";
 			// check the format to output
 			if (this.format === FormatJson) {
 				// add the message to the log record, as we're logging a single object only
@@ -244,7 +246,7 @@ export class NativeLogger implements Logger {
 				output = JSON.stringify(record, null, this.pretty);
 			} else if (this.format === FormatPlain) {
 				// in plain format, we concat the log record fields into a string
-				output = `${dateTime} ${level} ${this.scope}:${msg ? ` ${msg}` : ''}${Object.entries(data).length > 0 ? ` ${JSON.stringify(data)}` : ''}`;
+				output = `${dateTime} ${level} ${this.scope}:${msg ? ` ${msg}` : ""}${Object.entries(data).length > 0 ? ` ${JSON.stringify(data)}` : ""}`;
 			} else {
 				throw new Error(`Unknown log format: ${this.format}`);
 			}

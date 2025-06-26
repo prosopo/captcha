@@ -76,14 +76,21 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 				try {
 					const response = await fetch(url);
 					if (!response.ok) {
-						this.logger.error(
-							() => ({ url, status: response.status, statusText: response.statusText, msg: `GET ${url} failed` })
-						);
+						this.logger.error(() => ({
+							url,
+							status: response.status,
+							statusText: response.statusText,
+							msg: `GET ${url} failed`,
+						}));
 					} else {
 						this.logger.info(() => ({ msg: `GET ${url} OK` }));
 					}
 				} catch (err) {
-					this.logger.error(() => ({ err, data: { url }, msg: `GET ${url} failed` }));
+					this.logger.error(() => ({
+						err,
+						data: { url },
+						msg: `GET ${url} failed`,
+					}));
 				}
 			} else {
 				// resolve locally
@@ -91,7 +98,11 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 					fs.readFileSync(url);
 					this.logger.info(() => ({ msg: `GET ${url} OK` }));
 				} catch (err) {
-					this.logger.error(() => ({ err, data: { url }, msg: `GET ${url} failed` }));
+					this.logger.error(() => ({
+						err,
+						data: { url },
+						msg: `GET ${url} failed`,
+					}));
 				}
 			}
 		}

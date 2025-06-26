@@ -140,7 +140,10 @@ export async function setup(provider: boolean, sites: boolean) {
 	if (defaultProvider.secret) {
 		const hasProviderAccount =
 			defaultProvider.address && defaultProvider.secret;
-		logger.debug(() => ({ msg: "ENVIRONMENT", data: { nodeEnv: process.env.NODE_ENV } }));
+		logger.debug(() => ({
+			msg: "ENVIRONMENT",
+			data: { nodeEnv: process.env.NODE_ENV },
+		}));
 
 		const [mnemonic, address] = !hasProviderAccount
 			? await generateMnemonic()
@@ -165,7 +168,9 @@ export async function setup(provider: boolean, sites: boolean) {
 
 		defaultProvider.secret = mnemonic;
 
-		env.logger.info(() => ({ msg: `Registering provider... ${defaultProvider.address}` }));
+		env.logger.info(() => ({
+			msg: `Registering provider... ${defaultProvider.address}`,
+		}));
 
 		defaultProvider.pair = getPair(providerSecret);
 		if (provider) {
@@ -182,13 +187,15 @@ export async function setup(provider: boolean, sites: boolean) {
 			for (const siteKey of getDefaultSiteKeys()) {
 				siteKey.pair = getPair(siteKey.secret);
 
-				env.logger.info(
-					() => ({ msg: `Registering ${siteKey.secret} siteKey ... ${siteKey.pair?.address}` }),
-				);
+				env.logger.info(() => ({
+					msg: `Registering ${siteKey.secret} siteKey ... ${siteKey.pair?.address}`,
+				}));
 
 				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
 
-				env.logger.debug(() => ({ msg: "Updating env files with PROSOPO_SITE_KEY" }));
+				env.logger.debug(() => ({
+					msg: "Updating env files with PROSOPO_SITE_KEY",
+				}));
 				await updateDemoHTMLFiles(
 					[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
 					siteKey.pair.address,
@@ -198,12 +205,12 @@ export async function setup(provider: boolean, sites: boolean) {
 				const envVarNames =
 					siteKey.settings.captchaType === "image"
 						? [
-							"PROSOPO_SITE_KEY",
-							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-						]
+								"PROSOPO_SITE_KEY",
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							]
 						: [
-							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-						];
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							];
 
 				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
 			}

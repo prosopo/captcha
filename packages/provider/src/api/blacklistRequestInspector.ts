@@ -22,7 +22,7 @@ class BlacklistRequestInspector {
 		private readonly blacklistInspector: BlacklistInspector,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 		private readonly logger: Logger,
-	) { }
+	) {}
 
 	public async abortRequestForBlockedUsers(
 		request: Request,
@@ -32,7 +32,7 @@ class BlacklistRequestInspector {
 		const rawIp = request.ip || "";
 
 		request.logger.debug(() => ({
-			data: { ja4: request.ja4 }
+			data: { ja4: request.ja4 },
 		}));
 
 		const shouldAbortRequest = await this.shouldAbortRequest(

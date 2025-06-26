@@ -94,7 +94,10 @@ export default class ReloadingAPI {
 
 	private async _watchEnv() {
 		return fs.watchFile(this._envPath, async () => {
-			log.info(() => ({ data: { restarting: this._restarting }, msg: "env file change detected. Restarting" }));
+			log.info(() => ({
+				data: { restarting: this._restarting },
+				msg: "env file change detected. Restarting",
+			}));
 			if (!this._restarting) {
 				this._restarting = true;
 				await this.stop();

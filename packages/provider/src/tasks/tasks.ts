@@ -1,4 +1,9 @@
-import { type Logger, ProsopoEnvError, getLogger, parseLogLevel } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoEnvError,
+	getLogger,
+	parseLogLevel,
+} from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //

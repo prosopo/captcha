@@ -113,7 +113,10 @@ if (isMain(import.meta.url)) {
 			const hexSig = u8aToHex(sig);
 			logger.info(() => ({ data: { hexSig }, msg: "Hex Signature" }));
 			logger.info(() => ({ data: { publicKey }, msg: "Public Key" }));
-			logger.info(() => ({ data: { signature: base64Encode(hexSig) }, msg: "Base64 Signature" }));
+			logger.info(() => ({
+				data: { signature: base64Encode(hexSig) },
+				msg: "Base64 Signature",
+			}));
 			process.exit();
 		})
 		.catch((error) => {

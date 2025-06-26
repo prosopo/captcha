@@ -1,8 +1,4 @@
-import {
-	LogLevel,
-	ProsopoCliError,
-	getLogger,
-} from "@prosopo/common";
+import { LogLevel, ProsopoCliError, getLogger } from "@prosopo/common";
 import yargs, { type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
@@ -24,7 +20,7 @@ const dirname = process.cwd();
 
 export class Cli {
 	#commands: CliCommandAny[];
-	logger = getLogger('info', import.meta.url)
+	logger = getLogger("info", import.meta.url);
 
 	constructor(commands: CliCommandAny[]) {
 		this.#commands = commands;
@@ -50,7 +46,9 @@ export class Cli {
 				builder: command.getOptions(),
 				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 				handler: async (argv: any) => {
-					this.logger.debug(() => ({ msg: `running ${command.getCommandName()}` }));
+					this.logger.debug(() => ({
+						msg: `running ${command.getCommandName()}`,
+					}));
 					const args = await command.parse(argv);
 					await command.exec(args);
 				},

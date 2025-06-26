@@ -17,11 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import {
-	type Logger,
-	type ProsopoApiError,
-	getLogger,
-} from "@prosopo/common";
+import { type Logger, type ProsopoApiError, getLogger } from "@prosopo/common";
 import { UpdateDetectorKeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -29,18 +25,19 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
 
 class ApiUpdateDetectorKeyEndpoint
-	implements ApiEndpoint<UpdateDetectorKeyBodyType> {
-	public constructor(private readonly clientTaskManager: ClientTaskManager) { }
+	implements ApiEndpoint<UpdateDetectorKeyBodyType>
+{
+	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<UpdateDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger('info', '');
+		logger = logger || getLogger("info", "");
 		try {
 			const { detectorKey } = args;
 
-			logger = logger || getLogger('info', '');
+			logger = logger || getLogger("info", "");
 
 			logger.info(() => ({ msg: "Updating detector key" }));
 

@@ -27,7 +27,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 		private readonly rulesStorage: RulesStorage,
 		private readonly logger: Logger,
 		private _accessRule: Rule | null = null,
-	) { }
+	) {}
 
 	get accessRule(): Rule | null {
 		return this._accessRule;
@@ -59,7 +59,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 					userId: userId,
 					imageCaptchaConfig: imageCaptchaConfig,
 					ja4: ja4,
-				}
+				},
 			}));
 		}
 
@@ -94,7 +94,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 					...logArgs,
 					configDefined: false,
 				},
-				msg: "ImageCaptchaConfigRulesResolver.resolveConfig"
+				msg: "ImageCaptchaConfigRulesResolver.resolveConfig",
 			}));
 
 			return defaults;
@@ -111,7 +111,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 				config: config,
 				...logArgs,
 			},
-			msg: "ImageCaptchaConfigRulesResolver.resolveConfig"
+			msg: "ImageCaptchaConfigRulesResolver.resolveConfig",
 		}));
 
 		return config;
@@ -138,7 +138,7 @@ class ImageCaptchaConfigRulesResolver implements ImageCaptchaConfigResolver {
 				clientId: clientId,
 				ja4,
 			},
-			msg: "ImageCaptchaConfigRulesResolver.fetchUserAccessRule"
+			msg: "ImageCaptchaConfigRulesResolver.fetchUserAccessRule",
 		}));
 
 		return this.selectPrimaryUserAccessRule(accessRules);

@@ -119,7 +119,9 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(() => ({ msg: `No record of this challenge: ${challenge}` }));
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
 			// no record of this challenge
 			return false;
 		}
@@ -177,7 +179,9 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(() => ({ msg: `No record of this challenge: ${challenge}` }));
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
 			return { verified: false };
 		}
 
@@ -188,7 +192,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				return { verified: false };
 			}
 			if (challengeRecord.ipAddress !== ipV4Address.bigInt()) {
-				this.logger.debug(() => ({ msg: `IP address mismatch: ${getIPAddressFromBigInt(challengeRecord.ipAddress).address} !== ${ip}` }));
+				this.logger.debug(() => ({
+					msg: `IP address mismatch: ${getIPAddressFromBigInt(challengeRecord.ipAddress).address} !== ${ip}`,
+				}));
 				return { verified: false };
 			}
 		}

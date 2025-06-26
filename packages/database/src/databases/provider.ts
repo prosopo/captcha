@@ -169,7 +169,8 @@ const PROVIDER_TABLES = [
 
 export class ProviderDatabase
 	extends MongoDatabase
-	implements IProviderDatabase {
+	implements IProviderDatabase
+{
 	tables = {} as Tables<TableNames>;
 	private userAccessRulesDbStorage: RulesStorage | null;
 
@@ -232,7 +233,7 @@ export class ProviderDatabase
 		try {
 			this.logger.debug(() => ({
 				data: { datasetId: dataset.datasetId },
-				msg: "Storing dataset in database"
+				msg: "Storing dataset in database",
 			}));
 			const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
 			const datasetDoc = {
@@ -264,7 +265,7 @@ export class ProviderDatabase
 			);
 
 			this.logger.debug(() => ({
-				msg: "Inserting captcha records"
+				msg: "Inserting captcha records",
 			}));
 			// create a bulk upsert operation and execute
 			if (captchaDocs.length) {
@@ -295,7 +296,7 @@ export class ProviderDatabase
 				}));
 
 			this.logger.debug(() => ({
-				msg: "Inserting solution records"
+				msg: "Inserting solution records",
 			}));
 			// create a bulk upsert operation and execute
 			if (captchaSolutionDocs.length) {
@@ -313,7 +314,7 @@ export class ProviderDatabase
 				);
 			}
 			this.logger.debug(() => ({
-				msg: "Dataset stored in database"
+				msg: "Dataset stored in database",
 			}));
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.DATASET_LOAD_FAILED", {
@@ -630,7 +631,7 @@ export class ProviderDatabase
 					serverChecked,
 					storedStatus,
 				},
-				msg: "PowCaptcha record added successfully"
+				msg: "PowCaptcha record added successfully",
 			}));
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
@@ -642,10 +643,10 @@ export class ProviderDatabase
 					storedStatus,
 				},
 				logger: this.logger,
-			})
+			});
 			this.logger.error(() => ({
 				err: error,
-				msg: "Failed to add PowCaptcha record"
+				msg: "Failed to add PowCaptcha record",
 			}));
 			throw err;
 		}
@@ -675,23 +676,23 @@ export class ProviderDatabase
 			if (record) {
 				this.logger.info(() => ({
 					data: { challenge },
-					msg: "PowCaptcha record retrieved successfully"
+					msg: "PowCaptcha record retrieved successfully",
 				}));
 				return record;
 			}
 			this.logger.info(() => ({
 				data: { challenge },
-				msg: "No PowCaptcha record found"
+				msg: "No PowCaptcha record found",
 			}));
 			return null;
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: { error, challenge },
 				logger: this.logger,
-			})
+			});
 			this.logger.error(() => ({
 				err: err,
-				msg: "Failed to retrieve PowCaptcha record"
+				msg: "Failed to retrieve PowCaptcha record",
 			}));
 			throw err;
 		}
@@ -744,10 +745,10 @@ export class ProviderDatabase
 						...update,
 					},
 					logger: this.logger,
-				})
+				});
 				this.logger.info(() => ({
 					err: err,
-					msg: "No PowCaptcha record found to update"
+					msg: "No PowCaptcha record found to update",
 				}));
 				throw err;
 			}
@@ -756,7 +757,7 @@ export class ProviderDatabase
 					challenge,
 					...update,
 				},
-				msg: "PowCaptcha record updated successfully"
+				msg: "PowCaptcha record updated successfully",
 			}));
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
@@ -769,7 +770,7 @@ export class ProviderDatabase
 			});
 			this.logger.error(() => ({
 				err: err,
-				msg: "Failed to update PowCaptcha record"
+				msg: "Failed to update PowCaptcha record",
 			}));
 			throw err;
 		}
@@ -1007,7 +1008,7 @@ export class ProviderDatabase
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
 			this.logger.debug(() => ({
-				data: { action: "storing", sessionRecord }
+				data: { action: "storing", sessionRecord },
 			}));
 			await this.tables.session.create(sessionRecord);
 		} catch (err) {
@@ -1026,12 +1027,12 @@ export class ProviderDatabase
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
 		this.logger.debug(() => ({
-			data: { action: "checking and removing", sessionId }
+			data: { action: "checking and removing", sessionId },
 		}));
 		const filter: {
 			[key in keyof Pick<SessionRecord, "sessionId" | "deleted">]:
-			| string
-			| { $exists: boolean };
+				| string
+				| { $exists: boolean };
 		} = {
 			sessionId,
 			deleted: { $exists: false },
@@ -1406,10 +1407,10 @@ export class ProviderDatabase
 		try {
 			const result: CaptchaResult = { status: CaptchaStatus.approved };
 			const updateDoc: Pick<StoredCaptcha, "result" | "lastUpdatedTimestamp"> =
-			{
-				result,
-				lastUpdatedTimestamp: Date.now(),
-			};
+				{
+					result,
+					lastUpdatedTimestamp: Date.now(),
+				};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
@@ -1432,10 +1433,10 @@ export class ProviderDatabase
 	): Promise<void> {
 		try {
 			const updateDoc: Pick<StoredCaptcha, "result" | "lastUpdatedTimestamp"> =
-			{
-				result: { status: CaptchaStatus.disapproved, reason },
-				lastUpdatedTimestamp: Date.now(),
-			};
+				{
+					result: { status: CaptchaStatus.disapproved, reason },
+					lastUpdatedTimestamp: Date.now(),
+				};
 
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment

@@ -18,7 +18,7 @@ import type { Options } from "yargs";
 import type * as z from "zod";
 
 export abstract class CliCommand<T extends z.ZodTypeAny> {
-	logger = getLogger('info', import.meta.url);
+	logger = getLogger("info", import.meta.url);
 
 	// get the options for the CLI
 	public getOptions(): {

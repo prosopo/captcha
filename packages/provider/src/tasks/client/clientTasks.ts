@@ -226,7 +226,7 @@ export class ClientTaskManager {
 		} catch (e: unknown) {
 			this.logger.error(() => ({
 				err: e,
-				msg: "Error processing client tasks"
+				msg: "Error processing client tasks",
 			}));
 			this.captchaDB?.close();
 			await this.providerDB.updateScheduledTaskStatus(

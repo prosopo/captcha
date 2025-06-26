@@ -73,13 +73,13 @@ export class MongoDatabase {
 	 */
 	async connect(): Promise<void> {
 		this.logger.info(() => ({
-			data: { mongoUrl: this.safeURL }
+			data: { mongoUrl: this.safeURL },
 		}));
 		try {
 			if (this.connected) {
 				this.logger.info(() => ({
 					data: { mongoUrl: this.safeURL },
-					msg: "Database connection already open"
+					msg: "Database connection already open",
 				}));
 				return;
 			}
@@ -92,7 +92,7 @@ export class MongoDatabase {
 				connection.on("open", () => {
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
-						msg: "Database connection opened"
+						msg: "Database connection opened",
 					}));
 					this.connected = true;
 					resolve(connection);
@@ -111,7 +111,7 @@ export class MongoDatabase {
 				connection.on("connected", () => {
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
-						msg: "Database connected"
+						msg: "Database connected",
 					}));
 					this.connected = true;
 					resolve(connection);
@@ -121,14 +121,14 @@ export class MongoDatabase {
 					this.connected = false;
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
-						msg: "Database disconnected"
+						msg: "Database disconnected",
 					}));
 				});
 
 				connection.on("reconnected", () => {
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
-						msg: "Database reconnected"
+						msg: "Database reconnected",
 					}));
 					this.connected = true;
 					resolve(connection);
@@ -138,7 +138,7 @@ export class MongoDatabase {
 					this.connected = false;
 					this.logger.error(() => ({
 						data: { mongoUrl: this.safeURL },
-						msg: "Database reconnect failed"
+						msg: "Database reconnect failed",
 					}));
 				});
 
@@ -146,7 +146,7 @@ export class MongoDatabase {
 					this.connected = false;
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
-						msg: "Database connection closed"
+						msg: "Database connection closed",
 					}));
 				});
 
@@ -154,7 +154,7 @@ export class MongoDatabase {
 					this.connected = true;
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
-						msg: "Database connection is fully setup"
+						msg: "Database connection is fully setup",
 					}));
 					resolve(connection);
 				});
@@ -163,7 +163,7 @@ export class MongoDatabase {
 			this.logger.error(() => ({
 				err: e,
 				data: { mongoUrl: this.safeURL },
-				msg: "Database connection error"
+				msg: "Database connection error",
 			}));
 			throw e;
 		}
@@ -173,7 +173,7 @@ export class MongoDatabase {
 	async close(): Promise<void> {
 		this.logger.debug(() => ({
 			data: { mongoUrl: this.safeURL },
-			msg: "Closing connection"
+			msg: "Closing connection",
 		}));
 		await this.connection?.close();
 	}
