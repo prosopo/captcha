@@ -210,7 +210,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				return res.json(verificationResponse);
 			} catch (err) {
 				console.error("\nError in verifyPowCaptchaSolution:", err);
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({ err, data: { body: req.body } }));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },
