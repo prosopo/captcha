@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError, getLoggerDefault } from "@prosopo/common";
+import { ProsopoApiError, getLogger } from "@prosopo/common";
 import { getJA4 } from "@prosopo/provider";
 import {
 	ClientApiPaths,
@@ -94,7 +94,7 @@ export function prosopoRouter(): Router {
 
 	router.get("/test", async (req, res) => {
 		try {
-			const logger = getLoggerDefault();
+			const logger = getLogger('info', import.meta.url);
 			const ja4PlusFingerprint = await getJA4(req.headers, logger);
 			await db.connect();
 			await db.addOrUpdateJA4Record({
