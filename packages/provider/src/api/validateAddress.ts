@@ -16,7 +16,7 @@ import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import { validateAddress } from "@prosopo/util-crypto";
 
-export const validiateSiteKey = (siteKey: string, logger?: Logger) => {
+export const validateSiteKey = (siteKey: string, logger?: Logger) => {
 	return validateAddr(siteKey, "API.INVALID_SITE_KEY", logger);
 };
 
@@ -26,10 +26,17 @@ export const validateAddr = (
 	logger?: Logger,
 ) => {
 	try {
-		return validateAddress(address, false, 42);
+		const valid = validateAddress(address, false, 42);
+
+		if (!valid) {
+			throw new ProsopoApiError(translationKey, {
+				context: { code: 400, siteKey: address },
+				logger,
+			});
+		}
 	} catch (err) {
 		throw new ProsopoApiError(translationKey, {
-			context: { code: 400, error: err, siteKey: address },
+			context: { code: 400, siteKey: address },
 			logger,
 		});
 	}

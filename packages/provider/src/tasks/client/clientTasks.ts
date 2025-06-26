@@ -35,7 +35,7 @@ import {
 import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import type { OptionalId } from "mongodb";
-import { validiateSiteKey } from "../../api/validateAddress.js";
+import { validateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -307,7 +307,7 @@ export class ClientTaskManager {
 		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
-		validiateSiteKey(siteKey);
+		validateSiteKey(siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
