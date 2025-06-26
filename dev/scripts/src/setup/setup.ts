@@ -169,43 +169,45 @@ export async function setup(provider: boolean, sites: boolean) {
 
 		defaultProvider.pair = getPair(providerSecret);
 		if (provider) {
-            await setupProvider(env, defaultProvider);
+			await setupProvider(env, defaultProvider);
 
-                if (!hasProviderAccount) {
-                await updateEnvFile({
-                    PROVIDER_MNEMONIC: `"${mnemonic}"`,
-                    PROVIDER_ADDRESS: address,
-                });}
-            }
-        }
-        if (sites) {
-		for (const siteKey of getDefaultSiteKeys()) {
-			siteKey.pair = getPair(siteKey.secret);
-
-			env.logger.info(
-				`Registering ${siteKey.secret} siteKey ... ${siteKey.pair.address}`,
-			);
-
-			await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
-
-			env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
-			await updateDemoHTMLFiles(
-				[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
-				siteKey.pair.address,
-				env.logger,
-			);
-
-			const envVarNames =
-				siteKey.settings.captchaType === "image"
-					? [
-							"PROSOPO_SITE_KEY",
-							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-						]
-					: [`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`];
-
-			await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
+			if (!hasProviderAccount) {
+				await updateEnvFile({
+					PROVIDER_MNEMONIC: `"${mnemonic}"`,
+					PROVIDER_ADDRESS: address,
+				});
+			}
 		}
-        }
+		if (sites) {
+			for (const siteKey of getDefaultSiteKeys()) {
+				siteKey.pair = getPair(siteKey.secret);
+
+				env.logger.info(
+					`Registering ${siteKey.secret} siteKey ... ${siteKey.pair.address}`,
+				);
+
+				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
+
+				env.logger.debug("Updating env files with PROSOPO_SITE_KEY");
+				await updateDemoHTMLFiles(
+					[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
+					siteKey.pair.address,
+					env.logger,
+				);
+
+				const envVarNames =
+					siteKey.settings.captchaType === "image"
+						? [
+								"PROSOPO_SITE_KEY",
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							]
+						: [
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							];
+
+				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
+			}
+		}
 		process.exit();
 	} else {
 		console.error("no secret found in .env file");
