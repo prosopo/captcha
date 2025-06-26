@@ -41,6 +41,7 @@ export function getPair(
 			return keyring.addFromSeed(hexToU8a(secret));
 		}
 		if (secret.includes("//")) {
+			console.log("Getting pair from URI", secret);
 			return keyring.addFromUri(secret);
 		}
 		try {

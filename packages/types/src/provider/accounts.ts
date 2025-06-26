@@ -24,12 +24,12 @@ export interface IProviderAccount extends IUserAccount {
 	url: string;
 	datasetFile: string;
 	captchaDatasetId: string;
-	pair?: KeyringPair;
+	pair: KeyringPair;
 }
 
 export interface ISite {
 	secret: string;
 	address: string;
 	settings: IUserSettings;
-	pair?: KeyringPair;
+	pair: KeyringPair;
 }

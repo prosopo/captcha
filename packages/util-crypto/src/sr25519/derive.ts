@@ -5,6 +5,7 @@ import type { Keypair } from "../types.js";
 
 import { isU8a, u8aConcat } from "@polkadot/util";
 
+import { getPublicKey } from "@scure/sr25519";
 import { sr25519PairFromU8a } from "./pair/fromU8a.js";
 
 export function createDeriveFn(
@@ -15,11 +16,9 @@ export function createDeriveFn(
 			throw new Error("Invalid chainCode passed to derive");
 		}
 
-		return sr25519PairFromU8a(
-			new Uint8Array([
-				...keypair.publicKey,
-				...derive(keypair.secretKey, chainCode),
-			]),
-		);
+		const derivedSecret = derive(keypair.secretKey, chainCode);
+		const publicKey = getPublicKey(derivedSecret);
+
+		return sr25519PairFromU8a(new Uint8Array([...derivedSecret, ...publicKey]));
 	};
 }

@@ -22,7 +22,7 @@ const RE_NUMBER = /^\d+$/;
 const JUNCTION_ID_LEN = 32;
 
 export class DeriveJunction {
-	readonly #chainCode: Uint8Array = new Uint8Array(32);
+	#chainCode: Uint8Array = new Uint8Array(32);
 
 	#isHard = false;
 

@@ -17,13 +17,12 @@ import { defaultConfig, getSecret } from "@prosopo/cli";
 import { LogLevel, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
-import { DEV_PHRASE, generateMnemonic, getPair } from "@prosopo/keyring";
 import {
-	CaptchaType,
-	ClientSettingsSchema,
-	type IProviderAccount,
-	type ISite,
-} from "@prosopo/types";
+	generateMnemonic,
+	getDefaultSiteKeys,
+	getPair,
+} from "@prosopo/keyring";
+import type { IProviderAccount } from "@prosopo/types";
 import { get } from "@prosopo/util";
 import fse from "fs-extra";
 import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
@@ -59,40 +58,8 @@ function getDefaultProvider(): IProviderAccount {
 		address: process.env.PROSOPO_PROVIDER_ADDRESS || "",
 		secret: getSecret(),
 		captchaDatasetId: "",
+		pair: getPair(getSecret()),
 	};
-}
-//sr25519 dev site keys
-export function getDefaultSiteKeys(): ISite[] {
-	return [
-		{
-			secret: `${DEV_PHRASE}//${CaptchaType.image}`,
-			address: "5DWuxC3covEaAsPcMt1zcpibGLsHAqMcfAzi2fzuWtQupFgq",
-			settings: ClientSettingsSchema.parse({
-				captchaType: CaptchaType.image,
-			}),
-		},
-		{
-			secret: `${DEV_PHRASE}//${CaptchaType.pow}`,
-			address: "5GWr5T3bCvBZMG9H9CDM5ynYS1zo7vcwS24Dg4DismRmsD8P",
-			settings: ClientSettingsSchema.parse({
-				captchaType: CaptchaType.pow,
-			}),
-		},
-		{
-			secret: `${DEV_PHRASE}//${CaptchaType.frictionless}`,
-			address: "5Do7mgno9VQCDPn6abR1UgB9jUjaEmqVQb5paB5fHNabvRDE",
-			settings: ClientSettingsSchema.parse({
-				captchaType: CaptchaType.frictionless,
-			}),
-		},
-		{
-			secret: `${DEV_PHRASE}//${CaptchaType.invisible}`,
-			address: "5FNFBC97JQoJu7LBapycXbT66N9xzQH2tyFv1yNvBxqa8tQR",
-			settings: ClientSettingsSchema.parse({
-				captchaType: CaptchaType.invisible,
-			}),
-		},
-	];
 }
 
 async function copyEnvFile() {
@@ -169,7 +136,7 @@ export async function setup(provider: boolean, sites: boolean) {
 
 		defaultProvider.pair = getPair(providerSecret);
 		if (provider) {
-			await setupProvider(env, defaultProvider);
+			await setupProvider(env);
 
 			if (!hasProviderAccount) {
 				await updateEnvFile({

@@ -94,11 +94,12 @@ const siteKeyNotRegisteredError = (
 
 const invalidSiteKeyError = (
 	i18n: { t: TFunction<"translation", undefined> },
-	dapp: string,
+	siteKey: string,
 	logger?: Logger,
 ) => {
+	console.log("\n\nInvalid site key:", siteKey, "\n\n\n");
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
-		context: { code: 400, siteKey: dapp },
+		context: { code: 400, siteKey: siteKey },
 		i18n,
 		logger,
 	});

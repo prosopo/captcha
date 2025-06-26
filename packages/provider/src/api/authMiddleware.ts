@@ -53,6 +53,7 @@ export const authMiddleware = (env: ProviderEnvironment) => {
 			});
 			return;
 		} catch (err) {
+			console.error(err);
 			req.logger.error("Auth Middleware Error:", err);
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
@@ -101,17 +102,19 @@ const extractHeaders = (req: Request) => {
 
 export const verifySignature = (
 	signature: string,
-	timestamp: string,
+	message: string,
 	pair: KeyringPair,
 ) => {
 	const u8Sig = hexToU8a(signature);
 
-	if (!pair.verify(timestamp, u8Sig, pair.publicKey)) {
+	if (!pair.verify(message, u8Sig, pair.publicKey)) {
 		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
 			context: {
 				error: "Signature verification failed",
 				code: 401,
 				account: pair.address,
+				message,
+				signature,
 			},
 		});
 	}
