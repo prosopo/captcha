@@ -231,6 +231,8 @@ describe("Image Captcha Integration Tests", () => {
 		it("should verify a correctly completed image captcha as true", async () => {
 			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 
+			await registerSiteKey(pair.address, CaptchaType.image);
+
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
