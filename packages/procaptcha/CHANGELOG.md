@@ -1,5 +1,18 @@
 # @prosopo/procaptcha
 
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/util-crypto@13.5.0
+  - @prosopo/types@2.9.0
+  - @prosopo/account@2.7.1
+  - @prosopo/common@2.7.1
+  - @prosopo/datasets@2.7.1
+  - @prosopo/api@2.6.6
+  - @prosopo/load-balancer@2.6.6
+  - @prosopo/procaptcha-common@2.7.1
+
 ## 2.7.0
 ### Minor Changes
 

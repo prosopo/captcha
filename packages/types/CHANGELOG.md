@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 2.9.0
+### Minor Changes
+
+- 30bb383: Making sure verify works and derived accounts
+
+### Patch Changes
+
+  - @prosopo/common@2.7.1
+
 ## 2.8.0
 ### Minor Changes
 

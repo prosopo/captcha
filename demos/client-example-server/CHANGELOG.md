@@ -1,5 +1,14 @@
 # @prosopo/client-example-server
 
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/server@2.7.1
+  - @prosopo/dotenv@2.6.3
+
 ## 2.7.0
 ### Minor Changes
 

@@ -1,5 +1,20 @@
 # @prosopo/cli
 
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/util-crypto@13.5.0
+  - @prosopo/provider@2.11.0
+  - @prosopo/keyring@2.8.0
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/api@2.6.6
+  - @prosopo/env@2.7.1
+  - @prosopo/user-access-policy@2.6.6
+  - @prosopo/api-express-router@2.6.3
+  - @prosopo/dotenv@2.6.3
+
 ## 2.7.0
 ### Minor Changes
 
