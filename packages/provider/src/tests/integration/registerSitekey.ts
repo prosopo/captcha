@@ -24,13 +24,21 @@ export const registerSiteKey = async (
 		const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
 		const host = process.env.PROSOPO_DATABASE_HOST || "localhost";
 		const port = process.env.PROSOPO_DATABASE_PORT || 27017;
+		const dbName = process.env.PROSOPO_DATABASE_NAME || "prosopo";
 		const db = new ProviderDatabase(
 			`mongodb://${username}:${pw}@${host}:${port}`,
-			process.env.PROSOPO_DATABASE_NAME || "prosopo",
+			dbName,
 			process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
 		);
 		await db.connect();
-		console.log("Registering site key", siteKey);
+		console.log(
+			"Registering site key",
+			siteKey,
+			"with captcha type",
+			captchaType,
+			"in database",
+			dbName,
+		);
 		await db.updateClientRecords([
 			{
 				account: siteKey,

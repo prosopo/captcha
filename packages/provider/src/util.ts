@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { decodeAddress, encodeAddress } from "@polkadot/util-crypto/address";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
@@ -21,8 +20,9 @@ import {
 	type ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
+import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 

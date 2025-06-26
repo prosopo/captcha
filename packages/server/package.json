@@ -32,7 +32,6 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/api": "2.6.4",
 		"@prosopo/common": "2.6.1",

@@ -16,7 +16,7 @@ import { blake2b } from "@noble/hashes/blake2b";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import { ProsopoServer } from "@prosopo/server";
 import {
 	ApiParams,
@@ -87,7 +87,7 @@ const signup = async (
 			email: { $eq: req.body.email },
 		});
 		const payload = SubscribeBodySpec.parse(req.body);
-		const pair = await getPairAsync(config.account.secret);
+		const pair = await getPair(config.account.secret);
 		const prosopoServer = new ProsopoServer(config, pair);
 		if (dbUser) {
 			return res.status(409).json({ message: "email already exists" });
@@ -151,7 +151,7 @@ const login = async (
 	res: Response,
 ) => {
 	const User = mongoose.model<UserInterface>("User");
-	const pair = await getPairAsync(config.account.secret);
+	const pair = await getPair(config.account.secret);
 	const prosopoServer = new ProsopoServer(config, pair);
 	// checks if email exists
 	await User.findOne({

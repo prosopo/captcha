@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto/address";
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
@@ -27,6 +26,7 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { verifySignature } from "./authMiddleware.js";
@@ -209,6 +209,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 				return res.json(verificationResponse);
 			} catch (err) {
+				console.error("\nError in verifyPowCaptchaSolution:", err);
 				req.logger.error({ err, body: req.body });
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {

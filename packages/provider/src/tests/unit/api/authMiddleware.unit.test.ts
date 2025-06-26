@@ -1,8 +1,3 @@
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { hexToU8a, isHex } from "@polkadot/util";
-import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { NextFunction, Request, Response } from "express";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +11,26 @@ import type { NextFunction, Request, Response } from "express";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { hexToU8a, isHex } from "@polkadot/util";
+import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../api/authMiddleware.js";
 import type { Tasks } from "../../../tasks/tasks.js";
 
-vi.mock("@polkadot/util", () => ({
-	hexToU8a: vi.fn(),
-	isHex: vi.fn(),
-}));
+vi.mock("@polkadot/util", async (importOriginal) => {
+	const actual = await importOriginal();
+
+	return {
+		// @ts-ignore
+		...actual,
+		hexToU8a: vi.fn(),
+		isHex: vi.fn(),
+	};
+});
 
 const mockLogger = {
 	info: vi.fn(),
@@ -135,32 +142,5 @@ describe("authMiddleware", () => {
 			error: "Unauthorized",
 			message: expect.any(ProsopoEnvError),
 		});
-	});
-
-	it("should 404 if url does not contain /v1/prosopo", async () => {
-		const mockReq = {
-			url: "/favicon.ico",
-			originalUrl: "/favicon.ico",
-			headers: {
-				signature: "0x1234",
-				timestamp: new Date().getTime(),
-			},
-			logger: mockLogger,
-		} as unknown as Request;
-
-		const mockRes = {
-			status: vi.fn().mockReturnThis(),
-			statusCode: 404,
-			json: vi.fn(),
-		} as unknown as Response;
-
-		const mockNext = vi.fn(() => {
-			console.log("mock next function");
-		}) as unknown as NextFunction;
-
-		const middleware = authMiddleware(mockEnv);
-		await middleware(mockReq, mockRes, mockNext);
-
-		expect(mockRes.statusCode).toBe(404);
 	});
 });

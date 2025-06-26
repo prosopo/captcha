@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { u8aToHex } from "@polkadot/util";
-import { randomAsHex } from "@polkadot/util-crypto";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaSolution,
@@ -31,14 +30,11 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { Address4 } from "ip-address";
+import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
-import {
-	getIPAddress,
-	getIPAddressFromBigInt,
-	shuffleArray,
-} from "../../../../util.js";
+import { getIPAddress, getIPAddressFromBigInt } from "../../../../util.js";
+import { shuffleArray } from "../../../../util.js";
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -46,7 +42,7 @@ vi.mock("@prosopo/datasets", () => ({
 	compareCaptchaSolutions: vi.fn(),
 	parseAndSortCaptchaSolutions: vi.fn(),
 }));
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	randomAsHex: vi.fn(),
 	signatureVerify: vi.fn(),
 }));
