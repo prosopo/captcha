@@ -1,7 +1,7 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { u8aToU8a } from "@polkadot/util";
+import { u8aToHex, u8aToU8a } from "@polkadot/util";
 import { verify } from "@scure/sr25519";
 
 /**

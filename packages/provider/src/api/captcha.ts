@@ -43,7 +43,7 @@ import type { ObjectId } from "mongoose";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getIPAddress } from "../util.js";
-import { validateAddr, validiateSiteKey } from "./validateAddress.js";
+import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -96,7 +96,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const { datasetId, user, dapp, sessionId } = parsed;
 
-			validiateSiteKey(dapp);
+			validateSiteKey(dapp);
 			validateAddr(user);
 
 			try {
@@ -218,7 +218,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const { user, dapp } = parsed;
 
-			validiateSiteKey(dapp);
+			validateSiteKey(dapp);
 			validateAddr(user);
 
 			try {
@@ -296,7 +296,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		const { user, dapp, sessionId } = parsed;
 
-		validiateSiteKey(dapp);
+		validateSiteKey(dapp);
 		validateAddr(user);
 
 		try {
@@ -438,7 +438,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				user,
 			} = parsed;
 
-			validiateSiteKey(dapp);
+			validateSiteKey(dapp);
 			validateAddr(user);
 
 			try {

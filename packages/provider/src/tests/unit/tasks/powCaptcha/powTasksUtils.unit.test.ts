@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { ProsopoContractError } from "@prosopo/common";
-import { verifyRecency } from "@prosopo/util";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -95,6 +94,8 @@ describe("Validation Functions", () => {
 						failedFuncName: "checkPowSignature",
 						signature,
 						signatureType: undefined,
+						address: "testAddress",
+						message: "testChallenge",
 					},
 				}),
 			);
