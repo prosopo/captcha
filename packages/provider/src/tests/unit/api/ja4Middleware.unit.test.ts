@@ -24,16 +24,8 @@ describe("ja4Middleware", () => {
 	it("should return default JA4 if an error occurs", async () => {
 		const mockReq: {
 			ja4?: string;
-			logger?: {
-				error: (message: string) => void;
-				debug: (message: string) => void;
-			};
 		} & Request = {
 			headers: {},
-			logger: {
-				error: vi.fn(),
-				debug: vi.fn(),
-			},
 		} as unknown as Request;
 
 		const mockRes = {
