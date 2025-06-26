@@ -129,7 +129,12 @@ export async function updateEnvFile(vars: Record<string, string>) {
 	await fse.writeFile(envFile, readEnvFile);
 }
 
-export async function setup(force: boolean) {
+export async function setup(provider: boolean, sites: boolean) {
+	if (!provider && !sites) {
+		logger.info("No setup required, exiting.");
+		process.exit(0);
+	}
+
 	const defaultProvider = getDefaultProvider();
 
 	if (defaultProvider.secret) {
@@ -163,16 +168,17 @@ export async function setup(force: boolean) {
 		env.logger.info(`Registering provider... ${defaultProvider.address}`);
 
 		defaultProvider.pair = getPair(providerSecret);
+		if (provider) {
+            await setupProvider(env, defaultProvider);
 
-		await setupProvider(env, defaultProvider);
-
-		if (!hasProviderAccount) {
-			await updateEnvFile({
-				PROVIDER_MNEMONIC: `"${mnemonic}"`,
-				PROVIDER_ADDRESS: address,
-			});
-		}
-
+                if (!hasProviderAccount) {
+                await updateEnvFile({
+                    PROVIDER_MNEMONIC: `"${mnemonic}"`,
+                    PROVIDER_ADDRESS: address,
+                });}
+            }
+        }
+        if (sites) {
 		for (const siteKey of getDefaultSiteKeys()) {
 			siteKey.pair = getPair(siteKey.secret);
 
@@ -199,6 +205,7 @@ export async function setup(force: boolean) {
 
 			await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
 		}
+        }
 		process.exit();
 	} else {
 		console.error("no secret found in .env file");
