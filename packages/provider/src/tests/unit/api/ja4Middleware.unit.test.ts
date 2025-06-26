@@ -34,7 +34,9 @@ describe("ja4Middleware", () => {
 			},
 		} as unknown as Request;
 
-		const mockRes = {} as unknown as Response;
+		const mockRes = {
+			set: vi.fn(),
+		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
 		const ja4MiddlewareInstance = ja4Middleware({} as ProviderEnvironment);
