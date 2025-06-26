@@ -26,16 +26,21 @@ describe("ja4Middleware", () => {
 			ja4?: string;
 			logger?: {
 				error: (message: string) => void;
+				debug: (message: string) => void;
 			};
 		} & Request = {
 			headers: {},
 			logger: {
 				error: vi.fn(),
+				debug: vi.fn(),
 			},
 		} as unknown as Request;
 
 		const mockRes = {
 			set: vi.fn(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
