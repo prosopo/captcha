@@ -26,7 +26,6 @@ export const validateAddr = (
 	logger?: Logger,
 ) => {
 	if (!validateAddress(address, false, 42)) {
-		console.log("\n\n\n\n\n\nINVALID", address, "\n\n\n\n\n\n");
 		throw new ProsopoApiError(translationKey, {
 			context: { code: 400, siteKey: address },
 			logger,

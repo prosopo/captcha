@@ -97,7 +97,6 @@ const invalidSiteKeyError = (
 	siteKey: string,
 	logger?: Logger,
 ) => {
-	console.log("\n\nInvalid site key:", siteKey, "\n\n\n");
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
 		context: { code: 400, siteKey: siteKey },
 		i18n,

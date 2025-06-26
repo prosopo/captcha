@@ -296,11 +296,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		const { user, dapp, sessionId } = parsed;
 
-		console.log(
-			"Validating site key and address for PoW captcha challenge",
-			dapp,
-			user,
-		);
 		validateSiteKey(dapp);
 		validateAddr(user);
 
