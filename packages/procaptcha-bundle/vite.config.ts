@@ -36,9 +36,9 @@ const packageName = "@prosopo/procaptcha-bundle";
 const entry = "./src/index.ts";
 const copyOptions = copyTo
 	? {
-		srcDir: "./dist/bundle",
-		destDir: copyTo,
-	}
+			srcDir: "./dist/bundle",
+			destDir: copyTo,
+		}
 	: undefined;
 const tsConfigPaths = [path.resolve("./tsconfig.json")];
 const packagesDir = path.resolve("..");
