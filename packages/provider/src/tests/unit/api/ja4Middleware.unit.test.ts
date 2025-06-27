@@ -1,3 +1,4 @@
+import type { Logger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,20 +20,19 @@ import {
 	getJA4,
 	ja4Middleware,
 } from "../../../api/ja4Middleware.js";
-import type { Logger } from "@prosopo/common";
 
 describe("ja4Middleware", () => {
 	it("should return default JA4 if an error occurs", async () => {
 		const mockReq: {
 			ja4?: string;
-			logger: Logger
+			logger: Logger;
 		} & Request = {
 			headers: {},
 			logger: {
 				error: vi.fn(),
 				info: vi.fn(),
 				debug: vi.fn(),
-			}
+			},
 		} as unknown as Request;
 
 		const mockRes = {

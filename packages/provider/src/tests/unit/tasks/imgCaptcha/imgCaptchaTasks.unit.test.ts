@@ -422,11 +422,9 @@ describe("ImgCaptchaManager", () => {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const logFn = (logger.info as any).mock.calls[0][0];
 		const logObj = logFn();
-		expect(logObj).toMatchObject(
-			{
-				msg: "Deadline for responding to captcha has expired",
-			}
-		);
+		expect(logObj).toMatchObject({
+			msg: "Deadline for responding to captcha has expired",
+		});
 	});
 
 	it("should get dapp user commitment by ID", async () => {
@@ -559,14 +557,12 @@ describe("ImgCaptchaManager", () => {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const logFn = (logger.debug as any).mock.calls[0][0];
 		const logObj = logFn();
-		expect(logObj).toMatchObject(
-			{
-				msg: "IP address mismatch",
-				data: {
-					ip: "1.1.1.1",
-					solutionIp: "8.8.8.8",
-				}
-			}
-		);
+		expect(logObj).toMatchObject({
+			msg: "IP address mismatch",
+			data: {
+				ip: "1.1.1.1",
+				solutionIp: "8.8.8.8",
+			},
+		});
 	});
 });

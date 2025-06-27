@@ -86,10 +86,8 @@ describe("storeCaptchasExternally", () => {
 		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
 		const logFn = envInstance.logger.info.mock.calls[0][0];
 		const logObj = logFn();
-		expect(logObj).toMatchObject(
-			{
-				msg: "StoreCommitmentsExternal task running: false",
-			}
-		);
+		expect(logObj).toMatchObject({
+			msg: "StoreCommitmentsExternal task running: false",
+		});
 	});
 });
