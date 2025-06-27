@@ -20,11 +20,8 @@ import type { Drop } from "esbuild";
 import css from "rollup-plugin-import-css";
 import type { UserConfig } from "vite";
 import { filterDependencies, getDependencies } from "../dependencies.js";
-import { getLogger } from "../logger.js";
 import { default as ClosePlugin } from "./vite-plugin-close-and-copy.js";
 import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js";
-
-const logger = getLogger("vite.backend.config.js");
 
 export default async function (
 	packageName: string,
@@ -61,7 +58,7 @@ export default async function (
 		...optionalPeerDependencies,
 	];
 
-	logger.info(
+	console.info(
 		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
 	);
 
@@ -77,7 +74,7 @@ export default async function (
 		}),
 	};
 
-	logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
+	console.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
 
 	const entryAbsolute = path.resolve(packageDir, entry);
 
