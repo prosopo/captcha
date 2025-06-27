@@ -11,22 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { assert, describe, test } from "vitest";
 
-import type { Logger } from "@prosopo/common";
-import { vi } from "vitest";
-
-const loggerMockedInstance: Logger = {
-	trace: vi.fn(),
-	debug: vi.fn(),
-	info: vi.fn(),
-	warn: vi.fn(),
-	error: vi.fn(),
-	fatal: vi.fn(),
-	log: vi.fn(),
-	setLogLevel: vi.fn(),
-	getLogLevel: vi.fn(),
-	with: vi.fn().mockReturnThis(),
-	getScope: vi.fn().mockReturnValue("test-scope"),
-};
-
-export { loggerMockedInstance };
+describe("dummy", () => {
+	test("dummy", async () => {
+		assert(
+			true,
+			"This is a dummy test to ensure vite doesn't complain about no tests found.",
+		);
+	}, 120000);
+});

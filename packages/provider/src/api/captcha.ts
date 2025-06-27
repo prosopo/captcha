@@ -174,7 +174,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(captchaResponse);
 			} catch (err) {
-				req.logger.error({ err, params: req.params });
+				req.logger.error(() => ({
+					err,
+					data: req.params,
+					msg: "Error in PoW captcha solution submission",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -257,7 +261,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(returnValue);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({
+					err,
+					body: req.body,
+					msg: "Error in PoW captcha solution submission",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -386,7 +394,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
-			req.logger.error({ err, body: req.body });
+			req.logger.error(() => ({
+				err,
+				body: req.body,
+				msg: "Error in PoW captcha solution submission",
+			}));
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
@@ -467,7 +479,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 				return res.json(response);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({
+					err,
+					body: req.body,
+					msg: "Error in PoW captcha solution submission",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -498,7 +514,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.db.getFrictionlessTokenRecordByToken(token);
 
 				if (existingToken) {
-					req.logger.info(`Token ${existingToken} has already been used`);
+					req.logger.info(() => ({
+						token: existingToken,
+						msg: "Token has already been used",
+					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
 							existingToken._id as ObjectId,
@@ -606,9 +625,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
-					req.logger.info({
-						message: `Bot score ${botScore} is greater than threshold ${botThreshold}`,
-					});
+					req.logger.info(() => ({
+						message: "Bot score is greater than threshold",
+						data: {
+							botScore,
+							botThreshold,
+							tokenId,
+						},
+					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
 					);
@@ -619,7 +643,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
 				);
 			} catch (err) {
-				req.logger.error("Error in frictionless captcha challenge:", err);
+				req.logger.error(() => ({
+					err,
+					msg: "Error in frictionless captcha challenge",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: err },

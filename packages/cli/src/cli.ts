@@ -34,13 +34,13 @@ async function main() {
 	});
 
 	if (config.devOnlyWatchEvents) {
-		log.warn(
-			`
+		log.warn(() => ({
+			msg: `
         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
         EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             `,
-		);
+		}));
 	}
 
 	const pair = getPair(config.account.secret, config.account.address);
@@ -50,7 +50,7 @@ async function main() {
 		config.authAccount.address,
 	);
 
-	log.info(`Pair address: ${pair.address}`);
+	log.info(() => ({ data: { pairAddress: pair.address } }));
 
 	const processedArgs = await processArgs(
 		process.argv,
@@ -59,19 +59,19 @@ async function main() {
 		config,
 	);
 
-	log.info({ cliArgs: processedArgs });
+	log.info(() => ({ data: { cliArgs: processedArgs } }));
 	if (processedArgs.api) {
 		if (process.env.NODE_ENV === "development") {
 			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.startDev()
 				.then(() => {
-					log.info("Reloading API started...");
+					log.info(() => ({ msg: "Reloading API started..." }));
 				});
 		} else {
 			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
 				.start()
 				.then(() => {
-					log.info("Reloading API started...");
+					log.info(() => ({ msg: "Reloading API started..." }));
 				});
 		}
 	} else {
@@ -84,10 +84,10 @@ if (isMain(import.meta.url, "provider")) {
 	loadI18next(true).then(() => {
 		main()
 			.then(() => {
-				log.info("Running main process...");
+				log.info(() => ({ msg: "Running main process..." }));
 			})
 			.catch((error) => {
-				log.error(error);
+				log.error(() => ({ err: error }));
 			});
 	});
 }

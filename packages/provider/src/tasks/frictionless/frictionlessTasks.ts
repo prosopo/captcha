@@ -96,9 +96,9 @@ export class FrictionlessManager extends CaptchaManager {
 		const accessPolicyPenalty =
 			accessRule?.score || this.config.penalties.PENALTY_ACCESS_RULE;
 		botScore += accessPolicyPenalty;
-		this.logger.info({
-			message: "Address has an image captcha config defined",
-		});
+		this.logger.info(() => ({
+			msg: "Address has an image captcha config defined",
+		}));
 		await this.db.updateFrictionlessTokenRecord(tokenId, {
 			score: botScore,
 			scoreComponents: {
@@ -115,7 +115,10 @@ export class FrictionlessManager extends CaptchaManager {
 		botScore: number,
 		tokenId: FrictionlessTokenId,
 	) {
-		this.logger.info("Timestamp is older than 10 minutes", new Date(timestamp));
+		this.logger.info(() => ({
+			msg: "Timestamp is older than 10 minutes",
+			data: { timestamp: new Date(timestamp) },
+		}));
 		botScore += this.config.penalties.PENALTY_OLD_TIMESTAMP;
 		await this.db.updateFrictionlessTokenRecord(tokenId, {
 			score: botScore,
@@ -138,13 +141,15 @@ export class FrictionlessManager extends CaptchaManager {
 			process.env.BOT_DECRYPTION_KEY,
 			...(await this.getDetectorKeys()),
 		].filter((k) => k);
-		this.logger.debug({
-			action: "Decrypting score",
-			keysLength: decryptKeys.length,
-			keys: decryptKeys.map((k) =>
-				k ? `${k.slice(0, 5)}...${k.slice(-5)}` || "" : "",
-			),
-		});
+		this.logger.debug(() => ({
+			msg: "Decrypting score",
+			data: {
+				keysLength: decryptKeys.length,
+				keys: decryptKeys.map((k) =>
+					k ? `${k.slice(0, 5)}...${k.slice(-5)}` || "" : "",
+				),
+			},
+		}));
 
 		// run through the keys and try to decrypt the score
 		// if we run out of keys and the score is still not decrypted, throw an error
@@ -153,21 +158,23 @@ export class FrictionlessManager extends CaptchaManager {
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				const { baseBotScore: s, timestamp: t } = await getBotScore(token, key);
-				this.logger.info({
-					message: "Successfully decrypted score",
-					key: key ? `${key.slice(0, 5)}...${key.slice(-5)}` : "",
-					baseBotScore: s,
-					timestamp: t,
-				});
+				this.logger.info(() => ({
+					msg: "Successfully decrypted score",
+					data: {
+						key: key ? `${key.slice(0, 5)}...${key.slice(-5)}` : "",
+						baseBotScore: s,
+						timestamp: t,
+					},
+				}));
 				baseBotScore = s;
 				timestamp = t;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
 				if (keyIndex === decryptKeys.length - 1) {
-					this.logger.warn({
-						message: "Error decrypting score: no more keys to try",
-					});
+					this.logger.warn(() => ({
+						msg: "Error decrypting score: no more keys to try",
+					}));
 					baseBotScore = 1;
 					timestamp = 0;
 				}
@@ -175,10 +182,9 @@ export class FrictionlessManager extends CaptchaManager {
 		}
 
 		if (baseBotScore === undefined || timestamp === undefined) {
-			this.logger.error({
-				message:
-					"Error decrypting score: baseBotScore or timestamp is undefined",
-			});
+			this.logger.error(() => ({
+				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
+			}));
 			baseBotScore = 1;
 			timestamp = 0;
 		}

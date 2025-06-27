@@ -115,9 +115,15 @@ export default (
 					timestamp,
 					signature,
 				);
-				logger.info(`Site Key ${argv.sitekey} registered`);
+				logger.info(() => ({
+					data: { sitekey },
+					msg: "Site Key registered",
+				}));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({
+					err,
+					msg: "Error registering Site Key",
+				}));
 			}
 		},
 		middlewares: [validateSiteKey],

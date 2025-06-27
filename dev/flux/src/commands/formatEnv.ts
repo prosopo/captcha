@@ -47,15 +47,18 @@ export default (cmdArgs?: { logger?: Logger }) => {
 
 				const formattedEnv = formatEnvToArray(parsedArgs.file);
 
-				logger.info(formattedEnv);
+				logger.info(() => ({ data: { formattedEnv }, msg: "Formatted env" }));
 
 				if (parsedArgs.write) {
 					const writePath = path.resolve(parsedArgs.write);
 					fs.writeFileSync(writePath, formattedEnv);
-					logger.info(`Formatted env written to ${writePath}`);
+					logger.info(() => ({
+						data: { writePath },
+						msg: "Formatted env written to",
+					}));
 				}
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

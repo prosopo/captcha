@@ -29,12 +29,14 @@ class BlacklistRulesInspector implements BlacklistInspector {
 		ja4: string,
 		userId: string,
 	): Promise<boolean> {
-		this.logger.debug({
-			clientId: clientId,
-			userIpAddress: userIpAddress,
-			ja4: ja4,
-			userId: userId,
-		});
+		this.logger.debug(() => ({
+			data: {
+				clientId: clientId,
+				userIpAddress: userIpAddress,
+				ja4: ja4,
+				userId: userId,
+			},
+		}));
 		const accessRules = await this.rulesStorage.find(
 			{
 				clientId: clientId,
@@ -55,14 +57,16 @@ class BlacklistRulesInspector implements BlacklistInspector {
 		const userBlacklisted = blockingRules.length > 0;
 
 		if (userBlacklisted) {
-			this.logger.info({
-				userBlacklisted: userBlacklisted,
-				clientId: clientId,
-				userIpAddress: userIpAddress.address.toString(),
-				userId: userId,
-				accessRules: accessRules.length,
-				blockingRules: blockingRules.length,
-			});
+			this.logger.info(() => ({
+				data: {
+					userBlacklisted: userBlacklisted,
+					clientId: clientId,
+					userIpAddress: userIpAddress.address.toString(),
+					userId: userId,
+					accessRules: accessRules.length,
+					blockingRules: blockingRules.length,
+				},
+			}));
 		}
 
 		return userBlacklisted;

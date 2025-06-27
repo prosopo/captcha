@@ -64,14 +64,14 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 	}
 
 	public override async _run(args: Args) {
-		this.logger.debug("flatten run");
+		this.logger.debug(() => ({ msg: "flatten run" }));
 		await super._run(args);
 
 		const dataDir = args.input;
 		const outDir = args.output;
 
 		// find the labels (these should be subdirectories of the data directory)
-		this.logger.info("reading data");
+		this.logger.info(() => ({ msg: "reading data" }));
 		const labels: string[] = fs
 			.readdirSync(dataDir, { withFileTypes: true })
 			.filter((dirent) => dirent.isDirectory())
@@ -113,9 +113,10 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 				if (fs.existsSync(`${imageDir}/${name}`)) {
 					for (const item of items) {
 						if (item.hash === hex) {
-							this.logger.log(`\ndupe: ${label}/${image}`);
-							this.logger.log("item hash", item.hash);
-							this.logger.log("item label", item.label);
+							this.logger.info(() => ({
+								msg: `\ndupe: ${label}/${image}`,
+								data: { item },
+							}));
 						}
 					}
 					if (!args.allowDuplicates) {
@@ -143,11 +144,11 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 		};
 
 		// verify data
-		this.logger.info("verifying data");
+		this.logger.info(() => ({ msg: "verifying data", data: { ...data } }));
 		DataSchema.parse(data);
 
 		// write map file
-		this.logger.info("writing data");
+		this.logger.info(() => ({ msg: "writing data" }));
 		fs.writeFileSync(`${outDir}/data.json`, JSON.stringify(data, null, 4));
 	}
 }

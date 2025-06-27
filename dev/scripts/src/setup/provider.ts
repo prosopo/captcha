@@ -19,6 +19,6 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 export async function setupProvider(env: ProviderEnvironment): Promise<void> {
 	const logger = env.logger;
 	const tasks = new Tasks(env);
-	logger.info("   - providerSetDataset");
+	logger.info(() => ({ msg: "   - providerSetDataset" }));
 	await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
 }

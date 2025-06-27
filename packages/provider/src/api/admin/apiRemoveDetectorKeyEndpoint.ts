@@ -17,11 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import {
-	type Logger,
-	type ProsopoApiError,
-	getLoggerDefault,
-} from "@prosopo/common";
+import { type Logger, type ProsopoApiError, getLogger } from "@prosopo/common";
 import { UpdateDetectorKeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -37,13 +33,13 @@ class ApiRemoveDetectorKeyEndpoint
 		args: z.infer<UpdateDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLoggerDefault();
+		logger = logger || getLogger("info", import.meta.url);
 		try {
 			const { detectorKey } = args;
 
-			logger = logger || getLoggerDefault();
+			logger = logger || getLogger("info", import.meta.url);
 
-			logger.info({ message: "Removing detector key" });
+			logger.info(() => ({ msg: "Removing detector key" }));
 
 			await this.clientTaskManager.removeDetectorKey(detectorKey);
 
@@ -51,7 +47,7 @@ class ApiRemoveDetectorKeyEndpoint
 				status: ApiEndpointResponseStatus.SUCCESS,
 			};
 		} catch (error: unknown) {
-			logger.error({ message: "Error updating detector key", error });
+			logger.error(() => ({ err: error, msg: "Error updating detector key" }));
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
 				error: (error as ProsopoApiError).message,

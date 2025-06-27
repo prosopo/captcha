@@ -37,10 +37,10 @@ export default (
 				await tasks.clientTaskManager
 					.storeCommitmentsExternal()
 					.catch((err) => {
-						env.logger.error(err);
+						env.logger.error(() => ({ err }));
 					});
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

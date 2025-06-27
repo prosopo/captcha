@@ -1,4 +1,9 @@
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoEnvError,
+	getLogger,
+	parseLogLevel,
+} from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
@@ -44,7 +49,7 @@ export class Tasks {
 		this.config = env.config;
 		this.db = env.getDb();
 		this.captchaConfig = env.config.captchas;
-		this.logger = getLogger(env.config.logLevel, "Tasks");
+		this.logger = getLogger(parseLogLevel(env.config.logLevel), "Tasks");
 		if (!env.pair) {
 			throw new ProsopoEnvError("DEVELOPER.MISSING_PROVIDER_PAIR", {
 				context: { failedFuncName: "Tasks.constructor" },

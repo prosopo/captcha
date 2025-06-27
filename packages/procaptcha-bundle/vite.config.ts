@@ -14,7 +14,6 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { getLoggerDefault } from "@prosopo/common";
 import {
 	ViteFrontendConfig,
 	VitePluginRemoveUnusedTranslations,
@@ -26,8 +25,6 @@ import { defineConfig } from "vite";
 
 // load env using our util because vite loadEnv is not working for .env.development
 loadEnv();
-
-const logger = getLoggerDefault();
 
 // Vite doesn't find the tsconfig for some reason
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
@@ -139,7 +136,7 @@ export default defineConfig(async ({ command, mode }) => {
 						if (!fs.existsSync(containingFolder)) {
 							fs.mkdirSync(containingFolder, { recursive: true });
 						}
-						logger.info(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
+						console.log(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
 						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
 							recursive: true,
 						});

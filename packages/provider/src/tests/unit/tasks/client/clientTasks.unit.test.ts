@@ -188,7 +188,13 @@ describe("ClientTaskManager", () => {
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(logger.info).toHaveBeenCalledWith("Mongo env not set");
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject({
+			msg: "Mongo env not set",
+		});
+
 		expect(providerDB.getUnstoredDappUserCommitments).not.toHaveBeenCalled();
 	});
 
@@ -274,10 +280,13 @@ describe("ClientTaskManager", () => {
 		// Update the next ID and time (time is used as a timestamp)
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
-		logger.info("Test: Collections state updated", {
-			nextID: collections.schedulers.nextID,
-			currentTime: collections.schedulers.time,
-		});
+		logger.info(() => ({
+			data: {
+				nextID: collections.schedulers.nextID,
+				currentTime: collections.schedulers.time,
+			},
+			msg: "Test: Collections state updated",
+		}));
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
@@ -287,39 +296,40 @@ describe("ClientTaskManager", () => {
 		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
 			mockPoWCommitments,
 		);
-		logger.info("Test: Mock DB responses configured");
+		logger.info(() => ({ msg: "Test: Mock DB responses configured" }));
 
 		await clientTaskManager.storeCommitmentsExternal();
-		logger.info("Test: storeCommitmentsExternal completed");
+		logger.info(() => ({ msg: "Test: storeCommitmentsExternal completed" }));
 
 		// Verification steps with logging
 		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
-		logger.info("Test: Verified DB queries were made");
+		logger.info(() => ({ msg: "Test: Verified DB queries were made" }));
 
 		expect(providerDB.getLastScheduledTaskStatus).toHaveReturnedWith(
 			mockLastScheduledTask,
 		);
-		logger.info("Test: Verified last scheduled task status");
+		logger.info(() => ({ msg: "Test: Verified last scheduled task status" }));
 
 		expect(providerDB.createScheduledTaskStatus).toHaveBeenCalledWith(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
 		);
-		logger.info("Test: Verified task status creation");
+		logger.info(() => ({ msg: "Test: Verified task status creation" }));
 
 		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
-		logger.info(
-			"Test: Verified no image commitments were marked as stored (expected as they're old)",
-		);
+		logger.info(() => ({
+			msg: "Test: Verified no image commitments were marked as stored (expected as they're old)",
+		}));
 
 		const expectedPoWChallenges = mockPoWCommitments.map((c) => c.challenge);
 		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
 			expectedPoWChallenges,
 		);
-		logger.info("Test: Verified PoW commitments were marked as stored", {
-			expectedPoWChallenges,
-		});
+		logger.info(() => ({
+			msg: "Test: Verified PoW commitments were marked as stored",
+			data: { expectedPoWChallenges },
+		}));
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fi
