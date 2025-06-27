@@ -84,8 +84,12 @@ describe("storeCaptchasExternally", () => {
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
-		expect(envInstance.logger.info).toHaveBeenCalledWith(
-			"StoreCommitmentsExternal task running: false",
+		const logFn = envInstance.logger.info.mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject(
+			{
+				msg: "StoreCommitmentsExternal task running: false",
+			}
 		);
 	});
 });

@@ -188,7 +188,15 @@ describe("ClientTaskManager", () => {
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(logger.info).toHaveBeenCalledWith("Mongo env not set");
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject(
+			{
+				msg: "Mongo env not set",
+			}
+		);
+
 		expect(providerDB.getUnstoredDappUserCommitments).not.toHaveBeenCalled();
 	});
 
@@ -236,25 +244,25 @@ describe("ClientTaskManager", () => {
 			UserCommitment,
 			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				id: "commitment1",
-				// Image commitments were stored at time 1
-				lastUpdatedTimestamp: 1,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					id: "commitment1",
+					// Image commitments were stored at time 1
+					lastUpdatedTimestamp: 1,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
 			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				challenge: "1234567___userAccount___dappAccount",
-				// PoW commitments were stored at time 3
-				lastUpdatedTimestamp: 3,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					challenge: "1234567___userAccount___dappAccount",
+					// PoW commitments were stored at time 3
+					lastUpdatedTimestamp: 3,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		// Create a mock last scheduled task
 		const mockLastScheduledTask: Pick<

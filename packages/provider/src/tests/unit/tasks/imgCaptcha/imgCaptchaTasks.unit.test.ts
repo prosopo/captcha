@@ -172,9 +172,9 @@ describe("ImgCaptchaManager", () => {
 		} as unknown as KeyringPair;
 
 		logger = {
-			info: vi.fn(),
-			error: vi.fn(),
-			debug: vi.fn(),
+			info: vi.fn().mockImplementation(console.info),
+			debug: vi.fn().mockImplementation(console.debug),
+			error: vi.fn().mockImplementation(console.error),
 		} as unknown as Logger;
 
 		captchaConfig = {
@@ -418,8 +418,14 @@ describe("ImgCaptchaManager", () => {
 			);
 
 		expect(result).toBe(false);
-		expect(logger.info).toHaveBeenCalledWith(
-			"Deadline for responding to captcha has expired",
+
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject(
+			{
+				msg: "Deadline for responding to captcha has expired",
+			}
 		);
 	});
 
@@ -550,8 +556,17 @@ describe("ImgCaptchaManager", () => {
 		);
 		expect(verifyResult.verified).toBe(false);
 
-		expect(logger.debug).toHaveBeenCalledWith(
-			`IP address mismatch: ${getIPAddressFromBigInt(dappUserCommitment.ipAddress).address} !== ${ipAddress}`,
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.debug as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject(
+			{
+				msg: "IP address mismatch",
+				data: {
+					ip: "1.1.1.1",
+					solutionIp: "8.8.8.8",
+				}
+			}
 		);
 	});
 });
