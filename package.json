@@ -67,6 +67,7 @@
 	},
 	"workspaces": [
 		"dev/*",
+		"docker/images/*",
 		"packages/*",
 		"demos/*",
 		"integration/*",
