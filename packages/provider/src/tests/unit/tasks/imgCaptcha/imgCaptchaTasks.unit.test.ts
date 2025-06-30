@@ -556,7 +556,7 @@ describe("ImgCaptchaManager", () => {
 		expect(verifyResult.verified).toBe(false);
 
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (logger.debug as any).mock.calls[0][0];
+		const logFn = (logger.debug as any).mock.calls[1][0];
 		const logObj = logFn();
 		expect(logObj).toMatchObject({
 			msg: "IP address mismatch",
