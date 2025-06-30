@@ -21,17 +21,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
 
-const logger = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", import.meta.url);
 
 vi.mock("@prosopo/env", () => {
 	const mockLogger = {
-		debug: vi.fn().mockImplementation(logger.debug),
-		log: vi.fn().mockImplementation(logger.log),
-		info: vi.fn().mockImplementation(logger.info),
-		error: vi.fn().mockImplementation(logger.error),
-		trace: vi.fn().mockImplementation(logger.trace),
-		fatal: vi.fn().mockImplementation(logger.fatal),
-		warn: vi.fn().mockImplementation(logger.warn),
+		debug: vi.fn().mockImplementation(loggerOuter.debug),
+		log: vi.fn().mockImplementation(loggerOuter.log),
+		info: vi.fn().mockImplementation(loggerOuter.info),
+		error: vi.fn().mockImplementation(loggerOuter.error),
+		trace: vi.fn().mockImplementation(loggerOuter.trace),
+		fatal: vi.fn().mockImplementation(loggerOuter.fatal),
+		warn: vi.fn().mockImplementation(loggerOuter.warn),
 	} as unknown as Logger;
 	return {
 		ProviderEnvironment: vi.fn().mockImplementation(() => ({

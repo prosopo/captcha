@@ -33,7 +33,7 @@ import { DatasetManager } from "../../../../tasks/dataset/datasetTasks.js";
 // Import directly and mock the function
 import * as datasetTasksUtils from "../../../../tasks/dataset/datasetTasksUtils.js";
 
-const logger = getLogger("info", import.meta.url);
+const loggerOuter = getLogger("info", import.meta.url);
 
 vi.mock("@prosopo/database", () => ({
 	saveCaptchaEvent: vi.fn(),
@@ -68,13 +68,13 @@ describe("DatasetManager", () => {
 		} as ProsopoConfigOutput;
 
 		const mockLogger = {
-			debug: vi.fn().mockImplementation(logger.debug),
-			log: vi.fn().mockImplementation(logger.log),
-			info: vi.fn().mockImplementation(logger.info),
-			error: vi.fn().mockImplementation(logger.error),
-			trace: vi.fn().mockImplementation(logger.trace),
-			fatal: vi.fn().mockImplementation(logger.fatal),
-			warn: vi.fn().mockImplementation(logger.warn),
+			debug: vi.fn().mockImplementation(loggerOuter.debug),
+			log: vi.fn().mockImplementation(loggerOuter.log),
+			info: vi.fn().mockImplementation(loggerOuter.info),
+			error: vi.fn().mockImplementation(loggerOuter.error),
+			trace: vi.fn().mockImplementation(loggerOuter.trace),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal),
+			warn: vi.fn().mockImplementation(loggerOuter.warn),
 		} as unknown as Logger;
 		logger = mockLogger;
 
