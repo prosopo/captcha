@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 2.12.0
+### Minor Changes
+
+- d6de900: ip pass through
+
 ## 2.11.0
 ### Minor Changes
 
