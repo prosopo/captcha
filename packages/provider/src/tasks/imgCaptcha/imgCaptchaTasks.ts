@@ -459,6 +459,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		if (ip) {
 			const ipV4Address = getIPAddress(ip);
+			this.logger.log({ ipV4Address });
 			if (!ipV4Address) {
 				this.logger.debug(`Invalid IP address: ${ip}`);
 				return { status: "API.USER_NOT_VERIFIED", verified: false };
