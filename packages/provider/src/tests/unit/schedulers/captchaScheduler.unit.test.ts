@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { KeyringPair } from "@prosopo/types";
 import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
@@ -19,9 +20,8 @@ import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
-import { getLogger, type Logger } from "@prosopo/common";
 
-const logger = getLogger("info", import.meta.url)
+const logger = getLogger("info", import.meta.url);
 
 vi.mock("@prosopo/env", () => {
 	const mockLogger = {
@@ -32,7 +32,7 @@ vi.mock("@prosopo/env", () => {
 		trace: vi.fn().mockImplementation(logger.trace),
 		fatal: vi.fn().mockImplementation(logger.fatal),
 		warn: vi.fn().mockImplementation(logger.warn),
-	} as unknown as Logger
+	} as unknown as Logger;
 	return {
 		ProviderEnvironment: vi.fn().mockImplementation(() => ({
 			isReady: vi.fn().mockResolvedValue(true),

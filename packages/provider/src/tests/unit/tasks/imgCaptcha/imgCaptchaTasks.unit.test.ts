@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { u8aToHex } from "@polkadot/util";
-import { getLogger, type Logger, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
@@ -36,7 +36,7 @@ import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.
 import { getIPAddress, getIPAddressFromBigInt } from "../../../../util.js";
 import { shuffleArray } from "../../../../util.js";
 
-const logger = getLogger("info", import.meta.url)
+const logger = getLogger("info", import.meta.url);
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -181,8 +181,8 @@ describe("ImgCaptchaManager", () => {
 			trace: vi.fn().mockImplementation(logger.trace),
 			fatal: vi.fn().mockImplementation(logger.fatal),
 			warn: vi.fn().mockImplementation(logger.warn),
-		} as unknown as Logger
-		logger = mockLogger
+		} as unknown as Logger;
+		logger = mockLogger;
 
 		captchaConfig = {
 			solved: { count: 5 },

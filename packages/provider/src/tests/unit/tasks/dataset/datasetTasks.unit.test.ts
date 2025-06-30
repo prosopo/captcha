@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogger, type Logger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import { parseCaptchaDataset } from "@prosopo/datasets";
 import type {
 	DatasetRaw,
@@ -33,7 +33,7 @@ import { DatasetManager } from "../../../../tasks/dataset/datasetTasks.js";
 // Import directly and mock the function
 import * as datasetTasksUtils from "../../../../tasks/dataset/datasetTasksUtils.js";
 
-const logger = getLogger("info", import.meta.url)
+const logger = getLogger("info", import.meta.url);
 
 vi.mock("@prosopo/database", () => ({
 	saveCaptchaEvent: vi.fn(),
@@ -75,8 +75,8 @@ describe("DatasetManager", () => {
 			trace: vi.fn().mockImplementation(logger.trace),
 			fatal: vi.fn().mockImplementation(logger.fatal),
 			warn: vi.fn().mockImplementation(logger.warn),
-		} as unknown as Logger
-		logger = mockLogger
+		} as unknown as Logger;
+		logger = mockLogger;
 
 		captchaConfig = {
 			solved: { count: 5 },

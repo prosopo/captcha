@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogger, type Logger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import type {
@@ -24,7 +24,7 @@ import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 
-const logger = getLogger("info", import.meta.url)
+const logger = getLogger("info", import.meta.url);
 
 const defaultUserSettings: IUserSettings = {
 	frictionlessThreshold: 0.8,
@@ -51,7 +51,6 @@ describe("CaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-
 		const mockLogger = {
 			debug: vi.fn().mockImplementation(logger.debug),
 			log: vi.fn().mockImplementation(logger.log),
@@ -60,8 +59,8 @@ describe("CaptchaManager", () => {
 			trace: vi.fn().mockImplementation(logger.trace),
 			fatal: vi.fn().mockImplementation(logger.fatal),
 			warn: vi.fn().mockImplementation(logger.warn),
-		} as unknown as Logger
-		logger = mockLogger
+		} as unknown as Logger;
+		logger = mockLogger;
 
 		captchaManager = new CaptchaManager(db, pair, logger);
 

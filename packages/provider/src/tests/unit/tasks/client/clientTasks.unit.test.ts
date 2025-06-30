@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { getLogger, type Logger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -28,7 +28,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
 
-const logger = getLogger("info", import.meta.url)
+const logger = getLogger("info", import.meta.url);
 
 type TestScheduledTaskRecord = Pick<
 	ScheduledTaskRecord,
@@ -59,7 +59,7 @@ vi.mock(
 					trace: vi.fn().mockImplementation(logger.trace),
 					fatal: vi.fn().mockImplementation(logger.fatal),
 					warn: vi.fn().mockImplementation(logger.warn),
-				} as unknown as Logger
+				} as unknown as Logger;
 				this.logger = mockLogger;
 			}
 
@@ -247,25 +247,25 @@ describe("ClientTaskManager", () => {
 			UserCommitment,
 			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-				{
-					id: "commitment1",
-					// Image commitments were stored at time 1
-					lastUpdatedTimestamp: 1,
-					storedAtTimestamp: 1,
-				},
-			];
+			{
+				id: "commitment1",
+				// Image commitments were stored at time 1
+				lastUpdatedTimestamp: 1,
+				storedAtTimestamp: 1,
+			},
+		];
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
 			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-				{
-					challenge: "1234567___userAccount___dappAccount",
-					// PoW commitments were stored at time 3
-					lastUpdatedTimestamp: 3,
-					storedAtTimestamp: 1,
-				},
-			];
+			{
+				challenge: "1234567___userAccount___dappAccount",
+				// PoW commitments were stored at time 3
+				lastUpdatedTimestamp: 3,
+				storedAtTimestamp: 1,
+			},
+		];
 
 		// Create a mock last scheduled task
 		const mockLastScheduledTask: Pick<

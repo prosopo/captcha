@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogger, type Logger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { ignoreMiddleware } from "../../../api/ignoreMiddleware.js";
 
-const logger = getLogger("info", import.meta.url)
+const logger = getLogger("info", import.meta.url);
 
 vi.mock("@prosopo/util", () => ({
 	hexToU8a: vi.fn(),
@@ -34,7 +34,7 @@ describe("ignoreMiddleware", () => {
 			trace: vi.fn().mockImplementation(logger.trace),
 			fatal: vi.fn().mockImplementation(logger.fatal),
 			warn: vi.fn().mockImplementation(logger.warn),
-		} as unknown as Logger
+		} as unknown as Logger;
 		const mockReq = {
 			url: "/favicon.ico",
 			originalUrl: "/favicon.ico",

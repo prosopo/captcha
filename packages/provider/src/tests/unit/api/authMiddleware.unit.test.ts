@@ -14,14 +14,19 @@
 
 import type { KeyringPair } from "@polkadot/keyring/types";
 import { hexToU8a, isHex } from "@polkadot/util";
-import { getLogger, type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoApiError,
+	ProsopoEnvError,
+	getLogger,
+} from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../api/authMiddleware.js";
 import type { Tasks } from "../../../tasks/tasks.js";
 
-const logger = getLogger("info", import.meta.url)
+const logger = getLogger("info", import.meta.url);
 
 const mockLogger = {
 	debug: vi.fn().mockImplementation(logger.debug),
@@ -31,7 +36,7 @@ const mockLogger = {
 	trace: vi.fn().mockImplementation(logger.trace),
 	fatal: vi.fn().mockImplementation(logger.fatal),
 	warn: vi.fn().mockImplementation(logger.warn),
-} as unknown as Logger
+} as unknown as Logger;
 
 vi.mock("@polkadot/util", async (importOriginal) => {
 	const actual = await importOriginal();
@@ -65,7 +70,7 @@ describe("authMiddleware", () => {
 			trace: vi.fn().mockImplementation(logger.trace),
 			fatal: vi.fn().mockImplementation(logger.fatal),
 			warn: vi.fn().mockImplementation(logger.warn),
-		} as unknown as Logger
+		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
@@ -103,7 +108,7 @@ describe("authMiddleware", () => {
 			trace: vi.fn().mockImplementation(logger.trace),
 			fatal: vi.fn().mockImplementation(logger.fatal),
 			warn: vi.fn().mockImplementation(logger.warn),
-		} as unknown as Logger
+		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
@@ -145,7 +150,7 @@ describe("authMiddleware", () => {
 			trace: vi.fn().mockImplementation(logger.trace),
 			fatal: vi.fn().mockImplementation(logger.fatal),
 			warn: vi.fn().mockImplementation(logger.warn),
-		} as unknown as Logger
+		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
