@@ -52,12 +52,20 @@ vi.mock(
 
 			constructor() {
 				const mockLogger = {
-					debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+					debug: vi
+						.fn()
+						.mockImplementation(loggerOuter.debug.bind(loggerOuter)),
 					log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
 					info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
-					error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
-					trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
-					fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+					error: vi
+						.fn()
+						.mockImplementation(loggerOuter.error.bind(loggerOuter)),
+					trace: vi
+						.fn()
+						.mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+					fatal: vi
+						.fn()
+						.mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
 					warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 				} as unknown as Logger;
 				this.logger = mockLogger;
@@ -247,25 +255,25 @@ describe("ClientTaskManager", () => {
 			UserCommitment,
 			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-				{
-					id: "commitment1",
-					// Image commitments were stored at time 1
-					lastUpdatedTimestamp: 1,
-					storedAtTimestamp: 1,
-				},
-			];
+			{
+				id: "commitment1",
+				// Image commitments were stored at time 1
+				lastUpdatedTimestamp: 1,
+				storedAtTimestamp: 1,
+			},
+		];
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
 			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-				{
-					challenge: "1234567___userAccount___dappAccount",
-					// PoW commitments were stored at time 3
-					lastUpdatedTimestamp: 3,
-					storedAtTimestamp: 1,
-				},
-			];
+			{
+				challenge: "1234567___userAccount___dappAccount",
+				// PoW commitments were stored at time 3
+				lastUpdatedTimestamp: 3,
+				storedAtTimestamp: 1,
+			},
+		];
 
 		// Create a mock last scheduled task
 		const mockLastScheduledTask: Pick<
