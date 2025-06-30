@@ -1,5 +1,12 @@
 # @prosopo/scripts
 
+## 2.8.1
+### Patch Changes
+
+- Updated dependencies [d6de900]
+  - @prosopo/provider@2.12.0
+  - @prosopo/cli@2.7.2
+
 ## 2.8.0
 ### Minor Changes
 

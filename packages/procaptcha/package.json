@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha",
-	"version": "2.7.1",
+	"version": "2.7.2",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -31,7 +31,7 @@
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
 		"@prosopo/account": "2.7.1",
-		"@prosopo/api": "2.6.6",
+		"@prosopo/api": "2.7.0",
 		"@prosopo/common": "2.7.1",
 		"@prosopo/datasets": "2.7.1",
 		"@prosopo/load-balancer": "2.6.6",

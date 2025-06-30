@@ -1,5 +1,11 @@
 # @prosopo/client-example-server
 
+## 2.7.2
+### Patch Changes
+
+- Updated dependencies [d6de900]
+  - @prosopo/server@2.8.0
+
 ## 2.7.1
 ### Patch Changes
 

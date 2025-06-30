@@ -1,5 +1,15 @@
 # @prosopo/server
 
+## 2.8.0
+### Minor Changes
+
+- d6de900: ip pass through
+
+### Patch Changes
+
+- Updated dependencies [d6de900]
+  - @prosopo/api@2.7.0
+
 ## 2.7.1
 ### Patch Changes
 
