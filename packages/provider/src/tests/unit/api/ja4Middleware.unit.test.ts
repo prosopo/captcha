@@ -26,13 +26,13 @@ const loggerOuter = getLogger("info", import.meta.url);
 describe("ja4Middleware", () => {
 	it("should return default JA4 if an error occurs", async () => {
 		const mockLogger = {
-			debug: vi.fn().mockImplementation(loggerOuter.debug),
-			log: vi.fn().mockImplementation(loggerOuter.log),
-			info: vi.fn().mockImplementation(loggerOuter.info),
-			error: vi.fn().mockImplementation(loggerOuter.error),
-			trace: vi.fn().mockImplementation(loggerOuter.trace),
-			fatal: vi.fn().mockImplementation(loggerOuter.fatal),
-			warn: vi.fn().mockImplementation(loggerOuter.warn),
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 		} as unknown as Logger;
 		const mockReq: {
 			ja4?: string;
