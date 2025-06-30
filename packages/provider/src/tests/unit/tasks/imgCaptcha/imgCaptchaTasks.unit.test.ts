@@ -175,6 +175,7 @@ describe("ImgCaptchaManager", () => {
 			info: vi.fn(),
 			error: vi.fn(),
 			debug: vi.fn(),
+			log: vi.fn(),
 		} as unknown as Logger;
 
 		captchaConfig = {
