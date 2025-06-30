@@ -12,24 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import { getLogger, type Logger } from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { ignoreMiddleware } from "../../../api/ignoreMiddleware.js";
+
+const logger = getLogger("info", import.meta.url)
 
 vi.mock("@prosopo/util", () => ({
 	hexToU8a: vi.fn(),
 	isHex: vi.fn(),
 }));
 
-const mockLogger = {
-	info: vi.fn(),
-	error: vi.fn(),
-	warn: vi.fn(),
-} as unknown as Logger;
-
 describe("ignoreMiddleware", () => {
 	it("should 404 if url does not contain /v1/prosopo", async () => {
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(logger.debug),
+			log: vi.fn().mockImplementation(logger.log),
+			info: vi.fn().mockImplementation(logger.info),
+			error: vi.fn().mockImplementation(logger.error),
+			trace: vi.fn().mockImplementation(logger.trace),
+			fatal: vi.fn().mockImplementation(logger.fatal),
+			warn: vi.fn().mockImplementation(logger.warn),
+		} as unknown as Logger
 		const mockReq = {
 			url: "/favicon.ico",
 			originalUrl: "/favicon.ico",

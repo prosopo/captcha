@@ -1,4 +1,4 @@
-import type { Logger } from "@prosopo/common";
+import { getLogger, type Logger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,18 +21,27 @@ import {
 	ja4Middleware,
 } from "../../../api/ja4Middleware.js";
 
+
+const logger = getLogger("info", import.meta.url)
+
 describe("ja4Middleware", () => {
 	it("should return default JA4 if an error occurs", async () => {
+
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(logger.debug),
+			log: vi.fn().mockImplementation(logger.log),
+			info: vi.fn().mockImplementation(logger.info),
+			error: vi.fn().mockImplementation(logger.error),
+			trace: vi.fn().mockImplementation(logger.trace),
+			fatal: vi.fn().mockImplementation(logger.fatal),
+			warn: vi.fn().mockImplementation(logger.warn),
+		} as unknown as Logger
 		const mockReq: {
 			ja4?: string;
 			logger: Logger;
 		} & Request = {
 			headers: {},
-			logger: {
-				error: vi.fn(),
-				info: vi.fn(),
-				debug: vi.fn(),
-			},
+			logger: mockLogger
 		} as unknown as Request;
 
 		const mockRes = {

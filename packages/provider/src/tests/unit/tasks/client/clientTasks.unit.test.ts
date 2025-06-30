@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
+import { getLogger, type Logger } from "@prosopo/common";
 import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -27,6 +27,8 @@ import {
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
+
+const logger = getLogger("info", import.meta.url)
 
 type TestScheduledTaskRecord = Pick<
 	ScheduledTaskRecord,
@@ -44,17 +46,20 @@ vi.mock(
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const actual = (await importOriginal()) as Record<string, any>;
 
-		const mockLogger = {
-			info: vi.fn().mockImplementation(console.info),
-			debug: vi.fn().mockImplementation(console.debug),
-			error: vi.fn().mockImplementation(console.error),
-		};
-
 		class MockCaptchaDatabase {
 			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			logger: any;
 
 			constructor() {
+				const mockLogger = {
+					debug: vi.fn().mockImplementation(logger.debug),
+					log: vi.fn().mockImplementation(logger.log),
+					info: vi.fn().mockImplementation(logger.info),
+					error: vi.fn().mockImplementation(logger.error),
+					trace: vi.fn().mockImplementation(logger.trace),
+					fatal: vi.fn().mockImplementation(logger.fatal),
+					warn: vi.fn().mockImplementation(logger.warn),
+				} as unknown as Logger
 				this.logger = mockLogger;
 			}
 
@@ -242,25 +247,25 @@ describe("ClientTaskManager", () => {
 			UserCommitment,
 			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				id: "commitment1",
-				// Image commitments were stored at time 1
-				lastUpdatedTimestamp: 1,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					id: "commitment1",
+					// Image commitments were stored at time 1
+					lastUpdatedTimestamp: 1,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
 			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				challenge: "1234567___userAccount___dappAccount",
-				// PoW commitments were stored at time 3
-				lastUpdatedTimestamp: 3,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					challenge: "1234567___userAccount___dappAccount",
+					// PoW commitments were stored at time 3
+					lastUpdatedTimestamp: 3,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		// Create a mock last scheduled task
 		const mockLastScheduledTask: Pick<

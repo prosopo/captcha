@@ -19,24 +19,33 @@ import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
+import { getLogger, type Logger } from "@prosopo/common";
 
-vi.mock("@prosopo/env", () => ({
-	ProviderEnvironment: vi.fn().mockImplementation(() => ({
-		isReady: vi.fn().mockResolvedValue(true),
-		logger: {
-			debug: vi.fn().mockImplementation(console.debug),
-			log: vi.fn().mockImplementation(console.log),
-			info: vi.fn().mockImplementation(console.info),
-			error: vi.fn().mockImplementation(console.error),
-		},
-		getDb: vi.fn().mockReturnValue({
-			getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-		}),
-		db: {
-			getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-		},
-	})),
-}));
+const logger = getLogger("info", import.meta.url)
+
+vi.mock("@prosopo/env", () => {
+	const mockLogger = {
+		debug: vi.fn().mockImplementation(logger.debug),
+		log: vi.fn().mockImplementation(logger.log),
+		info: vi.fn().mockImplementation(logger.info),
+		error: vi.fn().mockImplementation(logger.error),
+		trace: vi.fn().mockImplementation(logger.trace),
+		fatal: vi.fn().mockImplementation(logger.fatal),
+		warn: vi.fn().mockImplementation(logger.warn),
+	} as unknown as Logger
+	return {
+		ProviderEnvironment: vi.fn().mockImplementation(() => ({
+			isReady: vi.fn().mockResolvedValue(true),
+			logger: mockLogger,
+			getDb: vi.fn().mockReturnValue({
+				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+			}),
+			db: {
+				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+			},
+		})),
+	};
+});
 
 vi.mock("../../../tasks/tasks.js", () => ({
 	Tasks: vi.fn().mockImplementation(() => ({

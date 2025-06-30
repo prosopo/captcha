@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { u8aToHex } from "@polkadot/util";
-import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import { getLogger, type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
@@ -35,6 +35,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { getIPAddress, getIPAddressFromBigInt } from "../../../../util.js";
 import { shuffleArray } from "../../../../util.js";
+
+const logger = getLogger("info", import.meta.url)
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -171,12 +173,16 @@ describe("ImgCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		logger = {
-			info: vi.fn().mockImplementation(console.info),
-			debug: vi.fn().mockImplementation(console.debug),
-			error: vi.fn().mockImplementation(console.error),
-			log: vi.fn().mockImplementation(console.log),
-		} as unknown as Logger;
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(logger.debug),
+			log: vi.fn().mockImplementation(logger.log),
+			info: vi.fn().mockImplementation(logger.info),
+			error: vi.fn().mockImplementation(logger.error),
+			trace: vi.fn().mockImplementation(logger.trace),
+			fatal: vi.fn().mockImplementation(logger.fatal),
+			warn: vi.fn().mockImplementation(logger.warn),
+		} as unknown as Logger
+		logger = mockLogger
 
 		captchaConfig = {
 			solved: { count: 5 },
