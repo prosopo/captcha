@@ -175,6 +175,7 @@ describe("ImgCaptchaManager", () => {
 			info: vi.fn().mockImplementation(console.info),
 			debug: vi.fn().mockImplementation(console.debug),
 			error: vi.fn().mockImplementation(console.error),
+			log: vi.fn().mockImplementation(console.log),
 		} as unknown as Logger;
 
 		captchaConfig = {

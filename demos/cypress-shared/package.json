@@ -17,7 +17,7 @@
 		"@prosopo/common": "2.7.1",
 		"@prosopo/datasets": "2.7.1",
 		"@prosopo/types-database": "2.7.4",
-		"@prosopo/scripts": "2.8.0",
+		"@prosopo/scripts": "2.8.1",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
