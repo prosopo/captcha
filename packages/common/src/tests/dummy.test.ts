@@ -11,14 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { assert, describe, test } from "vitest";
 
-import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { Tasks } from "@prosopo/provider";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-
-export async function setupProvider(env: ProviderEnvironment): Promise<void> {
-	const logger = env.logger;
-	const tasks = new Tasks(env);
-	logger.info(() => ({ msg: "   - providerSetDataset" }));
-	await tasks.datasetManager.providerSetDataset(datasetWithSolutionHashes);
-}
+describe("dummy", () => {
+	test("dummy", async () => {
+		assert(
+			true,
+			"This is a dummy test to ensure vite doesn't complain about no tests found.",
+		);
+	}, 120000);
+});
