@@ -551,8 +551,8 @@ describe("ImgCaptchaManager", () => {
 		);
 		expect(verifyResult.verified).toBe(false);
 
-		expect(logger.debug).toHaveBeenCalledWith(
-			`IP address mismatch: ${getIPAddressFromBigInt(dappUserCommitment.ipAddress).address} !== ${ipAddress}`,
-		);
+		expect(logger.info).toHaveBeenCalledWith({
+			error: `IP address mismatch: ${getIPAddressFromBigInt(dappUserCommitment.ipAddress).address} !== ${ipAddress}`,
+		});
 	});
 });

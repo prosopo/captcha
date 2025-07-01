@@ -81,4 +81,15 @@ export class Tasks {
 			this.logger,
 		);
 	}
+
+	setLogger(logger: Logger): void {
+		// Use a logger from the request
+		this.logger = logger;
+		this.powCaptchaManager.logger = logger;
+		this.datasetManager.logger = logger;
+		this.imgCaptchaManager.logger = logger;
+		this.clientTaskManager.logger = logger;
+		this.frictionlessManager.logger = logger;
+		this.db.logger = logger; // Ensure the database also uses the new logger
+	}
 }
