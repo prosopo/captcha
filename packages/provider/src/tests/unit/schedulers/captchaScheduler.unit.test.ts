@@ -21,7 +21,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
 
-
 vi.mock("@prosopo/env", () => {
 	const loggerOuter = getLogger("info", import.meta.url);
 	const mockLogger = {
