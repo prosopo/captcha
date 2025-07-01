@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Logger } from "@prosopo/common";
 import { vi } from "vitest";
 
-const loggerMockedInstance = {
+const loggerMockedInstance: Logger = {
 	trace: vi.fn(),
 	debug: vi.fn(),
 	info: vi.fn(),
@@ -24,6 +25,14 @@ const loggerMockedInstance = {
 	log: vi.fn(),
 	setLogLevel: vi.fn(),
 	getLogLevel: vi.fn(),
+	with: vi.fn().mockReturnThis(),
+	getScope: vi.fn().mockReturnValue("test-scope"),
+	getPretty: vi.fn().mockReturnValue(false),
+	setPretty: vi.fn(),
+	getPrintStack: vi.fn().mockReturnValue(false),
+	setPrintStack: vi.fn(),
+	getFormat: vi.fn().mockReturnValue("json"),
+	setFormat: vi.fn(),
 };
 
 export { loggerMockedInstance };

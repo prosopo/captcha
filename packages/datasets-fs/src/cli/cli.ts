@@ -1,9 +1,4 @@
-import {
-	LogLevel,
-	Loggable,
-	ProsopoCliError,
-	getLogger,
-} from "@prosopo/common";
+import { LogLevel, ProsopoCliError, getLogger } from "@prosopo/common";
 import yargs, { type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
@@ -22,15 +17,13 @@ import { hideBin } from "yargs/helpers";
 import type { CliCommandAny } from "./cliCommand.js";
 
 const dirname = process.cwd();
-const logger = getLogger(LogLevel.enum.info, `${dirname}`);
 
-export class Cli extends Loggable {
+export class Cli {
 	#commands: CliCommandAny[];
+	logger = getLogger("info", import.meta.url);
 
 	constructor(commands: CliCommandAny[]) {
-		super();
 		this.#commands = commands;
-		this.logger = logger;
 	}
 
 	private config() {
@@ -53,7 +46,9 @@ export class Cli extends Loggable {
 				builder: command.getOptions(),
 				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 				handler: async (argv: any) => {
-					this.logger.debug(`running ${command.getCommandName()}}`);
+					this.logger.debug(() => ({
+						msg: `running ${command.getCommandName()}`,
+					}));
 					const args = await command.parse(argv);
 					await command.exec(args);
 				},
@@ -82,7 +77,7 @@ export class Cli extends Loggable {
 
 	public async exec(args: string[] = process.argv.slice(2)) {
 		const config = this.config();
-		this.logger.debug("parsing", args);
+		this.logger.debug(() => ({ data: { args }, msg: "parsing" }));
 		await config.parse(args);
 	}
 }

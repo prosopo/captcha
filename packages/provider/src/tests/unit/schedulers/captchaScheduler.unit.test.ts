@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { KeyringPair } from "@prosopo/types";
 import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
@@ -20,23 +21,30 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
 
-vi.mock("@prosopo/env", () => ({
-	ProviderEnvironment: vi.fn().mockImplementation(() => ({
-		isReady: vi.fn().mockResolvedValue(true),
-		logger: {
-			debug: vi.fn().mockImplementation(console.debug),
-			log: vi.fn().mockImplementation(console.log),
-			info: vi.fn().mockImplementation(console.info),
-			error: vi.fn().mockImplementation(console.error),
-		},
-		getDb: vi.fn().mockReturnValue({
-			getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-		}),
-		db: {
-			getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
-		},
-	})),
-}));
+vi.mock("@prosopo/env", () => {
+	const loggerOuter = getLogger("info", import.meta.url);
+	const mockLogger = {
+		debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+		log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+		info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+		error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+		trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+		fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+		warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+	} as unknown as Logger;
+	return {
+		ProviderEnvironment: vi.fn().mockImplementation(() => ({
+			isReady: vi.fn().mockResolvedValue(true),
+			logger: mockLogger,
+			getDb: vi.fn().mockReturnValue({
+				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+			}),
+			db: {
+				getLastScheduledTaskStatus: vi.fn().mockResolvedValue(undefined),
+			},
+		})),
+	};
+});
 
 vi.mock("../../../tasks/tasks.js", () => ({
 	Tasks: vi.fn().mockImplementation(() => ({
@@ -84,8 +92,10 @@ describe("storeCaptchasExternally", () => {
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
-		expect(envInstance.logger.info).toHaveBeenCalledWith(
-			"StoreCommitmentsExternal task running: false",
-		);
+		const logFn = envInstance.logger.info.mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject({
+			msg: "StoreCommitmentsExternal task running: false",
+		});
 	});
 });
