@@ -46,12 +46,21 @@ export default (
 				const tasks = new Tasks(env);
 				const file = z.string().parse(argv.file);
 				const jsonFile = loadJSONFile(file) as JSON;
-				logger.info(`Loaded JSON from ${file}`);
+				logger.info(() => ({
+					data: { file },
+					msg: "Loading JSON",
+				}));
 				const result =
 					await tasks.datasetManager.providerSetDatasetFromFile(jsonFile);
-				logger.info(JSON.stringify(result, null, 2));
+				logger.info(() => ({
+					data: { file },
+					msg: "Loaded JSON",
+				}));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({
+					err,
+					msg: "Error loading JSON",
+				}));
 			}
 		},
 		middlewares: [],

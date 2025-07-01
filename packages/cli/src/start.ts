@@ -19,6 +19,7 @@ import {
 	createApiExpressDefaultEndpointAdapter,
 	requestLoggerMiddleware,
 } from "@prosopo/api-express-router";
+import { parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import { getPair } from "@prosopo/keyring";
@@ -59,13 +60,13 @@ async function startApi(
 	admin = false,
 	port?: number,
 ): Promise<Server> {
-	env.logger.info("Starting Prosopo API");
+	env.logger.info(() => ({ msg: "Starting Prosopo API" }));
 
 	const apiApp = express();
 	const apiPort = port || env.config.server.port;
 
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
-		env.config.logLevel,
+		parseLogLevel(env.config.logLevel),
 	);
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
@@ -74,10 +75,10 @@ async function startApi(
 
 	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
 
-	env.logger.debug({
-		message: "Adding headerCheckMiddleware",
+	env.logger.debug(() => ({
+		msg: "Adding headerCheckMiddleware",
 		paths: clientPathsExcludingVerify,
-	});
+	}));
 
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
 	apiApp.set(
@@ -109,7 +110,7 @@ async function startApi(
 	apiApp.use(publicRouter(env));
 
 	// Admin routes
-	env.logger.info("Enabling admin auth middleware");
+	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
 	apiApp.use(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
@@ -122,7 +123,6 @@ async function startApi(
 			authMiddleware(env.pair, env.authAccount),
 		);
 	}
-
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiRuleRoutesProvider,
@@ -133,7 +133,10 @@ async function startApi(
 		apiExpressRouterFactory.createRouter(
 			apiAdminRoutesProvider,
 			// unlike the default one, it should have errorStatusCode as 400
-			createApiExpressDefaultEndpointAdapter(env.config.logLevel, 400),
+			createApiExpressDefaultEndpointAdapter(
+				parseLogLevel(env.config.logLevel),
+				400,
+			),
 		),
 	);
 
@@ -146,7 +149,10 @@ async function startApi(
 	}
 
 	return apiApp.listen(apiPort, () => {
-		env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
+		env.logger.info(() => ({
+			data: { apiPort },
+			msg: "Prosopo app listening",
+		}));
 	});
 }
 
@@ -171,7 +177,7 @@ export async function start(
 		const authAccount = getPair(undefined, config.authAccount.address);
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
-		env.logger.debug("Env already defined");
+		env.logger.debug(() => ({ msg: "Env already defined" }));
 	}
 
 	await env.isReady();
@@ -194,7 +200,11 @@ export async function start(
 			env.config.scheduledTasks?.clientListScheduler?.schedule;
 		if (cronScheduleClient) {
 			getClientList(env.pair, cronScheduleClient, env.config).catch((err) => {
-				console.error("Failed to get client list:", err);
+				env.logger.error(() => ({
+					msg: "Failed to start client list scheduler",
+					err,
+					context: { failedFuncName: getClientList.name },
+				}));
 			});
 		}
 	}

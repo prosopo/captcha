@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type Logger, ProsopoDBError, getLoggerDefault } from "@prosopo/common";
+import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
 import type { IDatabase } from "@prosopo/types-database";
 import { ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
@@ -53,7 +53,7 @@ export class MongoDatabase implements IDatabase {
 		this._url = parsedUrl.toString();
 		this.safeURL = this.url.replace(/\w+:\w+/, "<Credentials>");
 		this.dbname = dbname || parsedUrl.pathname.replace("/", "");
-		this.logger = logger || getLoggerDefault();
+		this.logger = logger || getLogger("info", import.meta.url);
 	}
 
 	get url(): string {
@@ -75,11 +75,13 @@ export class MongoDatabase implements IDatabase {
 	 */
 	async connect(): Promise<void> {
 		this.logger.info(`Mongo url: ${this.safeURL}`);
-
+		try {
 		// Already connected
 		if (this.connected) {
-			this.logger.info(`Database connection to ${this.safeURL} already open`);
-			return;
+				this.logger.info(() => ({
+					data: { mongoUrl: this.safeURL },
+					msg: "Database connection already open",
+				}));			return;
 		}
 
 		// If a connection is in progress, await it
@@ -98,16 +100,21 @@ export class MongoDatabase implements IDatabase {
 			});
 
 			const onConnected = () => {
-				this.logger.info(`Database connected to ${this.safeURL}`);
-				this.connected = true;
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database connection opened",
+					}));				this.connected = true;
 				this.connection = connection;
 				this.connecting = undefined;
 				resolve();
 			};
 
 			const onError = (err: unknown) => {
-				this.logger.error(`Database connection error: ${err}`);
-				this.connected = false;
+					this.logger.error(() => ({
+						err,
+						data: { mongoUrl: this.safeURL },
+						msg: "Database error",
+					}));				this.connected = false;
 				this.connecting = undefined;
 				reject(err);
 			};
@@ -118,21 +125,54 @@ export class MongoDatabase implements IDatabase {
 			// Optional: handle other events
 			connection.on("disconnected", () => {
 				this.connected = false;
-				this.logger.info(`Database disconnected from ${this.safeURL}`);
-			});
+				this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+			msg: "Database disconnected",
+					}));
+				});
 
 			connection.on("reconnected", () => {
 				this.connected = true;
-				this.logger.info(`Database reconnected to ${this.safeURL}`);
-			});
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database reconnected",
+					}));			});
+
+            				connection.on("close", () => {
+					this.connected = false;
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database connection closed",
+					}));
+				});
+
+				connection.on("fullsetup", () => {
+					this.connected = true;
+					this.logger.info(() => ({
+						data: { mongoUrl: this.safeURL },
+						msg: "Database connection is fully setup",
+					}));
+					resolve(connection);
+				});
 		});
 
 		return this.connecting;
+        		} catch (e) {
+			this.logger.error(() => ({
+				err: e,
+				data: { mongoUrl: this.safeURL },
+				msg: "Database connection error",
+			}));
+			throw e;
+		}
 	}
 
 	/** Close connection to the database */
 	async close(): Promise<void> {
-		this.logger.debug(`Closing connection to ${this.safeURL}`);
+		this.logger.debug(() => ({
+			data: { mongoUrl: this.safeURL },
+			msg: "Closing connection",
+		}));
 		await this.connection?.close();
 	}
 }

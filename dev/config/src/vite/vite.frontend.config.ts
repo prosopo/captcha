@@ -25,11 +25,8 @@ import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
-import { getLogger } from "../logger.js";
 import { VitePluginCloseAndCopy } from "./index.js";
 import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
-
-const logger = getLogger("vite.frontend.config.ts");
 
 export default async function (
 	packageName: string,
@@ -53,13 +50,13 @@ export default async function (
 			? process.env.NODE_ENV
 			: mode;
 
-	logger.info(`Running at ${dir} in ${mode} mode`);
+	console.info(`Running at ${dir} in ${mode} mode`);
 	const isProduction = mode === "production";
 	// NODE_ENV must be wrapped in quotes.
 	// If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
 	// issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
 	process.env.NODE_ENV = `${process.env.NODE_ENV || mode}`;
-	logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
+	console.info(`NODE_ENV: ${process.env.NODE_ENV}`);
 
 	// Set the env vars that we want to be available in the browser
 	const define = {
@@ -90,7 +87,7 @@ export default async function (
 		),
 	};
 
-	logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`);
+	console.info(`Env vars: ${JSON.stringify(define, null, 4)}`);
 
 	// Get all dependencies of the current package
 	const { dependencies: deps, optionalPeerDependencies } =
@@ -113,7 +110,7 @@ export default async function (
 		...external,
 		...optionalPeerDependencies,
 	];
-	logger.debug(
+	console.debug(
 		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
 	);
 
@@ -132,7 +129,7 @@ export default async function (
 
 	const rollupExternal: ExternalOption = allExternal;
 
-	logger.info("Bundle name", bundleName);
+	console.info({ bundleName }, "Bundle name");
 	return {
 		server: {
 			host: "127.0.0.1",

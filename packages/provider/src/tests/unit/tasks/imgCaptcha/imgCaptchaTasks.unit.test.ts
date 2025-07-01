@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { u8aToHex } from "@polkadot/util";
-import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
@@ -35,6 +35,8 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
+
+const loggerOuter = getLogger("info", import.meta.url);
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -171,12 +173,16 @@ describe("ImgCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		logger = {
-			info: vi.fn(),
-			error: vi.fn(),
-			debug: vi.fn(),
-			log: vi.fn(),
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 		} as unknown as Logger;
+		logger = mockLogger;
 
 		captchaConfig = {
 			solved: { count: 5 },
@@ -419,9 +425,13 @@ describe("ImgCaptchaManager", () => {
 			);
 
 		expect(result).toBe(false);
-		expect(logger.info).toHaveBeenCalledWith(
-			"Deadline for responding to captcha has expired",
-		);
+
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject({
+			msg: "Deadline for responding to captcha has expired",
+		});
 	});
 
 	it("should get dapp user commitment by ID", async () => {
@@ -551,8 +561,15 @@ describe("ImgCaptchaManager", () => {
 		);
 		expect(verifyResult.verified).toBe(false);
 
-		expect(logger.debug).toHaveBeenCalledWith(
-			`IP address mismatch: ${getIPAddressFromBigInt(dappUserCommitment.ipAddress).address} !== ${ipAddress}`,
-		);
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.debug as any).mock.calls[1][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject({
+			msg: "IP address mismatch",
+			data: {
+				ip: "1.1.1.1",
+				solutionIp: "8.8.8.8",
+			},
+		});
 	});
 });

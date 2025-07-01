@@ -34,11 +34,12 @@ export const authMiddleware = (
 					return;
 				} catch (e: unknown) {
 					// need to fall through to the verifySignature check
-					req.logger.warn({
-						message: (e as ProsopoApiError).message,
-						code: (e as ProsopoApiError).code,
-						account: authAccount.address,
-					});
+					req.logger.warn(() => ({
+						err: e,
+						data: {
+							account: authAccount?.address,
+						},
+					}));
 					error = e as ProsopoApiError;
 				}
 			}
@@ -55,7 +56,7 @@ export const authMiddleware = (
 			});
 			return;
 		} catch (err) {
-			req.logger.error("Auth Middleware Error:", err);
+			req.logger.error(() => ({ err, msg: "Auth Middleware Error" }));
 			res.status(401).json({ error: "Unauthorized", message: err });
 			return;
 		}

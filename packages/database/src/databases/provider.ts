@@ -258,7 +258,10 @@ export class ProviderDatabase
 	 */
 	async storeDataset(dataset: Dataset | DatasetWithIdsAndTree): Promise<void> {
 		try {
-			this.logger.debug("Storing dataset in database");
+			this.logger.debug(() => ({
+				data: { datasetId: dataset.datasetId },
+				msg: "Storing dataset in database",
+			}));
 			const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
 			const datasetDoc = {
 				datasetId: parsedDataset.datasetId,
@@ -288,7 +291,9 @@ export class ProviderDatabase
 				}),
 			);
 
-			this.logger.debug("Inserting captcha records");
+			this.logger.debug(() => ({
+				msg: "Inserting captcha records",
+			}));
 			// create a bulk upsert operation and execute
 			if (captchaDocs.length) {
 				await this.tables?.captcha.bulkWrite(
@@ -317,7 +322,9 @@ export class ProviderDatabase
 					datasetContentId: parsedDataset.datasetContentId,
 				}));
 
-			this.logger.debug("Inserting solution records");
+			this.logger.debug(() => ({
+				msg: "Inserting solution records",
+			}));
 			// create a bulk upsert operation and execute
 			if (captchaSolutionDocs.length) {
 				await this.tables?.solution.bulkWrite(
@@ -333,7 +340,9 @@ export class ProviderDatabase
 					})),
 				);
 			}
-			this.logger.debug("Dataset stored in database");
+			this.logger.debug(() => ({
+				msg: "Dataset stored in database",
+			}));
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.DATASET_LOAD_FAILED", {
 				context: { failedFuncName: this.storeDataset.name, error: err },
@@ -642,21 +651,17 @@ export class ProviderDatabase
 
 		try {
 			await tables.powcaptcha.create(powCaptchaRecord);
-			this.logger.info("PowCaptcha record added successfully", {
-				challenge,
-				userSubmitted,
-				serverChecked,
-				storedStatus,
-			});
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					userSubmitted,
+					serverChecked,
+					storedStatus,
+				},
+				msg: "PowCaptcha record added successfully",
+			}));
 		} catch (error) {
-			this.logger.error("Failed to add PowCaptcha record", {
-				error,
-				challenge,
-				userSubmitted,
-				serverChecked,
-				storedStatus,
-			});
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
 					error,
 					challenge,
@@ -666,6 +671,11 @@ export class ProviderDatabase
 				},
 				logger: this.logger,
 			});
+			this.logger.error(() => ({
+				err: error,
+				msg: "Failed to add PowCaptcha record",
+			}));
+			throw err;
 		}
 	}
 
@@ -691,22 +701,27 @@ export class ProviderDatabase
 			const record: PoWCaptchaRecord | null | undefined =
 				await this.tables.powcaptcha.findOne(filter).lean<PoWCaptchaRecord>();
 			if (record) {
-				this.logger.info("PowCaptcha record retrieved successfully", {
-					challenge,
-				});
+				this.logger.info(() => ({
+					data: { challenge },
+					msg: "PowCaptcha record retrieved successfully",
+				}));
 				return record;
 			}
-			this.logger.info("No PowCaptcha record found", { challenge });
+			this.logger.info(() => ({
+				data: { challenge },
+				msg: "No PowCaptcha record found",
+			}));
 			return null;
 		} catch (error) {
-			this.logger.error("Failed to retrieve PowCaptcha record", {
-				error,
-				challenge,
-			});
-			throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: { error, challenge },
 				logger: this.logger,
 			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to retrieve PowCaptcha record",
+			}));
+			throw err;
 		}
 	}
 
@@ -751,29 +766,28 @@ export class ProviderDatabase
 				},
 			);
 			if (updateResult.matchedCount === 0) {
-				this.logger.info("No PowCaptcha record found to update", {
-					challenge,
-					...update,
-				});
-				throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
 						challenge,
 						...update,
 					},
 					logger: this.logger,
 				});
+				this.logger.info(() => ({
+					err: err,
+					msg: "No PowCaptcha record found to update",
+				}));
+				throw err;
 			}
-			this.logger.info("PowCaptcha record updated successfully", {
-				challenge,
-				...update,
-			});
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					...update,
+				},
+				msg: "PowCaptcha record updated successfully",
+			}));
 		} catch (error) {
-			this.logger.error("Failed to update PowCaptcha record", {
-				error,
-				challenge,
-				...update,
-			});
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
 					error,
 					challenge,
@@ -781,6 +795,11 @@ export class ProviderDatabase
 				},
 				logger: this.logger,
 			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to update PowCaptcha record",
+			}));
+			throw err;
 		}
 	}
 
@@ -1015,7 +1034,9 @@ export class ProviderDatabase
 	 */
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
-			this.logger.debug({ action: "storing", sessionRecord });
+			this.logger.debug(() => ({
+				data: { action: "storing", sessionRecord },
+			}));
 			await this.tables.session.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
@@ -1032,7 +1053,9 @@ export class ProviderDatabase
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
-		this.logger.debug({ action: "checking and removing", sessionId });
+		this.logger.debug(() => ({
+			data: { action: "checking and removing", sessionId },
+		}));
 		const filter: {
 			[key in keyof Pick<SessionRecord, "sessionId" | "deleted">]:
 				| string

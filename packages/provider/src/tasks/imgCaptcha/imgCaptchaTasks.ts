@@ -199,10 +199,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 		);
 		if (!verification.isValid) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-			this.logger.info("Invalid user timestamp signature");
-			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
+			const err = new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: { failedFuncName: this.dappUserSolution.name, userAccount },
 			});
+			this.logger.info(() => ({
+				err,
+				msg: "Invalid user timestamp signature",
+			}));
+			throw err;
 		}
 
 		// check that the requestHash signature is valid and signed by the provider
@@ -213,15 +217,19 @@ export class ImgCaptchaManager extends CaptchaManager {
 		);
 
 		if (!providerRequestHashSignatureVerify.isValid) {
-			this.logger.info("Invalid provider requestHash signature");
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-			throw new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
+			const err = new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: {
 					failedFuncName: this.dappUserSolution.name,
 					userAccount,
 					error: "requestHash signature is invalid",
 				},
 			});
+			this.logger.info(() => ({
+				err,
+				msg: "Invalid provider requestHash signature",
+			}));
+			throw err;
 		}
 
 		let response: DappUserSolutionResult = {
@@ -320,7 +328,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				};
 			}
 		} else {
-			this.logger.info("Request hash not found");
+			this.logger.info(() => ({
+				msg: "Request hash not found",
+			}));
 		}
 		return response;
 	}
@@ -381,13 +391,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 		const currentTime = Date.now();
 		// only proceed if there is a pending record
 		if (!pendingRecord) {
-			this.logger.info("No pending record found");
+			this.logger.info(() => ({
+				msg: "No pending record found",
+			}));
 			return false;
 		}
 
 		if (pendingRecord.deadlineTimestamp < currentTime) {
 			// deadline for responding to the captcha has expired
-			this.logger.info("Deadline for responding to captcha has expired");
+			this.logger.info(() => ({
+				msg: "Deadline for responding to captcha has expired",
+			}));
 			return false;
 		}
 		if (pendingRecord) {
@@ -452,21 +466,30 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// No solution exists
 		if (!solution) {
-			this.logger.debug("Not verified - no solution found");
+			this.logger.debug(() => ({
+				msg: "Not verified - no solution found",
+			}));
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
 		if (ip) {
 			const ipV4Address = getIPAddress(ip);
-			this.logger.log({ ipV4Address });
+			this.logger.debug(() => ({ data: { ipV4Address } }));
 			if (!ipV4Address) {
-				this.logger.debug(`Invalid IP address: ${ip}`);
+				this.logger.debug(() => ({
+					data: { ip },
+					msg: "Invalid IP address",
+				}));
 				return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 			if (solution.ipAddress !== ipV4Address.bigInt()) {
-				this.logger.debug(
-					`IP address mismatch: ${getIPAddressFromBigInt(solution.ipAddress).address} !== ${ip}`,
-				);
+				this.logger.debug(() => ({
+					data: {
+						ip,
+						solutionIp: getIPAddressFromBigInt(solution.ipAddress).address,
+					},
+					msg: "IP address mismatch",
+				}));
 				return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 		}
@@ -491,7 +514,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			// A solution exists but has timed out
 			if (timeSinceCompletion > maxVerifiedTime) {
-				this.logger.debug("Not verified - timed out");
+				this.logger.debug(() => ({
+					msg: "Not verified - timed out",
+				}));
 				return {
 					status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
 					verified: false,
@@ -508,10 +533,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 			);
 			if (tokenRecord) {
 				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
-				this.logger.info({
-					tscoreComponents: tokenRecord?.scoreComponents,
-					score: score,
-				});
+				this.logger.info(() => ({
+					data: {
+						tscoreComponents: tokenRecord?.scoreComponents,
+						score: score,
+					},
+				}));
 			}
 		}
 

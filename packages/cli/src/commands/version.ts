@@ -28,7 +28,9 @@ export default (
 		command: "version",
 		describe: "Return the version of the software",
 		handler: () => {
-			logger.info(`Version: ${JSON.stringify(version)}`);
+			logger.info(() => ({
+				data: { version },
+			}));
 		},
 	};
 };

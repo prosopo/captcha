@@ -13,11 +13,28 @@
 // limitations under the License.
 
 import { hexToU8a, isHex } from "@polkadot/util";
-import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoApiError,
+	ProsopoEnvError,
+	getLogger,
+} from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../middlewares/authMiddleware.js";
+
+const loggerOuter = getLogger("info", import.meta.url);
+
+const mockLogger = {
+	debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+	log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+	info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+	error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+	trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+	fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+	warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+} as unknown as Logger;
 
 vi.mock("@polkadot/util", async (importOriginal) => {
 	const actual = await importOriginal();
@@ -30,11 +47,6 @@ vi.mock("@polkadot/util", async (importOriginal) => {
 	};
 });
 
-const mockLogger = {
-	info: vi.fn(),
-	error: vi.fn(),
-	warn: vi.fn(),
-} as unknown as Logger;
 const mockPair = {
 	publicKey: "mockPublicKey",
 	verify: vi.fn(),
@@ -47,6 +59,15 @@ const mockEnv = {
 
 describe("authMiddleware", () => {
 	it("should call next() if signature is valid", async () => {
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
@@ -76,6 +97,15 @@ describe("authMiddleware", () => {
 	});
 
 	it("should return 401 if signature is invalid", async () => {
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
@@ -109,6 +139,15 @@ describe("authMiddleware", () => {
 	});
 
 	it("should return 401 if key pair is missing", async () => {
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",

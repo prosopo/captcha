@@ -15,14 +15,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, getLogger, parseLogLevel } from "@prosopo/common";
 import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logger = getLogger(
-	process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info,
-	"env",
+	parseLogLevel(process.env.PROSOPO_LOG_LEVEL, LogLevel.enum.info),
+	import.meta.url,
 );
 
 export function getEnv() {
@@ -46,7 +46,10 @@ export function loadEnv(
 		nodeEnv,
 	);
 	const args = { path: envPath, override };
-	logger.info(`Loading env from ${envPath}`);
+	logger.info(() => ({
+		data: { envPath },
+		msg: "Loading env",
+	}));
 	dotenv.config(args);
 	return envPath;
 }
@@ -70,7 +73,10 @@ export function getEnvFile(
 
 	let searchPath = path.resolve(rootDir || ".");
 
-	logger.info(`Searching for ${fileNameFull} in ${searchPath}`);
+	logger.info(() => ({
+		data: { fileName: fileNameFull, searchPath: searchPath },
+		msg: "Searching",
+	}));
 
 	let levelCount = 0;
 
@@ -80,18 +86,20 @@ export function getEnvFile(
 				fs.readFileSync(path.join(searchPath, "package.json"), "utf8"),
 			);
 			if (pkgJson.name === "@prosopo/captcha-private") {
-				logger.info(
-					`Reached the workspace root package.json, stopping search for ${fileNameFull}.`,
-				);
+				logger.info(() => ({
+					data: { fileName: fileNameFull },
+					msg: "Reached the workspace root package.json, stopping search.",
+				}));
 				break;
 			}
 		}
 		searchPath = path.resolve(searchPath, "..");
 		levelCount += 1;
 		if (levelCount > 10) {
-			logger.warn(
-				`Checked ${levelCount} directories above, stopping search for ${fileNameFull}.`,
-			);
+			logger.warn(() => ({
+				data: { fileName: fileNameFull, levelCount },
+				msg: "Checked directories above, stopping search.",
+			}));
 			break;
 		}
 	}
