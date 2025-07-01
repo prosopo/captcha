@@ -101,13 +101,13 @@ describe("authMiddleware", () => {
 
 	it("should return 401 if signature is invalid", async () => {
 		const mockLogger = {
-			debug: vi.fn().mockImplementation(loggerOuter.debug),
-			log: vi.fn().mockImplementation(loggerOuter.log),
-			info: vi.fn().mockImplementation(loggerOuter.info),
-			error: vi.fn().mockImplementation(loggerOuter.error),
-			trace: vi.fn().mockImplementation(loggerOuter.trace),
-			fatal: vi.fn().mockImplementation(loggerOuter.fatal),
-			warn: vi.fn().mockImplementation(loggerOuter.warn),
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
@@ -143,13 +143,13 @@ describe("authMiddleware", () => {
 
 	it("should return 401 if key pair is missing", async () => {
 		const mockLogger = {
-			debug: vi.fn().mockImplementation(loggerOuter.debug),
-			log: vi.fn().mockImplementation(loggerOuter.log),
-			info: vi.fn().mockImplementation(loggerOuter.info),
-			error: vi.fn().mockImplementation(loggerOuter.error),
-			trace: vi.fn().mockImplementation(loggerOuter.trace),
-			fatal: vi.fn().mockImplementation(loggerOuter.fatal),
-			warn: vi.fn().mockImplementation(loggerOuter.warn),
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 		} as unknown as Logger;
 		const mockReq = {
 			url: "/v1/prosopo/provider/captcha/image",
