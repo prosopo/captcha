@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "2.6.0",
+	"version": "2.6.1",
 	"description": "Prosopo config library",
 	"main": "./dist/index.js",
 	"type": "module",

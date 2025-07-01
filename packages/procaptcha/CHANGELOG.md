@@ -1,5 +1,20 @@
 # @prosopo/procaptcha
 
+## 2.7.3
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/procaptcha-common@2.7.2
+  - @prosopo/load-balancer@2.6.7
+  - @prosopo/util-crypto@13.5.1
+  - @prosopo/datasets@2.7.2
+  - @prosopo/account@2.7.2
+  - @prosopo/common@2.7.2
+  - @prosopo/types@2.9.1
+  - @prosopo/api@2.7.1
+  - @prosopo/util@2.6.1
+
 ## 2.7.2
 ### Patch Changes
 

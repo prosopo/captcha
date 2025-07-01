@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 2.6.1
+### Patch Changes
+
+- 86c22b8: structured logging
+
 ## 2.6.0
 
 ### Minor Changes
