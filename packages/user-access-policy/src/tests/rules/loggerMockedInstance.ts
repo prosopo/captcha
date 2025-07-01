@@ -27,6 +27,12 @@ const loggerMockedInstance: Logger = {
 	getLogLevel: vi.fn(),
 	with: vi.fn().mockReturnThis(),
 	getScope: vi.fn().mockReturnValue("test-scope"),
+	getPretty: vi.fn().mockReturnValue(false),
+	setPretty: vi.fn(),
+	getPrintStack: vi.fn().mockReturnValue(false),
+	setPrintStack: vi.fn(),
+	getFormat: vi.fn().mockReturnValue("json"),
+	setFormat: vi.fn(),
 };
 
 export { loggerMockedInstance };
