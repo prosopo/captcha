@@ -124,7 +124,7 @@ export class NativeLogger implements Logger {
 	setFormat(format: Format): void {
 		this.format = format;
 		if (this.format !== FormatJson) {
-			throw new Error('Only JSON format implemented for now'); // for performance reasons
+			throw new Error("Only JSON format implemented for now"); // for performance reasons
 		}
 	}
 
@@ -168,7 +168,7 @@ export class NativeLogger implements Logger {
 		return this.level;
 	}
 
-	private unpackError(err: Error | object): { msg: string, data: LogRecord } {
+	private unpackError(err: Error | object): { msg: string; data: LogRecord } {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const e: any = err; // allow additional properties
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
