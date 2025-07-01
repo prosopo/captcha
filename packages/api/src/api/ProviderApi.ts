@@ -47,9 +47,7 @@ import {
 	type DeleteRulesEndpointSchemaInput,
 	type InsertManyRulesEndpointInputSchema,
 	accessRuleApiPaths,
-	deleteRulesEndpointSchema,
 } from "@prosopo/user-access-policy";
-import { DeleteRulesEndpointSchema } from "../../../user-access-policy/src/api/deleteRulesEndpoint.js";
 import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi
