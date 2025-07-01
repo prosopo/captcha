@@ -14,7 +14,7 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoContractError, ProsopoEnvError, type Logger } from "@prosopo/common";
 import {
 	type IPAddress,
 	type ScheduledTaskNames,
@@ -88,4 +88,39 @@ export const getIPAddress = (ipAddressString: string): IPAddress => {
 
 export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
 	return Address4.fromBigInt(ipAddressBigInt);
+};
+
+/**
+ * Validates that the provided IP address matches the challenge record's IP address
+ * @param ip - The IP address string to validate
+ * @param challengeRecordIpAddress - The IP address from the challenge record as bigint
+ * @param logger - Logger instance for debug messages
+ * @returns Object with validation result and optional error message
+ */
+export const validateIpAddress = (
+	ip: string | undefined,
+	challengeRecordIpAddress: bigint,
+	logger: Logger,
+): { isValid: boolean; errorMessage?: string } => {
+	if (!ip) {
+		return { isValid: true }; // IP validation is optional
+	}
+
+	let ipV4Address;
+	try {
+		ipV4Address = getIPAddress(ip);
+		logger.log({ ipV4Address });
+	} catch (e) {
+		const errorMessage = `Invalid IP address: ${ip}`;
+		logger.debug(errorMessage);
+		return { isValid: false, errorMessage };
+	}
+	
+	if (challengeRecordIpAddress !== ipV4Address.bigInt()) {
+		const errorMessage = `IP address mismatch: ${getIPAddressFromBigInt(challengeRecordIpAddress).address} !== ${ip}`;
+		logger.debug(errorMessage);
+		return { isValid: false, errorMessage };
+	}
+	
+	return { isValid: true };
 };
