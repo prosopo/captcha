@@ -116,13 +116,13 @@ export const validateIpAddress = (
 		logger.log({ ipV4Address });
 	} catch (e) {
 		const errorMessage = `Invalid IP address: ${ip}`;
-		logger.debug(errorMessage);
+		logger.info({ error: errorMessage });
 		return { isValid: false, errorMessage };
 	}
 
 	if (challengeRecordIpAddress !== ipV4Address.bigInt()) {
 		const errorMessage = `IP address mismatch: ${getIPAddressFromBigInt(challengeRecordIpAddress).address} !== ${ip}`;
-		logger.debug(errorMessage);
+		logger.info({ error: errorMessage });
 		return { isValid: false, errorMessage };
 	}
 
