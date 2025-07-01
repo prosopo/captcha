@@ -106,9 +106,9 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toBe(`Invalid IP address: ${invalidIp}`);
-		expect(mockLogger.debug).toHaveBeenCalledWith(
-			`Invalid IP address: ${invalidIp}`,
-		);
+		expect(mockLogger.info).toHaveBeenCalledWith({
+			error: `Invalid IP address: ${invalidIp}`,
+		});
 	});
 
 	it("should return invalid when IP addresses don't match", () => {
@@ -119,8 +119,10 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("IP address mismatch:");
-		expect(mockLogger.debug).toHaveBeenCalledWith(
-			expect.stringContaining("IP address mismatch:"),
+		expect(mockLogger.info).toHaveBeenCalledWith(
+			expect.objectContaining({
+				error: "IP address mismatch: 192.168.1.2 !== 192.168.1.1",
+			}),
 		);
 	});
 
