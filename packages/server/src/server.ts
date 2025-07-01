@@ -79,7 +79,7 @@ export class ProsopoServer {
 		challenge?: string,
 		ip?: string,
 	): Promise<VerificationResponse> {
-		this.logger.info(`Verifying with provider: ${providerUrl}`);
+		this.logger.info(`Verifying with provider: ${providerUrl} for ip: ${ip}`);
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
 			throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
@@ -154,8 +154,7 @@ export class ProsopoServer {
 					status: i18n.t("API.USER_NOT_VERIFIED"),
 				};
 			}
-
-			return await this.verifyProvider(
+			const verificationResponse = await this.verifyProvider(
 				token,
 				this.config.timeouts,
 				provider.url,
@@ -164,6 +163,16 @@ export class ProsopoServer {
 				challenge,
 				ip,
 			);
+
+			this.logger.info({
+				verificationResponse,
+				providerUrl,
+				user,
+				challenge,
+				siteKey: this.pair?.address,
+			});
+
+			return verificationResponse;
 		} catch (err) {
 			this.logger.error({ err, token });
 			throw new ProsopoApiError("API.BAD_REQUEST", {

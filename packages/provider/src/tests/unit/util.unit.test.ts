@@ -98,6 +98,40 @@ describe("validateIpAddress", () => {
 		);
 	});
 
+	it("should return valid when IP addresses match 2", () => {
+		const testIp = "82.43.214.180";
+		const ipBigInt = BigInt(1378604724);
+
+		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+
+		expect(result.isValid).toBe(true);
+		expect(result.errorMessage).toBeUndefined();
+		expect(mockLogger.log).toHaveBeenCalledWith(
+			expect.objectContaining({
+				ipV4Address: expect.objectContaining({
+					address: testIp,
+				}),
+			}),
+		);
+	});
+
+	it("should return valid when IP addresses match 3", () => {
+		const testIp = "::ffff:82.43.214.180";
+		const ipBigInt = BigInt(1378604724);
+
+		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+
+		expect(result.isValid).toBe(true);
+		expect(result.errorMessage).toBeUndefined();
+		expect(mockLogger.log).toHaveBeenCalledWith(
+			expect.objectContaining({
+				ipV4Address: expect.objectContaining({
+					address: testIp,
+				}),
+			}),
+		);
+	});
+
 	it("should return invalid when IP address is malformed", () => {
 		const invalidIp = "invalid.ip.address";
 		const challengeRecordIp = BigInt(3232235777); // Some valid bigint

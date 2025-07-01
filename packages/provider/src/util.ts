@@ -81,17 +81,26 @@ export async function checkIfTaskIsRunning(
 
 export const getIPAddress = (ipAddressString: string): IPAddress => {
 	try {
-		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
+		try {
 			return new Address4(ipAddressString);
+		} catch (e) {
+			return new Address6(ipAddressString);
 		}
-		return new Address6(ipAddressString);
 	} catch (e) {
 		throw new ProsopoEnvError("API.INVALID_IP");
 	}
 };
 
 export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
-	return Address4.fromBigInt(ipAddressBigInt);
+	try {
+		try {
+			return Address4.fromBigInt(BigInt(ipAddressBigInt));
+		} catch (e) {
+			return Address6.fromBigInt(BigInt(ipAddressBigInt));
+		}
+	} catch (e) {
+		throw new ProsopoEnvError("API.INVALID_IP");
+	}
 };
 
 /**
@@ -110,18 +119,35 @@ export const validateIpAddress = (
 		return { isValid: true }; // IP validation is optional
 	}
 
-	let ipV4Address: IPAddress;
+	let ipV4orV6Address: IPAddress;
 	try {
-		ipV4Address = getIPAddress(ip);
-		logger.log({ ipV4Address });
+		ipV4orV6Address = getIPAddress(ip);
+		logger.log({ ipV4Address: ipV4orV6Address });
 	} catch (e) {
 		const errorMessage = `Invalid IP address: ${ip}`;
 		logger.info({ error: errorMessage });
 		return { isValid: false, errorMessage };
 	}
 
-	if (challengeRecordIpAddress !== ipV4Address.bigInt()) {
-		const errorMessage = `IP address mismatch: ${getIPAddressFromBigInt(challengeRecordIpAddress).address} !== ${ip}`;
+	let challengeIpV4orV6Address = getIPAddressFromBigInt(
+		challengeRecordIpAddress,
+	);
+
+	const payloadIPisV4 = ipV4orV6Address instanceof Address4;
+	const challengeIPisV4 = challengeIpV4orV6Address instanceof Address4;
+
+	// Make sure both IP addresses are of the same type (either both IPv4 or both IPv6)
+	if (!payloadIPisV4 || !challengeIPisV4) {
+		if (!payloadIPisV4) {
+			ipV4orV6Address = (<Address6>ipV4orV6Address).to4();
+		}
+		if (!challengeIPisV4) {
+			challengeIpV4orV6Address = (<Address6>challengeIpV4orV6Address).to4();
+		}
+	}
+
+	if (challengeIpV4orV6Address.bigInt() !== ipV4orV6Address.bigInt()) {
+		const errorMessage = `IP address mismatch: ${challengeIpV4orV6Address.address} !== ${ipV4orV6Address.address}`;
 		logger.info({ error: errorMessage });
 		return { isValid: false, errorMessage };
 	}
