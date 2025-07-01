@@ -14,9 +14,9 @@
 
 import { z } from "zod";
 
-export type LogObject = Record<string | number, unknown>;
+export type LogObject = object;
 export type LogRecord = {
-	err?: Error | unknown;
+	err?: unknown;
 	data?: LogObject;
 	msg?: string;
 };
@@ -39,6 +39,12 @@ export type Logger = {
 	 * @param obj An object to log, which will be added to every log message.
 	 */
 	with(obj: LogObject): Logger;
+	getPretty(): boolean;
+	setPretty(pretty: boolean): void;
+	getPrintStack(): boolean;
+	setPrintStack(printStack: boolean): void;
+	getFormat(): Format;
+	setFormat(format: Format): void;
 };
 
 export const InfoLevel = "info";
@@ -100,7 +106,7 @@ export type Format = z.infer<typeof Format>;
 export class NativeLogger implements Logger {
 	// the default data to be logged
 	// this provides utility for adding properties to every log message
-	private defaultData = {};
+	private defaultData: LogObject | undefined;
 	private level: LogLevel;
 	private levelNum: number;
 	private pretty = 0; // pretty print indentation level - 0 = no pretty print, 2 = 2 spaces, etc
@@ -117,6 +123,9 @@ export class NativeLogger implements Logger {
 
 	setFormat(format: Format): void {
 		this.format = format;
+		if (this.format !== FormatJson) {
+			throw new Error('Only JSON format implemented for now'); // for performance reasons
+		}
 	}
 
 	getFormat(): Format {
@@ -159,13 +168,15 @@ export class NativeLogger implements Logger {
 		return this.level;
 	}
 
-	private unpackError(err: Error): LogObject {
+	private unpackError(err: Error | object): { msg: string, data: LogRecord } {
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const e: any = err; // allow additional properties
-		const data: LogObject = { err: err.message, name: err.name };
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const data: any = { ...err };
+		data.name = e.name || "Error";
 		if (this.printStack) {
-			if (err.stack) {
-				data.stack = err.stack;
+			if (e.stack) {
+				data.stack = e.stack;
 			}
 			if (e.stacktrace) {
 				data.stacktrace = e.stacktrace; // for compatibility with some environments
@@ -208,7 +219,15 @@ export class NativeLogger implements Logger {
 				data.cause = e.cause;
 			}
 		}
-		return data;
+		const msg = e.message || e.msg || "";
+		if (e.message && e.msg) {
+			// duplicate message, defer msg to data
+			data.msg = e.msg;
+		}
+		return {
+			msg,
+			data,
+		};
 	}
 
 	private print(
@@ -219,37 +238,58 @@ export class NativeLogger implements Logger {
 		if (this.levelMap[level] > this.levelNum) {
 			return; // skip logging if the level is higher than the current log level
 		}
-		const dateTime = new Date().toISOString();
+		const ts = new Date().toISOString();
+		// populate the log fields using the fn
 		let { data, msg, err } = fn();
-		const errData = err instanceof Error ? this.unpackError(err) : {};
-		if (!msg && errData.message) {
-			// if no message is provided, use the error message
-			msg = String(errData.err) || String(errData.name);
+		let errMsg: string | undefined;
+		let errData: LogRecord | undefined;
+		if (err) {
+			if (err instanceof Error || typeof err === "object") {
+				// if it's an instance of Error, unpack the standard fields (e.g. message, name, stack, etc)
+				const result = this.unpackError(err);
+				errMsg = result.msg;
+				errData = result.data;
+			} else {
+				// primitive
+				errMsg = String(err);
+			}
 		}
-		data = { ...this.defaultData, ...errData, ...data };
-		const baseRecord = { scope: this.scope, dateTime, level: this.level, data };
+		// add any default data to the data object
+		if (this.defaultData) {
+			data = { ...this.defaultData, ...data };
+		}
+		const baseRecord: {
+			scope: string;
+			ts: string;
+			level: LogLevel;
+			data?: LogObject;
+			msg?: string;
+			err?: string;
+			errData?: LogRecord;
+		} = { scope: this.scope, ts, level: this.level };
+		if (data) {
+			baseRecord.data = data;
+		}
+		if (msg) {
+			baseRecord.msg = msg;
+		}
+		if (errMsg) {
+			baseRecord.err = errMsg;
+		}
+		if (errData) {
+			baseRecord.errData = errData;
+		}
+
 		if (inBrowser) {
 			// no need to convert to json, dev tools will handle it
-			if (msg) {
+			if (msg || errMsg) {
 				// log the log record object separately to the message to utilize browser dev tools
-				dest(msg, baseRecord);
+				dest(msg || errMsg, baseRecord);
 			} else {
 				dest(baseRecord);
 			}
 		} else {
-			let output = "";
-			// check the format to output
-			if (this.format === FormatJson) {
-				// add the message to the log record, as we're logging a single object only
-				const record = { ...baseRecord, msg };
-				// need to convert it to json
-				output = JSON.stringify(record, null, this.pretty);
-			} else if (this.format === FormatPlain) {
-				// in plain format, we concat the log record fields into a string
-				output = `${dateTime} ${level} ${this.scope}:${msg ? ` ${msg}` : ""}${Object.entries(data).length > 0 ? ` ${JSON.stringify(data)}` : ""}`;
-			} else {
-				throw new Error(`Unknown log format: ${this.format}`);
-			}
+			const output = JSON.stringify(baseRecord, null, this.pretty);
 			dest(output);
 		}
 	}
