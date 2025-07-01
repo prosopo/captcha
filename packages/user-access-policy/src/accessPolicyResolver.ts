@@ -59,18 +59,15 @@ export const createAccessPolicyResolver = (
 
 		const primaryAccessRule = resolvePrimaryRule(accessRules);
 
-		logger.debug(
-			"Resolved access policy",
+		logger.debug(() => ({
+			msg: "Resolved access policy",
 			// filter contains BigInt, which can't be handled directly via logger.
-			util.inspect(
-				{
-					filter: filter,
-					accessRules: accessRules,
-					primaryAccessRule: primaryAccessRule,
-				},
-				{ depth: null },
-			),
-		);
+			data: {
+				filter: filter,
+				accessRules: accessRules,
+				primaryAccessRule: primaryAccessRule,
+			},
+		}));
 
 		return primaryAccessRule;
 	};

@@ -81,10 +81,8 @@ export default async function (
 	let entriesAbsolute: string[];
 	if (typeof entry === "string") {
 		entriesAbsolute = [path.resolve(packageDir, entry)];
-		logger.info(`Entry point: ${entriesAbsolute}`);
 	} else {
 		entriesAbsolute = entry.map((e) => path.resolve(packageDir, e));
-		logger.info(`Entry points: ${entriesAbsolute}`);
 	}
 
 	// drop console logs if in production mode

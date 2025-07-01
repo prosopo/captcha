@@ -219,7 +219,10 @@ export class ProviderDatabase
 			password: this.options.redis?.password,
 		})
 			.on("error", (error) => {
-				this.logger.error("Redis Client Error", error);
+				this.logger.error(() => ({
+					err: error,
+					msg: "Redis client error",
+				}));
 			})
 			.connect()) as RedisClientType;
 	}

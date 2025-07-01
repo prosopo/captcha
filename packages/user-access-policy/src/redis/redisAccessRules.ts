@@ -51,31 +51,21 @@ export const createRedisAccessRulesReader = (
 					accessRulesRedisSearchOptions,
 				);
 
-				logger.debug(
-					"executed search query",
-					// filter contains BigInt, which can't be handled directly via logger.
-					util.inspect(
-						{
-							filter: filter,
-							searchReply: searchReply,
-							query: query,
-						},
-						{ depth: null },
-					),
-				);
+				logger.debug(() => ({
+					msg: "Executed search query",
+					query: query,
+					filter: filter,
+					numFound: searchReply.total,
+				}));
 			} catch (e) {
-				logger.error(
-					"failed to execute search query",
-					util.inspect(
-						{
-							query: query,
-							filter: filter,
-						},
-						{
-							depth: null,
-						},
-					),
-				);
+				logger.error(() => ({
+					err: e,
+					data: {
+						query: query,
+						filter: filter,
+					},
+					msg: "failed to execute search query",
+				}));
 
 				return [];
 			}
@@ -94,32 +84,13 @@ export const createRedisAccessRulesReader = (
 					query,
 					accessRulesRedisSearchOptions,
 				);
-
-				logger.debug(
-					"executed searchNoContent query",
-					// filter contains BigInt, which can't be handled directly via logger.
-					util.inspect(
-						{
-							filter: filter,
-							searchReply: searchReply,
-							query: query,
-						},
-						{
-							depth: null,
-						},
-					),
-				);
 			} catch (e) {
-				logger.error(
-					"failed to execute searchNoContent query",
-					util.inspect(
-						{
-							query: query,
-							filter: filter,
-						},
-						{ depth: null },
-					),
-				);
+				// 	debug(fn: LogRecordFn): void;
+				logger.error(() => ({
+					err: e,
+					data: { query: query, filter: filter },
+					msg: "Failed to execute search query for rule IDs",
+				}));
 
 				return [];
 			}
@@ -182,10 +153,11 @@ const extractAccessRulesFromSearchReply = (
 		if (parsedDocument.success) {
 			accessRules.push(parsedDocument.data);
 		} else {
-			logger.debug("failed to parse access rule", {
-				document: document,
+			logger.debug(() => ({
+				msg: "Failed to parse access rule from search reply",
+				id: id,
 				error: parsedDocument.error,
-			});
+			}));
 		}
 	});
 

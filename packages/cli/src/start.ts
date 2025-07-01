@@ -91,7 +91,7 @@ async function startApi(
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
 	apiApp.use(ignoreMiddleware());
-	apiApp.use(requestLoggerMiddleware(env.config.logLevel));
+	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 

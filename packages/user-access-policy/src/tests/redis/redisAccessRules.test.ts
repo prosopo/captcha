@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { LogLevel, getLogger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
 import {
 	afterAll,
@@ -39,7 +40,6 @@ import {
 	getRedisAccessRuleValue,
 } from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "#policy/tests/redis/testRedisClient.js";
-import { testLogger } from "#policy/tests/testLogger.js";
 
 describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
@@ -175,7 +175,10 @@ describe("redisAccessRules", () => {
 		let accessRulesReader: AccessRulesReader;
 
 		beforeAll(() => {
-			accessRulesReader = createRedisAccessRulesReader(redisClient, testLogger);
+			accessRulesReader = createRedisAccessRulesReader(
+				redisClient,
+				getLogger(LogLevel.enum.info, "RedisAccessRulesReader"),
+			);
 		});
 
 		test("finds client and global rules by greedy policy scope match", async () => {

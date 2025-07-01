@@ -74,71 +74,79 @@ export class MongoDatabase implements IDatabase {
 	 * @description Connect to the database and set the various tables
 	 */
 	async connect(): Promise<void> {
-		this.logger.info(`Mongo url: ${this.safeURL}`);
+		this.logger.info(() => ({
+			data: { mongoUrl: this.safeURL },
+			msg: "Connecting to database",
+		}));
 		try {
-		// Already connected
-		if (this.connected) {
+			// Already connected
+			if (this.connected) {
 				this.logger.info(() => ({
 					data: { mongoUrl: this.safeURL },
 					msg: "Database connection already open",
-				}));			return;
-		}
+				}));
+				return;
+			}
 
-		// If a connection is in progress, await it
-		if (this.connecting) {
-			this.logger.info(
-				"Connection in progress, awaiting existing connection...",
-			);
-			return this.connecting;
-		}
+			// If a connection is in progress, await it
+			if (this.connecting) {
+				this.logger.info(() => ({
+					data: { mongoUrl: this.safeURL },
+					msg: "Database connection in progress, waiting for it to finish",
+				}));
+				return this.connecting;
+			}
 
-		// Start a new connection
-		this.connecting = new Promise((resolve, reject) => {
-			const connection = mongoose.createConnection(this.url, {
-				dbName: this.dbname,
-				serverApi: ServerApiVersion.v1,
-			});
+			// Start a new connection
+			this.connecting = new Promise((resolve, reject) => {
+				const connection = mongoose.createConnection(this.url, {
+					dbName: this.dbname,
+					serverApi: ServerApiVersion.v1,
+				});
 
-			const onConnected = () => {
+				const onConnected = () => {
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
 						msg: "Database connection opened",
-					}));				this.connected = true;
-				this.connection = connection;
-				this.connecting = undefined;
-				resolve();
-			};
+					}));
+					this.connected = true;
+					this.connection = connection;
+					this.connecting = undefined;
+					resolve();
+				};
 
-			const onError = (err: unknown) => {
+				const onError = (err: unknown) => {
 					this.logger.error(() => ({
 						err,
 						data: { mongoUrl: this.safeURL },
 						msg: "Database error",
-					}));				this.connected = false;
-				this.connecting = undefined;
-				reject(err);
-			};
+					}));
+					this.connected = false;
+					this.connecting = undefined;
+					reject(err);
+				};
 
-			connection.once("open", onConnected);
-			connection.once("error", onError);
+				connection.once("open", onConnected);
+				connection.once("error", onError);
 
-			// Optional: handle other events
-			connection.on("disconnected", () => {
-				this.connected = false;
-				this.logger.info(() => ({
+				// Optional: handle other events
+				connection.on("disconnected", () => {
+					this.connected = false;
+					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
-			msg: "Database disconnected",
+						msg: "Database disconnected",
 					}));
 				});
 
-			connection.on("reconnected", () => {
-				this.connected = true;
+				connection.on("reconnected", () => {
+					this.connected = true;
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
 						msg: "Database reconnected",
-					}));			});
+					}));
+				});
 
-            				connection.on("close", () => {
+				connection.on("close", () => {
 					this.connected = false;
 					this.logger.info(() => ({
 						data: { mongoUrl: this.safeURL },
@@ -152,12 +160,11 @@ export class MongoDatabase implements IDatabase {
 						data: { mongoUrl: this.safeURL },
 						msg: "Database connection is fully setup",
 					}));
-					resolve(connection);
 				});
-		});
+			});
 
-		return this.connecting;
-        		} catch (e) {
+			return this.connecting;
+		} catch (e) {
 			this.logger.error(() => ({
 				err: e,
 				data: { mongoUrl: this.safeURL },

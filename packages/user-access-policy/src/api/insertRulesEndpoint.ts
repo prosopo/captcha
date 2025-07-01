@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { LogLevel, type Logger, getLoggerDefault } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { z } from "zod";
 import {
 	accessPolicySchema,
@@ -60,7 +60,7 @@ export class InsertRulesEndpoint
 		args: z.infer<InsertRulesEndpointSchema>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLoggerDefault();
+		logger = logger || getLogger(LogLevel.enum.info, "InsertRulesEndpoint");
 
 		return new Promise((resolve) => {
 			// either return after 5s or when the rules are inserted or fail to insert
@@ -78,7 +78,13 @@ export class InsertRulesEndpoint
 				})
 				.catch((error) => {
 					if (logger?.getLogLevel() === LogLevel.enum.debug) {
-						logger.error({ error });
+						logger.error(() => ({
+							err: error,
+							data: {
+								args: args,
+							},
+							msg: "Failed to insert access rules",
+						}));
 					}
 					resolve({
 						status: ApiEndpointResponseStatus.FAIL,
