@@ -14,7 +14,11 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import { ProsopoContractError, ProsopoEnvError, type Logger } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoContractError,
+	ProsopoEnvError,
+} from "@prosopo/common";
 import {
 	type IPAddress,
 	type ScheduledTaskNames,
@@ -106,7 +110,7 @@ export const validateIpAddress = (
 		return { isValid: true }; // IP validation is optional
 	}
 
-	let ipV4Address;
+	let ipV4Address: IPAddress;
 	try {
 		ipV4Address = getIPAddress(ip);
 		logger.log({ ipV4Address });
@@ -115,12 +119,12 @@ export const validateIpAddress = (
 		logger.debug(errorMessage);
 		return { isValid: false, errorMessage };
 	}
-	
+
 	if (challengeRecordIpAddress !== ipV4Address.bigInt()) {
 		const errorMessage = `IP address mismatch: ${getIPAddressFromBigInt(challengeRecordIpAddress).address} !== ${ip}`;
 		logger.debug(errorMessage);
 		return { isValid: false, errorMessage };
 	}
-	
+
 	return { isValid: true };
 };

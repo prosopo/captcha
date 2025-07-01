@@ -181,7 +181,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			return { verified: false };
 		}
 
-		const ipValidation = validateIpAddress(ip, challengeRecord.ipAddress, this.logger);
+		const ipValidation = validateIpAddress(
+			ip,
+			challengeRecord.ipAddress,
+			this.logger,
+		);
 		if (!ipValidation.isValid) {
 			return { verified: false };
 		}
