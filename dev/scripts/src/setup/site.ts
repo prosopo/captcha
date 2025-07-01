@@ -14,24 +14,37 @@
 
 import type { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
-import { CaptchaType, Tier } from "@prosopo/types";
+import {
+	CaptchaType,
+	ClientSettingsSchema,
+	type IUserSettings,
+	Tier,
+} from "@prosopo/types";
 
 export async function registerSiteKey(
 	env: ProviderEnvironment,
 	siteKey: string,
+	settings: Partial<IUserSettings> = {},
 ): Promise<void> {
 	const logger = env.logger;
 	const tasks = new Tasks(env);
-	logger.info("   - siteKeyRegister");
+	logger.info(
+		`registerSiteKey: ${siteKey}  captchaType: ${settings.captchaType}`,
+	);
 	await tasks.clientTaskManager.registerSiteKey(
 		siteKey as string,
 		Tier.Professional,
-		{
+		ClientSettingsSchema.parse({
 			captchaType: CaptchaType.frictionless,
 			frictionlessThreshold: 0.8,
 			powDifficulty: 4,
-			domains: ["localhost", "0.0.0.0"],
+
 			imageThreshold: 0.8,
-		},
+			...settings,
+			domains:
+				settings.domains && settings.domains.length > 0
+					? settings.domains
+					: ["localhost", "0.0.0.0"],
+		}),
 	);
 }

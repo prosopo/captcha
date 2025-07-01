@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	FrictionlessPenalties,
 	type ProsopoConfigOutput,

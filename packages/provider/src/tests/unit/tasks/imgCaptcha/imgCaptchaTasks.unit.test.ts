@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { u8aToHex } from "@polkadot/util";
-import { randomAsHex } from "@polkadot/util-crypto";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaSolution,
@@ -32,6 +31,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
@@ -42,7 +42,7 @@ vi.mock("@prosopo/datasets", () => ({
 	compareCaptchaSolutions: vi.fn(),
 	parseAndSortCaptchaSolutions: vi.fn(),
 }));
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	randomAsHex: vi.fn(),
 	signatureVerify: vi.fn(),
 }));
@@ -175,6 +175,7 @@ describe("ImgCaptchaManager", () => {
 			info: vi.fn(),
 			error: vi.fn(),
 			debug: vi.fn(),
+			log: vi.fn(),
 		} as unknown as Logger;
 
 		captchaConfig = {

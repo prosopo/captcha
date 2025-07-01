@@ -21,7 +21,7 @@ import {
 } from "@prosopo/api-express-router";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import { i18nMiddleware } from "@prosopo/locale";
 import {
 	createApiAdminRoutesProvider,
@@ -167,11 +167,8 @@ export async function start(
 			unsolved: { count: 0 },
 		});
 
-		const pair = await getPairAsync(secret);
-		const authAccount = await getPairAsync(
-			undefined,
-			config.authAccount.address,
-		);
+		const pair = getPair(secret);
+		const authAccount = getPair(undefined, config.authAccount.address);
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
 		env.logger.debug("Env already defined");

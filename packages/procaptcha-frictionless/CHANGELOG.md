@@ -1,5 +1,35 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.16
+### Patch Changes
+
+  - @prosopo/procaptcha-pow@2.7.2
+  - @prosopo/procaptcha-react@2.6.16
+
+## 2.6.15
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/types@2.9.0
+  - @prosopo/procaptcha-pow@2.7.1
+  - @prosopo/procaptcha-react@2.6.15
+
+## 2.6.14
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/procaptcha-pow@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/procaptcha-react@2.6.14
+
+## 2.6.13
+### Patch Changes
+
+- cf26d7e: Prevents the translation key (WIDGET.I_AM_HUMAN) to be shown until the translation is loaded
+- Updated dependencies [cf26d7e]
+  - @prosopo/procaptcha-pow@2.6.13
+  - @prosopo/procaptcha-react@2.6.13
+
 ## 2.6.12
 
 ### Patch Changes

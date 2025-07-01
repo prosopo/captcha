@@ -50,7 +50,7 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 
 		// Check first byte after the initial 5
 		if (clientHelloBuffer[5] !== 0x01) {
-			logger.warn("Invalid ClientHello message: First byte is not 0x01");
+			logger.debug("Invalid ClientHello message: First byte is not 0x01");
 			return { ja4PlusFingerprint: DEFAULT_JA4 };
 		}
 
@@ -136,6 +136,7 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 export const ja4Middleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			req.logger.debug({ url: req.url });
 			const ja4 = await getJA4(req.headers, req.logger);
 
 			req.ja4 = ja4.ja4PlusFingerprint || "";

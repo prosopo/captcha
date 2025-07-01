@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, getLoggerDefault } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
+import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,

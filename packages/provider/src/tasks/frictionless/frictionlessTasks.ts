@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
+
 import type { Logger } from "@prosopo/common";
-import { CaptchaType, type ProsopoConfigOutput } from "@prosopo/types";
+import {
+	CaptchaType,
+	type KeyringPair,
+	type ProsopoConfigOutput,
+} from "@prosopo/types";
 import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
 import type {
 	FrictionlessTokenId,
@@ -151,7 +155,7 @@ export class FrictionlessManager extends CaptchaManager {
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				const { baseBotScore: s, timestamp: t } = await getBotScore(token, key);
-				this.logger.debug({
+				this.logger.info({
 					message: "Successfully decrypted score",
 					key: key ? `${key.slice(0, 5)}...${key.slice(-5)}` : "",
 					baseBotScore: s,

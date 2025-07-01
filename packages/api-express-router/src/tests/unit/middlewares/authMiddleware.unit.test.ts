@@ -12,17 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
+import type { KeyringPair } from "@prosopo/types";
 import { hexToU8a, isHex } from "@polkadot/util";
 import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../middlewares/authMiddleware.js";
 
-vi.mock("@polkadot/util", () => ({
-	hexToU8a: vi.fn(),
-	isHex: vi.fn(),
-}));
+vi.mock("@polkadot/util", async (importOriginal) => {
+	const actual = await importOriginal();
+
+	return {
+		// @ts-ignore
+		...actual,
+		hexToU8a: vi.fn(),
+		isHex: vi.fn(),
+	};
+});
 
 const mockLogger = {
 	info: vi.fn(),

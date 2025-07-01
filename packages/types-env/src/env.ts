@@ -1,6 +1,3 @@
-import type { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import type { Logger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +11,13 @@ import type { Logger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { Logger } from "@prosopo/common";
+import type { Keyring } from "@prosopo/keyring";
+import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoBasicConfigOutput } from "@prosopo/types";
-import type { IDatabase, IProviderDatabase } from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 
 export interface ProsopoEnvironment {
 	config: ProsopoBasicConfigOutput;

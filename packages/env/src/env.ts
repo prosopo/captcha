@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
+import { Keyring } from "@prosopo/keyring";
+import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ProsopoEnvironment } from "@prosopo/types-env";

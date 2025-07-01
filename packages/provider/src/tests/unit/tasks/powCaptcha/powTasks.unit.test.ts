@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import {
-	ApiParams,
-	CaptchaStatus,
-	POW_SEPARATOR,
-	type PoWChallengeId,
-	type RequestHeaders,
+    ApiParams,
+    CaptchaStatus, KeyringPair,
+    POW_SEPARATOR,
+    type PoWChallengeId,
+    type RequestHeaders,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -33,7 +32,7 @@ import {
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
 }));
 

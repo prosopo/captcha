@@ -11,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { u8aToHex } from "@polkadot/util";
+
 import { ProviderApi } from "@prosopo/api";
 import {
 	type LogLevel,
@@ -22,7 +20,9 @@ import {
 	ProsopoContractError,
 	getLogger,
 } from "@prosopo/common";
+import { Keyring } from "@prosopo/keyring";
 import { loadBalancer } from "@prosopo/load-balancer";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
 	ProcaptchaOutputSchema,
@@ -31,6 +31,7 @@ import {
 	type VerificationResponse,
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
 import i18n from "i18next";
 
 export class ProsopoServer {
@@ -76,6 +77,7 @@ export class ProsopoServer {
 		timestamp: number,
 		user: string,
 		challenge?: string,
+		ip?: string,
 	): Promise<VerificationResponse> {
 		this.logger.info(`Verifying with provider: ${providerUrl}`);
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
@@ -102,6 +104,7 @@ export class ProsopoServer {
 				signatureHex,
 				timeouts.pow.cachedTimeout,
 				user,
+				ip,
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
@@ -118,6 +121,7 @@ export class ProsopoServer {
 			signatureHex,
 			user,
 			timeouts.image.cachedTimeout,
+			ip,
 		);
 	}
 
@@ -128,6 +132,7 @@ export class ProsopoServer {
 	 */
 	public async isVerified(
 		token: ProcaptchaToken,
+		ip?: string,
 	): Promise<VerificationResponse> {
 		try {
 			const payload = decodeProcaptchaOutput(token);
@@ -157,6 +162,7 @@ export class ProsopoServer {
 				Number(timestamp),
 				user,
 				challenge,
+				ip,
 			);
 		} catch (err) {
 			this.logger.error({ err, token });

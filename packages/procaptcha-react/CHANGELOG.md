@@ -1,5 +1,33 @@
 # @prosopo/procaptcha-react
 
+## 2.6.16
+### Patch Changes
+
+  - @prosopo/procaptcha@2.7.2
+
+## 2.6.15
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/procaptcha@2.7.1
+  - @prosopo/procaptcha-common@2.7.1
+
+## 2.6.14
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/procaptcha-common@2.7.0
+  - @prosopo/procaptcha@2.7.0
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+
+## 2.6.13
+### Patch Changes
+
+- cf26d7e: Prevents the translation key (WIDGET.I_AM_HUMAN) to be shown until the translation is loaded
+
 ## 2.6.12
 
 ### Patch Changes

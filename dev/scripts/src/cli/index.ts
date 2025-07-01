@@ -56,15 +56,23 @@ export async function processArgs(args: string[]) {
 			describe:
 				"Setup the development environment by registering a provider, staking, loading a data set and then registering a dapp and staking.",
 			builder: (yargs) =>
-				yargs.option("force", {
-					type: "boolean",
-					demandOption: false,
-					desc: "Force provider re-registration and dataset setup",
-				}),
+				yargs
+					.option("sites", {
+						type: "boolean",
+						demandOption: false,
+						default: true,
+						desc: "Set up sites",
+					})
+					.option("provider", {
+						type: "boolean",
+						demandOption: false,
+						default: true,
+						desc: "Set up the provider",
+					}),
 
 			handler: async (argv) => {
 				log.info("Running setup scripts");
-				await setup(!!argv.force);
+				await setup(argv.provider, argv.sites);
 			},
 		})
 		.command({

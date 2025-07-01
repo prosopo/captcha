@@ -11,10 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
+
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -186,6 +187,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		if (ip) {
 			const ipV4Address = getIPAddress(ip);
+			this.logger.log({ ipV4Address });
 			if (!ipV4Address) {
 				this.logger.debug(`Invalid IP address: ${ip}`);
 				return { verified: false };

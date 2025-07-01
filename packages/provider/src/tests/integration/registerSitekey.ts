@@ -24,7 +24,8 @@ export const registerSiteKey = async (
 		const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
 		const host = process.env.PROSOPO_DATABASE_HOST || "localhost";
 		const port = process.env.PROSOPO_DATABASE_PORT || 27017;
-		const db = new ProviderDatabase({
+        const dbName = process.env.PROSOPO_DATABASE_NAME || "prosopo";
+        const db = new ProviderDatabase({
 			mongo: {
 				url: `mongodb://${username}:${pw}@${host}:${port}`,
 				dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo",
@@ -36,7 +37,14 @@ export const registerSiteKey = async (
 			},
 		});
 		await db.connect();
-		console.log("Registering site key", siteKey);
+		console.log(
+			"Registering site key",
+			siteKey,
+			"with captcha type",
+			captchaType,
+			"in database",
+			dbName,
+		);
 		await db.updateClientRecords([
 			{
 				account: siteKey,

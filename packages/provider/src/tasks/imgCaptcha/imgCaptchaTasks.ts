@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { randomAsHex, signatureVerify } from "@polkadot/util-crypto";
 import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	ApiParams,
 	type Captcha,
@@ -43,6 +42,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import { checkLangRules } from "../../rules/lang.js";
 import { shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
@@ -458,6 +458,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		if (ip) {
 			const ipV4Address = getIPAddress(ip);
+			this.logger.log({ ipV4Address });
 			if (!ipV4Address) {
 				this.logger.debug(`Invalid IP address: ${ip}`);
 				return { status: "API.USER_NOT_VERIFIED", verified: false };

@@ -1,5 +1,34 @@
 # @prosopo/provider-mock
 
+## 2.7.3
+### Patch Changes
+
+- Updated dependencies [d6de900]
+  - @prosopo/provider@2.12.0
+
+## 2.7.2
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/provider@2.11.0
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/api-express-router@2.6.3
+
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/provider@2.10.0
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/api-express-router@2.6.2
+
+## 2.7.0
+### Minor Changes
+
+- 6f3d993: Add docker packages to workspace. Release 2.6.8
+
 ## 2.6.12
 
 ### Patch Changes

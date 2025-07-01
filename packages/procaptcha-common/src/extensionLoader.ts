@@ -13,5 +13,5 @@
 // limitations under the License.
 export const ExtensionLoader = async (web2: boolean) =>
 	web2
-		? (await import("@prosopo/account")).ExtensionWeb2
-		: (await import("@prosopo/account")).ExtensionWeb3;
+		? (await import("@prosopo/account/extension/ExtensionWeb2")).default
+		: (await import("@prosopo/account/extension/ExtensionWeb3")).default;

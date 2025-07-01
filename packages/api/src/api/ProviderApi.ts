@@ -125,10 +125,12 @@ export default class ProviderApi
 		signature: string,
 		userAccount: string,
 		maxVerifiedTime?: number,
+		ip?: string,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signature,
+			[ApiParams.ip]: ip,
 		};
 		if (maxVerifiedTime) {
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
@@ -246,11 +248,13 @@ export default class ProviderApi
 		signatureHex: string,
 		recencyLimit: number,
 		user: string,
+		ip?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signatureHex,
 			[ApiParams.verifiedTimeout]: recencyLimit,
+			[ApiParams.ip]: ip,
 		};
 		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {
