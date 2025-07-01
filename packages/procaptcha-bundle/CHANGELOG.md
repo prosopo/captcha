@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-bundle
 
+## 2.7.3
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/procaptcha-frictionless@2.6.17
+  - @prosopo/procaptcha-react@2.6.17
+  - @prosopo/procaptcha-pow@2.7.3
+  - @prosopo/util-crypto@13.5.1
+  - @prosopo/common@2.7.2
+  - @prosopo/dotenv@2.6.4
+  - @prosopo/types@2.9.1
+  - @prosopo/util@2.6.1
+
 ## 2.7.2
 ### Patch Changes
 

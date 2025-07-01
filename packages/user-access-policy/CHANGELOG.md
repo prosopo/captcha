@@ -1,5 +1,14 @@
 # @prosopo/user-access-policy
 
+## 2.6.7
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/api-route@2.6.4
+  - @prosopo/common@2.7.2
+  - @prosopo/types@2.9.1
+
 ## 2.6.6
 ### Patch Changes
 

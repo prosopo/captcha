@@ -1,5 +1,15 @@
 # @prosopo/flux
 
+## 2.6.4
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/common@2.7.2
+  - @prosopo/dotenv@2.6.4
+  - @prosopo/config@2.6.1
+  - @prosopo/util@2.6.1
+
 ## 2.6.3
 ### Patch Changes
 

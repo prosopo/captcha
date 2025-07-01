@@ -1,5 +1,13 @@
 # @prosopo/cypress-shared
 
+## 2.8.2
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/types@2.9.1
+  - @prosopo/util@2.6.1
+
 ## 2.8.1
 ### Patch Changes
 
