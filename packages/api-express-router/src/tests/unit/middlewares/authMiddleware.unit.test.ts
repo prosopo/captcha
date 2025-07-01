@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@prosopo/types";
 import { hexToU8a, isHex } from "@polkadot/util";
 import { type Logger, ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../middlewares/authMiddleware.js";

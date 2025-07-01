@@ -14,11 +14,12 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import {
-    ApiParams,
-    CaptchaStatus, KeyringPair,
-    POW_SEPARATOR,
-    type PoWChallengeId,
-    type RequestHeaders,
+	ApiParams,
+	CaptchaStatus,
+	type KeyringPair,
+	POW_SEPARATOR,
+	type PoWChallengeId,
+	type RequestHeaders,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,

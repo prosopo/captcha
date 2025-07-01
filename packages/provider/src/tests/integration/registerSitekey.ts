@@ -24,8 +24,8 @@ export const registerSiteKey = async (
 		const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
 		const host = process.env.PROSOPO_DATABASE_HOST || "localhost";
 		const port = process.env.PROSOPO_DATABASE_PORT || 27017;
-        const dbName = process.env.PROSOPO_DATABASE_NAME || "prosopo";
-        const db = new ProviderDatabase({
+		const dbName = process.env.PROSOPO_DATABASE_NAME || "prosopo";
+		const db = new ProviderDatabase({
 			mongo: {
 				url: `mongodb://${username}:${pw}@${host}:${port}`,
 				dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo",
