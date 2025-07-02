@@ -63,9 +63,14 @@ export const createAccessPolicyResolver = (
 			msg: "Resolved access policy",
 			// filter contains BigInt, which can't be handled directly via logger.
 			data: {
-				filter: filter,
-				accessRules: accessRules,
-				primaryAccessRule: primaryAccessRule,
+				inspect: util.inspect(
+					{
+						filter: filter,
+						accessRules: accessRules,
+						primaryAccessRule: primaryAccessRule,
+					},
+					{ depth: null },
+				),
 			},
 		}));
 

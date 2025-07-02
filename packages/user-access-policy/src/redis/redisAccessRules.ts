@@ -53,16 +53,30 @@ export const createRedisAccessRulesReader = (
 
 				logger.debug(() => ({
 					msg: "Executed search query",
-					query: query,
-					filter: filter,
-					numFound: searchReply.total,
+					data: {
+						inspect: util.inspect(
+							{
+								filter: filter,
+								searchReply: searchReply,
+								query: query,
+							},
+							{ depth: null },
+						),
+					},
 				}));
 			} catch (e) {
 				logger.error(() => ({
 					err: e,
 					data: {
-						query: query,
-						filter: filter,
+						inspect: util.inspect(
+							{
+								query: query,
+								filter: filter,
+							},
+							{
+								depth: null,
+							},
+						),
 					},
 					msg: "failed to execute search query",
 				}));
@@ -88,7 +102,17 @@ export const createRedisAccessRulesReader = (
 				// 	debug(fn: LogRecordFn): void;
 				logger.error(() => ({
 					err: e,
-					data: { query: query, filter: filter },
+					data: {
+						inspect: util.inspect(
+							{
+								query: query,
+								filter: filter,
+							},
+							{
+								depth: null,
+							},
+						),
+					},
 					msg: "Failed to execute search query for rule IDs",
 				}));
 
