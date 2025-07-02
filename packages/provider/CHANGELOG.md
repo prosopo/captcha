@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 2.14.0
+### Minor Changes
+
+- aee3efe: Add healthz endpoint
+
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/types@2.10.0
+  - @prosopo/database@2.6.9
+  - @prosopo/datasets@2.7.3
+  - @prosopo/env@2.7.3
+  - @prosopo/keyring@2.8.2
+  - @prosopo/types-database@2.7.6
+  - @prosopo/types-env@2.7.3
+  - @prosopo/user-access-policy@2.6.8
+
 ## 2.13.0
 ### Minor Changes
 

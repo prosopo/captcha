@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 2.10.0
+### Minor Changes
+
+- aee3efe: Add healthz endpoint
+
 ## 2.9.1
 ### Patch Changes
 
