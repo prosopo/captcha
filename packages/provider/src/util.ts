@@ -121,10 +121,10 @@ export const validateIpAddress = (
 	let ipV4orV6Address: IPAddress;
 	try {
 		ipV4orV6Address = getIPAddress(ip);
-		logger.log({ ipV4Address: ipV4orV6Address });
+		logger.info(() => ({ data: { ipV4orV6Address } }));
 	} catch (e) {
 		const errorMessage = `Invalid IP address: ${ip}`;
-		logger.info({ error: errorMessage });
+		logger.info(() => ({ msg: errorMessage }));
 		return { isValid: false, errorMessage };
 	}
 
@@ -156,7 +156,7 @@ export const validateIpAddress = (
 
 	if (challengeIpV4orV6Address.bigInt() - ipV4orV6Address.bigInt() !== 0n) {
 		const errorMessage = `IP address mismatch: ${challengeIpV4orV6Address.address} !== ${ipV4orV6Address.address}`;
-		logger.info({ error: errorMessage });
+		logger.info(() => ({ msg: errorMessage }));
 		return { isValid: false, errorMessage };
 	}
 
