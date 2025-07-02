@@ -14,21 +14,21 @@
 
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
-import { ClientApiPaths, PublicApiPaths } from "@prosopo/types";
-import type { ProviderEnvironment } from "@prosopo/types-env";
+import { PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
-import { Tasks } from "../tasks/tasks.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
  */
-export function publicRouter(env: ProviderEnvironment): Router {
+export function publicRouter(): Router {
 	const router = express.Router();
-	const tasks = new Tasks(env);
+
+	router.get(PublicApiPaths.Healthz, (req, res) => {
+		res.status(200).send("OK");
+	});
 
 	/**
 	 * Gets public details of the provider
