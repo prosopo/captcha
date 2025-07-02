@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.9.1
+### Patch Changes
+
+- 86c22b8: structured logging
+
 ## 2.9.0
 ### Minor Changes
 

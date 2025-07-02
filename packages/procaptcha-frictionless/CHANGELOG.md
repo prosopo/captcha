@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.17
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/procaptcha-react@2.6.17
+  - @prosopo/procaptcha-pow@2.7.3
+  - @prosopo/types@2.9.1
+
 ## 2.6.16
 ### Patch Changes
 

@@ -52,9 +52,8 @@ export default (cmdArgs?: { logger?: Logger }) => {
 					parsedArgs.app,
 					parsedArgs.ip,
 				);
-				logger.info(result);
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

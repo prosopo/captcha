@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 2.7.1
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/types@2.9.1
+
 ## 2.7.0
 ### Minor Changes
 
