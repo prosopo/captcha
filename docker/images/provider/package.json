@@ -1,15 +1,15 @@
 {
-	"name": "@prosopo/provider-docker",
-	"version": "2.7.2",
-	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
-	},
-	"scripts": {
-		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
-		"build": "npm run clean && cp -r src dist && docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
-		"clean": "del-cli dist",
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"publish:docker": "docker push $(npm run --silent docker-tag)"
-	}
+    "name": "@prosopo/provider-docker",
+    "version": "2.7.3",
+    "engines": {
+        "node": "20",
+        "npm": "10.8.2"
+    },
+    "scripts": {
+        "docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
+        "build": "npm run clean && cp -r src dist && docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
+        "clean": "del-cli dist",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "publish:docker": "docker push $(npm run --silent docker-tag)"
+    }
 }
