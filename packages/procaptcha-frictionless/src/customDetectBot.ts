@@ -42,6 +42,8 @@ const customDetectBot: BotDetectionFunction = async (
 		config.account.address,
 	);
 
+	console.log({ config });
+
 	const captcha = await providerApi.getFrictionlessCaptcha(
 		botScore.token,
 		config.account.address,

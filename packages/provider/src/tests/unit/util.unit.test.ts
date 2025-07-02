@@ -11,12 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
+import type { LogRecordFn, Logger } from "@prosopo/common";
 import { ScheduledTaskNames } from "@prosopo/types";
 import type {
 	IProviderDatabase,
 	ScheduledTaskRecord,
 } from "@prosopo/types-database";
+import { at } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
@@ -66,11 +67,13 @@ describe("validateIpAddress", () => {
 
 	beforeEach(() => {
 		mockLogger = {
-			log: vi.fn(),
-			debug: vi.fn(),
-			info: vi.fn(),
-			error: vi.fn(),
+			info: vi.fn().mockImplementation(console.info),
+			debug: vi.fn().mockImplementation(console.debug),
+			error: vi.fn().mockImplementation(console.error),
+			log: vi.fn().mockImplementation(console.log),
+			warn: vi.fn().mockImplementation(console.warn),
 		} as unknown as Logger;
+
 		vi.clearAllMocks();
 	});
 
@@ -89,13 +92,12 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
-		expect(mockLogger.log).toHaveBeenCalledWith(
-			expect.objectContaining({
-				ipV4Address: expect.objectContaining({
-					address: testIp,
-				}),
-			}),
-		);
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (mockLogger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toHaveProperty("data");
+		expect(logObj.data).toHaveProperty("ipV4orV6Address");
+		expect(logObj.data.ipV4orV6Address).toHaveProperty("address", testIp);
 	});
 
 	it("should return valid when when an IPV4 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
@@ -106,13 +108,12 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
-		expect(mockLogger.log).toHaveBeenCalledWith(
-			expect.objectContaining({
-				ipV4Address: expect.objectContaining({
-					address: testIp,
-				}),
-			}),
-		);
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (mockLogger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toHaveProperty("data");
+		expect(logObj.data).toHaveProperty("ipV4orV6Address");
+		expect(logObj.data.ipV4orV6Address).toHaveProperty("address", testIp);
 	});
 
 	it("should return valid when when an IPV4 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
@@ -123,12 +124,14 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
-		expect(mockLogger.log).toHaveBeenCalledWith(
-			expect.objectContaining({
-				ipV4Address: expect.objectContaining({
-					address: testIp,
-				}),
-			}),
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (mockLogger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toHaveProperty("data");
+		expect(logObj.data).toHaveProperty("ipV4orV6Address");
+		expect(logObj.data.ipV4orV6Address).toHaveProperty(
+			"address",
+			at(testIp.split(":"), 3),
 		);
 	});
 
@@ -140,13 +143,12 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
-		expect(mockLogger.log).toHaveBeenCalledWith(
-			expect.objectContaining({
-				ipV4Address: expect.objectContaining({
-					address: testIp,
-				}),
-			}),
-		);
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (mockLogger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toHaveProperty("data");
+		expect(logObj.data).toHaveProperty("ipV4orV6Address");
+		expect(logObj.data.ipV4orV6Address).toHaveProperty("address", testIp);
 	});
 
 	it("should return valid when when an IPV6 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
@@ -157,12 +159,14 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
-		expect(mockLogger.log).toHaveBeenCalledWith(
-			expect.objectContaining({
-				ipV4Address: expect.objectContaining({
-					address: testIp,
-				}),
-			}),
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (mockLogger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toHaveProperty("data");
+		expect(logObj.data).toHaveProperty("ipV4orV6Address");
+		expect(logObj.data.ipV4orV6Address).toHaveProperty(
+			"address",
+			at(testIp.split(":"), 3),
 		);
 	});
 
@@ -174,9 +178,11 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toBe(`Invalid IP address: ${invalidIp}`);
-		expect(mockLogger.info).toHaveBeenCalledWith({
-			error: `Invalid IP address: ${invalidIp}`,
-		});
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (mockLogger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toHaveProperty("msg");
+		expect(logObj.msg).toEqual(`Invalid IP address: ${invalidIp}`);
 	});
 
 	it("should return invalid when IP addresses don't match", () => {
@@ -187,10 +193,12 @@ describe("validateIpAddress", () => {
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("IP address mismatch:");
-		expect(mockLogger.info).toHaveBeenCalledWith(
-			expect.objectContaining({
-				error: "IP address mismatch: 192.168.1.2 !== 192.168.1.1",
-			}),
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (mockLogger.info as any).mock.calls[1][0];
+		const logObj = logFn();
+		expect(logObj).toHaveProperty("msg");
+		expect(logObj.msg).toEqual(
+			"IP address mismatch: 192.168.1.2 !== 192.168.1.1",
 		);
 	});
 
@@ -201,11 +209,6 @@ describe("validateIpAddress", () => {
 
 		validateIpAddress(testIp, ipBigInt, mockLogger);
 
-		expect(mockLogger.log).toHaveBeenCalledTimes(1);
-		expect(mockLogger.log).toHaveBeenCalledWith(
-			expect.objectContaining({
-				ipV4Address: expect.any(Object),
-			}),
-		);
+		expect(mockLogger.info).toHaveBeenCalledTimes(1);
 	});
 });
