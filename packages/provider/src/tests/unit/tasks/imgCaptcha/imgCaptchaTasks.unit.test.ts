@@ -562,13 +562,13 @@ describe("ImgCaptchaManager", () => {
 		expect(verifyResult.verified).toBe(false);
 
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		const logFn = (logger.debug as any).mock.calls[1][0];
+		const logFn = (logger.info as any).mock.calls[1][0];
 		const logObj = logFn();
 		expect(logObj).toMatchObject({
-			msg: "IP address mismatch",
+			msg: "IP address mismatch: 8.8.8.8 !== 1.1.1.1",
 			data: {
-				ip: "1.1.1.1",
-				solutionIp: "8.8.8.8",
+				challengeIp: "8.8.8.8",
+				providedIp: "1.1.1.1",
 			},
 		});
 	});

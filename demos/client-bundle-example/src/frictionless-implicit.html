@@ -189,7 +189,7 @@
 
     // Render the CAPTCHA
     const widgetId = render(captchaContainer, {
-        siteKey: "%PROSOPO_SITE_KEY_FRICTIONLESS%",
+        siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
         captchaType: "frictionless",
         callback: onCaptchaVerified,
         "failed-callback": function () {
