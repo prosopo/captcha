@@ -54,7 +54,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
+            test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the details endpoint
             interval: 5m
             retries: 3
             start_period: 30s
@@ -88,7 +88,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9339/v1/prosopo/provider/details" ]  # ping the details endpoint
+            test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ]  # ping the details endpoint
             interval: 5m
             retries: 3
             start_period: 30s

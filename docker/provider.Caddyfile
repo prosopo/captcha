@@ -81,14 +81,14 @@
 		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
 			lb_policy first
-			health_uri /v1/prosopo/provider/public/details
+			health_uri /healthz
 			health_interval 5s
-			health_timeout 2s
-			fail_duration 10s
+			health_timeout 4s
+			fail_duration 5s
 			max_fails 1
 			unhealthy_status 5xx
-			unhealthy_latency 5s
-			unhealthy_request_count 1
+			unhealthy_latency 10s
+			unhealthy_request_count 2
 
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs

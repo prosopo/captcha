@@ -92,6 +92,10 @@ async function startApi(
 
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
+
+	// Put this first so that no middleware runs on it
+	apiApp.use(publicRouter());
+
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
 	apiApp.use(ignoreMiddleware());
@@ -111,7 +115,6 @@ async function startApi(
 	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
-	apiApp.use(publicRouter(env));
 
 	// Admin routes
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
