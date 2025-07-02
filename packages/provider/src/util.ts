@@ -93,11 +93,10 @@ export const getIPAddress = (ipAddressString: string): IPAddress => {
 
 export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
 	try {
-		try {
-			return Address4.fromBigInt(BigInt(ipAddressBigInt));
-		} catch (e) {
+		if (ipAddressBigInt > 4228250626n) {
 			return Address6.fromBigInt(BigInt(ipAddressBigInt));
 		}
+		return Address4.fromBigInt(BigInt(ipAddressBigInt));
 	} catch (e) {
 		throw new ProsopoEnvError("API.INVALID_IP");
 	}
@@ -133,20 +132,29 @@ export const validateIpAddress = (
 		challengeRecordIpAddress,
 	);
 
-	const payloadIPisV4 = ipV4orV6Address instanceof Address4;
-	const challengeIPisV4 = challengeIpV4orV6Address instanceof Address4;
-
 	// Make sure both IP addresses are of the same type (either both IPv4 or both IPv6)
-	if (!payloadIPisV4 || !challengeIPisV4) {
-		if (!payloadIPisV4) {
-			ipV4orV6Address = (<Address6>ipV4orV6Address).to4();
-		}
-		if (!challengeIPisV4) {
-			challengeIpV4orV6Address = (<Address6>challengeIpV4orV6Address).to4();
-		}
+	ipV4orV6Address =
+		"address4" in ipV4orV6Address && ipV4orV6Address.address4
+			? ipV4orV6Address.address4
+			: ipV4orV6Address;
+	challengeIpV4orV6Address =
+		"address4" in challengeIpV4orV6Address && challengeIpV4orV6Address.address4
+			? challengeIpV4orV6Address.address4
+			: challengeIpV4orV6Address;
+
+	if (ipV4orV6Address.v4 && !challengeIpV4orV6Address.v4) {
+		challengeIpV4orV6Address = new Address4(
+			(<Address6>challengeIpV4orV6Address).to4().correctForm(),
+		);
 	}
 
-	if (challengeIpV4orV6Address.bigInt() !== ipV4orV6Address.bigInt()) {
+	if (!ipV4orV6Address.v4 && challengeIpV4orV6Address.v4) {
+		ipV4orV6Address = new Address6(
+			(<Address6>ipV4orV6Address).to4().correctForm(),
+		);
+	}
+
+	if (challengeIpV4orV6Address.bigInt() - ipV4orV6Address.bigInt() !== 0n) {
 		const errorMessage = `IP address mismatch: ${challengeIpV4orV6Address.address} !== ${ipV4orV6Address.address}`;
 		logger.info({ error: errorMessage });
 		return { isValid: false, errorMessage };

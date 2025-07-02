@@ -98,7 +98,7 @@ describe("validateIpAddress", () => {
 		);
 	});
 
-	it("should return valid when IP addresses match 2", () => {
+	it("should return valid when when an IPV4 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
 		const testIp = "82.43.214.180";
 		const ipBigInt = BigInt(1378604724);
 
@@ -115,9 +115,43 @@ describe("validateIpAddress", () => {
 		);
 	});
 
-	it("should return valid when IP addresses match 3", () => {
+	it("should return valid when when an IPV4 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
 		const testIp = "::ffff:82.43.214.180";
 		const ipBigInt = BigInt(1378604724);
+
+		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+
+		expect(result.isValid).toBe(true);
+		expect(result.errorMessage).toBeUndefined();
+		expect(mockLogger.log).toHaveBeenCalledWith(
+			expect.objectContaining({
+				ipV4Address: expect.objectContaining({
+					address: testIp,
+				}),
+			}),
+		);
+	});
+
+	it("should return valid when when an IPV6 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
+		const testIp = "82.43.214.180";
+		const ipBigInt = 281472060348084n;
+
+		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+
+		expect(result.isValid).toBe(true);
+		expect(result.errorMessage).toBeUndefined();
+		expect(mockLogger.log).toHaveBeenCalledWith(
+			expect.objectContaining({
+				ipV4Address: expect.objectContaining({
+					address: testIp,
+				}),
+			}),
+		);
+	});
+
+	it("should return valid when when an IPV6 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
+		const testIp = "::ffff:82.43.214.180";
+		const ipBigInt = 281472060348084n;
 
 		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
 
