@@ -14,11 +14,9 @@
 
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
-import { ClientApiPaths, PublicApiPaths } from "@prosopo/types";
-import type { ProviderEnvironment } from "@prosopo/types-env";
+import { PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
-import { Tasks } from "../tasks/tasks.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
