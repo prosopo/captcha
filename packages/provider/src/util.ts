@@ -14,7 +14,11 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoContractError,
+	ProsopoEnvError,
+} from "@prosopo/common";
 import {
 	type IPAddress,
 	type ScheduledTaskNames,
@@ -74,3 +78,93 @@ export async function checkIfTaskIsRunning(
 	}
 	return false;
 }
+
+export const getIPAddress = (ipAddressString: string): IPAddress => {
+	try {
+		try {
+			return new Address4(ipAddressString);
+		} catch (e) {
+			return new Address6(ipAddressString);
+		}
+	} catch (e) {
+		throw new ProsopoEnvError("API.INVALID_IP");
+	}
+};
+
+export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
+	try {
+		if (ipAddressBigInt > 4228250626n) {
+			return Address6.fromBigInt(BigInt(ipAddressBigInt));
+		}
+		return Address4.fromBigInt(BigInt(ipAddressBigInt));
+	} catch (e) {
+		throw new ProsopoEnvError("API.INVALID_IP");
+	}
+};
+
+/**
+ * Validates that the provided IP address matches the challenge record's IP address
+ * @param ip - The IP address string to validate
+ * @param challengeRecordIpAddress - The IP address from the challenge record as bigint
+ * @param logger - Logger instance for debug messages
+ * @returns Object with validation result and optional error message
+ */
+export const validateIpAddress = (
+	ip: string | undefined,
+	challengeRecordIpAddress: bigint,
+	logger: Logger,
+): { isValid: boolean; errorMessage?: string } => {
+	if (!ip) {
+		return { isValid: true }; // IP validation is optional
+	}
+
+	let ipV4orV6Address: IPAddress;
+	try {
+		ipV4orV6Address = getIPAddress(ip);
+		logger.info(() => ({ data: { ipV4orV6Address } }));
+	} catch (e) {
+		const errorMessage = `Invalid IP address: ${ip}`;
+		logger.info(() => ({ msg: errorMessage }));
+		return { isValid: false, errorMessage };
+	}
+
+	let challengeIpV4orV6Address = getIPAddressFromBigInt(
+		challengeRecordIpAddress,
+	);
+
+	// Make sure both IP addresses are of the same type (either both IPv4 or both IPv6)
+	ipV4orV6Address =
+		"address4" in ipV4orV6Address && ipV4orV6Address.address4
+			? ipV4orV6Address.address4
+			: ipV4orV6Address;
+	challengeIpV4orV6Address =
+		"address4" in challengeIpV4orV6Address && challengeIpV4orV6Address.address4
+			? challengeIpV4orV6Address.address4
+			: challengeIpV4orV6Address;
+
+	if (ipV4orV6Address.v4 && !challengeIpV4orV6Address.v4) {
+		challengeIpV4orV6Address = new Address4(
+			(<Address6>challengeIpV4orV6Address).to4().correctForm(),
+		);
+	}
+
+	if (!ipV4orV6Address.v4 && challengeIpV4orV6Address.v4) {
+		ipV4orV6Address = new Address6(
+			(<Address6>ipV4orV6Address).to4().correctForm(),
+		);
+	}
+
+	if (challengeIpV4orV6Address.bigInt() - ipV4orV6Address.bigInt() !== 0n) {
+		const errorMessage = `IP address mismatch: ${challengeIpV4orV6Address.address} !== ${ipV4orV6Address.address}`;
+		logger.info(() => ({
+			msg: errorMessage,
+			data: {
+				challengeIp: challengeIpV4orV6Address.address,
+				providedIp: ipV4orV6Address.address,
+			},
+		}));
+		return { isValid: false, errorMessage };
+	}
+
+	return { isValid: true };
+};

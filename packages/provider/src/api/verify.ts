@@ -38,7 +38,6 @@ import { Tasks } from "../tasks/tasks.js";
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
-	const tasks = new Tasks(env);
 
 	/**
 	 * Verifies a dapp's solution as being approved or not
@@ -53,6 +52,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
+
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
 			try {
@@ -138,7 +139,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
+
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
+
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			try {
 				parsed = ServerPowCaptchaVerifyRequestBody.parse(req.body);

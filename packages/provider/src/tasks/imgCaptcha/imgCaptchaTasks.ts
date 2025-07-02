@@ -44,7 +44,7 @@ import type {
 import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import { checkLangRules } from "../../rules/lang.js";
-import { shuffleArray } from "../../util.js";
+import { shuffleArray, validateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -472,26 +472,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
-		if (ip) {
-			const ipV4Address = getIPAddress(ip);
-			this.logger.debug(() => ({ data: { ipV4Address } }));
-			if (!ipV4Address) {
-				this.logger.debug(() => ({
-					data: { ip },
-					msg: "Invalid IP address",
-				}));
-				return { status: "API.USER_NOT_VERIFIED", verified: false };
-			}
-			if (solution.ipAddress !== ipV4Address.bigInt()) {
-				this.logger.debug(() => ({
-					data: {
-						ip,
-						solutionIp: getIPAddressFromBigInt(solution.ipAddress).address,
-					},
-					msg: "IP address mismatch",
-				}));
-				return { status: "API.USER_NOT_VERIFIED", verified: false };
-			}
+		const ipValidation = validateIpAddress(ip, solution.ipAddress, this.logger);
+		if (!ipValidation.isValid) {
+			return { status: "API.USER_NOT_VERIFIED", verified: false };
 		}
 
 		if (solution.serverChecked) {

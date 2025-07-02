@@ -166,8 +166,7 @@ export class ProsopoServer {
 					status: i18n.t("API.USER_NOT_VERIFIED"),
 				};
 			}
-
-			return await this.verifyProvider(
+			const verificationResponse = await this.verifyProvider(
 				token,
 				this.config.timeouts,
 				provider.url,
@@ -176,6 +175,18 @@ export class ProsopoServer {
 				challenge,
 				ip,
 			);
+
+			this.logger.info(() => ({
+				data: {
+					verificationResponse,
+					providerUrl,
+					user,
+					challenge,
+					siteKey: this.pair?.address,
+				},
+			}));
+
+			return verificationResponse;
 		} catch (err) {
 			this.logger.error(() => ({ err, data: { token } }));
 			throw new ProsopoApiError("API.BAD_REQUEST", {
