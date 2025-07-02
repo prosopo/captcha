@@ -1,5 +1,20 @@
 # @prosopo/cli
 
+## 2.8.0
+### Minor Changes
+
+- aee3efe: Add healthz endpoint
+
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/provider@2.14.0
+  - @prosopo/types@2.10.0
+  - @prosopo/api@2.7.2
+  - @prosopo/env@2.7.3
+  - @prosopo/keyring@2.8.2
+  - @prosopo/user-access-policy@2.6.8
+
 ## 2.7.4
 ### Patch Changes
 

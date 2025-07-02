@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "2.7.2",
+	"version": "2.7.3",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -28,7 +28,7 @@
 		"@noble/hashes": "1.5.0",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "2.7.2",
-		"@prosopo/types": "2.9.1",
+		"@prosopo/types": "2.10.0",
 		"@prosopo/util": "2.6.1",
 		"bcrypt": "5.1.1",
 		"cli-progress": "3.12.0",
