@@ -45,11 +45,12 @@ export class Tasks {
 	clientTaskManager: ClientTaskManager;
 	frictionlessManager: FrictionlessManager;
 
-	constructor(env: ProviderEnvironment) {
+	constructor(env: ProviderEnvironment, logger?: Logger) {
 		this.config = env.config;
 		this.db = env.getDb();
 		this.captchaConfig = env.config.captchas;
-		this.logger = getLogger(parseLogLevel(env.config.logLevel), "Tasks");
+		this.logger =
+			logger || getLogger(parseLogLevel(env.config.logLevel), "Tasks");
 		if (!env.pair) {
 			throw new ProsopoEnvError("DEVELOPER.MISSING_PROVIDER_PAIR", {
 				context: { failedFuncName: "Tasks.constructor" },
@@ -85,5 +86,16 @@ export class Tasks {
 			this.config,
 			this.logger,
 		);
+	}
+
+	setLogger(logger: Logger): void {
+		// Use a logger from the request
+		this.logger = logger;
+		this.powCaptchaManager.logger = logger;
+		this.datasetManager.logger = logger;
+		this.imgCaptchaManager.logger = logger;
+		this.clientTaskManager.logger = logger;
+		this.frictionlessManager.logger = logger;
+		this.db.logger = logger; // Ensure the database also uses the new logger
 	}
 }

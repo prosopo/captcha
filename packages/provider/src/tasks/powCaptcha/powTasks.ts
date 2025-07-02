@@ -28,7 +28,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
-import { getIPAddress, getIPAddressFromBigInt } from "../../util.js";
+import { validateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -185,19 +185,13 @@ export class PowCaptchaManager extends CaptchaManager {
 			return { verified: false };
 		}
 
-		if (ip) {
-			const ipV4Address = getIPAddress(ip);
-			this.logger.debug(() => ({ data: { ipV4Address } }));
-			if (!ipV4Address) {
-				this.logger.debug(() => ({ msg: `Invalid IP address: ${ip}` }));
-				return { verified: false };
-			}
-			if (challengeRecord.ipAddress !== ipV4Address.bigInt()) {
-				this.logger.debug(() => ({
-					msg: `IP address mismatch: ${getIPAddressFromBigInt(challengeRecord.ipAddress).address} !== ${ip}`,
-				}));
-				return { verified: false };
-			}
+		const ipValidation = validateIpAddress(
+			ip,
+			challengeRecord.ipAddress,
+			this.logger,
+		);
+		if (!ipValidation.isValid) {
+			return { verified: false };
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
