@@ -156,7 +156,13 @@ export const validateIpAddress = (
 
 	if (challengeIpV4orV6Address.bigInt() - ipV4orV6Address.bigInt() !== 0n) {
 		const errorMessage = `IP address mismatch: ${challengeIpV4orV6Address.address} !== ${ipV4orV6Address.address}`;
-		logger.info(() => ({ msg: errorMessage }));
+		logger.info(() => ({
+			msg: errorMessage,
+			data: {
+				challengeIp: challengeIpV4orV6Address.address,
+				providedIp: ipV4orV6Address.address,
+			},
+		}));
 		return { isValid: false, errorMessage };
 	}
 
