@@ -176,13 +176,15 @@ export class ProsopoServer {
 				ip,
 			);
 
-			this.logger.info({
-				verificationResponse,
-				providerUrl,
-				user,
-				challenge,
-				siteKey: this.pair?.address,
-			});
+			this.logger.info(() => ({
+				data: {
+					verificationResponse,
+					providerUrl,
+					user,
+					challenge,
+					siteKey: this.pair?.address,
+				},
+			}));
 
 			return verificationResponse;
 		} catch (err) {
