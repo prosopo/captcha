@@ -72,6 +72,7 @@ export enum ClientApiPaths {
 }
 
 export enum PublicApiPaths {
+	Healthz = "/healthz",
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
 }
 
