@@ -27,12 +27,6 @@ import {
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import {
-	at,
-	getIPAddress,
-	getIPAddressFromBigInt,
-	verifyRecency,
-} from "@prosopo/util";
 import { at, verifyRecency } from "@prosopo/util";
 import { validateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
