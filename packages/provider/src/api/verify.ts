@@ -53,8 +53,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
-			const tasks = new Tasks(env);
-			tasks.setLogger(req.logger);
+			const tasks = new Tasks(env, req.logger);
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
@@ -141,8 +140,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
-			const tasks = new Tasks(env);
-			tasks.setLogger(req.logger);
+			const tasks = new Tasks(env, req.logger);
 
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
 

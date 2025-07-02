@@ -55,7 +55,6 @@ const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
  */
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
-	const tasks = new Tasks(env);
 
 	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
 
@@ -68,6 +67,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.GetImageCaptchaChallenge,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
 			let parsed: CaptchaRequestBodyTypeOutput;
 
 			if (!req.ip) {
@@ -207,6 +207,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.SubmitImageCaptchaSolution,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
 			let parsed: CaptchaSolutionBodyType;
 			try {
 				parsed = CaptchaSolutionBody.parse(req.body);
@@ -289,6 +290,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ClientApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
 		let parsed: GetPowCaptchaChallengeRequestBodyTypeOutput;
+		const tasks = new Tasks(env);
+		tasks.setLogger(req.logger);
 
 		try {
 			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
@@ -427,6 +430,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.SubmitPowCaptchaSolution,
 		async (req, res, next) => {
 			let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
+			const tasks = new Tasks(env, req.logger);
 
 			try {
 				parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
@@ -506,6 +510,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.GetFrictionlessCaptchaChallenge,
 		async (req, res, next) => {
 			try {
+				const tasks = new Tasks(env, req.logger);
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
