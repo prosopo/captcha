@@ -83,8 +83,6 @@ export abstract class ProsopoBaseError<
 			logger.debug(() => ({ data: { ...errorMessage, stack: this.stack } }));
 			return;
 		}
-		console.log("logging error");
-		console.log("context", this.context?.error);
 		logger.log(logLevel, () => ({
 			data: errorMessage,
 			stack: this.stack,
