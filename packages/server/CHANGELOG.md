@@ -1,5 +1,10 @@
 # @prosopo/server
 
+## 2.9.0
+### Minor Changes
+
+- d5f2e95: Fix ip checking logic
+
 ## 2.8.1
 ### Patch Changes
 

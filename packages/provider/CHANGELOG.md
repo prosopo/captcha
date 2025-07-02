@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 2.13.0
+### Minor Changes
+
+- d5f2e95: Fix ip checking logic
+
 ## 2.12.1
 ### Patch Changes
 
