@@ -1,5 +1,15 @@
 # @prosopo/server
 
+## 2.9.2
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/common@3.0.0
+  - @prosopo/types@3.0.0
+  - @prosopo/api@3.0.0
+  - @prosopo/keyring@2.8.3
+  - @prosopo/load-balancer@2.6.9
+
 ## 2.9.1
 ### Patch Changes
 

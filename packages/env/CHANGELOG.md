@@ -1,5 +1,20 @@
 # @prosopo/env
 
+## 3.0.0
+### Major Changes
+
+- 64b5bcd: Access Controls
+
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/types-database@3.0.0
+  - @prosopo/database@3.0.0
+  - @prosopo/common@3.0.0
+  - @prosopo/types@3.0.0
+  - @prosopo/util@3.0.0
+  - @prosopo/types-env@2.7.4
+
 ## 2.7.3
 ### Patch Changes
 
