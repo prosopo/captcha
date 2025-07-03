@@ -280,6 +280,10 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
+		redisConnection: object({
+			url: string(),
+			password: string(),
+		}),
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),
 		lRules: record(string(), number()).optional(),

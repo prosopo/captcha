@@ -17,14 +17,12 @@ import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
-	PoWCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
 	StoredUserCommitmentRecordSchema,
 	type Tables,
 	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";

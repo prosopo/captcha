@@ -15,7 +15,9 @@
 import type { Server } from "node:net";
 import {
 	apiExpressRouterFactory,
+	authMiddleware,
 	createApiExpressDefaultEndpointAdapter,
+	requestLoggerMiddleware,
 } from "@prosopo/api-express-router";
 import { parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
@@ -31,23 +33,17 @@ import {
 	prosopoRouter,
 	prosopoVerifyRouter,
 	publicRouter,
-	requestLoggerMiddleware,
 	robotsMiddleware,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
-import {
-	authMiddleware,
-	blockMiddleware,
-	ja4Middleware,
-} from "@prosopo/provider";
+import { blockMiddleware, ja4Middleware } from "@prosopo/provider";
 import { ClientApiPaths, type CombinedApiPaths } from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy";
-import { apiRulePaths } from "@prosopo/user-access-policy";
 import cors from "cors";
-import express, { type RequestHandler } from "express";
+import express from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
@@ -118,9 +114,18 @@ async function startApi(
 
 	// Admin routes
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
-	apiApp.use("/v1/prosopo/provider/admin", authMiddleware(env));
-	apiApp.use(apiRulePaths.INSERT_MANY, authMiddleware(env));
-	apiApp.use(apiRulePaths.DELETE_MANY, authMiddleware(env));
+	apiApp.use(
+		"/v1/prosopo/provider/admin",
+		authMiddleware(env.pair, env.authAccount),
+	);
+
+	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
+	for (const userAccessRuleRoute of userAccessRuleRoutes) {
+		apiApp.use(
+			userAccessRuleRoute.path,
+			authMiddleware(env.pair, env.authAccount),
+		);
+	}
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
 			apiRuleRoutesProvider,
