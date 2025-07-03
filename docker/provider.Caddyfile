@@ -80,15 +80,49 @@
 
 		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
+			
+			# https://caddyserver.com/docs/modules/http.handlers.reverse_proxy
+
+			# try A, then B, then C, etc.
 			lb_policy first
-			health_uri /healthz
-			health_interval 5s
-			health_timeout 4s
-			fail_duration 5s
+
+			# how many times a backend can fail before it is considered unhealthy
 			max_fails 1
+
+			# how long a backend is marked as unhealthy after it has failed (this is a non-zero duration to enable passive health checks). Passive health checks decide a backend's health based on the response code (and whether it responded at all) from normal traffic.
+			fail_duration 1ns
+
+			# 5XX status codes are considered unhealthy, in addition to no response
 			unhealthy_status 5xx
+
+			# long latency on response marks the backend as unhealthy
 			unhealthy_latency 10s
-			unhealthy_request_count 2
+
+			transport http {
+				# how long to wait for a connection to be established to backend
+				dial_timeout 1s
+			}
+
+			# how long to keep trying backends before giving up
+			lb_try_duration 5s
+
+			# how long to wait between retries of backends (0 doesn't work, set to 1ns for almost immediate retry)
+			lb_try_interval 1ns
+
+			# example failover sequence with failing backends:
+			# - request comes in
+			# - lb_policy first means provider1 is tried first
+			# - request is sent to provider1
+			# - provider1 does not respond within 1s (dial_timeout)
+			# - provider1 is marked as unhealthy
+			# - request is sent to provider2
+			# - provider2 does not respond within 1s (dial_timeout)
+			# - in this time, provider1 is marked as healthy again (fail duration expired)
+			# - provider2 is marked as unhealthy
+			# - request is sent to provider1 again
+			# - provider1 responds within 1s
+			# - request is completed
+			# the request is retried over all backends in turn until either it succeeds or the try_duration is reached
 
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs
