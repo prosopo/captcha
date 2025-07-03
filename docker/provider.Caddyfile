@@ -117,7 +117,7 @@
 			# - provider1 is marked as unhealthy
 			# - request is sent to provider2
 			# - provider2 does not respond within 1s (dial_timeout)
-			# - in this time, provider1 is marked as healthy again (because fail_duration is 100ms)
+			# - in this time, provider1 is marked as healthy again (fail duration expired)
 			# - provider2 is marked as unhealthy
 			# - request is sent to provider1 again
 			# - provider1 responds within 1s
