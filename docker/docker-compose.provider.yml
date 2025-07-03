@@ -152,7 +152,6 @@ services:
             - ./redis.conf:/redis-stack.conf
         ports:
             - '6379:6379' # DB
-            - '8001:8001' # Insight tool
         networks:
             external:
             internal:
