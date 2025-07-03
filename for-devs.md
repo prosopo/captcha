@@ -91,7 +91,7 @@ siteKeys, etc.
 NODE_ENV="test" npm run setup
 ```
 
-### 4.4) Running all unit tests
+### 4.4) Running all the unit tests
 
 Launch services:
 
@@ -113,29 +113,12 @@ npm run test
 Tip: You can also run package-related unit tests individually, by running `npm run test` inside the target package
 folder.
 
-### 4.5) Running E2E Client Tests
+### 4.5) Running E2E Bundle Tests
 
 Launch services:
 
 ```
 npm run -w @prosopo/client-example-server build && NODE_ENV=test npm run start:server
-NODE_ENV=test npm run start:demo
-NODE_ENV=test npm run start:provider:admin
-```
-
-Run tests:
-
-```
-NODE_ENV=test npm run -w @prosopo/cypress-shared cypress:open:client-example
-```
-
-### 4.6) Running E2E Bundle Tests
-
-Launch services:
-
-```
-npm run -w @prosopo/client-example-server build && NODE_ENV=test npm run start:server
-NODE_ENV=test npm run start:demo
 NODE_ENV=test npm run start:provider:admin
 NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
 NODE_ENV=test npm run start:bundle

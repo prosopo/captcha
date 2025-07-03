@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { handleErrors } from "@prosopo/api-express-router";
+import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
@@ -29,7 +29,6 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
-import { verifySignature } from "./authMiddleware.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

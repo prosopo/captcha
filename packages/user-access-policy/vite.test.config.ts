@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
 import { ViteTestConfig } from "@prosopo/config";
 
 export default () => {
-	const testConfig = ViteTestConfig();
+	const testConfig = ViteTestConfig(path.resolve("./tsconfig.json"));
 
 	return {
 		...testConfig,

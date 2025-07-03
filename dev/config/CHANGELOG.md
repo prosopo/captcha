@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.0.0
+### Major Changes
+
+- 64b5bcd: Access Controls
+
 ## 2.6.1
 ### Patch Changes
 
