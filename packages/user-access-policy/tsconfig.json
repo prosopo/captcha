@@ -2,7 +2,10 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"paths": {
+			"#policy/*": ["./src/*"]
+		}
 	},
 	"include": ["./src"],
 	"references": [
@@ -14,6 +17,9 @@
 		},
 		{
 			"path": "../api-route"
+		},
+		{
+			"path": "../util"
 		}
 	]
 }
