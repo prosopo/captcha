@@ -90,7 +90,7 @@
 			max_fails 1
 
 			# how long a backend is marked as unhealthy after it has failed (this is a non-zero duration to enable passive health checks). Passive health checks decide a backend's health based on the response code (and whether it responded at all) from normal traffic.
-			fail_duration 1s
+			fail_duration 1ns
 
 			# 5XX status codes are considered unhealthy, in addition to no response
 			unhealthy_status 5xx
@@ -106,8 +106,8 @@
 			# how long to keep trying backends before giving up
 			lb_try_duration 5s
 
-			# how long to wait between retries of backends (0 means no wait, try immediately)
-			lb_try_interval 0ms 
+			# how long to wait between retries of backends (0 doesn't work, set to 1ns for almost immediate retry)
+			lb_try_interval 1ns
 
 			# example failover sequence with failing backends:
 			# - request comes in
