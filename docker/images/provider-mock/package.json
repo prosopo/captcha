@@ -11,9 +11,5 @@
 		"clean": "del-cli dist",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
-	},
-	"dependencies": {
-		"@prosopo/locale": "2.6.0",
-		"@prosopo/cli": "2.6.12"
 	}
 }

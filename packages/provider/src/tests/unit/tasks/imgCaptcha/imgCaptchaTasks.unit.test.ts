@@ -30,10 +30,10 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
+import { getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
-import { getIPAddress, getIPAddressFromBigInt } from "../../../../util.js";
 import { shuffleArray } from "../../../../util.js";
 
 const loggerOuter = getLogger("info", import.meta.url);

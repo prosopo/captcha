@@ -1,5 +1,16 @@
 # @prosopo/api-express-router
 
+## 3.0.0
+### Major Changes
+
+- 64b5bcd: Access Controls
+
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/common@3.0.0
+  - @prosopo/api-route@2.6.5
+
 ## 2.6.4
 ### Patch Changes
 

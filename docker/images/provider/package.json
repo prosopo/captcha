@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider-docker",
-	"version": "2.7.4",
+	"version": "3.0.0",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
@@ -11,9 +11,5 @@
 		"clean": "del-cli dist",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
-	},
-	"dependencies": {
-		"@prosopo/locale": "2.6.0",
-		"@prosopo/cli": "2.6.12"
 	}
 }

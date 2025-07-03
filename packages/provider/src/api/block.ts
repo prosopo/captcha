@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { getLogger, parseLogLevel } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { createBlacklistInspector } from "@prosopo/user-access-policy";
+import { createAccessPolicyResolver } from "@prosopo/user-access-policy";
 import { BlacklistRequestInspector } from "./blacklistRequestInspector.js";
 
 export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
@@ -27,15 +28,14 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	const environmentReadinessWaiter =
 		providerEnvironment.isReady.bind(providerEnvironment);
 
-	const blacklistInspector = createBlacklistInspector(
+	const resolveAccessPolicy = createAccessPolicyResolver(
 		userAccessRulesStorage,
 		logger,
 	);
 
 	const blacklistRequestInspector = new BlacklistRequestInspector(
-		blacklistInspector,
+		resolveAccessPolicy,
 		environmentReadinessWaiter,
-		logger,
 	);
 
 	return blacklistRequestInspector.abortRequestForBlockedUsers.bind(

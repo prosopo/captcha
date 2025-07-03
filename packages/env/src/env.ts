@@ -22,11 +22,11 @@ import { ProviderDatabase } from "@prosopo/database";
 import { Keyring } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
-import type { ProsopoBasicConfigOutput } from "@prosopo/types";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
 
 export class Environment implements ProsopoEnvironment {
-	config: ProsopoBasicConfigOutput;
+	config: ProsopoConfigOutput;
 	db: ProviderDatabase | undefined;
 	defaultEnvironment: EnvironmentTypes;
 	logger: Logger;
@@ -36,7 +36,7 @@ export class Environment implements ProsopoEnvironment {
 	authAccount: KeyringPair | undefined;
 
 	constructor(
-		config: ProsopoBasicConfigOutput,
+		config: ProsopoConfigOutput,
 		pair?: KeyringPair,
 		authAccount?: KeyringPair,
 	) {
@@ -130,12 +130,18 @@ export class Environment implements ProsopoEnvironment {
 			if (this.config.database) {
 				const dbConfig = this.config.database[this.defaultEnvironment];
 				if (dbConfig) {
-					this.db = new ProviderDatabase(
-						dbConfig.endpoint,
-						dbConfig.dbname,
-						dbConfig.authSource,
-						this.logger,
-					);
+					this.db = new ProviderDatabase({
+						mongo: {
+							url: dbConfig.endpoint,
+							dbname: dbConfig.dbname,
+							authSource: dbConfig.authSource,
+						},
+						redis: {
+							url: this.config.redisConnection.url,
+							password: this.config.redisConnection.password,
+						},
+						logger: this.logger,
+					});
 					await this.db.connect();
 				}
 			}
