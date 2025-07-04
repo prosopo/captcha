@@ -13,8 +13,9 @@
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
 		"start": "node ./dist/app.js",
 		"start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
-		"build": "tsc --build",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
+		"build": "run-s build:tsc build:bundle",
 		"clean": "tsc --build --clean"
 	},
 	"repository": {
