@@ -60,7 +60,7 @@ jobs:
             # build all the packages in the workspace to prepare assets for the next cli bundle command
             - name: Build packages
               run: |
-                  npm run build:all
+                  NODE_ENV="production" npm run build:all
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
