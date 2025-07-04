@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-route",
-	"version": "2.6.0",
+	"version": "2.6.5",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
@@ -20,11 +20,11 @@
 		"build:cjs": "npx vite --config vite.cjs.config.ts build"
 	},
 	"dependencies": {
-		"@prosopo/common": "2.6.0",
+		"@prosopo/common": "3.0.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.6.0"
+		"@prosopo/config": "3.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

@@ -34,4 +34,6 @@ export interface ProcaptchaRenderOptions {
 	"reset-callback"?: string | (() => void);
 	language?: (typeof Languages)[keyof typeof Languages];
 	size?: "invisible";
+	web3?: boolean;
+	userAccountAddress?: string;
 }

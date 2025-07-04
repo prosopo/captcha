@@ -27,9 +27,9 @@ export default (cmdArgs?: { logger?: Logger }) => {
 				const privateKey = getPrivateKey();
 				const publicKey = getPublicKey();
 				const dapps = await main(publicKey, privateKey);
-				logger.info(JSON.stringify(dapps, null, 2));
+				logger.info(() => ({ data: { dapps }, msg: "Dapps" }));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

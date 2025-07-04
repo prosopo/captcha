@@ -32,18 +32,22 @@ import {
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
 	type PowCaptchaSolutionResponse,
+	type ProsopoCaptchaCountConfigSchemaOutput,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { createImageCaptchaConfigResolver } from "@prosopo/user-access-policy";
-import { flatten } from "@prosopo/util";
+import {
+	type ResolveAccessPolicy,
+	ScopeMatch,
+	createAccessPolicyResolver,
+} from "@prosopo/user-access-policy";
+import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
-import { getIPAddress } from "../util.js";
-import { validateAddr, validiateSiteKey } from "./validateAddress.js";
+import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -55,7 +59,6 @@ const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
  */
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
-	const tasks = new Tasks(env);
 
 	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
 
@@ -68,6 +71,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.GetImageCaptchaChallenge,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
 			let parsed: CaptchaRequestBodyTypeOutput;
 
 			if (!req.ip) {
@@ -96,7 +100,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const { datasetId, user, dapp, sessionId } = parsed;
 
-			validiateSiteKey(dapp);
+			validateSiteKey(dapp);
 			validateAddr(user);
 
 			try {
@@ -111,19 +115,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						}),
 					);
 				}
-
-				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
-					userAccessRulesStorage,
-					req.logger,
-				);
-
-				const captchaConfig = await imageCaptchaConfigResolver.resolveConfig(
-					env.config.captchas,
-					ipAddress,
-					req.ja4,
-					user,
-					dapp,
-				);
 
 				const { valid, reason, frictionlessTokenId } =
 					await tasks.imgCaptchaManager.isValidRequest(
@@ -146,13 +137,43 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
+				const resolveAccessPolicy = createAccessPolicyResolver(
+					userAccessRulesStorage,
+					req.logger,
+				);
+
+				const userAccessPolicy = await resolveAccessPolicy({
+					policyScope: {
+						clientId: dapp,
+					},
+					policyScopeMatch: ScopeMatch.Greedy,
+					userScope: {
+						userId: user,
+						ja4Hash: req.ja4,
+						numericIp: ipAddress.bigInt(),
+					},
+					userScopeMatch: ScopeMatch.Greedy,
+				});
+				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
+					solved: {
+						count:
+							userAccessPolicy?.solvedImagesCount ||
+							env.config.captchas.solved.count,
+					},
+					unsolved: {
+						count:
+							userAccessPolicy?.unsolvedImagesCount ||
+							env.config.captchas.unsolved.count,
+					},
+				};
+
 				const taskData =
 					await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
 						datasetId,
 						user,
 						ipAddress,
 						captchaConfig,
-						clientRecord.settings.imageThreshold,
+						clientRecord.settings.imageThreshold ?? 0.8,
 						frictionlessTokenId,
 					);
 				const captchaResponse: CaptchaResponseBody = {
@@ -174,7 +195,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(captchaResponse);
 			} catch (err) {
-				req.logger.error({ err, params: req.params });
+				req.logger.error(() => ({
+					err,
+					data: req.params,
+					msg: "Error in PoW captcha solution submission",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -203,6 +228,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.SubmitImageCaptchaSolution,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
 			let parsed: CaptchaSolutionBodyType;
 			try {
 				parsed = CaptchaSolutionBody.parse(req.body);
@@ -218,7 +244,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const { user, dapp } = parsed;
 
-			validiateSiteKey(dapp);
+			validateSiteKey(dapp);
 			validateAddr(user);
 
 			try {
@@ -257,7 +283,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				};
 				return res.json(returnValue);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({
+					err,
+					body: req.body,
+					msg: "Error in PoW captcha solution submission",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -281,6 +311,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ClientApiPaths.GetPowCaptchaChallenge, async (req, res, next) => {
 		let parsed: GetPowCaptchaChallengeRequestBodyTypeOutput;
+		const tasks = new Tasks(env);
+		tasks.setLogger(req.logger);
 
 		try {
 			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
@@ -296,7 +328,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 		const { user, dapp, sessionId } = parsed;
 
-		validiateSiteKey(dapp);
+		validateSiteKey(dapp);
 		validateAddr(user);
 
 		try {
@@ -386,7 +418,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
-			req.logger.error({ err, body: req.body });
+			req.logger.error(() => ({
+				err,
+				body: req.body,
+				msg: "Error in PoW captcha solution submission",
+			}));
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
@@ -415,6 +451,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.SubmitPowCaptchaSolution,
 		async (req, res, next) => {
 			let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
+			const tasks = new Tasks(env, req.logger);
 
 			try {
 				parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
@@ -438,7 +475,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				user,
 			} = parsed;
 
-			validiateSiteKey(dapp);
+			validateSiteKey(dapp);
 			validateAddr(user);
 
 			try {
@@ -467,7 +504,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 				return res.json(response);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({
+					err,
+					body: req.body,
+					msg: "Error in PoW captcha solution submission",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -490,6 +531,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.GetFrictionlessCaptchaChallenge,
 		async (req, res, next) => {
 			try {
+				const tasks = new Tasks(env, req.logger);
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
@@ -498,7 +540,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.db.getFrictionlessTokenRecordByToken(token);
 
 				if (existingToken) {
-					req.logger.info(`Token ${existingToken} has already been used`);
+					req.logger.info(() => ({
+						token: existingToken,
+						msg: "Token has already been used",
+					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
 							existingToken._id as ObjectId,
@@ -578,23 +623,30 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if the IP address is blocked
 				const ipAddress = getIPAddress(req.ip || "");
 
-				const imageCaptchaConfigResolver = createImageCaptchaConfigResolver(
+				const resolveAccessPolicy = createAccessPolicyResolver(
 					userAccessRulesStorage,
 					req.logger,
 				);
+				const accessPolicy = await resolveAccessPolicy({
+					policyScope: {
+						clientId: dapp,
+					},
+					policyScopeMatch: ScopeMatch.Greedy,
+					userScope: {
+						userId: user,
+						ja4Hash: req.ja4,
+						numericIp: ipAddress.bigInt(),
+					},
+					userScopeMatch: ScopeMatch.Greedy,
+				});
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
-				const imageCaptchaConfigDefined =
-					await imageCaptchaConfigResolver.isConfigDefined(
-						dapp,
-						ipAddress,
-						req.ja4,
-						user,
-					);
-
-				if (imageCaptchaConfigDefined) {
+				if (
+					accessPolicy?.solvedImagesCount ||
+					accessPolicy?.unsolvedImagesCount
+				) {
 					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
-						imageCaptchaConfigResolver.accessRule,
+						accessPolicy,
 						baseBotScore,
 						botScore,
 						tokenId,
@@ -606,9 +658,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
-					req.logger.info({
-						message: `Bot score ${botScore} is greater than threshold ${botThreshold}`,
-					});
+					req.logger.info(() => ({
+						message: "Bot score is greater than threshold",
+						data: {
+							botScore,
+							botThreshold,
+							tokenId,
+						},
+					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
 					);
@@ -619,7 +676,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
 				);
 			} catch (err) {
-				req.logger.error("Error in frictionless captcha challenge:", err);
+				req.logger.error(() => ({
+					err,
+					msg: "Error in frictionless captcha challenge",
+				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 400, error: err },

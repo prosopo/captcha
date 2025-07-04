@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import { parseCaptchaDataset } from "@prosopo/datasets";
 import type {
 	DatasetRaw,
@@ -32,6 +32,8 @@ import { DatasetManager } from "../../../../tasks/dataset/datasetTasks.js";
 
 // Import directly and mock the function
 import * as datasetTasksUtils from "../../../../tasks/dataset/datasetTasksUtils.js";
+
+const loggerOuter = getLogger("info", import.meta.url);
 
 vi.mock("@prosopo/database", () => ({
 	saveCaptchaEvent: vi.fn(),
@@ -65,11 +67,16 @@ describe("DatasetManager", () => {
 			mongoCaptchaUri: "mongodb://localhost:27017/captchas",
 		} as ProsopoConfigOutput;
 
-		logger = {
-			info: vi.fn().mockImplementation(console.info),
-			debug: vi.fn().mockImplementation(console.debug),
-			error: vi.fn().mockImplementation(console.error),
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 		} as unknown as Logger;
+		logger = mockLogger;
 
 		captchaConfig = {
 			solved: { count: 5 },

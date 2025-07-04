@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiJsonError } from "@prosopo/common";
+import type { ApiJsonError, LogObject } from "@prosopo/common";
 import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
@@ -72,6 +72,7 @@ export enum ClientApiPaths {
 }
 
 export enum PublicApiPaths {
+	Healthz = "/healthz",
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
 }
 
@@ -225,6 +226,7 @@ export const VerifySolutionBody = object({
 	[ApiParams.maxVerifiedTime]: number()
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
+	[ApiParams.ip]: string().optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -283,6 +285,7 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.verifiedTimeout]: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.ip]: string().optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<

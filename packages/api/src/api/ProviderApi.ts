@@ -16,7 +16,6 @@ import {
 	ApiParams,
 	type ApiResponse,
 	type CaptchaRequestBodyType,
-	CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
@@ -34,7 +33,6 @@ import {
 	type ProviderRegistered,
 	PublicApiPaths,
 	type RandomProvider,
-	RegisterSitekeyBody,
 	type RegisterSitekeyBodyTypeOutput,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
@@ -45,6 +43,11 @@ import {
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
+import {
+	type DeleteRulesEndpointSchemaInput,
+	type InsertManyRulesEndpointInputSchema,
+	accessRuleApiPaths,
+} from "@prosopo/user-access-policy";
 import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi
@@ -120,10 +123,12 @@ export default class ProviderApi
 		signature: string,
 		userAccount: string,
 		maxVerifiedTime?: number,
+		ip?: string,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signature,
+			[ApiParams.ip]: ip,
 		};
 		if (maxVerifiedTime) {
 			payload[ApiParams.maxVerifiedTime] = maxVerifiedTime;
@@ -241,11 +246,13 @@ export default class ProviderApi
 		signatureHex: string,
 		recencyLimit: number,
 		user: string,
+		ip?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
 			[ApiParams.dappSignature]: signatureHex,
 			[ApiParams.verifiedTimeout]: recencyLimit,
+			[ApiParams.ip]: ip,
 		};
 		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
 			headers: {
@@ -306,5 +313,33 @@ export default class ProviderApi
 				},
 			},
 		);
+	}
+
+	public insertUserAccessPolicies(
+		rules: InsertManyRulesEndpointInputSchema,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(accessRuleApiPaths.INSERT_MANY, rules, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
+
+	public deleteUserAccessPolicies(
+		rules: DeleteRulesEndpointSchemaInput,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(accessRuleApiPaths.DELETE_MANY, rules, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
 	}
 }

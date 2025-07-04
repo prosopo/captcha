@@ -15,7 +15,7 @@
 import type { TranslationKey } from "@prosopo/locale";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
-import { type LogLevel, type Logger, getLoggerDefault } from "./index.js";
+import { type LogLevel, type Logger, getLogger } from "./logger.js";
 import type { ApiJsonError } from "./types.js";
 
 type BaseErrorOptions<ContextType> = {
@@ -56,7 +56,7 @@ export abstract class ProsopoBaseError<
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
-		const logger = options?.logger || getLoggerDefault();
+		const logger = options?.logger || getLogger("info", import.meta.url);
 		const logLevel = options?.logLevel || "error";
 		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
@@ -80,9 +80,13 @@ export abstract class ProsopoBaseError<
 		const errorParams = { error: this.message, context: this.context };
 		const errorMessage = { errorType: errorName || this.name, errorParams };
 		if (logLevel === "debug") {
-			logger.debug(this.stack);
+			logger.debug(() => ({ data: { ...errorMessage, stack: this.stack } }));
+			return;
 		}
-		logger[logLevel](errorMessage);
+		logger.log(logLevel, () => ({
+			data: errorMessage,
+			stack: this.stack,
+		}));
 	}
 }
 
@@ -196,9 +200,9 @@ export const unwrapError = (
 	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;
 
-	let message = i18n.t(err.message); // should be translated already
+	const message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
-	let statusMessage = err.message;
+	const statusMessage = "Bad Request";
 	jsonError.message = message;
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
@@ -219,8 +223,6 @@ export const unwrapError = (
 	}
 
 	if (isZodError(err)) {
-		message = i18n.t("API.PARSE_ERROR");
-		statusMessage = message;
 		if (typeof err.message === "object") {
 			jsonError = err.message;
 		} else {

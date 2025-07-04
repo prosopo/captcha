@@ -36,6 +36,9 @@
 			"path": "../util"
 		},
 		{
+			"path": "../util-crypto"
+		},
+		{
 			"path": "../../dev/config"
 		},
 		{
