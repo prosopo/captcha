@@ -51,14 +51,14 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
-      # build all packages in workspace
-      - run: npm run build:all
-
       - name: env
         run: |
               # Copy the rococo env file to production env file
               echo "Copying the rococo env to production env file in procaptcha-bundle"
             cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+
+      # build all packages in workspace
+      - run: npm run build:all
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
