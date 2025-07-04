@@ -11,7 +11,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
+		"build": "tsc --build",
 		"deploy": "node dist/deploy/protocol.js",
 		"cli": "node dist/cli/index.js",
 		"setup": "node dist/cli/index.js setup"

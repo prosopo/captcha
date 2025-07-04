@@ -21,7 +21,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
+		"build": "tsc --build",
 		"build:cjs": "echo \"No CJS build specified\"",
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV build --config vite.cjs.config.ts"
 	},
