@@ -8,11 +8,13 @@
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
+		"build": "tsc --build",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
+		"build:cjs": "echo 'no cjs build'",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV",
 		"clean": "echo 'nothing to clean'"
 	},
-	"version": "2.9.1",
+	"version": "2.9.2",
 	"devDependencies": {
 		"@prosopo/dotenv": "3.0.0",
 		"@types/node": "22.5.5",
