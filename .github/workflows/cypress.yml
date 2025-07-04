@@ -51,13 +51,6 @@ jobs:
               with:
                 npm_ci_args: '--include=dev'
 
-            # build the packages required by vite build commands first
-            - run: npm run -w @prosopo/config build
-            - run: npm run -w @prosopo/dotenv build
-
-            # build all packages in workspace
-            - run: npm run build:all
-
             - name: Setup env
               run: |
                   set -euxo pipefail # stop on errors, print commands, fail on pipe fails
@@ -69,6 +62,9 @@ jobs:
                     cp dev/scripts/env.test packages/cli/.env.test
                     cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
                     echo NODE_ENV: "$NODE_ENV"
+
+            # build all packages in workspace
+            - run: npm run build:all
 
             - name: Start the docker images
               run: |

@@ -53,22 +53,17 @@ jobs:
 
       # build all packages in workspace
       - run: npm run build:all
-      - run: npm run build:all:cjs
+
+      - name: env
+        run: |
+              # Copy the rococo env file to production env file
+              echo "Copying the rococo env to production env file in procaptcha-bundle"
+            cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         run: |
             NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle bundle:webpack
-
-      - name: Build JS bundle
-        run: |
-          set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-
-            # Copy the rococo env file to production env file
-            echo "Copying the rococo env to production env file in procaptcha-bundle"
-            cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
-
-            NODE_ENV="production" npm run -w @prosopo/procaptcha-bundle bundle
 
       - name: Start the docker images
         run: |
