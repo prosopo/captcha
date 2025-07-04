@@ -22,7 +22,7 @@
 		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.1"
+		"@prosopo/procaptcha-wrapper": "2.6.2"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
