@@ -15,7 +15,7 @@
 		"bundle": "vite build"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.0",
+		"@prosopo/procaptcha-wrapper": "2.6.1",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {

@@ -39,6 +39,9 @@ jobs:
                 VARS_CONTEXT: ${{ toJson(vars) }}
                 SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
+            - name: Set NX_PARALLEL environment variable
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
             - uses: actions/checkout@v4
               with:
                   submodules: "recursive"
@@ -47,10 +50,10 @@ jobs:
               with:
                 npm_ci_args: '--include=dev'
 
-            # build the packages
+            # build all the packages in the workspace to prepare assets for the next cli bundle command
             - name: Build packages
               run: |
-                  npm run -w @prosopo/scripts build
+                npm run build:all
 
             # build the cli production bundle
             - name: Build cli production bundle

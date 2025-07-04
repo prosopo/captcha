@@ -1,5 +1,91 @@
 # @prosopo/datasets
 
+## 3.0.0
+### Major Changes
+
+- 64b5bcd: Access Controls
+
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/types-database@3.0.0
+  - @prosopo/common@3.0.0
+  - @prosopo/types@3.0.0
+  - @prosopo/util@3.0.0
+
+## 2.7.3
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/types@2.10.0
+  - @prosopo/types-database@2.7.6
+
+## 2.7.2
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/types-database@2.7.5
+  - @prosopo/util-crypto@13.5.1
+  - @prosopo/common@2.7.2
+  - @prosopo/types@2.9.1
+  - @prosopo/util@2.6.1
+
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/util-crypto@13.5.0
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/types-database@2.7.4
+
+## 2.7.0
+### Minor Changes
+
+- 8f0644a: Taking required functions from polkadot/keyring and polkadot/util-crypto in-house and removing WASM dependencies. Adding @scure JS-based sr25519 function instead.
+
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/util-crypto@13.4.0
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/types-database@2.7.3
+
+## 2.6.12
+
+### Patch Changes
+
+- ea38a1c: lint
+
+## 2.6.11
+
+### Patch Changes
+
+- b2ae723: lint
+
+## 2.6.10
+
+### Patch Changes
+
+- d17c67f: lint
+
+## 2.6.9
+
+### Patch Changes
+
+- 0d194f2: lint
+
+## 2.6.8
+
+### Patch Changes
+
+- Updated dependencies [04cc7ee]
+  - @prosopo/common@2.6.1
+  - @prosopo/types@2.7.1
+  - @prosopo/types-database@2.7.2
+
 ## 2.6.7
 
 ### Patch Changes

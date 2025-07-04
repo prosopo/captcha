@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
@@ -75,12 +76,12 @@ import {
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
 import {
-	type Rule,
-	type RulesStorage,
-	createMongooseRulesStorage,
-	getRuleMongooseSchema,
+	type AccessRulesStorage,
+	createRedisAccessRulesIndex,
+	createRedisAccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import type { Model, ObjectId } from "mongoose";
+import type { ObjectId } from "mongoose";
+import { type RedisClientType, createClient } from "redis";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -95,7 +96,6 @@ enum TableNames {
 	client = "client",
 	frictionlessToken = "frictionlessToken",
 	session = "session",
-	userAccessRules = "userAccessRules",
 	detector = "detector",
 }
 
@@ -156,34 +156,42 @@ const PROVIDER_TABLES = [
 		schema: SessionRecordSchema,
 	},
 	{
-		collectionName: TableNames.userAccessRules,
-		modelName: "UserAccessRules",
-		schema: getRuleMongooseSchema(),
-	},
-	{
 		collectionName: TableNames.detector,
 		modelName: "Detector",
 		schema: DetectorRecordSchema,
 	},
 ];
 
+type ProviderDatabaseOptions = {
+	mongo: {
+		url: string;
+		dbname?: string;
+		authSource?: string;
+	};
+	redis?: {
+		url: string;
+		password: string;
+	};
+	logger?: Logger;
+};
+
 export class ProviderDatabase
 	extends MongoDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private userAccessRulesDbStorage: RulesStorage | null;
+	private userAccessRulesStorage: AccessRulesStorage | null;
 
-	constructor(
-		url: string,
-		dbname?: string,
-		authSource?: string,
-		logger?: Logger,
-	) {
-		super(url, dbname, authSource, logger);
+	constructor(private readonly options: ProviderDatabaseOptions) {
+		super(
+			options.mongo.url,
+			options.mongo.dbname,
+			options.mongo.authSource,
+			options.logger,
+		);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRulesDbStorage = null;
+		this.userAccessRulesStorage = null;
 	}
 
 	override async connect(): Promise<void> {
@@ -191,10 +199,32 @@ export class ProviderDatabase
 
 		this.loadTables();
 
-		this.userAccessRulesDbStorage = createMongooseRulesStorage(
+		await this.setupRedis();
+	}
+
+	protected async setupRedis(): Promise<void> {
+		const redisClient = await this.createRedisClient();
+
+		await createRedisAccessRulesIndex(redisClient);
+
+		this.userAccessRulesStorage = createRedisAccessRulesStorage(
+			redisClient,
 			this.logger,
-			<Model<Rule>>this.tables.userAccessRules,
 		);
+	}
+
+	protected async createRedisClient(): Promise<RedisClientType> {
+		return (await createClient({
+			url: this.options.redis?.url,
+			password: this.options.redis?.password,
+		})
+			.on("error", (error) => {
+				this.logger.error(() => ({
+					err: error,
+					msg: "Redis client error",
+				}));
+			})
+			.connect()) as RedisClientType;
 	}
 
 	loadTables() {
@@ -217,12 +247,12 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
-	public getUserAccessRulesStorage(): RulesStorage {
-		if (null === this.userAccessRulesDbStorage) {
-			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_UNDEFINED");
+	public getUserAccessRulesStorage(): AccessRulesStorage {
+		if (null === this.userAccessRulesStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED");
 		}
 
-		return this.userAccessRulesDbStorage;
+		return this.userAccessRulesStorage;
 	}
 
 	/**
@@ -231,7 +261,10 @@ export class ProviderDatabase
 	 */
 	async storeDataset(dataset: Dataset | DatasetWithIdsAndTree): Promise<void> {
 		try {
-			this.logger.debug("Storing dataset in database");
+			this.logger.debug(() => ({
+				data: { datasetId: dataset.datasetId },
+				msg: "Storing dataset in database",
+			}));
 			const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
 			const datasetDoc = {
 				datasetId: parsedDataset.datasetId,
@@ -261,7 +294,9 @@ export class ProviderDatabase
 				}),
 			);
 
-			this.logger.debug("Inserting captcha records");
+			this.logger.debug(() => ({
+				msg: "Inserting captcha records",
+			}));
 			// create a bulk upsert operation and execute
 			if (captchaDocs.length) {
 				await this.tables?.captcha.bulkWrite(
@@ -290,7 +325,9 @@ export class ProviderDatabase
 					datasetContentId: parsedDataset.datasetContentId,
 				}));
 
-			this.logger.debug("Inserting solution records");
+			this.logger.debug(() => ({
+				msg: "Inserting solution records",
+			}));
 			// create a bulk upsert operation and execute
 			if (captchaSolutionDocs.length) {
 				await this.tables?.solution.bulkWrite(
@@ -306,7 +343,9 @@ export class ProviderDatabase
 					})),
 				);
 			}
-			this.logger.debug("Dataset stored in database");
+			this.logger.debug(() => ({
+				msg: "Dataset stored in database",
+			}));
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.DATASET_LOAD_FAILED", {
 				context: { failedFuncName: this.storeDataset.name, error: err },
@@ -615,21 +654,17 @@ export class ProviderDatabase
 
 		try {
 			await tables.powcaptcha.create(powCaptchaRecord);
-			this.logger.info("PowCaptcha record added successfully", {
-				challenge,
-				userSubmitted,
-				serverChecked,
-				storedStatus,
-			});
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					userSubmitted,
+					serverChecked,
+					storedStatus,
+				},
+				msg: "PowCaptcha record added successfully",
+			}));
 		} catch (error) {
-			this.logger.error("Failed to add PowCaptcha record", {
-				error,
-				challenge,
-				userSubmitted,
-				serverChecked,
-				storedStatus,
-			});
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
 					error,
 					challenge,
@@ -639,6 +674,11 @@ export class ProviderDatabase
 				},
 				logger: this.logger,
 			});
+			this.logger.error(() => ({
+				err: error,
+				msg: "Failed to add PowCaptcha record",
+			}));
+			throw err;
 		}
 	}
 
@@ -664,22 +704,27 @@ export class ProviderDatabase
 			const record: PoWCaptchaRecord | null | undefined =
 				await this.tables.powcaptcha.findOne(filter).lean<PoWCaptchaRecord>();
 			if (record) {
-				this.logger.info("PowCaptcha record retrieved successfully", {
-					challenge,
-				});
+				this.logger.info(() => ({
+					data: { challenge },
+					msg: "PowCaptcha record retrieved successfully",
+				}));
 				return record;
 			}
-			this.logger.info("No PowCaptcha record found", { challenge });
+			this.logger.info(() => ({
+				data: { challenge },
+				msg: "No PowCaptcha record found",
+			}));
 			return null;
 		} catch (error) {
-			this.logger.error("Failed to retrieve PowCaptcha record", {
-				error,
-				challenge,
-			});
-			throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: { error, challenge },
 				logger: this.logger,
 			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to retrieve PowCaptcha record",
+			}));
+			throw err;
 		}
 	}
 
@@ -724,29 +769,28 @@ export class ProviderDatabase
 				},
 			);
 			if (updateResult.matchedCount === 0) {
-				this.logger.info("No PowCaptcha record found to update", {
-					challenge,
-					...update,
-				});
-				throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
 						challenge,
 						...update,
 					},
 					logger: this.logger,
 				});
+				this.logger.info(() => ({
+					err: err,
+					msg: "No PowCaptcha record found to update",
+				}));
+				throw err;
 			}
-			this.logger.info("PowCaptcha record updated successfully", {
-				challenge,
-				...update,
-			});
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					...update,
+				},
+				msg: "PowCaptcha record updated successfully",
+			}));
 		} catch (error) {
-			this.logger.error("Failed to update PowCaptcha record", {
-				error,
-				challenge,
-				...update,
-			});
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
 					error,
 					challenge,
@@ -754,6 +798,11 @@ export class ProviderDatabase
 				},
 				logger: this.logger,
 			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to update PowCaptcha record",
+			}));
+			throw err;
 		}
 	}
 
@@ -988,7 +1037,9 @@ export class ProviderDatabase
 	 */
 	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
 		try {
-			this.logger.debug({ action: "storing", sessionRecord });
+			this.logger.debug(() => ({
+				data: { action: "storing", sessionRecord },
+			}));
 			await this.tables.session.create(sessionRecord);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
@@ -1005,7 +1056,9 @@ export class ProviderDatabase
 	async checkAndRemoveSession(
 		sessionId: string,
 	): Promise<SessionRecord | undefined> {
-		this.logger.debug({ action: "checking and removing", sessionId });
+		this.logger.debug(() => ({
+			data: { action: "checking and removing", sessionId },
+		}));
 		const filter: {
 			[key in keyof Pick<SessionRecord, "sessionId" | "deleted">]:
 				| string

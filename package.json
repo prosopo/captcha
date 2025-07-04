@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "2.5.5",
+	"version": "3.0.0",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -31,9 +31,8 @@
 		"start:provider": "npm -w @prosopo/cli run start",
 		"start:provider:admin": "npm -w @prosopo/cli run start:admin",
 		"start:server": "npm -w @prosopo/client-example-server run start",
-		"start:demo": "npm -w @prosopo/client-example run start",
 		"start:bundle": "npm -w @prosopo/client-bundle-example run start",
-		"start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo\" \"npm run start:bundle\" --kill-others",
+		"start:all": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:bundle\" --kill-others",
 		"start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
 		"serve:bundle": "npm -w @prosopo/procaptcha-bundle run serve",
 		"populate-data": "npm -w @prosopo/provider run populate-data",
@@ -57,8 +56,9 @@
 		"deps:status": "npm-check-updates --deep",
 		"deps:upgrade": "npm-check-updates --deep --interactive --format group",
 		"prepare": "husky",
-		"changesets:add": "nx release plan",
-		"changesets": "nx release plan:check --verbose"
+		"changesets:empty": "npx @changesets/cli add --empty",
+		"changesets:add": "npx @changesets/cli add",
+		"changesets": "npx @changesets/cli status --verbose"
 	},
 	"private": true,
 	"engines": {

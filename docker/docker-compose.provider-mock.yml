@@ -1,0 +1,112 @@
+services:
+    provider1:
+        container_name: provider1
+        profiles:
+            - production
+            - staging
+        image: prosopo/provider-mock:dev
+        labels:
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
+        env_file:
+            - ../.env.${NODE_ENV}
+        ports:
+            - '9229:9229'
+        networks:
+            external:
+            internal:
+                ipv4_address: 172.18.0.3
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: [ "CMD", "curl", "--fail", "localhost:9229/v1/prosopo/provider/details" ] # ping the details endpoint
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+    database:
+        container_name: database
+        image: mongo:6.0.17
+        volumes:
+            - /data/db:/data/db
+        ports:
+            - '27017:27017'
+        env_file:
+            - ../.env.${NODE_ENV}
+        networks:
+            external:
+            internal:
+                ipv4_address: 172.18.0.5
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+    caddy:
+        container_name: caddy
+        profiles:
+            - production
+            - staging
+        image: prosopo/caddy:${CADDY_IMAGE}
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "vector.caddy=true" # enable logging as caddy
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        ports:
+            - '80:80'
+            - '443:443'
+            - '443:443/udp'
+        volumes:
+            - ./provider.Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            external:
+            internal:
+                ipv4_address: 172.18.0.6
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+
+networks:
+    internal:
+        name: internal
+        internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
+    external:
+        name: external
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.19.0.0/16
+                  gateway: 172.19.0.1
+volumes:
+    caddy_data:
+    caddy_config:

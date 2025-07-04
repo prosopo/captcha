@@ -27,7 +27,7 @@ const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 ): Promise<BotDetectionFunctionResult> => {
 	const detect = await DetectorLoader();
-	const botScore: { token: string } = await detect();
+	const botScore = (await detect()) as { token: string };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);
 

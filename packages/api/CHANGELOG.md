@@ -1,5 +1,52 @@
 # @prosopo/api
 
+## 3.0.0
+### Major Changes
+
+- 64b5bcd: Access Controls
+
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/user-access-policy@3.0.0
+  - @prosopo/types@3.0.0
+
+## 2.7.2
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/types@2.10.0
+
+## 2.7.1
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/types@2.9.1
+
+## 2.7.0
+### Minor Changes
+
+- d6de900: ip pass through
+
+## 2.6.6
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/types@2.9.0
+
+## 2.6.5
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/types@2.8.0
+
+## 2.6.4
+
+### Patch Changes
+
+- @prosopo/types@2.7.1
+
 ## 2.6.3
 
 ### Patch Changes
