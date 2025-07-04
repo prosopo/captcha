@@ -70,12 +70,10 @@ jobs:
 
       # create the provider image for AMD64
       - name: Build the Provider Container
-        id: build_docker_provider_amd64
-        continue-on-error: false
         uses: docker/build-push-action@v5
         with:
           context: ${{github.workspace}}
-          file: ${{github.workspace}}/docker/images/provider.dockerfile
+          file: ${{github.workspace}}/docker/images/provider/src/Dockerfile
           platforms: linux/amd64
           push: false
           tags: prosopo/provider:dev
