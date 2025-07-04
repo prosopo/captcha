@@ -11,8 +11,9 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "npx vite build",
-		"dev": "npx vite dev --port=9330"
+		"build": "tsc",
+		"bundle": "vite build",
+		"dev": "vite dev --port=9330"
 	},
 	"dependencies": {
 		"@prosopo/react-procaptcha-wrapper": "1.1.0",

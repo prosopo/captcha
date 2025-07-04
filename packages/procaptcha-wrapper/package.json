@@ -14,6 +14,10 @@
 		"build": "tsc --build",
 		"bundle": "vite build"
 	},
+	"dependencies": {
+		"@prosopo/types": "3.0.0",
+		"@prosopo/locale": "3.0.0"
+	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.0",
 		"del-cli": "6.0.0",
