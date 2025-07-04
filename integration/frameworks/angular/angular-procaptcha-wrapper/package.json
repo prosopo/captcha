@@ -22,7 +22,7 @@
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": ">=2.6.0"
+		"@prosopo/procaptcha-wrapper": "2.6.2"
 	},
 	"peerDependencies": {
 		"@angular/core": "^19.2.0"
