@@ -18,14 +18,12 @@ import {
 	type Captcha,
 	type CaptchaType,
 	type IUserSettings,
-	type RegisterSitekeyBodyTypeOutput,
 	Tier,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { u8aToHex } from "@polkadot/util";
-import type { ApiEndpointResponse } from "@prosopo/api-route";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
 declare global {
@@ -47,6 +45,7 @@ declare global {
 			elementExists(element: string): Chainable<Subject>;
 
 			registerSiteKey(
+				baseCaptchaType: CaptchaType,
 				captchaType?: CaptchaType,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
@@ -238,41 +237,54 @@ function elementExists(selector: string) {
 		.then(($window) => $window.document.querySelector(selector));
 }
 
-function registerSiteKey(captchaType: CaptchaType) {
+function registerSiteKey(
+	baseCaptchaType: CaptchaType,
+	captchaType?: CaptchaType,
+) {
+	const siteKey = Cypress.env(
+		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
+	);
+	if (!siteKey) {
+		throw new Error(
+			`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()} is not set in the environment variables.`,
+		);
+	}
+
+	cy.task(
+		"log",
+		`Registering site key  ${siteKey} for captcha type: ${captchaType || baseCaptchaType}`,
+	);
 	const timestamp = new Date().getTime();
 
 	return cy.then(() => {
-		return getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then(
-			(pair) => {
-				const signature = u8aToHex(pair.sign(timestamp.toString()));
-				const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const signature = u8aToHex(pair.sign(timestamp.toString()));
+		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
-				const settings: IUserSettings = {
-					captchaType: captchaType,
-					domains: ["0.0.0.0", "localhost", "*"],
-					frictionlessThreshold: 0.5,
-					powDifficulty: 2,
-					imageThreshold: 0.8,
-				};
+		const settings: IUserSettings = {
+			captchaType: captchaType || baseCaptchaType,
+			domains: ["0.0.0.0", "localhost", "*"],
+			frictionlessThreshold: 0.5,
+			powDifficulty: 2,
+			imageThreshold: 0.8,
+		};
 
-				// Use cy.request() to ensure Cypress correctly queues the request
-				return cy.request({
-					method: "POST",
-					url: adminSiteKeyURL,
-					headers: {
-						"Content-Type": "application/json",
-						signature: signature,
-						timestamp: timestamp.toString(),
-					},
-					body: {
-						siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-						tier: Tier.Free,
-						settings,
-					},
-					failOnStatusCode: false, // Allow handling of non-200 responses manually
-				});
+		// Use cy.request() to ensure Cypress correctly queues the request
+		return cy.request({
+			method: "POST",
+			url: adminSiteKeyURL,
+			headers: {
+				"Content-Type": "application/json",
+				signature: signature,
+				timestamp: timestamp.toString(),
 			},
-		);
+			body: {
+				siteKey: siteKey,
+				tier: Tier.Free,
+				settings,
+			},
+			failOnStatusCode: false, // Allow handling of non-200 responses manually
+		});
 	});
 }
 

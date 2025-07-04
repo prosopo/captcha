@@ -16,7 +16,7 @@ import { createHash } from "node:crypto";
 import type { IncomingHttpHeaders } from "node:http";
 import { Readable } from "node:stream";
 import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, getLoggerDefault } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { readTlsClientHello } from "read-tls-client-hello";
@@ -24,7 +24,7 @@ import { readTlsClientHello } from "read-tls-client-hello";
 export const DEFAULT_JA4 = "ja4";
 
 export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
-	logger = logger || getLoggerDefault();
+	logger = logger || getLogger("info", import.meta.url);
 
 	// Default JA4+ fingerprint for development
 	if (process.env.NODE_ENV === "development") {
@@ -43,18 +43,23 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		const clientHelloBuffer = Buffer.from(xTlsClientHello, "base64");
 
 		// Debug: Check first few bytes
-		logger.debug(
-			"ClientHello First Bytes:",
-			clientHelloBuffer.subarray(0, 5).toString("hex"),
-		);
+		logger.debug(() => ({
+			msg: "ClientHello First Bytes:",
+			data: { hex: clientHelloBuffer.subarray(0, 5).toString("hex") },
+		}));
 
 		// Check first byte after the initial 5
 		if (clientHelloBuffer[5] !== 0x01) {
-			logger.warn("Invalid ClientHello message: First byte is not 0x01");
+			logger.debug(() => ({
+				msg: "Invalid ClientHello message: First byte is not 0x01",
+			}));
 			return { ja4PlusFingerprint: DEFAULT_JA4 };
 		}
 
-		logger.debug("Headers TLS Version:", xTlsVersion);
+		logger.debug(() => ({
+			msg: "Headers TLS Version:",
+			data: { xTlsVersion },
+		}));
 
 		//`tls1.3` becomes `13` etc.
 		const tlsVersion = xTlsVersion.replace(/(tls)|\./g, "");
@@ -128,7 +133,10 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 
 		return { ja4PlusFingerprint };
 	} catch (e) {
-		logger.error("Error generating JA4+ fingerprint:", e);
+		logger.error(() => ({
+			msg: "Error generating JA4+ fingerprint:",
+			err: e instanceof Error ? e : new Error(String(e)),
+		}));
 		return { ja4PlusFingerprint: DEFAULT_JA4 };
 	}
 };
@@ -136,6 +144,7 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 export const ja4Middleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
+			req.logger.debug(() => ({ data: { url: req.url } }));
 			const ja4 = await getJA4(req.headers, req.logger);
 
 			req.ja4 = ja4.ja4PlusFingerprint || "";

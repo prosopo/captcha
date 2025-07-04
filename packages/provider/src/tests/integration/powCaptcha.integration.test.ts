@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import { sha256 } from "@noble/hashes/sha256";
-import { u8aToHex } from "@polkadot/util/u8a";
-import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
+import { generateMnemonic, getPair } from "@prosopo/keyring";
 import {
 	ApiParams,
 	CaptchaType,
@@ -24,6 +23,7 @@ import {
 	type PowCaptchaSolutionResponse,
 	type SubmitPowCaptchaSolutionBodyType,
 } from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
 import fetch from "node-fetch";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
@@ -149,18 +149,8 @@ describe("PoW Integration Tests", () => {
 	});
 	describe("SubmitPowCaptchaSolution", () => {
 		it("should verify a correctly completed PoW captcha as true", async () => {
-			const userPair = await getPairAsync(
-				dummyUserAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
-			const dappPair = await getPairAsync(
-				dummyDappAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
+			const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
+			const dappPair = getPair(dummyDappAccount.seed, undefined, "sr25519", 42);
 
 			const dummyDappAccountAddr = dappPair.address;
 
@@ -234,12 +224,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return false for incorrectly completed PoW captcha", async () => {
-			const userPair = await getPairAsync(
-				dummyUserAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
+			const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 			const userAccount = userPair.address;
 			const origin = "http://localhost";
 			const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
@@ -308,12 +293,7 @@ describe("PoW Integration Tests", () => {
 
 		it("should return an error for an unregistered site key", async () => {
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
-			const userPair = await getPairAsync(
-				dummyUserAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
+			const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 			const userAccount = userPair.address;
 			const origin = "http://localhost";
 
@@ -343,12 +323,7 @@ describe("PoW Integration Tests", () => {
 	});
 
 	it("should return an error for an invalid site key", async () => {
-		const userPair = await getPairAsync(
-			dummyUserAccount.seed,
-			undefined,
-			"sr25519",
-			42,
-		);
+		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
 		const userAccount = userPair.address;
 		const origin = "http://localhost";
 		const invalidSiteKey = "junk";
@@ -372,11 +347,7 @@ describe("PoW Integration Tests", () => {
 	});
 
 	it("should return an error if the captcha type is set to image", async () => {
-		const userPair = await getPairAsync(
-			dummyUserAccount.seed,
-			undefined,
-			"sr25519",
-		);
+		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
 		const userAccount = userPair.address;
 		const origin = "http://localhost";
 		const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
@@ -401,11 +372,7 @@ describe("PoW Integration Tests", () => {
 		expect(challengeBody.error?.code).toBe(400);
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
-		const userPair = await getPairAsync(
-			dummyUserAccount.seed,
-			undefined,
-			"sr25519",
-		);
+		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
 		const userAccount = userPair.address;
 		const origin = "http://localhost";
 		// Create a new site key to avoid conflicts with other tests

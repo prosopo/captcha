@@ -11,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { u8aToHex } from "@polkadot/util";
+
 import { ProviderApi } from "@prosopo/api";
 import {
 	type LogLevel,
@@ -22,7 +20,9 @@ import {
 	ProsopoContractError,
 	getLogger,
 } from "@prosopo/common";
+import { Keyring } from "@prosopo/keyring";
 import { loadBalancer } from "@prosopo/load-balancer";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
 	ProcaptchaOutputSchema,
@@ -31,6 +31,7 @@ import {
 	type VerificationResponse,
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
 import i18n from "i18next";
 
 export class ProsopoServer {
@@ -76,8 +77,12 @@ export class ProsopoServer {
 		timestamp: number,
 		user: string,
 		challenge?: string,
+		ip?: string,
 	): Promise<VerificationResponse> {
-		this.logger.info(`Verifying with provider: ${providerUrl}`);
+		this.logger.info(() => ({
+			data: { providerUrl },
+			msg: "Verifying with provider",
+		}));
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
 			throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
@@ -91,7 +96,10 @@ export class ProsopoServer {
 			const powTimeout = this.config.timeouts.pow.cachedTimeout;
 			const recent = timestamp ? Date.now() - timestamp < powTimeout : false;
 			if (!recent) {
-				this.logger.error("PoW captcha is not recent");
+				this.logger.error(() => ({
+					data: { timestamp },
+					msg: "PoW captcha is not recent",
+				}));
 				return {
 					verified: false,
 					status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
@@ -102,12 +110,16 @@ export class ProsopoServer {
 				signatureHex,
 				timeouts.pow.cachedTimeout,
 				user,
+				ip,
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
 		const recent = timestamp ? Date.now() - timestamp < imageTimeout : false;
 		if (!recent) {
-			this.logger.error("Image captcha is not recent");
+			this.logger.error(() => ({
+				data: { timestamp },
+				msg: "Image captcha is not recent",
+			}));
 			return {
 				verified: false,
 				status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
@@ -118,6 +130,7 @@ export class ProsopoServer {
 			signatureHex,
 			user,
 			timeouts.image.cachedTimeout,
+			ip,
 		);
 	}
 
@@ -128,6 +141,7 @@ export class ProsopoServer {
 	 */
 	public async isVerified(
 		token: ProcaptchaToken,
+		ip?: string,
 	): Promise<VerificationResponse> {
 		try {
 			const payload = decodeProcaptchaOutput(token);
@@ -143,23 +157,38 @@ export class ProsopoServer {
 
 			// if the provider is not found, return an error
 			if (!provider) {
-				this.logger.error("Provider not found");
+				this.logger.error(() => ({
+					data: { providerUrl },
+					msg: "Provider not found",
+				}));
 				return {
 					verified: false,
 					status: i18n.t("API.USER_NOT_VERIFIED"),
 				};
 			}
-
-			return await this.verifyProvider(
+			const verificationResponse = await this.verifyProvider(
 				token,
 				this.config.timeouts,
 				provider.url,
 				Number(timestamp),
 				user,
 				challenge,
+				ip,
 			);
+
+			this.logger.info(() => ({
+				data: {
+					verificationResponse,
+					providerUrl,
+					user,
+					challenge,
+					siteKey: this.pair?.address,
+				},
+			}));
+
+			return verificationResponse;
 		} catch (err) {
-			this.logger.error({ err, token });
+			this.logger.error(() => ({ err, data: { token } }));
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { code: 500, token },
 			});

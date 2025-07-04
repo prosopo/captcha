@@ -8,6 +8,9 @@
 	"references": [
 		{
 			"path": "../locale"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

@@ -1,5 +1,116 @@
 # @prosopo/provider
 
+## 3.0.0
+### Major Changes
+
+- 64b5bcd: Access Controls
+
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/api-express-router@3.0.0
+  - @prosopo/user-access-policy@3.0.0
+  - @prosopo/types-database@3.0.0
+  - @prosopo/database@3.0.0
+  - @prosopo/datasets@3.0.0
+  - @prosopo/common@3.0.0
+  - @prosopo/types@3.0.0
+  - @prosopo/util@3.0.0
+  - @prosopo/env@3.0.0
+  - @prosopo/config@3.0.0
+  - @prosopo/types-env@2.7.4
+  - @prosopo/api-route@2.6.5
+  - @prosopo/keyring@2.8.3
+
+## 2.14.0
+### Minor Changes
+
+- aee3efe: Add healthz endpoint
+
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/types@2.10.0
+  - @prosopo/database@2.6.9
+  - @prosopo/datasets@2.7.3
+  - @prosopo/env@2.7.3
+  - @prosopo/keyring@2.8.2
+  - @prosopo/types-database@2.7.6
+  - @prosopo/types-env@2.7.3
+  - @prosopo/user-access-policy@2.6.8
+
+## 2.13.0
+### Minor Changes
+
+- d5f2e95: Fix ip checking logic
+
+## 2.12.1
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/api-express-router@2.6.4
+  - @prosopo/user-access-policy@2.6.7
+  - @prosopo/types-database@2.7.5
+  - @prosopo/util-crypto@13.5.1
+  - @prosopo/api-route@2.6.4
+  - @prosopo/types-env@2.7.2
+  - @prosopo/database@2.6.8
+  - @prosopo/datasets@2.7.2
+  - @prosopo/keyring@2.8.1
+  - @prosopo/common@2.7.2
+  - @prosopo/types@2.9.1
+  - @prosopo/env@2.7.2
+  - @prosopo/config@2.6.1
+  - @prosopo/util@2.6.1
+
+## 2.12.0
+### Minor Changes
+
+- d6de900: ip pass through
+
+## 2.11.0
+### Minor Changes
+
+- 30bb383: Making sure verify works and derived accounts
+
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/util-crypto@13.5.0
+  - @prosopo/keyring@2.8.0
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/datasets@2.7.1
+  - @prosopo/database@2.6.7
+  - @prosopo/env@2.7.1
+  - @prosopo/types-database@2.7.4
+  - @prosopo/types-env@2.7.1
+  - @prosopo/user-access-policy@2.6.6
+  - @prosopo/api-express-router@2.6.3
+  - @prosopo/api-route@2.6.3
+
+## 2.10.0
+### Minor Changes
+
+- 8f0644a: Taking required functions from polkadot/keyring and polkadot/util-crypto in-house and removing WASM dependencies. Adding @scure JS-based sr25519 function instead.
+
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/util-crypto@13.4.0
+  - @prosopo/types-env@2.7.0
+  - @prosopo/datasets@2.7.0
+  - @prosopo/keyring@2.7.0
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/env@2.7.0
+  - @prosopo/api-express-router@2.6.2
+  - @prosopo/api-route@2.6.2
+  - @prosopo/database@2.6.6
+  - @prosopo/types-database@2.7.3
+  - @prosopo/user-access-policy@2.6.5
+
 ## 2.9.8
 
 ### Patch Changes

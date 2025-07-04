@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
@@ -104,9 +104,15 @@ export default (
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
 				});
-				logger.info(`Site Key ${argv.sitekey} registered`);
+				logger.info(() => ({
+					data: { sitekey },
+					msg: "Site Key registered",
+				}));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({
+					err,
+					msg: "Error registering Site Key",
+				}));
 			}
 		},
 		middlewares: [validateSiteKey],

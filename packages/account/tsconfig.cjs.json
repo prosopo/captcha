@@ -18,10 +18,16 @@
 			"path": "../fingerprint/tsconfig.cjs.json"
 		},
 		{
+			"path": "../keyring/tsconfig.cjs.json"
+		},
+		{
 			"path": "../types/tsconfig.cjs.json"
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util-crypto/tsconfig.cjs.json"
 		}
 	]
 }

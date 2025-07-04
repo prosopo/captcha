@@ -1,5 +1,12 @@
 # @prosopo/svelte-procaptcha-integration-demo
 
+## 1.1.1
+### Patch Changes
+
+- dead520: fix dep versions
+- Updated dependencies [dead520]
+  - @prosopo/svelte-procaptcha-wrapper@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes
