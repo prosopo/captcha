@@ -63,7 +63,7 @@ jobs:
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         run: |
-          NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle bundle:webpack
+          NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle build:bundle:webpack
 
       - name: Start the docker images
         run: |
