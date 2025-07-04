@@ -18,7 +18,7 @@
 	"scripts": {
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"bundle": "npx vite --config vite.cjs.config.ts build",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"mnemonic": "tsx ./scripts/generateMnemonic.ts"
 	},

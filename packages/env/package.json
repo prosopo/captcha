@@ -18,7 +18,7 @@
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"bundle": "npx vite --config vite.cjs.config.ts build"
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build"
 	},
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
