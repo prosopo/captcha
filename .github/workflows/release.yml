@@ -11,6 +11,14 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: false # queue the new runs until previous have finished. This avoids version bumps overlapping with each other
 
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  pull-requests: read
+  issues: read
+  actions: read
+
 defaults:
     run:
         shell: bash
