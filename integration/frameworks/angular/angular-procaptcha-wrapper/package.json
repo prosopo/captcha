@@ -18,7 +18,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "ng build",
+		"build": "ng-packagr -p ng-package.json",
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {
