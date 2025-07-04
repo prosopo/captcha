@@ -8,8 +8,9 @@
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"build": "tsc --build",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
+		"build:tsc": "tsc --build",
+		"build:vite": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
+		"build": "run-s build:tsc build:vite",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV",
 		"clean": "echo 'nothing to clean'"
 	},
