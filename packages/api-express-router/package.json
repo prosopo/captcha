@@ -17,7 +17,7 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"bundle": "npx vite --config vite.cjs.config.ts build"
 	},
 	"dependencies": {
 		"@prosopo/api-route": "2.6.5",

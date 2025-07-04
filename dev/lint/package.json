@@ -14,8 +14,7 @@
 		"license": "node dist/license.js check",
 		"license:fix": "node dist/license.js license",
 		"redirects": "node dist/redirects.js",
-		"redirects:fix": "node dist/redirects.js fix",
-		"build:cjs": "echo 'no cjs build'"
+		"redirects:fix": "node dist/redirects.js fix"
 	},
 	"author": "",
 	"license": "ISC",

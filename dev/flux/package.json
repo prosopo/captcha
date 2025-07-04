@@ -15,7 +15,8 @@
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"build:cjs": "echo \"No CJS build specified\"",
+		"bundle": "npx vite --config vite.cjs.config.ts build",
 		"cli": "node dist/index.js"
 	},
 	"author": "Prosopo Limited",

@@ -22,7 +22,8 @@
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build --verbose",
-		"build:cjs": "vite build --config vite.cjs.config.ts"
+		"build:cjs": "echo \"No CJS build specified\"",
+		"bundle": "vite build --config vite.cjs.config.ts"
 	},
 	"engines": {
 		"node": "20",
