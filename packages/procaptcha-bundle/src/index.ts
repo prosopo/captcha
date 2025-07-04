@@ -102,18 +102,25 @@ export const render = async (
 		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&
 		renderOptions.size === "invisible";
 
+	const isWeb2 = !renderOptions.web3;
+
 	if (hasInvisibleSize || element.tagName.toLowerCase() === "button") {
 		const roots = await widgetFactory.createWidgets(
 			[element],
 			renderOptions,
-			true,
+			isWeb2,
 			true,
 		);
 		procaptchaRoots.push(...roots);
 		return;
 	}
 
-	const roots = await widgetFactory.createWidgets([element], renderOptions);
+	const roots = await widgetFactory.createWidgets(
+		[element],
+		renderOptions,
+		isWeb2,
+		false,
+	);
 
 	procaptchaRoots.push(...roots);
 };

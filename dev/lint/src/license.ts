@@ -64,6 +64,12 @@ const files = fg
 			"**/next-env.d.ts/**",
 			"**/packages/docs/**",
 			"**/cloudflareBundle.js",
+			// polkadot files
+			"**/packages/util-crypto/**",
+			"**/packages/keyring/src/keyring/**",
+			"**/packages/keyring/src/pair/**",
+			"**/packages/types/src/keyring/keyring/**",
+			"**/packages/types/src/keyring/pair/**",
 		],
 	})
 	.filter((file) => fs.lstatSync(file).isFile());

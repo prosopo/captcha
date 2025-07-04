@@ -1,0 +1,27 @@
+{
+	"name": "@prosopo/testpkg2",
+	"version": "1.0.3",
+	"description": "Test package for testing deploys, releases, etc",
+	"main": "dist/index.js",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"scripts": {
+		"test": "echo \"No test specified\"",
+		"clean": "tsc --build --clean",
+		"build": "tsc --build --verbose"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git"
+	},
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"sideEffects": false
+}

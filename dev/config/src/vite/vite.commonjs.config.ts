@@ -19,17 +19,14 @@ import { type UserConfig, defineConfig } from "vite";
 import { default as noBundlePlugin } from "vite-plugin-no-bundle";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { getExternalsFromReferences } from "../dependencies.js";
-import { getLogger } from "../logger.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
-
-const log = getLogger("vite.commonjs.config.ts");
 
 export default async function (
 	name: string,
 	tsConfigPath: string,
 	entry?: string,
 ): Promise<UserConfig> {
-	log.info(`ViteCommonJSConfig: ${name}`);
+	console.info(`ViteCommonJSConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [
 		/dev/,
 	]);

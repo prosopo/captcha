@@ -61,6 +61,7 @@ class CaptchaRenderer {
 			renderOptions.language,
 			isWeb2,
 			invisible,
+			renderOptions.userAccountAddress,
 		);
 		this.readAndValidateSettings(container, config, renderOptions);
 

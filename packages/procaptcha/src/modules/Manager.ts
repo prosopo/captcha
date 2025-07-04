@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { randomAsHex } from "@polkadot/util-crypto/random";
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import {
@@ -30,7 +29,6 @@ import { getDefaultEvents } from "@prosopo/procaptcha-common";
 import {
 	type Account,
 	ApiParams,
-	type Callbacks,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type FrictionlessState,
@@ -45,6 +43,7 @@ import {
 } from "@prosopo/types";
 import { at, hashToHex } from "@prosopo/util";
 import { sleep } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
 
 const defaultState = (): Partial<ProcaptchaState> => {

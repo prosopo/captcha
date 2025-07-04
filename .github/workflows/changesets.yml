@@ -26,7 +26,6 @@ jobs:
     check:
         name: check
         runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false && !startsWith(github.head_ref, 'version/') # Exclude source branches starting with 'version/'
         steps:
             - name: Print contexts
               uses: prosopo/captcha/.github/actions/print_contexts@gha
@@ -36,11 +35,17 @@ jobs:
                     VARS_CONTEXT: ${{ toJson(vars) }}
                     SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
+            - name: Set NX_PARALLEL environment variable
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
             - uses: actions/checkout@v4
               with:
                   submodules: 'recursive'
+                  fetch-depth: 0 # required for comparing changesets to the base branch
 
             - uses: prosopo/captcha/.github/actions/npm@gha
+              with:
+                npm_ci_args: '--include=dev'
 
             # checkout the base and head refs
             # ensures we have history for both

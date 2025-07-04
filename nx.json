@@ -1,0 +1,56 @@
+{
+	"$schema": "./node_modules/nx/schemas/nx-schema.json",
+	"targetDefaults": {
+		"build": {
+			"dependsOn": [
+				"^lint",
+				"^typecheck",
+				"^build",
+				"^build:cjs",
+				"^bundle",
+				"lint",
+				"typecheck"
+			]
+		},
+		"bundle": {
+			"dependsOn": ["build", "build:cjs"]
+		},
+		"build:cjs": {
+			"dependsOn": ["build"]
+		},
+		"test": {
+			"dependsOn": ["build", "build:cjs", "bundle"]
+		},
+		"typecheck": {},
+		"*": {
+			"cache": true
+		}
+	},
+	"defaultBase": "main",
+	"release": {
+		"projects": ["*"],
+		"versionPlans": true,
+		"projectsRelationship": "independent",
+		"changelog": {
+			"projectChangelogs": true,
+			"automaticFromRef": true
+		}
+	},
+	"parallel": 8,
+	"pluginsConfig": {
+		"@nx/js": {
+			"projectsAffectedByDependencyUpdates": "auto"
+		}
+	},
+	"plugin": "@nx/js/typescript",
+	"options": {
+		"typecheck": {
+			"targetName": "typecheck"
+		}
+	},
+	"neverConnectToCloud": true,
+	"sync": {
+		"applyChanges": true
+	},
+	"useDaemonProcess": false
+}

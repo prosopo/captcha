@@ -27,7 +27,7 @@ import Modal from "./Modal.js";
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
-	const { t } = useTranslation();
+	const { t, ready: isTranslationReady } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const i18n = props.i18n;
@@ -150,7 +150,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 					setLoading(false);
 				}}
 				checked={state.isHuman}
-				labelText={t("WIDGET.I_AM_HUMAN")}
+				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 				error={state.error?.message}
 				aria-label="human checkbox"
 				loading={loading}

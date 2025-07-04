@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaStatus,
+	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type RequestHeaders,
@@ -26,16 +25,15 @@ import type {
 	IProviderDatabase,
 	PoWCaptchaStored,
 } from "@prosopo/types-database";
-import { verifyRecency } from "@prosopo/util";
+import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
-import { getIPAddress } from "../../../../util.js";
 
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
 }));
 
@@ -338,6 +336,39 @@ describe("PowCaptchaManager", () => {
 			expect(result.verified).toBe(false);
 
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
+		});
+
+		it("should return verified:false if an ip is received and it does not match the one on the challenge record", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const ipAddress = "8.8.8.8";
+			const challengeRecord = {
+				challenge,
+				dappAccount,
+				userAccount,
+				timestamp,
+				checked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getIPAddress("1.1.1.1").bigInt(),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				ipAddress,
+			);
+
+			expect(result.verified).toBe(false);
 		});
 	});
 });
