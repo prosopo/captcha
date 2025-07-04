@@ -18,8 +18,10 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "ng-packagr -p ng-package.json",
-		"dev": "npm run build -- --watch"
+		"build:tsc": "ng-packagr -p ng-package.json",
+		"build:bundle": "echo 'No bundle step for Angular package'",
+		"build": "run-s build:tsc build:bundle",
+		"dev": "npm run build:tsc -- --watch"
 	},
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": "2.6.3"
