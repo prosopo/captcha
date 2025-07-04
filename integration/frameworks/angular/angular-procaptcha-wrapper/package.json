@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/angular-procaptcha-wrapper",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -22,7 +22,7 @@
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.2"
+		"@prosopo/procaptcha-wrapper": "2.6.3"
 	},
 	"peerDependencies": {
 		"@angular/core": "^19.2.0"

@@ -1,5 +1,12 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.1
+### Patch Changes
+
+- dead520: fix dep versions
+- Updated dependencies [dead520]
+  - @prosopo/vue-procaptcha-wrapper@1.1.1
+
 ## 1.1.0
 
 ### Minor Changes

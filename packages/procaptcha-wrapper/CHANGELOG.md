@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.3
+### Patch Changes
+
+- dead520: fix dep versions
+
 ## 2.6.2
 ### Patch Changes
 
