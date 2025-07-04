@@ -141,10 +141,9 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
-    redis-stack:
-        container_name: redis-stack
-        # unlike "redis/redis-stack-server" this image includes Insights
-        image: redis/redis-stack:${REDIS_IMAGE}
+    redis:
+        container_name: redis
+        image: redis/redis:${REDIS_IMAGE}
         env_file:
             - ../.env.1.${NODE_ENV}
         volumes:
