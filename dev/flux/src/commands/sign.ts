@@ -41,18 +41,27 @@ export default (cmdArgs?: { logger?: Logger }) => {
 			const keypair: Keypair = { secretKey, publicKey };
 			const message = msgSpec.parse(argv.msg);
 			if (message.length === 0) {
-				logger.error("No message provided");
+				logger.error(() => ({
+					msg: "No message provided",
+					data: { args: process.argv.slice(2) },
+				}));
 				process.exit();
 			}
 			sign(message, keypair)
 				.then((sig) => {
 					const hexSig = u8aToHex(sig);
-					logger.info(`Public Key: ${publicKeyEncoded}`);
-					logger.info(`Base64 Signature: ${base64Encode(hexSig)}`);
+					logger.info(() => ({
+						data: { publicKeyEncoded },
+						msg: "Public Key",
+					}));
+					logger.info(() => ({
+						data: { signature: base64Encode(hexSig) },
+						msg: "Base64 Signature",
+					}));
 					process.exit();
 				})
 				.catch((error) => {
-					logger.error(error);
+					logger.error(() => ({ err: error }));
 					process.exit();
 				});
 		},

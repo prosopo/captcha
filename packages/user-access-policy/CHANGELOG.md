@@ -1,5 +1,49 @@
 # @prosopo/user-access-policy
 
+## 3.0.0
+### Major Changes
+
+- 64b5bcd: Access Controls
+
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/common@3.0.0
+  - @prosopo/types@3.0.0
+  - @prosopo/util@3.0.0
+  - @prosopo/api-route@2.6.5
+
+## 2.6.8
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/types@2.10.0
+
+## 2.6.7
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/api-route@2.6.4
+  - @prosopo/common@2.7.2
+  - @prosopo/types@2.9.1
+
+## 2.6.6
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/api-route@2.6.3
+
+## 2.6.5
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/api-route@2.6.2
+
 ## 2.6.4
 
 ### Patch Changes

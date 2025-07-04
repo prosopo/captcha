@@ -1,5 +1,49 @@
 # @prosopo/types-env
 
+## 2.7.4
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/types-database@3.0.0
+  - @prosopo/common@3.0.0
+  - @prosopo/types@3.0.0
+
+## 2.7.3
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/types@2.10.0
+  - @prosopo/types-database@2.7.6
+
+## 2.7.2
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/types-database@2.7.5
+  - @prosopo/common@2.7.2
+  - @prosopo/types@2.9.1
+
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/types@2.9.0
+  - @prosopo/common@2.7.1
+  - @prosopo/types-database@2.7.4
+
+## 2.7.0
+### Minor Changes
+
+- 8f0644a: Taking required functions from polkadot/keyring and polkadot/util-crypto in-house and removing WASM dependencies. Adding @scure JS-based sr25519 function instead.
+
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/types-database@2.7.3
+
 ## 2.6.5
 
 ### Patch Changes

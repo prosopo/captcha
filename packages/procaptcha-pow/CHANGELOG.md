@@ -1,5 +1,79 @@
 # @prosopo/procaptcha-pow
 
+## 2.7.5
+### Patch Changes
+
+- Updated dependencies [64b5bcd]
+  - @prosopo/common@3.0.0
+  - @prosopo/locale@3.0.0
+  - @prosopo/types@3.0.0
+  - @prosopo/util@3.0.0
+  - @prosopo/api@3.0.0
+  - @prosopo/procaptcha@2.7.5
+  - @prosopo/account@2.7.4
+  - @prosopo/procaptcha-common@2.7.4
+
+## 2.7.4
+### Patch Changes
+
+- Updated dependencies [aee3efe]
+  - @prosopo/types@2.10.0
+  - @prosopo/account@2.7.3
+  - @prosopo/api@2.7.2
+  - @prosopo/procaptcha@2.7.4
+  - @prosopo/procaptcha-common@2.7.3
+
+## 2.7.3
+### Patch Changes
+
+- 86c22b8: structured logging
+- Updated dependencies [86c22b8]
+  - @prosopo/procaptcha-common@2.7.2
+  - @prosopo/procaptcha@2.7.3
+  - @prosopo/account@2.7.2
+  - @prosopo/common@2.7.2
+  - @prosopo/types@2.9.1
+  - @prosopo/api@2.7.1
+  - @prosopo/util@2.6.1
+
+## 2.7.2
+### Patch Changes
+
+- Updated dependencies [d6de900]
+  - @prosopo/api@2.7.0
+  - @prosopo/procaptcha@2.7.2
+
+## 2.7.1
+### Patch Changes
+
+- Updated dependencies [30bb383]
+  - @prosopo/types@2.9.0
+  - @prosopo/account@2.7.1
+  - @prosopo/common@2.7.1
+  - @prosopo/procaptcha@2.7.1
+  - @prosopo/api@2.6.6
+  - @prosopo/procaptcha-common@2.7.1
+
+## 2.7.0
+### Minor Changes
+
+- 8f0644a: Taking required functions from polkadot/keyring and polkadot/util-crypto in-house and removing WASM dependencies. Adding @scure JS-based sr25519 function instead.
+
+### Patch Changes
+
+- Updated dependencies [8f0644a]
+  - @prosopo/procaptcha-common@2.7.0
+  - @prosopo/procaptcha@2.7.0
+  - @prosopo/account@2.7.0
+  - @prosopo/common@2.7.0
+  - @prosopo/types@2.8.0
+  - @prosopo/api@2.6.5
+
+## 2.6.13
+### Patch Changes
+
+- cf26d7e: Prevents the translation key (WIDGET.I_AM_HUMAN) to be shown until the translation is loaded
+
 ## 2.6.12
 
 ### Patch Changes

@@ -11,14 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
+
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import {
-	ProsopoApiError,
-	ProsopoEnvError,
-	getLoggerDefault,
-} from "@prosopo/common";
+import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -27,12 +24,11 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
-import { getIPAddress, getIPAddressFromBigInt } from "../../util.js";
+import { validateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -123,7 +119,9 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug("No record of this challenge");
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
 			// no record of this challenge
 			return false;
 		}
@@ -181,22 +179,19 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(`No record of this challenge: ${challenge}`);
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
 			return { verified: false };
 		}
 
-		if (ip) {
-			const ipV4Address = getIPAddress(ip);
-			if (!ipV4Address) {
-				this.logger.debug(`Invalid IP address: ${ip}`);
-				return { verified: false };
-			}
-			if (challengeRecord.ipAddress !== ipV4Address.bigInt()) {
-				this.logger.debug(
-					`IP address mismatch: ${getIPAddressFromBigInt(challengeRecord.ipAddress).address} !== ${ip}`,
-				);
-				return { verified: false };
-			}
+		const ipValidation = validateIpAddress(
+			ip,
+			challengeRecord.ipAddress,
+			this.logger,
+		);
+		if (!ipValidation.isValid) {
+			return { verified: false };
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -235,10 +230,12 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 			if (tokenRecord) {
 				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
-				this.logger.info({
-					tscoreComponents: tokenRecord?.scoreComponents,
-					score: score,
-				});
+				this.logger.info(() => ({
+					data: {
+						tscoreComponents: { ...(tokenRecord?.scoreComponents || {}) },
+						score,
+					},
+				}));
 			}
 		}
 
