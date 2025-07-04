@@ -25,9 +25,7 @@
 		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
 		"build": "run-s build:tsc build:bundle"
 	},
-	"browserslist": [
-		"> 0.5%, last 2 versions, not dead"
-	],
+	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@prosopo/detector": "3.0.0",
 		"@prosopo/locale": "3.0.0",
