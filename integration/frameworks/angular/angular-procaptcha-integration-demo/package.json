@@ -9,9 +9,7 @@
 		"clean": "del-cli ./dist",
 		"ng": "ng",
 		"start": "ng serve",
-		"build:tsc": "ng build",
-		"build:bundle": "echo 'No bundle step for Angular package'",
-		"build": "run-s build:tsc build:bundle",
+		"build": "ng build",
 		"watch": "ng build --watch --configuration development",
 		"test": "echo \"No test specified\"",
 		"dev": "npm run start"
