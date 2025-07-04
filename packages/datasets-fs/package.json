@@ -10,9 +10,10 @@
 	},
 	"scripts": {
 		"clean": "tsc --build --clean",
-		"build": "tsc --build",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
+		"build": "run-s build:tsc build:bundle",
+		"test": "NODE_ENV=${NODE_ENV:-test}; vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/cli.js"
 	},
 	"main": "./dist/index.js",
