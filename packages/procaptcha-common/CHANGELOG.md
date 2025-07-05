@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-common
 
+## 2.7.5
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+- Updated dependencies [4b6cbf9]
+- Updated dependencies [4b6cbf9]
+  - @prosopo/widget-skeleton@2.6.1
+  - @prosopo/load-balancer@2.6.10
+  - @prosopo/account@2.7.5
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/util@3.0.1
+
 ## 2.7.4
 ### Patch Changes
 

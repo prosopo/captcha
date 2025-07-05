@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/dotenv",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -26,8 +26,8 @@
 	},
 	"types": "./dist/index.d.ts",
 	"dependencies": {
-		"@prosopo/common": "3.0.0",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/common": "3.0.1",
+		"@prosopo/config": "3.0.1",
 		"dotenv": "16.4.5",
 		"express": "4.21.2"
 	},

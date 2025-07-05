@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -39,15 +39,15 @@
 	},
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "3.0.0",
-		"@prosopo/types": "3.0.0",
-		"@prosopo/types-database": "3.0.0",
-		"@prosopo/util": "3.0.0",
-		"@prosopo/util-crypto": "13.5.1",
+		"@prosopo/common": "3.0.1",
+		"@prosopo/types": "3.0.1",
+		"@prosopo/types-database": "3.0.1",
+		"@prosopo/util": "3.0.1",
+		"@prosopo/util-crypto": "13.5.2",
 		"express": "4.21.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

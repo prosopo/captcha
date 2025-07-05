@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"description": "Wrapper for the provider API",
 	"main": "dist/index.js",
 	"type": "module",
@@ -32,12 +32,12 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/types": "3.0.0",
-		"@prosopo/user-access-policy": "3.0.0",
+		"@prosopo/types": "3.0.1",
+		"@prosopo/user-access-policy": "3.0.1",
 		"express": "4.21.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
