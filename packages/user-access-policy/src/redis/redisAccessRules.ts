@@ -138,7 +138,10 @@ export const createRedisAccessRulesWriter = (
 			await client.hSet(ruleKey, ruleValue);
 
 			if (expirationTimestamp) {
-				await client.expireAt(ruleKey, expirationTimestamp);
+				await client.expireAt(
+					ruleKey,
+					Math.floor(Date.now() / 1000) + expirationTimestamp,
+				);
 			}
 
 			return ruleKey;
