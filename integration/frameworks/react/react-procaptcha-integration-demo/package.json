@@ -11,9 +11,10 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "tsc",
-		"bundle": "vite build",
-		"dev": "vite dev --port=9330"
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
+		"build": "run-s build:tsc build:bundle",
+		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9330 --mode=$NODE_ENV"
 	},
 	"dependencies": {
 		"@prosopo/react-procaptcha-wrapper": "1.1.1",
