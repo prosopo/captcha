@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 3.0.1
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+- Updated dependencies [4b6cbf9]
+- Updated dependencies [4b6cbf9]
+  - @prosopo/api-express-router@3.0.1
+  - @prosopo/user-access-policy@3.0.1
+  - @prosopo/types-database@3.0.1
+  - @prosopo/util-crypto@13.5.2
+  - @prosopo/api-route@2.6.6
+  - @prosopo/types-env@2.7.5
+  - @prosopo/database@3.0.1
+  - @prosopo/datasets@3.0.1
+  - @prosopo/keyring@2.8.4
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/util@3.0.1
+  - @prosopo/env@3.0.1
+  - @prosopo/config@3.0.1
+
 ## 3.0.0
 ### Major Changes
 

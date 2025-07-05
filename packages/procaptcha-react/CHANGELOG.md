@@ -1,5 +1,20 @@
 # @prosopo/procaptcha-react
 
+## 2.6.20
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+- Updated dependencies [4b6cbf9]
+- Updated dependencies [4b6cbf9]
+  - @prosopo/procaptcha-common@2.7.5
+  - @prosopo/widget-skeleton@2.6.1
+  - @prosopo/procaptcha@2.7.6
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/util@3.0.1
+  - @prosopo/locale@3.0.1
+
 ## 2.6.19
 ### Patch Changes
 

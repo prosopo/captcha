@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-integration-demo",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -16,7 +16,7 @@
 		"dev": "vite dev --port=9332"
 	},
 	"dependencies": {
-		"@prosopo/svelte-procaptcha-wrapper": "1.1.1",
+		"@prosopo/svelte-procaptcha-wrapper": "1.1.2",
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
