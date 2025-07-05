@@ -23,7 +23,9 @@ describe("provider bundle", () => {
 		const rootDir = getCliPkgDir();
 
 		// build bundle
-		await execPromise(`cd ${rootDir} && NODE_ENV=production npm run build:bundle`);
+		await execPromise(
+			`cd ${rootDir} && NODE_ENV=production npm run build:bundle`,
+		);
 
 		// run bundle and get version
 		const { stdout: runOut, stderr: runErr } = await execPromise(
