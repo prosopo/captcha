@@ -1,5 +1,11 @@
 # @prosopo/client-bundle-example
 
+## 2.9.3
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+
 ## 2.9.2
 ### Patch Changes
 

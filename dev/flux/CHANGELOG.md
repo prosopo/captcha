@@ -1,5 +1,17 @@
 # @prosopo/flux
 
+## 2.6.6
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+- Updated dependencies [4b6cbf9]
+- Updated dependencies [4b6cbf9]
+  - @prosopo/common@3.0.1
+  - @prosopo/dotenv@3.0.1
+  - @prosopo/util@3.0.1
+  - @prosopo/config@3.0.1
+
 ## 2.6.5
 ### Patch Changes
 
