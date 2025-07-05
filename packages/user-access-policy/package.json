@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
@@ -17,16 +17,17 @@
 		"#policy/*": "./dist/*"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose",
+		"build:tsc": "tsc --build",
 		"clean": "tsc --build --clean",
-		"build:cjs": "npx vite build --config vite.cjs.config.ts",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV build --config vite.cjs.config.ts",
+		"build": "run-s build:tsc build:bundle",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/api-route": "2.6.5",
-		"@prosopo/common": "3.0.0",
-		"@prosopo/types": "3.0.0",
-		"@prosopo/util": "3.0.0",
+		"@prosopo/api-route": "2.6.6",
+		"@prosopo/common": "3.0.1",
+		"@prosopo/types": "3.0.1",
+		"@prosopo/util": "3.0.1",
 		"ip-address": "10.0.1",
 		"redis": "5.0.0",
 		"zod": "3.23.8"

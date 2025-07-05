@@ -1,5 +1,18 @@
 # @prosopo/server
 
+## 2.9.3
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+- Updated dependencies [4b6cbf9]
+- Updated dependencies [4b6cbf9]
+  - @prosopo/load-balancer@2.6.10
+  - @prosopo/keyring@2.8.4
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/api@3.0.1
+
 ## 2.9.2
 ### Patch Changes
 

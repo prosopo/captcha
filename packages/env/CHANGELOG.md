@@ -1,5 +1,19 @@
 # @prosopo/env
 
+## 3.0.1
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+- Updated dependencies [4b6cbf9]
+- Updated dependencies [4b6cbf9]
+  - @prosopo/types-database@3.0.1
+  - @prosopo/types-env@2.7.5
+  - @prosopo/database@3.0.1
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/util@3.0.1
+
 ## 3.0.0
 ### Major Changes
 

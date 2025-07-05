@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider-mock",
-	"version": "2.7.7",
+	"version": "2.7.8",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -12,15 +12,15 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV"
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"build": "run-s build:tsc build:bundle"
 	},
 	"dependencies": {
-		"@prosopo/api-express-router": "3.0.0",
-		"@prosopo/common": "3.0.0",
-		"@prosopo/provider": "3.0.0",
-		"@prosopo/types": "3.0.0",
+		"@prosopo/api-express-router": "3.0.1",
+		"@prosopo/common": "3.0.1",
+		"@prosopo/provider": "3.0.1",
+		"@prosopo/types": "3.0.1",
 		"cors": "2.8.5",
 		"express": "4.21.2",
 		"mongodb": "6.9.0",

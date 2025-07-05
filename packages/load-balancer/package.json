@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/load-balancer",
-	"version": "2.6.9",
+	"version": "2.6.10",
 	"description": "Provider load balancer",
 	"main": "dist/index.js",
 	"type": "module",
@@ -17,8 +17,9 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
+		"build": "run-s build:tsc build:bundle"
 	},
 	"repository": {
 		"type": "git",
@@ -31,9 +32,9 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "3.0.0",
-		"@prosopo/config": "3.0.0",
-		"@prosopo/types": "3.0.0",
+		"@prosopo/common": "3.0.1",
+		"@prosopo/config": "3.0.1",
+		"@prosopo/types": "3.0.1",
 		"express": "4.21.2"
 	},
 	"devDependencies": {

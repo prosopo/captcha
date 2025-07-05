@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/account",
-	"version": "2.7.4",
+	"version": "2.7.5",
 	"description": "Services and Utils for Prosopo account gen and management",
 	"main": "dist/index.js",
 	"type": "module",
@@ -27,8 +27,9 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
+		"build": "run-s build:tsc build:bundle"
 	},
 	"repository": {
 		"type": "git",
@@ -45,15 +46,15 @@
 		"@polkadot/extension-dapp": "0.46.9",
 		"@polkadot/extension-inject": "0.46.9",
 		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "3.0.0",
-		"@prosopo/fingerprint": "2.6.0",
-		"@prosopo/keyring": "2.8.3",
-		"@prosopo/types": "3.0.0",
-		"@prosopo/util": "3.0.0",
-		"@prosopo/util-crypto": "13.5.1"
+		"@prosopo/common": "3.0.1",
+		"@prosopo/fingerprint": "2.6.1",
+		"@prosopo/keyring": "2.8.4",
+		"@prosopo/types": "3.0.1",
+		"@prosopo/util": "3.0.1",
+		"@prosopo/util-crypto": "13.5.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

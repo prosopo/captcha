@@ -2,26 +2,26 @@
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
 	"targetDefaults": {
 		"build": {
-			"dependsOn": [
-				"^lint",
-				"^typecheck",
-				"^build",
-				"^build:cjs",
-				"^bundle",
-				"lint",
-				"typecheck"
-			]
+			"dependsOn": ["^lint", "^typecheck", "^build", "lint", "typecheck"]
 		},
-		"bundle": {
-			"dependsOn": ["build", "build:cjs"]
+		"build:tsc": {
+			"dependsOn": ["^typecheck", "^lint", "^build", "lint", "typecheck"]
+		},
+		"build:bundle": {
+			"dependsOn": ["^typecheck", "^lint", "^build", "lint", "typecheck"]
 		},
 		"build:cjs": {
-			"dependsOn": ["build"]
+			"dependsOn": ["^typecheck", "^lint", "^build", "lint", "typecheck"]
 		},
 		"test": {
-			"dependsOn": ["build", "build:cjs", "bundle"]
+			"dependsOn": ["build"]
 		},
-		"typecheck": {},
+		"typecheck": {
+			"dependsOn": ["^typecheck"]
+		},
+		"lint": {
+			"dependsOn": ["^lint"]
+		},
 		"*": {
 			"cache": true
 		}

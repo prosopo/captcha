@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vue-procaptcha-wrapper",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -11,11 +11,12 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "vue-tsc",
-		"bundle": "vite build"
+		"build:tsc": "vue-tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
+		"build": "run-s build:tsc build:bundle"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.3",
+		"@prosopo/procaptcha-wrapper": "2.6.4",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {
