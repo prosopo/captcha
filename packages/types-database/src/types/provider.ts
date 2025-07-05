@@ -221,6 +221,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 PoWCaptchaRecordSchema.index({ challenge: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
+PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
