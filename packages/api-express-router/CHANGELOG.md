@@ -1,5 +1,15 @@
 # @prosopo/api-express-router
 
+## 3.0.1
+### Patch Changes
+
+- 4b6cbf9: fix npm scripts bundle command
+- 4b6cbf9: standardise all vite based npm scripts for bundling
+- Updated dependencies [4b6cbf9]
+- Updated dependencies [4b6cbf9]
+  - @prosopo/api-route@2.6.6
+  - @prosopo/common@3.0.1
+
 ## 3.0.0
 ### Major Changes
 
