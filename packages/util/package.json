@@ -12,7 +12,7 @@
 		"clean": "tsc --build --clean",
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --noEmit",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"cli": "node ./dist/js/cli.js",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},

@@ -17,10 +17,10 @@
 		"#policy/*": "./dist/*"
 	},
 	"scripts": {
-		"build:tsc": "tsc --build",
 		"clean": "tsc --build --clean",
-		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV build --config vite.cjs.config.ts",
-		"build": "run-s build:tsc build:bundle",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
