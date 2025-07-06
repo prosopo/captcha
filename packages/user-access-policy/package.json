@@ -17,9 +17,10 @@
 		"#policy/*": "./dist/*"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose",
+		"build:tsc": "tsc --build",
 		"clean": "tsc --build --clean",
-		"build:cjs": "npx vite build --config vite.cjs.config.ts",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV build --config vite.cjs.config.ts",
+		"build": "run-s build:tsc build:bundle",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
