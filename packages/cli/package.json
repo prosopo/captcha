@@ -19,7 +19,11 @@
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"cli": "node ./dist/cli.js",
+		"start": "node ./dist/cli.js --api",
+		"start:admin": "node ./dist/cli.js --api --adminApi",
+		"start:dev": "node ./dist/cli.js --api --dev"
 	},
 	"dependencies": {
 		"@polkadot/types-codec": "10.13.1",
