@@ -27,9 +27,12 @@
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/common": "3.0.0",
 		"@prosopo/dotenv": "3.0.0",

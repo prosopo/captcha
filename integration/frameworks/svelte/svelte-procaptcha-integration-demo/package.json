@@ -9,12 +9,11 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "del-cli ./dist",
-		"build:tsc": "tsc --build",
-		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
-		"build": "run-s build:tsc build:bundle",
-		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9332 --mode=$NODE_ENV"
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV"
 	},
 	"dependencies": {
 		"@prosopo/svelte-procaptcha-wrapper": "1.1.1",
