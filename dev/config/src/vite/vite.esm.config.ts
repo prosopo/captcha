@@ -26,7 +26,7 @@ export default async function (
 	tsConfigPath: string,
 	entry?: string,
 ): Promise<UserConfig> {
-	console.info(`ViteCommonJSConfig: ${name}`);
+	console.info(`ViteEsmConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [
 		/dev/,
 	]);
