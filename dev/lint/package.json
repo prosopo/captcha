@@ -6,7 +6,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
+		"build": "tsc --build",
 		"engines": "node dist/engines.js",
 		"refs": "node dist/refs.js",
 		"workflowNames": "node dist/workflowNames.js",
@@ -14,8 +14,7 @@
 		"license": "node dist/license.js check",
 		"license:fix": "node dist/license.js license",
 		"redirects": "node dist/redirects.js",
-		"redirects:fix": "node dist/redirects.js fix",
-		"build:cjs": "echo 'no cjs build'"
+		"redirects:fix": "node dist/redirects.js fix"
 	},
 	"author": "",
 	"license": "ISC",
