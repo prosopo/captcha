@@ -14,7 +14,8 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
-		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9330 --mode=$NODE_ENV"
+		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9330 --mode=$NODE_ENV",
+		"clean": "del-cli dist"
 	},
 	"dependencies": {
 		"@prosopo/react-procaptcha-wrapper": "1.1.1",
