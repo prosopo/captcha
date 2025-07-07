@@ -24,7 +24,7 @@ loadEnv();
 const packageName = "@prosopo/provider-mock";
 const bundleName = "provider-mock";
 const dir = path.resolve();
-const entry = "./src/start.ts";
+const entry = "./src/index.ts";
 const packageVersion = version;
 
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
