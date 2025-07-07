@@ -20,6 +20,7 @@ import {
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { at, flatten } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 import fg from "fast-glob";
 import { defineConfig } from "vite";
 
@@ -121,6 +122,9 @@ export default defineConfig(async ({ command, mode }) => {
 						}
 						if (id.includes("bn.js")) {
 							return "bnChunk";
+						}
+						if (id.includes("packages/detector")) {
+							return `${randomAsHex().slice(0, Math.random() * 10 + 5)}`;
 						}
 						return undefined;
 					},
