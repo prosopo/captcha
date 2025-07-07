@@ -1,5 +1,20 @@
 # @prosopo/provider
 
+## 3.0.2
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/api-express-router@3.0.1
+  - @prosopo/api-route@2.6.6
+  - @prosopo/database@3.0.2
+  - @prosopo/datasets@3.0.2
+  - @prosopo/env@3.0.2
+  - @prosopo/keyring@2.8.4
+  - @prosopo/types-database@3.0.2
+  - @prosopo/types-env@2.7.6
+  - @prosopo/user-access-policy@3.1.1
+
 ## 3.0.1
 ### Patch Changes
 

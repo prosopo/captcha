@@ -1,5 +1,12 @@
 # @prosopo/account
 
+## 2.7.5
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/keyring@2.8.4
+
 ## 2.7.4
 ### Patch Changes
 
