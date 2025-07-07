@@ -46,7 +46,7 @@ export function initializeI18n() {
 				debug: true,
 				fallbackLng: LanguageSchema.enum.en,
 				namespace: "translation",
-				supportedLngs: Languages,
+				supportedLngs: Object.values(Languages),
 				nonExplicitSupportedLngs: true,
 				backend: {
 					backends: [
