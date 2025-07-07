@@ -30,4 +30,4 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig;
+export default ViteTestConfig();

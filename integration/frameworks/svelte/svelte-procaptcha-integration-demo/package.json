@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-integration-demo",
-	"version": "1.0.0",
+	"version": "1.1.1",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -11,15 +11,17 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "npx vite build",
-		"dev": "npx vite dev --port=9332"
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
+		"build": "run-s build:tsc build:bundle",
+		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9332 --mode=$NODE_ENV"
 	},
 	"dependencies": {
-		"@prosopo/svelte-procaptcha-wrapper": "1.0.0",
+		"@prosopo/svelte-procaptcha-wrapper": "1.1.1",
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.0.0",
+		"@prosopo/procaptcha-integration-build-config": "1.1.0",
 		"@sveltejs/vite-plugin-svelte": "5.0.3",
 		"del-cli": "6.0.0"
 	},

@@ -12,16 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import fs from "node:fs/promises";
-import { getLogger } from "@prosopo/common";
-import { flatten, unflatten } from "@prosopo/util";
 import glob from "fast-glob";
 import type { Plugin } from "vite";
 
 const used = new Set<string>();
-const log = getLogger(
-	"Info",
-	"config.vite.vite-plugin-removed-unused-translations.js",
-);
+
+export const flatten = (obj: object, prefix = ""): Record<string, string> => {
+	const flattenedObj: Record<string, string> = {};
+	for (const [key, value] of Object.entries(obj)) {
+		if (value instanceof Object) {
+			Object.assign(flattenedObj, flatten(value, `${prefix + key}.`));
+		} else {
+			flattenedObj[prefix + key] = value;
+		}
+	}
+	return flattenedObj;
+};
+
+type UnflattenObject =
+	| Record<string, string | number | boolean | undefined>
+	| string[]
+	| number[]
+	| boolean[];
+
+export const unflatten = (
+	obj: Record<string, string | number | boolean>,
+): Record<string, string | number | boolean | UnflattenObject> => {
+	const result: Record<string, string | number | boolean | UnflattenObject> =
+		{};
+
+	for (const [key, value] of Object.entries(obj)) {
+		const keys = key.split(".");
+		keys.reduce((acc, k, i) => {
+			if (i === keys.length - 1) {
+				(acc as Record<string, string | number | boolean | UnflattenObject>)[
+					k
+				] = value;
+			} else {
+				if (!acc[k]) {
+					acc[k] = Number.isNaN(Number(keys[i + 1])) ? {} : [];
+				}
+			}
+			return acc[k] as Record<
+				string,
+				string | number | boolean | UnflattenObject
+			>;
+		}, result);
+	}
+
+	return result;
+};
 
 export default function VitePluginRemoveUnusedTranslations(
 	translationKeys: string[],
@@ -33,7 +73,7 @@ export default function VitePluginRemoveUnusedTranslations(
 			// Collect translation keys used in the source files
 			for (const key of translationKeys) {
 				if (code.includes(key) && !used.has(key)) {
-					log.info(`Found key: ${key}`);
+					console.info(`Found key: ${key}`);
 					used.add(key);
 				}
 			}
@@ -45,7 +85,7 @@ export default function VitePluginRemoveUnusedTranslations(
 			// Find all matching JSON files
 			const jsonFiles = await glob(jsonPattern, { absolute: true });
 
-			log.info(`Found ${jsonFiles.length} JSON files at ${jsonPattern}`);
+			console.info(`Found ${jsonFiles.length} JSON files at ${jsonPattern}`);
 
 			const filePromises = [];
 			for (const filePath of jsonFiles) {
@@ -72,15 +112,14 @@ export default function VitePluginRemoveUnusedTranslations(
 								"utf-8",
 							)
 							.then(() => {
-								log.info(`Updated ${filePath}`);
+								console.info(`Updated ${filePath}`);
 							})
 							.catch((e) => {
-								log.error(`Failed to update ${filePath}:`, e);
+								console.error(`Failed to update ${filePath}:`, e);
 							}),
 					);
 				} catch (error: unknown) {
-					// @ts-ignore
-					log.error(`Failed to process ${filePath}:`, error);
+					console.error(`Failed to process ${filePath}:`, error);
 				}
 			}
 			await Promise.all(filePromises);

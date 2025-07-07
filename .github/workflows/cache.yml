@@ -3,53 +3,56 @@
 name: cache
 
 on:
-    push:
-        branches: [main, dev, staging]
-    workflow_dispatch:
+  push:
+    branches: [main, dev, staging]
+  workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
-    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-    CARGO_TERM_COLOR: always
-    NODE_OPTIONS: "--max-old-space-size=4096"
+  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  CARGO_TERM_COLOR: always
+  NODE_OPTIONS: "--max-old-space-size=4096"
 
 defaults:
-    run:
-        shell: bash
+  run:
+    shell: bash
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Print contexts
-              uses: prosopo/captcha/.github/actions/print_contexts@gha
-              with:
-                INPUTS_CONTEXT: ${{ toJson(inputs) }}
-                NEEDS_CONTEXT: ${{ toJson(needs) }}
-                VARS_CONTEXT: ${{ toJson(vars) }}
-                SECRETS_CONTEXT: ${{ toJson(secrets) }}
-                
-            - uses: actions/checkout@v4
-              with:
-                  submodules: "recursive"
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print contexts
+        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        with:
+          INPUTS_CONTEXT: ${{ toJson(inputs) }}
+          NEEDS_CONTEXT: ${{ toJson(needs) }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-            # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
-            - run: npm cache clean --force
+      - name: Set NX_PARALLEL environment variable
+        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+          
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: 'package.json'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+      # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
+      - run: npm cache clean --force
 
-            - run: npm ci
+      - uses: prosopo/captcha/.github/actions/npm@gha
+        with:
+          npm_ci_args: '--include=dev'
 
-            # install cypress so we don't have to do that every time
-            - run: npx cypress install
+      # clean the nx cache
+      - run: npx nx reset
 
-            - name: Save npm cache
-              uses: prosopo/captcha/.github/actions/save_npm_cache@gha
+      # install cypress so we don't have to do that every time
+      - run: npx cypress install
+
+      - name: Save npm cache
+        uses: prosopo/captcha/.github/actions/save_npm_cache@gha
 

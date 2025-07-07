@@ -3,57 +3,61 @@
 name: lint
 
 on:
-    pull_request:
-        branches: [main, dev, staging, release/*]
-        types: 
-            - opened # when a PR is opened
-            - synchronize # when a PR is pushed to
-            - reopened # when a PR is reopened
-            - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
-    workflow_dispatch:
+  pull_request:
+    branches: [main, dev, staging, release/*]
+    types: 
+      - opened # when a PR is opened
+      - synchronize # when a PR is pushed to
+      - reopened # when a PR is reopened
+      - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+  workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
-    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-    CARGO_TERM_COLOR: always
-    NODE_OPTIONS: "--max-old-space-size=4096"
+  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  CARGO_TERM_COLOR: always
+  NODE_OPTIONS: "--max-old-space-size=4096"
 
 defaults:
-    run:
-        shell: bash
+  run:
+    shell: bash
 
 jobs:
-    check:
-        runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false
-        steps:
-            - name: Print contexts
-              uses: prosopo/captcha/.github/actions/print_contexts@gha
-              with:
-                INPUTS_CONTEXT: ${{ toJson(inputs) }}
-                NEEDS_CONTEXT: ${{ toJson(needs) }}
-                VARS_CONTEXT: ${{ toJson(vars) }}
-                SECRETS_CONTEXT: ${{ toJson(secrets) }}
+  check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Print contexts
+        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        with:
+          INPUTS_CONTEXT: ${{ toJson(inputs) }}
+          NEEDS_CONTEXT: ${{ toJson(needs) }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-            - uses: actions/checkout@v4
-              with:
-                  submodules: "recursive"
+      - name: Set NX_PARALLEL environment variable
+        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-            - name: Restore npm cache
-              uses: prosopo/captcha/.github/actions/restore_npm_cache@gha
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version-file: 'package.json'
-            - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+      - uses: prosopo/captcha/.github/actions/npm@gha
+        with:
+          npm_ci_args: '--include=dev'
 
-            - run: npm ci
+      # if this fails, you need to run `npx nx sync` as something is out of sync wrt deps, configs, etc
+      - name: sync check
+        run: |
 
-            - run: npm run -w @prosopo/lint build
+          # check that the changesets are present for each package which has been modified
+          npx nx sync:check
 
-            - run: npm run lint
+      - run: npm run -w @prosopo/lint build
+
+      - run: npm run lint
 

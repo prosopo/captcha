@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-import { getLogger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +11,15 @@ import { getLogger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import fs from "node:fs";
+import path from "node:path";
 import type { Plugin } from "vite";
 
 export interface ClosePluginOptions {
 	srcDir: string;
 	destDir: string[];
 }
-
-const log = getLogger("Info", "config.vite.vite-plugin-close.js");
 
 /**
  *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.
@@ -34,24 +32,24 @@ export default function VitePluginCloseAndCopy(
 	return {
 		name: "close-plugin", // required, will show up in warnings and errors
 		buildStart() {
-			log.info("Bundle build started");
+			console.info("Bundle build started");
 		},
 		buildEnd(error) {
-			log.info("Build end");
+			console.info("Build end");
 			if (error) {
 				console.log(error);
-				log.error(error);
+				console.error(error);
 			}
 		},
 		closeBundle() {
 			if (options) {
 				for (const destDir of options.destDir) {
 					clearOutputDirJS(__dirname, destDir);
-					log.info(`Bundle cleared from ${options.destDir}`);
+					console.info(`Bundle cleared from ${options.destDir}`);
 					copyBundle(__dirname, options.srcDir, destDir);
-					log.info(`Bundle copied to ${options.destDir}`);
+					console.info(`Bundle copied to ${options.destDir}`);
 				}
-				log.info("Bundle closed");
+				console.info("Bundle closed");
 			}
 		},
 	};
@@ -66,7 +64,7 @@ const clearOutputDirJS = (__dirname: string, destDir: string) =>
 		});
 
 const copyBundle = (__dirname: string, srcDir: string, destDir: string) => {
-	log.info(
+	console.info(
 		"Copying",
 		path.resolve(__dirname, srcDir),
 		"to",

@@ -8,6 +8,9 @@
 	"include": ["src", "src/**/*.json", "src/index.html"],
 	"references": [
 		{
+			"path": "../common"
+		},
+		{
 			"path": "../dotenv"
 		},
 		{
@@ -27,6 +30,9 @@
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
 		},
 		{
 			"path": "../widget-skeleton"

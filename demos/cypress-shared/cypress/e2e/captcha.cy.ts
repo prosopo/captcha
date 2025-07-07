@@ -20,7 +20,7 @@ import { type Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-let captchaType: CaptchaType;
+const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	beforeEach(() => {
@@ -32,8 +32,7 @@ describe("Captchas", () => {
 				console.log("Challenge passed");
 			};
 		});
-		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
-		cy.registerSiteKey(captchaType).then((response) => {
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
 			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
@@ -78,6 +77,9 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(Cypress.env("default_page")).then(() => {
+			// Wait for the procaptcha script to be loaded
+			// This ensures tests work with both async and non-async script loading
+			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
@@ -85,12 +87,12 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		cy.registerSiteKey(CaptchaType.image);
+		cy.registerSiteKey(baseCaptchaType);
 	});
 
 	it("An error is returned if captcha type is set to pow and the wrong captcha type is used in the widget", () => {
-		expect(captchaType).to.not.equal(CaptchaType.pow);
-		cy.registerSiteKey(CaptchaType.pow).then((response) => {
+		expect(baseCaptchaType).to.not.equal(CaptchaType.pow);
+		cy.registerSiteKey(baseCaptchaType, CaptchaType.pow).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
 			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
@@ -99,6 +101,9 @@ describe("Captchas", () => {
 			expect(response.status).to.equal(200);
 		});
 		cy.visit(Cypress.env("default_page"));
+
+		// Wait for the procaptcha script to be loaded after navigation
+		cy.waitForProcaptchaScript();
 
 		cy.task("log", "Clicking the first div...");
 		cy.get("div").first().click();

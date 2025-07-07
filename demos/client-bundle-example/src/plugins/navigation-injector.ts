@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // Vite plugin to inject navigation into HTML files
-import fs from "node:fs";
 import path from "node:path";
 import {
 	type IndexHtmlTransformContext,
@@ -25,10 +24,12 @@ interface CaptchaTypeDetails {
 	exists: boolean;
 }
 
+interface CaptchaType {
+	[key: string]: CaptchaTypeDetails;
+}
+
 interface CaptchaTypes {
-	[key: string]: {
-		[key: string]: CaptchaTypeDetails;
-	};
+	[key: string]: CaptchaType;
 }
 
 export default function navigationInjector(): Plugin {
@@ -37,19 +38,20 @@ export default function navigationInjector(): Plugin {
 		standard: {
 			image: {
 				implicit: { path: "index.html", exists: true },
-				explicit: { path: "image-explicit.html", exists: false },
+				explicit: { path: "image-explicit.html", exists: true },
 			},
 			pow: {
-				implicit: { path: "pow-implicit.html", exists: false },
-				explicit: { path: "pow-explicit.html", exists: false },
+				implicit: { path: "pow-implicit.html", exists: true },
+				explicit: { path: "pow-explicit.html", exists: true },
 			},
 			frictionless: {
-				implicit: {
-					path: "frictionless-implicit.html",
-					exists: false,
-				},
+				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
 			},
+			// slider: {
+			// 	implicit: { path: "slider-implicit.html", exists: true },
+			// 	explicit: { path: "slider-explicit.html", exists: true },
+			// },
 		},
 		invisible: {
 			image: {
@@ -70,6 +72,10 @@ export default function navigationInjector(): Plugin {
 					exists: true,
 				},
 			},
+			// slider: {
+			// 	implicit: { path: "invisible-slider-implicit.html", exists: true },
+			// 	explicit: { path: "invisible-slider-explicit.html", exists: true },
+			// },
 		},
 	};
 
@@ -82,60 +88,64 @@ export default function navigationInjector(): Plugin {
         margin-bottom: 20px;
         transition: all 0.3s ease;
         overflow: hidden;
-        max-height: 500px; /* Initial state - visible */
+        max-height: 500px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       }
       .nav-topbar.collapsed {
-        max-height: 50px; /* Collapsed state - only show toggle button and title */
+        max-height: 60px;
       }
       .nav-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0 15px;
+        padding: 0 20px;
         position: relative;
       }
       .nav-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 0;
+        padding: 12px 0;
         position: relative;
         z-index: 20;
       }
       .nav-title {
         color: white;
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 1.25rem;
+        font-weight: 600;
         margin: 0;
         display: flex;
         align-items: center;
+        gap: 8px;
       }
       .nav-title-text {
-        margin-right: 10px;
+        margin-right: 8px;
       }
       .nav-title-hint {
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: normal;
         opacity: 0;
         transition: opacity 0.3s ease;
+        color: rgba(255,255,255,0.8);
       }
       .collapsed .nav-title-hint {
         opacity: 0.8;
       }
       .nav-toggle {
-        background-color: rgba(0,0,0,0.1);
+        background-color: rgba(255,255,255,0.1);
         color: white;
         border: none;
-        padding: 5px 10px;
+        padding: 8px 12px;
         cursor: pointer;
-        border-radius: 4px;
+        border-radius: 6px;
         z-index: 10;
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: background-color 0.2s ease;
       }
       .nav-toggle:hover {
-        background-color: rgba(0,0,0,0.2);
+        background-color: rgba(255,255,255,0.2);
       }
       .nav-toggle-icon {
         width: 24px;
@@ -162,29 +172,42 @@ export default function navigationInjector(): Plugin {
         opacity: 1;
       }
       .nav-content {
-        padding: 0 0 15px 0;
+        padding: 0 0 20px 0;
         transition: opacity 0.3s ease;
       }
       .collapsed .nav-content {
         opacity: 0;
       }
-      .nav-row {
+      .nav-sections {
         display: flex;
         flex-wrap: wrap;
-        margin-bottom: 15px;
+        gap: 20px;
+      }
+      .nav-section {
+        flex: 1;
+        min-width: 280px;
+      }
+      .nav-section h3 {
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
       }
       .nav-group {
-        flex: 1;
-        min-width: 250px;
-        margin-bottom: 10px;
-        margin-right: 20px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
       }
       .nav-group-title {
-        color: rgba(255,255,255,0.8);
-        font-size: 0.9em;
-        margin: 0 0 5px 0;
-        text-transform: uppercase;
+        color: rgba(255,255,255,0.9);
+        font-size: 0.875rem;
         font-weight: 500;
+        margin: 0 0 8px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
       .nav-group-links {
         list-style: none;
@@ -192,32 +215,149 @@ export default function navigationInjector(): Plugin {
         padding: 0;
       }
       .nav-group-links li {
-        margin: 5px 0;
+        margin: 6px 0;
       }
       .nav-group-links a {
         color: white;
         text-decoration: none;
-        font-weight: bold;
-        padding: 5px 0;
+        font-weight: 500;
+        padding: 6px 8px;
         display: inline-block;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
       }
       .nav-group-links a:hover {
-        text-decoration: underline;
+        background-color: rgba(255,255,255,0.2);
       }
       .nav-group-links .active {
-        border-bottom: 2px solid white;
+        background-color: rgba(255,255,255,0.2);
+        font-weight: 600;
       }
       .nav-group-links .disabled {
         color: rgba(255,255,255,0.5);
         cursor: not-allowed;
+        opacity: 0.7;
       }
       
       @media (max-width: 768px) {
-        .nav-row {
-          flex-direction: column;
+        .nav-container {
+          padding: 0 16px;
+        }
+        .nav-title {
+          font-size: 1.125rem;
         }
         .nav-title-hint {
           display: none;
+        }
+        .nav-sections {
+          flex-direction: column;
+          gap: 16px;
+        }
+        .nav-section {
+          min-width: 100%;
+        }
+        .nav-section h3 {
+          font-size: 0.875rem;
+        }
+        .nav-group {
+          padding: 10px;
+        }
+        .nav-group-title {
+          font-size: 0.8125rem;
+        }
+        .nav-group-links a {
+          padding: 8px 10px;
+          width: 100%;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .nav-topbar {
+          max-height: 60px;
+        }
+        .nav-topbar.collapsed {
+          max-height: 60px;
+        }
+        .nav-title {
+          font-size: 1rem;
+        }
+        .nav-toggle {
+          padding: 6px 10px;
+        }
+      }
+      
+      .nav-group-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .nav-group-dropdown-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-weight: 500;
+        padding: 6px 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+      }
+      
+      .nav-group-dropdown-btn:hover {
+        background-color: rgba(255,255,255,0.2);
+      }
+      
+      .nav-group-dropdown-btn svg {
+        width: 16px;
+        height: 16px;
+        transition: transform 0.2s ease;
+      }
+      
+      .nav-group-dropdown-btn.open svg {
+        transform: rotate(180deg);
+      }
+      
+      .nav-group-dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: rgba(33, 150, 243, 0.95);
+        min-width: 160px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        z-index: 1;
+        border-radius: 4px;
+        padding: 8px 0;
+        margin-top: 4px;
+      }
+      
+      .nav-group-dropdown-btn.open + .nav-group-dropdown-content {
+        display: block;
+      }
+      
+      .nav-group-dropdown-content a {
+        color: white;
+        padding: 8px 16px;
+        text-decoration: none;
+        display: block;
+        transition: background-color 0.2s ease;
+      }
+      
+      .nav-group-dropdown-content a:hover {
+        background-color: rgba(255,255,255,0.2);
+      }
+      
+      .nav-group-dropdown-content a.active {
+        background-color: rgba(255,255,255,0.2);
+        font-weight: 600;
+      }
+      
+      @media (max-width: 768px) {
+        .nav-group-dropdown-content {
+          position: static;
+          box-shadow: none;
+          background-color: rgba(255,255,255,0.1);
+          margin-top: 8px;
         }
       }
     </style>
@@ -230,6 +370,7 @@ export default function navigationInjector(): Plugin {
         const toggleBtn = document.getElementById('nav-toggle');
         const navBar = document.getElementById('nav-topbar');
         const navHeader = document.getElementById('nav-header');
+        const isMobile = window.innerWidth <= 768;
         
         // Check if navigation was previously collapsed
         const navCollapsed = localStorage.getItem('navCollapsed') === 'true';
@@ -261,20 +402,21 @@ export default function navigationInjector(): Plugin {
         
         // Toggle on button click
         toggleBtn.addEventListener('click', function(e) {
-          e.stopPropagation(); // Prevent header click from firing
+          e.stopPropagation();
           toggleNav();
         });
         
-        // Expand on toggle button hover when collapsed
-        toggleBtn.addEventListener('mouseenter', function() {
-          if (navBar.classList.contains('collapsed')) {
-            expandNav();
-          }
-        });
+        // Expand on toggle button hover when collapsed (desktop only)
+        if (!isMobile) {
+          toggleBtn.addEventListener('mouseenter', function() {
+            if (navBar.classList.contains('collapsed')) {
+              expandNav();
+            }
+          });
+        }
         
         // Toggle on header click
         navHeader.addEventListener('click', function(e) {
-          // Don't toggle if a link within the header was clicked
           if (e.target.tagName === 'A') {
             return;
           }
@@ -283,6 +425,37 @@ export default function navigationInjector(): Plugin {
         
         // Make the header appear clickable with cursor style
         navHeader.style.cursor = 'pointer';
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+          const newIsMobile = window.innerWidth <= 768;
+          if (newIsMobile !== isMobile) {
+            if (newIsMobile) {
+              // On mobile, collapse the nav by default
+              collapseNav();
+            } else {
+              // On desktop, expand the nav by default
+              expandNav();
+            }
+          }
+        });
+        
+        // Handle dropdown toggles
+        document.querySelectorAll('.nav-group-dropdown-btn').forEach(button => {
+          button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.classList.toggle('open');
+          });
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.nav-group-dropdown')) {
+            document.querySelectorAll('.nav-group-dropdown-btn').forEach(button => {
+              button.classList.remove('open');
+            });
+          }
+        });
       });
     </script>
   `;
@@ -346,7 +519,7 @@ export default function navigationInjector(): Plugin {
                 </button>
               </div>
               <div class="nav-content">
-                <div class="nav-row">
+                <div class="nav-sections">
                   ${standardNav}
                   ${invisibleNav}
                 </div>
@@ -354,28 +527,6 @@ export default function navigationInjector(): Plugin {
             </div>
           </div>
         `;
-
-				// Replace environment variables
-				const bundleUrl =
-					process.env.VITE_BUNDLE_URL ||
-					"https://staging-js.prosopo.io/js/procaptcha.bundle.js";
-
-				console.log(`Using bundle URL: ${bundleUrl}`);
-				html = html.replace(/%VITE_BUNDLE_URL%/g, bundleUrl);
-
-				// Replace other environment variables
-				if (process.env.PROSOPO_SITE_KEY) {
-					html = html.replace(
-						/%PROSOPO_SITE_KEY%/g,
-						process.env.PROSOPO_SITE_KEY,
-					);
-				}
-				if (process.env.PROSOPO_SERVER_URL) {
-					html = html.replace(
-						/%PROSOPO_SERVER_URL%/g,
-						process.env.PROSOPO_SERVER_URL,
-					);
-				}
 
 				// Inject navigation after <body> tag and script before </body>
 				if (html.includes("<body>") && html.includes("</body>")) {
@@ -402,49 +553,46 @@ export default function navigationInjector(): Plugin {
 			const typeTitle = typeName.charAt(0).toUpperCase() + typeName.slice(1);
 			const links: string[] = [];
 
-			for (const [implName, implDetails] of Object.entries(captchaType)) {
+			// Create simple buttons for each implementation
+			for (const [implName, implDetails] of Object.entries(
+				captchaType as CaptchaType,
+			)) {
 				const pagePath = implDetails.path;
 				const pageExists = implDetails.exists;
+				const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
 
 				// Calculate relative path
 				let href: string;
 				if (currentPath.includes("/")) {
-					// We're in a subdirectory
 					const depth = (currentPath.match(/\//g) || []).length;
 					href = "../".repeat(depth) + pagePath;
 				} else {
-					// We're in the src root
 					href = pagePath;
 				}
 
-				// Mark current page as active and check if the file exists
-				const isActive = currentPath === pagePath;
-				const implTitle = implName.charAt(0).toUpperCase() + implName.slice(1);
-
-				let linkHtml: string;
 				if (pageExists) {
-					const activeClass = isActive ? ' class="active"' : "";
-					linkHtml = `<a href="${href}"${activeClass}>${implTitle}</a>`;
+					const activeClass = currentPath === pagePath ? ' class="active"' : "";
+					links.push(`<a href="${href}"${activeClass}>${implTitle}</a>`);
 				} else {
-					linkHtml = `<span class="disabled" title="Coming Soon">${implTitle}</span>`;
+					links.push(
+						`<span class="disabled" title="Coming Soon">${implTitle}</span>`,
+					);
 				}
-
-				links.push(`<li>${linkHtml}</li>`);
 			}
 
 			navGroups.push(`
         <div class="nav-group">
           <div class="nav-group-title">${typeTitle}</div>
-          <ul class="nav-group-links">
+          <div class="nav-group-links">
             ${links.join("\n            ")}
-          </ul>
+          </div>
         </div>
       `);
 		}
 
 		return `
       <div class="nav-section">
-        <h3 style="color: white; margin: 0 0 10px 0;">${title}</h3>
+        <h3>${title}</h3>
         <div class="nav-row">
           ${navGroups.join("\n          ")}
         </div>

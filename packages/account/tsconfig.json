@@ -17,10 +17,16 @@
 			"path": "../fingerprint"
 		},
 		{
+			"path": "../keyring"
+		},
+		{
 			"path": "../types"
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

@@ -13,7 +13,13 @@
 			"path": "../types"
 		},
 		{
+			"path": "../types-database"
+		},
+		{
 			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

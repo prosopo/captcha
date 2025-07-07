@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { signatureVerify } from "@polkadot/util-crypto";
 import { ProsopoContractError } from "@prosopo/common";
-import { verifyRecency } from "@prosopo/util";
+import { signatureVerify } from "@prosopo/util-crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
 }));
 
@@ -95,6 +94,8 @@ describe("Validation Functions", () => {
 						failedFuncName: "checkPowSignature",
 						signature,
 						signatureType: undefined,
+						address: "testAddress",
+						message: "testChallenge",
 					},
 				}),
 			);

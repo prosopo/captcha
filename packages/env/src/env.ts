@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
-import { Databases, ProviderDatabase } from "@prosopo/database";
+import {
+	type Logger,
+	ProsopoEnvError,
+	getLogger,
+	parseLogLevel,
+} from "@prosopo/common";
+import { ProviderDatabase } from "@prosopo/database";
+import { Keyring } from "@prosopo/keyring";
+import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
-import type { ProsopoBasicConfigOutput } from "@prosopo/types";
-import type { IDatabase } from "@prosopo/types-database";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
-import { get } from "@prosopo/util";
 
 export class Environment implements ProsopoEnvironment {
-	config: ProsopoBasicConfigOutput;
+	config: ProsopoConfigOutput;
 	db: ProviderDatabase | undefined;
 	defaultEnvironment: EnvironmentTypes;
 	logger: Logger;
@@ -33,7 +36,7 @@ export class Environment implements ProsopoEnvironment {
 	authAccount: KeyringPair | undefined;
 
 	constructor(
-		config: ProsopoBasicConfigOutput,
+		config: ProsopoConfigOutput,
 		pair?: KeyringPair,
 		authAccount?: KeyringPair,
 	) {
@@ -41,7 +44,10 @@ export class Environment implements ProsopoEnvironment {
 		this.defaultEnvironment = this.config.defaultEnvironment;
 		this.pair = pair;
 		this.authAccount = authAccount;
-		this.logger = getLogger(this.config.logLevel, "ProsopoEnvironment");
+		this.logger = getLogger(
+			parseLogLevel(this.config.logLevel),
+			"ProsopoEnvironment",
+		);
 
 		this.keyring = new Keyring({
 			type: "sr25519",
@@ -105,11 +111,11 @@ export class Environment implements ProsopoEnvironment {
 				await this.importDatabase();
 			}
 			if (this.db && !this.db.connected) {
-				this.logger.warn(
-					`Database connection is not ready (state: ${this.db.connection?.readyState}), reconnecting...`,
-				);
+				this.logger.warn(() => ({
+					msg: `Database connection is not ready (state: ${this.db?.connection?.readyState}), reconnecting...`,
+				}));
 				await this.db.connect();
-				this.logger.info("Connected to db");
+				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
@@ -124,12 +130,18 @@ export class Environment implements ProsopoEnvironment {
 			if (this.config.database) {
 				const dbConfig = this.config.database[this.defaultEnvironment];
 				if (dbConfig) {
-					this.db = new ProviderDatabase(
-						dbConfig.endpoint,
-						dbConfig.dbname,
-						dbConfig.authSource,
-						this.logger,
-					);
+					this.db = new ProviderDatabase({
+						mongo: {
+							url: dbConfig.endpoint,
+							dbname: dbConfig.dbname,
+							authSource: dbConfig.authSource,
+						},
+						redis: {
+							url: this.config.redisConnection.url,
+							password: this.config.redisConnection.password,
+						},
+						logger: this.logger,
+					});
 					await this.db.connect();
 				}
 			}

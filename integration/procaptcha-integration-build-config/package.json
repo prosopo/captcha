@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-integration-build-config",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -11,7 +11,7 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose"
+		"build": "tsc --build"
 	},
 	"dependencies": {
 		"deepmerge": "4.3.1",

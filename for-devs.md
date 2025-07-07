@@ -12,9 +12,9 @@ Common:
 Client-side (browser):
 
 * `procaptcha-bundle` - Displaying captcha widget
-    - `procaptcha-frictionless`
+    - `procaptcha-frictionless` (Dynamic CAPTCHA that does client-side detection to determine whether to serve PoW/Image)
     - `procaptcha-react` (image)
-    - `procaptcha-pow`
+    - `procaptcha-pow` (Proof-of-Work)
 
 * `widget-skeleton` - Widget skeleton wrapped into the web component
 
@@ -61,7 +61,6 @@ To set up the environment for testing, run the following commands:
 
 ```
 cp demos/client-example-server/env.development demos/client-example-server/.env.test
-cp demos/client-example/env.development demos/client-example/.env.test
 cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
 cp dev/scripts/env.test .env.test
 cp dev/scripts/env.test dev/scripts/.env.test
@@ -74,13 +73,13 @@ cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 The DB is necessary for all kind of the tests. Since the DB is docked, to start the DB service run the following:
 
 ```
-sudo docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
 ```
 
 Note: After the testing is done, stop it using the `down` command:
 
 ```
-sudo docker compose --file ./docker/docker-compose.test.yml down
+docker compose --file ./docker/docker-compose.test.yml down
 ```
 
 ### 4.3) DB population
@@ -92,7 +91,7 @@ siteKeys, etc.
 NODE_ENV="test" npm run setup
 ```
 
-### 4.4) Running all unit tests
+### 4.4) Running all the unit tests
 
 Launch services:
 
@@ -114,29 +113,12 @@ npm run test
 Tip: You can also run package-related unit tests individually, by running `npm run test` inside the target package
 folder.
 
-### 4.5) Running E2E Client Tests
+### 4.5) Running E2E Bundle Tests
 
 Launch services:
 
 ```
 npm run -w @prosopo/client-example-server build && NODE_ENV=test npm run start:server
-NODE_ENV=test npm run start:demo
-NODE_ENV=test npm run start:provider:admin
-```
-
-Run tests:
-
-```
-NODE_ENV=test npm run -w @prosopo/cypress-shared cypress:open:client-example
-```
-
-### 4.6) Running E2E Bundle Tests
-
-Launch services:
-
-```
-npm run -w @prosopo/client-example-server build && NODE_ENV=test npm run start:server
-NODE_ENV=test npm run start:demo
 NODE_ENV=test npm run start:provider:admin
 NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
 NODE_ENV=test npm run start:bundle

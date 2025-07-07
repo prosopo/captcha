@@ -17,15 +17,15 @@ concurrency:
   cancel-in-progress: true
 
 env:
-    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-    CARGO_TERM_COLOR: always
-    NODE_OPTIONS: "--max-old-space-size=4096"
-    NODE_ENV: "test"
+  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+  CARGO_TERM_COLOR: always
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  NODE_ENV: "test"
 
 defaults:
-    run:
-        shell: bash
+  run:
+    shell: bash
 
 jobs:
   check:
@@ -40,38 +40,30 @@ jobs:
           VARS_CONTEXT: ${{ toJson(vars) }}
           SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
+      - name: Set NX_PARALLEL environment variable
+        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+
       - uses: actions/checkout@v4
         with:
-            submodules: "recursive"
+          submodules: "recursive"
 
-      - name: Restore npm cache
-        uses: prosopo/captcha/.github/actions/restore_npm_cache@gha
-
-      - uses: actions/setup-node@v4
+      - uses: prosopo/captcha/.github/actions/npm@gha
         with:
-          node-version-file: 'package.json'
-      - run: npm i -g "npm@$(jq -r .engines.npm < package.json)"
+          npm_ci_args: '--include=dev'
 
-      - run: npm ci
+      - name: env
+        run: |
+          # Copy the rococo env file to production env file
+          echo "Copying the rococo env to production env file in procaptcha-bundle"
+          cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
       # build all packages in workspace
       - run: npm run build:all
-      - run: npm run build:all:cjs
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         run: |
-            NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle bundle:webpack
-
-      - name: Build JS bundle
-        run: |
-          set -euxo pipefail # stop on errors, print commands, fail on pipe fails
-
-            # Copy the rococo env file to production env file
-            echo "Copying the rococo env to production env file in procaptcha-bundle"
-            cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
-
-            NODE_ENV="production" npm run -w @prosopo/procaptcha-bundle bundle
+          NODE_ENV="development" npm run -w @prosopo/procaptcha-bundle build:bundle:webpack
 
       - name: Start the docker images
         run: |
@@ -83,23 +75,24 @@ jobs:
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-            cp demos/client-example-server/env.development demos/client-example-server/.env.test
-            cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
-            cp dev/scripts/env.test .env.test
-            cp dev/scripts/env.test dev/scripts/.env.test
-            cp dev/scripts/env.test packages/cli/.env.test
-            cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+          cp demos/client-example-server/env.development demos/client-example-server/.env.test
+          cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
+          cp dev/scripts/env.test .env.test
+          cp dev/scripts/env.test dev/scripts/.env.test
+          cp dev/scripts/env.test packages/cli/.env.test
+          cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
 
-            NODE_ENV="test" npm run setup
-            
-            echo NODE_ENV: "$NODE_ENV"
+          NODE_ENV="test" npm run setup
 
+          echo NODE_ENV: "$NODE_ENV"
 
       - name: Start services and run tests
+        env:
+          NX_PARALLEL: "1"
         run: |
           npx concurrently \
-          "NODE_ENV=test npm run start:provider" \
-          "sleep 10s && NODE_ENV=test npm run test" \
-           --success "first" --kill-others
+            "NODE_ENV=test npm run start:provider" \
+            "sleep 10s && NODE_ENV=test npm run test:all" \
+            --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down

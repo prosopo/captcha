@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "2.5.5",
+	"version": "3.0.0",
 	"description": "Prosopo config library",
 	"main": "./dist/index.js",
 	"type": "module",
@@ -21,8 +21,9 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "vite build --config vite.cjs.config.ts"
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV build --config vite.cjs.config.ts",
+		"build": "run-s build:tsc build:bundle"
 	},
 	"engines": {
 		"node": "20",
@@ -36,9 +37,6 @@
 		"@babel/plugin-transform-react-jsx": "7.25.2",
 		"@babel/plugin-transform-runtime": "7.25.4",
 		"@babel/preset-env": "7.25.4",
-		"@prosopo/common": "2.5.5",
-		"@prosopo/types": "2.5.5",
-		"@prosopo/util": "2.5.5",
 		"@rollup/plugin-alias": "5.1.0",
 		"@rollup/plugin-babel": "6.0.4",
 		"@rollup/plugin-commonjs": "26.0.1",
@@ -51,6 +49,7 @@
 		"@rollup/plugin-wasm": "6.2.2",
 		"@vitejs/plugin-react": "4.3.4",
 		"babel-loader": "9.2.1",
+		"consola": "3.2.3",
 		"css-loader": "7.1.2",
 		"esbuild": "0.23.1",
 		"express": "4.21.2",
@@ -84,6 +83,7 @@
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
 		"vite": "6.2.3",
+		"vite-plugin-node-polyfills": "0.23.0",
 		"vitest": "3.0.9",
 		"webpack-cli": "5.1.4",
 		"webpack-dev-server": "5.1.0"

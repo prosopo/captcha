@@ -15,8 +15,6 @@
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import { CaptchaType, Tier } from "@prosopo/types";
 import {
-	type BlockRule,
-	BlockRuleType,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -40,7 +38,7 @@ import {
 	type Timestamp,
 	TimestampSchema,
 } from "@prosopo/types";
-import type { RulesStorage } from "@prosopo/user-access-policy";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
@@ -338,6 +336,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
+	threshold: { type: Number, required: true, default: 0.8 },
 });
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
@@ -470,6 +469,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	getSolutions(datasetId: string): Promise<SolutionRecord[]>;
 
+	getSolutionByCaptchaId(captchaId: string): Promise<SolutionRecord | null>;
+
 	getDataset(datasetId: string): Promise<DatasetWithIds>;
 
 	getRandomCaptcha(
@@ -500,6 +501,7 @@ export interface IProviderDatabase extends IDatabase {
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
 		ipAddress: bigint,
+		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
 
@@ -654,7 +656,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
 
-	getUserAccessRulesStorage(): RulesStorage;
+	getUserAccessRulesStorage(): AccessRulesStorage;
 
 	storeDetectorKey(detectorKey: string): Promise<void>;
 

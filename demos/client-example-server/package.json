@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/client-example-server",
-	"version": "2.5.5",
+	"version": "2.7.6",
 	"description": "Backend for client-example",
 	"main": "dist/app.js",
 	"type": "module",
@@ -13,9 +13,9 @@
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
 		"start": "node ./dist/app.js",
 		"start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
-		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
+		"build": "run-s build:tsc build:bundle",
 		"clean": "tsc --build --clean"
 	},
 	"repository": {
@@ -32,11 +32,11 @@
 		"@noble/hashes": "1.5.0",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "2.5.5",
-		"@prosopo/dotenv": "2.5.5",
-		"@prosopo/server": "2.5.5",
-		"@prosopo/types": "2.5.5",
-		"@prosopo/util": "2.5.5",
+		"@prosopo/common": "3.0.0",
+		"@prosopo/dotenv": "3.0.0",
+		"@prosopo/server": "2.9.2",
+		"@prosopo/types": "3.0.0",
+		"@prosopo/util": "3.0.0",
 		"@typegoose/auto-increment": "4.6.0",
 		"cors": "2.8.5",
 		"express": "4.21.2",
@@ -46,7 +46,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.5.5",
+		"@prosopo/config": "3.0.0",
 		"@types/jsonwebtoken": "9.0.6",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",

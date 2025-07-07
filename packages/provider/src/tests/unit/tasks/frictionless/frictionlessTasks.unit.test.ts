@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
+
+import type { KeyringPair } from "@prosopo/types";
 import {
 	FrictionlessPenalties,
 	type ProsopoConfigOutput,
@@ -20,6 +21,10 @@ import type {
 	FrictionlessTokenId,
 	IProviderDatabase,
 } from "@prosopo/types-database";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+} from "@prosopo/user-access-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FrictionlessManager } from "../../../../tasks/frictionless/frictionlessTasks.js";
 
@@ -66,13 +71,13 @@ describe("Frictionless Task Manager", () => {
 
 	describe("scoreIncreaseAccessPolicy", () => {
 		it("should return the correct score increase for 0 score", async () => {
-			const accessRule = {
-				isUserBlocked: false,
-				score: 1,
+			const accessPolicy: AccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				frictionlessScore: 1,
 			};
 			const tokenId = "tokenId" as unknown as FrictionlessTokenId;
 			const result = await frictionlessTaskManager.scoreIncreaseAccessPolicy(
-				accessRule,
+				accessPolicy,
 				0,
 				0,
 				tokenId,
@@ -80,14 +85,14 @@ describe("Frictionless Task Manager", () => {
 			expect(result).toBe(1);
 		});
 		it("should return the correct score increase for an existing score", async () => {
-			const accessRule = {
-				isUserBlocked: false,
-				score: 1,
+			const accessPolicy: AccessPolicy = {
+				type: AccessPolicyType.Restrict,
+				frictionlessScore: 1,
 			};
 			const existingScore = 0.1;
 			const tokenId = "tokenId" as unknown as FrictionlessTokenId;
 			const result = await frictionlessTaskManager.scoreIncreaseAccessPolicy(
-				accessRule,
+				accessPolicy,
 				existingScore,
 				existingScore,
 				tokenId,

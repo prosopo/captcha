@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vite-plugin-watch-workspace",
-	"version": "2.5.5",
+	"version": "2.6.2",
 	"description": "Vite plugin for watching and rebuilding external files",
 	"main": "./dist/index.js",
 	"type": "module",
@@ -13,8 +13,9 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
+		"build": "run-s build:tsc build:bundle"
 	},
 	"engines": {
 		"node": "20",
@@ -23,7 +24,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/config": "2.5.5",
+		"@prosopo/config": "3.0.0",
 		"debug": "4.3.7",
 		"esbuild": "0.23.1",
 		"express": "4.21.2",

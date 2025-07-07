@@ -1,0 +1,66 @@
+{
+	"name": "@prosopo/util-crypto",
+	"version": "13.5.1",
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"private": false,
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"scripts": {
+		"clean": "tsc --build --clean",
+		"build:tsc": "tsc --build",
+		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV --config vite.cjs.config.ts build",
+		"build": "run-s build:tsc build:bundle",
+		"cli": "node ./dist/js/cli.js",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+	},
+	"main": "./dist/index.js",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		},
+		"./mnemonic/bip39": {
+			"types": "./dist/mnemonic/bip39.d.ts",
+			"import": "./dist/mnemonic/bip39.js",
+			"require": "./dist/cjs/mnemonic/bip39.cjs",
+			"default": "./dist/mnemonic/bip39.js"
+		}
+	},
+	"types": "./dist/index.d.ts",
+	"dependencies": {
+		"@noble/curves": "1.9.2",
+		"@noble/hashes": "1.8.0",
+		"@polkadot/util": "12.6.2",
+		"@polkadot/x-randomvalues": "12.6.2",
+		"@scure/base": "^1.1.7",
+		"@scure/sr25519": "0.2.0"
+	},
+	"devDependencies": {
+		"@vitest/coverage-v8": "3.0.9",
+		"concurrently": "9.0.1",
+		"del-cli": "6.0.0",
+		"npm-run-all": "2.1.0",
+		"tslib": "2.7.0",
+		"tsx": "4.19.1",
+		"typescript": "5.6.2",
+		"vite": "6.2.3",
+		"vitest": "3.0.9"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git"
+	},
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org"
+	},
+	"description": "Utility package to house all code that is not specific to prosopo. E.g. random number generation, string manipulation, etc.",
+	"sideEffects": false
+}

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-wrapper",
-	"version": "1.0.0",
+	"version": "1.1.1",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -17,12 +17,12 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist && del-cli ./.svelte-kit",
-		"package": "svelte-package -i ./src -o ./dist",
-		"build": "npm run package && del-cli ./.svelte-kit",
-		"dev": "npm run package -- -w"
+		"svpkg": "svelte-package -i ./src -o ./dist",
+		"build": "npm run svpkg && del-cli ./.svelte-kit",
+		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": ">=2.5.4"
+		"@prosopo/procaptcha-wrapper": "2.6.3"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
