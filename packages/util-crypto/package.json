@@ -18,18 +18,6 @@
 	},
 	"main": "./dist/index.js",
 	"type": "module",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		},
-		"./mnemonic/bip39": {
-			"types": "./dist/mnemonic/bip39.d.ts",
-			"import": "./dist/mnemonic/bip39.js",
-			"require": "./dist/cjs/mnemonic/bip39.cjs",
-			"default": "./dist/mnemonic/bip39.js"
-		}
-	},
 	"types": "./dist/index.d.ts",
 	"dependencies": {
 		"@noble/curves": "1.9.2",
