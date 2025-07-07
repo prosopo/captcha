@@ -1,7 +1,5 @@
 # @prosopo/procaptcha-wrapper
 
-<<<<<<< HEAD
-=======
 ## 2.6.4
 ### Patch Changes
 
@@ -9,7 +7,6 @@
   - @prosopo/locale@3.0.1
   - @prosopo/types@3.0.1
 
->>>>>>> main
 ## 2.6.3
 ### Patch Changes
 

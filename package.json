@@ -1,10 +1,7 @@
 {
 	"name": "@prosopo/captcha",
 	"version": "3.0.0",
-<<<<<<< HEAD
-=======
 	"author": "Prosopo",
->>>>>>> main
 	"type": "module",
 	"author": "Prosopo",
 	"repository": {
@@ -102,14 +99,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-<<<<<<< HEAD
-		"vite": "6.2.3",
-		"vitest": "3.0.9",
-		"@prosopo/config": "3.0.0"
-=======
 		"vite": "6.3.5",
 		"vitest": "3.0.9"
->>>>>>> main
 	},
 	"overrides": {
 		"@types/express-serve-static-core": "4.19.6"
