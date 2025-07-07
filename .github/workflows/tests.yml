@@ -53,7 +53,8 @@ jobs:
 
       # build all packages in workspace
       - run: npm run build:all
-      - run: npm run build:all:cjs
+      # build:all runs build:cjs so we don't need to run build:all:cjs
+      # - run: npm run build:all:cjs
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
