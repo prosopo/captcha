@@ -25,9 +25,7 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "echo no tests"
 	},
-	"browserslist": [
-		"> 0.5%, last 2 versions, not dead"
-	],
+	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@prosopo/common": "3.0.0",
 		"@prosopo/locale": "3.0.0",

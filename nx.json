@@ -2,47 +2,25 @@
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
 	"targetDefaults": {
 		"build": {
-			"dependsOn": [
-				"^lint",
-				"^typecheck",
-				"^build",
-				"lint",
-				"typecheck"
-			]
+			"dependsOn": ["^lint", "^typecheck", "^build", "lint", "typecheck"]
 		},
 		"build:cjs": {
-			"dependsOn": [
-				"^typecheck",
-				"^lint",
-				"^build:cjs",
-				"lint",
-				"typecheck"
-			]
+			"dependsOn": ["^typecheck", "^lint", "^build:cjs", "lint", "typecheck"]
 		},
 		"bundle": {
-			"dependsOn": [
-				"build"
-			]
+			"dependsOn": ["build"]
 		},
 		"bundle:webpack": {
-			"dependsOn": [
-				"build:cjs"
-			]
+			"dependsOn": ["build:cjs"]
 		},
 		"test": {
-			"dependsOn": [
-				"build"
-			]
+			"dependsOn": ["build"]
 		},
 		"typecheck": {
-			"dependsOn": [
-				"^typecheck"
-			]
+			"dependsOn": ["^typecheck"]
 		},
 		"lint": {
-			"dependsOn": [
-				"^lint"
-			]
+			"dependsOn": ["^lint"]
 		},
 		"*": {
 			"cache": true
@@ -50,9 +28,7 @@
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": [
-			"*"
-		],
+		"projects": ["*"],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
