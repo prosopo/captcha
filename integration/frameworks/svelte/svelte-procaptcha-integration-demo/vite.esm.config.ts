@@ -17,8 +17,11 @@ import { ViteEsmConfig } from "@prosopo/config";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 
 export default async function () {
-	const config = await ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"))
-	config.plugins = config.plugins || []
+	const config = await ViteEsmConfig(
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
+	);
+	config.plugins = config.plugins || [];
 	config.plugins.push(svelte());
 	return config;
 }

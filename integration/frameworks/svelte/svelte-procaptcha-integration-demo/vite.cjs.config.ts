@@ -20,7 +20,7 @@ export default async function () {
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
 	);
-	config.plugins = config.plugins || []
+	config.plugins = config.plugins || [];
 	config.plugins.push(svelte());
 	return config;
 }
