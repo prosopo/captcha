@@ -14,7 +14,11 @@
 
 import path from "node:path";
 import { ViteEsmConfig } from "@prosopo/config";
+import vue from '@vitejs/plugin-vue'
 
-export default function () {
-	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
+export default async function () {
+	const config = await ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"))
+	config.plugins = config.plugins || []
+	config.plugins.push(vue());
+	return config;
 }
