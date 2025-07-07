@@ -16,7 +16,7 @@ import path from "node:path";
 import i18n from "i18next";
 import FSBackend from "i18next-fs-backend/cjs"; // https://github.com/i18next/i18next-fs-backend/issues/57
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
-import { LanguageSchema, Languages } from "./translations.js";
+import { i18nSharedOptions } from "./i18SharedOptions.js";
 import { isServerSide } from "./util.js";
 
 const loadPath =
@@ -35,10 +35,7 @@ export function initializeI18n() {
 			.use(FSBackend)
 			.use(lngDetector) // this line should switch the language to the one the user reports in the Accept-Language header
 			.init({
-				debug: process.env.PROSOPO_LOG_LEVEL === "debug",
-				fallbackLng: LanguageSchema.enum.en,
-				nonExplicitSupportedLngs: true,
-				supportedLngs: Object.values(Languages),
+				...i18nSharedOptions,
 				ns: ["translation"],
 				backend: {
 					loadPath,
