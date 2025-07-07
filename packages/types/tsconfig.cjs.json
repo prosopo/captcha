@@ -16,9 +16,6 @@
 		},
 		{
 			"path": "../locale/tsconfig.cjs.json"
-		},
-		{
-			"path": "../util/tsconfig.cjs.json"
 		}
 	]
 }
