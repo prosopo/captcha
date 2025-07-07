@@ -47,6 +47,7 @@ export function initializeI18n() {
 				fallbackLng: LanguageSchema.enum.en,
 				namespace: "translation",
 				supportedLngs: Languages,
+				nonExplicitSupportedLngs: true,
 				backend: {
 					backends: [
 						HttpBackend, // if a namespace can't be loaded via normal http-backend loadPath, then the inMemoryLocalBackend will try to return the correct resources
