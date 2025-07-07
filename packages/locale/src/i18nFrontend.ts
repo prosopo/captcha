@@ -19,7 +19,6 @@ import HttpBackend from "i18next-http-backend";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { initReactI18next } from "react-i18next";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
-import { LanguageSchema, Languages } from "./translations.js";
 
 const reactOptions: InitOptions = {
 	react: {
@@ -41,7 +40,15 @@ export function initializeI18n() {
 		i18n
 			// @ts-ignore
 			.use(ChainedBackend)
-			.use(I18nextBrowserLanguageDetector)
+			.use(
+				new I18nextBrowserLanguageDetector(null, {
+					order: ["cookie", "localStorage", "navigator"],
+					lookupQuerystring: "lng",
+					lookupCookie: "i18next",
+					lookupLocalStorage: "i18nextLng",
+					caches: ["localStorage", "cookie"],
+				}),
+			)
 			.use(initReactI18next)
 			.init({
 				...i18nSharedOptions,

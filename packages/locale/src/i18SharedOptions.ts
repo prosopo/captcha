@@ -18,13 +18,5 @@ export const i18nSharedOptions = {
 	fallbackLng: LanguageSchema.enum.en,
 	namespace: "translation",
 	supportedLngs: Object.values(Languages),
-	nonExplicitSupportedLngs: true,
-	detection: {
-		order: ["querystring", "cookie", "localStorage", "navigator"],
-		lookupQuerystring: "lng",
-		lookupCookie: "i18next",
-		lookupLocalStorage: "i18nextLng",
-		caches: ["localStorage", "cookie"],
-		checkWhitelist: true, // Prevents loading unsupported variants like en-GB
-	},
+	nonExplicitSupportedLngs: false,
 };
