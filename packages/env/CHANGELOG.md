@@ -1,5 +1,15 @@
 # @prosopo/env
 
+## 3.0.3
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types-database@3.0.3
+  - @prosopo/database@3.0.3
+  - @prosopo/types@3.0.2
+  - @prosopo/types-env@2.7.7
+  - @prosopo/common@3.0.2
+
 ## 3.0.2
 ### Patch Changes
 
