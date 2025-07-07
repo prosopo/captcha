@@ -53,9 +53,8 @@ const main = async (args: {
 	}
 };
 
-main({
-	pkgJsonPath: z.string().parse(process.argv[2]),
-}).catch((err) => {
-	console.error(err);
-	process.exit(1);
-});
+export const scripts = async () => {
+	await main({
+		pkgJsonPath: z.string().parse(process.argv[2]),
+	});
+};

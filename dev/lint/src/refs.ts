@@ -231,6 +231,8 @@ const validateDependencies = async (args: {
 	return wrongTsConfigs;
 };
 
-validateWorkspace({
-	packageJsonPath: z.string().parse(process.argv[2]),
-});
+export const refs = async () => {
+	await validateWorkspace({
+		packageJsonPath: z.string().parse(process.argv[2]),
+	});
+};

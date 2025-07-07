@@ -15,7 +15,7 @@
 		}
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
+		"test": "echo no tests",
 		"clean": "del-cli ./dist && del-cli ./.svelte-kit",
 		"svpkg": "svelte-package -i ./src -o ./dist",
 		"build": "npm run svpkg && del-cli ./.svelte-kit",

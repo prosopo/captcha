@@ -16,7 +16,7 @@
 		}
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
+		"test": "echo no tests",
 		"clean": "del-cli ./dist",
 		"build": "ng-packagr -p ng-package.json",
 		"dev": "npm run build -- --watch"

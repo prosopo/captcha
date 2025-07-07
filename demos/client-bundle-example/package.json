@@ -7,7 +7,7 @@
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
+		"test": "echo no tests",
 		"build:tsc": "tsc --build",
 		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
 		"build": "run-s build:tsc build:bundle",

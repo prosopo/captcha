@@ -9,7 +9,7 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
-		"test": "echo \"No test specified\"",
+		"test": "echo no tests",
 		"clean": "tsc --build --clean",
 		"build": "tsc --build"
 	},
