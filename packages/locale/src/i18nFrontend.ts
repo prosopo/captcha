@@ -18,6 +18,7 @@ import ChainedBackend from "i18next-chained-backend";
 import HttpBackend from "i18next-http-backend";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { initReactI18next } from "react-i18next";
+import { i18nSharedOptions } from "./i18SharedOptions.js";
 import { LanguageSchema, Languages } from "./translations.js";
 
 const reactOptions: InitOptions = {
@@ -43,11 +44,7 @@ export function initializeI18n() {
 			.use(I18nextBrowserLanguageDetector)
 			.use(initReactI18next)
 			.init({
-				debug: true,
-				fallbackLng: LanguageSchema.enum.en,
-				namespace: "translation",
-				supportedLngs: Object.values(Languages),
-				nonExplicitSupportedLngs: true,
+				...i18nSharedOptions,
 				backend: {
 					backends: [
 						HttpBackend, // if a namespace can't be loaded via normal http-backend loadPath, then the inMemoryLocalBackend will try to return the correct resources
