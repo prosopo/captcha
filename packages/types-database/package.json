@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-database",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"description": "Types for prosopo database",
 	"main": "dist/index.js",
 	"type": "module",
@@ -33,7 +33,7 @@
 	"dependencies": {
 		"@prosopo/common": "3.0.0",
 		"@prosopo/types": "3.0.0",
-		"@prosopo/user-access-policy": "3.0.0",
+		"@prosopo/user-access-policy": "3.1.0",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",

@@ -1,5 +1,11 @@
 # @prosopo/types-env
 
+## 2.7.5
+### Patch Changes
+
+- Updated dependencies [913f2a6]
+  - @prosopo/types-database@3.0.1
+
 ## 2.7.4
 ### Patch Changes
 
