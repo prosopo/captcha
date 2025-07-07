@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.1.0
+### Minor Changes
+
+- 913f2a6: Make custom expiration times work in redis. Make redis internal only and persist data
+
 ## 3.0.0
 ### Major Changes
 
