@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { blake2b } from "@noble/hashes/blake2b";
-import { getRootDir, getTestResultsDir } from "@prosopo/workspace";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +16,7 @@ import { getRootDir, getTestResultsDir } from "@prosopo/workspace";
 // limitations under the License.
 import { CaptchasContainerSchema, DataSchema } from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";
+import { getRootDir, getTestResultsDir } from "@prosopo/workspace";
 import sharp from "sharp";
 import { afterAll, beforeAll, describe, test } from "vitest";
 import { Flatten } from "../commands/flatten.js";
