@@ -1,5 +1,18 @@
 # @prosopo/client-example-server
 
+## 2.7.8
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/dotenv@3.0.1
+  - @prosopo/server@2.9.4
+
+## 2.7.7
+### Patch Changes
+
+  - @prosopo/server@2.9.3
+
 ## 2.7.6
 ### Patch Changes
 

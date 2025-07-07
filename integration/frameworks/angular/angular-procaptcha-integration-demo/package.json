@@ -1,6 +1,10 @@
 {
 	"name": "@prosopo/angular-procaptcha-integration-demo",
+<<<<<<< HEAD
 	"version": "1.1.1",
+=======
+	"version": "1.1.2",
+>>>>>>> main
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
@@ -23,7 +27,11 @@
 		"@angular/platform-browser": "^19.2.0",
 		"@angular/platform-browser-dynamic": "^19.2.0",
 		"@angular/router": "^19.2.0",
+<<<<<<< HEAD
 		"@prosopo/angular-procaptcha-wrapper": "1.1.1",
+=======
+		"@prosopo/angular-procaptcha-wrapper": "1.1.2",
+>>>>>>> main
 		"@types/node": "22.13.17",
 		"rxjs": "~7.8.0",
 		"tslib": "^2.3.0",

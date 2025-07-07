@@ -487,12 +487,14 @@ export class ProviderDatabase
 		const filter: {
 			[key in keyof Pick<Captcha, "captchaId">]: { $in: string[] };
 		} = { captchaId: { $in: captchaId } };
-		const cursor = this.tables?.captcha.find(filter).lean();
+		const cursor = this.tables?.captcha
+			.find<Captcha>(filter)
+			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
 
 		if (docs?.length) {
 			// drop the _id field
-			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
 		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
@@ -1258,12 +1260,14 @@ export class ProviderDatabase
 			datasetId,
 			solved: state === CaptchaStates.Solved,
 		};
-		const cursor = this.tables?.captcha.find(filter).lean();
+		const cursor = this.tables?.captcha
+			.find(filter)
+			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
 
 		if (docs) {
 			// drop the _id field
-			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
 		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
@@ -1280,7 +1284,9 @@ export class ProviderDatabase
 		} = {
 			captchaId: { $in: captchaId },
 		};
-		const cursor = this.tables?.usersolution?.find(filter).lean();
+		const cursor = this.tables?.usersolution
+			?.find<UserSolutionRecord>(filter)
+			.lean<(UserSolutionRecord & { _id: unknown })[]>();
 		const docs = await cursor;
 
 		if (docs) {

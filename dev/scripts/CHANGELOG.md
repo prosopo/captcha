@@ -1,5 +1,31 @@
 # @prosopo/scripts
 
+## 3.0.2
+### Patch Changes
+
+  - @prosopo/cli@3.0.2
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/account@2.7.5
+  - @prosopo/datasets@3.0.2
+  - @prosopo/dotenv@3.0.1
+  - @prosopo/env@3.0.2
+  - @prosopo/keyring@2.8.4
+  - @prosopo/provider@3.0.2
+  - @prosopo/types-database@3.0.2
+  - @prosopo/types-env@2.7.6
+
+## 3.0.1
+### Patch Changes
+
+- Updated dependencies [913f2a6]
+  - @prosopo/types-database@3.0.1
+  - @prosopo/cli@3.0.1
+  - @prosopo/provider@3.0.1
+  - @prosopo/datasets@3.0.1
+  - @prosopo/env@3.0.1
+  - @prosopo/types-env@2.7.5
+
 ## 3.0.0
 ### Major Changes
 

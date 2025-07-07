@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.0.1
+### Patch Changes
+
+- 87bd9bc: Allow non-explicit languages
+
 ## 3.0.0
 ### Major Changes
 
