@@ -51,7 +51,7 @@ export default async function (
 			VitePluginCloseAndCopy(),
 		],
 		build: {
-			emptyOutDir: true,
+			emptyOutDir: false,
 			ssr: true,
 			target: "node18",
 			outDir: "dist/cjs",
