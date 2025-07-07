@@ -124,7 +124,7 @@ export default defineConfig(async ({ command, mode }) => {
 							return "bnChunk";
 						}
 						if (id.includes("packages/detector")) {
-							return `${randomAsHex().slice(0, Math.random() * 10 + 5)}`;
+							return `${randomAsHex().slice(0, Math.floor(Math.random() * 10 + 5))}`;
 						}
 						return undefined;
 					},
