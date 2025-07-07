@@ -4,20 +4,6 @@
 	"description": "Prosopo config library",
 	"main": "./dist/index.js",
 	"type": "module",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		},
-		"./webpack": {
-			"import": "./dist/webpack/index.js",
-			"require": "./dist/webpack/cjs/index.cjs"
-		},
-		"./webpack/webpack.config": {
-			"import": "./dist/webpack/webpack.config.js",
-			"require": "./dist/cjs/webpack/webpack.config.cjs"
-		}
-	},
 	"scripts": {
 		"build": "tsc --build",
 		"clean": "tsc --build --clean",
