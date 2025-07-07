@@ -39,10 +39,6 @@ export default async function (
 		ssr: { external: allExternal },
 		plugins: [
 			// @ts-ignore
-			replace({
-				"import.meta.url": "module", // Replaces ESM checks with CommonJS equivalent
-			}),
-			// @ts-ignore
 			noBundlePlugin({
 				root: "src",
 				copy: "**/*.css",

@@ -1,4 +1,3 @@
-import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +11,10 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ViteCommonJSConfig } from "./src/vite/index.js";
+
+import path from "node:path";
+import { ViteEsmConfig } from "@prosopo/config";
 
 export default function () {
-	return ViteCommonJSConfig(
-		"config",
-		path.resolve("./tsconfig.cjs.json"),
-		"src/index.ts",
-	);
+	return ViteEsmConfig(path.basename('.'), path.resolve("./tsconfig.json"));
 }
