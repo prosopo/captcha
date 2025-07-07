@@ -11,5 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import "./commands.js";
-import "@cypress/xpath";
+
+import path from "node:path";
+import { ViteEsmConfig } from "@prosopo/config";
+
+export default function () {
+	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
+}
