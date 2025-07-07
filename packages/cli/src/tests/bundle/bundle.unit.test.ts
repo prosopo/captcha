@@ -24,7 +24,7 @@ describe("provider bundle", () => {
 
 		// build bundle
 		await execPromise(
-			`cd ${rootDir} && NODE_ENV=production npm run build:bundle`,
+			`cd ${rootDir} && NODE_ENV=production npm run bundle`,
 		);
 
 		// run bundle and get version
