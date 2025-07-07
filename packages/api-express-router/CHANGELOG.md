@@ -1,5 +1,11 @@
 # @prosopo/api-express-router
 
+## 3.0.1
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/api-route@2.6.6
+
 ## 3.0.0
 ### Major Changes
 
