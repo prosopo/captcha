@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.3
+### Patch Changes
+
+- dead520: fix dep versions
+
+## 2.6.2
+### Patch Changes
+
+- 5705cfb: use build+bundle npm scripts
+
 ## 2.6.1
 ### Patch Changes
 

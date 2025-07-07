@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.6.1",
+	"version": "2.6.3",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -11,7 +11,12 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build": "npx vite build"
+		"build": "tsc --build",
+		"bundle": "vite build"
+	},
+	"dependencies": {
+		"@prosopo/types": "3.0.0",
+		"@prosopo/locale": "3.0.0"
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.0",

@@ -148,12 +148,11 @@ services:
         env_file:
             - ../.env.1.${NODE_ENV}
         volumes:
-            # - ./data:/data we don't need a persistent storage for Tests
+            - ./data:/data # mount a volume for data persistence
             - ./redis.conf:/redis-stack.conf
         ports:
             - '6379:6379' # DB
         networks:
-            external:
             internal:
                 ipv4_address: 172.18.0.8
     vector:
