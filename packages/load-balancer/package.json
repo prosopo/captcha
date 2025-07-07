@@ -3,6 +3,7 @@
 	"version": "2.6.9",
 	"description": "Provider load balancer",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",

@@ -2,6 +2,7 @@
 	"name": "@prosopo/user-access-policy",
 	"version": "3.0.0",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",

@@ -3,6 +3,7 @@
 	"version": "2.6.0",
 	"description": "Provider fingerprint",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",

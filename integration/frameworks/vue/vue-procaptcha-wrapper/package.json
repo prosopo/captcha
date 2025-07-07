@@ -8,6 +8,12 @@
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"scripts": {
 		"build": "vue-tsc --build",
 		"build:cjs": "vue-tsc --build --module commonjs",

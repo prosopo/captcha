@@ -3,6 +3,7 @@
 	"version": "2.7.2",
 	"description": "",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"clean": "tsc --build --clean",
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
@@ -33,7 +34,13 @@
 		"vitest": "3.0.9"
 	},
 	"main": "dist/index.js",
-	"type": "module",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"

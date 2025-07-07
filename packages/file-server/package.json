@@ -3,6 +3,7 @@
 	"version": "2.6.2",
 	"description": "Simple static file server",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",

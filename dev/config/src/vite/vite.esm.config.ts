@@ -34,6 +34,7 @@ export default async function (
 		...builtinModules,
 		...builtinModules.map((m) => `node:${m}`),
 		...projectExternal,
+		"@prosopo/config",
 	];
 	return defineConfig({
 		ssr: { external: allExternal },

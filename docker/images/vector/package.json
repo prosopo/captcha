@@ -5,6 +5,7 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
+	"type": "module",
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
 		"build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
@@ -12,10 +13,15 @@
 		"test": "echo no tests",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
 	},
-	"dependencies": {
-		"@prosopo/config": "3.0.0"
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
 	},
-	"devDependencies": {
+	"dependencies": {
 		"@prosopo/config": "3.0.0"
 	}
 }

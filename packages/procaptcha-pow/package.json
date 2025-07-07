@@ -3,7 +3,7 @@
 	"version": "2.7.5",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
-	"main": "./dist/index.js",
+	"main": "dist/index.js",
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
@@ -16,7 +16,7 @@
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
-	"types": "./dist/index.d.ts",
+	"types": "dist/index.d.ts",
 	"source": "./src/index.ts",
 	"scripts": {
 		"clean": "tsc --build --clean",
@@ -51,7 +51,6 @@
 		}
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

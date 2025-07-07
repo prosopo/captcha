@@ -2,6 +2,7 @@
 	"name": "@prosopo/api-route",
 	"version": "2.6.5",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -23,9 +24,6 @@
 	"dependencies": {
 		"@prosopo/common": "3.0.0",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.0.0"
-	},
-	"devDependencies": {
 		"@prosopo/config": "3.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

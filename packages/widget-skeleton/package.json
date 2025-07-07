@@ -2,12 +2,13 @@
 	"name": "@prosopo/widget-skeleton",
 	"version": "2.6.0",
 	"description": "Non business logic utilities for web applications",
-	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
 			"import": "./dist/index.js",
@@ -39,7 +40,6 @@
 		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

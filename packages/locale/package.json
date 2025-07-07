@@ -2,19 +2,19 @@
 	"name": "@prosopo/locale",
 	"version": "3.0.0",
 	"description": "Prosopo locale library",
-	"main": "./dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
-	"types": "./dist/index.d.ts",
 	"scripts": {
 		"clean": "tsc --build --clean",
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
@@ -37,7 +37,6 @@
 		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",

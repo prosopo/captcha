@@ -3,6 +3,13 @@
 	"version": "2.6.5",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"bin": {
 		"flux": "dist/index.js"
 	},
@@ -49,7 +56,6 @@
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
 		"vite": "6.2.3",
-		"vitest": "3.0.9",
-		"@prosopo/config": "3.0.0"
+		"vitest": "3.0.9"
 	}
 }

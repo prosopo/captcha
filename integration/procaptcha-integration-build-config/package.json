@@ -8,6 +8,12 @@
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"scripts": {
 		"test": "echo no tests",
 		"clean": "tsc --build --clean",
@@ -25,8 +31,5 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false,
-	"devDependencies": {
-		"@prosopo/config": "3.0.0"
-	}
+	"sideEffects": false
 }

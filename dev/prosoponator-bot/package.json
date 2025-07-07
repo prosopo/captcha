@@ -3,6 +3,7 @@
 	"version": "2.6.0",
 	"description": "",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -30,7 +31,13 @@
 		"@prosopo/config": "3.0.0"
 	},
 	"main": "dist/index.js",
-	"type": "module",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"

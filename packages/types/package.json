@@ -2,18 +2,18 @@
 	"name": "@prosopo/types",
 	"version": "3.0.0",
 	"description": "Types for prosopo TypeScript packages",
+	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"type": "module",
-	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
-	},
 	"exports": {
 		".": {
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
+	},
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
 	},
 	"scripts": {
 		"clean": "tsc --build --clean",

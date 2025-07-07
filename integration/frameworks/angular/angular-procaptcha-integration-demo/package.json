@@ -5,6 +5,7 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
+	"type": "module",
 	"scripts": {
 		"clean": "del-cli ./dist",
 		"ng": "ng",
@@ -28,6 +29,14 @@
 		"tslib": "^2.3.0",
 		"zone.js": "~0.15.0",
 		"@prosopo/config": "3.0.0"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
 	},
 	"devDependencies": {
 		"@angular-builders/custom-webpack": "19.0.0",

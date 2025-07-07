@@ -4,6 +4,7 @@
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
+	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
@@ -16,9 +17,14 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/js/cli.js"
 	},
-	"main": "./dist/index.js",
-	"type": "module",
-	"types": "./dist/index.d.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"dependencies": {
 		"@noble/curves": "1.9.2",
 		"@noble/hashes": "1.8.0",

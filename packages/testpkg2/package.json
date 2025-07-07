@@ -3,6 +3,13 @@
 	"version": "1.0.3",
 	"description": "Test package for testing deploys, releases, etc",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -27,9 +34,6 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/config": "3.0.0"
-	},
-	"devDependencies": {
 		"@prosopo/config": "3.0.0"
 	}
 }
