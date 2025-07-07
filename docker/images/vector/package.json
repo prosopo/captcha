@@ -9,7 +9,7 @@
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
 		"build": "npm run clean && cp -r src dist && docker build --progress=plain --tag $(npm run --silent docker-tag) dist",
 		"clean": "del-cli dist",
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "echo no tests",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
 	}
 }

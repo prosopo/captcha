@@ -32,9 +32,10 @@
 		"vitest": "3.0.9"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"build": "tsc --build",
-		"clean": "tsc --build --clean",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"cypress:open:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.image.config.js",
 		"cypress:run:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress run --browser chrome --config-file cypress.image.config.js",
 		"cypress:open:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.frictionless.config.js",
