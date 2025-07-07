@@ -25,7 +25,9 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "echo no tests"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
 		"@prosopo/account": "2.7.4",
@@ -38,7 +40,8 @@
 		"@prosopo/util": "3.0.0",
 		"@prosopo/widget-skeleton": "2.6.0",
 		"express": "4.21.2",
-		"react": "18.3.1"
+		"react": "18.3.1",
+		"@prosopo/config": "3.0.0"
 	},
 	"overrides": {
 		"@polkadot/extension-inject": {

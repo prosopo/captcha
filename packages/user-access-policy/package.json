@@ -30,13 +30,13 @@
 		"@prosopo/util": "3.0.0",
 		"ip-address": "10.0.1",
 		"redis": "5.0.0",
-		"zod": "3.23.8"
+		"zod": "3.23.8",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"vite": "6.2.3",
 		"vitest": "3.0.9",
-		"yargs": "17.7.2",
-		"@prosopo/config": "3.0.0"
+		"yargs": "17.7.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

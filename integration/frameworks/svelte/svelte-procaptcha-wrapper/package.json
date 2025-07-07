@@ -22,7 +22,8 @@
 		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.3"
+		"@prosopo/procaptcha-wrapper": "2.6.3",
+		"@prosopo/config": "3.0.0"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
@@ -30,8 +31,7 @@
 	"devDependencies": {
 		"@sveltejs/package": "2.3.10",
 		"del-cli": "6.0.0",
-		"svelte-check": "4.2.2",
-		"@prosopo/config": "3.0.0"
+		"svelte-check": "4.2.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

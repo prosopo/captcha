@@ -51,7 +51,8 @@
 		"@prosopo/keyring": "2.8.3",
 		"@prosopo/types": "3.0.0",
 		"@prosopo/util": "3.0.0",
-		"@prosopo/util-crypto": "13.5.1"
+		"@prosopo/util-crypto": "13.5.1",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0",

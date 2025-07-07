@@ -10,7 +10,8 @@
 	"dependencies": {
 		"@prosopo/types": "3.0.0",
 		"@prosopo/util": "3.0.0",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
@@ -29,8 +30,7 @@
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
 		"vite": "6.2.3",
-		"vitest": "3.0.9",
-		"@prosopo/config": "3.0.0"
+		"vitest": "3.0.9"
 	},
 	"scripts": {
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",

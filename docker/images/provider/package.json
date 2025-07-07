@@ -7,7 +7,8 @@
 	},
 	"dependencies": {
 		"@prosopo/locale": "3.0.0",
-		"@prosopo/cli": "3.0.0"
+		"@prosopo/cli": "3.0.0",
+		"@prosopo/config": "3.0.0"
 	},
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",

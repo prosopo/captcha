@@ -22,7 +22,8 @@
 	},
 	"dependencies": {
 		"@prosopo/common": "3.0.0",
-		"zod": "3.23.8"
+		"zod": "3.23.8",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0"

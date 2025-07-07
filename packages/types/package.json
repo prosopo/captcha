@@ -39,10 +39,10 @@
 		"express": "4.21.2",
 		"ip-address": "10.0.1",
 		"scale-ts": "1.6.0",
-		"zod": "3.23.8"
+		"zod": "3.23.8",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",

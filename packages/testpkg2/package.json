@@ -26,6 +26,9 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
+	"dependencies": {
+		"@prosopo/config": "3.0.0"
+	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0"
 	}

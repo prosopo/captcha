@@ -31,7 +31,8 @@
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "3.0.0",
 		"@prosopo/types": "3.0.0",
-		"@prosopo/util-crypto": "13.5.1"
+		"@prosopo/util-crypto": "13.5.1",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0",

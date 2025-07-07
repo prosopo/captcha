@@ -16,7 +16,8 @@
 	"dependencies": {
 		"deepmerge": "4.3.1",
 		"vite": "6.2.3",
-		"vite-plugin-dts": "4.5.3"
+		"vite-plugin-dts": "4.5.3",
+		"@prosopo/config": "3.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

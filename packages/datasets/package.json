@@ -33,8 +33,12 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": [
+				"dist/types"
+			],
+			"captcha": [
+				"dist/captcha"
+			]
 		}
 	},
 	"dependencies": {
@@ -44,7 +48,8 @@
 		"@prosopo/types-database": "3.0.0",
 		"@prosopo/util": "3.0.0",
 		"@prosopo/util-crypto": "13.5.1",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0",

@@ -29,7 +29,8 @@
 		"@prosopo/types-database": "3.0.0",
 		"@prosopo/types-env": "2.7.4",
 		"@prosopo/util": "3.0.0",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0",

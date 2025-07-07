@@ -17,10 +17,10 @@
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
-	"dependencies": {},
-	"devDependencies": {
+	"dependencies": {
 		"@prosopo/config": "3.0.0"
 	},
+	"devDependencies": {},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/prosopo/captcha.git"

@@ -44,7 +44,8 @@
 		"fast-glob": "3.3.2",
 		"fs-extra": "11.2.0",
 		"mongodb": "6.9.0",
-		"yargs": "17.7.2"
+		"yargs": "17.7.2",
+		"@prosopo/config": "3.0.0"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"
@@ -59,7 +60,6 @@
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
 		"vite": "6.2.3",
-		"vitest": "3.0.9",
-		"@prosopo/config": "3.0.0"
+		"vitest": "3.0.9"
 	}
 }

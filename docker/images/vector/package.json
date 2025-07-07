@@ -12,6 +12,9 @@
 		"test": "echo no tests",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
 	},
+	"dependencies": {
+		"@prosopo/config": "3.0.0"
+	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0"
 	}

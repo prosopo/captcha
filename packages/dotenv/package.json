@@ -18,17 +18,12 @@
 	},
 	"main": "./dist/index.js",
 	"type": "module",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
 	"types": "./dist/index.d.ts",
 	"dependencies": {
 		"@prosopo/common": "3.0.0",
 		"dotenv": "16.4.5",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "3.0.9",
@@ -39,8 +34,7 @@
 		"tsx": "4.19.1",
 		"typescript": "5.6.2",
 		"vite": "6.2.3",
-		"vitest": "3.0.9",
-		"@prosopo/config": "3.0.0"
+		"vitest": "3.0.9"
 	},
 	"repository": {
 		"type": "git",

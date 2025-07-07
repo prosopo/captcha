@@ -145,7 +145,8 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"express": "4.21.2",
-		"vue": "^3.5.13"
+		"vue": "^3.5.13",
+		"@prosopo/config": "3.0.0"
 	},
 	"config": {
 		"commitizen": {

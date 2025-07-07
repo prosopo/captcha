@@ -39,7 +39,8 @@
 		"@prosopo/keyring": "2.8.3",
 		"@prosopo/load-balancer": "2.6.9",
 		"@prosopo/types": "3.0.0",
-		"express": "4.21.2"
+		"express": "4.21.2",
+		"@prosopo/config": "3.0.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.0.0",

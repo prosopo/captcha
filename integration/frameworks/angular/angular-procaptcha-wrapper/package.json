@@ -22,15 +22,15 @@
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.3"
+		"@prosopo/procaptcha-wrapper": "2.6.3",
+		"@prosopo/config": "3.0.0"
 	},
 	"peerDependencies": {
 		"@angular/core": "^19.2.0"
 	},
 	"devDependencies": {
 		"del-cli": "6.0.0",
-		"ng-packagr": "19.2.0",
-		"@prosopo/config": "3.0.0"
+		"ng-packagr": "19.2.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
