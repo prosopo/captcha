@@ -1,8 +1,8 @@
 {
 	"name": "@prosopo/captcha",
 	"version": "3.0.0",
-	"author": "Prosopo",
 	"type": "module",
+	"author": "Prosopo",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/prosopo/captcha.git"
