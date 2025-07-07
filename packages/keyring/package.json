@@ -8,6 +8,12 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"scripts": {
 		"clean": "tsc --build --clean",
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
