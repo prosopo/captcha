@@ -125,6 +125,7 @@ jobs:
                     echo "No changes to commit"
                     exit 0
                 fi
+                npm i
                 git add -u .
                 git commit -m "chore: version bump"
                 git status
@@ -260,7 +261,7 @@ jobs:
                   echo "Some packages failed to publish to npm"
                   exit 1
                 fi
-            
+
             - name: publish to gh
               if: ${{ env.affected != '[]' }}
               run: |
@@ -294,7 +295,7 @@ jobs:
                     exit 1
                 fi
 
-            
+
             - name: publish to dockerhub
               if: ${{ env.affected != '[]' }}
               run: |
