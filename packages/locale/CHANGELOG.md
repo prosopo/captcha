@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.0.2
+### Patch Changes
+
+- f682f0c: Moving type and fixing i18n config
+
 ## 3.0.1
 ### Patch Changes
 

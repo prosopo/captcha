@@ -1,5 +1,14 @@
 # @prosopo/types-database
 
+## 3.0.3
+### Patch Changes
+
+- f682f0c: Moving type and fixing i18n config
+- Updated dependencies [f682f0c]
+  - @prosopo/types@3.0.2
+  - @prosopo/common@3.0.2
+  - @prosopo/user-access-policy@3.1.2
+
 ## 3.0.2
 ### Patch Changes
 
