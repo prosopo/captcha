@@ -29,6 +29,7 @@
 		"@noble/hashes": "1.5.0",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "3.0.0",
+		"@prosopo/workspace": "3.0.0",
 		"@prosopo/types": "3.0.0",
 		"@prosopo/util": "3.0.0",
 		"bcrypt": "5.1.1",

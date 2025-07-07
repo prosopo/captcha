@@ -5,7 +5,10 @@
 		"outDir": "./dist",
 		"module": "NodeNext"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json"
+	],
 	"references": [
 		{
 			"path": "../api"
@@ -13,7 +16,6 @@
 		{
 			"path": "../common"
 		},
-
 		{
 			"path": "../dotenv"
 		},
@@ -39,7 +41,7 @@
 			"path": "../util-crypto"
 		},
 		{
-			"path": "../../dev/config"
+			"path": "../../dev/workspace"
 		},
 		{
 			"path": "../user-access-policy"

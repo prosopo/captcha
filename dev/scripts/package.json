@@ -29,7 +29,7 @@
 		"@prosopo/account": "2.7.4",
 		"@prosopo/cli": "3.0.0",
 		"@prosopo/common": "3.0.0",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/workspace": "3.0.0",
 		"@prosopo/datasets": "3.0.0",
 		"@prosopo/dotenv": "3.0.0",
 		"@prosopo/env": "3.0.0",

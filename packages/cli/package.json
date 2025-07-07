@@ -31,7 +31,7 @@
 		"@prosopo/api": "3.0.0",
 		"@prosopo/api-express-router": "3.0.0",
 		"@prosopo/common": "3.0.0",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/workspace": "3.0.0",
 		"@prosopo/dotenv": "3.0.0",
 		"@prosopo/env": "3.0.0",
 		"@prosopo/keyring": "2.8.3",
