@@ -16,6 +16,7 @@ import crypto from "node:crypto";
 import { CaptchaTypeSchema } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { type ZodRawShape, z } from "zod";
+import { hashUserAgent } from "#policy/util.js";
 
 export enum AccessPolicyType {
 	Block = "block",
@@ -95,10 +96,7 @@ export const userScopeInputSchema = userScopeSchema
 		}
 
 		if ("string" === typeof userAgent) {
-			userScope.userAgentHash = crypto
-				.createHash("sha256")
-				.update(userAgent)
-				.digest("hex");
+			userScope.userAgentHash = hashUserAgent(userAgent);
 		}
 
 		return userScope;
