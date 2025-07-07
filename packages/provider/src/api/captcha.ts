@@ -137,23 +137,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const resolveAccessPolicy = createAccessPolicyResolver(
-					userAccessRulesStorage,
-					req.logger,
-				);
-
-				const userAccessPolicy = await resolveAccessPolicy({
-					policyScope: {
-						clientId: dapp,
-					},
-					policyScopeMatch: ScopeMatch.Greedy,
-					userScope: {
-						userId: user,
-						ja4Hash: req.ja4,
-						numericIp: ipAddress.bigInt(),
-					},
-					userScopeMatch: ScopeMatch.Greedy,
-				});
+				const userAccessPolicy =
+					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
+						userAccessRulesStorage,
+						dapp,
+						{
+							numericIp: ipAddress.bigInt(),
+							userId: user,
+							ja4Hash: req.ja4,
+							userAgent: req.headers["user-agent"],
+						},
+					);
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
 						count:
@@ -639,6 +633,41 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					},
 					userScopeMatch: ScopeMatch.Greedy,
 				});
+
+				// Get access policies in order of priority
+				const accessPolicies = await Promise.all([
+					resolveAccessPolicy({
+						userScope: {
+							userId: user,
+							ja4Hash: req.ja4,
+							numericIp: ipAddress.bigInt(),
+						},
+						userScopeMatch: ScopeMatch.Exact,
+					}),
+					resolveAccessPolicy({
+						policyScope: {
+							clientId: dapp,
+						},
+						policyScopeMatch: ScopeMatch.Exact,
+						userScope: {
+							userId: user,
+							ja4Hash: req.ja4,
+							numericIp: ipAddress.bigInt(),
+						},
+						userScopeMatch: ScopeMatch.Exact,
+					}),
+					resolveAccessPolicy({
+						policyScope: {
+							clientId: dapp,
+						},
+						policyScopeMatch: ScopeMatch.Exact,
+						userScope: {
+							ja4Hash: req.ja4,
+							numericIp: ipAddress.bigInt(),
+						},
+						userScopeMatch: ScopeMatch.Exact,
+					}),
+				]);
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
 				if (

@@ -8,23 +8,31 @@
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"build": "vite build",
+		"build": "tsc --build",
+		"bundle": "vite build",
 		"build:cjs": "echo 'no cjs build'",
 		"start": "vite serve ./src --port 9232 --config vite.config.ts",
 		"clean": "echo 'nothing to clean'"
 	},
-	"version": "2.9.1",
+	"version": "2.9.2",
 	"devDependencies": {
 		"@prosopo/dotenv": "3.0.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
+	},
+	"dependencies": {
+		"@typegoose/auto-increment": "4.13.0",
+		"axios": "1.10.0",
+		"esbuild": "0.25.6",
+		"openpgp": "5.11.3",
+		"webpack-dev-server": "5.2.2"
 	}
 }
