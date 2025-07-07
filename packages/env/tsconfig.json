@@ -13,6 +13,9 @@
 			"path": "../database"
 		},
 		{
+			"path": "../keyring"
+		},
+		{
 			"path": "../types"
 		},
 		{
