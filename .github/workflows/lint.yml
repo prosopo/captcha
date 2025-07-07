@@ -57,7 +57,7 @@ jobs:
           # check that the changesets are present for each package which has been modified
           npx nx sync:check
 
-      - run: nx run-many --target=build --projects=@prosopo/lint
+      - run: npx nx run-many --target=build --projects=@prosopo/lint
 
-      - run: nx run @prosopo/lint:lint
+      - run: npx nx run @prosopo/lint:lint
 
