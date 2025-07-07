@@ -29,7 +29,8 @@
 	},
 	"devDependencies": {
 		"del-cli": "6.0.0",
-		"ng-packagr": "19.2.0"
+		"ng-packagr": "19.2.0",
+		"@prosopo/config": "3.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

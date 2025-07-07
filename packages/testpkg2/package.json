@@ -25,5 +25,8 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false
+	"sideEffects": false,
+	"devDependencies": {
+		"@prosopo/config": "3.0.0"
+	}
 }

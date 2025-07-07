@@ -35,7 +35,8 @@
 	"devDependencies": {
 		"vite": "6.2.3",
 		"vitest": "3.0.9",
-		"yargs": "17.7.2"
+		"yargs": "17.7.2",
+		"@prosopo/config": "3.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

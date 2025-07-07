@@ -14,5 +14,8 @@
 		"clean": "del-cli dist",
 		"test": "echo no tests",
 		"publish:docker": "docker push $(npm run --silent docker-tag)"
+	},
+	"devDependencies": {
+		"@prosopo/config": "3.0.0"
 	}
 }
