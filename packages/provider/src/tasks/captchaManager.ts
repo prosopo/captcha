@@ -27,6 +27,7 @@ import {
 	type AccessRulesStorage,
 	ScopeMatch,
 	createAccessPolicyResolver,
+	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
 import { uniqueSubsets } from "@prosopo/util";
 
@@ -180,8 +181,6 @@ export class CaptchaManager {
 				),
 		);
 
-		this.logger.debug(() => ({ data: prioritisedUserScopes }));
-
 		for (const clientOrUndefined of [clientId, undefined]) {
 			for (const scope of prioritisedUserScopes) {
 				const accessPolicy = await resolver({
@@ -191,9 +190,8 @@ export class CaptchaManager {
 						},
 						policyScopeMatch: ScopeMatch.Exact,
 					}),
-					userScope: {
-						...scope,
-					},
+					userScope: userScopeInputSchema.parse(scope),
+
 					userScopeMatch: ScopeMatch.Exact,
 				});
 				if (accessPolicy) {
