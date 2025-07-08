@@ -37,7 +37,7 @@
 						],
 						"scripts": [],
 						"customWebpackConfig": {
-							"path": "webpack.config.ts"
+							"path": "webpack.config.cjs"
 						}
 					},
 					"configurations": {

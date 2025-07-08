@@ -6,13 +6,13 @@
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
+	"typings": "dist/index.d.ts",
 	"module": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/index.d.ts",
+			"default": "./dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs"
 		}
 	},
 	"scripts": {
