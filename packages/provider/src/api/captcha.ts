@@ -47,6 +47,7 @@ import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
+import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
@@ -137,17 +138,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const userAccessPolicy =
+				const userScope = getRequestUserScope(
+					flatten(req.headers),
+					req.ja4,
+					req.ip,
+					user,
+				);
+				const userAccessPolicy = (
 					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 						userAccessRulesStorage,
 						dapp,
-						{
-							numericIp: ipAddress.bigInt(),
-							userId: user,
-							ja4Hash: req.ja4,
-							userAgent: req.headers["user-agent"],
-						},
-					);
+						userScope,
+					)
+				)[0];
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
 						count:
@@ -376,11 +379,26 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			const userScope = getRequestUserScope(
+				flatten(req.headers),
+				req.ja4,
+				req.ip,
+				user,
+			);
+			const userAccessPolicy = (
+				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					dapp,
+					userScope,
+				)
+			)[0];
+
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,
 				dapp,
 				origin,
-				clientSettings?.settings?.powDifficulty,
+				userAccessPolicy?.powDifficulty ||
+					clientSettings?.settings?.powDifficulty,
 			);
 
 			await tasks.db.storePowCaptchaRecord(
@@ -615,67 +633,24 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				}
 
 				// Check if the IP address is blocked
-				const ipAddress = getIPAddress(req.ip || "");
-
-				const resolveAccessPolicy = createAccessPolicyResolver(
-					userAccessRulesStorage,
-					req.logger,
+				const userScope = getRequestUserScope(
+					flatten(req.headers),
+					req.ja4,
+					req.ip,
+					user,
 				);
-				const accessPolicy = await resolveAccessPolicy({
-					policyScope: {
-						clientId: dapp,
-					},
-					policyScopeMatch: ScopeMatch.Greedy,
-					userScope: {
-						userId: user,
-						ja4Hash: req.ja4,
-						numericIp: ipAddress.bigInt(),
-					},
-					userScopeMatch: ScopeMatch.Greedy,
-				});
-
-				// Get access policies in order of priority
-				const accessPolicies = await Promise.all([
-					resolveAccessPolicy({
-						userScope: {
-							userId: user,
-							ja4Hash: req.ja4,
-							numericIp: ipAddress.bigInt(),
-						},
-						userScopeMatch: ScopeMatch.Exact,
-					}),
-					resolveAccessPolicy({
-						policyScope: {
-							clientId: dapp,
-						},
-						policyScopeMatch: ScopeMatch.Exact,
-						userScope: {
-							userId: user,
-							ja4Hash: req.ja4,
-							numericIp: ipAddress.bigInt(),
-						},
-						userScopeMatch: ScopeMatch.Exact,
-					}),
-					resolveAccessPolicy({
-						policyScope: {
-							clientId: dapp,
-						},
-						policyScopeMatch: ScopeMatch.Exact,
-						userScope: {
-							ja4Hash: req.ja4,
-							numericIp: ipAddress.bigInt(),
-						},
-						userScopeMatch: ScopeMatch.Exact,
-					}),
-				]);
+				const userAccessPolicy = (
+					await tasks.frictionlessManager.getPrioritisedAccessPolicies(
+						userAccessRulesStorage,
+						dapp,
+						userScope,
+					)
+				)[0];
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
-				if (
-					accessPolicy?.solvedImagesCount ||
-					accessPolicy?.unsolvedImagesCount
-				) {
+				if (userAccessPolicy?.captchaType === CaptchaType.image) {
 					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
-						accessPolicy,
+						userAccessPolicy,
 						baseBotScore,
 						botScore,
 						tokenId,
