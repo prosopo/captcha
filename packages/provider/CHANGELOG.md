@@ -1,5 +1,12 @@
 # @prosopo/provider
 
+## 3.0.6
+### Patch Changes
+
+- 9671152: uuid
+- Updated dependencies [9671152]
+  - @prosopo/api-express-router@3.0.3
+
 ## 3.0.5
 ### Patch Changes
 

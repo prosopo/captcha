@@ -1,5 +1,10 @@
 # @prosopo/api-express-router
 
+## 3.0.3
+### Patch Changes
+
+- 9671152: uuid
+
 ## 3.0.2
 ### Patch Changes
 
