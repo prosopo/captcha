@@ -2,12 +2,12 @@
 	"name": "@prosopo/client-example-server",
 	"version": "2.7.11",
 	"description": "Backend for client-example",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/app.js",
+	"types": "dist/app.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"import": "./dist/app.js",
+			"require": "./dist/cjs/app.cjs"
 		}
 	},
 	"type": "module",
