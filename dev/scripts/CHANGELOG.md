@@ -1,5 +1,20 @@
 # @prosopo/scripts
 
+## 3.0.5
+### Patch Changes
+
+- Updated dependencies [745cc89]
+  - @prosopo/config@3.1.0
+  - @prosopo/account@2.7.8
+  - @prosopo/cli@3.0.5
+  - @prosopo/datasets@3.0.5
+  - @prosopo/dotenv@3.0.4
+  - @prosopo/env@3.0.5
+  - @prosopo/provider@3.0.5
+  - @prosopo/types-database@3.0.5
+  - @prosopo/types-env@2.7.9
+  - @prosopo/util@3.0.2
+
 ## 3.0.4
 ### Patch Changes
 

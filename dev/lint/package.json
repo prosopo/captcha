@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.7.3",
+	"version": "2.7.4",
 	"description": "",
 	"private": true,
 	"scripts": {
@@ -38,7 +38,7 @@
 		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.0.1",
+		"@prosopo/util": "3.0.2",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
