@@ -1,5 +1,24 @@
 # @prosopo/cli
 
+## 3.0.6
+### Patch Changes
+
+- Updated dependencies [9671152]
+  - @prosopo/api-express-router@3.0.3
+  - @prosopo/provider@3.0.6
+
+## 3.0.5
+### Patch Changes
+
+- Updated dependencies [745cc89]
+  - @prosopo/config@3.1.0
+  - @prosopo/api@3.0.5
+  - @prosopo/dotenv@3.0.4
+  - @prosopo/env@3.0.5
+  - @prosopo/provider@3.0.5
+  - @prosopo/util@3.0.2
+  - @prosopo/user-access-policy@3.1.4
+
 ## 3.0.4
 ### Patch Changes
 

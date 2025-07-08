@@ -23,7 +23,7 @@
 	},
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": "2.6.5",
-		"@prosopo/config": "3.0.1"
+		"@prosopo/config": "3.1.0"
 	},
 	"peerDependencies": {
 		"@angular/core": "^19.2.0"

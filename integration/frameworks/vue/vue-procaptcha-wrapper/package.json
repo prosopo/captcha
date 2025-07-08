@@ -25,7 +25,7 @@
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": "2.6.5",
 		"vue": "3.5.13",
-		"@prosopo/config": "3.0.1"
+		"@prosopo/config": "3.1.0"
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.0",

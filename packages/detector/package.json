@@ -30,7 +30,7 @@
 		"typescript": "5.6.2",
 		"vite": "6.3.5",
 		"vitest": "3.0.9",
-		"@prosopo/config": "3.0.1"
+		"@prosopo/config": "3.1.0"
 	},
 	"type": "module",
 	"dependencies": {

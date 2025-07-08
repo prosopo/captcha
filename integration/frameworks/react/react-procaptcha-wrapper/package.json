@@ -24,7 +24,7 @@
 	},
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": "2.6.5",
-		"@prosopo/config": "3.0.1"
+		"@prosopo/config": "3.1.0"
 	},
 	"peerDependencies": {
 		"react": "^18.0.0 || ^19.0.0"

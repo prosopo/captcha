@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/file-server",
-	"version": "2.6.3",
+	"version": "2.6.4",
 	"description": "Simple static file server",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -24,7 +24,7 @@
 		"start": "node ./dist/index.js"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.0.1",
+		"@prosopo/util": "3.0.2",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"dotenv": "16.4.5",
@@ -32,11 +32,12 @@
 		"express": "4.21.2",
 		"node-fetch": "3.3.2",
 		"sharp": "0.33.5",
-		"@prosopo/config": "3.0.1",
+		"@prosopo/config": "3.1.0",
 		"openpgp": "5.11.3",
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",

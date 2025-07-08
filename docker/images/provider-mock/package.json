@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@prosopo/provider-mock": "2.7.7",
-		"@prosopo/config": "3.0.1"
+		"@prosopo/config": "3.1.0"
 	},
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
