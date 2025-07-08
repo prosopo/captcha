@@ -41,10 +41,19 @@ class ApiUpdateDetectorKeyEndpoint
 
 			logger.info(() => ({ msg: "Updating detector key" }));
 
-			await this.clientTaskManager.updateDetectorKey(detectorKey);
+			const activeDetectorKeys = await this.clientTaskManager.updateDetectorKey(
+				detectorKey,
+			);
 
+			logger.info(() => ({
+				msg: "Detector key updated",
+				activeDetectorKeys,
+			}));
 			return {
 				status: ApiEndpointResponseStatus.SUCCESS,
+				data: {
+					activeDetectorKeys,
+				},
 			};
 		} catch (error) {
 			logger.error(() => ({ msg: "Error updating detector key", err: error }));
