@@ -185,20 +185,38 @@ jobs:
                 # tag each affected package with the new version
                 for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
                     if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
-                      version=$(npm pkg get version | jq -r '.')
-                    else  
-                      version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
+                        version=$(npm pkg get version | jq -r '.') || version=""
+                    else
+                        version=$(
+                            { npm pkg --workspace "$pkg" get version 2>/dev/null || true; } \
+                            | jq -r ".[\"$pkg\"]" 2>/dev/null
+                        )
                     fi
-                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')
+                
+                    # Skip tagging if version is empty
+                    if [ -z "$version" ]; then
+                        echo "Skipping $pkg (could not determine version)"
+                        continue
+                    fi
+                
+                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" \
+                        'map(if .name == $name then . + {version: $version} else . end)')
+                
                     echo "Tagging $pkg with version $version"
+                
                     set +e
                     git tag "$pkg@$version"
                     result=$?
                     set -e
-                    affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
+                
+                    affected=$(echo "$affected" | jq -c \
+                        --arg name "$pkg" \
+                        --arg version "$version" \
+                        --argjson result_tag "$result" \
+                        'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
+                
                     echo
                 done
-                
                 # tag the repo with the root package version
                 git tag "v${{ env.root_version }}"
 
