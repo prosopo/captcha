@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import axios, { AxiosRequestConfig } from "axios";
 import { HttpError } from "./HttpError.js";
 
 export class HttpClientBase {
@@ -20,18 +21,11 @@ export class HttpClientBase {
 		this.baseURL = baseURL + prefix;
 	}
 
-	protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+	protected async fetch<T>(input: RequestInfo, config: AxiosRequestConfig = {}): Promise<T> {
+		config.timeout = config.timeout || 5000; // default timeout of 5 seconds
 		try {
-			const response = await fetch(this.baseURL + input, init);
-			if (
-				!response.ok &&
-				// Only throw an error if the response is not JSON and not a 400 error
-				response.status !== 400 &&
-				!response.headers.get("content-type")?.includes("application/json")
-			) {
-				throw new HttpError(response.status, response.statusText, response.url);
-			}
-			return this.responseHandler<T>(response);
+			const response = await axios.get(this.baseURL + input, config);
+			return response.data;
 		} catch (error) {
 			return this.errorHandler(error as Error);
 		}
@@ -40,39 +34,16 @@ export class HttpClientBase {
 	protected async post<T, U>(
 		input: RequestInfo,
 		body: U,
-		init?: RequestInit,
+		config: AxiosRequestConfig = {},
 	): Promise<T> {
-		const headers = {
-			"Content-Type": "application/json",
-			...(init?.headers || {}),
-		};
+		config.headers = config.headers || {};
+		config.headers["Content-Type"] = "application/json";
+		config.timeout = config.timeout || 5000; // default timeout of 5 seconds
 		try {
-			const response = await fetch(this.baseURL + input, {
-				method: "POST",
-				body: JSON.stringify(body),
-				...init,
-				headers,
-			});
-			if (
-				!response.ok &&
-				// Only throw an error if the response is not JSON and not a 400 error
-				response.status !== 400 &&
-				!response.headers.get("content-type")?.includes("application/json")
-			) {
-				throw new HttpError(response.status, response.statusText, response.url);
-			}
-			return this.responseHandler<T>(response);
+			const response = await axios.post(this.baseURL + input, body, config);
+			return response.data;
 		} catch (error) {
 			return this.errorHandler(error as Error);
-		}
-	}
-
-	protected async responseHandler<T>(response: Response): Promise<T> {
-		try {
-			return await response.json();
-		} catch (error) {
-			console.error("Error parsing JSON:", error);
-			throw error;
 		}
 	}
 
