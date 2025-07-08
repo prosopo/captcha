@@ -15,8 +15,5 @@ import path from "node:path";
 import ViteESMConfig from "./src/vite/vite.esm.config.js";
 
 export default function () {
-    return ViteESMConfig(
-        path.basename("."),
-        path.resolve("./tsconfig.json"),
-    );
+	return ViteESMConfig(path.basename("."), path.resolve("./tsconfig.json"));
 }
