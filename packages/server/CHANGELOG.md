@@ -1,5 +1,11 @@
 # @prosopo/server
 
+## 2.9.6
+### Patch Changes
+
+  - @prosopo/api@3.0.4
+  - @prosopo/load-balancer@2.6.12
+
 ## 2.9.5
 ### Patch Changes
 

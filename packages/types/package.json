@@ -44,7 +44,7 @@
 		"openpgp": "5.11.3",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {

@@ -32,7 +32,7 @@
 		"@polkadot/x-randomvalues": "12.6.2",
 		"@scure/base": "^1.1.7",
 		"@scure/sr25519": "0.2.0",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",

@@ -38,7 +38,7 @@
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "3.0.2",
 		"@prosopo/types": "3.0.2",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@prosopo/util-crypto": "13.5.1",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",

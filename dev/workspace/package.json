@@ -25,7 +25,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/config": "3.0.0"
+		"@prosopo/config": "3.0.1"
 	},
 	"devDependencies": {},
 	"repository": {

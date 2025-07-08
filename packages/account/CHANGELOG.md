@@ -1,5 +1,10 @@
 # @prosopo/account
 
+## 2.7.7
+### Patch Changes
+
+  - @prosopo/util@3.0.1
+
 ## 2.7.6
 ### Patch Changes
 

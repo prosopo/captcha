@@ -26,7 +26,7 @@
 	},
 	"dependencies": {
 		"@octokit/graphql": "8.1.1",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/dotenv",
-	"version": "3.0.2",
+	"version": "3.0.3",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"exports": {
@@ -27,7 +27,7 @@
 	"type": "module",
 	"dependencies": {
 		"@prosopo/common": "3.0.2",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"dotenv": "16.4.5",

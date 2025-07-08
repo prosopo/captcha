@@ -34,7 +34,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@fingerprintjs/fingerprintjs": "3.4.2",
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.0.1",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
