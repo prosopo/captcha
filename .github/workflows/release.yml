@@ -183,7 +183,11 @@ jobs:
                     if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                       version=$(npm pkg get version | jq -r '.')
                     else  
-                      version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
+                      if [ "$pkg" = "docker/images/provider" ]; then
+                        version=$(jq -r '.version' docker/images/provider/package.json)
+                      else
+                        version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
+                      fi
                     fi
                     affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')
                     echo "Tagging $pkg with version $version"
