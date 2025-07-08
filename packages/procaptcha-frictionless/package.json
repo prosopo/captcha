@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.6.19",
+	"version": "2.6.24",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -27,24 +27,29 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@prosopo/detector": "3.0.0",
-		"@prosopo/locale": "3.0.0",
-		"@prosopo/procaptcha-pow": "2.7.5",
-		"@prosopo/procaptcha-react": "2.6.19",
-		"@prosopo/types": "3.0.0",
+		"@prosopo/locale": "3.0.2",
+		"@prosopo/procaptcha-pow": "2.7.10",
+		"@prosopo/procaptcha-react": "2.6.24",
+		"@prosopo/types": "3.0.2",
 		"@prosopo/widget-skeleton": "2.6.0",
+		"@typegoose/auto-increment": "4.13.0",
+		"axios": "1.10.0",
+		"esbuild": "0.25.6",
 		"express": "4.21.2",
-		"react": "18.3.1"
+		"openpgp": "5.11.3",
+		"react": "18.3.1",
+		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.0",
+		"@prosopo/config": "3.1.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
 	},
 	"repository": {

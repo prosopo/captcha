@@ -1,5 +1,41 @@
 # @prosopo/client-example-server
 
+## 2.7.11
+### Patch Changes
+
+  - @prosopo/dotenv@3.0.4
+  - @prosopo/server@2.9.7
+  - @prosopo/util@3.0.2
+
+## 2.7.10
+### Patch Changes
+
+  - @prosopo/dotenv@3.0.3
+  - @prosopo/server@2.9.6
+  - @prosopo/util@3.0.1
+
+## 2.7.9
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types@3.0.2
+  - @prosopo/common@3.0.2
+  - @prosopo/server@2.9.5
+  - @prosopo/dotenv@3.0.2
+
+## 2.7.8
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/dotenv@3.0.1
+  - @prosopo/server@2.9.4
+
+## 2.7.7
+### Patch Changes
+
+  - @prosopo/server@2.9.3
+
 ## 2.7.6
 ### Patch Changes
 

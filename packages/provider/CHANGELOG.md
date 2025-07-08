@@ -1,5 +1,80 @@
 # @prosopo/provider
 
+## 3.0.6
+### Patch Changes
+
+- 9671152: uuid
+- Updated dependencies [9671152]
+  - @prosopo/api-express-router@3.0.3
+
+## 3.0.5
+### Patch Changes
+
+- Updated dependencies [745cc89]
+  - @prosopo/config@3.1.0
+  - @prosopo/database@3.0.5
+  - @prosopo/datasets@3.0.5
+  - @prosopo/env@3.0.5
+  - @prosopo/types-database@3.0.5
+  - @prosopo/types-env@2.7.9
+  - @prosopo/util@3.0.2
+  - @prosopo/user-access-policy@3.1.4
+
+## 3.0.4
+### Patch Changes
+
+- Updated dependencies [5619b4b]
+  - @prosopo/config@3.0.1
+  - @prosopo/database@3.0.4
+  - @prosopo/datasets@3.0.4
+  - @prosopo/env@3.0.4
+  - @prosopo/types-database@3.0.4
+  - @prosopo/types-env@2.7.8
+  - @prosopo/util@3.0.1
+  - @prosopo/user-access-policy@3.1.3
+
+## 3.0.3
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types-database@3.0.3
+  - @prosopo/database@3.0.3
+  - @prosopo/types@3.0.2
+  - @prosopo/datasets@3.0.3
+  - @prosopo/env@3.0.3
+  - @prosopo/types-env@2.7.7
+  - @prosopo/common@3.0.2
+  - @prosopo/keyring@2.8.5
+  - @prosopo/user-access-policy@3.1.2
+  - @prosopo/api-express-router@3.0.2
+  - @prosopo/api-route@2.6.7
+
+## 3.0.2
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/api-express-router@3.0.1
+  - @prosopo/api-route@2.6.6
+  - @prosopo/database@3.0.2
+  - @prosopo/datasets@3.0.2
+  - @prosopo/env@3.0.2
+  - @prosopo/keyring@2.8.4
+  - @prosopo/types-database@3.0.2
+  - @prosopo/types-env@2.7.6
+  - @prosopo/user-access-policy@3.1.1
+
+## 3.0.1
+### Patch Changes
+
+- Updated dependencies [913f2a6]
+  - @prosopo/user-access-policy@3.1.0
+  - @prosopo/types-database@3.0.1
+  - @prosopo/database@3.0.1
+  - @prosopo/datasets@3.0.1
+  - @prosopo/env@3.0.1
+  - @prosopo/types-env@2.7.5
+
 ## 3.0.0
 ### Major Changes
 

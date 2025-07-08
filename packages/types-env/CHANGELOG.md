@@ -1,5 +1,36 @@
 # @prosopo/types-env
 
+## 2.7.9
+### Patch Changes
+
+  - @prosopo/types-database@3.0.5
+
+## 2.7.8
+### Patch Changes
+
+  - @prosopo/types-database@3.0.4
+
+## 2.7.7
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types-database@3.0.3
+  - @prosopo/types@3.0.2
+  - @prosopo/common@3.0.2
+
+## 2.7.6
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/types-database@3.0.2
+
+## 2.7.5
+### Patch Changes
+
+- Updated dependencies [913f2a6]
+  - @prosopo/types-database@3.0.1
+
 ## 2.7.4
 ### Patch Changes
 

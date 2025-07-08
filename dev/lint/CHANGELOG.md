@@ -1,5 +1,15 @@
 # @prosopo/lint
 
+## 2.7.4
+### Patch Changes
+
+  - @prosopo/util@3.0.2
+
+## 2.7.3
+### Patch Changes
+
+  - @prosopo/util@3.0.1
+
 ## 2.7.2
 ### Patch Changes
 

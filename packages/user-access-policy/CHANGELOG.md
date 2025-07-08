@@ -1,5 +1,35 @@
 # @prosopo/user-access-policy
 
+## 3.1.4
+### Patch Changes
+
+  - @prosopo/util@3.0.2
+
+## 3.1.3
+### Patch Changes
+
+  - @prosopo/util@3.0.1
+
+## 3.1.2
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types@3.0.2
+  - @prosopo/common@3.0.2
+  - @prosopo/api-route@2.6.7
+
+## 3.1.1
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/api-route@2.6.6
+
+## 3.1.0
+### Minor Changes
+
+- 913f2a6: Make custom expiration times work in redis. Make redis internal only and persist data
+
 ## 3.0.0
 ### Major Changes
 

@@ -1,5 +1,44 @@
 # @prosopo/provider-mock
 
+## 2.7.13
+### Patch Changes
+
+- Updated dependencies [9671152]
+  - @prosopo/api-express-router@3.0.3
+  - @prosopo/provider@3.0.6
+
+## 2.7.12
+### Patch Changes
+
+  - @prosopo/provider@3.0.5
+
+## 2.7.11
+### Patch Changes
+
+  - @prosopo/provider@3.0.4
+
+## 2.7.10
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types@3.0.2
+  - @prosopo/provider@3.0.3
+  - @prosopo/common@3.0.2
+  - @prosopo/api-express-router@3.0.2
+
+## 2.7.9
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/api-express-router@3.0.1
+  - @prosopo/provider@3.0.2
+
+## 2.7.8
+### Patch Changes
+
+  - @prosopo/provider@3.0.1
+
 ## 2.7.7
 ### Patch Changes
 

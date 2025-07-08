@@ -76,19 +76,6 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
 
-export enum StoredStatusNames {
-	notStored = "notStored",
-	userSubmitted = "userSubmitted",
-	serverChecked = "serverChecked",
-	stored = "stored",
-}
-
-export type StoredStatus =
-	| StoredStatusNames.notStored
-	| StoredStatusNames.userSubmitted
-	| StoredStatusNames.serverChecked
-	| StoredStatusNames.stored;
-
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -222,6 +209,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 PoWCaptchaRecordSchema.index({ challenge: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
+PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },

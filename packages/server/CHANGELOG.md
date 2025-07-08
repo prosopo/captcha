@@ -1,5 +1,41 @@
 # @prosopo/server
 
+## 2.9.7
+### Patch Changes
+
+  - @prosopo/api@3.0.5
+  - @prosopo/load-balancer@2.6.13
+
+## 2.9.6
+### Patch Changes
+
+  - @prosopo/api@3.0.4
+  - @prosopo/load-balancer@2.6.12
+
+## 2.9.5
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types@3.0.2
+  - @prosopo/common@3.0.2
+  - @prosopo/api@3.0.3
+  - @prosopo/keyring@2.8.5
+  - @prosopo/load-balancer@2.6.11
+
+## 2.9.4
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/keyring@2.8.4
+  - @prosopo/load-balancer@2.6.10
+  - @prosopo/api@3.0.2
+
+## 2.9.3
+### Patch Changes
+
+  - @prosopo/api@3.0.1
+
 ## 2.9.2
 ### Patch Changes
 

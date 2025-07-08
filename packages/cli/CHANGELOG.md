@@ -1,5 +1,75 @@
 # @prosopo/cli
 
+## 3.0.6
+### Patch Changes
+
+- Updated dependencies [9671152]
+  - @prosopo/api-express-router@3.0.3
+  - @prosopo/provider@3.0.6
+
+## 3.0.5
+### Patch Changes
+
+- Updated dependencies [745cc89]
+  - @prosopo/config@3.1.0
+  - @prosopo/api@3.0.5
+  - @prosopo/dotenv@3.0.4
+  - @prosopo/env@3.0.5
+  - @prosopo/provider@3.0.5
+  - @prosopo/util@3.0.2
+  - @prosopo/user-access-policy@3.1.4
+
+## 3.0.4
+### Patch Changes
+
+- Updated dependencies [5619b4b]
+  - @prosopo/config@3.0.1
+  - @prosopo/api@3.0.4
+  - @prosopo/dotenv@3.0.3
+  - @prosopo/env@3.0.4
+  - @prosopo/provider@3.0.4
+  - @prosopo/util@3.0.1
+  - @prosopo/user-access-policy@3.1.3
+
+## 3.0.3
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/locale@3.0.2
+  - @prosopo/types@3.0.2
+  - @prosopo/env@3.0.3
+  - @prosopo/provider@3.0.3
+  - @prosopo/common@3.0.2
+  - @prosopo/api@3.0.3
+  - @prosopo/keyring@2.8.5
+  - @prosopo/user-access-policy@3.1.2
+  - @prosopo/api-express-router@3.0.2
+  - @prosopo/dotenv@3.0.2
+
+## 3.0.2
+### Patch Changes
+
+- Updated dependencies [87bd9bc]
+  - @prosopo/locale@3.0.1
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/api-express-router@3.0.1
+  - @prosopo/dotenv@3.0.1
+  - @prosopo/env@3.0.2
+  - @prosopo/keyring@2.8.4
+  - @prosopo/provider@3.0.2
+  - @prosopo/user-access-policy@3.1.1
+  - @prosopo/api@3.0.2
+
+## 3.0.1
+### Patch Changes
+
+- Updated dependencies [913f2a6]
+  - @prosopo/user-access-policy@3.1.0
+  - @prosopo/api@3.0.1
+  - @prosopo/provider@3.0.1
+  - @prosopo/env@3.0.1
+
 ## 3.0.0
 ### Major Changes
 
