@@ -13,8 +13,6 @@
 // limitations under the License.
 
 import { defineConfig } from "vitest/config";
-import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
-import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
 
 export default function () {
 	const testTypeEnv = process.env.TEST_TYPE || "";
@@ -23,11 +21,6 @@ export default function () {
 	// If we drop ^, there's a chance the tests with no type specified get ignored by accident, which we want to avoid. Ergo, include them by default.
 	const testTypeGlob = `@(|${testTypes.map((t) => (t ? `.${t.trim()}` : "")).join("|")})`;
 	console.log(`Filtering tests by type: ${testTypeGlob}`);
-
-	const plugins = [
-		VitePluginSourcemapExclude({ excludeNodeModules: true }),
-		VitePluginCloseAndCopy(),
-	];
 
 	return defineConfig({
 		build: {
@@ -65,6 +58,5 @@ export default function () {
 			},
 			testTimeout: 10000,
 		},
-		plugins: plugins,
 	});
 }
