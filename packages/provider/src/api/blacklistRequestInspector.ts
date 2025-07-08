@@ -14,12 +14,57 @@
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import {
+	type AccessRulesStorage,
 	type ResolveAccessPolicy,
 	ScopeMatch,
+	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
-import { getIPAddress } from "@prosopo/util";
+import { getIPAddress, uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
+
+export const getPrioritisedAccessRule = (
+	resolver: ResolveAccessPolicy,
+	userScope: {
+		[key: string]: bigint | string | undefined;
+	},
+	clientId?: string,
+) => {
+	const userScopeKeys = Object.keys(userScope).filter(
+		(key) => userScope[key] !== undefined,
+	);
+
+	const prioritisedUserScopes = uniqueSubsets(userScopeKeys).map(
+		(subset: string[]) =>
+			subset.reduce(
+				(acc, key) => {
+					acc[key] = userScope[key];
+					return acc;
+				},
+				{} as Record<string, bigint | string | undefined>,
+			),
+	);
+
+	const policyPromises = [];
+	for (const clientOrUndefined of [clientId, undefined]) {
+		for (const scope of prioritisedUserScopes) {
+			policyPromises.push(
+				resolver({
+					...(clientOrUndefined && {
+						policyScope: {
+							clientId: clientOrUndefined,
+						},
+						policyScopeMatch: ScopeMatch.Exact,
+					}),
+					userScope: userScopeInputSchema.parse(scope),
+
+					userScopeMatch: ScopeMatch.Exact,
+				}),
+			);
+		}
+	}
+	return Promise.race(policyPromises);
+};
 
 export class BlacklistRequestInspector {
 	public constructor(
@@ -92,20 +137,21 @@ export class BlacklistRequestInspector {
 				requestBody,
 			);
 
-			const accessPolicy = await this.resolveAccessPolicy({
-				policyScope: {
-					clientId: clientId,
-				},
-				policyScopeMatch: ScopeMatch.Greedy,
-				userScope: {
-					userId: userId,
-					numericIp: userIpAddress.bigInt(),
-					ja4Hash: ja4,
-				},
-				userScopeMatch: ScopeMatch.Greedy,
-			});
+			const accessPolicy = await getPrioritisedAccessRule(
+				this.resolveAccessPolicy,
 
-			return AccessPolicyType.Block === accessPolicy?.type;
+				{
+					userId: userId ? BigInt(userId) : undefined,
+					ja4: ja4 || undefined,
+					ipAddress: userIpAddress ? userIpAddress.bigInt() : undefined,
+				},
+				clientId,
+			);
+			if (!accessPolicy) {
+				return false;
+			}
+
+			return AccessPolicyType.Block === accessPolicy.type;
 		} catch (err) {
 			logger.error(() => ({
 				err,
