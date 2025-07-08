@@ -182,8 +182,10 @@ jobs:
             - name: tag
               if: ${{ env.affected != '[]' }}
               run: |
+                affected='${{ env.affected }}'
+            
                 # tag each affected package with the new version
-                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
+                for pkg in $(echo "$affected" | jq -r '.[] | .name'); do
                     if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                         version=$(npm pkg get version | jq -r '.') || version=""
                     else
@@ -192,52 +194,52 @@ jobs:
                             | jq -r ".[\"$pkg\"]" 2>/dev/null
                         )
                     fi
-                
+            
                     # Skip tagging if version is empty
                     if [ -z "$version" ]; then
                         echo "Skipping $pkg (could not determine version)"
                         continue
                     fi
-                
+            
                     affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" \
                         'map(if .name == $name then . + {version: $version} else . end)')
-                
+            
                     echo "Tagging $pkg with version $version"
-                
+            
                     set +e
                     git tag "$pkg@$version"
                     result=$?
                     set -e
-                
+            
                     affected=$(echo "$affected" | jq -c \
                         --arg name "$pkg" \
                         --arg version "$version" \
                         --argjson result_tag "$result" \
                         'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
-                
+            
                     echo
                 done
+            
                 # tag the repo with the root package version
                 git tag "v${{ env.root_version }}"
-
-                echo "affected: $affected"
-                echo "affected=$affected" >> $GITHUB_ENV
-
+            
+                echo "🔁 Tagging summary (raw):"
+                echo "$affected" | jq
+            
                 # Check if any package failed to tag and remove them from affected
                 tag_failed=$(echo "$affected" | jq '[.[] | select(.tag != 0)] | length')
                 if [ "$tag_failed" -gt 0 ]; then
                   echo "ℹ️  Some packages failed to tag:"
-                  echo "$affected" | jq -r '.[] | select(.tag != 0) | " - \(.name) (version: \(.version))"'
-                  
+                  echo "$affected" | jq -r '.[] | select(.tag != 0) | " - \(.name) (version: \(.version // "unknown"))"'
+            
                   # Remove failed packages from affected
-                  affected=$(echo "$affected" | jq '[.[] | select(.tag == 0)]')
+                  affected=$(echo "$affected" | jq -c '[.[] | select(.tag == 0)]')
                 else
                   echo "✅ All packages tagged successfully"
                 fi
-                
-                # Update the GitHub Actions environment with the filtered affected list
-                echo "affected=$affected" >> $GITHUB_ENV
-
+            
+                # Update GitHub Actions env (must be compact and single-line!)
+                echo "affected=$(echo "$affected" | jq -c '.')" >> "$GITHUB_ENV"
 
             - name: build+bundle
               if: ${{ env.affected != '[]' }}
