@@ -137,7 +137,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const userAccessPolicy =
+				const userAccessPolicy = (
 					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 						userAccessRulesStorage,
 						dapp,
@@ -147,7 +147,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							ja4Hash: req.ja4,
 							userAgent: req.headers["user-agent"],
 						},
-					);
+					)
+				)[0];
 				console.log("\nuser access policy", userAccessPolicy, "\n");
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
@@ -378,7 +379,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			}
 
 			const ipAddress = getIPAddress(req.ip || "");
-			const userAccessPolicy =
+			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
@@ -388,7 +389,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						ja4Hash: req.ja4,
 						userAgent: req.headers["user-agent"],
 					},
-				);
+				)
+			)[0];
 			console.log("\nuser access policy", userAccessPolicy, "\n");
 
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(

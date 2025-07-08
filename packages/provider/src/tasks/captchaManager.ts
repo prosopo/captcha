@@ -162,12 +162,11 @@ export class CaptchaManager {
 			[key: string]: bigint | string | undefined;
 		},
 	) {
-		const resolver = createAccessPolicyResolver(
+		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
-			this.logger,
+			userScope,
+			clientId,
 		);
-
-		return getPrioritisedAccessRule(resolver, userScope, clientId);
 	}
 
 	async getDetectorKeys(): Promise<string[]> {

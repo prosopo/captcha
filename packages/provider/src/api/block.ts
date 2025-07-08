@@ -34,7 +34,7 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	);
 
 	const blacklistRequestInspector = new BlacklistRequestInspector(
-		resolveAccessPolicy,
+		userAccessRulesStorage,
 		environmentReadinessWaiter,
 	);
 

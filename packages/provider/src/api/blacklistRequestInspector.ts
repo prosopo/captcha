@@ -23,8 +23,8 @@ import { AccessPolicyType } from "@prosopo/user-access-policy";
 import { getIPAddress, uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 
-export const getPrioritisedAccessRule = (
-	resolver: ResolveAccessPolicy,
+export const getPrioritisedAccessRule = async (
+	userAccessRulesStorage: AccessRulesStorage,
 	userScope: {
 		[key: string]: bigint | string | undefined;
 	},
@@ -49,7 +49,7 @@ export const getPrioritisedAccessRule = (
 	for (const clientOrUndefined of [clientId, undefined]) {
 		for (const scope of prioritisedUserScopes) {
 			policyPromises.push(
-				resolver({
+				userAccessRulesStorage.findRules({
 					...(clientOrUndefined && {
 						policyScope: {
 							clientId: clientOrUndefined,
@@ -63,12 +63,12 @@ export const getPrioritisedAccessRule = (
 			);
 		}
 	}
-	return Promise.race(policyPromises);
+	return (await Promise.all(policyPromises)).flat();
 };
 
 export class BlacklistRequestInspector {
 	public constructor(
-		private readonly resolveAccessPolicy: ResolveAccessPolicy,
+		private readonly userAccessRulesStorage: AccessRulesStorage,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 	) {}
 
@@ -137,19 +137,23 @@ export class BlacklistRequestInspector {
 				requestBody,
 			);
 
-			const accessPolicy = await getPrioritisedAccessRule(
-				this.resolveAccessPolicy,
-
+			const accessPolicies = await getPrioritisedAccessRule(
+				this.userAccessRulesStorage,
 				{
-					userId: userId ? BigInt(userId) : undefined,
+					userId: userId ? userId : undefined,
 					ja4: ja4 || undefined,
 					ipAddress: userIpAddress ? userIpAddress.bigInt() : undefined,
 				},
 				clientId,
 			);
-			if (!accessPolicy) {
+			if (
+				!accessPolicies ||
+				accessPolicies.length === 0 ||
+				!accessPolicies[0]
+			) {
 				return false;
 			}
+			const accessPolicy = accessPolicies[0];
 
 			return AccessPolicyType.Block === accessPolicy.type;
 		} catch (err) {
