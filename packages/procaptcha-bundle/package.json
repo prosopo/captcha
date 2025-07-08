@@ -33,7 +33,9 @@
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode ${MODE:-production}",
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/common": "3.0.2",
 		"@prosopo/dotenv": "3.0.4",
@@ -68,7 +70,6 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.0",
 		"@types/jsdom": "21.1.7",
 		"@types/react": "18.3.1",
 		"@types/react-dom": "18.3.1",

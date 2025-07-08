@@ -25,7 +25,9 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "echo no tests"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/account": "2.7.8",
 		"@prosopo/common": "3.0.2",
@@ -42,7 +44,6 @@
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.0",
 		"@types/react": "18.3.1",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",

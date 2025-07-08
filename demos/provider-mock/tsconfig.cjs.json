@@ -1,0 +1,26 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"module": "NodeNext"
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../../packages/api-express-router"
+		},
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/provider"
+		},
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../dev/config"
+		}
+	]
+}

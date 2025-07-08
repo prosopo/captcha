@@ -1,0 +1,19 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["./src"],
+	"references": [
+		{
+			"path": "../../integration/procaptcha-integration-build-config"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../locale"
+		}
+	]
+}

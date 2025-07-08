@@ -25,11 +25,10 @@
 		"@prosopo/api-route": "2.6.7",
 		"@prosopo/common": "3.0.2",
 		"uuid": "11.1.0",
-		"zod": "3.23.8"
-	},
-	"devDependencies": {
+		"zod": "3.23.8",
 		"@prosopo/config": "3.1.0"
 	},
+	"devDependencies": {},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"bugs": {

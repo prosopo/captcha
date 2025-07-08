@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"emitDeclarationOnly": false,
+		"types": ["vite/client"]
+	},
+	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"]
+}
