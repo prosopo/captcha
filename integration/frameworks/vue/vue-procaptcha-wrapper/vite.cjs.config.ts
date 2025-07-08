@@ -13,10 +13,14 @@ import path from "node:path";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ViteCommonJSConfig } from "@prosopo/config";
+import vue from "@vitejs/plugin-vue";
 
-export default function () {
-	return ViteCommonJSConfig(
+export default async function () {
+	const config = await ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
 	);
+	config.plugins = config.plugins || [];
+	config.plugins.push(vue());
+	return config;
 }
