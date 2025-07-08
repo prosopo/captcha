@@ -16,12 +16,15 @@ import { Address4, Address6 } from "ip-address";
 
 export const getIPAddress = (ipAddressString: string) => {
 	try {
-		if (ipAddressString.match(/^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/)) {
-			return new Address4(ipAddressString);
-		}
-		return new Address6(ipAddressString);
+		return new Address4(ipAddressString);
 	} catch (e) {
-		throw new Error("API.INVALID_IP");
+		try {
+			return new Address6(ipAddressString);
+		} catch (e) {
+			console.log(JSON.stringify(ipAddressString, null, 2));
+			console.log(`Invalid IP address: ${ipAddressString}`, e);
+			throw new Error("API.INVALID_IP");
+		}
 	}
 };
 

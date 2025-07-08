@@ -14,7 +14,7 @@
 
 import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
-import type { IPAddress, KeyringPair } from "@prosopo/types";
+import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -23,13 +23,8 @@ import type {
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
-import {
-	type AccessRulesStorage,
-	ScopeMatch,
-	createAccessPolicyResolver,
-	userScopeInputSchema,
-} from "@prosopo/user-access-policy";
-import { uniqueSubsets } from "@prosopo/util";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -158,55 +153,14 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: {
-			[key: string]: bigint | string | undefined;
+			[key: string]: bigint | string;
 		},
 	) {
-		const resolver = createAccessPolicyResolver(
+		return getPrioritisedAccessRule(
 			userAccessRulesStorage,
-			this.logger,
+			userScope,
+			clientId,
 		);
-
-		const userScopeKeys = Object.keys(userScope).filter(
-			(key) => userScope[key] !== undefined,
-		);
-
-		const prioritisedUserScopes = uniqueSubsets(userScopeKeys).map(
-			(subset: string[]) =>
-				subset.reduce(
-					(acc, key) => {
-						acc[key] = userScope[key];
-						return acc;
-					},
-					{} as Record<string, bigint | string | undefined>,
-				),
-		);
-
-		for (const clientOrUndefined of [clientId, undefined]) {
-			for (const scope of prioritisedUserScopes) {
-				const accessPolicy = await resolver({
-					...(clientOrUndefined && {
-						policyScope: {
-							clientId: clientOrUndefined,
-						},
-						policyScopeMatch: ScopeMatch.Exact,
-					}),
-					userScope: userScopeInputSchema.parse(scope),
-
-					userScopeMatch: ScopeMatch.Exact,
-				});
-				if (accessPolicy) {
-					this.logger.debug(() => ({
-						msg: "Access policy found",
-						data: {
-							accessPolicy,
-							scope,
-						},
-					}));
-					return accessPolicy;
-				}
-			}
-		}
-		return undefined;
 	}
 
 	async getDetectorKeys(): Promise<string[]> {
