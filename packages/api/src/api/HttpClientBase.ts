@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import { HttpError } from "./HttpError.js";
 
 export class HttpClientBase {
@@ -21,7 +21,10 @@ export class HttpClientBase {
 		this.baseURL = baseURL + prefix;
 	}
 
-	protected async fetch<T>(input: RequestInfo, config: AxiosRequestConfig = {}): Promise<T> {
+	protected async fetch<T>(
+		input: RequestInfo,
+		config: AxiosRequestConfig = {},
+	): Promise<T> {
 		config.timeout = config.timeout || 5000; // default timeout of 5 seconds
 		try {
 			const response = await axios.get(this.baseURL + input, config);
