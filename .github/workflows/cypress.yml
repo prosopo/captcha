@@ -3,115 +3,119 @@
 name: cypress
 
 on:
-  pull_request:
-    branches: [main, dev, staging, release/*]
-    types:
-      - opened # when a PR is opened
-      - synchronize # when a PR is pushed to
-      - reopened # when a PR is reopened
-      - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
-  workflow_dispatch:
+    pull_request:
+        branches: [main, dev, staging, release/*]
+        types:
+            - opened # when a PR is opened
+            - synchronize # when a PR is pushed to
+            - reopened # when a PR is reopened
+            - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+    workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 env:
-  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-  GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-  CARGO_TERM_COLOR: always
-  NODE_OPTIONS: "--max-old-space-size=4096"
-  NODE_ENV: "test"
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    CARGO_TERM_COLOR: always
+    NODE_OPTIONS: "--max-old-space-size=4096"
+    NODE_ENV: "test"
 
 defaults:
-  run:
-    shell: bash
+    run:
+        shell: bash
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      - name: Print contexts
-        uses: prosopo/captcha/.github/actions/print_contexts@gha
-        with:
-          INPUTS_CONTEXT: ${{ toJson(inputs) }}
-          NEEDS_CONTEXT: ${{ toJson(needs) }}
-          VARS_CONTEXT: ${{ toJson(vars) }}
-          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+    check:
+        runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
+        steps:
+            - name: Print contexts
+              uses: prosopo/captcha/.github/actions/print_contexts@gha
+              with:
+                INPUTS_CONTEXT: ${{ toJson(inputs) }}
+                NEEDS_CONTEXT: ${{ toJson(needs) }}
+                VARS_CONTEXT: ${{ toJson(vars) }}
+                SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-      - name: Set NX_PARALLEL environment variable
-        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+            - name: Set NX_PARALLEL environment variable
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
+            - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
-      - uses: prosopo/captcha/.github/actions/npm@gha
-        with:
-          npm_ci_args: '--include=dev'
+            - uses: prosopo/captcha/.github/actions/npm@gha
+              with:
+                npm_ci_args: '--include=dev'
 
-      - name: Setup env
-        run: |
-          set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+            # build the packages required by vite build commands first
+            - run: npm run -w @prosopo/config build
+            - run: npm run -w @prosopo/dotenv build
 
-          cp demos/client-example-server/env.development demos/client-example-server/.env.test
-          cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
-          cp dev/scripts/env.test .env.test
-          cp dev/scripts/env.test dev/scripts/.env.test
-          cp dev/scripts/env.test packages/cli/.env.test
-          cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-          echo NODE_ENV: "$NODE_ENV"
+            # build all packages in workspace
+            - run: npm run build:all
 
-      # build all packages in workspace
-      - run: npm run build:all
+            - name: Setup env
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-      - name: Start the docker images
-        run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
-          docker container ls
-          sleep 10s
+                    cp demos/client-example-server/env.development demos/client-example-server/.env.test
+                    cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
+                    cp dev/scripts/env.test .env.test
+                    cp dev/scripts/env.test dev/scripts/.env.test
+                    cp dev/scripts/env.test packages/cli/.env.test
+                    cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+                    echo NODE_ENV: "$NODE_ENV"
 
-      # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-      - run: NODE_ENV="test" npm run setup
+            - name: Start the docker images
+              run: |
+                  docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+                  docker container ls
+                  sleep 10s
 
-      # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
-      # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
-      # by the cypress tests to find the elements they need to interact with
-      - run: NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run build:bundle
+            # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
+            - run: NODE_ENV="test" npm run setup
 
-      - name: Run the cypress tests on client-bundle-example
-        run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
+            # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
+            # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
+            # by the cypress tests to find the elements they need to interact with
+            - run: NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
 
-      - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
-        run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
+            - name: Run the cypress tests on client-bundle-example
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
 
-      - name: Run the cypress tests on client-bundle-example explicit rendering with pow captcha
-        run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
+            - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
 
-      - name: Run the cypress tests on client-bundle-example explicit rendering with invisible captcha
-        run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
+            - name: Run the cypress tests on client-bundle-example explicit rendering with pow captcha
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
 
-      # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v4
-        # store screenshots only on failures
-        if: failure()
-        with:
-          name: cypress-screenshots
-          path: ./demos/cypress-shared/cypress/screenshots
-          if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
+            - name: Run the cypress tests on client-bundle-example explicit rendering with invisible captcha
+              run: |
+                  npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "sleep 10s && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
 
-      # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v4
-        # store videos only on failures
-        if: failure()
-        with:
-          name: cypress-videos
-          path: ./demos/cypress-shared/cypress/videos
-          if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
+            # after the test run completes store videos and any screenshots
+            - uses: actions/upload-artifact@v4
+              # store screenshots only on failures
+              if: failure()
+              with:
+                  name: cypress-screenshots
+                  path: ./demos/cypress-shared/cypress/screenshots
+                  if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
-      - run: docker compose --file ./docker/docker-compose.test.yml down
+            # after the test run completes store videos and any screenshots
+            - uses: actions/upload-artifact@v4
+              # store videos only on failures
+              if: failure()
+              with:
+                  name: cypress-videos
+                  path: ./demos/cypress-shared/cypress/videos
+                  if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
+
+            - run: docker compose --file ./docker/docker-compose.test.yml down

@@ -11,9 +11,8 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "del-cli ./dist",
-		"build:tsc": "tsc --build",
-		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV",
-		"build": "run-s build:tsc build:bundle"
+		"build": "tsc --build",
+		"bundle": "vite build"
 	},
 	"dependencies": {
 		"@prosopo/types": "3.0.0",

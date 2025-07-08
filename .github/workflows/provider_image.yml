@@ -3,99 +3,105 @@
 name: provider_image
 
 on:
-  pull_request:
-    branches: [main, dev, staging, release/*]
-    types:
-      - opened # when a PR is opened
-      - synchronize # when a PR is pushed to
-      - reopened # when a PR is reopened
-      - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
-  workflow_dispatch:
+    pull_request:
+        branches: [main, dev, staging, release/*]
+        types:
+            - opened # when a PR is opened
+            - synchronize # when a PR is pushed to
+            - reopened # when a PR is reopened
+            - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+    workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 env:
-  GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-  GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
-  CARGO_TERM_COLOR: always
-  NODE_OPTIONS: "--max-old-space-size=4096"
+    GITHUB_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
+    CARGO_TERM_COLOR: always
+    NODE_OPTIONS: "--max-old-space-size=4096"
 
 defaults:
-  run:
-    shell: bash
+    run:
+        shell: bash
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      - name: Print contexts
-        uses: prosopo/captcha/.github/actions/print_contexts@gha
-        with:
-          INPUTS_CONTEXT: ${{ toJson(inputs) }}
-          NEEDS_CONTEXT: ${{ toJson(needs) }}
-          VARS_CONTEXT: ${{ toJson(vars) }}
-          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+    check:
+        runs-on: ubuntu-latest
+        if: github.event.pull_request.draft == false
+        steps:
+            - name: Print contexts
+              uses: prosopo/captcha/.github/actions/print_contexts@gha
+              with:
+                INPUTS_CONTEXT: ${{ toJson(inputs) }}
+                NEEDS_CONTEXT: ${{ toJson(needs) }}
+                VARS_CONTEXT: ${{ toJson(vars) }}
+                SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-      - name: Set NX_PARALLEL environment variable
-        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+            - name: Set NX_PARALLEL environment variable
+              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
+            - uses: actions/checkout@v4
+              with:
+                  submodules: "recursive"
 
-      - uses: prosopo/captcha/.github/actions/npm@gha
-        with:
-          npm_ci_args: '--include=dev'
+            - uses: prosopo/captcha/.github/actions/npm@gha
+              with:
+                npm_ci_args: '--include=dev'
 
-      - name: env
-        run: |
-          cp ./dev/scripts/env.production ./packages/cli/.env.production
-          cp ./dev/scripts/env.production ./.env.production
-          # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
-          echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
+            # build all the packages in the workspace to prepare assets for the next cli bundle command
+            - name: Build packages
+              run: |
+                npm run build:all
 
-      # build all the packages in the workspace to prepare assets for the next cli bundle command
-      - name: Build packages
-        run: |
-          NODE_ENV="production" npm run build:all
+            # build the cli production bundle
+            - name: Build cli production bundle
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+                    cp ./dev/scripts/env.production ./packages/cli/.env.production
+                    cp ./dev/scripts/env.production ./.env.production
+                    # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
+                    echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
+                    NODE_ENV="production" npm run -w @prosopo/cli bundle
 
-      # We cannot create the images in a single step because the output of buildx is not compatible with
-      # `docker load`. https://stackoverflow.com/a/72952846/1178971
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
 
-      # create the provider image for AMD64
-      - name: Build the Provider Container
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{github.workspace}}
-          file: ${{github.workspace}}/docker/images/provider/src/Dockerfile
-          platforms: linux/amd64
-          push: false
-          tags: prosopo/provider:dev
-          outputs: type=docker,dest=provider-amd64.tar
+            # We cannot create the images in a single step because the output of buildx is not compatible with
+            # `docker load`. https://stackoverflow.com/a/72952846/1178971
 
-      # load the AMD64 image
-      - name: Load the Provider Container
-        run: docker load -i provider-amd64.tar
+            # create the provider image for AMD64
+            - name: Build the Provider Container
+              id: build_docker_provider_amd64
+              continue-on-error: false
+              uses: docker/build-push-action@v5
+              with:
+                  context: ${{github.workspace}}
+                  file: ${{github.workspace}}/docker/images/provider.dockerfile
+                  platforms: linux/amd64
+                  push: false
+                  tags: prosopo/provider:dev
+                  outputs: type=docker,dest=provider-amd64.tar
 
-      # Generate a mnemonic for the provider image
-      - name: Generate mnemonic and add to env file
-        run: |
-          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" node dev/scripts/dist/scripts/generateMnemonic.js --env
+            # load the AMD64 image
+            - name: Load the Provider Container
+              run: docker load -i provider-amd64.tar
 
-      # Check that the version command works when running the bundle in the provider image
-      - name: Check provider bundle runs
-        run: |
-          set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+            # Generate a mnemonic for the provider image
+            - name: Generate mnemonic and add to env file
+              run: |
+                  PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" node dev/scripts/dist/scripts/generateMnemonic.js --env
 
-            CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
-            sleep 20s
-            docker logs "$CONTAINER" >& provider.log
-            cat provider.log
-            grep -oE "\"version\":\".*\"" provider.log || exit 1
+            # Check that the version command works when running the bundle in the provider image
+            - name: Check provider bundle runs
+              run: |
+                  set -euxo pipefail # stop on errors, print commands, fail on pipe fails
+
+                    CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
+                    sleep 20s
+                    docker logs "$CONTAINER" >& provider.log
+                    cat provider.log
+                    grep -oE "Version: \\\\\".*\\\\\"" provider.log || (cat provider.log && exit 1)
 

@@ -33,7 +33,8 @@
 	},
 	"scripts": {
 		"test": "echo \"No test specified\"",
-		"build": "tsc --build",
+		"build": "tsc --build --verbose",
+		"build:cjs": "echo 'no cjs build'",
 		"clean": "tsc --build --clean",
 		"cypress:open:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.image.config.js",
 		"cypress:run:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress run --browser chrome --config-file cypress.image.config.js",

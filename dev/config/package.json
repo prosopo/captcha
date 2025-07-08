@@ -21,9 +21,8 @@
 	"scripts": {
 		"test": "echo \"No test specified\"",
 		"clean": "tsc --build --clean",
-		"build:tsc": "tsc --build",
-		"build:bundle": "NODE_ENV=${NODE_ENV:-production}; vite --mode=$NODE_ENV build --config vite.cjs.config.ts",
-		"build": "run-s build:tsc build:bundle"
+		"build": "tsc --build --verbose",
+		"build:cjs": "vite build --config vite.cjs.config.ts"
 	},
 	"engines": {
 		"node": "20",
