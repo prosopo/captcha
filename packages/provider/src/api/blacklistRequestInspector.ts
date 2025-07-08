@@ -97,6 +97,8 @@ export class BlacklistRequestInspector {
 	): Promise<void> {
 		const rawIp = request.ip || "";
 
+		console.log(`Raw IP: ${rawIp}`);
+
 		request.logger.debug(() => ({
 			data: { ja4: request.ja4 },
 		}));
@@ -148,8 +150,6 @@ export class BlacklistRequestInspector {
 		await this.environmentReadinessWaiter();
 
 		try {
-			const userIpAddress = getIPAddress(rawIp);
-
 			const { userId, clientId } = this.extractIdsFromRequest(
 				requestHeaders,
 				requestBody,
@@ -157,12 +157,7 @@ export class BlacklistRequestInspector {
 
 			const accessPolicies = await getPrioritisedAccessRule(
 				this.userAccessRulesStorage,
-				getRequestUserScope(
-					requestHeaders,
-					ja4,
-					userIpAddress?.toString(),
-					userId,
-				),
+				getRequestUserScope(requestHeaders, ja4, rawIp, userId),
 				clientId,
 			);
 			if (
