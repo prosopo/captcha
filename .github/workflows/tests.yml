@@ -60,6 +60,9 @@ jobs:
       # build all packages in workspace
       - run: npm run build:all
 
+      # build the procaptcha-bundle in cjs mode
+      - run: npx nx run @prosopo/procaptcha-bundle:build:cjs 
+
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         run: |

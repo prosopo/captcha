@@ -10,6 +10,7 @@
 	"scripts": {
 		"hostid": "dig +short ${HOSTNAME}.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
 		"build:all": "nx run-many --target=build",
+		"build:cjs:all": "nx run-many --target=build:cjs",
 		"bundle:all": "nx run-many --target=bundle",
 		"clean-npm:node-modules": "del-cli --verbose '**/node_modules'",
 		"clean-npm:package-lock": "del-cli --verbose '**/package-lock.json' '!**/node_modules'",
