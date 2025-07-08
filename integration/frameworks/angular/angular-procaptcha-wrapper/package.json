@@ -11,8 +11,9 @@
 	"module": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"default": "./dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs"
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
 		}
 	},
 	"scripts": {

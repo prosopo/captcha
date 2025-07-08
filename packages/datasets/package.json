@@ -22,7 +22,8 @@
 	"exports": {
 		".": {
 			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
 		},
 		"./captcha": {
 			"types": "./dist/captcha/index.d.ts",
@@ -33,8 +34,12 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": [
+				"dist/types"
+			],
+			"captcha": [
+				"dist/captcha"
+			]
 		}
 	},
 	"dependencies": {

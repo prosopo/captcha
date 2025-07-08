@@ -6,8 +6,9 @@
 	"types": "dist/app.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/app.js",
-			"require": "./dist/cjs/app.cjs"
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/app.d.ts"
 		}
 	},
 	"type": "module",
