@@ -26,7 +26,7 @@ import type { NextFunction, Request, Response } from "express";
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: {
-		[key: string]: bigint | string | undefined;
+		[key: string]: bigint | string;
 	},
 	clientId?: string,
 ) => {
@@ -137,12 +137,17 @@ export class BlacklistRequestInspector {
 				requestBody,
 			);
 
+			const userAgent = requestHeaders["user-agent"]
+				? requestHeaders["user-agent"].toString()
+				: undefined;
+
 			const accessPolicies = await getPrioritisedAccessRule(
 				this.userAccessRulesStorage,
 				{
-					userId: userId ? userId : undefined,
-					ja4: ja4 || undefined,
-					ipAddress: userIpAddress ? userIpAddress.bigInt() : undefined,
+					...(userId && { userId: userId }),
+					...(ja4 && { ja4Hash: ja4 }),
+					...(userAgent && { userAgent: userAgent }),
+					...(userIpAddress && { numericIp: userIpAddress.bigInt() }),
 				},
 				clientId,
 			);

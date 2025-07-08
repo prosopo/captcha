@@ -137,19 +137,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
+				const userAgent = req.headers["user-agent"]
+					? req.headers["user-agent"].toString()
+					: undefined;
+				const userScope = {
+					...(user && { userId: user }),
+					...(req.ja4 && { ja4Hash: req.ja4 }),
+					...(userAgent && { userAgent: userAgent }),
+					...(ipAddress && { ipAddress: ipAddress.bigInt() }),
+				};
+
 				const userAccessPolicy = (
 					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 						userAccessRulesStorage,
 						dapp,
-						{
-							numericIp: ipAddress.bigInt(),
-							userId: user,
-							ja4Hash: req.ja4,
-							userAgent: req.headers["user-agent"],
-						},
+						userScope,
 					)
 				)[0];
-				console.log("\nuser access policy", userAccessPolicy, "\n");
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
 						count:
@@ -379,19 +383,22 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			}
 
 			const ipAddress = getIPAddress(req.ip || "");
+			const userAgent = req.headers["user-agent"]
+				? req.headers["user-agent"].toString()
+				: undefined;
+			const userScope = {
+				...(user && { userId: user }),
+				...(req.ja4 && { ja4Hash: req.ja4 }),
+				...(userAgent && { userAgent: userAgent }),
+				...(ipAddress && { ipAddress: ipAddress.bigInt() }),
+			};
 			const userAccessPolicy = (
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
-					{
-						numericIp: ipAddress.bigInt(),
-						userId: user,
-						ja4Hash: req.ja4,
-						userAgent: req.headers["user-agent"],
-					},
+					userScope,
 				)
 			)[0];
-			console.log("\nuser access policy", userAccessPolicy, "\n");
 
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,

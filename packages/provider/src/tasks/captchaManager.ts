@@ -14,7 +14,7 @@
 
 import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
-import type { IPAddress, KeyringPair } from "@prosopo/types";
+import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -23,13 +23,7 @@ import type {
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
-import {
-	type AccessRulesStorage,
-	ScopeMatch,
-	createAccessPolicyResolver,
-	userScopeInputSchema,
-} from "@prosopo/user-access-policy";
-import { uniqueSubsets } from "@prosopo/util";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
@@ -159,7 +153,7 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: {
-			[key: string]: bigint | string | undefined;
+			[key: string]: bigint | string;
 		},
 	) {
 		return getPrioritisedAccessRule(
