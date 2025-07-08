@@ -80,6 +80,7 @@ export const getPrioritisedAccessRule = async (
 			);
 		}
 	}
+	// TODO maybe change this to Promise.race for speed.
 	return (await Promise.all(policyPromises)).flat();
 };
 
