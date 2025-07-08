@@ -128,7 +128,7 @@ jobs:
                 npm i
                 # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
                 root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
-                echo "root_version=root_version" >> $GITHUB_ENV
+                echo "root_version=$root_version" >> $GITHUB_ENV
                 echo "Setting root package.json version to $root_version"
                 npm pkg set version="$root_version"
                 cd docker/images/provider
@@ -256,26 +256,26 @@ jobs:
                 git push
                 git push --tags
 
-            - name: set repo link
-              run: |
-                # set the repository field to link the package with the repo
-
-                # get the workspace dir
-                workspace_dir=$(pwd)
-                echo "Workspace directory: $workspace_dir"
-
-                # for each affected package
-                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
-                    echo "Setting repository field for $pkg"
-                    pkg_dir="$(npx -w "$pkg" -- node -p 'process.cwd()')"
-                    echo "Package directory: $pkg_dir"
-                    rel_dir=$(realpath --relative-to="$workspace_dir" "$pkg_dir")
-                    echo "Relative directory: $rel_dir"
-                    # set the repository field to the relative path
-                    npm pkg --workspace $pkg set repository.directory="$rel_dir"
-                    npm pkg --workspace $pkg set repository.url="https://github.com/${{ github.repository }}.git"
-                    npm pkg --workspace $pkg set repository.type="git"
-                done
+#            - name: set repo link
+#              run: |
+#                # set the repository field to link the package with the repo
+#
+#                # get the workspace dir
+#                workspace_dir=$(pwd)
+#                echo "Workspace directory: $workspace_dir"
+#
+#                # for each affected package
+#                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
+#                    echo "Setting repository field for $pkg"
+#                    pkg_dir="$(npx -w "$pkg" -- node -p 'process.cwd()')"
+#                    echo "Package directory: $pkg_dir"
+#                    rel_dir=$(realpath --relative-to="$workspace_dir" "$pkg_dir")
+#                    echo "Relative directory: $rel_dir"
+#                    # set the repository field to the relative path
+#                    npm pkg --workspace $pkg set repository.directory="$rel_dir"
+#                    npm pkg --workspace $pkg set repository.url="https://github.com/${{ github.repository }}.git"
+#                    npm pkg --workspace $pkg set repository.type="git"
+#                done
 
             - name: publish to npm
               if: ${{ env.affected != '[]' }} && ${{ env.prerelease == 'false' }}
@@ -307,38 +307,38 @@ jobs:
                   exit 1
                 fi
 
-            - name: publish to gh
-              if: ${{ env.affected != '[]' }}
-              run: |
-                # for each affected package
-                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
-                    # skip the workspace root
-                    if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
-                        echo "Skipping workspace root package"
-                        continue
-                    fi
-
-                    echo "Publishing $pkg to gh"
-                    result=0
-                    # make the package non-private so it can be published to gh
-                    npm pkg --workspace $pkg delete private
-                    set +e
-                    npm publish -w "$pkg" --access public --registry https://npm.pkg.github.com
-                    result_gh=$?
-                    set -e
-                    echo
-
-                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson gh "$result" 'map(if .name == $pkg then . + {gh: $gh} else . end)')
-                done
-
-                echo "affected: $affected"
-                echo "affected=$affected" >> $GITHUB_ENV
-
-                # expect always publish to GitHub Packages
-                if [ "$(echo "$affected" | jq '[.[] | select(.gh != 0)] | length')" -gt 0 ]; then
-                    echo "Some packages failed to publish to GitHub Packages"
-                    exit 1
-                fi
+#            - name: publish to gh
+#              if: ${{ env.affected != '[]' }}
+#              run: |
+#                # for each affected package
+#                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
+#                    # skip the workspace root
+#                    if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+#                        echo "Skipping workspace root package"
+#                        continue
+#                    fi
+#
+#                    echo "Publishing $pkg to gh"
+#                    result=0
+#                    # make the package non-private so it can be published to gh
+#                    npm pkg --workspace $pkg delete private
+#                    set +e
+#                    npm publish -w "$pkg" --access public --registry https://npm.pkg.github.com
+#                    result_gh=$?
+#                    set -e
+#                    echo
+#
+#                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson gh "$result" 'map(if .name == $pkg then . + {gh: $gh} else . end)')
+#                done
+#
+#                echo "affected: $affected"
+#                echo "affected=$affected" >> $GITHUB_ENV
+#
+#                # expect always publish to GitHub Packages
+#                if [ "$(echo "$affected" | jq '[.[] | select(.gh != 0)] | length')" -gt 0 ]; then
+#                    echo "Some packages failed to publish to GitHub Packages"
+#                    exit 1
+#                fi
 
 
             - name: publish to dockerhub
@@ -391,7 +391,7 @@ jobs:
                 fi
 
                 npm_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != null) | select(.npm == 0) | .name  + "@" + .version')
-                gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != null) | select(.gh == 0) | .name  + "@" + .version')
+                # gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != null) | select(.gh == 0) | .name  + "@" + .version')
                 tag_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != null) | select(.tag == 0) | .name  + "@" + .version')
                 dockerhub_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.dockerhub != null) | select(.dockerhub == 0) | .name  + "@" + .version')
                 npm_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != null) | select(.npm != 0) | .name  + "@" + .version')
