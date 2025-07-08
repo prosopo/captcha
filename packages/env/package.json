@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "3.0.4",
+	"version": "3.0.5",
 	"description": "Path env prosopo environment",
 	"main": "dist/index.js",
 	"type": "module",
@@ -23,11 +23,11 @@
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
 		"@prosopo/common": "3.0.2",
-		"@prosopo/database": "3.0.4",
+		"@prosopo/database": "3.0.5",
 		"@prosopo/types": "3.0.2",
-		"@prosopo/types-database": "3.0.4",
-		"@prosopo/types-env": "2.7.8",
-		"@prosopo/util": "3.0.1",
+		"@prosopo/types-database": "3.0.5",
+		"@prosopo/types-env": "2.7.9",
+		"@prosopo/util": "3.0.2",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
@@ -36,7 +36,7 @@
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.1",
+		"@prosopo/config": "3.1.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

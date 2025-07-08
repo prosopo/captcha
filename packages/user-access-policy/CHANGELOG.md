@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.1.4
+### Patch Changes
+
+  - @prosopo/util@3.0.2
+
 ## 3.1.3
 ### Patch Changes
 

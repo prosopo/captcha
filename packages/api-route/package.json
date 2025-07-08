@@ -24,7 +24,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.1"
+		"@prosopo/config": "3.1.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

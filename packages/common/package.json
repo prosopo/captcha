@@ -36,7 +36,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.0.1",
+		"@prosopo/config": "3.1.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
