@@ -12,16 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
-import { ApiPrefix } from "@prosopo/types";
+import { ApiPrefix, type IPAddress } from "@prosopo/types";
 import {
+	AccessPolicyType,
 	type AccessRulesStorage,
-	type ResolveAccessPolicy,
 	ScopeMatch,
 	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
-import { AccessPolicyType } from "@prosopo/user-access-policy";
 import { getIPAddress, uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
+
+export const getRequestUserScope = (
+	requestHeaders: Record<string, unknown>,
+	ja4?: string,
+	ip?: string,
+	user?: string,
+) => {
+	const ipAddress = getIPAddress(ip || "");
+	const userAgent = requestHeaders["user-agent"]
+		? requestHeaders["user-agent"].toString()
+		: undefined;
+	return {
+		...(user && { userId: user }),
+		...(ja4 && { ja4Hash: ja4 }),
+		...(userAgent && { userAgent: userAgent }),
+		...(ipAddress && { ipAddress: ipAddress.bigInt() }),
+	};
+};
 
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
@@ -137,18 +154,14 @@ export class BlacklistRequestInspector {
 				requestBody,
 			);
 
-			const userAgent = requestHeaders["user-agent"]
-				? requestHeaders["user-agent"].toString()
-				: undefined;
-
 			const accessPolicies = await getPrioritisedAccessRule(
 				this.userAccessRulesStorage,
-				{
-					...(userId && { userId: userId }),
-					...(ja4 && { ja4Hash: ja4 }),
-					...(userAgent && { userAgent: userAgent }),
-					...(userIpAddress && { numericIp: userIpAddress.bigInt() }),
-				},
+				getRequestUserScope(
+					requestHeaders,
+					ja4,
+					userIpAddress?.toString(),
+					userId,
+				),
 				clientId,
 			);
 			if (
