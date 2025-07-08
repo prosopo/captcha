@@ -183,7 +183,7 @@ jobs:
                     if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                       version=$(npm pkg get version | jq -r '.')
                     else  
-                      if [ "$pkg" = "docker/images/provider" ]; then
+                      if [ "$pkg" = "@prosopo/docker-provider" ]; then
                         version=$(jq -r '.version' docker/images/provider/package.json)
                       else
                         version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
