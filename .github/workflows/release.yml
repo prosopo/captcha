@@ -162,6 +162,10 @@ jobs:
                     echo "No package.json files changed, no affected packages"
                 fi
                 echo "affected: $affected"
+                
+                # Remove any docker packages
+                affected=$(echo "$affected" | jq -c 'map(select(.name != "docker/images/provider"))')
+                
                 echo "affected=$affected" >> $GITHUB_ENV
 
             - name: lint
@@ -183,11 +187,7 @@ jobs:
                     if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                       version=$(npm pkg get version | jq -r '.')
                     else  
-                      if [ "$pkg" = "@prosopo/docker-provider" ]; then
-                        version=$(jq -r '.version' docker/images/provider/package.json)
-                      else
-                        version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
-                      fi
+                      version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
                     fi
                     affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')
                     echo "Tagging $pkg with version $version"
