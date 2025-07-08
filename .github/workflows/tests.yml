@@ -58,7 +58,7 @@ jobs:
           cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
       # build all packages in workspace
-      - run: nx run-many --target=build,build:cjs 
+      - run: npx nx run-many --target=build,build:cjs 
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
