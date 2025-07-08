@@ -34,6 +34,8 @@ import {
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
+	type StoredStatus,
+	StoredStatusNames,
 } from "@prosopo/types";
 import type {
 	FrictionlessTokenRecord,
@@ -65,8 +67,6 @@ import {
 	type SolutionRecord,
 	SolutionRecordSchema,
 	type StoredCaptcha,
-	type StoredStatus,
-	StoredStatusNames,
 	type Tables,
 	type UserCommitment,
 	type UserCommitmentRecord,

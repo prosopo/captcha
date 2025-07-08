@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.1.1",
+	"version": "3.1.2",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -25,9 +25,9 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/api-route": "2.6.6",
-		"@prosopo/common": "3.0.1",
-		"@prosopo/types": "3.0.1",
+		"@prosopo/api-route": "2.6.7",
+		"@prosopo/common": "3.0.2",
+		"@prosopo/types": "3.0.2",
 		"@prosopo/util": "3.0.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",

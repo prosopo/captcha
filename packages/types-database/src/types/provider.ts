@@ -75,19 +75,6 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
 
-export enum StoredStatusNames {
-	notStored = "notStored",
-	userSubmitted = "userSubmitted",
-	serverChecked = "serverChecked",
-	stored = "stored",
-}
-
-export type StoredStatus =
-	| StoredStatusNames.notStored
-	| StoredStatusNames.userSubmitted
-	| StoredStatusNames.serverChecked
-	| StoredStatusNames.stored;
-
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;

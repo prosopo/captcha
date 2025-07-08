@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "3.0.1",
+	"version": "3.0.2",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -28,10 +28,10 @@
 	"dependencies": {
 		"@noble/hashes": "1.5.0",
 		"@polkadot/util": "12.6.2",
-		"@prosopo/workspace": "3.0.0",
-		"@prosopo/common": "3.0.1",
-		"@prosopo/types": "3.0.1",
+		"@prosopo/common": "3.0.2",
+		"@prosopo/types": "3.0.2",
 		"@prosopo/util": "3.0.0",
+		"@prosopo/workspace": "3.0.0",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"bcrypt": "5.1.1",

@@ -122,9 +122,19 @@ jobs:
           npx @changesets/cli version --verbose
           git status
           if [ -z "$(git status --porcelain)" ]; then
-            echo "No changes to commit"
-            exit 0
+              echo "No changes to commit"
+              exit 0
           fi
+          npm i
+          # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
+          root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+          echo "root_version=root_version" >> $GITHUB_ENV
+          echo "Setting root package.json version to $root_version"
+          npm pkg set version="$root_version"
+          cd docker/images/provider
+          # Set the version of the docker/images/provider/package.json to the same as the root package.json
+          npm pkg set version="$root_version"
+          cd -
           git add -u .
           git commit -m "chore: version bump"
           git status
@@ -144,14 +154,18 @@ jobs:
           done
           affected='[]'
           if [ -n "$package_files" ]; then
-            for file in $package_files; do
-              name=$(jq -r '.name' "$file")
-              affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, version: "unknown"}]')
-            done
+              for file in $package_files; do
+                  name=$(jq -r '.name' "$file")
+                  affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, version: "unknown"}]')
+              done
           else 
-            echo "No package.json files changed, no affected packages"
+              echo "No package.json files changed, no affected packages"
           fi
           echo "affected: $affected"
+          
+          # Remove any docker packages
+          affected=$(echo "$affected" | jq -c 'map(select(.name != "docker/images/provider"))')
+          
           echo "affected=$affected" >> $GITHUB_ENV
 
       - name: lint
@@ -170,20 +184,23 @@ jobs:
         run: |
           # tag each affected package with the new version
           for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
-            if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
-              version=$(npm pkg get version | jq -r '.')
-            else  
-              version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
-            fi
-            affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')
-            echo "Tagging $pkg with version $version"
-            set +e
-            git tag "$pkg@$version"
-            result=$?
-            set -e
-            affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
-            echo
+              if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
+                version=$(npm pkg get version | jq -r '.')
+              else  
+                version=$(npm pkg --workspace $pkg get version | jq -r ".[\"$pkg\"]")
+              fi
+              affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" 'map(if .name == $name then . + {version: $version} else . end)')
+              echo "Tagging $pkg with version $version"
+              set +e
+              git tag "$pkg@$version"
+              result=$?
+              set -e
+              affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" --argjson result_tag "$result" 'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
+              echo
           done
+          
+          # tag the repo with the root package version
+          git tag "v${{ env.root_version }}"
 
           echo "affected: $affected"
           echo "affected=$affected" >> $GITHUB_ENV
@@ -260,17 +277,17 @@ jobs:
             echo "Some packages failed to publish to npm"
             exit 1
           fi
-      
+
       - name: publish to gh
         if: ${{ env.affected != '[]' }}
         run: |
           # for each affected package
           for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
-            # skip the workspace root
-            if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
-              echo "Skipping workspace root package"
-              continue
-            fi
+              # skip the workspace root
+              if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+                  echo "Skipping workspace root package"
+                  continue
+              fi
 
             echo "Publishing $pkg to gh"
             result=0
@@ -294,17 +311,17 @@ jobs:
             exit 1
           fi
 
-      
+
       - name: publish to dockerhub
         if: ${{ env.affected != '[]' }}
         run: |
           # for each affected package
           for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
-            # skip the workspace root
-            if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
-              echo "Skipping workspace root package"
-              continue
-            fi
+              # skip the workspace root
+              if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+                  echo "Skipping workspace root package"
+                  continue
+              fi
 
             echo "Publishing $pkg to dockerhub"
             result=0
