@@ -66,6 +66,7 @@ const ONE_HOUR = 60 * 60;
 const ONE_DAY = ONE_HOUR * 24;
 const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
+const TEN_MINUTES = 10 * 60;
 
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
@@ -452,14 +453,18 @@ SessionRecordSchema.index({ deleted: 1 });
 export type DetectorKey = {
 	detectorKey: string;
 	createdAt: Date;
+	expiresAt?: Date;
 };
 
 export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
 	detectorKey: { type: String, required: true },
+	expiresAt: { type: Date, required: false, expires: 0 },
 });
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
+// TTL index for automatic cleanup of expired keys
+DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
