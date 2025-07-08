@@ -2,7 +2,8 @@
 import {onMounted, onUpdated, ref} from "vue";
 
 import {HTMLAttributes} from "vue"
-import {type ProcaptchaRenderOptions, renderProcaptcha} from "@prosopo/procaptcha-wrapper";
+import {renderProcaptcha} from "@prosopo/procaptcha-wrapper";
+import type {ProcaptchaRenderOptions} from "@prosopo/types";
 
 type ProcaptchaComponentProperties = ProcaptchaRenderOptions & {
   htmlAttributes?: AllHtmlAttributes,

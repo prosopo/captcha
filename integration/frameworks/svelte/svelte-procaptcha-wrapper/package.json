@@ -10,9 +10,10 @@
 	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js",
 			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/index.d.ts"
+			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
