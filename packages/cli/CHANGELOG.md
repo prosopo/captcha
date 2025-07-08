@@ -1,5 +1,17 @@
 # @prosopo/cli
 
+## 3.0.4
+### Patch Changes
+
+- Updated dependencies [5619b4b]
+  - @prosopo/config@3.0.1
+  - @prosopo/api@3.0.4
+  - @prosopo/dotenv@3.0.3
+  - @prosopo/env@3.0.4
+  - @prosopo/provider@3.0.4
+  - @prosopo/util@3.0.1
+  - @prosopo/user-access-policy@3.1.3
+
 ## 3.0.3
 ### Patch Changes
 

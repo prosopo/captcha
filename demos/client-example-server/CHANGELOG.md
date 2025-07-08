@@ -1,5 +1,12 @@
 # @prosopo/client-example-server
 
+## 2.7.10
+### Patch Changes
+
+  - @prosopo/dotenv@3.0.3
+  - @prosopo/server@2.9.6
+  - @prosopo/util@3.0.1
+
 ## 2.7.9
 ### Patch Changes
 
