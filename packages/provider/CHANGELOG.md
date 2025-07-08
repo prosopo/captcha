@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.1.0
+### Minor Changes
+
+- 9e18fca: Make resolver easier to use
+
 ## 3.0.6
 ### Patch Changes
 
