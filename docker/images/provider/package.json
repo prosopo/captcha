@@ -15,8 +15,8 @@
 		}
 	},
 	"dependencies": {
-		"@prosopo/locale": "3.0.0",
-		"@prosopo/cli": "3.0.0",
+		"@prosopo/locale": "3.0.1",
+		"@prosopo/cli": "3.0.2",
 		"@prosopo/config": "3.0.0"
 	},
 	"scripts": {
