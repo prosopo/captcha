@@ -1,5 +1,11 @@
 # @prosopo/dotenv
 
+## 3.0.3
+### Patch Changes
+
+- Updated dependencies [5619b4b]
+  - @prosopo/config@3.0.1
+
 ## 3.0.2
 ### Patch Changes
 

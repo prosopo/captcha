@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-pow
 
+## 2.7.9
+### Patch Changes
+
+  - @prosopo/account@2.7.7
+  - @prosopo/api@3.0.4
+  - @prosopo/procaptcha@2.7.9
+  - @prosopo/procaptcha-common@2.7.7
+  - @prosopo/util@3.0.1
+
 ## 2.7.8
 ### Patch Changes
 

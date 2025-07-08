@@ -1,5 +1,18 @@
 # @prosopo/provider
 
+## 3.0.4
+### Patch Changes
+
+- Updated dependencies [5619b4b]
+  - @prosopo/config@3.0.1
+  - @prosopo/database@3.0.4
+  - @prosopo/datasets@3.0.4
+  - @prosopo/env@3.0.4
+  - @prosopo/types-database@3.0.4
+  - @prosopo/types-env@2.7.8
+  - @prosopo/util@3.0.1
+  - @prosopo/user-access-policy@3.1.3
+
 ## 3.0.3
 ### Patch Changes
 
