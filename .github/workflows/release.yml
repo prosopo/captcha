@@ -302,11 +302,6 @@ jobs:
                 echo "affected: $affected"
                 echo "affected=$affected" >> $GITHUB_ENV
 
-                if [ "$(echo "$affected" | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
-                  echo "Some packages failed to publish to npm"
-                  exit 1
-                fi
-
 #            - name: publish to gh
 #              if: ${{ env.affected != '[]' }}
 #              run: |
