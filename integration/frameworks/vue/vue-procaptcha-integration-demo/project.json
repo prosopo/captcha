@@ -5,10 +5,7 @@
 			"options": {
 				"script": "build"
 			},
-			"dependsOn": [
-				"^build",
-				"@prosopo/vue-procaptcha-wrapper:typecheck"
-			]
+			"dependsOn": ["^build", "@prosopo/vue-procaptcha-wrapper:typecheck"]
 		}
 	}
 }

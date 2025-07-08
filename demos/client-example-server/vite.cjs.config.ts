@@ -18,6 +18,6 @@ export default function () {
 	return ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
-		"app.js"
+		"app.js",
 	);
 }
