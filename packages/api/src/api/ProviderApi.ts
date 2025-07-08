@@ -52,8 +52,7 @@ import HttpClientBase from "./HttpClientBase.js";
 
 export default class ProviderApi
 	extends HttpClientBase
-	implements ProviderApiInterface
-{
+	implements ProviderApiInterface {
 	private account: string;
 
 	constructor(providerUrl: string, account: string) {
