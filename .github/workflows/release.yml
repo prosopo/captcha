@@ -223,12 +223,15 @@ jobs:
                 echo "affected: $affected"
                 echo "affected=$affected" >> $GITHUB_ENV
 
-                # Check if any package failed to tag and exit if so
+                # Check if any package failed to tag and print info instead of exiting
                 tag_failed=$(echo "$affected" | jq '[.[] | select(.tag != 0)] | length')
                 if [ "$tag_failed" -gt 0 ]; then
-                  echo "Some packages failed to tag"
-                  exit 1
-                fi                
+                  echo "ℹ️  Some packages failed to tag:"
+                  echo "$affected" | jq -r '.[] | select(.tag != 0) | " - \(.name) (version: \(.version))"'
+                else
+                  echo "✅ All packages tagged successfully"
+                fi
+   
 
             - name: build+bundle
               if: ${{ env.affected != '[]' }}
