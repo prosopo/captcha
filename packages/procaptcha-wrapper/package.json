@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.6.5",
+	"version": "2.6.6",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -23,9 +23,9 @@
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV"
 	},
 	"dependencies": {
-		"@prosopo/types": "3.0.2",
-		"@prosopo/locale": "3.0.2",
-		"@prosopo/config": "3.1.0"
+		"@prosopo/types": "3.0.3",
+		"@prosopo/config": "3.1.0",
+		"@prosopo/locale": "3.0.2"
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.0",
