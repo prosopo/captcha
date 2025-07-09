@@ -41,9 +41,8 @@ class ApiUpdateDetectorKeyEndpoint
 
 			logger.info(() => ({ msg: "Updating detector key" }));
 
-			const activeDetectorKeys = await this.clientTaskManager.updateDetectorKey(
-				detectorKey,
-			);
+			const activeDetectorKeys =
+				await this.clientTaskManager.updateDetectorKey(detectorKey);
 
 			logger.info(() => ({
 				msg: "Detector key updated",

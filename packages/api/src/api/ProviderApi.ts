@@ -39,7 +39,7 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
 	UpdateDetectorKeyBody,
-	UpdateDetectorKeyResponse,
+	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
