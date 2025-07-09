@@ -1,5 +1,12 @@
 # @prosopo/account
 
+## 2.7.9
+### Patch Changes
+
+- Updated dependencies [b0d7207]
+  - @prosopo/types@3.0.3
+  - @prosopo/keyring@2.8.6
+
 ## 2.7.8
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vue-procaptcha-wrapper",
-	"version": "1.1.3",
+	"version": "1.1.4",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -15,7 +15,7 @@
 		"bundle": "vite build"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.5",
+		"@prosopo/procaptcha-wrapper": "2.6.6",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {
