@@ -17,6 +17,6 @@ export const i18nSharedOptions = {
 	debug: process.env.PROSOPO_LOG_LEVEL === "debug",
 	fallbackLng: LanguageSchema.enum.en,
 	namespace: "translation",
-	supportedLngs: Object.values(Languages),
+	supportedLngs: Languages,
 	nonExplicitSupportedLngs: false,
 };
