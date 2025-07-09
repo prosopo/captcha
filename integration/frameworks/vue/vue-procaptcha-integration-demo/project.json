@@ -5,10 +5,7 @@
 			"options": {
 				"script": "build"
 			},
-			"dependsOn": [
-				"^build",
-				"^typecheck"
-			]
+			"dependsOn": ["^build", "^typecheck"]
 		}
 	}
 }
