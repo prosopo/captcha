@@ -250,6 +250,12 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.score]?: number;
 }
 
+export interface UpdateDetectorKeyResponse extends ApiResponse {
+	data: {
+		activeDetectorKeys: string[];
+	};
+}
+
 export interface ImageVerificationResponse extends VerificationResponse {
 	[ApiParams.commitmentId]?: Hash;
 }

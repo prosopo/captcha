@@ -1,5 +1,19 @@
 # @prosopo/provider
 
+## 3.1.1
+### Patch Changes
+
+- b0d7207: Types for proper rotation
+- Updated dependencies [b0d7207]
+  - @prosopo/types-database@3.0.6
+  - @prosopo/database@3.0.6
+  - @prosopo/types@3.0.3
+  - @prosopo/datasets@3.0.6
+  - @prosopo/env@3.0.6
+  - @prosopo/types-env@2.7.10
+  - @prosopo/keyring@2.8.6
+  - @prosopo/user-access-policy@3.1.5
+
 ## 3.1.0
 ### Minor Changes
 

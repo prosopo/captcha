@@ -1,5 +1,14 @@
 # @prosopo/database
 
+## 3.0.6
+### Patch Changes
+
+- b0d7207: Types for proper rotation
+- Updated dependencies [b0d7207]
+  - @prosopo/types-database@3.0.6
+  - @prosopo/types@3.0.3
+  - @prosopo/user-access-policy@3.1.5
+
 ## 3.0.5
 ### Patch Changes
 

@@ -1,5 +1,13 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.25
+### Patch Changes
+
+- Updated dependencies [b0d7207]
+  - @prosopo/types@3.0.3
+  - @prosopo/procaptcha-pow@2.7.11
+  - @prosopo/procaptcha-react@2.6.25
+
 ## 2.6.24
 ### Patch Changes
 

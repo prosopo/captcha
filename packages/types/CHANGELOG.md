@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.0.3
+### Patch Changes
+
+- b0d7207: Types for proper rotation
+
 ## 3.0.2
 ### Patch Changes
 
