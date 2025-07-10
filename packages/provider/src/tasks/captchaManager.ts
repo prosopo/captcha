@@ -23,6 +23,8 @@ import type {
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -145,6 +147,20 @@ export class CaptchaManager {
 				[ApiParams.score]: score,
 			}),
 		};
+	}
+
+	async getPrioritisedAccessPolicies(
+		userAccessRulesStorage: AccessRulesStorage,
+		clientId: string,
+		userScope: {
+			[key: string]: bigint | string;
+		},
+	) {
+		return getPrioritisedAccessRule(
+			userAccessRulesStorage,
+			userScope,
+			clientId,
+		);
 	}
 
 	async getDetectorKeys(): Promise<string[]> {

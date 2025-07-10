@@ -1,7 +1,8 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.0.0",
+	"version": "3.1.5",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -9,6 +10,7 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
@@ -17,22 +19,27 @@
 		"#policy/*": "./dist/*"
 	},
 	"scripts": {
-		"build": "tsc --build --verbose",
 		"clean": "tsc --build --clean",
-		"build:cjs": "npx vite build --config vite.cjs.config.ts",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/api-route": "2.6.5",
-		"@prosopo/common": "3.0.0",
-		"@prosopo/types": "3.0.0",
-		"@prosopo/util": "3.0.0",
+		"@prosopo/api-route": "2.6.7",
+		"@prosopo/common": "3.0.2",
+		"@prosopo/types": "3.0.3",
+		"@prosopo/util": "3.0.2",
+		"axios": "1.10.0",
+		"esbuild": "0.25.6",
 		"ip-address": "10.0.1",
 		"redis": "5.0.0",
-		"zod": "3.23.8"
+		"zod": "3.23.8",
+		"@prosopo/config": "3.1.0",
+		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9",
 		"yargs": "17.7.2"
 	},

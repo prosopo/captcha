@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/angular-procaptcha-wrapper",
-	"version": "1.1.0",
+	"version": "1.1.4",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -9,20 +9,15 @@
 	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"typings": "dist/index.d.ts",
 	"module": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"default": "./dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs"
-		}
-	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
+		"test": "echo no tests",
 		"clean": "del-cli ./dist",
 		"build": "ng-packagr -p ng-package.json",
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": ">=2.6.0"
+		"@prosopo/procaptcha-wrapper": "2.6.6",
+		"@prosopo/config": "3.1.0"
 	},
 	"peerDependencies": {
 		"@angular/core": "^19.2.0"

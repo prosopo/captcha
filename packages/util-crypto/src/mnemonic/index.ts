@@ -9,3 +9,4 @@ export { mnemonicToEntropy } from "./toEntropy.js";
 export { mnemonicToLegacySeed } from "./toLegacySeed.js";
 export { mnemonicToMiniSecret } from "./toMiniSecret.js";
 export { mnemonicValidate } from "./validate.js";
+export { entropyToMnemonic } from "./bip39.js";

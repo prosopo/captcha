@@ -1,5 +1,15 @@
 # @prosopo/config
 
+## 3.1.0
+### Minor Changes
+
+- 745cc89: Remove plugins from test config
+
+## 3.0.1
+### Patch Changes
+
+- 5619b4b: Updating tsconfig paths
+
 ## 3.0.0
 ### Major Changes
 

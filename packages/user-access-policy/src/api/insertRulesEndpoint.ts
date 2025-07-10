@@ -62,35 +62,33 @@ export class InsertRulesEndpoint
 	): Promise<ApiEndpointResponse> {
 		logger = logger || getLogger(LogLevel.enum.info, "InsertRulesEndpoint");
 
-		return new Promise((resolve) => {
-			// either return after 5s or when the rules are inserted or fail to insert
+		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
 					status: ApiEndpointResponseStatus.PROCESSING,
 				});
 			}, 5000);
-
-			this.createRules(args)
-				.then(() => {
-					resolve({
-						status: ApiEndpointResponseStatus.SUCCESS,
-					});
-				})
-				.catch((error) => {
-					if (logger?.getLogLevel() === LogLevel.enum.debug) {
-						logger.error(() => ({
-							err: error,
-							data: {
-								args: args,
-							},
-							msg: "Failed to insert access rules",
-						}));
-					}
-					resolve({
-						status: ApiEndpointResponseStatus.FAIL,
-					});
-				});
 		});
+
+		const createRulesPromise = this.createRules(args)
+			.then(() => ({
+				status: ApiEndpointResponseStatus.SUCCESS,
+			}))
+			.catch((error) => {
+				if (logger?.getLogLevel() === LogLevel.enum.debug) {
+					logger.error(() => ({
+						err: error,
+						data: { args },
+						msg: "Failed to insert access rules",
+					}));
+				}
+				return {
+					status: ApiEndpointResponseStatus.FAIL,
+				};
+			});
+
+		// Whichever finishes first: timeout or actual rule creation
+		return Promise.race([timeoutPromise, createRulesPromise]);
 	}
 
 	public getRequestArgsSchema(): InsertRulesEndpointSchema {

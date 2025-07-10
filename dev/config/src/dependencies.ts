@@ -34,7 +34,9 @@ async function getPackageDir(packageName: string): Promise<string> {
 	// get package directory
 	const { stdout: packageDir, stderr } = await exec(pkgCommand);
 	if (stderr) {
-		throw new Error("CONFIG.INVALID_PACKAGE_DIR");
+		if (stderr.includes("ERR!")) {
+			throw new Error("CONFIG.INVALID_PACKAGE_DIR");
+		}
 	}
 	return packageDir.trim() || path.resolve();
 }

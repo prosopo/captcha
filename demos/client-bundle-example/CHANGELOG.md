@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.9.2
+### Patch Changes
+
+- 5705cfb: use build+bundle npm scripts
+
 ## 2.9.1
 ### Patch Changes
 

@@ -7,7 +7,7 @@
 		"noEmitOnError": true,
 		"sourceMap": false
 	},
-	"include": ["**/*.ts"],
+	"include": ["src/**/*.ts", "cypress/**/*.ts"],
 	"references": [
 		{
 			"path": "../../dev/scripts"

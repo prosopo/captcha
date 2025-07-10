@@ -5,59 +5,59 @@
 name: changesets
 
 on:
-    pull_request:
-        # all branches
-        types: 
-            - opened # when a PR is opened
-            - synchronize # when a PR is pushed to
-            - reopened # when a PR is reopened
-            - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
-    workflow_dispatch:
+  pull_request:
+    # all branches
+    types: 
+      - opened # when a PR is opened
+      - synchronize # when a PR is pushed to
+      - reopened # when a PR is reopened
+      - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+  workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 defaults:
-    run:
-        shell: bash
+  run:
+    shell: bash
 
 jobs:
-    check:
-        name: check
-        runs-on: ubuntu-latest
-        steps:
-            - name: Print contexts
-              uses: prosopo/captcha/.github/actions/print_contexts@gha
-              with:
-                    INPUTS_CONTEXT: ${{ toJson(inputs) }}
-                    NEEDS_CONTEXT: ${{ toJson(needs) }}
-                    VARS_CONTEXT: ${{ toJson(vars) }}
-                    SECRETS_CONTEXT: ${{ toJson(secrets) }}
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print contexts
+        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        with:
+          INPUTS_CONTEXT: ${{ toJson(inputs) }}
+          NEEDS_CONTEXT: ${{ toJson(needs) }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-            - name: Set NX_PARALLEL environment variable
-              run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
+      - name: Set NX_PARALLEL environment variable
+        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-            - uses: actions/checkout@v4
-              with:
-                  submodules: 'recursive'
-                  fetch-depth: 0 # required for comparing changesets to the base branch
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0 # required for comparing changesets to the base branch
 
-            - uses: prosopo/captcha/.github/actions/npm@gha
-              with:
-                npm_ci_args: '--include=dev'
+      - uses: prosopo/captcha/.github/actions/npm@gha
+        with:
+          npm_ci_args: '--include=dev'
 
-            # checkout the base and head refs
-            # ensures we have history for both
-            - name: Checkout base ref
-              run: git fetch origin ${{ github.base_ref }} && git checkout ${{ github.base_ref }}
+      # checkout the base and head refs
+      # ensures we have history for both
+      - name: Checkout base ref
+        run: git fetch origin ${{ github.base_ref }} && git checkout ${{ github.base_ref }}
 
-            - name: Checkout head ref
-              run: git fetch origin ${{ github.head_ref }} && git checkout ${{ github.head_ref }}
+      - name: Checkout head ref
+        run: git fetch origin ${{ github.head_ref }} && git checkout ${{ github.head_ref }}
 
-            # if this fails, you need to run `npm run changesets:add` (preferred!) or `npm run changesets:empty` for an empty changeset (avoid if possible)
-            - name: check changesets
-              run: |
+      # if this fails, you need to run `npm run changesets:add` (preferred!) or `npm run changesets:empty` for an empty changeset (avoid if possible)
+      - name: check changesets
+        run: |
 
-                # check that the changesets are present for each package which has been modified
-                npm run changesets -- --since ${{ github.base_ref }}
+          # check that the changesets are present for each package which has been modified
+          npm run changesets -- --since ${{ github.base_ref }}

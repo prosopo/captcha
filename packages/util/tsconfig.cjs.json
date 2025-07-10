@@ -2,13 +2,8 @@
 	"extends": "../../tsconfig.cjs.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist/cjs"
+		"outDir": "./dist"
 	},
-	"include": [
-		"./src/**/*.ts",
-		"./src/**/*.json",
-		"./src/**/*.d.ts",
-		"./src/**/*.tsx"
-	],
+	"include": ["src", "src/**/*.json"],
 	"references": []
 }

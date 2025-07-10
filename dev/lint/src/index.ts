@@ -11,8 +11,36 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { z } from "zod";
+import { engines } from "./engines.js";
+import { license } from "./license.js";
+import { redirects } from "./redirects.js";
+import { refs } from "./refs.js";
+import { scripts } from "./scripts.js";
+import { workflowNames } from "./workflowNames.js";
+
 const main = async () => {
-	console.log("index.ts");
+	const cmd = z.string().parse(process.argv[2]);
+	// remove the cmd from the args
+	process.argv.splice(2, 1);
+
+	switch (cmd) {
+		case "engines":
+			return await engines();
+		case "refs":
+			return await refs();
+		case "workflowNames":
+			return await workflowNames();
+		case "scripts":
+			return await scripts();
+		case "license":
+			return await license();
+		case "redirects":
+			return await redirects();
+		default:
+			throw new Error(`Unknown command: ${cmd}`);
+	}
 };
 
 main();
