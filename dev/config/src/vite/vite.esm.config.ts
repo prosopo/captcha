@@ -20,6 +20,8 @@ import { default as noBundlePlugin } from "vite-plugin-no-bundle";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { getExternalsFromReferences } from "../dependencies.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import VitePluginCopy from "./vite-plugin-copy.js";
 
 export default async function (
 	name: string,
@@ -45,6 +47,11 @@ export default async function (
 			}),
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
 			VitePluginCloseAndCopy(),
+			VitePluginCopy({
+				srcDir: "src",
+				destDir: "dist",
+				include: ["**/*.json"],
+			}),
 		],
 		build: {
 			emptyOutDir: false,
