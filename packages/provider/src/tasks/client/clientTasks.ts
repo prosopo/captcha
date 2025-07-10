@@ -323,7 +323,7 @@ export class ClientTaskManager {
 		]);
 	}
 
-	async updateDetectorKey(detectorKey: string): Promise<void> {
+	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
@@ -331,6 +331,9 @@ export class ClientTaskManager {
 			});
 		}
 		await this.providerDB.storeDetectorKey(detectorKey);
+
+		const activeDetectorKeys = await this.providerDB.getDetectorKeys();
+		return activeDetectorKeys;
 	}
 
 	async removeDetectorKey(detectorKey: string): Promise<void> {

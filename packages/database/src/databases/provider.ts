@@ -1668,7 +1668,13 @@ export class ProviderDatabase
 	/** @description Remove a detector key */
 	async removeDetectorKey(detectorKey: string): Promise<void> {
 		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
-		await this.tables?.detector.deleteOne(filter);
+
+		// Instead of deleting, set the expiresAt field to expire in 10 minutes
+		const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+		await this.tables?.detector.updateOne(filter, {
+			$set: { expiresAt },
+		});
 	}
 
 	/**
@@ -1676,7 +1682,12 @@ export class ProviderDatabase
 	 */
 	async getDetectorKeys(): Promise<string[]> {
 		const keyRecords = await this.tables?.detector
-			.find({}, { detectorKey: 1 })
+			.find(
+				{
+					$or: [{ expiresAt: { $exists: false } }, { expiresAt: null }],
+				},
+				{ detectorKey: 1 },
+			)
 			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 

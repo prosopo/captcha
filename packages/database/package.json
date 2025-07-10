@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "3.0.5",
+	"version": "3.0.6",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"type": "module",
@@ -33,9 +33,9 @@
 	"dependencies": {
 		"@prosopo/common": "3.0.2",
 		"@prosopo/config": "3.1.0",
-		"@prosopo/types": "3.0.2",
-		"@prosopo/types-database": "3.0.5",
-		"@prosopo/user-access-policy": "3.1.4",
+		"@prosopo/types": "3.0.3",
+		"@prosopo/types-database": "3.0.6",
+		"@prosopo/user-access-policy": "3.1.5",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
