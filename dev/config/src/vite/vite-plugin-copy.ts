@@ -14,8 +14,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Plugin } from "vite";
 import fg from "fast-glob";
+import type { Plugin } from "vite";
 
 interface CopyPluginOptions {
 	srcDir: string;
@@ -38,10 +38,15 @@ export default function VitePluginCopy(options: CopyPluginOptions): Plugin {
 		async closeBundle() {
 			const srcAbs = path.resolve(__dirname, options.srcDir);
 			const destAbs = path.resolve(__dirname, options.destDir);
-			const include = options.include && options.include.length > 0 ? options.include : undefined;
+			const include =
+				options.include && options.include.length > 0
+					? options.include
+					: undefined;
 			const exclude = options.exclude || [];
 			if (!include) {
-				console.info(`[copy-plugin] No include globs specified, nothing to copy.`);
+				console.info(
+					"[copy-plugin] No include globs specified, nothing to copy.",
+				);
 				return;
 			}
 			const files = await fg(include, {
