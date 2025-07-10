@@ -4,13 +4,13 @@
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json"
+	],
 	"references": [
 		{
 			"path": "../common"
-		},
-		{
-			"path": "../../dev/config"
 		}
 	]
 }

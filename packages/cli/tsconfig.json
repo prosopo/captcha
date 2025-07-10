@@ -5,7 +5,10 @@
 		"outDir": "./dist",
 		"module": "NodeNext"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json"
+	],
 	"references": [
 		{
 			"path": "../api"
@@ -15,9 +18,6 @@
 		},
 		{
 			"path": "../dotenv"
-		},
-		{
-			"path": "../../dev/config"
 		},
 		{
 			"path": "../env"
