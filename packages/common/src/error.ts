@@ -197,10 +197,13 @@ export const unwrapError = (
 	err: ProsopoBaseError | SyntaxError | ZodError,
 	i18nInstance?: { t: TFunction },
 ) => {
+	console.log("i18nInstance", i18nInstance);
 	const i18n = i18nInstance || backupTranslationObj;
 	const code = "code" in err ? (err.code as number) : 400;
 
+	console.log("err to unwrap", err);
 	const message = i18n.t(err.message); // should be translated already
+	console.log("message", message);
 	let jsonError: ApiJsonError = { code, message };
 	const statusMessage = "Bad Request";
 	jsonError.message = message;
