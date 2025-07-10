@@ -21,3 +21,4 @@ export { default as ViteCommonJSConfig } from "./vite.commonjs.config.js";
 export { default as ViteEsmConfig } from "./vite.esm.config.js";
 export { default as VitePluginRemoveUnusedTranslations } from "./vite-plugin-remove-unused-translations.js";
 export * from "./TsNoCheckPlugin.js";
+export { default as VitePluginCopy } from "./vite-plugin-copy.js";
