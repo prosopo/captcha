@@ -54,10 +54,9 @@ export default function VitePluginCopy(options: CopyPluginOptions): Plugin {
 				const srcFile = path.join(srcAbs, relFile);
 				const destFile = path.join(destAbs, relFile);
 				ensureDirExists(destFile);
-				console.info(`[copy-plugin] Copying file ${srcFile} to ${destFile}`);
+				console.info(`[copy-plugin] copying ${srcFile} to ${destFile}`);
 				fs.copyFileSync(srcFile, destFile);
 			}
-			console.info(`[copy-plugin] Copy complete.`);
 		},
 	};
 }
