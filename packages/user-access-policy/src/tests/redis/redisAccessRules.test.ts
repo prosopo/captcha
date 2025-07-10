@@ -39,7 +39,7 @@ import {
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
 } from "#policy/redis/redisAccessRulesIndex.js";
-import { createTestRedisClient } from "#policy/tests/redis/testRedisClient.js";
+import { createTestRedisClient } from "./testRedisClient.js";
 
 describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
