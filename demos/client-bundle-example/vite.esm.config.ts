@@ -12,22 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import fs from "node:fs";
 import path from "node:path";
-import { ViteTestConfig } from "@prosopo/config";
-import dotenv from "dotenv";
-process.env.NODE_ENV = "test";
-// if .env.test exists at this level, use it, otherwise use the one at the root
-const envFile = `.env.${process.env.NODE_ENV || "development"}`;
-let envPath = envFile;
-if (fs.existsSync(envFile)) {
-	envPath = path.resolve(envFile);
-} else if (fs.existsSync(`../../${envFile}`)) {
-	envPath = path.resolve(`../../${envFile}`);
-} else {
-	throw new Error(`No ${envFile} file found`);
+import { ViteEsmConfig } from "@prosopo/config";
+
+export default function () {
+	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
 }
-
-dotenv.config({ path: envPath });
-
-export default ViteTestConfig();

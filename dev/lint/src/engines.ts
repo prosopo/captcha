@@ -19,15 +19,14 @@ import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
 import z from "zod";
 
-const main = async (args: {
-	pkgJsonPath: string;
-}) => {
-	console.log("Checking", args.pkgJsonPath);
+export const engines = async () => {
+	const pkgJsonPath = z.string().parse(process.argv[2]);
+	console.log("Checking", pkgJsonPath);
 	// read the pkg json file
-	const pkgJson = JSON.parse(fs.readFileSync(args.pkgJsonPath, "utf8"));
+	const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 	// only accept workspace pkg json
 	if (pkgJson.workspaces === undefined) {
-		throw new Error(`${args.pkgJsonPath} is not a workspace`);
+		throw new Error(`${pkgJsonPath} is not a workspace`);
 	}
 
 	const enginesSchema = z.object({
@@ -41,7 +40,7 @@ const main = async (args: {
 		.string()
 		.array()
 		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkgJsonPath)}/${g}/package.json`);
+		.map((g) => `${path.dirname(pkgJsonPath)}/${g}/package.json`);
 	const pkgJsonPaths = fg.globSync(globs);
 	for (const pkgJsonPath of pkgJsonPaths) {
 		console.log("Checking", pkgJsonPath);
@@ -59,10 +58,3 @@ const main = async (args: {
 		}
 	}
 };
-
-main({
-	pkgJsonPath: z.string().parse(process.argv[2]),
-}).catch((err) => {
-	console.error(err);
-	process.exit(1);
-});

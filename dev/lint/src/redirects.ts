@@ -404,7 +404,7 @@ const fixFile = (filePath: string, linksToFix: FileLink[]): void => {
 /**
  * Main function to run the redirect linting
  */
-const main = async (): Promise<void> => {
+export const redirects = async (): Promise<void> => {
 	try {
 		// Determine the mode (check or fix)
 		const mode: Mode = process.argv[2] === "fix" ? Mode.FIX : Mode.CHECK;
@@ -507,6 +507,3 @@ const main = async (): Promise<void> => {
 		process.exit(1);
 	}
 };
-
-// Run the main function
-main();

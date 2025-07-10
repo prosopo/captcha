@@ -1,3 +1,4 @@
+import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +12,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { assert, describe, test } from "vitest";
+import ViteESMConfig from "./src/vite/vite.esm.config.js";
 
-describe("dummy", () => {
-	test("dummy", async () => {
-		assert(
-			true,
-			"This is a dummy test to ensure vite doesn't complain about no tests found.",
-		);
-	}, 120000);
-});
+export default function () {
+	return ViteESMConfig(path.basename("."), path.resolve("./tsconfig.json"));
+}

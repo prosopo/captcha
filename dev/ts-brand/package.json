@@ -2,7 +2,7 @@
 	"name": "@prosopo/ts-brand",
 	"version": "3.0.2",
 	"description": "Brand your TypeScript types",
-	"main": "./dist/index.js",
+	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -10,15 +10,15 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
-	"types": "./dist/index.d.ts",
 	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"author": "Prosopo Limited",
