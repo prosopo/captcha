@@ -45,13 +45,13 @@ export default async function (
 				root: "src",
 				copy: "**/*.css",
 			}),
-			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
-			VitePluginCloseAndCopy(),
 			VitePluginCopy({
 				srcDir: "src",
 				destDir: "dist",
 				include: ["**/*.json"],
 			}),
+			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
+			VitePluginCloseAndCopy(),
 		],
 		build: {
 			emptyOutDir: false,

@@ -20,6 +20,7 @@ import { default as noBundlePlugin } from "vite-plugin-no-bundle";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { getExternalsFromReferences } from "../dependencies.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
+import VitePluginCopy from "./vite-plugin-copy.js";
 
 export default async function (
 	name: string,
@@ -46,6 +47,11 @@ export default async function (
 			noBundlePlugin({
 				root: "src",
 				copy: "**/*.css",
+			}),
+			VitePluginCopy({
+				srcDir: "src",
+				destDir: "dist",
+				include: ["**/*.json"],
 			}),
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
 			VitePluginCloseAndCopy(),
