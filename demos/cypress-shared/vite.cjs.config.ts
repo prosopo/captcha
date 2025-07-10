@@ -18,6 +18,6 @@ export default function () {
 	return ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
-		'cypress/index.ts'
+		"cypress/index.ts",
 	);
 }
