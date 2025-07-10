@@ -29,7 +29,7 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
-export default describe("Captchas", () => {
+describe("Captchas", () => {
 	before(() => {
 		// Call registerSiteKey and handle response here
 		return cy.registerSiteKey(baseCaptchaType).then((response) => {

@@ -22,7 +22,7 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
-export default describe("Proof of Work CAPTCHA", () => {
+describe("Proof of Work CAPTCHA", () => {
 	beforeEach(() => {
 		cy.registerSiteKey(baseCaptchaType).then((response) => {
 			// Log the response status and body using cy.task()

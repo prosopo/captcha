@@ -22,7 +22,7 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
-export default describe("Captchas", () => {
+describe("Captchas", () => {
 	beforeEach(() => {
 		// Define the onCaptchaVerified callback
 		cy.window().then((win) => {

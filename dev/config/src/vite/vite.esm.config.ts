@@ -37,17 +37,6 @@ export default async function (
 		...builtinModules.map((m) => `node:${m}`),
 		...projectExternal,
 	];
-	// glob for all source files in the project
-	// this sets vite to compile all files in the project, not just the entry point + imports (which can leave some files uncompiled because they are not imported in index.ts, for example)
-	// console.log("cwd", process.cwd());
-	// const globs = ["**/*.ts", "**/*.js", "**/*.mjs", "**/*.tsx", "**/*.jsx"].map((f) => `${process.cwd()}/src/${f}`);
-	// console.log("globs", globs);
-	// const files = await fg(globs, {
-	// 	cwd: process.cwd(),
-	// 	ignore: ["node_modules/**", "dist/**", "build/**", "out/**"],
-	// 	absolute: true,
-	// });
-	// console.log("files", files);
 	return defineConfig({
 		ssr: { external: allExternal },
 		plugins: [
@@ -77,7 +66,6 @@ export default async function (
 			rollupOptions: {
 				treeshake: false,
 				external: allExternal,
-				// input: files,
 			},
 		},
 	});

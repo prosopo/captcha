@@ -19,7 +19,6 @@
 	"dependencies": {
 		"@prosopo/types": "3.0.3",
 		"@prosopo/util": "3.0.2",
-		"@prosopo/keyring": "2.8.6",
 		"express": "4.21.2",
 		"@prosopo/config": "3.1.0",
 		"@typegoose/auto-increment": "4.13.0",

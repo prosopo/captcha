@@ -78,7 +78,7 @@ export function getWidgetElement(
  * Wait for the procaptcha script to be loaded, handling async defer scripts
  * This is especially important when the script has async and defer attributes
  */
-export function waitForProcaptchaScript(): Cypress.Chainable<void> {
+function waitForProcaptchaScript(): Cypress.Chainable<void> {
 	return cy.window().then((win) => {
 		return new Cypress.Promise<void>((resolve) => {
 			// Check if procaptcha is already loaded
@@ -116,7 +116,7 @@ export function waitForProcaptchaScript(): Cypress.Chainable<void> {
 	});
 }
 
-export function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
+function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	// First wait for the procaptcha script to be loaded
 	return cy.waitForProcaptchaScript().then(() => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
@@ -153,7 +153,7 @@ export function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	});
 }
 
-export function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
+function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
 	return getWidgetElement(".prosopo-modalInner p").then(($p) => {
 		const $pWithText = $p.filter((index, el) => {
 			return Cypress.$(el).text().includes("all containing");
@@ -174,7 +174,7 @@ export function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
 	});
 }
 
-export function getSelectors(captcha: Captcha) {
+function getSelectors(captcha: Captcha) {
 	cy.wrap({ captcha })
 		.then(({ captcha }) => {
 			cy.get<SolutionRecord[]>("@solutions").then((solutions) => {
@@ -204,7 +204,7 @@ export function getSelectors(captcha: Captcha) {
 	return cy.get("@selectors");
 }
 
-export function clickCorrectCaptchaImages(
+function clickCorrectCaptchaImages(
 	captcha: Captcha,
 ): Chainable<JQuery<HTMLElement>> {
 	return cy.captchaImages().then(() => {
@@ -222,7 +222,7 @@ export function clickCorrectCaptchaImages(
 	});
 }
 
-export function clickNextButton() {
+function clickNextButton() {
 	cy.intercept("POST", "**/prosopo/provider/client/solution").as(
 		"postSolution",
 	);
@@ -231,13 +231,13 @@ export function clickNextButton() {
 	cy.wait(0);
 }
 
-export function elementExists(selector: string) {
+function elementExists(selector: string) {
 	return cy
 		.window()
 		.then(($window) => $window.document.querySelector(selector));
 }
 
-export function registerSiteKey(
+function registerSiteKey(
 	baseCaptchaType: CaptchaType,
 	captchaType?: CaptchaType,
 ) {
