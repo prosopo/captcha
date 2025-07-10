@@ -12,9 +12,9 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/index.d.ts"
+			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"types": "dist/index.d.ts",
@@ -26,7 +26,9 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "echo no tests"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
 		"@prosopo/account": "2.7.9",

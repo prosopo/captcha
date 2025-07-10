@@ -10,12 +10,11 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/index.d.ts"
+			"require": "./dist/cjs/index.cjs"
 		}
 	},
-	"types": "dist/index.d.ts",
 	"scripts": {
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",

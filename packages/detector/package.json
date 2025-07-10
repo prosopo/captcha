@@ -9,9 +9,9 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/index.d.ts"
+			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
