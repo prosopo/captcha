@@ -22,7 +22,7 @@ import { getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
-describe("Captchas", () => {
+export default describe("Captchas", () => {
 	beforeEach(() => {
 		cy.registerSiteKey(baseCaptchaType).then((response) => {
 			// Log the response status and body using cy.task()
