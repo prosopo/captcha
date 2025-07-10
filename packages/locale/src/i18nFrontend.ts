@@ -40,7 +40,15 @@ export function initializeI18n() {
 		i18n
 			// @ts-ignore
 			.use(ChainedBackend)
-			.use(I18nextBrowserLanguageDetector)
+			.use(
+				new I18nextBrowserLanguageDetector(null, {
+					order: ["cookie", "localStorage", "navigator"],
+					lookupQuerystring: "lng",
+					lookupCookie: "i18next",
+					lookupLocalStorage: "i18nextLng",
+					caches: ["localStorage", "cookie"],
+				}),
+			)
 			.use(initReactI18next)
 			.init({
 				...i18nSharedOptions,
