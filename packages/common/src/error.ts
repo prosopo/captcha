@@ -200,7 +200,6 @@ export const unwrapError = (
 	const i18n = i18nInstance || backupTranslationObj;
 	let code = "code" in err ? (err.code as number) : 400;
 
-
 	const message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
 	const statusMessage = "Bad Request";
