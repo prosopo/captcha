@@ -24,6 +24,7 @@ export const accessRulesRedisIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
 export const accessRuleRedisKeyPrefix = "uar:";
 const accessRuleContentHashAlgorithm = "md5";
+const DEFAULT_SEARCH_LIMIT = 10000;
 
 const accessRulesIndex: RedisIndex = {
 	name: accessRulesRedisIndexName,
@@ -81,7 +82,7 @@ export const accessRulesRedisSearchOptions: FtSearchOptions = {
 	DIALECT: 2,
 	LIMIT: {
 		from: 0,
-		size: 10000,
+		size: DEFAULT_SEARCH_LIMIT,
 	},
 };
 
