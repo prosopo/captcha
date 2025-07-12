@@ -35,7 +35,7 @@ export const insertRulesEndpointSchema: z.ZodType<{
 	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
 	userScopes: z.array(userScopeInputSchema),
-	expirationTimestampSeconds: z
+	expirationTimestamp: z
 		.number()
 		.optional()
 		.transform((val) => (val !== undefined ? Math.floor(val) : val)),
