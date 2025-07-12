@@ -44,7 +44,7 @@ const accessRulesIndex: RedisIndex = {
 		numericIpMaskMin: SCHEMA_FIELD_TYPE.NUMERIC,
 		numericIpMaskMax: SCHEMA_FIELD_TYPE.NUMERIC,
 		userId: SCHEMA_FIELD_TYPE.TAG,
-		numericIp: SCHEMA_FIELD_TYPE.NUMERIC,
+		numericIp: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 		ja4Hash: SCHEMA_FIELD_TYPE.TAG,
 		headersHash: SCHEMA_FIELD_TYPE.TAG,
 		userAgentHash: SCHEMA_FIELD_TYPE.TAG,
@@ -79,6 +79,10 @@ const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 export const accessRulesRedisSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
+	LIMIT: {
+		from: 0,
+		size: 10000,
+	},
 };
 
 /*
