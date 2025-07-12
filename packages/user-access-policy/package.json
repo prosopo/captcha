@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.1.5",
+	"version": "3.2.0",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
