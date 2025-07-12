@@ -23,6 +23,8 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        depends_on:
+            - redis-stack
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the healthz endpoint
             interval: 5m
@@ -57,6 +59,8 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        depends_on:
+            - redis-stack
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ]  # ping the healthz endpoint
             interval: 5m
