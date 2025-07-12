@@ -152,7 +152,7 @@ services:
         env_file:
             - ../.env.1.${NODE_ENV}
         volumes:
-            - ./data:/data # mount a volume for data persistence
+            # - ./data:/data # mount a volume for data persistence
             - ./redis.conf:/redis-stack.conf
         ports:
             - '6379:6379' # DB

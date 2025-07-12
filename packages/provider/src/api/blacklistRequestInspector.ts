@@ -97,8 +97,6 @@ export class BlacklistRequestInspector {
 	): Promise<void> {
 		const rawIp = request.ip || "";
 
-		console.log(`Raw IP: ${rawIp}`);
-
 		request.logger.debug(() => ({
 			data: { ja4: request.ja4 },
 		}));
