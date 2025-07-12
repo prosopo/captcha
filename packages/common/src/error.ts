@@ -210,7 +210,7 @@ export const unwrapError = (
 		jsonError.key =
 			err.context.translationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = i18n.t(err.message);
-		code = err.context.code || jsonError.code;
+		code = err.context.code ?? jsonError.code;
 		// Only move to the next error if ProsopoBaseError or ZodError
 		if (
 			err.context.error &&
