@@ -1,5 +1,10 @@
 # @prosopo/server
 
+## 2.9.9
+### Patch Changes
+
+  - @prosopo/api@3.0.7
+
 ## 2.9.8
 ### Patch Changes
 
