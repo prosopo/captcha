@@ -1,5 +1,15 @@
 # @prosopo/scripts
 
+## 3.0.10
+### Patch Changes
+
+  - @prosopo/cli@3.0.10
+  - @prosopo/provider@3.1.3
+  - @prosopo/types-database@3.0.8
+  - @prosopo/env@3.0.8
+  - @prosopo/datasets@3.0.8
+  - @prosopo/types-env@2.7.12
+
 ## 3.0.9
 ### Patch Changes
 
