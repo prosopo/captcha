@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.2.1
+### Patch Changes
+
+- cdf7c29: Fix var
+
 ## 3.2.0
 ### Minor Changes
 
