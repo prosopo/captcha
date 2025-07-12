@@ -31,6 +31,7 @@ describe("unwrap error", () => {
 		expect(unwrapped.code).to.equal(400);
 
 		expect(unwrapped.jsonError.message).to.equal("Missing body");
+		expect(unwrapped.jsonError.key).to.equal("API.MISSING_BODY");
 		expect(unwrapped.jsonError.code).to.equal(400);
 		expect(unwrapped.statusMessage).to.equal("Bad Request");
 	});
@@ -50,6 +51,7 @@ describe("unwrap error", () => {
 		expect(unwrapped.code).to.equal(401);
 
 		expect(unwrapped.jsonError.message).to.equal("Unauthorized");
+		expect(unwrapped.jsonError.key).to.equal("API.UNAUTHORIZED");
 		expect(unwrapped.jsonError.code).to.equal(401);
 		expect(unwrapped.statusMessage).to.equal("Bad Request");
 	});
@@ -67,6 +69,7 @@ describe("unwrap error", () => {
 		expect(unwrapped.code).to.equal(400);
 
 		expect(unwrapped.jsonError.message).to.equal("Missing body");
+		expect(unwrapped.jsonError.key).to.equal("API.MISSING_BODY");
 		expect(unwrapped.jsonError.code).to.equal(400);
 		expect(unwrapped.statusMessage).to.equal("Bad Request");
 	});
