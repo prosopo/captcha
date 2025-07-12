@@ -130,15 +130,22 @@ export const createRedisAccessRulesWriter = (
 	return {
 		insertRule: async (
 			rule: AccessRule,
-			expirationSeconds?: number,
+			expirationTimestamp?: number,
 		): Promise<string> => {
 			const ruleKey = getRedisAccessRuleKey(rule);
 			const ruleValue = getRedisAccessRuleValue(rule);
 
 			await client.hSet(ruleKey, ruleValue);
 
-			if (expirationSeconds) {
-				await client.expire(ruleKey, expirationSeconds);
+			if (expirationTimestamp) {
+				const expiryDate = new Date(expirationTimestamp);
+				if (expiryDate.getUTCFullYear() === 1970) {
+					// timestamp is already in seconds
+					await client.expireAt(ruleKey, expirationTimestamp);
+				} else {
+					const timestampInSeconds = Math.floor(expirationTimestamp / 1000);
+					await client.expireAt(ruleKey, timestampInSeconds);
+				}
 			}
 
 			return ruleKey;
