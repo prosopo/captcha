@@ -30,7 +30,7 @@ export const insertRulesEndpointSchema: z.ZodType<{
 	accessPolicy: z.infer<typeof accessPolicySchema>;
 	policyScope?: z.infer<typeof policyScopeSchema>;
 	userScopes: z.input<typeof userScopeInputSchema>[];
-	expirationTimestampSeconds?: number;
+	expirationTimestamp?: number;
 }> = z.object({
 	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
@@ -109,10 +109,7 @@ export class InsertRulesEndpoint
 			};
 
 			createPromises.push(
-				this.accessRulesWriter.insertRule(
-					rule,
-					args.expirationTimestampSeconds,
-				),
+				this.accessRulesWriter.insertRule(rule, args.expirationTimestamp),
 			);
 		}
 		return Promise.all(createPromises);

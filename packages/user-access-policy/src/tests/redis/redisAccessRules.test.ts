@@ -103,16 +103,22 @@ describe("redisAccessRules", () => {
 			};
 			const accessRuleKey = getRedisAccessRuleKey(accessRule);
 			// 1 hour from now.
-			const expirationSeconds = 60 * 60;
+			const expireIn = 60 * 60; // seconds
+			const expirationTimestamp = new Date(
+				Date.now() + expireIn * 1000,
+			).getTime();
+			const expirationTimestampInSeconds = Math.floor(
+				expirationTimestamp / 1000,
+			);
 
 			// when
-			await accessRulesWriter.insertRule(accessRule, expirationSeconds);
+			await accessRulesWriter.insertRule(accessRule, expirationTimestamp);
 			const ruleKey = getRedisAccessRuleKey(accessRule);
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const insertedExpirationResult = await redisClient.expire(
+			const insertedExpirationResult = await redisClient.expireAt(
 				ruleKey,
-				expirationSeconds,
+				expirationTimestampInSeconds,
 			);
 			const indexRecordsCount = await getIndexRecordsCount();
 
@@ -120,7 +126,9 @@ describe("redisAccessRules", () => {
 
 			expect(insertedAccessRule).toEqual(accessRule);
 			expect(insertedExpirationResult).toBe(1);
-			expect(recordExpirySeconds).toBeLessThanOrEqual(expirationSeconds);
+			expect(recordExpirySeconds).toBeLessThanOrEqual(
+				expirationTimestampInSeconds,
+			);
 
 			expect(indexRecordsCount).toBe(1);
 		});
