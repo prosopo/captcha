@@ -100,10 +100,13 @@
 		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
 		"INVALID_SITE_KEY": "Invalid site key",
 		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
+		"UNAUTHORIZED": "Unauthorized",
 		"INVALID_IP": "Invalid IP",
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
+		"MISSING_BODY": "Missing body",
+		"PARSE_ERROR": "Error parsing request",
+		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse."
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

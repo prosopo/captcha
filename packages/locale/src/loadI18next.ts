@@ -20,16 +20,18 @@ async function loadI18next(backend: boolean): Promise<i18n> {
 			if (backend) {
 				import("./i18nBackend.js").then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
-						i18nInstance = initializeI18n();
+						i18nInstance = initializeI18n(resolve);
+					} else {
+						resolve(i18nInstance);
 					}
-					resolve(i18nInstance);
 				});
 			} else {
 				import("./i18nFrontend.js").then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
-						i18nInstance = initializeI18n();
+						i18nInstance = initializeI18n(resolve);
+					} else {
+						resolve(i18nInstance);
 					}
-					resolve(i18nInstance);
 				});
 			}
 		} catch (e) {
