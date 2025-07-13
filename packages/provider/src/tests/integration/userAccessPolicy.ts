@@ -40,7 +40,7 @@ export const removeAllUserAccessPolicies = async (adminPair: KeyringPair) => {
 	return Promise.all(responses);
 };
 
-export const addUserAccessPolicy = async (
+export const userAccessPolicy = async (
 	adminPair: KeyringPair,
 	options: {
 		client?: string;

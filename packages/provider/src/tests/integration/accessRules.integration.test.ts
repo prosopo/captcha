@@ -24,11 +24,11 @@ import {
 import { randomAsHex } from "@prosopo/util-crypto";
 import fetch from "node-fetch";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import {
-	addUserAccessPolicy,
-	removeAllUserAccessPolicies,
-} from "./addUserAccessPolicy.js";
 import { registerSiteKey } from "./registerSitekey.js";
+import {
+	removeAllUserAccessPolicies,
+	userAccessPolicy,
+} from "./userAccessPolicy.js";
 
 const baseUrl = "http://localhost:9229";
 const solutions = datasetWithSolutionHashes;
@@ -62,7 +62,7 @@ describe("Access Rules Integration Tests", () => {
 	});
 
 	it("should return a 401 for a blocked user", async () => {
-		await addUserAccessPolicy(adminPair, {
+		await userAccessPolicy(adminPair, {
 			block: true, // block
 			userId,
 			description: "Blocked user test",
@@ -114,7 +114,7 @@ describe("Access Rules Integration Tests", () => {
 		expect(response.status).toBe(200);
 	});
 	it("should return a 200 when a rule expires immediately", async () => {
-		await addUserAccessPolicy(adminPair, {
+		await userAccessPolicy(adminPair, {
 			block: true, // block
 			userId,
 			description: "Blocked user test",
@@ -144,7 +144,7 @@ describe("Access Rules Integration Tests", () => {
 	});
 	it("should return a 401 when a user agent is blocked", async () => {
 		const badUserAgent = "bad-user-agent";
-		await addUserAccessPolicy(adminPair, {
+		await userAccessPolicy(adminPair, {
 			block: true, // block
 			userAgent: badUserAgent,
 			description: "Blocked user agent test",
@@ -176,7 +176,7 @@ describe("Access Rules Integration Tests", () => {
 		await registerSiteKey(otherSiteKey, CaptchaType.image);
 
 		console.log(`Blocking user ${userId} for site key: ${otherSiteKey}`);
-		await addUserAccessPolicy(adminPair, {
+		await userAccessPolicy(adminPair, {
 			block: true, // block
 			userId: userId,
 			client: otherSiteKey,
