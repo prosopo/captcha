@@ -17,6 +17,7 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 	ScopeMatch,
+	type UserScopeApiInput,
 	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
 import { getIPAddress, uniqueSubsets } from "@prosopo/util";
@@ -27,8 +28,7 @@ export const getRequestUserScope = (
 	ja4?: string,
 	ip?: string,
 	user?: string,
-) => {
-	const ipAddress = getIPAddress(ip || "");
+): Pick<UserScopeApiInput, "userId" | "ja4Hash" | "userAgent" | "ip"> => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
 		: undefined;
@@ -36,7 +36,7 @@ export const getRequestUserScope = (
 		...(user && { userId: user }),
 		...(ja4 && { ja4Hash: ja4 }),
 		...(userAgent && { userAgent: userAgent }),
-		...(ipAddress && { ipAddress: ipAddress.bigInt() }),
+		...(ip && { ip }),
 	};
 };
 
