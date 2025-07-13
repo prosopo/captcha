@@ -1,5 +1,16 @@
 # @prosopo/env
 
+## 3.1.0
+### Minor Changes
+
+- b7c3258: Add tests for UAPs
+
+### Patch Changes
+
+  - @prosopo/database@3.0.9
+  - @prosopo/types-database@3.0.9
+  - @prosopo/types-env@2.7.13
+
 ## 3.0.8
 ### Patch Changes
 

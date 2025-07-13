@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/client-example-server",
-	"version": "2.7.14",
+	"version": "2.7.15",
 	"description": "Backend for client-example",
 	"main": "dist/app.js",
 	"type": "module",
@@ -34,7 +34,7 @@
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/common": "3.0.2",
 		"@prosopo/dotenv": "3.0.4",
-		"@prosopo/server": "2.9.10",
+		"@prosopo/server": "2.9.11",
 		"@prosopo/types": "3.0.3",
 		"@prosopo/util": "3.0.2",
 		"@typegoose/auto-increment": "4.13.0",

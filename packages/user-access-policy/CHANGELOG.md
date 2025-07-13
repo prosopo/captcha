@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.3.0
+### Minor Changes
+
+- b7c3258: Add tests for UAPs
+
 ## 3.2.1
 ### Patch Changes
 

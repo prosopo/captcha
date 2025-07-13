@@ -1,5 +1,10 @@
 # @prosopo/datasets
 
+## 3.0.9
+### Patch Changes
+
+  - @prosopo/types-database@3.0.9
+
 ## 3.0.8
 ### Patch Changes
 
