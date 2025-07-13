@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/react-procaptcha-wrapper",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -15,7 +15,7 @@
 		"bundle": "vite build"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.6"
+		"@prosopo/procaptcha-wrapper": "2.6.7"
 	},
 	"peerDependencies": {
 		"react": "^18.0.0 || ^19.0.0"

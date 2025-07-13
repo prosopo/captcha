@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-pow
 
+## 2.7.14
+### Patch Changes
+
+- Updated dependencies [b7c3258]
+  - @prosopo/api@3.1.0
+  - @prosopo/procaptcha@2.7.14
+
 ## 2.7.13
 ### Patch Changes
 

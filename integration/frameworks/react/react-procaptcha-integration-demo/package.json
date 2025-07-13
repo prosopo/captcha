@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/react-procaptcha-integration-demo",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -16,7 +16,7 @@
 		"dev": "vite dev --port=9330"
 	},
 	"dependencies": {
-		"@prosopo/react-procaptcha-wrapper": "1.1.4",
+		"@prosopo/react-procaptcha-wrapper": "1.1.5",
 		"react": "18.3.1",
 		"react-dom": "18.3.1"
 	},
