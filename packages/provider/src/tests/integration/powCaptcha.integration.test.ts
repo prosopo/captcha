@@ -176,8 +176,6 @@ describe("PoW Integration Tests", () => {
 
 			const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
 
-			console.log({ challengeBody });
-
 			const challenge = challengeBody.challenge;
 			const difficulty = challengeBody.difficulty;
 			const signature = challengeBody.signature;

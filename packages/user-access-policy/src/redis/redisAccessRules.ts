@@ -144,6 +144,7 @@ export const createRedisAccessRulesWriter = (
 		): Promise<string> => {
 			const ruleKey = getRedisAccessRuleKey(rule);
 			const ruleValue = getRedisAccessRuleValue(rule);
+
 			await client.hSet(ruleKey, ruleValue);
 
 			if (expirationTimestamp) {
@@ -156,8 +157,6 @@ export const createRedisAccessRulesWriter = (
 					await client.expireAt(ruleKey, timestampInSeconds);
 				}
 			}
-
-			await client.hGetAll(ruleKey);
 
 			return ruleKey;
 		},
