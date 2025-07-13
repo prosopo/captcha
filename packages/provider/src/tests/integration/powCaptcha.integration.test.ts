@@ -150,16 +150,14 @@ describe("PoW Integration Tests", () => {
 	describe("SubmitPowCaptchaSolution", () => {
 		it("should verify a correctly completed PoW captcha as true", async () => {
 			const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
-			const dappPair = getPair(dummyDappAccount.seed, undefined, "sr25519", 42);
+			const [_dummySiteKeyMnemonic, dummySiteKey] = await generateMnemonic();
 
-			const dummyDappAccountAddr = dappPair.address;
-
-			await registerSiteKey(dummyDappAccountAddr, CaptchaType.pow);
+			await registerSiteKey(dummySiteKey, CaptchaType.pow);
 
 			const origin = "http://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
 				user: userPair.address,
-				dapp: dummyDappAccountAddr,
+				dapp: dummySiteKey,
 			};
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -169,7 +167,7 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dummyDappAccountAddr,
+						"Prosopo-Site-Key": dummySiteKey,
 						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(requestBody),
@@ -177,6 +175,8 @@ describe("PoW Integration Tests", () => {
 			);
 
 			const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
+
+			console.log({ challengeBody });
 
 			const challenge = challengeBody.challenge;
 			const difficulty = challengeBody.difficulty;
@@ -198,7 +198,7 @@ describe("PoW Integration Tests", () => {
 				nonce,
 				verifiedTimeout,
 				user: userPair.address,
-				dapp: dummyDappAccountAddr,
+				dapp: dummySiteKey,
 			};
 			const response = await fetch(
 				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
@@ -208,7 +208,7 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dummyDappAccountAddr,
+						"Prosopo-Site-Key": dummySiteKey,
 						"Prosopo-User": userAccount,
 					},
 					body: JSON.stringify(submitBody),

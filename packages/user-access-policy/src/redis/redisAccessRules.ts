@@ -59,19 +59,21 @@ export const createRedisAccessRulesReader = (
 					accessRulesRedisSearchOptions,
 				);
 
-				logger.debug(() => ({
-					msg: "Executed search query",
-					data: {
-						inspect: util.inspect(
-							{
-								filter: filter,
-								searchReply: searchReply,
-								query: query,
-							},
-							{ depth: null },
-						),
-					},
-				}));
+				if (searchReply.total > 0) {
+					logger.debug(() => ({
+						msg: "Executed search query",
+						data: {
+							inspect: util.inspect(
+								{
+									filter: filter,
+									searchReply: searchReply,
+									query: query,
+								},
+								{ depth: null },
+							),
+						},
+					}));
+				}
 			} catch (e) {
 				logger.error(() => ({
 					err: e,
