@@ -183,6 +183,30 @@ describe("redisAccessRules", () => {
 
 			expect(indexRecordsCount).toBe(0);
 		});
+
+		test("deletes all rules when there are 1000s of rules", async () => {
+			// given
+			const rulesCount = 10000;
+			const accessRules: AccessRule[] = Array.from(
+				{ length: rulesCount },
+				() => ({
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				}),
+			);
+
+			for (const rule of accessRules) {
+				await insertRule(rule);
+			}
+
+			// when
+			await accessRulesWriter.deleteAllRules();
+
+			// then
+			const indexRecordsCount = await getIndexRecordsCount();
+
+			expect(indexRecordsCount).toBe(0);
+		});
 	});
 
 	describe("reader", () => {
@@ -267,9 +291,12 @@ describe("redisAccessRules", () => {
 				},
 				policyScopeMatch: ScopeMatch.Exact,
 			});
-			const foundGlobalAccessRules = await accessRulesReader.findRules({
-				policyScopeMatch: ScopeMatch.Exact,
-			});
+			const foundGlobalAccessRules = await accessRulesReader.findRules(
+				{
+					policyScopeMatch: ScopeMatch.Exact,
+				},
+				false,
+			);
 
 			// then
 			const indexRecordsCount = await getIndexRecordsCount();

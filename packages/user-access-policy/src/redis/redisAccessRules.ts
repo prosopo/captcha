@@ -41,11 +41,11 @@ export const createRedisAccessRulesReader = (
 	return {
 		findRules: async (
 			filter: PolicyFilter,
-			exact = true,
+			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
 			const query = getRedisAccessRulesQuery(filter);
 
-			if (exact && query === "ismissing(@clientId)") {
+			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
 				// We don't want to accidentally return all rules when the filter is empty
 				return [];
 			}
@@ -168,11 +168,7 @@ export const createRedisAccessRulesWriter = (
 
 			if (keys.length === 0) return 0;
 
-			// Cast keys to a non-empty tuple type to satisfy TS
-			const keysTuple = keys as [string, ...string[]];
-
-			// @ts-ignore
-			return await client.del(...keysTuple);
+			return await client.del(keys);
 		},
 	};
 };
