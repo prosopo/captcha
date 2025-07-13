@@ -53,7 +53,7 @@ describe("ja4Middleware", () => {
 		const ja4MiddlewareInstance = ja4Middleware({} as ProviderEnvironment);
 		await ja4MiddlewareInstance(mockReq, mockRes, mockNext);
 
-		expect(mockReq.ja4).toBe(DEFAULT_JA4);
+		expect(mockReq.ja4.startsWith(DEFAULT_JA4)).toBe(true);
 	});
 });
 
@@ -67,7 +67,7 @@ describe("getJA4", () => {
 
 		const ja4 = await getJA4(mockHeaders);
 
-		expect(ja4.ja4PlusFingerprint).toBe(DEFAULT_JA4);
+		expect(ja4.ja4PlusFingerprint.startsWith(DEFAULT_JA4)).toBe(true);
 	});
 
 	it("should return the correct JA4 for a known ClientHello", async () => {

@@ -61,19 +61,11 @@ async function main() {
 
 	log.info(() => ({ data: { cliArgs: processedArgs } }));
 	if (processedArgs.api) {
-		if (process.env.NODE_ENV === "development") {
-			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
-				.startDev()
-				.then(() => {
-					log.info(() => ({ msg: "Reloading API started..." }));
-				});
-		} else {
-			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
-				.start()
-				.then(() => {
-					log.info(() => ({ msg: "Reloading API started..." }));
-				});
-		}
+		await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
+			.start()
+			.then(() => {
+				log.info(() => ({ msg: "Reloading API started..." }));
+			});
 	} else {
 		process.exit(0);
 	}

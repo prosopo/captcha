@@ -14,6 +14,7 @@
 
 import crypto from "node:crypto";
 import { CaptchaTypeSchema } from "@prosopo/types";
+import { getIPAddress } from "@prosopo/util";
 import { Address4 } from "ip-address";
 import { type ZodRawShape, z } from "zod";
 import { hashUserAgent } from "#policy/util.js";
@@ -79,7 +80,7 @@ export const userScopeInputSchema = userScopeSchema
 		const { ip, ipMask, userAgent, ...userScope } = inputUserScope;
 
 		if ("string" === typeof ip) {
-			userScope.numericIp = new Address4(ip).bigInt();
+			userScope.numericIp = getIPAddress(ip).bigInt();
 		}
 
 		// Assuming ipMask is already validated to be a string in CIDR format
