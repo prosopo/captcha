@@ -67,7 +67,7 @@ describe("getJA4", () => {
 
 		const ja4 = await getJA4(mockHeaders);
 
-		expect(ja4.ja4PlusFingerprintq.startsWith(DEFAULT_JA4)).toBe(true);
+		expect(ja4.ja4PlusFingerprint.startsWith(DEFAULT_JA4)).toBe(true);
 	});
 
 	it("should return the correct JA4 for a known ClientHello", async () => {
