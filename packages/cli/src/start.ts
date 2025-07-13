@@ -214,8 +214,3 @@ export async function start(
 
 	return startApi(env, admin, port);
 }
-
-export async function startDev(env?: ProviderEnvironment, admin?: boolean) {
-	//start(env, admin, 9238);
-	return await start(env, admin);
-}

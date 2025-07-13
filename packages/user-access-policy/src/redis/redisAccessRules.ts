@@ -39,8 +39,16 @@ export const createRedisAccessRulesReader = (
 	logger: Logger,
 ): AccessRulesReader => {
 	return {
-		findRules: async (filter: PolicyFilter): Promise<AccessRule[]> => {
+		findRules: async (
+			filter: PolicyFilter,
+			exact = true,
+		): Promise<AccessRule[]> => {
 			const query = getRedisAccessRulesQuery(filter);
+
+			if (exact && query === "ismissing(@clientId)") {
+				// We don't want to accidentally return all rules when the filter is empty
+				return [];
+			}
 
 			let searchReply: SearchReply;
 
@@ -134,7 +142,6 @@ export const createRedisAccessRulesWriter = (
 		): Promise<string> => {
 			const ruleKey = getRedisAccessRuleKey(rule);
 			const ruleValue = getRedisAccessRuleValue(rule);
-
 			await client.hSet(ruleKey, ruleValue);
 
 			if (expirationTimestamp) {
@@ -148,6 +155,8 @@ export const createRedisAccessRulesWriter = (
 				}
 			}
 
+			await client.hGetAll(ruleKey);
+
 			return ruleKey;
 		},
 
@@ -157,7 +166,13 @@ export const createRedisAccessRulesWriter = (
 		deleteAllRules: async (): Promise<number> => {
 			const keys = await client.keys(`${accessRuleRedisKeyPrefix}*`);
 
-			return keys.length > 0 ? await client.del(keys) : 0;
+			if (keys.length === 0) return 0;
+
+			// Cast keys to a non-empty tuple type to satisfy TS
+			const keysTuple = keys as [string, ...string[]];
+
+			// @ts-ignore
+			return await client.del(...keysTuple);
 		},
 	};
 };
