@@ -17,6 +17,7 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 	ScopeMatch,
+	type UserScopeApiInput,
 	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
 import { getIPAddress, uniqueSubsets } from "@prosopo/util";
@@ -27,8 +28,7 @@ export const getRequestUserScope = (
 	ja4?: string,
 	ip?: string,
 	user?: string,
-) => {
-	const ipAddress = getIPAddress(ip || "");
+): Pick<UserScopeApiInput, "userId" | "ja4Hash" | "userAgent" | "ip"> => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
 		: undefined;
@@ -36,7 +36,7 @@ export const getRequestUserScope = (
 		...(user && { userId: user }),
 		...(ja4 && { ja4Hash: ja4 }),
 		...(userAgent && { userAgent: userAgent }),
-		...(ipAddress && { ipAddress: ipAddress.bigInt() }),
+		...(ip && { ip }),
 	};
 };
 
@@ -51,8 +51,8 @@ export const getPrioritisedAccessRule = async (
 		(key) => userScope[key] !== undefined,
 	);
 
-	const prioritisedUserScopes = uniqueSubsets(userScopeKeys).map(
-		(subset: string[]) =>
+	const prioritisedUserScopes = uniqueSubsets(userScopeKeys)
+		.map((subset: string[]) =>
 			subset.reduce(
 				(acc, key) => {
 					acc[key] = userScope[key];
@@ -60,7 +60,9 @@ export const getPrioritisedAccessRule = async (
 				},
 				{} as Record<string, bigint | string | undefined>,
 			),
-	);
+		)
+		.filter((us) => Object.keys(us).length > 0)
+		.filter((us) => Object.values(us).some((value) => value !== undefined));
 
 	const policyPromises = [];
 	for (const clientOrUndefined of [clientId, undefined]) {
@@ -71,8 +73,8 @@ export const getPrioritisedAccessRule = async (
 						policyScope: {
 							clientId: clientOrUndefined,
 						},
-						policyScopeMatch: ScopeMatch.Exact,
 					}),
+					policyScopeMatch: ScopeMatch.Exact,
 					userScope: userScopeInputSchema.parse(scope),
 
 					userScopeMatch: ScopeMatch.Exact,
