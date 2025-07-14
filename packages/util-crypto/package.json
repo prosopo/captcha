@@ -4,32 +4,28 @@
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
+	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"cli": "node ./dist/js/cli.js",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"cli": "node ./dist/js/cli.js"
 	},
-	"main": "./dist/index.js",
-	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
-		},
-		"./mnemonic/bip39": {
-			"types": "./dist/mnemonic/bip39.d.ts",
-			"import": "./dist/mnemonic/bip39.js",
-			"require": "./dist/cjs/mnemonic/bip39.cjs",
-			"default": "./dist/mnemonic/bip39.js"
 		}
 	},
-	"types": "./dist/index.d.ts",
 	"dependencies": {
 		"@noble/curves": "1.9.2",
 		"@noble/hashes": "1.8.0",
@@ -37,6 +33,7 @@
 		"@polkadot/x-randomvalues": "12.6.2",
 		"@scure/base": "^1.1.7",
 		"@scure/sr25519": "0.2.0",
+		"@prosopo/config": "3.1.0",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
