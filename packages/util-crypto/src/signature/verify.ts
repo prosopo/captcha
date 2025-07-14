@@ -131,7 +131,7 @@ function verifyMultisig(
 function getVerifyFn(signature: Uint8Array): VerifyFn {
 	const sigFirstPart = signature[0];
 
-	if (!sigFirstPart) {
+	if (sigFirstPart === undefined) {
 		throw new Error(
 			"Invalid signature, expected first byte to indicate crypto type",
 		);
