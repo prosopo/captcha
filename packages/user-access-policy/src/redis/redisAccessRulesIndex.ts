@@ -24,6 +24,7 @@ export const accessRulesRedisIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
 export const accessRuleRedisKeyPrefix = "uar:";
 const accessRuleContentHashAlgorithm = "md5";
+const DEFAULT_SEARCH_LIMIT = 1000;
 
 const accessRulesIndex: RedisIndex = {
 	name: accessRulesRedisIndexName,
@@ -44,7 +45,7 @@ const accessRulesIndex: RedisIndex = {
 		numericIpMaskMin: SCHEMA_FIELD_TYPE.NUMERIC,
 		numericIpMaskMax: SCHEMA_FIELD_TYPE.NUMERIC,
 		userId: SCHEMA_FIELD_TYPE.TAG,
-		numericIp: SCHEMA_FIELD_TYPE.NUMERIC,
+		numericIp: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 		ja4Hash: SCHEMA_FIELD_TYPE.TAG,
 		headersHash: SCHEMA_FIELD_TYPE.TAG,
 		userAgentHash: SCHEMA_FIELD_TYPE.TAG,
@@ -52,7 +53,7 @@ const accessRulesIndex: RedisIndex = {
 	// the satisfy statement is to guarantee that the keys are right
 	options: {
 		ON: "HASH" as const,
-		PREFIX: accessRuleRedisKeyPrefix,
+		PREFIX: [accessRuleRedisKeyPrefix],
 	},
 };
 
@@ -79,6 +80,15 @@ const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 export const accessRulesRedisSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
+};
+
+export const accessRulesRedisDeleteOptions: FtSearchOptions = {
+	// #2 is a required option when the 'ismissing()' function is in the query body
+	DIALECT: 2,
+	LIMIT: {
+		from: 0,
+		size: DEFAULT_SEARCH_LIMIT,
+	},
 };
 
 /*

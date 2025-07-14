@@ -343,4 +343,21 @@ export default class ProviderApi
 			},
 		});
 	}
+
+	public deleteAllUserAccessPolicies(
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			accessRuleApiPaths.DELETE_ALL,
+			{},
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
 }

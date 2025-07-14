@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.7
+### Patch Changes
+
+- 913b69a: Move dep
+
 ## 2.6.6
 ### Patch Changes
 

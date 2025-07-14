@@ -35,7 +35,10 @@ import {
 	accessRuleApiPaths,
 	getExpressApiRuleRateLimits,
 } from "#policy/api/accessRuleApiRoutes.js";
-import { deleteAllRulesEndpointSchema } from "#policy/api/deleteAllRulesEndpoint.js";
+import {
+	type DeleteAllRulesEndpointSchema,
+	deleteAllRulesEndpointSchema,
+} from "#policy/api/deleteAllRulesEndpoint.js";
 import {
 	type DeleteRulesEndpointSchemaInput,
 	type DeleteRulesEndpointSchemaOutput,
@@ -64,6 +67,7 @@ export {
 	type PolicyFilter,
 	type DeleteRulesEndpointSchemaOutput,
 	type DeleteRulesEndpointSchemaInput,
+	type DeleteAllRulesEndpointSchema,
 	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
 	type AccessRule,

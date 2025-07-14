@@ -1,5 +1,36 @@
 # @prosopo/scripts
 
+## 3.0.11
+### Patch Changes
+
+- Updated dependencies [b7c3258]
+  - @prosopo/provider@3.2.0
+  - @prosopo/cli@3.1.0
+  - @prosopo/env@3.1.0
+  - @prosopo/types-database@3.0.9
+  - @prosopo/datasets@3.0.9
+  - @prosopo/types-env@2.7.13
+
+## 3.0.10
+### Patch Changes
+
+  - @prosopo/cli@3.0.10
+  - @prosopo/provider@3.1.3
+  - @prosopo/types-database@3.0.8
+  - @prosopo/env@3.0.8
+  - @prosopo/datasets@3.0.8
+  - @prosopo/types-env@2.7.12
+
+## 3.0.9
+### Patch Changes
+
+  - @prosopo/cli@3.0.9
+  - @prosopo/provider@3.1.2
+  - @prosopo/types-database@3.0.7
+  - @prosopo/env@3.0.7
+  - @prosopo/datasets@3.0.7
+  - @prosopo/types-env@2.7.11
+
 ## 3.0.8
 ### Patch Changes
 

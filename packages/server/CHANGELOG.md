@@ -1,5 +1,21 @@
 # @prosopo/server
 
+## 2.9.11
+### Patch Changes
+
+- Updated dependencies [b7c3258]
+  - @prosopo/api@3.1.0
+
+## 2.9.10
+### Patch Changes
+
+  - @prosopo/api@3.0.8
+
+## 2.9.9
+### Patch Changes
+
+  - @prosopo/api@3.0.7
+
 ## 2.9.8
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/provider-mock",
-	"version": "2.7.15",
+	"version": "2.7.18",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"type": "module",
@@ -27,7 +27,7 @@
 	"dependencies": {
 		"@prosopo/api-express-router": "3.0.3",
 		"@prosopo/common": "3.0.2",
-		"@prosopo/provider": "3.1.1",
+		"@prosopo/provider": "3.2.0",
 		"@prosopo/types": "3.0.3",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",

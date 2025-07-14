@@ -1,5 +1,27 @@
 # @prosopo/api
 
+## 3.1.0
+### Minor Changes
+
+- b7c3258: Add tests for UAPs
+
+### Patch Changes
+
+- Updated dependencies [b7c3258]
+  - @prosopo/user-access-policy@3.3.0
+
+## 3.0.8
+### Patch Changes
+
+- Updated dependencies [cdf7c29]
+  - @prosopo/user-access-policy@3.2.1
+
+## 3.0.7
+### Patch Changes
+
+- Updated dependencies [a7164ce]
+  - @prosopo/user-access-policy@3.2.0
+
 ## 3.0.6
 ### Patch Changes
 

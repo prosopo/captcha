@@ -1,5 +1,20 @@
 # @prosopo/user-access-policy
 
+## 3.3.0
+### Minor Changes
+
+- b7c3258: Add tests for UAPs
+
+## 3.2.1
+### Patch Changes
+
+- cdf7c29: Fix var
+
+## 3.2.0
+### Minor Changes
+
+- a7164ce: Allow searching for more rules to make deleting rules easier. Fix the expiry times of rules
+
 ## 3.1.5
 ### Patch Changes
 
