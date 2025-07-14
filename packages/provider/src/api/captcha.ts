@@ -638,8 +638,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				)[0];
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
-				console.log({ userAccessPolicy });
-				console.log("\nWTF\n");
 				if (userAccessPolicy) {
 					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
 						userAccessPolicy,
