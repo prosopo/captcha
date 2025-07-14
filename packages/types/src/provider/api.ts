@@ -344,6 +344,11 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.token]: string(),
 	[ApiParams.user]: string(),
 });
+
+export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
+	typeof GetFrictionlessCaptchaChallengeRequestBody
+>;
+
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
 >;
