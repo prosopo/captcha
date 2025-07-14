@@ -22,7 +22,6 @@ import {
 	type KeyringPair,
 } from "@prosopo/types";
 import { randomAsHex } from "@prosopo/util-crypto";
-import fetch from "node-fetch";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { registerSiteKey } from "./registerSitekey.js";
 import {

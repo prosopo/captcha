@@ -25,7 +25,6 @@ import {
 	type SubmitPowCaptchaSolutionBodyType,
 } from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";
-import fetch from "node-fetch";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	dummyDappAccount,
