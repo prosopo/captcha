@@ -3,20 +3,28 @@
 	"version": "2.7.15",
 	"description": "Backend for client-example",
 	"main": "dist/app.js",
+	"types": "dist/app.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/app.d.ts"
+		}
+	},
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
 		"start": "node ./dist/app.js",
 		"start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
-		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --mode=$NODE_ENV --config ./vite.config.ts",
-		"clean": "tsc --build --clean"
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV"
 	},
 	"repository": {
 		"type": "git",
@@ -44,13 +52,13 @@
 		"express": "4.21.2",
 		"jsonwebtoken": "9.0.2",
 		"mongodb-memory-server": "10.0.0",
+		"@prosopo/config": "3.1.0",
 		"mongoose": "8.13.0",
 		"openpgp": "5.11.3",
 		"webpack-dev-server": "5.2.2",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.0",
 		"@types/jsonwebtoken": "9.0.6",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",

@@ -3,6 +3,15 @@
 	"version": "2.8.9",
 	"private": true,
 	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
@@ -10,10 +19,11 @@
 	"dependencies": {
 		"@prosopo/types": "3.0.3",
 		"@prosopo/util": "3.0.2",
+		"express": "4.21.2",
+		"@prosopo/config": "3.1.0",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
-		"express": "4.21.2",
 		"openpgp": "5.11.3",
 		"webpack-dev-server": "5.2.2"
 	},
@@ -37,10 +47,10 @@
 		"vitest": "3.0.9"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
-		"clean": "tsc --build --clean",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
 		"cypress:open:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.image.config.js",
 		"cypress:run:client-bundle-example:image": "CAPTCHA_TYPE=image CYPRESS_BASE_URL='http://localhost:9232' cypress run --browser chrome --config-file cypress.image.config.js",
 		"cypress:open:client-bundle-example:frictionless": "CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='http://localhost:9232' cypress open --config-file cypress.frictionless.config.js",

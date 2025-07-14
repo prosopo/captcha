@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Keyring } from "@prosopo/keyring";
 import { mnemonicGenerate, mnemonicToMiniSecret } from "@prosopo/util-crypto";
 import type { KeypairType } from "@prosopo/util-crypto";
+import { Keyring } from "../keyring/keyring.js";
 
 /** Generate a mnemonic, returning the mnemonic and associated address
  * @param keyring

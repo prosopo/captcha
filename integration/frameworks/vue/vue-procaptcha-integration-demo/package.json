@@ -8,15 +8,26 @@
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "del-cli ./dist",
-		"build": "vue-tsc",
-		"bundle": "vite build",
-		"dev": "vite dev --port=9331"
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"typecheck": "vue-tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9331 --mode=$NODE_ENV"
 	},
 	"dependencies": {
 		"@prosopo/vue-procaptcha-wrapper": "1.1.5",
+		"@prosopo/config": "3.1.0",
+		"@prosopo/types": "3.0.3",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {
