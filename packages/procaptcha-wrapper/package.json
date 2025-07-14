@@ -15,8 +15,8 @@
 		"bundle": "vite build"
 	},
 	"dependencies": {
-		"@prosopo/types": "3.0.3",
-		"@prosopo/locale": "3.0.2"
+		"@prosopo/locale": "3.0.2",
+		"@prosopo/types": "3.0.3"
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.0",
