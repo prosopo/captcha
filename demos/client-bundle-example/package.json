@@ -1,20 +1,37 @@
 {
 	"name": "@prosopo/client-bundle-example",
-	"main": "index.js",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"build": "tsc --build",
-		"bundle": "vite build",
-		"build:cjs": "echo 'no cjs build'",
-		"start": "vite serve ./src --port 9232 --config vite.config.ts",
-		"clean": "echo 'nothing to clean'"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
+		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV"
 	},
 	"version": "2.9.2",
+	"dependencies": {
+		"@typegoose/auto-increment": "4.13.0",
+		"axios": "1.10.0",
+		"esbuild": "0.25.6",
+		"openpgp": "5.11.3",
+		"webpack-dev-server": "5.2.2",
+		"@prosopo/config": "3.1.0"
+	},
 	"devDependencies": {
 		"@prosopo/dotenv": "3.0.4",
 		"@types/node": "22.5.5",
@@ -27,12 +44,5 @@
 		"typescript": "5.6.2",
 		"vite": "6.3.5",
 		"vitest": "3.0.9"
-	},
-	"dependencies": {
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
-		"esbuild": "0.25.6",
-		"openpgp": "5.11.3",
-		"webpack-dev-server": "5.2.2"
 	}
 }

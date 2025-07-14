@@ -23,7 +23,7 @@ import {
 	test,
 } from "vitest";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
-import { createTestRedisClient } from "#policy/tests/redis/testRedisClient.js";
+import { createTestRedisClient } from "./testRedisClient.js";
 
 describe("redisIndex", () => {
 	let redisClient: RedisClientType;

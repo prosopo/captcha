@@ -2,23 +2,25 @@
 	"name": "@prosopo/locale",
 	"version": "3.0.2",
 	"description": "Prosopo locale library",
-	"main": "./dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
-	"types": "./dist/index.d.ts",
 	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"author": "Prosopo Limited",
@@ -36,8 +38,9 @@
 		"i18next-resources-to-backend": "1.2.1",
 		"openpgp": "5.11.3",
 		"react-i18next": "15.4.0",
-		"webpack-dev-server": "5.2.2",
-		"zod": "3.23.8"
+		"zod": "3.23.8",
+		"@prosopo/config": "3.1.0",
+		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.1.0",

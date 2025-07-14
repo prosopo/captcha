@@ -3,11 +3,12 @@
 	"version": "2.6.0",
 	"description": "",
 	"private": true,
+	"type": "module",
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build:cjs": "echo 'no cjs build'",
-		"build": "tsc --build --verbose",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
 		"start": "npx tsx src/index.ts"
 	},
 	"author": "",
@@ -25,6 +26,7 @@
 	},
 	"dependencies": {
 		"@octokit/graphql": "8.1.1",
+		"@prosopo/config": "3.1.0",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
@@ -33,7 +35,14 @@
 		"webpack-dev-server": "5.2.2"
 	},
 	"main": "dist/index.js",
-	"type": "module",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"

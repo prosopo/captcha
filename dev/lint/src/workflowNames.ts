@@ -47,9 +47,8 @@ const main = async (args: {
 	}
 };
 
-main({
-	root: z.string().parse(process.argv[2]),
-}).catch((err) => {
-	console.error(err);
-	process.exit(1);
-});
+export const workflowNames = async () => {
+	await main({
+		root: z.string().parse(process.argv[2]),
+	});
+};

@@ -3,17 +3,24 @@
 	"version": "3.0.11",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
-		"deploy": "node dist/deploy/protocol.js",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
 		"cli": "node dist/cli/index.js",
 		"setup": "node dist/cli/index.js setup"
 	},
@@ -47,9 +54,9 @@
 		"fast-glob": "3.3.2",
 		"fs-extra": "11.2.0",
 		"mongodb": "6.9.0",
+		"yargs": "17.7.2",
 		"openpgp": "5.11.3",
-		"webpack-dev-server": "5.2.2",
-		"yargs": "17.7.2"
+		"webpack-dev-server": "5.2.2"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"

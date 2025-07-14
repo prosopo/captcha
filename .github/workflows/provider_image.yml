@@ -57,10 +57,8 @@ jobs:
           # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
           echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
 
-      # build all the packages in the workspace to prepare assets for the next cli bundle command
-      - name: Build packages
-        run: |
-          NODE_ENV="production" npm run build:all
+      - run: NODE_ENV="production" npx nx run @prosopo/cli:build
+      - run: NODE_ENV="production" npx nx run @prosopo/cli:bundle
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -86,7 +84,7 @@ jobs:
       # Generate a mnemonic for the provider image
       - name: Generate mnemonic and add to env file
         run: |
-          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" node dev/scripts/dist/scripts/generateMnemonic.js --env
+          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" npx tsx dev/scripts/src/scripts/generateMnemonic.ts --env
 
       # Check that the version command works when running the bundle in the provider image
       - name: Check provider bundle runs
