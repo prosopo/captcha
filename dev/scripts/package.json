@@ -21,7 +21,6 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "echo no tests",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"cli": "node dist/cli/index.js",
 		"setup": "node dist/cli/index.js setup"
 	},
