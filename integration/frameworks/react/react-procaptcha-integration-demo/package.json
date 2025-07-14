@@ -22,7 +22,7 @@
 		"test": "echo no tests",
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9330 --mode=$NODE_ENV",
-		"clean": "del-cli dist"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
 		"@prosopo/react-procaptcha-wrapper": "1.1.4",

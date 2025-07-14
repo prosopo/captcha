@@ -15,7 +15,7 @@
 		}
 	},
 	"scripts": {
-		"clean": "rm -rf dist",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "npm run clean && cp -r src dist",
 		"build:cjs": "npm run build",
 		"typecheck": "echo no typecheck",

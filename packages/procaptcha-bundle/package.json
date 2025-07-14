@@ -24,7 +24,7 @@
 	"types": "dist/index.d.ts",
 	"source": "./src/index.tsx",
 	"scripts": {
-		"clean": "tsc --build --clean",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
@@ -34,7 +34,9 @@
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode ${MODE:-production}",
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@prosopo/common": "3.0.2",
 		"@prosopo/dotenv": "3.0.4",

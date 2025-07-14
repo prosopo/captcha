@@ -18,9 +18,9 @@
 	},
 	"scripts": {
 		"test": "echo no tests",
-		"clean": "del-cli ./dist && del-cli ./.svelte-kit",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"svpkg": "svelte-package -i ./src -o ./dist",
-		"build": "npm run svpkg && del-cli ./.svelte-kit",
+		"build": "npm run svpkg && del-cli --verbose ./.svelte-kit",
 		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {

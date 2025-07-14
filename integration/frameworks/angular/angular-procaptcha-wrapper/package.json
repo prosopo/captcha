@@ -11,7 +11,7 @@
 	"module": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"scripts": {
 		"test": "echo no tests",
-		"clean": "del-cli ./dist",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "ng-packagr -p ng-package.json",
 		"dev": "npm run build -- --watch"
 	},
