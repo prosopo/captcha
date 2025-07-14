@@ -374,19 +374,11 @@ jobs:
           echo "affected: $affected"
           echo "affected=$affected" >> $GITHUB_ENV
 
-<<<<<<< HEAD
-          # expect always publish to Docker Hub
-          if [ "$(echo "$affected" | jq '[.[] | select(.dockerhub != 0)] | length')" -gt 0 ]; then
-            echo "Some packages failed to publish to Docker Hub"
-            exit 1
-          fi
-=======
-#                # expect always publish to Docker Hub
-#                if [ "$(echo "$affected" | jq '[.[] | select(.dockerhub != 0)] | length')" -gt 0 ]; then
-#                    echo "Some packages failed to publish to Docker Hub"
-#                    exit 1
-#                fi
->>>>>>> main
+          # # expect always publish to Docker Hub
+          # if [ "$(echo "$affected" | jq '[.[] | select(.dockerhub != 0)] | length')" -gt 0 ]; then
+          #   echo "Some packages failed to publish to Docker Hub"
+          #   exit 1
+          # fi
 
       - name: handle result
         if: always()
