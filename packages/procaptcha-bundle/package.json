@@ -28,7 +28,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
-		"test": "NODE_ENV=${NODE_ENV:-production}; vitest run --config vite.esm.config.ts --mode $NODE_ENV",
+		"test": "NODE_ENV=${NODE_ENV:-production}; vitest run --config vite.test.config.ts --mode $NODE_ENV",
 		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-production}; webpack build --config webpack.config.cjs --mode ${MODE:-production}",
