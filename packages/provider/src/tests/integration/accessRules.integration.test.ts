@@ -412,7 +412,6 @@ describe("Access Rules Integration Tests", () => {
 				},
 			});
 			expect(responseImage.status).toBe(400);
-			console.log(await responseImage.json());
 		});
 		it("should not return a pow captcha for a user with an image captcha access rule", async () => {
 			await userAccessPolicy(adminPair, {
