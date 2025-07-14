@@ -33,5 +33,6 @@ export default function () {
 	const config = ViteTestConfig();
 	config.test = config.test || {};
 	config.test.environment = "jsdom";
+	config.test.globals = true;
 	return config;
 }
