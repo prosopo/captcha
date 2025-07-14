@@ -7,13 +7,13 @@
 	"include": ["./src"],
 	"references": [
 		{
-			"path": "../../integration/procaptcha-integration-build-config"
+			"path": "../../integration/procaptcha-integration-build-config/tsconfig.cjs.json"
 		},
 		{
-			"path": "../types"
+			"path": "../types/tsconfig.cjs.json"
 		},
 		{
-			"path": "../locale"
+			"path": "../locale/tsconfig.cjs.json"
 		}
 	]
 }
