@@ -20,6 +20,10 @@ export default createIntegrationViteConfig({
 	viteSettings: {
 		envDir: __dirname,
 	},
+	define: {
+		VITE_RENDER_SCRIPT_URL: "https://js.prosopo.io/js/procaptcha.bundle.js",
+		VITE_RENDER_SCRIPT_ID: "procaptcha-bundle",
+	},
 	dtsPluginOptions: {
 		// workaround to "inline" external dependencies
 		bundledPackages: ["@prosopo/types", "@prosopo/locale"],
