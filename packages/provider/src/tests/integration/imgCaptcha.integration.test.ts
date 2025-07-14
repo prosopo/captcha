@@ -24,7 +24,6 @@ import {
 	CaptchaType,
 	ClientApiPaths,
 } from "@prosopo/types";
-import fetch from "node-fetch";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 import { registerSiteKey } from "./registerSitekey.js";
