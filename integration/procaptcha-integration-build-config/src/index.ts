@@ -22,7 +22,6 @@ interface IntegrationConfigSettings {
 	name: string;
 	viteSettings?: UserConfig;
 	dtsPluginOptions?: DtsPluginOptions;
-	define?: Record<string, string>;
 }
 
 function createIntegrationViteConfig(
@@ -34,7 +33,6 @@ function createIntegrationViteConfig(
 		build: {
 			outDir: path.resolve(configSettings.directory, "./dist"),
 			emptyOutDir: true,
-
 			lib: {
 				name: configSettings.name,
 				entry: path.resolve(configSettings.directory, "./src/index.ts"),
