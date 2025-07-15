@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "مفتاح سري مفقود",
 		"SITE_KEY_NOT_FOUND": "لم يتم العثور على مفتاح الموقع",
-		"MISSING_SECRET_KEY": "مفتاح السر المفقود",
 		"JSON_LOAD_FAILED": "فشل في تحميل ملف JSON",
 		"MNEMONIC_UNDEFINED": "العبارة السرية غير معرفة. يرجى تعيين العبارة السرية في متغيرات البيئة",
 		"NO_MNEMONIC_OR_SEED": "لا توجد عبارة سرية أو بذرة مقدمة",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "زوج مزود مفقود",
 		"MISSING_ENV_VARIABLE": "متغير البيئة مفقود",
 		"GENERAL": "خطأ تطوير عام، انظر السياق",
-		"MISSING_SECRET_KEY": "المفتاح السري مفقود",
 		"METHOD_NOT_IMPLEMENTED": "الطريقة غير مُنفّذة"
 	},
 	"FS": {

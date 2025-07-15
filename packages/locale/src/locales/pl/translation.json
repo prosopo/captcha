@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Nie znaleziono klucza witryny",
 		"MISSING_SECRET_KEY": "Brakujący klucz tajny",
+		"SITE_KEY_NOT_FOUND": "Nie znaleziono klucza witryny",
 		"JSON_LOAD_FAILED": "Nie można załadować pliku JSON",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Proszę ustawić mnemonik w zmiennych środowiskowych",
 		"NO_MNEMONIC_OR_SEED": "Nie podano mnemonika ani seeda",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Brakująca para dostawcy",
 		"MISSING_ENV_VARIABLE": "Brak zmiennej środowiskowej",
 		"GENERAL": "Ogólny błąd dewelopera, zobacz kontekst",
-		"MISSING_SECRET_KEY": "Brakujący klucz tajny",
 		"METHOD_NOT_IMPLEMENTED": "Metoda niezaimplementowana"
 	},
 	"FS": {

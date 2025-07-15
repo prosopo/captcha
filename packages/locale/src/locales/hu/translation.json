@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Webhely kulcs nem található",
 		"MISSING_SECRET_KEY": "Hiányzó titkos kulcs",
+		"SITE_KEY_NOT_FOUND": "Webhely kulcs nem található",
 		"JSON_LOAD_FAILED": "JSON fájl betöltése sikertelen",
 		"MNEMONIC_UNDEFINED": "Mnemonic nincs meghatározva. Kérjük állítsa be a mnemonicot környezeti változókban",
 		"NO_MNEMONIC_OR_SEED": "Nincs megadva mnemonic vagy mag",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Hiányzó ellátópár",
 		"MISSING_ENV_VARIABLE": "Hiányzó környezeti változó",
 		"GENERAL": "Általános fejlesztői hiba, lásd a kontextust",
-		"MISSING_SECRET_KEY": "Hiányzó titkos kulcs",
 		"METHOD_NOT_IMPLEMENTED": "Az eljárás nincs implementálva"
 	},
 	"FS": {

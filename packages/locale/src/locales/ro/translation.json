@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Cheie secretă lipsă",
 		"SITE_KEY_NOT_FOUND": "Cheie site negasita",
-		"MISSING_SECRET_KEY": "Lipseste cheia secreta",
 		"JSON_LOAD_FAILED": "Nu s-a putut incarca fisierul JSON",
 		"MNEMONIC_UNDEFINED": "Mnemonic indefinit. Te rog seteaza mnemonicul in variabilele de mediu",
 		"NO_MNEMONIC_OR_SEED": "Nu s-a furnizat niciun mnemonic sau seed",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Pereche de furnizori lipsa",
 		"MISSING_ENV_VARIABLE": "Variabila de mediu lipsa",
 		"GENERAL": "Eroare generala de dezvoltare, vezi contextul",
-		"MISSING_SECRET_KEY": "Cheie secreta lipsa",
 		"METHOD_NOT_IMPLEMENTED": "Metoda neimplementata"
 	},
 	"FS": {

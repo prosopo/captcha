@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "ไม่มีคีย์ลับ",
 		"SITE_KEY_NOT_FOUND": "คีย์เว็บไซต์ไม่พบ",
-		"MISSING_SECRET_KEY": "สูญหาคีย์ลับ",
 		"JSON_LOAD_FAILED": "ล้มเหลวในการโหลดไฟล์ JSON",
 		"MNEMONIC_UNDEFINED": "ไม่ได้กำหนด Mnemonic กรุณาตั้งค่า Mnemonic ในตัวแปรสภาพแวดล้อม",
 		"NO_MNEMONIC_OR_SEED": "ไม่มี Mnemonic หรือ Seed ที่ให้มา",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "คู่ให้บริการที่ขาดหาย",
 		"MISSING_ENV_VARIABLE": "ตัวแปรสภาพแวดล้อมที่ขาดหาย",
 		"GENERAL": "ข้อผิดพลาด Dev ทั่วไป ดูบริบท",
-		"MISSING_SECRET_KEY": "คีย์ลับที่ขาดหาย",
 		"METHOD_NOT_IMPLEMENTED": "เมธอดยังไม่ได้นำมาใช้"
 	},
 	"FS": {

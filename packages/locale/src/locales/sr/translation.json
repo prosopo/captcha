@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Недостаје тајни кључ",
 		"SITE_KEY_NOT_FOUND": "عنصر الموقع غير موجود",
-		"MISSING_SECRET_KEY": "مفتاح السر المفقود",
 		"JSON_LOAD_FAILED": "Neuspelo učitavanje JSON datoteke",
 		"MNEMONIC_UNDEFINED": "Mnemonic nedefinisan. Molimo postavite mnemonic u okruženjske promenljive",
 		"NO_MNEMONIC_OR_SEED": "Nije dostavljen mnemonic ili ključ",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Missing provider pair",
 		"MISSING_ENV_VARIABLE": "Missing environment variable",
 		"GENERAL": "General Dev Error, see context",
-		"MISSING_SECRET_KEY": "Missing secret key",
 		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
 	},
 	"FS": {

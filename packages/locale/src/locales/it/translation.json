@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Chiave segreta mancante",
 		"SITE_KEY_NOT_FOUND": "Chave do site não encontrada",
-		"MISSING_SECRET_KEY": "Chave secreta ausente",
 		"JSON_LOAD_FAILED": "Caricamento del file JSON fallito",
 		"MNEMONIC_UNDEFINED": "Mnemonic indefinito. Imposta il mnemonic nelle variabili d'ambiente",
 		"NO_MNEMONIC_OR_SEED": "Nessun mnemonic o seed fornito",
@@ -133,7 +133,6 @@
 		"MISSING_PROVIDER_PAIR": "Coppia di fornitori mancante",
 		"MISSING_ENV_VARIABLE": "Variabile d'ambiente mancante",
 		"GENERAL": "Errore di sviluppo generale, vedere il contesto",
-		"MISSING_SECRET_KEY": "Chiave segreta mancante",
 		"METHOD_NOT_IMPLEMENTED": "Metodo non implementato"
 	},
 	"FS": {

@@ -1,4 +1,17 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "गुप्त कुंजी गायब",
+		"SITE_KEY_NOT_FOUND": "सइट कज नह मल",
+		"JSON_LOAD_FAILED": "JSON फइल लड करन म वफल रह",
+		"MNEMONIC_UNDEFINED": "मनमनक अनरदषट। कपय परयवरण चरण म मनमनक सट कर",
+		"NO_MNEMONIC_OR_SEED": "कई मनमनक य सड परदन नह कय गय",
+		"CANT_FIND_KEYRINGPAIR": "{{पत}} क लए करगपयर नह मल सकत",
+		"ENVIRONMENT_NOT_READY": "परयवरण तयर नह ह",
+		"INVALID_SIGNATURE": "अवध हसतकषर",
+		"SITE_KEY_MISSING": "सइट कज गयब ह",
+		"ACCOUNT_NOT_FOUND": "खत नह मल",
+		"INVALID_TIMESTAMP": "अवध समय चहन"
+	},
 	"TARGET": {
 		"pelecaniformes": "पलकनफरमस",
 		"self-propelled-lawn-mower": "स्व-चालित लॉन-घास काटने की मशीन",
@@ -298,19 +311,6 @@
 		"yo-yo": "य-य",
 		"zebra": "जबर"
 	},
-	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "सइट कज नह मल",
-		"MISSING_SECRET_KEY": "गपत कज गयब ह",
-		"JSON_LOAD_FAILED": "JSON फइल लड करन म वफल रह",
-		"MNEMONIC_UNDEFINED": "मनमनक अनरदषट। कपय परयवरण चरण म मनमनक सट कर",
-		"NO_MNEMONIC_OR_SEED": "कई मनमनक य सड परदन नह कय गय",
-		"CANT_FIND_KEYRINGPAIR": "{{पत}} क लए करगपयर नह मल सकत",
-		"ENVIRONMENT_NOT_READY": "परयवरण तयर नह ह",
-		"INVALID_SIGNATURE": "अवध हसतकषर",
-		"SITE_KEY_MISSING": "सइट कज गयब ह",
-		"ACCOUNT_NOT_FOUND": "खत नह मल",
-		"INVALID_TIMESTAMP": "अवध समय चहन"
-	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "इस करय क करन क लए परयपत अनमतय नह ह",
 		"MISSING_QUERY_PARAMETERS": "सध परमटर गयब ह",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "परवइडर जड गयब ह",
 		"MISSING_ENV_VARIABLE": "परयवरण म गयब चर",
 		"GENERAL": "समनय डव तरट, सदरभ दख",
-		"MISSING_SECRET_KEY": "गपत कज गयब ह",
 		"METHOD_NOT_IMPLEMENTED": "वध क लग नह कय गय ह"
 	},
 	"FS": {

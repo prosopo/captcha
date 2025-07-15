@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Clé de site introuvable",
 		"MISSING_SECRET_KEY": "Clé secrète manquante",
+		"SITE_KEY_NOT_FOUND": "Clé de site introuvable",
 		"JSON_LOAD_FAILED": "Échec du chargement du fichier JSON",
 		"MNEMONIC_UNDEFINED": "Mnémonique non défini. Veuillez définir la phrase mnémonique dans les variables d'environnement",
 		"NO_MNEMONIC_OR_SEED": "Aucune phrase mnémonique ou graine fournie",
@@ -133,7 +133,6 @@
 		"MISSING_PROVIDER_PAIR": "Paire de fournisseurs manquante",
 		"MISSING_ENV_VARIABLE": "Variable d'environnement manquante",
 		"GENERAL": "Erreur Dev Générale, voir le contexte",
-		"MISSING_SECRET_KEY": "Clé secrète manquante",
 		"METHOD_NOT_IMPLEMENTED": "Méthode non implémentée"
 	},
 	"FS": {

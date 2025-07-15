@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "缺少密钥",
 		"SITE_KEY_NOT_FOUND": "站点密钥未找到",
-		"MISSING_SECRET_KEY": "缺少秘钥",
 		"JSON_LOAD_FAILED": "无法加载JSON文件",
 		"MNEMONIC_UNDEFINED": "未定义助记词。请在环境变量中设置助记词",
 		"NO_MNEMONIC_OR_SEED": "没有提供助记词或种子",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "缺少提供商对",
 		"MISSING_ENV_VARIABLE": "缺少环境变量",
 		"GENERAL": "一般开发错误，请参考上下文",
-		"MISSING_SECRET_KEY": "缺少秘钥",
 		"METHOD_NOT_IMPLEMENTED": "方法未实现"
 	},
 	"FS": {

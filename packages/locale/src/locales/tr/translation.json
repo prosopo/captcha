@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Gizli anahtar eksik",
 		"SITE_KEY_NOT_FOUND": "Site key not found",
-		"MISSING_SECRET_KEY": "Missing secret key",
 		"ACCOUNT_NOT_FOUND": "Hesap bulunamadı",
 		"JSON_LOAD_FAILED": "JSON dosyası yüklenemedi",
 		"MNEMONIC_UNDEFINED": "Mnemonic Tanımsız. Lütfen mnenonik'i ortam değişkenlerinde ayarlayın",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Eksik sağlayıcı çifti",
 		"MISSING_ENV_VARIABLE": "Eksik ortam değişkeni",
 		"GENERAL": "Genel Geliştirici Hatası, bağlamı kontrol edin",
-		"MISSING_SECRET_KEY": "Eksil gizli anahtar",
 		"METHOD_NOT_IMPLEMENTED": "Yöntem uygulanmadı"
 	},
 	"FS": {

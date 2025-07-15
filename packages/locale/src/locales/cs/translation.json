@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Klíč webu nenalezen",
 		"MISSING_SECRET_KEY": "Chybějící tajný klíč",
+		"SITE_KEY_NOT_FOUND": "Klíč webu nenalezen",
 		"JSON_LOAD_FAILED": "Nepodařilo se načíst soubor JSON",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Nastavte prosím mnemoniku v prostředí",
 		"NO_MNEMONIC_OR_SEED": "Nebyla poskytnuta mnemonika nebo seed",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Chybějící dvojice poskytovatelů",
 		"MISSING_ENV_VARIABLE": "Chybějící proměnná prostředí",
 		"GENERAL": "Obecná chyba vývoje, viz kontext",
-		"MISSING_SECRET_KEY": "Chybějící tajný klíč",
 		"METHOD_NOT_IMPLEMENTED": "Metoda není implementována"
 	},
 	"FS": {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoContractError } from "@prosopo/common";
+import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -88,7 +88,7 @@ describe("Validation Functions", () => {
 			expect(() =>
 				checkPowSignature(challenge, signature, providerAddress),
 			).toThrow(
-				new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
+				new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
 					context: {
 						ERROR: "Signature is invalid for this message: undefined",
 						failedFuncName: "checkPowSignature",
@@ -96,7 +96,9 @@ describe("Validation Functions", () => {
 						signatureType: undefined,
 						address: "testAddress",
 						message: "testChallenge",
+						code: 500,
 					},
+					code: 500,
 				}),
 			);
 		});

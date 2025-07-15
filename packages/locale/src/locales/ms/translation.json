@@ -1,4 +1,17 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Kunci rahsia hilang",
+		"SITE_KEY_NOT_FOUND": "Site key not found",
+		"JSON_LOAD_FAILED": "Failed to load JSON file",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Please set the mnemonic in environment variables",
+		"NO_MNEMONIC_OR_SEED": "No mnemonic or seed provided",
+		"CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
+		"ENVIRONMENT_NOT_READY": "Environment not ready",
+		"INVALID_SIGNATURE": "Invalid signature",
+		"SITE_KEY_MISSING": "SITE KEY missing",
+		"ACCOUNT_NOT_FOUND": "Account not found",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
+	},
 	"TARGET": {
 		"horseshoe-crab": "ladam-ketam",
 		"ipod": "ipod",
@@ -298,19 +311,6 @@
 		"yo-yo": "yo-yo",
 		"zebra": "cebra"
 	},
-	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Site key not found",
-		"MISSING_SECRET_KEY": "Missing secret key",
-		"JSON_LOAD_FAILED": "Failed to load JSON file",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Please set the mnemonic in environment variables",
-		"NO_MNEMONIC_OR_SEED": "No mnemonic or seed provided",
-		"CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
-		"ENVIRONMENT_NOT_READY": "Environment not ready",
-		"INVALID_SIGNATURE": "Invalid signature",
-		"SITE_KEY_MISSING": "SITE KEY missing",
-		"ACCOUNT_NOT_FOUND": "Account not found",
-		"INVALID_TIMESTAMP": "Invalid timestamp"
-	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
 		"MISSING_QUERY_PARAMETERS": "Missing query parameters",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Missing provider pair",
 		"MISSING_ENV_VARIABLE": "Missing environment variable",
 		"GENERAL": "General Dev Error, see context",
-		"MISSING_SECRET_KEY": "Missing secret key",
 		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
 	},
 	"FS": {

@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Manglende hemmelig nøkkel",
 		"SITE_KEY_NOT_FOUND": "Platennøkkel ikke funnet",
-		"MISSING_SECRET_KEY": "Mangler hemmelig nøkkel",
 		"JSON_LOAD_FAILED": "Klarte ikke å laste JSON-fil",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vennligst sett mnemonikken i miljøvariabler",
 		"NO_MNEMONIC_OR_SEED": "Ingen mnemonikk eller frø oppgitt",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Manglende leverandørpar",
 		"MISSING_ENV_VARIABLE": "Manglende miljøvariabel",
 		"GENERAL": "Generell utviklerfeil, se kontekst",
-		"MISSING_SECRET_KEY": "Manglende hemmelig nøkkel",
 		"METHOD_NOT_IMPLEMENTED": "Metoden er ikkje implementert"
 	},
 	"FS": {

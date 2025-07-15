@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "누락된 시크릿 키",
 		"SITE_KEY_NOT_FOUND": "사이트 키를 찾을 수 없음",
-		"MISSING_SECRET_KEY": "누락된 비밀 키",
 		"ACCOUNT_NOT_FOUND": "계정을 찾을 수 없습니다",
 		"JSON_LOAD_FAILED": "JSON 파일을 불러오는 데 실패함",
 		"MNEMONIC_UNDEFINED": "니모닉이 정의되지 않았습니다. 환경 변수에 니모닉을 설정하세요",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "누락된 제공자 쌍",
 		"MISSING_ENV_VARIABLE": "누락된 환경 변수",
 		"GENERAL": "일반 개발 오류, 상황을 확인하십시오",
-		"MISSING_SECRET_KEY": "누락된 비밀 키",
 		"METHOD_NOT_IMPLEMENTED": "구현되지 않은 메소드"
 	},
 	"FS": {

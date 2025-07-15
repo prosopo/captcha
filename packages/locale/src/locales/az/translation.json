@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Gizli açar qısağını qalmışdır",
 		"SITE_KEY_NOT_FOUND": "Sayt açarı tapılmadı",
-		"MISSING_SECRET_KEY": "Gizli açar itirildi",
 		"JSON_LOAD_FAILED": "JSON faylını yükləmək alınmadı",
 		"MNEMONIC_UNDEFINED": "Mnemonic Qeyri-müəyyəndir. Lütfən mnemonic-i mühit dəyişənlərində təyin edin",
 		"NO_MNEMONIC_OR_SEED": "Mnemonic və ya toxum göstərilmiş deyil",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Təminatçı cütü yoxdur",
 		"MISSING_ENV_VARIABLE": "Mühit dəyişkəni yoxdur",
 		"GENERAL": "Ümumi Dev Xəta, məzmunu gör",
-		"MISSING_SECRET_KEY": "Gizli açar yoxdur",
 		"METHOD_NOT_IMPLEMENTED": "Metod icra olunmadı"
 	},
 	"FS": {

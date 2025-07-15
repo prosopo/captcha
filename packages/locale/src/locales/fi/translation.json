@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Sivuston avainta ei löytynyt",
 		"MISSING_SECRET_KEY": "Puuttuva salainen avain",
+		"SITE_KEY_NOT_FOUND": "Sivuston avainta ei löytynyt",
 		"JSON_LOAD_FAILED": "JSON-tiedoston lataaminen epäonnistui",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Aseta mnemonic ympäristömuuttujiin",
 		"NO_MNEMONIC_OR_SEED": "Ei annettu mnemonicia tai siemenavainta",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Missing provider pair",
 		"MISSING_ENV_VARIABLE": "Missing environment variable",
 		"GENERAL": "General Dev Error, see context",
-		"MISSING_SECRET_KEY": "Missing secret key",
 		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
 	},
 	"FS": {

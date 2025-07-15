@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Platsnyckel hittades inte",
 		"MISSING_SECRET_KEY": "Saknad hemlig nyckel",
+		"SITE_KEY_NOT_FOUND": "Platsnyckel hittades inte",
 		"JSON_LOAD_FAILED": "Misslyckades att ladda JSON-fil",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vänligen ange mnemonic i miljövariabler",
 		"NO_MNEMONIC_OR_SEED": "Ingen mnemonic eller seed angiven",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Saknad-leverantör-par",
 		"MISSING_ENV_VARIABLE": "Saknad-miljövariabel",
 		"GENERAL": "Allmänt utvecklarfel, se sammanhang",
-		"MISSING_SECRET_KEY": "Saknad hemlig nyckel",
 		"METHOD_NOT_IMPLEMENTED": "Metod-inte-implementerad"
 	},
 	"FS": {

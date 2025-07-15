@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Chave do site não encontrada",
 		"MISSING_SECRET_KEY": "Chave secreta ausente",
+		"SITE_KEY_NOT_FOUND": "Chave do site não encontrada",
 		"JSON_LOAD_FAILED": "Falha ao carregar arquivo JSON",
 		"MNEMONIC_UNDEFINED": "Mnemônico Indefinido. Por favor, defina o mnemônico nas variáveis de ambiente",
 		"NO_MNEMONIC_OR_SEED": "Nenhum mnemônico ou seed fornecido",
@@ -133,7 +133,6 @@
 		"MISSING_PROVIDER_PAIR": "Par de provedores ausente",
 		"MISSING_ENV_VARIABLE": "Variável de ambiente ausente",
 		"GENERAL": "Erro de desenvolvedor geral, veja o contexto",
-		"MISSING_SECRET_KEY": "Chave secreta ausente",
 		"METHOD_NOT_IMPLEMENTED": "Método não implementado"
 	},
 	"FS": {

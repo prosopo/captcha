@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Mga kulang na lihim na key",
 		"SITE_KEY_NOT_FOUND": "Ikskey angway ofoundsley",
-		"MISSING_SECRET_KEY": "Issingmay ecretsay eyskay",
 		"JSON_LOAD_FAILED": "Nahimong pakyas pag-load sa JSON file",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Palihug isulat ang mnemonic sa environment variables",
 		"NO_MNEMONIC_OR_SEED": "Walay gisugdan o gisementohan",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Nawawalang provider pair",
 		"MISSING_ENV_VARIABLE": "Nawawalang environment variable",
 		"GENERAL": "Pangkalahatang Dev Error, tingnan ang konteksto",
-		"MISSING_SECRET_KEY": "Nawawalang secret key",
 		"METHOD_NOT_IMPLEMENTED": "Paraan hindi pa naipatutupad"
 	},
 	"FS": {

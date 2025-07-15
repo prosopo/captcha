@@ -1,7 +1,7 @@
 {
 	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Không tìm thấy khóa trang",
 		"MISSING_SECRET_KEY": "Thiếu khóa bí mật",
+		"SITE_KEY_NOT_FOUND": "Không tìm thấy khóa trang",
 		"JSON_LOAD_FAILED": "Không thể tải tệp JSON",
 		"MNEMONIC_UNDEFINED": "Không xác định Mnemonic. Vui lòng thiết lập mnemonic trong biến môi trường",
 		"NO_MNEMONIC_OR_SEED": "Không có mnemonic hoặc seed được cung cấp",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Thiếu cặp nhà cung cấp",
 		"MISSING_ENV_VARIABLE": "Thiếu biến môi trường",
 		"GENERAL": "Lỗi phát triển chung, xem ngữ cảnh",
-		"MISSING_SECRET_KEY": "Thiếu khóa bí mật",
 		"METHOD_NOT_IMPLEMENTED": "Phương thức chưa được triển khai"
 	},
 	"FS": {

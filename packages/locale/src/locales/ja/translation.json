@@ -1,4 +1,17 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "秘密キーが欠けています",
+		"SITE_KEY_NOT_FOUND": "Site keyが見つかりません",
+		"JSON_LOAD_FAILED": "JSONファイルの読み込みに失敗しました",
+		"MNEMONIC_UNDEFINED": "ニーモニックが未定義です。環境変数でニーモニックを設定してください",
+		"NO_MNEMONIC_OR_SEED": "ニーモニックまたはシードが提供されていません",
+		"CANT_FIND_KEYRINGPAIR": "{{address}}のキーリングペアが見つかりません",
+		"ENVIRONMENT_NOT_READY": "環境が準備できていません",
+		"INVALID_SIGNATURE": "無効な署名",
+		"SITE_KEY_MISSING": "SITE KEYが見つかりません",
+		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
+		"INVALID_TIMESTAMP": "無効なタイムスタンプ"
+	},
 	"TARGET": {
 		"homer-simpson": "homer-simpson",
 		"pelecaniformes": "pelecaniformes",
@@ -298,19 +311,6 @@
 		"yo-yo": "ヨーヨー",
 		"zebra": "シマウマ"
 	},
-	"GENERAL": {
-		"SITE_KEY_NOT_FOUND": "Site keyが見つかりません",
-		"MISSING_SECRET_KEY": "秘密キーが見つかりません",
-		"JSON_LOAD_FAILED": "JSONファイルの読み込みに失敗しました",
-		"MNEMONIC_UNDEFINED": "ニーモニックが未定義です。環境変数でニーモニックを設定してください",
-		"NO_MNEMONIC_OR_SEED": "ニーモニックまたはシードが提供されていません",
-		"CANT_FIND_KEYRINGPAIR": "{{address}}のキーリングペアが見つかりません",
-		"ENVIRONMENT_NOT_READY": "環境が準備できていません",
-		"INVALID_SIGNATURE": "無効な署名",
-		"SITE_KEY_MISSING": "SITE KEYが見つかりません",
-		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
-		"INVALID_TIMESTAMP": "無効なタイムスタンプ"
-	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "この操作を行うための権限が不足しています",
 		"MISSING_QUERY_PARAMETERS": "クエリパラメータが見つかりません",
@@ -432,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "プロバイダーペアがありません",
 		"MISSING_ENV_VARIABLE": "環境変数が見つかりません",
 		"GENERAL": "一般的なDevエラー、コンテキストを参照してください",
-		"MISSING_SECRET_KEY": "秘密キーが見つかりません",
 		"METHOD_NOT_IMPLEMENTED": "メソッドは実装されていません"
 	},
 	"FS": {
