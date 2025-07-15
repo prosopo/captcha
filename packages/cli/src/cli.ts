@@ -16,7 +16,7 @@ import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getPair } from "@prosopo/keyring";
 import { loadI18next } from "@prosopo/locale";
-import { DEFAULT_SOLVED_COUNT, type ProsopoConfigOutput } from "@prosopo/types";
+import { type ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";
 import getConfig from "./prosopo.config.js";
