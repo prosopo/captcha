@@ -98,7 +98,6 @@ describe("Validation Functions", () => {
 						message: "testChallenge",
 						code: 500,
 					},
-					code: 500,
 				}),
 			);
 		});
