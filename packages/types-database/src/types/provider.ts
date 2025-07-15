@@ -14,6 +14,7 @@
 
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import { CaptchaType, Tier } from "@prosopo/types";
+import type { UserAgentInfo } from "@prosopo/types-private";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -91,6 +92,7 @@ export interface StoredCaptcha {
 	serverChecked: boolean;
 	geolocation?: string;
 	vpn?: boolean;
+	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 	frictionlessTokenId?: FrictionlessTokenId;
@@ -199,6 +201,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	geolocation: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	parsedUserAgentInfo: { type: Object, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -237,6 +240,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	lastUpdatedTimestamp: { type: Number, required: false },
 	geolocation: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	parsedUserAgentInfo: { type: Object, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
