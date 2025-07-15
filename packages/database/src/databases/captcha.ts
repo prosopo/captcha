@@ -104,9 +104,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				}),
 			);
 			logger.info(() => ({
-				data: { 
+				data: {
 					insertedCount: result.insertedCount,
-					totalProcessed: sessionEvents.length 
+					totalProcessed: sessionEvents.length,
 				},
 				msg: "Mongo Saved Session Events",
 			}));
@@ -127,11 +127,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				}),
 			);
 			logger.info(() => ({
-				data: { 
+				data: {
 					upsertedCount: result.upsertedCount,
 					matchedCount: result.matchedCount,
 					modifiedCount: result.modifiedCount,
-					totalProcessed: imageCaptchaEvents.length
+					totalProcessed: imageCaptchaEvents.length,
 				},
 				msg: "Mongo Saved Image Events",
 			}));
@@ -151,11 +151,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				}),
 			);
 			logger.info(() => ({
-				data: { 
+				data: {
 					upsertedCount: result.upsertedCount,
 					matchedCount: result.matchedCount,
 					modifiedCount: result.modifiedCount,
-					totalProcessed: powCaptchaEvents.length
+					totalProcessed: powCaptchaEvents.length,
 				},
 				msg: "Mongo Saved PoW Events",
 			}));
