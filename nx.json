@@ -9,44 +9,30 @@
 		]
 	},
 	"namedOutputs": {
-		"dist": [
-			"{projectRoot}/dist"
-		]
+		"dist": ["{projectRoot}/dist"]
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": [
-				"^{target}"
-			],
+			"dependsOn": ["^{target}"],
 			"cache": true
 		},
 		"build:cjs": {
-			"dependsOn": [
-				"^{target}"
-			],
+			"dependsOn": ["^{target}"],
 			"cache": true
 		},
 		"bundle": {
-			"dependsOn": [
-				"^build",
-				"^{target}"
-			],
+			"dependsOn": ["^build", "^{target}"],
 			"cache": true
 		},
 		"bundle:webpack": {
-			"dependsOn": [
-				"^build:cjs",
-				"^{target}"
-			],
+			"dependsOn": ["^build:cjs", "^{target}"],
 			"cache": true
 		},
 		"test": {
 			"cache": true
 		},
 		"typecheck": {
-			"dependsOn": [
-				"^{target}"
-			],
+			"dependsOn": ["^{target}"],
 			"cache": true
 		},
 		"lint": {
@@ -55,9 +41,7 @@
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": [
-			"*"
-		],
+		"projects": ["*"],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
