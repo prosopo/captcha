@@ -130,7 +130,7 @@ export async function setup(provider: boolean, sites: boolean) {
 		const pair = getPair(providerSecret);
 		const authAccount = getPair(config.authAccount.secret);
 
-		const env = new ProviderEnvironment(defaultConfig(), pair, authAccount);
+		const env = new ProviderEnvironment(config, pair, authAccount);
 		await env.isReady();
 
 		defaultProvider.secret = mnemonic;
