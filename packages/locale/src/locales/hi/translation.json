@@ -298,6 +298,28 @@
 		"yo-yo": "यो-यो",
 		"zebra": "जीब्रा"
 	},
+	"API": {
+		"UNAUTHORIZED": "अनधिकृत",
+		"MISSING_BODY": "शरीर गायब है",
+		"NO_CONTENT_TYPE_HEADER": "कोई सामग्री प्रकार शीर्षक नहीं है। माना गया JSON एन्कोड हो सकता है लेकिन टुकड़े करने में असफल।",
+		"CAPTCHA_FAILED": "आपने एक या एक से अधिक कैप्चा गलत जवाब दिया है। कृपया पुनः प्रयास करें",
+		"CAPTCHA_PASSED": "आपने सही जवाब दिए हैं",
+		"BAD_REQUEST": "अवैध अनुरोध",
+		"USER_VERIFIED": "उपयोगकर्ता सत्यापित है",
+		"USER_NOT_VERIFIED": "उपयोगकर्ता सत्यापित नहीं है",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "उपयोगकर्ता सत्यापित नहीं है। कैप्चा समाधान समाप्त हो गया है।",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "उपयोगकर्ता सत्यापित नहीं है। कोई कैप्चा समाधान नहीं मिला।",
+		"USER_ALREADY_VERIFIED": "इस समाधान को पहले से ही सत्यापित कर दिया गया है। उपयोगकर्ता को एक नया कैप्चा पूरा करना चाहिए।",
+		"UNKNOWN": "अज्ञात API त्रुटि",
+		"SITE_KEY_NOT_REGISTERED": "साइट कुंजी पंजीकृत नहीं है",
+		"INCORRECT_CAPTCHA_TYPE": "गलत CAPTCHA प्रकार",
+		"INVALID_SITE_KEY": "अमान्य साइट कुंजी",
+		"UNAUTHORIZED_ORIGIN_URL": "अनधिकृत मूल URL",
+		"INVALID_IP": "अमान्य आईपी",
+		"INVALID_URL": "अमान्य यूआरएल",
+		"INVALID_BODY": "अमान्य बॉडी",
+		"PARSE_ERROR": "अनुरोध विशेषण में त्रुटि"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "पोल्काडॉट एक्सटेंशन नहीं मिला"
 	},
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "अमान्य टोकन",
 		"INVALID_SOLUTION": "अमान्य समाधान",
 		"DECRYPTION_ERROR": "डिक्रिप्शन त्रुटि"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "आपने एक या एक से अधिक कैप्चा गलत जवाब दिया है। कृपया पुनः प्रयास करें",
-		"CAPTCHA_PASSED": "आपने सही जवाब दिए हैं",
-		"BAD_REQUEST": "अवैध अनुरोध",
-		"USER_VERIFIED": "उपयोगकर्ता सत्यापित है",
-		"USER_NOT_VERIFIED": "उपयोगकर्ता सत्यापित नहीं है",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "उपयोगकर्ता सत्यापित नहीं है। कैप्चा समाधान समाप्त हो गया है।",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "उपयोगकर्ता सत्यापित नहीं है। कोई कैप्चा समाधान नहीं मिला।",
-		"USER_ALREADY_VERIFIED": "इस समाधान को पहले से ही सत्यापित कर दिया गया है। उपयोगकर्ता को एक नया कैप्चा पूरा करना चाहिए।",
-		"UNKNOWN": "अज्ञात API त्रुटि",
-		"SITE_KEY_NOT_REGISTERED": "साइट कुंजी पंजीकृत नहीं है",
-		"INCORRECT_CAPTCHA_TYPE": "गलत CAPTCHA प्रकार",
-		"INVALID_SITE_KEY": "अमान्य साइट कुंजी",
-		"UNAUTHORIZED_ORIGIN_URL": "अनधिकृत मूल URL",
-		"INVALID_IP": "अमान्य आईपी",
-		"INVALID_URL": "अमान्य यूआरएल",
-		"INVALID_BODY": "अमान्य बॉडी",
-		"PARSE_ERROR": "अनुरोध विशेषण में त्रुटि"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "अमान्य पैरामीटर"

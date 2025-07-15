@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Не авторизован",
+		"MISSING_BODY": "Отсутствует тело",
+		"NO_CONTENT_TYPE_HEADER": "Заголовок отсутствия типа контента. Предполагается, что тело закодировано в формате JSON, но не удается разобрать.",
+		"CAPTCHA_FAILED": "Вы неправильно ответили на одну или несколько капч. Пожалуйста, попробуйте еще раз",
+		"CAPTCHA_PASSED": "Вы правильно ответили на капч",
+		"BAD_REQUEST": "Некорректный запрос",
+		"USER_VERIFIED": "Пользователь проверен",
+		"USER_NOT_VERIFIED": "Пользователь не проверен",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Пользователь не проверен. Решение капчи устарело",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Пользователь не проверен. Решение капчи не найдено",
+		"USER_ALREADY_VERIFIED": "Это решение уже проверено. Пользователь должен завершить новую капчу",
+		"UNKNOWN": "Неизвестная ошибка API",
+		"SITE_KEY_NOT_REGISTERED": "Ключ сайта не зарегистрирован",
+		"INCORRECT_CAPTCHA_TYPE": "Неверный тип CAPTCHA",
+		"INVALID_SITE_KEY": "Недопустимый ключ сайта",
+		"UNAUTHORIZED_ORIGIN_URL": "Недопустимый URL происхождения",
+		"INVALID_IP": "Недопустимый IP",
+		"INVALID_URL": "Недопустимый URL",
+		"INVALID_BODY": "Недопустимое тело запроса",
+		"PARSE_ERROR": "Ошибка разбора запроса"
+	},
 	"TARGET": {
 		"airplanes": "самолеты",
 		"american-flag": "американский флаг",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Недействительный токен",
 		"INVALID_SOLUTION": "Недопустимое решение",
 		"DECRYPTION_ERROR": "Ошибка расшифровки"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Вы неправильно ответили на одну или несколько капч. Пожалуйста, попробуйте еще раз",
-		"CAPTCHA_PASSED": "Вы правильно ответили на капч",
-		"BAD_REQUEST": "Некорректный запрос",
-		"USER_VERIFIED": "Пользователь проверен",
-		"USER_NOT_VERIFIED": "Пользователь не проверен",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Пользователь не проверен. Решение капчи устарело",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Пользователь не проверен. Решение капчи не найдено",
-		"USER_ALREADY_VERIFIED": "Это решение уже проверено. Пользователь должен завершить новую капчу",
-		"UNKNOWN": "Неизвестная ошибка API",
-		"SITE_KEY_NOT_REGISTERED": "Ключ сайта не зарегистрирован",
-		"INCORRECT_CAPTCHA_TYPE": "Неверный тип CAPTCHA",
-		"INVALID_SITE_KEY": "Недопустимый ключ сайта",
-		"UNAUTHORIZED_ORIGIN_URL": "Недопустимый URL происхождения",
-		"INVALID_IP": "Недопустимый IP",
-		"INVALID_URL": "Недопустимый URL",
-		"INVALID_BODY": "Недопустимое тело запроса",
-		"PARSE_ERROR": "Ошибка разбора запроса"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Недопустимый параметр"
