@@ -14,7 +14,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { stringToHex } from "@polkadot/util";
-import { ProsopoContractError } from "@prosopo/common";
+import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
 import { signatureVerify } from "@prosopo/util-crypto";
 
 export const validateSolution = (
@@ -39,7 +39,7 @@ export const checkPowSignature = (
 		address,
 	);
 	if (!signatureVerification.isValid) {
-		throw new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
+		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
 			context: {
 				ERROR: `Signature is invalid for this message: ${signatureType}`,
 				failedFuncName: checkPowSignature.name,

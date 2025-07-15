@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Clave secreta faltante",
+		"SITE_KEY_NOT_FOUND": "Clave del sitio no encontrada",
+		"JSON_LOAD_FAILED": "Error al cargar el archivo JSON",
+		"MNEMONIC_UNDEFINED": "Mnemónico indefinido. Por favor, establece el mnemónico en las variables de entorno",
+		"NO_MNEMONIC_OR_SEED": "No se proporcionó mnemónico ni semilla",
+		"CANT_FIND_KEYRINGPAIR": "No se puede encontrar el keyringpair para {{address}}",
+		"ENVIRONMENT_NOT_READY": "Entorno no listo",
+		"INVALID_SIGNATURE": "Firma inválida",
+		"SITE_KEY_MISSING": "Falta la CLAVE DEL SITIO",
+		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
+		"INVALID_TIMESTAMP": "Marca de tiempo inválida"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permisos insuficientes para realizar esta acción",
+		"MISSING_QUERY_PARAMETERS": "Faltan parámetros de consulta",
+		"MISSING_AUTHORIZATION_HEADER": "Falta la cabecera de autorización",
+		"TIMESTAMP_TOO_OLD": "Marca de tiempo demasiado antigua",
+		"FORBIDDEN": "Prohibido",
+		"PROVIDER_VERIFY_FAILED": "Fallo en la verificación del proveedor",
 		"UNAUTHORIZED": "No autorizado",
 		"MISSING_BODY": "Cuerpo faltante",
 		"NO_CONTENT_TYPE_HEADER": "Sin encabezado de tipo de contenido. Se asumió un cuerpo codificado en JSON pero no se pudo analizar.",
@@ -21,6 +40,14 @@
 		"INVALID_BODY": "Cuerpo inválido",
 		"PARSE_ERROR": "Error al analizar la respuesta"
 	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "No se puede modificar el usuario propietario",
+		"CANNOT_DELETE_OWN_USER": "No se puede eliminar tu propia cuenta",
+		"CANNOT_DELETE_LAST_USER": "No se puede eliminar el último usuario",
+		"USER_ALREADY_EXISTS": "El usuario ya existe",
+		"NO_SUGGESTIONS_FOUND": "No se encontraron sugerencias",
+		"CANNOT_DEACTIVATE_LAST_SITE": "No se puede desactivar el último sitio activo"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extensión Polkadot no encontrada"
 	},
@@ -34,17 +61,6 @@
 		"NO_ACCOUNTS_FOUND": "No se encontraron cuentas",
 		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
 		"NO_EXTENSION_FOUND": "Extensión no encontrada"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Error al cargar el archivo JSON",
-		"MNEMONIC_UNDEFINED": "Mnemónico indefinido. Por favor, establece el mnemónico en las variables de entorno",
-		"NO_MNEMONIC_OR_SEED": "No se proporcionó mnemónico ni semilla",
-		"CANT_FIND_KEYRINGPAIR": "No se puede encontrar el keyringpair para {{address}}",
-		"ENVIRONMENT_NOT_READY": "Entorno no listo",
-		"INVALID_SIGNATURE": "Firma inválida",
-		"SITE_KEY_MISSING": "Falta la CLAVE DEL SITIO",
-		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
-		"INVALID_TIMESTAMP": "Marca de tiempo inválida"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Error al codificar dirección inválida",
@@ -117,7 +133,6 @@
 		"MISSING_PROVIDER_PAIR": "Falta el par de proveedor",
 		"MISSING_ENV_VARIABLE": "Falta una variable de entorno",
 		"GENERAL": "Error general de desarrollo, ver contexto",
-		"MISSING_SECRET_KEY": "Falta la clave secreta",
 		"METHOD_NOT_IMPLEMENTED": "Método no implementado"
 	},
 	"FS": {
