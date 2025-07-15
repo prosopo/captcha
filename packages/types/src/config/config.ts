@@ -24,6 +24,8 @@ import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import {
 	ApiPathRateLimits,
+	DEFAULT_SOLVED_COUNT,
+	DEFAULT_UNSOLVED_COUNT,
 	ProsopoCaptchaCountConfigSchema,
 	ProviderDefaultRateLimits,
 } from "../provider/index.js";
@@ -264,8 +266,8 @@ export type ProcaptchaClientConfigOutput = output<
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
 		captchas: ProsopoCaptchaCountConfigSchema.optional().default({
-			solved: { count: 1 },
-			unsolved: { count: 0 },
+			solved: { count: DEFAULT_SOLVED_COUNT },
+			unsolved: { count: DEFAULT_UNSOLVED_COUNT },
 		}),
 		penalties: FrictionlessPenalties,
 		scheduledTasks: object({
