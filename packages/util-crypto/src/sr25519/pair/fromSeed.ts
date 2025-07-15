@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { RistrettoPoint } from "@noble/curves/ed25519";
-import { bytesToNumberLE } from "@noble/curves/utils";
+import { bytesToNumberLE } from "@noble/curves/abstract/utils";
 import { u8aToU8a } from "@polkadot/util";
 import { secretFromSeed } from "@scure/sr25519";
 import type { Keypair } from "../../types.js";
