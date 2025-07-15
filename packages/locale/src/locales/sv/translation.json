@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Saknad hemlig nyckel",
+		"SITE_KEY_NOT_FOUND": "Platsnyckel hittades inte",
+		"JSON_LOAD_FAILED": "Misslyckades att ladda JSON-fil",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vänligen ange mnemonic i miljövariabler",
+		"NO_MNEMONIC_OR_SEED": "Ingen mnemonic eller seed angiven",
+		"CANT_FIND_KEYRINGPAIR": "Kan inte hitta keyringpair för {{address}}",
+		"ENVIRONMENT_NOT_READY": "Miljön är inte redo",
+		"INVALID_SIGNATURE": "Ogiltig signatur",
+		"SITE_KEY_MISSING": "SITE KEY saknas",
+		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
+		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Otillräckliga behörigheter för att utföra denna åtgärd",
+		"MISSING_QUERY_PARAMETERS": "Saknade frågeparametrar",
+		"MISSING_AUTHORIZATION_HEADER": "Saknad auktoriseringsrubrik",
+		"TIMESTAMP_TOO_OLD": "Tidsstämpel för gammal",
+		"FORBIDDEN": "Förbjuden",
+		"PROVIDER_VERIFY_FAILED": "Leverantörsverifiering misslyckades",
 		"UNAUTHORIZED": "Obehörig",
 		"MISSING_BODY": "Saknad kropp",
 		"NO_CONTENT_TYPE_HEADER": "Ingen innehållstypshuvud. Antogs JSON-kodad kropp men misslyckades med att tolka.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Ogiltig URL",
 		"INVALID_BODY": "Ogiltig body",
 		"PARSE_ERROR": "Fel vid tolkning av förfrågan"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Kan inte ändra ägare användare",
+		"CANNOT_DELETE_OWN_USER": "Kan inte ta bort ditt eget konto",
+		"CANNOT_DELETE_LAST_USER": "Kan inte ta bort sista användaren",
+		"USER_ALREADY_EXISTS": "Användaren finns redan",
+		"NO_SUGGESTIONS_FOUND": "Inga förslag hittades",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan inte inaktivera den sista aktiva platsen"
 	},
 	"TARGET": {
 		"airplanes": "flygplan",
@@ -334,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
 		"NO_EXTENSION_FOUND": "Ingen förlängning hittades"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Misslyckades att ladda JSON-fil",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vänligen ange mnemonic i miljövariabler",
-		"NO_MNEMONIC_OR_SEED": "Ingen mnemonic eller seed angiven",
-		"CANT_FIND_KEYRINGPAIR": "Kan inte hitta keyringpair för {{address}}",
-		"ENVIRONMENT_NOT_READY": "Miljön är inte redo",
-		"INVALID_SIGNATURE": "Ogiltig signatur",
-		"SITE_KEY_MISSING": "SITE KEY saknas",
-		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
-		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Misslyckades att koda ogiltig adress",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-lösningens åtagande finns inte",
@@ -416,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Saknad-leverantör-par",
 		"MISSING_ENV_VARIABLE": "Saknad-miljövariabel",
 		"GENERAL": "Allmänt utvecklarfel, se sammanhang",
-		"MISSING_SECRET_KEY": "Saknad hemlig nyckel",
 		"METHOD_NOT_IMPLEMENTED": "Metod-inte-implementerad"
 	},
 	"FS": {

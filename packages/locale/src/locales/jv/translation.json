@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Kunci rahasia hilang",
+		"SITE_KEY_NOT_FOUND": "Site key not found",
+		"JSON_LOAD_FAILED": "Gagal memuat file JSON",
+		"MNEMONIC_UNDEFINED": "Mnemonic Tidak Didefinisikan. Harap atur mnemonic di variabel lingkungan",
+		"NO_MNEMONIC_OR_SEED": "Tidak ada mnemonic atau seed yang diberikan",
+		"CANT_FIND_KEYRINGPAIR": "Tidak dapat menemukan keyringpair untuk {{address}}",
+		"ENVIRONMENT_NOT_READY": "Lingkungan belum siap",
+		"INVALID_SIGNATURE": "Tanda tangan tidak valid",
+		"SITE_KEY_MISSING": "Kunci SITUS hilang",
+		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
+		"INVALID_TIMESTAMP": "Cap waktu tidak valid"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
+		"MISSING_QUERY_PARAMETERS": "Missing query parameters",
+		"MISSING_AUTHORIZATION_HEADER": "Missing authorization header",
+		"TIMESTAMP_TOO_OLD": "Timestamp too old",
+		"FORBIDDEN": "Forbidden",
+		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"UNAUTHORIZED": "Hindi umiiral",
 		"MISSING_BODY": "Kulang na katawan",
 		"NO_CONTENT_TYPE_HEADER": "Walang header ng uri ng nilalaman. Tinatayang JSON na naka-encode ang katawan ngunit nabigo sa pag-parse.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "URL tidak valid",
 		"INVALID_BODY": "Badan tidak valid",
 		"PARSE_ERROR": "Kesalahan parsing permintaan"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
+		"CANNOT_DELETE_OWN_USER": "Cannot delete your own account",
+		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
+		"USER_ALREADY_EXISTS": "User already exists",
+		"NO_SUGGESTIONS_FOUND": "No suggestions found",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
 	},
 	"TARGET": {
 		"airplanes": "airplanes",
@@ -334,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Gagal memuat file JSON",
-		"MNEMONIC_UNDEFINED": "Mnemonic Tidak Didefinisikan. Harap atur mnemonic di variabel lingkungan",
-		"NO_MNEMONIC_OR_SEED": "Tidak ada mnemonic atau seed yang diberikan",
-		"CANT_FIND_KEYRINGPAIR": "Tidak dapat menemukan keyringpair untuk {{address}}",
-		"ENVIRONMENT_NOT_READY": "Lingkungan belum siap",
-		"INVALID_SIGNATURE": "Tanda tangan tidak valid",
-		"SITE_KEY_MISSING": "Kunci SITUS hilang",
-		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
-		"INVALID_TIMESTAMP": "Cap waktu tidak valid"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Komitmen solusi captcha tidak ada",
@@ -416,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Pasangan penyedia hilang",
 		"MISSING_ENV_VARIABLE": "Variabel lingkungan hilang",
 		"GENERAL": "Kesalahan Dev Umum, lihat konteks",
-		"MISSING_SECRET_KEY": "Kunci rahasia hilang",
 		"METHOD_NOT_IMPLEMENTED": "Metode tidak diimplementasikan"
 	},
 	"FS": {
