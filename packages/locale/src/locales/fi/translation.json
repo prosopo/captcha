@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Sivuston avainta ei löytynyt",
+		"MISSING_SECRET_KEY": "Puuttuva salainen avain",
+		"JSON_LOAD_FAILED": "JSON-tiedoston lataaminen epäonnistui",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Aseta mnemonic ympäristömuuttujiin",
+		"NO_MNEMONIC_OR_SEED": "Ei annettu mnemonicia tai siemenavainta",
+		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{osoite}}",
+		"ENVIRONMENT_NOT_READY": "Ympäristö ei ole valmis",
+		"INVALID_SIGNATURE": "Virheellinen allekirjoitus",
+		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
+		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
+		"INVALID_TIMESTAMP": "Virheellinen aikaleima"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Riittämättömät oikeudet tämän toiminnon suorittamiseen",
+		"MISSING_QUERY_PARAMETERS": "Puuttuvia kyselyparametreja",
+		"MISSING_AUTHORIZATION_HEADER": "Puuttuva valtuutusotsake",
+		"TIMESTAMP_TOO_OLD": "Aikaleima liian vanha",
+		"FORBIDDEN": "Kielletty",
+		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Ei voida muokata omistajakäyttäjää",
+		"CANNOT_DELETE_OWN_USER": "Et voi poistaa omaa tiliäsi",
+		"CANNOT_DELETE_LAST_USER": "Viimeistä käyttäjää ei voida poistaa",
+		"USER_ALREADY_EXISTS": "Käyttäjä on jo olemassa",
+		"NO_SUGGESTIONS_FOUND": "Ei ehdotuksia löytynyt",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Viimeistä aktiivista sivustoa ei voi poistaa"
 	},
 	"TARGET": {
 		"airplanes": "ilmailukoneet",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Ei tilejä löytynyt",
 		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
 		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "JSON-tiedoston lataaminen epäonnistui",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Aseta mnemonic ympäristömuuttujiin",
-		"NO_MNEMONIC_OR_SEED": "Ei annettu mnemonicia tai siemenavainta",
-		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{osoite}}",
-		"ENVIRONMENT_NOT_READY": "Ympäristö ei ole valmis",
-		"INVALID_SIGNATURE": "Virheellinen allekirjoitus",
-		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
-		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
-		"INVALID_TIMESTAMP": "Virheellinen aikaleima"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Epäonnistui koodata virheellinen osoite",

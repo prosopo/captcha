@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Chave do site não encontrada",
+		"MISSING_SECRET_KEY": "Chave secreta ausente",
+		"JSON_LOAD_FAILED": "Caricamento del file JSON fallito",
+		"MNEMONIC_UNDEFINED": "Mnemonic indefinito. Imposta il mnemonic nelle variabili d'ambiente",
+		"NO_MNEMONIC_OR_SEED": "Nessun mnemonic o seed fornito",
+		"CANT_FIND_KEYRINGPAIR": "Impossibile trovare il keyringpair per {{address}}",
+		"ENVIRONMENT_NOT_READY": "Ambiente non pronto",
+		"INVALID_SIGNATURE": "Firma non valida",
+		"SITE_KEY_MISSING": "Manca la chiave del sito",
+		"ACCOUNT_NOT_FOUND": "Account non trovato",
+		"INVALID_TIMESTAMP": "Timestamp non valido"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permissões insuficientes para realizar esta ação",
+		"MISSING_QUERY_PARAMETERS": "Parâmetros de consulta ausentes",
+		"MISSING_AUTHORIZATION_HEADER": "Cabeçalho de autorização ausente",
+		"TIMESTAMP_TOO_OLD": "Data/hora muito antiga",
+		"FORBIDDEN": "Proibido",
+		"PROVIDER_VERIFY_FAILED": "Falha na verificação do provedor",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -21,6 +40,14 @@
 		"INVALID_BODY": "Corpo non valido",
 		"PARSE_ERROR": "Errore nell'analisi della richiesta"
 	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",
+		"CANNOT_DELETE_OWN_USER": "Não é possível excluir sua própria conta",
+		"CANNOT_DELETE_LAST_USER": "Não é possível excluir o último usuário",
+		"USER_ALREADY_EXISTS": "Usuário já existe",
+		"NO_SUGGESTIONS_FOUND": "Nenhuma sugestão encontrada",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Estensione Polkadot non trovata"
 	},
@@ -34,17 +61,6 @@
 		"NO_ACCOUNTS_FOUND": "Nessun account trovato",
 		"ACCOUNT_NOT_FOUND": "Account non trovato",
 		"NO_EXTENSION_FOUND": "Nessuna estensione trovata"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Caricamento del file JSON fallito",
-		"MNEMONIC_UNDEFINED": "Mnemonic indefinito. Imposta il mnemonic nelle variabili d'ambiente",
-		"NO_MNEMONIC_OR_SEED": "Nessun mnemonic o seed fornito",
-		"CANT_FIND_KEYRINGPAIR": "Impossibile trovare il keyringpair per {{address}}",
-		"ENVIRONMENT_NOT_READY": "Ambiente non pronto",
-		"INVALID_SIGNATURE": "Firma non valida",
-		"SITE_KEY_MISSING": "Manca la chiave del sito",
-		"ACCOUNT_NOT_FOUND": "Account non trovato",
-		"INVALID_TIMESTAMP": "Timestamp non valido"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Impossibile codificare l'indirizzo non valido",

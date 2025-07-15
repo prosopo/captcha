@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "คีย์เว็บไซต์ไม่พบ",
+		"MISSING_SECRET_KEY": "สูญหาคีย์ลับ",
+		"JSON_LOAD_FAILED": "ล้มเหลวในการโหลดไฟล์ JSON",
+		"MNEMONIC_UNDEFINED": "ไม่ได้กำหนด Mnemonic กรุณาตั้งค่า Mnemonic ในตัวแปรสภาพแวดล้อม",
+		"NO_MNEMONIC_OR_SEED": "ไม่มี Mnemonic หรือ Seed ที่ให้มา",
+		"CANT_FIND_KEYRINGPAIR": "ไม่สามารถค้นหา keyringpair สำหรับ {{address}}",
+		"ENVIRONMENT_NOT_READY": "สภาพแวดล้อมไม่พร้อม",
+		"INVALID_SIGNATURE": "ลายเซ็นต์ไม่ถูกต้อง",
+		"SITE_KEY_MISSING": "SITE KEY หายไป",
+		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
+		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "สิทธิ์ไม่เพียงพอในการทำการกระทำนี้",
+		"MISSING_QUERY_PARAMETERS": "ขาดพารามิเตอร์การค้นหา",
+		"MISSING_AUTHORIZATION_HEADER": "หัวข้อการอนุญาตขาดหาย",
+		"TIMESTAMP_TOO_OLD": "ประทับเวลาเก่าเกินไป",
+		"FORBIDDEN": "ห้าม",
+		"PROVIDER_VERIFY_FAILED": "การตรวจสอบผู้ให้บริการล้มเหลว",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "URL ไม่ถูกต้อง",
 		"INVALID_BODY": "ข้อมูลไม่ถูกต้อง",
 		"PARSE_ERROR": "ข้อผิดพลาดในการแปลคำขอ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ไม่สามารถแก้ไขผู้ใช้เจ้าของ",
+		"CANNOT_DELETE_OWN_USER": "ไม่สามารถลบบัญชีของคุณเอง",
+		"CANNOT_DELETE_LAST_USER": "ไม่สามารถลบผู้ใช้สุดท้าย",
+		"USER_ALREADY_EXISTS": "ผู้ใช้มีอยู่แล้ว",
+		"NO_SUGGESTIONS_FOUND": "ไม่พบข้อเสนอ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ไม่สามารถปิดใช้งานเว็บไซต์ที่ใช้งานอยู่ครั้งสุดท้าย"
 	},
 	"TARGET": {
 		"airplanes": "เครื่องบิน",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "ไม่พบบัญชี",
 		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
 		"NO_EXTENSION_FOUND": "ไม่พบส่วนขยาย"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "ล้มเหลวในการโหลดไฟล์ JSON",
-		"MNEMONIC_UNDEFINED": "ไม่ได้กำหนด Mnemonic กรุณาตั้งค่า Mnemonic ในตัวแปรสภาพแวดล้อม",
-		"NO_MNEMONIC_OR_SEED": "ไม่มี Mnemonic หรือ Seed ที่ให้มา",
-		"CANT_FIND_KEYRINGPAIR": "ไม่สามารถค้นหา keyringpair สำหรับ {{address}}",
-		"ENVIRONMENT_NOT_READY": "สภาพแวดล้อมไม่พร้อม",
-		"INVALID_SIGNATURE": "ลายเซ็นต์ไม่ถูกต้อง",
-		"SITE_KEY_MISSING": "SITE KEY หายไป",
-		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
-		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "ล้มเหลวในการเข้ารหัสที่อยู่ไม่ถูกต้อง",

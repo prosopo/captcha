@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Ikskey angway ofoundsley",
+		"MISSING_SECRET_KEY": "Issingmay ecretsay eyskay",
+		"JSON_LOAD_FAILED": "Nahimong pakyas pag-load sa JSON file",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Palihug isulat ang mnemonic sa environment variables",
+		"NO_MNEMONIC_OR_SEED": "Walay gisugdan o gisementohan",
+		"CANT_FIND_KEYRINGPAIR": "Dili makaplag sa keyringpair alang sa {{address}}",
+		"ENVIRONMENT_NOT_READY": "Ang kapalibotan wala pa andam",
+		"INVALID_SIGNATURE": "Invalid nga lagda",
+		"SITE_KEY_MISSING": "Nanginahanglan og SITE KEY",
+		"ACCOUNT_NOT_FOUND": "Account dili makita",
+		"INVALID_TIMESTAMP": "Invalid nga timestamp"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Insufficientway ermissionspay otay erformpay histay actionway",
+		"MISSING_QUERY_PARAMETERS": "Issingmay ueryqay arameterspay",
+		"MISSING_AUTHORIZATION_HEADER": "Issingmay uthorizationay eaderhay",
+		"TIMESTAMP_TOO_OLD": "Imestamptay ootay oldway",
+		"FORBIDDEN": "Forbiddenway",
+		"PROVIDER_VERIFY_FAILED": "Oviderpray erificationvay ailedfay",
 		"UNAUTHORIZED": "Nakalista",
 		"MISSING_BODY": "Nawala ang katawan",
 		"NO_CONTENT_TYPE_HEADER": "Walang header ng uri ng content. Inakalang JSON na naka-encode ang katawan ngunit hindi ito nagawa na parsisin.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Hindi wastong URL",
 		"INVALID_BODY": "Hindi wastong body",
 		"PARSE_ERROR": "Error sa pagsasalin ng request"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Annotcay odifymay ownerway seruy",
+		"CANNOT_DELETE_OWN_USER": "Annotcay eleteday ouryay ownway accountway",
+		"CANNOT_DELETE_LAST_USER": "Annotcay eleteday astlay seruy",
+		"USER_ALREADY_EXISTS": "Userway alreadyway existstay",
+		"NO_SUGGESTIONS_FOUND": "Onay uggestionssay oundfay",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Annotcay eactivateday ethay astlay activeay itesay"
 	},
 	"TARGET": {
 		"airplanes": "eroplano",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Walay makitang mga account",
 		"ACCOUNT_NOT_FOUND": "Account dili makita",
 		"NO_EXTENSION_FOUND": "Walay nakitang extension"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Nahimong pakyas pag-load sa JSON file",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Palihug isulat ang mnemonic sa environment variables",
-		"NO_MNEMONIC_OR_SEED": "Walay gisugdan o gisementohan",
-		"CANT_FIND_KEYRINGPAIR": "Dili makaplag sa keyringpair alang sa {{address}}",
-		"ENVIRONMENT_NOT_READY": "Ang kapalibotan wala pa andam",
-		"INVALID_SIGNATURE": "Invalid nga lagda",
-		"SITE_KEY_MISSING": "Nanginahanglan og SITE KEY",
-		"ACCOUNT_NOT_FOUND": "Account dili makita",
-		"INVALID_TIMESTAMP": "Invalid nga timestamp"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nahimong pakyas ang pag-encode sa dili balido nga address",

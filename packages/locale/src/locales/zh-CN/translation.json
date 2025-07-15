@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "站点密钥未找到",
+		"MISSING_SECRET_KEY": "缺少秘钥",
+		"JSON_LOAD_FAILED": "无法加载JSON文件",
+		"MNEMONIC_UNDEFINED": "未定义助记词。请在环境变量中设置助记词",
+		"NO_MNEMONIC_OR_SEED": "没有提供助记词或种子",
+		"CANT_FIND_KEYRINGPAIR": "找不到{{address}}的密钥对",
+		"ENVIRONMENT_NOT_READY": "环境尚未准备好",
+		"INVALID_SIGNATURE": "无效的签名",
+		"SITE_KEY_MISSING": "缺少SITE KEY",
+		"ACCOUNT_NOT_FOUND": "找不到帐户",
+		"INVALID_TIMESTAMP": "无效的时间戳"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "权限不足，无法执行此操作",
+		"MISSING_QUERY_PARAMETERS": "缺少查询参数",
+		"MISSING_AUTHORIZATION_HEADER": "缺少授权头",
+		"TIMESTAMP_TOO_OLD": "时间戳过旧",
+		"FORBIDDEN": "禁止",
+		"PROVIDER_VERIFY_FAILED": "提供商验证失败",
 		"UNAUTHORIZED": "未授权",
 		"MISSING_BODY": "缺少主体",
 		"NO_CONTENT_TYPE_HEADER": "没有内容类型标头。假定为JSON编码主体，但无法解析。",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "无效的URL",
 		"INVALID_BODY": "无效的主体",
 		"PARSE_ERROR": "解析请求时出错"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",
+		"CANNOT_DELETE_OWN_USER": "无法删除您自己的帐户",
+		"CANNOT_DELETE_LAST_USER": "无法删除最后一个用户",
+		"USER_ALREADY_EXISTS": "用户已经存在",
+		"NO_SUGGESTIONS_FOUND": "未找到建议",
+		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点"
 	},
 	"TARGET": {
 		"airplanes": "飞机",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "找不到帐户",
 		"ACCOUNT_NOT_FOUND": "找不到帐户",
 		"NO_EXTENSION_FOUND": "找不到扩展"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "无法加载JSON文件",
-		"MNEMONIC_UNDEFINED": "未定义助记词。请在环境变量中设置助记词",
-		"NO_MNEMONIC_OR_SEED": "没有提供助记词或种子",
-		"CANT_FIND_KEYRINGPAIR": "找不到{{address}}的密钥对",
-		"ENVIRONMENT_NOT_READY": "环境尚未准备好",
-		"INVALID_SIGNATURE": "无效的签名",
-		"SITE_KEY_MISSING": "缺少SITE KEY",
-		"ACCOUNT_NOT_FOUND": "找不到帐户",
-		"INVALID_TIMESTAMP": "无效的时间戳"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "无法编码无效地址",

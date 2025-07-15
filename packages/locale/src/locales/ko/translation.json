@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "사이트 키를 찾을 수 없음",
+		"MISSING_SECRET_KEY": "누락된 비밀 키",
+		"ACCOUNT_NOT_FOUND": "계정을 찾을 수 없습니다",
+		"JSON_LOAD_FAILED": "JSON 파일을 불러오는 데 실패함",
+		"MNEMONIC_UNDEFINED": "니모닉이 정의되지 않았습니다. 환경 변수에 니모닉을 설정하세요",
+		"NO_MNEMONIC_OR_SEED": "니모닉 또는 시드가 제공되지 않았음",
+		"CANT_FIND_KEYRINGPAIR": "{{address}}의 키링 페어를 찾을 수 없음",
+		"ENVIRONMENT_NOT_READY": "환경이 준비되지 않음",
+		"INVALID_SIGNATURE": "잘못된 서명",
+		"SITE_KEY_MISSING": "SITE KEY가 누락됨",
+		"INVALID_TIMESTAMP": "잘못된 타임스탬프"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "이 작업을 수행할 권한이 충분하지 않음",
+		"MISSING_QUERY_PARAMETERS": "쿼리 매개변수가 누락됨",
+		"MISSING_AUTHORIZATION_HEADER": "인증 헤더가 누락됨",
+		"TIMESTAMP_TOO_OLD": "시간이 너무 오래 됨",
+		"FORBIDDEN": "금지됨",
+		"PROVIDER_VERIFY_FAILED": "제공자 검증 실패",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "유효하지 않은 URL",
 		"INVALID_BODY": "유효하지 않은 본문",
 		"PARSE_ERROR": "요청 구문 분석 오류"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "소유자 사용자를 수정할 수 없음",
+		"CANNOT_DELETE_OWN_USER": "본인 계정을 삭제할 수 없음",
+		"CANNOT_DELETE_LAST_USER": "마지막 사용자를 삭제할 수 없음",
+		"USER_ALREADY_EXISTS": "사용자가 이미 존재함",
+		"NO_SUGGESTIONS_FOUND": "제안을 찾을 수 없음",
+		"CANNOT_DEACTIVATE_LAST_SITE": "마지막 활성 사이트를 비활성화할 수 없음"
 	},
 	"TARGET": {
 		"airplanes": "비행기",
@@ -319,17 +346,6 @@
 		"xylophone": "실로폰",
 		"yo-yo": "요요",
 		"zebra": "얼룩말"
-	},
-	"GENERAL": {
-		"ACCOUNT_NOT_FOUND": "계정을 찾을 수 없습니다",
-		"JSON_LOAD_FAILED": "JSON 파일을 불러오는 데 실패함",
-		"MNEMONIC_UNDEFINED": "니모닉이 정의되지 않았습니다. 환경 변수에 니모닉을 설정하세요",
-		"NO_MNEMONIC_OR_SEED": "니모닉 또는 시드가 제공되지 않았음",
-		"CANT_FIND_KEYRINGPAIR": "{{address}}의 키링 페어를 찾을 수 없음",
-		"ENVIRONMENT_NOT_READY": "환경이 준비되지 않음",
-		"INVALID_SIGNATURE": "잘못된 서명",
-		"SITE_KEY_MISSING": "SITE KEY가 누락됨",
-		"INVALID_TIMESTAMP": "잘못된 타임스탬프"
 	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot 확장 프로그램을 찾을 수 없습니다"

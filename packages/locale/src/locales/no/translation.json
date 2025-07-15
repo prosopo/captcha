@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Platennøkkel ikke funnet",
+		"MISSING_SECRET_KEY": "Mangler hemmelig nøkkel",
+		"JSON_LOAD_FAILED": "Klarte ikke å laste JSON-fil",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vennligst sett mnemonikken i miljøvariabler",
+		"NO_MNEMONIC_OR_SEED": "Ingen mnemonikk eller frø oppgitt",
+		"CANT_FIND_KEYRINGPAIR": "Finner ikke keyringpar for {{address}}",
+		"ENVIRONMENT_NOT_READY": "Miljøet ikke klart",
+		"INVALID_SIGNATURE": "Ugyldig signatur",
+		"SITE_KEY_MISSING": "SITE KEY mangler",
+		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
+		"INVALID_TIMESTAMP": "Ugyldig tidsstempel"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Utilstrekkelige tillatelser for å utføre denne handlingen",
+		"MISSING_QUERY_PARAMETERS": "Manglende spørringsparametere",
+		"MISSING_AUTHORIZATION_HEADER": "Mangler autorisasjonsheader",
+		"TIMESTAMP_TOO_OLD": "Tidspunkt for gammel",
+		"FORBIDDEN": "Forbudt",
+		"PROVIDER_VERIFY_FAILED": "Utdypning bekreftelse mislyktes",
 		"UNAUTHORIZED": "Oautorisert",
 		"MISSING_BODY": "Manglar kropp",
 		"NO_CONTENT_TYPE_HEADER": "Ingen innhaldstypeheader. Gjekk ut frå at kroppen var kodet i JSON, men vart ikkje tolka.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Ugyldig URL",
 		"INVALID_BODY": "Ugyldig kropp",
 		"PARSE_ERROR": "Feil ved å tolke forespørsel"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Kan ikke endre eierbruker",
+		"CANNOT_DELETE_OWN_USER": "Kan ikke slette din egen konto",
+		"CANNOT_DELETE_LAST_USER": "Kan ikke slette siste bruker",
+		"USER_ALREADY_EXISTS": "Brukeren eksisterer allerede",
+		"NO_SUGGESTIONS_FOUND": "Ingen forslag funnet",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikke deaktivere siste aktive nettsted"
 	},
 	"TARGET": {
 		"airplanes": "flymaskiner",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Ingen kontoer funnet",
 		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
 		"NO_EXTENSION_FOUND": "Ingen tilleggsprogram funnet"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Klarte ikke å laste JSON-fil",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vennligst sett mnemonikken i miljøvariabler",
-		"NO_MNEMONIC_OR_SEED": "Ingen mnemonikk eller frø oppgitt",
-		"CANT_FIND_KEYRINGPAIR": "Finner ikke keyringpar for {{address}}",
-		"ENVIRONMENT_NOT_READY": "Miljøet ikke klart",
-		"INVALID_SIGNATURE": "Ugyldig signatur",
-		"SITE_KEY_MISSING": "SITE KEY mangler",
-		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
-		"INVALID_TIMESTAMP": "Ugyldig tidsstempel"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Klarte ikke å kryptere ugyldig adresse",

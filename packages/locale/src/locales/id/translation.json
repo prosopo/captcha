@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Site key not found",
+		"MISSING_SECRET_KEY": "Missing secret key",
+		"JSON_LOAD_FAILED": "Gagal memuat file JSON",
+		"MNEMONIC_UNDEFINED": "Mnemonic Tidak Didefinisikan. Harap atur mnemonic di variabel lingkungan",
+		"NO_MNEMONIC_OR_SEED": "Tidak ada mnemonic atau seed yang disediakan",
+		"CANT_FIND_KEYRINGPAIR": "Tidak dapat menemukan keyringpair untuk {{address}}",
+		"ENVIRONMENT_NOT_READY": "Lingkungan tidak siap",
+		"INVALID_SIGNATURE": "Tanda tangan tidak valid",
+		"SITE_KEY_MISSING": "SITE KEY hilang",
+		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
+		"INVALID_TIMESTAMP": "Timestamp tidak valid"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
+		"MISSING_QUERY_PARAMETERS": "Missing query parameters",
+		"MISSING_AUTHORIZATION_HEADER": "Missing authorization header",
+		"TIMESTAMP_TOO_OLD": "Timestamp too old",
+		"FORBIDDEN": "Forbidden",
+		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Missing body",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
+		"CANNOT_DELETE_OWN_USER": "Cannot delete your own account",
+		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
+		"USER_ALREADY_EXISTS": "User already exists",
+		"NO_SUGGESTIONS_FOUND": "No suggestions found",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
 	},
 	"TARGET": {
 		"airplanes": "eroplano",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Gagal memuat file JSON",
-		"MNEMONIC_UNDEFINED": "Mnemonic Tidak Didefinisikan. Harap atur mnemonic di variabel lingkungan",
-		"NO_MNEMONIC_OR_SEED": "Tidak ada mnemonic atau seed yang disediakan",
-		"CANT_FIND_KEYRINGPAIR": "Tidak dapat menemukan keyringpair untuk {{address}}",
-		"ENVIRONMENT_NOT_READY": "Lingkungan tidak siap",
-		"INVALID_SIGNATURE": "Tanda tangan tidak valid",
-		"SITE_KEY_MISSING": "SITE KEY hilang",
-		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
-		"INVALID_TIMESTAMP": "Timestamp tidak valid"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",

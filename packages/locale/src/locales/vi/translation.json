@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Không tìm thấy khóa trang",
+		"MISSING_SECRET_KEY": "Thiếu khóa bí mật",
+		"JSON_LOAD_FAILED": "Không thể tải tệp JSON",
+		"MNEMONIC_UNDEFINED": "Không xác định Mnemonic. Vui lòng thiết lập mnemonic trong biến môi trường",
+		"NO_MNEMONIC_OR_SEED": "Không có mnemonic hoặc seed được cung cấp",
+		"CANT_FIND_KEYRINGPAIR": "Không thể tìm thấy keyringpair cho {{address}}",
+		"ENVIRONMENT_NOT_READY": "Môi trường chưa sẵn sàng",
+		"INVALID_SIGNATURE": "Chữ ký không hợp lệ",
+		"SITE_KEY_MISSING": "SITE KEY thiếu",
+		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
+		"INVALID_TIMESTAMP": "Thời điểm không hợp lệ"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Không đủ quyền để thực hiện hành động này",
+		"MISSING_QUERY_PARAMETERS": "Thiếu tham số truy vấn",
+		"MISSING_AUTHORIZATION_HEADER": "Thiếu tiêu đề ủy quyền",
+		"TIMESTAMP_TOO_OLD": "Mốc thời gian quá cũ",
+		"FORBIDDEN": "Bị cấm",
+		"PROVIDER_VERIFY_FAILED": "Xác thực nhà cung cấp không thành công",
 		"UNAUTHORIZED": "Không được phép",
 		"MISSING_BODY": "Thiếu nội dung",
 		"NO_CONTENT_TYPE_HEADER": "Không có tiêu đề content-type. Giả định nội dung được mã hóa JSON nhưng không thể phân tích.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "URL không hợp lệ",
 		"INVALID_BODY": "Nội dung không hợp lệ",
 		"PARSE_ERROR": "Lỗi phân tích yêu cầu"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Không thể sửa đổi người dùng chủ sở hữu",
+		"CANNOT_DELETE_OWN_USER": "Không thể xóa tài khoản của chính bạn",
+		"CANNOT_DELETE_LAST_USER": "Không thể xóa người dùng cuối cùng",
+		"USER_ALREADY_EXISTS": "Người dùng đã tồn tại",
+		"NO_SUGGESTIONS_FOUND": "Không tìm thấy gợi ý nào",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Không thể vô hiệu hóa trang cuối cùng hoạt động"
 	},
 	"TARGET": {
 		"airplanes": "máy bay",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Không tìm thấy tài khoản",
 		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
 		"NO_EXTENSION_FOUND": "Không tìm thấy tiện ích"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Không thể tải tệp JSON",
-		"MNEMONIC_UNDEFINED": "Không xác định Mnemonic. Vui lòng thiết lập mnemonic trong biến môi trường",
-		"NO_MNEMONIC_OR_SEED": "Không có mnemonic hoặc seed được cung cấp",
-		"CANT_FIND_KEYRINGPAIR": "Không thể tìm thấy keyringpair cho {{address}}",
-		"ENVIRONMENT_NOT_READY": "Môi trường chưa sẵn sàng",
-		"INVALID_SIGNATURE": "Chữ ký không hợp lệ",
-		"SITE_KEY_MISSING": "SITE KEY thiếu",
-		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
-		"INVALID_TIMESTAMP": "Thời điểm không hợp lệ"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Không thể mã hóa địa chỉ không hợp lệ",

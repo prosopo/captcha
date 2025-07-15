@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "साइट कुंजी नहीं मिली",
+		"MISSING_SECRET_KEY": "गुप्त कुंजी गायब है",
+		"JSON_LOAD_FAILED": "JSON फ़ाइल लोड करने में विफल रहा",
+		"MNEMONIC_UNDEFINED": "म्नेमोनिक अनिर्दिष्ट। कृपया पर्यावरण चरणों में म्नेमोनिक सेट करें",
+		"NO_MNEMONIC_OR_SEED": "कोई म्नेमोनिक या सीड प्रदान नहीं किया गया",
+		"CANT_FIND_KEYRINGPAIR": "{{पता}} के लिए कीरिंगपेयर नहीं मिल सकता",
+		"ENVIRONMENT_NOT_READY": "पर्यावरण तैयार नहीं है",
+		"INVALID_SIGNATURE": "अवैध हस्ताक्षर",
+		"SITE_KEY_MISSING": "साइट कुंजी गायब है",
+		"ACCOUNT_NOT_FOUND": "खाता नहीं मिला",
+		"INVALID_TIMESTAMP": "अवैध समय चिह्न"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "इस क्रिया को करने के लिए पर्याप्त अनुमतियां नहीं हैं",
+		"MISSING_QUERY_PARAMETERS": "सोध पैरामीटर गायब है",
+		"MISSING_AUTHORIZATION_HEADER": "अधिकृति हेडर गायब है",
+		"TIMESTAMP_TOO_OLD": "समय-चिह्न बहुत पुराना है",
+		"FORBIDDEN": "निषेध",
+		"PROVIDER_VERIFY_FAILED": "प्रदाता सत्यापन विफल हुआ",
+		"UNAUTHORIZED": "अनधिकृत",
+		"MISSING_BODY": "शरीर गायब है",
+		"NO_CONTENT_TYPE_HEADER": "कोई सामग्री प्रकार शीर्षक नहीं है। माना गया JSON एन्कोड हो सकता है लेकिन टुकड़े करने में असफल।",
+		"CAPTCHA_FAILED": "आपने एक या एक से अधिक कैप्चा गलत जवाब दिया है। कृपया पुनः प्रयास करें",
+		"CAPTCHA_PASSED": "आपने सही जवाब दिए हैं",
+		"BAD_REQUEST": "अवैध अनुरोध",
+		"USER_VERIFIED": "उपयोगकर्ता सत्यापित है",
+		"USER_NOT_VERIFIED": "उपयोगकर्ता सत्यापित नहीं है",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "उपयोगकर्ता सत्यापित नहीं है। कैप्चा समाधान समाप्त हो गया है।",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "उपयोगकर्ता सत्यापित नहीं है। कोई कैप्चा समाधान नहीं मिला।",
+		"USER_ALREADY_VERIFIED": "इस समाधान को पहले से ही सत्यापित कर दिया गया है। उपयोगकर्ता को एक नया कैप्चा पूरा करना चाहिए।",
+		"UNKNOWN": "अज्ञात API त्रुटि",
+		"SITE_KEY_NOT_REGISTERED": "साइट कुंजी पंजीकृत नहीं है",
+		"INCORRECT_CAPTCHA_TYPE": "गलत CAPTCHA प्रकार",
+		"INVALID_SITE_KEY": "अमान्य साइट कुंजी",
+		"UNAUTHORIZED_ORIGIN_URL": "अनधिकृत मूल URL",
+		"INVALID_IP": "अमान्य आईपी",
+		"INVALID_URL": "अमान्य यूआरएल",
+		"INVALID_BODY": "अमान्य बॉडी",
+		"PARSE_ERROR": "अनुरोध विशेषण में त्रुटि"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "मालिक उपयोगकर्ता को संशोधित नहीं किया जा सकता",
+		"CANNOT_DELETE_OWN_USER": "अपना खाता हटाया नहीं जा सकता",
+		"CANNOT_DELETE_LAST_USER": "आखिरी उपयोगकर्ता हटाया नहीं जा सकता",
+		"USER_ALREADY_EXISTS": "उपयोगकर्ता पहले से मौजूद है",
+		"NO_SUGGESTIONS_FOUND": "कोई सुझाव नहीं मिले",
+		"CANNOT_DEACTIVATE_LAST_SITE": "अंतिम सक्रिय साइट को निष्क्रिय नहीं किया जा सकता"
+	},
 	"TARGET": {
 		"pelecaniformes": "",
 		"self-propelled-lawn-mower": "",
@@ -298,28 +347,6 @@
 		"yo-yo": "यो-यो",
 		"zebra": "जीब्रा"
 	},
-	"API": {
-		"UNAUTHORIZED": "अनधिकृत",
-		"MISSING_BODY": "शरीर गायब है",
-		"NO_CONTENT_TYPE_HEADER": "कोई सामग्री प्रकार शीर्षक नहीं है। माना गया JSON एन्कोड हो सकता है लेकिन टुकड़े करने में असफल।",
-		"CAPTCHA_FAILED": "आपने एक या एक से अधिक कैप्चा गलत जवाब दिया है। कृपया पुनः प्रयास करें",
-		"CAPTCHA_PASSED": "आपने सही जवाब दिए हैं",
-		"BAD_REQUEST": "अवैध अनुरोध",
-		"USER_VERIFIED": "उपयोगकर्ता सत्यापित है",
-		"USER_NOT_VERIFIED": "उपयोगकर्ता सत्यापित नहीं है",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "उपयोगकर्ता सत्यापित नहीं है। कैप्चा समाधान समाप्त हो गया है।",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "उपयोगकर्ता सत्यापित नहीं है। कोई कैप्चा समाधान नहीं मिला।",
-		"USER_ALREADY_VERIFIED": "इस समाधान को पहले से ही सत्यापित कर दिया गया है। उपयोगकर्ता को एक नया कैप्चा पूरा करना चाहिए।",
-		"UNKNOWN": "अज्ञात API त्रुटि",
-		"SITE_KEY_NOT_REGISTERED": "साइट कुंजी पंजीकृत नहीं है",
-		"INCORRECT_CAPTCHA_TYPE": "गलत CAPTCHA प्रकार",
-		"INVALID_SITE_KEY": "अमान्य साइट कुंजी",
-		"UNAUTHORIZED_ORIGIN_URL": "अनधिकृत मूल URL",
-		"INVALID_IP": "अमान्य आईपी",
-		"INVALID_URL": "अमान्य यूआरएल",
-		"INVALID_BODY": "अमान्य बॉडी",
-		"PARSE_ERROR": "अनुरोध विशेषण में त्रुटि"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "पोल्काडॉट एक्सटेंशन नहीं मिला"
 	},
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "कोई खाते नहीं मिले",
 		"ACCOUNT_NOT_FOUND": "खाता नहीं मिला",
 		"NO_EXTENSION_FOUND": "कोई एक्सटेंशन नहीं मिला"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "JSON फ़ाइल लोड करने में विफल रहा",
-		"MNEMONIC_UNDEFINED": "म्नेमोनिक अनिर्दिष्ट। कृपया पर्यावरण चरणों में म्नेमोनिक सेट करें",
-		"NO_MNEMONIC_OR_SEED": "कोई म्नेमोनिक या सीड प्रदान नहीं किया गया",
-		"CANT_FIND_KEYRINGPAIR": "{{पता}} के लिए कीरिंगपेयर नहीं मिल सकता",
-		"ENVIRONMENT_NOT_READY": "पर्यावरण तैयार नहीं है",
-		"INVALID_SIGNATURE": "अवैध हस्ताक्षर",
-		"SITE_KEY_MISSING": "साइट कुंजी गायब है",
-		"ACCOUNT_NOT_FOUND": "खाता नहीं मिला",
-		"INVALID_TIMESTAMP": "अवैध समय चिह्न"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "अवैध पता को एन्कोड करने में विफल रहा",

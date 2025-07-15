@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Clave de sitio no encontrada",
+		"MISSING_SECRET_KEY": "Falta la clave secreta",
+		"JSON_LOAD_FAILED": "Αποτυχία φόρτωσης αρχείου JSON",
+		"MNEMONIC_UNDEFINED": "Το μνημονικό δεν έχει καθοριστεί. Καθορίστε το μνημονικό στις μεταβλητές περιβάλλοντος",
+		"NO_MNEMONIC_OR_SEED": "Δεν παρέχεται μνημονικό ή κλειδί",
+		"CANT_FIND_KEYRINGPAIR": "Δεν είναι δυνατή η εύρεση του keyringpair για τη διεύθυνση {{address}}",
+		"ENVIRONMENT_NOT_READY": "Το περιβάλλον δεν είναι έτοιμο",
+		"INVALID_SIGNATURE": "Μη έγκυρη υπογραφή",
+		"SITE_KEY_MISSING": "Λείπει το SITE KEY",
+		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
+		"INVALID_TIMESTAMP": "Μη έγκυρη σφραγίδα χρόνου"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permisos insuficientes para realizar esta acción",
+		"MISSING_QUERY_PARAMETERS": "Faltan parámetros de consulta",
+		"MISSING_AUTHORIZATION_HEADER": "Falta la cabecera de autorización",
+		"TIMESTAMP_TOO_OLD": "Marca de tiempo demasiado antigua",
+		"FORBIDDEN": "Prohibido",
+		"PROVIDER_VERIFY_FAILED": "Fallo en la verificación del proveedor",
+		"UNAUTHORIZED": "No autorizado",
+		"MISSING_BODY": "Cuerpo faltante",
+		"NO_CONTENT_TYPE_HEADER": "Sin encabezado de tipo de contenido. Se asumió que el cuerpo está codificado en JSON pero no se pudo analizar.",
+		"CAPTCHA_FAILED": "Απάντησες λανθασμένα ένα ή περισσότερα captchas. Παρακαλώ δοκίμασε ξανά",
+		"CAPTCHA_PASSED": "Απάντησες σωστά στα captchas",
+		"BAD_REQUEST": "Μη έγκυρο αίτημα",
+		"USER_VERIFIED": "Ο χρήστης επαληθεύτηκε",
+		"USER_NOT_VERIFIED": "Ο χρήστης δεν επαληθεύτηκε",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Ο χρήστης δεν επαληθεύτηκε. Η λύση captcha έχει λήξει",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Ο χρήστης δεν επαληθεύτηκε. Δεν βρέθηκε λύση captcha",
+		"USER_ALREADY_VERIFIED": "Αυτή η λύση έχει ήδη επαληθευτεί. Ο χρήστης θα πρέπει να ολοκληρώσει ένα νέο captcha",
+		"UNKNOWN": "Άγνωστο σφάλμα API",
+		"SITE_KEY_NOT_REGISTERED": "Το κλειδί ιστότοπου δεν είναι εγγεγραμμένο",
+		"INCORRECT_CAPTCHA_TYPE": "Λάθος τύπος CAPTCHA",
+		"INVALID_SITE_KEY": "Μη έγκυρο κλειδί ιστότοπου",
+		"UNAUTHORIZED_ORIGIN_URL": "Μη εξουσιοδοτημένη προέλευση URL",
+		"INVALID_IP": "Μη έγκυρη διεύθυνση IP",
+		"INVALID_URL": "Μη έγκυρη διεύθυνση URL",
+		"INVALID_BODY": "Μη έγκυρο σώμα",
+		"PARSE_ERROR": "Σφάλμα ανάλυσης αιτήματος"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "No se puede modificar el usuario propietario",
+		"CANNOT_DELETE_OWN_USER": "No se puede eliminar tu propia cuenta",
+		"CANNOT_DELETE_LAST_USER": "No se puede eliminar el último usuario",
+		"USER_ALREADY_EXISTS": "El usuario ya existe",
+		"NO_SUGGESTIONS_FOUND": "No se encontraron sugerencias",
+		"CANNOT_DEACTIVATE_LAST_SITE": "No se puede desactivar el último sitio activo"
+	},
 	"TARGET": {
 		"homer-simpson": "",
 		"airplanes": "aviones",
@@ -298,28 +347,6 @@
 		"yo-yo": "γιο-γιο",
 		"zebra": "ζέβρα"
 	},
-	"API": {
-		"UNAUTHORIZED": "No autorizado",
-		"MISSING_BODY": "Cuerpo faltante",
-		"NO_CONTENT_TYPE_HEADER": "Sin encabezado de tipo de contenido. Se asumió que el cuerpo está codificado en JSON pero no se pudo analizar.",
-		"CAPTCHA_FAILED": "Απάντησες λανθασμένα ένα ή περισσότερα captchas. Παρακαλώ δοκίμασε ξανά",
-		"CAPTCHA_PASSED": "Απάντησες σωστά στα captchas",
-		"BAD_REQUEST": "Μη έγκυρο αίτημα",
-		"USER_VERIFIED": "Ο χρήστης επαληθεύτηκε",
-		"USER_NOT_VERIFIED": "Ο χρήστης δεν επαληθεύτηκε",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Ο χρήστης δεν επαληθεύτηκε. Η λύση captcha έχει λήξει",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Ο χρήστης δεν επαληθεύτηκε. Δεν βρέθηκε λύση captcha",
-		"USER_ALREADY_VERIFIED": "Αυτή η λύση έχει ήδη επαληθευτεί. Ο χρήστης θα πρέπει να ολοκληρώσει ένα νέο captcha",
-		"UNKNOWN": "Άγνωστο σφάλμα API",
-		"SITE_KEY_NOT_REGISTERED": "Το κλειδί ιστότοπου δεν είναι εγγεγραμμένο",
-		"INCORRECT_CAPTCHA_TYPE": "Λάθος τύπος CAPTCHA",
-		"INVALID_SITE_KEY": "Μη έγκυρο κλειδί ιστότοπου",
-		"UNAUTHORIZED_ORIGIN_URL": "Μη εξουσιοδοτημένη προέλευση URL",
-		"INVALID_IP": "Μη έγκυρη διεύθυνση IP",
-		"INVALID_URL": "Μη έγκυρη διεύθυνση URL",
-		"INVALID_BODY": "Μη έγκυρο σώμα",
-		"PARSE_ERROR": "Σφάλμα ανάλυσης αιτήματος"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Δεν βρέθηκε επέκταση Polkadot"
 	},
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Δεν βρέθηκαν λογαριασμοί",
 		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
 		"NO_EXTENSION_FOUND": "Δε βρέθηκε επέκταση"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Αποτυχία φόρτωσης αρχείου JSON",
-		"MNEMONIC_UNDEFINED": "Το μνημονικό δεν έχει καθοριστεί. Καθορίστε το μνημονικό στις μεταβλητές περιβάλλοντος",
-		"NO_MNEMONIC_OR_SEED": "Δεν παρέχεται μνημονικό ή κλειδί",
-		"CANT_FIND_KEYRINGPAIR": "Δεν είναι δυνατή η εύρεση του keyringpair για τη διεύθυνση {{address}}",
-		"ENVIRONMENT_NOT_READY": "Το περιβάλλον δεν είναι έτοιμο",
-		"INVALID_SIGNATURE": "Μη έγκυρη υπογραφή",
-		"SITE_KEY_MISSING": "Λείπει το SITE KEY",
-		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
-		"INVALID_TIMESTAMP": "Μη έγκυρη σφραγίδα χρόνου"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Αποτυχία κωδικοποίησης μη έγκυρης διεύθυνσης",

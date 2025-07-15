@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"SITE_KEY_NOT_FOUND": "Cheie site negasita",
+		"MISSING_SECRET_KEY": "Lipseste cheia secreta",
+		"JSON_LOAD_FAILED": "Nu s-a putut incarca fisierul JSON",
+		"MNEMONIC_UNDEFINED": "Mnemonic indefinit. Te rog seteaza mnemonicul in variabilele de mediu",
+		"NO_MNEMONIC_OR_SEED": "Nu s-a furnizat niciun mnemonic sau seed",
+		"CANT_FIND_KEYRINGPAIR": "Nu s-a putut gasi keyringpair-ul pentru {{address}}",
+		"ENVIRONMENT_NOT_READY": "Mediul nu este pregatit",
+		"INVALID_SIGNATURE": "Semnatura invalida",
+		"SITE_KEY_MISSING": "Cheia SITE lipseste",
+		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
+		"INVALID_TIMESTAMP": "Timestamp invalid"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permisiuni insuficiente pentru a efectua aceasta actiune",
+		"MISSING_QUERY_PARAMETERS": "Parametrii de interogare lipsesc",
+		"MISSING_AUTHORIZATION_HEADER": "Header de autorizare lipsa",
+		"TIMESTAMP_TOO_OLD": "Marca de timp prea veche",
+		"FORBIDDEN": "Interzis",
+		"PROVIDER_VERIFY_FAILED": "Verificarea furnizorului a esuat",
 		"UNAUTHORIZED": "Neautorizat",
 		"MISSING_BODY": "Corp lipsă",
 		"NO_CONTENT_TYPE_HEADER": "Fără antet de tip conținut. S-a presupus corp codat JSON dar nu s-a reușit parsarea.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "URL invalid",
 		"INVALID_BODY": "Corp invalid",
 		"PARSE_ERROR": "Eroare la parsare"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",
+		"CANNOT_DELETE_OWN_USER": "Nu puteti sterge propriul cont",
+		"CANNOT_DELETE_LAST_USER": "Nu se poate sterge ultimul utilizator",
+		"USER_ALREADY_EXISTS": "Utilizatorul exista deja",
+		"NO_SUGGESTIONS_FOUND": "Nu s-au gasit sugestii",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ"
 	},
 	"TARGET": {
 		"airplanes": "avioane",
@@ -333,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Niciun cont gasit",
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
 		"NO_EXTENSION_FOUND": "Nicio extensie gasita"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Nu s-a putut incarca fisierul JSON",
-		"MNEMONIC_UNDEFINED": "Mnemonic indefinit. Te rog seteaza mnemonicul in variabilele de mediu",
-		"NO_MNEMONIC_OR_SEED": "Nu s-a furnizat niciun mnemonic sau seed",
-		"CANT_FIND_KEYRINGPAIR": "Nu s-a putut gasi keyringpair-ul pentru {{address}}",
-		"ENVIRONMENT_NOT_READY": "Mediul nu este pregatit",
-		"INVALID_SIGNATURE": "Semnatura invalida",
-		"SITE_KEY_MISSING": "Cheia SITE lipseste",
-		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
-		"INVALID_TIMESTAMP": "Timestamp invalid"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Eroare la codificarea adresei invalide",
