@@ -298,6 +298,28 @@
 		"yo-yo": "γιο-γιο",
 		"zebra": "ζέβρα"
 	},
+	"API": {
+		"UNAUTHORIZED": "No autorizado",
+		"MISSING_BODY": "Cuerpo faltante",
+		"NO_CONTENT_TYPE_HEADER": "Sin encabezado de tipo de contenido. Se asumió que el cuerpo está codificado en JSON pero no se pudo analizar.",
+		"CAPTCHA_FAILED": "Απάντησες λανθασμένα ένα ή περισσότερα captchas. Παρακαλώ δοκίμασε ξανά",
+		"CAPTCHA_PASSED": "Απάντησες σωστά στα captchas",
+		"BAD_REQUEST": "Μη έγκυρο αίτημα",
+		"USER_VERIFIED": "Ο χρήστης επαληθεύτηκε",
+		"USER_NOT_VERIFIED": "Ο χρήστης δεν επαληθεύτηκε",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Ο χρήστης δεν επαληθεύτηκε. Η λύση captcha έχει λήξει",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Ο χρήστης δεν επαληθεύτηκε. Δεν βρέθηκε λύση captcha",
+		"USER_ALREADY_VERIFIED": "Αυτή η λύση έχει ήδη επαληθευτεί. Ο χρήστης θα πρέπει να ολοκληρώσει ένα νέο captcha",
+		"UNKNOWN": "Άγνωστο σφάλμα API",
+		"SITE_KEY_NOT_REGISTERED": "Το κλειδί ιστότοπου δεν είναι εγγεγραμμένο",
+		"INCORRECT_CAPTCHA_TYPE": "Λάθος τύπος CAPTCHA",
+		"INVALID_SITE_KEY": "Μη έγκυρο κλειδί ιστότοπου",
+		"UNAUTHORIZED_ORIGIN_URL": "Μη εξουσιοδοτημένη προέλευση URL",
+		"INVALID_IP": "Μη έγκυρη διεύθυνση IP",
+		"INVALID_URL": "Μη έγκυρη διεύθυνση URL",
+		"INVALID_BODY": "Μη έγκυρο σώμα",
+		"PARSE_ERROR": "Σφάλμα ανάλυσης αιτήματος"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Δεν βρέθηκε επέκταση Polkadot"
 	},
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Μη έγκυρο τεκμήριο",
 		"INVALID_SOLUTION": "Μη έγκυρη λύση",
 		"DECRYPTION_ERROR": "Σφάλμα αποκρυπτογράφησης"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Απάντησες λανθασμένα ένα ή περισσότερα captchas. Παρακαλώ δοκίμασε ξανά",
-		"CAPTCHA_PASSED": "Απάντησες σωστά στα captchas",
-		"BAD_REQUEST": "Μη έγκυρο αίτημα",
-		"USER_VERIFIED": "Ο χρήστης επαληθεύτηκε",
-		"USER_NOT_VERIFIED": "Ο χρήστης δεν επαληθεύτηκε",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Ο χρήστης δεν επαληθεύτηκε. Η λύση captcha έχει λήξει",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Ο χρήστης δεν επαληθεύτηκε. Δεν βρέθηκε λύση captcha",
-		"USER_ALREADY_VERIFIED": "Αυτή η λύση έχει ήδη επαληθευτεί. Ο χρήστης θα πρέπει να ολοκληρώσει ένα νέο captcha",
-		"UNKNOWN": "Άγνωστο σφάλμα API",
-		"SITE_KEY_NOT_REGISTERED": "Το κλειδί ιστότοπου δεν είναι εγγεγραμμένο",
-		"INCORRECT_CAPTCHA_TYPE": "Λάθος τύπος CAPTCHA",
-		"INVALID_SITE_KEY": "Μη έγκυρο κλειδί ιστότοπου",
-		"UNAUTHORIZED_ORIGIN_URL": "Μη εξουσιοδοτημένη προέλευση URL",
-		"INVALID_IP": "Μη έγκυρη διεύθυνση IP",
-		"INVALID_URL": "Μη έγκυρη διεύθυνση URL",
-		"INVALID_BODY": "Μη έγκυρο σώμα",
-		"PARSE_ERROR": "Σφάλμα ανάλυσης αιτήματος"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Μη έγκυρη παράμετρος"

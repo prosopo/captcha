@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Missing body",
+		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
+		"CAPTCHA_FAILED": "하나 이상의 캡차를 잘못 응답했습니다. 다시 시도하십시오",
+		"CAPTCHA_PASSED": "캡차를 올바르게 해결하셨습니다",
+		"BAD_REQUEST": "잘못된 요청",
+		"USER_VERIFIED": "사용자 확인됨",
+		"USER_NOT_VERIFIED": "사용자 확인되지 않음",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "사용자 확인되지 않음. 캡차 솔루션이 만료되었습니다",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "사용자 확인되지 않음. 캡차 솔루션이 없습니다",
+		"USER_ALREADY_VERIFIED": "이 솔루션이 이미 확인되었습니다. 사용자는 새 캡차를 완료해야 합니다",
+		"UNKNOWN": "미지의 API 오류",
+		"SITE_KEY_NOT_REGISTERED": "사이트 키가 등록되지 않음",
+		"INCORRECT_CAPTCHA_TYPE": "잘못된 캡차 유형",
+		"INVALID_SITE_KEY": "유효하지 않은 사이트 키",
+		"UNAUTHORIZED_ORIGIN_URL": "승인되지 않은 출처 URL",
+		"INVALID_IP": "유효하지 않은 IP",
+		"INVALID_URL": "유효하지 않은 URL",
+		"INVALID_BODY": "유효하지 않은 본문",
+		"PARSE_ERROR": "요청 구문 분석 오류"
+	},
 	"TARGET": {
 		"airplanes": "비행기",
 		"american-flag": "미국 국기",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "유효하지 않은 토큰",
 		"INVALID_SOLUTION": "유효하지 않은 솔루션",
 		"DECRYPTION_ERROR": "해제 오류"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "하나 이상의 캡차를 잘못 응답했습니다. 다시 시도하십시오",
-		"CAPTCHA_PASSED": "캡차를 올바르게 해결하셨습니다",
-		"BAD_REQUEST": "잘못된 요청",
-		"USER_VERIFIED": "사용자 확인됨",
-		"USER_NOT_VERIFIED": "사용자 확인되지 않음",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "사용자 확인되지 않음. 캡차 솔루션이 만료되었습니다",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "사용자 확인되지 않음. 캡차 솔루션이 없습니다",
-		"USER_ALREADY_VERIFIED": "이 솔루션이 이미 확인되었습니다. 사용자는 새 캡차를 완료해야 합니다",
-		"UNKNOWN": "미지의 API 오류",
-		"SITE_KEY_NOT_REGISTERED": "사이트 키가 등록되지 않음",
-		"INCORRECT_CAPTCHA_TYPE": "잘못된 캡차 유형",
-		"INVALID_SITE_KEY": "유효하지 않은 사이트 키",
-		"UNAUTHORIZED_ORIGIN_URL": "승인되지 않은 출처 URL",
-		"INVALID_IP": "유효하지 않은 IP",
-		"INVALID_URL": "유효하지 않은 URL",
-		"INVALID_BODY": "유효하지 않은 본문",
-		"PARSE_ERROR": "요청 구문 분석 오류"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "잘못된 매개변수"

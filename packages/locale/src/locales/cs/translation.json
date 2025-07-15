@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Neoprávněný",
+		"MISSING_BODY": "Chybějící tělo",
+		"NO_CONTENT_TYPE_HEADER": "Chybí hlavička typu obsahu. Předpokládáno, že tělo je kódované ve formátu JSON, ale nepodařilo se ho analyzovat.",
+		"CAPTCHA_FAILED": "Odpověděli jste špatně na jednu nebo více CAPTCHA. Zkuste to prosím znovu",
+		"CAPTCHA_PASSED": "Správně jste odpověděli na CAPTCHA",
+		"BAD_REQUEST": "Špatný požadavek",
+		"USER_VERIFIED": "Uživatel ověřen",
+		"USER_NOT_VERIFIED": "Uživatel není ověřen",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Uživatel není ověřen. Platnost řešení CAPTCHA vypršela",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Uživatel není ověřen. Žádné řešení CAPTCHA nenalezeno",
+		"USER_ALREADY_VERIFIED": "Toto řešení již bylo ověřeno. Uživatel by měl dokončit novou CAPTCHU.",
+		"UNKNOWN": "Neznámá chyba API",
+		"SITE_KEY_NOT_REGISTERED": "Klíč webu není registrován",
+		"INCORRECT_CAPTCHA_TYPE": "Nesprávný typ CAPTCHA",
+		"INVALID_SITE_KEY": "Neplatný klíč webu",
+		"UNAUTHORIZED_ORIGIN_URL": "Neautorizovaná URL původu",
+		"INVALID_IP": "Neplatná IP adresa",
+		"INVALID_URL": "Neplatná URL adresa",
+		"INVALID_BODY": "Neplatné tělo",
+		"PARSE_ERROR": "Chyba při zpracování požadavku"
+	},
 	"TARGET": {
 		"airplanes": "letadla",
 		"american-flag": "americká vlajka",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Neplatný token",
 		"INVALID_SOLUTION": "Neplatné řešení",
 		"DECRYPTION_ERROR": "Chyba dešifrování"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Odpověděli jste špatně na jednu nebo více CAPTCHA. Zkuste to prosím znovu",
-		"CAPTCHA_PASSED": "Správně jste odpověděli na CAPTCHA",
-		"BAD_REQUEST": "Špatný požadavek",
-		"USER_VERIFIED": "Uživatel ověřen",
-		"USER_NOT_VERIFIED": "Uživatel není ověřen",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Uživatel není ověřen. Platnost řešení CAPTCHA vypršela",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Uživatel není ověřen. Žádné řešení CAPTCHA nenalezeno",
-		"USER_ALREADY_VERIFIED": "Toto řešení již bylo ověřeno. Uživatel by měl dokončit novou CAPTCHU.",
-		"UNKNOWN": "Neznámá chyba API",
-		"SITE_KEY_NOT_REGISTERED": "Klíč webu není registrován",
-		"INCORRECT_CAPTCHA_TYPE": "Nesprávný typ CAPTCHA",
-		"INVALID_SITE_KEY": "Neplatný klíč webu",
-		"UNAUTHORIZED_ORIGIN_URL": "Neautorizovaná URL původu",
-		"INVALID_IP": "Neplatná IP adresa",
-		"INVALID_URL": "Neplatná URL adresa",
-		"INVALID_BODY": "Neplatné tělo",
-		"PARSE_ERROR": "Chyba při zpracování požadavku"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Neplatný parametr"

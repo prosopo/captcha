@@ -35,7 +35,9 @@ const getLoadPath = (language: string, namespace: string) => {
 	return `${import.meta.url.replace(`/${filename}`, "")}/locales/${language}/${namespace}.json`;
 };
 
-export function initializeI18n() {
+export function initializeI18n(
+	i18nLoadedCallback?: (value: typeof i18n) => void,
+) {
 	if (!i18n.isInitialized) {
 		i18n
 			// @ts-ignore
@@ -69,6 +71,9 @@ export function initializeI18n() {
 				},
 				...reactOptions,
 			} as InitOptions);
+		i18n.on("loaded", () => {
+			i18nLoadedCallback?.(i18n);
+		});
 	}
 	return i18n;
 }

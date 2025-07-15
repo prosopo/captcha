@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Oautorisert",
+		"MISSING_BODY": "Manglar kropp",
+		"NO_CONTENT_TYPE_HEADER": "Ingen innhaldstypeheader. Gjekk ut frå at kroppen var kodet i JSON, men vart ikkje tolka.",
+		"CAPTCHA_FAILED": "Du svarte feil på en eller flere captchas. Prøv igjen",
+		"CAPTCHA_PASSED": "Du svarte korrekt på captchas",
+		"BAD_REQUEST": "BadRequest",
+		"USER_VERIFIED": "Bruker verifisert",
+		"USER_NOT_VERIFIED": "Bruker ikke verifisert",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Bruker ikke verifisert. Captcha-løsning har utløpt",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Bruker ikke verifisert. Ingen captcha-løsning funnet",
+		"USER_ALREADY_VERIFIED": "Denne løsningen er allerede verifisert. Brukeren må fullføre en ny captcha",
+		"UNKNOWN": "Ukjent API-feil",
+		"SITE_KEY_NOT_REGISTERED": "Nettstedsnøkkel er ikkje registrert",
+		"INCORRECT_CAPTCHA_TYPE": "Feil CAPTCHA-type",
+		"INVALID_SITE_KEY": "Ugyldig nettstedsnøkkel",
+		"UNAUTHORIZED_ORIGIN_URL": "Uautorisert opprinnelig URL",
+		"INVALID_IP": "Ugyldig IP",
+		"INVALID_URL": "Ugyldig URL",
+		"INVALID_BODY": "Ugyldig kropp",
+		"PARSE_ERROR": "Feil ved å tolke forespørsel"
+	},
 	"TARGET": {
 		"airplanes": "flymaskiner",
 		"american-flag": "amerikansk flagg",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Ugyldig token",
 		"INVALID_SOLUTION": "Ugyldig løsning",
 		"DECRYPTION_ERROR": "Feil ved dekryptering"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Du svarte feil på en eller flere captchas. Prøv igjen",
-		"CAPTCHA_PASSED": "Du svarte korrekt på captchas",
-		"BAD_REQUEST": "BadRequest",
-		"USER_VERIFIED": "Bruker verifisert",
-		"USER_NOT_VERIFIED": "Bruker ikke verifisert",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Bruker ikke verifisert. Captcha-løsning har utløpt",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Bruker ikke verifisert. Ingen captcha-løsning funnet",
-		"USER_ALREADY_VERIFIED": "Denne løsningen er allerede verifisert. Brukeren må fullføre en ny captcha",
-		"UNKNOWN": "Ukjent API-feil",
-		"SITE_KEY_NOT_REGISTERED": "Nettstedsnøkkel er ikkje registrert",
-		"INCORRECT_CAPTCHA_TYPE": "Feil CAPTCHA-type",
-		"INVALID_SITE_KEY": "Ugyldig nettstedsnøkkel",
-		"UNAUTHORIZED_ORIGIN_URL": "Uautorisert opprinnelig URL",
-		"INVALID_IP": "Ugyldig IP",
-		"INVALID_URL": "Ugyldig URL",
-		"INVALID_BODY": "Ugyldig kropp",
-		"PARSE_ERROR": "Feil ved å tolke forespørsel"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ugyldig parameter"

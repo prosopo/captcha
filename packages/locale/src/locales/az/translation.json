@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "İcazəsiz",
+		"MISSING_BODY": "Gövdesi eksik",
+		"NO_CONTENT_TYPE_HEADER": "Məzmun-növü başlığı yoxdur. JSON kodlanmış gövde olduğu, ancaq ayrışdırmaq mümkün olmadığı düşünüldü.",
+		"CAPTCHA_FAILED": "Bir və ya bir neçə captcha sualına düzgün cavab verməmisiniz. Xahiş edirik yenidən cəhd edin",
+		"CAPTCHA_PASSED": "Siz doğru cavab verdiniz",
+		"BAD_REQUEST": "BadRequest",
+		"USER_VERIFIED": "İstifadəçi təsdiqləndi",
+		"USER_NOT_VERIFIED": "İstifadəçi təsdiqlənmədi",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "İstifadəçi təsdiqlənmədi. Captcha həlli vaxtı bitmişdir",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "İstifadəçi təsdiqlənmədi. Heç bir captcha həlli tapılmadı",
+		"USER_ALREADY_VERIFIED": "Bu həlli artıq təsdiqlənmişdir. İstifadəçi yeni bir captcha başa düşməlidir",
+		"UNKNOWN": "Nəsə tanınmayan xəta baş verdi",
+		"SITE_KEY_NOT_REGISTERED": "Site açar qeydə alınmadı",
+		"INCORRECT_CAPTCHA_TYPE": "Səhv CAPTCHA növü",
+		"INVALID_SITE_KEY": "Yanlış site açarı",
+		"UNAUTHORIZED_ORIGIN_URL": "Razılıqlı mənbə URL",
+		"INVALID_IP": "Yanlış IP",
+		"INVALID_URL": "Yanlış URL",
+		"INVALID_BODY": "Yanlış bədən",
+		"PARSE_ERROR": "Tələbi pars edərkən səhv baş verdi"
+	},
 	"TARGET": {
 		"airplanes": "təyyarələr",
 		"american-flag": "Amerika bayrağı",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Yanlış token",
 		"INVALID_SOLUTION": "Yanlış həll",
 		"DECRYPTION_ERROR": "Şifrəni çözərkən səhv"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Bir və ya bir neçə captcha sualına düzgün cavab verməmisiniz. Xahiş edirik yenidən cəhd edin",
-		"CAPTCHA_PASSED": "Siz doğru cavab verdiniz",
-		"BAD_REQUEST": "BadRequest",
-		"USER_VERIFIED": "İstifadəçi təsdiqləndi",
-		"USER_NOT_VERIFIED": "İstifadəçi təsdiqlənmədi",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "İstifadəçi təsdiqlənmədi. Captcha həlli vaxtı bitmişdir",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "İstifadəçi təsdiqlənmədi. Heç bir captcha həlli tapılmadı",
-		"USER_ALREADY_VERIFIED": "Bu həlli artıq təsdiqlənmişdir. İstifadəçi yeni bir captcha başa düşməlidir",
-		"UNKNOWN": "Nəsə tanınmayan xəta baş verdi",
-		"SITE_KEY_NOT_REGISTERED": "Site açar qeydə alınmadı",
-		"INCORRECT_CAPTCHA_TYPE": "Səhv CAPTCHA növü",
-		"INVALID_SITE_KEY": "Yanlış site açarı",
-		"UNAUTHORIZED_ORIGIN_URL": "Razılıqlı mənbə URL",
-		"INVALID_IP": "Yanlış IP",
-		"INVALID_URL": "Yanlış URL",
-		"INVALID_BODY": "Yanlış bədən",
-		"PARSE_ERROR": "Tələbi pars edərkən səhv baş verdi"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Yanlış parametr"

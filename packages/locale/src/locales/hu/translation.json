@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Hiányzó test",
+		"NO_CONTENT_TYPE_HEADER": "Nincs tartalom-típus fejléc. Feltételezett JSON kódolt test, de nem sikerült értelmezni.",
+		"CAPTCHA_FAILED": "Egy vagy több captcha kérdés helytelenül lett megválaszolva. Kérjük, próbáld meg újra",
+		"CAPTCHA_PASSED": "Helyesen megválaszoltad a captcha kérdéseket",
+		"BAD_REQUEST": "BadRequest",
+		"USER_VERIFIED": "Felhasználó ellenőrzött",
+		"USER_NOT_VERIFIED": "Felhasználó nincs ellenőrizve",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Felhasználó nincs ellenőrizve. A captcha megoldás lejárt.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Felhasználó nincs ellenőrizve. Nem található captcha megoldás.",
+		"USER_ALREADY_VERIFIED": "Ez a megoldás már ellenőrzésre került. A felhasználónak új captcha-t kell megoldania.",
+		"UNKNOWN": "Ismeretlen API hiba",
+		"SITE_KEY_NOT_REGISTERED": "Oldalkulcs nincs regisztrálva",
+		"INCORRECT_CAPTCHA_TYPE": "Helytelen CAPTCHA típus",
+		"INVALID_SITE_KEY": "Érvénytelen oldalkulcs",
+		"UNAUTHORIZED_ORIGIN_URL": "Engedély nélküli eredeti URL",
+		"INVALID_IP": "Érvénytelen IP",
+		"INVALID_URL": "Érvénytelen URL",
+		"INVALID_BODY": "Érvénytelen test",
+		"PARSE_ERROR": "Hiba az adatkérések elemzése közben"
+	},
 	"TARGET": {
 		"airplanes": "repülőgépek",
 		"american-flag": "amerikai zászló",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Érvénytelen token",
 		"INVALID_SOLUTION": "Érvénytelen megoldás",
 		"DECRYPTION_ERROR": "Hiba a titkosítás közben"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Egy vagy több captcha kérdés helytelenül lett megválaszolva. Kérjük, próbáld meg újra",
-		"CAPTCHA_PASSED": "Helyesen megválaszoltad a captcha kérdéseket",
-		"BAD_REQUEST": "BadRequest",
-		"USER_VERIFIED": "Felhasználó ellenőrzött",
-		"USER_NOT_VERIFIED": "Felhasználó nincs ellenőrizve",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Felhasználó nincs ellenőrizve. A captcha megoldás lejárt.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Felhasználó nincs ellenőrizve. Nem található captcha megoldás.",
-		"USER_ALREADY_VERIFIED": "Ez a megoldás már ellenőrzésre került. A felhasználónak új captcha-t kell megoldania.",
-		"UNKNOWN": "Ismeretlen API hiba",
-		"SITE_KEY_NOT_REGISTERED": "Oldalkulcs nincs regisztrálva",
-		"INCORRECT_CAPTCHA_TYPE": "Helytelen CAPTCHA típus",
-		"INVALID_SITE_KEY": "Érvénytelen oldalkulcs",
-		"UNAUTHORIZED_ORIGIN_URL": "Engedély nélküli eredeti URL",
-		"INVALID_IP": "Érvénytelen IP",
-		"INVALID_URL": "Érvénytelen URL",
-		"INVALID_BODY": "Érvénytelen test",
-		"PARSE_ERROR": "Hiba az adatkérések elemzése közben"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Érvénytelen paraméter"
