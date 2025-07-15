@@ -57,6 +57,7 @@ import {
 import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
+import { UserAgentInfo } from "./userAgent.js";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
@@ -75,15 +76,6 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 });
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
-
-export interface UserAgentInfo {
-	ua: string;
-	browser: BrowserInfo;
-	cpu: CPUInfo;
-	device: DeviceInfo;
-	engine: EngineInfo;
-	os: OSInfo;
-}
 
 export interface StoredCaptcha {
 	result: {
