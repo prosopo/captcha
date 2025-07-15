@@ -54,6 +54,8 @@ export const userAccessPolicy = async (
 		solved?: number;
 		unsolved?: number;
 		expiration?: number;
+		captchaType?: CaptchaType;
+		powDifficulty?: number;
 	},
 ) => {
 	const providers = await loadBalancer(EnvironmentTypesSchema.enum.development);
@@ -71,6 +73,8 @@ export const userAccessPolicy = async (
 			score,
 			solved,
 			expiration,
+			captchaType = CaptchaType.image,
+			powDifficulty,
 		} = options;
 
 		const accessPolicyBody: InsertManyRulesEndpointOutputSchema = {
@@ -79,8 +83,9 @@ export const userAccessPolicy = async (
 					? { type: AccessPolicyType.Block }
 					: {
 							type: AccessPolicyType.Restrict,
-							captchaType: CaptchaType.image,
-							solvedImagesCount: solved || 2,
+							captchaType: captchaType,
+							...(solved && { solvedImagesCount: solved }),
+							...(powDifficulty && { powDifficulty: powDifficulty }),
 						}),
 				...(description && { description: description }),
 				...(score && { frictionlessScore: score }),
