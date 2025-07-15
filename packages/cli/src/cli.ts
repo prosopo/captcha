@@ -27,7 +27,6 @@ const log = getLogger(LogLevel.enum.info, "CLI");
 async function main() {
 	const envPath = loadEnv();
 
-	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
 	const config: ProsopoConfigOutput = getConfig();
 
 	if (config.devOnlyWatchEvents) {

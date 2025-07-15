@@ -83,10 +83,7 @@ export abstract class ProsopoBaseError<
 			logger.debug(() => ({ data: { ...errorMessage, stack: this.stack } }));
 			return;
 		}
-		logger.log(logLevel, () => ({
-			data: errorMessage,
-			stack: this.stack,
-		}));
+		logger.error(() => ({ data: { ...errorMessage } }));
 	}
 }
 
