@@ -1,4 +1,65 @@
 {
+	"CAPTCHA": {
+		"DIFFERENT_DATASET_IDS": "Dataset tunnisteet eivät täsmää",
+		"ID_MISMATCH": "captcha tunniste ei täsmää",
+		"MISSING_ITEM_HASH": "puuttuva kohteen hajote",
+		"INVALID_CAPTCHA_CHALLENGE": "Virheellinen captcha haaste",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp käyttäjän ratkaisua ei löytynyt",
+		"NO_CAPTCHA": "Ei löytynyt captchaa",
+		"NO_SESSION_FOUND": "Ei löytynyt istuntoa",
+		"INVALID_TOKEN": "Virheellinen tunniste",
+		"INVALID_SOLUTION": "Virheellinen ratkaisu",
+		"DECRYPTION_ERROR": "Virhe salauksessa",
+		"PARSE_ERROR": "Virhe captchaa parsittaessa",
+		"INVALID_CAPTCHA_ID": "Virheellinen captcha-tunnus",
+		"INVALID_ITEM_FORMAT": "Vain kuvan ja tekstin tyyppiset kohteet sallittu",
+		"INVALID_SOLUTION_TYPE": "Virheellinen ratkaisun tyyppi",
+		"INVALID_ITEM_HASH": "Virheellinen kohteen hajautusarvo"
+	},
+	"API": {
+		"CAPTCHA_FAILED": "Vastasit yhteen tai useampaan captchan kysymykseen väärin. Yritä uudelleen",
+		"CAPTCHA_PASSED": "Vastasit oikein captchan kysymyksiin",
+		"BAD_REQUEST": "Virheellinen pyyntö",
+		"USER_VERIFIED": "Käyttäjä vahvistettu",
+		"USER_NOT_VERIFIED": "Käyttäjää ei vahvistettu",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Käyttäjää ei vahvistettu. Captcha ratkaisu on vanhentunut",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Käyttäjää ei vahvistettu. Captcha ratkaisua ei löytynyt",
+		"USER_ALREADY_VERIFIED": "Tämä ratkaisu on jo vahvistettu. Käyttäjän tulee suorittaa uusi captcha",
+		"UNKNOWN": "Tuntematon API virhe",
+		"SITE_KEY_NOT_REGISTERED": "Sivuavain ei rekisteröity",
+		"INCORRECT_CAPTCHA_TYPE": "Väärä CAPTCHA tyyppi",
+		"INVALID_SITE_KEY": "Virheellinen sivuavain",
+		"UNAUTHORIZED_ORIGIN_URL": "Epäoikeutettu alkuperä URL",
+		"UNAUTHORIZED": "Epäoikeutettu",
+		"INVALID_IP": "Virheellinen IP",
+		"INVALID_URL": "Virheellinen URL",
+		"INVALID_BODY": "Virheellinen pyyntö",
+		"MISSING_BODY": "Pyyntö puuttuu",
+		"PARSE_ERROR": "Virhe pyynnön jäsentämisessä",
+		"NO_CONTENT_TYPE_HEADER": "Ei sisältötyyppi otsikkoa. Oletettu JSON koodattu pyyntö mutta jäsentäminen epäonnistui",
+		"INSUFFICIENT_PERMISSIONS": "Riittämättömät oikeudet tämän toiminnon suorittamiseen",
+		"MISSING_QUERY_PARAMETERS": "Puuttuvia kyselyparametreja",
+		"MISSING_AUTHORIZATION_HEADER": "Puuttuva valtuutusotsake",
+		"TIMESTAMP_TOO_OLD": "Aikaleima liian vanha",
+		"FORBIDDEN": "Kielletty",
+		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Virheellinen parametri"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY ei ole asetettu .env tiedostossa.",
+		"PROVIDER_NO_CAPTCHA": "Palveluntarjoaja ei palauttanut captchaa",
+		"MISSING_PROVIDER_PAIR": "Puuttuva palveluntarjoaja pari",
+		"MISSING_ENV_VARIABLE": "Puuttuva ympäristömuuttuja",
+		"GENERAL": "Yleinen kehitysvirhe, katso konteksti",
+		"METHOD_NOT_IMPLEMENTED": "Menetelmää ei ole toteutettu"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Tiedostoa ei löytynyt",
+		"FILE_ALREADY_EXISTS": "Tiedosto on jo olemassa",
+		"INVALID_DIR_FORMAT": "Virheellinen kansio formaatti"
+	},
 	"GENERAL": {
 		"MISSING_SECRET_KEY": "Puuttuva salainen avain",
 		"SITE_KEY_NOT_FOUND": "Sivuston avainta ei löytynyt",
@@ -11,34 +72,6 @@
 		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
 		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
 		"INVALID_TIMESTAMP": "Virheellinen aikaleima"
-	},
-	"API": {
-		"INSUFFICIENT_PERMISSIONS": "Riittämättömät oikeudet tämän toiminnon suorittamiseen",
-		"MISSING_QUERY_PARAMETERS": "Puuttuvia kyselyparametreja",
-		"MISSING_AUTHORIZATION_HEADER": "Puuttuva valtuutusotsake",
-		"TIMESTAMP_TOO_OLD": "Aikaleima liian vanha",
-		"FORBIDDEN": "Kielletty",
-		"PROVIDER_VERIFY_FAILED": "Palveluntarjoajan tarkistus epäonnistui",
-		"UNAUTHORIZED": "Unauthorized",
-		"MISSING_BODY": "Missing body",
-		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
-		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
-		"CAPTCHA_PASSED": "You correctly answered the captchas",
-		"BAD_REQUEST": "BadRequest",
-		"USER_VERIFIED": "User verified",
-		"USER_NOT_VERIFIED": "User not verified",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
-		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
-		"UNKNOWN": "Unknown API error",
-		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
-		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
-		"INVALID_SITE_KEY": "Invalid site key",
-		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
-		"INVALID_IP": "Invalid IP",
-		"INVALID_URL": "Invalid URL",
-		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Ei voida muokata omistajakäyttäjää",
@@ -405,38 +438,5 @@
 		"CONNECTION_UNDEFINED": "Yhteyttä ei määritelty",
 		"COMMITMENT_FLAG_FAILED": "Sitoumuksen merkitseminen käsitellyksi epäonnistui",
 		"UNKNOWN": "Tuntematon tietokantavirhe"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Virhe captchaa parsittaessa",
-		"INVALID_CAPTCHA_ID": "Virheellinen captcha-tunnus",
-		"INVALID_ITEM_FORMAT": "Vain kuvan ja tekstin tyyppiset kohteet sallittu",
-		"INVALID_SOLUTION_TYPE": "Virheellinen ratkaisun tyyppi",
-		"INVALID_ITEM_HASH": "Virheellinen kohteen hajautusarvo",
-		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
-		"ID_MISMATCH": "captcha id mismatch",
-		"MISSING_ITEM_HASH": "missing item hash",
-		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
-		"NO_CAPTCHA": "No captcha found",
-		"NO_SESSION_FOUND": "No session found",
-		"INVALID_TOKEN": "Invalid token",
-		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
-	},
-	"CLI": {
-		"PARAMETER_ERROR": "Invalid parameter"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
-		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
-		"MISSING_PROVIDER_PAIR": "Missing provider pair",
-		"MISSING_ENV_VARIABLE": "Missing environment variable",
-		"GENERAL": "General Dev Error, see context",
-		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "File not found",
-		"FILE_ALREADY_EXISTS": "File already exists",
-		"INVALID_DIR_FORMAT": "Invalid directory format"
 	}
 }
