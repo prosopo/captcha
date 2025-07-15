@@ -120,7 +120,6 @@ describe("Access Rules Integration Tests", () => {
 
 			expect(response.status).toBe(200);
 			const data = (await response.json()) as CaptchaResponseBody;
-			console.log(data);
 			expect(data[ApiParams.status]).toBe("ok");
 			expect(data.captchas.length).to.be.equal(DEFAULT_SOLVED_COUNT);
 		});
