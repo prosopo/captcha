@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Fehlender Körper",
+		"NO_CONTENT_TYPE_HEADER": "Kein Inhaltstyp-Header. Angenommenes JSON-kodiertes Körper, aber konnte nicht analysieren.",
+		"CAPTCHA_FAILED": "Sie haben ein oder mehrere Captchas falsch beantwortet. Bitte versuchen Sie es erneut",
+		"CAPTCHA_PASSED": "Sie haben die Captchas korrekt beantwortet",
+		"BAD_REQUEST": "Ungültige Anfrage",
+		"USER_VERIFIED": "Benutzer verifiziert",
+		"USER_NOT_VERIFIED": "Benutzer nicht verifiziert",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Benutzer nicht verifiziert. Die Lösung des Captchas ist abgelaufen.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Benutzer nicht verifiziert. Keine Captcha-Lösung gefunden.",
+		"USER_ALREADY_VERIFIED": "Diese Lösung wurde bereits verifiziert. Der Benutzer sollte ein neues Captcha ausfüllen.",
+		"UNKNOWN": "Unbekannter API-Fehler",
+		"SITE_KEY_NOT_REGISTERED": "Site-Key nicht registriert",
+		"INCORRECT_CAPTCHA_TYPE": "Falscher CAPTCHA-Typ",
+		"UNAUTHORIZED_ORIGIN_URL": "Nicht autorisierte Ursprungs-URL",
+		"INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+		"INVALID_IP": "Ungültige IP",
+		"INVALID_URL": "Ungültiger URL",
+		"INVALID_BODY": "Ungültiger Körper",
+		"PARSE_ERROR": "Fehler beim Parsen der Anfrage"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-Erweiterung nicht gefunden"
 	},
@@ -85,25 +107,6 @@
 		"INVALID_TOKEN": "Ungültiges Token",
 		"INVALID_SOLUTION": "Ungültige Lösung",
 		"DECRYPTION_ERROR": "Fehler beim Entschlüsseln"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Sie haben ein oder mehrere Captchas falsch beantwortet. Bitte versuchen Sie es erneut",
-		"CAPTCHA_PASSED": "Sie haben die Captchas korrekt beantwortet",
-		"BAD_REQUEST": "Ungültige Anfrage",
-		"USER_VERIFIED": "Benutzer verifiziert",
-		"USER_NOT_VERIFIED": "Benutzer nicht verifiziert",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Benutzer nicht verifiziert. Die Lösung des Captchas ist abgelaufen.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Benutzer nicht verifiziert. Keine Captcha-Lösung gefunden.",
-		"USER_ALREADY_VERIFIED": "Diese Lösung wurde bereits verifiziert. Der Benutzer sollte ein neues Captcha ausfüllen.",
-		"UNKNOWN": "Unbekannter API-Fehler",
-		"SITE_KEY_NOT_REGISTERED": "Site-Key nicht registriert",
-		"INCORRECT_CAPTCHA_TYPE": "Falscher CAPTCHA-Typ",
-		"UNAUTHORIZED_ORIGIN_URL": "Nicht autorisierte Ursprungs-URL",
-		"INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
-		"INVALID_IP": "Ungültige IP",
-		"INVALID_URL": "Ungültiger URL",
-		"INVALID_BODY": "Ungültiger Körper",
-		"PARSE_ERROR": "Fehler beim Parsen der Anfrage"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ungültiger Parameter"

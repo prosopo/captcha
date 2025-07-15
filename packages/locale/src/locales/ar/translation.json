@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "غير مصرح",
+		"MISSING_BODY": "جسم مفقود",
+		"NO_CONTENT_TYPE_HEADER": "رأس نوع المحتوى غير موجود. تم افتراض جسم مشفر بتنسيق JSON ولكن فشل في التحليل.",
+		"CAPTCHA_FAILED": "لقد أجبت على واحد أو أكثر من الcaptchas بشكل غير صحيح. يرجى المحاولة مرة أخرى",
+		"CAPTCHA_PASSED": "لقد أجبت بشكل صحيح على الcaptchas",
+		"BAD_REQUEST": "طلب غير صالح",
+		"USER_VERIFIED": "المستخدم موثق",
+		"USER_NOT_VERIFIED": "المستخدم غير موثق",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "المستخدم غير موثق. انتهت صلاحية حلا الcaptcha",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "المستخدم غير موثق. لم يتم العثور على حل للcaptcha",
+		"USER_ALREADY_VERIFIED": "تم التحقق بالفعل من هذا الحل. يجب على المستخدم إكمال captcha جديد",
+		"UNKNOWN": "خطأ API غير معروف",
+		"SITE_KEY_NOT_REGISTERED": "مفتاح الموقع غير مسجل",
+		"INCORRECT_CAPTCHA_TYPE": "نوع CAPTCHA غير صحيح",
+		"INVALID_SITE_KEY": "مفتاح الموقع غير صالح",
+		"UNAUTHORIZED_ORIGIN_URL": "عنوان URL الأصلي غير مصرح به",
+		"INVALID_IP": "IP غير صالح",
+		"INVALID_URL": "عنوان URL غير صالح",
+		"INVALID_BODY": "بيانات غير صالحة",
+		"PARSE_ERROR": "خطأ في تحليل الطلب"
+	},
 	"TARGET": {
 		"airplanes": "طائرات",
 		"american-flag": "العلم الأمريكي",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "الرمز غير صالح",
 		"INVALID_SOLUTION": "الحل غير صالح",
 		"DECRYPTION_ERROR": "خطأ في فك التشفير"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "لقد أجبت على واحد أو أكثر من الcaptchas بشكل غير صحيح. يرجى المحاولة مرة أخرى",
-		"CAPTCHA_PASSED": "لقد أجبت بشكل صحيح على الcaptchas",
-		"BAD_REQUEST": "طلب غير صالح",
-		"USER_VERIFIED": "المستخدم موثق",
-		"USER_NOT_VERIFIED": "المستخدم غير موثق",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "المستخدم غير موثق. انتهت صلاحية حلا الcaptcha",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "المستخدم غير موثق. لم يتم العثور على حل للcaptcha",
-		"USER_ALREADY_VERIFIED": "تم التحقق بالفعل من هذا الحل. يجب على المستخدم إكمال captcha جديد",
-		"UNKNOWN": "خطأ API غير معروف",
-		"SITE_KEY_NOT_REGISTERED": "مفتاح الموقع غير مسجل",
-		"INCORRECT_CAPTCHA_TYPE": "نوع CAPTCHA غير صحيح",
-		"INVALID_SITE_KEY": "مفتاح الموقع غير صالح",
-		"UNAUTHORIZED_ORIGIN_URL": "عنوان URL الأصلي غير مصرح به",
-		"INVALID_IP": "IP غير صالح",
-		"INVALID_URL": "عنوان URL غير صالح",
-		"INVALID_BODY": "بيانات غير صالحة",
-		"PARSE_ERROR": "خطأ في تحليل الطلب"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "معلمة غير صالحة"

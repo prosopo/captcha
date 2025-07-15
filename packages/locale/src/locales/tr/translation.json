@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Yetkisiz",
+		"MISSING_BODY": "Eksik gövde",
+		"NO_CONTENT_TYPE_HEADER": "İçerik tipi başlığı yok. JSON kodlu gövde varsayılmış ancak ayrıştırılamadı.",
+		"CAPTCHA_FAILED": "Bir veya daha fazla captchayı yanlış cevapladınız. Lütfen tekrar deneyin",
+		"CAPTCHA_PASSED": "Captchaları doğru bir şekilde cevapladınız",
+		"BAD_REQUEST": "Kötü istek",
+		"USER_VERIFIED": "Kullanıcı doğrulandı",
+		"USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Kullanıcı doğrulanmadı. Captcha çözümü süresi doldu.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Kullanıcı doğrulanmadı. Hiç captcha çözümü bulunamadı.",
+		"USER_ALREADY_VERIFIED": "Bu çözüm zaten doğrulandı. Kullanıcı yeni bir captcha tamamlamalıdır.",
+		"UNKNOWN": "Bilinmeyen API hatası",
+		"SITE_KEY_NOT_REGISTERED": "Site anahtarı kayıtlı değil",
+		"INCORRECT_CAPTCHA_TYPE": "Yanlış CAPTCHA türü",
+		"INVALID_SITE_KEY": "Geçersiz site anahtarı",
+		"UNAUTHORIZED_ORIGIN_URL": "Yetkisiz kaynak URL",
+		"INVALID_IP": "Geçersiz IP",
+		"INVALID_URL": "Geçersiz URL",
+		"INVALID_BODY": "Geçersiz gövde",
+		"PARSE_ERROR": "İstek ayrıştırma hatası"
+	},
 	"TARGET": {
 		"airplanes": "uçaklar",
 		"american-flag": "Amerikan bayrağı",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Geçersiz belirteç",
 		"INVALID_SOLUTION": "Geçersiz çözüm",
 		"DECRYPTION_ERROR": "Şifreleme hatası"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Bir veya daha fazla captchayı yanlış cevapladınız. Lütfen tekrar deneyin",
-		"CAPTCHA_PASSED": "Captchaları doğru bir şekilde cevapladınız",
-		"BAD_REQUEST": "Kötü istek",
-		"USER_VERIFIED": "Kullanıcı doğrulandı",
-		"USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Kullanıcı doğrulanmadı. Captcha çözümü süresi doldu.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Kullanıcı doğrulanmadı. Hiç captcha çözümü bulunamadı.",
-		"USER_ALREADY_VERIFIED": "Bu çözüm zaten doğrulandı. Kullanıcı yeni bir captcha tamamlamalıdır.",
-		"UNKNOWN": "Bilinmeyen API hatası",
-		"SITE_KEY_NOT_REGISTERED": "Site anahtarı kayıtlı değil",
-		"INCORRECT_CAPTCHA_TYPE": "Yanlış CAPTCHA türü",
-		"INVALID_SITE_KEY": "Geçersiz site anahtarı",
-		"UNAUTHORIZED_ORIGIN_URL": "Yetkisiz kaynak URL",
-		"INVALID_IP": "Geçersiz IP",
-		"INVALID_URL": "Geçersiz URL",
-		"INVALID_BODY": "Geçersiz gövde",
-		"PARSE_ERROR": "İstek ayrıştırma hatası"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Geçersiz parametre"

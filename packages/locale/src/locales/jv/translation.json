@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Hindi umiiral",
+		"MISSING_BODY": "Kulang na katawan",
+		"NO_CONTENT_TYPE_HEADER": "Walang header ng uri ng nilalaman. Tinatayang JSON na naka-encode ang katawan ngunit nabigo sa pag-parse.",
+		"CAPTCHA_FAILED": "Anda menjawab salah satu atau lebih captchas dengan tidak benar. Silakan coba lagi",
+		"CAPTCHA_PASSED": "Anda menjawab captchas dengan benar",
+		"BAD_REQUEST": "Permintaan Buruk",
+		"USER_VERIFIED": "Pengguna terverifikasi",
+		"USER_NOT_VERIFIED": "Pengguna tidak terverifikasi",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Pengguna tidak terverifikasi. Solusi captcha telah kadaluwarsa",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Pengguna tidak terverifikasi. Tidak ditemukan solusi captcha",
+		"USER_ALREADY_VERIFIED": "Solusi ini sudah diverifikasi. Pengguna harus menyelesaikan captcha baru.",
+		"UNKNOWN": "Kesalahan API yang tidak diketahui",
+		"SITE_KEY_NOT_REGISTERED": "Kunci situs tidak terdaftar",
+		"INCORRECT_CAPTCHA_TYPE": "Jenis CAPTCHA salah",
+		"INVALID_SITE_KEY": "Kunci situs tidak valid",
+		"UNAUTHORIZED_ORIGIN_URL": "URL asal tidak sah",
+		"INVALID_IP": "IP tidak valid",
+		"INVALID_URL": "URL tidak valid",
+		"INVALID_BODY": "Badan tidak valid",
+		"PARSE_ERROR": "Kesalahan parsing permintaan"
+	},
 	"TARGET": {
 		"airplanes": "airplanes",
 		"american-flag": "Wara Amerika",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Token tidak valid",
 		"INVALID_SOLUTION": "Solusi tidak valid",
 		"DECRYPTION_ERROR": "Kesalahan dekripsi"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Anda menjawab salah satu atau lebih captchas dengan tidak benar. Silakan coba lagi",
-		"CAPTCHA_PASSED": "Anda menjawab captchas dengan benar",
-		"BAD_REQUEST": "Permintaan Buruk",
-		"USER_VERIFIED": "Pengguna terverifikasi",
-		"USER_NOT_VERIFIED": "Pengguna tidak terverifikasi",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Pengguna tidak terverifikasi. Solusi captcha telah kadaluwarsa",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Pengguna tidak terverifikasi. Tidak ditemukan solusi captcha",
-		"USER_ALREADY_VERIFIED": "Solusi ini sudah diverifikasi. Pengguna harus menyelesaikan captcha baru.",
-		"UNKNOWN": "Kesalahan API yang tidak diketahui",
-		"SITE_KEY_NOT_REGISTERED": "Kunci situs tidak terdaftar",
-		"INCORRECT_CAPTCHA_TYPE": "Jenis CAPTCHA salah",
-		"INVALID_SITE_KEY": "Kunci situs tidak valid",
-		"UNAUTHORIZED_ORIGIN_URL": "URL asal tidak sah",
-		"INVALID_IP": "IP tidak valid",
-		"INVALID_URL": "URL tidak valid",
-		"INVALID_BODY": "Badan tidak valid",
-		"PARSE_ERROR": "Kesalahan parsing permintaan"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parameter tidak valid"

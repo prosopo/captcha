@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Unauthorised",
+		"MISSING_BODY": "Missing body",
+		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
+		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
+		"CAPTCHA_PASSED": "You correctly answered the captchas",
+		"BAD_REQUEST": "BadRequest",
+		"USER_VERIFIED": "User verified",
+		"USER_NOT_VERIFIED": "User not verified",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
+		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
+		"UNKNOWN": "Unknown API error",
+		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
+		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
+		"INVALID_SITE_KEY": "Invalid site key",
+		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
+		"INVALID_IP": "Invalid IP",
+		"INVALID_URL": "Invalid URL",
+		"INVALID_BODY": "Invalid body",
+		"PARSE_ERROR": "Error parsing request"
+	},
 	"TARGET": {
 		"airplanes": "aeroplanes",
 		"american-flag": "American flag",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
 		"DECRYPTION_ERROR": "Error decrypting"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
-		"CAPTCHA_PASSED": "You correctly answered the captchas",
-		"BAD_REQUEST": "BadRequest",
-		"USER_VERIFIED": "User verified",
-		"USER_NOT_VERIFIED": "User not verified",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "User not verified. Captcha solution has expired.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "User not verified. No captcha solution found.",
-		"USER_ALREADY_VERIFIED": "This solution has already been verified. User should complete a new captcha.",
-		"UNKNOWN": "Unknown API error",
-		"SITE_KEY_NOT_REGISTERED": "Site key not registered",
-		"INCORRECT_CAPTCHA_TYPE": "Incorrect CAPTCHA type",
-		"INVALID_SITE_KEY": "Invalid site key",
-		"UNAUTHORIZED_ORIGIN_URL": "Unauthorized origin URL",
-		"INVALID_IP": "Invalid IP",
-		"INVALID_URL": "Invalid URL",
-		"INVALID_BODY": "Invalid body",
-		"PARSE_ERROR": "Error parsing request"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

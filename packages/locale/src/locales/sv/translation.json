@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Obehörig",
+		"MISSING_BODY": "Saknad kropp",
+		"NO_CONTENT_TYPE_HEADER": "Ingen innehållstypshuvud. Antogs JSON-kodad kropp men misslyckades med att tolka.",
+		"CAPTCHA_FAILED": "Du svarade fel på en eller flera CAPTCHA: er. Försök igen",
+		"CAPTCHA_PASSED": "Du svarade korrekt på CAPTCHA: erna",
+		"BAD_REQUEST": "Felaktig-begäran",
+		"USER_VERIFIED": "Användaren-verifierad",
+		"USER_NOT_VERIFIED": "Användaren-inte-verifierad",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Användaren-inte-verifierad. Captcha-lösningen har gått ut.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Användaren-inte-verifierad. Ingen captcha-lösning hittades.",
+		"USER_ALREADY_VERIFIED": "Denna lösning har redan verifierats. Användaren bör slutföra en ny captcha",
+		"UNKNOWN": "Okänt API-fel",
+		"SITE_KEY_NOT_REGISTERED": "Site-nyckel-inte-registrerad",
+		"INCORRECT_CAPTCHA_TYPE": "Fel CAPTCHA-typ",
+		"INVALID_SITE_KEY": "Ogiltig site-nyckel",
+		"UNAUTHORIZED_ORIGIN_URL": "Obehörig ursprungs-URL",
+		"INVALID_IP": "Ogiltig IP",
+		"INVALID_URL": "Ogiltig URL",
+		"INVALID_BODY": "Ogiltig body",
+		"PARSE_ERROR": "Fel vid tolkning av förfrågan"
+	},
 	"TARGET": {
 		"airplanes": "flygplan",
 		"american-flag": "amerikanska flaggan",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Ogiltig token",
 		"INVALID_SOLUTION": "Ogiltig lösning",
 		"DECRYPTION_ERROR": "Fel vid avkryptering"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Du svarade fel på en eller flera CAPTCHA: er. Försök igen",
-		"CAPTCHA_PASSED": "Du svarade korrekt på CAPTCHA: erna",
-		"BAD_REQUEST": "Felaktig-begäran",
-		"USER_VERIFIED": "Användaren-verifierad",
-		"USER_NOT_VERIFIED": "Användaren-inte-verifierad",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Användaren-inte-verifierad. Captcha-lösningen har gått ut.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Användaren-inte-verifierad. Ingen captcha-lösning hittades.",
-		"USER_ALREADY_VERIFIED": "Denna lösning har redan verifierats. Användaren bör slutföra en ny captcha",
-		"UNKNOWN": "Okänt API-fel",
-		"SITE_KEY_NOT_REGISTERED": "Site-nyckel-inte-registrerad",
-		"INCORRECT_CAPTCHA_TYPE": "Fel CAPTCHA-typ",
-		"INVALID_SITE_KEY": "Ogiltig site-nyckel",
-		"UNAUTHORIZED_ORIGIN_URL": "Obehörig ursprungs-URL",
-		"INVALID_IP": "Ogiltig IP",
-		"INVALID_URL": "Ogiltig URL",
-		"INVALID_BODY": "Ogiltig body",
-		"PARSE_ERROR": "Fel vid tolkning av förfrågan"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ogiltig parameter"
