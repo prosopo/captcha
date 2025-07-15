@@ -1,0 +1,101 @@
+name: "print_contexts"
+
+inputs:
+    INPUTS_CONTEXT:
+        description: "The inputs context as json"
+        required: false
+    NEEDS_CONTEXT:
+        description: "The needs context as json"
+        required: false
+    VARS_CONTEXT:
+        description: "The vars context as json"
+        required: false
+    SECRETS_CONTEXT:
+        description: "The secrets context as json"
+        required: false
+    STEPS_CONTEXT:
+        description: "The steps context as json"
+        required: false
+
+runs:
+    using: "composite"
+    steps:
+
+      - name: Print contexts
+        shell: bash
+        run: |
+            echo "**** github ****"
+            cat <<'EOF'
+            echo "::group::github"
+            echo '${{ toJson(github) }}'
+            echo "::endgroup::"
+            EOF
+            
+            echo "**** env ****"
+            cat <<'EOF'
+            echo "::group::env"
+            echo '${{ toJson(env) }}'
+            echo "::endgroup::"
+            EOF
+            
+            echo "**** vars ****"
+            cat <<'EOF'
+            echo "::group::vars"
+            echo '${{ inputs.VARS_CONTEXT }}'
+            echo "::endgroup::"
+            EOF
+
+            echo "**** job ****"
+            cat <<'EOF'
+            echo "::group::job"
+            echo '${{ toJson(job) }}'
+            echo "::endgroup::"
+            EOF
+
+            echo "**** runner ****"
+            cat <<'EOF'
+            echo "::group::runner"
+            echo '${{ toJson(runner) }}'
+            echo "::endgroup::"
+            EOF
+
+            echo "**** secrets ****"
+            cat <<'EOF'
+            echo "::group::secrets"
+            echo '${{ inputs.SECRETS_CONTEXT }}'
+            echo "::endgroup::"
+            EOF
+
+            echo "**** strategy ****"
+            cat <<'EOF'
+            echo "::group::strategy"
+            echo '${{ toJson(strategy) }}'
+            EOF
+
+            echo "**** matrix ****"
+            cat <<'EOF'
+            echo "::group::matrix"
+            echo '${{ toJson(matrix) }}'
+            echo "::endgroup::"
+            EOF
+
+            echo "**** needs ****"
+            cat <<'EOF'
+            echo "::group::needs"
+            echo '${{ inputs.NEEDS_CONTEXT }}'
+            echo "::endgroup::"
+            EOF
+
+            echo "**** inputs ****"
+            cat <<'EOF'
+            echo "::group::inputs"
+            echo '${{ inputs.INPUTS_CONTEXT }}'
+            echo "::endgroup::"
+            EOF
+
+            echo "**** steps ****"
+            cat <<'EOF'
+            echo "::group::steps"
+            echo '${{ inputs.STEPS_CONTEXT }}'
+            echo "::endgroup::"
+            EOF
