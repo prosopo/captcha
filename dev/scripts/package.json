@@ -1,19 +1,26 @@
 {
 	"name": "@prosopo/scripts",
-	"version": "3.0.8",
+	"version": "3.0.11",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
-		"deploy": "node dist/deploy/protocol.js",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
 		"cli": "node dist/cli/index.js",
 		"setup": "node dist/cli/index.js setup"
 	},
@@ -27,17 +34,17 @@
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/account": "2.7.9",
-		"@prosopo/cli": "3.0.8",
+		"@prosopo/cli": "3.1.0",
 		"@prosopo/common": "3.0.2",
 		"@prosopo/config": "3.1.0",
-		"@prosopo/datasets": "3.0.6",
+		"@prosopo/datasets": "3.0.9",
 		"@prosopo/dotenv": "3.0.4",
-		"@prosopo/env": "3.0.6",
+		"@prosopo/env": "3.1.0",
 		"@prosopo/keyring": "2.8.6",
-		"@prosopo/provider": "3.1.1",
+		"@prosopo/provider": "3.2.0",
 		"@prosopo/types": "3.0.3",
-		"@prosopo/types-database": "3.0.6",
-		"@prosopo/types-env": "2.7.10",
+		"@prosopo/types-database": "3.0.9",
+		"@prosopo/types-env": "2.7.13",
 		"@prosopo/util": "3.0.2",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
@@ -47,9 +54,9 @@
 		"fast-glob": "3.3.2",
 		"fs-extra": "11.2.0",
 		"mongodb": "6.9.0",
+		"yargs": "17.7.2",
 		"openpgp": "5.11.3",
-		"webpack-dev-server": "5.2.2",
-		"yargs": "17.7.2"
+		"webpack-dev-server": "5.2.2"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"

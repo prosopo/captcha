@@ -97,9 +97,6 @@ export class FrictionlessManager extends CaptchaManager {
 			accessPolicy?.frictionlessScore ||
 			this.config.penalties.PENALTY_ACCESS_RULE;
 		botScore += accessPolicyPenalty;
-		this.logger.info(() => ({
-			msg: "Address has an image captcha config defined",
-		}));
 		await this.db.updateFrictionlessTokenRecord(tokenId, {
 			score: botScore,
 			scoreComponents: {

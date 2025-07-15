@@ -2,6 +2,7 @@
 	"name": "@prosopo/api-route",
 	"version": "2.6.7",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -9,23 +10,24 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests"
 	},
 	"dependencies": {
 		"@prosopo/common": "3.0.2",
-		"zod": "3.23.8"
-	},
-	"devDependencies": {
+		"zod": "3.23.8",
 		"@prosopo/config": "3.1.0"
 	},
+	"devDependencies": {},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"bugs": {

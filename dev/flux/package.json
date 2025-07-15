@@ -3,6 +3,14 @@
 	"version": "2.6.9",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"bin": {
 		"flux": "dist/index.js"
 	},
@@ -12,10 +20,10 @@
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests",
 		"cli": "node dist/index.js"
 	},
 	"author": "Prosopo Limited",

@@ -1,8 +1,9 @@
 {
 	"name": "@prosopo/cli",
-	"version": "3.0.8",
+	"version": "3.1.0",
 	"description": "CLI for Prosopo Provider",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -10,16 +11,19 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"cli": "node ./dist/cli.js",
 		"start": "node ./dist/cli.js --api",
 		"start:admin": "node ./dist/cli.js --api --adminApi",
@@ -27,17 +31,17 @@
 	},
 	"dependencies": {
 		"@polkadot/types-codec": "10.13.1",
-		"@prosopo/api": "3.0.6",
+		"@prosopo/api": "3.1.0",
 		"@prosopo/api-express-router": "3.0.3",
 		"@prosopo/common": "3.0.2",
 		"@prosopo/config": "3.1.0",
 		"@prosopo/dotenv": "3.0.4",
-		"@prosopo/env": "3.0.6",
+		"@prosopo/env": "3.1.0",
 		"@prosopo/keyring": "2.8.6",
 		"@prosopo/locale": "3.0.2",
-		"@prosopo/provider": "3.1.1",
+		"@prosopo/provider": "3.2.0",
 		"@prosopo/types": "3.0.3",
-		"@prosopo/user-access-policy": "3.1.5",
+		"@prosopo/user-access-policy": "3.3.0",
 		"@prosopo/util": "3.0.2",
 		"@prosopo/util-crypto": "13.5.1",
 		"@typegoose/auto-increment": "4.13.0",
@@ -55,7 +59,6 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.0",
 		"@types/cors": "2.8.17",
 		"@types/yargs": "17.0.33",
 		"@vitest/coverage-v8": "3.0.9",

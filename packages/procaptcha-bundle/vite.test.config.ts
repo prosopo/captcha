@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,12 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-import fs from "node:fs";
-import path from "node:path";
 import { ViteTestConfig } from "@prosopo/config";
 import dotenv from "dotenv";
-
 process.env.NODE_ENV = "test";
 // if .env.test exists at this level, use it, otherwise use the one at the root
 const envFile = `.env.${process.env.NODE_ENV || "development"}`;
@@ -31,4 +29,10 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig();
+export default function () {
+	const config = ViteTestConfig();
+	config.test = config.test || {};
+	config.test.environment = "jsdom";
+	config.test.globals = true;
+	return config;
+}

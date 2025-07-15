@@ -2,27 +2,14 @@
 	"name": "@prosopo/config",
 	"version": "3.1.0",
 	"description": "Prosopo config library",
-	"main": "./dist/index.js",
 	"type": "module",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		},
-		"./webpack": {
-			"import": "./dist/webpack/index.js",
-			"require": "./dist/webpack/cjs/index.cjs"
-		},
-		"./webpack/webpack.config": {
-			"import": "./dist/webpack/webpack.config.js",
-			"require": "./dist/cjs/webpack/webpack.config.cjs"
-		}
-	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "vite build --config vite.cjs.config.ts"
+		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "echo no tests"
 	},
 	"engines": {
 		"node": "20",
@@ -51,6 +38,7 @@
 		"babel-loader": "9.2.1",
 		"consola": "3.2.3",
 		"css-loader": "7.1.2",
+		"dotenv": "17.2.0",
 		"esbuild": "0.25.6",
 		"express": "4.21.2",
 		"html-webpack-plugin": "5.6.0",
@@ -100,5 +88,22 @@
 	"publishConfig": {
 		"registry": "https://registry.npmjs.org"
 	},
-	"sideEffects": false
+	"sideEffects": false,
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		},
+		"./webpack": {
+			"import": "./dist/webpack/index.js",
+			"require": "./dist/webpack/cjs/index.cjs"
+		},
+		"./webpack/webpack.config": {
+			"import": "./dist/webpack/webpack.config.js",
+			"require": "./dist/cjs/webpack/webpack.config.cjs"
+		}
+	}
 }

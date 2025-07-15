@@ -39,8 +39,16 @@ export const createRedisAccessRulesReader = (
 	logger: Logger,
 ): AccessRulesReader => {
 	return {
-		findRules: async (filter: PolicyFilter): Promise<AccessRule[]> => {
+		findRules: async (
+			filter: PolicyFilter,
+			skipEmptyUserScopes = true,
+		): Promise<AccessRule[]> => {
 			const query = getRedisAccessRulesQuery(filter);
+
+			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
+				// We don't want to accidentally return all rules when the filter is empty
+				return [];
+			}
 
 			let searchReply: SearchReply;
 
@@ -51,19 +59,21 @@ export const createRedisAccessRulesReader = (
 					accessRulesRedisSearchOptions,
 				);
 
-				logger.debug(() => ({
-					msg: "Executed search query",
-					data: {
-						inspect: util.inspect(
-							{
-								filter: filter,
-								searchReply: searchReply,
-								query: query,
-							},
-							{ depth: null },
-						),
-					},
-				}));
+				if (searchReply.total > 0) {
+					logger.debug(() => ({
+						msg: "Executed search query",
+						data: {
+							inspect: util.inspect(
+								{
+									filter: filter,
+									searchReply: searchReply,
+									query: query,
+								},
+								{ depth: null },
+							),
+						},
+					}));
+				}
 			} catch (e) {
 				logger.error(() => ({
 					err: e,
@@ -130,15 +140,22 @@ export const createRedisAccessRulesWriter = (
 	return {
 		insertRule: async (
 			rule: AccessRule,
-			expirationSeconds?: number,
+			expirationTimestamp?: number,
 		): Promise<string> => {
 			const ruleKey = getRedisAccessRuleKey(rule);
 			const ruleValue = getRedisAccessRuleValue(rule);
 
 			await client.hSet(ruleKey, ruleValue);
 
-			if (expirationSeconds) {
-				await client.expire(ruleKey, expirationSeconds);
+			if (expirationTimestamp) {
+				const expiryDate = new Date(expirationTimestamp);
+				if (expiryDate.getUTCFullYear() === 1970) {
+					// timestamp is already in seconds
+					await client.expireAt(ruleKey, expirationTimestamp);
+				} else {
+					const timestampInSeconds = Math.floor(expirationTimestamp / 1000);
+					await client.expireAt(ruleKey, timestampInSeconds);
+				}
 			}
 
 			return ruleKey;
@@ -150,7 +167,9 @@ export const createRedisAccessRulesWriter = (
 		deleteAllRules: async (): Promise<number> => {
 			const keys = await client.keys(`${accessRuleRedisKeyPrefix}*`);
 
-			return keys.length > 0 ? await client.del(keys) : 0;
+			if (keys.length === 0) return 0;
+
+			return await client.del(keys);
 		},
 	};
 };

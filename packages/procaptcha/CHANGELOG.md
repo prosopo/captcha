@@ -1,5 +1,24 @@
 # @prosopo/procaptcha
 
+## 2.7.14
+### Patch Changes
+
+- Updated dependencies [b7c3258]
+  - @prosopo/api@3.1.0
+  - @prosopo/datasets@3.0.9
+
+## 2.7.13
+### Patch Changes
+
+  - @prosopo/api@3.0.8
+  - @prosopo/datasets@3.0.8
+
+## 2.7.12
+### Patch Changes
+
+  - @prosopo/api@3.0.7
+  - @prosopo/datasets@3.0.7
+
 ## 2.7.11
 ### Patch Changes
 
