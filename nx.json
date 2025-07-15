@@ -1,34 +1,61 @@
 {
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
+	"namedInputs": {
+		"default": [
+			"{projectRoot}/**",
+			"!{projectRoot}/dist/**"
+		]
+	},
+	"namedOutputs": {
+		"dist": [
+			"{projectRoot}/dist"
+		]
+	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build"]
+			"dependsOn": [
+				"^{target}"
+			],
+			"cache": true
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"]
+			"dependsOn": [
+				"^{target}"
+			],
+			"cache": true
 		},
 		"bundle": {
-			"dependsOn": []
+			"dependsOn": [
+				"^build",
+				"^{target}"
+			],
+			"cache": true
 		},
 		"bundle:webpack": {
-			"dependsOn": []
+			"dependsOn": [
+				"^build:cjs",
+				"^{target}"
+			],
+			"cache": true
 		},
 		"test": {
-			"dependsOn": []
+			"cache": true
 		},
 		"typecheck": {
-			"dependsOn": ["^typecheck"]
+			"dependsOn": [
+				"^{target}"
+			],
+			"cache": true
 		},
 		"lint": {
-			"dependsOn": ["^lint"]
-		},
-		"*": {
 			"cache": true
 		}
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": ["*"],
+		"projects": [
+			"*"
+		],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
