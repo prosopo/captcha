@@ -18,7 +18,7 @@
 		"mnemonic": "tsx ./scripts/generateMnemonic.ts"
 	},
 	"dependencies": {
-		"@noble/hashes": "1.5.0",
+		"@noble/hashes": "1.8.0",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/api-express-router": "3.0.3",
 		"@prosopo/api-route": "2.6.7",
