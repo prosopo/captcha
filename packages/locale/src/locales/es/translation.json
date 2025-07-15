@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "No autorizado",
+		"MISSING_BODY": "Cuerpo faltante",
+		"NO_CONTENT_TYPE_HEADER": "Sin encabezado de tipo de contenido. Se asumió un cuerpo codificado en JSON pero no se pudo analizar.",
+		"CAPTCHA_FAILED": "Respondiste incorrectamente a uno o más captchas. Por favor, inténtalo de nuevo",
+		"CAPTCHA_PASSED": "Respondiste correctamente a los captchas",
+		"BAD_REQUEST": "Solicitud incorrecta",
+		"USER_VERIFIED": "Usuario verificado",
+		"USER_NOT_VERIFIED": "Usuario no verificado",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Usuario no verificado. La solución del captcha ha expirado.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Usuario no verificado. No se encontró solución de captcha.",
+		"USER_ALREADY_VERIFIED": "Esta solución ya ha sido verificada. El usuario debe completar un nuevo captcha.",
+		"UNKNOWN": "Error desconocido en el API",
+		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada",
+		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
+		"UNAUTHORIZED_ORIGIN_URL": "URL de origen no autorizada",
+		"INVALID_SITE_KEY": "Clave de sitio no válida",
+		"INVALID_IP": "IP no válida",
+		"INVALID_URL": "URL inválida",
+		"INVALID_BODY": "Cuerpo inválido",
+		"PARSE_ERROR": "Error al analizar la respuesta"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extensión Polkadot no encontrada"
 	},
@@ -85,25 +107,6 @@
 		"INVALID_TOKEN": "Token inválido",
 		"INVALID_SOLUTION": "Solución inválida",
 		"DECRYPTION_ERROR": "Error de descifrado"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Respondiste incorrectamente a uno o más captchas. Por favor, inténtalo de nuevo",
-		"CAPTCHA_PASSED": "Respondiste correctamente a los captchas",
-		"BAD_REQUEST": "Solicitud incorrecta",
-		"USER_VERIFIED": "Usuario verificado",
-		"USER_NOT_VERIFIED": "Usuario no verificado",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Usuario no verificado. La solución del captcha ha expirado.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Usuario no verificado. No se encontró solución de captcha.",
-		"USER_ALREADY_VERIFIED": "Esta solución ya ha sido verificada. El usuario debe completar un nuevo captcha.",
-		"UNKNOWN": "Error desconocido en el API",
-		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada",
-		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
-		"UNAUTHORIZED_ORIGIN_URL": "URL de origen no autorizada",
-		"INVALID_SITE_KEY": "Clave de sitio no válida",
-		"INVALID_IP": "IP no válida",
-		"INVALID_URL": "URL inválida",
-		"INVALID_BODY": "Cuerpo inválido",
-		"PARSE_ERROR": "Error al analizar la respuesta"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parámetro inválido"

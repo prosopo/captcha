@@ -26,6 +26,7 @@
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "echo no tests",

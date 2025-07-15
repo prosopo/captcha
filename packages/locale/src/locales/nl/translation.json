@@ -298,6 +298,28 @@
 		"xylophone": "xylofoon",
 		"zebra": "zebra"
 	},
+	"API": {
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Ontbrekend lichaam",
+		"NO_CONTENT_TYPE_HEADER": "Geen content-type koptekst. Aangenomen dat het lichaam gecodeerd is in JSON maar niet kon worden geparseerd.",
+		"CAPTCHA_FAILED": "Je hebt één of meer captchas incorrect beantwoord. Probeer het opnieuw",
+		"CAPTCHA_PASSED": "Je hebt de captchas correct beantwoord",
+		"BAD_REQUEST": "Ongeldige aanvraag",
+		"USER_VERIFIED": "Gebruiker geverifieerd",
+		"USER_NOT_VERIFIED": "Gebruiker niet geverifieerd",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Gebruiker niet geverifieerd. Captcha-oplossing is verlopen",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Gebruiker niet geverifieerd. Geen captcha-oplossing gevonden",
+		"USER_ALREADY_VERIFIED": "Deze oplossing is al geverifieerd. Gebruiker moet een nieuwe captcha voltooien",
+		"UNKNOWN": "Onbekende API-fout",
+		"SITE_KEY_NOT_REGISTERED": "Site-sleutel niet geregistreerd",
+		"INCORRECT_CAPTCHA_TYPE": "Onjuist CAPTCHA-type",
+		"INVALID_SITE_KEY": "Ongeldige site-sleutel",
+		"UNAUTHORIZED_ORIGIN_URL": "Ongeautoriseerde oorsprongs-URL",
+		"INVALID_IP": "Ongeldig IP-adres",
+		"INVALID_URL": "Ongeldige URL",
+		"INVALID_BODY": "Ongeldige body",
+		"PARSE_ERROR": "Fout bij parsen van aanvraag"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-extensie niet gevonden"
 	},
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Ongeldige token",
 		"INVALID_SOLUTION": "Ongeldige oplossing",
 		"DECRYPTION_ERROR": "Fout bij decoderen"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Je hebt één of meer captchas incorrect beantwoord. Probeer het opnieuw",
-		"CAPTCHA_PASSED": "Je hebt de captchas correct beantwoord",
-		"BAD_REQUEST": "Ongeldige aanvraag",
-		"USER_VERIFIED": "Gebruiker geverifieerd",
-		"USER_NOT_VERIFIED": "Gebruiker niet geverifieerd",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Gebruiker niet geverifieerd. Captcha-oplossing is verlopen",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Gebruiker niet geverifieerd. Geen captcha-oplossing gevonden",
-		"USER_ALREADY_VERIFIED": "Deze oplossing is al geverifieerd. Gebruiker moet een nieuwe captcha voltooien",
-		"UNKNOWN": "Onbekende API-fout",
-		"SITE_KEY_NOT_REGISTERED": "Site-sleutel niet geregistreerd",
-		"INCORRECT_CAPTCHA_TYPE": "Onjuist CAPTCHA-type",
-		"INVALID_SITE_KEY": "Ongeldige site-sleutel",
-		"UNAUTHORIZED_ORIGIN_URL": "Ongeautoriseerde oorsprongs-URL",
-		"INVALID_IP": "Ongeldig IP-adres",
-		"INVALID_URL": "Ongeldige URL",
-		"INVALID_BODY": "Ongeldige body",
-		"PARSE_ERROR": "Fout bij parsen van aanvraag"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ongeldige parameter"

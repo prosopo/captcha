@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Neautorizat",
+		"MISSING_BODY": "Corp lipsă",
+		"NO_CONTENT_TYPE_HEADER": "Fără antet de tip conținut. S-a presupus corp codat JSON dar nu s-a reușit parsarea.",
+		"CAPTCHA_FAILED": "Ai raspuns incorect la unul sau mai multe captchas. Te rog sa incerci din nou",
+		"CAPTCHA_PASSED": "Ai raspuns corect la captchas",
+		"BAD_REQUEST": "Cerere incorecta",
+		"USER_VERIFIED": "Utilizator verificat",
+		"USER_NOT_VERIFIED": "Utilizator neverificat",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utilizator neconfirmat. Soluția captcha a expirat",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Utilizator neconfirmat. Nu s-a gasit nicio soluție pentru captcha",
+		"USER_ALREADY_VERIFIED": "Aceasta soluție a fost deja verificata. Utilizatorul trebuie sa completeze un nou captcha",
+		"UNKNOWN": "Eroare API necunoscuta",
+		"SITE_KEY_NOT_REGISTERED": "Cheia site-ului nu este inregistrata",
+		"INCORRECT_CAPTCHA_TYPE": "Tip CAPTCHA incorect",
+		"INVALID_SITE_KEY": "Cheie site invalida",
+		"UNAUTHORIZED_ORIGIN_URL": "URL-ul de origine neautorizat",
+		"INVALID_IP": "IP invalid",
+		"INVALID_URL": "URL invalid",
+		"INVALID_BODY": "Corp invalid",
+		"PARSE_ERROR": "Eroare la parsare"
+	},
 	"TARGET": {
 		"airplanes": "avioane",
 		"american-flag": "steag american",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Token invalid",
 		"INVALID_SOLUTION": "Solutie invalida",
 		"DECRYPTION_ERROR": "Eroare la decriptare"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Ai raspuns incorect la unul sau mai multe captchas. Te rog sa incerci din nou",
-		"CAPTCHA_PASSED": "Ai raspuns corect la captchas",
-		"BAD_REQUEST": "Cerere incorecta",
-		"USER_VERIFIED": "Utilizator verificat",
-		"USER_NOT_VERIFIED": "Utilizator neverificat",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utilizator neconfirmat. Soluția captcha a expirat",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Utilizator neconfirmat. Nu s-a gasit nicio soluție pentru captcha",
-		"USER_ALREADY_VERIFIED": "Aceasta soluție a fost deja verificata. Utilizatorul trebuie sa completeze un nou captcha",
-		"UNKNOWN": "Eroare API necunoscuta",
-		"SITE_KEY_NOT_REGISTERED": "Cheia site-ului nu este inregistrata",
-		"INCORRECT_CAPTCHA_TYPE": "Tip CAPTCHA incorect",
-		"INVALID_SITE_KEY": "Cheie site invalida",
-		"UNAUTHORIZED_ORIGIN_URL": "URL-ul de origine neautorizat",
-		"INVALID_IP": "IP invalid",
-		"INVALID_URL": "URL invalid",
-		"INVALID_BODY": "Corp invalid",
-		"PARSE_ERROR": "Eroare la parsare"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parametru invalid"

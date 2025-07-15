@@ -171,7 +171,8 @@ jobs:
       - name: lint
         if: ${{ env.affected != '[]' }}
         run: |
-          npm run build -w @prosopo/lint
+          npm run build:tsc -w @prosopo/config
+          npm run build:tsc -w @prosopo/lint
           npm run lint-fix
           # Amend the previous commit with any lint fixes
           if [ -n "$(git status --porcelain)" ]; then

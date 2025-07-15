@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "未授权",
+		"MISSING_BODY": "缺少主体",
+		"NO_CONTENT_TYPE_HEADER": "没有内容类型标头。假定为JSON编码主体，但无法解析。",
+		"CAPTCHA_FAILED": "您回答了一个或多个验证码不正确。请重试",
+		"CAPTCHA_PASSED": "您正确回答了验证码",
+		"BAD_REQUEST": "错误的请求",
+		"USER_VERIFIED": "用户已验证",
+		"USER_NOT_VERIFIED": "用户未验证",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "用户未验证。验证码解决方案已过期。",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "用户未验证。找不到验证码解决方案。",
+		"USER_ALREADY_VERIFIED": "此解决方案已经验证。用户应完成新的验证码。",
+		"UNKNOWN": "未知API错误",
+		"SITE_KEY_NOT_REGISTERED": "站点密钥未注册",
+		"INCORRECT_CAPTCHA_TYPE": "CAPTCHA类型不正确",
+		"INVALID_SITE_KEY": "无效的站点密钥",
+		"UNAUTHORIZED_ORIGIN_URL": "未授权的来源URL",
+		"INVALID_IP": "无效的IP",
+		"INVALID_URL": "无效的URL",
+		"INVALID_BODY": "无效的主体",
+		"PARSE_ERROR": "解析请求时出错"
+	},
 	"TARGET": {
 		"airplanes": "飞机",
 		"american-flag": "美国国旗",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "无效的令牌",
 		"INVALID_SOLUTION": "无效的解决方案",
 		"DECRYPTION_ERROR": "解密错误"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "您回答了一个或多个验证码不正确。请重试",
-		"CAPTCHA_PASSED": "您正确回答了验证码",
-		"BAD_REQUEST": "错误的请求",
-		"USER_VERIFIED": "用户已验证",
-		"USER_NOT_VERIFIED": "用户未验证",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "用户未验证。验证码解决方案已过期。",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "用户未验证。找不到验证码解决方案。",
-		"USER_ALREADY_VERIFIED": "此解决方案已经验证。用户应完成新的验证码。",
-		"UNKNOWN": "未知API错误",
-		"SITE_KEY_NOT_REGISTERED": "站点密钥未注册",
-		"INCORRECT_CAPTCHA_TYPE": "CAPTCHA类型不正确",
-		"INVALID_SITE_KEY": "无效的站点密钥",
-		"UNAUTHORIZED_ORIGIN_URL": "未授权的来源URL",
-		"INVALID_IP": "无效的IP",
-		"INVALID_URL": "无效的URL",
-		"INVALID_BODY": "无效的主体",
-		"PARSE_ERROR": "解析请求时出错"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "无效的参数"

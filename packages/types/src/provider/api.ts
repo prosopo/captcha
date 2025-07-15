@@ -59,6 +59,9 @@ export const ApiPrefix = "/v1/prosopo" as const;
 
 export type IPAddress = Address4 | Address6;
 
+export const DEFAULT_SOLVED_COUNT = 2;
+export const DEFAULT_UNSOLVED_COUNT = 0;
+
 export enum ClientApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
@@ -374,12 +377,12 @@ export const ProsopoCaptchaCountConfigSchema = object({
 		count: number().positive(),
 	})
 		.optional()
-		.default({ count: 1 }),
+		.default({ count: DEFAULT_SOLVED_COUNT }),
 	unsolved: object({
 		count: number().nonnegative(),
 	})
 		.optional()
-		.default({ count: 0 }),
+		.default({ count: DEFAULT_UNSOLVED_COUNT }),
 });
 
 export type ProsopoCaptchaCountConfigSchemaInput = input<

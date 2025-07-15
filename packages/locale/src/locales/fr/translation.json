@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Non autorisé",
+		"MISSING_BODY": "Corps manquant",
+		"NO_CONTENT_TYPE_HEADER": "En-tête de type de contenu manquant. Corps encodé en JSON supposé mais erreur lors de l'analyse.",
+		"CAPTCHA_FAILED": "Vous avez répondu incorrectement à un ou plusieurs captchas. Veuillez réessayer",
+		"CAPTCHA_PASSED": "Vous avez répondu correctement aux captchas",
+		"BAD_REQUEST": "Mauvaise Requête",
+		"USER_VERIFIED": "Utilisateur vérifié",
+		"USER_NOT_VERIFIED": "Utilisateur non vérifié",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utilisateur non vérifié. La solution du captcha a expiré.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Utilisateur non vérifié. Aucune solution captcha trouvée.",
+		"USER_ALREADY_VERIFIED": "Cette solution a déjà été vérifiée. L'utilisateur doit compléter un nouveau captcha.",
+		"UNKNOWN": "Erreur API inconnue",
+		"SITE_KEY_NOT_REGISTERED": "Clé du site non enregistrée",
+		"INCORRECT_CAPTCHA_TYPE": "Type de CAPTCHA incorrect",
+		"UNAUTHORIZED_ORIGIN_URL": "URL d'origine non autorisée",
+		"INVALID_SITE_KEY": "Clé de site non valide",
+		"INVALID_IP": "IP invalide",
+		"INVALID_URL": "URL inválida",
+		"INVALID_BODY": "Cuerpo inválido",
+		"PARSE_ERROR": "Erreur d'analyse de la demande"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extension Polkadot non trouvée"
 	},
@@ -85,25 +107,6 @@
 		"INVALID_TOKEN": "Jeton invalide",
 		"INVALID_SOLUTION": "Solution invalide",
 		"DECRYPTION_ERROR": "Erreur de décryptage"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Vous avez répondu incorrectement à un ou plusieurs captchas. Veuillez réessayer",
-		"CAPTCHA_PASSED": "Vous avez répondu correctement aux captchas",
-		"BAD_REQUEST": "Mauvaise Requête",
-		"USER_VERIFIED": "Utilisateur vérifié",
-		"USER_NOT_VERIFIED": "Utilisateur non vérifié",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utilisateur non vérifié. La solution du captcha a expiré.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Utilisateur non vérifié. Aucune solution captcha trouvée.",
-		"USER_ALREADY_VERIFIED": "Cette solution a déjà été vérifiée. L'utilisateur doit compléter un nouveau captcha.",
-		"UNKNOWN": "Erreur API inconnue",
-		"SITE_KEY_NOT_REGISTERED": "Clé du site non enregistrée",
-		"INCORRECT_CAPTCHA_TYPE": "Type de CAPTCHA incorrect",
-		"UNAUTHORIZED_ORIGIN_URL": "URL d'origine non autorisée",
-		"INVALID_SITE_KEY": "Clé de site non valide",
-		"INVALID_IP": "IP invalide",
-		"INVALID_URL": "URL inválida",
-		"INVALID_BODY": "Cuerpo inválido",
-		"PARSE_ERROR": "Erreur d'analyse de la demande"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Paramètre invalide"

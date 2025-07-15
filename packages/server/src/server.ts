@@ -69,6 +69,7 @@ export class ProsopoServer {
 	 * @param timestamp
 	 * @param user
 	 * @param challenge
+	 * @param ip
 	 */
 	public async verifyProvider(
 		token: string,

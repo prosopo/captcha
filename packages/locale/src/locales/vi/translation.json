@@ -1,4 +1,26 @@
 {
+	"API": {
+		"UNAUTHORIZED": "Không được phép",
+		"MISSING_BODY": "Thiếu nội dung",
+		"NO_CONTENT_TYPE_HEADER": "Không có tiêu đề content-type. Giả định nội dung được mã hóa JSON nhưng không thể phân tích.",
+		"CAPTCHA_FAILED": "Bạn đã trả lời một hoặc nhiều CAPTCHA không đúng. Vui lòng thử lại",
+		"CAPTCHA_PASSED": "Bạn đã trả lời đúng các CAPTCHA",
+		"BAD_REQUEST": "Yêu cầu không hợp lệ",
+		"USER_VERIFIED": "Người dùng đã được xác minh",
+		"USER_NOT_VERIFIED": "Người dùng chưa được xác minh",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Người dùng chưa được xác minh. Giải pháp CAPTCHA đã hết hạn",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Người dùng chưa được xác minh. Không tìm thấy giải pháp CAPTCHA",
+		"USER_ALREADY_VERIFIED": "Giải pháp này đã được xác minh. Người dùng cần hoàn tất một CAPTCHA mới",
+		"UNKNOWN": "Lỗi API không xác định",
+		"SITE_KEY_NOT_REGISTERED": "Khóa trang web chưa được đăng ký",
+		"INCORRECT_CAPTCHA_TYPE": "Loại CAPTCHA không đúng",
+		"INVALID_SITE_KEY": "Khóa trang web không hợp lệ",
+		"UNAUTHORIZED_ORIGIN_URL": "URL nguồn không được ủy quyền",
+		"INVALID_IP": "IP không hợp lệ",
+		"INVALID_URL": "URL không hợp lệ",
+		"INVALID_BODY": "Nội dung không hợp lệ",
+		"PARSE_ERROR": "Lỗi phân tích yêu cầu"
+	},
 	"TARGET": {
 		"airplanes": "máy bay",
 		"american-flag": "cờ Mỹ",
@@ -384,25 +406,6 @@
 		"INVALID_TOKEN": "Token không hợp lệ",
 		"INVALID_SOLUTION": "Giải pháp không hợp lệ",
 		"DECRYPTION_ERROR": "Lỗi giải mã"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Bạn đã trả lời một hoặc nhiều CAPTCHA không đúng. Vui lòng thử lại",
-		"CAPTCHA_PASSED": "Bạn đã trả lời đúng các CAPTCHA",
-		"BAD_REQUEST": "Yêu cầu không hợp lệ",
-		"USER_VERIFIED": "Người dùng đã được xác minh",
-		"USER_NOT_VERIFIED": "Người dùng chưa được xác minh",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Người dùng chưa được xác minh. Giải pháp CAPTCHA đã hết hạn",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Người dùng chưa được xác minh. Không tìm thấy giải pháp CAPTCHA",
-		"USER_ALREADY_VERIFIED": "Giải pháp này đã được xác minh. Người dùng cần hoàn tất một CAPTCHA mới",
-		"UNKNOWN": "Lỗi API không xác định",
-		"SITE_KEY_NOT_REGISTERED": "Khóa trang web chưa được đăng ký",
-		"INCORRECT_CAPTCHA_TYPE": "Loại CAPTCHA không đúng",
-		"INVALID_SITE_KEY": "Khóa trang web không hợp lệ",
-		"UNAUTHORIZED_ORIGIN_URL": "URL nguồn không được ủy quyền",
-		"INVALID_IP": "IP không hợp lệ",
-		"INVALID_URL": "URL không hợp lệ",
-		"INVALID_BODY": "Nội dung không hợp lệ",
-		"PARSE_ERROR": "Lỗi phân tích yêu cầu"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Tham số không hợp lệ"
