@@ -57,7 +57,7 @@ describe("handleErrors", async () => {
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
 
-	it("should handle SyntaxError", async () => {
+	it("should not return SyntaxError", async () => {
 		const mockRequest = { i18n } as unknown as Request;
 		const mockResponse = {
 			writeHead: vi.fn().mockReturnThis(),
@@ -68,8 +68,7 @@ describe("handleErrors", async () => {
 		} as unknown as Response;
 		const mockNext = vi.fn() as unknown as NextFunction;
 
-		const [len, max] = [100, 50];
-		const message = `Input length: ${len}, exceeds maximum allowed length: ${max}`;
+		const message = "Unknown API error";
 		const error = new SyntaxError(message);
 
 		handleErrors(error, mockRequest, mockResponse, mockNext);
@@ -82,6 +81,7 @@ describe("handleErrors", async () => {
 		expect(mockResponse.send).toHaveBeenCalledWith({
 			error: {
 				message,
+				key: "API.UNKNOWN",
 				code: 400,
 			},
 		});
@@ -114,7 +114,7 @@ describe("handleErrors", async () => {
 		);
 		expect(mockResponse.status).toHaveBeenCalledWith(400);
 		expect(mockResponse.send).toHaveBeenCalledWith({
-			error: { code: 400, message: [zodError] },
+			error: { code: 400, key: "API.INVALID_BODY", message: [zodError] },
 		});
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
