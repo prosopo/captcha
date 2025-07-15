@@ -3,7 +3,9 @@
 	"namedInputs": {
 		"default": [
 			"{projectRoot}/**",
-			"!{projectRoot}/dist/**"
+			"!{projectRoot}/dist/**",
+			"!{projectRoot}/node_modules/**",
+			"!{projectRoot}/coverage/**"
 		]
 	},
 	"namedOutputs": {
