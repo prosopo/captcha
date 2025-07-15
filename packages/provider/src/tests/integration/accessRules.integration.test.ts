@@ -121,7 +121,7 @@ describe("Access Rules Integration Tests", () => {
 			expect(response.status).toBe(200);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data[ApiParams.status]).toBe("ok");
-			expect(data.captchas.length).to.be.equal(DEFAULT_SOLVED_COUNT);
+			expect(data.captchas.length).toBe(DEFAULT_SOLVED_COUNT);
 		});
 		it("should return a 200 when a rule expires immediately", async () => {
 			await userAccessPolicy(adminPair, {
