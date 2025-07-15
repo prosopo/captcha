@@ -14,7 +14,6 @@
 
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import { CaptchaType, Tier } from "@prosopo/types";
-import type { UserAgentInfo } from "@prosopo/types-private";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -76,6 +75,15 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 });
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
+
+export interface UserAgentInfo {
+	ua: string;
+	browser: BrowserInfo;
+	cpu: CPUInfo;
+	device: DeviceInfo;
+	engine: EngineInfo;
+	os: OSInfo;
+}
 
 export interface StoredCaptcha {
 	result: {
