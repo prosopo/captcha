@@ -57,7 +57,7 @@ import {
 import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
-import { UserAgentInfo } from "./userAgent.js";
+import type { UserAgentInfo } from "./userAgent.js";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
