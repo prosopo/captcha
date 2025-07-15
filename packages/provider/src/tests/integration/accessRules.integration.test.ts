@@ -17,8 +17,10 @@ import { generateMnemonic, getPair } from "@prosopo/keyring";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
+	type CaptchaResponseBody,
 	CaptchaType,
 	ClientApiPaths,
+	DEFAULT_SOLVED_COUNT,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
@@ -92,6 +94,8 @@ describe("Access Rules Integration Tests", () => {
 			});
 
 			expect(response.status).toBe(401);
+			const data = await response.json();
+			expect(data.captchas).toBeUndefined();
 		});
 		it("should return a 200 for a non-blocked user", async () => {
 			const origin = "http://localhost";
@@ -115,6 +119,10 @@ describe("Access Rules Integration Tests", () => {
 			});
 
 			expect(response.status).toBe(200);
+			const data = (await response.json()) as CaptchaResponseBody;
+			console.log(data);
+			expect(data[ApiParams.status]).toBe("ok");
+			expect(data.captchas.length).to.be.equal(DEFAULT_SOLVED_COUNT);
 		});
 		it("should return a 200 when a rule expires immediately", async () => {
 			await userAccessPolicy(adminPair, {
@@ -256,6 +264,35 @@ describe("Access Rules Integration Tests", () => {
 			await registerSiteKey(siteKey, CaptchaType.frictionless);
 			[userMnemonic, userId] = await generateMnemonic();
 			userPair = getPair(userMnemonic);
+		});
+
+		it("should return a 401 for a blocked user", async () => {
+			await userAccessPolicy(adminPair, {
+				block: true, // block
+				userId,
+				description: "Blocked user test",
+			});
+			const origin = "http://localhost";
+			const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
+			const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
+				{
+					[ApiParams.dapp]: siteKey,
+					[ApiParams.token]: randomAsHex(16),
+					[ApiParams.user]: userId,
+				};
+			const response = await fetch(getFrictionlessCaptchaUrl, {
+				method: "POST",
+				body: JSON.stringify(getFrictionlessCaptchaBody),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": userId,
+					"User-Agent": randomAsHex(16),
+				},
+			});
+
+			expect(response.status).toBe(401);
 		});
 
 		it("should return the correct captcha type for a user with an image captcha access rule", async () => {
@@ -483,6 +520,35 @@ describe("Access Rules Integration Tests", () => {
 			[userMnemonic, userId] = await generateMnemonic();
 			userPair = getPair(userMnemonic);
 		});
+
+		it("should return a 401 for a blocked user", async () => {
+			await userAccessPolicy(adminPair, {
+				block: true, // block
+				userId,
+				description: "Blocked user test",
+			});
+			const origin = "http://localhost";
+
+			const getPoWCaptchaUrl = `${baseUrl}${ClientApiPaths.GetPowCaptchaChallenge}`;
+			const getPoWCaptchaBody: GetPowCaptchaChallengeRequestBodyTypeOutput = {
+				[ApiParams.dapp]: siteKey,
+				[ApiParams.user]: userId,
+			};
+			const response = await fetch(getPoWCaptchaUrl, {
+				method: "POST",
+				body: JSON.stringify(getPoWCaptchaBody),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": userId,
+					"User-Agent": randomAsHex(16),
+				},
+			});
+
+			expect(response.status).toBe(401);
+		});
+
 		it("should return the correct captcha type for a user with a pow captcha access rule", async () => {
 			const difficulty = 6;
 			await userAccessPolicy(adminPair, {

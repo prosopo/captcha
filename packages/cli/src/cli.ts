@@ -16,7 +16,7 @@ import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getPair } from "@prosopo/keyring";
 import { loadI18next } from "@prosopo/locale";
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import { DEFAULT_SOLVED_COUNT, type ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
 import { processArgs } from "./argv.js";
 import getConfig from "./prosopo.config.js";
@@ -28,10 +28,7 @@ async function main() {
 	const envPath = loadEnv();
 
 	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-	const config: ProsopoConfigOutput = getConfig(undefined, {
-		solved: { count: 2 },
-		unsolved: { count: 0 },
-	});
+	const config: ProsopoConfigOutput = getConfig();
 
 	if (config.devOnlyWatchEvents) {
 		log.warn(() => ({
