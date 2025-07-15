@@ -4,13 +4,19 @@
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json"
+	],
 	"references": [
 		{
 			"path": "../common"
 		},
 		{
 			"path": "../locale"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }
