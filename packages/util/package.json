@@ -33,7 +33,7 @@
 	},
 	"types": "dist/index.d.ts",
 	"dependencies": {
-		"@noble/hashes": "1.5.0",
+		"@noble/hashes": "1.8.0",
 		"@prosopo/config": "3.1.0",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
