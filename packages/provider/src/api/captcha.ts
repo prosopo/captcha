@@ -117,11 +117,26 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
+				const userScope = getRequestUserScope(
+					flatten(req.headers),
+					req.ja4,
+					req.ip,
+					user,
+				);
+				const userAccessPolicy = (
+					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
+						userAccessRulesStorage,
+						dapp,
+						userScope,
+					)
+				)[0];
+
 				const { valid, reason, frictionlessTokenId } =
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
 						CaptchaType.image,
 						sessionId,
+						userAccessPolicy,
 					);
 
 				if (!valid) {
@@ -138,19 +153,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const userScope = getRequestUserScope(
-					flatten(req.headers),
-					req.ja4,
-					req.ip,
-					user,
-				);
-				const userAccessPolicy = (
-					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
-						userAccessRulesStorage,
-						dapp,
-						userScope,
-					)
-				)[0];
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
 						count:
@@ -341,11 +343,26 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			const userScope = getRequestUserScope(
+				flatten(req.headers),
+				req.ja4,
+				req.ip,
+				user,
+			);
+			const userAccessPolicy = (
+				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					dapp,
+					userScope,
+				)
+			)[0];
+
 			const { valid, reason, frictionlessTokenId } =
 				await tasks.powCaptchaManager.isValidRequest(
 					clientSettings,
 					CaptchaType.pow,
 					sessionId,
+					userAccessPolicy,
 				);
 
 			if (!valid) {
@@ -378,20 +395,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					}),
 				);
 			}
-
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				req.ip,
-				user,
-			);
-			const userAccessPolicy = (
-				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
-					userAccessRulesStorage,
-					dapp,
-					userScope,
-				)
-			)[0];
 
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,
@@ -619,19 +622,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					},
 				});
 
-				// If the timestamp is older than 10 minutes, send an image captcha
-				if (FrictionlessManager.timestampTooOld(timestamp)) {
-					await tasks.frictionlessManager.scoreIncreaseTimestamp(
-						timestamp,
-						baseBotScore,
-						botScore,
-						tokenId,
-					);
-					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
-					);
-				}
-
 				// Check if the IP address is blocked
 				const userScope = getRequestUserScope(
 					flatten(req.headers),
@@ -648,9 +638,29 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				)[0];
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
-				if (userAccessPolicy?.captchaType === CaptchaType.image) {
+				if (userAccessPolicy) {
 					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
 						userAccessPolicy,
+						baseBotScore,
+						botScore,
+						tokenId,
+					);
+					if (userAccessPolicy.captchaType === CaptchaType.image) {
+						return res.json(
+							await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+						);
+					}
+					if (userAccessPolicy.captchaType === CaptchaType.pow) {
+						return res.json(
+							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+						);
+					}
+				}
+
+				// If the timestamp is older than 10 minutes, send an image captcha
+				if (FrictionlessManager.timestampTooOld(timestamp)) {
+					await tasks.frictionlessManager.scoreIncreaseTimestamp(
+						timestamp,
 						baseBotScore,
 						botScore,
 						tokenId,
