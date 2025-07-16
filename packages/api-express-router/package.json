@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-express-router",
-	"version": "3.0.3",
+	"version": "3.0.4",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -24,11 +24,11 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/api-route": "2.6.7",
-		"@prosopo/common": "3.0.2",
+		"@prosopo/api-route": "2.6.8",
+		"@prosopo/common": "3.1.0",
 		"uuid": "11.1.0",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.1.0"
+		"@prosopo/config": "3.1.1"
 	},
 	"devDependencies": {},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

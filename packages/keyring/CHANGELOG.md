@@ -1,5 +1,31 @@
 # @prosopo/keyring
 
+## 2.8.7
+### Patch Changes
+
+- 93d5e50: ensure packages have @prosopo/config as dep for vite configs
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- 93d5e50: fix missing dep for @prosopo/config
+- f29fc7e: Refining API error handling. Adding more language strings
+- 3573f0b: standardise all vite based npm scripts for bundling
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [8a64429]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [63519d7]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+- Updated dependencies [6d604ad]
+  - @prosopo/util-crypto@13.5.2
+  - @prosopo/types@3.0.4
+  - @prosopo/common@3.1.0
+  - @prosopo/config@3.1.1
+
 ## 2.8.6
 ### Patch Changes
 
