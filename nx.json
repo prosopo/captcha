@@ -16,14 +16,14 @@
 	"targetDefaults": {
 		"build": {
 			"dependsOn": [
-				"^{target}",
+				"^build",
 				"@prosopo/config:build"
 			],
 			"cache": true
 		},
 		"build:cjs": {
 			"dependsOn": [
-				"^{target}",
+				"^build:cjs",
 				"@prosopo/config:build"
 			],
 			"cache": true
@@ -31,7 +31,7 @@
 		"bundle": {
 			"dependsOn": [
 				"^build",
-				"^{target}",
+				"^bundle",
 				"@prosopo/config:build"
 			],
 			"cache": true
@@ -39,7 +39,7 @@
 		"bundle:webpack": {
 			"dependsOn": [
 				"^build:cjs",
-				"^{target}",
+				"^bundle:webpack",
 				"@prosopo/config:build"
 			],
 			"cache": true
@@ -52,7 +52,7 @@
 		},
 		"typecheck": {
 			"dependsOn": [
-				"^{target}",
+				"^typecheck",
 				"@prosopo/config:build"
 			],
 			"cache": true
