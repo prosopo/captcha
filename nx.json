@@ -9,66 +9,39 @@
 		]
 	},
 	"namedOutputs": {
-		"dist": [
-			"{projectRoot}/dist"
-		]
+		"dist": ["{projectRoot}/dist"]
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": [
-				"^build",
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["^build", "@prosopo/config:build"],
 			"cache": true
 		},
 		"build:cjs": {
-			"dependsOn": [
-				"^build:cjs",
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["^build:cjs"],
 			"cache": true
 		},
 		"bundle": {
-			"dependsOn": [
-				"^build",
-				"^bundle",
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["^build", "^bundle"],
 			"cache": true
 		},
 		"bundle:webpack": {
-			"dependsOn": [
-				"^build:cjs",
-				"^bundle:webpack",
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["^build:cjs", "^bundle:webpack"],
 			"cache": true
 		},
 		"test": {
-			"dependsOn": [
-				"@prosopo/config:build"
-			],
 			"cache": true
 		},
 		"typecheck": {
-			"dependsOn": [
-				"^typecheck",
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["^typecheck"],
 			"cache": true
 		},
 		"lint": {
-			"dependsOn": [
-				"@prosopo/config:build"
-			],
 			"cache": true
 		}
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": [
-			"*"
-		],
+		"projects": ["*"],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
