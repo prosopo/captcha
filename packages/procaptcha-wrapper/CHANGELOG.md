@@ -1,5 +1,24 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.8
+### Patch Changes
+
+- 0f4bc06: Add CJS config to fix build
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [63519d7]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+  - @prosopo/locale@3.1.0
+  - @prosopo/types@3.0.4
+  - @prosopo/config@3.1.1
+
 ## 2.6.7
 ### Patch Changes
 

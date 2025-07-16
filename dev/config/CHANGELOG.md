@@ -1,5 +1,13 @@
 # @prosopo/config
 
+## 3.1.1
+### Patch Changes
+
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- 3573f0b: standardise all vite based npm scripts for bundling
+- 2d0dd8a: Integration tests for UAPs
+
 ## 3.1.0
 ### Minor Changes
 
