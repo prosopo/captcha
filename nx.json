@@ -1,28 +1,41 @@
 {
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
+	"namedInputs": {
+		"default": [
+			"{projectRoot}/**",
+			"!{projectRoot}/dist/**",
+			"!{projectRoot}/node_modules/**",
+			"!{projectRoot}/coverage/**"
+		]
+	},
+	"namedOutputs": {
+		"dist": ["{projectRoot}/dist"]
+	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build"]
+			"dependsOn": ["^build"],
+			"cache": true
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"]
+			"dependsOn": ["^build:cjs"],
+			"cache": true
 		},
 		"bundle": {
-			"dependsOn": []
+			"dependsOn": ["build"],
+			"cache": true
 		},
 		"bundle:webpack": {
-			"dependsOn": []
+			"dependsOn": ["build:cjs"],
+			"cache": true
 		},
 		"test": {
-			"dependsOn": []
+			"cache": true
 		},
 		"typecheck": {
-			"dependsOn": ["^typecheck"]
+			"dependsOn": ["^typecheck"],
+			"cache": true
 		},
 		"lint": {
-			"dependsOn": ["^lint"]
-		},
-		"*": {
 			"cache": true
 		}
 	},
@@ -40,12 +53,6 @@
 	"pluginsConfig": {
 		"@nx/js": {
 			"projectsAffectedByDependencyUpdates": "auto"
-		}
-	},
-	"plugin": "@nx/js/typescript",
-	"options": {
-		"typecheck": {
-			"targetName": "typecheck"
 		}
 	},
 	"neverConnectToCloud": true,

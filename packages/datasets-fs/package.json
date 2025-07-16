@@ -47,7 +47,6 @@
 		"@prosopo/config": "3.1.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.0",
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
 		"@vitest/coverage-v8": "3.0.9",
