@@ -50,5 +50,5 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
-      - run: npx nx run-many --target=typecheck
+      - run: npx nx run-many --target=typecheck --nxBail
 
