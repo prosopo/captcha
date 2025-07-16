@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Chybějící tajný klíč",
+		"SITE_KEY_NOT_FOUND": "Klíč webu nenalezen",
+		"JSON_LOAD_FAILED": "Nepodařilo se načíst soubor JSON",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Nastavte prosím mnemoniku v prostředí",
+		"NO_MNEMONIC_OR_SEED": "Nebyla poskytnuta mnemonika nebo seed",
+		"CANT_FIND_KEYRINGPAIR": "Nelze nalézt keyringpair pro {{address}}",
+		"ENVIRONMENT_NOT_READY": "Prostředí není připraveno",
+		"INVALID_SIGNATURE": "Neplatný podpis",
+		"SITE_KEY_MISSING": "Chybějící SITE KEY",
+		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
+		"INVALID_TIMESTAMP": "Neplatný časový razítko"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Nedostatečná oprávnění k provedení této akce",
+		"MISSING_QUERY_PARAMETERS": "Chybějící parametry dotazu",
+		"MISSING_AUTHORIZATION_HEADER": "Chybějící hlavička autorizace",
+		"TIMESTAMP_TOO_OLD": "Příliš starý časový údaj",
+		"FORBIDDEN": "Zakázáno",
+		"PROVIDER_VERIFY_FAILED": "Ověření poskytovatele selhalo",
 		"UNAUTHORIZED": "Neoprávněný",
 		"MISSING_BODY": "Chybějící tělo",
 		"NO_CONTENT_TYPE_HEADER": "Chybí hlavička typu obsahu. Předpokládáno, že tělo je kódované ve formátu JSON, ale nepodařilo se ho analyzovat.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Neplatná URL adresa",
 		"INVALID_BODY": "Neplatné tělo",
 		"PARSE_ERROR": "Chyba při zpracování požadavku"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nelze upravit vlastníka uživatele",
+		"CANNOT_DELETE_OWN_USER": "Nelze smazat vlastní účet",
+		"CANNOT_DELETE_LAST_USER": "Nelze smazat posledního uživatele",
+		"USER_ALREADY_EXISTS": "Uživatel již existuje",
+		"NO_SUGGESTIONS_FOUND": "Nebyly nalezeny žádné návrhy",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web"
 	},
 	"TARGET": {
 		"airplanes": "letadla",
@@ -334,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
 		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Nepodařilo se načíst soubor JSON",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Nastavte prosím mnemoniku v prostředí",
-		"NO_MNEMONIC_OR_SEED": "Nebyla poskytnuta mnemonika nebo seed",
-		"CANT_FIND_KEYRINGPAIR": "Nelze nalézt keyringpair pro {{address}}",
-		"ENVIRONMENT_NOT_READY": "Prostředí není připraveno",
-		"INVALID_SIGNATURE": "Neplatný podpis",
-		"SITE_KEY_MISSING": "Chybějící SITE KEY",
-		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
-		"INVALID_TIMESTAMP": "Neplatný časový razítko"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Závazek řešení captchy neexistuje",
@@ -416,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Chybějící dvojice poskytovatelů",
 		"MISSING_ENV_VARIABLE": "Chybějící proměnná prostředí",
 		"GENERAL": "Obecná chyba vývoje, viz kontext",
-		"MISSING_SECRET_KEY": "Chybějící tajný klíč",
 		"METHOD_NOT_IMPLEMENTED": "Metoda není implementována"
 	},
 	"FS": {

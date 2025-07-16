@@ -120,7 +120,7 @@ const removeUnusedKeys = (jsonPath: string, projectPath: string) => {
 
 	// for each of en.json, es.json, and pt.json, load the files, remove the unused keys, and write the files back
 	// to the same location
-	for (const lang of Languages) {
+	for (const lang of Object.values(Languages)) {
 		const langJsonPath = jsonPath.replace("en", lang);
 		const langJson = JSON.parse(fs.readFileSync(langJsonPath, "utf8"));
 		for (const key of unusedKeys) {

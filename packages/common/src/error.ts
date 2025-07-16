@@ -201,6 +201,8 @@ export const unwrapError = (
 	let jsonError: ApiJsonError = { code, message };
 	const statusMessage = "Bad Request";
 	jsonError.message = message;
+	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
+
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
 		// base error will not have a translation key
@@ -225,6 +227,9 @@ export const unwrapError = (
 			jsonError = err.message;
 		} else {
 			jsonError.message = JSON.parse(err.message);
+			jsonError.key =
+				jsonError.key !== "API.UNKNOWN" ? jsonError.key : "API.INVALID_BODY";
+			code = 400;
 		}
 	}
 

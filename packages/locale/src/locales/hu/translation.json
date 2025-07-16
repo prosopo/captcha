@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Hiányzó titkos kulcs",
+		"SITE_KEY_NOT_FOUND": "Webhely kulcs nem található",
+		"JSON_LOAD_FAILED": "JSON fájl betöltése sikertelen",
+		"MNEMONIC_UNDEFINED": "Mnemonic nincs meghatározva. Kérjük állítsa be a mnemonicot környezeti változókban",
+		"NO_MNEMONIC_OR_SEED": "Nincs megadva mnemonic vagy mag",
+		"CANT_FIND_KEYRINGPAIR": "Nem található a kulcspáros a következőhöz: {{address}}",
+		"ENVIRONMENT_NOT_READY": "Környezet nincs felkészítve",
+		"INVALID_SIGNATURE": "Érvénytelen aláírás",
+		"SITE_KEY_MISSING": "Az oldal kulcs hiányzik",
+		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
+		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Nincs elegendő engedély a művelet végrehajtásához",
+		"MISSING_QUERY_PARAMETERS": "Hiányzó lekérdezési paraméterek",
+		"MISSING_AUTHORIZATION_HEADER": "Hiányzó azonosítási fejléc",
+		"TIMESTAMP_TOO_OLD": "Az időbélyeg túl régi",
+		"FORBIDDEN": "tiltott",
+		"PROVIDER_VERIFY_FAILED": "Szolgáltató ellenőrzése sikertelen",
 		"UNAUTHORIZED": "Unauthorized",
 		"MISSING_BODY": "Hiányzó test",
 		"NO_CONTENT_TYPE_HEADER": "Nincs tartalom-típus fejléc. Feltételezett JSON kódolt test, de nem sikerült értelmezni.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Érvénytelen URL",
 		"INVALID_BODY": "Érvénytelen test",
 		"PARSE_ERROR": "Hiba az adatkérések elemzése közben"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",
+		"CANNOT_DELETE_OWN_USER": "Nem törölheti saját fiókját",
+		"CANNOT_DELETE_LAST_USER": "Nem törölheti az utolsó felhasználót",
+		"USER_ALREADY_EXISTS": "A felhasználó már létezik",
+		"NO_SUGGESTIONS_FOUND": "Nincsenek javaslatok",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nem lehet inaktiválni az utolsó aktív webhelyet"
 	},
 	"TARGET": {
 		"airplanes": "repülőgépek",
@@ -334,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
 		"NO_EXTENSION_FOUND": "Nincs kiterjesztés található"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "JSON fájl betöltése sikertelen",
-		"MNEMONIC_UNDEFINED": "Mnemonic nincs meghatározva. Kérjük állítsa be a mnemonicot környezeti változókban",
-		"NO_MNEMONIC_OR_SEED": "Nincs megadva mnemonic vagy mag",
-		"CANT_FIND_KEYRINGPAIR": "Nem található a kulcspáros a következőhöz: {{address}}",
-		"ENVIRONMENT_NOT_READY": "Környezet nincs felkészítve",
-		"INVALID_SIGNATURE": "Érvénytelen aláírás",
-		"SITE_KEY_MISSING": "Az oldal kulcs hiányzik",
-		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
-		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nem sikerült kódolni az érvénytelen címet",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "A captcha megoldás elkötelezettsége nem létezik",
@@ -416,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Hiányzó ellátópár",
 		"MISSING_ENV_VARIABLE": "Hiányzó környezeti változó",
 		"GENERAL": "Általános fejlesztői hiba, lásd a kontextust",
-		"MISSING_SECRET_KEY": "Hiányzó titkos kulcs",
 		"METHOD_NOT_IMPLEMENTED": "Az eljárás nincs implementálva"
 	},
 	"FS": {
