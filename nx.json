@@ -9,30 +9,42 @@
 		]
 	},
 	"namedOutputs": {
-		"dist": ["{projectRoot}/dist"]
+		"dist": [
+			"{projectRoot}/dist"
+		]
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build", "@prosopo/config:build"],
+			"dependsOn": [
+				"^build"
+			],
 			"cache": true
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"],
+			"dependsOn": [
+				"^build:cjs"
+			],
 			"cache": true
 		},
 		"bundle": {
-			"dependsOn": ["^build", "^bundle"],
+			"dependsOn": [
+				"build"
+			],
 			"cache": true
 		},
 		"bundle:webpack": {
-			"dependsOn": ["^build:cjs", "^bundle:webpack"],
+			"dependsOn": [
+				"build:cjs"
+			],
 			"cache": true
 		},
 		"test": {
 			"cache": true
 		},
 		"typecheck": {
-			"dependsOn": ["^typecheck"],
+			"dependsOn": [
+				"^typecheck"
+			],
 			"cache": true
 		},
 		"lint": {
@@ -41,7 +53,9 @@
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": ["*"],
+		"projects": [
+			"*"
+		],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
@@ -55,7 +69,9 @@
 			"projectsAffectedByDependencyUpdates": "auto"
 		}
 	},
-	"plugin": "@nx/js",
 	"neverConnectToCloud": true,
+	"sync": {
+		"applyChanges": true
+	},
 	"useDaemonProcess": false
 }
