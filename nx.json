@@ -13,29 +13,31 @@
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^{target}"],
+			"dependsOn": ["^{target}", "@prosopo/config:build"],
 			"cache": true
 		},
 		"build:cjs": {
-			"dependsOn": ["^{target}"],
+			"dependsOn": ["^{target}", "@prosopo/config:build"],
 			"cache": true
 		},
 		"bundle": {
-			"dependsOn": ["^build", "^{target}"],
+			"dependsOn": ["^build", "^{target}", "@prosopo/config:build"],
 			"cache": true
 		},
 		"bundle:webpack": {
-			"dependsOn": ["^build:cjs", "^{target}"],
+			"dependsOn": ["^build:cjs", "^{target}", "@prosopo/config:build"],
 			"cache": true
 		},
 		"test": {
+			"dependsOn": ["@prosopo/config:build"],
 			"cache": true
 		},
 		"typecheck": {
-			"dependsOn": ["^{target}"],
+			"dependsOn": ["^{target}", "@prosopo/config:build"],
 			"cache": true
 		},
 		"lint": {
+			"dependsOn": ["@prosopo/config:build"],
 			"cache": true
 		}
 	},
