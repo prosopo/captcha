@@ -57,8 +57,8 @@ jobs:
           # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
           echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
 
-      - run: NODE_ENV="production" npx nx run @prosopo/cli:build
-      - run: NODE_ENV="production" npx nx run @prosopo/cli:bundle
+      - run: NODE_ENV="production" npx nx run @prosopo/cli:build --nxBail
+      - run: NODE_ENV="production" npx nx run @prosopo/cli:bundle --nxBail
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

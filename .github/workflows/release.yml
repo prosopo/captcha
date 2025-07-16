@@ -247,7 +247,7 @@ jobs:
         run: |
           echo "Building and bundling affected packages"
           set -x
-          npx nx run-many --target=build,build:cjs,bundle --projects=$(echo $affected | jq -r '[.[].name] | join(",")')
+          npx nx run-many --target=build,build:cjs,bundle --projects=$(echo $affected | jq -r '[.[].name] | join(",")') --nxBail
 
       - name: push
         if: ${{ env.affected != '[]' }}
