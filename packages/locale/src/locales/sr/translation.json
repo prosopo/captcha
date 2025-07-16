@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Недостаје тајни кључ",
+		"SITE_KEY_NOT_FOUND": "عنصر الموقع غير موجود",
+		"JSON_LOAD_FAILED": "Neuspelo učitavanje JSON datoteke",
+		"MNEMONIC_UNDEFINED": "Mnemonic nedefinisan. Molimo postavite mnemonic u okruženjske promenljive",
+		"NO_MNEMONIC_OR_SEED": "Nije dostavljen mnemonic ili ključ",
+		"CANT_FIND_KEYRINGPAIR": "Nije moguće pronaći keyringpair za {{address}}",
+		"ENVIRONMENT_NOT_READY": "Okruženje nije spremno",
+		"INVALID_SIGNATURE": "Nevažeći potpis",
+		"SITE_KEY_MISSING": "SITE KEY nedostaje",
+		"ACCOUNT_NOT_FOUND": "Nalog nije pronađen",
+		"INVALID_TIMESTAMP": "Nevažeće vreme"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "أذونات غير كافية لأداء هذا الإجراء",
+		"MISSING_QUERY_PARAMETERS": "متغيرات الاستعلام المفقودة",
+		"MISSING_AUTHORIZATION_HEADER": "رأس التفويض المفقود",
+		"TIMESTAMP_TOO_OLD": "الطابع الزمني قديم جدًا",
+		"FORBIDDEN": "ممنوع",
+		"PROVIDER_VERIFY_FAILED": "فشل التحقق من المزود",
 		"UNAUTHORIZED": "غير مصرح",
 		"MISSING_BODY": "الجسم غير موجود",
 		"NO_CONTENT_TYPE_HEADER": "لا يوجد عنوان نوع المحتوى. يفترض جسمًا مشفرًا بتنسيق JSON ولكن فشل التحليل.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Invalid URL",
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "لا يمكن تعديل مالك المستخدم",
+		"CANNOT_DELETE_OWN_USER": "لا يمكن حذف حسابك الخاص",
+		"CANNOT_DELETE_LAST_USER": "لا يمكن حذف آخر مستخدم",
+		"USER_ALREADY_EXISTS": "المستخدم موجود بالفعل",
+		"NO_SUGGESTIONS_FOUND": "لا توجد اقتراحات",
+		"CANNOT_DEACTIVATE_LAST_SITE": "لا يمكن تعطيل آخر موقع نشط"
 	},
 	"TARGET": {
 		"airplanes": "طائرات",
@@ -334,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "Nalog nije pronađen",
 		"NO_EXTENSION_FOUND": "Nema pronađenih ekstenzija"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Neuspelo učitavanje JSON datoteke",
-		"MNEMONIC_UNDEFINED": "Mnemonic nedefinisan. Molimo postavite mnemonic u okruženjske promenljive",
-		"NO_MNEMONIC_OR_SEED": "Nije dostavljen mnemonic ili ključ",
-		"CANT_FIND_KEYRINGPAIR": "Nije moguće pronaći keyringpair za {{address}}",
-		"ENVIRONMENT_NOT_READY": "Okruženje nije spremno",
-		"INVALID_SIGNATURE": "Nevažeći potpis",
-		"SITE_KEY_MISSING": "SITE KEY nedostaje",
-		"ACCOUNT_NOT_FOUND": "Nalog nije pronađen",
-		"INVALID_TIMESTAMP": "Nevažeće vreme"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nemogućnost kodiranja nevažeće adrese",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Obavezna izjava za captcha rešenje ne postoji",
@@ -416,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Missing provider pair",
 		"MISSING_ENV_VARIABLE": "Missing environment variable",
 		"GENERAL": "General Dev Error, see context",
-		"MISSING_SECRET_KEY": "Missing secret key",
 		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
 	},
 	"FS": {

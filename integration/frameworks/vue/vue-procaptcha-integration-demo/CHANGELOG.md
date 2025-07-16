@@ -1,5 +1,21 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.6
+### Patch Changes
+
+- 3573f0b: build using vite, typecheck using tsc
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [63519d7]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+  - @prosopo/types@3.0.4
+  - @prosopo/config@3.1.1
+  - @prosopo/vue-procaptcha-wrapper@1.1.6
+
 ## 1.1.5
 ### Patch Changes
 

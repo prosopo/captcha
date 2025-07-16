@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/gh-actions",
-	"version": "2.6.0",
+	"version": "2.6.1",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@octokit/graphql": "8.1.1",
-		"@prosopo/config": "3.1.0",
+		"@prosopo/config": "3.1.1",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",

@@ -1,5 +1,29 @@
 # @prosopo/provider-mock
 
+## 2.7.19
+### Patch Changes
+
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- 3573f0b: standardise all vite based npm scripts for bundling
+- Updated dependencies [2f0c830]
+- Updated dependencies [52dbf21]
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [63519d7]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+  - @prosopo/provider@3.2.1
+  - @prosopo/types@3.0.4
+  - @prosopo/api-express-router@3.0.4
+  - @prosopo/common@3.1.0
+  - @prosopo/config@3.1.1
+
 ## 2.7.18
 ### Patch Changes
 

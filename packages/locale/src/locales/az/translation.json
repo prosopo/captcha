@@ -1,5 +1,24 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Gizli açar qısağını qalmışdır",
+		"SITE_KEY_NOT_FOUND": "Sayt açarı tapılmadı",
+		"JSON_LOAD_FAILED": "JSON faylını yükləmək alınmadı",
+		"MNEMONIC_UNDEFINED": "Mnemonic Qeyri-müəyyəndir. Lütfən mnemonic-i mühit dəyişənlərində təyin edin",
+		"NO_MNEMONIC_OR_SEED": "Mnemonic və ya toxum göstərilmiş deyil",
+		"CANT_FIND_KEYRINGPAIR": "{{address}} üçün açar çiftini tapa bilmir",
+		"ENVIRONMENT_NOT_READY": "Mühit hazır deyil",
+		"INVALID_SIGNATURE": "Yanlış imza",
+		"SITE_KEY_MISSING": "SITE KEY çatışmır",
+		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
+		"INVALID_TIMESTAMP": "Yanlış vaxt damğı"
+	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Bu əməliyyatı yerinə yetirmək üçün kifayət qədər icazə yoxdur",
+		"MISSING_QUERY_PARAMETERS": "Axtarış parametrləri itirildi",
+		"MISSING_AUTHORIZATION_HEADER": "Səlahiyyət başlığı itirildi",
+		"TIMESTAMP_TOO_OLD": "Zaman damgası çox köhnədir",
+		"FORBIDDEN": "Qadağan edilir",
+		"PROVIDER_VERIFY_FAILED": "Təchizatçı doğrulaması alınmadı",
 		"UNAUTHORIZED": "İcazəsiz",
 		"MISSING_BODY": "Gövdesi eksik",
 		"NO_CONTENT_TYPE_HEADER": "Məzmun-növü başlığı yoxdur. JSON kodlanmış gövde olduğu, ancaq ayrışdırmaq mümkün olmadığı düşünüldü.",
@@ -20,6 +39,14 @@
 		"INVALID_URL": "Yanlış URL",
 		"INVALID_BODY": "Yanlış bədən",
 		"PARSE_ERROR": "Tələbi pars edərkən səhv baş verdi"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Sahib istifadəçini dəyişmək olmaz",
+		"CANNOT_DELETE_OWN_USER": "Öz hesabınızı silə bilmərsiniz",
+		"CANNOT_DELETE_LAST_USER": "Son istifadəçini silmək olmaz",
+		"USER_ALREADY_EXISTS": "İstifadəçi artıq mövcuddur",
+		"NO_SUGGESTIONS_FOUND": "Təklif tapılmadı",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Sonaktiv saytı deaktiv etmək olmaz"
 	},
 	"TARGET": {
 		"airplanes": "təyyarələr",
@@ -334,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
 		"NO_EXTENSION_FOUND": "Tətbiq tapılmadı"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "JSON faylını yükləmək alınmadı",
-		"MNEMONIC_UNDEFINED": "Mnemonic Qeyri-müəyyəndir. Lütfən mnemonic-i mühit dəyişənlərində təyin edin",
-		"NO_MNEMONIC_OR_SEED": "Mnemonic və ya toxum göstərilmiş deyil",
-		"CANT_FIND_KEYRINGPAIR": "{{address}} üçün açar çiftini tapa bilmir",
-		"ENVIRONMENT_NOT_READY": "Mühit hazır deyil",
-		"INVALID_SIGNATURE": "Yanlış imza",
-		"SITE_KEY_MISSING": "SITE KEY çatışmır",
-		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
-		"INVALID_TIMESTAMP": "Yanlış vaxt damğı"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçərsiz ünvan kodlanmadı",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha həlli əfsanəsi mövcud deyil",
@@ -416,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Təminatçı cütü yoxdur",
 		"MISSING_ENV_VARIABLE": "Mühit dəyişkəni yoxdur",
 		"GENERAL": "Ümumi Dev Xəta, məzmunu gör",
-		"MISSING_SECRET_KEY": "Gizli açar yoxdur",
 		"METHOD_NOT_IMPLEMENTED": "Metod icra olunmadı"
 	},
 	"FS": {

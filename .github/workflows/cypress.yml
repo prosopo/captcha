@@ -64,7 +64,7 @@ jobs:
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace
-      - run: npm run build:all
+      - run: npx nx run-many --target=build --nxBail
 
       - name: Start the docker images
         run: |
@@ -78,7 +78,7 @@ jobs:
       # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
       # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
       # by the cypress tests to find the elements they need to interact with
-      - run: NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
+      - run: NODE_ENV="development" npx nx run @prosopo/procaptcha-bundle:bundle --nxBail
 
       - name: Run the cypress tests on client-bundle-example
         run: |

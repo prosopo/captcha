@@ -1,5 +1,30 @@
 # @prosopo/client-example-server
 
+## 2.7.16
+### Patch Changes
+
+- 52dbf21: bumping deps
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- 3573f0b: standardise all vite based npm scripts for bundling
+- Updated dependencies [52dbf21]
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [63519d7]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+  - @prosopo/util@3.0.3
+  - @prosopo/server@2.9.12
+  - @prosopo/types@3.0.4
+  - @prosopo/common@3.1.0
+  - @prosopo/dotenv@3.0.5
+  - @prosopo/config@3.1.1
+
 ## 2.7.15
 ### Patch Changes
 
