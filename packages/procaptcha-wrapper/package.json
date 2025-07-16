@@ -26,6 +26,7 @@
 	},
 	"dependencies": {
 		"@prosopo/types": "3.0.4",
+		"@prosopo/util": "3.0.3",
 		"@prosopo/config": "3.1.1",
 		"@prosopo/locale": "3.1.0"
 	},
