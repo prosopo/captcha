@@ -173,6 +173,7 @@ jobs:
         run: |
           npm run build:tsc -w @prosopo/config
           npm run build:tsc -w @prosopo/lint
+          npm run build:tsc -w @prosopo/procaptcha-integration-build-config
           npm run lint-fix
           # Amend the previous commit with any lint fixes
           if [ -n "$(git status --porcelain)" ]; then
