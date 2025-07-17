@@ -18,8 +18,27 @@ import { env } from "node:process";
 import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
 import z from "zod";
+import { Argv } from "yargs";
 
-const main = async (args: {
+export const buildWorkflowNamesCommand = () => {
+	return {
+		command: 'workflowNames',
+		describe: 'Check the workflow names in the workspace',
+		builder: (yargs: Argv) => {
+			return yargs.option('root', {
+				alias: 'r',
+			})
+		},
+		handler: async (argv: unknown) => {
+			const args = z.object({
+				root: z.string(),
+			}).parse(argv);
+			await workflowNames({ root: args.root });
+		}
+	}
+}
+
+const workflowNames = async (args: {
 	root: string;
 }) => {
 	const workflowsDir = path.join(args.root, ".github/workflows");
@@ -45,10 +64,5 @@ const main = async (args: {
 			throw new Error(`${pth} has name ${name}, should be ${target}`);
 		}
 	}
-};
-
-export const workflowNames = async () => {
-	await main({
-		root: z.string().parse(process.argv[2]),
-	});
+	console.log("Workflow names check complete");
 };

@@ -18,6 +18,7 @@ import { inspect } from "node:util";
 import { get } from "@prosopo/util";
 import fg from "fast-glob";
 import z from "zod";
+import { Argv } from "yargs";
 
 // covers both package.json and tsconfig.json fields
 const packageConfigSchema = z.object({
@@ -231,8 +232,22 @@ const validateDependencies = async (args: {
 	return wrongTsConfigs;
 };
 
-export const refs = async () => {
-	await validateWorkspace({
-		packageJsonPath: z.string().parse(process.argv[2]),
-	});
-};
+export const buildRefsCommand = () => {
+	return {
+		command: 'refs',
+		describe: 'Check the references in the workspace',
+		builder: (yargs: Argv) => {
+			return yargs.option('pkg', {
+				alias: 'p',
+			})
+		},
+		handler: async (argv: unknown) => {
+			const args = z.object({
+				pkg: z.string(),
+			}).parse(argv);
+			await validateWorkspace({
+				packageJsonPath: args.pkg,
+			});
+		}
+	}
+}

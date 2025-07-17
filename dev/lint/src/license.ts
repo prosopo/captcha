@@ -16,8 +16,49 @@ import fs from "node:fs";
 import { at } from "@prosopo/util";
 import fg from "fast-glob";
 import { z } from "zod";
+import { Argv } from "yargs";
 
-export const license = async () => {
+export const buildLicenseCommand = () => {
+	return {
+		command: 'license',
+		describe: 'Check the license in the workspace',
+		builder: (yargs: Argv) => {
+			return yargs.option('pkg', {
+				alias: 'p',
+			}).option('fix', {
+				alias: 'f',
+				type: 'boolean',
+				default: false,
+			}).option('ignore', {
+				alias: 'i',
+				type: 'array',
+				string: true,
+				default: [],
+			}).option('list', {
+				alias: 'l',
+				type: 'boolean',
+				default: false,
+			})
+		},
+		handler: async (argv: unknown) => {
+			const args = z.object({
+				pkg: z.string(),
+				fix: z.boolean(),
+				ignore: z.array(z.string()),
+				list: z.boolean(),
+			}).parse(argv);
+			await license(args);
+		}
+	}
+}
+
+const license = async (args: {
+	pkg: string;
+	fix: boolean;
+	ignore: string[];
+	list: boolean;
+}) => {
+
 	const header = `// Copyright 2021-${new Date().getFullYear()} Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,9 +85,8 @@ export const license = async () => {
 		"**/*.mts",
 	];
 
-	const cmd = z.string().parse(process.argv[2]);
-	const currentPath = z.string().parse(process.argv[3]);
-	const ignore = z.string().default("").parse(process.argv[4]).split(",");
+	const currentPath = args.pkg;
+	const ignore = args.ignore;
 
 	const files = fg
 		.sync(searchPaths, {
@@ -75,10 +115,10 @@ export const license = async () => {
 		})
 		.filter((file) => fs.lstatSync(file).isFile());
 
-	if (cmd === "list") {
+	if (args.list) {
 		console.log(JSON.stringify(files, null, 4));
 		console.log("Found", files.length, "files");
-	} else if (cmd === "check") {
+	} else if (!args.fix) {
 		for (const file of files) {
 			const fileContents = fs.readFileSync(file, "utf8");
 			if (fileContents.includes(header)) {
@@ -87,7 +127,7 @@ export const license = async () => {
 				throw new Error(`License not present: ${file}`);
 			}
 		}
-	} else if (cmd === "license") {
+	} else if (args.fix) {
 		//for each file, check if file contains // Copyright (C) Prosopo (UK) Ltd.
 		for (const file of files) {
 			//check if file is a file, not a directory
