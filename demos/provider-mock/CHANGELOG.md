@@ -1,5 +1,10 @@
 # @prosopo/provider-mock
 
+## 2.7.22
+### Patch Changes
+
+  - @prosopo/provider@3.2.4
+
 ## 2.7.21
 ### Patch Changes
 
