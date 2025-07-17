@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.2.3
+### Patch Changes
+
+- 58ab0ce: logging key fix
+
 ## 3.2.2
 ### Patch Changes
 
