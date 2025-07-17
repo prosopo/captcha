@@ -19,6 +19,7 @@ env:
   affected: '[]' # default to empty array
   prerelease: 'false' # default to false, will be set to true if there are changesets and not on main branch
   BRANCH_PROTECTION_DISABLED: 'true' # bypass husky check
+  NODE_ENV: "production"
 
 jobs:
   release:
