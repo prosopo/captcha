@@ -51,6 +51,18 @@ export const tsconfigIncludes = async () => {
         throw new Error(`${args.pkg} is not a workspace`);
     }
 
+    // Helper function to check and optionally fix includes
+    function checkAndFixInclude({ includes, pattern, errorMsg, tsconfigPath }: { includes: string[]; pattern: string; errorMsg: string; tsconfigPath: string; }) {
+        if (!includes.includes(pattern)) {
+            if (args.fix) {
+                includes.push(pattern);
+                console.log(`Added "${pattern}" to ${tsconfigPath} \"includes\"`);
+            } else {
+                throw new Error(`${tsconfigPath} ${errorMsg}`);
+            }
+        }
+    }
+
     // for each package in the workspace
     const globs = z
         .string()
@@ -71,37 +83,33 @@ export const tsconfigIncludes = async () => {
             includes = includesResult.data;
         }
         // ensure "includes" includes ts, tsx, json and d.ts files (note that json and d.ts are not included by default in tsc, this is why we need to explicitly include them)
-        if (!includes.includes("src/**/*.ts")) {
-            if (args.fix) {
-                includes.push("src/**/*.ts");
-            } else {
-                throw new Error(`${tsconfigPath} does not include ts files`);
-            }
-        }
-        if (!includes.includes("src/**/*.tsx")) {
-            if (args.fix) {
-                includes.push("src/**/*.tsx");
-            } else {
-                throw new Error(`${tsconfigPath} does not include tsx files`);
-            }
-        }
-        if (!includes.includes("src/**/*.json")) {
-            if (args.fix) {
-                includes.push("src/**/*.json");
-            } else {
-                throw new Error(`${tsconfigPath} does not include json files`);
-            }
-        }
-        if (!includes.includes("src/**/*.d.ts")) {
-            if (args.fix) {
-                includes.push("src/**/*.d.ts");
-            } else {
-                throw new Error(`${tsconfigPath} does not include d.ts files`);
-            }
-        }
+        checkAndFixInclude({
+            includes,
+            pattern: "src/**/*.ts",
+            errorMsg: "does not include ts files",
+            tsconfigPath,
+        });
+        checkAndFixInclude({
+            includes,
+            pattern: "src/**/*.tsx",
+            errorMsg: "does not include tsx files",
+            tsconfigPath,
+        });
+        checkAndFixInclude({
+            includes,
+            pattern: "src/**/*.json",
+            errorMsg: "does not include json files",
+            tsconfigPath,
+        });
+        checkAndFixInclude({
+            includes,
+            pattern: "src/**/*.d.ts",
+            errorMsg: "does not include d.ts files",
+            tsconfigPath,
+        });
         if (args.fix) {
             tsconfig.include = includes;
-            fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2));
+            fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 4));
             console.log(`Fixed ${tsconfigPath} "includes"`);
         }
     }
