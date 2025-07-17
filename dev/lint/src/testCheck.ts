@@ -26,10 +26,9 @@ export const buildTestCheckCommand = () => {
 		command: "testCheck",
 		describe: "Check packages that have tests have an npm script to run them",
 		builder: (yargs: Argv) => {
-			return yargs
-				.option("pkg", {
-					alias: "p",
-				})
+			return yargs.option("pkg", {
+				alias: "p",
+			});
 		},
 		handler: async (argv: unknown) => {
 			const args = z
@@ -67,7 +66,7 @@ const testCheck = (args: {
 		// glob for test files in the source dir (.test.ts or .spec.ts)
 		const testFiles = fg.globSync([
 			`${path.dirname(pkgJsonPath)}/src/**/*.test.ts`,
-			`${path.dirname(pkgJsonPath)}/src/**/*.spec.ts`
+			`${path.dirname(pkgJsonPath)}/src/**/*.spec.ts`,
 		]);
 		if (hasTestScript) {
 			// package has a test script

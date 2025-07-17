@@ -127,7 +127,7 @@ const checkTsconfigIncludes = (args: {
 			tsconfigPath,
 		});
 		if (args.fix) {
-			if (includes.length != tsconfig.include.length) {
+			if (includes.length !== tsconfig.include.length) {
 				tsconfig.include = includes;
 				fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 4));
 				console.log(`Fixed ${tsconfigPath} "includes"`);

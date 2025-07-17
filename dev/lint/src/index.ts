@@ -17,7 +17,7 @@ import { buildJsonCommand } from "./json.js";
 import { buildLicenseCommand } from "./license.js";
 import { buildRedirectsCommand } from "./redirects.js";
 import { buildRefsCommand } from "./refs.js";
-import { buildTestCheckCommand } from "./testSetup.js";
+import { buildTestCheckCommand } from "./testCheck.js";
 import { buildTsconfigIncludesCommand } from "./tsconfigIncludes.js";
 import { buildWorkflowNamesCommand } from "./workflowNames.js";
 
@@ -34,13 +34,10 @@ const main = async () => {
 		.command(buildRedirectsCommand())
 		.command(buildRefsCommand())
 		.command(buildTestCheckCommand())
+		.demandCommand()
 		.strict()
 		.help()
 		.parse();
-
-	if (args._[0] === undefined) {
-		console.log("No command provided");
-	}
 };
 
 main();
