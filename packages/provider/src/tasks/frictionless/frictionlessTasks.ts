@@ -139,15 +139,21 @@ export class FrictionlessManager extends CaptchaManager {
 			process.env.BOT_DECRYPTION_KEY,
 			...(await this.getDetectorKeys()),
 		].filter((k) => k);
-		this.logger.debug(() => ({
-			msg: "Decrypting score",
-			data: {
-				keysLength: decryptKeys.length,
-				keys: decryptKeys.map((k) =>
-					k ? `${k.slice(0, 5)}...${k.slice(-5)}` || "" : "",
-				),
-			},
-		}));
+		this.logger.debug(() => {
+			const loggedKey = decryptKeys.map((k) =>
+				k
+					? `${k.slice(0, 5)}... ${k.slice(k.length - 5, k.length + 5)} ... ${k.slice(-5)}` ||
+						""
+					: "",
+			);
+			return {
+				msg: "Decrypting score",
+				data: {
+					keysLength: decryptKeys.length,
+					keys: loggedKey,
+				},
+			};
+		});
 
 		// run through the keys and try to decrypt the score
 		// if we run out of keys and the score is still not decrypted, throw an error
