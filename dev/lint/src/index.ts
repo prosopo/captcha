@@ -25,7 +25,7 @@ import { hideBin } from 'yargs/helpers';
 
 const main = async () => {
 
-	await yargs(hideBin(process.argv))
+	const args = await yargs(hideBin(process.argv))
 		.command(buildEnginesCommand())
 		.command(buildJsonCommand())
 		.command(buildTsconfigIncludesCommand())
@@ -33,10 +33,13 @@ const main = async () => {
 		.command(buildLicenseCommand())
 		.command(buildRedirectsCommand())
 		.command(buildRefsCommand())
-		.demandCommand()
 		.strict()
 		.help()
-		.argv;
+		.parse();
+
+	if (args.command === undefined) {
+		console.log('No command provided')
+	}
 };
 
 main();

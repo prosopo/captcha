@@ -11,17 +11,7 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests",
-		"engines": "node dist/engines.js",
-		"refs": "node dist/refs.js",
-		"workflowNames": "node dist/workflowNames.js",
-		"scripts": "node dist/scripts.js",
-		"license": "node dist/license.js check",
-		"license:fix": "node dist/license.js license",
-		"redirects": "node dist/redirects.js",
-		"redirects:fix": "node dist/redirects.js fix",
-		"tsconfig:includes": "node dist/tsconfigIncludes.js",
-		"tsconfig:includes:fix": "node dist/tsconfigIncludes.js --fix",
-		"json": "node dist/json.js"
+		"start": "node dist/index.js"
 	},
 	"author": "",
 	"license": "ISC",
