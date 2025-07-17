@@ -1,5 +1,10 @@
 # @prosopo/types-database
 
+## 3.0.11
+### Patch Changes
+
+- 625fef8: ua parsing
+
 ## 3.0.10
 ### Patch Changes
 
