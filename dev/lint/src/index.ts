@@ -36,7 +36,7 @@ const main = async () => {
 		.help()
 		.parse();
 
-	if (args.command === undefined) {
+	if (args._[0] === undefined) {
 		console.log("No command provided");
 	}
 };

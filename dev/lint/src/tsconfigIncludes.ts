@@ -26,13 +26,15 @@ export const buildTsconfigIncludesCommand = () => {
 		command: "tsconfigIncludes",
 		describe: "Check the tsconfig includes in the workspace",
 		builder: (yargs: Argv) => {
-			return yargs.option("pkg", {
-				alias: "p",
-			}).option("fix", {
-				alias: "f",
-				type: "boolean",
-				default: false,
-			});
+			return yargs
+				.option("pkg", {
+					alias: "p",
+				})
+				.option("fix", {
+					alias: "f",
+					type: "boolean",
+					default: false,
+				});
 		},
 		handler: async (argv: unknown) => {
 			const args = z
@@ -125,9 +127,11 @@ const checkTsconfigIncludes = (args: {
 			tsconfigPath,
 		});
 		if (args.fix) {
-			tsconfig.include = includes;
-			fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 4));
-			console.log(`Fixed ${tsconfigPath} "includes"`);
+			if (includes.length != tsconfig.include.length) {
+				tsconfig.include = includes;
+				fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 4));
+				console.log(`Fixed ${tsconfigPath} "includes"`);
+			}
 		}
 	}
 	console.log("TSConfig 'includes' check complete");
