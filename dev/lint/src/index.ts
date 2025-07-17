@@ -14,13 +14,13 @@
 
 import { z } from "zod";
 import { engines } from "./engines.js";
+import { json } from "./json.js";
 import { license } from "./license.js";
 import { redirects } from "./redirects.js";
 import { refs } from "./refs.js";
 import { scripts } from "./scripts.js";
 import { tsconfigIncludes } from "./tsconfigIncludes.js";
 import { workflowNames } from "./workflowNames.js";
-import { json } from "./json.js";
 
 const main = async () => {
 	const cmd = z.string().parse(process.argv[2]);

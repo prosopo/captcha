@@ -56,7 +56,7 @@ export const json = async () => {
 	const jsonPaths = fg.globSync(globs);
 	for (const jsonPath of jsonPaths) {
 		console.log("Checking", jsonPath);
-		const content = fs.readFileSync(jsonPath, "utf8")
+		const content = fs.readFileSync(jsonPath, "utf8");
 		try {
 			// check if the json is valid
 			const json = JSON.parse(content);
