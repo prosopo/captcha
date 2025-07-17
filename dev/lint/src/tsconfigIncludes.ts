@@ -23,7 +23,7 @@ import z from "zod";
 
 export const buildTsconfigIncludesCommand = () => {
 	return {
-		command: "tsconfig:includes",
+		command: "tsconfigIncludes",
 		describe: "Check the tsconfig includes in the workspace",
 		builder: (yargs: Argv) => {
 			return yargs.option("pkg", {
