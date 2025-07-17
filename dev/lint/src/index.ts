@@ -20,6 +20,7 @@ import { refs } from "./refs.js";
 import { scripts } from "./scripts.js";
 import { tsconfigIncludes } from "./tsconfigIncludes.js";
 import { workflowNames } from "./workflowNames.js";
+import { json } from "./json.js";
 
 const main = async () => {
 	const cmd = z.string().parse(process.argv[2]);
@@ -41,6 +42,8 @@ const main = async () => {
 			return await redirects();
 		case "tsconfig:includes":
 			return await tsconfigIncludes();
+		case "json":
+			return await json();
 		default:
 			throw new Error(`Unknown command: ${cmd}`);
 	}
