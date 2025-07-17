@@ -19,6 +19,7 @@ import { redirects } from "./redirects.js";
 import { refs } from "./refs.js";
 import { scripts } from "./scripts.js";
 import { workflowNames } from "./workflowNames.js";
+import { tsconfigIncludes } from "./tsconfigIncludes.js";
 
 const main = async () => {
 	const cmd = z.string().parse(process.argv[2]);
@@ -38,6 +39,8 @@ const main = async () => {
 			return await license();
 		case "redirects":
 			return await redirects();
+		case "tsconfig:includes":
+			return await tsconfigIncludes();
 		default:
 			throw new Error(`Unknown command: ${cmd}`);
 	}
