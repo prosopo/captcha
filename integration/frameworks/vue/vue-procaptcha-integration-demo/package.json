@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vue-procaptcha-integration-demo",
-	"version": "1.1.6",
+	"version": "1.1.7",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -25,7 +25,7 @@
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite dev --port=9331 --mode=$NODE_ENV"
 	},
 	"dependencies": {
-		"@prosopo/vue-procaptcha-wrapper": "1.1.6",
+		"@prosopo/vue-procaptcha-wrapper": "1.1.7",
 		"@prosopo/config": "3.1.1",
 		"@prosopo/types": "3.0.4",
 		"vue": "3.5.13"
