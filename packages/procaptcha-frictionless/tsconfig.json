@@ -1,40 +1,37 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": [
-            "es6",
-            "dom"
-        ],
-        "allowJs": true
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "src/index.html",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../detector"
-        },
-        {
-            "path": "../locale"
-        },
-        {
-            "path": "../procaptcha-pow"
-        },
-        {
-            "path": "../procaptcha-react"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../widget-skeleton"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"],
+		"allowJs": true
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/index.html",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../detector"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../procaptcha-pow"
+		},
+		{
+			"path": "../procaptcha-react"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../widget-skeleton"
+		}
+	]
 }

@@ -1,43 +1,37 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "lib": [
-            "ES2021",
-            "dom"
-        ],
-        "types": [
-            "cypress",
-            "node"
-        ],
-        "noEmit": true,
-        "noEmitOnError": true,
-        "sourceMap": false
-    },
-    "include": [
-        "src/**/*.ts",
-        "cypress/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.json",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../../dev/scripts"
-        },
-        {
-            "path": "../../packages/types"
-        },
-        {
-            "path": "../../packages/util"
-        },
-        {
-            "path": "../../packages/common"
-        },
-        {
-            "path": "../../packages/datasets"
-        },
-        {
-            "path": "../../packages/types-database"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"lib": ["ES2021", "dom"],
+		"types": ["cypress", "node"],
+		"noEmit": true,
+		"noEmitOnError": true,
+		"sourceMap": false
+	},
+	"include": [
+		"src/**/*.ts",
+		"cypress/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../../dev/scripts"
+		},
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/util"
+		},
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/datasets"
+		},
+		{
+			"path": "../../packages/types-database"
+		}
+	]
 }

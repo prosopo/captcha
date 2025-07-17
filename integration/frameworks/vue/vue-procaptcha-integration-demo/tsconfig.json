@@ -1,24 +1,24 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext"
-    },
-    "include": [
-        "./src",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.json",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../vue-procaptcha-wrapper"
-        },
-        {
-            "path": "../../../procaptcha-integration-build-config"
-        }
-    ]
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext"
+	},
+	"include": [
+		"./src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../vue-procaptcha-wrapper"
+		},
+		{
+			"path": "../../../procaptcha-integration-build-config"
+		}
+	]
 }

@@ -1,56 +1,56 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "NodeNext"
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../api"
-        },
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../dotenv"
-        },
-        {
-            "path": "../env"
-        },
-        {
-            "path": "../keyring"
-        },
-        {
-            "path": "../locale"
-        },
-        {
-            "path": "../provider"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util"
-        },
-        {
-            "path": "../util-crypto"
-        },
-        {
-            "path": "../../dev/workspace"
-        },
-        {
-            "path": "../user-access-policy"
-        },
-        {
-            "path": "../api-express-router"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"module": "NodeNext"
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../dotenv"
+		},
+		{
+			"path": "../env"
+		},
+		{
+			"path": "../keyring"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../provider"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
+		},
+		{
+			"path": "../../dev/workspace"
+		},
+		{
+			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api-express-router"
+		}
+	]
 }

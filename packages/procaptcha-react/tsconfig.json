@@ -1,42 +1,39 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": [
-            "es6",
-            "dom"
-        ],
-        "jsxImportSource": "@emotion/react"
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../locale"
-        },
-        {
-            "path": "../procaptcha"
-        },
-        {
-            "path": "../procaptcha-common"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util"
-        },
-        {
-            "path": "../widget-skeleton"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"],
+		"jsxImportSource": "@emotion/react"
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../procaptcha"
+		},
+		{
+			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../widget-skeleton"
+		}
+	]
 }

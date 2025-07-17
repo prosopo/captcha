@@ -1,20 +1,17 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": [
-            "es6",
-            "dom"
-        ],
-        "jsxImportSource": "@emotion/react"
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ],
-    "references": []
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"],
+		"jsxImportSource": "@emotion/react"
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": []
 }

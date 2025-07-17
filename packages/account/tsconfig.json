@@ -1,40 +1,37 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": [
-            "es6",
-            "dom"
-        ],
-        "allowJs": true,
-        "jsxImportSource": "@emotion/react"
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../util"
-        },
-        {
-            "path": "../fingerprint"
-        },
-        {
-            "path": "../keyring"
-        },
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util-crypto"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["es6", "dom"],
+		"allowJs": true,
+		"jsxImportSource": "@emotion/react"
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../fingerprint"
+		},
+		{
+			"path": "../keyring"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util-crypto"
+		}
+	]
 }

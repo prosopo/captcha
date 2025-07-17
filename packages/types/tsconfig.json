@@ -1,25 +1,25 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist"
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../common"
-        },
-        {
-            "path": "../locale"
-        },
-        {
-            "path": "../util-crypto"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../util-crypto"
+		}
+	]
 }

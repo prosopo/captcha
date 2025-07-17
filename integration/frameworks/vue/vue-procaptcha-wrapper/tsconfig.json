@@ -1,22 +1,22 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist"
-    },
-    "include": [
-        "./src",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.json",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../../../../packages/procaptcha-wrapper"
-        },
-        {
-            "path": "../../../procaptcha-integration-build-config"
-        }
-    ]
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": [
+		"./src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../../../../packages/procaptcha-wrapper"
+		},
+		{
+			"path": "../../../procaptcha-integration-build-config"
+		}
+	]
 }

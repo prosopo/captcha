@@ -1,20 +1,18 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "types": [
-            "vite/client"
-        ]
-    },
-    "include": [
-        "./src/**/*.ts",
-        "./src/**/*.d.ts",
-        "./src/**/*.tsx",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.json",
-        "src/**/*.d.ts"
-    ],
-    "references": []
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"types": ["vite/client"]
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.d.ts",
+		"./src/**/*.tsx",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
+	"references": []
 }

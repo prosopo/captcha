@@ -1,36 +1,32 @@
 {
-    "extends": "../../tsconfig.esm.json",
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": [
-            "dom",
-            "dom.iterable",
-            "esnext"
-        ]
-    },
-    "include": [
-        "src",
-        "src/**/*.json",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ],
-    "references": [
-        {
-            "path": "../../packages/common"
-        },
-        {
-            "path": "../../packages/dotenv"
-        },
-        {
-            "path": "../../packages/server"
-        },
-        {
-            "path": "../../packages/types"
-        },
-        {
-            "path": "../../packages/util"
-        }
-    ]
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["dom", "dom.iterable", "esnext"]
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/server"
+		},
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/util"
+		}
+	]
 }
