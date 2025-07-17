@@ -1,5 +1,11 @@
 # @prosopo/angular-procaptcha-wrapper
 
+## 1.1.7
+### Patch Changes
+
+- Updated dependencies [c8d2743]
+  - @prosopo/procaptcha-wrapper@2.6.9
+
 ## 1.1.6
 ### Patch Changes
 

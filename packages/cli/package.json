@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cli",
-	"version": "3.1.1",
+	"version": "3.1.2",
 	"description": "CLI for Prosopo Provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -39,7 +39,7 @@
 		"@prosopo/env": "3.1.1",
 		"@prosopo/keyring": "2.8.7",
 		"@prosopo/locale": "3.1.0",
-		"@prosopo/provider": "3.2.1",
+		"@prosopo/provider": "3.2.2",
 		"@prosopo/types": "3.0.4",
 		"@prosopo/user-access-policy": "3.3.1",
 		"@prosopo/util": "3.0.3",

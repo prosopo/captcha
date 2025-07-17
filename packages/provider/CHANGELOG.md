@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.2.2
+### Patch Changes
+
+- 9e4e7ca: better key logging
+
 ## 3.2.1
 ### Patch Changes
 
