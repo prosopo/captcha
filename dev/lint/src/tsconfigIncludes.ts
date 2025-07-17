@@ -28,13 +28,17 @@ export const buildTsconfigIncludesCommand = () => {
 		builder: (yargs: Argv) => {
 			return yargs.option("pkg", {
 				alias: "p",
+			}).option("fix", {
+				alias: "f",
+				type: "boolean",
+				default: false,
 			});
 		},
 		handler: async (argv: unknown) => {
 			const args = z
 				.object({
 					pkg: z.string(),
-					fix: z.boolean().default(false),
+					fix: z.boolean(),
 				})
 				.parse(argv);
 			await checkTsconfigIncludes(args);
