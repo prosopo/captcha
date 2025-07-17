@@ -1,31 +1,39 @@
 {
-	"extends": "../../tsconfig.esm.json",
-	"compilerOptions": {
-		"rootDir": "./src",
-		"outDir": "./dist",
-		"lib": ["es6", "dom"],
-		"jsxImportSource": "@emotion/react"
-	},
-	"include": ["src", "src/**/*.json"],
-
-	"references": [
-		{
-			"path": "../common"
-		},
-		{
-			"path": "../load-balancer"
-		},
-		{
-			"path": "../types"
-		},
-		{
-			"path": "../util"
-		},
-		{
-			"path": "../widget-skeleton"
-		},
-		{
-			"path": "../account"
-		}
-	]
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": [
+            "es6",
+            "dom"
+        ],
+        "jsxImportSource": "@emotion/react"
+    },
+    "include": [
+        "src",
+        "src/**/*.json",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.d.ts"
+    ],
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../load-balancer"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../util"
+        },
+        {
+            "path": "../widget-skeleton"
+        },
+        {
+            "path": "../account"
+        }
+    ]
 }

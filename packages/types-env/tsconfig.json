@@ -1,19 +1,25 @@
 {
-	"extends": "../../tsconfig.esm.json",
-	"compilerOptions": {
-		"rootDir": "./src",
-		"outDir": "./dist"
-	},
-	"include": ["src", "src/**/*.json"],
-	"references": [
-		{
-			"path": "../common"
-		},
-		{
-			"path": "../types"
-		},
-		{
-			"path": "../types-database"
-		}
-	]
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
+    "include": [
+        "src",
+        "src/**/*.json",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.d.ts"
+    ],
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../types-database"
+        }
+    ]
 }

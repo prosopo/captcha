@@ -1,25 +1,33 @@
 {
-	"extends": "../../tsconfig.esm.json",
-	"compilerOptions": {
-		"rootDir": "./src",
-		"outDir": "./dist",
-		"paths": {
-			"#policy/*": ["./src/*"]
-		}
-	},
-	"include": ["./src"],
-	"references": [
-		{
-			"path": "../common"
-		},
-		{
-			"path": "../types"
-		},
-		{
-			"path": "../api-route"
-		},
-		{
-			"path": "../util"
-		}
-	]
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "paths": {
+            "#policy/*": [
+                "./src/*"
+            ]
+        }
+    },
+    "include": [
+        "./src",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.json",
+        "src/**/*.d.ts"
+    ],
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../api-route"
+        },
+        {
+            "path": "../util"
+        }
+    ]
 }

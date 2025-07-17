@@ -1,26 +1,35 @@
 {
-	"extends": "../../tsconfig.esm.json",
-	"compilerOptions": {
-		"rootDir": "./src",
-		"outDir": "./dist",
-		"lib": ["es6", "dom"]
-	},
-	"include": ["src", "src/**/*.json"],
-	"references": [
-		{
-			"path": "../api"
-		},
-		{
-			"path": "../common"
-		},
-		{
-			"path": "../keyring"
-		},
-		{
-			"path": "../types"
-		},
-		{
-			"path": "../load-balancer"
-		}
-	]
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": [
+            "es6",
+            "dom"
+        ]
+    },
+    "include": [
+        "src",
+        "src/**/*.json",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.d.ts"
+    ],
+    "references": [
+        {
+            "path": "../api"
+        },
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../keyring"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../load-balancer"
+        }
+    ]
 }

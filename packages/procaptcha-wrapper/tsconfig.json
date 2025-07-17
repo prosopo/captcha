@@ -1,22 +1,28 @@
 {
-	"extends": "../../tsconfig.esm.json",
-	"compilerOptions": {
-		"rootDir": "./src",
-		"outDir": "./dist"
-	},
-	"include": ["./src"],
-	"references": [
-		{
-			"path": "../../integration/procaptcha-integration-build-config"
-		},
-		{
-			"path": "../types"
-		},
-		{
-			"path": "../locale"
-		},
-		{
-			"path": "../util"
-		}
-	]
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
+    "include": [
+        "./src",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.json",
+        "src/**/*.d.ts"
+    ],
+    "references": [
+        {
+            "path": "../../integration/procaptcha-integration-build-config"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../locale"
+        },
+        {
+            "path": "../util"
+        }
+    ]
 }
