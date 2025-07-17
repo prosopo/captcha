@@ -17,33 +17,34 @@ import path from "node:path";
 import { env } from "node:process";
 import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
-import yargs, { Argv } from "yargs";
+import yargs, { type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 import z from "zod";
 
 export const buildJsonCommand = () => {
 	return {
-		command: 'json',
-		describe: 'Check the json files in the workspace',
+		command: "json",
+		describe: "Check the json files in the workspace",
 		builder: (yargs: Argv) => {
-			return yargs.option('pkg', {
-				alias: 'p',
-			})
+			return yargs.option("pkg", {
+				alias: "p",
+			});
 		},
 		handler: async (argv: unknown) => {
-			const args = z.object({
-				pkg: z.string(),
-			}).parse(argv);
+			const args = z
+				.object({
+					pkg: z.string(),
+				})
+				.parse(argv);
 
 			await json({ pkg: args.pkg });
-		}
-	}
-}
+		},
+	};
+};
 
 const json = async (args: {
 	pkg: string;
 }) => {
-
 	console.log("Checking", args.pkg);
 	// read the pkg json file
 	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));

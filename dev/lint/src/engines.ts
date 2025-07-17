@@ -17,32 +17,33 @@ import path from "node:path";
 import { env } from "node:process";
 import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
+import type { Argv } from "yargs";
 import z from "zod";
-import { Argv } from "yargs";
 
 export const buildEnginesCommand = () => {
 	return {
-		command: 'engines',
-		describe: 'Check the engines of the workspace',
+		command: "engines",
+		describe: "Check the engines of the workspace",
 		builder: (yargs: Argv) => {
-			return yargs.option('pkg', {
-				alias: 'p',
-			})
+			return yargs.option("pkg", {
+				alias: "p",
+			});
 		},
 		handler: async (argv: unknown) => {
-			const args = z.object({
-				pkg: z.string(),
-			}).parse(argv);
+			const args = z
+				.object({
+					pkg: z.string(),
+				})
+				.parse(argv);
 
 			await engines({ pkg: args.pkg });
-		}
-	}
-}
+		},
+	};
+};
 
 const engines = async (args: {
 	pkg: string;
 }) => {
-
 	console.log("Checking", args.pkg);
 	// read the pkg json file
 	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));
@@ -80,5 +81,4 @@ const engines = async (args: {
 		}
 	}
 	console.log("Engines check complete");
-
-}
+};

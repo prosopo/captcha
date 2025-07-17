@@ -16,15 +16,14 @@ import { buildEnginesCommand } from "./engines.js";
 import { buildJsonCommand } from "./json.js";
 import { buildLicenseCommand } from "./license.js";
 import { buildRedirectsCommand } from "./redirects.js";
+import { buildRefsCommand } from "./refs.js";
 import { buildTsconfigIncludesCommand } from "./tsconfigIncludes.js";
 import { buildWorkflowNamesCommand } from "./workflowNames.js";
-import { buildRefsCommand } from "./refs.js";
 
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
 const main = async () => {
-
 	const args = await yargs(hideBin(process.argv))
 		.command(buildEnginesCommand())
 		.command(buildJsonCommand())
@@ -38,7 +37,7 @@ const main = async () => {
 		.parse();
 
 	if (args.command === undefined) {
-		console.log('No command provided')
+		console.log("No command provided");
 	}
 };
 

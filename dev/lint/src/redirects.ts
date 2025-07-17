@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import fg from "fast-glob";
-import { Argv } from "yargs";
+import type { Argv } from "yargs";
 import { z } from "zod";
 
 // Define types for links
@@ -405,26 +405,30 @@ const fixFile = (filePath: string, linksToFix: FileLink[]): void => {
 
 export const buildRedirectsCommand = () => {
 	return {
-		command: 'redirects',
-		describe: 'Check the redirects in the workspace',
+		command: "redirects",
+		describe: "Check the redirects in the workspace",
 		builder: (yargs: Argv) => {
-			return yargs.option('fix', {
-				alias: 'f',
-				type: 'boolean',
-				default: false,
-			}).option('pkg', {
-				alias: 'p',
-			})
+			return yargs
+				.option("fix", {
+					alias: "f",
+					type: "boolean",
+					default: false,
+				})
+				.option("pkg", {
+					alias: "p",
+				});
 		},
 		handler: async (argv: unknown) => {
-			const args = z.object({
-				fix: z.boolean(),
-				pkg: z.string(),
-			}).parse(argv);
+			const args = z
+				.object({
+					fix: z.boolean(),
+					pkg: z.string(),
+				})
+				.parse(argv);
 			await redirects(args);
-		}
-	}
-}
+		},
+	};
+};
 
 /**
  * Main function to run the redirect linting
@@ -469,9 +473,7 @@ const redirects = async (args: {
 	const internalLinks = allLinks.filter((link) => link.isInternal);
 
 	// Filter to links missing trailing slashes
-	const linksWithoutSlash = allLinks.filter(
-		(link) => link.needsTrailingSlash,
-	);
+	const linksWithoutSlash = allLinks.filter((link) => link.needsTrailingSlash);
 
 	console.log(`\nFound ${internalLinks.length} internal links.`);
 

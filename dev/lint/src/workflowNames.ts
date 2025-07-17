@@ -17,26 +17,28 @@ import path from "node:path";
 import { env } from "node:process";
 import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
+import type { Argv } from "yargs";
 import z from "zod";
-import { Argv } from "yargs";
 
 export const buildWorkflowNamesCommand = () => {
 	return {
-		command: 'workflowNames',
-		describe: 'Check the workflow names in the workspace',
+		command: "workflowNames",
+		describe: "Check the workflow names in the workspace",
 		builder: (yargs: Argv) => {
-			return yargs.option('root', {
-				alias: 'r',
-			})
+			return yargs.option("root", {
+				alias: "r",
+			});
 		},
 		handler: async (argv: unknown) => {
-			const args = z.object({
-				root: z.string(),
-			}).parse(argv);
+			const args = z
+				.object({
+					root: z.string(),
+				})
+				.parse(argv);
 			await workflowNames({ root: args.root });
-		}
-	}
-}
+		},
+	};
+};
 
 const workflowNames = async (args: {
 	root: string;

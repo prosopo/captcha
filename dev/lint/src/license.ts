@@ -15,42 +15,48 @@
 import fs from "node:fs";
 import { at } from "@prosopo/util";
 import fg from "fast-glob";
+import type { Argv } from "yargs";
 import { z } from "zod";
-import { Argv } from "yargs";
 
 export const buildLicenseCommand = () => {
 	return {
-		command: 'license',
-		describe: 'Check the license in the workspace',
+		command: "license",
+		describe: "Check the license in the workspace",
 		builder: (yargs: Argv) => {
-			return yargs.option('pkg', {
-				alias: 'p',
-			}).option('fix', {
-				alias: 'f',
-				type: 'boolean',
-				default: false,
-			}).option('ignore', {
-				alias: 'i',
-				type: 'array',
-				string: true,
-				default: [],
-			}).option('list', {
-				alias: 'l',
-				type: 'boolean',
-				default: false,
-			})
+			return yargs
+				.option("pkg", {
+					alias: "p",
+				})
+				.option("fix", {
+					alias: "f",
+					type: "boolean",
+					default: false,
+				})
+				.option("ignore", {
+					alias: "i",
+					type: "array",
+					string: true,
+					default: [],
+				})
+				.option("list", {
+					alias: "l",
+					type: "boolean",
+					default: false,
+				});
 		},
 		handler: async (argv: unknown) => {
-			const args = z.object({
-				pkg: z.string(),
-				fix: z.boolean(),
-				ignore: z.array(z.string()),
-				list: z.boolean(),
-			}).parse(argv);
+			const args = z
+				.object({
+					pkg: z.string(),
+					fix: z.boolean(),
+					ignore: z.array(z.string()),
+					list: z.boolean(),
+				})
+				.parse(argv);
 			await license(args);
-		}
-	}
-}
+		},
+	};
+};
 
 const license = async (args: {
 	pkg: string;
@@ -58,7 +64,6 @@ const license = async (args: {
 	ignore: string[];
 	list: boolean;
 }) => {
-
 	const header = `// Copyright 2021-${new Date().getFullYear()} Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
