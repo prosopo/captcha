@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.9
+### Patch Changes
+
+- c8d2743: fix deps for tsconfig and pkg json (missing util)
+
 ## 2.6.8
 ### Patch Changes
 
