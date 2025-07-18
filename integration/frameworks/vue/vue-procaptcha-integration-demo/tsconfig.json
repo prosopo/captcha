@@ -19,6 +19,9 @@
 		},
 		{
 			"path": "../../../procaptcha-integration-build-config"
+		},
+		{
+			"path": "../../../types"
 		}
 	]
 }
