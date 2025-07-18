@@ -1,5 +1,5 @@
 {
-	"name": "http-blackhole",
+	"name": "@prosopo/http-blackhole",
 	"version": "1.0.0",
 	"main": "index.js",
 	"engines": {
