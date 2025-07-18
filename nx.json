@@ -35,6 +35,10 @@
 			"dependsOn": ["^typecheck"],
 			"cache": true
 		},
+		"build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"cache": true
+		},
 		"lint": {
 			"cache": true
 		},
