@@ -34,7 +34,6 @@ export const json = async () => {
 	const args = z
 		.object({
 			pkg: z.string(),
-			fix: z.boolean().default(false),
 		})
 		.parse(argv);
 
