@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/locale",
-	"version": "3.1.0",
+	"version": "3.1.1",
 	"description": "Prosopo locale library",
 	"type": "module",
 	"engines": {
@@ -22,9 +22,9 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
-		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
@@ -44,7 +44,7 @@
 		"openpgp": "5.11.3",
 		"react-i18next": "15.4.0",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.1.1",
+		"@prosopo/config": "3.1.2",
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {

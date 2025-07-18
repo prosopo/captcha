@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/dotenv",
-	"version": "3.0.5",
+	"version": "3.0.6",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"exports": {
@@ -19,17 +19,17 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
-		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests",
 		"cli": "node ./dist/js/cli.js"
 	},
 	"type": "module",
 	"dependencies": {
-		"@prosopo/common": "3.1.0",
-		"@prosopo/config": "3.1.1",
+		"@prosopo/common": "3.1.1",
+		"@prosopo/config": "3.1.2",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"dotenv": "16.4.5",

@@ -123,7 +123,6 @@ const validateWorkspace = async (args: {
 		findWorkspacePackageJsons(workspacePackage),
 	);
 
-	// for each package in the workspace, check their version matches the workspace version
 	const packagePatterns = [
 		workspacePackagePath, // include the workspace package.json
 		...z

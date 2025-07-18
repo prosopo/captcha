@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-route",
-	"version": "2.6.8",
+	"version": "2.6.9",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -17,16 +17,16 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
-		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests"
 	},
 	"dependencies": {
-		"@prosopo/common": "3.1.0",
+		"@prosopo/common": "3.1.1",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.1.1"
+		"@prosopo/config": "3.1.2"
 	},
 	"devDependencies": {},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

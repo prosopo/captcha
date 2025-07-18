@@ -35,8 +35,19 @@
 			"dependsOn": ["^typecheck"],
 			"cache": true
 		},
+		"build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"cache": true
+		},
 		"lint": {
 			"cache": true
+		},
+		"clean": {
+			"cache": false
+		},
+		"clean:deps": {
+			"cache": false,
+			"dependsOn": ["clean", "^clean"]
 		}
 	},
 	"defaultBase": "main",

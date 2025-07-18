@@ -44,9 +44,6 @@
 			"path": "../util-crypto"
 		},
 		{
-			"path": "../../dev/workspace"
-		},
-		{
 			"path": "../user-access-policy"
 		},
 		{

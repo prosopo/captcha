@@ -58,7 +58,10 @@ const json = async (args: {
 		.string()
 		.array()
 		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkg)}/${g}/**/*.json`);
+		.flatMap((g) => [
+			`${path.dirname(args.pkg)}/${g}/**/*.json`,
+			`!${path.dirname(args.pkg)}/${g}/**/node_modules/**`,
+		]);
 	// glob the json files
 	const jsonPaths = fg.globSync(globs);
 	for (const jsonPath of jsonPaths) {
