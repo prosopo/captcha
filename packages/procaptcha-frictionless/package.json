@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.6.30",
+	"version": "2.6.31",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -24,25 +24,23 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests"
 	},
-	"browserslist": [
-		"> 0.5%, last 2 versions, not dead"
-	],
+	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/detector": "3.0.1",
-		"@prosopo/locale": "3.1.0",
-		"@prosopo/procaptcha-pow": "2.7.16",
-		"@prosopo/procaptcha-react": "2.6.30",
-		"@prosopo/types": "3.0.4",
-		"@prosopo/widget-skeleton": "2.6.1",
+		"@prosopo/detector": "3.0.2",
+		"@prosopo/locale": "3.1.1",
+		"@prosopo/procaptcha-pow": "2.7.17",
+		"@prosopo/procaptcha-react": "2.6.31",
+		"@prosopo/types": "3.0.5",
+		"@prosopo/widget-skeleton": "2.6.2",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
 		"express": "4.21.2",
 		"react": "18.3.1",
-		"@prosopo/config": "3.1.1",
+		"@prosopo/config": "3.1.2",
 		"openpgp": "5.11.3",
 		"webpack-dev-server": "5.2.2"
 	},

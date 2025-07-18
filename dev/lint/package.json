@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.7.5",
+	"version": "2.7.6",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -9,7 +9,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests",
 		"engines": "node dist/engines.js",
 		"refs": "node dist/refs.js",
@@ -18,7 +18,9 @@
 		"license": "node dist/license.js check",
 		"license:fix": "node dist/license.js license",
 		"redirects": "node dist/redirects.js",
-		"redirects:fix": "node dist/redirects.js fix"
+		"redirects:fix": "node dist/redirects.js fix",
+		"tsconfig:includes": "node dist/tsconfigIncludes.js",
+		"tsconfig:includes:fix": "node dist/tsconfigIncludes.js --fix"
 	},
 	"author": "",
 	"license": "ISC",
@@ -48,7 +50,7 @@
 		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.0.3",
+		"@prosopo/util": "3.0.4",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
@@ -58,6 +60,6 @@
 		"webpack-dev-server": "5.2.2",
 		"yargs": "17.7.2",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.1.1"
+		"@prosopo/config": "3.1.2"
 	}
 }

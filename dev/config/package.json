@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.1.1",
+	"version": "3.1.2",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
@@ -8,7 +8,7 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests"
 	},
 	"engines": {

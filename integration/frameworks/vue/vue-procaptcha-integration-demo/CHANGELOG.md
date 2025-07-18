@@ -1,5 +1,16 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.8
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/vue-procaptcha-wrapper@1.1.8
+  - @prosopo/types@3.0.5
+  - @prosopo/config@3.1.2
+
 ## 1.1.7
 ### Patch Changes
 

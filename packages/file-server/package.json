@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/file-server",
-	"version": "2.6.5",
+	"version": "2.6.6",
 	"description": "Simple static file server",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -21,12 +21,12 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests",
 		"start": "node ./dist/index.js"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.0.3",
+		"@prosopo/util": "3.0.4",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"dotenv": "16.4.5",
@@ -34,7 +34,7 @@
 		"express": "4.21.2",
 		"node-fetch": "3.3.2",
 		"sharp": "0.33.5",
-		"@prosopo/config": "3.1.1",
+		"@prosopo/config": "3.1.2",
 		"openpgp": "5.11.3",
 		"webpack-dev-server": "5.2.2"
 	},
