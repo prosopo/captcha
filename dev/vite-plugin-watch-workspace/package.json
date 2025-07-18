@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vite-plugin-watch-workspace",
-	"version": "2.6.5",
+	"version": "2.6.6",
 	"description": "Vite plugin for watching and rebuilding external files",
 	"type": "module",
 	"main": "dist/index.js",
@@ -26,7 +26,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/config": "3.1.1",
+		"@prosopo/config": "3.1.2",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"debug": "4.3.7",
