@@ -41,6 +41,13 @@
 		},
 		"lint": {
 			"cache": true
+		},
+		"clean": {
+			"cache": false
+		},
+		"clean:deps": {
+			"cache": false,
+			"dependsOn": ["clean", "^clean"]
 		}
 	},
 	"defaultBase": "main",
