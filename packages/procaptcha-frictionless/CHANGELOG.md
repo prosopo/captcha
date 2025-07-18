@@ -1,5 +1,20 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.31
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/procaptcha-react@2.6.31
+  - @prosopo/widget-skeleton@2.6.2
+  - @prosopo/procaptcha-pow@2.7.17
+  - @prosopo/detector@3.0.2
+  - @prosopo/locale@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/config@3.1.2
+
 ## 2.6.30
 ### Patch Changes
 
