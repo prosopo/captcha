@@ -1,5 +1,16 @@
 # @prosopo/types
 
+## 3.0.5
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/common@3.1.1
+  - @prosopo/locale@3.1.1
+  - @prosopo/config@3.1.2
+
 ## 3.0.4
 ### Patch Changes
 

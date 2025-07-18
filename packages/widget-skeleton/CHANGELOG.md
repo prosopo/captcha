@@ -1,5 +1,14 @@
 # @prosopo/widget-skeleton
 
+## 2.6.2
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/config@3.1.2
+
 ## 2.6.1
 ### Patch Changes
 
