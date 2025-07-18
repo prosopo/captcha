@@ -1,5 +1,17 @@
 # @prosopo/keyring
 
+## 2.8.8
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/util-crypto@13.5.3
+  - @prosopo/common@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/config@3.1.2
+
 ## 2.8.7
 ### Patch Changes
 

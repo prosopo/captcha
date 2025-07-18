@@ -1,5 +1,14 @@
 # @prosopo/client-bundle-example
 
+## 2.9.4
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/config@3.1.2
+
 ## 2.9.3
 ### Patch Changes
 
