@@ -1,18 +1,22 @@
 {
 	"targets": {
 		"build": {
-			"executor": "nx:run-script",
-			"options": {
-				"script": "build"
-			},
-			"dependsOn": ["^build", "^typecheck"]
+			"dependsOn": [
+				"^build",
+				"^typecheck"
+			]
 		},
 		"build:cjs": {
-			"executor": "nx:run-script",
-			"options": {
-				"script": "build"
-			},
-			"dependsOn": ["^build:cjs", "^typecheck"]
+			"dependsOn": [
+				"^build:cjs",
+				"^typecheck"
+			]
+		},
+		"bundle": {
+			"dependsOn": [
+				"^build",
+				"^typecheck"
+			]
 		}
 	}
 }
