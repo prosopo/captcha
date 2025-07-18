@@ -32,5 +32,11 @@
 		"moduleResolution": "nodenext",
 		"target": "ES2021"
 	},
-	"include": ["src"]
+	"include": [
+		"src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	]
 }
