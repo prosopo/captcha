@@ -12,7 +12,6 @@
 		"start": "ng serve",
 		"build": "ng build",
 		"watch": "ng build --watch --configuration development",
-		"test": "echo no tests",
 		"dev": "npm run start"
 	},
 	"dependencies": {

@@ -19,8 +19,7 @@
 		"build": "npm run clean && cp -r src dist",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "npm run build",
-		"typecheck": "echo no typecheck",
-		"test": "echo no tests"
+		"typecheck": "echo no typecheck"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "3.0.9",

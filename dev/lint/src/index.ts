@@ -17,6 +17,7 @@ import { buildJsonCommand } from "./json.js";
 import { buildLicenseCommand } from "./license.js";
 import { buildRedirectsCommand } from "./redirects.js";
 import { buildRefsCommand } from "./refs.js";
+import { buildTestCheckCommand } from "./testCheck.js";
 import { buildTsconfigIncludesCommand } from "./tsconfigIncludes.js";
 import { buildWorkflowNamesCommand } from "./workflowNames.js";
 
@@ -32,6 +33,7 @@ const main = async () => {
 		.command(buildLicenseCommand())
 		.command(buildRedirectsCommand())
 		.command(buildRefsCommand())
+		.command(buildTestCheckCommand())
 		.demandCommand()
 		.strict()
 		.help()
