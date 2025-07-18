@@ -92,6 +92,7 @@ const checkTsconfigIncludes = (args: {
 	for (const tsconfigPath of tsconfigPaths) {
 		console.log("Checking", tsconfigPath);
 		const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
+		tsconfig.include = tsconfig.include || [];
 		const includesResult = z.array(z.string()).safeParse(tsconfig.include);
 		let includes: string[] = [];
 		if (!includesResult.success) {
