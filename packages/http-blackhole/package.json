@@ -2,6 +2,11 @@
 	"name": "http-blackhole",
 	"version": "1.0.0",
 	"main": "index.js",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"type": "module",
 	"scripts": {
 		"build": "tsc --build",
 		"start": "node dist/index.js",
