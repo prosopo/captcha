@@ -45,7 +45,7 @@
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
 		"lint:engines": "nx run @prosopo/lint:start -- engines --pkg $(pwd)/package.json",
 		"lint:refs": "nx run @prosopo/lint:start -- refs --pkg $(pwd)/package.json",
-		"lint:workflowNames": "nx run @prosopo/lint:start -- workflowNames --pkg $(pwd)",
+		"lint:workflowNames": "nx run @prosopo/lint:start -- workflowNames --root $(pwd)",
 		"lint:scripts": "nx run @prosopo/lint:start -- scripts --pkg $(pwd)/package.json",
 		"lint:tsconfigIncludes": "nx run @prosopo/lint:start -- tsconfigIncludes --pkg $(pwd)/package.json",
 		"lint-fix:tsconfigIncludes": "npm run --silent lint:tsconfigIncludes -- --fix",
