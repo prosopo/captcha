@@ -67,6 +67,8 @@ const testCheck = (args: {
 		const testFiles = fg.globSync([
 			`${path.dirname(pkgJsonPath)}/src/**/*.test.ts`,
 			`${path.dirname(pkgJsonPath)}/src/**/*.spec.ts`,
+			`${path.dirname(pkgJsonPath)}/src/**/*.test.tsx`,
+			`${path.dirname(pkgJsonPath)}/src/**/*.spec.tsx`,
 		]);
 		if (hasTestScript) {
 			// package has a test script
