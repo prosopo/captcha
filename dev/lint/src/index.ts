@@ -32,13 +32,10 @@ const main = async () => {
 		.command(buildLicenseCommand())
 		.command(buildRedirectsCommand())
 		.command(buildRefsCommand())
+		.demandCommand()
 		.strict()
 		.help()
 		.parse();
-
-	if (args._[0] === undefined) {
-		console.log("No command provided");
-	}
 };
 
 main();
