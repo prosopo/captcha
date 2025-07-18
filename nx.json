@@ -43,7 +43,7 @@
 		},
 		"clean:deps": {
 			"cache": false,
-			"dependsOn": ["^clean"]
+			"dependsOn": ["clean", "^clean"]
 		}
 	},
 	"defaultBase": "main",
