@@ -32,7 +32,7 @@
 		"test": "echo no tests",
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
-		"bundle:webpack": "NODE_ENV=${NODE_ENV:-development}; webpack build --config webpack.config.cjs --mode ${MODE:-production}",
+		"bundle:webpack": "NODE_ENV=${NODE_ENV:-development}; MODE=${MODE:-$NODE_ENV}; webpack build --config webpack.config.cjs --mode $MODE",
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host"
 	},
 	"browserslist": [
