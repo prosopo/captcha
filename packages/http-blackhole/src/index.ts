@@ -16,7 +16,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT) || 8080;
 
 const server = http.createServer(
 	(req: http.IncomingMessage, res: http.ServerResponse) => {
