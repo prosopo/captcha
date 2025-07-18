@@ -21,7 +21,7 @@
 			"path": "../../../procaptcha-integration-build-config"
 		},
 		{
-			"path": "../../../types"
+			"path": "../../../../packages/types"
 		}
 	]
 }
