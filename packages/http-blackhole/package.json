@@ -10,8 +10,7 @@
 	"scripts": {
 		"build": "tsc --build",
 		"start": "node dist/index.js",
-		"bundle": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js",
-		"test": "echo no tests"
+		"bundle": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js"
 	},
 	"author": "",
 	"dependencies": {
