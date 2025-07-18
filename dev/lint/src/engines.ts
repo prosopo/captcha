@@ -68,7 +68,13 @@ const engines = async (args: {
 	for (const pkgJsonPath of pkgJsonPaths) {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
-		const pkgEngine = enginesSchema.parse(pkgJson.engines);
+		const pkgEngineResult = enginesSchema.safeParse(pkgJson.engines);
+		if (!pkgEngineResult.success) {
+			throw new Error(
+				`${pkgJsonPath} has invalid engines: ${pkgEngineResult.error.message}`,
+			);
+		}
+		const pkgEngine = pkgEngineResult.data;
 		if (pkgEngine.node !== engines.node) {
 			throw new Error(
 				`${pkgJsonPath} has node version ${pkgEngine.node}, should be ${engines.node}`,
