@@ -1,22 +1,13 @@
 {
 	"targets": {
 		"build": {
-			"dependsOn": [
-				"^build",
-				"^typecheck"
-			]
+			"dependsOn": ["^build", "^typecheck"]
 		},
 		"build:cjs": {
-			"dependsOn": [
-				"^build:cjs",
-				"^typecheck"
-			]
+			"dependsOn": ["^build:cjs", "^typecheck"]
 		},
 		"bundle": {
-			"dependsOn": [
-				"^build",
-				"^typecheck"
-			]
+			"dependsOn": ["^build", "^typecheck"]
 		}
 	}
 }
