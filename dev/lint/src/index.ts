@@ -14,6 +14,7 @@
 
 import { z } from "zod";
 import { engines } from "./engines.js";
+import { json } from "./json.js";
 import { license } from "./license.js";
 import { redirects } from "./redirects.js";
 import { refs } from "./refs.js";
@@ -41,6 +42,8 @@ const main = async () => {
 			return await redirects();
 		case "tsconfig:includes":
 			return await tsconfigIncludes();
+		case "json":
+			return await json();
 		default:
 			throw new Error(`Unknown command: ${cmd}`);
 	}
