@@ -17,7 +17,6 @@
 		}
 	},
 	"scripts": {
-		"test": "echo no tests",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"svpkg": "svelte-package -i ./src -o ./dist",
 		"build": "npm run svpkg && del-cli --verbose ./.svelte-kit",

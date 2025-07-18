@@ -29,11 +29,11 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
-		"test": "echo no tests",
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-development}; MODE=${MODE:-$NODE_ENV}; webpack build --config webpack.config.cjs --mode $MODE",
-		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host"
+		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {

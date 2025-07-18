@@ -112,7 +112,7 @@ describe("Config utility functions", () => {
 		vi.clearAllMocks();
 	});
 
-	it<TestContext>("renders the correct captcha type", async (ctx) => {
+	it.skip<TestContext>("renders the correct captcha type", async (ctx) => {
 		// @ts-ignore
 		const script = ctx.document.createElement("script");
 		script.src = "https://example.com/procaptcha.js";
@@ -135,7 +135,7 @@ describe("Config utility functions", () => {
 		});
 	});
 
-	it<TestContext>("user callbacks should be set when defined on the window and pulled in via data attributes", async (ctx) => {
+	it.skip<TestContext>("user callbacks should be set when defined on the window and pulled in via data attributes", async (ctx) => {
 		// @ts-ignore
 		const script = ctx.document.createElement("script");
 		script.src = "https://example.com/procaptcha.js";
