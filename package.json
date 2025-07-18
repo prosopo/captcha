@@ -49,6 +49,7 @@
 		"lint:scripts": "npm run -w @prosopo/lint scripts -- $(pwd)/package.json",
 		"lint:tsconfig:includes": "npm run -w @prosopo/lint tsconfig:includes -- --pkg $(pwd)/package.json",
 		"lint-fix:tsconfig:includes": "npm run -w @prosopo/lint tsconfig:includes:fix -- --pkg $(pwd)/package.json --fix",
+		"lint:json": "npm run -w @prosopo/lint json -- --pkg $(pwd)/package.json",
 		"removePolkadotJSWarnings": "sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/versionDetect.js && sed -i 's/console.warn\\(.*\\);//g' ./node_modules/@polkadot/util/cjs/versionDetect.js || true",
 		"postinstall": "npm run removePolkadotJSWarnings",
 		"depcheck": "npx --workspaces depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",

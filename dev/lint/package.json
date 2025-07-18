@@ -20,7 +20,8 @@
 		"redirects": "node dist/redirects.js",
 		"redirects:fix": "node dist/redirects.js fix",
 		"tsconfig:includes": "node dist/tsconfigIncludes.js",
-		"tsconfig:includes:fix": "node dist/tsconfigIncludes.js --fix"
+		"tsconfig:includes:fix": "node dist/tsconfigIncludes.js --fix",
+		"json": "node dist/json.js"
 	},
 	"author": "",
 	"license": "ISC",
