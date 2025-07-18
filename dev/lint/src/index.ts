@@ -18,6 +18,7 @@ import { license } from "./license.js";
 import { redirects } from "./redirects.js";
 import { refs } from "./refs.js";
 import { scripts } from "./scripts.js";
+import { tsconfigIncludes } from "./tsconfigIncludes.js";
 import { workflowNames } from "./workflowNames.js";
 
 const main = async () => {
@@ -38,6 +39,8 @@ const main = async () => {
 			return await license();
 		case "redirects":
 			return await redirects();
+		case "tsconfig:includes":
+			return await tsconfigIncludes();
 		default:
 			throw new Error(`Unknown command: ${cmd}`);
 	}

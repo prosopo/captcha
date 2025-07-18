@@ -5,7 +5,14 @@
 		"outDir": "./dist",
 		"lib": ["es6", "dom"]
 	},
-	"include": ["src", "src/**/*.json", "src/index.html"],
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/index.html",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
 			"path": "../common"

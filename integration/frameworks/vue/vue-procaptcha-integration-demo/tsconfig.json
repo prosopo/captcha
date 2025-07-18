@@ -6,7 +6,13 @@
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext"
 	},
-	"include": ["./src"],
+	"include": [
+		"./src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
 			"path": "../vue-procaptcha-wrapper"

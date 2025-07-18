@@ -9,7 +9,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly --force",
 		"test": "echo no tests",
 		"engines": "node dist/engines.js",
 		"refs": "node dist/refs.js",
@@ -18,7 +18,9 @@
 		"license": "node dist/license.js check",
 		"license:fix": "node dist/license.js license",
 		"redirects": "node dist/redirects.js",
-		"redirects:fix": "node dist/redirects.js fix"
+		"redirects:fix": "node dist/redirects.js fix",
+		"tsconfig:includes": "node dist/tsconfigIncludes.js",
+		"tsconfig:includes:fix": "node dist/tsconfigIncludes.js --fix"
 	},
 	"author": "",
 	"license": "ISC",
