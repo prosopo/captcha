@@ -1,0 +1,22 @@
+{
+	"name": "http-blackhole",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"build": "tsc --build",
+		"start": "node dist/index.js",
+		"bundle": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js",
+		"test": "echo no tests"
+	},
+	"author": "",
+	"dependencies": {
+		"dotenv": "^17.2.0"
+	},
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"@types/node": "^24.0.13",
+		"tsx": "^4.20.3",
+		"typescript": "^5.8.3"
+	}
+}
