@@ -12,41 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
-import { engines } from "./engines.js";
-import { json } from "./json.js";
-import { license } from "./license.js";
-import { redirects } from "./redirects.js";
-import { refs } from "./refs.js";
-import { scripts } from "./scripts.js";
-import { tsconfigIncludes } from "./tsconfigIncludes.js";
-import { workflowNames } from "./workflowNames.js";
+import { buildEnginesCommand } from "./engines.js";
+import { buildJsonCommand } from "./json.js";
+import { buildLicenseCommand } from "./license.js";
+import { buildRedirectsCommand } from "./redirects.js";
+import { buildRefsCommand } from "./refs.js";
+import { buildTsconfigIncludesCommand } from "./tsconfigIncludes.js";
+import { buildWorkflowNamesCommand } from "./workflowNames.js";
+
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
 const main = async () => {
-	const cmd = z.string().parse(process.argv[2]);
-	// remove the cmd from the args
-	process.argv.splice(2, 1);
-
-	switch (cmd) {
-		case "engines":
-			return await engines();
-		case "refs":
-			return await refs();
-		case "workflowNames":
-			return await workflowNames();
-		case "scripts":
-			return await scripts();
-		case "license":
-			return await license();
-		case "redirects":
-			return await redirects();
-		case "tsconfig:includes":
-			return await tsconfigIncludes();
-		case "json":
-			return await json();
-		default:
-			throw new Error(`Unknown command: ${cmd}`);
-	}
+	const args = await yargs(hideBin(process.argv))
+		.command(buildEnginesCommand())
+		.command(buildJsonCommand())
+		.command(buildTsconfigIncludesCommand())
+		.command(buildWorkflowNamesCommand())
+		.command(buildLicenseCommand())
+		.command(buildRedirectsCommand())
+		.command(buildRefsCommand())
+		.demandCommand()
+		.strict()
+		.help()
+		.parse();
 };
 
 main();

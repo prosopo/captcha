@@ -17,26 +17,34 @@ import path from "node:path";
 import { env } from "node:process";
 import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
-import yargs from "yargs";
+import yargs, { type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 import z from "zod";
 
-export const json = async () => {
-	// Parse arguments using yargs
-	const argv = await yargs(hideBin(process.argv))
-		.option("pkg", {
-			alias: "p",
-			type: "string",
-			describe: "Path to the root package.json",
-			demandOption: true,
-		})
-		.help().argv;
-	const args = z
-		.object({
-			pkg: z.string(),
-		})
-		.parse(argv);
+export const buildJsonCommand = () => {
+	return {
+		command: "json",
+		describe: "Check the json files in the workspace",
+		builder: (yargs: Argv) => {
+			return yargs.option("pkg", {
+				alias: "p",
+			});
+		},
+		handler: async (argv: unknown) => {
+			const args = z
+				.object({
+					pkg: z.string(),
+				})
+				.parse(argv);
 
+			await json({ pkg: args.pkg });
+		},
+	};
+};
+
+const json = async (args: {
+	pkg: string;
+}) => {
 	console.log("Checking", args.pkg);
 	// read the pkg json file
 	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));
@@ -50,7 +58,10 @@ export const json = async () => {
 		.string()
 		.array()
 		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkg)}/${g}/**/*.json`);
+		.flatMap((g) => [
+			`${path.dirname(args.pkg)}/${g}/**/*.json`,
+			`!${path.dirname(args.pkg)}/${g}/**/node_modules/**`,
+		]);
 	// glob the json files
 	const jsonPaths = fg.globSync(globs);
 	for (const jsonPath of jsonPaths) {
@@ -64,4 +75,6 @@ export const json = async () => {
 			throw new Error(`Unable to parse ${jsonPath} as JSON: ${e}`);
 		}
 	}
+
+	console.log("JSON check complete");
 };
