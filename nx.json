@@ -13,11 +13,11 @@
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build"],
+			"dependsOn": ["^build", "typecheck"],
 			"cache": true
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"],
+			"dependsOn": ["^build:cjs", "typecheck"],
 			"cache": true
 		},
 		"bundle": {
