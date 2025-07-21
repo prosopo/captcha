@@ -10,36 +10,36 @@
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build"],
+			"dependsOn": ["^build", "@prosopo/config:build"],
 			"cache": true,
 			"inputs": ["^custom", "custom"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"],
+			"dependsOn": ["^build:cjs", "@prosopo/config:build"],
 			"cache": true,
 			"inputs": ["^custom", "custom"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle": {
 			"cache": true,
-			"inputs": ["^custom", "custom"],
+			"inputs": ["^custom", "custom", "@prosopo/config:build"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle:webpack": {
 			"cache": true,
-			"inputs": ["^custom", "custom"],
+			"inputs": ["^custom", "custom", "@prosopo/config:build"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"test": {
 			"cache": true,
-			"inputs": ["^custom", "custom"],
+			"inputs": ["^custom", "custom", "@prosopo/config:build"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"typecheck": {
 			"dependsOn": ["^typecheck"],
 			"cache": true,
-			"inputs": ["^custom", "custom"],
+			"inputs": ["^custom", "custom", "@prosopo/config:build"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"build:tsc": {
