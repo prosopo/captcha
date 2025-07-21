@@ -209,18 +209,23 @@ export default async function (
 					}),
 					// String replacement plugin for fingerprinting code
 					{
-						name: 'string-replace-fingerprint',
+						name: "string-replace-fingerprint",
 						generateBundle(_, bundle) {
 							for (const fileName in bundle) {
 								const chunk = bundle[fileName];
-								if (chunk && chunk.type === 'chunk' && 'code' in chunk && chunk.code) {
+								if (
+									chunk &&
+									chunk.type === "chunk" &&
+									"code" in chunk &&
+									chunk.code
+								) {
 									chunk.code = chunk.code.replace(
 										/var request = new XMLHttpRequest\(\);\s*request\.open\("get", "https:\/\/m1\.openfpcdn\.io\/fingerprintjs\/v"\.concat\(version, "\/npm-monitoring"\), true\);\s*request\.send\(\);/g,
-										'console.log("running captcha");'
+										'console.log("running captcha");',
 									);
 								}
 							}
-						}
+						},
 					},
 					visualizer({
 						open: true,
