@@ -18,7 +18,8 @@
         }
 
         window.onActionHandler = function(token) {
-            updateCaptchaStatus('CAPTCHA callback executed with token', 'success');
+            updateCaptchaStatus('Challenge passed successfully!', 'success');
+            updateCaptchaStatus(`Token generated: ${token ? token.substring(0, 15) + '...' : 'No token'}`, 'success');
             
             if (!token) {
                 updateCaptchaStatus('Error: No token received from CAPTCHA', 'error');
@@ -26,54 +27,25 @@
                 return;
             }
 
-            updateCaptchaStatus('Form submission initiated with valid CAPTCHA token', 'info');
-            const payload = {
-                email: document.getElementById('email').value,
-                name: document.getElementById('name').value,
-                password: document.getElementById('password').value,
-                "procaptcha-response": token,
-            };
-            const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;
-            console.log("Posting to", url, "with payload", payload);
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-                contentType: "application/json",
-            }).then((response) => {
-                return new Promise((resolve) => response.json()
-                    .then((json) => resolve({
-                        status: response.status,
-                        ok: response.ok,
-                        json,
-                    })))
-            })
-                .then(async ({status, json, ok}) => {
-                    console.log("Response status:", status, "message:", json.message, "ok:", ok);
-                    console.log("Full response:", json);
-                    try {
-                        if (status !== 200) {
-                            window.setIsError(true);
-                            window.setMessage(json.message);
-                            updateCaptchaStatus(`API Error: ${json.message}`, 'error');
-                        } else {
-                            window.setIsError(false);
-                            window.setMessage(json.message);
-                            updateCaptchaStatus(`API Success: ${json.message}`, 'success');
-                        }
-                    } catch (err) {
-                        console.log("Error processing response:", err);
-                        updateCaptchaStatus(`Error processing response: ${err}`, 'error');
-                    }
-                })
-                .catch((err) => {
-                    console.log("Fetch error:", err);
-                    window.setIsError(true);
-                    window.setMessage("Error: " + err);
-                    updateCaptchaStatus(`Fetch error: ${err}`, 'error');
-                });
+            // Get form values
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Display result without server call
+            const messageContainer = document.getElementById('messageContainer');
+            const message = document.getElementById('message');
+            
+            message.innerHTML = `<strong>Form submitted with:</strong><br>
+- Name: ${name}<br>
+- Email: ${email}<br>
+- Password: ${password ? '[hidden]' : '[empty]'}<br>
+- Procaptcha verified: Yes`;
+            
+            messageContainer.style.color = 'green';
+            messageContainer.style.display = 'block';
+            
+            updateCaptchaStatus('Form submission completed', 'success');
         };
 
         window.addEventListener('load', () => {
