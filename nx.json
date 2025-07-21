@@ -1,79 +1,95 @@
 {
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
+	"namedInputs": {
+		"custom": [
+			"{projectRoot}/**",
+			"!{projectRoot}/node_modules/**",
+			"!{projectRoot}/coverage/**",
+			"{projectRoot}/dist/**/*"
+		]
+	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build"],
+			"dependsOn": [
+				"^build"
+			],
 			"cache": true,
 			"inputs": [
-				"{projectRoot}/**",
-				"!{projectRoot}/node_modules/**",
-				"!{projectRoot}/coverage/**",
-				"{projectRoot}/dist/**/*"
+				"^custom",
+				"custom"
 			],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"],
+			"dependsOn": [
+				"^build:cjs"
+			],
 			"cache": true,
 			"inputs": [
-				"{projectRoot}/**",
-				"!{projectRoot}/node_modules/**",
-				"!{projectRoot}/coverage/**",
-				"{projectRoot}/dist/**/*"
+				"^custom",
+				"custom"
 			],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"bundle": {
 			"cache": true,
 			"inputs": [
-				"{projectRoot}/**",
-				"!{projectRoot}/node_modules/**",
-				"!{projectRoot}/coverage/**",
-				"{projectRoot}/dist/**/*"
+				"^custom",
+				"custom"
 			],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"bundle:webpack": {
 			"cache": true,
 			"inputs": [
-				"{projectRoot}/**",
-				"!{projectRoot}/node_modules/**",
-				"!{projectRoot}/coverage/**",
-				"{projectRoot}/dist/**/*"
+				"^custom",
+				"custom"
 			],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"test": {
 			"cache": true,
 			"inputs": [
-				"{projectRoot}/**",
-				"!{projectRoot}/node_modules/**",
-				"!{projectRoot}/coverage/**",
-				"{projectRoot}/dist/**/*"
+				"^custom",
+				"custom"
 			],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"typecheck": {
-			"dependsOn": ["^typecheck"],
+			"dependsOn": [
+				"^typecheck"
+			],
 			"cache": true,
 			"inputs": [
-				"{projectRoot}/**",
-				"!{projectRoot}/node_modules/**",
-				"!{projectRoot}/coverage/**",
-				"{projectRoot}/dist/**/*"
+				"^custom",
+				"custom"
 			],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"build:tsc": {
-			"dependsOn": ["^build:tsc"],
+			"dependsOn": [
+				"^build:tsc"
+			],
 			"cache": true,
 			"inputs": [
-				"{projectRoot}/**",
-				"!{projectRoot}/node_modules/**",
-				"!{projectRoot}/coverage/**",
-				"{projectRoot}/dist/**/*"
+				"^custom",
+				"custom"
 			],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"lint": {
 			"cache": false
@@ -83,12 +99,17 @@
 		},
 		"clean:deps": {
 			"cache": false,
-			"dependsOn": ["clean", "^clean"]
+			"dependsOn": [
+				"clean",
+				"^clean"
+			]
 		}
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": ["*"],
+		"projects": [
+			"*"
+		],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
