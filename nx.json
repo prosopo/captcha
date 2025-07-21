@@ -16,14 +16,12 @@
 	"targetDefaults": {
 		"build": {
 			"dependsOn": [
-				"^typecheck",
 				"^build"
 			],
 			"cache": true
 		},
 		"build:cjs": {
 			"dependsOn": [
-				"^typecheck",
 				"^build:cjs"
 			],
 			"cache": true
