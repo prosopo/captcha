@@ -101,7 +101,9 @@ export default function statusLogInjector(): Plugin {
 		};
 
 		const originalOnActionHandler = window.onActionHandler;
-		window.onActionHandler = function() {
+		window.onActionHandler = function(token) {
+			console.log('status-log-injector onActionHandler called with token:', token);
+			
 			const procaptchaElements = document.getElementsByName('procaptcha-response');
 			
 			if (!procaptchaElements.length) {
@@ -111,7 +113,10 @@ export default function statusLogInjector(): Plugin {
 			}
 			
 			updateCaptchaStatus('Form submission initiated with valid CAPTCHA token', 'info');
-			if (originalOnActionHandler) originalOnActionHandler();
+			if (originalOnActionHandler) {
+				console.log('status-log-injector calling original onActionHandler with token:', token);
+				originalOnActionHandler(token);
+			}
 		};
 
 		document.addEventListener('DOMContentLoaded', function() {
