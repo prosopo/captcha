@@ -2,203 +2,106 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <title>Procaptcha demo: PoW - Implicit Rendering</title>
-<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
-    <script type="module">
-        // Function to update CAPTCHA status display is now provided by status-log-injector
-
-        window.addEventListener('load', () => {
-
-            window.setIsError = (isError) => {
-                const messageContainer = document.getElementById('messageContainer');
-                messageContainer.style.color = isError ? 'red' : 'black';
-                messageContainer.style.display = 'block';
-            };
-
-            window.setMessage = (message) => {
-                document.getElementById('message').innerText = message;
-            };
-
-            window.onLoggedIn = (token) => {
-                updateCaptchaStatus('Logged in, fetching private resource', 'info');
-                const url = new URL("/private", config.serverUrl).href;
-                console.log("getting private resource with token ", token, "at", url);
-                fetch(url, {
-                    method: "GET",
-                    headers: {
-                        Origin: "http://localhost:9232", // TODO: change this to env var
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
-                    .then(async (res) => {
-                        try {
-                            const jsonRes = await res.json();
-                            if (res.status === 200) {
-                                updateCaptchaStatus(`Successfully accessed private resource`, 'success');
-                                setMessage(jsonRes.message);
-                            } else {
-                                updateCaptchaStatus(`Failed to access private resource: ${res.status}`, 'error');
-                            }
-                        } catch (err) {
-                            console.log(err);
-                            updateCaptchaStatus(`Error parsing response: ${err}`, 'error');
-                        }
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        updateCaptchaStatus(`Fetch error: ${err}`, 'error');
-                    });
-            };
-
-            window.onActionHandler = () => {
-                updateCaptchaStatus('Form submission initiated', 'info');
-                
-                const procaptchaElements = document.getElementsByName('procaptcha-response');
-
-                if (!procaptchaElements.length) {
-                    updateCaptchaStatus('Error: No CAPTCHA response found', 'error');
-                    alert("Must complete captcha");
-                    return
-                }
-
-                const procaptchaToken = procaptchaElements[0].value;
-                updateCaptchaStatus(`Token received: ${procaptchaToken.substring(0, 15)}...`, 'success');
-
-                const payload = {
-                    email: document.getElementById('email').value,
-                    name: document.getElementById('name').value,
-                    password: document.getElementById('password').value,
-                    "procaptcha-response": procaptchaToken,
-                };
-                const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;
-                console.log("posting to", url, "with payload", payload);
-                fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload),
-                    contentType: "application/json",
-                }).then((response) => {
-                    return new Promise((resolve) => response.json()
-                        .then((json) => resolve({
-                            status: response.status,
-                            ok: response.ok,
-                            json,
-                        })))
-                })
-                    .then(async ({status, json, ok}) => {
-                        console.log("status", status, "json", json.message, "ok", ok);
-                        console.log("json", json)
-                        try {
-                            if (status !== 200) {
-                                updateCaptchaStatus(`API Error: ${json.message}`, 'error');
-                                setIsError(true);
-                                setMessage(json.message);
-                            } else {
-                                updateCaptchaStatus(`API Success: ${json.message}`, 'success');
-                                setIsError(false);
-                                setMessage(json.message);
-                            }
-                        } catch (err) {
-                            console.log(err);
-                            updateCaptchaStatus(`Error processing response: ${err}`, 'error');
-                        }
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        updateCaptchaStatus(`Fetch error: ${err}`, 'error');
-                        setIsError(true);
-                        setMessage("Error: " + err);
-                    });
-            };
-            
-            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
-            
-            // Monitor DOM for CAPTCHA initialization
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.addedNodes.length) {
-                        for (let i = 0; i < mutation.addedNodes.length; i++) {
-                            const node = mutation.addedNodes[i];
-                            if (node.classList && (node.classList.contains('procaptcha') || 
-                                  node.querySelector && node.querySelector('.procaptcha'))) {
-                                updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
-                                observer.disconnect();
-                                break;
-                            }
-                        }
-                    }
-                });
-            });
-            
-            observer.observe(document.body, { childList: true, subtree: true });
-        });
-
-
-        window.onCaptchaFailed = function () {
-            console.log('Challenge failed');
-            updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+    <title>Procaptcha Demo - Client Bundle Examples</title>
+    <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <style>
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
         }
-
-        window.onCaptchaVerified = (output) => {
-            console.log('Challenge passed');
-            updateCaptchaStatus('Challenge passed successfully!', 'success');
-            updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
+        .demo-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            background: #f9f9f9;
         }
-        
-        // Add custom event listener for CAPTCHA verification stages
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                updateCaptchaStatus('CAPTCHA script loaded and initialized', 'info');
-                updateCaptchaStatus('Waiting for user interaction...', 'info');
-            }, 500);
-        });
-    </script>
-    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%" async defer></script>
+        .demo-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .demo-card p {
+            color: #666;
+            font-size: 14px;
+        }
+        .demo-link {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 8px 16px;
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .demo-link:hover {
+            background: #1976D2;
+            color: white;
+        }
+        .explicit { background: #4CAF50; }
+        .implicit { background: #FF9800; }
+    </style>
 </head>
 <body>
 
 <div class="mui-container">
-    <h1>Proof of Work CAPTCHA - Implicit Rendering</h1>
-    <p>This example demonstrates how to use Procaptcha in Proof of Work mode with implicit rendering.</p>
+    <h1>Procaptcha Client Bundle Examples</h1>
+    <p>This page provides access to various Procaptcha demo implementations showing different CAPTCHA types and rendering modes.</p>
     
-    <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
+    <div class="demo-grid">
+        <div class="demo-card">
+            <h3>🔗 Frictionless CAPTCHA</h3>
+            <p>Behavioral analysis with minimal user interaction. Works silently in the background to verify human behavior.</p>
+            <a href="frictionless-explicit.html" class="demo-link explicit">Explicit</a>
+            <a href="frictionless-implicit.html" class="demo-link implicit">Implicit</a>
+        </div>
+        
+        <div class="demo-card">
+            <h3>🖼️ Image CAPTCHA</h3>
+            <p>Traditional image-based challenges where users select images matching a given criteria.</p>
+            <a href="image-explicit.html" class="demo-link explicit">Explicit</a>
+            <a href="image-implicit.html" class="demo-link implicit">Implicit</a>
+        </div>
+        
+        <div class="demo-card">
+            <h3>⚡ Proof of Work CAPTCHA</h3>
+            <p>Computational challenges that require solving cryptographic puzzles to prove human intent.</p>
+            <a href="pow-explicit.html" class="demo-link explicit">Explicit</a>
+            <a href="pow-implicit.html" class="demo-link implicit">Implicit</a>
+        </div>
+        
+        <div class="demo-card">
+            <h3>👻 Invisible Frictionless</h3>
+            <p>Completely invisible behavioral analysis that works without any visible UI elements.</p>
+            <a href="invisible-frictionless-explicit.html" class="demo-link explicit">Explicit</a>
+            <a href="invisible-frictionless-implicit.html" class="demo-link implicit">Implicit</a>
+        </div>
+        
+        <div class="demo-card">
+            <h3>👻 Invisible Image</h3>
+            <p>Image challenges that appear only when behavioral analysis is inconclusive.</p>
+            <a href="invisible-image-explicit.html" class="demo-link explicit">Explicit</a>
+            <a href="invisible-image-implicit.html" class="demo-link implicit">Implicit</a>
+        </div>
+        
+        <div class="demo-card">
+            <h3>👻 Invisible Proof of Work</h3>
+            <p>Computational challenges that run invisibly in the background when needed.</p>
+            <a href="invisible-pow-explicit.html" class="demo-link explicit">Explicit</a>
+            <a href="invisible-pow-implicit.html" class="demo-link implicit">Implicit</a>
+        </div>
+    </div>
     
-    <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
-        <h2>Example Login Form</h2>
-        <div class="mui-textfield mui-textfield--float-label">
-            <label for="name">Name</label>
-            <input id="name" type="text" name="name" required/>
-        </div>
-        <div class="mui-textfield mui-textfield--float-label">
-            <label for="email">Email Address</label>
-            <input id="email" type="email" name="email" required/>
-        </div>
-        <div class="mui-textfield mui-textfield--float-label">
-            <label for="password">Password</label>
-            <input id="password" type="password" name="password" required/>
-        </div>
-        <div class="mui-textfield mui-textfield--float-label">
-            <!-- Dev sitekey -->
-            <div
-                    class="procaptcha"
-                    data-theme="light"
-                    data-sitekey="%PROSOPO_SITE_KEY_IMAGE%"
-                    data-failed-callback="onCaptchaFailed"
-                    data-callback="onCaptchaVerified"
-                    data-captcha-type="image"
-            ></div>
-        </div>
-        <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
-        <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
-    </form>
-    
-    <!-- Console output display area -->
-    <div id="console-output" class="console-output" style="display: none;"></div>
-    
-    <!-- Explanation will be injected by the explanation-injector plugin -->
+    <div style="margin-top: 40px; padding: 20px; background: #f5f5f5; border-radius: 5px;">
+        <h3>Rendering Modes</h3>
+        <p><strong>Explicit Rendering:</strong> Uses JavaScript <code>render()</code> and <code>execute()</code> functions for programmatic control.</p>
+        <p><strong>Implicit Rendering:</strong> Uses HTML attributes on buttons/forms for automatic initialization and execution.</p>
+        
+        <h3>Demo Environment</h3>
+        <p><strong>Note:</strong> All demos now use client-side verification for demonstration purposes. They show successful form submission without requiring server infrastructure.</p>
+    </div>
 </div>
+
 </body>
 </html>
