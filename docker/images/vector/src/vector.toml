@@ -28,23 +28,6 @@ del(.date)
 #inputs = ["provider_format"]
 #encoding.codec = "json"
 
-# send provider logs to openobserve
-[sinks.openobserve_provider]
-type = "http"
-inputs = ["provider_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
-
 # send provider logs to tiger-stairs
 [sinks.prosopo_provider]
 type = "http"
@@ -124,23 +107,6 @@ inputs = ["docker_format"]
 encoding.codec = "json"
 
 # send to openobserve
-[sinks.openobserve_docker]
-type = "http"
-inputs = ["docker_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
-
-# send to openobserve
 [sinks.prosopo_docker]
 type = "http"
 inputs = ["docker_format"]
@@ -194,23 +160,6 @@ del(.resp_headers)
 del(.bytes_read)
 del(.logger)
 '''
-
-# send to openobserve
-[sinks.openobserve_caddy]
-type = "http"
-inputs = ["caddy_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
 
 # send to openobserve
 [sinks.prosopo_caddy]
