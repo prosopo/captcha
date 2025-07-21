@@ -1,54 +1,104 @@
 {
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
-	"namedInputs": {
-		"default": [
-			"{projectRoot}/**",
-			"!{projectRoot}/dist/**",
-			"!{projectRoot}/node_modules/**",
-			"!{projectRoot}/coverage/**"
-		]
-	},
-	"namedOutputs": {
-		"dist": [
-			"{projectRoot}/dist"
-		]
-	},
 	"targetDefaults": {
 		"build": {
 			"dependsOn": [
 				"^build"
 			],
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/**",
+				"!{projectRoot}/node_modules/**",
+				"!{projectRoot}/coverage/**",
+				"{projectRoot}/dist/**/*"
+			],
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"build:cjs": {
 			"dependsOn": [
 				"^build:cjs"
 			],
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/**",
+				"!{projectRoot}/node_modules/**",
+				"!{projectRoot}/coverage/**",
+				"{projectRoot}/dist/**/*"
+			],
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"bundle": {
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/**",
+				"!{projectRoot}/node_modules/**",
+				"!{projectRoot}/coverage/**",
+				"{projectRoot}/dist/**/*"
+			],
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"bundle:webpack": {
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/**",
+				"!{projectRoot}/node_modules/**",
+				"!{projectRoot}/coverage/**",
+				"{projectRoot}/dist/**/*"
+			],
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"test": {
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/**",
+				"!{projectRoot}/node_modules/**",
+				"!{projectRoot}/coverage/**",
+				"{projectRoot}/dist/**/*"
+			],
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"typecheck": {
 			"dependsOn": [
 				"^typecheck"
 			],
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/**",
+				"!{projectRoot}/node_modules/**",
+				"!{projectRoot}/coverage/**",
+				"{projectRoot}/dist/**/*"
+			],
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"build:tsc": {
 			"dependsOn": [
 				"^build:tsc"
 			],
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{projectRoot}/**",
+				"!{projectRoot}/node_modules/**",
+				"!{projectRoot}/coverage/**",
+				"{projectRoot}/dist/**/*"
+			],
+			"outputs": [
+				"{projectRoot}/dist/**/*"
+			]
 		},
 		"lint": {
-			"cache": true
+			"cache": false
 		},
 		"clean": {
 			"cache": false
