@@ -44,7 +44,7 @@ services:
         labels:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: build
         env_file:
             - ../.env.2.${NODE_ENV}
@@ -62,7 +62,7 @@ services:
         depends_on:
             - redis-stack
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ]  # ping the healthz endpoint
+            test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ] # ping the healthz endpoint
             interval: 5m
             retries: 3
             start_period: 30s
@@ -152,7 +152,8 @@ services:
         env_file:
             - ../.env.1.${NODE_ENV}
         volumes:
-            - ./data:/data # mount a volume for data persistence
+            # disabled data vol to avoid dodgy rules being propagated between redeploys
+            # - ./data:/data # mount a volume for data persistence
             - ./redis.conf:/redis-stack.conf
         ports:
             - '6379:6379' # DB
