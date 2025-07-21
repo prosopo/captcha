@@ -221,7 +221,7 @@ export default async function (
 								) {
 									chunk.code = chunk.code.replace(
 										/var request = new XMLHttpRequest\(\);\s*request\.open\("get", "https:\/\/m1\.openfpcdn\.io\/fingerprintjs\/v"\.concat\(version, "\/npm-monitoring"\), true\);\s*request\.send\(\);/g,
-										'console.log("running captcha");',
+										"",
 									);
 								}
 							}
