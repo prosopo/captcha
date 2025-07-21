@@ -5,9 +5,6 @@
 		},
 		"build:cjs": {
 			"dependsOn": ["^build:cjs", "^typecheck"]
-		},
-		"bundle": {
-			"dependsOn": ["^build", "^typecheck"]
 		}
 	}
 }
