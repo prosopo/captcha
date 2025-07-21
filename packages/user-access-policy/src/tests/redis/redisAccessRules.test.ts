@@ -20,10 +20,11 @@ import {
 	beforeEach,
 	describe,
 	expect,
+	it,
 	test,
 } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import { ScopeMatch } from "#policy/accessPolicyResolver.js";
+import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type {
 	AccessRule,
 	AccessRulesReader,
@@ -38,6 +39,7 @@ import {
 	createRedisAccessRulesIndex,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
+	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "./testRedisClient.js";
 
@@ -52,7 +54,7 @@ describe("redisAccessRules", () => {
 		const ruleKey = getRedisAccessRuleKey(rule);
 		const ruleValue = getRedisAccessRuleValue(rule);
 
-		await redisClient.hSet(ruleKey, ruleValue);
+		return await redisClient.hSet(ruleKey, ruleValue);
 	};
 
 	beforeAll(async () => {
@@ -67,6 +69,10 @@ describe("redisAccessRules", () => {
 		if (keys.length > 0) {
 			await redisClient.del(keys);
 		}
+		// Get a new DB for each test
+		redisClient = await createTestRedisClient();
+
+		await createRedisAccessRulesIndex(redisClient);
 	});
 
 	describe("writer", () => {
@@ -212,7 +218,7 @@ describe("redisAccessRules", () => {
 	describe("reader", () => {
 		let accessRulesReader: AccessRulesReader;
 
-		beforeAll(() => {
+		beforeAll(async () => {
 			accessRulesReader = createRedisAccessRulesReader(
 				redisClient,
 				getLogger(LogLevel.enum.info, "RedisAccessRulesReader"),
@@ -511,7 +517,7 @@ describe("redisAccessRules", () => {
 			expect(ip_201_accessRules).toEqual([]);
 		});
 
-		test("finds rules by exact ip match", async () => {
+		test("finds rules by exact ip match with exact policy match", async () => {
 			// given
 			const johnId = getUniqueString();
 
@@ -546,6 +552,7 @@ describe("redisAccessRules", () => {
 				policyScope: {
 					clientId: johnId,
 				},
+				policyScopeMatch: ScopeMatch.Exact,
 				userScope: {
 					numericIp: BigInt(0),
 				},
@@ -555,6 +562,7 @@ describe("redisAccessRules", () => {
 				policyScope: {
 					clientId: johnId,
 				},
+				policyScopeMatch: ScopeMatch.Exact,
 				userScope: {
 					numericIp: BigInt(100),
 				},
@@ -566,15 +574,278 @@ describe("redisAccessRules", () => {
 
 			expect(indexRecordsCount).toBe(4);
 
-			expect(ip_0_accessRules).toEqual([]);
+			expect(ip_0_accessRules).toEqual([johnIpMask_0_100_AccessRule]);
 			expect(ip_100_accessRules).toEqual([
+				johnIpMask_0_100_AccessRule,
 				johnIp_100_AccessRule,
+			]);
+		});
+		test("finds rules by exact ip match with exact policy match 2", async () => {
+			// given
+			const johnId = getUniqueString();
+			const johnIp = BigInt(100);
+
+			const johnIpMask_0_100_AccessRule: AccessRule = {
+				clientId: johnId,
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: BigInt(0),
+				numericIpMaskMax: johnIp,
+			};
+			const johnIp_100_AccessRule: AccessRule = {
+				clientId: johnId,
+				type: AccessPolicyType.Block,
+				numericIp: johnIp,
+			};
+			const globalIpMask_100_200_AccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIpMaskMin: johnIp,
+				numericIpMaskMax: BigInt(200),
+			};
+			const globalIp_100_AccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp: johnIp,
+			};
+
+			await insertRule(johnIpMask_0_100_AccessRule);
+			await insertRule(johnIp_100_AccessRule);
+			await insertRule(globalIpMask_100_200_AccessRule);
+			await insertRule(globalIp_100_AccessRule);
+
+			// when
+			const ip_0_accessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: johnId,
+				},
+				policyScopeMatch: ScopeMatch.Exact,
+				userScope: {
+					numericIp: BigInt(0),
+				},
+				userScopeMatch: ScopeMatch.Exact,
+			});
+			const ip_100_accessRules = await accessRulesReader.findRules({
+				policyScopeMatch: ScopeMatch.Exact,
+				userScope: {
+					numericIp: johnIp,
+				},
+				userScopeMatch: ScopeMatch.Exact,
+			});
+
+			// then
+			const indexRecordsCount = await getIndexRecordsCount();
+
+			expect(indexRecordsCount).toBe(4);
+
+			expect(ip_0_accessRules).toEqual([johnIpMask_0_100_AccessRule]);
+			expect(ip_100_accessRules).toEqual([
+				globalIpMask_100_200_AccessRule,
 				globalIp_100_AccessRule,
 			]);
+		});
+		test("does not find rules when some criteria do not match and user scope match is exact", async () => {
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				userAgentHash: "userAgentHash1",
+				ja4Hash: "ja4Hash",
+			};
+
+			// when
+			await insertRule(accessRule);
+
+			// then
+			const query = {
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: ScopeMatch.Exact,
+				userScope: {
+					ja4Hash: "ja4Hash",
+					userAgentHash: "userAgentHash2",
+				},
+				userScopeMatch: ScopeMatch.Exact,
+			};
+
+			const foundAccessRules = await accessRulesReader.findRules(query);
+			expect(foundAccessRules).toEqual([]);
+		});
+		test("does not find rules when query is more exact than rule and user scope match is exact", async () => {
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				ja4Hash: "ja4Hash",
+			};
+
+			// when
+			await insertRule(accessRule);
+
+			// then
+			const query = {
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: ScopeMatch.Exact,
+				userScope: {
+					ja4Hash: "ja4Hash",
+					userAgentHash: "userAgentHash",
+				},
+				userScopeMatch: ScopeMatch.Exact,
+			};
+
+			const foundAccessRules = await accessRulesReader.findRules(query);
+			expect(foundAccessRules).toEqual([]);
+		});
+		test("does find rules when query is more exact than rule and user scope match is greedy", async () => {
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				ja4Hash: "ja4Hash",
+			};
+
+			// when
+			await insertRule(accessRule);
+
+			// then
+			const query = {
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: ScopeMatch.Exact,
+				userScope: {
+					ja4Hash: "ja4Hash",
+					userAgentHash: "userAgentHash",
+				},
+				userScopeMatch: ScopeMatch.Greedy,
+			};
+
+			const foundAccessRules = await accessRulesReader.findRules(query);
+			expect(foundAccessRules).toEqual([accessRule]);
+		});
+		test("does find rules when some criteria do not match and user scope match is exact", async () => {
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				userAgentHash: "userAgentHash",
+				ja4Hash: "ja4Hash",
+			};
+
+			// when
+			getRedisAccessRuleKey(accessRule);
+			await insertRule(accessRule);
+
+			// then
+			const query = {
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: ScopeMatch.Exact,
+				userScope: {
+					ja4Hash: "ja4Hash",
+					userAgentHash: "userAgentHash",
+				},
+				userScopeMatch: ScopeMatch.Greedy,
+			};
+
+			const foundAccessRules = await accessRulesReader.findRules(query);
+			expect(foundAccessRules).toEqual([accessRule]);
+		});
+		test("if an ip rule and an ip mask rule is applied for a single IP at client level, both rules are returned with the more specific IP rule being first in the list", async () => {
+			// given
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				numericIp: BigInt(10),
+			};
+			const ipRangeAccessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				numericIpMaskMin: BigInt(10),
+				numericIpMaskMax: BigInt(20),
+			};
+
+			// when
+			await insertRule(accessRule);
+			await insertRule(ipRangeAccessRule);
+
+			// then
+
+			const query = {
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: ScopeMatch.Exact,
+				userScope: {
+					numericIp: BigInt(10),
+				},
+				userScopeMatch: ScopeMatch.Exact,
+			};
+
+			const foundAccessRules = await accessRulesReader.findRules(query);
+			expect(foundAccessRules).toEqual([accessRule, ipRangeAccessRule]);
 		});
 	});
 
 	afterAll(async () => {
 		await redisClient.flushAll();
+	});
+});
+
+describe("getUserScopeQuery", () => {
+	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact", () => {
+		const filter = {
+			userScope: {
+				numericIp: BigInt(100),
+				ja4Hash: "ja4Hash",
+				userAgentHash: undefined,
+			},
+			userScopeMatch: ScopeMatch.Exact,
+		} as PolicyFilter;
+
+		const query = getRedisAccessRulesQuery(filter);
+
+		expect(query).toBe(
+			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) )",
+		);
+	});
+
+	it("puts ismissing(x) for multiple fields passed in as `undefined` when user scope match is exact", () => {
+		const filter = {
+			userScope: {
+				numericIp: BigInt(100),
+				ja4Hash: "ja4Hash",
+				userAgentHash: undefined,
+				headersHash: undefined,
+				userId: undefined,
+			},
+			userScopeMatch: ScopeMatch.Exact,
+		} as PolicyFilter;
+
+		const query = getRedisAccessRulesQuery(filter);
+
+		expect(query).toBe(
+			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
+		);
+	});
+
+	it("does not put ismissing(x) for multiple fields passed in as `undefined` when user scope match is greedy", () => {
+		const filter = {
+			userScope: {
+				numericIp: BigInt(100),
+				ja4Hash: "ja4Hash",
+				userAgentHash: undefined,
+				headersHash: undefined,
+				userId: undefined,
+			},
+			userScopeMatch: ScopeMatch.Greedy,
+		} as PolicyFilter;
+
+		const query = getRedisAccessRulesQuery(filter);
+
+		expect(query).toBe(
+			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | @ja4Hash:{ja4Hash} )",
+		);
 	});
 });

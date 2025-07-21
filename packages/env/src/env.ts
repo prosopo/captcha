@@ -19,7 +19,7 @@ import {
 	parseLogLevel,
 } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
-import { Keyring } from "@prosopo/keyring";
+import { Keyring, getPair } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
@@ -45,7 +45,7 @@ export class Environment implements ProsopoEnvironment {
 	) {
 		this.config = config;
 		this.defaultEnvironment = this.config.defaultEnvironment;
-		this.pair = pair;
+		this.pair = pair || getPair(config.account.secret);
 		this.authAccount = authAccount;
 		this.logger = getLogger(
 			parseLogLevel(this.config.logLevel),
@@ -145,6 +145,7 @@ export class Environment implements ProsopoEnvironment {
 		try {
 			if (this.config.database) {
 				const dbConfig = this.config.database[this.defaultEnvironment];
+				console.log(this.config.database);
 				if (dbConfig) {
 					this.db = new ProviderDatabase({
 						mongo: {
