@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/common",
-	"version": "3.1.1",
+	"version": "3.1.2",
 	"description": "Prosopo common library",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -26,14 +26,14 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/locale": "3.1.1",
-		"@prosopo/util-crypto": "13.5.3",
+		"@prosopo/locale": "3.1.2",
+		"@prosopo/util-crypto": "13.5.4",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"consola": "3.2.3",
 		"esbuild": "0.25.6",
 		"express": "4.21.2",
-		"@prosopo/config": "3.1.2",
+		"@prosopo/config": "3.1.3",
 		"openpgp": "5.11.3",
 		"webpack-dev-server": "5.2.2",
 		"zod": "3.23.8"
