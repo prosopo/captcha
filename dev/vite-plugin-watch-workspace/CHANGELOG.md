@@ -1,5 +1,12 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.8
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+
 ## 2.6.7
 ### Patch Changes
 

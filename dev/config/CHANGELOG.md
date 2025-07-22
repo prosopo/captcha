@@ -1,5 +1,11 @@
 # @prosopo/config
 
+## 3.1.4
+### Patch Changes
+
+- 44ffda2: Dropping monitoring calls
+- a49b538: Extra tests
+
 ## 3.1.3
 ### Patch Changes
 

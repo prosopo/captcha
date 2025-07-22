@@ -1,5 +1,15 @@
 # @prosopo/common
 
+## 3.1.3
+### Patch Changes
+
+- a49b538: Extra tests
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/locale@3.1.3
+  - @prosopo/util-crypto@13.5.5
+
 ## 3.1.2
 ### Patch Changes
 

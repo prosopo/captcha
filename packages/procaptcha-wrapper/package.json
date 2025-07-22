@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.6.11",
+	"version": "2.6.12",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -23,13 +23,13 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
 	"dependencies": {
-		"@prosopo/types": "3.0.6",
-		"@prosopo/util": "3.0.5",
-		"@prosopo/config": "3.1.3",
-		"@prosopo/locale": "3.1.2"
+		"@prosopo/types": "3.0.7",
+		"@prosopo/util": "3.0.6",
+		"@prosopo/config": "3.1.4",
+		"@prosopo/locale": "3.1.3"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.1.3",
+		"@prosopo/procaptcha-integration-build-config": "1.1.4",
 		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

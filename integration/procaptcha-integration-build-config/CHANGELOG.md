@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-integration-build-config
 
+## 1.1.4
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+
 ## 1.1.3
 ### Patch Changes
 
