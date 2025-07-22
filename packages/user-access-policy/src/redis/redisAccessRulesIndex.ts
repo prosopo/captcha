@@ -79,32 +79,39 @@ const numericIndexFields: Array<keyof AccessRule> = [
 
 type CustomFieldComparisons = Record<
 	keyof AccessRule,
-	(value: unknown) => string
+	(value: unknown, scope: { [key in keyof AccessRule]: unknown }) => string
 >;
-const fieldDependencies: {
-	[key in keyof UserScope]?: {
-		exclude?: Array<keyof UserScope>;
-		implies?: Array<keyof UserScope>;
-	};
-} = {
-	numericIp: {
-		exclude: ["numericIpMaskMin", "numericIpMaskMax"],
-	},
-	numericIpMaskMin: {
-		exclude: ["numericIp"],
-		implies: ["numericIpMaskMax"],
-	},
-	numericIpMaskMax: {
-		exclude: ["numericIp"],
-		implies: ["numericIpMaskMin"],
-	},
-};
+
 const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
-	numericIp: (value) => {
+	numericIp: (value, scope) => {
 		if (value !== undefined) {
 			return `( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
 		}
-		return "ismissing(@numericIp)";
+		// Only emit ismissing(@numericIp) if ranges are also not present
+		if (
+			scope.numericIpMaskMin === undefined &&
+			scope.numericIpMaskMax === undefined
+		) {
+			return "ismissing(@numericIp) ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax)";
+		}
+		// Else, let ranges handle it
+		return "";
+	},
+	numericIpMaskMin: (value, scope) => {
+		if (scope.numericIp !== undefined) {
+			return ""; // handled by numericIp
+		}
+		return value !== undefined
+			? `@numericIpMaskMin:[-inf ${value}]`
+			: "ismissing(@numericIpMaskMin)";
+	},
+	numericIpMaskMax: (value, scope) => {
+		if (scope.numericIp !== undefined) {
+			return ""; // handled by numericIp
+		}
+		return value !== undefined
+			? `@numericIpMaskMax:[${value} +inf]`
+			: "ismissing(@numericIpMaskMax)";
 	},
 };
 
@@ -189,39 +196,38 @@ const getUserScopeQuery = (
 	}
 
 	if (matchingFieldsOnly) {
-		const presentFields = new Set(scopeEntries.map(([key]) => key));
-		const addedFields = new Set<keyof UserScope>();
+		const scopeMap = new Map<keyof UserScope, unknown>(scopeEntries);
 
+		// If numericIp is explicitly undefined, set both range fields to undefined
+		if (scopeMap.has("numericIp") && scopeMap.get("numericIp") === undefined) {
+			scopeMap.set("numericIpMaskMin", undefined);
+			scopeMap.set("numericIpMaskMax", undefined);
+		}
+
+		// Ensure all expected fields are accounted for
 		for (const name of Object.keys(userScopeSchema.shape) as Array<
 			keyof UserScope
 		>) {
-			if (presentFields.has(name)) continue;
-
-			// Respect dependencies
-			const deps = fieldDependencies[name];
-
-			// If any of its 'exclude' fields are present, skip this one
-			if (deps?.exclude?.some((excluded) => presentFields.has(excluded))) {
-				continue;
+			if (!scopeMap.has(name)) {
+				scopeMap.set(name, undefined);
 			}
-
-			// If it's implied by another field (e.g., max implies min), and that field is present, add this
-			if (deps?.implies?.some((impliedBy) => presentFields.has(impliedBy))) {
-				scopeEntries.push([name, undefined]);
-				addedFields.add(name);
-				continue;
-			}
-
-			// If none of the conditions above apply, mark it undefined
-			scopeEntries.push([name, undefined]);
-			addedFields.add(name);
 		}
+
+		scopeEntries = [...scopeMap.entries()];
 	}
+
+	const scopeObj = Object.fromEntries(scopeEntries) as Partial<UserScope>;
 
 	return scopeEntries
 		.map(([scopeFieldName, scopeFieldValue]) =>
-			getUserScopeFieldQuery(scopeFieldName, scopeFieldValue, scopeMatchType),
+			getUserScopeFieldQuery(
+				scopeFieldName,
+				scopeFieldValue,
+				scopeMatchType,
+				scopeObj,
+			),
 		)
+		.filter(Boolean)
 		.join(scopeJoinType);
 };
 
@@ -229,12 +235,10 @@ const getUserScopeFieldQuery = (
 	fieldName: keyof UserScope,
 	fieldValue: unknown,
 	matchType: ScopeMatch | undefined,
+	fullScope: Partial<UserScope>, // <-- NEW ARG
 ): string => {
-	if (
-		//ScopeMatch.Greedy === matchType &&
-		"function" === typeof greedyFieldComparisons[fieldName]
-	) {
-		return greedyFieldComparisons[fieldName](fieldValue);
+	if ("function" === typeof greedyFieldComparisons[fieldName]) {
+		return greedyFieldComparisons[fieldName](fieldValue, fullScope);
 	}
 
 	if (fieldValue === undefined) {
