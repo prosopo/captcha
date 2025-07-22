@@ -169,7 +169,8 @@ const getUserScopeFieldQuery = (
 ): string => {
 	if (
 		//ScopeMatch.Greedy === matchType &&
-		"function" === typeof greedyFieldComparisons[fieldName]
+		"function" === typeof greedyFieldComparisons[fieldName] &&
+		fieldValue !== undefined
 	) {
 		return greedyFieldComparisons[fieldName](fieldValue);
 	}
