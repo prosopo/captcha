@@ -297,5 +297,31 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 			expect(nonClientResult.length).toBe(0);
 		});
+		it("should not return a match for a different IP", async () => {
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+				userAgent: userAgent1,
+				numericIp: BigInt(16843009),
+			});
+
+			await accessRulesStorage.insertRule(accessRule1);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					clientId: siteKey,
+					ja4Hash: ja4Hash2,
+					userAgent: userAgent1,
+					numericIp: BigInt(17843009),
+				},
+				siteKey,
+			);
+
+
+			expect(result.length).toBe(0);
+
+		});
 	});
 });
