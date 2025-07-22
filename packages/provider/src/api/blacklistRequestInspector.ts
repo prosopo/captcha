@@ -62,7 +62,6 @@ export const getPrioritisedAccessRule = async (
 		)
 		.filter((us) => Object.keys(us).length > 0)
 		.map((pus) => {
-			console.log(pus);
 			// add undefined values for missing keys
 			for (const key of userScopeKeys) {
 				if (!Object.keys(pus).includes(key)) {
