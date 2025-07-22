@@ -10,31 +10,33 @@
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build"],
+			"dependsOn": ["^build", "@prosopo/config:build"],
 			"cache": true,
 			"inputs": ["^custom", "custom"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"],
+			"dependsOn": ["^build:cjs", "@prosopo/config:build"],
 			"cache": true,
 			"inputs": ["^custom", "custom"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle": {
+			"dependsOn": ["@prosopo/config:build"],
 			"cache": true,
 			"inputs": ["^custom", "custom"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle:webpack": {
+			"dependsOn": ["@prosopo/config:build"],
 			"cache": true,
 			"inputs": ["^custom", "custom"],
 			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"test": {
 			"cache": true,
-			"inputs": ["^custom", "custom"],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"dependsOn": ["@prosopo/config:build"],
+			"inputs": ["^custom", "custom"]
 		},
 		"typecheck": {
 			"dependsOn": ["^typecheck"],
