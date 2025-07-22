@@ -141,7 +141,7 @@ export default defineConfig(({ command, mode }) => {
 				transformMixedEsModules: true,
 			},
 			outDir: "dist",
-			emptyOutDir: true,
+			emptyOutDir: false,
 			rollupOptions: {
 				input: {
 					index: path.resolve(__dirname, "src/index.html"),

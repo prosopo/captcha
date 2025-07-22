@@ -44,11 +44,11 @@ const accessRulesIndex: RedisIndex = {
 		},
 		numericIpMaskMin: SCHEMA_FIELD_TYPE.NUMERIC,
 		numericIpMaskMax: SCHEMA_FIELD_TYPE.NUMERIC,
-		userId: SCHEMA_FIELD_TYPE.TAG,
+		userId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 		numericIp: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-		ja4Hash: SCHEMA_FIELD_TYPE.TAG,
-		headersHash: SCHEMA_FIELD_TYPE.TAG,
-		userAgentHash: SCHEMA_FIELD_TYPE.TAG,
+		ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+		headersHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+		userAgentHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	} satisfies Partial<Record<keyof AccessRule, string | object>>,
 	// the satisfy statement is to guarantee that the keys are right
 	options: {
@@ -59,7 +59,13 @@ const accessRulesIndex: RedisIndex = {
 
 export const createRedisAccessRulesIndex = async (
 	client: RedisClientType,
-): Promise<void> => createRedisIndex(client, accessRulesIndex);
+	indexName?: string,
+): Promise<void> => {
+	if (indexName) {
+		accessRulesIndex.name = indexName;
+	}
+	return createRedisIndex(client, accessRulesIndex);
+};
 
 const numericIndexFields: Array<keyof AccessRule> = [
 	"numericIp",
@@ -111,7 +117,6 @@ export const getRedisAccessRulesQuery = (filter: PolicyFilter): string => {
 
 	if (userScope && Object.keys(userScope).length > 0) {
 		const userScopeFilter = getUserScopeQuery(userScope, filter.userScopeMatch);
-
 		return `${policyScopeFilter} ( ${userScopeFilter} )`;
 	}
 
@@ -137,13 +142,18 @@ const getUserScopeQuery = (
 	userScope: UserScope,
 	scopeMatchType: ScopeMatch | undefined,
 ): string => {
-	const scopeEntries = Object.entries(userScope)
-		// skip fields with undefined values
-		.filter(([_, value]) => value !== undefined) as Array<
+	let scopeEntries = Object.entries(userScope) as Array<
 		[keyof UserScope, unknown]
 	>;
+	let scopeJoinType = " ";
 
-	const scopeJoinType = ScopeMatch.Exact === scopeMatchType ? " " : " | ";
+	// skip fields with undefined values if in greedy mode and set operator to OR
+	if (scopeMatchType === ScopeMatch.Greedy) {
+		scopeEntries = scopeEntries.filter(
+			([_, value]) => value !== undefined,
+		) as Array<[keyof UserScope, unknown]>;
+		scopeJoinType = " | ";
+	}
 
 	return scopeEntries
 		.map(([scopeFieldName, scopeFieldValue]) =>
@@ -158,10 +168,14 @@ const getUserScopeFieldQuery = (
 	matchType: ScopeMatch | undefined,
 ): string => {
 	if (
-		ScopeMatch.Greedy === matchType &&
+		//ScopeMatch.Greedy === matchType &&
 		"function" === typeof greedyFieldComparisons[fieldName]
 	) {
 		return greedyFieldComparisons[fieldName](fieldValue);
+	}
+
+	if (fieldValue === undefined) {
+		return `ismissing(@${fieldName})`;
 	}
 
 	return numericIndexFields.includes(fieldName)
