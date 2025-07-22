@@ -194,10 +194,7 @@ jobs:
               if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                   version=$(npm pkg get version | jq -r '.') || version=""
               else
-                  version=$(
-                      { npm pkg --workspace "$pkg" get version 2>/dev/null || true; } \
-                      | jq -r ".[\"$pkg\"]" 2>/dev/null
-                  )
+                  version=$(npm pkg --workspace "$pkg" get version 2>/dev/null | jq -r '.')
               fi
       
               # Skip tagging if version is empty
