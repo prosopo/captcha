@@ -83,7 +83,7 @@ jobs:
           git config user.email "dev@prosopo.io"
 
 
-      - run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts --include=dev
 
       - name: detect changesets
         run: |
