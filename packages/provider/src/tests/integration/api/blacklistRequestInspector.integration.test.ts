@@ -319,9 +319,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
-
 			expect(result.length).toBe(0);
-
 		});
 	});
 });
