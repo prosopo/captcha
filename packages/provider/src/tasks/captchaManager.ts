@@ -44,7 +44,7 @@ export class CaptchaManager {
 		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
 			sessionRecord.tokenId,
 		);
-		return tokenRecord ? (tokenRecord._id as FrictionlessTokenId) : undefined;
+		return tokenRecord;
 	}
 
 	async isValidRequest(
@@ -105,11 +105,42 @@ export class CaptchaManager {
 						type: requestedCaptchaType,
 					};
 				}
-				const frictionlessTokenId =
+				const frictionlessToken =
 					await this.getFrictionlessTokenIdFromSession(sessionRecord);
+
+				if (!frictionlessToken) {
+					this.logger.warn(() => ({
+						msg: "No frictionless token found",
+						data: {
+							account: clientSettings.account,
+							sessionId: sessionId,
+						},
+					}));
+					return {
+						valid: false,
+						reason: "CAPTCHA.NO_SESSION_FOUND",
+						type: requestedCaptchaType,
+					};
+				}
+
+				// Check not img captcha on token
+				if (frictionlessToken.score >= clientSettings.settings.frictionlessThreshold) {
+					this.logger.warn(() => ({
+						msg: "Invalid frictionless request",
+						data: {
+							account: clientSettings.account,
+							sessionId: sessionId,
+						},
+					}));
+					return {
+						valid: false,
+						reason: "CAPTCHA.NO_SESSION_FOUND",
+						type: requestedCaptchaType,
+					};
+				}
 				return {
 					valid: true,
-					frictionlessTokenId,
+					frictionlessTokenId: frictionlessToken._id as FrictionlessTokenId,
 					type: requestedCaptchaType,
 				};
 			}

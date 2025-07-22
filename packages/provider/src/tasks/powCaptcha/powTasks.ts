@@ -88,7 +88,6 @@ export class PowCaptchaManager extends CaptchaManager {
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
-		difficulty: number,
 		providerChallengeSignature: string,
 		nonce: number,
 		timeout: number,
@@ -125,7 +124,9 @@ export class PowCaptchaManager extends CaptchaManager {
 			// no record of this challenge
 			return false;
 		}
-
+		
+		const difficulty = challengeRecord.difficulty;
+		
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecord(
 				challenge,

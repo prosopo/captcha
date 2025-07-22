@@ -477,7 +477,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 			const {
 				challenge,
-				difficulty,
 				signature,
 				nonce,
 				verifiedTimeout,
@@ -503,7 +502,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 					challenge,
-					difficulty,
 					signature.provider.challenge,
 					nonce,
 					verifiedTimeout,
