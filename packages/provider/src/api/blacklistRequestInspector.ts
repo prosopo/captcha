@@ -65,21 +65,33 @@ export const getPrioritisedAccessRule = async (
 		.filter((us) => Object.values(us).some((value) => value !== undefined));
 
 	const policyPromises = [];
-	for (const clientOrUndefined of [clientId, undefined]) {
+	// Search first by clientId, if it exists, then by undefined clientId. Otherwise, just search by undefined clientId.
+	const clientLoop = clientId ? [clientId, undefined] : [undefined];
+	for (const clientOrUndefined of clientLoop) {
 		for (const scope of prioritisedUserScopes) {
-			policyPromises.push(
-				userAccessRulesStorage.findRules({
-					...(clientOrUndefined && {
-						policyScope: {
-							clientId: clientOrUndefined,
-						},
-					}),
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse(scope),
+			const parsedUserScope = userScopeInputSchema.parse(scope);
 
-					userScopeMatch: ScopeMatch.Exact,
+			// Check if values are defined
+			if (
+				Object.values(parsedUserScope).every((value) => value === undefined)
+			) {
+				continue; // Skip if all values are undefined
+			}
+
+			const filter = {
+				...(clientOrUndefined && {
+					policyScope: {
+						clientId: clientOrUndefined,
+					},
 				}),
-			);
+				policyScopeMatch: ScopeMatch.Exact,
+
+				userScope: parsedUserScope,
+
+				userScopeMatch: ScopeMatch.Exact,
+			};
+
+			policyPromises.push(userAccessRulesStorage.findRules(filter));
 		}
 	}
 	// TODO maybe change this to Promise.race for speed.

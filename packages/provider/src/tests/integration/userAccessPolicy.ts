@@ -109,8 +109,6 @@ export const userAccessPolicy = async (
 
 		const providerApi = new ProviderApi(provider.url, adminPair.address);
 
-		//console.log(JSON.stringify(accessPolicyBody, null, 2));
-
 		const response = await providerApi.insertUserAccessPolicies(
 			accessPolicyBody,
 			timestamp.toString(),

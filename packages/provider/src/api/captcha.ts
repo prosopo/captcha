@@ -37,11 +37,6 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type ResolveAccessPolicy,
-	ScopeMatch,
-	createAccessPolicyResolver,
-} from "@prosopo/user-access-policy";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
@@ -56,7 +51,7 @@ const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
+ * @param {ProviderEnvironment} env - The Prosopo environment
  */
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();

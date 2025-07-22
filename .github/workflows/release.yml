@@ -82,7 +82,8 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: npm ci
+
+      - run: npm ci --ignore-scripts
 
       - name: detect changesets
         run: |
@@ -94,32 +95,33 @@ jobs:
             echo "changesets=false" >> $GITHUB_ENV
           fi
 
-      - name: prerelease
-        run: |
-          # if there are changesets
-          if [ "${{ env.changesets }}" = "true" ]; then
-            echo "Found changesets"
-            if [ "${GITHUB_REF##*/}" = "main" ]; then
-              echo "On main branch, exiting prerelease mode"
-              # remove pre.json to exit prerelease mode
-              npx @changesets/cli pre exit || true
-            else
-              echo "Not on main branch, entering prerelease mode"
-              # pre.json puts changesets into prerelease mode
-              branch_name="${GITHUB_REF##*/}"
-              # sanitize branch name to be safe for changesets
-              # replace unsafe characters with '-'
-              # e.g. my/branch?is#unsafe -> my-branch-is-unsafe
-              safe_branch_name=$(echo "$branch_name" | tr '/\\:;*?"<>|@#%&=+,$' '-')
-              npx @changesets/cli pre enter "$safe_branch_name"
-              echo "prerelease=true" >> $GITHUB_ENV
-            fi
-          else
-            echo "No changesets found"
-          fi
+#      - name: prerelease
+#        run: |
+#          # if there are changesets
+#          if [ "${{ env.changesets }}" = "true" ]; then
+#            echo "Found changesets"
+#            if [ "${GITHUB_REF##*/}" = "main" ]; then
+#              echo "On main branch, exiting prerelease mode"
+#              # remove pre.json to exit prerelease mode
+#              npx @changesets/cli pre exit || true
+#            else
+#              echo "Not on main branch, entering prerelease mode"
+#              # pre.json puts changesets into prerelease mode
+#              branch_name="${GITHUB_REF##*/}"
+#              # sanitize branch name to be safe for changesets
+#              # replace unsafe characters with '-'
+#              # e.g. my/branch?is#unsafe -> my-branch-is-unsafe
+#              safe_branch_name=$(echo "$branch_name" | tr '/\\:;*?"<>|@#%&=+,$' '-')
+#              npx @changesets/cli pre enter "$safe_branch_name"
+#              echo "prerelease=true" >> $GITHUB_ENV
+#            fi
+#          else
+#            echo "No changesets found"
+#          fi
 
       - name: version
         run: |
+          npm i -g @changesets/cli
           npx @changesets/cli version --verbose
           git status
           if [ -z "$(git status --porcelain)" ]; then

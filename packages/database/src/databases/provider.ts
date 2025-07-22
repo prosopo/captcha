@@ -171,6 +171,7 @@ type ProviderDatabaseOptions = {
 	redis?: {
 		url: string;
 		password: string;
+		indexName?: string;
 	};
 	logger?: Logger;
 };
@@ -205,7 +206,10 @@ export class ProviderDatabase
 	protected async setupRedis(): Promise<void> {
 		const redisClient = await this.createRedisClient();
 
-		await createRedisAccessRulesIndex(redisClient);
+		await createRedisAccessRulesIndex(
+			redisClient,
+			this.options.redis?.indexName,
+		);
 
 		this.userAccessRulesStorage = createRedisAccessRulesStorage(
 			redisClient,
