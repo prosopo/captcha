@@ -70,13 +70,11 @@ export const getPrioritisedAccessRule = async (
 	const clientLoop = clientId ? [clientId, undefined] : [undefined];
 	for (const clientOrUndefined of clientLoop) {
 		for (const scope of prioritisedUserScopes) {
-			const parsedUserScope = userScopeInputSchema.parse(scope);
-			// Check if values are defined
-			if (
-				Object.values(parsedUserScope).every((value) => value === undefined)
-			) {
-				continue; // Skip if all values are undefined
+			if (Object.values(scope).every((value) => value === undefined)) {
+				continue;
 			}
+
+			const parsedUserScope = userScopeInputSchema.parse(scope);
 
 			const filter = {
 				...(clientOrUndefined && {
@@ -94,7 +92,6 @@ export const getPrioritisedAccessRule = async (
 			policyPromises.push(userAccessRulesStorage.findRules(filter, true, true));
 		}
 	}
-	// TODO maybe change this to Promise.race for speed.
 	return (await Promise.all(policyPromises)).flat();
 };
 
