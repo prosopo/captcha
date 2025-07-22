@@ -17,16 +17,39 @@ import path from "node:path";
 import { env } from "node:process";
 import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
+import type { Argv } from "yargs";
 import z from "zod";
 
-export const engines = async () => {
-	const pkgJsonPath = z.string().parse(process.argv[2]);
-	console.log("Checking", pkgJsonPath);
+export const buildEnginesCommand = () => {
+	return {
+		command: "engines",
+		describe: "Check the engines of the workspace",
+		builder: (yargs: Argv) => {
+			return yargs.option("pkg", {
+				alias: "p",
+			});
+		},
+		handler: async (argv: unknown) => {
+			const args = z
+				.object({
+					pkg: z.string(),
+				})
+				.parse(argv);
+
+			await engines({ pkg: args.pkg });
+		},
+	};
+};
+
+const engines = async (args: {
+	pkg: string;
+}) => {
+	console.log("Checking", args.pkg);
 	// read the pkg json file
-	const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
+	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));
 	// only accept workspace pkg json
 	if (pkgJson.workspaces === undefined) {
-		throw new Error(`${pkgJsonPath} is not a workspace`);
+		throw new Error(`${args.pkg} is not a workspace`);
 	}
 
 	const enginesSchema = z.object({
@@ -40,12 +63,18 @@ export const engines = async () => {
 		.string()
 		.array()
 		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(pkgJsonPath)}/${g}/package.json`);
+		.map((g) => `${path.dirname(args.pkg)}/${g}/package.json`);
 	const pkgJsonPaths = fg.globSync(globs);
 	for (const pkgJsonPath of pkgJsonPaths) {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
-		const pkgEngine = enginesSchema.parse(pkgJson.engines);
+		const pkgEngineResult = enginesSchema.safeParse(pkgJson.engines);
+		if (!pkgEngineResult.success) {
+			throw new Error(
+				`${pkgJsonPath} has invalid engines: ${pkgEngineResult.error.message}`,
+			);
+		}
+		const pkgEngine = pkgEngineResult.data;
 		if (pkgEngine.node !== engines.node) {
 			throw new Error(
 				`${pkgJsonPath} has node version ${pkgEngine.node}, should be ${engines.node}`,
@@ -57,4 +86,5 @@ export const engines = async () => {
 			);
 		}
 	}
+	console.log("Engines check complete");
 };

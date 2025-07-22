@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util-crypto",
-	"version": "13.5.2",
+	"version": "13.5.5",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -11,9 +11,9 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
-		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/js/cli.js"
@@ -34,7 +34,7 @@
 		"@polkadot/x-randomvalues": "12.6.2",
 		"@scure/base": "^1.1.7",
 		"@scure/sr25519": "0.2.0",
-		"@prosopo/config": "3.1.1"
+		"@prosopo/config": "3.1.4"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "3.0.9",

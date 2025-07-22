@@ -1,5 +1,62 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.33
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/detector@3.0.4
+  - @prosopo/locale@3.1.3
+  - @prosopo/procaptcha-pow@2.7.19
+  - @prosopo/procaptcha-react@2.6.33
+  - @prosopo/types@3.0.7
+  - @prosopo/widget-skeleton@2.6.4
+
+## 2.6.32
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [df4e030]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/procaptcha-react@2.6.32
+  - @prosopo/widget-skeleton@2.6.3
+  - @prosopo/procaptcha-pow@2.7.18
+  - @prosopo/detector@3.0.3
+  - @prosopo/types@3.0.6
+  - @prosopo/config@3.1.3
+  - @prosopo/locale@3.1.2
+
+## 2.6.31
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/procaptcha-react@2.6.31
+  - @prosopo/widget-skeleton@2.6.2
+  - @prosopo/procaptcha-pow@2.7.17
+  - @prosopo/detector@3.0.2
+  - @prosopo/locale@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/config@3.1.2
+
+## 2.6.30
+### Patch Changes
+
+  - @prosopo/procaptcha-pow@2.7.16
+  - @prosopo/procaptcha-react@2.6.30
+
 ## 2.6.29
 ### Patch Changes
 

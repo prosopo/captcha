@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/detector",
-	"version": "3.0.1",
+	"version": "3.0.4",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"engines": {
@@ -19,8 +19,7 @@
 		"build": "npm run clean && cp -r src dist",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "npm run build",
-		"typecheck": "echo no typecheck",
-		"test": "echo no tests"
+		"typecheck": "echo no typecheck"
 	},
 	"devDependencies": {
 		"@vitest/coverage-v8": "3.0.9",
@@ -41,6 +40,6 @@
 		"express": "4.21.2",
 		"openpgp": "5.11.3",
 		"webpack-dev-server": "5.2.2",
-		"@prosopo/config": "3.1.1"
+		"@prosopo/config": "3.1.4"
 	}
 }

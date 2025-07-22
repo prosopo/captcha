@@ -17,6 +17,7 @@ import path from "node:path";
 import { inspect } from "node:util";
 import { get } from "@prosopo/util";
 import fg from "fast-glob";
+import type { Argv } from "yargs";
 import z from "zod";
 
 // covers both package.json and tsconfig.json fields
@@ -122,7 +123,6 @@ const validateWorkspace = async (args: {
 		findWorkspacePackageJsons(workspacePackage),
 	);
 
-	// for each package in the workspace, check their version matches the workspace version
 	const packagePatterns = [
 		workspacePackagePath, // include the workspace package.json
 		...z
@@ -231,8 +231,24 @@ const validateDependencies = async (args: {
 	return wrongTsConfigs;
 };
 
-export const refs = async () => {
-	await validateWorkspace({
-		packageJsonPath: z.string().parse(process.argv[2]),
-	});
+export const buildRefsCommand = () => {
+	return {
+		command: "refs",
+		describe: "Check the references in the workspace",
+		builder: (yargs: Argv) => {
+			return yargs.option("pkg", {
+				alias: "p",
+			});
+		},
+		handler: async (argv: unknown) => {
+			const args = z
+				.object({
+					pkg: z.string(),
+				})
+				.parse(argv);
+			await validateWorkspace({
+				packageJsonPath: args.pkg,
+			});
+		},
+	};
 };

@@ -1,24 +1,16 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.7.5",
+	"version": "2.7.8",
 	"description": "",
 	"private": true,
 	"type": "module",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
-		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
-		"test": "echo no tests",
-		"engines": "node dist/engines.js",
-		"refs": "node dist/refs.js",
-		"workflowNames": "node dist/workflowNames.js",
-		"scripts": "node dist/scripts.js",
-		"license": "node dist/license.js check",
-		"license:fix": "node dist/license.js license",
-		"redirects": "node dist/redirects.js",
-		"redirects:fix": "node dist/redirects.js fix"
+		"start": "node dist/index.js"
 	},
 	"author": "",
 	"license": "ISC",
@@ -48,7 +40,7 @@
 		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.0.3",
+		"@prosopo/util": "3.0.6",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
@@ -58,6 +50,6 @@
 		"webpack-dev-server": "5.2.2",
 		"yargs": "17.7.2",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.1.1"
+		"@prosopo/config": "3.1.4"
 	}
 }

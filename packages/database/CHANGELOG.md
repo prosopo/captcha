@@ -1,5 +1,59 @@
 # @prosopo/database
 
+## 3.0.14
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+- Updated dependencies [e090e2f]
+  - @prosopo/config@3.1.4
+  - @prosopo/user-access-policy@3.4.1
+  - @prosopo/common@3.1.3
+  - @prosopo/types@3.0.7
+  - @prosopo/types-database@3.0.14
+
+## 3.0.13
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- df4e030: Revising UAP rule getters
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [df4e030]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/types-database@3.0.13
+  - @prosopo/common@3.1.2
+  - @prosopo/types@3.0.6
+  - @prosopo/config@3.1.3
+  - @prosopo/user-access-policy@3.4.0
+
+## 3.0.12
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/user-access-policy@3.3.2
+  - @prosopo/types-database@3.0.12
+  - @prosopo/common@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/config@3.1.2
+
+## 3.0.11
+### Patch Changes
+
+- 625fef8: ua parsing
+- Updated dependencies [625fef8]
+  - @prosopo/types-database@3.0.11
+
 ## 3.0.10
 ### Patch Changes
 

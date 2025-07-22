@@ -21,6 +21,7 @@ env:
   GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   CARGO_TERM_COLOR: always
   NODE_OPTIONS: "--max-old-space-size=4096"
+  NODE_ENV: "test"
 
 defaults:
   run:
@@ -50,5 +51,5 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
-      - run: npx nx run-many --target=typecheck
+      - run: npx nx run-many --target=typecheck --nxBail
 

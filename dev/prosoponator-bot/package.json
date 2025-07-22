@@ -1,15 +1,14 @@
 {
 	"name": "@prosopo/prosoponator-bot",
-	"version": "2.6.1",
+	"version": "2.6.4",
 	"description": "",
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
-		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
-		"test": "echo no tests",
 		"start": "npx tsx src/index.ts"
 	},
 	"author": "",
@@ -29,7 +28,7 @@
 		"@actions/core": "1.10.1",
 		"@actions/github": "6.0.0",
 		"express": "4.21.2",
-		"@prosopo/config": "3.1.1",
+		"@prosopo/config": "3.1.4",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",

@@ -152,7 +152,6 @@ services:
         env_file:
             - ../.env.1.${NODE_ENV}
         volumes:
-            # disabled data vol to avoid dodgy rules being propagated between redeploys
             # - ./data:/data # mount a volume for data persistence
             - ./redis.conf:/redis-stack.conf
         ports:

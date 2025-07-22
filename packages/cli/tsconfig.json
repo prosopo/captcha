@@ -5,7 +5,13 @@
 		"outDir": "./dist",
 		"module": "NodeNext"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
 			"path": "../api"
@@ -36,9 +42,6 @@
 		},
 		{
 			"path": "../util-crypto"
-		},
-		{
-			"path": "../../dev/workspace"
 		},
 		{
 			"path": "../user-access-policy"

@@ -1,5 +1,93 @@
 # @prosopo/cli
 
+## 3.1.7
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+- Updated dependencies [e090e2f]
+  - @prosopo/config@3.1.4
+  - @prosopo/user-access-policy@3.4.1
+  - @prosopo/provider@3.3.1
+  - @prosopo/common@3.1.3
+  - @prosopo/api@3.1.4
+  - @prosopo/api-express-router@3.0.7
+  - @prosopo/dotenv@3.0.8
+  - @prosopo/env@3.1.5
+  - @prosopo/keyring@2.8.10
+  - @prosopo/locale@3.1.3
+  - @prosopo/types@3.0.7
+  - @prosopo/util@3.0.6
+  - @prosopo/util-crypto@13.5.5
+
+## 3.1.6
+### Patch Changes
+
+- df4e030: Revising UAP rule getters
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [df4e030]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/common@3.1.2
+  - @prosopo/dotenv@3.0.7
+  - @prosopo/types@3.0.6
+  - @prosopo/api@3.1.3
+  - @prosopo/env@3.1.4
+  - @prosopo/config@3.1.3
+  - @prosopo/user-access-policy@3.4.0
+  - @prosopo/provider@3.3.0
+  - @prosopo/api-express-router@3.0.6
+  - @prosopo/util-crypto@13.5.4
+  - @prosopo/keyring@2.8.9
+  - @prosopo/locale@3.1.2
+  - @prosopo/util@3.0.5
+
+## 3.1.5
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/api-express-router@3.0.5
+  - @prosopo/user-access-policy@3.3.2
+  - @prosopo/util-crypto@13.5.3
+  - @prosopo/provider@3.2.5
+  - @prosopo/keyring@2.8.8
+  - @prosopo/common@3.1.1
+  - @prosopo/dotenv@3.0.6
+  - @prosopo/locale@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/util@3.0.4
+  - @prosopo/api@3.1.2
+  - @prosopo/env@3.1.3
+  - @prosopo/config@3.1.2
+
+## 3.1.4
+### Patch Changes
+
+  - @prosopo/env@3.1.2
+  - @prosopo/provider@3.2.4
+
+## 3.1.3
+### Patch Changes
+
+- Updated dependencies [58ab0ce]
+  - @prosopo/provider@3.2.3
+
+## 3.1.2
+### Patch Changes
+
+- Updated dependencies [9e4e7ca]
+  - @prosopo/provider@3.2.2
+
 ## 3.1.1
 ### Patch Changes
 
