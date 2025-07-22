@@ -124,7 +124,10 @@ export class CaptchaManager {
 				}
 
 				// Check not img captcha on token
-				if (frictionlessToken.score >= clientSettings.settings.frictionlessThreshold) {
+				if (
+					frictionlessToken.score >=
+					clientSettings.settings.frictionlessThreshold
+				) {
 					this.logger.warn(() => ({
 						msg: "Invalid frictionless request",
 						data: {

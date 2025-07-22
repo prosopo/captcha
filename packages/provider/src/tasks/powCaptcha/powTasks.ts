@@ -124,9 +124,9 @@ export class PowCaptchaManager extends CaptchaManager {
 			// no record of this challenge
 			return false;
 		}
-		
+
 		const difficulty = challengeRecord.difficulty;
-		
+
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecord(
 				challenge,

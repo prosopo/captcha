@@ -475,14 +475,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const {
-				challenge,
-				signature,
-				nonce,
-				verifiedTimeout,
-				dapp,
-				user,
-			} = parsed;
+			const { challenge, signature, nonce, verifiedTimeout, dapp, user } =
+				parsed;
 
 			validateSiteKey(dapp);
 			validateAddr(user);
