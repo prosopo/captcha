@@ -439,7 +439,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 				siteKey,
 			);
-			console.log({ result });
+			expect(result).toEqual([]);
 			expect(result.length).toBe(0);
 		});
 		it("should not return a match for a different IP 2", async () => {
