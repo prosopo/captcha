@@ -21,7 +21,10 @@ import {
 	ScopeMatch,
 	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
-import { accessRuleSchemaExtended } from "@prosopo/user-access-policy";
+import {
+	accessRuleSchema,
+	accessRuleSchemaExtended,
+} from "@prosopo/user-access-policy";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
@@ -34,6 +37,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		const userAgent2 = "testuseragent2";
 		const userAgent3 = "testuseragent3";
 		const ja4Hash1 = "t13d1516h2_8daaf6152771_8eba31f8906f";
+		const ja4Hash2 = "t13d1516h2_8daaf6152771_8eba31f8906g";
 		let siteKey: string;
 		let siteKeyMnemonic: string;
 
@@ -224,6 +228,74 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				userScopeMatch: ScopeMatch.Exact,
 			});
 			expect(result).toHaveLength(1);
+		});
+		it("should return multiple matching rules", async () => {
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+			});
+			const accessRule2 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				numericIp: BigInt(16843009),
+			});
+			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRule(accessRule2);
+			const spy = vi.spyOn(accessRulesStorage, "findRules");
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					numericIp: BigInt(16843009),
+				},
+				siteKey,
+			);
+
+			expect(spy).toHaveBeenCalledTimes(6);
+
+			expect(result.length).toBe(2);
+		});
+		it("should return multiple matching rules in order of specificity", async () => {
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+				numericIp: BigInt(16843009),
+			});
+			const accessRule2 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				numericIp: BigInt(16843009),
+			});
+			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRule(accessRule2);
+			const spy = vi.spyOn(accessRulesStorage, "findRules");
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					numericIp: BigInt(16843009),
+				},
+				siteKey,
+			);
+
+			expect(spy).toHaveBeenCalledTimes(6);
+
+			expect(result.length).toBe(2);
+			expect(result).toStrictEqual([accessRule1, accessRule2]);
+
+			// check non-client result
+			const nonClientResult = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					numericIp: BigInt(16843009),
+				},
+			);
+			expect(nonClientResult.length).toBe(0);
 		});
 	});
 });
