@@ -1,5 +1,20 @@
 # @prosopo/angular-procaptcha-integration-demo
 
+## 1.1.9
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- Updated dependencies [828066d]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/angular-procaptcha-wrapper@1.1.9
+  - @prosopo/config@3.1.3
+
 ## 1.1.8
 ### Patch Changes
 

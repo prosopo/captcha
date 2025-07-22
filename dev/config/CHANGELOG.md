@@ -1,5 +1,15 @@
 # @prosopo/config
 
+## 3.1.3
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 3ef4fd2: remove cjs config
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+
 ## 3.1.2
 ### Patch Changes
 
