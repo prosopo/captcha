@@ -26,7 +26,11 @@ import {
 	policyScopeSchema,
 } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type { AccessRule, AccessRulesStorage } from "#policy/accessRules.js";
+import {
+	type AccessRule,
+	type AccessRulesStorage,
+	accessRuleSchema,
+} from "#policy/accessRules.js";
 import {
 	AccessRuleApiRoutes,
 	accessRuleApiPaths,
@@ -78,6 +82,7 @@ export {
 	createRedisAccessRulesStorage,
 	// api
 	accessRuleApiPaths,
+	accessRuleSchema,
 	accessRuleSchemaExtended,
 	accessPolicySchema,
 	policyScopeSchema,
