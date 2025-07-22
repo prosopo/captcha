@@ -123,11 +123,8 @@ export class CaptchaManager {
 					};
 				}
 
-				// Check not img captcha on token
-				if (
-					frictionlessToken.score >=
-					clientSettings.settings.frictionlessThreshold
-				) {
+				// Check the captcha type of the session is the same as the requested captcha type
+				if (sessionRecord.captchaType !== requestedCaptchaType) {
 					this.logger.warn(() => ({
 						msg: "Invalid frictionless request",
 						data: {
