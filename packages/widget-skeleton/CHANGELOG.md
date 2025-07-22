@@ -1,5 +1,12 @@
 # @prosopo/widget-skeleton
 
+## 2.6.4
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+
 ## 2.6.3
 ### Patch Changes
 

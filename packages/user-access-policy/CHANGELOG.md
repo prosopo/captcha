@@ -1,5 +1,18 @@
 # @prosopo/user-access-policy
 
+## 3.4.1
+### Patch Changes
+
+- a49b538: Extra tests
+- e090e2f: More tests
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/common@3.1.3
+  - @prosopo/api-route@2.6.11
+  - @prosopo/types@3.0.7
+  - @prosopo/util@3.0.6
+
 ## 3.4.0
 ### Minor Changes
 
