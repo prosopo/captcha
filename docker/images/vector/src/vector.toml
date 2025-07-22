@@ -188,7 +188,7 @@ if parsed != null {
     .log = parsed
 }
 .host="$OO_HOST"
-.request_id = get!(.resp_headers, ["X-Request-Id"])[0]
+.request_id = get(.resp_headers, ["X-Request-Id"])[0] ?? null
 del(.user_id)
 del(.size)
 del(.resp_headers)
