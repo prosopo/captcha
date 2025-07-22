@@ -1,3 +1,4 @@
+import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,19 +12,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ViteCommonJSConfig } from "@prosopo/config";
 
-import { createIntegrationViteConfig } from "@prosopo/procaptcha-integration-build-config";
-
-export default createIntegrationViteConfig({
-	name: "ProcaptchaWrapper",
-	directory: __dirname,
-	viteSettings: {
-		envDir: __dirname,
-	},
-	dtsPluginOptions: {
-		// workaround to "inline" external dependencies
-		bundledPackages: ["@prosopo/types", "@prosopo/locale"],
-		// note: "bundledPackages" option doesn't work without "rollupTypes" https://github.com/qmhc/vite-plugin-dts/issues/302
-		rollupTypes: true,
-	},
-});
+export default function () {
+	return ViteCommonJSConfig(
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
+	);
+}

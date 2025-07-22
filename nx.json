@@ -1,42 +1,64 @@
 {
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
 	"namedInputs": {
-		"default": [
+		"custom": [
 			"{projectRoot}/**",
-			"!{projectRoot}/dist/**",
 			"!{projectRoot}/node_modules/**",
-			"!{projectRoot}/coverage/**"
+			"!{projectRoot}/coverage/**",
+			"{projectRoot}/dist/**/*"
 		]
-	},
-	"namedOutputs": {
-		"dist": ["{projectRoot}/dist"]
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build"],
-			"cache": true
+			"dependsOn": ["^build", "@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"build:cjs": {
-			"dependsOn": ["^build:cjs"],
-			"cache": true
+			"dependsOn": ["^build:cjs", "@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle": {
-			"dependsOn": ["build"],
-			"cache": true
+			"dependsOn": ["@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle:webpack": {
-			"dependsOn": ["build:cjs"],
-			"cache": true
+			"dependsOn": ["@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"test": {
-			"cache": true
+			"cache": true,
+			"dependsOn": ["@prosopo/config:build"],
+			"inputs": ["^custom", "custom"]
 		},
 		"typecheck": {
 			"dependsOn": ["^typecheck"],
-			"cache": true
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
+		},
+		"build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"lint": {
-			"cache": true
+			"cache": false
+		},
+		"clean": {
+			"cache": false
+		},
+		"clean:deps": {
+			"cache": false,
+			"dependsOn": ["clean", "^clean"]
 		}
 	},
 	"defaultBase": "main",

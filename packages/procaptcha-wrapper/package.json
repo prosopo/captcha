@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.6.8",
+	"version": "2.6.12",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -17,20 +17,19 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
-		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
-		"test": "echo no tests",
-		"bundle": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.config.ts --mode $NODE_ENV"
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
 	"dependencies": {
-		"@prosopo/types": "3.0.4",
-		"@prosopo/config": "3.1.1",
-		"@prosopo/locale": "3.1.0"
+		"@prosopo/types": "3.0.7",
+		"@prosopo/util": "3.0.6",
+		"@prosopo/config": "3.1.4",
+		"@prosopo/locale": "3.1.3"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.1.1",
+		"@prosopo/procaptcha-integration-build-config": "1.1.4",
 		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

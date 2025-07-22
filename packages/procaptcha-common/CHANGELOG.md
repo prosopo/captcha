@@ -1,5 +1,56 @@
 # @prosopo/procaptcha-common
 
+## 2.7.13
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/common@3.1.3
+  - @prosopo/account@2.7.13
+  - @prosopo/load-balancer@2.6.18
+  - @prosopo/types@3.0.7
+  - @prosopo/util@3.0.6
+  - @prosopo/widget-skeleton@2.6.4
+
+## 2.7.12
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [df4e030]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/widget-skeleton@2.6.3
+  - @prosopo/load-balancer@2.6.17
+  - @prosopo/account@2.7.12
+  - @prosopo/common@3.1.2
+  - @prosopo/types@3.0.6
+  - @prosopo/config@3.1.3
+  - @prosopo/util@3.0.5
+
+## 2.7.11
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/widget-skeleton@2.6.2
+  - @prosopo/load-balancer@2.6.16
+  - @prosopo/account@2.7.11
+  - @prosopo/common@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/util@3.0.4
+  - @prosopo/config@3.1.2
+
 ## 2.7.10
 ### Patch Changes
 

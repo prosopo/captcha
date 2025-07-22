@@ -29,7 +29,11 @@ import {
 	ProsopoCaptchaCountConfigSchema,
 	ProviderDefaultRateLimits,
 } from "../provider/index.js";
-import { FrictionlessPenalties } from "./frictionless.js";
+import {
+	FrictionlessPenalties,
+	PENALTY_ACCESS_RULE_DEFAULT,
+	PENALTY_OLD_TIMESTAMP_DEFAULT,
+} from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
@@ -119,9 +123,12 @@ export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
 export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>;
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>;
 
-export const ProsopoImageServerConfigSchema = object({
+export const ProsopoApiConfigSchema = object({
 	baseURL: string().url(),
 	port: number().optional().default(9229),
+}).default({
+	baseURL: "http://localhost",
+	port: 9229,
 });
 
 export const ProsopoCaptchaSolutionConfigSchema = object({
@@ -269,7 +276,10 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			solved: { count: DEFAULT_SOLVED_COUNT },
 			unsolved: { count: DEFAULT_UNSOLVED_COUNT },
 		}),
-		penalties: FrictionlessPenalties,
+		penalties: FrictionlessPenalties.optional().default({
+			PENALTY_OLD_TIMESTAMP: PENALTY_OLD_TIMESTAMP_DEFAULT,
+			PENALTY_ACCESS_RULE: PENALTY_ACCESS_RULE_DEFAULT,
+		}),
 		scheduledTasks: object({
 			captchaScheduler: object({
 				schedule: string().optional(),
@@ -278,13 +288,17 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 				schedule: string().optional(),
 			}).optional(),
 		}).optional(),
-		server: ProsopoImageServerConfigSchema,
+		server: ProsopoApiConfigSchema.optional(),
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
 		redisConnection: object({
 			url: string(),
 			password: string(),
+			indexName: string().optional(),
+		}).default({
+			url: "redis://localhost:6379",
+			password: "root",
 		}),
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),

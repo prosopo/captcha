@@ -19,6 +19,7 @@ env:
   affected: '[]' # default to empty array
   prerelease: 'false' # default to false, will be set to true if there are changesets and not on main branch
   BRANCH_PROTECTION_DISABLED: 'true' # bypass husky check
+  NODE_ENV: "production"
 
 jobs:
   release:
@@ -81,7 +82,8 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: npm ci
+
+      - run: npm ci --ignore-scripts --include=dev
 
       - name: detect changesets
         run: |
@@ -119,13 +121,11 @@ jobs:
 
       - name: version
         run: |
+          npm i -g @changesets/cli
           npx @changesets/cli version --verbose
           git status
-          if [ -z "$(git status --porcelain)" ]; then
-              echo "No changes to commit"
-              exit 0
-          fi
-          npm i
+
+          npm i --ignore-scripts --include=dev
           # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
           root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
@@ -173,6 +173,7 @@ jobs:
         run: |
           npm run build:tsc -w @prosopo/config
           npm run build:tsc -w @prosopo/lint
+          npm run build:tsc -w @prosopo/procaptcha-integration-build-config
           npm run lint-fix
           # Amend the previous commit with any lint fixes
           if [ -n "$(git status --porcelain)" ]; then
@@ -190,10 +191,7 @@ jobs:
               if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                   version=$(npm pkg get version | jq -r '.') || version=""
               else
-                  version=$(
-                      { npm pkg --workspace "$pkg" get version 2>/dev/null || true; } \
-                      | jq -r ".[\"$pkg\"]" 2>/dev/null
-                  )
+                  version=$(npm pkg --workspace "$pkg" get version 2>/dev/null | jq -r --arg pkg "$pkg" '.[$pkg]')
               fi
       
               # Skip tagging if version is empty
@@ -247,7 +245,9 @@ jobs:
         run: |
           echo "Building and bundling affected packages"
           set -x
-          npx nx run-many --target=build,build:cjs,bundle --projects=$(echo $affected | jq -r '[.[].name] | join(",")')
+          npm run build:all
+          npm run build:all:cjs
+          npm run bundle:all
 
       - name: push
         if: ${{ env.affected != '[]' }}

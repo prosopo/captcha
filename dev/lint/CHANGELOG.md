@@ -1,5 +1,44 @@
 # @prosopo/lint
 
+## 2.7.8
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/util@3.0.6
+
+## 2.7.7
+### Patch Changes
+
+- e5b8b3d: allow tests to be in tsx, not just ts
+- 387160a: handle undefined "includes" property on tsconfig files
+- 6352635: allow engines to not be set in a package.json when linting
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- ae468a6: add json linting
+- Updated dependencies [828066d]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/config@3.1.3
+  - @prosopo/util@3.0.5
+
+## 2.7.6
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/util@3.0.4
+  - @prosopo/config@3.1.2
+
 ## 2.7.5
 ### Patch Changes
 

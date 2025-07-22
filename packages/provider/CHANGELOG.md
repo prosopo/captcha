@@ -1,5 +1,103 @@
 # @prosopo/provider
 
+## 3.3.1
+### Patch Changes
+
+- a49b538: Extra tests
+- e090e2f: More tests
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+- Updated dependencies [e090e2f]
+  - @prosopo/config@3.1.4
+  - @prosopo/user-access-policy@3.4.1
+  - @prosopo/common@3.1.3
+  - @prosopo/api-express-router@3.0.7
+  - @prosopo/api-route@2.6.11
+  - @prosopo/database@3.0.14
+  - @prosopo/datasets@3.0.14
+  - @prosopo/env@3.1.5
+  - @prosopo/keyring@2.8.10
+  - @prosopo/types@3.0.7
+  - @prosopo/types-database@3.0.14
+  - @prosopo/types-env@2.7.18
+  - @prosopo/util@3.0.6
+  - @prosopo/util-crypto@13.5.5
+
+## 3.3.0
+### Minor Changes
+
+- df4e030: Revising UAP rule getters
+
+### Patch Changes
+
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [df4e030]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/types-database@3.0.13
+  - @prosopo/api-route@2.6.10
+  - @prosopo/types-env@2.7.17
+  - @prosopo/database@3.0.13
+  - @prosopo/common@3.1.2
+  - @prosopo/types@3.0.6
+  - @prosopo/env@3.1.4
+  - @prosopo/config@3.1.3
+  - @prosopo/user-access-policy@3.4.0
+  - @prosopo/api-express-router@3.0.6
+  - @prosopo/util-crypto@13.5.4
+  - @prosopo/datasets@3.0.13
+  - @prosopo/keyring@2.8.9
+  - @prosopo/util@3.0.5
+
+## 3.2.5
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/api-express-router@3.0.5
+  - @prosopo/user-access-policy@3.3.2
+  - @prosopo/types-database@3.0.12
+  - @prosopo/util-crypto@13.5.3
+  - @prosopo/api-route@2.6.9
+  - @prosopo/types-env@2.7.16
+  - @prosopo/database@3.0.12
+  - @prosopo/datasets@3.0.12
+  - @prosopo/keyring@2.8.8
+  - @prosopo/common@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/util@3.0.4
+  - @prosopo/env@3.1.3
+  - @prosopo/config@3.1.2
+
+## 3.2.4
+### Patch Changes
+
+- Updated dependencies [625fef8]
+  - @prosopo/types-database@3.0.11
+  - @prosopo/database@3.0.11
+  - @prosopo/datasets@3.0.11
+  - @prosopo/env@3.1.2
+  - @prosopo/types-env@2.7.15
+
+## 3.2.3
+### Patch Changes
+
+- 58ab0ce: logging key fix
+
+## 3.2.2
+### Patch Changes
+
+- 9e4e7ca: better key logging
+
 ## 3.2.1
 ### Patch Changes
 
