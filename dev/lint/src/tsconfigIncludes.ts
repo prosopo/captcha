@@ -88,7 +88,9 @@ const checkTsconfigIncludes = (args: {
 		.array()
 		.parse(pkgJson.workspaces)
 		.map((g) => `${path.dirname(args.pkg)}/${g}/tsconfig{,.+}.json`);
-	const tsconfigPaths = fg.globSync(globs);
+	const tsconfigPaths = fg.globSync(globs, {
+		ignore: ["packages/docs/**"],
+	});
 	for (const tsconfigPath of tsconfigPaths) {
 		console.log("Checking", tsconfigPath);
 		const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf8"));
