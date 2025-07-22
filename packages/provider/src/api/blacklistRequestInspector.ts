@@ -48,9 +48,7 @@ export const getPrioritisedAccessRule = async (
 	},
 	clientId?: string,
 ) => {
-	const userScopeKeys = Object.keys(userScope).filter(
-		(key) => userScope[key] !== undefined,
-	);
+	const userScopeKeys = Object.keys(userScope);
 
 	const prioritisedUserScopes = uniqueSubsets(userScopeKeys)
 		.map((subset: string[]) =>
@@ -63,7 +61,16 @@ export const getPrioritisedAccessRule = async (
 			),
 		)
 		.filter((us) => Object.keys(us).length > 0)
-		.filter((us) => Object.values(us).some((value) => value !== undefined));
+		.map((pus) => {
+			console.log(pus);
+			// add undefined values for missing keys
+			for (const key of userScopeKeys) {
+				if (!Object.keys(pus).includes(key)) {
+					pus[key] = undefined;
+				}
+			}
+			return pus;
+		});
 
 	const policyPromises = [];
 	// Search first by clientId, if it exists, then by undefined clientId. Otherwise, just search by undefined clientId.
