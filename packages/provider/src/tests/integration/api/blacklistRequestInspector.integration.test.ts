@@ -257,7 +257,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result.length).toBe(2);
 		});
-		it("should return multiple matching rules in order of specficity", async () => {
+		it("should return multiple matching rules in order of specificity", async () => {
 			const accessRule1 = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
