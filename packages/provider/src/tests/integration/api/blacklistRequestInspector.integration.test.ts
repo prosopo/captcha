@@ -463,7 +463,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 				siteKey,
 			);
-			console.log({ result });
+			// Debugging output removed.
 			expect(result.length).toBe(0);
 		});
 		it("should not return a match for a different IP 3", async () => {
