@@ -848,4 +848,23 @@ describe("getUserScopeQuery", () => {
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | @ja4Hash:{ja4Hash} )",
 		);
 	});
+
+	it("puts ismissing(x) for multiple fields passed in as `undefined` when user scope match is exact 2", () => {
+		const filter = {
+			userScope: {
+				numericIp: undefined,
+				ja4Hash: "ja4Hash",
+				userAgentHash: undefined,
+				headersHash: undefined,
+				userId: undefined,
+			},
+			userScopeMatch: ScopeMatch.Exact,
+		} as PolicyFilter;
+
+		const query = getRedisAccessRulesQuery(filter);
+
+		expect(query).toBe(
+			" ( ismissing(@numericIp) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
+		);
+	});
 });
