@@ -95,40 +95,37 @@ jobs:
             echo "changesets=false" >> $GITHUB_ENV
           fi
 
-#      - name: prerelease
-#        run: |
-#          # if there are changesets
-#          if [ "${{ env.changesets }}" = "true" ]; then
-#            echo "Found changesets"
-#            if [ "${GITHUB_REF##*/}" = "main" ]; then
-#              echo "On main branch, exiting prerelease mode"
-#              # remove pre.json to exit prerelease mode
-#              npx @changesets/cli pre exit || true
-#            else
-#              echo "Not on main branch, entering prerelease mode"
-#              # pre.json puts changesets into prerelease mode
-#              branch_name="${GITHUB_REF##*/}"
-#              # sanitize branch name to be safe for changesets
-#              # replace unsafe characters with '-'
-#              # e.g. my/branch?is#unsafe -> my-branch-is-unsafe
-#              safe_branch_name=$(echo "$branch_name" | tr '/\\:;*?"<>|@#%&=+,$' '-')
-#              npx @changesets/cli pre enter "$safe_branch_name"
-#              echo "prerelease=true" >> $GITHUB_ENV
-#            fi
-#          else
-#            echo "No changesets found"
-#          fi
+      - name: prerelease
+        run: |
+          # if there are changesets
+          if [ "${{ env.changesets }}" = "true" ]; then
+            echo "Found changesets"
+            if [ "${GITHUB_REF##*/}" = "main" ]; then
+              echo "On main branch, exiting prerelease mode"
+              # remove pre.json to exit prerelease mode
+              npx @changesets/cli pre exit || true
+            else
+              echo "Not on main branch, entering prerelease mode"
+              # pre.json puts changesets into prerelease mode
+              branch_name="${GITHUB_REF##*/}"
+              # sanitize branch name to be safe for changesets
+              # replace unsafe characters with '-'
+              # e.g. my/branch?is#unsafe -> my-branch-is-unsafe
+              safe_branch_name=$(echo "$branch_name" | tr '/\\:;*?"<>|@#%&=+,$' '-')
+              npx @changesets/cli pre enter "$safe_branch_name"
+              echo "prerelease=true" >> $GITHUB_ENV
+            fi
+          else
+            echo "No changesets found"
+          fi
 
       - name: version
         run: |
           npm i -g @changesets/cli
           npx @changesets/cli version --verbose
           git status
-          if [ -z "$(git status --porcelain)" ]; then
-              echo "No changes to commit"
-              exit 0
-          fi
-          npm i
+
+          npm i --ignore-scripts --include=dev
           # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
           root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
           echo "root_version=$root_version" >> $GITHUB_ENV
@@ -194,10 +191,7 @@ jobs:
               if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
                   version=$(npm pkg get version | jq -r '.') || version=""
               else
-                  version=$(
-                      { npm pkg --workspace "$pkg" get version 2>/dev/null || true; } \
-                      | jq -r ".[\"$pkg\"]" 2>/dev/null
-                  )
+                  version=$(npm pkg --workspace "$pkg" get version 2>/dev/null | jq -r --arg pkg "$pkg" '.[$pkg]')
               fi
       
               # Skip tagging if version is empty

@@ -1,5 +1,12 @@
 # @prosopo/testpkg2
 
+## 1.0.7
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+
 ## 1.0.6
 ### Patch Changes
 
