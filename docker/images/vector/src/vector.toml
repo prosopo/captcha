@@ -14,12 +14,18 @@ include_labels = ["vector.provider=true"]
 type = "remap"
 inputs = ["provider"]
 source = '''
-.=parse_json!(.message)
-del(.message)
-del(.timestamp)
-del(._timestamp)
-.host="$OO_HOST"
-del(.date)
+output={}
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    del(.message)
+    output = parsed
+}
+output.host="$OO_HOST"
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+.=output
 '''
 
 # print to console the provider logs
@@ -83,21 +89,19 @@ decoding.codec = "json"
 type = "remap"
 inputs = ["docker"]
 source = '''
-.host="$OO_HOST"
-del(.id)
-del(.from)
-del(.Type)
-.name=.Actor.Attributes.name
-del(.Actor)
-del(.scope)
-del(.time)
-del(.timeNano)
-del(.source_type)
-del(.timestamp)
-del(._timestamp)
-del(.pid)
-del(.stream)
-del(.command)
+output={}
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    del(.message)
+    output = parsed
+}
+output.host="$OO_HOST"
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+output.name=.Actor.Attributes.name
+.=output
 '''
 
 # print docker events to console
@@ -147,18 +151,19 @@ include_labels = ["vector.caddy=true"]
 type = "remap"
 inputs = ["caddy"]
 source = '''
-.=parse_json!(string!(.message))
-.host="$OO_HOST"
-.request_id = get!(.resp_headers, ["X-Request-Id"])[0]
-del(.timestamp)
-del(._timestamp)
-del(.ts)
-del(.user_id)
-del(.size)
-del(.message)
-del(.resp_headers)
-del(.bytes_read)
-del(.logger)
+output={}
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    del(.message)
+    output = parsed
+}
+output.host="$OO_HOST"
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+output.request_id = get(.resp_headers, ["X-Request-Id"])[0] ?? null
+.=output
 '''
 
 # send to openobserve
