@@ -463,7 +463,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 				siteKey,
 			);
-			// Debugging output removed.
 			expect(result.length).toBe(0);
 		});
 		it("should not return a match for a different IP 3", async () => {
@@ -488,7 +487,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 				siteKey,
 			);
-			console.log({ result });
 			expect(result.length).toBe(0);
 		});
 	});
