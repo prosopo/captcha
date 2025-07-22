@@ -14,12 +14,12 @@ include_labels = ["vector.provider=true"]
 type = "remap"
 inputs = ["provider"]
 source = '''
-.=parse_json!(.message)
-del(.message)
-del(.timestamp)
-del(._timestamp)
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    del(.message)
+    .log = parsed
+}
 .host="$OO_HOST"
-del(.date)
 '''
 
 # print to console the provider logs
@@ -100,6 +100,11 @@ decoding.codec = "json"
 type = "remap"
 inputs = ["docker"]
 source = '''
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    del(.message)
+    .log = parsed
+}
 .host="$OO_HOST"
 del(.id)
 del(.from)
@@ -107,11 +112,7 @@ del(.Type)
 .name=.Actor.Attributes.name
 del(.Actor)
 del(.scope)
-del(.time)
-del(.timeNano)
 del(.source_type)
-del(.timestamp)
-del(._timestamp)
 del(.pid)
 del(.stream)
 del(.command)
@@ -181,15 +182,15 @@ include_labels = ["vector.caddy=true"]
 type = "remap"
 inputs = ["caddy"]
 source = '''
-.=parse_json!(string!(.message))
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    del(.message)
+    .log = parsed
+}
 .host="$OO_HOST"
 .request_id = get!(.resp_headers, ["X-Request-Id"])[0]
-del(.timestamp)
-del(._timestamp)
-del(.ts)
 del(.user_id)
 del(.size)
-del(.message)
 del(.resp_headers)
 del(.bytes_read)
 del(.logger)
