@@ -36,8 +36,7 @@
 		"test": {
 			"cache": true,
 			"dependsOn": ["@prosopo/config:build"],
-			"inputs": ["^custom", "custom"],
-			"outputs": ["{projectRoot}/dist/**/*"]
+			"inputs": ["^custom", "custom"]
 		},
 		"typecheck": {
 			"dependsOn": ["^typecheck"],
