@@ -139,7 +139,7 @@ jobs:
           npm pkg set version="$root_version"
           cd -
           git add -u .
-          git commit -m "chore: version bump"
+          git commit -m "chore: version bump $root_version"
           git status
 
       - name: affected
