@@ -121,7 +121,7 @@ jobs:
 
       - name: version
         run: |
-          npm i -g @changesets/cli
+          npm install --no-package-lock --no-save @changesets/cli
           npx @changesets/cli version --verbose
           git status
           if [ -z "$(git status --porcelain)" ]; then
