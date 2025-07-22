@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
-import { ApiPrefix, type IPAddress } from "@prosopo/types";
+import { ApiPrefix } from "@prosopo/types";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 	ScopeMatch,
 	type UserScopeApiInput,
+	type UserScopeApiOutput,
 	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
-import { getIPAddress, uniqueSubsets } from "@prosopo/util";
+import { uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 
 export const getRequestUserScope = (
@@ -41,43 +42,35 @@ export const getRequestUserScope = (
 	};
 };
 
+const getPrioritisedUserScopes = (userScope: {
+	[key: string]: bigint | string;
+}): Record<string, bigint | string | undefined>[] => {
+	const userScopeKeys = Object.keys(userScope);
+	return uniqueSubsets(userScopeKeys).map((subset: string[]) =>
+		subset.reduce(
+			(acc, key) => {
+				acc[key] = userScope[key];
+				return acc;
+			},
+			{} as Record<string, bigint | string | undefined>,
+		),
+	);
+};
+
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: {
-		[key: string]: bigint | string;
+		[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
 	},
 	clientId?: string,
 ) => {
-	const userScopeKeys = Object.keys(userScope);
-
-	const prioritisedUserScopes = uniqueSubsets(userScopeKeys)
-		.map((subset: string[]) =>
-			subset.reduce(
-				(acc, key) => {
-					acc[key] = userScope[key];
-					return acc;
-				},
-				{} as Record<string, bigint | string | undefined>,
-			),
-		)
-		.filter((us) => Object.keys(us).length > 0)
-		.map((pus) => {
-			// add undefined values for missing keys
-			for (const key of userScopeKeys) {
-				if (!Object.keys(pus).includes(key)) {
-					pus[key] = undefined;
-				}
-			}
-			return pus;
-		});
-
+	const prioritisedUserScopes = getPrioritisedUserScopes(userScope);
 	const policyPromises = [];
 	// Search first by clientId, if it exists, then by undefined clientId. Otherwise, just search by undefined clientId.
 	const clientLoop = clientId ? [clientId, undefined] : [undefined];
 	for (const clientOrUndefined of clientLoop) {
 		for (const scope of prioritisedUserScopes) {
 			const parsedUserScope = userScopeInputSchema.parse(scope);
-
 			// Check if values are defined
 			if (
 				Object.values(parsedUserScope).every((value) => value === undefined)
@@ -98,7 +91,7 @@ export const getPrioritisedAccessRule = async (
 				userScopeMatch: ScopeMatch.Exact,
 			};
 
-			policyPromises.push(userAccessRulesStorage.findRules(filter));
+			policyPromises.push(userAccessRulesStorage.findRules(filter, true, true));
 		}
 	}
 	// TODO maybe change this to Promise.race for speed.

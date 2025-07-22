@@ -15,7 +15,11 @@
 import crypto from "node:crypto";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import type { PolicyScope, UserScope } from "#policy/accessPolicy.js";
+import {
+	type PolicyScope,
+	type UserScope,
+	userScopeSchema,
+} from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRule } from "#policy/accessRules.js";
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
@@ -42,8 +46,8 @@ const accessRulesIndex: RedisIndex = {
 			// necessary to make possible use of the ismissing() function on this field in the search
 			INDEXMISSING: true,
 		},
-		numericIpMaskMin: SCHEMA_FIELD_TYPE.NUMERIC,
-		numericIpMaskMax: SCHEMA_FIELD_TYPE.NUMERIC,
+		numericIpMaskMin: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
+		numericIpMaskMax: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 		userId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 		numericIp: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 		ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
@@ -77,10 +81,31 @@ type CustomFieldComparisons = Record<
 	keyof AccessRule,
 	(value: unknown) => string
 >;
-
+const fieldDependencies: {
+	[key in keyof UserScope]?: {
+		exclude?: Array<keyof UserScope>;
+		implies?: Array<keyof UserScope>;
+	};
+} = {
+	numericIp: {
+		exclude: ["numericIpMaskMin", "numericIpMaskMax"],
+	},
+	numericIpMaskMin: {
+		exclude: ["numericIp"],
+		implies: ["numericIpMaskMax"],
+	},
+	numericIpMaskMax: {
+		exclude: ["numericIp"],
+		implies: ["numericIpMaskMin"],
+	},
+};
 const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
-	numericIp: (value) =>
-		`( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`,
+	numericIp: (value) => {
+		if (value !== undefined) {
+			return `( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
+		}
+		return "ismissing(@numericIp)";
+	},
 };
 
 export const accessRulesRedisSearchOptions: FtSearchOptions = {
@@ -107,7 +132,10 @@ export const accessRulesRedisDeleteOptions: FtSearchOptions = {
  * )
  * DIALECT 2 # must have when the ismissing() function in use
  * */
-export const getRedisAccessRulesQuery = (filter: PolicyFilter): string => {
+export const getRedisAccessRulesQuery = (
+	filter: PolicyFilter,
+	matchingFieldsOnly: boolean,
+): string => {
 	const { policyScope, userScope } = filter;
 
 	const policyScopeFilter = getPolicyScopeQuery(
@@ -116,7 +144,11 @@ export const getRedisAccessRulesQuery = (filter: PolicyFilter): string => {
 	);
 
 	if (userScope && Object.keys(userScope).length > 0) {
-		const userScopeFilter = getUserScopeQuery(userScope, filter.userScopeMatch);
+		const userScopeFilter = getUserScopeQuery(
+			userScope,
+			filter.userScopeMatch,
+			matchingFieldsOnly,
+		);
 		return `${policyScopeFilter} ( ${userScopeFilter} )`;
 	}
 
@@ -141,6 +173,7 @@ const getPolicyScopeQuery = (
 const getUserScopeQuery = (
 	userScope: UserScope,
 	scopeMatchType: ScopeMatch | undefined,
+	matchingFieldsOnly: boolean,
 ): string => {
 	let scopeEntries = Object.entries(userScope) as Array<
 		[keyof UserScope, unknown]
@@ -153,6 +186,36 @@ const getUserScopeQuery = (
 			([_, value]) => value !== undefined,
 		) as Array<[keyof UserScope, unknown]>;
 		scopeJoinType = " | ";
+	}
+
+	if (matchingFieldsOnly) {
+		const presentFields = new Set(scopeEntries.map(([key]) => key));
+		const addedFields = new Set<keyof UserScope>();
+
+		for (const name of Object.keys(userScopeSchema.shape) as Array<
+			keyof UserScope
+		>) {
+			if (presentFields.has(name)) continue;
+
+			// Respect dependencies
+			const deps = fieldDependencies[name];
+
+			// If any of its 'exclude' fields are present, skip this one
+			if (deps?.exclude?.some((excluded) => presentFields.has(excluded))) {
+				continue;
+			}
+
+			// If it's implied by another field (e.g., max implies min), and that field is present, add this
+			if (deps?.implies?.some((impliedBy) => presentFields.has(impliedBy))) {
+				scopeEntries.push([name, undefined]);
+				addedFields.add(name);
+				continue;
+			}
+
+			// If none of the conditions above apply, mark it undefined
+			scopeEntries.push([name, undefined]);
+			addedFields.add(name);
+		}
 	}
 
 	return scopeEntries
@@ -169,8 +232,7 @@ const getUserScopeFieldQuery = (
 ): string => {
 	if (
 		//ScopeMatch.Greedy === matchType &&
-		"function" === typeof greedyFieldComparisons[fieldName] &&
-		fieldValue !== undefined
+		"function" === typeof greedyFieldComparisons[fieldName]
 	) {
 		return greedyFieldComparisons[fieldName](fieldValue);
 	}

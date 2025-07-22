@@ -302,6 +302,7 @@ describe("redisAccessRules", () => {
 					policyScopeMatch: ScopeMatch.Exact,
 				},
 				false,
+				false,
 			);
 
 			// then
@@ -804,10 +805,26 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter);
+		const query = getRedisAccessRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) )",
+		);
+	});
+	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact and for missing fields when matchingFieldsOnly is set", () => {
+		const filter = {
+			userScope: {
+				numericIp: BigInt(100),
+				ja4Hash: "ja4Hash",
+				userAgentHash: undefined,
+			},
+			userScopeMatch: ScopeMatch.Exact,
+		} as PolicyFilter;
+
+		const query = getRedisAccessRulesQuery(filter, true);
+
+		expect(query).toBe(
+			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) )",
 		);
 	});
 
@@ -823,7 +840,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter);
+		const query = getRedisAccessRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -842,7 +859,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Greedy,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter);
+		const query = getRedisAccessRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | @ja4Hash:{ja4Hash} )",
@@ -861,10 +878,10 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter);
+		const query = getRedisAccessRulesQuery(filter, false);
 
 		expect(query).toBe(
-			" ( ismissing(@numericIp) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
+			" ( ismissing(@numericIp) ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
 		);
 	});
 });
