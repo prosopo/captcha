@@ -37,6 +37,7 @@ export const getRequestUserScope = (
 		...(ja4 && { ja4Hash: ja4 }),
 		...(userAgent && { userAgent: userAgent }),
 		...(ip && { ip }),
+		// TODO more things with headers
 	};
 };
 
