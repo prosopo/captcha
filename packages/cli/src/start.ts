@@ -37,7 +37,11 @@ import {
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import { blockMiddleware, ja4Middleware } from "@prosopo/provider";
-import { ClientApiPaths, type CombinedApiPaths } from "@prosopo/types";
+import {
+	ClientApiPaths,
+	type CombinedApiPaths,
+	type KeyringPair,
+} from "@prosopo/types";
 import {
 	createApiRuleRoutesProvider,
 	getExpressApiRuleRateLimits,
@@ -63,7 +67,7 @@ async function startApi(
 	env.logger.info(() => ({ msg: "Starting Prosopo API" }));
 
 	const apiApp = express();
-	const apiPort = port || env.config.server.port;
+	const apiPort = port || env.config.server?.port;
 
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
@@ -177,7 +181,10 @@ export async function start(
 		});
 
 		const pair = getPair(secret);
-		const authAccount = getPair(undefined, config.authAccount.address);
+		let authAccount: KeyringPair | undefined;
+		if (config.authAccount) {
+			authAccount = getPair(undefined, config.authAccount.address);
+		}
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
 		env.logger.debug(() => ({ msg: "Env already defined" }));
