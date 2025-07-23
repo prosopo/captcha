@@ -160,7 +160,6 @@ describe("PowCaptchaManager", () => {
 				typeof powCaptchaManager.verifyPowCaptchaSolution
 			> = [
 				challenge,
-				difficulty,
 				providerSignature,
 				nonce,
 				timeout,
@@ -264,7 +263,6 @@ describe("PowCaptchaManager", () => {
 			expect(
 				await powCaptchaManager.verifyPowCaptchaSolution(
 					challenge,
-					difficulty,
 					signature,
 					nonce,
 					timeout,

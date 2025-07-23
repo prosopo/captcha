@@ -134,6 +134,24 @@ export class FrictionlessManager extends CaptchaManager {
 		return diff > DEFAULT_MAX_TIMESTAMP_AGE;
 	}
 
+	/**
+	 * Redacts a key for logging purposes by showing only the first 5, middle 10, and last 5 characters
+	 * @param key - The key to redact
+	 * @returns Redacted key string or empty string if key is falsy
+	 */
+	private redactKeyForLogging(key: string | undefined | null): string {
+		if (!key) return "";
+
+		const start = key.slice(0, 5);
+		const middle = key.slice(
+			Math.floor(key.length / 2) - 5,
+			Math.floor(key.length / 2) + 5,
+		);
+		const end = key.slice(-5);
+
+		return `${start}...${middle}...${end}`;
+	}
+
 	async decryptPayload(token: string) {
 		const decryptKeys = [
 			process.env.BOT_DECRYPTION_KEY,
@@ -141,18 +159,9 @@ export class FrictionlessManager extends CaptchaManager {
 		].filter((k) => k);
 
 		this.logger.debug(() => {
-			const loggedKeys = decryptKeys.map((key) => {
-				if (!key) return "";
-
-				const start = key.slice(0, 5);
-				const middle = key.slice(
-					Math.floor(key.length / 2) - 5,
-					Math.floor(key.length / 2) + 5,
-				);
-				const end = key.slice(-5);
-
-				return `${start}...${middle}...${end}`;
-			});
+			const loggedKeys = decryptKeys.map((key) =>
+				this.redactKeyForLogging(key),
+			);
 
 			return {
 				msg: "Decrypting score",
@@ -173,7 +182,7 @@ export class FrictionlessManager extends CaptchaManager {
 				this.logger.info(() => ({
 					msg: "Successfully decrypted score",
 					data: {
-						key: key ? `${key.slice(0, 5)}...${key.slice(-5)}` : "",
+						key: this.redactKeyForLogging(key),
 						baseBotScore: s,
 						timestamp: t,
 					},

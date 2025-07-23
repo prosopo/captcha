@@ -475,15 +475,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const {
-				challenge,
-				difficulty,
-				signature,
-				nonce,
-				verifiedTimeout,
-				dapp,
-				user,
-			} = parsed;
+			const { challenge, signature, nonce, verifiedTimeout, dapp, user } =
+				parsed;
 
 			validateSiteKey(dapp);
 			validateAddr(user);
@@ -503,7 +496,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 					challenge,
-					difficulty,
 					signature.provider.challenge,
 					nonce,
 					verifiedTimeout,
