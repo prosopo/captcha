@@ -53,6 +53,27 @@ const json = async (args: {
 		throw new Error(`${args.pkg} is not a workspace`);
 	}
 
+	// get the path of the pkgJson file
+	const pkgJsonPath = path.resolve(args.pkg);
+
+	// load ignore paths from gitignore
+	const gitignorePath = path.join(
+		pkgJsonPath.split(path.sep).slice(0, -1).join(path.sep),
+		".gitignore",
+	);
+	let ignorePaths: string[] = [];
+	if (fs.existsSync(gitignorePath)) {
+		const gitignoreContent = fs.readFileSync(gitignorePath, "utf8");
+		// parse the gitignore content
+		ignorePaths = gitignoreContent
+			.split("\n")
+			.map((line) => line.trim())
+			.filter((line) => line && !line.startsWith("#"))
+			.map((line) => `**${line}**`);
+	} else {
+		console.log("No .gitignore found, not ignoring any paths");
+	}
+
 	// for each package in the workspace
 	const globs = z
 		.string()
@@ -63,7 +84,7 @@ const json = async (args: {
 			`!${path.dirname(args.pkg)}/${g}/**/node_modules/**`,
 		]);
 	// glob the json files
-	const jsonPaths = fg.globSync(globs);
+	const jsonPaths = fg.globSync(globs, { ignore: ignorePaths });
 	for (const jsonPath of jsonPaths) {
 		console.log("Checking", jsonPath);
 		const content = fs.readFileSync(jsonPath, "utf8");
