@@ -1,5 +1,13 @@
 # @prosopo/procaptcha-react
 
+## 2.6.34
+### Patch Changes
+
+- 926df8a: lint
+- Updated dependencies [926df8a]
+  - @prosopo/procaptcha-common@2.7.14
+  - @prosopo/procaptcha@2.7.20
+
 ## 2.6.33
 ### Patch Changes
 

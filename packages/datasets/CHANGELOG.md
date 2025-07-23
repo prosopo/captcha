@@ -1,5 +1,11 @@
 # @prosopo/datasets
 
+## 3.0.15
+### Patch Changes
+
+- 926df8a: lint
+  - @prosopo/types-database@3.0.15
+
 ## 3.0.14
 ### Patch Changes
 
