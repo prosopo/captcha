@@ -360,7 +360,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
 				{
-					clientId: siteKey,
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIp: BigInt(17843009),
@@ -384,7 +383,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
 				{
-					clientId: siteKey,
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIp: BigInt(17843009),
@@ -432,7 +430,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
 				{
-					clientId: siteKey,
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					ip: "1.1.1.2",
@@ -456,7 +453,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
 				{
-					clientId: siteKey,
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIp: BigInt(16843010),
@@ -479,7 +475,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
 				{
-					clientId: siteKey,
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIpMaskMin: BigInt(16843010),
