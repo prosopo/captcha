@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-pow
 
+## 2.7.20
+### Patch Changes
+
+- 926df8a: lint
+- Updated dependencies [926df8a]
+  - @prosopo/procaptcha-common@2.7.14
+  - @prosopo/procaptcha@2.7.20
+  - @prosopo/api@3.1.5
+
 ## 2.7.19
 ### Patch Changes
 

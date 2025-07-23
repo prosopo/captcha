@@ -1,5 +1,10 @@
 # @prosopo/lint
 
+## 2.7.9
+### Patch Changes
+
+- 8cc6551: x
+
 ## 2.7.8
 ### Patch Changes
 
