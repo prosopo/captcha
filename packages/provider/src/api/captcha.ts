@@ -187,6 +187,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					},
 				};
+				req.logger.info(() => ({
+					msg: "Image captcha challenge issued",
+					data: {
+						captchaType: CaptchaType.image,
+						requestHash: taskData.requestHash,
+						solvedImagesCount: captchaConfig.solved.count,
+						user,
+						dapp,
+						sessionId,
+					},
+				}));
 				return res.json(captchaResponse);
 			} catch (err) {
 				req.logger.error(() => ({
@@ -391,12 +402,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			const difficulty =
+				userAccessPolicy?.powDifficulty ||
+				clientSettings?.settings?.powDifficulty;
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,
 				dapp,
 				origin,
-				userAccessPolicy?.powDifficulty ||
-					clientSettings?.settings?.powDifficulty,
+				difficulty,
 			);
 
 			await tasks.db.storePowCaptchaRecord(
@@ -426,6 +439,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				},
 			};
 
+			req.logger.info(() => ({
+				msg: "PoW captcha challenge issued",
+				data: {
+					captchaType: CaptchaType.pow,
+					challenge: challenge.challenge,
+					difficulty: challenge.difficulty,
+					user,
+					dapp,
+					session: sessionId,
+				},
+			}));
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
 			req.logger.error(() => ({
