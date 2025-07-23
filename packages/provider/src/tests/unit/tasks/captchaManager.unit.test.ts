@@ -164,7 +164,7 @@ describe("CaptchaManager", () => {
 				frictionlessTokenId: "frictionlessTokenId",
 			});
 		});
-		
+
 		it("should not validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type pow", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
@@ -175,7 +175,6 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
 				_id: "frictionlessTokenId",
-
 			});
 
 			const result = await captchaManager.isValidRequest(
