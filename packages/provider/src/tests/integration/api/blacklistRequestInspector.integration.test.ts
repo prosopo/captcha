@@ -25,6 +25,7 @@ import {
 	accessRuleSchema,
 	accessRuleSchemaExtended,
 } from "@prosopo/user-access-policy";
+import { getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
@@ -97,60 +98,84 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 
 			expect(spy).toHaveBeenCalledTimes(6);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScope: {
+						clientId: siteKey,
+					},
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScope: {
+						clientId: siteKey,
+					},
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScope: {
+						clientId: siteKey,
+					},
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
 
-			expect(spy).toHaveBeenCalledWith({
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScope: {
-					clientId: siteKey,
-				},
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScope: {
-					clientId: siteKey,
-				},
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScope: {
-					clientId: siteKey,
-				},
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
 			expect(result).toHaveLength(1);
 		});
 		it("should not return a rule when a JA4-UserAgent rule exists and the user matches the the JA4 but not the user agent", async () => {
@@ -174,59 +199,83 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(spy).toHaveBeenCalledTimes(6);
 
-			expect(spy).toHaveBeenCalledWith({
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScope: {
-					clientId: siteKey,
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
 				},
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScope: {
-					clientId: siteKey,
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
 				},
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					userAgent: userAgent1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
-			expect(spy).toHaveBeenCalledWith({
-				policyScope: {
-					clientId: siteKey,
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
 				},
-				policyScopeMatch: ScopeMatch.Exact,
-				userScope: userScopeInputSchema.parse({
-					ja4Hash: ja4Hash1,
-				}),
-				userScopeMatch: ScopeMatch.Exact,
-			});
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScope: {
+						clientId: siteKey,
+					},
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScope: {
+						clientId: siteKey,
+					},
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						userAgent: userAgent1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
+			expect(spy).toHaveBeenCalledWith(
+				{
+					policyScope: {
+						clientId: siteKey,
+					},
+					policyScopeMatch: ScopeMatch.Exact,
+					userScope: userScopeInputSchema.parse({
+						ja4Hash: ja4Hash1,
+					}),
+					userScopeMatch: ScopeMatch.Exact,
+				},
+				true,
+				true,
+			);
 			expect(result).toHaveLength(1);
 		});
 		it("should return multiple matching rules", async () => {
@@ -311,7 +360,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
 				{
-					clientId: siteKey,
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIp: BigInt(17843009),
@@ -319,6 +367,121 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				siteKey,
 			);
 
+			expect(result.length).toBe(0);
+		});
+		it("should not return a match for a different IP", async () => {
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+				userAgent: userAgent1,
+				numericIp: BigInt(16843009),
+			});
+
+			await accessRulesStorage.insertRule(accessRule1);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					userAgent: userAgent1,
+					numericIp: BigInt(17843009),
+				},
+				siteKey,
+			);
+
+			expect(result.length).toBe(0);
+		});
+		it("should return a match for the same IP", async () => {
+			const numericIp = BigInt(16843009);
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+				userAgent: userAgent1,
+				numericIp: numericIp,
+			});
+
+			await accessRulesStorage.insertRule(accessRule1);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					userAgent: userAgent1,
+					ip: getIPAddressFromBigInt(numericIp).address,
+				},
+				siteKey,
+			);
+
+			expect(result.length).toBe(1);
+		});
+		it("should not return a match for a different IP", async () => {
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+				userAgent: userAgent1,
+				numericIp: BigInt(16843009),
+			});
+
+			await accessRulesStorage.insertRule(accessRule1);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					userAgent: userAgent1,
+					ip: "1.1.1.2",
+				},
+				siteKey,
+			);
+			expect(result).toEqual([]);
+			expect(result.length).toBe(0);
+		});
+		it("should not return a match for a different IP 2", async () => {
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+				userAgent: userAgent1,
+				numericIp: BigInt(16843009),
+			});
+
+			await accessRulesStorage.insertRule(accessRule1);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					userAgent: userAgent1,
+					numericIp: BigInt(16843010),
+				},
+				siteKey,
+			);
+			expect(result.length).toBe(0);
+		});
+		it("should not return a match for a different IP 3", async () => {
+			const accessRule1 = accessRuleSchema.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				ja4Hash: ja4Hash2,
+				userAgent: userAgent1,
+				numericIp: BigInt(16843009),
+			});
+
+			await accessRulesStorage.insertRule(accessRule1);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					ja4Hash: ja4Hash2,
+					userAgent: userAgent1,
+					numericIpMaskMin: BigInt(16843010),
+					numericIpMaskMax: BigInt(16843010),
+				},
+				siteKey,
+			);
 			expect(result.length).toBe(0);
 		});
 	});

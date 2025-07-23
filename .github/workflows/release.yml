@@ -103,7 +103,9 @@ jobs:
             if [ "${GITHUB_REF##*/}" = "main" ]; then
               echo "On main branch, exiting prerelease mode"
               # remove pre.json to exit prerelease mode
-              npx @changesets/cli pre exit || true
+              if [ -f .changeset/pre.json ]; then
+                npx @changesets/cli pre exit
+              fi
             else
               echo "Not on main branch, entering prerelease mode"
               # pre.json puts changesets into prerelease mode
