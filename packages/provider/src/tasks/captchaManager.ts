@@ -198,7 +198,11 @@ export class CaptchaManager {
 			[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
 		},
 	) {
-		return getPrioritisedAccessRule(userAccessRulesStorage, userScope);
+		return getPrioritisedAccessRule(
+			userAccessRulesStorage,
+			userScope,
+			clientId,
+		);
 	}
 
 	async getDetectorKeys(): Promise<string[]> {

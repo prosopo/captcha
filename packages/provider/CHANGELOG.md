@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.5.0
+### Minor Changes
+
+- 3834a10: Proper session validation
+
+### Patch Changes
+
+- 0c865a7: Add missing var
+- 1f3a02f: Release 3.1.8
+- Updated dependencies [1f3a02f]
+  - @prosopo/user-access-policy@3.5.1
+  - @prosopo/types-database@3.0.16
+  - @prosopo/types-env@2.7.20
+  - @prosopo/database@3.0.16
+  - @prosopo/datasets@3.0.16
+  - @prosopo/env@3.1.7
+
 ## 3.4.0
 ### Minor Changes
 

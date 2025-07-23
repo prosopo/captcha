@@ -1,5 +1,14 @@
 # @prosopo/provider-mock
 
+## 2.7.27
+### Patch Changes
+
+- 1f3a02f: Release 3.1.8
+- Updated dependencies [3834a10]
+- Updated dependencies [0c865a7]
+- Updated dependencies [1f3a02f]
+  - @prosopo/provider@3.5.0
+
 ## 2.7.26
 ### Patch Changes
 

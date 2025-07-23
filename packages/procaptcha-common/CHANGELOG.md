@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-common
 
+## 2.7.15
+### Patch Changes
+
+- 1f3a02f: Release 3.1.8
+
 ## 2.7.14
 ### Patch Changes
 

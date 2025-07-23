@@ -1,5 +1,19 @@
 # @prosopo/scripts
 
+## 3.0.20
+### Patch Changes
+
+- 1f3a02f: Release 3.1.8
+- Updated dependencies [3834a10]
+- Updated dependencies [0c865a7]
+- Updated dependencies [1f3a02f]
+  - @prosopo/provider@3.5.0
+  - @prosopo/types-database@3.0.16
+  - @prosopo/types-env@2.7.20
+  - @prosopo/datasets@3.0.16
+  - @prosopo/cli@3.1.9
+  - @prosopo/env@3.1.7
+
 ## 3.0.19
 ### Patch Changes
 

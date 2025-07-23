@@ -1,5 +1,14 @@
 # @prosopo/env
 
+## 3.1.7
+### Patch Changes
+
+- 1f3a02f: Release 3.1.8
+- Updated dependencies [1f3a02f]
+  - @prosopo/types-database@3.0.16
+  - @prosopo/types-env@2.7.20
+  - @prosopo/database@3.0.16
+
 ## 3.1.6
 ### Patch Changes
 
