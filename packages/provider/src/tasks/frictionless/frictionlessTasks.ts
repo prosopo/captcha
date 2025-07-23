@@ -159,7 +159,9 @@ export class FrictionlessManager extends CaptchaManager {
 		].filter((k) => k);
 
 		this.logger.debug(() => {
-			const loggedKeys = decryptKeys.map((key) => this.redactKeyForLogging(key));
+			const loggedKeys = decryptKeys.map((key) =>
+				this.redactKeyForLogging(key),
+			);
 
 			return {
 				msg: "Decrypting score",
