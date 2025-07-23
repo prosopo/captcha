@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-common",
-	"version": "2.7.14",
+	"version": "2.7.15",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
