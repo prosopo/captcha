@@ -36,10 +36,14 @@ export type AccessRule = z.infer<typeof accessRuleSchema>;
 export type AccessRulesReader = {
 	findRules(
 		filter: PolicyFilter,
+		matchingFieldsOnly?: boolean,
 		skipEmptyUserScopes?: boolean,
 	): Promise<AccessRule[]>;
 
-	findRuleIds(filter: PolicyFilter): Promise<string[]>;
+	findRuleIds(
+		filter: PolicyFilter,
+		matchingFieldsOnly?: boolean,
+	): Promise<string[]>;
 };
 
 export type AccessRulesWriter = {

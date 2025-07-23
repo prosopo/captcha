@@ -26,6 +26,8 @@ import type {
 import type {
 	AccessPolicy,
 	AccessRulesStorage,
+	UserScopeApiInput,
+	UserScopeApiOutput,
 } from "@prosopo/user-access-policy";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
@@ -193,14 +195,10 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: {
-			[key: string]: bigint | string;
+			[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
 		},
 	) {
-		return getPrioritisedAccessRule(
-			userAccessRulesStorage,
-			userScope,
-			clientId,
-		);
+		return getPrioritisedAccessRule(userAccessRulesStorage, userScope);
 	}
 
 	async getDetectorKeys(): Promise<string[]> {

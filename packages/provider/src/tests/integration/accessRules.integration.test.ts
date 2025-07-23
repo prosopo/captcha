@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { generateMnemonic, getPair } from "@prosopo/keyring";
+import {
+	generateMnemonic,
+	getDefaultProviders,
+	getPair,
+} from "@prosopo/keyring";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
@@ -26,6 +30,7 @@ import {
 	type GetPowCaptchaResponse,
 	type KeyringPair,
 } from "@prosopo/types";
+import { at } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { registerSiteKey } from "./registerSitekey.js";
@@ -49,7 +54,7 @@ describe("Access Rules Integration Tests", () => {
 		let userPair: KeyringPair;
 		let userMnemonic: string;
 		let userId: string;
-
+		const adminPair = at(getDefaultProviders(), 0).pair;
 		beforeEach(async () => {
 			const responses = await removeAllUserAccessPolicies(adminPair);
 			expect(responses.every((response) => response.status === "SUCCESS")).toBe(
@@ -58,7 +63,7 @@ describe("Access Rules Integration Tests", () => {
 			// Create a new site key to avoid conflicts with other tests
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();
 			siteKeyPair = getPair(siteKeyMnemonic);
-			await registerSiteKey(siteKey, CaptchaType.image);
+			await registerSiteKey(siteKey, CaptchaType.image, adminPair);
 			[userMnemonic, userId] = await generateMnemonic();
 			userPair = getPair(userMnemonic);
 		});
@@ -183,7 +188,7 @@ describe("Access Rules Integration Tests", () => {
 		});
 		it("should return 200 when user is blocked for a different client but not the calling client", async () => {
 			const [_otherSiteKeyMnemonic, otherSiteKey] = await generateMnemonic();
-			await registerSiteKey(otherSiteKey, CaptchaType.image);
+			await registerSiteKey(otherSiteKey, CaptchaType.image, adminPair);
 
 			await userAccessPolicy(adminPair, {
 				block: true, // block
@@ -251,7 +256,7 @@ describe("Access Rules Integration Tests", () => {
 		let userPair: KeyringPair;
 		let userMnemonic: string;
 		let userId: string;
-
+		const adminPair = at(getDefaultProviders(), 0).pair;
 		beforeEach(async () => {
 			const responses = await removeAllUserAccessPolicies(adminPair);
 			expect(responses.every((response) => response.status === "SUCCESS")).toBe(
@@ -260,7 +265,7 @@ describe("Access Rules Integration Tests", () => {
 			// Create a new site key to avoid conflicts with other tests
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();
 			siteKeyPair = getPair(siteKeyMnemonic);
-			await registerSiteKey(siteKey, CaptchaType.frictionless);
+			await registerSiteKey(siteKey, CaptchaType.frictionless, adminPair);
 			[userMnemonic, userId] = await generateMnemonic();
 			userPair = getPair(userMnemonic);
 		});
@@ -506,7 +511,7 @@ describe("Access Rules Integration Tests", () => {
 		let userPair: KeyringPair;
 		let userMnemonic: string;
 		let userId: string;
-
+		const adminPair = at(getDefaultProviders(), 0).pair;
 		beforeEach(async () => {
 			const responses = await removeAllUserAccessPolicies(adminPair);
 			expect(responses.every((response) => response.status === "SUCCESS")).toBe(
@@ -515,7 +520,7 @@ describe("Access Rules Integration Tests", () => {
 			// Create a new site key to avoid conflicts with other tests
 			[siteKeyMnemonic, siteKey] = await generateMnemonic();
 			siteKeyPair = getPair(siteKeyMnemonic);
-			await registerSiteKey(siteKey, CaptchaType.pow);
+			await registerSiteKey(siteKey, CaptchaType.pow, adminPair);
 			[userMnemonic, userId] = await generateMnemonic();
 			userPair = getPair(userMnemonic);
 		});

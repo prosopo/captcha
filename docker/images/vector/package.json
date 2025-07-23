@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vector-docker",
-	"version": "2.5.6",
+	"version": "2.6.3",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
