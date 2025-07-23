@@ -102,7 +102,8 @@
 		"vitest": "3.0.9"
 	},
 	"overrides": {
-		"@types/express-serve-static-core": "4.19.6"
+		"@types/express-serve-static-core": "4.19.6",
+		"stylus": "0.0.1-security"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
 	"bugs": {
