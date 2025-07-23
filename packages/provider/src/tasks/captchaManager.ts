@@ -109,6 +109,22 @@ export class CaptchaManager {
 				}
 				const frictionlessTokenId =
 					await this.getFrictionlessTokenIdFromSession(sessionRecord);
+
+				// Check the captcha type of the session is the same as the requested captcha type
+				if (sessionRecord.captchaType !== requestedCaptchaType) {
+					this.logger.warn(() => ({
+						msg: "Invalid frictionless request",
+						data: {
+							account: clientSettings.account,
+							sessionId: sessionId,
+						},
+					}));
+					return {
+						valid: false,
+						reason: "CAPTCHA.NO_SESSION_FOUND",
+						type: requestedCaptchaType,
+					};
+				}
 				return {
 					valid: true,
 					frictionlessTokenId,
