@@ -19,13 +19,17 @@ import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
 
 export default function (tsConfigPath?: string) {
-	const testTypeEnv = process.env.TEST_TYPE || "";
-	const testTypes = testTypeEnv.trim().split(",");
+	const testTypeEnv = process.env.TEST_TYPE || undefined;
+	console.log(`TEST_TYPE environment variable: ${testTypeEnv}`);
+	const testTypes = testTypeEnv ? testTypeEnv.trim().split(",") : [];
 	// @(|) globs any tests which don't have their type specified, e.g. myTest.test.ts. These are included even when filtering by test type because we don't know what type of test they are. Really, they should have their type specified.
 	// If we drop ^, there's a chance the tests with no type specified get ignored by accident, which we want to avoid. Ergo, include them by default.
-	const testTypeGlob = `@(|${testTypes.map((t) => (t ? `.${t.trim()}` : "")).join("|")})`;
+	const testTypeGlob =
+		testTypes.length > 0
+			? `@(${testTypes.map((t) => `.${t}`).join("|")})`
+			: "@(|)";
 	console.log(`Filtering tests by type: ${testTypeGlob}`);
-
+	const include = `src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`;
 	const plugins = [
 		VitePluginSourcemapExclude({ excludeNodeModules: true }),
 		VitePluginCloseAndCopy(),
@@ -50,9 +54,7 @@ export default function (tsConfigPath?: string) {
 		test: {
 			//root: getRootDir(),
 			reporters: ["basic"],
-			include: [
-				`src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`,
-			],
+			include: [include],
 			watch: false,
 			exclude: ["**/node_modules/**", "**/dist/**"],
 			logHeapUsage: true,

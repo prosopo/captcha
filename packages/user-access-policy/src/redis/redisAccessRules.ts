@@ -41,9 +41,10 @@ export const createRedisAccessRulesReader = (
 	return {
 		findRules: async (
 			filter: PolicyFilter,
+			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
-			const query = getRedisAccessRulesQuery(filter);
+			const query = getRedisAccessRulesQuery(filter, matchingFieldsOnly);
 
 			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
 				// We don't want to accidentally return all rules when the filter is empty
@@ -97,8 +98,11 @@ export const createRedisAccessRulesReader = (
 			return extractAccessRulesFromSearchReply(searchReply, logger);
 		},
 
-		findRuleIds: async (filter: PolicyFilter): Promise<string[]> => {
-			const query = getRedisAccessRulesQuery(filter);
+		findRuleIds: async (
+			filter: PolicyFilter,
+			matchingFieldsOnly = false,
+		): Promise<string[]> => {
+			const query = getRedisAccessRulesQuery(filter, matchingFieldsOnly);
 
 			let searchReply: SearchNoContentReply;
 

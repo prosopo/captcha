@@ -25,6 +25,9 @@ import {
 import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 import { createTestRedisClient } from "./testRedisClient.js";
 
+let indexCount = 0;
+const getTestIndexName = () => `index:${indexCount++}`;
+
 describe("redisIndex", () => {
 	let redisClient: RedisClientType;
 
@@ -32,14 +35,10 @@ describe("redisIndex", () => {
 		redisClient = await createTestRedisClient();
 	});
 
-	beforeEach(async () => {
-		await redisClient.flushAll();
-	});
-
 	test("creates new index", async () => {
 		// given
 		const redisIndex: RedisIndex = {
-			name: "index:first",
+			name: getTestIndexName(),
 			schema: {
 				tagField: SCHEMA_FIELD_TYPE.TAG,
 			},
@@ -58,7 +57,7 @@ describe("redisIndex", () => {
 	test("does not re-create existing index when no changes declared", async () => {
 		// given
 		const redisIndex: RedisIndex = {
-			name: "index:first",
+			name: getTestIndexName(),
 			schema: {
 				tagField: SCHEMA_FIELD_TYPE.TAG,
 			},
@@ -88,7 +87,7 @@ describe("redisIndex", () => {
 	test("re-creates existing index when schema changes made", async () => {
 		// given
 		const redisIndex: RedisIndex = {
-			name: "index:first",
+			name: getTestIndexName(),
 			schema: {
 				tagField: SCHEMA_FIELD_TYPE.TAG,
 			},
@@ -117,7 +116,7 @@ describe("redisIndex", () => {
 	test("re-creates existing index when option changes made", async () => {
 		// given
 		const redisIndex: RedisIndex = {
-			name: "index:first",
+			name: getTestIndexName(),
 			schema: {
 				tagField: SCHEMA_FIELD_TYPE.TAG,
 			},
@@ -139,9 +138,5 @@ describe("redisIndex", () => {
 
 		expect(indexNames).toContain(redisIndex.name);
 		expect(actualIndexInfo.index_definition.key_type).toBe("HASH");
-	});
-
-	afterAll(async () => {
-		await redisClient.flushAll();
 	});
 });
