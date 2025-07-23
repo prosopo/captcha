@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.4.1",
+	"version": "3.5.0",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
