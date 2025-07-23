@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.5.0
+### Minor Changes
+
+- e0628d9: Make sure rules don't leak between IPs
+
 ## 3.4.1
 ### Patch Changes
 

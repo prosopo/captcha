@@ -1,5 +1,12 @@
 # @prosopo/provider-mock
 
+## 2.7.26
+### Patch Changes
+
+- Updated dependencies [8cc6551]
+- Updated dependencies [e0628d9]
+  - @prosopo/provider@3.4.0
+
 ## 2.7.25
 ### Patch Changes
 

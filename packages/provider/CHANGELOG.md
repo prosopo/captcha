@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.4.0
+### Minor Changes
+
+- e0628d9: Make sure rules don't leak between IPs
+
+### Patch Changes
+
+- 8cc6551: x
+- Updated dependencies [926df8a]
+- Updated dependencies [e0628d9]
+  - @prosopo/datasets@3.0.15
+  - @prosopo/user-access-policy@3.5.0
+  - @prosopo/database@3.0.15
+  - @prosopo/types-database@3.0.15
+  - @prosopo/env@3.1.6
+  - @prosopo/types-env@2.7.19
+
 ## 3.3.1
 ### Patch Changes
 

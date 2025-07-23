@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.7.8",
+	"version": "2.7.9",
 	"description": "",
 	"private": true,
 	"type": "module",
