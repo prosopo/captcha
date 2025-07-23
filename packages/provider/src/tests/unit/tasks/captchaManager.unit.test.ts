@@ -102,11 +102,12 @@ describe("CaptchaManager", () => {
 				type: CaptchaType.pow,
 			});
 		});
-		it("should validate a request for an pow captcha when the client settings are set to frictionless and a session ID is passed and found", async () => {
+		it("should validate a request for an pow captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type pow", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
 				tokenId: "tokenId" as unknown as ObjectId,
-			} as Pick<Session, "tokenId">);
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "tokenId" | "captchaType">);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
@@ -132,11 +133,12 @@ describe("CaptchaManager", () => {
 				frictionlessTokenId: "frictionlessTokenId",
 			});
 		});
-		it("should validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found", async () => {
+		it("should validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type image", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
 				tokenId: "tokenId" as unknown as ObjectId,
-			} as Pick<Session, "tokenId">);
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "tokenId" | "captchaType">);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
@@ -162,6 +164,72 @@ describe("CaptchaManager", () => {
 				frictionlessTokenId: "frictionlessTokenId",
 			});
 		});
+		
+		it("should not validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type pow", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				tokenId: "tokenId" as unknown as ObjectId,
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "tokenId" | "captchaType">);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
+				_id: "frictionlessTokenId",
+
+			});
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				"sessionId",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
+				type: CaptchaType.image,
+			});
+		});
+
+		it("should not validate a request for a pow captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type image", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				tokenId: "tokenId" as unknown as ObjectId,
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "tokenId">);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
+				_id: "frictionlessTokenId",
+			});
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				"sessionId",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
+				type: CaptchaType.pow,
+			});
+		});
+
 		it("should not validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed but not found", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
