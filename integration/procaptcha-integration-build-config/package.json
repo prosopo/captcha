@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-integration-build-config",
-	"version": "1.1.0",
+	"version": "1.1.4",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -8,15 +8,28 @@
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
 	"dependencies": {
+		"axios": "1.10.0",
 		"deepmerge": "4.3.1",
-		"vite": "6.2.3",
-		"vite-plugin-dts": "4.5.3"
+		"@prosopo/config": "3.1.4",
+		"esbuild": "0.25.6",
+		"vite": "6.3.5",
+		"vite-plugin-dts": "4.5.4",
+		"webpack-dev-server": "5.2.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

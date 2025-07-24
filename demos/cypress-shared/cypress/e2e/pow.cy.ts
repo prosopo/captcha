@@ -20,12 +20,11 @@ import { type Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-let captchaType: CaptchaType;
+const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Proof of Work CAPTCHA", () => {
 	beforeEach(() => {
-		captchaType = Cypress.env("CAPTCHA_TYPE") || "pow";
-		cy.registerSiteKey(captchaType).then((response) => {
+		cy.registerSiteKey(baseCaptchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
 			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
@@ -62,7 +61,7 @@ describe("Proof of Work CAPTCHA", () => {
 
 	it("An error is returned if captcha type is set to image and pow is used in the widget", () => {
 		// Register with image site key but use POW captcha
-		cy.registerSiteKey(CaptchaType.image).then((response) => {
+		cy.registerSiteKey(baseCaptchaType, CaptchaType.image).then((response) => {
 			cy.task("log", `Response status: ${response.status}`);
 			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
 			expect(response.status).to.equal(200);

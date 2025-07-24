@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaStatus,
+	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type RequestHeaders,
@@ -26,16 +25,15 @@ import type {
 	IProviderDatabase,
 	PoWCaptchaStored,
 } from "@prosopo/types-database";
-import { verifyRecency } from "@prosopo/util";
+import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
-import { getIPAddress } from "../../../../util.js";
 
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
 }));
 
@@ -162,7 +160,6 @@ describe("PowCaptchaManager", () => {
 				typeof powCaptchaManager.verifyPowCaptchaSolution
 			> = [
 				challenge,
-				difficulty,
 				providerSignature,
 				nonce,
 				timeout,
@@ -266,7 +263,6 @@ describe("PowCaptchaManager", () => {
 			expect(
 				await powCaptchaManager.verifyPowCaptchaSolution(
 					challenge,
-					difficulty,
 					signature,
 					nonce,
 					timeout,

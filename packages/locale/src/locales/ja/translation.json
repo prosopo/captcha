@@ -1,8 +1,21 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "秘密キーが欠けています",
+		"SITE_KEY_NOT_FOUND": "Site keyが見つかりません",
+		"JSON_LOAD_FAILED": "JSONファイルの読み込みに失敗しました",
+		"MNEMONIC_UNDEFINED": "ニーモニックが未定義です。環境変数でニーモニックを設定してください",
+		"NO_MNEMONIC_OR_SEED": "ニーモニックまたはシードが提供されていません",
+		"CANT_FIND_KEYRINGPAIR": "{{address}}のキーリングペアが見つかりません",
+		"ENVIRONMENT_NOT_READY": "環境が準備できていません",
+		"INVALID_SIGNATURE": "無効な署名",
+		"SITE_KEY_MISSING": "SITE KEYが見つかりません",
+		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
+		"INVALID_TIMESTAMP": "無効なタイムスタンプ"
+	},
 	"TARGET": {
-		"homer-simpson": "",
-		"pelecaniformes": "",
-		"superman": "",
+		"homer-simpson": "homer-simpson",
+		"pelecaniformes": "pelecaniformes",
+		"superman": "superman",
 		"airplanes": "飛行機",
 		"american-flag": "アメリカ国旗",
 		"bonsai": "盆栽",
@@ -298,6 +311,42 @@
 		"yo-yo": "ヨーヨー",
 		"zebra": "シマウマ"
 	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "この操作を行うための権限が不足しています",
+		"MISSING_QUERY_PARAMETERS": "クエリパラメータが見つかりません",
+		"MISSING_AUTHORIZATION_HEADER": "認証ヘッダーが見つかりません",
+		"TIMESTAMP_TOO_OLD": "タイムスタンプが古すぎます",
+		"FORBIDDEN": "禁止されています",
+		"PROVIDER_VERIFY_FAILED": "プロバイダーの検証に失敗しました",
+		"UNAUTHORIZED": "未承認",
+		"MISSING_BODY": "ボディが不足しています",
+		"NO_CONTENT_TYPE_HEADER": "Content-typeヘッダーがありません。JSONエンコードされたボディが想定されていますが、解析に失敗しました。",
+		"CAPTCHA_FAILED": "1つ以上のキャプチャに誤解した回答をしました。もう一度お試しください",
+		"CAPTCHA_PASSED": "正しくキャプチャに回答しました",
+		"BAD_REQUEST": "不正なリクエスト",
+		"USER_VERIFIED": "ユーザーが検証済み",
+		"USER_NOT_VERIFIED": "ユーザーが未検証",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "ユーザーが未検証。キャプチャのソリューションが期限切れです",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "ユーザーが未検証。キャプチャのソリューションが見つかりません",
+		"USER_ALREADY_VERIFIED": "このソリューションはすでに検証されています。ユーザーは新しいキャプチャを完了する必要があります",
+		"UNKNOWN": "不明なAPIエラー",
+		"SITE_KEY_NOT_REGISTERED": "サイトキーが登録されていません",
+		"INCORRECT_CAPTCHA_TYPE": "間違ったCAPTCHAタイプ",
+		"INVALID_SITE_KEY": "無効なサイトキー",
+		"UNAUTHORIZED_ORIGIN_URL": "許可されていないオリジンURL",
+		"INVALID_IP": "無効なIP",
+		"INVALID_URL": "無効なURL",
+		"INVALID_BODY": "無効な本体",
+		"PARSE_ERROR": "リクエストの解析エラー"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "所有者ユーザーを変更できません",
+		"CANNOT_DELETE_OWN_USER": "自分のアカウントを削除することはできません",
+		"CANNOT_DELETE_LAST_USER": "最後のユーザーを削除することはできません",
+		"USER_ALREADY_EXISTS": "ユーザーはすでに存在しています",
+		"NO_SUGGESTIONS_FOUND": "提案は見つかりません",
+		"CANNOT_DEACTIVATE_LAST_SITE": "最後のアクティブサイトを無効にすることはできません"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot拡張機能が見つかりません"
 	},
@@ -311,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "アカウントが見つかりません",
 		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
 		"NO_EXTENSION_FOUND": "拡張機能が見つかりません"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "JSONファイルの読み込みに失敗しました",
-		"MNEMONIC_UNDEFINED": "ニーモニックが未定義です。環境変数でニーモニックを設定してください",
-		"NO_MNEMONIC_OR_SEED": "ニーモニックまたはシードが提供されていません",
-		"CANT_FIND_KEYRINGPAIR": "{{address}}のキーリングペアが見つかりません",
-		"ENVIRONMENT_NOT_READY": "環境が準備できていません",
-		"INVALID_SIGNATURE": "無効な署名",
-		"SITE_KEY_MISSING": "SITE KEYが見つかりません",
-		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
-		"INVALID_TIMESTAMP": "無効なタイムスタンプ"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "無効なアドレスをエンコードできませんでした",
@@ -385,25 +423,6 @@
 		"INVALID_SOLUTION": "無効なソリューション",
 		"DECRYPTION_ERROR": "復号エラー"
 	},
-	"API": {
-		"CAPTCHA_FAILED": "1つ以上のキャプチャに誤解した回答をしました。もう一度お試しください",
-		"CAPTCHA_PASSED": "正しくキャプチャに回答しました",
-		"BAD_REQUEST": "不正なリクエスト",
-		"USER_VERIFIED": "ユーザーが検証済み",
-		"USER_NOT_VERIFIED": "ユーザーが未検証",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "ユーザーが未検証。キャプチャのソリューションが期限切れです",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "ユーザーが未検証。キャプチャのソリューションが見つかりません",
-		"USER_ALREADY_VERIFIED": "このソリューションはすでに検証されています。ユーザーは新しいキャプチャを完了する必要があります",
-		"UNKNOWN": "不明なAPIエラー",
-		"SITE_KEY_NOT_REGISTERED": "サイトキーが登録されていません",
-		"INCORRECT_CAPTCHA_TYPE": "間違ったCAPTCHAタイプ",
-		"INVALID_SITE_KEY": "無効なサイトキー",
-		"UNAUTHORIZED_ORIGIN_URL": "許可されていないオリジンURL",
-		"INVALID_IP": "無効なIP",
-		"INVALID_URL": "無効なURL",
-		"INVALID_BODY": "無効な本体",
-		"PARSE_ERROR": "リクエストの解析エラー"
-	},
 	"CLI": {
 		"PARAMETER_ERROR": "無効なパラメーター"
 	},
@@ -413,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "プロバイダーペアがありません",
 		"MISSING_ENV_VARIABLE": "環境変数が見つかりません",
 		"GENERAL": "一般的なDevエラー、コンテキストを参照してください",
-		"MISSING_SECRET_KEY": "秘密キーが見つかりません",
 		"METHOD_NOT_IMPLEMENTED": "メソッドは実装されていません"
 	},
 	"FS": {

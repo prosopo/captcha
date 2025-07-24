@@ -32,7 +32,7 @@ function createIntegrationViteConfig(
 		plugins: [dts(configSettings.dtsPluginOptions)],
 		build: {
 			outDir: path.resolve(configSettings.directory, "./dist"),
-			emptyOutDir: true,
+			emptyOutDir: false,
 			lib: {
 				name: configSettings.name,
 				entry: path.resolve(configSettings.directory, "./src/index.ts"),

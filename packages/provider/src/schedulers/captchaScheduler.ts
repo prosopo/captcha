@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { ProviderEnvironment } from "@prosopo/env";
+import type { KeyringPair } from "@prosopo/types";
 import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
 import { CronJob } from "cron";
 import { Tasks } from "../tasks/tasks.js";
@@ -34,15 +34,19 @@ export async function storeCaptchasExternally(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			env.getDb(),
 		);
-		env.logger.info(
-			`${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
-		);
+		env.logger.info(() => ({
+			data: { taskRunning },
+			msg: `${ScheduledTaskNames.StoreCommitmentsExternal} task running: ${taskRunning}`,
+		}));
 		if (!taskRunning) {
-			env.logger.info(
-				`${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
-			);
+			env.logger.info(() => ({
+				msg: `${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
+			}));
 			await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {
-				env.logger.error(err);
+				env.logger.error(() => ({
+					err,
+					msg: "Error storing commitments externally",
+				}));
 			});
 		}
 	});
