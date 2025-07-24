@@ -29,6 +29,7 @@ export type DatasetBase = {
 	format: CaptchaTypes;
 	contentTree?: string[][];
 	solutionTree?: string[][];
+	randomMax: number;
 };
 
 export interface Dataset extends DatasetBase {
@@ -46,6 +47,7 @@ export type DatasetWithIds = {
 	format: CaptchaTypes;
 	contentTree?: string[][];
 	solutionTree?: string[][];
+	randomMax: number;
 };
 
 export interface DatasetWithIdsAndTree extends DatasetWithIds {
