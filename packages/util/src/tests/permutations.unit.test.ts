@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test } from "vitest";
-import { permutations } from "../permutations.js";
+import { describe, expect, it, test } from "vitest";
+import { permutations, uniqueSubsets } from "../permutations.js";
 
 describe("permutations", () => {
 	test("handles empty array", () => {
@@ -45,5 +45,40 @@ describe("permutations", () => {
 			[0, 1, 1],
 			[0, 1, 2],
 		]);
+	});
+});
+
+describe("uniqueSubsets", () => {
+	it("returns all unique subsets of an array", () => {
+		const arr = ["a", "b", "c"];
+		const result = uniqueSubsets(arr);
+		expect(result).toEqual([
+			["a", "b", "c"],
+			["a", "b"],
+			["a", "c"],
+			["b", "c"],
+			["a"],
+			["b"],
+			["c"],
+		]);
+	});
+
+	it("returns subsets sorted by length in descending order", () => {
+		const arr = ["x", "y"];
+		const result = uniqueSubsets(arr);
+		expect(result).toEqual([["x", "y"], ["x"], ["y"]]);
+	});
+
+	it("throws an error if the array contains undefined values", () => {
+		const arr = ["a", undefined as unknown as string, "c"];
+		expect(() => uniqueSubsets(arr)).toThrow(
+			"Undefined value at index 1 in array: a,,c",
+		);
+	});
+
+	it("returns an empty array for an empty input array", () => {
+		const arr: string[] = [];
+		const result = uniqueSubsets(arr);
+		expect(result).toEqual([]);
 	});
 });

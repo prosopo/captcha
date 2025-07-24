@@ -14,10 +14,8 @@
 import fs from "node:fs/promises";
 import glob from "fast-glob";
 import type { Plugin } from "vite";
-import { getLogger } from "../logger.js";
 
 const used = new Set<string>();
-const log = getLogger("config.vite.vite-plugin-removed-unused-translations.js");
 
 export const flatten = (obj: object, prefix = ""): Record<string, string> => {
 	const flattenedObj: Record<string, string> = {};
@@ -75,7 +73,7 @@ export default function VitePluginRemoveUnusedTranslations(
 			// Collect translation keys used in the source files
 			for (const key of translationKeys) {
 				if (code.includes(key) && !used.has(key)) {
-					log.info(`Found key: ${key}`);
+					console.info(`Found key: ${key}`);
 					used.add(key);
 				}
 			}
@@ -87,7 +85,7 @@ export default function VitePluginRemoveUnusedTranslations(
 			// Find all matching JSON files
 			const jsonFiles = await glob(jsonPattern, { absolute: true });
 
-			log.info(`Found ${jsonFiles.length} JSON files at ${jsonPattern}`);
+			console.info(`Found ${jsonFiles.length} JSON files at ${jsonPattern}`);
 
 			const filePromises = [];
 			for (const filePath of jsonFiles) {
@@ -114,15 +112,14 @@ export default function VitePluginRemoveUnusedTranslations(
 								"utf-8",
 							)
 							.then(() => {
-								log.info(`Updated ${filePath}`);
+								console.info(`Updated ${filePath}`);
 							})
 							.catch((e) => {
-								log.error(`Failed to update ${filePath}:`, e);
+								console.error(`Failed to update ${filePath}:`, e);
 							}),
 					);
 				} catch (error: unknown) {
-					// @ts-ignore
-					log.error(`Failed to process ${filePath}:`, error);
+					console.error(`Failed to process ${filePath}:`, error);
 				}
 			}
 			await Promise.all(filePromises);

@@ -22,6 +22,9 @@
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util-crypto/tsconfig.cjs.json"
 		}
 	]
 }

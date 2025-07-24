@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { CaptchaType } from "@prosopo/types";
+import { CaptchaType } from "@prosopo/types";
 import type { ReactNode } from "react";
 import { captchaComponentsList } from "./captchaComponentsList.js";
 import type { CaptchaProps } from "./captchaProps.js";
@@ -22,6 +22,10 @@ class CaptchaComponentProvider {
 		captchaType: CaptchaType,
 		captchaProps: CaptchaProps,
 	): ReactNode {
+		if (captchaType === CaptchaType.invisible) {
+			throw new Error("Not Implemented");
+		}
+
 		const CaptchaComponent = captchaComponentsList[captchaType];
 
 		console.log(`rendering ${captchaType}`);

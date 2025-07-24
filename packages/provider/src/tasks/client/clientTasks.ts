@@ -35,7 +35,7 @@ import {
 import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import type { OptionalId } from "mongodb";
-import { validiateSiteKey } from "../../api/validateAddress.js";
+import { validateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -91,7 +91,7 @@ export class ClientTaskManager {
 	 */
 	async storeCommitmentsExternal(): Promise<void> {
 		if (!this.config.mongoCaptchaUri) {
-			this.logger.info("Mongo env not set");
+			this.logger.info(() => ({ msg: "Mongo env not set" }));
 			return;
 		}
 
@@ -170,9 +170,9 @@ export class ClientTaskManager {
 						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
 							filteredBatch.map((record) => record.tokenId),
 						);
-					this.logger.info(
-						`Frictionless token records: ${frictionlessTokenRecords.length}`,
-					);
+					this.logger.info(() => ({
+						msg: `Frictionless token records: ${frictionlessTokenRecords.length}`,
+					}));
 					// attach scores to session records
 					const filteredBatchWithScores = filteredBatch.map((record) => {
 						const tokenRecord = frictionlessTokenRecords.find(
@@ -180,10 +180,10 @@ export class ClientTaskManager {
 								tokenRecord._id?.toString() === record.tokenId.toString(),
 						);
 						if (!tokenRecord) {
-							this.logger.error({
-								message: "No token record found",
-								context: { tokenId: record.tokenId },
-							});
+							this.logger.error(() => ({
+								msg: "No token record found",
+								data: { tokenId: record.tokenId },
+							}));
 							return {
 								...record,
 								score: 0,
@@ -224,7 +224,10 @@ export class ClientTaskManager {
 			);
 			this.captchaDB?.close();
 		} catch (e: unknown) {
-			this.logger.error(e);
+			this.logger.error(() => ({
+				err: e,
+				msg: "Error processing client tasks",
+			}));
 			this.captchaDB?.close();
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -240,7 +243,7 @@ export class ClientTaskManager {
 	 */
 	async getClientList(): Promise<void> {
 		if (!this.config.mongoClientUri) {
-			this.logger.info("Mongo env not set");
+			this.logger.info(() => ({ msg: "Mongo env not set" }));
 			return;
 		}
 
@@ -268,9 +271,9 @@ export class ClientTaskManager {
 				? lastTask.updated - tenMinuteWindow || 0
 				: 0;
 
-			this.logger.info({
-				message: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
-			});
+			this.logger.info(() => ({
+				msg: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
+			}));
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
@@ -293,7 +296,10 @@ export class ClientTaskManager {
 				context: { error: e },
 				logger: this.logger,
 			});
-			this.logger.error(getClientListError, { context: { error: e } });
+			this.logger.error(() => ({
+				err: getClientListError,
+				msg: "Error getting client list",
+			}));
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
@@ -307,7 +313,7 @@ export class ClientTaskManager {
 		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
-		validiateSiteKey(siteKey);
+		validateSiteKey(siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
@@ -317,7 +323,7 @@ export class ClientTaskManager {
 		]);
 	}
 
-	async updateDetectorKey(detectorKey: string): Promise<void> {
+	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
@@ -325,6 +331,9 @@ export class ClientTaskManager {
 			});
 		}
 		await this.providerDB.storeDetectorKey(detectorKey);
+
+		const activeDetectorKeys = await this.providerDB.getDetectorKeys();
+		return activeDetectorKeys;
 	}
 
 	async removeDetectorKey(detectorKey: string): Promise<void> {
@@ -349,10 +358,10 @@ export class ClientTaskManager {
 				referrerDomain.endsWith(`.${allowedDomain}`)
 			);
 		} catch {
-			this.logger.error({
-				message: "Error in isSubdomainOrExactMatch",
-				context: { referrer, clientDomain },
-			});
+			this.logger.error(() => ({
+				msg: "Error in isSubdomainOrExactMatch",
+				data: { referrer, clientDomain },
+			}));
 			return false;
 		}
 	}

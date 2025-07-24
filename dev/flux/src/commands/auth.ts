@@ -53,15 +53,17 @@ export default (cmdArgs?: { logger?: Logger }) => {
 					parsedArgs.app,
 					parsedArgs.ip,
 				);
-				logger.info({
-					publicKey,
-					nodeUIURL: result.nodeUIURL.href,
-					nodeAPIURL: result.nodeAPIURL.href,
-					nodeLoginPhrase: result.nodeLoginPhrase,
-					nodeSignature: result.nodeSignature,
-				});
+				logger.info(() => ({
+					data: {
+						publicKey,
+						nodeUIURL: result.nodeUIURL.href,
+						nodeAPIURL: result.nodeAPIURL.href,
+						nodeLoginPhrase: result.nodeLoginPhrase,
+						nodeSignature: result.nodeSignature,
+					},
+				}));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

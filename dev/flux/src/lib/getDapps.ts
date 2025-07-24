@@ -25,7 +25,7 @@ export const main = async (publicKey: string, privateKey: Uint8Array) => {
 
 		// Login to the node
 		await verifyLogin(publicKey, signature, loginPhrase);
-		logger.info(nodeAPIURL);
+		logger.info(() => ({ data: { nodeAPIURL }, msg: "Node API URL" }));
 		return getDappDetails(nodeAPIURL, publicKey, signature, loginPhrase);
 	} catch (e) {
 		console.error(e);

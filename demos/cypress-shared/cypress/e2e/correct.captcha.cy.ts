@@ -16,24 +16,23 @@ import "@cypress/xpath";
 import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import {
 	AdminApiPaths,
 	type Captcha,
-	CaptchaType,
+	type CaptchaType,
 	type IUserSettings,
 	type RegisterSitekeyBodyTypeOutput,
 	Tier,
 } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-let captchaType: CaptchaType;
+const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
-		captchaType = Cypress.env("CAPTCHA_TYPE") || "image";
 		// Call registerSiteKey and handle response here
-		return cy.registerSiteKey(captchaType).then((response) => {
+		return cy.registerSiteKey(baseCaptchaType).then((response) => {
 			// Log the response status and body using cy.task()
 			cy.task("log", `Response status: ${response.status}`);
 			cy.task("log", `Response: ${JSON.stringify(response.body)}`);
@@ -66,6 +65,9 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy.visit(page).then(() => {
+			// Wait for the procaptcha script to be loaded
+			// This ensures tests work with both async and non-async script loading
+			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 			// wrap the solutions to make them available to the tests
 			cy.wrap(solutions).as("solutions");
@@ -73,7 +75,7 @@ describe("Captchas", () => {
 	});
 
 	after(() => {
-		return cy.registerSiteKey(CaptchaType.image);
+		return cy.registerSiteKey(baseCaptchaType);
 	});
 
 	it("Selecting the incorrect images fails the captcha", () => {

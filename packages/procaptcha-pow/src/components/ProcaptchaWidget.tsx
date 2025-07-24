@@ -24,7 +24,7 @@ import { Manager } from "../services/Manager.js";
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 const Procaptcha = (props: ProcaptchaProps) => {
-	const { t } = useTranslation();
+	const { t, ready: isTranslationReady } = useTranslation();
 	const config = props.config;
 	const i18n = props.i18n;
 	const theme = "light" === config.theme ? lightTheme : darkTheme;
@@ -111,7 +111,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				setLoading(false);
 			}}
 			theme={theme}
-			labelText={t("WIDGET.I_AM_HUMAN")}
+			labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 			error={state.error?.message}
 			aria-label="human checkbox"
 			loading={loading}

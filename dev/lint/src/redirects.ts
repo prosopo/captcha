@@ -15,6 +15,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import fg from "fast-glob";
+import type { Argv } from "yargs";
+import { z } from "zod";
 
 // Define types for links
 type FileLink = {
@@ -401,112 +403,132 @@ const fixFile = (filePath: string, linksToFix: FileLink[]): void => {
 	}
 };
 
+export const buildRedirectsCommand = () => {
+	return {
+		command: "redirects",
+		describe: "Check the redirects in the workspace",
+		builder: (yargs: Argv) => {
+			return yargs
+				.option("fix", {
+					alias: "f",
+					type: "boolean",
+					default: false,
+				})
+				.option("pkg", {
+					alias: "p",
+				});
+		},
+		handler: async (argv: unknown) => {
+			const args = z
+				.object({
+					fix: z.boolean(),
+					pkg: z.string(),
+				})
+				.parse(argv);
+			await redirects(args);
+		},
+	};
+};
+
 /**
  * Main function to run the redirect linting
  */
-const main = async (): Promise<void> => {
-	try {
-		// Determine the mode (check or fix)
-		const mode: Mode = process.argv[2] === "fix" ? Mode.FIX : Mode.CHECK;
+const redirects = async (args: {
+	fix: boolean;
+	pkg: string;
+}): Promise<void> => {
+	// Determine the mode (check or fix)
+	const mode: Mode = args.fix ? Mode.FIX : Mode.CHECK;
 
-		// Find the workspace root directory
-		const workspaceRoot = findWorkspaceRoot();
+	// Find the workspace root directory
+	const workspaceRoot = findWorkspaceRoot();
 
-		// The directory to check is the argument after the mode
-		const targetDir = process.argv[mode === Mode.FIX ? 3 : 2];
+	// The directory to check is the argument after the mode
+	const targetDir = args.pkg;
 
-		if (!targetDir) {
-			console.error("Please provide a target directory as an argument");
-			process.exit(1);
-		}
-
-		// Resolve the target directory relative to the workspace root
-		const absolutePath = path.resolve(workspaceRoot, targetDir);
-		console.log(`Workspace root: ${workspaceRoot}`);
-		console.log(`Checking redirects in: ${absolutePath}`);
-		console.log(`Mode: ${mode === Mode.FIX ? "FIX" : "CHECK"}`);
-
-		// Find all template files
-		const files = await findTemplateFiles(absolutePath);
-
-		console.log(`\nFound ${files.length} template files.`);
-
-		// Extract links from all files
-		const allLinks: FileLink[] = [];
-		for (const file of files) {
-			const fileLinks = await extractLinksFromFile(file);
-			allLinks.push(...fileLinks);
-		}
-
-		// Filter to only internal links
-		const internalLinks = allLinks.filter((link) => link.isInternal);
-
-		// Filter to links missing trailing slashes
-		const linksWithoutSlash = allLinks.filter(
-			(link) => link.needsTrailingSlash,
-		);
-
-		console.log(`\nFound ${internalLinks.length} internal links.`);
-
-		if (linksWithoutSlash.length > 0) {
-			if (mode === Mode.FIX) {
-				console.log(
-					`\n🔧 Fixing ${linksWithoutSlash.length} URLs without trailing slashes:`,
-				);
-
-				// Group links by file path for efficient fixing
-				const fileGroups: Record<string, FileLink[]> = {};
-
-				// Populate the file groups
-				for (const link of linksWithoutSlash) {
-					const filePath = link.filePath;
-					if (!fileGroups[filePath]) {
-						fileGroups[filePath] = [];
-					}
-					fileGroups[filePath].push(link);
-				}
-
-				// Fix each file
-				for (const filePath of Object.keys(fileGroups)) {
-					const linksToFix = fileGroups[filePath];
-					if (linksToFix && linksToFix.length > 0) {
-						fixFile(filePath, linksToFix);
-					}
-				}
-
-				console.log(
-					`\n✅ Fixed ${linksWithoutSlash.length} URLs in ${Object.keys(fileGroups).length} files.`,
-				);
-			} else {
-				console.error("\n❌ ERROR: Found URLs without trailing slashes:");
-
-				for (const link of linksWithoutSlash) {
-					const relativePath = path.relative(workspaceRoot, link.filePath);
-					console.error(
-						`  - ${relativePath}:${link.line} - ${link.url} (should be ${link.url}/)`,
-					);
-				}
-
-				console.error(
-					`\n❌ Total URLs missing trailing slashes: ${linksWithoutSlash.length}`,
-				);
-				console.error(
-					"\n❌ Linting failed! Please add trailing slashes to all internal URLs.",
-				);
-				console.error(
-					'\n💡 Run "npm run lint-fix:redirects" to automatically fix these issues.',
-				);
-				process.exit(1);
-			}
-		} else {
-			console.log("\n✅ All internal URLs have proper trailing slashes.");
-			console.log("\n✅ Linting passed!");
-		}
-	} catch (error) {
-		console.error("Error running redirects lint:", error);
+	if (!targetDir) {
+		console.error("Please provide a target directory as an argument");
 		process.exit(1);
 	}
-};
 
-// Run the main function
-main();
+	// Resolve the target directory relative to the workspace root
+	const absolutePath = path.resolve(workspaceRoot, targetDir);
+	console.log(`Workspace root: ${workspaceRoot}`);
+	console.log(`Checking redirects in: ${absolutePath}`);
+	console.log(`Mode: ${mode === Mode.FIX ? "FIX" : "CHECK"}`);
+
+	// Find all template files
+	const files = await findTemplateFiles(absolutePath);
+
+	console.log(`\nFound ${files.length} template files.`);
+
+	// Extract links from all files
+	const allLinks: FileLink[] = [];
+	for (const file of files) {
+		const fileLinks = await extractLinksFromFile(file);
+		allLinks.push(...fileLinks);
+	}
+
+	// Filter to only internal links
+	const internalLinks = allLinks.filter((link) => link.isInternal);
+
+	// Filter to links missing trailing slashes
+	const linksWithoutSlash = allLinks.filter((link) => link.needsTrailingSlash);
+
+	console.log(`\nFound ${internalLinks.length} internal links.`);
+
+	if (linksWithoutSlash.length > 0) {
+		if (mode === Mode.FIX) {
+			console.log(
+				`\n🔧 Fixing ${linksWithoutSlash.length} URLs without trailing slashes:`,
+			);
+
+			// Group links by file path for efficient fixing
+			const fileGroups: Record<string, FileLink[]> = {};
+
+			// Populate the file groups
+			for (const link of linksWithoutSlash) {
+				const filePath = link.filePath;
+				if (!fileGroups[filePath]) {
+					fileGroups[filePath] = [];
+				}
+				fileGroups[filePath].push(link);
+			}
+
+			// Fix each file
+			for (const filePath of Object.keys(fileGroups)) {
+				const linksToFix = fileGroups[filePath];
+				if (linksToFix && linksToFix.length > 0) {
+					fixFile(filePath, linksToFix);
+				}
+			}
+
+			console.log(
+				`\n✅ Fixed ${linksWithoutSlash.length} URLs in ${Object.keys(fileGroups).length} files.`,
+			);
+		} else {
+			console.error("\n❌ ERROR: Found URLs without trailing slashes:");
+
+			for (const link of linksWithoutSlash) {
+				const relativePath = path.relative(workspaceRoot, link.filePath);
+				console.error(
+					`  - ${relativePath}:${link.line} - ${link.url} (should be ${link.url}/)`,
+				);
+			}
+
+			console.error(
+				`\n❌ Total URLs missing trailing slashes: ${linksWithoutSlash.length}`,
+			);
+			console.error(
+				"\n❌ Linting failed! Please add trailing slashes to all internal URLs.",
+			);
+			console.error(
+				'\n💡 Run "npm run lint-fix:redirects" to automatically fix these issues.',
+			);
+			process.exit(1);
+		}
+	} else {
+		console.log("\n✅ All internal URLs have proper trailing slashes.");
+		console.log("\n✅ Linting passed!");
+	}
+};

@@ -1,122 +1,104 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
     <title>Procaptcha Invisible POW Mode - Implicit Rendering</title>
-    <!-- Load the Procaptcha script -->
-    <script type="module" src="%VITE_BUNDLE_URL%" async defer></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        form {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"],
-        input[type="email"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #result {
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-            display: none;
-        }
-    </style>
-    <script type="text/javascript">
-        function onSubmit(token) {
+<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <script type="module">
+        // Function to update CAPTCHA status display is now provided by status-log-injector
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
+            
+            // Monitor DOM for CAPTCHA initialization
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            const node = mutation.addedNodes[i];
+                            if (node.classList && (node.classList.contains('procaptcha') || 
+                                  node.querySelector && node.querySelector('.procaptcha'))) {
+                                updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
+                                observer.disconnect();
+                                break;
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+        
+        // Create a method to show CAPTCHA execution events
+        document.addEventListener('procaptcha:execute', function(e) {
+            updateCaptchaStatus(`CAPTCHA execution started: type=pow, mode=invisible`, 'info');
+            updateCaptchaStatus(`Container: ${e.detail.containerId}, timestamp: ${new Date(e.detail.timestamp).toLocaleTimeString()}`, 'info');
+        });
+        
+        window.onSubmit = function(token) {
             console.log('Procaptcha verified, token: ' + token);
+            updateCaptchaStatus('Challenge passed successfully!', 'success');
+            updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
             
             // Get form values
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             
             const resultElement = document.getElementById('result');
-            resultElement.textContent = `Form submitted with:
-- Name: ${name}
-- Email: ${email}
+            if (resultElement) {
+                resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
+- Name: ${name}<br>
+- Email: ${email}<br>
 - Procaptcha verified: Yes`;
-            resultElement.style.display = 'block';
+                resultElement.style.display = 'block';
+            }
+            
+            updateCaptchaStatus('Form submission completed', 'success');
             
             // Prevent actual form submission
             return false;
         }
     </script>
+    <!-- Load the Procaptcha script -->
+    <script type="module" src="%VITE_BUNDLE_URL%" async defer></script>
 </head>
 <body>
-    <h1>Procaptcha Invisible POW Mode</h1>
-    <p>This example demonstrates how to use Procaptcha in invisible POW mode with implicit rendering.</p>
-    
-    <form id="demo-form" action="javascript:void(0);" method="POST">
-        <div>
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" placeholder="Your name" required />
-        </div>
+    <div class="mui-container">
+        <h1>Invisible Proof of Work CAPTCHA - Implicit Rendering</h1>
+        <p>This example demonstrates how to use Procaptcha in invisible Proof of Work mode with implicit rendering directly on a button.</p>
         
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Your email" required />
-        </div>
+        <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
         
-        <!-- Submit button with Procaptcha attributes -->
-        <!-- The p-procaptcha class and data-sitekey attribute are required -->
-        <button 
-            class="p-procaptcha" 
-            data-sitekey="%PROSOPO_SITE_KEY%" 
-            data-callback="onSubmit"
-            data-captcha-type="pow">
-            Submit
-        </button>
-    </form>
-    
-    <div id="result"></div>
-    
-    <div style="margin-top: 20px;">
-        <h2>How It Works</h2>
-        <p>This example demonstrates how to use Procaptcha in invisible POW mode with implicit rendering:</p>
-        <ol>
-            <li>Include the Procaptcha script in the head of your document</li>
-            <li>Add the <code>p-procaptcha</code> class to your submit button</li>
-            <li>Add the <code>data-sitekey</code> attribute with your site key</li>
-            <li>Add the <code>data-callback</code> attribute with the name of your callback function</li>
-            <li>The CAPTCHA verification happens invisibly when the user clicks the button</li>
-        </ol>
-        <p>The key elements are:</p>
-        <pre>
-&lt;script type="module" src="./assets/procaptcha.bundle.js" async defer&gt;&lt;/script&gt;
-
-&lt;button 
-    class="p-procaptcha" 
-    data-sitekey="%PROSOPO_SITE_KEY%" 
-    data-callback="onSubmit"
-    data-captcha-type="pow"&gt;
-    Submit
-&lt;/button&gt;
-        </pre>
+        <form id="demo-form" action="javascript:void(0);" method="POST" class="mui-form">
+            <h2>Example Form</h2>
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required />
+            </div>
+            
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required />
+            </div>
+            
+            <!-- Submit button with Procaptcha attributes -->
+            <button 
+                class="mui-btn mui-btn--raised procaptcha" 
+                data-sitekey="%PROSOPO_SITE_KEY_POW%" 
+                data-callback="onSubmit"
+                data-captcha-type="pow"
+                data-size="invisible">
+                Submit
+            </button>
+        </form>
+        
+        <div id="result" class="info-box" style="display: none;"></div>
+        
+        <!-- Console output display area -->
+        <div id="console-output" class="console-output" style="display: none;"></div>
+        
+        <!-- Explanation will be injected by the explanation-injector plugin -->
     </div>
 </body>
 </html> 

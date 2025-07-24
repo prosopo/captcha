@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"lib": ["ES2021", "dom"],
+		"types": ["node"],
+		"noEmit": true,
+		"noEmitOnError": true,
+		"sourceMap": false
+	},
+	"include": ["**/*.ts"],
+	"references": [
+		{
+			"path": "../../packages/dotenv"
+		}
+	]
+}

@@ -6,7 +6,14 @@
 		"lib": ["es6", "dom"],
 		"allowJs": true
 	},
-	"include": ["src", "src/**/*.json", "src/index.html"],
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/index.html",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
 			"path": "../detector"

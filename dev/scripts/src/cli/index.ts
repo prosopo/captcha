@@ -15,10 +15,10 @@
 import path from "node:path";
 import { isHex } from "@polkadot/util";
 import { LogLevel, getLogger } from "@prosopo/common";
-import { getLogLevel } from "@prosopo/common";
-import { getScriptsPkgDir } from "@prosopo/config";
+import { parseLogLevel } from "@prosopo/common";
 import { getEnv, loadEnv } from "@prosopo/dotenv";
 import { decodeProcaptchaOutput, encodeProcaptchaOutput } from "@prosopo/types";
+import { getScriptsPkgDir } from "@prosopo/workspace";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { importContract } from "../contract/index.js";
@@ -35,7 +35,7 @@ export async function processArgs(args: string[]) {
 		choices: Object.keys(LogLevel.enum),
 	}).argv;
 
-	const log = getLogger(getLogLevel(parsed.logLevel), "CLI");
+	const log = getLogger(parseLogLevel(parsed.logLevel), "CLI");
 
 	await yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")
@@ -56,15 +56,23 @@ export async function processArgs(args: string[]) {
 			describe:
 				"Setup the development environment by registering a provider, staking, loading a data set and then registering a dapp and staking.",
 			builder: (yargs) =>
-				yargs.option("force", {
-					type: "boolean",
-					demandOption: false,
-					desc: "Force provider re-registration and dataset setup",
-				}),
+				yargs
+					.option("sites", {
+						type: "boolean",
+						demandOption: false,
+						default: true,
+						desc: "Set up sites",
+					})
+					.option("provider", {
+						type: "boolean",
+						demandOption: false,
+						default: true,
+						desc: "Set up the provider",
+					}),
 
 			handler: async (argv) => {
-				log.info("Running setup scripts");
-				await setup(!!argv.force);
+				log.info(() => ({ msg: "Running setup scripts" }));
+				await setup(argv.provider, argv.sites);
 			},
 		})
 		.command({
@@ -106,11 +114,15 @@ export async function processArgs(args: string[]) {
 				}),
 			handler: async (argv) => {
 				if (!isHex(argv.token)) {
-					log.debug("Encoding token to hex");
-					log.info(encodeProcaptchaOutput(JSON.parse(argv.token)));
+					log.debug(() => ({ msg: "Encoding token to hex" }));
+					log.info(() => ({
+						data: { result: encodeProcaptchaOutput(JSON.parse(argv.token)) },
+					}));
 				} else {
-					log.debug("Decoding token from hex");
-					log.info(decodeProcaptchaOutput(argv.token));
+					log.debug(() => ({ msg: "Decoding token from hex" }));
+					log.info(() => ({
+						data: { result: decodeProcaptchaOutput(argv.token) },
+					}));
 				}
 			},
 		}).argv;

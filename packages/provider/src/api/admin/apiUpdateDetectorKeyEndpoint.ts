@@ -17,11 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import {
-	type Logger,
-	type ProsopoApiError,
-	getLoggerDefault,
-} from "@prosopo/common";
+import { type Logger, type ProsopoApiError, getLogger } from "@prosopo/common";
 import { UpdateDetectorKeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -37,21 +33,29 @@ class ApiUpdateDetectorKeyEndpoint
 		args: z.infer<UpdateDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLoggerDefault();
+		logger = logger || getLogger("info", "");
 		try {
 			const { detectorKey } = args;
 
-			logger = logger || getLoggerDefault();
+			logger = logger || getLogger("info", "");
 
-			logger.info("Updating detector key");
+			logger.info(() => ({ msg: "Updating detector key" }));
 
-			await this.clientTaskManager.updateDetectorKey(detectorKey);
+			const activeDetectorKeys =
+				await this.clientTaskManager.updateDetectorKey(detectorKey);
 
+			logger.info(() => ({
+				msg: "Detector key updated",
+				activeDetectorKeys,
+			}));
 			return {
 				status: ApiEndpointResponseStatus.SUCCESS,
+				data: {
+					activeDetectorKeys,
+				},
 			};
 		} catch (error) {
-			logger.error("Error updating detector key", error);
+			logger.error(() => ({ msg: "Error updating detector key", err: error }));
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
 				error: (error as ProsopoApiError).message,

@@ -19,3 +19,4 @@ export * from "./provider/index.js";
 export * from "./procaptcha/index.js";
 export * from "./procaptcha-bundle/index.js";
 export * from "./procaptcha-frictionless/index.js";
+export * from "./keyring/index.js";

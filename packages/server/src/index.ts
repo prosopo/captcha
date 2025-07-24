@@ -14,12 +14,12 @@
 import { ProsopoServer } from "./server.js";
 export { ProsopoServer } from "./server.js";
 export { getServerConfig, getServerUrl } from "./config.js";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import type { ProsopoServerConfigOutput } from "@prosopo/types";
 export const PublicProsopoServer = async (
 	config: ProsopoServerConfigOutput,
 ) => {
 	// if site key is '' then it will burn address
-	const pair = await getPairAsync(undefined, config.account.address);
+	const pair = getPair(undefined, config.account.address);
 	return new ProsopoServer(config, pair);
 };

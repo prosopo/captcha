@@ -33,7 +33,7 @@ import {
 	type RawSolution,
 } from "@prosopo/types";
 import type { SolutionRecord } from "@prosopo/types-database";
-import { at, consoleTableWithWrapping } from "@prosopo/util";
+import { at } from "@prosopo/util";
 import { downloadImage } from "./util.js";
 
 export const NO_SOLUTION_VALUE = "NO_SOLUTION";

@@ -17,9 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
 import type { ProjectReference } from "typescript";
-import { getLogger } from "./logger.js";
 
-const logger = getLogger("config.dependencies.js");
 const exec = util.promisify(child_process.exec);
 // find a tScOnFiG.json file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/;
@@ -32,11 +30,13 @@ async function getPackageDir(packageName: string): Promise<string> {
 		pkg = `@prosopo/${packageName}`;
 	}
 	const pkgCommand = `npm list ${pkg} -ap`;
-	logger.info(`Running command ${pkgCommand}`);
+	console.info(`Running command ${pkgCommand}`);
 	// get package directory
 	const { stdout: packageDir, stderr } = await exec(pkgCommand);
 	if (stderr) {
-		throw new Error("CONFIG.INVALID_PACKAGE_DIR");
+		if (stderr.includes("ERR!")) {
+			throw new Error("CONFIG.INVALID_PACKAGE_DIR");
+		}
 	}
 	return packageDir.trim() || path.resolve();
 }
@@ -130,7 +130,7 @@ export async function getExternalsFromReferences(
 	ignorePatterns: RegExp[] = [],
 ): Promise<string[]> {
 	const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns, [], false);
-	logger.debug("tsConfigPaths", tsConfigPaths);
+	console.debug({ tsConfigPaths });
 	const promises: Promise<string>[] = [];
 	for (const refTsConfigPath of tsConfigPaths) {
 		const packageJsonPath = path.resolve(
@@ -161,7 +161,7 @@ export async function getExternalsFromReferences(
 		);
 	}
 	const externals = await Promise.all(promises);
-	logger.debug("externals", externals);
+	console.debug({ externals });
 	return externals;
 }
 
@@ -181,7 +181,7 @@ export async function getDependencies(
 	if (packageName) {
 		const packageDir = await getPackageDir(packageName);
 		cmd = `cd ${packageDir.trim()} && ${cmd}`;
-		logger.info(`Running command ${cmd} in ${packageDir}`);
+		console.info(`Running command ${cmd} in ${packageDir}`);
 	}
 
 	const { stdout, stderr } = await exec(cmd);

@@ -12,7 +12,6 @@
 		{
 			"path": "../common/tsconfig.cjs.json"
 		},
-
 		{
 			"path": "../dotenv/tsconfig.cjs.json"
 		},
@@ -35,7 +34,7 @@
 			"path": "../util/tsconfig.cjs.json"
 		},
 		{
-			"path": "../../dev/config/tsconfig.cjs.json"
+			"path": "../util-crypto/tsconfig.cjs.json"
 		},
 		{
 			"path": "../user-access-policy/tsconfig.cjs.json"

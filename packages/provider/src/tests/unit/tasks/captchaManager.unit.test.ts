@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
-import type { Logger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -23,6 +23,8 @@ import type {
 import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
+
+const loggerOuter = getLogger("info", import.meta.url);
 
 const defaultUserSettings: IUserSettings = {
 	frictionlessThreshold: 0.8,
@@ -49,12 +51,16 @@ describe("CaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		logger = {
-			info: vi.fn(),
-			error: vi.fn(),
-			debug: vi.fn(),
-			warn: vi.fn(),
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 		} as unknown as Logger;
+		logger = mockLogger;
 
 		captchaManager = new CaptchaManager(db, pair, logger);
 
@@ -96,11 +102,12 @@ describe("CaptchaManager", () => {
 				type: CaptchaType.pow,
 			});
 		});
-		it("should validate a request for an pow captcha when the client settings are set to frictionless and a session ID is passed and found", async () => {
+		it("should validate a request for an pow captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type pow", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
 				tokenId: "tokenId" as unknown as ObjectId,
-			} as Pick<Session, "tokenId">);
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "tokenId" | "captchaType">);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
@@ -126,11 +133,12 @@ describe("CaptchaManager", () => {
 				frictionlessTokenId: "frictionlessTokenId",
 			});
 		});
-		it("should validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found", async () => {
+		it("should validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type image", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
 				tokenId: "tokenId" as unknown as ObjectId,
-			} as Pick<Session, "tokenId">);
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "tokenId" | "captchaType">);
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
@@ -156,6 +164,71 @@ describe("CaptchaManager", () => {
 				frictionlessTokenId: "frictionlessTokenId",
 			});
 		});
+
+		it("should not validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type pow", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				tokenId: "tokenId" as unknown as ObjectId,
+				captchaType: CaptchaType.pow,
+			} as Pick<Session, "tokenId" | "captchaType">);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
+				_id: "frictionlessTokenId",
+			});
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				"sessionId",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
+				type: CaptchaType.image,
+			});
+		});
+
+		it("should not validate a request for a pow captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type image", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				tokenId: "tokenId" as unknown as ObjectId,
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "tokenId">);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
+				_id: "frictionlessTokenId",
+			});
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				"sessionId",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: "CAPTCHA.NO_SESSION_FOUND",
+				type: CaptchaType.pow,
+			});
+		});
+
 		it("should not validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed but not found", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);

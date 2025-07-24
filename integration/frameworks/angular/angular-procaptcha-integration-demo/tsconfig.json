@@ -26,5 +26,6 @@
 		{
 			"path": "../angular-procaptcha-wrapper"
 		}
-	]
+	],
+	"include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json", "src/**/*.d.ts"]
 }

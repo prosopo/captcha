@@ -8,6 +8,9 @@
 	"include": ["src/index.ts", "src/index.html"],
 	"references": [
 		{
+			"path": "../common/tsconfig.cjs.json"
+		},
+		{
 			"path": "../dotenv/tsconfig.cjs.json"
 		},
 		{
@@ -27,6 +30,9 @@
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util-crypto/tsconfig.cjs.json"
 		},
 		{
 			"path": "../widget-skeleton/tsconfig.cjs.json"

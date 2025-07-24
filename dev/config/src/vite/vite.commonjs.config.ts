@@ -19,17 +19,15 @@ import { type UserConfig, defineConfig } from "vite";
 import { default as noBundlePlugin } from "vite-plugin-no-bundle";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { getExternalsFromReferences } from "../dependencies.js";
-import { getLogger } from "../logger.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
-
-const log = getLogger("vite.commonjs.config.ts");
+import VitePluginCopy from "./vite-plugin-copy.js";
 
 export default async function (
 	name: string,
 	tsConfigPath: string,
 	entry?: string,
 ): Promise<UserConfig> {
-	log.info(`ViteCommonJSConfig: ${name}`);
+	console.info(`ViteCommonJSConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [
 		/dev/,
 	]);
@@ -50,11 +48,16 @@ export default async function (
 				root: "src",
 				copy: "**/*.css",
 			}),
+			VitePluginCopy({
+				srcDir: "src",
+				destDir: "dist",
+				include: ["**/*.json"],
+			}),
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
 			VitePluginCloseAndCopy(),
 		],
 		build: {
-			emptyOutDir: true,
+			emptyOutDir: false,
 			ssr: true,
 			target: "node18",
 			outDir: "dist/cjs",

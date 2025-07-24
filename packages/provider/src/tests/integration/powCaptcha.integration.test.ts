@@ -13,30 +13,30 @@
 // limitations under the License.
 
 import { sha256 } from "@noble/hashes/sha256";
-import { u8aToHex } from "@polkadot/util/u8a";
-import { generateMnemonic, getPairAsync } from "@prosopo/keyring";
+import {
+	generateMnemonic,
+	getDefaultProviders,
+	getPair,
+} from "@prosopo/keyring";
 import {
 	ApiParams,
 	CaptchaType,
 	ClientApiPaths,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
+	type KeyringPair,
 	type PowCaptchaSolutionResponse,
 	type SubmitPowCaptchaSolutionBodyType,
 } from "@prosopo/types";
-import fetch from "node-fetch";
-import { beforeAll, describe, expect, it } from "vitest";
-import {
-	dummyDappAccount,
-	dummyUserAccount,
-} from "./mocks/solvedTestCaptchas.js";
+import { at, u8aToHex } from "@prosopo/util";
+import { beforeEach, describe, expect, it } from "vitest";
+import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 import { registerSiteKey } from "./registerSitekey.js";
 
 // Define the endpoint path and base URL
 const baseUrl = "http://localhost:9229";
 const getPowCaptchaChallengePath = ClientApiPaths.GetPowCaptchaChallenge;
-const dappAccount = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+const userId = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
 const bufferToHex = (buffer: Uint8Array): string =>
 	Array.from(buffer)
@@ -81,15 +81,24 @@ const failPoW = (data: string, difficulty: number): number => {
 
 describe("PoW Integration Tests", () => {
 	describe("GetPowCaptchaChallenge", () => {
-		beforeAll(async () => {
-			await registerSiteKey(dappAccount, CaptchaType.pow);
+		let siteKeyMnemonic: string;
+		let siteKey: string;
+		let userMnemonic: string;
+		let userId: string;
+		const adminPair = at(getDefaultProviders(), 0).pair;
+		beforeEach(async () => {
+			// Create a new site key to avoid conflicts with other tests
+			[siteKeyMnemonic, siteKey] = await generateMnemonic();
+
+			await registerSiteKey(siteKey, CaptchaType.pow, adminPair);
+			[userMnemonic, userId] = await generateMnemonic();
 		});
 
 		it("should supply a PoW challenge to a Dapp User", async () => {
 			const origin = "http://localhost";
 			const body: GetPowCaptchaChallengeRequestBodyType = {
-				user: userAccount,
-				dapp: dappAccount,
+				user: userId,
+				dapp: siteKey,
 			};
 			const response = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 				method: "POST",
@@ -97,8 +106,8 @@ describe("PoW Integration Tests", () => {
 					Connection: "close",
 					"Content-Type": "application/json",
 					Origin: origin,
-					"Prosopo-Site-Key": dappAccount,
-					"Prosopo-User": userAccount,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": userId,
 				},
 				body: JSON.stringify(body),
 			});
@@ -120,10 +129,10 @@ describe("PoW Integration Tests", () => {
 				headers: {
 					Connection: "close",
 					"Content-Type": "application/json",
-					"Prosopo-Site-Key": dappAccount,
-					"Prosopo-User": userAccount,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": userId,
 				},
-				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+				body: JSON.stringify({ user: userId, dapp: siteKey }),
 			});
 
 			expect(response.status).toBe(400);
@@ -137,39 +146,36 @@ describe("PoW Integration Tests", () => {
 					Connection: "close",
 					"Content-Type": "application/json",
 					Origin: origin,
-					"Prosopo-Site-Key": dappAccount,
-					"Prosopo-User": userAccount,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": userId,
 				},
-				body: JSON.stringify({ user: userAccount, dapp: dappAccount }),
+				body: JSON.stringify({ user: userId, dapp: siteKey }),
 			});
 
 			expect(response.status).toBe(400);
-			expect(response.statusText).toBe("Unauthorized origin URL");
+			expect(response.statusText).toBe("Bad Request");
 		});
 	});
 	describe("SubmitPowCaptchaSolution", () => {
+		let siteKeyMnemonic: string;
+		let siteKey: string;
+		let userMnemonic: string;
+		let userPair: KeyringPair;
+		let userId: string;
+		const adminPair = at(getDefaultProviders(), 0).pair;
+		beforeEach(async () => {
+			// Create a new site key to avoid conflicts with other tests
+			[siteKeyMnemonic, siteKey] = await generateMnemonic();
+
+			await registerSiteKey(siteKey, CaptchaType.pow, adminPair);
+			[userMnemonic, userId] = await generateMnemonic();
+			userPair = getPair(userMnemonic);
+		});
 		it("should verify a correctly completed PoW captcha as true", async () => {
-			const userPair = await getPairAsync(
-				dummyUserAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
-			const dappPair = await getPairAsync(
-				dummyDappAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
-
-			const dummyDappAccountAddr = dappPair.address;
-
-			await registerSiteKey(dummyDappAccountAddr, CaptchaType.pow);
-
 			const origin = "http://localhost";
 			const requestBody: GetPowCaptchaChallengeRequestBodyType = {
-				user: userPair.address,
-				dapp: dummyDappAccountAddr,
+				user: userId,
+				dapp: siteKey,
 			};
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -179,8 +185,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dummyDappAccountAddr,
-						"Prosopo-User": userAccount,
+						"Prosopo-Site-Key": siteKey,
+						"Prosopo-User": userId,
 					},
 					body: JSON.stringify(requestBody),
 				},
@@ -208,7 +214,7 @@ describe("PoW Integration Tests", () => {
 				nonce,
 				verifiedTimeout,
 				user: userPair.address,
-				dapp: dummyDappAccountAddr,
+				dapp: siteKey,
 			};
 			const response = await fetch(
 				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
@@ -218,8 +224,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dummyDappAccountAddr,
-						"Prosopo-User": userAccount,
+						"Prosopo-Site-Key": siteKey,
+						"Prosopo-User": userId,
 					},
 					body: JSON.stringify(submitBody),
 				},
@@ -234,16 +240,7 @@ describe("PoW Integration Tests", () => {
 		});
 
 		it("should return false for incorrectly completed PoW captcha", async () => {
-			const userPair = await getPairAsync(
-				dummyUserAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
-			const userAccount = userPair.address;
 			const origin = "http://localhost";
-			const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-			await registerSiteKey(dapp, CaptchaType.pow);
 
 			const captchaRes = await fetch(
 				`${baseUrl}${getPowCaptchaChallengePath}`,
@@ -253,10 +250,10 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dapp,
-						"Prosopo-User": userAccount,
+						"Prosopo-Site-Key": siteKey,
+						"Prosopo-User": userId,
 					},
-					body: JSON.stringify({ user: userAccount, dapp: dapp }),
+					body: JSON.stringify({ user: userId, dapp: siteKey }),
 				},
 			);
 
@@ -282,7 +279,7 @@ describe("PoW Integration Tests", () => {
 				nonce,
 				verifiedTimeout,
 				user: userPair.address,
-				dapp,
+				dapp: siteKey,
 			};
 			const response = await fetch(
 				`${baseUrl}${ClientApiPaths.SubmitPowCaptchaSolution}`,
@@ -292,8 +289,8 @@ describe("PoW Integration Tests", () => {
 						Connection: "close",
 						"Content-Type": "application/json",
 						Origin: origin,
-						"Prosopo-Site-Key": dapp,
-						"Prosopo-User": userAccount,
+						"Prosopo-Site-Key": siteKey,
+						"Prosopo-User": userId,
 					},
 					body: JSON.stringify(body),
 				},
@@ -308,13 +305,8 @@ describe("PoW Integration Tests", () => {
 
 		it("should return an error for an unregistered site key", async () => {
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
-			const userPair = await getPairAsync(
-				dummyUserAccount.seed,
-				undefined,
-				"sr25519",
-				42,
-			);
-			const userAccount = userPair.address;
+			const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
+			const userId = userPair.address;
 			const origin = "http://localhost";
 
 			const captchaRes = await fetch(
@@ -326,10 +318,10 @@ describe("PoW Integration Tests", () => {
 						"Content-Type": "application/json",
 						Origin: origin,
 						"Prosopo-Site-Key": unregisteredAccount,
-						"Prosopo-User": userAccount,
+						"Prosopo-User": userId,
 					},
 					body: JSON.stringify({
-						user: userAccount,
+						user: userId,
 						dapp: unregisteredAccount,
 					}),
 				},
@@ -343,13 +335,6 @@ describe("PoW Integration Tests", () => {
 	});
 
 	it("should return an error for an invalid site key", async () => {
-		const userPair = await getPairAsync(
-			dummyUserAccount.seed,
-			undefined,
-			"sr25519",
-			42,
-		);
-		const userAccount = userPair.address;
 		const origin = "http://localhost";
 		const invalidSiteKey = "junk";
 
@@ -360,9 +345,9 @@ describe("PoW Integration Tests", () => {
 				"Content-Type": "application/json",
 				Origin: origin,
 				"Prosopo-Site-Key": invalidSiteKey,
-				"Prosopo-User": userAccount,
+				"Prosopo-User": userId,
 			},
-			body: JSON.stringify({ user: userAccount, dapp: invalidSiteKey }),
+			body: JSON.stringify({ user: userId, dapp: invalidSiteKey }),
 		});
 
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
@@ -372,15 +357,13 @@ describe("PoW Integration Tests", () => {
 	});
 
 	it("should return an error if the captcha type is set to image", async () => {
-		const userPair = await getPairAsync(
-			dummyUserAccount.seed,
-			undefined,
-			"sr25519",
-		);
-		const userAccount = userPair.address;
+		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
+		const userId = userPair.address;
 		const origin = "http://localhost";
-		const dapp = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
-		await registerSiteKey(dapp, CaptchaType.image);
+		const siteKey = "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw";
+		const adminPair = at(getDefaultProviders(), 0).pair;
+
+		await registerSiteKey(siteKey, CaptchaType.image, adminPair);
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
@@ -388,10 +371,10 @@ describe("PoW Integration Tests", () => {
 				Connection: "close",
 				"Content-Type": "application/json",
 				Origin: origin,
-				"Prosopo-Site-Key": dapp,
-				"Prosopo-User": userAccount,
+				"Prosopo-Site-Key": siteKey,
+				"Prosopo-User": userId,
 			},
-			body: JSON.stringify({ user: userAccount, dapp }),
+			body: JSON.stringify({ user: userId, dapp: siteKey }),
 		});
 
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
@@ -401,16 +384,13 @@ describe("PoW Integration Tests", () => {
 		expect(challengeBody.error?.code).toBe(400);
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
-		const userPair = await getPairAsync(
-			dummyUserAccount.seed,
-			undefined,
-			"sr25519",
-		);
-		const userAccount = userPair.address;
+		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
+		const userId = userPair.address;
 		const origin = "http://localhost";
 		// Create a new site key to avoid conflicts with other tests
 		const [mnemonic, dapp] = await generateMnemonic();
-		await registerSiteKey(dapp, CaptchaType.frictionless);
+		const adminPair = at(getDefaultProviders(), 0).pair;
+		await registerSiteKey(dapp, CaptchaType.frictionless, adminPair);
 
 		const captchaRes = await fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
 			method: "POST",
@@ -419,9 +399,9 @@ describe("PoW Integration Tests", () => {
 				"Content-Type": "application/json",
 				Origin: origin,
 				"Prosopo-Site-Key": dapp,
-				"Prosopo-User": userAccount,
+				"Prosopo-User": userId,
 			},
-			body: JSON.stringify({ user: userAccount, dapp }),
+			body: JSON.stringify({ user: userId, dapp }),
 		});
 
 		const challengeBody = (await captchaRes.json()) as GetPowCaptchaResponse;
