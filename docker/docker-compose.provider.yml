@@ -77,6 +77,8 @@ services:
             - production
             - staging
         image: mongo:6.0.17
+        command: ["--wiredTigerCacheSizeGB", "0.25"]
+        mem_limit: 1g
         labels:
             - "vector.mongo=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
