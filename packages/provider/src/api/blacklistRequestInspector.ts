@@ -13,15 +13,92 @@
 // limitations under the License.
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
-import type { BlacklistInspector } from "@prosopo/user-access-policy";
+import {
+	AccessPolicyType,
+	type AccessRulesStorage,
+	ScopeMatch,
+	type UserScopeApiInput,
+	type UserScopeApiOutput,
+	userScopeInputSchema,
+} from "@prosopo/user-access-policy";
+import { uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
-import { getIPAddress } from "../util.js";
 
-class BlacklistRequestInspector {
+export const getRequestUserScope = (
+	requestHeaders: Record<string, unknown>,
+	ja4?: string,
+	ip?: string,
+	user?: string,
+): Pick<UserScopeApiInput, "userId" | "ja4Hash" | "userAgent" | "ip"> => {
+	const userAgent = requestHeaders["user-agent"]
+		? requestHeaders["user-agent"].toString()
+		: undefined;
+	return {
+		...(user && { userId: user }),
+		...(ja4 && { ja4Hash: ja4 }),
+		...(userAgent && { userAgent: userAgent }),
+		...(ip && { ip }),
+		// TODO more things with headers
+	};
+};
+
+const getPrioritisedUserScopes = (userScope: {
+	[key: string]: bigint | string;
+}): Record<string, bigint | string | undefined>[] => {
+	const userScopeKeys = Object.keys(userScope);
+	return uniqueSubsets(userScopeKeys).map((subset: string[]) =>
+		subset.reduce(
+			(acc, key) => {
+				acc[key] = userScope[key];
+				return acc;
+			},
+			{} as Record<string, bigint | string | undefined>,
+		),
+	);
+};
+
+export const getPrioritisedAccessRule = async (
+	userAccessRulesStorage: AccessRulesStorage,
+	userScope: {
+		[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
+	},
+	clientId?: string,
+) => {
+	const prioritisedUserScopes = getPrioritisedUserScopes(userScope);
+	const policyPromises = [];
+	// Search first by clientId, if it exists, then by undefined clientId. Otherwise, just search by undefined clientId.
+	const clientLoop = clientId ? [clientId, undefined] : [undefined];
+	for (const clientOrUndefined of clientLoop) {
+		for (const scope of prioritisedUserScopes) {
+			if (Object.values(scope).every((value) => value === undefined)) {
+				continue;
+			}
+
+			const parsedUserScope = userScopeInputSchema.parse(scope);
+
+			const filter = {
+				...(clientOrUndefined && {
+					policyScope: {
+						clientId: clientOrUndefined,
+					},
+				}),
+				policyScopeMatch: ScopeMatch.Exact,
+
+				userScope: parsedUserScope,
+
+				userScopeMatch: ScopeMatch.Exact,
+			};
+
+			policyPromises.push(userAccessRulesStorage.findRules(filter, true, true));
+		}
+	}
+	return (await Promise.all(policyPromises)).flat();
+};
+
+export class BlacklistRequestInspector {
 	public constructor(
-		private readonly blacklistInspector: BlacklistInspector,
+		private readonly userAccessRulesStorage: AccessRulesStorage,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
-		private readonly logger: Logger,
 	) {}
 
 	public async abortRequestForBlockedUsers(
@@ -31,7 +108,9 @@ class BlacklistRequestInspector {
 	): Promise<void> {
 		const rawIp = request.ip || "";
 
-		request.logger.debug("JA4", request.ja4);
+		request.logger.debug(() => ({
+			data: { ja4: request.ja4 },
+		}));
 
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
@@ -65,11 +144,14 @@ class BlacklistRequestInspector {
 
 		// block if no IP is present
 		if (!rawIp) {
-			logger.info("Request without IP", {
-				requestedRoute: requestedRoute,
-				requestHeaders: requestHeaders,
-				requestBody: requestBody,
-			});
+			logger.info(() => ({
+				data: {
+					requestedRoute: requestedRoute,
+					requestHeaders: requestHeaders,
+					requestBody: requestBody,
+				},
+				msg: "Request without IP",
+			}));
 
 			return true;
 		}
@@ -77,21 +159,31 @@ class BlacklistRequestInspector {
 		await this.environmentReadinessWaiter();
 
 		try {
-			const userIpAddress = getIPAddress(rawIp);
-
 			const { userId, clientId } = this.extractIdsFromRequest(
 				requestHeaders,
 				requestBody,
 			);
 
-			return await this.blacklistInspector.isUserBlacklisted(
+			const accessPolicies = await getPrioritisedAccessRule(
+				this.userAccessRulesStorage,
+				getRequestUserScope(requestHeaders, ja4, rawIp, userId),
 				clientId,
-				userIpAddress,
-				ja4,
-				userId,
 			);
+			if (
+				!accessPolicies ||
+				accessPolicies.length === 0 ||
+				!accessPolicies[0]
+			) {
+				return false;
+			}
+			const accessPolicy = accessPolicies[0];
+
+			return AccessPolicyType.Block === accessPolicy.type;
 		} catch (err) {
-			logger.error("Block Middleware Error:", err);
+			logger.error(() => ({
+				err,
+				msg: "Block Middleware Error",
+			}));
 
 			return true;
 		}
@@ -105,21 +197,19 @@ class BlacklistRequestInspector {
 		requestHeaders: Record<string, unknown>,
 		requestBody: Record<string, unknown>,
 	): {
-		userId: string;
-		clientId: string;
+		userId: string | undefined;
+		clientId: string | undefined;
 	} {
 		const userId =
 			this.getObjectValue(requestHeaders, "Prosopo-User") ||
-			this.getObjectValue(requestBody, "user") ||
-			"";
+			this.getObjectValue(requestBody, "user");
 		const clientId =
 			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
-			this.getObjectValue(requestBody, "dapp") ||
-			"";
+			this.getObjectValue(requestBody, "dapp");
 
 		return {
-			userId: "string" === typeof userId ? userId : "",
-			clientId: "string" === typeof clientId ? clientId : "",
+			userId: "string" === typeof userId ? userId : undefined,
+			clientId: "string" === typeof clientId ? clientId : undefined,
 		};
 	}
 
@@ -130,5 +220,3 @@ class BlacklistRequestInspector {
 		return object[key];
 	}
 }
-
-export { BlacklistRequestInspector };

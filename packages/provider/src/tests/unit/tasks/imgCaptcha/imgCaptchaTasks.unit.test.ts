@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { u8aToHex } from "@polkadot/util";
-import { randomAsHex } from "@polkadot/util-crypto";
-import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaSolution,
@@ -31,9 +30,13 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
+import { getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
-import { getIPAddress, shuffleArray } from "../../../../util.js";
+import { shuffleArray } from "../../../../util.js";
+
+const loggerOuter = getLogger("info", import.meta.url);
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
@@ -41,7 +44,7 @@ vi.mock("@prosopo/datasets", () => ({
 	compareCaptchaSolutions: vi.fn(),
 	parseAndSortCaptchaSolutions: vi.fn(),
 }));
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	randomAsHex: vi.fn(),
 	signatureVerify: vi.fn(),
 }));
@@ -170,10 +173,16 @@ describe("ImgCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		logger = {
-			info: vi.fn(),
-			error: vi.fn(),
+		const mockLogger = {
+			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+			info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+			error: vi.fn().mockImplementation(loggerOuter.error.bind(loggerOuter)),
+			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
 		} as unknown as Logger;
+		logger = mockLogger;
 
 		captchaConfig = {
 			solved: { count: 5 },
@@ -416,9 +425,13 @@ describe("ImgCaptchaManager", () => {
 			);
 
 		expect(result).toBe(false);
-		expect(logger.info).toHaveBeenCalledWith(
-			"Deadline for responding to captcha has expired",
-		);
+
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject({
+			msg: "Deadline for responding to captcha has expired",
+		});
 	});
 
 	it("should get dapp user commitment by ID", async () => {
@@ -514,5 +527,49 @@ describe("ImgCaptchaManager", () => {
 		);
 
 		expect(result).toBeUndefined();
+	});
+
+	it("should fail the user if an ip is passed up and it does not match the ip address stored in the commitment", async () => {
+		const userAccount = "userAccount";
+		const dappAccount = "dappAccount";
+		const ipAddress = "1.1.1.1";
+		const dappUserCommitment: UserCommitment = {
+			id: "commitmentId",
+			userAccount,
+			dappAccount,
+			providerAccount: "providerAccount",
+			datasetId: "datasetId",
+			result: { status: CaptchaStatus.approved },
+			userSignature: "",
+			userSubmitted: true,
+			serverChecked: false,
+			requestedAtTimestamp: 0,
+			ipAddress: getIPAddress("8.8.8.8").bigInt(),
+			headers: { a: "1", b: "2", c: "3" },
+			ja4: "ja4",
+		};
+
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+		(db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
+
+		const verifyResult = await imgCaptchaManager.verifyImageCaptchaSolution(
+			userAccount,
+			dappAccount,
+			"commitmentId",
+			undefined,
+			ipAddress,
+		);
+		expect(verifyResult.verified).toBe(false);
+
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.info as any).mock.calls[1][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject({
+			msg: "IP address mismatch: 8.8.8.8 !== 1.1.1.1",
+			data: {
+				challengeIp: "8.8.8.8",
+				providedIp: "1.1.1.1",
+			},
+		});
 	});
 });

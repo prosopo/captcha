@@ -1,17 +1,17 @@
 {
 	"name": "@prosopo/angular-procaptcha-integration-demo",
-	"version": "1.1.0",
+	"version": "1.1.10",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
+	"type": "module",
 	"scripts": {
-		"clean": "del-cli ./dist",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"ng": "ng",
 		"start": "ng serve",
 		"build": "ng build",
 		"watch": "ng build --watch --configuration development",
-		"test": "echo \"No test specified\"",
 		"dev": "npm run start"
 	},
 	"dependencies": {
@@ -22,11 +22,21 @@
 		"@angular/platform-browser": "^19.2.0",
 		"@angular/platform-browser-dynamic": "^19.2.0",
 		"@angular/router": "^19.2.0",
-		"@prosopo/angular-procaptcha-wrapper": "1.1.0",
+		"@prosopo/angular-procaptcha-wrapper": "1.1.10",
 		"@types/node": "22.13.17",
 		"rxjs": "~7.8.0",
 		"tslib": "^2.3.0",
-		"zone.js": "~0.15.0"
+		"zone.js": "~0.15.0",
+		"@prosopo/config": "3.1.4"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
 	},
 	"devDependencies": {
 		"@angular-builders/custom-webpack": "19.0.0",

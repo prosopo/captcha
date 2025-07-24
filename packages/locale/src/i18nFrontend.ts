@@ -18,7 +18,7 @@ import ChainedBackend from "i18next-chained-backend";
 import HttpBackend from "i18next-http-backend";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { initReactI18next } from "react-i18next";
-import { LanguageSchema, Languages } from "./translations.js";
+import { i18nSharedOptions } from "./i18SharedOptions.js";
 
 const reactOptions: InitOptions = {
 	react: {
@@ -35,18 +35,25 @@ const getLoadPath = (language: string, namespace: string) => {
 	return `${import.meta.url.replace(`/${filename}`, "")}/locales/${language}/${namespace}.json`;
 };
 
-export function initializeI18n() {
+export function initializeI18n(
+	i18nLoadedCallback?: (value: typeof i18n) => void,
+) {
 	if (!i18n.isInitialized) {
 		i18n
 			// @ts-ignore
 			.use(ChainedBackend)
-			.use(I18nextBrowserLanguageDetector)
+			.use(
+				new I18nextBrowserLanguageDetector(null, {
+					order: ["cookie", "localStorage", "navigator"],
+					lookupQuerystring: "lng",
+					lookupCookie: "i18next",
+					lookupLocalStorage: "i18nextLng",
+					caches: ["localStorage", "cookie"],
+				}),
+			)
 			.use(initReactI18next)
 			.init({
-				debug: true,
-				fallbackLng: LanguageSchema.enum.en,
-				namespace: "translation",
-				supportedLngs: Languages,
+				...i18nSharedOptions,
 				backend: {
 					backends: [
 						HttpBackend, // if a namespace can't be loaded via normal http-backend loadPath, then the inMemoryLocalBackend will try to return the correct resources
@@ -64,6 +71,9 @@ export function initializeI18n() {
 				},
 				...reactOptions,
 			} as InitOptions);
+		i18n.on("loaded", () => {
+			i18nLoadedCallback?.(i18n);
+		});
 	}
 	return i18n;
 }

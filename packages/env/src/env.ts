@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
-import { Databases, ProviderDatabase } from "@prosopo/database";
+import {
+	type Logger,
+	ProsopoEnvError,
+	getLogger,
+	parseLogLevel,
+} from "@prosopo/common";
+import { ProviderDatabase } from "@prosopo/database";
+import { Keyring, getPair } from "@prosopo/keyring";
+import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
-import type { ProsopoBasicConfigOutput } from "@prosopo/types";
-import type { IDatabase } from "@prosopo/types-database";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
-import { get } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 
 export class Environment implements ProsopoEnvironment {
-	config: ProsopoBasicConfigOutput;
+	config: ProsopoConfigOutput;
 	db: ProviderDatabase | undefined;
 	defaultEnvironment: EnvironmentTypes;
 	logger: Logger;
@@ -31,22 +35,36 @@ export class Environment implements ProsopoEnvironment {
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
+	envId: string | undefined;
+	ready = false;
 
 	constructor(
-		config: ProsopoBasicConfigOutput,
+		config: ProsopoConfigOutput,
 		pair?: KeyringPair,
 		authAccount?: KeyringPair,
 	) {
 		this.config = config;
 		this.defaultEnvironment = this.config.defaultEnvironment;
-		this.pair = pair;
+		this.pair = pair || getPair(config.account.secret);
 		this.authAccount = authAccount;
-		this.logger = getLogger(this.config.logLevel, "ProsopoEnvironment");
+		this.logger = getLogger(
+			parseLogLevel(this.config.logLevel),
+			"ProsopoEnvironment",
+		);
 
 		this.keyring = new Keyring({
 			type: "sr25519",
 		});
 		if (this.pair) this.keyring.addPair(this.pair);
+		this.envId = randomAsHex(32).slice(0, 32);
+		this.logger.info(() => ({
+			msg: "Environment initialized",
+			data: {
+				envId: this.envId,
+				defaultEnvironment: this.defaultEnvironment,
+				logLevel: this.config.logLevel,
+			},
+		}));
 	}
 
 	async getSigner(): Promise<KeyringPair> {
@@ -95,22 +113,26 @@ export class Environment implements ProsopoEnvironment {
 	}
 
 	async isReady() {
+		if (this.ready) {
+			this.logger.debug(() => ({ msg: "Environment is already ready" }));
+			return;
+		}
 		try {
 			if (this.pair && this.config.account.password && this.pair.isLocked) {
 				this.pair.unlock(this.config.account.password);
 			}
 			await this.getSigner();
-			// make sure contract address is valid before trying to load contract interface
 			if (!this.db) {
 				await this.importDatabase();
 			}
 			if (this.db && !this.db.connected) {
-				this.logger.warn(
-					`Database connection is not ready (state: ${this.db.connection?.readyState}), reconnecting...`,
-				);
+				this.logger.warn(() => ({
+					msg: `Database connection is not ready (state: ${this.db?.connection?.readyState}), reconnecting...`,
+				}));
 				await this.db.connect();
-				this.logger.info("Connected to db");
+				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
+			this.ready = true;
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
 				context: { error: err },
@@ -124,12 +146,18 @@ export class Environment implements ProsopoEnvironment {
 			if (this.config.database) {
 				const dbConfig = this.config.database[this.defaultEnvironment];
 				if (dbConfig) {
-					this.db = new ProviderDatabase(
-						dbConfig.endpoint,
-						dbConfig.dbname,
-						dbConfig.authSource,
-						this.logger,
-					);
+					this.db = new ProviderDatabase({
+						mongo: {
+							url: dbConfig.endpoint,
+							dbname: dbConfig.dbname,
+							authSource: dbConfig.authSource,
+						},
+						redis: {
+							url: this.config.redisConnection.url,
+							password: this.config.redisConnection.password,
+						},
+						logger: this.logger,
+					});
 					await this.db.connect();
 				}
 			}

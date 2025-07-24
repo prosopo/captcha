@@ -22,10 +22,14 @@ export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
 
 export const ClientSettingsSchema = object({
-	captchaType: CaptchaTypeSpec.default(captchaTypeDefault),
-	domains: array(string()).default([...domainsDefault]),
-	frictionlessThreshold: number().default(frictionlessThresholdDefault),
-	powDifficulty: number().default(powDifficultyDefault),
-	imageThreshold: number().default(imageThresholdDefault),
+	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
+	domains: array(string())
+		.optional()
+		.default([...domainsDefault]),
+	frictionlessThreshold: number()
+		.optional()
+		.default(frictionlessThresholdDefault),
+	powDifficulty: number().optional().default(powDifficultyDefault),
+	imageThreshold: number().optional().default(imageThresholdDefault),
 });
 export type IUserSettings = output<typeof ClientSettingsSchema>;

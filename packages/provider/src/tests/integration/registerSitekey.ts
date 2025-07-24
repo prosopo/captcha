@@ -1,3 +1,5 @@
+import { ProviderApi } from "@prosopo/api";
+import { loadBalancer } from "@prosopo/load-balancer";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,38 +13,43 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProviderDatabase } from "@prosopo/database";
-import type { CaptchaType } from "@prosopo/types";
-import type { ClientRecord } from "@prosopo/types-database";
+import {
+	type CaptchaType,
+	ClientSettingsSchema,
+	EnvironmentTypesSchema,
+	type KeyringPair,
+	Tier,
+} from "@prosopo/types";
+import { u8aToHex } from "@prosopo/util";
 
 export const registerSiteKey = async (
 	siteKey: string,
 	captchaType: CaptchaType,
+	adminPair: KeyringPair,
 ): Promise<void> => {
 	try {
-		const username = process.env.PROSOPO_DATABASE_USERNAME || "root";
-		const pw = process.env.PROSOPO_DATABASE_PASSWORD || "root";
-		const host = process.env.PROSOPO_DATABASE_HOST || "localhost";
-		const port = process.env.PROSOPO_DATABASE_PORT || 27017;
-		const db = new ProviderDatabase(
-			`mongodb://${username}:${pw}@${host}:${port}`,
-			process.env.PROSOPO_DATABASE_NAME || "prosopo",
-			process.env.PROSOPO_DATABASE_AUTH_SOURCE || "admin",
+		const providers = await loadBalancer(
+			EnvironmentTypesSchema.enum.development,
 		);
-		await db.connect();
-		console.log("Registering site key", siteKey);
-		await db.updateClientRecords([
-			{
-				account: siteKey,
-				settings: {
-					captchaType: captchaType,
+		for (const provider of providers) {
+			const timestamp = Date.now();
+			const signature = u8aToHex(adminPair.sign(timestamp.toString()));
+
+			const providerApi = new ProviderApi(provider.url, adminPair.address);
+
+			const response = await providerApi.registerSiteKey(
+				siteKey,
+				Tier.Free,
+				ClientSettingsSchema.parse({
+					captchaType,
 					domains: ["localhost", "0.0.0.0", "127.0.0.0", "example.com"],
 					frictionlessThreshold: 0.5,
 					powDifficulty: 4,
-				},
-			} as ClientRecord,
-		]);
-		await db.connection?.close();
+				}),
+				timestamp.toString(),
+				signature,
+			);
+		}
 	} catch (err) {
 		throw new Error(`Failed to register site key: ${err}`);
 	}

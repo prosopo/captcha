@@ -67,6 +67,7 @@ describe("logging", () => {
 			expect(sectionKeysObj[locale]).to.deep.equal(sectionKeysObj.en);
 			// @ts-ignore
 			for (const sectionKey of Object.keys(innerKeysObj[locale])) {
+				console.log(`Checking ${locale} ${sectionKey}`);
 				// @ts-ignore
 				expect(innerKeysObj[locale][sectionKey]).to.deep.equal(
 					// @ts-ignore
