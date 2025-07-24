@@ -17,8 +17,9 @@ source = '''
 output={}
 parsed=parse_json(.message) ?? null
 if parsed != null {
-    del(.message)
     output = parsed
+} else {
+    output.message = .message
 }
 output.host="$OO_HOST"
 output.container_name=.container_name
@@ -92,8 +93,9 @@ source = '''
 output={}
 parsed=parse_json(.message) ?? null
 if parsed != null {
-    del(.message)
     output = parsed
+} else {
+    output.message = .message
 }
 output.host="$OO_HOST"
 output.container_name=.container_name
@@ -154,8 +156,9 @@ source = '''
 output={}
 parsed=parse_json(.message) ?? null
 if parsed != null {
-    del(.message)
     output = parsed
+} else {
+    output.message = .message
 }
 output.host="$OO_HOST"
 output.container_name=.container_name
