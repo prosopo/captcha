@@ -36,7 +36,7 @@ export const Languages = {
 	dutch: "nl",
 	norwegian: "no",
 	polish: "pl",
-	portugeseBrazil: "pt-br",
+	portugeseBrazil: "pt-BR",
 	portuguese: "pt",
 	romanian: "ro",
 	russian: "ru",
@@ -46,7 +46,7 @@ export const Languages = {
 	turkish: "tr",
 	ukrainian: "uk",
 	vietnamese: "vi",
-	chinese: "zh-cn",
+	chinese: "zh-CN",
 } as const;
 
 export const LanguageSchema = z.enum(

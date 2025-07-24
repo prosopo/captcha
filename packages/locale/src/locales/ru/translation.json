@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Отсутствует секретный ключ",
+		"SITE_KEY_NOT_FOUND": "Ключ сайта не найден",
+		"JSON_LOAD_FAILED": "Не удалось загрузить файл JSON",
+		"MNEMONIC_UNDEFINED": "Мнемоника не определена. Укажите мнемонику в переменных среды",
+		"NO_MNEMONIC_OR_SEED": "Мнемоника или seed не предоставлены",
+		"CANT_FIND_KEYRINGPAIR": "Не удается найти пару ключей для {{address}}",
+		"ENVIRONMENT_NOT_READY": "Среда не готова",
+		"INVALID_SIGNATURE": "Неверная подпись",
+		"SITE_KEY_MISSING": "Отсутствует ключ сайта",
+		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
+		"INVALID_TIMESTAMP": "Недопустимый временной штамп"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Недостаточно прав для выполнения этого действия",
+		"MISSING_QUERY_PARAMETERS": "Отсутствуют параметры запроса",
+		"MISSING_AUTHORIZATION_HEADER": "Отсутствует заголовок авторизации",
+		"TIMESTAMP_TOO_OLD": "Слишком старый временной штамп",
+		"FORBIDDEN": "Запрещено",
+		"PROVIDER_VERIFY_FAILED": "Ошибка проверки провайдера",
+		"UNAUTHORIZED": "Не авторизован",
+		"MISSING_BODY": "Отсутствует тело",
+		"NO_CONTENT_TYPE_HEADER": "Заголовок отсутствия типа контента. Предполагается, что тело закодировано в формате JSON, но не удается разобрать.",
+		"CAPTCHA_FAILED": "Вы неправильно ответили на одну или несколько капч. Пожалуйста, попробуйте еще раз",
+		"CAPTCHA_PASSED": "Вы правильно ответили на капч",
+		"BAD_REQUEST": "Некорректный запрос",
+		"USER_VERIFIED": "Пользователь проверен",
+		"USER_NOT_VERIFIED": "Пользователь не проверен",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Пользователь не проверен. Решение капчи устарело",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Пользователь не проверен. Решение капчи не найдено",
+		"USER_ALREADY_VERIFIED": "Это решение уже проверено. Пользователь должен завершить новую капчу",
+		"UNKNOWN": "Неизвестная ошибка API",
+		"SITE_KEY_NOT_REGISTERED": "Ключ сайта не зарегистрирован",
+		"INCORRECT_CAPTCHA_TYPE": "Неверный тип CAPTCHA",
+		"INVALID_SITE_KEY": "Недопустимый ключ сайта",
+		"UNAUTHORIZED_ORIGIN_URL": "Недопустимый URL происхождения",
+		"INVALID_IP": "Недопустимый IP",
+		"INVALID_URL": "Недопустимый URL",
+		"INVALID_BODY": "Недопустимое тело запроса",
+		"PARSE_ERROR": "Ошибка разбора запроса"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Невозможно изменить владельца пользователя",
+		"CANNOT_DELETE_OWN_USER": "Нельзя удалить свою учетную запись",
+		"CANNOT_DELETE_LAST_USER": "Нельзя удалить последнего пользователя",
+		"USER_ALREADY_EXISTS": "Пользователь уже существует",
+		"NO_SUGGESTIONS_FOUND": "Предложения не найдены",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Нельзя деактивировать последний активный сайт"
+	},
 	"TARGET": {
 		"airplanes": "самолеты",
 		"american-flag": "американский флаг",
@@ -312,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
 		"NO_EXTENSION_FOUND": "Расширение не найдено"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Не удалось загрузить файл JSON",
-		"MNEMONIC_UNDEFINED": "Мнемоника не определена. Укажите мнемонику в переменных среды",
-		"NO_MNEMONIC_OR_SEED": "Мнемоника или seed не предоставлены",
-		"CANT_FIND_KEYRINGPAIR": "Не удается найти пару ключей для {{address}}",
-		"ENVIRONMENT_NOT_READY": "Среда не готова",
-		"INVALID_SIGNATURE": "Неверная подпись",
-		"SITE_KEY_MISSING": "Отсутствует ключ сайта",
-		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
-		"INVALID_TIMESTAMP": "Недопустимый временной штамп"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Не удалось закодировать неверный адрес",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Коммитмент решения капчи не существует",
@@ -385,25 +423,6 @@
 		"INVALID_SOLUTION": "Недопустимое решение",
 		"DECRYPTION_ERROR": "Ошибка расшифровки"
 	},
-	"API": {
-		"CAPTCHA_FAILED": "Вы неправильно ответили на одну или несколько капч. Пожалуйста, попробуйте еще раз",
-		"CAPTCHA_PASSED": "Вы правильно ответили на капч",
-		"BAD_REQUEST": "Некорректный запрос",
-		"USER_VERIFIED": "Пользователь проверен",
-		"USER_NOT_VERIFIED": "Пользователь не проверен",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Пользователь не проверен. Решение капчи устарело",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Пользователь не проверен. Решение капчи не найдено",
-		"USER_ALREADY_VERIFIED": "Это решение уже проверено. Пользователь должен завершить новую капчу",
-		"UNKNOWN": "Неизвестная ошибка API",
-		"SITE_KEY_NOT_REGISTERED": "Ключ сайта не зарегистрирован",
-		"INCORRECT_CAPTCHA_TYPE": "Неверный тип CAPTCHA",
-		"INVALID_SITE_KEY": "Недопустимый ключ сайта",
-		"UNAUTHORIZED_ORIGIN_URL": "Недопустимый URL происхождения",
-		"INVALID_IP": "Недопустимый IP",
-		"INVALID_URL": "Недопустимый URL",
-		"INVALID_BODY": "Недопустимое тело запроса",
-		"PARSE_ERROR": "Ошибка разбора запроса"
-	},
 	"CLI": {
 		"PARAMETER_ERROR": "Недопустимый параметр"
 	},
@@ -413,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Отсутствует пара поставщиков",
 		"MISSING_ENV_VARIABLE": "Отсутствует переменная среды",
 		"GENERAL": "Общая ошибка Dev, см. контекст",
-		"MISSING_SECRET_KEY": "Отсутствует секретный ключ",
 		"METHOD_NOT_IMPLEMENTED": "Метод не реализован"
 	},
 	"FS": {

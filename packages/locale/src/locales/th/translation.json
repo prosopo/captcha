@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "ไม่มีคีย์ลับ",
+		"SITE_KEY_NOT_FOUND": "คีย์เว็บไซต์ไม่พบ",
+		"JSON_LOAD_FAILED": "ล้มเหลวในการโหลดไฟล์ JSON",
+		"MNEMONIC_UNDEFINED": "ไม่ได้กำหนด Mnemonic กรุณาตั้งค่า Mnemonic ในตัวแปรสภาพแวดล้อม",
+		"NO_MNEMONIC_OR_SEED": "ไม่มี Mnemonic หรือ Seed ที่ให้มา",
+		"CANT_FIND_KEYRINGPAIR": "ไม่สามารถค้นหา keyringpair สำหรับ {{address}}",
+		"ENVIRONMENT_NOT_READY": "สภาพแวดล้อมไม่พร้อม",
+		"INVALID_SIGNATURE": "ลายเซ็นต์ไม่ถูกต้อง",
+		"SITE_KEY_MISSING": "SITE KEY หายไป",
+		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
+		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "สิทธิ์ไม่เพียงพอในการทำการกระทำนี้",
+		"MISSING_QUERY_PARAMETERS": "ขาดพารามิเตอร์การค้นหา",
+		"MISSING_AUTHORIZATION_HEADER": "หัวข้อการอนุญาตขาดหาย",
+		"TIMESTAMP_TOO_OLD": "ประทับเวลาเก่าเกินไป",
+		"FORBIDDEN": "ห้าม",
+		"PROVIDER_VERIFY_FAILED": "การตรวจสอบผู้ให้บริการล้มเหลว",
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Missing body",
+		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
+		"CAPTCHA_FAILED": "คุณตอบคำถาม captcha ผิดหนึ่งหรือหลายครั้ง กรุณาลองใหม่อีกครั้ง",
+		"CAPTCHA_PASSED": "คุณตอบคำถาม captcha ถูกต้อง",
+		"BAD_REQUEST": "คำขอไม่ถูกต้อง",
+		"USER_VERIFIED": "ยืนยันผู้ใช้",
+		"USER_NOT_VERIFIED": "ผู้ใช้ไม่ได้รับการยืนยัน",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "ผู้ใช้ไม่ได้รับการยืนยัน คำตอบ captcha หมดอายุ",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "ผู้ใช้ไม่ได้รับการยืนยัน ไม่สามารถพบคำตอบ captcha",
+		"USER_ALREADY_VERIFIED": "คำตอบนี้ถูกยืนยันแล้ว ผู้ใช้ควรทำ captcha ใหม่",
+		"UNKNOWN": "ข้อผิดพลาด API ไม่รู้จัก",
+		"SITE_KEY_NOT_REGISTERED": "บล็อกการลงทะเบียนหมายเลขเว็บไม่ถูกต้อง",
+		"INCORRECT_CAPTCHA_TYPE": "ประเภท CAPTCHA ไม่ถูกต้อง",
+		"INVALID_SITE_KEY": "ไม่ถูกต้องหมายเลขเว็บ",
+		"UNAUTHORIZED_ORIGIN_URL": "URL ต้นทางไม่ได้รับอนุญาต",
+		"INVALID_IP": "IP ไม่ถูกต้อง",
+		"INVALID_URL": "URL ไม่ถูกต้อง",
+		"INVALID_BODY": "ข้อมูลไม่ถูกต้อง",
+		"PARSE_ERROR": "ข้อผิดพลาดในการแปลคำขอ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ไม่สามารถแก้ไขผู้ใช้เจ้าของ",
+		"CANNOT_DELETE_OWN_USER": "ไม่สามารถลบบัญชีของคุณเอง",
+		"CANNOT_DELETE_LAST_USER": "ไม่สามารถลบผู้ใช้สุดท้าย",
+		"USER_ALREADY_EXISTS": "ผู้ใช้มีอยู่แล้ว",
+		"NO_SUGGESTIONS_FOUND": "ไม่พบข้อเสนอ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ไม่สามารถปิดใช้งานเว็บไซต์ที่ใช้งานอยู่ครั้งสุดท้าย"
+	},
 	"TARGET": {
 		"airplanes": "เครื่องบิน",
 		"american-flag": "ธงอเมริกัน",
@@ -312,17 +361,6 @@
 		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
 		"NO_EXTENSION_FOUND": "ไม่พบส่วนขยาย"
 	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "ล้มเหลวในการโหลดไฟล์ JSON",
-		"MNEMONIC_UNDEFINED": "ไม่ได้กำหนด Mnemonic กรุณาตั้งค่า Mnemonic ในตัวแปรสภาพแวดล้อม",
-		"NO_MNEMONIC_OR_SEED": "ไม่มี Mnemonic หรือ Seed ที่ให้มา",
-		"CANT_FIND_KEYRINGPAIR": "ไม่สามารถค้นหา keyringpair สำหรับ {{address}}",
-		"ENVIRONMENT_NOT_READY": "สภาพแวดล้อมไม่พร้อม",
-		"INVALID_SIGNATURE": "ลายเซ็นต์ไม่ถูกต้อง",
-		"SITE_KEY_MISSING": "SITE KEY หายไป",
-		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
-		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
-	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "ล้มเหลวในการเข้ารหัสที่อยู่ไม่ถูกต้อง",
 		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "ข้อสรุปแก้ปัญหารหัสผ่านไม่มีอยู่",
@@ -385,25 +423,6 @@
 		"INVALID_SOLUTION": "คำตอบไม่ถูกต้อง",
 		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส"
 	},
-	"API": {
-		"CAPTCHA_FAILED": "คุณตอบคำถาม captcha ผิดหนึ่งหรือหลายครั้ง กรุณาลองใหม่อีกครั้ง",
-		"CAPTCHA_PASSED": "คุณตอบคำถาม captcha ถูกต้อง",
-		"BAD_REQUEST": "คำขอไม่ถูกต้อง",
-		"USER_VERIFIED": "ยืนยันผู้ใช้",
-		"USER_NOT_VERIFIED": "ผู้ใช้ไม่ได้รับการยืนยัน",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "ผู้ใช้ไม่ได้รับการยืนยัน คำตอบ captcha หมดอายุ",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "ผู้ใช้ไม่ได้รับการยืนยัน ไม่สามารถพบคำตอบ captcha",
-		"USER_ALREADY_VERIFIED": "คำตอบนี้ถูกยืนยันแล้ว ผู้ใช้ควรทำ captcha ใหม่",
-		"UNKNOWN": "ข้อผิดพลาด API ไม่รู้จัก",
-		"SITE_KEY_NOT_REGISTERED": "บล็อกการลงทะเบียนหมายเลขเว็บไม่ถูกต้อง",
-		"INCORRECT_CAPTCHA_TYPE": "ประเภท CAPTCHA ไม่ถูกต้อง",
-		"INVALID_SITE_KEY": "ไม่ถูกต้องหมายเลขเว็บ",
-		"UNAUTHORIZED_ORIGIN_URL": "URL ต้นทางไม่ได้รับอนุญาต",
-		"INVALID_IP": "IP ไม่ถูกต้อง",
-		"INVALID_URL": "URL ไม่ถูกต้อง",
-		"INVALID_BODY": "ข้อมูลไม่ถูกต้อง",
-		"PARSE_ERROR": "ข้อผิดพลาดในการแปลคำขอ"
-	},
 	"CLI": {
 		"PARAMETER_ERROR": "พารามิเตอร์ไม่ถูกต้อง"
 	},
@@ -413,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "คู่ให้บริการที่ขาดหาย",
 		"MISSING_ENV_VARIABLE": "ตัวแปรสภาพแวดล้อมที่ขาดหาย",
 		"GENERAL": "ข้อผิดพลาด Dev ทั่วไป ดูบริบท",
-		"MISSING_SECRET_KEY": "คีย์ลับที่ขาดหาย",
 		"METHOD_NOT_IMPLEMENTED": "เมธอดยังไม่ได้นำมาใช้"
 	},
 	"FS": {
