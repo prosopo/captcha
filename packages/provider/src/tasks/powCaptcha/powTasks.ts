@@ -11,14 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
+
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import {
-	ProsopoApiError,
-	ProsopoEnvError,
-	getLoggerDefault,
-} from "@prosopo/common";
+import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -27,11 +24,11 @@ import {
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
+import { validateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -91,7 +88,6 @@ export class PowCaptchaManager extends CaptchaManager {
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
-		difficulty: number,
 		providerChallengeSignature: string,
 		nonce: number,
 		timeout: number,
@@ -122,10 +118,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug("No record of this challenge");
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
 			// no record of this challenge
 			return false;
 		}
+
+		const difficulty = challengeRecord.difficulty;
 
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecord(
@@ -168,17 +168,30 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} dappAccount - the dapp that is requesting the captcha
 	 * @param {string} challenge - the starting string for the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+	 * @param ip
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
+		ip?: string,
 	): Promise<{ verified: boolean; score?: number }> {
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
 		if (!challengeRecord) {
-			this.logger.debug(`No record of this challenge: ${challenge}`);
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
+			return { verified: false };
+		}
+
+		const ipValidation = validateIpAddress(
+			ip,
+			challengeRecord.ipAddress,
+			this.logger,
+		);
+		if (!ipValidation.isValid) {
 			return { verified: false };
 		}
 
@@ -218,10 +231,12 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 			if (tokenRecord) {
 				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
-				this.logger.info({
-					tscoreComponents: tokenRecord?.scoreComponents,
-					score: score,
-				});
+				this.logger.info(() => ({
+					data: {
+						tscoreComponents: { ...(tokenRecord?.scoreComponents || {}) },
+						score,
+					},
+				}));
 			}
 		}
 

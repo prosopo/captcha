@@ -11,8 +11,33 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { buildEnginesCommand } from "./engines.js";
+import { buildJsonCommand } from "./json.js";
+import { buildLicenseCommand } from "./license.js";
+import { buildRedirectsCommand } from "./redirects.js";
+import { buildRefsCommand } from "./refs.js";
+import { buildTestCheckCommand } from "./testCheck.js";
+import { buildTsconfigIncludesCommand } from "./tsconfigIncludes.js";
+import { buildWorkflowNamesCommand } from "./workflowNames.js";
+
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
 const main = async () => {
-	console.log("index.ts");
+	const args = await yargs(hideBin(process.argv))
+		.command(buildEnginesCommand())
+		.command(buildJsonCommand())
+		.command(buildTsconfigIncludesCommand())
+		.command(buildWorkflowNamesCommand())
+		.command(buildLicenseCommand())
+		.command(buildRedirectsCommand())
+		.command(buildRefsCommand())
+		.command(buildTestCheckCommand())
+		.demandCommand()
+		.strict()
+		.help()
+		.parse();
 };
 
 main();

@@ -84,6 +84,19 @@ export enum CaptchaStatus {
 	disapproved = "Disapproved",
 }
 
+export enum StoredStatusNames {
+	notStored = "notStored",
+	userSubmitted = "userSubmitted",
+	serverChecked = "serverChecked",
+	stored = "stored",
+}
+
+export type StoredStatus =
+	| StoredStatusNames.notStored
+	| StoredStatusNames.userSubmitted
+	| StoredStatusNames.serverChecked
+	| StoredStatusNames.stored;
+
 type Hash = string | number[];
 
 export type Commit = {

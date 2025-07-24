@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha Proof of Work Mode - Explicit Rendering</title>
+<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <script type="module">
+        // Function to update CAPTCHA status display is now provided by status-log-injector
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
+            
+            // Monitor DOM for CAPTCHA initialization
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            const node = mutation.addedNodes[i];
+                            if (node.classList && (node.classList.contains('procaptcha') || 
+                                  node.querySelector && node.querySelector('.procaptcha'))) {
+                                updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
+                                observer.disconnect();
+                                break;
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+        
+        // updateCaptchaStatus is now provided by status-log-injector
+    </script>
+</head>
+<body>
+    <div class="mui-container">
+        <h1>Procaptcha Proof of Work Mode - Explicit Rendering</h1>
+        <p>This example demonstrates how to use Procaptcha in Proof of Work mode with explicit rendering.</p>
+        
+        <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
+        
+        <form id="demo-form" class="mui-form">
+            <h2>Example Form</h2>
+            
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required />
+            </div>
+            
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required />
+            </div>
+            
+            <!-- The container for the CAPTCHA -->
+            <div id="procaptcha-container"></div>
+            
+            <button type="submit" class="mui-btn mui-btn--raised">Submit</button>
+            
+            <div id="error"></div>
+        </form>
+        
+        <div id="result" class="info-box" style="display: none;"></div>
+        
+        <!-- Console output display area -->
+        <div id="console-output" class="console-output" style="display: none;"></div>
+        
+        <!-- Explanation will be injected by the explanation-injector plugin -->
+    </div>
+    
+    <script type="module">
+        import { render } from "%VITE_BUNDLE_URL%"
+        
+        // Form validation function
+        function validateForm() {
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const errorDisplay = document.getElementById('error');
+            
+            if (!nameInput.value || !emailInput.value) {
+                errorDisplay.textContent = 'Please fill out all fields';
+                errorDisplay.style.display = 'block';
+                window.updateCaptchaStatus('Form validation failed: Empty fields', 'error');
+                return false;
+            }
+            
+            // Basic email validation
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(emailInput.value)) {
+                errorDisplay.textContent = 'Please enter a valid email address';
+                errorDisplay.style.display = 'block';
+                window.updateCaptchaStatus('Form validation failed: Invalid email format', 'error');
+                return false;
+            }
+            
+            errorDisplay.style.display = 'none';
+            window.updateCaptchaStatus('Form validation passed', 'info');
+            return true;
+        }
+        
+        // Callback for successful CAPTCHA verification
+        function handleCaptchaResponse(token) {
+            console.log('Procaptcha verified, token:', token);
+            window.updateCaptchaStatus('Challenge passed successfully!', 'success');
+            window.updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            
+            // Display result
+            const resultElement = document.getElementById('result');
+            resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
+- Name: ${name}<br>
+- Email: ${email}<br>
+- Procaptcha verified: Yes`;
+            resultElement.style.display = 'block';
+            
+            window.updateCaptchaStatus('Form submission completed', 'success');
+        }
+        
+        // Callback for failed CAPTCHA verification
+        function handleCaptchaFailed() {
+            console.log('Captcha verification failed');
+            window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+            document.getElementById('error').textContent = 'CAPTCHA verification failed. Please try again.';
+            document.getElementById('error').style.display = 'block';
+        }
+        
+        // Wait for DOM content to be loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
+            
+            // Render the CAPTCHA
+            const widgetId = render(document.getElementById('procaptcha-container'), {
+                siteKey: import.meta.env.PROSOPO_SITE_KEY_POW,
+                captchaType: "pow",
+                callback: handleCaptchaResponse,
+                "failed-callback": handleCaptchaFailed
+            });
+            
+            window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
+            
+            // Add form submit handler
+            document.getElementById('demo-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                window.updateCaptchaStatus('Form submission attempted', 'info');
+                if (validateForm()) {
+                    // Form is valid, CAPTCHA verification will be handled by the callback
+                    window.updateCaptchaStatus('Waiting for CAPTCHA verification', 'info');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

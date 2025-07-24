@@ -1,8 +1,16 @@
 {
 	"name": "@prosopo/flux",
-	"version": "2.6.0",
+	"version": "2.6.13",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"bin": {
 		"flux": "dist/index.js"
 	},
@@ -12,27 +20,31 @@
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"cli": "node dist/index.js"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@noble/curves": "1.6.0",
+		"@noble/curves": "1.9.2",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "2.6.0",
-		"@prosopo/config": "2.6.0",
-		"@prosopo/dotenv": "2.6.0",
-		"@prosopo/util": "2.6.0",
+		"@prosopo/common": "3.1.3",
+		"@prosopo/config": "3.1.4",
+		"@prosopo/dotenv": "3.0.8",
+		"@prosopo/util": "3.0.6",
+		"@typegoose/auto-increment": "4.13.0",
+		"axios": "1.10.0",
+		"esbuild": "0.25.6",
 		"express": "4.21.2",
-		"openpgp": "5.11.2",
+		"openpgp": "5.11.3",
 		"qs": "6.13.0",
 		"socket.io-client": "4.7.5",
 		"varuint-bitcoin": "1.1.2",
+		"webpack-dev-server": "5.2.2",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"
 	},
@@ -44,11 +56,11 @@
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
 	}
 }

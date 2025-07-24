@@ -1,0 +1,50 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["dom", "dom.iterable", "esnext"]
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../../packages/account"
+		},
+		{
+			"path": "../../packages/cli"
+		},
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/datasets"
+		},
+		{
+			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/env"
+		},
+		{
+			"path": "../../packages/keyring"
+		},
+		{
+			"path": "../../packages/provider"
+		},
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/types-database"
+		},
+		{
+			"path": "../../packages/types-env"
+		},
+		{
+			"path": "../../packages/util"
+		},
+		{
+			"path": "../../dev/config"
+		}
+	]
+}

@@ -15,16 +15,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse, stringify } from "@iarna/toml";
-import { getLogLevel, getLogger } from "@prosopo/common";
-import { getRootDir } from "@prosopo/config";
+import { getLogger, parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
+import { getRootDir } from "@prosopo/workspace";
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created
 loadEnv();
-const logLevel = getLogLevel();
+const logLevel = parseLogLevel(process.env.PROSOPO_LOG_LEVEL);
 const log = getLogger(logLevel, "setVersion");
-log.info("Log level:", logLevel);
+log.info(() => ({ data: { logLevel } }));
 
 const parseVersion = (version: string) => {
 	try {
@@ -58,18 +58,18 @@ const find = (pth: string, filter: (pth: string) => boolean): string[] => {
 				results.push(...find(fullPath, filter));
 			}
 		} catch (e) {
-			log.debug("Not a directory: {fullPath}");
+			log.debug(() => ({ data: { fullPath }, msg: "Not a directory" }));
 		}
 	}
 	return results;
 };
 
 export default async function setVersion(versionIn: string, ignore?: string[]) {
-	log.info("Setting version to ", versionIn);
+	log.info(() => ({ data: { versionIn }, msg: "Setting version to" }));
 	const version = parseVersion(versionIn);
 	const root = getRootDir();
 	const ignorePaths = ["node_modules", "cargo-cache", ...(ignore ?? [])];
-	log.debug("Ignoring paths: ", ignorePaths);
+	log.debug(() => ({ data: { ignorePaths }, msg: "Ignoring paths" }));
 	// walk through all files finding .json or .toml
 	const files = find(root, (pth) => {
 		// ignore node_modules and any user specified paths
@@ -84,7 +84,7 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 	files
 		.filter((pth) => path.extname(pth) === ".json")
 		.forEach((pth) => {
-			log.debug("setting version in", pth);
+			log.debug(() => ({ data: { pth }, msg: "setting version in" }));
 			const content = fs.readFileSync(pth, "utf8");
 			// replace version in all json files
 			const jsonContent = JSON.parse(content);
@@ -102,7 +102,10 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 				for (const key of Object.keys(obj)) {
 					if (key.startsWith("@prosopo") && !key.includes("typechain")) {
 						// and replace version
-						log.debug(`setting ${key} to ${version} in ${pth}`);
+						log.debug(() => ({
+							data: { key, version, pth },
+							msg: "setting dependency version",
+						}));
 						obj[key] = version;
 					}
 				}
@@ -119,7 +122,7 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 			return !ignorePaths.some((ignorePath) => pth.includes(ignorePath));
 		})
 		.forEach((pth) => {
-			log.debug("setting version in", pth);
+			log.debug(() => ({ data: { pth }, msg: "setting version in" }));
 			const content = fs.readFileSync(pth, "utf8");
 			// replace version in all toml files
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -142,7 +145,10 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 	files
 		.filter((pth) => path.extname(pth) === ".toml")
 		.forEach((pth) => {
-			log.debug("setting dependency versions in", pth);
+			log.debug(() => ({
+				data: { pth },
+				msg: "setting dependency versions in",
+			}));
 			const content = fs.readFileSync(pth, "utf8");
 			// replace version in all toml files
 			const tomlContent = parse(content);

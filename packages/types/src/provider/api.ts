@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiJsonError } from "@prosopo/common";
+import type { ApiJsonError, LogObject } from "@prosopo/common";
 import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
@@ -59,6 +59,9 @@ export const ApiPrefix = "/v1/prosopo" as const;
 
 export type IPAddress = Address4 | Address6;
 
+export const DEFAULT_SOLVED_COUNT = 2;
+export const DEFAULT_UNSOLVED_COUNT = 0;
+
 export enum ClientApiPaths {
 	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
 	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
@@ -72,6 +75,7 @@ export enum ClientApiPaths {
 }
 
 export enum PublicApiPaths {
+	Healthz = "/healthz",
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
 }
 
@@ -225,6 +229,7 @@ export const VerifySolutionBody = object({
 	[ApiParams.maxVerifiedTime]: number()
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
+	[ApiParams.ip]: string().optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -246,6 +251,12 @@ export interface ApiResponse {
 export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
+}
+
+export interface UpdateDetectorKeyResponse extends ApiResponse {
+	data: {
+		activeDetectorKeys: string[];
+	};
 }
 
 export interface ImageVerificationResponse extends VerificationResponse {
@@ -283,6 +294,7 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.verifiedTimeout]: number()
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
+	[ApiParams.ip]: string().optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
@@ -335,6 +347,11 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.token]: string(),
 	[ApiParams.user]: string(),
 });
+
+export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
+	typeof GetFrictionlessCaptchaChallengeRequestBody
+>;
+
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
 >;
@@ -360,12 +377,12 @@ export const ProsopoCaptchaCountConfigSchema = object({
 		count: number().positive(),
 	})
 		.optional()
-		.default({ count: 1 }),
+		.default({ count: DEFAULT_SOLVED_COUNT }),
 	unsolved: object({
 		count: number().nonnegative(),
 	})
 		.optional()
-		.default({ count: 0 }),
+		.default({ count: DEFAULT_UNSOLVED_COUNT }),
 });
 
 export type ProsopoCaptchaCountConfigSchemaInput = input<

@@ -1,0 +1,15 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext"
+	},
+	"include": ["./src"],
+	"references": [
+		{
+			"path": "../../../../packages/procaptcha-wrapper"
+		}
+	]
+}

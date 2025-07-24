@@ -20,21 +20,18 @@ import type { Drop } from "esbuild";
 import css from "rollup-plugin-import-css";
 import type { UserConfig } from "vite";
 import { filterDependencies, getDependencies } from "../dependencies.js";
-import { getLogger } from "../logger.js";
 import { default as ClosePlugin } from "./vite-plugin-close-and-copy.js";
 import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js";
-
-const logger = getLogger("vite.backend.config.js");
 
 export default async function (
 	packageName: string,
 	packageVersion: string,
 	bundleName: string,
 	packageDir: string,
-	entry: string,
+	entry: string | string[],
 	command?: string,
 	mode?: string,
-	optionalBaseDir = "../..",
+	outputDir?: string,
 ): Promise<UserConfig> {
 	const isProduction = mode === "production";
 
@@ -42,8 +39,10 @@ export default async function (
 	const { dependencies: deps, optionalPeerDependencies } =
 		await getDependencies(packageName, true);
 
-	// Output directory is relative to directory of the package
-	const outDir = path.resolve(packageDir, "dist/bundle");
+	// Output directory is custom or relative to directory of the package
+	const outDir = outputDir
+		? path.resolve(outputDir)
+		: path.resolve(packageDir, "dist/bundle");
 
 	// Get rid of any dependencies we don't want to bundle
 	const { external, internal } = filterDependencies(deps, [
@@ -61,7 +60,7 @@ export default async function (
 		...optionalPeerDependencies,
 	];
 
-	logger.info(
+	console.info(
 		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
 	);
 
@@ -77,9 +76,14 @@ export default async function (
 		}),
 	};
 
-	logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
+	console.info(`Defined vars ${JSON.stringify(define, null, 2)}`);
 
-	const entryAbsolute = path.resolve(packageDir, entry);
+	let entriesAbsolute: string[];
+	if (typeof entry === "string") {
+		entriesAbsolute = [path.resolve(packageDir, entry)];
+	} else {
+		entriesAbsolute = entry.map((e) => path.resolve(packageDir, e));
+	}
 
 	// drop console logs if in production mode
 	const drop: Drop[] | undefined =
@@ -111,7 +115,7 @@ export default async function (
 			ssr: true,
 			target: "node18",
 			lib: {
-				entry: entryAbsolute,
+				entry: entriesAbsolute,
 				name: bundleName,
 				fileName: `${bundleName}.[name].bundle.js`,
 				formats: ["es"],

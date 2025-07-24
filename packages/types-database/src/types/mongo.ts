@@ -20,6 +20,7 @@ export interface IDatabase {
 	dbname: string;
 	connection?: Connection;
 	logger: Logger;
+	connected: boolean;
 
 	getConnection(): Connection;
 

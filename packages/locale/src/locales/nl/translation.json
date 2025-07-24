@@ -1,6 +1,19 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Ontbrekende geheime sleutel",
+		"SITE_KEY_NOT_FOUND": "Site sleutel niet gevonden",
+		"JSON_LOAD_FAILED": "Laden van JSON-bestand mislukt",
+		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Stel de mnemonic in omgevingsvariabelen in",
+		"NO_MNEMONIC_OR_SEED": "Geen mnemonic of seed opgegeven",
+		"CANT_FIND_KEYRINGPAIR": "Kan het sleutelhangerpaar niet vinden voor {{adres}}",
+		"ENVIRONMENT_NOT_READY": "Omgeving is niet gereed",
+		"INVALID_SIGNATURE": "Ongeldige handtekening",
+		"SITE_KEY_MISSING": "SITE KEY ontbreekt",
+		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
+		"INVALID_TIMESTAMP": "Ongeldige tijdstempel"
+	},
 	"TARGET": {
-		"yo-yo": "",
+		"yo-yo": "jojo",
 		"airplanes": "vliegtuigen",
 		"american-flag": "Amerikaanse vlag",
 		"bonsai": "bonsai",
@@ -298,6 +311,42 @@
 		"xylophone": "xylofoon",
 		"zebra": "zebra"
 	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Onvoldoende rechten om deze actie uit te voeren",
+		"MISSING_QUERY_PARAMETERS": "Ontbrekende query parameters",
+		"MISSING_AUTHORIZATION_HEADER": "Ontbrekende autorisatie header",
+		"TIMESTAMP_TOO_OLD": "Tijdstempel te oud",
+		"FORBIDDEN": "Verboden",
+		"PROVIDER_VERIFY_FAILED": "Provider verificatie mislukt",
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Ontbrekend lichaam",
+		"NO_CONTENT_TYPE_HEADER": "Geen content-type koptekst. Aangenomen dat het lichaam gecodeerd is in JSON maar niet kon worden geparseerd.",
+		"CAPTCHA_FAILED": "Je hebt één of meer captchas incorrect beantwoord. Probeer het opnieuw",
+		"CAPTCHA_PASSED": "Je hebt de captchas correct beantwoord",
+		"BAD_REQUEST": "Ongeldige aanvraag",
+		"USER_VERIFIED": "Gebruiker geverifieerd",
+		"USER_NOT_VERIFIED": "Gebruiker niet geverifieerd",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Gebruiker niet geverifieerd. Captcha-oplossing is verlopen",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Gebruiker niet geverifieerd. Geen captcha-oplossing gevonden",
+		"USER_ALREADY_VERIFIED": "Deze oplossing is al geverifieerd. Gebruiker moet een nieuwe captcha voltooien",
+		"UNKNOWN": "Onbekende API-fout",
+		"SITE_KEY_NOT_REGISTERED": "Site-sleutel niet geregistreerd",
+		"INCORRECT_CAPTCHA_TYPE": "Onjuist CAPTCHA-type",
+		"INVALID_SITE_KEY": "Ongeldige site-sleutel",
+		"UNAUTHORIZED_ORIGIN_URL": "Ongeautoriseerde oorsprongs-URL",
+		"INVALID_IP": "Ongeldig IP-adres",
+		"INVALID_URL": "Ongeldige URL",
+		"INVALID_BODY": "Ongeldige body",
+		"PARSE_ERROR": "Fout bij parsen van aanvraag"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Kan eigenaar gebruiker niet wijzigen",
+		"CANNOT_DELETE_OWN_USER": "Kan uw eigen account niet verwijderen",
+		"CANNOT_DELETE_LAST_USER": "Kan laatste gebruiker niet verwijderen",
+		"USER_ALREADY_EXISTS": "Gebruiker bestaat al",
+		"NO_SUGGESTIONS_FOUND": "Geen suggesties gevonden",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan de laatste actieve site niet deactiveren"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot-extensie niet gevonden"
 	},
@@ -311,17 +360,6 @@
 		"NO_ACCOUNTS_FOUND": "Geen accounts gevonden",
 		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
 		"NO_EXTENSION_FOUND": "Geen extensie gevonden"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Laden van JSON-bestand mislukt",
-		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Stel de mnemonic in omgevingsvariabelen in",
-		"NO_MNEMONIC_OR_SEED": "Geen mnemonic of seed opgegeven",
-		"CANT_FIND_KEYRINGPAIR": "Kan het sleutelhangerpaar niet vinden voor {{adres}}",
-		"ENVIRONMENT_NOT_READY": "Omgeving is niet gereed",
-		"INVALID_SIGNATURE": "Ongeldige handtekening",
-		"SITE_KEY_MISSING": "SITE KEY ontbreekt",
-		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
-		"INVALID_TIMESTAMP": "Ongeldige tijdstempel"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Mislukt om ongeldig adres te coderen",
@@ -385,25 +423,6 @@
 		"INVALID_SOLUTION": "Ongeldige oplossing",
 		"DECRYPTION_ERROR": "Fout bij decoderen"
 	},
-	"API": {
-		"CAPTCHA_FAILED": "Je hebt één of meer captchas incorrect beantwoord. Probeer het opnieuw",
-		"CAPTCHA_PASSED": "Je hebt de captchas correct beantwoord",
-		"BAD_REQUEST": "Ongeldige aanvraag",
-		"USER_VERIFIED": "Gebruiker geverifieerd",
-		"USER_NOT_VERIFIED": "Gebruiker niet geverifieerd",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Gebruiker niet geverifieerd. Captcha-oplossing is verlopen",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Gebruiker niet geverifieerd. Geen captcha-oplossing gevonden",
-		"USER_ALREADY_VERIFIED": "Deze oplossing is al geverifieerd. Gebruiker moet een nieuwe captcha voltooien",
-		"UNKNOWN": "Onbekende API-fout",
-		"SITE_KEY_NOT_REGISTERED": "Site-sleutel niet geregistreerd",
-		"INCORRECT_CAPTCHA_TYPE": "Onjuist CAPTCHA-type",
-		"INVALID_SITE_KEY": "Ongeldige site-sleutel",
-		"UNAUTHORIZED_ORIGIN_URL": "Ongeautoriseerde oorsprongs-URL",
-		"INVALID_IP": "Ongeldig IP-adres",
-		"INVALID_URL": "Ongeldige URL",
-		"INVALID_BODY": "Ongeldige body",
-		"PARSE_ERROR": "Fout bij parsen van aanvraag"
-	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ongeldige parameter"
 	},
@@ -413,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Ontbrekend providerpaar",
 		"MISSING_ENV_VARIABLE": "Ontbrekende omgevingsvariabele",
 		"GENERAL": "Algemene Dev-fout, zie context",
-		"MISSING_SECRET_KEY": "Ontbrekende geheime sleutel",
 		"METHOD_NOT_IMPLEMENTED": "Methode niet geïmplementeerd"
 	},
 	"FS": {

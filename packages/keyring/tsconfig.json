@@ -7,14 +7,22 @@
 		"allowJs": true,
 		"jsxImportSource": "@emotion/react"
 	},
-	"include": ["src", "src/**/*.json"],
-
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
 			"path": "../common"
 		},
 		{
 			"path": "../types"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

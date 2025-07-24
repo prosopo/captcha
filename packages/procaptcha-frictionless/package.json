@@ -1,9 +1,9 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.6.0",
+	"version": "2.6.35",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
-	"main": "./dist/index.js",
+	"main": "dist/index.js",
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
@@ -12,39 +12,47 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
-	"types": "./dist/index.d.ts",
+	"types": "dist/index.d.ts",
 	"source": "./src/index.ts",
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/detector": "2.6.0",
-		"@prosopo/locale": "2.6.0",
-		"@prosopo/procaptcha-pow": "2.6.0",
-		"@prosopo/procaptcha-react": "2.6.0",
-		"@prosopo/types": "2.6.0",
-		"@prosopo/widget-skeleton": "2.6.0",
+		"@prosopo/detector": "3.0.4",
+		"@prosopo/locale": "3.1.3",
+		"@prosopo/procaptcha-pow": "2.7.21",
+		"@prosopo/procaptcha-react": "2.6.35",
+		"@prosopo/types": "3.0.7",
+		"@prosopo/widget-skeleton": "2.6.4",
+		"@typegoose/auto-increment": "4.13.0",
+		"axios": "1.10.0",
+		"esbuild": "0.25.6",
 		"express": "4.21.2",
-		"react": "18.3.1"
+		"react": "18.3.1",
+		"@prosopo/config": "3.1.4",
+		"openpgp": "5.11.3",
+		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.6.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
 	},
 	"repository": {
