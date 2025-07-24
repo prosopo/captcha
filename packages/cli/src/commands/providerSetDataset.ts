@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
+import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import * as z from "zod";
@@ -46,12 +46,21 @@ export default (
 				const tasks = new Tasks(env);
 				const file = z.string().parse(argv.file);
 				const jsonFile = loadJSONFile(file) as JSON;
-				logger.info(`Loaded JSON from ${file}`);
+				logger.info(() => ({
+					data: { file },
+					msg: "Loading JSON",
+				}));
 				const result =
 					await tasks.datasetManager.providerSetDatasetFromFile(jsonFile);
-				logger.info(JSON.stringify(result, null, 2));
+				logger.info(() => ({
+					data: { file },
+					msg: "Loaded JSON",
+				}));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({
+					err,
+					msg: "Error loading JSON",
+				}));
 			}
 		},
 		middlewares: [],

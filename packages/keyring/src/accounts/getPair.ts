@@ -12,25 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Keyring } from "@polkadot/keyring";
-import type { KeyringPair, KeyringPair$Json } from "@polkadot/keyring/types";
-import { cryptoWaitReady } from "@polkadot/util-crypto";
-import { mnemonicValidate } from "@polkadot/util-crypto/mnemonic";
-import type { KeypairType } from "@polkadot/util-crypto/types";
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
 import { ProsopoEnvError } from "@prosopo/common";
 import type { PolkadotSecretJSON } from "@prosopo/types";
-
-export async function getPairAsync(
-	secret?: string | KeyringPair$Json | PolkadotSecretJSON,
-	account?: string | Uint8Array,
-	pairType?: KeypairType,
-	ss58Format?: number,
-): Promise<KeyringPair> {
-	await cryptoWaitReady();
-	return getPair(secret, account, pairType, ss58Format);
-}
+import type { KeyringPair, KeyringPair$Json } from "@prosopo/types";
+import { mnemonicValidate } from "@prosopo/util-crypto";
+import type { KeypairType } from "@prosopo/util-crypto";
+import { Keyring } from "../keyring/keyring.js";
 
 export function getPair(
 	secret?: string | KeyringPair$Json | PolkadotSecretJSON,
@@ -51,7 +40,7 @@ export function getPair(
 		if (isHex(secret)) {
 			return keyring.addFromSeed(hexToU8a(secret));
 		}
-		if (secret.startsWith("//")) {
+		if (secret.includes("//")) {
 			return keyring.addFromUri(secret);
 		}
 		try {
@@ -62,13 +51,13 @@ export function getPair(
 			const keyring = new Keyring({ type: content[1], ss58Format });
 			return keyring.addFromJson(json as KeyringPair$Json);
 		} catch (e) {
-			throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED", {
+			throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY", {
 				context: { error: e },
 			});
 		}
 	} else if (typeof secret === "object") {
 		return keyring.addFromJson(secret as KeyringPair$Json);
 	} else {
-		throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED");
+		throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY");
 	}
 }

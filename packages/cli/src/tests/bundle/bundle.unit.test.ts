@@ -1,6 +1,6 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { getCliPkgDir } from "@prosopo/config";
+import { getCliPkgDir } from "@prosopo/workspace";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,6 @@ describe("provider bundle", () => {
 		const { stdout: runOut, stderr: runErr } = await execPromise(
 			`cd ${rootDir} && node dist/bundle/provider.cli.bundle.js version`,
 		);
-		assert(runOut.includes("Version:"));
+		assert(/{"version":"\d+\.\d+\.\d+"}/.test(runOut));
 	}, 120000);
 });

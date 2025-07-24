@@ -1,246 +1,459 @@
-# release newly bumped packages to the registry
-# this workflow does not bump the version numbers or handle anything to do with that!
-
 name: release
 
 on:
-    push:
-        branches: # on push to these branches
-            - main
-            - build/*
-    workflow_dispatch:
+  push:
+    branches: # on push to these branches
+      - main
+      - build/*
+  workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: false # queue the new runs until previous have finished. This avoids publishing multiple builds at the same time, which may cause issues with the registry
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false # queue the new runs until previous have finished. This avoids version bumps overlapping with each other
 
 defaults:
-    run:
-        shell: bash
+  run:
+    shell: bash
+
+env:
+  affected: '[]' # default to empty array
+  prerelease: 'false' # default to false, will be set to true if there are changesets and not on main branch
+  BRANCH_PROTECTION_DISABLED: 'true' # bypass husky check
+  NODE_ENV: "production"
 
 jobs:
-    release:
-        name: release
-        runs-on: ubuntu-latest
-        steps:
-            - name: Print contexts
-              uses: prosopo/captcha/.github/actions/print_contexts@gha
-              with:
-                    INPUTS_CONTEXT: ${{ toJson(inputs) }}
-                    NEEDS_CONTEXT: ${{ toJson(needs) }}
-                    VARS_CONTEXT: ${{ toJson(vars) }}
-                    SECRETS_CONTEXT: ${{ toJson(secrets) }}
-        
-            - name: Authenticate GitHub CLI
-              run: |
-                set -x
-                echo "${{ secrets.PROSOPONATOR_PAT }}" | gh auth login --with-token
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print contexts
+        uses: prosopo/captcha/.github/actions/print_contexts@gha
+        with:
+          INPUTS_CONTEXT: ${{ toJson(inputs) }}
+          NEEDS_CONTEXT: ${{ toJson(needs) }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-            - uses: actions/checkout@v4
-              with:
-                  submodules: 'recursive'
-                  token: ${{ secrets.PROSOPONATOR_PAT }}
-                  fetch-depth: 0 # fetch all history so we can tag the commits
+      - name: Set NX_PARALLEL environment variable
+        run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
 
-            - name: git config
-              run: |
-                set -x
-                git config user.name "prosoponator[bot]"
-                git config user.email "dev@prosopo.io"
+      - name: Get token for gh app token
+        id: app_token
+        uses: peter-murray/workflow-application-token-action@v3
+        with:
+          application_id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
 
-            - uses: prosopo/captcha/.github/actions/npm@gha
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0 # fetch all history
 
-            - name: setup npm registry
-              run: |
-                set -x
-                echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-                echo "//npm.pkg.github.com/:_authToken=${{ secrets.PROSOPONATOR_PAT }}" >> .npmrc
+      - name: setup npm registry
+        run: |
+          set -x
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.PROSOPONATOR_PAT }}" >> ~/.npmrc
 
-            - name: authenticate npm registry
-              run: |
-                set -x
-                npm whoami --registry https://registry.npmjs.org/
+      - name: authenticate npm registry
+        run: |
+          set -x
+          npm whoami --registry https://registry.npmjs.org/
 
-            - name: authenticate gh registry
-              run: |
-                set -x
-                npm whoami --registry https://npm.pkg.github.com/
+      - name: authenticate gh registry
+        run: |
+          set -x
+          npm whoami --registry https://npm.pkg.github.com/
 
-            # find all pkgs that have changed version
-            - name: find bumped packages
-              run: |
-                set -x
-                # find the packages in the workspace, excluding those from submodules (as these are managed in their own repos)
-                pkgs=$(npm run --workspaces env | grep npm_package_json | cut -d '=' -f 2 | grep -vE "$(git config --file .gitmodules --get-regexp path | awk '{print $2}' | xargs printf "$(pwd)/%s\n" | sed 's|^|^|; s|$|/|' | paste -sd'|' -)")
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-                affected="[]"
-                for pkg in $pkgs; do
-                  # get the package name
-                  name=$(cat "$pkg" | jq -r '.name')
-                  # get the package version
-                  version=$(cat "$pkg" | jq -r '.version')
-                  # construct the tag
-                  tag="$name@$version"
-                  # check if the tag exists
-                  if git rev-parse "$tag"; then
-                    continue
-                  else
-                    # tag does not exist, add it to the list of packages to publish
-                    affected=$(echo "$affected" | jq -c --arg name "$name" --arg version "$version" --arg tag "$tag" --arg path "$pkg" '. + [{name: $name, version: $version, tag: $tag, path: $path}]')
-                  fi
-                done
+      - name: Export vars to env
+        run: |
+          echo '${{ toJson(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
 
-                echo "affected=$affected"
+      - name: git config
+        run: |
+          set -x
+          git config user.name "prosoponator[bot]"
+          git config user.email "dev@prosopo.io"
 
-                # put the list of affected pkgs into the env
-                echo "affected=$affected" >> $GITHUB_ENV
 
-            - name: check tags available on registries
-              run: |
-                set -x
-                # check if the tags are available on npm
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+      - run: npm ci --ignore-scripts --include=dev
 
-                for pkg in $affected; do
-                  # get the package tag
-                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
-                  # check if the tag exists on npm
-                  if ! npm view "$tag" --registry https://registry.npmjs.org/ >/dev/null 2>&1; then
-                    echo "Tag $tag is available on npm"
-                  else
-                    echo "Error: Tag $tag already exists on npm"
-                    exit 1
-                  fi
-                  if ! npm view "$tag" --registry https://npm.pkg.github.com/ >/dev/null 2>&1; then
-                    echo "Tag $tag is available on gh"
-                  else
-                    echo "Error: Tag $tag already exists on gh"
-                    exit 1
-                  fi
-                done
+      - name: detect changesets
+        run: |
+          if find .changeset -name "*.md" | grep -q . ; then
+            echo "Found changesets"
+            echo "changesets=true" >> $GITHUB_ENV
+          else
+            echo "No changesets found"
+            echo "changesets=false" >> $GITHUB_ENV
+          fi
 
-            # chuck all vars into the env for building
-            - name: vars to env
-              run: |
-                set -x
-                for key in $(echo '${{ toJson(vars) }}' | jq -r 'keys[]'); do
-                  value=$(echo '${{ toJson(vars) }}' | jq -r --arg k "$key" '.[$k]')
-                  echo "$key=$value" >> $GITHUB_ENV
-                done
+      - name: prerelease
+        run: |
+          # if there are changesets
+          if [ "${{ env.changesets }}" = "true" ]; then
+            echo "Found changesets"
+            if [ "${GITHUB_REF##*/}" = "main" ]; then
+              echo "On main branch, exiting prerelease mode"
+              # remove pre.json to exit prerelease mode
+              if [ -f .changeset/pre.json ]; then
+                npx @changesets/cli pre exit
+              fi
+            else
+              echo "Not on main branch, entering prerelease mode"
+              # pre.json puts changesets into prerelease mode
+              branch_name="${GITHUB_REF##*/}"
+              # sanitize branch name to be safe for changesets
+              # replace unsafe characters with '-'
+              # e.g. my/branch?is#unsafe -> my-branch-is-unsafe
+              safe_branch_name=$(echo "$branch_name" | tr '/\\:;*?"<>|@#%&=+,$' '-')
+              npx @changesets/cli pre enter "$safe_branch_name"
+              echo "prerelease=true" >> $GITHUB_ENV
+            fi
+          else
+            echo "No changesets found"
+          fi
 
-            # build each of those packages
-            - name: build packages
-              run: |
-                set -x
-                echo '${{ toJson(env) }}'
-                echo "affected='${{ env.affected }}'"
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+      - name: version
+        run: |
+          npm i -g @changesets/cli
+          npx @changesets/cli version --verbose
+          git status
 
-                # build each package
-                for pkg in $affected; do
-                  npm run build -w "$pkg" --if-present
-                  npm run build:cjs -w "$pkg" --if-present
-                  npm run bundle -w "$pkg" --if-present
-                done
+          npm i --ignore-scripts --include=dev
+          # Set the version of the root package.json and the docker/images/provider/package.json to the same as @prosopo/cli
+          root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+          echo "root_version=$root_version" >> $GITHUB_ENV
+          echo "Setting root package.json version to $root_version"
+          npm pkg set version="$root_version"
+          cd docker/images/provider
+          # Set the version of the docker/images/provider/package.json to the same as the root package.json
+          npm pkg set version="$root_version"
+          cd -
+          git add -u .
+          git commit -m "chore: version bump"
+          git status
 
-            - name: create tags
-              run: |
-                set -x
-                # create a tag for each of the affected packages
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+      - name: affected
+        if: ${{ env.changesets == 'true' }}
+        run: |
 
-                for pkg in $affected; do
-                  # get the package tag
-                  tag=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .tag')
-                  # create the tag
-                  git tag -a "$tag" -m "Release $tag"
-                done
+          # Find all package.json files changed in the last commit (by changesets version bump)
+          changed_pkg_jsons=$(git diff --name-only HEAD~1 HEAD | grep 'package.json$' || true)
+          package_files=""
+          for file in $changed_pkg_jsons; do
+            # Check if the version property changed in this package.json
+            if git diff HEAD~1 HEAD -- "$file" | grep -qE '\+[[:space:]]+"version":'; then
+              package_files="$package_files $file"
+            fi
+          done
+          affected='[]'
+          if [ -n "$package_files" ]; then
+              for file in $package_files; do
+                  name=$(jq -r '.name' "$file")
+                  affected=$(echo "$affected" | jq -c --arg name "$name" '. + [{name: $name, version: "unknown"}]')
+              done
+          else 
+              echo "No package.json files changed, no affected packages"
+          fi
+          echo "affected: $affected"
+          
+          # Remove any docker packages
+          affected=$(echo "$affected" | jq -c 'map(select(.name != "docker/images/provider"))')
+          
+          echo "affected=$affected" >> $GITHUB_ENV
 
-                # push all tags to the remote
-                git push --tags
-                # if pushing tags fails then one or more of the pkgs have already been published at their version
-                # this could be:
-                # 1. the package has been published by someone else, in which case you need to merge their new version in before processing changesets
-                # 2. this workflow has run before and already published this version and no changesets have been processed since. If you weren't expecting a version bump, this is the expected behaviour. If you were then you have forgotten to add some changesets.
+      - name: lint
+        if: ${{ env.affected != '[]' }}
+        run: |
+          npm run build:tsc -w @prosopo/config
+          npm run build:tsc -w @prosopo/lint
+          npm run build:tsc -w @prosopo/procaptcha-integration-build-config
+          npm run lint-fix
+          # Amend the previous commit with any lint fixes
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -u .
+            git commit --amend --no-edit
+          fi
 
-            # add repo url + pkg path to each pkg
-            # required for pkg to be associated with a repo in the gh registry
-            - name: set repo details in all pkgs
-              run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+      - name: tag
+        if: ${{ env.affected != '[]' }}
+        run: |
+          affected='${{ env.affected }}'
+      
+          # tag each affected package with the new version
+          for pkg in $(echo "$affected" | jq -r '.[] | .name'); do
+              if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
+                  version=$(npm pkg get version | jq -r '.') || version=""
+              else
+                  version=$(npm pkg --workspace "$pkg" get version 2>/dev/null | jq -r --arg pkg "$pkg" '.[$pkg]')
+              fi
+      
+              # Skip tagging if version is empty
+              if [ -z "$version" ]; then
+                  echo "Skipping $pkg (could not determine version)"
+                  continue
+              fi
+      
+              affected=$(echo "$affected" | jq -c --arg name "$pkg" --arg version "$version" \
+                  'map(if .name == $name then . + {version: $version} else . end)')
+      
+              echo "Tagging $pkg with version $version"
+      
+              set +e
+              git tag "$pkg@$version"
+              result=$?
+              set -e
+      
+              affected=$(echo "$affected" | jq -c \
+                  --arg name "$pkg" \
+                  --arg version "$version" \
+                  --argjson result_tag "$result" \
+                  'map(if .name == $name then . + {tag: $result_tag, version: $version} else . end)')
+      
+              echo
+          done
+      
+          # tag the repo with the root package version
+          git tag "v${{ env.root_version }}"
+      
+          echo "🔁 Tagging summary (raw):"
+          echo "$affected" | jq
+      
+          # Check if any package failed to tag and remove them from affected
+          tag_failed=$(echo "$affected" | jq '[.[] | select(.tag != 0)] | length')
+          if [ "$tag_failed" -gt 0 ]; then
+            echo "ℹ️  Some packages failed to tag:"
+            echo "$affected" | jq -r '.[] | select(.tag != 0) | " - \(.name) (version: \(.version // "unknown"))"'
+      
+            # Remove failed packages from affected
+            affected=$(echo "$affected" | jq -c '[.[] | select(.tag == 0)]')
+          else
+            echo "✅ All packages tagged successfully"
+          fi
+      
+          # Update GitHub Actions env (must be compact and single-line!)
+          echo "affected=$(echo "$affected" | jq -c '.')" >> "$GITHUB_ENV"
 
-                # set the repo details in each package
-                for pkg in $affected; do
-                  # get the package path
-                  path=$(echo '${{ env.affected }}' | jq -r --arg pkg "$pkg" '.[] | select(.name == $pkg) | .path')
-                  # set the repo details (necessary to associate the published pkg with the repo)
-                  npm pkg -w "$pkg" set repository.type=git
-                  npm pkg -w "$pkg" set repository.url="git+https://github.com/${{ github.repository }}.git"
-                  dir=$(realpath --relative-to="$(pwd)" "$(dirname $path)")
-                  npm pkg -w "$pkg" set repository.directory="$dir"
-                done
+      - name: build+bundle
+        if: ${{ env.affected != '[]' }}
+        run: |
+          echo "Building and bundling affected packages"
+          set -x
+          npm run build:all
+          npm run build:all:cjs
+          npm run bundle:all
 
-            - name: detect pre-release mode
-              run: |
-                set -x
-                # check if we are in pre-release mode
-                # this is done by checking if the pre.json file exists
-                if [[ -f .changeset/pre.json ]]; then
-                  echo "pre_release=true" >> $GITHUB_ENV
-                else
-                  echo "pre_release=false" >> $GITHUB_ENV
-                fi
+      - name: push
+        if: ${{ env.affected != '[]' }}
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          git push
+          git push --tags
 
-            # publish each of those packages to npmjs
-            - name: publish to npmjs registry
-              # only publish to npmjs if we are not in pre-release mode
-              if: env.pre_release == 'false'
-              run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+#            - name: set repo link
+#              run: |
+#                # set the repository field to link the package with the repo
+#
+#                # get the workspace dir
+#                workspace_dir=$(pwd)
+#                echo "Workspace directory: $workspace_dir"
+#
+#                # for each affected package
+#                for pkg in $(echo '${{ env.affected }}' | jq -r '.[]'); do
+#                    echo "Setting repository field for $pkg"
+#                    pkg_dir="$(npx -w "$pkg" -- node -p 'process.cwd()')"
+#                    echo "Package directory: $pkg_dir"
+#                    rel_dir=$(realpath --relative-to="$workspace_dir" "$pkg_dir")
+#                    echo "Relative directory: $rel_dir"
+#                    # set the repository field to the relative path
+#                    npm pkg --workspace $pkg set repository.directory="$rel_dir"
+#                    npm pkg --workspace $pkg set repository.url="https://github.com/${{ github.repository }}.git"
+#                    npm pkg --workspace $pkg set repository.type="git"
+#                done
 
-                # publish each package
-                for pkg in $affected; do
-                  npm publish --access public --registry https://registry.npmjs.org/ -w "$pkg"
-                done
+      - name: publish to npm
+        if: ${{ env.affected != '[]' }} && ${{ env.prerelease == 'false' }}
+        run: |
+          # for each affected package
+          for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
+            # skip the workspace root
+            if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+              echo "Skipping workspace root package"
+              continue
+            fi
 
-            # publish each of those packages to gh
-            - name: publish to gh registry
-              run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
+            echo "Publishing $pkg to npm"
+            result=0
+            set +e
+            npm publish -w "$pkg" --access public --registry https://registry.npmjs.org/
+            result=$?
+            set -e
+            echo
 
-                # publish each package
-                for pkg in $affected; do
-                  # set the package to be non-private
-                  # packages need to be non-private in order to publish to the gh registry
-                  # but the gh registry keeps access restricted so only we can access it
-                  npm pkg delete private -w "$pkg"
-                  npm publish --access restricted --registry https://npm.pkg.github.com/ -w "$pkg"
-                done
+            affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson npm "$result" 'map(if .name == $pkg then . + {npm: $npm} else . end)')
+          done
 
-            # packages set to private are no longer private at this point!
+          echo "affected: $affected"
+          echo "affected=$affected" >> $GITHUB_ENV
 
-            - name: slack notification
-              if: always() && env.affected != '[]'
-              run: |
-                set -x
-                # get the list of affected package names
-                affected=$(echo '${{ env.affected }}' | jq -r '.[].name')
-                # get the tags
-                # format tags separated by newline
-                tags=$(echo '${{ env.affected }}' | jq -r '.[].tag' | tr ' ' '\n')
-                # get the status of this workflow
-                status=$(echo '${{ job.status }}')
-                emoji=":x:"
-                if [[ $status == "success" ]]; then
-                  emoji=":rocket:"
-                fi
+          if [ "$(echo "$affected" | jq '[.[] | select(.npm != 0)] | length')" -gt 0 ]; then
+            echo "Some packages failed to publish to npm"
+            exit 1
+          fi
 
-                # send a slack notification
-                curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"${emoji} Release ${status} for \`\`\`$tags\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+#            - name: publish to gh
+#              if: ${{ env.affected != '[]' }}
+#              run: |
+#                # for each affected package
+#                for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
+#                    # skip the workspace root
+#                    if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+#                        echo "Skipping workspace root package"
+#                        continue
+#                    fi
+#
+#                    echo "Publishing $pkg to gh"
+#                    result=0
+#                    # make the package non-private so it can be published to gh
+#                    npm pkg --workspace $pkg delete private
+#                    set +e
+#                    npm publish -w "$pkg" --access public --registry https://npm.pkg.github.com
+#                    result_gh=$?
+#                    set -e
+#                    echo
+#
+#                    affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson gh "$result" 'map(if .name == $pkg then . + {gh: $gh} else . end)')
+#                done
+#
+#                echo "affected: $affected"
+#                echo "affected=$affected" >> $GITHUB_ENV
+#
+#                # expect always publish to GitHub Packages
+#                if [ "$(echo "$affected" | jq '[.[] | select(.gh != 0)] | length')" -gt 0 ]; then
+#                    echo "Some packages failed to publish to GitHub Packages"
+#                    exit 1
+#                fi
+
+
+      - name: publish to dockerhub
+        if: ${{ env.affected != '[]' }}
+        run: |
+          # for each affected package
+          for pkg in $(echo '${{ env.affected }}' | jq -r '.[] | .name'); do
+              # skip the workspace root
+              if [ "$pkg" == "$(cat package.json | jq -r '.name')" ]; then
+                  echo "Skipping workspace root package"
+                  continue
+              fi
+
+            echo "Publishing $pkg to dockerhub"
+            result=0
+            # if the package has a publish:docker script, run it
+            # else it isn't a docker package
+            if cat $(npx -w "$pkg" node -p "process.cwd()+'/package.json'") | jq -r '.scripts["publish:docker"] or error("missing script")'; then
+              echo "Package $pkg has a publish:docker script, publishing to Docker Hub"
+            else
+              echo "Package $pkg does not have a publish:docker script, skipping"
+              continue
+            fi
+            set +e
+            npm publish:docker -w "$pkg"
+            result=$?
+            set -e
+            echo
+
+            affected=$(echo "$affected" | jq -c --arg pkg "$pkg" --argjson dockerhub "$result" 'map(if .name == $pkg then . + {dockerhub: $dockerhub} else . end)')
+          done
+
+          echo "affected: $affected"
+          echo "affected=$affected" >> $GITHUB_ENV
+
+          # # expect always publish to Docker Hub
+          # if [ "$(echo "$affected" | jq '[.[] | select(.dockerhub != 0)] | length')" -gt 0 ]; then
+          #   echo "Some packages failed to publish to Docker Hub"
+          #   exit 1
+          # fi
+
+      - name: handle result
+        if: always()
+        run: |
+          echo "affected: ${{ env.affected }}"
+
+          if [ "${{ job.status }}" == "failure" ]; then
+            echo "Workflow failed, notifying Slack"
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rotating_light: Release workflow *failed* for branch \`${GITHUB_REF##*/}\` <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+
+          npm_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != null) | select(.npm == 0) | .name  + "@" + .version')
+          # gh_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != null) | select(.gh == 0) | .name  + "@" + .version')
+          tag_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != null) | select(.tag == 0) | .name  + "@" + .version')
+          dockerhub_success=$(echo '${{ env.affected }}' | jq -r '.[] | select(.dockerhub != null) | select(.dockerhub == 0) | .name  + "@" + .version')
+          npm_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.npm != null) | select(.npm != 0) | .name  + "@" + .version')
+          gh_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.gh != null) | select(.gh != 0) | .name  + "@" + .version')
+          tag_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.tag != null) | select(.tag != 0) | .name  + "@" + .version')
+          dockerhub_failure=$(echo '${{ env.affected }}' | jq -r '.[] | select(.dockerhub != null) | select(.dockerhub != 0) | .name  + "@" + .version')
+
+          if [ -n "$tag_success" ]; then
+            echo "Successfully tagged packages:"
+            echo "$tag_success"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully tagged packages: \`\`\`$tag_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+
+          if [ -n "$tag_failure" ]; then
+            echo "Failed to tag packages:"
+            echo "$tag_failure"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to tag packages: \`\`\`$tag_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+
+          if [ -n "$npm_success" ]; then
+            echo "Successfully published to npm:"
+            echo "$npm_success"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to npm: \`\`\`$npm_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+
+          if [ -n "$npm_failure" ]; then
+            echo "Failed to publish to npm:"
+            echo "$npm_failure"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to npm: \`\`\`$npm_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+
+          if [ -n "$gh_success" ]; then
+            echo "Successfully published to GitHub Packages:"
+            echo "$gh_success"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to gh: \`\`\`$gh_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+          
+          if [ -n "$gh_failure" ]; then
+            echo "Failed to publish to GitHub Packages:"
+            echo "$gh_failure"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to gh: \`\`\`$gh_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+
+          if [ -n "$dockerhub_success" ]; then
+            echo "Successfully published to Docker Hub:"
+            echo "$dockerhub_success"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":rocket: Successfully published to Docker Hub: \`\`\`$dockerhub_success\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi
+
+          if [ -n "$dockerhub_failure" ]; then
+            echo "Failed to publish to Docker Hub:"
+            echo "$dockerhub_failure"
+            echo ""
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \":x: Failed to publish to Docker Hub: \`\`\`$dockerhub_failure\`\`\`\"}" ${{ secrets.SLACKBOT_DEVOPS }}
+          fi

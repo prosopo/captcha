@@ -1,0 +1,12 @@
+services:
+  redis-stack-server:
+    container_name: redis-stack-server
+    # unlike "redis/redis-stack" this image excludes Insights
+    image: redis/redis-stack:latest
+    volumes:
+      - /data/redis:/data/redis
+      - ./redis.conf:/redis-stack.conf
+    ports:
+      - '6379:6379'
+    env_file:
+      - ../.env.${NODE_ENV}

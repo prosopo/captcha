@@ -1,0 +1,27 @@
+{
+	"name": "@prosopo/http-blackhole",
+	"version": "1.0.2",
+	"main": "dist/index.js",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"scripts": {
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"start": "node dist/index.js"
+	},
+	"author": "",
+	"dependencies": {
+		"@prosopo/config": "3.1.4",
+		"dotenv": "^17.2.0"
+	},
+	"license": "Apache-2.0",
+	"description": "",
+	"devDependencies": {
+		"@types/node": "^24.0.13",
+		"tsx": "^4.20.3",
+		"typescript": "^5.8.3"
+	}
+}
