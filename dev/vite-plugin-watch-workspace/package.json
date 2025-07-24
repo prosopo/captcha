@@ -35,7 +35,7 @@
 		"vite": "6.3.5"
 	},
 	"peerDependencies": {
-		"vite": ">=6"
+		"vite": "^6.0.0"
 	},
 	"repository": {
 		"type": "git",
