@@ -16,7 +16,7 @@ import { ViteCommonJSConfig } from "@prosopo/config";
 
 export default function () {
 	return ViteCommonJSConfig(
-		"types-database",
-		path.resolve("./tsconfig.cjs.json"),
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
 	);
 }

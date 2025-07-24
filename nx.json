@@ -1,25 +1,64 @@
 {
 	"$schema": "./node_modules/nx/schemas/nx-schema.json",
+	"namedInputs": {
+		"custom": [
+			"{projectRoot}/**",
+			"!{projectRoot}/node_modules/**",
+			"!{projectRoot}/coverage/**",
+			"{projectRoot}/dist/**/*"
+		]
+	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": ["^build", "^build:cjs", "^bundle"],
-			"cache": false
-		},
-		"bundle": {
-			"dependsOn": ["build", "build:cjs"],
-			"cache": false
+			"dependsOn": ["^build", "@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"build:cjs": {
-			"dependsOn": ["build"],
-			"cache": false
+			"dependsOn": ["^build:cjs", "@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
+		},
+		"bundle": {
+			"dependsOn": ["@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
+		},
+		"bundle:webpack": {
+			"dependsOn": ["@prosopo/config:build"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"test": {
-			"dependsOn": ["build", "build:cjs", "bundle"],
-			"cache": false
+			"cache": true,
+			"dependsOn": ["@prosopo/config:build"],
+			"inputs": ["^custom", "custom"]
 		},
 		"typecheck": {
-			"dependsOn": ["^build"],
+			"dependsOn": ["^typecheck"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
+		},
+		"build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"cache": true,
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
+		},
+		"lint": {
 			"cache": false
+		},
+		"clean": {
+			"cache": false
+		},
+		"clean:deps": {
+			"cache": false,
+			"dependsOn": ["clean", "^clean"]
 		}
 	},
 	"defaultBase": "main",
@@ -32,16 +71,10 @@
 			"automaticFromRef": true
 		}
 	},
-	"parallel": 4,
+	"parallel": 8,
 	"pluginsConfig": {
 		"@nx/js": {
 			"projectsAffectedByDependencyUpdates": "auto"
-		},
-		"plugin": "@nx/js/typescript",
-		"options": {
-			"typecheck": {
-				"targetName": "typecheck"
-			}
 		}
 	},
 	"neverConnectToCloud": true,

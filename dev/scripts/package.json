@@ -1,19 +1,26 @@
 {
 	"name": "@prosopo/scripts",
-	"version": "2.6.11",
+	"version": "3.0.20",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "echo 'no cjs build'",
-		"deploy": "node dist/deploy/protocol.js",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"cli": "node dist/cli/index.js",
 		"setup": "node dist/cli/index.js setup"
 	},
@@ -26,25 +33,30 @@
 		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/account": "2.6.4",
-		"@prosopo/cli": "2.6.11",
-		"@prosopo/common": "2.6.1",
-		"@prosopo/config": "2.6.0",
-		"@prosopo/datasets": "2.6.11",
-		"@prosopo/dotenv": "2.6.1",
-		"@prosopo/env": "2.6.5",
-		"@prosopo/keyring": "2.6.4",
-		"@prosopo/provider": "2.9.7",
-		"@prosopo/types": "2.7.1",
-		"@prosopo/types-database": "2.7.2",
-		"@prosopo/types-env": "2.6.5",
-		"@prosopo/util": "2.6.0",
+		"@prosopo/account": "2.7.13",
+		"@prosopo/cli": "3.1.9",
+		"@prosopo/common": "3.1.3",
+		"@prosopo/config": "3.1.4",
+		"@prosopo/datasets": "3.0.16",
+		"@prosopo/dotenv": "3.0.8",
+		"@prosopo/env": "3.1.7",
+		"@prosopo/keyring": "2.8.10",
+		"@prosopo/provider": "3.5.0",
+		"@prosopo/types": "3.0.7",
+		"@prosopo/types-database": "3.0.16",
+		"@prosopo/types-env": "2.7.20",
+		"@prosopo/util": "3.0.6",
+		"@typegoose/auto-increment": "4.13.0",
+		"axios": "1.10.0",
 		"dotenv": "16.4.5",
+		"esbuild": "0.25.6",
 		"express": "4.21.2",
 		"fast-glob": "3.3.2",
 		"fs-extra": "11.2.0",
 		"mongodb": "6.9.0",
-		"yargs": "17.7.2"
+		"yargs": "17.7.2",
+		"openpgp": "5.11.3",
+		"webpack-dev-server": "5.2.2"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"
@@ -54,11 +66,11 @@
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
 	}
 }

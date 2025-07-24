@@ -14,7 +14,7 @@
 import process from "node:process";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import { loadI18next } from "@prosopo/locale";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { isMain } from "@prosopo/util";
@@ -27,33 +27,26 @@ const log = getLogger(LogLevel.enum.info, "CLI");
 async function main() {
 	const envPath = loadEnv();
 
-	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-	const config: ProsopoConfigOutput = getConfig(undefined, {
-		solved: { count: 2 },
-		unsolved: { count: 0 },
-	});
+	const config: ProsopoConfigOutput = getConfig();
 
 	if (config.devOnlyWatchEvents) {
-		log.warn(
-			`
+		log.warn(() => ({
+			msg: `
         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
         EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             `,
-		);
+		}));
 	}
 
-	const pair = await getPairAsync(
-		config.account.secret,
-		config.account.address,
-	);
+	const pair = getPair(config.account.secret, config.account.address);
 
-	const authAccount = await getPairAsync(
+	const authAccount = getPair(
 		config.authAccount.secret,
 		config.authAccount.address,
 	);
 
-	log.info(`Pair address: ${pair.address}`);
+	log.info(() => ({ data: { pairAddress: pair.address } }));
 
 	const processedArgs = await processArgs(
 		process.argv,
@@ -62,21 +55,13 @@ async function main() {
 		config,
 	);
 
-	log.info({ cliArgs: processedArgs });
+	log.info(() => ({ data: { cliArgs: processedArgs } }));
 	if (processedArgs.api) {
-		if (process.env.NODE_ENV === "development") {
-			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
-				.startDev()
-				.then(() => {
-					log.info("Reloading API started...");
-				});
-		} else {
-			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
-				.start()
-				.then(() => {
-					log.info("Reloading API started...");
-				});
-		}
+		await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
+			.start()
+			.then(() => {
+				log.info(() => ({ msg: "Reloading API started..." }));
+			});
 	} else {
 		process.exit(0);
 	}
@@ -87,10 +72,10 @@ if (isMain(import.meta.url, "provider")) {
 	loadI18next(true).then(() => {
 		main()
 			.then(() => {
-				log.info("Running main process...");
+				log.info(() => ({ msg: "Running main process..." }));
 			})
 			.catch((error) => {
-				log.error(error);
+				log.error(() => ({ err: error }));
 			});
 	});
 }

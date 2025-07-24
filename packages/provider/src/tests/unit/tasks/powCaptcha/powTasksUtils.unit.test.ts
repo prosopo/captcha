@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { signatureVerify } from "@polkadot/util-crypto";
-import { ProsopoContractError } from "@prosopo/common";
-import { verifyRecency } from "@prosopo/util";
+import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
+import { signatureVerify } from "@prosopo/util-crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 
-vi.mock("@polkadot/util-crypto", () => ({
+vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
 }));
 
@@ -89,12 +88,15 @@ describe("Validation Functions", () => {
 			expect(() =>
 				checkPowSignature(challenge, signature, providerAddress),
 			).toThrow(
-				new ProsopoContractError("GENERAL.INVALID_SIGNATURE", {
+				new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
 					context: {
 						ERROR: "Signature is invalid for this message: undefined",
 						failedFuncName: "checkPowSignature",
 						signature,
 						signatureType: undefined,
+						address: "testAddress",
+						message: "testChallenge",
+						code: 500,
 					},
 				}),
 			);

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getLogLevel } from "@prosopo/common";
+import { parseLogLevel } from "@prosopo/common";
 import {
 	DatabaseTypes,
 	EnvironmentTypesSchema,
@@ -56,7 +56,7 @@ export default function getConfig(
 	admin = "ADMIN",
 ): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
-		logLevel: getLogLevel(),
+		logLevel: parseLogLevel(process.env.PROSOPO_LOG_LEVEL, "info"),
 		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
 			? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
 			: EnvironmentTypesSchema.enum.development,
@@ -100,6 +100,10 @@ export default function getConfig(
 		mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || "",
 		mongoClientUri: process.env.PROSOPO_MONGO_CLIENT_URI || "",
+		redisConnection: {
+			url: process.env.REDIS_CONNECTION_URL || "",
+			password: process.env.REDIS_CONNECTION_PASSWORD || "",
+		},
 		rateLimits: getRateLimitConfig(),
 		proxyCount: process.env.PROSOPO_PROXY_COUNT
 			? Number.parseInt(process.env.PROSOPO_PROXY_COUNT)
