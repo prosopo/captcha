@@ -19,7 +19,10 @@ import { type Logger, getLogger } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
-import { readTlsClientHello, calculateJa4FromHelloData } from "read-tls-client-hello";
+import {
+	calculateJa4FromHelloData,
+	readTlsClientHello,
+} from "read-tls-client-hello";
 
 export const DEFAULT_JA4 = "ja4";
 
