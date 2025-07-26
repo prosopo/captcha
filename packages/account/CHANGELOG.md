@@ -1,5 +1,17 @@
 # @prosopo/account
 
+## 2.7.14
+### Patch Changes
+
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/common@3.1.4
+  - @prosopo/fingerprint@2.6.5
+  - @prosopo/keyring@2.8.11
+  - @prosopo/types@3.0.8
+  - @prosopo/util@3.0.7
+  - @prosopo/util-crypto@13.5.6
+
 ## 2.7.13
 ### Patch Changes
 
