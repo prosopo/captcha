@@ -1,5 +1,21 @@
 # @prosopo/procaptcha-pow
 
+## 2.7.22
+### Patch Changes
+
+- 30e7d4d: Fixing coverage report and more damn linting
+- Updated dependencies [30e7d4d]
+  - @prosopo/procaptcha-common@2.7.16
+  - @prosopo/config@3.1.5
+  - @prosopo/procaptcha@2.7.22
+  - @prosopo/account@2.7.14
+  - @prosopo/api@3.1.7
+  - @prosopo/common@3.1.4
+  - @prosopo/locale@3.1.4
+  - @prosopo/types@3.0.8
+  - @prosopo/util@3.0.7
+  - @prosopo/widget-skeleton@2.6.5
+
 ## 2.7.21
 ### Patch Changes
 
