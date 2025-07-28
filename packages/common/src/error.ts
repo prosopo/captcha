@@ -56,7 +56,9 @@ export abstract class ProsopoBaseError<
 		error: Error | TranslationKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
-		const logger = options?.logger || getLogger({ scope: "common.error", url: import.meta.url });
+		const logger =
+			options?.logger ||
+			getLogger({ scope: "common.error", url: import.meta.url });
 		const logLevel = options?.logLevel || "error";
 		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {

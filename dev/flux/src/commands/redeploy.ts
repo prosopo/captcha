@@ -25,7 +25,8 @@ const fluxDeployArgs = z.object({
 
 export default (cmdArgs?: { logger?: Logger }) => {
 	const logger =
-		cmdArgs?.logger || getLogger({ scope: "dev.flux.cli.deploy", url: import.meta.url });
+		cmdArgs?.logger ||
+		getLogger({ scope: "dev.flux.cli.deploy", url: import.meta.url });
 
 	return {
 		command: "redeploy <app>",

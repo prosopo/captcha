@@ -52,14 +52,20 @@ export type InsertManyRulesEndpointOutputSchema = z.output<
 >;
 
 export class InsertRulesEndpoint
-	implements ApiEndpoint<InsertRulesEndpointSchema> {
-	public constructor(private readonly accessRulesWriter: AccessRulesWriter) { }
+	implements ApiEndpoint<InsertRulesEndpointSchema>
+{
+	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
 
 	async processRequest(
 		args: z.infer<InsertRulesEndpointSchema>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger({ scope: "user-access-policy.api.insertRulesEndpoint", url: import.meta.url });
+		logger =
+			logger ||
+			getLogger({
+				scope: "user-access-policy.api.insertRulesEndpoint",
+				url: import.meta.url,
+			});
 
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {

@@ -28,7 +28,10 @@ export default (
 ) => {
 	const logger =
 		cmdArgs?.logger ||
-		getLogger({ scope: "procaptcha.cli.provider-set-dataset", url: import.meta.url });
+		getLogger({
+			scope: "procaptcha.cli.provider-set-dataset",
+			url: import.meta.url,
+		});
 
 	return {
 		command: "provider_set_data_set",

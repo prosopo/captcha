@@ -17,7 +17,10 @@ import { errorHandler } from "../errorHandler.js";
 import { getAuth, verifyLogin } from "./auth.js";
 
 export const nodeAPIURL = new URL("https://jetpackbridge.runonflux.io/");
-const logger = getLogger({ scope: "dev.flux.lib.getDapps", url: import.meta.url });
+const logger = getLogger({
+	scope: "dev.flux.lib.getDapps",
+	url: import.meta.url,
+});
 
 export const main = async (publicKey: string, privateKey: Uint8Array) => {
 	try {

@@ -25,8 +25,9 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type RegisterSitekeyBodyType = typeof RegisterSitekeyBody;
 
 class ApiRegisterSiteKeyEndpoint
-	implements ApiEndpoint<RegisterSitekeyBodyType> {
-	public constructor(private readonly clientTaskManager: ClientTaskManager) { }
+	implements ApiEndpoint<RegisterSitekeyBodyType>
+{
+	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<RegisterSitekeyBodyType>,

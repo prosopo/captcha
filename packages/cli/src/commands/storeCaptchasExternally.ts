@@ -24,7 +24,8 @@ export default (
 	cmdArgs?: { logger?: Logger },
 ) => {
 	const logger =
-		cmdArgs?.logger || getLogger({ scope: "cli.store_captchas", url: import.meta.url });
+		cmdArgs?.logger ||
+		getLogger({ scope: "cli.store_captchas", url: import.meta.url });
 
 	return {
 		command: "store_captchas",
