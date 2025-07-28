@@ -171,8 +171,11 @@ const validateWorkspace = async (args: {
 
 interface InvalidTsConfig {
 	tsConfigPath: string;
+	packageJsonPath: string;
 	unnecessaryReferences: string[];
 	missingReferences: string[];
+	missingDependencies: string[];
+	unnecessaryDependencies: string[];
 }
 
 const validateDependencies = async (args: {
@@ -214,13 +217,38 @@ const validateDependencies = async (args: {
 			(dep) => !referencedPackageNames.includes(dep),
 		);
 
-		if (0 === unnecessaryReferences.length && 0 === missingReferences.length)
+		// grep the source code for imports
+		// there may be imports, e.g. @prosopo/util, that are not in the package.json or tsconfig.json
+		const srcFiles = fg.globSync(`${packageDirectory}/**/*.{ts,tsx,js,jsx}`);
+		const allImports = new Set<string>();
+		for (const srcFile of srcFiles) {
+			const srcFileContent = fs.readFileSync(srcFile, "utf8");
+			const imports = srcFileContent.match(/import\s+['"]([^'"]+)['"]/g);
+			if (!imports) continue;
+			imports.forEach((importPath) => {
+				allImports.add(importPath);
+			});
+		}
+
+		// filter out imports that are in the package.json or tsconfig.json
+		const missingDependencies = Array.from(allImports)
+			.filter((importPath) => !workspaceDependencies.includes(importPath))
+			.filter((importPath) => !workspacePackageNames.includes(importPath));
+
+		const unnecessaryDependencies = workspaceDependencies.filter(
+			(dependency) => !allImports.has(dependency),
+		);
+
+		if (0 === unnecessaryReferences.length && 0 === missingReferences.length && 0 === missingDependencies.length && 0 === unnecessaryDependencies.length)
 			continue;
 
 		wrongTsConfigs.push({
-			tsConfigPath: tsConfigPath,
-			unnecessaryReferences: unnecessaryReferences,
-			missingReferences: missingReferences,
+			tsConfigPath,
+			packageJsonPath: packageJson.path,
+			unnecessaryReferences,
+			missingReferences,
+			missingDependencies,
+			unnecessaryDependencies,
 		});
 	}
 
