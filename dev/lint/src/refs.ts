@@ -229,24 +229,24 @@ const validateDependencies = async (args: {
 		const allImports = new Set<string>();
 		for (const srcFile of srcFiles) {
 			const srcFileContent = fs.readFileSync(srcFile, "utf8");
-			const importRegex = /import.+['"](.+?)['"]/g;
-			const workspaceImports: string[] = [];
-			let match: RegExpExecArray | null = null;
-			while (true) {
-				match = importRegex.exec(srcFileContent);
-				if (match === null) {
-					break;
-				}
+			// This regex matches import statements with 'from' and also bare imports (e.g. import "xyz.js")
+			const importRegexWithFrom = /import[\s\S]*?from\s*['"](.+?)['"]/g;
+			const importRegexBare = /import\s*['"](.+?)['"]/g;
+
+			const matchesWithFrom = Array.from(
+				srcFileContent.matchAll(importRegexWithFrom),
+			);
+			const matchesBare = Array.from(srcFileContent.matchAll(importRegexBare));
+			const matches = [...matchesWithFrom, ...matchesBare];
+
+			for (const match of matches) {
 				const importPath = match[1];
 				if (
 					importPath &&
 					workspacePackageNames.includes(importPath.toString())
 				) {
-					workspaceImports.push(importPath);
+					allImports.add(importPath);
 				}
-			}
-			for (const importPath of workspaceImports) {
-				allImports.add(importPath);
 			}
 		}
 
