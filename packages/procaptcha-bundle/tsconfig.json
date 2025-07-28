@@ -15,7 +15,7 @@
 	],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../dotenv"
@@ -37,9 +37,6 @@
 		},
 		{
 			"path": "../util"
-		},
-		{
-			"path": "../util-crypto"
 		},
 		{
 			"path": "../widget-skeleton"

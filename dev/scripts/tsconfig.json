@@ -14,9 +14,6 @@
 	],
 	"references": [
 		{
-			"path": "../../packages/account"
-		},
-		{
 			"path": "../../packages/cli"
 		},
 		{
@@ -39,9 +36,6 @@
 		},
 		{
 			"path": "../../packages/types"
-		},
-		{
-			"path": "../../packages/types-database"
 		},
 		{
 			"path": "../../packages/types-env"

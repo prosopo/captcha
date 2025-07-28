@@ -45,7 +45,6 @@
 		"@prosopo/types": "3.0.8",
 		"@prosopo/types-database": "3.0.17",
 		"@prosopo/util": "3.0.7",
-		"@prosopo/util-crypto": "13.5.6",
 		"@prosopo/config": "3.1.5",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
