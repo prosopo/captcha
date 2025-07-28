@@ -30,16 +30,9 @@
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "^20.0.0",
-		"@vitest/coverage-v8": "3.0.9",
-		"concurrently": "9.0.1",
+		"@sveltejs/package": "2.3.10",
 		"del-cli": "6.0.0",
-		"npm-run-all": "4.1.5",
-		"tslib": "2.7.0",
-		"tsx": "4.20.3",
-		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"svelte-check": "4.2.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

@@ -40,9 +40,6 @@
 		},
 		{
 			"path": "../widget-skeleton"
-		},
-		{
-			"path": "../procaptcha-common"
 		}
 	]
 }

@@ -27,18 +27,6 @@
 		},
 		{
 			"path": "../../packages/types"
-		},
-		{
-			"path": "../../packages/database"
-		},
-		{
-			"path": "../../packages/dotenv"
-		},
-		{
-			"path": "../../packages/locale"
-		},
-		{
-			"path": "../../packages/types-database"
 		}
 	]
 }

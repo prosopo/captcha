@@ -26,12 +26,6 @@
 		},
 		{
 			"path": "../../packages/types-database"
-		},
-		{
-			"path": "../../packages/dotenv"
-		},
-		{
-			"path": "../../packages/keyring"
 		}
 	]
 }

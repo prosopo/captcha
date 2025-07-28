@@ -33,9 +33,6 @@
 		},
 		{
 			"path": "../widget-skeleton/tsconfig.cjs.json"
-		},
-		{
-			"path": "../procaptcha-common/tsconfig.cjs.json"
 		}
 	]
 }

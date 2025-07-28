@@ -40,13 +40,10 @@
 		"@prosopo/dotenv": "3.0.9",
 		"@prosopo/env": "3.1.8",
 		"@prosopo/keyring": "2.8.11",
-		"@prosopo/locale": "3.0.8",
 		"@prosopo/provider": "3.6.0",
 		"@prosopo/types": "3.0.8",
 		"@prosopo/types-env": "2.7.21",
 		"@prosopo/util": "3.0.7",
-		"@prosopo/util-crypto": "3.0.7",
-		"@prosopo/workspace": "3.0.7",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"dotenv": "16.4.5",
@@ -63,7 +60,7 @@
 		"@polkadot/keyring": "12.6.2"
 	},
 	"devDependencies": {
-		"@types/node": "^20.0.0",
+		"@types/fs-extra": "11.0.4",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

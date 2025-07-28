@@ -26,9 +26,6 @@
 		},
 		{
 			"path": "../util-crypto"
-		},
-		{
-			"path": "../util"
 		}
 	]
 }
