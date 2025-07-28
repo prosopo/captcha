@@ -20,7 +20,7 @@ import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const logger = getLogger(import.meta.url);
+const logger = getLogger({ scope: "dotenv.env", url: import.meta.url });
 
 export function getEnv() {
 	if (process.env.NODE_ENV) {

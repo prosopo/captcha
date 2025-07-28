@@ -29,7 +29,7 @@ import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
 import { setupProvider } from "./provider.js";
 import { registerSiteKey } from "./site.js";
 
-const logger = getLogger("dev-scripts.setup");
+const logger = getLogger({ scope: "dev.scripts.setup", url: import.meta.url });
 const __dirname = path.resolve();
 
 // Take the root dir from the environment or assume it's the root of this package

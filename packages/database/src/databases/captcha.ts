@@ -27,7 +27,7 @@ import {
 import type { RootFilterQuery } from "mongoose";
 import { MongoDatabase } from "../base/index.js";
 
-const logger = getLogger({ scope: import.meta.url });
+const logger = getLogger({ scope: "database.databases.captcha", url: import.meta.url });
 
 enum TableNames {
 	frictionlessToken = "frictionlessToken",

@@ -52,7 +52,7 @@ export function processArgs(
 	authAccount: KeyringPair,
 	config: ProsopoConfigOutput,
 ) {
-	const logger = getLogger("procaptcha.cli");
+	const logger = getLogger({ scope: "procaptcha.cli", url: import.meta.url });
 
 	const commandManager = yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")

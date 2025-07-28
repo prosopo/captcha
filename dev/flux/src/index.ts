@@ -26,7 +26,7 @@ import {
 	commandTerminal,
 } from "./commands/index.js";
 
-const logger = getLogger("flux.cli");
+const logger = getLogger({ scope: "dev.flux.cli", url: import.meta.url });
 
 export default async function processArgs(args: string[]) {
 	return yargs(hideBin(args))

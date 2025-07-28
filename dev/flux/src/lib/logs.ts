@@ -22,7 +22,7 @@ import {
 } from "./auth.js";
 import { getSocketURL, getZelIdAuthHeader, prefixIPAddress } from "./url.js";
 
-const log = getLogger(import.meta.url);
+const log = getLogger({ scope: "dev.flux.lib.logs", url: import.meta.url });
 
 async function getLogs(
 	zelid: string,

@@ -17,7 +17,7 @@ import { getPrivateKey, getPublicKey } from "./process.env.js";
 
 export default (cmdArgs?: { logger?: Logger }) => {
 	const logger =
-		cmdArgs?.logger || getLogger("flux.cli.getDapps");
+		cmdArgs?.logger || getLogger({ scope: "dev.flux.cli.getDapps", url: import.meta.url });
 
 	return {
 		command: "getDapps",

@@ -20,7 +20,7 @@ import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import type { AwaitedProcessedArgs } from "./argv.js";
 import { start } from "./start.js";
 
-const log = getLogger("procaptcha.cli");
+const log = getLogger({ scope: "procaptcha.cli", url: import.meta.url });
 
 export default class ReloadingAPI {
 	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
