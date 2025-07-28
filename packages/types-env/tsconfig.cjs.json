@@ -22,6 +22,9 @@
 		},
 		{
 			"path": "../types-database/tsconfig.cjs.json"
+		},
+		{
+			"path": "../keyring/tsconfig.cjs.json"
 		}
 	]
 }

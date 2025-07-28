@@ -30,6 +30,7 @@
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.5",
+		"@types/node": "22.10.2",
 		"@vitejs/plugin-vue": "5.2.3",
 		"del-cli": "6.0.0",
 		"vue-tsc": "2.2.10"

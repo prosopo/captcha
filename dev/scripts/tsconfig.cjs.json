@@ -39,6 +39,15 @@
 		},
 		{
 			"path": "../../dev/config"
+		},
+		{
+			"path": "../../packages/locale"
+		},
+		{
+			"path": "../../packages/util-crypto"
+		},
+		{
+			"path": "../../dev/workspace"
 		}
 	]
 }
