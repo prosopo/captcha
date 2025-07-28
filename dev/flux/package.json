@@ -52,7 +52,7 @@
 		"@polkadot/keyring": "12.6.2"
 	},
 	"devDependencies": {
-		"@types/qs": "6.9.18",
+		"@types/node": "^20.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

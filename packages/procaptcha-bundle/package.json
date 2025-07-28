@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@prosopo/dotenv": "3.0.9",
 		"@prosopo/locale": "3.1.4",
+		"@prosopo/procaptcha-common": "3.0.17",
 		"@prosopo/procaptcha-frictionless": "2.6.36",
 		"@prosopo/procaptcha-pow": "2.7.22",
 		"@prosopo/procaptcha-react": "2.6.36",
@@ -68,12 +69,15 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"devDependencies": {
-		"@types/jsdom": "21.1.7",
-		"@types/react": "18.3.1",
-		"@types/react-dom": "18.3.1",
+		"@emotion/cache": "^11.11.0",
+		"@emotion/react": "^11.11.0",
+		"@types/node": "^20.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
+		"dotenv": "^16.0.0",
+		"fast-glob": "^3.3.0",
+		"jsdom": "^24.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",

@@ -32,6 +32,9 @@
 			"path": "../../packages/keyring"
 		},
 		{
+			"path": "../../packages/locale"
+		},
+		{
 			"path": "../../packages/provider"
 		},
 		{
@@ -42,6 +45,12 @@
 		},
 		{
 			"path": "../../packages/util"
+		},
+		{
+			"path": "../../packages/util-crypto"
+		},
+		{
+			"path": "../workspace"
 		},
 		{
 			"path": "../../dev/config"

@@ -20,6 +20,15 @@
 			"path": "../common"
 		},
 		{
+			"path": "../env"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../types"
+		},
+		{
 			"path": "../../dev/config/tsconfig.json"
 		}
 	]

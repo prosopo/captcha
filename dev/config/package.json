@@ -59,22 +59,19 @@
 		"webpack": "5.94.0"
 	},
 	"devDependencies": {
-		"@babel/plugin-proposal-import-attributes-to-assertions": "7.24.7",
-		"@babel/plugin-transform-class-properties": "7.25.4",
-		"@babel/plugin-transform-object-rest-spread": "7.24.7",
-		"@babel/preset-typescript": "7.24.7",
+		"@types/node": "^20.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
+		"fast-glob": "^3.3.0",
 		"npm-run-all": "4.1.5",
+		"rollup": "^4.0.0",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "6.3.5",
-		"vite-plugin-node-polyfills": "0.23.0",
-		"vitest": "3.0.9",
-		"webpack-cli": "5.1.4",
-		"webpack-dev-server": "5.2.2"
+		"vite-plugin-node-polyfills": "^0.24.0",
+		"vitest": "3.0.9"
 	},
 	"repository": {
 		"type": "git",

@@ -19,6 +19,15 @@
 		},
 		{
 			"path": "../locale/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util-crypto/tsconfig.cjs.json"
 		}
 	]
 }

@@ -23,6 +23,9 @@
 		},
 		{
 			"path": "../user-access-policy"
+		},
+		{
+			"path": "../locale"
 		}
 	]
 }
