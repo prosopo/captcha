@@ -13,6 +13,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../common"
 		},
 		{
@@ -22,13 +25,7 @@
 			"path": "../types"
 		},
 		{
-			"path": "../types-database"
-		},
-		{
 			"path": "../types-env"
-		},
-		{
-			"path": "../util"
 		}
 	]
 }

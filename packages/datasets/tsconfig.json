@@ -13,6 +13,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../common"
 		},
 		{
@@ -23,9 +26,6 @@
 		},
 		{
 			"path": "../util"
-		},
-		{
-			"path": "../util-crypto"
 		}
 	]
 }

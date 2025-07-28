@@ -15,7 +15,7 @@
 	],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../load-balancer"
@@ -28,9 +28,6 @@
 		},
 		{
 			"path": "../widget-skeleton"
-		},
-		{
-			"path": "../account"
 		}
 	]
 }

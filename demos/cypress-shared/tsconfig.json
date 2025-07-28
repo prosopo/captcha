@@ -16,7 +16,7 @@
 	],
 	"references": [
 		{
-			"path": "../../dev/scripts"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../../packages/types"

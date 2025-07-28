@@ -18,6 +18,9 @@
 		},
 		{
 			"path": "../common"
+		},
+		{
+			"path": "../../dev/config/tsconfig.json"
 		}
 	]
 }

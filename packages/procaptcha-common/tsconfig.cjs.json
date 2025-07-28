@@ -14,7 +14,7 @@
 	],
 	"references": [
 		{
-			"path": "../common/tsconfig.cjs.json"
+			"path": "../../dev/config/tsconfig.cjs.json"
 		},
 		{
 			"path": "../load-balancer/tsconfig.cjs.json"
@@ -27,9 +27,6 @@
 		},
 		{
 			"path": "../widget-skeleton/tsconfig.cjs.json"
-		},
-		{
-			"path": "../account/tsconfig.cjs.json"
 		}
 	]
 }
