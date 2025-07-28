@@ -17,6 +17,7 @@ import path from "node:path";
 import { inspect } from "node:util";
 import { get } from "@prosopo/util";
 import fg from "fast-glob";
+import ts from "typescript";
 import type { Argv } from "yargs";
 import z from "zod";
 
@@ -178,6 +179,56 @@ interface InvalidTsConfig {
 	unnecessaryDependencies: string[];
 }
 
+/**
+ * Extracts all import paths from a TypeScript file.
+ * Handles static and dynamic imports.
+ */
+export function getImportsFromTsFile(filePath: string): string[] {
+	const code = fs.readFileSync(filePath, "utf-8");
+	const sourceFile = ts.createSourceFile(
+		path.basename(filePath),
+		code,
+		ts.ScriptTarget.Latest,
+		true,
+	);
+
+	const imports: string[] = [];
+
+	function visit(node: ts.Node) {
+		// Static imports: import ... from '...'
+		if (ts.isImportDeclaration(node)) {
+			if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+				imports.push(node.moduleSpecifier.text);
+			}
+		}
+
+		// Side-effect imports: import '...'
+		else if (ts.isImportEqualsDeclaration(node)) {
+			if (
+				ts.isExternalModuleReference(node.moduleReference) &&
+				ts.isStringLiteral(node.moduleReference.expression)
+			) {
+				imports.push(node.moduleReference.expression.text);
+			}
+		}
+
+		// Dynamic imports: import('...')
+		else if (
+			ts.isCallExpression(node) &&
+			node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+			node.arguments.length === 1 &&
+			ts.isStringLiteral(node.arguments[0] as ts.Node)
+		) {
+			imports.push((node.arguments[0] as ts.StringLiteral).text);
+		}
+
+		ts.forEachChild(node, visit);
+	}
+
+	visit(sourceFile);
+	return imports;
+}
+
 const validateDependencies = async (args: {
 	packageJson: File;
 	workspacePackageNames: string[];
@@ -227,32 +278,69 @@ const validateDependencies = async (args: {
 		// there may be imports, e.g. @prosopo/util, that are not in the package.json or tsconfig.json
 		const srcFiles = fg.globSync(
 			`${packageDirectory}/**/*.{ts,tsx,js,jsx,vue,mjs,cjs,svelte}`,
+			{
+				ignore: [
+					`${packageDirectory}/node_modules/**`,
+					`${packageDirectory}/dist/**`,
+				],
+			}
 		);
 		const allImports = new Set<string>();
 		for (const srcFile of srcFiles) {
-			const srcFileContent = fs.readFileSync(srcFile, "utf8");
-			// This regex matches import statements with 'from', bare imports (e.g. import "xyz.js"), and dynamic imports (e.g. import("xyz"))
-			const importRegexWithFrom = /import[\s\S]+?from\s+['"](.+?)['"]/g;
-			const importRegexBare = /import\s+['"](.+?)['"]/g;
-			const importRegexDynamic = /import\(['"](.+?)['"]\)/g;
 
-			const matchesWithFrom = Array.from(
-				srcFileContent.matchAll(importRegexWithFrom),
+			let imports = getImportsFromTsFile(srcFile);
+			// if there's node:XYZ imports then remove them, add node types lib instead
+			const hasNodeImports = imports.some((importPath) =>
+				importPath.startsWith("node:"),
 			);
-			const matchesBare = Array.from(srcFileContent.matchAll(importRegexBare));
-			const matchesDynamic = Array.from(
-				srcFileContent.matchAll(importRegexDynamic),
-			);
-			const matches = [...matchesWithFrom, ...matchesBare, ...matchesDynamic];
+			if (hasNodeImports) {
+				imports = imports.filter((importPath) => !importPath.startsWith("node:"));
+				imports.push("@types/node");
+			}
 
-			for (const match of matches) {
-				const importPath = match[1];
-				if (
-					importPath &&
-					workspacePackageNames.includes(importPath.toString())
-				) {
-					allImports.add(importPath);
+			// For each import, check if the file it refers to is in the current package dir.
+			// If so, filter it out. If not, add an import for the package containing the file specified by this import.
+			imports = imports.flatMap((importPath) => {
+				if (importPath.startsWith("./") || importPath.startsWith("../")) {
+					// Resolve the absolute path of the import relative to the source file
+					const resolvedPath = path.resolve(path.dirname(srcFile), importPath);
+					// Check if the resolved path is inside the current package directory
+					if (resolvedPath.startsWith(packageDirectory)) {
+						// It's a file in the current package, filter it out
+						return [];
+					} else {
+						// It's outside the current package, try to find the package it belongs to
+						// Walk up from the resolvedPath to find a package.json
+						let dir = resolvedPath;
+						let found = false;
+						let pkgName: string | undefined = undefined;
+						while (dir !== path.dirname(dir)) {
+							const pkgJsonPath = path.join(dir, "package.json");
+							if (fs.existsSync(pkgJsonPath)) {
+								try {
+									const pkg = loadPackageConfig(pkgJsonPath);
+									pkgName = pkg.content.name;
+									found = true;
+									break;
+								} catch {
+									// ignore parse errors
+								}
+							}
+							dir = path.dirname(dir);
+						}
+						if (found && pkgName) {
+							return [pkgName];
+						}
+						// If no package.json found, ignore
+						return [];
+					}
 				}
+				// Not a relative import, keep as is
+				return [importPath];
+			});
+
+			for (const importPath of imports) {
+				allImports.add(importPath);
 			}
 		}
 
