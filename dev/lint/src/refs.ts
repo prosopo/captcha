@@ -27,6 +27,8 @@ const packageConfigSchema = z.object({
 	version: z.string().optional(),
 	dependencies: z.record(z.string()).optional(),
 	devDependencies: z.record(z.string()).optional(),
+	peerDependencies: z.record(z.string()).optional(),
+	optionalDependencies: z.record(z.string()).optional(),
 	workspaces: z.array(z.string()).optional(),
 	references: z.array(z.record(z.string())).optional(),
 });
@@ -72,14 +74,35 @@ const findWorkspacePackageJsons = (workspacePackageJson: File) =>
 		.map((pattern) => fg.globSync(pattern))
 		.reduce((acc, val) => acc.concat(val), []);
 
+const getDevDependencies = (packageJson: File) => {
+	const developmentDependencies = Object.keys(
+		z.record(z.string()).catch({}).parse(packageJson.content.devDependencies),
+	);
+	return developmentDependencies;
+};
+
 const getAllDependencies = (packageJson: File) => {
 	const regularDependencies = Object.keys(
 		z.record(z.string()).catch({}).parse(packageJson.content.dependencies),
 	);
-	const developmentDependencies = Object.keys(
-		z.record(z.string()).catch({}).parse(packageJson.content.devDependencies),
+	const developmentDependencies = getDevDependencies(packageJson);
+	const peerDependencies = Object.keys(
+		z.record(z.string()).catch({}).parse(packageJson.content.peerDependencies),
 	);
-	return [...new Set([...regularDependencies, ...developmentDependencies])];
+	const optionalDependencies = Object.keys(
+		z
+			.record(z.string())
+			.catch({})
+			.parse(packageJson.content.optionalDependencies),
+	);
+	return [
+		...new Set([
+			...regularDependencies,
+			...developmentDependencies,
+			...peerDependencies,
+			...optionalDependencies,
+		]),
+	];
 };
 
 const getWorkspacePackageNames = (workspacePackagePaths: string[]) =>
@@ -244,8 +267,9 @@ const validateDependencies = async (args: {
 	const packageDirectory = path.dirname(packageJson.path);
 
 	// get the dependencies for this package that are in the workspace
-	const workspaceDependencies = getAllDependencies(packageJson).filter(
-		(dependency) => workspacePackageNames.includes(dependency),
+	const allDependencies = getAllDependencies(packageJson);
+	const workspaceDependencies = allDependencies.filter((dependency) =>
+		workspacePackageNames.includes(dependency),
 	);
 
 	const wrongTsConfigs: InvalidTsConfig[] = [];
@@ -283,74 +307,89 @@ const validateDependencies = async (args: {
 					`${packageDirectory}/node_modules/**`,
 					`${packageDirectory}/dist/**`,
 				],
-			}
+			},
 		);
 		const allImports = new Set<string>();
 		for (const srcFile of srcFiles) {
-
 			let imports = getImportsFromTsFile(srcFile);
 			// if there's node:XYZ imports then remove them, add node types lib instead
 			const hasNodeImports = imports.some((importPath) =>
 				importPath.startsWith("node:"),
 			);
 			if (hasNodeImports) {
-				imports = imports.filter((importPath) => !importPath.startsWith("node:"));
+				imports = imports.filter(
+					(importPath) => !importPath.startsWith("node:"),
+				);
 				imports.push("@types/node");
 			}
 
-			// For each import, check if the file it refers to is in the current package dir.
-			// If so, filter it out. If not, add an import for the package containing the file specified by this import.
+			// Process imports to extract package names and handle relative imports
 			imports = imports.flatMap((importPath) => {
-				if (importPath.startsWith("./") || importPath.startsWith("../")) {
+				// Handle relative imports (./ or ../)
+				if (importPath.startsWith(".")) {
 					// Resolve the absolute path of the import relative to the source file
 					const resolvedPath = path.resolve(path.dirname(srcFile), importPath);
 					// Check if the resolved path is inside the current package directory
 					if (resolvedPath.startsWith(packageDirectory)) {
 						// It's a file in the current package, filter it out
 						return [];
-					} else {
-						// It's outside the current package, try to find the package it belongs to
-						// Walk up from the resolvedPath to find a package.json
-						let dir = resolvedPath;
-						let found = false;
-						let pkgName: string | undefined = undefined;
-						while (dir !== path.dirname(dir)) {
-							const pkgJsonPath = path.join(dir, "package.json");
-							if (fs.existsSync(pkgJsonPath)) {
-								try {
-									const pkg = loadPackageConfig(pkgJsonPath);
-									pkgName = pkg.content.name;
-									found = true;
-									break;
-								} catch {
-									// ignore parse errors
-								}
-							}
-							dir = path.dirname(dir);
-						}
-						if (found && pkgName) {
-							return [pkgName];
-						}
-						// If no package.json found, ignore
-						return [];
 					}
+					// It's outside the current package, try to find the package it belongs to
+					// Walk up from the resolvedPath to find a package.json
+					let dir = resolvedPath;
+					let found = false;
+					let pkgName: string | undefined = undefined;
+					while (dir !== path.dirname(dir)) {
+						const pkgJsonPath = path.join(dir, "package.json");
+						if (fs.existsSync(pkgJsonPath)) {
+							try {
+								const pkg = loadPackageConfig(pkgJsonPath);
+								pkgName = pkg.content.name;
+								found = true;
+								break;
+							} catch {
+								// ignore parse errors
+							}
+						}
+						dir = path.dirname(dir);
+					}
+					if (found && pkgName) {
+						return [pkgName];
+					}
+					// If no package.json found, ignore
+					return [];
 				}
-				// Not a relative import, keep as is
-				return [importPath];
+
+				// Handle non-relative imports (package imports and sub-imports)
+				// Extract the base package name from sub-imports like 'svelte/elements' -> 'svelte'
+				if (importPath.startsWith("@")) {
+					// Scoped packages, so we need the first two parts
+					const parts = importPath.split("/");
+					return [parts.slice(0, 2).join("/")];
+				}
+				// Non-scoped packages, take the first part
+				const parts = importPath.split("/");
+				return [parts[0] || importPath];
 			});
+
+			// filter any imports that begin with #, these are shorthand internal imports
+			imports = imports.filter((importPath) => !importPath.startsWith("#"));
 
 			for (const importPath of imports) {
 				allImports.add(importPath);
 			}
 		}
 
-		// filter out imports that are in the package.json or tsconfig.json
+		// record all the imports that are not in the package.json or tsconfig.json
 		const missingDependencies = Array.from(allImports).filter(
-			(importPath) => !workspaceDependencies.includes(importPath),
+			(importPath) => !allDependencies.includes(importPath),
 		);
 
-		const unnecessaryDependencies = workspaceDependencies.filter(
-			(dependency) => !allImports.has(dependency),
+		// record all the dependencies that are not imported, unless specified as devDependencies
+		const devDependencies = getDevDependencies(packageJson);
+		const unnecessaryDependencies = allDependencies.filter(
+			(dependency) =>
+				!allImports.has(dependency) && !devDependencies.includes(dependency),
 		);
 
 		if (
