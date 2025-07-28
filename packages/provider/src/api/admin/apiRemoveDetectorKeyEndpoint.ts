@@ -25,8 +25,9 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
 
 class ApiRemoveDetectorKeyEndpoint
-	implements ApiEndpoint<UpdateDetectorKeyBodyType> {
-	public constructor(private readonly clientTaskManager: ClientTaskManager) { }
+	implements ApiEndpoint<UpdateDetectorKeyBodyType>
+{
+	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<UpdateDetectorKeyBodyType>,

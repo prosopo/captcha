@@ -172,12 +172,12 @@ export async function setup(provider: boolean, sites: boolean) {
 				const envVarNames =
 					siteKey.settings.captchaType === "image"
 						? [
-							"PROSOPO_SITE_KEY",
-							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-						]
+								"PROSOPO_SITE_KEY",
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							]
 						: [
-							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-						];
+								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+							];
 
 				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
 			}

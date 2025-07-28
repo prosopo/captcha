@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
 import _ from "lodash";
+import { z } from "zod";
 
 export type LogObject = object;
 export type LogRecord = {
@@ -110,11 +110,13 @@ export function getLogger({
 	}
 	const logger = new NativeLogger(scope, url);
 	// try to get the level from the environment variable
-	const envLevel = process?.env?.PROSOPO_LOG_LEVEL || process?.env?.LOG_LEVEL || InfoLevel;
+	const envLevel =
+		process?.env?.PROSOPO_LOG_LEVEL || process?.env?.LOG_LEVEL || InfoLevel;
 	const level = parseLogLevel(envLevel);
 	logger.setLogLevel(level);
 	// try to get the pretty from the environment variable
-	const envPretty = process?.env?.PROSOPO_LOG_PRETTY || process?.env?.LOG_PRETTY || "false";
+	const envPretty =
+		process?.env?.PROSOPO_LOG_PRETTY || process?.env?.LOG_PRETTY || "false";
 	const pretty = envPretty === "true";
 	logger.setPretty(pretty);
 	return logger;
@@ -319,7 +321,7 @@ export class NativeLogger implements Logger {
 			errData?: LogRecord;
 		} = { url: this.url, scope: this.scope, ts, level: this.level };
 		if (event) {
-			baseRecord.event = event
+			baseRecord.event = event;
 		}
 		if (data) {
 			baseRecord.data = data;

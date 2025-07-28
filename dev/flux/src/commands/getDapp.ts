@@ -22,7 +22,8 @@ const fluxGetDappArgs = z.object({
 });
 export default (cmdArgs?: { logger?: Logger }) => {
 	const logger =
-		cmdArgs?.logger || getLogger({ scope: "dev.flux.cli.getDapp", url: import.meta.url });
+		cmdArgs?.logger ||
+		getLogger({ scope: "dev.flux.cli.getDapp", url: import.meta.url });
 
 	return {
 		command: "getDapp <app>",
