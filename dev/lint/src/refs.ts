@@ -232,9 +232,9 @@ const validateDependencies = async (args: {
 		for (const srcFile of srcFiles) {
 			const srcFileContent = fs.readFileSync(srcFile, "utf8");
 			// This regex matches import statements with 'from', bare imports (e.g. import "xyz.js"), and dynamic imports (e.g. import("xyz"))
-			const importRegexWithFrom = /import[\s\S]*?from\s*['"](.+?)['"]/g;
-			const importRegexBare = /import\s*['"](.+?)['"]/g;
-			const importRegexDynamic = /import\s*\(\s*['"](.+?)['"]\s*\)/g;
+			const importRegexWithFrom = /import[\s\S]+?from\s+['"](.+?)['"]/g;
+			const importRegexBare = /import\s+['"](.+?)['"]/g;
+			const importRegexDynamic = /import\(['"](.+?)['"]\)/g;
 
 			const matchesWithFrom = Array.from(
 				srcFileContent.matchAll(importRegexWithFrom),
