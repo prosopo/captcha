@@ -183,6 +183,12 @@ const validateDependencies = async (args: {
 	workspacePackageNames: string[];
 }): Promise<InvalidTsConfig[]> => {
 	const packageJson = args.packageJson;
+
+	// skip workspaces
+	if (packageJson.content.workspaces) {
+		return [];
+	}
+
 	const workspacePackageNames = args.workspacePackageNames;
 	const packageDirectory = path.dirname(packageJson.path);
 
@@ -223,9 +229,16 @@ const validateDependencies = async (args: {
 		const allImports = new Set<string>();
 		for (const srcFile of srcFiles) {
 			const srcFileContent = fs.readFileSync(srcFile, "utf8");
-			const imports = srcFileContent.match(/import\s+['"]([^'"]+)['"]/g);
-			if (!imports) continue;
-			for (const importPath of imports) {
+			const importRegex = /import.+['"](.+?)['"]/g;
+			const workspaceImports: string[] = [];
+			let match;
+			while ((match = importRegex.exec(srcFileContent)) !== null) {
+				const importPath = match[1];
+				if (importPath && workspacePackageNames.includes(importPath)) {
+					workspaceImports.push(importPath);
+				}
+			}
+			for (const importPath of workspaceImports) {
 				allImports.add(importPath);
 			}
 		}
