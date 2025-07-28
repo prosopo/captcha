@@ -42,7 +42,6 @@
 		"@prosopo/keyring": "2.8.11",
 		"@prosopo/load-balancer": "2.6.19",
 		"@prosopo/types": "3.0.8",
-		"@prosopo/util": "3.0.7",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
@@ -50,11 +49,9 @@
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
-		"@types/node": "^20.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"i18next": "^23.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",

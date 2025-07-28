@@ -27,9 +27,6 @@
 		},
 		{
 			"path": "../widget-skeleton/tsconfig.cjs.json"
-		},
-		{
-			"path": "../account/tsconfig.cjs.json"
 		}
 	]
 }

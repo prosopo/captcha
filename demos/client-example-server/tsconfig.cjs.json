@@ -24,9 +24,6 @@
 		},
 		{
 			"path": "../../packages/util"
-		},
-		{
-			"path": "../../packages/keyring"
 		}
 	]
 }

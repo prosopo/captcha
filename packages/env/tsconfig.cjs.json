@@ -25,12 +25,6 @@
 		},
 		{
 			"path": "../types-env/tsconfig.cjs.json"
-		},
-		{
-			"path": "../keyring/tsconfig.cjs.json"
-		},
-		{
-			"path": "../util-crypto/tsconfig.cjs.json"
 		}
 	]
 }

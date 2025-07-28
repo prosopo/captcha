@@ -17,8 +17,6 @@
 		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/dotenv": "3.0.9",
-		"@prosopo/keyring": "2.8.11",
 		"@prosopo/types": "3.0.8",
 		"@prosopo/util": "3.0.7",
 		"express": "4.21.2",
@@ -30,7 +28,6 @@
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
-		"@polkadot/util": "^12.6.2",
 		"@cypress/xpath": "2.0.3",
 		"@prosopo/common": "3.1.4",
 		"@prosopo/datasets": "3.0.17",

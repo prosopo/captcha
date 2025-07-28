@@ -26,12 +26,6 @@
 		},
 		{
 			"path": "../types-env"
-		},
-		{
-			"path": "../keyring"
-		},
-		{
-			"path": "../util-crypto"
 		}
 	]
 }

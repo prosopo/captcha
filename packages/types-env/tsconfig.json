@@ -23,9 +23,6 @@
 		},
 		{
 			"path": "../types-database"
-		},
-		{
-			"path": "../keyring"
 		}
 	]
 }
