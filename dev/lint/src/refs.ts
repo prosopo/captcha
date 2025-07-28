@@ -225,19 +225,25 @@ const validateDependencies = async (args: {
 
 		// grep the source code for imports
 		// there may be imports, e.g. @prosopo/util, that are not in the package.json or tsconfig.json
-		const srcFiles = fg.globSync(`${packageDirectory}/**/*.{ts,tsx,js,jsx}`);
+		const srcFiles = fg.globSync(
+			`${packageDirectory}/**/*.{ts,tsx,js,jsx,vue,mjs,cjs,svelte}`,
+		);
 		const allImports = new Set<string>();
 		for (const srcFile of srcFiles) {
 			const srcFileContent = fs.readFileSync(srcFile, "utf8");
-			// This regex matches import statements with 'from' and also bare imports (e.g. import "xyz.js")
+			// This regex matches import statements with 'from', bare imports (e.g. import "xyz.js"), and dynamic imports (e.g. import("xyz"))
 			const importRegexWithFrom = /import[\s\S]*?from\s*['"](.+?)['"]/g;
 			const importRegexBare = /import\s*['"](.+?)['"]/g;
+			const importRegexDynamic = /import\s*\(\s*['"](.+?)['"]\s*\)/g;
 
 			const matchesWithFrom = Array.from(
 				srcFileContent.matchAll(importRegexWithFrom),
 			);
 			const matchesBare = Array.from(srcFileContent.matchAll(importRegexBare));
-			const matches = [...matchesWithFrom, ...matchesBare];
+			const matchesDynamic = Array.from(
+				srcFileContent.matchAll(importRegexDynamic),
+			);
+			const matches = [...matchesWithFrom, ...matchesBare, ...matchesDynamic];
 
 			for (const match of matches) {
 				const importPath = match[1];
