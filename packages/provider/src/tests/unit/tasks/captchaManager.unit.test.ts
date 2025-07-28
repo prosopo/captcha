@@ -24,7 +24,7 @@ import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger({ scope: import.meta.url });
 
 const defaultUserSettings: IUserSettings = {
 	frictionlessThreshold: 0.8,

@@ -39,7 +39,7 @@ export default (
 	cmdArgs?: { logger?: Logger },
 ) => {
 	const logger =
-		cmdArgs?.logger || getLogger(LogLevel.enum.info, "cli.dapp_register");
+		cmdArgs?.logger || getLogger("procaptcha.cli.dapp-register");
 
 	return {
 		command: "site_key_register_api <sitekey> <url>",

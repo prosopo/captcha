@@ -17,7 +17,7 @@ import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { ignoreMiddleware } from "../../../api/ignoreMiddleware.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger({ scope: import.meta.url });
 
 vi.mock("@prosopo/util", () => ({
 	hexToU8a: vi.fn(),

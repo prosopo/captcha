@@ -53,7 +53,7 @@ export class MongoDatabase implements IDatabase {
 		this._url = parsedUrl.toString();
 		this.safeURL = this.url.replace(/\w+:\w+/, "<Credentials>");
 		this.dbname = dbname || parsedUrl.pathname.replace("/", "");
-		this.logger = logger || getLogger("info", import.meta.url);
+		this.logger = logger || getLogger({ scope: import.meta.url });
 	}
 
 	get url(): string {

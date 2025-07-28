@@ -18,10 +18,7 @@ import { generateMnemonic } from "@prosopo/keyring";
 import { updateEnvFile } from "../setup/index.js";
 
 loadEnv();
-const logger = getLogger(
-	parseLogLevel(process.env.PROSOPO_LOG_LEVEL),
-	import.meta.url,
-);
+const logger = getLogger(import.meta.url);
 
 async function mnemonic(addToEnv: boolean) {
 	const [mnemonic, address] = await generateMnemonic();

@@ -221,7 +221,7 @@ describe("redisAccessRules", () => {
 		beforeAll(async () => {
 			accessRulesReader = createRedisAccessRulesReader(
 				redisClient,
-				getLogger(LogLevel.enum.info, "RedisAccessRulesReader"),
+				getLogger("RedisAccessRulesReader"),
 			);
 		});
 

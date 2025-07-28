@@ -29,7 +29,7 @@ import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
 import { setupProvider } from "./provider.js";
 import { registerSiteKey } from "./site.js";
 
-const logger = getLogger(LogLevel.enum.info, "setup");
+const logger = getLogger("dev-scripts.setup");
 const __dirname = path.resolve();
 
 // Take the root dir from the environment or assume it's the root of this package
@@ -172,12 +172,12 @@ export async function setup(provider: boolean, sites: boolean) {
 				const envVarNames =
 					siteKey.settings.captchaType === "image"
 						? [
-								"PROSOPO_SITE_KEY",
-								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-							]
+							"PROSOPO_SITE_KEY",
+							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+						]
 						: [
-								`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
-							];
+							`PROSOPO_SITE_KEY_${siteKey.settings.captchaType.toUpperCase()}`,
+						];
 
 				await updateEnvFiles(envVarNames, siteKey.pair.address, env.logger);
 			}

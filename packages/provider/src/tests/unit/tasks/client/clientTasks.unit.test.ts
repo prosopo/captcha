@@ -28,7 +28,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger({ scope: import.meta.url });
 
 type TestScheduledTaskRecord = Pick<
 	ScheduledTaskRecord,
@@ -255,25 +255,25 @@ describe("ClientTaskManager", () => {
 			UserCommitment,
 			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				id: "commitment1",
-				// Image commitments were stored at time 1
-				lastUpdatedTimestamp: 1,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					id: "commitment1",
+					// Image commitments were stored at time 1
+					lastUpdatedTimestamp: 1,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		const mockPoWCommitments: Pick<
 			PoWCaptchaStored,
 			"challenge" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
-			{
-				challenge: "1234567___userAccount___dappAccount",
-				// PoW commitments were stored at time 3
-				lastUpdatedTimestamp: 3,
-				storedAtTimestamp: 1,
-			},
-		];
+				{
+					challenge: "1234567___userAccount___dappAccount",
+					// PoW commitments were stored at time 3
+					lastUpdatedTimestamp: 3,
+					storedAtTimestamp: 1,
+				},
+			];
 
 		// Create a mock last scheduled task
 		const mockLastScheduledTask: Pick<

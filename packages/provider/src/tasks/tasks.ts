@@ -50,7 +50,8 @@ export class Tasks {
 		this.db = env.getDb();
 		this.captchaConfig = env.config.captchas;
 		this.logger =
-			logger || getLogger(parseLogLevel(env.config.logLevel), "Tasks");
+			logger || getLogger("procaptcha.provider.tasks");
+		this.logger.setLogLevel(parseLogLevel(env.config.logLevel));
 		if (!env.pair) {
 			throw new ProsopoEnvError("DEVELOPER.MISSING_PROVIDER_PAIR", {
 				context: { failedFuncName: "Tasks.constructor" },

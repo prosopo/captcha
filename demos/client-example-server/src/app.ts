@@ -34,7 +34,7 @@ enum ProsopoVerificationType {
 	local = "local",
 }
 
-const logger = getLogger("info", import.meta.url);
+const logger = getLogger(import.meta.url);
 
 async function main() {
 	loadEnv();

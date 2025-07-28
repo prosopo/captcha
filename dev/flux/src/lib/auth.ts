@@ -21,7 +21,7 @@ import { sign } from "./sep256k1Sign.js";
 import { getNodeAPIURL, prefixIPAddress } from "./url.js";
 
 loadEnv();
-const log = getLogger("info", import.meta.url);
+const log = getLogger(import.meta.url);
 export const FLUX_URL = new URL("https://api.runonflux.io/");
 
 interface ResponseLoginPhrase {
