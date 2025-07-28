@@ -26,6 +26,7 @@ export type Logger = {
 	setLogLevel(level: LogLevel): void;
 	getLogLevel(): LogLevel;
 	getScope(): string;
+	getUrl(): string;
 	info(fn: LogRecordFn): void;
 	debug(fn: LogRecordFn): void;
 	trace(fn: LogRecordFn): void;
@@ -86,11 +87,20 @@ export function parseLogLevel(
 }
 
 // Create a new logger with the given level and scope
-export function getLogger(scope: string): Logger {
+export function getLogger({
+	scope,
+	url,
+}: {
+	scope: string;
+	url: string;
+}): Logger {
 	if (!scope) {
-		throw new Error("Scope is required and cannot be empty");
+		throw new Error("getLogger() requires a scope to be provided");
 	}
-	const logger = new NativeLogger(scope);
+	if (!url) {
+		throw new Error("getLogger() requires a URL to be provided");
+	}
+	const logger = new NativeLogger(scope, url);
 	// try to get the level from the environment variable
 	const envLevel = process?.env?.PROSOPO_LOG_LEVEL || process?.env?.LOG_LEVEL || InfoLevel;
 	const level = parseLogLevel(envLevel);
@@ -119,13 +129,14 @@ export class NativeLogger implements Logger {
 	private defaultData: LogObject | undefined;
 	private level: LogLevel;
 	private levelNum: number;
+	private levelMap: LevelMap = logLevelMap;
 	private pretty = 0; // pretty print indentation level - 0 = no pretty print, 2 = 2 spaces, etc
 	private printStack = false; // whether to print the stack trace in the log
 	private format: Format = FormatJson;
 
 	constructor(
 		private scope: string,
-		private levelMap: LevelMap = logLevelMap,
+		private url: string,
 	) {
 		this.level = InfoLevel; // default log level
 		this.levelNum = this.levelMap[this.level];
@@ -143,7 +154,7 @@ export class NativeLogger implements Logger {
 	}
 
 	with(obj: LogObject): Logger {
-		const newLogger = new NativeLogger(this.scope);
+		const newLogger = new NativeLogger(this.scope, this.url);
 		newLogger.defaultData = { ...this.defaultData, ...obj };
 		newLogger.setLogLevel(this.getLogLevel());
 		return newLogger;
@@ -167,6 +178,10 @@ export class NativeLogger implements Logger {
 
 	getScope(): string {
 		return this.scope;
+	}
+
+	getUrl(): string {
+		return this.url;
 	}
 
 	setLogLevel(level: LogLevel): void {
