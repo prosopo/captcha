@@ -153,6 +153,16 @@ export class NativeLogger implements Logger {
 		this.levelNum = this.levelMap[this.level];
 	}
 
+	clone(): NativeLogger {
+		const newLogger = new NativeLogger(this.scope, this.url);
+		newLogger.defaultData = { ...this.defaultData };
+		newLogger.setLogLevel(this.getLogLevel());
+		newLogger.setPretty(this.getPretty());
+		newLogger.setPrintStack(this.getPrintStack());
+		newLogger.setFormat(this.getFormat());
+		return newLogger;
+	}
+
 	setFormat(format: Format): void {
 		this.format = format;
 		if (this.format !== FormatJson) {
@@ -165,17 +175,15 @@ export class NativeLogger implements Logger {
 	}
 
 	with(obj: LogObject): Logger {
-		const newLogger = new NativeLogger(this.scope, this.url);
+		const newLogger = this.clone();
 		newLogger.defaultData = { ...this.defaultData, ...obj };
-		newLogger.setLogLevel(this.getLogLevel());
 		return newLogger;
 	}
 
 	subScope(subScope: string): Logger {
 		const newScope = `${this.scope}.${subScope}`;
-		const newLogger = new NativeLogger(newScope, this.url);
-		newLogger.defaultData = { ...this.defaultData };
-		newLogger.setLogLevel(this.getLogLevel());
+		const newLogger = this.clone();
+		newLogger.scope = newScope;
 		return newLogger;
 	}
 
