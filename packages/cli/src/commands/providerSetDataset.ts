@@ -28,7 +28,7 @@ export default (
 ) => {
 	const logger =
 		cmdArgs?.logger ||
-		getLogger(LogLevel.enum.info, "cli.provider_set_data_set");
+		getLogger("procaptcha.cli.provider-set-dataset");
 
 	return {
 		command: "provider_set_data_set",

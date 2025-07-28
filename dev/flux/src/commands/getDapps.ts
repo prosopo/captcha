@@ -17,7 +17,7 @@ import { getPrivateKey, getPublicKey } from "./process.env.js";
 
 export default (cmdArgs?: { logger?: Logger }) => {
 	const logger =
-		cmdArgs?.logger || getLogger(LogLevel.enum.info, "flux.cli.getDapps");
+		cmdArgs?.logger || getLogger("flux.cli.getDapps");
 
 	return {
 		command: "getDapps",

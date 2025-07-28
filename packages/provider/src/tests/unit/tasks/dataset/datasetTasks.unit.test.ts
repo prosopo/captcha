@@ -33,7 +33,7 @@ import { DatasetManager } from "../../../../tasks/dataset/datasetTasks.js";
 // Import directly and mock the function
 import * as datasetTasksUtils from "../../../../tasks/dataset/datasetTasksUtils.js";
 
-const loggerOuter = getLogger("info", import.meta.url);
+const loggerOuter = getLogger({ scope: import.meta.url });
 
 vi.mock("@prosopo/database", () => ({
 	saveCaptchaEvent: vi.fn(),

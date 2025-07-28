@@ -35,7 +35,7 @@ export async function processArgs(args: string[]) {
 		choices: Object.keys(LogLevel.enum),
 	}).argv;
 
-	const log = getLogger(parseLogLevel(parsed.logLevel), "CLI");
+	const log = getLogger("dev-scripts.cli");
 
 	await yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")

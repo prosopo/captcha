@@ -25,19 +25,18 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
 
 class ApiUpdateDetectorKeyEndpoint
-	implements ApiEndpoint<UpdateDetectorKeyBodyType>
-{
-	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
+	implements ApiEndpoint<UpdateDetectorKeyBodyType> {
+	public constructor(private readonly clientTaskManager: ClientTaskManager) { }
 
 	async processRequest(
 		args: z.infer<UpdateDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", "");
+		logger = logger || getLogger("");
 		try {
 			const { detectorKey } = args;
 
-			logger = logger || getLogger("info", "");
+			logger = logger || getLogger("");
 
 			logger.info(() => ({ msg: "Updating detector key" }));
 

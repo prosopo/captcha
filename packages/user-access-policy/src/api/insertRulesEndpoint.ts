@@ -52,15 +52,14 @@ export type InsertManyRulesEndpointOutputSchema = z.output<
 >;
 
 export class InsertRulesEndpoint
-	implements ApiEndpoint<InsertRulesEndpointSchema>
-{
-	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
+	implements ApiEndpoint<InsertRulesEndpointSchema> {
+	public constructor(private readonly accessRulesWriter: AccessRulesWriter) { }
 
 	async processRequest(
 		args: z.infer<InsertRulesEndpointSchema>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger(LogLevel.enum.info, "InsertRulesEndpoint");
+		logger = logger || getLogger("InsertRulesEndpoint");
 
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {

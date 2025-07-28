@@ -18,7 +18,7 @@ import { main as authMain, verifyLogin } from "./auth.js";
 import { getSocketURL } from "./url.js";
 
 loadEnv();
-const logger = getLogger(LogLevel.enum.info, "flux.lib.terminal");
+const logger = getLogger("flux.lib.terminal");
 
 export async function main(
 	publicKey: string,

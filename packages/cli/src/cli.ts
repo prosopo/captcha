@@ -22,7 +22,7 @@ import { processArgs } from "./argv.js";
 import getConfig from "./prosopo.config.js";
 import ReloadingAPI from "./reloader.js";
 
-const log = getLogger(LogLevel.enum.info, "CLI");
+const log = getLogger("procaptcha.cli");
 
 async function main() {
 	const envPath = loadEnv();

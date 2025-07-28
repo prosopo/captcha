@@ -22,7 +22,7 @@ import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js
 import { Tasks } from "../../../tasks/tasks.js";
 
 vi.mock("@prosopo/env", () => {
-	const loggerOuter = getLogger("info", import.meta.url);
+	const loggerOuter = getLogger({ scope: import.meta.url });
 	const mockLogger = {
 		debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
 		log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),

@@ -24,7 +24,7 @@ const fluxAuthArgs = z.object({
 
 export default (cmdArgs?: { logger?: Logger }) => {
 	const logger =
-		cmdArgs?.logger || getLogger(LogLevel.enum.info, "flux.cli.auth");
+		cmdArgs?.logger || getLogger("flux.cli.auth");
 
 	return {
 		command: "auth <app>",

@@ -18,7 +18,7 @@ import { i18nMiddleware } from "@prosopo/locale";
 import cors from "cors";
 import express from "express";
 import { prosopoRouter } from "./api.js";
-const logger = getLogger(LogLevel.enum.info, "prosopo:provider-mock:start.ts");
+const logger = getLogger("provider-mock.start");
 
 async function startApi() {
 	const apiApp = express();

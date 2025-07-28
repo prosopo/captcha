@@ -24,7 +24,7 @@ export default (
 	cmdArgs?: { logger?: Logger },
 ) => {
 	const logger =
-		cmdArgs?.logger || getLogger(LogLevel.enum.info, "cli.store_captchas");
+		cmdArgs?.logger || getLogger("cli.store_captchas");
 
 	return {
 		command: "store_captchas",

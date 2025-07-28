@@ -22,9 +22,7 @@ import { getRootDir } from "@prosopo/workspace";
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created
 loadEnv();
-const logLevel = parseLogLevel(process.env.PROSOPO_LOG_LEVEL);
-const log = getLogger(logLevel, "setVersion");
-log.info(() => ({ data: { logLevel } }));
+const log = getLogger("setVersion");
 
 const parseVersion = (version: string) => {
 	try {

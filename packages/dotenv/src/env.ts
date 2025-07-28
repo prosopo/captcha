@@ -20,10 +20,7 @@ import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const logger = getLogger(
-	parseLogLevel(process.env.PROSOPO_LOG_LEVEL, LogLevel.enum.info),
-	import.meta.url,
-);
+const logger = getLogger(import.meta.url);
 
 export function getEnv() {
 	if (process.env.NODE_ENV) {

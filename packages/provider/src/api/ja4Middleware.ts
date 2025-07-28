@@ -27,7 +27,7 @@ import {
 export const DEFAULT_JA4 = "ja4";
 
 export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
-	logger = logger || getLogger("info", import.meta.url);
+	logger = logger || getLogger({ scope: import.meta.url });
 
 	// Default JA4+ fingerprint for development
 	if (process.env.NODE_ENV === "development") {

@@ -29,7 +29,7 @@ import { isMain } from "@prosopo/util";
 import varuint from "varuint-bitcoin";
 
 loadEnv();
-const logger = getLogger(LogLevel.enum.info, "flux.lib.sep256k1Sign");
+const logger = getLogger("flux.lib.sep256k1Sign");
 const MESSAGE_MAGIC = "\u0018Bitcoin Signed Message:\n";
 
 function hash256(buffer: Buffer) {

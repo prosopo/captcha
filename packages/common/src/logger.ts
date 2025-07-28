@@ -86,9 +86,19 @@ export function parseLogLevel(
 }
 
 // Create a new logger with the given level and scope
-export function getLogger(logLevel: LogLevel, scope: string): Logger {
+export function getLogger(scope: string): Logger {
+	if (!scope) {
+		throw new Error("Scope is required and cannot be empty");
+	}
 	const logger = new NativeLogger(scope);
-	logger.setLogLevel(logLevel);
+	// try to get the level from the environment variable
+	const envLevel = process?.env?.PROSOPO_LOG_LEVEL || process?.env?.LOG_LEVEL || InfoLevel;
+	const level = parseLogLevel(envLevel);
+	logger.setLogLevel(level);
+	// try to get the pretty from the environment variable
+	const envPretty = process?.env?.PROSOPO_LOG_PRETTY || process?.env?.LOG_PRETTY || "false";
+	const pretty = envPretty === "true";
+	logger.setPretty(pretty);
 	return logger;
 }
 
