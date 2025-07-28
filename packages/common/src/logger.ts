@@ -20,6 +20,7 @@ export type LogRecord = {
 	err?: unknown;
 	data?: LogObject;
 	msg?: string;
+	event?: string;
 };
 export type LogRecordFn = () => LogRecord;
 
@@ -316,11 +317,12 @@ export class NativeLogger implements Logger {
 			scope: string;
 			ts: string;
 			level: LogLevel;
+			event?: string;
 			data?: LogObject;
 			msg?: string;
 			err?: string;
 			errData?: LogRecord;
-		} = { url: this.url, scope: this.scope, ts, level: this.level };
+		} = { url: this.url, scope: this.scope, ts, level: this.level, event };
 		if (data) {
 			baseRecord.data = data;
 		}
