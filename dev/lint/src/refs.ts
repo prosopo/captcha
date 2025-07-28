@@ -231,10 +231,17 @@ const validateDependencies = async (args: {
 			const srcFileContent = fs.readFileSync(srcFile, "utf8");
 			const importRegex = /import.+['"](.+?)['"]/g;
 			const workspaceImports: string[] = [];
-			let match;
-			while ((match = importRegex.exec(srcFileContent)) !== null) {
+			let match: RegExpExecArray | null = null;
+			while (true) {
+				match = importRegex.exec(srcFileContent);
+				if (match === null) {
+					break;
+				}
 				const importPath = match[1];
-				if (importPath && workspacePackageNames.includes(importPath)) {
+				if (
+					importPath &&
+					workspacePackageNames.includes(importPath.toString())
+				) {
 					workspaceImports.push(importPath);
 				}
 			}
