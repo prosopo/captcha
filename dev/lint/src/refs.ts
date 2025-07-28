@@ -187,8 +187,9 @@ const validateDependencies = async (args: {
 	const packageDirectory = path.dirname(packageJson.path);
 
 	// get the dependencies for this package that are in the workspace
-	const workspaceDependencies = getAllDependencies(packageJson)
-		.filter((dependency) => workspacePackageNames.includes(dependency))
+	const workspaceDependencies = getAllDependencies(packageJson).filter(
+		(dependency) => workspacePackageNames.includes(dependency),
+	);
 
 	const wrongTsConfigs: InvalidTsConfig[] = [];
 
@@ -199,15 +200,14 @@ const validateDependencies = async (args: {
 		const tsConfigReferences = getTsConfigReferences(tsConfigJson);
 
 		// convert references to package names, e.g. ../common => @prosopo/common
-		const referencedPackageNames = tsConfigReferences
-			.map((referencePath) => {
-				const referenceDirectory = path.dirname(referencePath);
-				const referencedPackage = loadPackageConfigWithErrorContext(
-					`${packageDirectory}/${referenceDirectory}/package.json`,
-					`specified in ${tsConfigPath}`,
-				);
-				return getPackageName(referencedPackage);
-			})
+		const referencedPackageNames = tsConfigReferences.map((referencePath) => {
+			const referenceDirectory = path.dirname(referencePath);
+			const referencedPackage = loadPackageConfigWithErrorContext(
+				`${packageDirectory}/${referenceDirectory}/package.json`,
+				`specified in ${tsConfigPath}`,
+			);
+			return getPackageName(referencedPackage);
+		});
 
 		// validate references against dependencies
 		const unnecessaryReferences: string[] = referencedPackageNames.filter(
@@ -225,9 +225,9 @@ const validateDependencies = async (args: {
 			const srcFileContent = fs.readFileSync(srcFile, "utf8");
 			const imports = srcFileContent.match(/import\s+['"]([^'"]+)['"]/g);
 			if (!imports) continue;
-			imports.forEach((importPath) => {
+			for (const importPath of imports) {
 				allImports.add(importPath);
-			});
+			}
 		}
 
 		// filter out imports that are in the package.json or tsconfig.json
@@ -239,7 +239,12 @@ const validateDependencies = async (args: {
 			(dependency) => !allImports.has(dependency),
 		);
 
-		if (0 === unnecessaryReferences.length && 0 === missingReferences.length && 0 === missingDependencies.length && 0 === unnecessaryDependencies.length)
+		if (
+			0 === unnecessaryReferences.length &&
+			0 === missingReferences.length &&
+			0 === missingDependencies.length &&
+			0 === unnecessaryDependencies.length
+		)
 			continue;
 
 		wrongTsConfigs.push({
