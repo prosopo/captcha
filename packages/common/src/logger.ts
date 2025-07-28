@@ -40,6 +40,12 @@ export type Logger = {
 	 * @param obj An object to log, which will be added to every log message.
 	 */
 	with(obj: LogObject): Logger;
+	/**
+	 * Creates a new logger instance which includes the given sub-scope in every log message.
+	 * This is useful for adding context to log messages, such as user IDs, request IDs, etc.
+	 * @param subScope A string to add to the scope of the logger.
+	 */
+	subScope(subScope: string): Logger;
 	getPretty(): boolean;
 	setPretty(pretty: boolean): void;
 	getPrintStack(): boolean;
@@ -161,6 +167,14 @@ export class NativeLogger implements Logger {
 	with(obj: LogObject): Logger {
 		const newLogger = new NativeLogger(this.scope, this.url);
 		newLogger.defaultData = { ...this.defaultData, ...obj };
+		newLogger.setLogLevel(this.getLogLevel());
+		return newLogger;
+	}
+
+	subScope(subScope: string): Logger {
+		const newScope = `${this.scope}.${subScope}`;
+		const newLogger = new NativeLogger(newScope, this.url);
+		newLogger.defaultData = { ...this.defaultData };
 		newLogger.setLogLevel(this.getLogLevel());
 		return newLogger;
 	}
@@ -289,6 +303,7 @@ export class NativeLogger implements Logger {
 			data = { ...this.defaultData, ...data };
 		}
 		const baseRecord: {
+			url: string;
 			scope: string;
 			ts: string;
 			level: LogLevel;
@@ -296,7 +311,7 @@ export class NativeLogger implements Logger {
 			msg?: string;
 			err?: string;
 			errData?: LogRecord;
-		} = { scope: this.scope, ts, level: this.level };
+		} = { url: this.url, scope: this.scope, ts, level: this.level };
 		if (data) {
 			baseRecord.data = data;
 		}
