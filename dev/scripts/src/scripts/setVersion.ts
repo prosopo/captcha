@@ -22,7 +22,7 @@ import { getRootDir } from "@prosopo/workspace";
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created
 loadEnv();
-const log = getLogger("setVersion");
+const log = getLogger({ scope: "dev.scripts.setVersion", url: import.meta.url });
 
 const parseVersion = (version: string) => {
 	try {

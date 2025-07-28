@@ -18,7 +18,7 @@ import type { Options } from "yargs";
 import type * as z from "zod";
 
 export abstract class CliCommand<T extends z.ZodTypeAny> {
-	logger = getLogger({ scope: import.meta.url });
+	logger = getLogger({ scope: "datasets-fs.cli.cliCommand", url: import.meta.url });
 
 	// get the options for the CLI
 	public getOptions(): {

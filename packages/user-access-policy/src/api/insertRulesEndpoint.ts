@@ -59,7 +59,7 @@ export class InsertRulesEndpoint
 		args: z.infer<InsertRulesEndpointSchema>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("InsertRulesEndpoint");
+		logger = logger || getLogger({ scope: "user-access-policy.api.insertRulesEndpoint", url: import.meta.url });
 
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {

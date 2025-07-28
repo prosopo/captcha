@@ -41,7 +41,7 @@ export default (
 	cmdArgs?: { logger?: Logger },
 ) => {
 	const logger =
-		cmdArgs?.logger || getLogger("procaptcha.cli.dapp-register");
+		cmdArgs?.logger || getLogger({ scope: "procaptcha.cli.dapp-register", url: import.meta.url });
 
 	return {
 		command: "site_key_register <sitekey> <tier>",

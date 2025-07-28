@@ -221,7 +221,7 @@ describe("redisAccessRules", () => {
 		beforeAll(async () => {
 			accessRulesReader = createRedisAccessRulesReader(
 				redisClient,
-				getLogger("RedisAccessRulesReader"),
+				getLogger({ scope: "user-access-policy.tests.redisAccessRules", url: import.meta.url }),
 			);
 		});
 

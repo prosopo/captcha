@@ -20,7 +20,7 @@ const dirname = process.cwd();
 
 export class Cli {
 	#commands: CliCommandAny[];
-	logger = getLogger({ scope: import.meta.url });
+	logger = getLogger({ scope: "datasets-fs.cli.cli", url: import.meta.url });
 
 	constructor(commands: CliCommandAny[]) {
 		this.#commands = commands;

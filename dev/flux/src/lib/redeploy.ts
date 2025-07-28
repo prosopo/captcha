@@ -16,7 +16,7 @@ import { errorHandler } from "../errorHandler.js";
 import { main as authMain, verifyLogin } from "./auth.js";
 import { getZelIdAuthHeader } from "./url.js";
 
-const log = getLogger(import.meta.url);
+const log = getLogger({ scope: "dev.flux.lib.redeploy", url: import.meta.url });
 
 interface ResponseSoftRedeploy {
 	status: string;
