@@ -29,6 +29,9 @@
 		},
 		{
 			"path": "../load-balancer/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util/tsconfig.cjs.json"
 		}
 	]
 }

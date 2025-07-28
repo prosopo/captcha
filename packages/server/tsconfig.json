@@ -30,6 +30,9 @@
 		},
 		{
 			"path": "../load-balancer"
+		},
+		{
+			"path": "../util"
 		}
 	]
 }

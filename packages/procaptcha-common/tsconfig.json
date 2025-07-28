@@ -18,6 +18,9 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
+			"path": "../account"
+		},
+		{
 			"path": "../load-balancer"
 		},
 		{

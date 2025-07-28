@@ -50,6 +50,9 @@
 			"path": "../user-access-policy"
 		},
 		{
+			"path": "../../dev/workspace"
+		},
+		{
 			"path": "../api-express-router"
 		}
 	]

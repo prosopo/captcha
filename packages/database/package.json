@@ -36,6 +36,7 @@
 	"dependencies": {
 		"@prosopo/common": "3.1.4",
 		"@prosopo/config": "3.1.5",
+		"@prosopo/locale": "3.0.8",
 		"@prosopo/types": "3.0.8",
 		"@prosopo/types-database": "3.0.17",
 		"@prosopo/user-access-policy": "3.5.2",
@@ -51,6 +52,8 @@
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
+		"@polkadot/util": "^12.6.2",
+		"@types/node": "^20.0.0",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
