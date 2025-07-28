@@ -294,7 +294,7 @@ export class NativeLogger implements Logger {
 		}
 		const ts = new Date().toISOString();
 		// populate the log fields using the fn
-		let { data, msg, err } = fn();
+		let { data, msg, err, event } = fn();
 		let errMsg: string | undefined;
 		let errData: LogRecord | undefined;
 		if (err) {
@@ -322,7 +322,10 @@ export class NativeLogger implements Logger {
 			msg?: string;
 			err?: string;
 			errData?: LogRecord;
-		} = { url: this.url, scope: this.scope, ts, level: this.level, event };
+		} = { url: this.url, scope: this.scope, ts, level: this.level };
+		if (event) {
+			baseRecord.event = event
+		}
 		if (data) {
 			baseRecord.data = data;
 		}
