@@ -108,11 +108,6 @@ export function getLogger({
 	if (!url) {
 		throw new Error("getLogger() requires a URL to be provided");
 	}
-	// drop the file:// prefix from url, if present
-	const filePrefix = "file://";
-	if (url.startsWith(filePrefix)) {
-		url = url.slice(filePrefix.length);
-	}
 	const logger = new NativeLogger(scope, url);
 	// try to get the level from the environment variable
 	const envLevel = process?.env?.PROSOPO_LOG_LEVEL || process?.env?.LOG_LEVEL || InfoLevel;
