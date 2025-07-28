@@ -258,8 +258,7 @@ const validateDependencies = async (args: {
 
 		// filter out imports that are in the package.json or tsconfig.json
 		const missingDependencies = Array.from(allImports)
-			.filter((importPath) => !workspaceDependencies.includes(importPath))
-			.filter((importPath) => !workspacePackageNames.includes(importPath));
+			.filter((importPath) => !workspaceDependencies.includes(importPath));
 
 		const unnecessaryDependencies = workspaceDependencies.filter(
 			(dependency) => !allImports.has(dependency),
