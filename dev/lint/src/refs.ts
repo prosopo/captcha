@@ -186,8 +186,6 @@ const validateDependencies = async (args: {
 	// get the dependencies for this package that are in the workspace
 	const workspaceDependencies = getAllDependencies(packageJson)
 		.filter((dependency) => workspacePackageNames.includes(dependency))
-		// ignore @prosopo/config package because of circular dependency
-		.filter((dependency) => dependency !== "@prosopo/config");
 
 	const wrongTsConfigs: InvalidTsConfig[] = [];
 
@@ -207,8 +205,6 @@ const validateDependencies = async (args: {
 				);
 				return getPackageName(referencedPackage);
 			})
-			// ignore @prosopo/config package because of circular dependency
-			.filter((packageName) => packageName !== "@prosopo/config");
 
 		// validate references against dependencies
 		const unnecessaryReferences: string[] = referencedPackageNames.filter(
