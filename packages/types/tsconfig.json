@@ -20,6 +20,15 @@
 		},
 		{
 			"path": "../locale"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

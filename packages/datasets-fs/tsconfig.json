@@ -23,6 +23,12 @@
 		},
 		{
 			"path": "../types"
+		},
+		{
+			"path": "../util-crypto"
+		},
+		{
+			"path": "../../dev/workspace"
 		}
 	]
 }

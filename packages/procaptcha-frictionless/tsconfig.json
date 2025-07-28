@@ -35,6 +35,15 @@
 		},
 		{
 			"path": "../widget-skeleton"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../procaptcha-common"
 		}
 	]
 }

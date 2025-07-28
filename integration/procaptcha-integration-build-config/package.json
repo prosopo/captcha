@@ -23,13 +23,14 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
 	"dependencies": {
-		"axios": "1.10.0",
-		"deepmerge": "4.3.1",
 		"@prosopo/config": "3.1.5",
-		"esbuild": "0.25.6",
+		"deepmerge": "4.3.1",
 		"vite": "6.3.5",
-		"vite-plugin-dts": "4.5.4",
-		"webpack-dev-server": "5.2.2"
+		"vite-plugin-dts": "4.5.4"
+	},
+	"devDependencies": {
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

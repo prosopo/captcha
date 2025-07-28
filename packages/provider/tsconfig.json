@@ -61,6 +61,12 @@
 		},
 		{
 			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../locale"
 		}
 	]
 }
