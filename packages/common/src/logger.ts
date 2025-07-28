@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { z } from "zod";
+import _ from "lodash";
 
 export type LogObject = object;
 export type LogRecord = {
@@ -155,7 +156,7 @@ export class NativeLogger implements Logger {
 
 	clone(): NativeLogger {
 		const newLogger = new NativeLogger(this.scope, this.url);
-		newLogger.defaultData = { ...this.defaultData };
+		newLogger.defaultData = _.cloneDeep(this.defaultData);
 		newLogger.setLogLevel(this.getLogLevel());
 		newLogger.setPretty(this.getPretty());
 		newLogger.setPrintStack(this.getPrintStack());
