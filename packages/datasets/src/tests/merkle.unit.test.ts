@@ -19,6 +19,7 @@ import {
 	type RawSolution,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
+import { hexHashArray } from "@prosopo/util-crypto";
 import { beforeAll, describe, expect, test } from "vitest";
 import {
 	CaptchaMerkleTree,
@@ -26,7 +27,6 @@ import {
 	computeItemHash,
 	matchItemsToSolutions,
 } from "../index.js";
-import { hexHashArray } from "@prosopo/util-crypto";
 
 async function getDataset(): Promise<Dataset> {
 	return {

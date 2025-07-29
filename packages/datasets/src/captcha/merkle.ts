@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ProsopoError } from "@prosopo/common";
 import type {
 	MerkleLayer,
 	MerkleLeaf,
@@ -20,7 +21,6 @@ import type {
 	MerkleProofLayer,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { ProsopoError } from "@prosopo/common";
 import { hexHashArray } from "@prosopo/util-crypto";
 
 class MerkleNode implements MerkleNodeInterface {

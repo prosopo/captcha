@@ -197,7 +197,9 @@ export default async function (
 					nodePolyfills({
 						include: ["crypto"],
 					}),
+					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
 					css() as any,
+					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
 					wasm() as any,
 					// @ts-ignore
 					nodeResolve({
@@ -206,6 +208,7 @@ export default async function (
 						rootDir: path.resolve(dir, "../../"),
 						dedupe: ["react", "react-dom"],
 						modulesOnly: true,
+						// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
 					}) as any,
 					// String replacement plugin for fingerprinting code
 					{

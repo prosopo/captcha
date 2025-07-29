@@ -45,7 +45,8 @@
 		"@prosopo/types": "3.0.8",
 		"@prosopo/types-database": "3.0.17",
 		"@prosopo/util": "3.0.7",
-		"@prosopo/config": "3.1.5"
+		"@prosopo/config": "3.1.5",
+		"@prosopo/util-crypto": "13.5.6"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
