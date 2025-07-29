@@ -15,19 +15,19 @@ import { describe, expect, it, test } from "vitest";
 import { jsonDecode, jsonEncode } from "../json.js";
 
 describe("json", () => {
+	const str =
+		'{"a":{"type":"bigint","value":"1"},"b":"hello","c":[{"type":"bigint","value":"1"},{"type":"bigint","value":"2"},{"type":"bigint","value":"3"}]}';
+	const obj = {
+		a: 1n,
+		b: "hello",
+		c: [1n, 2n, 3n],
+	};
 
-    const str = '{"a":{"type":"bigint","value":"1"},"b":"hello","c":[{"type":"bigint","value":"1"},{"type":"bigint","value":"2"},{"type":"bigint","value":"3"}]}'
-    const obj = {
-        a: 1n,
-        b: "hello",
-        c: [1n, 2n, 3n]
-    };
+	test("encode obj with bigint", () => {
+		expect(jsonEncode(obj)).to.deep.equal(str);
+	});
 
-    test("encode obj with bigint", () => {
-        expect(jsonEncode(obj)).to.deep.equal(str);
-    });
-
-    test("decode obj with bigint", () => {
-        expect(jsonDecode(str)).to.deep.equal(obj);
-    });
+	test("decode obj with bigint", () => {
+		expect(jsonDecode(str)).to.deep.equal(obj);
+	});
 });
