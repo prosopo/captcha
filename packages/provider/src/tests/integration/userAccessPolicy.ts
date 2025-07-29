@@ -82,11 +82,11 @@ export const userAccessPolicy = async (
 				...(block
 					? { type: AccessPolicyType.Block }
 					: {
-						type: AccessPolicyType.Restrict,
-						captchaType: captchaType,
-						...(solved && { solvedImagesCount: solved }),
-						...(powDifficulty && { powDifficulty: powDifficulty }),
-					}),
+							type: AccessPolicyType.Restrict,
+							captchaType: captchaType,
+							...(solved && { solvedImagesCount: solved }),
+							...(powDifficulty && { powDifficulty: powDifficulty }),
+						}),
 				...(description && { description: description }),
 				...(score && { frictionlessScore: score }),
 			},
@@ -114,6 +114,5 @@ export const userAccessPolicy = async (
 			timestamp.toString(),
 			signature,
 		);
-
 	}
 };

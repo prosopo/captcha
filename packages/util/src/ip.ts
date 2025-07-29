@@ -13,9 +13,6 @@
 // limitations under the License.
 
 import { Address4, Address6 } from "ip-address";
-import { getLogger } from "@prosopo/common";
-
-const logger = getLogger("info", import.meta.url);
 
 export const getIPAddress = (ipAddressString: string) => {
 	try {
@@ -24,8 +21,7 @@ export const getIPAddress = (ipAddressString: string) => {
 		try {
 			return new Address6(ipAddressString);
 		} catch (e) {
-			logger.error(() => ({ data: { ipAddressString }, err: e }));
-			throw new Error("API.INVALID_IP");
+			throw new Error(`API.INVALID_IP: ${ipAddressString}`);
 		}
 	}
 };
