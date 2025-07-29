@@ -34,7 +34,7 @@
 		"@prosopo/types": "3.0.8",
 		"@prosopo/util": "3.0.7",
 		"@prosopo/config": "3.1.5",
-		"@redis/search": "1.1.0",
+		"@redis/search": "5.6.1",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
 		"redis": "5.0.0",
