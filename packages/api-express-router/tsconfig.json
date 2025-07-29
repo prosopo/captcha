@@ -18,6 +18,18 @@
 		},
 		{
 			"path": "../common"
+		},
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
+			"path": "../env"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../types"
 		}
 	]
 }

@@ -24,6 +24,9 @@
 	},
 	"references": [
 		{
+			"path": "../../../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../angular-procaptcha-wrapper"
 		}
 	]

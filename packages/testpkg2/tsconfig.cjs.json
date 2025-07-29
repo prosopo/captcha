@@ -9,5 +9,10 @@
 		"./src/**/*.json",
 		"./src/**/*.d.ts",
 		"./src/**/*.tsx"
+	],
+	"references": [
+		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		}
 	]
 }

@@ -15,6 +15,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../api-route"
 		},
 		{
@@ -58,6 +61,12 @@
 		},
 		{
 			"path": "../user-access-policy"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../locale"
 		}
 	]
 }

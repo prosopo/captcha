@@ -15,12 +15,12 @@
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
 import { stringToU8a } from "@polkadot/util";
-import { hexHash } from "@prosopo/common";
 import { getFingerprint } from "@prosopo/fingerprint";
 import { Keyring } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { u8aToHex, version } from "@prosopo/util";
+import { hexHash } from "@prosopo/util-crypto";
 import type { KeypairType } from "@prosopo/util-crypto";
 import { Extension } from "./Extension.js";
 

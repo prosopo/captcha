@@ -13,12 +13,7 @@
 // limitations under the License.
 
 import { isHex } from "@polkadot/util";
-import {
-	ProsopoDatasetError,
-	ProsopoEnvError,
-	hexHash,
-	hexHashArray,
-} from "@prosopo/common";
+import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import {
 	type AssetsResolver,
 	type Captcha,
@@ -34,6 +29,7 @@ import {
 } from "@prosopo/types";
 import type { SolutionRecord } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
+import { hexHash, hexHashArray } from "@prosopo/util-crypto";
 import { downloadImage } from "./util.js";
 
 export const NO_SOLUTION_VALUE = "NO_SOLUTION";
