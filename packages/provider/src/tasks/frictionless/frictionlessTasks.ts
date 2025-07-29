@@ -97,9 +97,6 @@ export class FrictionlessManager extends CaptchaManager {
 			accessPolicy?.frictionlessScore ||
 			this.config.penalties.PENALTY_ACCESS_RULE;
 		botScore += accessPolicyPenalty;
-		this.logger.info(() => ({
-			msg: "Address has an image captcha config defined",
-		}));
 		await this.db.updateFrictionlessTokenRecord(tokenId, {
 			score: botScore,
 			scoreComponents: {
@@ -137,20 +134,43 @@ export class FrictionlessManager extends CaptchaManager {
 		return diff > DEFAULT_MAX_TIMESTAMP_AGE;
 	}
 
+	/**
+	 * Redacts a key for logging purposes by showing only the first 5, middle 10, and last 5 characters
+	 * @param key - The key to redact
+	 * @returns Redacted key string or empty string if key is falsy
+	 */
+	private redactKeyForLogging(key: string | undefined | null): string {
+		if (!key) return "";
+
+		const start = key.slice(0, 5);
+		const middle = key.slice(
+			Math.floor(key.length / 2) - 5,
+			Math.floor(key.length / 2) + 5,
+		);
+		const end = key.slice(-5);
+
+		return `${start}...${middle}...${end}`;
+	}
+
 	async decryptPayload(token: string) {
 		const decryptKeys = [
 			process.env.BOT_DECRYPTION_KEY,
 			...(await this.getDetectorKeys()),
 		].filter((k) => k);
-		this.logger.debug(() => ({
-			msg: "Decrypting score",
-			data: {
-				keysLength: decryptKeys.length,
-				keys: decryptKeys.map((k) =>
-					k ? `${k.slice(0, 5)}...${k.slice(-5)}` || "" : "",
-				),
-			},
-		}));
+
+		this.logger.debug(() => {
+			const loggedKeys = decryptKeys.map((key) =>
+				this.redactKeyForLogging(key),
+			);
+
+			return {
+				msg: "Decrypting score",
+				data: {
+					keysLength: decryptKeys.length,
+					keys: loggedKeys,
+				},
+			};
+		});
 
 		// run through the keys and try to decrypt the score
 		// if we run out of keys and the score is still not decrypted, throw an error
@@ -162,7 +182,7 @@ export class FrictionlessManager extends CaptchaManager {
 				this.logger.info(() => ({
 					msg: "Successfully decrypted score",
 					data: {
-						key: key ? `${key.slice(0, 5)}...${key.slice(-5)}` : "",
+						key: this.redactKeyForLogging(key),
 						baseBotScore: s,
 						timestamp: t,
 					},

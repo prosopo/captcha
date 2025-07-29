@@ -37,16 +37,12 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type ResolveAccessPolicy,
-	ScopeMatch,
-	createAccessPolicyResolver,
-} from "@prosopo/user-access-policy";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
+import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
@@ -55,7 +51,7 @@ const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
+ * @param {ProviderEnvironment} env - The Prosopo environment
  */
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
@@ -116,11 +112,26 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
+				const userScope = getRequestUserScope(
+					flatten(req.headers),
+					req.ja4,
+					req.ip,
+					user,
+				);
+				const userAccessPolicy = (
+					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
+						userAccessRulesStorage,
+						dapp,
+						userScope,
+					)
+				)[0];
+
 				const { valid, reason, frictionlessTokenId } =
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
 						CaptchaType.image,
 						sessionId,
+						userAccessPolicy,
 					);
 
 				if (!valid) {
@@ -137,23 +148,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const resolveAccessPolicy = createAccessPolicyResolver(
-					userAccessRulesStorage,
-					req.logger,
-				);
-
-				const userAccessPolicy = await resolveAccessPolicy({
-					policyScope: {
-						clientId: dapp,
-					},
-					policyScopeMatch: ScopeMatch.Greedy,
-					userScope: {
-						userId: user,
-						ja4Hash: req.ja4,
-						numericIp: ipAddress.bigInt(),
-					},
-					userScopeMatch: ScopeMatch.Greedy,
-				});
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
 						count:
@@ -193,6 +187,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					},
 				};
+				req.logger.info(() => ({
+					msg: "Image captcha challenge issued",
+					data: {
+						captchaType: CaptchaType.image,
+						requestHash: taskData.requestHash,
+						solvedImagesCount: captchaConfig.solved.count,
+						user,
+						dapp,
+						sessionId,
+					},
+				}));
 				return res.json(captchaResponse);
 			} catch (err) {
 				req.logger.error(() => ({
@@ -344,11 +349,26 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			const userScope = getRequestUserScope(
+				flatten(req.headers),
+				req.ja4,
+				req.ip,
+				user,
+			);
+			const userAccessPolicy = (
+				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					dapp,
+					userScope,
+				)
+			)[0];
+
 			const { valid, reason, frictionlessTokenId } =
 				await tasks.powCaptchaManager.isValidRequest(
 					clientSettings,
 					CaptchaType.pow,
 					sessionId,
+					userAccessPolicy,
 				);
 
 			if (!valid) {
@@ -382,11 +402,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
+			const difficulty =
+				userAccessPolicy?.powDifficulty ||
+				clientSettings?.settings?.powDifficulty;
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,
 				dapp,
 				origin,
-				clientSettings?.settings?.powDifficulty,
+				difficulty,
 			);
 
 			await tasks.db.storePowCaptchaRecord(
@@ -416,6 +439,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				},
 			};
 
+			req.logger.info(() => ({
+				msg: "PoW captcha challenge issued",
+				data: {
+					captchaType: CaptchaType.pow,
+					challenge: challenge.challenge,
+					difficulty: challenge.difficulty,
+					user,
+					dapp,
+					session: sessionId,
+				},
+			}));
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
 			req.logger.error(() => ({
@@ -465,15 +499,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const {
-				challenge,
-				difficulty,
-				signature,
-				nonce,
-				verifiedTimeout,
-				dapp,
-				user,
-			} = parsed;
+			const { challenge, signature, nonce, verifiedTimeout, dapp, user } =
+				parsed;
 
 			validateSiteKey(dapp);
 			validateAddr(user);
@@ -493,7 +520,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
 					challenge,
-					difficulty,
 					signature.provider.challenge,
 					nonce,
 					verifiedTimeout,
@@ -607,46 +633,45 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					},
 				});
 
-				// If the timestamp is older than 10 minutes, send an image captcha
-				if (FrictionlessManager.timestampTooOld(timestamp)) {
-					await tasks.frictionlessManager.scoreIncreaseTimestamp(
-						timestamp,
+				// Check if the IP address is blocked
+				const userScope = getRequestUserScope(
+					flatten(req.headers),
+					req.ja4,
+					req.ip,
+					user,
+				);
+				const userAccessPolicy = (
+					await tasks.frictionlessManager.getPrioritisedAccessPolicies(
+						userAccessRulesStorage,
+						dapp,
+						userScope,
+					)
+				)[0];
+
+				// If the user or IP address has an image captcha config defined, send an image captcha
+				if (userAccessPolicy) {
+					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
+						userAccessPolicy,
 						baseBotScore,
 						botScore,
 						tokenId,
 					);
-					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
-					);
+					if (userAccessPolicy.captchaType === CaptchaType.image) {
+						return res.json(
+							await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+						);
+					}
+					if (userAccessPolicy.captchaType === CaptchaType.pow) {
+						return res.json(
+							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+						);
+					}
 				}
 
-				// Check if the IP address is blocked
-				const ipAddress = getIPAddress(req.ip || "");
-
-				const resolveAccessPolicy = createAccessPolicyResolver(
-					userAccessRulesStorage,
-					req.logger,
-				);
-				const accessPolicy = await resolveAccessPolicy({
-					policyScope: {
-						clientId: dapp,
-					},
-					policyScopeMatch: ScopeMatch.Greedy,
-					userScope: {
-						userId: user,
-						ja4Hash: req.ja4,
-						numericIp: ipAddress.bigInt(),
-					},
-					userScopeMatch: ScopeMatch.Greedy,
-				});
-
-				// If the user or IP address has an image captcha config defined, send an image captcha
-				if (
-					accessPolicy?.solvedImagesCount ||
-					accessPolicy?.unsolvedImagesCount
-				) {
-					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
-						accessPolicy,
+				// If the timestamp is older than 10 minutes, send an image captcha
+				if (FrictionlessManager.timestampTooOld(timestamp)) {
+					await tasks.frictionlessManager.scoreIncreaseTimestamp(
+						timestamp,
 						baseBotScore,
 						botScore,
 						tokenId,

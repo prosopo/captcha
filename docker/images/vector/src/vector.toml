@@ -14,12 +14,19 @@ include_labels = ["vector.provider=true"]
 type = "remap"
 inputs = ["provider"]
 source = '''
-.=parse_json!(.message)
-del(.message)
-del(.timestamp)
-del(._timestamp)
-.host="$OO_HOST"
-del(.date)
+output={}
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    output = parsed
+} else {
+    output.message = .message
+}
+output.host="$OO_HOST"
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+.=output
 '''
 
 # print to console the provider logs
@@ -27,23 +34,6 @@ del(.date)
 #type = "console"
 #inputs = ["provider_format"]
 #encoding.codec = "json"
-
-# send provider logs to openobserve
-[sinks.openobserve_provider]
-type = "http"
-inputs = ["provider_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
 
 # send provider logs to tiger-stairs
 [sinks.prosopo_provider]
@@ -64,12 +54,12 @@ batch.max_events = 100000 # max number of events per batch
 
 [sinks.prosopo_provider2]
 type = "http"
-inputs = ["caddy_format"]
-uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
+inputs = ["provider_format"]
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV}_provider_node/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
+auth.user = "$OO2_USERNAME"
+auth.password = "$OO2_PASSWORD"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
@@ -100,21 +90,20 @@ decoding.codec = "json"
 type = "remap"
 inputs = ["docker"]
 source = '''
-.host="$OO_HOST"
-del(.id)
-del(.from)
-del(.Type)
-.name=.Actor.Attributes.name
-del(.Actor)
-del(.scope)
-del(.time)
-del(.timeNano)
-del(.source_type)
-del(.timestamp)
-del(._timestamp)
-del(.pid)
-del(.stream)
-del(.command)
+output={}
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    output = parsed
+} else {
+    output.message = .message
+}
+output.host="$OO_HOST"
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+output.name=.Actor.Attributes.name
+.=output
 '''
 
 # print docker events to console
@@ -122,23 +111,6 @@ del(.command)
 type = "console"
 inputs = ["docker_format"]
 encoding.codec = "json"
-
-# send to openobserve
-[sinks.openobserve_docker]
-type = "http"
-inputs = ["docker_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
 
 # send to openobserve
 [sinks.prosopo_docker]
@@ -159,12 +131,12 @@ batch.max_events = 100000 # max number of events per batch
 
 [sinks.prosopo_docker2]
 type = "http"
-inputs = ["caddy_format"]
-uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
+inputs = ["docker_format"]
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV}_provider_docker/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
+auth.user = "$OO2_USERNAME"
+auth.password = "$OO2_PASSWORD"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
@@ -181,36 +153,21 @@ include_labels = ["vector.caddy=true"]
 type = "remap"
 inputs = ["caddy"]
 source = '''
-.=parse_json!(string!(.message))
-.host="$OO_HOST"
-.request_id = get!(.resp_headers, ["X-Request-Id"])[0]
-del(.timestamp)
-del(._timestamp)
-del(.ts)
-del(.user_id)
-del(.size)
-del(.message)
-del(.resp_headers)
-del(.bytes_read)
-del(.logger)
+output={}
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    output = parsed
+} else {
+    output.message = .message
+}
+output.host="$OO_HOST"
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+output.request_id = get(.resp_headers, ["X-Request-Id"])[0] ?? null
+.=output
 '''
-
-# send to openobserve
-[sinks.openobserve_caddy]
-type = "http"
-inputs = ["caddy_format"]
-uri = "https://api.openobserve.ai/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
 
 # send to openobserve
 [sinks.prosopo_caddy]
@@ -232,11 +189,11 @@ batch.max_events = 100000 # max number of events per batch
 [sinks.prosopo_caddy2]
 type = "http"
 inputs = ["caddy_format"]
-uri = "https://oo2.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV}_provider_caddy/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
+auth.user = "$OO2_USERNAME"
+auth.password = "$OO2_PASSWORD"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"

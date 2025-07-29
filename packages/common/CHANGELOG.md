@@ -1,5 +1,89 @@
 # @prosopo/common
 
+## 3.1.4
+### Patch Changes
+
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/locale@3.1.4
+  - @prosopo/util-crypto@13.5.6
+
+## 3.1.3
+### Patch Changes
+
+- a49b538: Extra tests
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/locale@3.1.3
+  - @prosopo/util-crypto@13.5.5
+
+## 3.1.2
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/config@3.1.3
+  - @prosopo/util-crypto@13.5.4
+  - @prosopo/locale@3.1.2
+
+## 3.1.1
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/util-crypto@13.5.3
+  - @prosopo/locale@3.1.1
+  - @prosopo/config@3.1.2
+
+## 3.1.0
+### Minor Changes
+
+- f29fc7e: Refining API error handling. Adding more language strings
+
+### Patch Changes
+
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- 3573f0b: standardise all vite based npm scripts for bundling
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [8a64429]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+- Updated dependencies [6d604ad]
+  - @prosopo/util-crypto@13.5.2
+  - @prosopo/locale@3.1.0
+  - @prosopo/config@3.1.1
+
+## 3.0.2
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/locale@3.0.2
+
+## 3.0.1
+### Patch Changes
+
+- Updated dependencies [87bd9bc]
+  - @prosopo/locale@3.0.1
+
 ## 3.0.0
 ### Major Changes
 

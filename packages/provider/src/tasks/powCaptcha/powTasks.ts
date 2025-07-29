@@ -88,7 +88,6 @@ export class PowCaptchaManager extends CaptchaManager {
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
-		difficulty: number,
 		providerChallengeSignature: string,
 		nonce: number,
 		timeout: number,
@@ -125,6 +124,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			// no record of this challenge
 			return false;
 		}
+
+		const difficulty = challengeRecord.difficulty;
 
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecord(
@@ -217,11 +218,15 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		verifyRecency(challenge, timeout);
+		const recent = verifyRecency(challenge, timeout);
 
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+
+		if (!recent) {
+			return { verified: false };
+		}
 
 		let score: number | undefined;
 		if (challengeRecord.frictionlessTokenId) {

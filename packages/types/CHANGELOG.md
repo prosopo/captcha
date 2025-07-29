@@ -1,5 +1,95 @@
 # @prosopo/types
 
+## 3.0.8
+### Patch Changes
+
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/common@3.1.4
+  - @prosopo/locale@3.1.4
+
+## 3.0.7
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/common@3.1.3
+  - @prosopo/locale@3.1.3
+
+## 3.0.6
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- df4e030: Revising UAP rule getters
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/common@3.1.2
+  - @prosopo/config@3.1.3
+  - @prosopo/locale@3.1.2
+
+## 3.0.5
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/common@3.1.1
+  - @prosopo/locale@3.1.1
+  - @prosopo/config@3.1.2
+
+## 3.0.4
+### Patch Changes
+
+- 93d5e50: ensure packages have @prosopo/config as dep for vite configs
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- 93d5e50: fix missing dep for @prosopo/config
+- 63519d7: Tests
+- 3573f0b: standardise all vite based npm scripts for bundling
+- 2d0dd8a: Integration tests for UAPs
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+  - @prosopo/locale@3.1.0
+  - @prosopo/common@3.1.0
+  - @prosopo/config@3.1.1
+
+## 3.0.3
+### Patch Changes
+
+- b0d7207: Types for proper rotation
+
+## 3.0.2
+### Patch Changes
+
+- f682f0c: Moving type and fixing i18n config
+- Updated dependencies [f682f0c]
+  - @prosopo/locale@3.0.2
+  - @prosopo/common@3.0.2
+
+## 3.0.1
+### Patch Changes
+
+- Updated dependencies [87bd9bc]
+  - @prosopo/locale@3.0.1
+  - @prosopo/common@3.0.1
+
 ## 3.0.0
 ### Major Changes
 

@@ -19,11 +19,12 @@ import {
 	parseLogLevel,
 } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
-import { Keyring } from "@prosopo/keyring";
+import { Keyring, getPair } from "@prosopo/keyring";
 import type { KeyringPair } from "@prosopo/types";
 import type { AssetsResolver, EnvironmentTypes } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ProsopoEnvironment } from "@prosopo/types-env";
+import { randomAsHex } from "@prosopo/util-crypto";
 
 export class Environment implements ProsopoEnvironment {
 	config: ProsopoConfigOutput;
@@ -34,6 +35,8 @@ export class Environment implements ProsopoEnvironment {
 	keyring: Keyring;
 	pair: KeyringPair | undefined;
 	authAccount: KeyringPair | undefined;
+	envId: string | undefined;
+	ready = false;
 
 	constructor(
 		config: ProsopoConfigOutput,
@@ -42,7 +45,7 @@ export class Environment implements ProsopoEnvironment {
 	) {
 		this.config = config;
 		this.defaultEnvironment = this.config.defaultEnvironment;
-		this.pair = pair;
+		this.pair = pair || getPair(config.account.secret);
 		this.authAccount = authAccount;
 		this.logger = getLogger(
 			parseLogLevel(this.config.logLevel),
@@ -53,6 +56,15 @@ export class Environment implements ProsopoEnvironment {
 			type: "sr25519",
 		});
 		if (this.pair) this.keyring.addPair(this.pair);
+		this.envId = randomAsHex(32).slice(0, 32);
+		this.logger.info(() => ({
+			msg: "Environment initialized",
+			data: {
+				envId: this.envId,
+				defaultEnvironment: this.defaultEnvironment,
+				logLevel: this.config.logLevel,
+			},
+		}));
 	}
 
 	async getSigner(): Promise<KeyringPair> {
@@ -101,12 +113,15 @@ export class Environment implements ProsopoEnvironment {
 	}
 
 	async isReady() {
+		if (this.ready) {
+			this.logger.debug(() => ({ msg: "Environment is already ready" }));
+			return;
+		}
 		try {
 			if (this.pair && this.config.account.password && this.pair.isLocked) {
 				this.pair.unlock(this.config.account.password);
 			}
 			await this.getSigner();
-			// make sure contract address is valid before trying to load contract interface
 			if (!this.db) {
 				await this.importDatabase();
 			}
@@ -117,6 +132,7 @@ export class Environment implements ProsopoEnvironment {
 				await this.db.connect();
 				this.logger.info(() => ({ msg: "Connected to db" }));
 			}
+			this.ready = true;
 		} catch (err) {
 			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
 				context: { error: err },

@@ -81,6 +81,9 @@ export default async function (
 		"process.env.PROSOPO_DOCS_URL": JSON.stringify(
 			process.env.PROSOPO_DOCS_URL,
 		),
+		"process.env.PROSOPO_LOG_LEVEL": JSON.stringify(
+			process.env.PROSOPO_LOG_LEVEL,
+		),
 		// only needed if bundling with a site key
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
 			process.env.PROSOPO_SITE_KEY,
@@ -204,6 +207,26 @@ export default async function (
 						dedupe: ["react", "react-dom"],
 						modulesOnly: true,
 					}),
+					// String replacement plugin for fingerprinting code
+					{
+						name: "string-replace-fingerprint",
+						generateBundle(_, bundle) {
+							for (const fileName in bundle) {
+								const chunk = bundle[fileName];
+								if (
+									chunk &&
+									chunk.type === "chunk" &&
+									"code" in chunk &&
+									chunk.code
+								) {
+									chunk.code = chunk.code.replace(
+										/var request = new XMLHttpRequest\(\);\s*request\.open\("get", "https:\/\/m1\.openfpcdn\.io\/fingerprintjs\/v"\.concat\(version, "\/npm-monitoring"\), true\);\s*request\.send\(\);/g,
+										"",
+									);
+								}
+							}
+						},
+					},
 					visualizer({
 						open: true,
 						template: "treemap", //'list',

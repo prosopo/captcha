@@ -39,6 +39,7 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
 	UpdateDetectorKeyBody,
+	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
@@ -283,7 +284,7 @@ export default class ProviderApi
 		detectorKey: string,
 		timestamp: string,
 		signature: string,
-	): Promise<ApiResponse> {
+	): Promise<UpdateDetectorKeyResponse> {
 		return this.post(
 			AdminApiPaths.UpdateDetectorKey,
 			UpdateDetectorKeyBody.parse({ detectorKey }),
@@ -341,5 +342,22 @@ export default class ProviderApi
 				signature,
 			},
 		});
+	}
+
+	public deleteAllUserAccessPolicies(
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			accessRuleApiPaths.DELETE_ALL,
+			{},
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
 	}
 }

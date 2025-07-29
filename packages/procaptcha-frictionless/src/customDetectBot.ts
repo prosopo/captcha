@@ -23,6 +23,19 @@ import type {
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
 
+export const withTimeout = async <T>(
+	promise: Promise<T>,
+	ms: number,
+): Promise<T> => {
+	const timeoutPromise = new Promise<never>((_, reject) => {
+		setTimeout(() => {
+			reject(new ProsopoEnvError("API.UNKNOWN"));
+		}, ms);
+	});
+
+	return Promise.race([promise, timeoutPromise]);
+};
+
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 ): Promise<BotDetectionFunctionResult> => {
@@ -35,17 +48,25 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
-	// Get random active provider
-	const provider = await getRandomActiveProvider(config);
+	// Get random active provider with timeout
+	const provider = await withTimeout(
+		getRandomActiveProvider(config),
+		10000, // 10 second timeout
+	);
+
 	const providerApi = new ProviderApi(
 		provider.provider.url,
 		config.account.address,
 	);
 
-	const captcha = await providerApi.getFrictionlessCaptcha(
-		botScore.token,
-		config.account.address,
-		userAccount.account.address,
+	// Get frictionless captcha with timeout
+	const captcha = await withTimeout(
+		providerApi.getFrictionlessCaptcha(
+			botScore.token,
+			config.account.address,
+			userAccount.account.address,
+		),
+		10000, // 10 second timeout
 	);
 
 	return {

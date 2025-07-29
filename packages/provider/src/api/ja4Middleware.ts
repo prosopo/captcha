@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createHash } from "node:crypto";
 import type { IncomingHttpHeaders } from "node:http";
 import { Readable } from "node:stream";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { randomAsHex } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
-import { readTlsClientHello } from "read-tls-client-hello";
+import {
+	calculateJa4FromHelloData,
+	readTlsClientHello,
+} from "read-tls-client-hello";
 
 export const DEFAULT_JA4 = "ja4";
 
@@ -28,7 +31,9 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 
 	// Default JA4+ fingerprint for development
 	if (process.env.NODE_ENV === "development") {
-		return { ja4PlusFingerprint: DEFAULT_JA4 };
+		return {
+			ja4PlusFingerprint: `${DEFAULT_JA4}${randomAsHex().slice(28, 32)}`,
+		};
 	}
 
 	try {
@@ -37,7 +42,6 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		const xTlsVersion = (headers["x-tls-version"] || "")
 			.toString()
 			.toLowerCase();
-		const xTlsServerName = (headers["x-tls-server-name"] || "").toString();
 
 		// Decode the base64 ClientHello message
 		const clientHelloBuffer = Buffer.from(xTlsClientHello, "base64");
@@ -61,9 +65,6 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 			data: { xTlsVersion },
 		}));
 
-		//`tls1.3` becomes `13` etc.
-		const tlsVersion = xTlsVersion.replace(/(tls)|\./g, "");
-
 		// Convert to Readable stream
 		const readableStream = new Readable({
 			read() {
@@ -74,62 +75,7 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		// Parse the TLS Client Hello
 		const clientHello = await readTlsClientHello(readableStream);
 
-		// Extract details
-		const { alpnProtocols } = clientHello;
-
-		// _tlsVersion is not used, as we already have the TLS version from the headers. The tlsVersion reported by the
-		// `clientHello` object is also not accurate.
-		const [_tlsVersion, cipherSuites, extensions] = clientHello.fingerprintData;
-
-		// Determine the transport protocol
-		const transport = "t"; // Assuming TCP
-
-		// Check if SNI is present
-		const sniIndicator = xTlsServerName ? "d" : "i";
-
-		// Count valid cipher suites (excluding GREASE values)
-		const validCipherSuites = cipherSuites.filter(
-			(cs: number) => (cs & 0x0f0f) !== 0x0a0a,
-		);
-		const cipherCount = validCipherSuites.length;
-
-		// Count valid extensions (excluding GREASE values)
-		// ext & 0x0f0f extracts the last 4 bits of each byte in ext.
-		// The condition removes GREASE values (0x0a0a), which TLS uses for robustness testing.
-		// If ext & 0x0f0f !== 0x0a0a, the extension is valid.
-		const validExtensions = extensions.filter(
-			(ext: number) => (ext & 0x0f0f) !== 0x0a0a,
-		);
-		const extensionCount = validExtensions.length;
-
-		// ALPN protocol (first and last character of first protocol)
-		const alpn = alpnProtocols?.length ? alpnProtocols[0] : "";
-		const alpnLabel = alpn ? `${alpn[0]}${alpn[alpn.length - 1]}` : "00";
-
-		// Hash of sorted cipher suites
-		const sortedCiphers = validCipherSuites
-			.map((cs: number) => cs.toString(16).padStart(4, "0"))
-			.sort()
-			.join(",");
-		const cipherHash = createHash("sha256")
-			.update(sortedCiphers)
-			.digest("hex")
-			.slice(0, 12);
-
-		// Sort numerically, convert to decimal strings, join with dashes
-		const decimalString = extensions
-			.sort((a, b) => a - b) // sort as numbers
-			.map((ext) => ext.toString(10)) // convert to decimal strings
-			.join("-");
-
-		// Create SHA256 hash and truncate
-		const extensionHash = createHash("sha256")
-			.update(decimalString)
-			.digest("hex")
-			.slice(0, 12);
-
-		// Construct the JA4+ fingerprint
-		const ja4PlusFingerprint = `${transport}${tlsVersion}${sniIndicator}${cipherCount}${extensionCount}${alpnLabel}_${cipherHash}_${extensionHash}`;
+		const ja4PlusFingerprint = calculateJa4FromHelloData(clientHello);
 
 		return { ja4PlusFingerprint };
 	} catch (e) {

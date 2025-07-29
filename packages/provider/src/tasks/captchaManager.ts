@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, getLogger } from "@prosopo/common";
+import { type Logger, ProsopoApiError, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
@@ -23,6 +23,13 @@ import type {
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
+import type {
+	AccessPolicy,
+	AccessRulesStorage,
+	UserScopeApiInput,
+	UserScopeApiOutput,
+} from "@prosopo/user-access-policy";
+import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -44,8 +51,9 @@ export class CaptchaManager {
 
 	async isValidRequest(
 		clientSettings: ClientRecord | IUserDataSlim,
-		captchaType: CaptchaType,
+		requestedCaptchaType: CaptchaType,
 		sessionId?: string,
+		userAccessPolicy?: AccessPolicy,
 	): Promise<{
 		valid: boolean;
 		reason?: TranslationKey;
@@ -55,10 +63,29 @@ export class CaptchaManager {
 		this.logger.debug(() => ({
 			msg: "Validating request",
 			data: {
-				captchaType,
+				captchaType: requestedCaptchaType,
 				sessionId,
 			},
 		}));
+
+		// User Access Policies override default behaviour
+		if (
+			userAccessPolicy &&
+			userAccessPolicy.captchaType !== requestedCaptchaType
+		) {
+			this.logger.warn(() => ({
+				msg: "Invalid captcha type for user access policy",
+				data: {
+					account: clientSettings.account,
+					captchaType: userAccessPolicy.captchaType,
+				},
+			}));
+			return {
+				valid: false,
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
+				type: requestedCaptchaType,
+			};
+		}
 
 		// Session ID
 
@@ -77,15 +104,31 @@ export class CaptchaManager {
 					return {
 						valid: false,
 						reason: "CAPTCHA.NO_SESSION_FOUND",
-						type: captchaType,
+						type: requestedCaptchaType,
 					};
 				}
 				const frictionlessTokenId =
 					await this.getFrictionlessTokenIdFromSession(sessionRecord);
+
+				// Check the captcha type of the session is the same as the requested captcha type
+				if (sessionRecord.captchaType !== requestedCaptchaType) {
+					this.logger.warn(() => ({
+						msg: "Invalid frictionless request",
+						data: {
+							account: clientSettings.account,
+							sessionId: sessionId,
+						},
+					}));
+					return {
+						valid: false,
+						reason: "CAPTCHA.NO_SESSION_FOUND",
+						type: requestedCaptchaType,
+					};
+				}
 				return {
 					valid: true,
 					frictionlessTokenId,
-					type: captchaType,
+					type: requestedCaptchaType,
 				};
 			}
 
@@ -102,7 +145,7 @@ export class CaptchaManager {
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",
-				type: captchaType,
+				type: requestedCaptchaType,
 			};
 		}
 
@@ -112,22 +155,23 @@ export class CaptchaManager {
 		// - If `captchaType` is `image` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `image`
 		// - If `captchaType` is `pow` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `pow`
 		// - If `captchaType` is `frictionless` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `frictionless`
-		if (clientSettings?.settings?.captchaType !== captchaType) {
+		if (clientSettings?.settings?.captchaType !== requestedCaptchaType) {
 			this.logger.warn(() => ({
-				msg: `Invalid ${captchaType} request`,
+				msg: `Invalid ${requestedCaptchaType} request`,
 				data: {
 					account: clientSettings.account,
-					requestedCaptchaType: captchaType,
+					requestedCaptchaType: requestedCaptchaType,
 					settingsCaptchaType: clientSettings?.settings?.captchaType,
 				},
 			}));
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",
-				type: captchaType,
+				type: requestedCaptchaType,
 			};
 		}
-		return { valid: true, type: captchaType };
+
+		return { valid: true, type: requestedCaptchaType };
 	}
 
 	getVerificationResponse(
@@ -145,6 +189,20 @@ export class CaptchaManager {
 				[ApiParams.score]: score,
 			}),
 		};
+	}
+
+	async getPrioritisedAccessPolicies(
+		userAccessRulesStorage: AccessRulesStorage,
+		clientId: string,
+		userScope: {
+			[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
+		},
+	) {
+		return getPrioritisedAccessRule(
+			userAccessRulesStorage,
+			userScope,
+			clientId,
+		);
 	}
 
 	async getDetectorKeys(): Promise<string[]> {

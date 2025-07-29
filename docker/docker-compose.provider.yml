@@ -23,6 +23,8 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        depends_on:
+            - redis-stack
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the healthz endpoint
             interval: 5m
@@ -57,6 +59,8 @@ services:
             options:
                 max-size: '100m'
                 max-file: '1'
+        depends_on:
+            - redis-stack
         healthcheck:
             test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ]  # ping the healthz endpoint
             interval: 5m
@@ -147,12 +151,11 @@ services:
         env_file:
             - ../.env.1.${NODE_ENV}
         volumes:
-            # - ./data:/data we don't need a persistent storage for Tests
+            - ./data:/data # mount a volume for data persistence
             - ./redis.conf:/redis-stack.conf
         ports:
             - '6379:6379' # DB
         networks:
-            external:
             internal:
                 ipv4_address: 172.18.0.8
     vector:

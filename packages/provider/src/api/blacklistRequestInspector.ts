@@ -14,16 +14,90 @@
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import {
-	type ResolveAccessPolicy,
+	AccessPolicyType,
+	type AccessRulesStorage,
 	ScopeMatch,
+	type UserScopeApiInput,
+	type UserScopeApiOutput,
+	userScopeInputSchema,
 } from "@prosopo/user-access-policy";
-import { AccessPolicyType } from "@prosopo/user-access-policy";
-import { getIPAddress } from "@prosopo/util";
+import { uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
+
+export const getRequestUserScope = (
+	requestHeaders: Record<string, unknown>,
+	ja4?: string,
+	ip?: string,
+	user?: string,
+): Pick<UserScopeApiInput, "userId" | "ja4Hash" | "userAgent" | "ip"> => {
+	const userAgent = requestHeaders["user-agent"]
+		? requestHeaders["user-agent"].toString()
+		: undefined;
+	return {
+		...(user && { userId: user }),
+		...(ja4 && { ja4Hash: ja4 }),
+		...(userAgent && { userAgent: userAgent }),
+		...(ip && { ip }),
+		// TODO more things with headers
+	};
+};
+
+const getPrioritisedUserScopes = (userScope: {
+	[key: string]: bigint | string;
+}): Record<string, bigint | string | undefined>[] => {
+	const userScopeKeys = Object.keys(userScope);
+	return uniqueSubsets(userScopeKeys).map((subset: string[]) =>
+		subset.reduce(
+			(acc, key) => {
+				acc[key] = userScope[key];
+				return acc;
+			},
+			{} as Record<string, bigint | string | undefined>,
+		),
+	);
+};
+
+export const getPrioritisedAccessRule = async (
+	userAccessRulesStorage: AccessRulesStorage,
+	userScope: {
+		[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
+	},
+	clientId?: string,
+) => {
+	const prioritisedUserScopes = getPrioritisedUserScopes(userScope);
+	const policyPromises = [];
+	// Search first by clientId, if it exists, then by undefined clientId. Otherwise, just search by undefined clientId.
+	const clientLoop = clientId ? [clientId, undefined] : [undefined];
+	for (const clientOrUndefined of clientLoop) {
+		for (const scope of prioritisedUserScopes) {
+			if (Object.values(scope).every((value) => value === undefined)) {
+				continue;
+			}
+
+			const parsedUserScope = userScopeInputSchema.parse(scope);
+
+			const filter = {
+				...(clientOrUndefined && {
+					policyScope: {
+						clientId: clientOrUndefined,
+					},
+				}),
+				policyScopeMatch: ScopeMatch.Exact,
+
+				userScope: parsedUserScope,
+
+				userScopeMatch: ScopeMatch.Exact,
+			};
+
+			policyPromises.push(userAccessRulesStorage.findRules(filter, true, true));
+		}
+	}
+	return (await Promise.all(policyPromises)).flat();
+};
 
 export class BlacklistRequestInspector {
 	public constructor(
-		private readonly resolveAccessPolicy: ResolveAccessPolicy,
+		private readonly userAccessRulesStorage: AccessRulesStorage,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
 	) {}
 
@@ -85,27 +159,26 @@ export class BlacklistRequestInspector {
 		await this.environmentReadinessWaiter();
 
 		try {
-			const userIpAddress = getIPAddress(rawIp);
-
 			const { userId, clientId } = this.extractIdsFromRequest(
 				requestHeaders,
 				requestBody,
 			);
 
-			const accessPolicy = await this.resolveAccessPolicy({
-				policyScope: {
-					clientId: clientId,
-				},
-				policyScopeMatch: ScopeMatch.Greedy,
-				userScope: {
-					userId: userId,
-					numericIp: userIpAddress.bigInt(),
-					ja4Hash: ja4,
-				},
-				userScopeMatch: ScopeMatch.Greedy,
-			});
+			const accessPolicies = await getPrioritisedAccessRule(
+				this.userAccessRulesStorage,
+				getRequestUserScope(requestHeaders, ja4, rawIp, userId),
+				clientId,
+			);
+			if (
+				!accessPolicies ||
+				accessPolicies.length === 0 ||
+				!accessPolicies[0]
+			) {
+				return false;
+			}
+			const accessPolicy = accessPolicies[0];
 
-			return AccessPolicyType.Block === accessPolicy?.type;
+			return AccessPolicyType.Block === accessPolicy.type;
 		} catch (err) {
 			logger.error(() => ({
 				err,
