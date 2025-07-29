@@ -13,16 +13,13 @@
 	],
 	"references": [
 		{
-			"path": "../../integration/procaptcha-integration-build-config"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../types"
 		},
 		{
 			"path": "../locale"
-		},
-		{
-			"path": "../util"
 		}
 	]
 }

@@ -13,10 +13,16 @@
 	],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../locale"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

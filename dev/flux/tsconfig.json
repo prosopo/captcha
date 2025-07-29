@@ -21,6 +21,9 @@
 		},
 		{
 			"path": "../../packages/util"
+		},
+		{
+			"path": "../config/tsconfig.json"
 		}
 	]
 }

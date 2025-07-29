@@ -15,18 +15,10 @@
 		"dev": "npm run start"
 	},
 	"dependencies": {
-		"@angular/common": "^19.2.0",
-		"@angular/compiler": "^19.2.0",
 		"@angular/core": "^19.2.0",
-		"@angular/forms": "^19.2.0",
 		"@angular/platform-browser": "^19.2.0",
-		"@angular/platform-browser-dynamic": "^19.2.0",
 		"@angular/router": "^19.2.0",
 		"@prosopo/angular-procaptcha-wrapper": "1.1.11",
-		"@types/node": "22.13.17",
-		"rxjs": "~7.8.0",
-		"tslib": "^2.3.0",
-		"zone.js": "~0.15.0",
 		"@prosopo/config": "3.1.5"
 	},
 	"main": "dist/index.js",
@@ -44,6 +36,7 @@
 		"@angular/cli": "^19.2.5",
 		"@angular/compiler-cli": "^19.2.0",
 		"@types/jasmine": "~5.1.0",
+		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
 		"dotenv-webpack": "8.1.0",
 		"jasmine-core": "~5.6.0",
