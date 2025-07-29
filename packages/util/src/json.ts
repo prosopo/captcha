@@ -1,16 +1,19 @@
 
 
-export const jsonEncode = (obj: unknown): string => {
-    return JSON.stringify(obj, (_key, value) =>
+export const jsonEncode = (obj: unknown, replacer?: (this: any, key: string, value: any) => any, space?: string | number): string => {
+    return JSON.stringify(obj, (key, value) =>
         typeof value === "bigint" ? {
             type: "bigint",
             value: value.toString()
-        } : value
-    );
+        } : replacer ? replacer.call(this, key, value) : value
+        , space);
 }
 
-export const jsonDecode = (str: string): unknown => {
-    return JSON.parse(str, (_key, value) =>
-        typeof value === "object" && value !== null && value.type === "bigint" ? BigInt(value.value) : value
-    );
+export const jsonDecode = (str: string, reviver?: (this: any, key: string, value: any) => any): unknown => {
+    return JSON.parse(str, (key, value) => {
+        if (typeof value === "object" && value !== null && value.type === "bigint") {
+            return BigInt(value.value);
+        }
+        return reviver ? reviver.call(this, key, value) : value;
+    });
 }
