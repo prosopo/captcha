@@ -1,5 +1,30 @@
 # @prosopo/provider
 
+## 3.6.0
+### Minor Changes
+
+- dc5ce11: Use out of the box JA4 impl
+
+### Patch Changes
+
+- 6b98f67: Fix recency checker
+- Updated dependencies [30e7d4d]
+  - @prosopo/datasets@3.0.17
+  - @prosopo/config@3.1.5
+  - @prosopo/api-express-router@3.0.8
+  - @prosopo/api-route@2.6.12
+  - @prosopo/common@3.1.4
+  - @prosopo/database@3.0.17
+  - @prosopo/env@3.1.8
+  - @prosopo/keyring@2.8.11
+  - @prosopo/load-balancer@2.6.19
+  - @prosopo/types@3.0.8
+  - @prosopo/types-database@3.0.17
+  - @prosopo/types-env@2.7.21
+  - @prosopo/user-access-policy@3.5.2
+  - @prosopo/util@3.0.7
+  - @prosopo/util-crypto@13.5.6
+
 ## 3.5.0
 ### Minor Changes
 
