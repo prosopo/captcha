@@ -21,7 +21,7 @@ import {
 	ja4Middleware,
 } from "../../../api/ja4Middleware.js";
 
-const loggerOuter = getLogger({ scope: import.meta.url });
+const loggerOuter = getLogger({ scope: 'mock', url: import.meta.url });
 
 describe("ja4Middleware", () => {
 	it("should return default JA4 if an error occurs", async () => {
