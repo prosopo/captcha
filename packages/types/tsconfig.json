@@ -16,13 +16,7 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../common"
-		},
-		{
 			"path": "../locale"
-		},
-		{
-			"path": "../types"
 		},
 		{
 			"path": "../util"
