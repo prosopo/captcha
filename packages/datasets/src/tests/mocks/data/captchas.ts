@@ -19,6 +19,7 @@ export const datasetWithSolutionHashes = {
 	datasetContentId:
 		"0x3a2dbbf5610f04f54581843db3adf7e0fadc02cdb8e42e30b028c850e0603165",
 	format: "SelectAll",
+	randomMax: 15,
 	contentTree: [
 		[
 			"0x77ba6bdfedc563a34580c8b9cbcdec64608fda0ebf93649797af751d91b8e7a2",

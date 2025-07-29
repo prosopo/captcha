@@ -62,6 +62,7 @@ async function getDataset(): Promise<Dataset> {
 			},
 		],
 		format: CaptchaTypes.SelectAll,
+		randomMax: 3,
 	};
 }
 
