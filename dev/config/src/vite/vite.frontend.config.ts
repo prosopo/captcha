@@ -197,8 +197,8 @@ export default async function (
 					nodePolyfills({
 						include: ["crypto"],
 					}),
-					css(),
-					wasm(),
+					css() as any,
+					wasm() as any,
 					// @ts-ignore
 					nodeResolve({
 						browser: true,
@@ -206,7 +206,7 @@ export default async function (
 						rootDir: path.resolve(dir, "../../"),
 						dedupe: ["react", "react-dom"],
 						modulesOnly: true,
-					}),
+					}) as any,
 					// String replacement plugin for fingerprinting code
 					{
 						name: "string-replace-fingerprint",
