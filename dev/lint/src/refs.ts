@@ -133,6 +133,7 @@ interface InvalidPackage {
 
 const validateWorkspace = async (args: {
 	packageJsonPath: string;
+	ignore: string[];
 }) => {
 	const workspacePackagePath = args.packageJsonPath;
 	const workspacePackage = loadPackageConfig(workspacePackagePath);
@@ -163,8 +164,14 @@ const validateWorkspace = async (args: {
 	const invalidPackages: InvalidPackage[] = [];
 
 	for (const packagePath of packagePaths) {
+		const packageJson = loadPackageConfig(packagePath);
+
+		if (args.ignore.includes(getPackageName(packageJson))) {
+			continue;
+		}
+
 		const invalidTsConfigs = await validateDependencies({
-			packageJson: loadPackageConfig(packagePath),
+			packageJson,
 			workspacePackageNames,
 		});
 
@@ -421,18 +428,28 @@ export const buildRefsCommand = () => {
 		command: "refs",
 		describe: "Check the references in the workspace",
 		builder: (yargs: Argv) => {
-			return yargs.option("pkg", {
-				alias: "p",
-			});
+			return yargs
+				.option("pkg", {
+					alias: "p",
+				})
+				.option("ignore", {
+					alias: "i",
+					describe: "Ignore specified dependency or reference (can be specified multiple times)",
+					type: "string",
+					array: true,
+					default: [],
+				});
 		},
 		handler: async (argv: unknown) => {
 			const args = z
 				.object({
 					pkg: z.string(),
+					ignore: z.array(z.string()).default([]),
 				})
 				.parse(argv);
 			await validateWorkspace({
 				packageJsonPath: args.pkg,
+				ignore: args.ignore,
 			});
 		},
 	};
