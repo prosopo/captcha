@@ -8,6 +8,9 @@
 	"references": [
 		{
 			"path": "../../packages/util"
+		},
+		{
+			"path": "../config/tsconfig.cjs.json"
 		}
 	]
 }

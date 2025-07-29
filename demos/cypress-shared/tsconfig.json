@@ -16,7 +16,7 @@
 	],
 	"references": [
 		{
-			"path": "../../dev/scripts"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../../packages/types"
@@ -32,6 +32,12 @@
 		},
 		{
 			"path": "../../packages/types-database"
+		},
+		{
+			"path": "../../packages/keyring"
+		},
+		{
+			"path": "../../packages/dotenv"
 		}
 	]
 }

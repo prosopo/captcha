@@ -14,7 +14,7 @@
 	],
 	"references": [
 		{
-			"path": "../account/tsconfig.cjs.json"
+			"path": "../../dev/config/tsconfig.cjs.json"
 		},
 		{
 			"path": "../api/tsconfig.cjs.json"
@@ -24,9 +24,6 @@
 		},
 		{
 			"path": "../locale/tsconfig.cjs.json"
-		},
-		{
-			"path": "../procaptcha/tsconfig.cjs.json"
 		},
 		{
 			"path": "../procaptcha-common/tsconfig.cjs.json"

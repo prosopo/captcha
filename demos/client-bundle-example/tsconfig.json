@@ -16,6 +16,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../../packages/dotenv"
 		}
 	]

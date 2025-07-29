@@ -128,7 +128,8 @@ export default async function (
 				output: {
 					entryFileNames: `${bundleName}.[name].bundle.js`,
 				},
-				plugins: [css(), wasm(), nodeResolve()],
+				// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+				plugins: [css() as any, wasm() as any, nodeResolve() as any],
 			},
 		},
 		plugins: [
