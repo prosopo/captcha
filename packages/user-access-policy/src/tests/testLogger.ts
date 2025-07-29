@@ -27,6 +27,8 @@ const loggerMockedInstance: Logger = {
 	getLogLevel: vi.fn(),
 	with: vi.fn().mockReturnThis(),
 	getScope: vi.fn().mockReturnValue("test-scope"),
+	getUrl: vi.fn().mockReturnValue("test-url"),
+	subScope: vi.fn().mockReturnThis(),
 	getPretty: vi.fn().mockReturnValue(false),
 	setPretty: vi.fn(),
 	getPrintStack: vi.fn().mockReturnValue(false),

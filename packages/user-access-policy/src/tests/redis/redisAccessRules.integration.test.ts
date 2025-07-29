@@ -221,7 +221,10 @@ describe("redisAccessRules", () => {
 		beforeAll(async () => {
 			accessRulesReader = createRedisAccessRulesReader(
 				redisClient,
-				getLogger(LogLevel.enum.info, "RedisAccessRulesReader"),
+				getLogger({
+					scope: "user-access-policy.tests.redisAccessRules",
+					url: import.meta.url,
+				}),
 			);
 		});
 

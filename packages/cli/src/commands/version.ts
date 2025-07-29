@@ -22,7 +22,8 @@ export default (
 	cmdArgs?: { logger?: Logger },
 ) => {
 	const logger =
-		cmdArgs?.logger || getLogger(LogLevel.enum.info, "cli.version");
+		cmdArgs?.logger ||
+		getLogger({ scope: "cli.version", url: import.meta.url });
 
 	return {
 		command: "version",

@@ -24,7 +24,8 @@ const fluxFormatEnvArgs = z.object({
 });
 export default (cmdArgs?: { logger?: Logger }) => {
 	const logger =
-		cmdArgs?.logger || getLogger(LogLevel.enum.info, "flux.cli.getDapp");
+		cmdArgs?.logger ||
+		getLogger({ scope: "dev.flux.cli.getDapp", url: import.meta.url });
 
 	return {
 		command: "formatenv <file>",

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { cloneDeep } from "lodash";
 import { z } from "zod";
 
 export type LogObject = object;
@@ -19,6 +20,7 @@ export type LogRecord = {
 	err?: unknown;
 	data?: LogObject;
 	msg?: string;
+	event?: string;
 };
 export type LogRecordFn = () => LogRecord;
 
@@ -26,6 +28,7 @@ export type Logger = {
 	setLogLevel(level: LogLevel): void;
 	getLogLevel(): LogLevel;
 	getScope(): string;
+	getUrl(): string;
 	info(fn: LogRecordFn): void;
 	debug(fn: LogRecordFn): void;
 	trace(fn: LogRecordFn): void;
@@ -39,6 +42,12 @@ export type Logger = {
 	 * @param obj An object to log, which will be added to every log message.
 	 */
 	with(obj: LogObject): Logger;
+	/**
+	 * Creates a new logger instance which includes the given sub-scope in every log message.
+	 * This is useful for adding context to log messages, such as user IDs, request IDs, etc.
+	 * @param subScope A string to add to the scope of the logger.
+	 */
+	subScope(subScope: string): Logger;
 	getPretty(): boolean;
 	setPretty(pretty: boolean): void;
 	getPrintStack(): boolean;
@@ -86,9 +95,30 @@ export function parseLogLevel(
 }
 
 // Create a new logger with the given level and scope
-export function getLogger(logLevel: LogLevel, scope: string): Logger {
-	const logger = new NativeLogger(scope);
-	logger.setLogLevel(logLevel);
+export function getLogger({
+	scope,
+	url,
+}: {
+	scope: string;
+	url: string;
+}): Logger {
+	if (!scope) {
+		throw new Error("getLogger() requires a scope to be provided");
+	}
+	if (!url) {
+		throw new Error("getLogger() requires a URL to be provided");
+	}
+	const logger = new NativeLogger(scope, url);
+	// try to get the level from the environment variable
+	const envLevel =
+		process?.env?.PROSOPO_LOG_LEVEL || process?.env?.LOG_LEVEL || InfoLevel;
+	const level = parseLogLevel(envLevel);
+	logger.setLogLevel(level);
+	// try to get the pretty from the environment variable
+	const envPretty =
+		process?.env?.PROSOPO_LOG_PRETTY || process?.env?.LOG_PRETTY || "false";
+	const pretty = envPretty === "true";
+	logger.setPretty(pretty);
 	return logger;
 }
 
@@ -109,16 +139,27 @@ export class NativeLogger implements Logger {
 	private defaultData: LogObject | undefined;
 	private level: LogLevel;
 	private levelNum: number;
+	private levelMap: LevelMap = logLevelMap;
 	private pretty = 0; // pretty print indentation level - 0 = no pretty print, 2 = 2 spaces, etc
 	private printStack = false; // whether to print the stack trace in the log
 	private format: Format = FormatJson;
 
 	constructor(
 		private scope: string,
-		private levelMap: LevelMap = logLevelMap,
+		private url: string,
 	) {
 		this.level = InfoLevel; // default log level
 		this.levelNum = this.levelMap[this.level];
+	}
+
+	clone(): NativeLogger {
+		const newLogger = new NativeLogger(this.scope, this.url);
+		newLogger.defaultData = cloneDeep(this.defaultData);
+		newLogger.setLogLevel(this.getLogLevel());
+		newLogger.setPretty(this.getPretty());
+		newLogger.setPrintStack(this.getPrintStack());
+		newLogger.setFormat(this.getFormat());
+		return newLogger;
 	}
 
 	setFormat(format: Format): void {
@@ -133,9 +174,15 @@ export class NativeLogger implements Logger {
 	}
 
 	with(obj: LogObject): Logger {
-		const newLogger = new NativeLogger(this.scope);
+		const newLogger = this.clone();
 		newLogger.defaultData = { ...this.defaultData, ...obj };
-		newLogger.setLogLevel(this.getLogLevel());
+		return newLogger;
+	}
+
+	subScope(subScope: string): Logger {
+		const newScope = `${this.scope}.${subScope}`;
+		const newLogger = this.clone();
+		newLogger.scope = newScope;
 		return newLogger;
 	}
 
@@ -157,6 +204,10 @@ export class NativeLogger implements Logger {
 
 	getScope(): string {
 		return this.scope;
+	}
+
+	getUrl(): string {
+		return this.url;
 	}
 
 	setLogLevel(level: LogLevel): void {
@@ -240,7 +291,7 @@ export class NativeLogger implements Logger {
 		}
 		const ts = new Date().toISOString();
 		// populate the log fields using the fn
-		let { data, msg, err } = fn();
+		let { data, msg, err, event } = fn();
 		let errMsg: string | undefined;
 		let errData: LogRecord | undefined;
 		if (err) {
@@ -259,14 +310,19 @@ export class NativeLogger implements Logger {
 			data = { ...this.defaultData, ...data };
 		}
 		const baseRecord: {
+			url: string;
 			scope: string;
 			ts: string;
 			level: LogLevel;
+			event?: string;
 			data?: LogObject;
 			msg?: string;
 			err?: string;
 			errData?: LogRecord;
-		} = { scope: this.scope, ts, level: this.level };
+		} = { url: this.url, scope: this.scope, ts, level: this.level };
+		if (event) {
+			baseRecord.event = event;
+		}
 		if (data) {
 			baseRecord.data = data;
 		}

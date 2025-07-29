@@ -47,10 +47,10 @@ export class ProsopoServer {
 		this.pair = pair;
 		this.defaultEnvironment = this.config.defaultEnvironment;
 		this.dappAccount = this.config.account.address;
-		this.logger = getLogger(
-			this.config.logLevel as unknown as LogLevel,
-			"@prosopo/server",
-		);
+		this.logger = getLogger({
+			scope: "prosopo.server",
+			url: import.meta.url,
+		});
 		this.keyring = new Keyring({
 			type: "sr25519",
 		});
