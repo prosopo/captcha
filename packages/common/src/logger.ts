@@ -154,7 +154,7 @@ export class NativeLogger implements Logger {
 
 	clone(): NativeLogger {
 		const newLogger = new NativeLogger(this.scope, this.url);
-		newLogger.defaultData = _.cloneDeep(this.defaultData);
+		newLogger.defaultData = cloneDeep(this.defaultData);
 		newLogger.setLogLevel(this.getLogLevel());
 		newLogger.setPretty(this.getPretty());
 		newLogger.setPrintStack(this.getPrintStack());
