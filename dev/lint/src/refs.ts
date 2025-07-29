@@ -380,6 +380,9 @@ const validateDependencies = async (args: {
 			}
 		}
 
+		// eliminate self import, e.g. @prosopo/types containing import from @prosopo/types
+		allImports.delete(getPackageName(packageJson));
+
 		// record all the imports that are not in the package.json or tsconfig.json
 		const missingDependencies = Array.from(allImports).filter(
 			(importPath) => !allDependencies.includes(importPath),
