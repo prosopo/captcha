@@ -19,7 +19,7 @@
 			"path": "../locale"
 		},
 		{
-			"path": "../util-crypto"
+			"path": "../types"
 		}
 	]
 }

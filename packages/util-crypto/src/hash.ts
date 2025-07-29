@@ -11,8 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export type ApiJsonError = {
-	message: string;
-	key?: string;
-	code: number;
-};
+
+import { blake2AsHex } from "@prosopo/util-crypto";
+
+export const HEX_HASH_BIT_LENGTH = 256;
+
+export function hexHash(
+	data: string | Uint8Array,
+	bitLength?: 256 | 512 | 64 | 128 | 384 | undefined,
+): string {
+	// default bit length is 256
+	return blake2AsHex(data, bitLength);
+}
+
+export function hexHashArray<T>(arr: T[]): string {
+	return hexHash(arr.join(""));
+}
