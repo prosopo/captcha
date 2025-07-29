@@ -390,6 +390,9 @@ const validateDependencies = async (args: {
 		// eliminate self import, e.g. @prosopo/types containing import from @prosopo/types
 		allImports.delete(getPackageName(packageJson));
 
+		// eliminate imports for "url" (TODO fix this, it's a patch for bundling breaking without "node:" otherwise, see util pkg.)
+		allImports.delete("url");
+
 		// record all the imports that are not in the package.json or tsconfig.json
 		const missingDependencies = Array.from(allImports).filter(
 			(importPath) => !allDependencies.includes(importPath),
