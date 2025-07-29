@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import type { TranslationKey } from "@prosopo/locale";
+import type { ApiJsonError } from "@prosopo/types";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { type LogLevel, type Logger, getLogger } from "./logger.js";
-import type { ApiJsonError } from "./types.js";
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;

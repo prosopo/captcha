@@ -12,6 +12,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
@@ -19,6 +22,12 @@
 		},
 		{
 			"path": "../types/tsconfig.cjs.json"
+		},
+		{
+			"path": "../util-crypto/tsconfig.cjs.json"
+		},
+		{
+			"path": "../../dev/workspace/tsconfig.cjs.json"
 		}
 	]
 }
