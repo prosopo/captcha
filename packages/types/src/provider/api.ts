@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiJsonError, LogObject } from "@prosopo/common";
 import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
@@ -54,6 +53,12 @@ import {
 	RequestHashSignatureSchema,
 	TimestampSignatureSchema,
 } from "../procaptcha/index.js";
+
+export type ApiJsonError = {
+	message: string;
+	key?: string;
+	code: number;
+};
 
 export const ApiPrefix = "/v1/prosopo" as const;
 

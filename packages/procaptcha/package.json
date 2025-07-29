@@ -32,23 +32,14 @@
 	},
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
-		"@prosopo/account": "2.7.14",
 		"@prosopo/api": "3.1.7",
 		"@prosopo/common": "3.1.4",
 		"@prosopo/datasets": "3.0.17",
-		"@prosopo/load-balancer": "2.6.19",
 		"@prosopo/procaptcha-common": "2.7.16",
 		"@prosopo/types": "3.0.8",
 		"@prosopo/util": "3.0.7",
 		"@prosopo/util-crypto": "13.5.6",
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
-		"esbuild": "0.25.6",
-		"express": "4.21.2",
-		"jsdom": "25.0.0",
-		"@prosopo/config": "3.1.5",
-		"openpgp": "5.11.3",
-		"webpack-dev-server": "5.2.2"
+		"@prosopo/config": "3.1.5"
 	},
 	"overrides": {
 		"@polkadot/extension-inject": {
@@ -63,6 +54,7 @@
 		}
 	},
 	"devDependencies": {
+		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

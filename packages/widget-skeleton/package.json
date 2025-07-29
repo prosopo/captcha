@@ -34,18 +34,10 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@emotion/react": "11.13.3",
-		"@emotion/styled": "11.13.0",
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
-		"esbuild": "0.25.6",
-		"express": "4.21.2",
-		"@prosopo/config": "3.1.5",
-		"openpgp": "5.11.3",
-		"react": "18.3.1",
-		"webpack-dev-server": "5.2.2"
+		"@prosopo/config": "3.1.5"
 	},
 	"devDependencies": {
+		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
