@@ -25,18 +25,29 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
 
 class ApiRemoveDetectorKeyEndpoint
-	implements ApiEndpoint<UpdateDetectorKeyBodyType> {
-	public constructor(private readonly clientTaskManager: ClientTaskManager) { }
+	implements ApiEndpoint<UpdateDetectorKeyBodyType>
+{
+	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<UpdateDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger({ scope: 'provider.api.admin.apiRemoveDetectorKeyEndpoint', url: import.meta.url });
+		logger =
+			logger ||
+			getLogger({
+				scope: "provider.api.admin.apiRemoveDetectorKeyEndpoint",
+				url: import.meta.url,
+			});
 		try {
 			const { detectorKey } = args;
 
-			logger = logger || getLogger({ scope: 'provider.api.admin.apiRemoveDetectorKeyEndpoint', url: import.meta.url });
+			logger =
+				logger ||
+				getLogger({
+					scope: "provider.api.admin.apiRemoveDetectorKeyEndpoint",
+					url: import.meta.url,
+				});
 
 			logger.info(() => ({ msg: "Removing detector key" }));
 
