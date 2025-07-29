@@ -34,11 +34,11 @@
 		"@prosopo/util": "3.0.7",
 		"@prosopo/widget-skeleton": "2.6.5",
 		"@prosopo/config": "3.1.5",
+		"@emotion/react": "11.11.1",
+		"@emotion/styled": "11.11.0",
 		"react": "18.3.1"
 	},
 	"devDependencies": {
-		"@emotion/react": "11.11.1",
-		"@emotion/styled": "11.11.0",
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",
 		"@vitest/coverage-v8": "3.0.9",
