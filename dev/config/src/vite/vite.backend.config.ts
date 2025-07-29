@@ -128,7 +128,7 @@ export default async function (
 				output: {
 					entryFileNames: `${bundleName}.[name].bundle.js`,
 				},
-				plugins: [css(), wasm(), nodeResolve()],
+				plugins: [css() as any, wasm() as any, nodeResolve() as any],
 			},
 		},
 		plugins: [
