@@ -35,7 +35,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/extension-inject": "0.46.9",
-		"@polkadot/types": "12.6.2",
+		"@polkadot/types": "10.13.1",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/locale": "3.1.4",
 		"@prosopo/util": "3.0.7",
