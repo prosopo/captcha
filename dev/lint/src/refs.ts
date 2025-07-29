@@ -434,7 +434,8 @@ export const buildRefsCommand = () => {
 				})
 				.option("ignore", {
 					alias: "i",
-					describe: "Ignore specified dependency or reference (can be specified multiple times)",
+					describe:
+						"Ignore specified dependency or reference (can be specified multiple times)",
 					type: "string",
 					array: true,
 					default: [],
