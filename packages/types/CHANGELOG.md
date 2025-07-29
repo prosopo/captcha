@@ -1,5 +1,13 @@
 # @prosopo/types
 
+## 3.0.8
+### Patch Changes
+
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/common@3.1.4
+  - @prosopo/locale@3.1.4
+
 ## 3.0.7
 ### Patch Changes
 

@@ -1,5 +1,23 @@
 # @prosopo/procaptcha-bundle
 
+## 3.0.17
+### Patch Changes
+
+- 30e7d4d: Fixing coverage report and more damn linting
+- Updated dependencies [30e7d4d]
+- Updated dependencies [857c614]
+  - @prosopo/procaptcha-frictionless@2.6.36
+  - @prosopo/procaptcha-react@2.6.36
+  - @prosopo/procaptcha-pow@2.7.22
+  - @prosopo/config@3.1.5
+  - @prosopo/common@3.1.4
+  - @prosopo/dotenv@3.0.9
+  - @prosopo/locale@3.1.4
+  - @prosopo/types@3.0.8
+  - @prosopo/util@3.0.7
+  - @prosopo/util-crypto@13.5.6
+  - @prosopo/widget-skeleton@2.6.5
+
 ## 3.0.16
 ### Patch Changes
 

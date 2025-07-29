@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.6.36
+### Patch Changes
+
+- 30e7d4d: Fixing coverage report and more damn linting
+- 857c614: Adding timeouts to frictionless requests to providers to stop hangs
+- Updated dependencies [30e7d4d]
+  - @prosopo/procaptcha-react@2.6.36
+  - @prosopo/procaptcha-pow@2.7.22
+  - @prosopo/config@3.1.5
+  - @prosopo/detector@3.0.5
+  - @prosopo/locale@3.1.4
+  - @prosopo/types@3.0.8
+  - @prosopo/widget-skeleton@2.6.5
+
 ## 2.6.35
 ### Patch Changes
 

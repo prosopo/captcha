@@ -1,5 +1,13 @@
 # @prosopo/lint
 
+## 2.7.11
+### Patch Changes
+
+- a436d90: Add ignore paths to JSON linter
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/util@3.0.7
+
 ## 2.7.10
 ### Patch Changes
 

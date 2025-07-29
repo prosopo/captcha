@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.1.5
+### Patch Changes
+
+- 30e7d4d: Fixing coverage report and more damn linting
+
 ## 3.1.4
 ### Patch Changes
 

@@ -1,5 +1,17 @@
 # @prosopo/datasets
 
+## 3.0.17
+### Patch Changes
+
+- 30e7d4d: Fixing coverage report and more damn linting
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/common@3.1.4
+  - @prosopo/types@3.0.8
+  - @prosopo/types-database@3.0.17
+  - @prosopo/util@3.0.7
+  - @prosopo/util-crypto@13.5.6
+
 ## 3.0.16
 ### Patch Changes
 

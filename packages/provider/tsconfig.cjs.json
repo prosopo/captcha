@@ -30,6 +30,9 @@
 			"path": "../env/tsconfig.cjs.json"
 		},
 		{
+			"path": "../load-balancer/tsconfig.cjs.json"
+		},
+		{
 			"path": "../keyring/tsconfig.cjs.json"
 		},
 		{

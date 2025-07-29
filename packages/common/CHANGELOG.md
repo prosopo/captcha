@@ -1,5 +1,13 @@
 # @prosopo/common
 
+## 3.1.4
+### Patch Changes
+
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/locale@3.1.4
+  - @prosopo/util-crypto@13.5.6
+
 ## 3.1.3
 ### Patch Changes
 

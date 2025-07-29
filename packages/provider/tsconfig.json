@@ -36,6 +36,9 @@
 			"path": "../env"
 		},
 		{
+			"path": "../load-balancer"
+		},
+		{
 			"path": "../keyring"
 		},
 		{

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types",
-	"version": "3.0.7",
+	"version": "3.0.8",
 	"description": "Types for prosopo TypeScript packages",
 	"type": "module",
 	"main": "dist/index.js",
@@ -35,8 +35,8 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/extension-inject": "0.46.9",
-		"@prosopo/common": "3.1.3",
-		"@prosopo/locale": "3.1.3",
+		"@prosopo/common": "3.1.4",
+		"@prosopo/locale": "3.1.4",
 		"@typegoose/auto-increment": "4.13.0",
 		"axios": "1.10.0",
 		"esbuild": "0.25.6",
@@ -45,7 +45,7 @@
 		"openpgp": "5.11.3",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.1.4",
+		"@prosopo/config": "3.1.5",
 		"webpack-dev-server": "5.2.2"
 	},
 	"devDependencies": {
