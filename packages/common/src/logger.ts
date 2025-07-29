@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { jsonEncode } from "@prosopo/util";
 import { z } from "zod";
 
 export type LogObject = object;
@@ -289,7 +290,7 @@ export class NativeLogger implements Logger {
 				dest(baseRecord);
 			}
 		} else {
-			const output = JSON.stringify(baseRecord, null, this.pretty);
+			const output = jsonEncode(baseRecord, null, this.pretty);
 			dest(output);
 		}
 	}
