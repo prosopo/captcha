@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { blake2AsHex } from "@prosopo/util-crypto";
+import { blake2AsHex } from "./blake2/index.js";
 
 export const HEX_HASH_BIT_LENGTH = 256;
 
