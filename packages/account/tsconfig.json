@@ -3,9 +3,11 @@
 	"compilerOptions": {
 		"rootDir": "./src",
 		"outDir": "./dist",
-		"lib": ["es6", "dom"],
-		"allowJs": true,
-		"jsxImportSource": "@emotion/react"
+		"lib": [
+			"es6",
+			"dom"
+		],
+		"allowJs": true
 	},
 	"include": [
 		"src",
