@@ -51,13 +51,13 @@ export function getPair(
 			const keyring = new Keyring({ type: content[1], ss58Format });
 			return keyring.addFromJson(json as KeyringPair$Json);
 		} catch (e) {
-			throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED", {
+			throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY", {
 				context: { error: e },
 			});
 		}
 	} else if (typeof secret === "object") {
 		return keyring.addFromJson(secret as KeyringPair$Json);
 	} else {
-		throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED");
+		throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY");
 	}
 }

@@ -34,6 +34,8 @@ import {
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
 	type ScheduledTaskStatus,
+	type StoredStatus,
+	StoredStatusNames,
 } from "@prosopo/types";
 import type {
 	FrictionlessTokenRecord,
@@ -65,8 +67,6 @@ import {
 	type SolutionRecord,
 	SolutionRecordSchema,
 	type StoredCaptcha,
-	type StoredStatus,
-	StoredStatusNames,
 	type Tables,
 	type UserCommitment,
 	type UserCommitmentRecord,
@@ -171,6 +171,7 @@ type ProviderDatabaseOptions = {
 	redis?: {
 		url: string;
 		password: string;
+		indexName?: string;
 	};
 	logger?: Logger;
 };
@@ -205,7 +206,10 @@ export class ProviderDatabase
 	protected async setupRedis(): Promise<void> {
 		const redisClient = await this.createRedisClient();
 
-		await createRedisAccessRulesIndex(redisClient);
+		await createRedisAccessRulesIndex(
+			redisClient,
+			this.options.redis?.indexName,
+		);
 
 		this.userAccessRulesStorage = createRedisAccessRulesStorage(
 			redisClient,
@@ -487,12 +491,14 @@ export class ProviderDatabase
 		const filter: {
 			[key in keyof Pick<Captcha, "captchaId">]: { $in: string[] };
 		} = { captchaId: { $in: captchaId } };
-		const cursor = this.tables?.captcha.find(filter).lean();
+		const cursor = this.tables?.captcha
+			.find<Captcha>(filter)
+			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
 
 		if (docs?.length) {
 			// drop the _id field
-			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
 		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
@@ -1258,12 +1264,14 @@ export class ProviderDatabase
 			datasetId,
 			solved: state === CaptchaStates.Solved,
 		};
-		const cursor = this.tables?.captcha.find(filter).lean();
+		const cursor = this.tables?.captcha
+			.find(filter)
+			.lean<(Captcha & { _id: unknown })[]>();
 		const docs = await cursor;
 
 		if (docs) {
 			// drop the _id field
-			return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
 		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
@@ -1280,7 +1288,9 @@ export class ProviderDatabase
 		} = {
 			captchaId: { $in: captchaId },
 		};
-		const cursor = this.tables?.usersolution?.find(filter).lean();
+		const cursor = this.tables?.usersolution
+			?.find<UserSolutionRecord>(filter)
+			.lean<(UserSolutionRecord & { _id: unknown })[]>();
 		const docs = await cursor;
 
 		if (docs) {
@@ -1662,7 +1672,13 @@ export class ProviderDatabase
 	/** @description Remove a detector key */
 	async removeDetectorKey(detectorKey: string): Promise<void> {
 		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
-		await this.tables?.detector.deleteOne(filter);
+
+		// Instead of deleting, set the expiresAt field to expire in 10 minutes
+		const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+		await this.tables?.detector.updateOne(filter, {
+			$set: { expiresAt },
+		});
 	}
 
 	/**
@@ -1670,7 +1686,12 @@ export class ProviderDatabase
 	 */
 	async getDetectorKeys(): Promise<string[]> {
 		const keyRecords = await this.tables?.detector
-			.find({}, { detectorKey: 1 })
+			.find(
+				{
+					$or: [{ expiresAt: { $exists: false } }, { expiresAt: null }],
+				},
+				{ detectorKey: 1 },
+			)
 			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 

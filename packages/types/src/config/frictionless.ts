@@ -13,7 +13,15 @@
 // limitations under the License.
 import { number, object } from "zod";
 
+export const PENALTY_OLD_TIMESTAMP_DEFAULT = 0.2;
+export const PENALTY_ACCESS_RULE_DEFAULT = 0.5;
 export const FrictionlessPenalties = object({
-	PENALTY_OLD_TIMESTAMP: number().positive().optional().default(0.2),
-	PENALTY_ACCESS_RULE: number().positive().optional().default(0.5),
+	PENALTY_OLD_TIMESTAMP: number()
+		.positive()
+		.optional()
+		.default(PENALTY_OLD_TIMESTAMP_DEFAULT),
+	PENALTY_ACCESS_RULE: number()
+		.positive()
+		.optional()
+		.default(PENALTY_ACCESS_RULE_DEFAULT),
 });

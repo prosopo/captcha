@@ -1,5 +1,162 @@
 # @prosopo/server
 
+## 2.9.18
+### Patch Changes
+
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/api@3.1.7
+  - @prosopo/common@3.1.4
+  - @prosopo/keyring@2.8.11
+  - @prosopo/load-balancer@2.6.19
+  - @prosopo/types@3.0.8
+
+## 2.9.17
+### Patch Changes
+
+- 1f3a02f: Release 3.1.8
+- Updated dependencies [1f3a02f]
+  - @prosopo/api@3.1.6
+
+## 2.9.16
+### Patch Changes
+
+  - @prosopo/api@3.1.5
+
+## 2.9.15
+### Patch Changes
+
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/common@3.1.3
+  - @prosopo/api@3.1.4
+  - @prosopo/keyring@2.8.10
+  - @prosopo/load-balancer@2.6.18
+  - @prosopo/types@3.0.7
+
+## 2.9.14
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [df4e030]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/load-balancer@2.6.17
+  - @prosopo/common@3.1.2
+  - @prosopo/types@3.0.6
+  - @prosopo/api@3.1.3
+  - @prosopo/config@3.1.3
+  - @prosopo/keyring@2.8.9
+
+## 2.9.13
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/load-balancer@2.6.16
+  - @prosopo/keyring@2.8.8
+  - @prosopo/common@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/api@3.1.2
+  - @prosopo/config@3.1.2
+
+## 2.9.12
+### Patch Changes
+
+- 93d5e50: ensure packages have @prosopo/config as dep for vite configs
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- 93d5e50: fix missing dep for @prosopo/config
+- 3573f0b: standardise all vite based npm scripts for bundling
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [63519d7]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+  - @prosopo/keyring@2.8.7
+  - @prosopo/types@3.0.4
+  - @prosopo/load-balancer@2.6.15
+  - @prosopo/common@3.1.0
+  - @prosopo/api@3.1.1
+  - @prosopo/config@3.1.1
+
+## 2.9.11
+### Patch Changes
+
+- Updated dependencies [b7c3258]
+  - @prosopo/api@3.1.0
+
+## 2.9.10
+### Patch Changes
+
+  - @prosopo/api@3.0.8
+
+## 2.9.9
+### Patch Changes
+
+  - @prosopo/api@3.0.7
+
+## 2.9.8
+### Patch Changes
+
+- Updated dependencies [b0d7207]
+  - @prosopo/types@3.0.3
+  - @prosopo/api@3.0.6
+  - @prosopo/keyring@2.8.6
+  - @prosopo/load-balancer@2.6.14
+
+## 2.9.7
+### Patch Changes
+
+  - @prosopo/api@3.0.5
+  - @prosopo/load-balancer@2.6.13
+
+## 2.9.6
+### Patch Changes
+
+  - @prosopo/api@3.0.4
+  - @prosopo/load-balancer@2.6.12
+
+## 2.9.5
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types@3.0.2
+  - @prosopo/common@3.0.2
+  - @prosopo/api@3.0.3
+  - @prosopo/keyring@2.8.5
+  - @prosopo/load-balancer@2.6.11
+
+## 2.9.4
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/keyring@2.8.4
+  - @prosopo/load-balancer@2.6.10
+  - @prosopo/api@3.0.2
+
+## 2.9.3
+### Patch Changes
+
+  - @prosopo/api@3.0.1
+
 ## 2.9.2
 ### Patch Changes
 

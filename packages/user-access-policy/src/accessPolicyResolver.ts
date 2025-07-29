@@ -12,16 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as util from "node:util";
-import type { Logger } from "@prosopo/common";
 import { z } from "zod";
 import {
-	type AccessPolicy,
-	AccessPolicyType,
 	policyScopeSchema,
 	userScopeInputSchema,
 } from "#policy/accessPolicy.js";
-import type { AccessRule, AccessRulesReader } from "#policy/accessRules.js";
 
 export enum ScopeMatch {
 	Exact = "exact",
@@ -45,59 +40,3 @@ export const policyFilterSchema = z.object({
 
 // we infer using 'z.input()', as '.output()' already have .default() field values, making them required
 export type PolicyFilter = z.input<typeof policyFilterSchema>;
-
-export type ResolveAccessPolicy = (
-	filter: PolicyFilter,
-) => Promise<AccessPolicy | undefined>;
-
-export const createAccessPolicyResolver = (
-	accessRulesReader: AccessRulesReader,
-	logger: Logger,
-): ResolveAccessPolicy => {
-	return async (filter: PolicyFilter): Promise<AccessPolicy | undefined> => {
-		const accessRules = await accessRulesReader.findRules(filter);
-
-		const primaryAccessRule = resolvePrimaryRule(accessRules);
-
-		logger.debug(() => ({
-			msg: "Resolved access policy",
-			// filter contains BigInt, which can't be handled directly via logger.
-			data: {
-				inspect: util.inspect(
-					{
-						filter: filter,
-						accessRules: accessRules,
-						primaryAccessRule: primaryAccessRule,
-					},
-					{ depth: null },
-				),
-			},
-		}));
-
-		return primaryAccessRule;
-	};
-};
-
-const resolvePrimaryRule = (rules: AccessRule[]): AccessRule | undefined => {
-	// blocking rules have priority over restricting
-	const blockingRules = rules.filter(
-		(accessRule) => AccessPolicyType.Block === accessRule.type,
-	);
-
-	const rulesToEvaluate = blockingRules.length > 0 ? blockingRules : rules;
-
-	return resolveMostLocalRule(rulesToEvaluate);
-};
-
-const resolveMostLocalRule = (rules: AccessRule[]): AccessRule | undefined => {
-	// client rules have priority over global
-	const clientRules = rules.filter(
-		(accessRule) => "string" === typeof accessRule.clientId,
-	);
-
-	if (clientRules.length > 0) {
-		return clientRules.shift();
-	}
-
-	return rules.shift();
-};

@@ -4,5 +4,6 @@
 		{
 			"path": "../../../../packages/procaptcha-wrapper"
 		}
-	]
+	],
+	"include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json", "src/**/*.d.ts"]
 }

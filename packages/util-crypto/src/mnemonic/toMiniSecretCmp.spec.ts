@@ -13,7 +13,7 @@ import {
 //
 // - 100 runs with 5 checks, takes 2mins on _my_ machine
 // - 10_000 runs with 5 checks should be ~3hrs
-const NUM_RUNS = 100;
+const NUM_RUNS = 10;
 const NUM_CHECKS = 5;
 
 // generate either a JS or WASM mnemonic

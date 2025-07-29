@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Chiave segreta mancante",
+		"SITE_KEY_NOT_FOUND": "Chave do site não encontrada",
+		"JSON_LOAD_FAILED": "Caricamento del file JSON fallito",
+		"MNEMONIC_UNDEFINED": "Mnemonic indefinito. Imposta il mnemonic nelle variabili d'ambiente",
+		"NO_MNEMONIC_OR_SEED": "Nessun mnemonic o seed fornito",
+		"CANT_FIND_KEYRINGPAIR": "Impossibile trovare il keyringpair per {{address}}",
+		"ENVIRONMENT_NOT_READY": "Ambiente non pronto",
+		"INVALID_SIGNATURE": "Firma non valida",
+		"SITE_KEY_MISSING": "Manca la chiave del sito",
+		"ACCOUNT_NOT_FOUND": "Account non trovato",
+		"INVALID_TIMESTAMP": "Timestamp non valido"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permissões insuficientes para realizar esta ação",
+		"MISSING_QUERY_PARAMETERS": "Parâmetros de consulta ausentes",
+		"MISSING_AUTHORIZATION_HEADER": "Cabeçalho de autorização ausente",
+		"TIMESTAMP_TOO_OLD": "Data/hora muito antiga",
+		"FORBIDDEN": "Proibido",
+		"PROVIDER_VERIFY_FAILED": "Falha na verificação do provedor",
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Missing body",
+		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
+		"CAPTCHA_FAILED": "Hai risposto in modo errato a uno o più captcha. Per favore riprova",
+		"CAPTCHA_PASSED": "Hai risposto correttamente ai captcha",
+		"BAD_REQUEST": "Richiesta non valida",
+		"USER_VERIFIED": "Utente verificato",
+		"USER_NOT_VERIFIED": "Utente non verificato",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utente non verificato. La soluzione del captcha è scaduta.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Utente non verificato. Nessuna soluzione captcha trovata.",
+		"USER_ALREADY_VERIFIED": "Questa soluzione è già stata verificata. L'utente deve completare un nuovo captcha.",
+		"UNKNOWN": "Errore API sconosciuto",
+		"SITE_KEY_NOT_REGISTERED": "Chiave del sito non registrata",
+		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
+		"UNAUTHORIZED_ORIGIN_URL": "URL di origine non autorizzato",
+		"INVALID_SITE_KEY": "Chiave del sito non valida",
+		"INVALID_IP": "IP non valido",
+		"INVALID_URL": "URL non valido",
+		"INVALID_BODY": "Corpo non valido",
+		"PARSE_ERROR": "Errore nell'analisi della richiesta"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",
+		"CANNOT_DELETE_OWN_USER": "Não é possível excluir sua própria conta",
+		"CANNOT_DELETE_LAST_USER": "Não é possível excluir o último usuário",
+		"USER_ALREADY_EXISTS": "Usuário já existe",
+		"NO_SUGGESTIONS_FOUND": "Nenhuma sugestão encontrada",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Estensione Polkadot non trovata"
 	},
@@ -12,17 +61,6 @@
 		"NO_ACCOUNTS_FOUND": "Nessun account trovato",
 		"ACCOUNT_NOT_FOUND": "Account non trovato",
 		"NO_EXTENSION_FOUND": "Nessuna estensione trovata"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Caricamento del file JSON fallito",
-		"MNEMONIC_UNDEFINED": "Mnemonic indefinito. Imposta il mnemonic nelle variabili d'ambiente",
-		"NO_MNEMONIC_OR_SEED": "Nessun mnemonic o seed fornito",
-		"CANT_FIND_KEYRINGPAIR": "Impossibile trovare il keyringpair per {{address}}",
-		"ENVIRONMENT_NOT_READY": "Ambiente non pronto",
-		"INVALID_SIGNATURE": "Firma non valida",
-		"SITE_KEY_MISSING": "Manca la chiave del sito",
-		"ACCOUNT_NOT_FOUND": "Account non trovato",
-		"INVALID_TIMESTAMP": "Timestamp non valido"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Impossibile codificare l'indirizzo non valido",
@@ -86,25 +124,6 @@
 		"INVALID_SOLUTION": "Soluzione non valida",
 		"DECRYPTION_ERROR": "Errore di decodifica"
 	},
-	"API": {
-		"CAPTCHA_FAILED": "Hai risposto in modo errato a uno o più captcha. Per favore riprova",
-		"CAPTCHA_PASSED": "Hai risposto correttamente ai captcha",
-		"BAD_REQUEST": "Richiesta non valida",
-		"USER_VERIFIED": "Utente verificato",
-		"USER_NOT_VERIFIED": "Utente non verificato",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utente non verificato. La soluzione del captcha è scaduta.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Utente non verificato. Nessuna soluzione captcha trovata.",
-		"USER_ALREADY_VERIFIED": "Questa soluzione è già stata verificata. L'utente deve completare un nuovo captcha.",
-		"UNKNOWN": "Errore API sconosciuto",
-		"SITE_KEY_NOT_REGISTERED": "Chiave del sito non registrata",
-		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
-		"UNAUTHORIZED_ORIGIN_URL": "URL di origine non autorizzato",
-		"INVALID_SITE_KEY": "Chiave del sito non valida",
-		"INVALID_IP": "IP non valido",
-		"INVALID_URL": "URL non valido",
-		"INVALID_BODY": "Corpo non valido",
-		"PARSE_ERROR": "Errore nell'analisi della richiesta"
-	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parametro non valido"
 	},
@@ -114,7 +133,6 @@
 		"MISSING_PROVIDER_PAIR": "Coppia di fornitori mancante",
 		"MISSING_ENV_VARIABLE": "Variabile d'ambiente mancante",
 		"GENERAL": "Errore di sviluppo generale, vedere il contesto",
-		"MISSING_SECRET_KEY": "Chiave segreta mancante",
 		"METHOD_NOT_IMPLEMENTED": "Metodo non implementato"
 	},
 	"FS": {

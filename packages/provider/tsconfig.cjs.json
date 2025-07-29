@@ -21,9 +21,6 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../../dev/config/tsconfig.cjs.json"
-		},
-		{
 			"path": "../database/tsconfig.cjs.json"
 		},
 		{
@@ -31,6 +28,9 @@
 		},
 		{
 			"path": "../env/tsconfig.cjs.json"
+		},
+		{
+			"path": "../load-balancer/tsconfig.cjs.json"
 		},
 		{
 			"path": "../keyring/tsconfig.cjs.json"

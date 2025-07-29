@@ -57,6 +57,7 @@ import {
 import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
+import type { UserAgentInfo } from "./userAgent.js";
 
 export type IUserDataSlim = Pick<IUserData, "account" | "settings" | "tier">;
 
@@ -66,6 +67,7 @@ const ONE_HOUR = 60 * 60;
 const ONE_DAY = ONE_HOUR * 24;
 const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
+const TEN_MINUTES = 10 * 60;
 
 export const ClientRecordSchema = new Schema<ClientRecord>({
 	account: String,
@@ -74,19 +76,6 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 });
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
-
-export enum StoredStatusNames {
-	notStored = "notStored",
-	userSubmitted = "userSubmitted",
-	serverChecked = "serverChecked",
-	stored = "stored",
-}
-
-export type StoredStatus =
-	| StoredStatusNames.notStored
-	| StoredStatusNames.userSubmitted
-	| StoredStatusNames.serverChecked
-	| StoredStatusNames.stored;
 
 export interface StoredCaptcha {
 	result: {
@@ -103,6 +92,7 @@ export interface StoredCaptcha {
 	serverChecked: boolean;
 	geolocation?: string;
 	vpn?: boolean;
+	parsedUserAgentInfo?: UserAgentInfo;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 	frictionlessTokenId?: FrictionlessTokenId;
@@ -211,6 +201,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	geolocation: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	parsedUserAgentInfo: { type: Object, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -221,6 +212,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 PoWCaptchaRecordSchema.index({ challenge: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
+PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -248,6 +240,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	lastUpdatedTimestamp: { type: Number, required: false },
 	geolocation: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
+	parsedUserAgentInfo: { type: Object, required: false },
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -452,14 +445,18 @@ SessionRecordSchema.index({ deleted: 1 });
 export type DetectorKey = {
 	detectorKey: string;
 	createdAt: Date;
+	expiresAt?: Date;
 };
 
 export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
 	detectorKey: { type: String, required: true },
+	expiresAt: { type: Date, required: false, expires: 0 },
 });
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
+// TTL index for automatic cleanup of expired keys
+DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>

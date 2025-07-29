@@ -1,0 +1,26 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"lib": ["dom", "dom.iterable", "esnext"]
+	},
+	"include": ["src", "src/**/*.json"],
+	"references": [
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/server"
+		},
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/util"
+		}
+	]
+}

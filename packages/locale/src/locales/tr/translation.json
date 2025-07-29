@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Gizli anahtar eksik",
+		"SITE_KEY_NOT_FOUND": "Site key not found",
+		"ACCOUNT_NOT_FOUND": "Hesap bulunamadı",
+		"JSON_LOAD_FAILED": "JSON dosyası yüklenemedi",
+		"MNEMONIC_UNDEFINED": "Mnemonic Tanımsız. Lütfen mnenonik'i ortam değişkenlerinde ayarlayın",
+		"NO_MNEMONIC_OR_SEED": "Mnemonic veya seed belirtilmedi",
+		"CANT_FIND_KEYRINGPAIR": "{{address}} için anahtar çifti bulunamadı",
+		"ENVIRONMENT_NOT_READY": "Çevre hazır değil",
+		"INVALID_SIGNATURE": "Geçersiz imza",
+		"SITE_KEY_MISSING": "SITE KEY eksik",
+		"INVALID_TIMESTAMP": "Geçersiz zaman damgası"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
+		"MISSING_QUERY_PARAMETERS": "Missing query parameters",
+		"MISSING_AUTHORIZATION_HEADER": "Missing authorization header",
+		"TIMESTAMP_TOO_OLD": "Timestamp too old",
+		"FORBIDDEN": "Forbidden",
+		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
+		"UNAUTHORIZED": "Yetkisiz",
+		"MISSING_BODY": "Eksik gövde",
+		"NO_CONTENT_TYPE_HEADER": "İçerik tipi başlığı yok. JSON kodlu gövde varsayılmış ancak ayrıştırılamadı.",
+		"CAPTCHA_FAILED": "Bir veya daha fazla captchayı yanlış cevapladınız. Lütfen tekrar deneyin",
+		"CAPTCHA_PASSED": "Captchaları doğru bir şekilde cevapladınız",
+		"BAD_REQUEST": "Kötü istek",
+		"USER_VERIFIED": "Kullanıcı doğrulandı",
+		"USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Kullanıcı doğrulanmadı. Captcha çözümü süresi doldu.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Kullanıcı doğrulanmadı. Hiç captcha çözümü bulunamadı.",
+		"USER_ALREADY_VERIFIED": "Bu çözüm zaten doğrulandı. Kullanıcı yeni bir captcha tamamlamalıdır.",
+		"UNKNOWN": "Bilinmeyen API hatası",
+		"SITE_KEY_NOT_REGISTERED": "Site anahtarı kayıtlı değil",
+		"INCORRECT_CAPTCHA_TYPE": "Yanlış CAPTCHA türü",
+		"INVALID_SITE_KEY": "Geçersiz site anahtarı",
+		"UNAUTHORIZED_ORIGIN_URL": "Yetkisiz kaynak URL",
+		"INVALID_IP": "Geçersiz IP",
+		"INVALID_URL": "Geçersiz URL",
+		"INVALID_BODY": "Geçersiz gövde",
+		"PARSE_ERROR": "İstek ayrıştırma hatası"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
+		"CANNOT_DELETE_OWN_USER": "Cannot delete your own account",
+		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
+		"USER_ALREADY_EXISTS": "User already exists",
+		"NO_SUGGESTIONS_FOUND": "No suggestions found",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
+	},
 	"TARGET": {
 		"airplanes": "uçaklar",
 		"american-flag": "Amerikan bayrağı",
@@ -298,17 +347,6 @@
 		"yo-yo": "yo-yo",
 		"zebra": "zebra"
 	},
-	"GENERAL": {
-		"ACCOUNT_NOT_FOUND": "Hesap bulunamadı",
-		"JSON_LOAD_FAILED": "JSON dosyası yüklenemedi",
-		"MNEMONIC_UNDEFINED": "Mnemonic Tanımsız. Lütfen mnenonik'i ortam değişkenlerinde ayarlayın",
-		"NO_MNEMONIC_OR_SEED": "Mnemonic veya seed belirtilmedi",
-		"CANT_FIND_KEYRINGPAIR": "{{address}} için anahtar çifti bulunamadı",
-		"ENVIRONMENT_NOT_READY": "Çevre hazır değil",
-		"INVALID_SIGNATURE": "Geçersiz imza",
-		"SITE_KEY_MISSING": "SITE KEY eksik",
-		"INVALID_TIMESTAMP": "Geçersiz zaman damgası"
-	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Polkadot uzantısı bulunamadı"
 	},
@@ -385,25 +423,6 @@
 		"INVALID_SOLUTION": "Geçersiz çözüm",
 		"DECRYPTION_ERROR": "Şifreleme hatası"
 	},
-	"API": {
-		"CAPTCHA_FAILED": "Bir veya daha fazla captchayı yanlış cevapladınız. Lütfen tekrar deneyin",
-		"CAPTCHA_PASSED": "Captchaları doğru bir şekilde cevapladınız",
-		"BAD_REQUEST": "Kötü istek",
-		"USER_VERIFIED": "Kullanıcı doğrulandı",
-		"USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Kullanıcı doğrulanmadı. Captcha çözümü süresi doldu.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Kullanıcı doğrulanmadı. Hiç captcha çözümü bulunamadı.",
-		"USER_ALREADY_VERIFIED": "Bu çözüm zaten doğrulandı. Kullanıcı yeni bir captcha tamamlamalıdır.",
-		"UNKNOWN": "Bilinmeyen API hatası",
-		"SITE_KEY_NOT_REGISTERED": "Site anahtarı kayıtlı değil",
-		"INCORRECT_CAPTCHA_TYPE": "Yanlış CAPTCHA türü",
-		"INVALID_SITE_KEY": "Geçersiz site anahtarı",
-		"UNAUTHORIZED_ORIGIN_URL": "Yetkisiz kaynak URL",
-		"INVALID_IP": "Geçersiz IP",
-		"INVALID_URL": "Geçersiz URL",
-		"INVALID_BODY": "Geçersiz gövde",
-		"PARSE_ERROR": "İstek ayrıştırma hatası"
-	},
 	"CLI": {
 		"PARAMETER_ERROR": "Geçersiz parametre"
 	},
@@ -413,7 +432,6 @@
 		"MISSING_PROVIDER_PAIR": "Eksik sağlayıcı çifti",
 		"MISSING_ENV_VARIABLE": "Eksik ortam değişkeni",
 		"GENERAL": "Genel Geliştirici Hatası, bağlamı kontrol edin",
-		"MISSING_SECRET_KEY": "Eksil gizli anahtar",
 		"METHOD_NOT_IMPLEMENTED": "Yöntem uygulanmadı"
 	},
 	"FS": {

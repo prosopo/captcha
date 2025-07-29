@@ -30,12 +30,12 @@ export const insertRulesEndpointSchema: z.ZodType<{
 	accessPolicy: z.infer<typeof accessPolicySchema>;
 	policyScope?: z.infer<typeof policyScopeSchema>;
 	userScopes: z.input<typeof userScopeInputSchema>[];
-	expirationTimestampSeconds?: number;
+	expirationTimestamp?: number;
 }> = z.object({
 	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
 	userScopes: z.array(userScopeInputSchema),
-	expirationTimestampSeconds: z
+	expirationTimestamp: z
 		.number()
 		.optional()
 		.transform((val) => (val !== undefined ? Math.floor(val) : val)),
@@ -62,35 +62,33 @@ export class InsertRulesEndpoint
 	): Promise<ApiEndpointResponse> {
 		logger = logger || getLogger(LogLevel.enum.info, "InsertRulesEndpoint");
 
-		return new Promise((resolve) => {
-			// either return after 5s or when the rules are inserted or fail to insert
+		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
 					status: ApiEndpointResponseStatus.PROCESSING,
 				});
 			}, 5000);
-
-			this.createRules(args)
-				.then(() => {
-					resolve({
-						status: ApiEndpointResponseStatus.SUCCESS,
-					});
-				})
-				.catch((error) => {
-					if (logger?.getLogLevel() === LogLevel.enum.debug) {
-						logger.error(() => ({
-							err: error,
-							data: {
-								args: args,
-							},
-							msg: "Failed to insert access rules",
-						}));
-					}
-					resolve({
-						status: ApiEndpointResponseStatus.FAIL,
-					});
-				});
 		});
+
+		const createRulesPromise = this.createRules(args)
+			.then(() => ({
+				status: ApiEndpointResponseStatus.SUCCESS,
+			}))
+			.catch((error) => {
+				if (logger?.getLogLevel() === LogLevel.enum.debug) {
+					logger.error(() => ({
+						err: error,
+						data: { args },
+						msg: "Failed to insert access rules",
+					}));
+				}
+				return {
+					status: ApiEndpointResponseStatus.FAIL,
+				};
+			});
+
+		// Whichever finishes first: timeout or actual rule creation
+		return Promise.race([timeoutPromise, createRulesPromise]);
 	}
 
 	public getRequestArgsSchema(): InsertRulesEndpointSchema {
@@ -111,10 +109,7 @@ export class InsertRulesEndpoint
 			};
 
 			createPromises.push(
-				this.accessRulesWriter.insertRule(
-					rule,
-					args.expirationTimestampSeconds,
-				),
+				this.accessRulesWriter.insertRule(rule, args.expirationTimestamp),
 			);
 		}
 		return Promise.all(createPromises);

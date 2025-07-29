@@ -18,23 +18,28 @@ import {
 	AccessPolicyType,
 	type AccessRuleExtended,
 	type PolicyScope,
+	type UserScope,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
 	accessPolicySchema,
+	accessRuleSchemaExtended,
 	policyScopeSchema,
 } from "#policy/accessPolicy.js";
-import {
-	type ResolveAccessPolicy,
-	createAccessPolicyResolver,
-} from "#policy/accessPolicyResolver.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type { AccessRule, AccessRulesStorage } from "#policy/accessRules.js";
+import {
+	type AccessRule,
+	type AccessRulesStorage,
+	accessRuleSchema,
+} from "#policy/accessRules.js";
 import {
 	AccessRuleApiRoutes,
 	accessRuleApiPaths,
 	getExpressApiRuleRateLimits,
 } from "#policy/api/accessRuleApiRoutes.js";
-import { deleteAllRulesEndpointSchema } from "#policy/api/deleteAllRulesEndpoint.js";
+import {
+	type DeleteAllRulesEndpointSchema,
+	deleteAllRulesEndpointSchema,
+} from "#policy/api/deleteAllRulesEndpoint.js";
 import {
 	type DeleteRulesEndpointSchemaInput,
 	type DeleteRulesEndpointSchemaOutput,
@@ -59,17 +64,17 @@ export {
 	type AccessPolicy,
 	type PolicyScope,
 	type AccessRulesStorage,
-	type ResolveAccessPolicy,
 	type PolicyFilter,
 	type DeleteRulesEndpointSchemaOutput,
 	type DeleteRulesEndpointSchemaInput,
+	type DeleteAllRulesEndpointSchema,
 	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
 	type AccessRule,
+	type UserScope,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
 	type AccessRuleExtended,
-	createAccessPolicyResolver,
 	AccessPolicyType,
 	ScopeMatch,
 	// redis
@@ -77,6 +82,8 @@ export {
 	createRedisAccessRulesStorage,
 	// api
 	accessRuleApiPaths,
+	accessRuleSchema,
+	accessRuleSchemaExtended,
 	accessPolicySchema,
 	policyScopeSchema,
 	insertRulesEndpointSchema,

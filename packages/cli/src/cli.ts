@@ -27,11 +27,7 @@ const log = getLogger(LogLevel.enum.info, "CLI");
 async function main() {
 	const envPath = loadEnv();
 
-	// quick fix to allow for new dataset structure that only has `{ solved: true }` captchas
-	const config: ProsopoConfigOutput = getConfig(undefined, {
-		solved: { count: 2 },
-		unsolved: { count: 0 },
-	});
+	const config: ProsopoConfigOutput = getConfig();
 
 	if (config.devOnlyWatchEvents) {
 		log.warn(() => ({
@@ -61,19 +57,11 @@ async function main() {
 
 	log.info(() => ({ data: { cliArgs: processedArgs } }));
 	if (processedArgs.api) {
-		if (process.env.NODE_ENV === "development") {
-			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
-				.startDev()
-				.then(() => {
-					log.info(() => ({ msg: "Reloading API started..." }));
-				});
-		} else {
-			await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
-				.start()
-				.then(() => {
-					log.info(() => ({ msg: "Reloading API started..." }));
-				});
-		}
+		await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
+			.start()
+			.then(() => {
+				log.info(() => ({ msg: "Reloading API started..." }));
+			});
 	} else {
 		process.exit(0);
 	}

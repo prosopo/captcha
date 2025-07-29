@@ -27,7 +27,7 @@ import { Extension } from "./Extension.js";
 const SignerLoader = async () =>
 	(await import("@polkadot/extension-base/page/Signer")).default;
 const EntropyToMnemonicLoader = async () =>
-	(await import("@prosopo/util-crypto/mnemonic/bip39")).entropyToMnemonic;
+	(await import("@prosopo/util-crypto")).entropyToMnemonic;
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair };
 

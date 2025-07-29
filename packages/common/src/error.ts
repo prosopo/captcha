@@ -83,10 +83,7 @@ export abstract class ProsopoBaseError<
 			logger.debug(() => ({ data: { ...errorMessage, stack: this.stack } }));
 			return;
 		}
-		logger.log(logLevel, () => ({
-			data: errorMessage,
-			stack: this.stack,
-		}));
+		logger.error(() => ({ data: { ...errorMessage } }));
 	}
 }
 
@@ -198,18 +195,21 @@ export const unwrapError = (
 	i18nInstance?: { t: TFunction },
 ) => {
 	const i18n = i18nInstance || backupTranslationObj;
-	const code = "code" in err ? (err.code as number) : 400;
+	let code = "code" in err ? (err.code as number) : 400;
 
 	const message = i18n.t(err.message); // should be translated already
 	let jsonError: ApiJsonError = { code, message };
 	const statusMessage = "Bad Request";
 	jsonError.message = message;
+	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
+
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
 		// base error will not have a translation key
 		jsonError.key =
 			err.context.translationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = i18n.t(err.message);
+		code = err.context.code ?? jsonError.code;
 		// Only move to the next error if ProsopoBaseError or ZodError
 		if (
 			err.context.error &&
@@ -227,10 +227,13 @@ export const unwrapError = (
 			jsonError = err.message;
 		} else {
 			jsonError.message = JSON.parse(err.message);
+			jsonError.key =
+				jsonError.key !== "API.UNKNOWN" ? jsonError.key : "API.INVALID_BODY";
+			code = 400;
 		}
 	}
 
-	jsonError.code = jsonError.code || code;
+	jsonError.code = code;
 	return { code, statusMessage, jsonError };
 };
 

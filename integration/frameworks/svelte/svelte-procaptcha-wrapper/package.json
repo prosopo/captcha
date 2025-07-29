@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-wrapper",
-	"version": "1.1.0",
+	"version": "1.1.11",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -11,25 +11,28 @@
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"svelte": "./dist/index.js"
+			"svelte": "./dist/index.js",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "del-cli ./dist && del-cli ./.svelte-kit",
-		"package": "svelte-package -i ./src -o ./dist",
-		"build": "npm run package && del-cli ./.svelte-kit",
-		"dev": "npm run package -- -w"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"svpkg": "svelte-package -i ./src -o ./dist",
+		"build": "npm run svpkg && del-cli --verbose ./.svelte-kit",
+		"dev": "npm run svpkg -- -w"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": ">=2.6.0"
+		"@prosopo/procaptcha-wrapper": "2.6.13",
+		"@prosopo/config": "3.1.5"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
 		"@sveltejs/package": "2.3.10",
-		"del-cli": "6.0.0"
+		"del-cli": "6.0.0",
+		"svelte-check": "4.2.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

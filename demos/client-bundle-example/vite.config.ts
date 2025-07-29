@@ -119,6 +119,13 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_WEB2": JSON.stringify(
 				process.env.PROSOPO_WEB2 || "true",
 			),
+			process: {
+				env: {
+					PROSOPO_LOG_LEVEL: JSON.stringify(
+						process.env.PROSOPO_LOG_LEVEL || "info",
+					),
+				},
+			},
 		},
 		optimizeDeps: {
 			noDiscovery: true,
@@ -134,7 +141,7 @@ export default defineConfig(({ command, mode }) => {
 				transformMixedEsModules: true,
 			},
 			outDir: "dist",
-			emptyOutDir: true,
+			emptyOutDir: false,
 			rollupOptions: {
 				input: {
 					index: path.resolve(__dirname, "src/index.html"),

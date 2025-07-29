@@ -1,5 +1,149 @@
 # @prosopo/user-access-policy
 
+## 3.5.2
+### Patch Changes
+
+- Updated dependencies [30e7d4d]
+  - @prosopo/config@3.1.5
+  - @prosopo/api-route@2.6.12
+  - @prosopo/common@3.1.4
+  - @prosopo/types@3.0.8
+  - @prosopo/util@3.0.7
+
+## 3.5.1
+### Patch Changes
+
+- 1f3a02f: Release 3.1.8
+
+## 3.5.0
+### Minor Changes
+
+- e0628d9: Make sure rules don't leak between IPs
+
+## 3.4.1
+### Patch Changes
+
+- a49b538: Extra tests
+- e090e2f: More tests
+- Updated dependencies [44ffda2]
+- Updated dependencies [a49b538]
+  - @prosopo/config@3.1.4
+  - @prosopo/common@3.1.3
+  - @prosopo/api-route@2.6.11
+  - @prosopo/types@3.0.7
+  - @prosopo/util@3.0.6
+
+## 3.4.0
+### Minor Changes
+
+- df4e030: Revising UAP rule getters
+
+### Patch Changes
+
+- 91bbe87: configure typecheck before bundle for vue packages
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+- Updated dependencies [828066d]
+- Updated dependencies [df4e030]
+- Updated dependencies [91bbe87]
+- Updated dependencies [3ef4fd2]
+- Updated dependencies [91bbe87]
+- Updated dependencies [346e092]
+- Updated dependencies [5d36e05]
+  - @prosopo/api-route@2.6.10
+  - @prosopo/common@3.1.2
+  - @prosopo/types@3.0.6
+  - @prosopo/config@3.1.3
+  - @prosopo/util@3.0.5
+
+## 3.3.2
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+- Updated dependencies [eb71691]
+- Updated dependencies [eb71691]
+  - @prosopo/api-route@2.6.9
+  - @prosopo/common@3.1.1
+  - @prosopo/types@3.0.5
+  - @prosopo/util@3.0.4
+  - @prosopo/config@3.1.2
+
+## 3.3.1
+### Patch Changes
+
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- efd8102: Add tests for unwrap error helper
+- 3573f0b: standardise all vite based npm scripts for bundling
+- Updated dependencies [52dbf21]
+- Updated dependencies [93d5e50]
+- Updated dependencies [3573f0b]
+- Updated dependencies [3573f0b]
+- Updated dependencies [efd8102]
+- Updated dependencies [93d5e50]
+- Updated dependencies [63519d7]
+- Updated dependencies [f29fc7e]
+- Updated dependencies [3573f0b]
+- Updated dependencies [2d0dd8a]
+  - @prosopo/util@3.0.3
+  - @prosopo/types@3.0.4
+  - @prosopo/api-route@2.6.8
+  - @prosopo/common@3.1.0
+  - @prosopo/config@3.1.1
+
+## 3.3.0
+### Minor Changes
+
+- b7c3258: Add tests for UAPs
+
+## 3.2.1
+### Patch Changes
+
+- cdf7c29: Fix var
+
+## 3.2.0
+### Minor Changes
+
+- a7164ce: Allow searching for more rules to make deleting rules easier. Fix the expiry times of rules
+
+## 3.1.5
+### Patch Changes
+
+- Updated dependencies [b0d7207]
+  - @prosopo/types@3.0.3
+
+## 3.1.4
+### Patch Changes
+
+  - @prosopo/util@3.0.2
+
+## 3.1.3
+### Patch Changes
+
+  - @prosopo/util@3.0.1
+
+## 3.1.2
+### Patch Changes
+
+- Updated dependencies [f682f0c]
+  - @prosopo/types@3.0.2
+  - @prosopo/common@3.0.2
+  - @prosopo/api-route@2.6.7
+
+## 3.1.1
+### Patch Changes
+
+  - @prosopo/common@3.0.1
+  - @prosopo/types@3.0.1
+  - @prosopo/api-route@2.6.6
+
+## 3.1.0
+### Minor Changes
+
+- 913f2a6: Make custom expiration times work in redis. Make redis internal only and persist data
+
 ## 3.0.0
 ### Major Changes
 
