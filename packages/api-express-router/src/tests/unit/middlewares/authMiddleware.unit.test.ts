@@ -24,7 +24,7 @@ import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../middlewares/authMiddleware.js";
 
-const loggerOuter = getLogger({ scope: 'mock', url: import.meta.url });
+const loggerOuter = getLogger({ scope: "mock", url: import.meta.url });
 
 const mockLogger = {
 	debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),

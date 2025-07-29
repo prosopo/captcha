@@ -36,7 +36,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
 
-const loggerOuter = getLogger({ scope: 'mock', url: import.meta.url });
+const loggerOuter = getLogger({ scope: "mock", url: import.meta.url });
 
 // Mock dependencies
 vi.mock("@prosopo/datasets", () => ({
