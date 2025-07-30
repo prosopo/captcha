@@ -14,6 +14,7 @@
 
 import type { KeyringPair } from "@prosopo/types";
 import {
+	CaptchaType,
 	FrictionlessPenalties,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";

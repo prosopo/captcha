@@ -74,7 +74,7 @@ export class CaptchaManager {
 					data: {
 						sessionId: sessionRecord.sessionId,
 						tokenId: tokenRecord._id,
-						originalIP: tokenRecord.ipAddress.toString(),
+						originalIP: tokenRecord.ipAddress?.toString() || "unknown",
 						currentIP: currentIPBigInt.toString(),
 					},
 				}));
