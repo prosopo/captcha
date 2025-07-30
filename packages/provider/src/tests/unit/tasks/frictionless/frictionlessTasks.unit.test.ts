@@ -118,13 +118,14 @@ describe("Frictionless Task Manager", () => {
 	describe("Session creation with IP tracking", () => {
 		it("should create session and store IP address", async () => {
 			const mockObjectId = "mockObjectId123";
-			
+
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
 			const session = await frictionlessTaskManager.createSession(
+				// biome-ignore lint/suspicious/noExplicitAny: tests
 				mockObjectId as any,
-				CaptchaType.image
+				CaptchaType.image,
 			);
 
 			expect(session).toHaveProperty("sessionId");
@@ -136,12 +137,13 @@ describe("Frictionless Task Manager", () => {
 
 		it("should create image captcha session correctly", async () => {
 			const mockObjectId = "mockObjectId123";
-			
+
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
 			const response = await frictionlessTaskManager.sendImageCaptcha(
-				mockObjectId as any
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				mockObjectId as any,
 			);
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.image);
@@ -151,12 +153,13 @@ describe("Frictionless Task Manager", () => {
 
 		it("should create PoW captcha session correctly", async () => {
 			const mockObjectId = "mockObjectId123";
-			
+
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
 			const response = await frictionlessTaskManager.sendPowCaptcha(
-				mockObjectId as any
+				// biome-ignore lint/suspicious/noExplicitAny: tests
+				mockObjectId as any,
 			);
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
