@@ -37,6 +37,8 @@ describe("Frictionless Task Manager", () => {
 	beforeEach(() => {
 		db = {
 			updateFrictionlessTokenRecord: vi.fn(),
+			storeFrictionlessTokenRecord: vi.fn(),
+			storeSessionRecord: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -110,6 +112,56 @@ describe("Frictionless Task Manager", () => {
 				"tokenId" as unknown as FrictionlessTokenId,
 			);
 			expect(result).toBe(defaults.PENALTY_OLD_TIMESTAMP);
+		});
+	});
+
+	describe("Session creation with IP tracking", () => {
+		it("should create session and store IP address", async () => {
+			const mockObjectId = "mockObjectId123";
+			
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const session = await frictionlessTaskManager.createSession(
+				mockObjectId as any,
+				CaptchaType.image
+			);
+
+			expect(session).toHaveProperty("sessionId");
+			expect(session).toHaveProperty("tokenId", mockObjectId);
+			expect(session).toHaveProperty("captchaType", CaptchaType.image);
+			expect(session).toHaveProperty("createdAt");
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(session);
+		});
+
+		it("should create image captcha session correctly", async () => {
+			const mockObjectId = "mockObjectId123";
+			
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const response = await frictionlessTaskManager.sendImageCaptcha(
+				mockObjectId as any
+			);
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.image);
+			expect(response).toHaveProperty("sessionId");
+			expect(response).toHaveProperty("status", "ok");
+		});
+
+		it("should create PoW captcha session correctly", async () => {
+			const mockObjectId = "mockObjectId123";
+			
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const response = await frictionlessTaskManager.sendPowCaptcha(
+				mockObjectId as any
+			);
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
+			expect(response).toHaveProperty("sessionId");
+			expect(response).toHaveProperty("status", "ok");
 		});
 	});
 });
