@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
-import {
-	type Callbacks,
-	type ProcaptchaProps,
-} from "@prosopo/types";
+import type { Callbacks, ProcaptchaProps } from "@prosopo/types";
 import { type DOMWindow, JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WidgetFactory } from "../../util/widgetFactory.js";
@@ -116,13 +113,13 @@ describe("Config utility functions", () => {
 		context.document = undefined;
 		context.window = undefined;
 		// @ts-ignore
-		delete global.HTMLElement;
+		global.HTMLElement = undefined;
 		// @ts-ignore
-		delete global.Element;
+		global.Element = undefined;
 		// @ts-ignore
-		delete global.Node;
+		global.Node = undefined;
 		// @ts-ignore
-		delete global.navigator;
+		global.navigator = undefined;
 		vi.clearAllMocks();
 	});
 
@@ -202,7 +199,7 @@ describe("Config utility functions", () => {
 			// @ts-ignore
 			const call = ProcaptchaPow.mock.calls[0];
 			const props = call[0];
-			
+
 			// Check that the core properties we care about are present
 			expect(props.config.account.address).toBe("1234");
 			expect(props.config.web2).toBe(true);
@@ -210,7 +207,7 @@ describe("Config utility functions", () => {
 			expect(props.config.dappName).toBe("ProsopoClientDapp");
 			expect(props.config.theme).toBe("light");
 			expect(props.config.mode).toBe("visible");
-			
+
 			// Check that callbacks object exists (it will be empty since we're not testing callback extraction here)
 			expect(props.callbacks).toBeDefined();
 			expect(typeof props.callbacks).toBe("object");
