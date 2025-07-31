@@ -59,7 +59,7 @@ export class CaptchaManager {
 		);
 
 		if (!tokenRecord) {
-			this.logger.warn(() => ({
+			this.logger.info(() => ({
 				msg: "No frictionless token found for session",
 				data: { sessionId: sessionRecord.sessionId },
 			}));
@@ -69,7 +69,7 @@ export class CaptchaManager {
 		if (tokenRecord.ipAddress !== undefined) {
 			const currentIPBigInt = getIPAddress(currentIP).bigInt();
 			if (tokenRecord.ipAddress !== currentIPBigInt) {
-				this.logger.warn(() => ({
+				this.logger.info(() => ({
 					msg: "IP address mismatch for frictionless token",
 					data: {
 						sessionId: sessionRecord.sessionId,
