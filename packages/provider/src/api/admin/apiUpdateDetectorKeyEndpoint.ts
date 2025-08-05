@@ -33,11 +33,21 @@ class ApiUpdateDetectorKeyEndpoint
 		args: z.infer<UpdateDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger("info", "");
+		logger =
+			logger ||
+			getLogger({
+				scope: "provider.api.admin.apiUpdateDetectorKeyEndpoint",
+				url: import.meta.url,
+			});
 		try {
 			const { detectorKey } = args;
 
-			logger = logger || getLogger("info", "");
+			logger =
+				logger ||
+				getLogger({
+					scope: "provider.api.admin.apiUpdateDetectorKeyEndpoint",
+					url: import.meta.url,
+				});
 
 			logger.info(() => ({ msg: "Updating detector key" }));
 
