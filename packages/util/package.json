@@ -38,12 +38,11 @@
 		"@prosopo/config": "3.1.5",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
-		"lodash-es": "4.17.21",
+		"lodash": "4.17.21",
 		"seedrandom": "3.0.5"
 	},
 	"devDependencies": {
-		"@types/lodash": "4.17.7",
-		"@types/lodash-es": "4.17.12",
+		"@types/lodash": "4.14.202",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
 		"@vitest/coverage-v8": "3.0.9",
