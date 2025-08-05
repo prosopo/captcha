@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { cloneDeep } from "lodash";
+import { lodash } from "@prosopo/util/lodash";
 import { z } from "zod";
 
 export type LogObject = object;
@@ -154,7 +154,7 @@ export class NativeLogger implements Logger {
 
 	clone(): NativeLogger {
 		const newLogger = new NativeLogger(this.scope, this.url);
-		newLogger.defaultData = cloneDeep(this.defaultData);
+		newLogger.defaultData = lodash().cloneDeep(this.defaultData);
 		newLogger.setLogLevel(this.getLogLevel());
 		newLogger.setPretty(this.getPretty());
 		newLogger.setPrintStack(this.getPrintStack());
