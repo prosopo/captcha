@@ -1,5 +1,15 @@
 # @prosopo/keyring
 
+## 2.8.12
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 2.8.11
 ### Patch Changes
 

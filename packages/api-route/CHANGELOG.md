@@ -1,5 +1,12 @@
 # @prosopo/api-route
 
+## 2.6.13
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/common@3.1.5
+
 ## 2.6.12
 ### Patch Changes
 

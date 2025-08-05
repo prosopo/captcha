@@ -1,5 +1,17 @@
 # @prosopo/datasets
 
+## 3.0.18
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/types-database@3.0.18
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 3.0.17
 ### Patch Changes
 
