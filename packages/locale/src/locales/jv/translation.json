@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Solusi pengguna Dapp tidak ditemukan",
 		"NO_CAPTCHA": "Tidak ada captcha ditemukan",
 		"NO_SESSION_FOUND": "Tidak ada sesi ditemukan",
+		"IP_ADDRESS_MISMATCH": "Alamat IP ora cocok",
 		"INVALID_TOKEN": "Token tidak valid",
 		"INVALID_SOLUTION": "Solusi tidak valid",
 		"DECRYPTION_ERROR": "Kesalahan dekripsi"

@@ -112,6 +112,7 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
 				_id: "frictionlessTokenId",
+				ipAddress: 2130706433n, // 127.0.0.1 as bigint
 			});
 
 			const result = await captchaManager.isValidRequest(
@@ -125,6 +126,8 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.pow,
 				"sessionId",
+				undefined,
+				"127.0.0.1",
 			);
 
 			expect(result).toEqual({
@@ -143,6 +146,7 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
 				_id: "frictionlessTokenId",
+				ipAddress: 2130706433n, // 127.0.0.1 as bigint
 			});
 
 			const result = await captchaManager.isValidRequest(
@@ -156,6 +160,8 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.image,
 				"sessionId",
+				undefined,
+				"127.0.0.1",
 			);
 
 			expect(result).toEqual({
@@ -366,6 +372,111 @@ describe("CaptchaManager", () => {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",
 				type: CaptchaType.image,
+			});
+		});
+
+		it("should not validate a request when IP address mismatches for frictionless session", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				tokenId: "tokenId" as unknown as ObjectId,
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "tokenId" | "captchaType">);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
+				_id: "frictionlessTokenId",
+				ipAddress: 2130706433n, // 127.0.0.1 as bigint
+			});
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				"sessionId",
+				undefined,
+				"192.168.1.100", // Different IP
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: "CAPTCHA.IP_ADDRESS_MISMATCH",
+				type: CaptchaType.image,
+			});
+		});
+
+		it("should validate a request when no IP is stored on frictionless token", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				tokenId: "tokenId" as unknown as ObjectId,
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "tokenId" | "captchaType">);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
+				_id: "frictionlessTokenId",
+				// No ipAddress field
+			});
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				"sessionId",
+				undefined,
+				"192.168.1.100",
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.image,
+				frictionlessTokenId: "frictionlessTokenId",
+			});
+		});
+
+		it("should validate a request when no currentIP is provided even with IP stored on token", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.checkAndRemoveSession as any).mockResolvedValue({
+				tokenId: "tokenId" as unknown as ObjectId,
+				captchaType: CaptchaType.image,
+			} as Pick<Session, "tokenId" | "captchaType">);
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
+				_id: "frictionlessTokenId",
+				ipAddress: 2130706433n, // 127.0.0.1 as bigint
+			});
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.image,
+				"sessionId",
+				undefined,
+				undefined, // No currentIP provided
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.image,
+				frictionlessTokenId: "frictionlessTokenId",
 			});
 		});
 	});
