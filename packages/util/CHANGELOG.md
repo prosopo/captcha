@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.0.8
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 3.0.7
 ### Patch Changes
 

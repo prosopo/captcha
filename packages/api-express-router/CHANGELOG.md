@@ -1,5 +1,17 @@
 # @prosopo/api-express-router
 
+## 3.0.9
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/api-route@2.6.13
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/env@3.1.9
+
 ## 3.0.8
 ### Patch Changes
 
