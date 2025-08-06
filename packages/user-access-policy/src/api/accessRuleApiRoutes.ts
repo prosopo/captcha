@@ -17,10 +17,12 @@ import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { DeleteAllRulesEndpoint } from "#policy/api/deleteAllRulesEndpoint.js";
 import { DeleteRulesEndpoint } from "./deleteRulesEndpoint.js";
 import { InsertRulesEndpoint } from "./insertRulesEndpoint.js";
+import {DeleteRuleGroupsEndpoint} from "#policy/api/deleteRuleGroupsEndpoint.js";
 
 export enum accessRuleApiPaths {
 	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
 	DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
+	DELETE_GROUPS = "/v1/prosopo/user-access-policy/rules/delete-groups",
 	DELETE_ALL = "/v1/prosopo/user-access-policy/rules/delete-all",
 }
 
@@ -38,6 +40,10 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 			{
 				path: accessRuleApiPaths.DELETE_MANY,
 				endpoint: new DeleteRulesEndpoint(this.accessRulesStorage),
+			},
+			{
+				path: accessRuleApiPaths.DELETE_GROUPS,
+				endpoint: new DeleteRuleGroupsEndpoint(this.accessRulesStorage),
 			},
 			{
 				path: accessRuleApiPaths.DELETE_ALL,
@@ -70,6 +76,16 @@ export const getExpressApiRuleRateLimits = () => {
 			limit:
 				getIntEnvironmentVariable(
 					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_LIMIT",
+				) || defaultLimit,
+		},
+		[accessRuleApiPaths.DELETE_GROUPS]: {
+			windowMs:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_GROUPS_WINDOW",
+				) || defaultWindowsMs,
+			limit:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_GROUPS_LIMIT",
 				) || defaultLimit,
 		},
 		[accessRuleApiPaths.DELETE_ALL]: {
