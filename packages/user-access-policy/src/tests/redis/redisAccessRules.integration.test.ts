@@ -49,8 +49,8 @@ describe("redisAccessRules", () => {
 	let indexName: string;
 
 	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
-	const getIndexRecordsCount = async (): Promise<number> =>
-		(await redisClient.ft.info(accessRulesRedisIndexName)).num_docs;
+	const getIndexRecordsCount = async (indexName: string): Promise<number> =>
+		(await redisClient.ft.info(indexName)).num_docs;
 
 	const insertRule = async (rule: AccessRule) => {
 		const ruleKey = getRedisAccessRuleKey(rule);
@@ -101,7 +101,7 @@ describe("redisAccessRules", () => {
 
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(insertedAccessRule).toEqual(accessRule);
 			expect(indexRecordsCount).toEqual(1);
