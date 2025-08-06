@@ -31,8 +31,8 @@ import {
 	accessRulesRedisSearchOptions,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
-	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
+import {getRedisAccessRulesQuery} from "#policy/redis/redisAccesRulesQuery.js";
 
 export const createRedisAccessRulesReader = (
 	client: RedisClientType,
