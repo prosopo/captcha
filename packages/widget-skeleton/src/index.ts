@@ -12,6 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export { createWidgetSkeleton } from "./webComponent/createWidget.js";
+export { 
+	createWidgetSkeleton,
+	type CreateWidgetSkeletonOptions,
+	type WidgetSkeletonResult,
+} from "./elements/webComponent/createWidget.js";
+export {
+	createShadowDomDetector,
+	type ShadowDomDetector,
+	type ShadowDomDetectorOptions,
+} from "./elements/shadowDomDetector.js";
 export * from "./theme.js";
 export * from "./constants.js";

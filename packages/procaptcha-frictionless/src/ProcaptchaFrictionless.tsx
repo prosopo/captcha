@@ -78,6 +78,34 @@ export const ProcaptchaFrictionless = ({
 	detectBot = customDetectBot,
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
+	
+	// Enhanced callbacks with Shadow DOM detection for frictionless captcha
+	console.log('[ProcaptchaFrictionless] Original callbacks:', callbacks);
+	console.log('[ProcaptchaFrictionless] Original onShadowDomAccess:', !!callbacks.onShadowDomAccess);
+	
+	// Store the original callback if it exists
+	const originalShadowDomCallback = callbacks.onShadowDomAccess;
+	
+	// Modify the callbacks object in-place so the Shadow DOM detector uses the enhanced version
+	callbacks.onShadowDomAccess = (type: 'access' | 'attach' | 'click', target: Element) => {
+		console.log("[ProcaptchaFrictionless] Callback in ProcaptchaFrictionless.tsx triggered, frictionless captcha is notified");
+		console.log(`[ProcaptchaFrictionless] Shadow DOM ${type} detected on:`, target);
+		
+		// Call the original callback if it exists
+		if (originalShadowDomCallback) {
+			console.log('[ProcaptchaFrictionless] Calling original callback');
+			originalShadowDomCallback(type, target);
+		} else {
+			console.log('[ProcaptchaFrictionless] No original callback available');
+		}
+		
+		// Additional logic for frictionless captcha could go here
+		// For example: trigger bot detection, restart frictionless flow, etc.
+	};
+	
+	console.log('[ProcaptchaFrictionless] Enhanced callback installed in-place');
+	console.log('[ProcaptchaFrictionless] Shadow DOM detector will now use enhanced callback');
+	
 	const events = getDefaultEvents(callbacks);
 
 	useEffect(() => {

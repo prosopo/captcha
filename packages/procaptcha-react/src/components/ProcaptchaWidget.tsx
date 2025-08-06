@@ -34,11 +34,39 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
+	
+	// Enhanced callbacks with Shadow DOM detection for image captcha
+	console.log('[ProcaptchaWidget] Original callbacks:', callbacks);
+	console.log('[ProcaptchaWidget] Original onShadowDomAccess:', !!callbacks.onShadowDomAccess);
+	
+	// Store the original callback if it exists
+	const originalShadowDomCallback = callbacks.onShadowDomAccess;
+	
+	// Modify the callbacks object in-place so the Shadow DOM detector uses the enhanced version
+	callbacks.onShadowDomAccess = (type: 'access' | 'attach' | 'click', target: Element) => {
+		console.log("[ProcaptchaWidget] Callback in ProcaptchaWidget.tsx triggered, image captcha is notified");
+		console.log(`[ProcaptchaWidget] Shadow DOM ${type} detected on:`, target);
+		
+		// Call the original callback if it exists
+		if (originalShadowDomCallback) {
+			console.log('[ProcaptchaWidget] Calling original callback');
+			originalShadowDomCallback(type, target);
+		} else {
+			console.log('[ProcaptchaWidget] No original callback available');
+		}
+		
+		// Additional logic for image captcha could go here
+		// For example: trigger a challenge, log to analytics, etc.
+	};
+	
+	console.log('[ProcaptchaWidget] Enhanced callback installed in-place');
+	console.log('[ProcaptchaWidget] Shadow DOM detector will now use enhanced callback');
+	
 	const manager = Manager(
 		config,
 		state,
 		updateState,
-		callbacks,
+		callbacks, // Use the original callbacks object (which now has the enhanced callback)
 		frictionlessState,
 	);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;

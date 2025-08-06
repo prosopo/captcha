@@ -78,4 +78,6 @@ export interface Callbacks {
 	onFailed: () => void;
 	onReload: () => void;
 	onReset: () => void;
+	/** Called when automated Shadow DOM access is detected (potential bot behavior) */
+	onShadowDomAccess?: (type: 'access' | 'attach' | 'click', target: Element) => void;
 }

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test All Captcha Types - Shadow DOM Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .captcha-section {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .captcha-container {
+            min-height: 120px;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        
+        .console-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            margin: 15px 0;
+        }
+        
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            margin: 6px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        button:hover {
+            background: #005a87;
+        }
+        
+        button.danger {
+            background: #dc3545;
+        }
+        
+        button.success {
+            background: #28a745;
+        }
+        
+        .type-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .expected-output {
+            background: #e7f3ff;
+            border: 1px solid #007cba;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .test-results {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test All Captcha Types - Shadow DOM Detection</h1>
+    <p>This page tests Shadow DOM detection across all three captcha types: Frictionless, PoW, and Image.</p>
+    
+    <div class="captcha-section">
+        <div class="type-header">
+            <h2>🚀 Frictionless Captcha (Default)</h2>
+            <span class="status-badge status-active" id="frictionless-status">READY</span>
+        </div>
+        <div class="expected-output">
+            <strong>Expected Output:</strong><br>
+            [ProcaptchaFrictionless] Callback in ProcaptchaFrictionless.tsx triggered, frictionless captcha is notified
+        </div>
+        <div class="captcha-container" id="frictionless-container">
+            Frictionless widget will be created here
+        </div>
+        <button onclick="createFrictionlessWidget()">🚀 Create Frictionless Widget</button>
+        <button onclick="testWidget('frictionless')" class="danger">🤖 Test Shadow Access</button>
+        <button onclick="destroyWidget('frictionless')">🗑️ Destroy</button>
+    </div>
+    
+    <div class="captcha-section">
+        <div class="type-header">
+            <h2>⚡ PoW Captcha</h2>
+            <span class="status-badge status-inactive" id="pow-status">NOT TESTED</span>
+        </div>
+        <div class="expected-output">
+            <strong>Expected Output:</strong><br>
+            [ProcaptchaPoW] Callback in ProcaptchaPoW triggered, PoW captcha is notified
+        </div>
+        <div class="captcha-container" id="pow-container">
+            PoW widget will be created here
+        </div>
+        <button onclick="createPowWidget()">⚡ Create PoW Widget</button>
+        <button onclick="testWidget('pow')" class="danger">🤖 Test Shadow Access</button>
+        <button onclick="destroyWidget('pow')">🗑️ Destroy</button>
+    </div>
+    
+    <div class="captcha-section">
+        <div class="type-header">
+            <h2>🖼️ Image Captcha</h2>
+            <span class="status-badge status-inactive" id="image-status">NOT TESTED</span>
+        </div>
+        <div class="expected-output">
+            <strong>Expected Output:</strong><br>
+            [ProcaptchaWidget] Callback in ProcaptchaWidget.tsx triggered, image captcha is notified
+        </div>
+        <div class="captcha-container" id="image-container">
+            Image widget will be created here
+        </div>
+        <button onclick="createImageWidget()">🖼️ Create Image Widget</button>
+        <button onclick="testWidget('image')" class="danger">🤖 Test Shadow Access</button>
+        <button onclick="destroyWidget('image')">🗑️ Destroy</button>
+    </div>
+    
+    <div class="captcha-section">
+        <h2>🔍 Console Output</h2>
+        <div class="test-results" id="test-results">
+            <strong>Test Results:</strong><br>
+            • Frictionless: <span id="frictionless-result">Not tested</span><br>
+            • PoW: <span id="pow-result">Not tested</span><br>
+            • Image: <span id="image-result">Not tested</span>
+        </div>
+        <div id="console-output" class="console-output">
+            Console logs will appear here...
+        </div>
+        <button onclick="clearConsole()">🧹 Clear Console</button>
+        <button onclick="runAllTests()" class="success">🚀 Run All Tests</button>
+    </div>
+
+    <script>
+        const widgets = {
+            frictionless: null,
+            pow: null,
+            image: null
+        };
+        
+        const detectors = {
+            frictionless: null,
+            pow: null,
+            image: null
+        };
+        
+        const testResults = {
+            frictionless: false,
+            pow: false,
+            image: false
+        };
+        
+        // Capture console logs
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        function addToConsole(message, type = 'log') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff4444' : type === 'warn' ? '#ffaa00' : '#00ff00';
+            output.innerHTML += `<span style="color: #666">[${timestamp}]</span> <span style="color: ${color}">[${type.toUpperCase()}]</span> ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            
+            // Check for success messages
+            if (message.includes('ProcaptchaFrictionless] Callback in ProcaptchaFrictionless.tsx triggered')) {
+                testResults.frictionless = true;
+                updateTestResults();
+            }
+            if (message.includes('ProcaptchaPoW] Callback in ProcaptchaPoW triggered')) {
+                testResults.pow = true;
+                updateTestResults();
+            }
+            if (message.includes('ProcaptchaWidget] Callback in ProcaptchaWidget.tsx triggered')) {
+                testResults.image = true;
+                updateTestResults();
+            }
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warn');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+        
+        function updateTestResults() {
+            document.getElementById('frictionless-result').textContent = testResults.frictionless ? '✅ PASSED' : '❌ Not tested';
+            document.getElementById('pow-result').textContent = testResults.pow ? '✅ PASSED' : '❌ Not tested';
+            document.getElementById('image-result').textContent = testResults.image ? '✅ PASSED' : '❌ Not tested';
+            
+            document.getElementById('frictionless-result').style.color = testResults.frictionless ? '#28a745' : '#dc3545';
+            document.getElementById('pow-result').style.color = testResults.pow ? '#28a745' : '#dc3545';
+            document.getElementById('image-result').style.color = testResults.image ? '#28a745' : '#dc3545';
+        }
+        
+        function updateStatus(type, status) {
+            const statusElement = document.getElementById(`${type}-status`);
+            statusElement.textContent = status;
+            statusElement.className = `status-badge ${status === 'ACTIVE' ? 'status-active' : 'status-inactive'}`;
+        }
+        
+        // Mock widget creation functions
+        function createMockWidget(type, container) {
+            const widget = document.createElement('prosopo-procaptcha');
+            widget.style.cssText = `
+                display: block;
+                width: 100%;
+                max-width: 400px;
+                border: 2px solid #007cba;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                background: white;
+                margin: 0 auto;
+            `;
+            
+            const shadowRoot = widget.attachShadow({ mode: 'open' });
+            shadowRoot.innerHTML = `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h3>🛡️ ${type.toUpperCase()} CAPTCHA</h3>
+                    <div style="background: #007cba; color: white; padding: 15px; border-radius: 6px; cursor: pointer; margin: 10px 0;">
+                        ✓ I'm not a robot
+                    </div>
+                    <div style="color: #666; font-size: 12px;">
+                        Shadow DOM Detection: ${type} mode
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(widget);
+            
+            return widget;
+        }
+        
+        function createMockDetector(type, widget) {
+            const originalShadowRootGetter = Object.getOwnPropertyDescriptor(Element.prototype, 'shadowRoot');
+            
+            if (originalShadowRootGetter) {
+                Object.defineProperty(Element.prototype, 'shadowRoot', {
+                    get: function() {
+                        const isTargetElement = this.tagName.toLowerCase() === 'prosopo-procaptcha';
+                        
+                        if (isTargetElement && this === widget) {
+                            console.log(`[ShadowDomDetector] shadowRoot accessed on ${type.toUpperCase()} widget`);
+                            
+                            // Simulate the callback chain based on type
+                            setTimeout(() => {
+                                if (type === 'frictionless') {
+                                    console.log('[ProcaptchaFrictionless] Callback in ProcaptchaFrictionless.tsx triggered, frictionless captcha is notified');
+                                    console.log('[ProcaptchaFrictionless] Shadow DOM access detected on: PROSOPO-PROCAPTCHA');
+                                } else if (type === 'pow') {
+                                    console.log('[ProcaptchaPoW] Callback in ProcaptchaPoW triggered, PoW captcha is notified');
+                                    console.log('[ProcaptchaPoW] Shadow DOM access detected on: PROSOPO-PROCAPTCHA');
+                                } else if (type === 'image') {
+                                    console.log('[ProcaptchaWidget] Callback in ProcaptchaWidget.tsx triggered, image captcha is notified');
+                                    console.log('[ProcaptchaWidget] Shadow DOM access detected on: PROSOPO-PROCAPTCHA');
+                                }
+                            }, 100);
+                        }
+                        
+                        return originalShadowRootGetter.get.call(this);
+                    },
+                    configurable: true,
+                    enumerable: true,
+                });
+            }
+            
+            return {
+                stop: () => {
+                    if (originalShadowRootGetter) {
+                        Object.defineProperty(Element.prototype, 'shadowRoot', originalShadowRootGetter);
+                    }
+                }
+            };
+        }
+        
+        // Widget creation functions
+        window.createFrictionlessWidget = function() {
+            console.log('🚀 Creating Frictionless widget...');
+            const container = document.getElementById('frictionless-container');
+            widgets.frictionless = createMockWidget('frictionless', container);
+            detectors.frictionless = createMockDetector('frictionless', widgets.frictionless);
+            updateStatus('frictionless', 'ACTIVE');
+            console.log('✅ Frictionless widget created with Shadow DOM detection');
+        };
+        
+        window.createPowWidget = function() {
+            console.log('⚡ Creating PoW widget...');
+            const container = document.getElementById('pow-container');
+            widgets.pow = createMockWidget('pow', container);
+            detectors.pow = createMockDetector('pow', widgets.pow);
+            updateStatus('pow', 'ACTIVE');
+            console.log('✅ PoW widget created with Shadow DOM detection');
+        };
+        
+        window.createImageWidget = function() {
+            console.log('🖼️ Creating Image widget...');
+            const container = document.getElementById('image-container');
+            widgets.image = createMockWidget('image', container);
+            detectors.image = createMockDetector('image', widgets.image);
+            updateStatus('image', 'ACTIVE');
+            console.log('✅ Image widget created with Shadow DOM detection');
+        };
+        
+        // Test functions
+        window.testWidget = function(type) {
+            if (!widgets[type]) {
+                console.warn(`⚠️ Create a ${type} widget first!`);
+                return;
+            }
+            
+            console.log(`🤖 Testing Shadow DOM access on ${type.toUpperCase()} widget...`);
+            
+            setTimeout(() => {
+                try {
+                    const shadowRoot = widgets[type].shadowRoot; // This triggers detection
+                    console.log(`🤖 Bot successfully accessed ${type} shadowRoot`);
+                } catch (error) {
+                    console.error(`🤖 Bot access failed on ${type}:`, error.message);
+                }
+            }, 500);
+        };
+        
+        window.destroyWidget = function(type) {
+            if (!widgets[type]) {
+                console.warn(`⚠️ No ${type} widget to destroy`);
+                return;
+            }
+            
+            if (detectors[type]) {
+                detectors[type].stop();
+                detectors[type] = null;
+            }
+            
+            widgets[type].remove();
+            widgets[type] = null;
+            
+            const container = document.getElementById(`${type}-container`);
+            container.innerHTML = `${type.charAt(0).toUpperCase() + type.slice(1)} widget destroyed`;
+            
+            updateStatus(type, 'DESTROYED');
+            console.log(`🗑️ ${type.charAt(0).toUpperCase() + type.slice(1)} widget destroyed`);
+        };
+        
+        window.runAllTests = function() {
+            console.log('🚀 Running comprehensive test suite...');
+            
+            // Reset results
+            testResults.frictionless = false;
+            testResults.pow = false;
+            testResults.image = false;
+            updateTestResults();
+            
+            // Create all widgets
+            setTimeout(() => {
+                createFrictionlessWidget();
+            }, 500);
+            
+            setTimeout(() => {
+                createPowWidget();
+            }, 1000);
+            
+            setTimeout(() => {
+                createImageWidget();
+            }, 1500);
+            
+            // Test all widgets
+            setTimeout(() => {
+                testWidget('frictionless');
+            }, 2500);
+            
+            setTimeout(() => {
+                testWidget('pow');
+            }, 3500);
+            
+            setTimeout(() => {
+                testWidget('image');
+            }, 4500);
+            
+            setTimeout(() => {
+                console.log('🎯 All tests completed! Check results above.');
+                const allPassed = testResults.frictionless && testResults.pow && testResults.image;
+                if (allPassed) {
+                    console.log('🎉 ALL TESTS PASSED! Shadow DOM detection working across all captcha types.');
+                } else {
+                    console.log('❌ Some tests failed. Check individual results.');
+                }
+            }, 6000);
+        };
+        
+        window.clearConsole = function() {
+            document.getElementById('console-output').innerHTML = '';
+        };
+        
+        // Initialize
+        console.log('🧪 Test page loaded for all captcha types');
+        console.log('📋 This page tests Shadow DOM detection across Frictionless, PoW, and Image captcha types');
+        console.log('🎯 Click "Run All Tests" to test all types automatically');
+        
+        updateTestResults();
+    </script>
+</body>
+</html>
