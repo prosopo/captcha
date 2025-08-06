@@ -53,6 +53,10 @@ export const getDefaultCallbacks = (element?: Element): Callbacks => ({
 	onReload: () => {
 		console.log("Challenge reloaded");
 	},
+	onShadowDomAccess: (type: 'access' | 'attach' | 'click', target: Element) => {
+		console.log(`Shadow DOM ${type} detected on:`, target);
+		// Default behavior could be to trigger a challenge or log the event
+	},
 });
 
 /**

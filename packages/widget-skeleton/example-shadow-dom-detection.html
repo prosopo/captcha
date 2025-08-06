@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow DOM Detection Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .logs {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        
+        .log-warning {
+            color: #ff6600;
+            font-weight: bold;
+        }
+        
+        .log-error {
+            color: #cc0000;
+            font-weight: bold;
+        }
+        
+        .log-info {
+            color: #0066cc;
+        }
+        
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #005a87;
+        }
+        
+        #captcha-container {
+            min-height: 100px;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shadow DOM Detection Example</h1>
+    
+    <div class="container">
+        <h2>CAPTCHA Widget Container</h2>
+        <div id="captcha-container">
+            Widget will be created here
+        </div>
+        
+        <div>
+            <button onclick="createWidget()">Create Widget with Detection</button>
+            <button onclick="destroyWidget()">Destroy Widget</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Test Shadow DOM Access (Bot Simulation)</h2>
+        <p>These buttons simulate what bots might do to access the Shadow DOM:</p>
+        
+        <button onclick="testShadowRootAccess()">🤖 Access shadowRoot (Bot Behavior)</button>
+        <button onclick="testAttachShadow()">🤖 Call attachShadow (Spoofing Attempt)</button>
+        <button onclick="testClickInShadowDOM()">👆 Click Inside Shadow DOM (Normal User)</button>
+    </div>
+    
+    <div class="container">
+        <h2>Detection Logs</h2>
+        <div id="logs" class="logs"></div>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <script type="module">
+        // Mock implementation for demonstration
+        // In real usage, this would come from @prosopo/widget-skeleton
+        
+        let currentWidget = null;
+        let currentDetector = null;
+        
+        // Mock theme object
+        const mockTheme = {
+            palette: {
+                background: {
+                    contrastText: '#333'
+                }
+            }
+        };
+        
+        // Logging utility
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+            
+            // Also log to console
+            console.log(message);
+        }
+        
+        // Mock Shadow DOM detector implementation
+        function createMockShadowDomDetector(options) {
+            const { element, onAutomatedAccess, onInteraction, targetTagName } = options;
+            const monitoredTagName = targetTagName || element.tagName.toLowerCase();
+            
+            let isMonitoring = false;
+            let originalShadowRootGetter;
+            let originalAttachShadow;
+            let clickListener;
+            
+            const handleShadowRootAccess = function() {
+                const isTargetElement = this.tagName.toLowerCase() === monitoredTagName;
+                
+                if (isTargetElement) {
+                    addLog(`🚨 AUTOMATED ACCESS DETECTED on ${this.tagName}`, 'error');
+                    onAutomatedAccess?.();
+                } else {
+                    addLog(`shadowRoot accessed on ${this.tagName}`, 'warning');
+                }
+                
+                onInteraction?.('access', this);
+                return originalShadowRootGetter?.get?.call(this);
+            };
+            
+            const handleAttachShadow = function(...args) {
+                const isTargetElement = this.tagName.toLowerCase() === monitoredTagName;
+                
+                if (isTargetElement) {
+                    addLog(`🚨 SPOOFING ATTEMPT DETECTED on ${this.tagName}`, 'error');
+                    onAutomatedAccess?.();
+                } else {
+                    addLog(`attachShadow called on ${this.tagName}`, 'warning');
+                }
+                
+                onInteraction?.('attach', this);
+                return originalAttachShadow?.apply(this, args);
+            };
+            
+            const handleDocumentClick = (event) => {
+                const target = event.target;
+                if (!target) return;
+                
+                const rootNode = target.getRootNode();
+                
+                if (rootNode instanceof ShadowRoot) {
+                    const hostElement = rootNode.host;
+                    const isTargetElement = hostElement.tagName.toLowerCase() === monitoredTagName;
+                    
+                    if (isTargetElement) {
+                        addLog(`👆 User clicked inside monitored Shadow DOM: ${hostElement.tagName}`, 'info');
+                    } else {
+                        addLog(`Click inside Shadow DOM: ${hostElement.tagName}`, 'info');
+                    }
+                    
+                    onInteraction?.('click', target);
+                }
+            };
+            
+            return {
+                start() {
+                    if (isMonitoring) return;
+                    
+                    try {
+                        // Override shadowRoot getter
+                        originalShadowRootGetter = Object.getOwnPropertyDescriptor(Element.prototype, 'shadowRoot');
+                        if (originalShadowRootGetter) {
+                            Object.defineProperty(Element.prototype, 'shadowRoot', {
+                                get: handleShadowRootAccess,
+                                configurable: true,
+                                enumerable: true,
+                            });
+                        }
+                        
+                        // Override attachShadow
+                        originalAttachShadow = Element.prototype.attachShadow;
+                        Element.prototype.attachShadow = handleAttachShadow;
+                        
+                        // Add click listener
+                        clickListener = handleDocumentClick;
+                        document.addEventListener('click', clickListener, true);
+                        
+                        isMonitoring = true;
+                        addLog(`✅ Shadow DOM detection started for: ${monitoredTagName}`, 'info');
+                        
+                    } catch (error) {
+                        addLog(`❌ Failed to start detection: ${error.message}`, 'error');
+                    }
+                },
+                
+                stop() {
+                    if (!isMonitoring) return;
+                    
+                    try {
+                        // Restore original methods
+                        if (originalShadowRootGetter) {
+                            Object.defineProperty(Element.prototype, 'shadowRoot', originalShadowRootGetter);
+                        }
+                        if (originalAttachShadow) {
+                            Element.prototype.attachShadow = originalAttachShadow;
+                        }
+                        if (clickListener) {
+                            document.removeEventListener('click', clickListener, true);
+                        }
+                        
+                        isMonitoring = false;
+                        addLog('🛑 Shadow DOM detection stopped', 'info');
+                        
+                    } catch (error) {
+                        addLog(`❌ Failed to stop detection: ${error.message}`, 'error');
+                    }
+                },
+                
+                isActive() {
+                    return isMonitoring;
+                }
+            };
+        }
+        
+        // Mock widget creation
+        function createMockWidget() {
+            const container = document.getElementById('captcha-container');
+            
+            // Create a custom element with Shadow DOM
+            const webComponent = document.createElement('prosopo-procaptcha');
+            webComponent.style.display = 'block';
+            webComponent.style.width = '100%';
+            webComponent.style.maxWidth = '400px';
+            webComponent.style.border = '1px solid #007cba';
+            webComponent.style.borderRadius = '8px';
+            webComponent.style.padding = '20px';
+            webComponent.style.textAlign = 'center';
+            
+            // Create Shadow DOM
+            const shadowRoot = webComponent.attachShadow({ mode: 'open' });
+            shadowRoot.innerHTML = `
+                <style>
+                    .widget-content {
+                        font-family: Arial, sans-serif;
+                        color: #333;
+                    }
+                    .checkbox__content {
+                        background: #f0f8ff;
+                        padding: 15px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        user-select: none;
+                    }
+                    .checkbox__content:hover {
+                        background: #e6f3ff;
+                    }
+                </style>
+                <div class="widget-content">
+                    <h3>🛡️ CAPTCHA Widget</h3>
+                    <div class="checkbox__content">
+                        ✓ I'm not a robot
+                    </div>
+                    <p><small>Protected by Shadow DOM</small></p>
+                </div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(webComponent);
+            
+            return webComponent;
+        }
+        
+        // Global functions for buttons
+        window.createWidget = function() {
+            if (currentWidget) {
+                addLog('Widget already exists. Destroy it first.', 'warning');
+                return;
+            }
+            
+            try {
+                // Create the widget
+                currentWidget = createMockWidget();
+                
+                // Create detector
+                currentDetector = createMockShadowDomDetector({
+                    element: currentWidget,
+                    targetTagName: 'prosopo-procaptcha',
+                    onAutomatedAccess: () => {
+                        addLog('🚨 FRICTIONLESS RESTART TRIGGERED - Bot detected!', 'error');
+                        // In real implementation, this would restart the frictionless flow
+                    },
+                    onInteraction: (type, target) => {
+                        addLog(`Shadow DOM ${type} interaction logged`, 'info');
+                    }
+                });
+                
+                // Start detection
+                currentDetector.start();
+                
+                addLog('✅ Widget created with Shadow DOM detection enabled', 'info');
+                
+            } catch (error) {
+                addLog(`❌ Failed to create widget: ${error.message}`, 'error');
+            }
+        };
+        
+        window.destroyWidget = function() {
+            if (!currentWidget) {
+                addLog('No widget to destroy', 'warning');
+                return;
+            }
+            
+            try {
+                // Stop detector
+                if (currentDetector) {
+                    currentDetector.stop();
+                    currentDetector = null;
+                }
+                
+                // Remove widget
+                currentWidget.remove();
+                currentWidget = null;
+                
+                document.getElementById('captcha-container').innerHTML = 'Widget destroyed';
+                addLog('🗑️ Widget destroyed and detection stopped', 'info');
+                
+            } catch (error) {
+                addLog(`❌ Failed to destroy widget: ${error.message}`, 'error');
+            }
+        };
+        
+        window.testShadowRootAccess = function() {
+            if (!currentWidget) {
+                addLog('Create a widget first!', 'warning');
+                return;
+            }
+            
+            addLog('🤖 Simulating bot accessing shadowRoot...', 'info');
+            
+            // This simulates what a bot might do
+            setTimeout(() => {
+                try {
+                    const shadowRoot = currentWidget.shadowRoot; // This will trigger detection!
+                    addLog(`Bot accessed shadowRoot: ${shadowRoot ? 'Success' : 'Failed'}`, 'info');
+                } catch (error) {
+                    addLog(`Bot shadowRoot access failed: ${error.message}`, 'error');
+                }
+            }, 100);
+        };
+        
+        window.testAttachShadow = function() {
+            addLog('🤖 Simulating spoofing attempt with attachShadow...', 'info');
+            
+            setTimeout(() => {
+                try {
+                    const fakeElement = document.createElement('prosopo-procaptcha');
+                    fakeElement.attachShadow({ mode: 'open' }); // This will trigger detection!
+                    addLog('Bot created fake Shadow DOM', 'info');
+                    fakeElement.remove();
+                } catch (error) {
+                    addLog(`Bot spoofing failed: ${error.message}`, 'error');
+                }
+            }, 100);
+        };
+        
+        window.testClickInShadowDOM = function() {
+            if (!currentWidget) {
+                addLog('Create a widget first!', 'warning');
+                return;
+            }
+            
+            addLog('👆 Simulating user click inside Shadow DOM...', 'info');
+            
+            setTimeout(() => {
+                try {
+                    const shadowContent = currentWidget.shadowRoot?.querySelector('.checkbox__content');
+                    if (shadowContent) {
+                        // Simulate a click event
+                        const clickEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        shadowContent.dispatchEvent(clickEvent);
+                        addLog('User clicked checkbox content', 'info');
+                    } else {
+                        addLog('Could not find clickable content', 'warning');
+                    }
+                } catch (error) {
+                    addLog(`Click simulation failed: ${error.message}`, 'error');
+                }
+            }, 100);
+        };
+        
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '';
+        };
+        
+        // Initialize
+        addLog('🚀 Shadow DOM Detection Example loaded', 'info');
+        addLog('Create a widget and test the bot detection features!', 'info');
+    </script>
+</body>
+</html>

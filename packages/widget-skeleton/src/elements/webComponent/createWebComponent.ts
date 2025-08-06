@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { WIDGET_MAX_WIDTH } from "../constants.js";
+import { WIDGET_MAX_WIDTH } from "../../constants.js";
 
 const FONT_FAMILY =
 	'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';

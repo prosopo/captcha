@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export function detect(): Promise<{
+export function detect(element?: HTMLElement, callback?: (element: HTMLElement) => void): Promise<{
 	token: string;
 }>;
 //# sourceMappingURL=index.d.ts.map

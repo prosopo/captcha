@@ -30,6 +30,34 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const theme = "light" === config.theme ? lightTheme : darkTheme;
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const callbacks = props.callbacks || {};
+	
+	// Enhanced callbacks with Shadow DOM detection for PoW captcha
+	console.log('[ProcaptchaPoW] Original callbacks:', callbacks);
+	console.log('[ProcaptchaPoW] Original onShadowDomAccess:', !!callbacks.onShadowDomAccess);
+	
+	// Store the original callback if it exists
+	const originalShadowDomCallback = callbacks.onShadowDomAccess;
+	
+	// Modify the callbacks object in-place so the Shadow DOM detector uses the enhanced version
+	callbacks.onShadowDomAccess = (type: 'access' | 'attach' | 'click', target: Element) => {
+		console.log("[ProcaptchaPoW] Callback in ProcaptchaPoW triggered, PoW captcha is notified");
+		console.log(`[ProcaptchaPoW] Shadow DOM ${type} detected on:`, target);
+		
+		// Call the original callback if it exists
+		if (originalShadowDomCallback) {
+			console.log('[ProcaptchaPoW] Calling original callback');
+			originalShadowDomCallback(type, target);
+		} else {
+			console.log('[ProcaptchaPoW] No original callback available');
+		}
+		
+		// Additional logic for PoW captcha could go here
+		// For example: trigger challenge, log analytics, etc.
+	};
+	
+	console.log('[ProcaptchaPoW] Enhanced callback installed in-place');
+	console.log('[ProcaptchaPoW] Shadow DOM detector will now use enhanced callback');
+	
 	const [state, _updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	// get the state update mechanism

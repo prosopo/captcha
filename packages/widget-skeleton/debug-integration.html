@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Shadow DOM Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .debug-section {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .console-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 8px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #005a87;
+        }
+        
+        button.danger {
+            background: #dc3545;
+        }
+        
+        .flow-diagram {
+            background: #e7f3ff;
+            border: 1px solid #007cba;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        .callback-object {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        #widget-container {
+            min-height: 120px;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 Debug Shadow DOM Integration</h1>
+    <p>This page helps debug why the Shadow DOM callbacks aren't working between widget-skeleton and procaptcha-react.</p>
+    
+    <div class="debug-section">
+        <h2>🎯 Expected Flow</h2>
+        <div class="flow-diagram">
+            <strong>1. Widget Factory:</strong> Creates callbacks object with onShadowDomAccess<br>
+            <strong>2. Widget Factory:</strong> Passes callbacks to Shadow DOM detector<br>
+            <strong>3. Widget Factory:</strong> Passes same callbacks to React component<br>
+            <strong>4. React Component:</strong> Creates enhanced callbacks (ISSUE: doesn't update detector)<br>
+            <strong>5. Shadow DOM Access:</strong> Detector calls original callbacks, not enhanced ones
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>🧪 Test Widget</h2>
+        <div id="widget-container">
+            Click "Create Debug Widget" to start
+        </div>
+        
+        <button onclick="createDebugWidget()">🚀 Create Debug Widget</button>
+        <button onclick="testShadowAccess()" class="danger">🤖 Test Shadow Access</button>
+        <button onclick="clearConsole()">🧹 Clear Console</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>📊 Callback Objects Comparison</h2>
+        <div id="callback-comparison"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>🔍 Console Output</h2>
+        <div id="console-output" class="console-output">
+            Console logs will appear here...
+        </div>
+    </div>
+
+    <script>
+        let debugWidget = null;
+        let originalCallbacks = null;
+        let enhancedCallbacks = null;
+        
+        // Capture console logs
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        function addToConsole(message, type = 'log') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff4444' : type === 'warn' ? '#ffaa00' : '#00ff00';
+            output.innerHTML += `<span style="color: #666">[${timestamp}]</span> <span style="color: ${color}">[${type.toUpperCase()}]</span> ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warn');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+        
+        // Mock the widget factory behavior
+        function createMockCallbacks() {
+            return {
+                onHuman: (token) => console.log('onHuman called'),
+                onError: (error) => console.log('onError called'),
+                onShadowDomAccess: (type, target) => {
+                    console.log(`[ORIGINAL CALLBACK] Shadow DOM ${type} detected on:`, target.tagName);
+                    console.log('[ORIGINAL CALLBACK] This is the callback that the Shadow DOM detector actually calls');
+                }
+            };
+        }
+        
+        function createEnhancedCallbacks(originalCallbacks) {
+            return {
+                ...originalCallbacks,
+                onShadowDomAccess: (type, target) => {
+                    console.log("[ENHANCED CALLBACK] Callback in ProcaptchaWidget.tsx triggered, image captcha is notified");
+                    console.log(`[ENHANCED CALLBACK] Shadow DOM ${type} detected on:`, target.tagName);
+                    
+                    // Call the original callback
+                    if (originalCallbacks.onShadowDomAccess) {
+                        console.log('[ENHANCED CALLBACK] Calling original callback');
+                        originalCallbacks.onShadowDomAccess(type, target);
+                    }
+                }
+            };
+        }
+        
+        function updateCallbackComparison() {
+            const container = document.getElementById('callback-comparison');
+            container.innerHTML = `
+                <h3>Original Callbacks (used by Shadow DOM detector):</h3>
+                <div class="callback-object">
+                    onShadowDomAccess: ${originalCallbacks?.onShadowDomAccess ? 'PRESENT' : 'MISSING'}<br>
+                    Function: ${originalCallbacks?.onShadowDomAccess?.toString().substring(0, 100)}...
+                </div>
+                
+                <h3>Enhanced Callbacks (used by React component):</h3>
+                <div class="callback-object">
+                    onShadowDomAccess: ${enhancedCallbacks?.onShadowDomAccess ? 'PRESENT' : 'MISSING'}<br>
+                    Function: ${enhancedCallbacks?.onShadowDomAccess?.toString().substring(0, 100)}...
+                </div>
+                
+                <h3>Problem:</h3>
+                <div class="callback-object" style="background: #fff3cd; border-color: #ffeaa7;">
+                    The Shadow DOM detector uses ORIGINAL callbacks, but React component creates ENHANCED callbacks.
+                    The detector never knows about the enhanced version!
+                </div>
+            `;
+        }
+        
+        window.createDebugWidget = function() {
+            console.log('🚀 Creating debug widget to demonstrate the callback issue...');
+            
+            // Step 1: Widget Factory creates original callbacks (like getDefaultCallbacks)
+            originalCallbacks = createMockCallbacks();
+            console.log('[WIDGET FACTORY] Created original callbacks:', originalCallbacks);
+            
+            // Step 2: Create widget element
+            const container = document.getElementById('widget-container');
+            const widget = document.createElement('prosopo-procaptcha');
+            widget.style.cssText = `
+                display: block;
+                width: 100%;
+                max-width: 400px;
+                border: 2px solid #007cba;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                background: white;
+            `;
+            
+            // Create Shadow DOM
+            const shadowRoot = widget.attachShadow({ mode: 'open' });
+            shadowRoot.innerHTML = `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h3>🛡️ Debug CAPTCHA Widget</h3>
+                    <div style="background: #007cba; color: white; padding: 15px; border-radius: 6px; cursor: pointer;">
+                        ✓ I'm not a robot
+                    </div>
+                    <div style="color: #666; font-size: 12px; margin-top: 10px;">
+                        Shadow DOM Detection Active
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(widget);
+            debugWidget = widget;
+            
+            // Step 3: Shadow DOM detector uses ORIGINAL callbacks
+            console.log('[SHADOW DOM DETECTOR] Using original callbacks for detection');
+            
+            // Step 4: React component creates ENHANCED callbacks (but detector doesn't know about them!)
+            enhancedCallbacks = createEnhancedCallbacks(originalCallbacks);
+            console.log('[REACT COMPONENT] Created enhanced callbacks:', enhancedCallbacks);
+            console.log('[REACT COMPONENT] ⚠️ Problem: Shadow DOM detector still uses original callbacks!');
+            
+            // Step 5: Set up Shadow DOM detection with ORIGINAL callbacks
+            setupShadowDetection(widget, originalCallbacks);
+            
+            updateCallbackComparison();
+            
+            console.log('✅ Debug widget created. The issue is now visible!');
+            console.log('🔍 Notice: Shadow DOM detector will call ORIGINAL callback, not enhanced one');
+        };
+        
+        function setupShadowDetection(element, callbacks) {
+            const originalShadowRootGetter = Object.getOwnPropertyDescriptor(Element.prototype, 'shadowRoot');
+            
+            if (originalShadowRootGetter) {
+                Object.defineProperty(Element.prototype, 'shadowRoot', {
+                    get: function() {
+                        const isTargetElement = this.tagName.toLowerCase() === 'prosopo-procaptcha';
+                        
+                        console.log(`[SHADOW DOM DETECTOR] shadowRoot accessed on ${this.tagName}, isTarget: ${isTargetElement}`);
+                        
+                        if (isTargetElement) {
+                            console.log('[SHADOW DOM DETECTOR] Calling callbacks.onShadowDomAccess (ORIGINAL)');
+                            // This calls the ORIGINAL callback, not the enhanced one!
+                            if (callbacks.onShadowDomAccess) {
+                                callbacks.onShadowDomAccess('access', this);
+                            }
+                        }
+                        
+                        return originalShadowRootGetter.get.call(this);
+                    },
+                    configurable: true,
+                    enumerable: true,
+                });
+            }
+            
+            console.log('[SHADOW DOM DETECTOR] Detection setup complete using ORIGINAL callbacks');
+        }
+        
+        window.testShadowAccess = function() {
+            if (!debugWidget) {
+                console.warn('⚠️ Create a debug widget first!');
+                return;
+            }
+            
+            console.log('🤖 Testing Shadow DOM access...');
+            console.log('🔍 This should demonstrate that ORIGINAL callback is called, not ENHANCED');
+            
+            setTimeout(() => {
+                try {
+                    const shadowRoot = debugWidget.shadowRoot; // This triggers detection
+                    console.log('🤖 Bot successfully accessed shadowRoot');
+                } catch (error) {
+                    console.error('🤖 Bot access failed:', error.message);
+                }
+            }, 500);
+        };
+        
+        window.clearConsole = function() {
+            document.getElementById('console-output').innerHTML = '';
+        };
+        
+        // Initialize
+        console.log('🐛 Debug page loaded');
+        console.log('📋 This page demonstrates why Shadow DOM callbacks aren\'t working');
+        console.log('🎯 The issue: React components create enhanced callbacks, but Shadow DOM detector uses original ones');
+        
+        updateCallbackComparison();
+    </script>
+</body>
+</html>

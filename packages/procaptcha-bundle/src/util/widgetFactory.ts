@@ -26,6 +26,8 @@ import {
 } from "@prosopo/types";
 import {
 	createWidgetSkeleton,
+	type CreateWidgetSkeletonOptions,
+	type WidgetSkeletonResult,
 	darkTheme,
 	lightTheme,
 } from "@prosopo/widget-skeleton";
@@ -93,11 +95,27 @@ class WidgetFactory {
 			container.appendChild(newDiv);
 			widgetInteractiveArea = newDiv as HTMLElement;
 		} else {
-			widgetInteractiveArea = createWidgetSkeleton(
+			// Use the new API with Shadow DOM detection
+			const widgetResult = createWidgetSkeleton({
 				container,
-				widgetTheme,
-				"prosopo-procaptcha",
-			);
+				theme: widgetTheme,
+				webComponentTag: "prosopo-procaptcha",
+				onAutomatedAccess: () => {
+					// Trigger the Shadow DOM access callback
+					if (callbacks.onShadowDomAccess) {
+						callbacks.onShadowDomAccess('access', container);
+					}
+				},
+				onInteraction: (type, target) => {
+					// Log all Shadow DOM interactions
+					if (callbacks.onShadowDomAccess) {
+						callbacks.onShadowDomAccess(type, target);
+					}
+				},
+				enableShadowDomDetection: true,
+			}) as WidgetSkeletonResult;
+			
+			widgetInteractiveArea = widgetResult.interactiveArea;
 		}
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
