@@ -42,9 +42,11 @@ import {
 	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "./testRedisClient.js";
+import {randomAsHex} from "@prosopo/util-crypto";
 
 describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
+	let indexName: string;
 
 	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
 	const getIndexRecordsCount = async (): Promise<number> =>
@@ -69,10 +71,14 @@ describe("redisAccessRules", () => {
 		if (keys.length > 0) {
 			await redisClient.del(keys);
 		}
+
+		// Get a new index name for each test
+		indexName = randomAsHex(16);
+
 		// Get a new DB for each test
 		redisClient = await createTestRedisClient();
 
-		await createRedisAccessRulesIndex(redisClient);
+		await createRedisAccessRulesIndex(redisClient, indexName);
 	});
 
 	describe("writer", () => {
