@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/common";
+import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
 	afterAll,
@@ -42,7 +43,6 @@ import {
 	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "./testRedisClient.js";
-import {randomAsHex} from "@prosopo/util-crypto";
 
 describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
