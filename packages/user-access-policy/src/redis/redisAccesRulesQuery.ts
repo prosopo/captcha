@@ -56,11 +56,16 @@ export const getRedisAccessRulesQuery = (
     matchingFieldsOnly: boolean,
 ): string => {
     const { policyScope, userScope } = filter;
+    const queryParts=[];
 
-    const policyScopeFilter = getPolicyScopeQuery(
+    const policyScopeQuery = getPolicyScopeQuery(
         policyScope,
         filter.policyScopeMatch,
     );
+
+    if(policyScopeQuery){
+        queryParts.push(policyScopeQuery);
+    }
 
     if (userScope && Object.keys(userScope).length > 0) {
         const userScopeFilter = getUserScopeQuery(
@@ -68,10 +73,11 @@ export const getRedisAccessRulesQuery = (
             filter.userScopeMatch,
             matchingFieldsOnly,
         );
-        return `${policyScopeFilter} ( ${userScopeFilter} )`;
+
+       queryParts.push(`( ${userScopeFilter} )`);
     }
 
-    return policyScopeFilter ? policyScopeFilter : "*";
+    return queryParts.length>0 ? queryParts.join(" ") : "*";
 };
 
 const getPolicyScopeQuery = (
@@ -83,6 +89,7 @@ const getPolicyScopeQuery = (
    return policyScopeFields.map(scopeField =>
         getPolicyScopeFieldQuery(scopeField,policyScope?.[scopeField], scopeMatchType))
         .join(" ")
+       .trim()
 };
 
 const getPolicyScopeFieldQuery = (
