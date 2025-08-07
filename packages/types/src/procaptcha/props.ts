@@ -16,6 +16,7 @@ import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type { Account, Callbacks } from "./manager.js";
+import { ReactNode } from "react";
 
 export type FrictionlessState = {
 	provider: RandomProvider;
@@ -37,4 +38,5 @@ export interface ProcaptchaProps {
 	frictionlessState?: FrictionlessState;
 	// display an error message
 	errorMessage?: string;
+	container?: HTMLElement;
 }

@@ -29,7 +29,7 @@ export function createWidgetSkeleton(
 	container: Element,
 	theme: Theme,
 	webComponentTag: string,
-): HTMLElement {
+): {widgetInteractiveArea: HTMLElement, webComponent: HTMLElement} {
 	const widget = createWidgetSkeletonElement(theme);
 	const webComponent = createWebComponent(webComponentTag);
 	const webComponentRoot = getWebComponentRoot(webComponent);
@@ -44,7 +44,7 @@ export function createWidgetSkeleton(
 		throw new Error("Fail to initialize widget: interactive area is not found");
 	}
 
-	return widgetInteractiveArea;
+	return {widgetInteractiveArea, webComponent};
 }
 
 const getWebComponentRoot = (webComponent: HTMLElement) =>

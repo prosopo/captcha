@@ -38,6 +38,7 @@ export const withTimeout = async <T>(
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
+	container: HTMLElement,
 ): Promise<BotDetectionFunctionResult> => {
 	const detect = await DetectorLoader();
 	const botScore = (await detect()) as { token: string };

@@ -26,6 +26,7 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 
 export type BotDetectionFunction = (
 	config: ProcaptchaClientConfigOutput,
+	container: HTMLElement,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**

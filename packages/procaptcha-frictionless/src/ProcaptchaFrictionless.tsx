@@ -76,9 +76,12 @@ export const ProcaptchaFrictionless = ({
 	restart,
 	i18n,
 	detectBot = customDetectBot,
+	container
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
 	const events = getDefaultEvents(callbacks);
+
+	console.log("container", container);
 
 	useEffect(() => {
 		if (config.language) {
@@ -148,7 +151,7 @@ export const ProcaptchaFrictionless = ({
 				stateRef.current.attemptCount += 1;
 
 				const configOutput = ProcaptchaConfigSchema.parse(config);
-				const result = await detectBot(configOutput);
+				const result = await detectBot(configOutput, container);
 
 				if (result.error?.message) {
 					stateRef.current = {
