@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.14
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 2.6.13
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.9.8
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 2.9.7
 ### Patch Changes
 

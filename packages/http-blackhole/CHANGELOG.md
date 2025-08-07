@@ -1,5 +1,10 @@
 # @prosopo/http-blackhole
 
+## 1.0.4
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 1.0.3
 ### Patch Changes
 

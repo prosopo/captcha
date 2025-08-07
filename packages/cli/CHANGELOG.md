@@ -1,5 +1,25 @@
 # @prosopo/cli
 
+## 3.1.11
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/provider@3.6.1
+  - @prosopo/locale@3.1.5
+  - @prosopo/api-express-router@3.0.9
+  - @prosopo/user-access-policy@3.5.3
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/dotenv@3.0.10
+  - @prosopo/types@3.0.9
+  - @prosopo/workspace@3.0.6
+  - @prosopo/util@3.0.8
+  - @prosopo/api@3.1.8
+  - @prosopo/env@3.1.9
+
 ## 3.1.10
 ### Patch Changes
 

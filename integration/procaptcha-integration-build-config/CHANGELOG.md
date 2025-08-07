@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-integration-build-config
 
+## 1.1.6
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 1.1.5
 ### Patch Changes
 

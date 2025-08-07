@@ -1,5 +1,12 @@
 # @prosopo/dotenv
 
+## 3.0.10
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/common@3.1.5
+
 ## 3.0.9
 ### Patch Changes
 

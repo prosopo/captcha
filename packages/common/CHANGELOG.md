@@ -1,5 +1,13 @@
 # @prosopo/common
 
+## 3.1.5
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+
 ## 3.1.4
 ### Patch Changes
 

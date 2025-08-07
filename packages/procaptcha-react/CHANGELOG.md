@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-react
 
+## 2.6.37
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/procaptcha-common@2.7.17
+  - @prosopo/widget-skeleton@2.6.6
+  - @prosopo/procaptcha@2.7.23
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 2.6.36
 ### Patch Changes
 

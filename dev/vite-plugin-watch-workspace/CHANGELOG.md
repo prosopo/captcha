@@ -1,5 +1,10 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.10
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 2.6.9
 ### Patch Changes
 
