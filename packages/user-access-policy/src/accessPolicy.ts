@@ -51,7 +51,7 @@ export const accessPolicySchema: z.ZodObject<{
 
 export const policyScopeSchema = z.object({
 	clientId: z.coerce.string().optional(),
-	groupId: z.coerce.string().optional(),
+	groupId: z.coerce.string().optional(), // fixme
 });
 
 export const userScopeSchema = z.object({

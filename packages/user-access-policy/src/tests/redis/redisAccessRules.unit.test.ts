@@ -18,6 +18,25 @@ import {getRedisAccessRulesQuery} from "#policy/redis/redisAccesRulesQuery.js";
 
 // fixme policyScope tests
 
+describe("getPolicyScopeQuery", () => {
+    it("puts ismissing(x) for field x passed in as `undefined` when policy scope match is exact", () => {
+        const filter = {
+            policyScope: {
+
+            },
+            policyScopeMatch: ScopeMatch.Exact,
+        } as PolicyFilter;
+
+        const query = getRedisAccessRulesQuery(filter, false);
+
+        expect(query).toBe(
+            "ismissing(@clientId) ismissing(@groupId)",
+        );
+    });
+
+});
+
+
 describe("getUserScopeQuery", () => {
 	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact", () => {
 		const filter = {
