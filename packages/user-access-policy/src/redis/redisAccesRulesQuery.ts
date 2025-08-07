@@ -58,12 +58,16 @@ export const getRedisAccessRulesQuery = (
     const { policyScope, userScope } = filter;
     const queryParts=[];
 
+    if(filter.groupId) {
+        queryParts.push(`@groupId:{${filter.groupId}}`);
+    }
+
     const policyScopeQuery = getPolicyScopeQuery(
         policyScope,
         filter.policyScopeMatch,
     );
 
-    if(policyScopeQuery){
+    if(policyScopeQuery) {
         queryParts.push(policyScopeQuery);
     }
 
@@ -84,7 +88,7 @@ const getPolicyScopeQuery = (
     policyScope: PolicyScope | undefined,
     scopeMatchType: ScopeMatch | undefined,
 ): string => {
-    const policyScopeFields: (keyof PolicyScope)[] = ["clientId", "groupId"];
+    const policyScopeFields: (keyof PolicyScope)[] = ["clientId",];
 
    return policyScopeFields.map(scopeField =>
         getPolicyScopeFieldQuery(scopeField,policyScope?.[scopeField], scopeMatchType))
