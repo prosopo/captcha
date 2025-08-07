@@ -16,13 +16,12 @@ import { describe, expect, it } from "vitest";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import {getRedisAccessRulesQuery} from "#policy/redis/redisAccesRulesQuery.js";
 
-// fixme policyScope tests
-
 describe("getPolicyScopeQuery", () => {
-    it("puts ismissing(x) for field x passed in as `undefined` when policy scope match is exact", () => {
+
+    it("puts value for field x passed in when policy scope match is exact", () => {
         const filter = {
             policyScope: {
-
+                clientId: "clientId",
             },
             policyScopeMatch: ScopeMatch.Exact,
         } as PolicyFilter;
@@ -30,7 +29,53 @@ describe("getPolicyScopeQuery", () => {
         const query = getRedisAccessRulesQuery(filter, false);
 
         expect(query).toBe(
-            "ismissing(@clientId) ismissing(@groupId)",
+            "@clientId:{clientId}",
+        );
+    });
+
+
+    it("puts ismissing(x) for field x passed in as `undefined` when policy scope match is exact", () => {
+        const filter = {
+            policyScope: {
+                clientId: undefined,
+            },
+            policyScopeMatch: ScopeMatch.Exact,
+        } as PolicyFilter;
+
+        const query = getRedisAccessRulesQuery(filter, false);
+
+        expect(query).toBe(
+            "ismissing(@clientId)",
+        );
+    });
+
+    it("does not put ismissing(x) for field x passed in as `undefined` when policy scope match is greedy", () => {
+        const filter = {
+            policyScope: {
+                clientId: undefined,
+            },
+            policyScopeMatch: ScopeMatch.Greedy,
+        } as PolicyFilter;
+
+        const query = getRedisAccessRulesQuery(filter, false);
+
+        expect(query).toBe(
+            "*",
+        );
+    });
+
+    it("puts value and ismissing(x) for field x passed in when policy scope match is greedy", () => {
+        const filter = {
+            policyScope: {
+                clientId: "clientId",
+            },
+            policyScopeMatch: ScopeMatch.Greedy,
+        } as PolicyFilter;
+
+        const query = getRedisAccessRulesQuery(filter, false);
+
+        expect(query).toBe(
+            "( @clientId:{clientId} | ismissing(@clientId) )",
         );
     });
 

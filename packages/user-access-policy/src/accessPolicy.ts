@@ -51,7 +51,6 @@ export const accessPolicySchema: z.ZodObject<{
 
 export const policyScopeSchema = z.object({
 	clientId: z.coerce.string().optional(),
-	groupId: z.coerce.string().optional(), // fixme
 });
 
 export const userScopeSchema = z.object({
@@ -112,6 +111,7 @@ export type UserScopeApiOutput = z.output<typeof userScopeInputSchema>;
 export const accessRuleSchemaExtended = z
 	.object({
 		// flat structure is used to fit the Redis requirements
+        groupId: z.coerce.string().optional(),
 		...accessPolicySchema.shape,
 		...policyScopeSchema.shape,
 		...userScopeInputSchema._def.schema.shape,

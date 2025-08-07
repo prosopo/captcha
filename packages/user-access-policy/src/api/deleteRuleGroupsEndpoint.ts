@@ -17,10 +17,14 @@ import {
     type ApiEndpointResponse,
     ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { z } from "zod";
+import {string, z} from "zod";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
+import {ScopeMatch} from "#policy/accessPolicyResolver.js";
 
-export const deleteRuleGroupsEndpointSchema = z.array(z.string());
+export const deleteRuleGroupsEndpointSchema = z.array(z.object({
+    clientId: z.string(),
+    groupId: z.string(),
+}));
 
 export type DeleteRuleGroupsEndpointSchemaOutput = z.output<
     typeof deleteRuleGroupsEndpointSchema
@@ -42,12 +46,14 @@ export class DeleteRuleGroupsEndpoint
     ): Promise<ApiEndpointResponse> {
         const allRuleIds = [];
 
-        for (const groupId of args) {
+        for (const ruleToDelete of args) {
             const foundRuleIds =
                 await this.accessRulesStorage.findRuleIds({
                     policyScope: {
-                        groupId: groupId,
-                    }
+                        clientId: ruleToDelete.clientId,
+                    },
+                    policyScopeMatch: ScopeMatch.Exact,
+                    groupId: ruleToDelete.groupId,
                 });
 
             allRuleIds.push(...foundRuleIds);
