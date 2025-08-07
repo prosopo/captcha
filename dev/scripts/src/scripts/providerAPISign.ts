@@ -1,9 +1,22 @@
-import {getPair} from "@prosopo/keyring";
-import {u8aToHex} from "@polkadot/util";
-import {loadEnv} from "@prosopo/dotenv";
+import { u8aToHex } from "@polkadot/util";
+import { loadEnv } from "@prosopo/dotenv";
+// Copyright 2021-2025 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { getPair } from "@prosopo/keyring";
 
-loadEnv()
+loadEnv();
 
-const adminPair = getPair(process.env.PROSOPO_ADMIN_SECRET)
+const adminPair = getPair(process.env.PROSOPO_ADMIN_SECRET);
 
-console.log(u8aToHex(adminPair.sign(new Date().getTime().toString())))
+console.log(u8aToHex(adminPair.sign(new Date().getTime().toString())));
