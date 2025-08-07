@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/common";
+import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
 	afterAll,
@@ -45,10 +46,11 @@ import { createTestRedisClient } from "./testRedisClient.js";
 
 describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
+	let indexName: string;
 
 	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
-	const getIndexRecordsCount = async (): Promise<number> =>
-		(await redisClient.ft.info(accessRulesRedisIndexName)).num_docs;
+	const getIndexRecordsCount = async (indexName: string): Promise<number> =>
+		(await redisClient.ft.info(indexName)).num_docs;
 
 	const insertRule = async (rule: AccessRule) => {
 		const ruleKey = getRedisAccessRuleKey(rule);
@@ -69,10 +71,14 @@ describe("redisAccessRules", () => {
 		if (keys.length > 0) {
 			await redisClient.del(keys);
 		}
+
+		// Get a new index name for each test
+		indexName = randomAsHex(16);
+
 		// Get a new DB for each test
 		redisClient = await createTestRedisClient();
 
-		await createRedisAccessRulesIndex(redisClient);
+		await createRedisAccessRulesIndex(redisClient, indexName);
 	});
 
 	describe("writer", () => {
@@ -95,7 +101,7 @@ describe("redisAccessRules", () => {
 
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(insertedAccessRule).toEqual(accessRule);
 			expect(indexRecordsCount).toEqual(1);
@@ -126,7 +132,7 @@ describe("redisAccessRules", () => {
 				ruleKey,
 				expirationTimestampInSeconds,
 			);
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			const recordExpirySeconds = await redisClient.ttl(ruleKey);
 
@@ -161,7 +167,7 @@ describe("redisAccessRules", () => {
 
 			// then
 			const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(presentAccessRule).toEqual(doeAccessRule);
 			expect(indexRecordsCount).toBe(1);
@@ -185,7 +191,7 @@ describe("redisAccessRules", () => {
 			await accessRulesWriter.deleteAllRules();
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(0);
 		});
@@ -209,7 +215,7 @@ describe("redisAccessRules", () => {
 			await accessRulesWriter.deleteAllRules();
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(0);
 		});
@@ -256,7 +262,7 @@ describe("redisAccessRules", () => {
 			});
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(3);
 			expect(foundByClientAccessRules).toEqual([
@@ -306,7 +312,7 @@ describe("redisAccessRules", () => {
 			);
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(3);
 			expect(foundClientAccessRules).toEqual([johnAccessRule]);
@@ -354,7 +360,7 @@ describe("redisAccessRules", () => {
 			});
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(4);
 			expect(foundAccessRules).toEqual([johnIpAccessRule, globalJa4AccessRule]);
@@ -414,7 +420,7 @@ describe("redisAccessRules", () => {
 			});
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(5);
 			expect(foundAccessRules).toEqual([
@@ -503,7 +509,7 @@ describe("redisAccessRules", () => {
 			});
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(4);
 
@@ -571,7 +577,7 @@ describe("redisAccessRules", () => {
 			});
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(4);
 
@@ -632,7 +638,7 @@ describe("redisAccessRules", () => {
 			});
 
 			// then
-			const indexRecordsCount = await getIndexRecordsCount();
+			const indexRecordsCount = await getIndexRecordsCount(indexName);
 
 			expect(indexRecordsCount).toBe(4);
 
