@@ -165,8 +165,15 @@ export const createRedisAccessRulesWriter = (
 			return ruleKey;
 		},
 
-		deleteRules: async (ruleIds: string[]): Promise<void> =>
-			void (await client.del(ruleIds)),
+		deleteRules: async (ruleIds: string[]): Promise<void> => {
+			let total = 0;
+			// delete in batches of 100 to avoid recursion depth errors
+			for (let i = 0; i < ruleIds.length; i += 100) {
+				const batch = ruleIds.slice(i, i + 100);
+				const count = await client.del(batch);
+				total += count;
+			}
+		},
 
 		deleteAllRules: async (): Promise<number> => {
 			let total = 0;
