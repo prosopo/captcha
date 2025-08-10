@@ -35,7 +35,12 @@ class ApiRegisterSiteKeyEndpoint
 	): Promise<ApiEndpointResponse> {
 		const { siteKey, tier, settings } = args;
 
-		logger = logger || getLogger("info", import.meta.url);
+		logger =
+			logger ||
+			getLogger({
+				scope: "provider.api.admin.apiRegisterSiteKeyEndpoint",
+				url: import.meta.url,
+			});
 
 		const temp = settings || ClientSettingsSchema.parse({});
 

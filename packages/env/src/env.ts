@@ -47,10 +47,11 @@ export class Environment implements ProsopoEnvironment {
 		this.defaultEnvironment = this.config.defaultEnvironment;
 		this.pair = pair || getPair(config.account.secret);
 		this.authAccount = authAccount;
-		this.logger = getLogger(
-			parseLogLevel(this.config.logLevel),
-			"ProsopoEnvironment",
-		);
+		this.logger = getLogger({
+			scope: "prosopo.env",
+			url: import.meta.url,
+		});
+		this.logger.setLogLevel(parseLogLevel(this.config.logLevel));
 
 		this.keyring = new Keyring({
 			type: "sr25519",

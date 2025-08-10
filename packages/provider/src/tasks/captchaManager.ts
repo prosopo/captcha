@@ -40,7 +40,8 @@ export class CaptchaManager {
 	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
 		this.pair = pair;
 		this.db = db;
-		this.logger = logger || getLogger("info", import.meta.url);
+		this.logger =
+			logger || getLogger({ scope: "captcha.manager", url: import.meta.url });
 	}
 
 	async getFrictionlessTokenIdFromSession(sessionRecord: Session) {

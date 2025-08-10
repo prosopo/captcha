@@ -46,7 +46,8 @@ const writeLogs = (file: string, result: { url: string; logs: string }[]) => {
 
 export default (cmdArgs?: { logger?: Logger }) => {
 	const logger =
-		cmdArgs?.logger || getLogger(LogLevel.enum.info, "flux.cli.auth");
+		cmdArgs?.logger ||
+		getLogger({ scope: "dev.flux.cli.auth", url: import.meta.url });
 
 	return {
 		command: "logs",
