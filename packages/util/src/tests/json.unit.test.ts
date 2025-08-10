@@ -11,21 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { describe, expect, it, test } from "vitest";
+import { jsonDecode, jsonEncode } from "../json.js";
 
-import { Address4, Address6 } from "ip-address";
+describe("json", () => {
+	const str =
+		'{"a":{"type":"bigint","value":"1"},"b":"hello","c":[{"type":"bigint","value":"1"},{"type":"bigint","value":"2"},{"type":"bigint","value":"3"}]}';
+	const obj = {
+		a: 1n,
+		b: "hello",
+		c: [1n, 2n, 3n],
+	};
 
-export const getIPAddress = (ipAddressString: string) => {
-	try {
-		return new Address4(ipAddressString);
-	} catch (e) {
-		try {
-			return new Address6(ipAddressString);
-		} catch (e) {
-			throw new Error(`API.INVALID_IP: ${ipAddressString}`);
-		}
-	}
-};
+	test("encode obj with bigint", () => {
+		expect(jsonEncode(obj)).to.deep.equal(str);
+	});
 
-export const getIPAddressFromBigInt = (ipAddressBigInt: bigint) => {
-	return Address4.fromBigInt(ipAddressBigInt);
-};
+	test("decode obj with bigint", () => {
+		expect(jsonDecode(str)).to.deep.equal(obj);
+	});
+});

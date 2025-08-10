@@ -114,7 +114,5 @@ export const userAccessPolicy = async (
 			timestamp.toString(),
 			signature,
 		);
-
-		console.log(response);
 	}
 };
