@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-bundle
 
+## 3.0.18
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- 3663edb: Fixing and re enabling tests marked as skip
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/procaptcha-frictionless@2.6.37
+  - @prosopo/procaptcha-common@2.7.17
+  - @prosopo/procaptcha-react@2.6.37
+  - @prosopo/widget-skeleton@2.6.6
+  - @prosopo/procaptcha-pow@2.7.23
+  - @prosopo/dotenv@3.0.10
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 3.0.17
 ### Patch Changes
 

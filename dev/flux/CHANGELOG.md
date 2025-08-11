@@ -1,5 +1,14 @@
 # @prosopo/flux
 
+## 2.6.15
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/common@3.1.5
+  - @prosopo/dotenv@3.0.10
+  - @prosopo/util@3.0.8
+
 ## 2.6.14
 ### Patch Changes
 
