@@ -1,5 +1,17 @@
 # @prosopo/account
 
+## 2.7.15
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/fingerprint@2.6.6
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 2.7.14
 ### Patch Changes
 

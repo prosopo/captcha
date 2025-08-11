@@ -1,5 +1,16 @@
 # @prosopo/procaptcha-common
 
+## 2.7.17
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/widget-skeleton@2.6.6
+  - @prosopo/load-balancer@2.6.20
+  - @prosopo/account@2.7.15
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 2.7.16
 ### Patch Changes
 

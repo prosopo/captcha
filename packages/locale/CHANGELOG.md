@@ -1,5 +1,11 @@
 # @prosopo/locale
 
+## 3.1.5
+### Patch Changes
+
+- d8e855c: Adding checks for IP consistency throughout the verification process
+- 6960643: lint detect missing and unneccessary imports
+
 ## 3.1.4
 ### Patch Changes
 

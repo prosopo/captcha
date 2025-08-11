@@ -1,5 +1,20 @@
 # @prosopo/provider-mock
 
+## 2.8.1
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/types-database@3.0.18
+  - @prosopo/provider@3.6.1
+  - @prosopo/locale@3.1.5
+  - @prosopo/api-express-router@3.0.9
+  - @prosopo/database@3.0.18
+  - @prosopo/common@3.1.5
+  - @prosopo/dotenv@3.0.10
+  - @prosopo/types@3.0.9
+
 ## 2.8.0
 ### Minor Changes
 

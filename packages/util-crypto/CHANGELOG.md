@@ -1,5 +1,10 @@
 # @prosopo/util-crypto
 
+## 13.5.7
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 13.5.6
 ### Patch Changes
 
