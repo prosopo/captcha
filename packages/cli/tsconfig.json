@@ -14,6 +14,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../api"
 		},
 		{
@@ -48,6 +51,9 @@
 		},
 		{
 			"path": "../api-express-router"
+		},
+		{
+			"path": "../../dev/workspace"
 		}
 	]
 }

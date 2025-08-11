@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Hindi natagpuan ang solusyon ng user ng Dapp",
 		"NO_CAPTCHA": "Walang natagpuang captcha",
 		"NO_SESSION_FOUND": "Walang natagpuang sesyon",
+		"IP_ADDRESS_MISMATCH": "IP വിലാസങ്ങൾ പൊരുത്തപ്പെടുന്നില്ല",
 		"INVALID_TOKEN": "Hindi wastong token",
 		"INVALID_SOLUTION": "Hindi wastong solusyon",
 		"DECRYPTION_ERROR": "Error sa pagdedecrypt"

@@ -30,7 +30,6 @@
 		"@iarna/toml": "2.2.5",
 		"@polkadot/api": "10.13.1",
 		"@polkadot/api-contract": "10.13.1",
-		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
 		"@prosopo/account": "2.7.14",
@@ -46,23 +45,17 @@
 		"@prosopo/types-database": "3.0.17",
 		"@prosopo/types-env": "2.7.21",
 		"@prosopo/util": "3.0.7",
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
 		"dotenv": "16.4.5",
-		"esbuild": "0.25.6",
-		"express": "4.21.2",
 		"fast-glob": "3.3.2",
 		"fs-extra": "11.2.0",
-		"mongodb": "6.9.0",
-		"yargs": "17.7.2",
-		"openpgp": "5.11.3",
-		"webpack-dev-server": "5.2.2"
+		"yargs": "17.7.2"
 	},
 	"overrides": {
 		"@polkadot/keyring": "12.6.2"
 	},
 	"devDependencies": {
 		"@types/fs-extra": "11.0.4",
+		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

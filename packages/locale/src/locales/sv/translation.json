@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp-användarösning-hittades-inte",
 		"NO_CAPTCHA": "Ingen CAPTCHA hittades",
 		"NO_SESSION_FOUND": "Inget-session-hittades",
+		"IP_ADDRESS_MISMATCH": "IP-adresser matchar inte",
 		"INVALID_TOKEN": "Ogiltig token",
 		"INVALID_SOLUTION": "Ogiltig lösning",
 		"DECRYPTION_ERROR": "Fel vid avkryptering"

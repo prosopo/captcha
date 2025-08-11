@@ -15,13 +15,13 @@
 	],
 	"references": [
 		{
+			"path": "../../../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../vue-procaptcha-wrapper"
 		},
 		{
 			"path": "../../../procaptcha-integration-build-config"
-		},
-		{
-			"path": "../../../../packages/types"
 		}
 	]
 }

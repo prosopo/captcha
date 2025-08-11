@@ -28,3 +28,4 @@ export * from "./sha/index.js";
 export * from "./signature/index.js";
 export * from "./sr25519/index.js";
 export * from "./types.js";
+export * from "./hash.js";

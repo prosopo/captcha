@@ -132,6 +132,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						CaptchaType.image,
 						sessionId,
 						userAccessPolicy,
+						req.ip,
 					);
 
 				if (!valid) {
@@ -369,6 +370,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					CaptchaType.pow,
 					sessionId,
 					userAccessPolicy,
+					req.ip,
 				);
 
 			if (!valid) {
@@ -631,6 +633,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						baseScore: baseBotScore,
 						...(lScore && { lScore }),
 					},
+					ipAddress: getIPAddress(req.ip || "").bigInt(),
 				});
 
 				// Check if the IP address is blocked

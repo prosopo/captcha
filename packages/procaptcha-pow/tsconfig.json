@@ -15,7 +15,7 @@
 	],
 	"references": [
 		{
-			"path": "../account"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../api"
@@ -25,9 +25,6 @@
 		},
 		{
 			"path": "../locale"
-		},
-		{
-			"path": "../procaptcha"
 		},
 		{
 			"path": "../procaptcha-common"

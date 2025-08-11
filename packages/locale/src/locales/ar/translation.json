@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "لم يتم العثور على حل لمستخدم Dapp",
 		"NO_CAPTCHA": "لم يتم العثور على captcha",
 		"NO_SESSION_FOUND": "لم يتم العثور على جلسة",
+		"IP_ADDRESS_MISMATCH": "عناوين IP غير متطابقة",
 		"INVALID_TOKEN": "الرمز غير صالح",
 		"INVALID_SOLUTION": "الحل غير صالح",
 		"DECRYPTION_ERROR": "خطأ في فك التشفير"

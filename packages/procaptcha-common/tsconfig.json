@@ -15,7 +15,7 @@
 	],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../load-balancer"

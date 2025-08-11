@@ -16,6 +16,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../detector"
 		},
 		{
@@ -32,6 +35,15 @@
 		},
 		{
 			"path": "../widget-skeleton"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../procaptcha-common"
 		}
 	]
 }
