@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/file-server",
-	"version": "2.6.9",
+	"version": "2.6.10",
 	"description": "Simple static file server",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -25,7 +25,7 @@
 		"start": "node ./dist/index.js"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.0.7",
+		"@prosopo/util": "3.0.8",
 		"@prosopo/config": "3.1.5",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",

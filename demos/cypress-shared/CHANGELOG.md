@@ -1,5 +1,13 @@
 # @prosopo/cypress-shared
 
+## 2.8.16
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 2.8.15
 ### Patch Changes
 
