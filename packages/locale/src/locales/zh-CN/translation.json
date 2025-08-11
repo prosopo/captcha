@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "找不到Dapp用户解决方案",
 		"NO_CAPTCHA": "找不到验证码",
 		"NO_SESSION_FOUND": "找不到会话",
+		"IP_ADDRESS_MISMATCH": "检测到 IP 地址不匹配",
 		"INVALID_TOKEN": "无效的令牌",
 		"INVALID_SOLUTION": "无效的解决方案",
 		"DECRYPTION_ERROR": "解密错误"

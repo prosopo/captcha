@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Nie znaleziono rozwiązania użytkownika Dapp",
 		"NO_CAPTCHA": "Nie znaleziono captchy",
 		"NO_SESSION_FOUND": "Nie znaleziono sesji",
+		"IP_ADDRESS_MISMATCH": "Adresy IP nie pasują",
 		"INVALID_TOKEN": "Nieprawidłowy token",
 		"INVALID_SOLUTION": "Nieprawidłowe rozwiązanie",
 		"DECRYPTION_ERROR": "Błąd deszyfrowania"

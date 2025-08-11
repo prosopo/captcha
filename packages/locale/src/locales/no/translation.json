@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp brukerløsning ikkje funnet",
 		"NO_CAPTCHA": "Ingen captcha funnet",
 		"NO_SESSION_FOUND": "Ingen økt funnet",
+		"IP_ADDRESS_MISMATCH": "IP-adresser stemmer ikke overens",
 		"INVALID_TOKEN": "Ugyldig token",
 		"INVALID_SOLUTION": "Ugyldig løsning",
 		"DECRYPTION_ERROR": "Feil ved dekryptering"

@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "ไม่พบคำตอบของผู้ใช้ Dapp",
 		"NO_CAPTCHA": "ไม่พบ captcha",
 		"NO_SESSION_FOUND": "ไม่พบเซสชัน",
+		"IP_ADDRESS_MISMATCH": "ที่อยู่ IP ไม่ตรงกัน",
 		"INVALID_TOKEN": "โทเคนไม่ถูกต้อง",
 		"INVALID_SOLUTION": "คำตอบไม่ถูกต้อง",
 		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส"
