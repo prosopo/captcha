@@ -36,7 +36,7 @@ export const policyFilterSchema = z.object({
 	 * Greedy: finds rules where any of the given fields match and checks IP against masks. Used by the Express middleware
 	 */
 	userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
-    groupId: z.string().optional(),
+	groupId: z.string().optional(),
 });
 
 // we infer using 'z.input()', as '.output()' already have .default() field values, making them required

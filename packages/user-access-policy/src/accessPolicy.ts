@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import crypto from "node:crypto";
 import { CaptchaTypeSchema } from "@prosopo/types";
 import { getIPAddress } from "@prosopo/util";
 import { Address4 } from "ip-address";
@@ -107,18 +106,3 @@ export type PolicyScope = z.output<typeof policyScopeSchema>;
 export type UserScope = z.output<typeof userScopeSchema>;
 export type UserScopeApiInput = z.input<typeof userScopeInputSchema>;
 export type UserScopeApiOutput = z.output<typeof userScopeInputSchema>;
-
-export const accessRuleSchemaExtended = z
-	.object({
-		// flat structure is used to fit the Redis requirements
-        groupId: z.coerce.string().optional(),
-		...accessPolicySchema.shape,
-		...policyScopeSchema.shape,
-		...userScopeInputSchema._def.schema.shape,
-	})
-	.omit({
-		numericIp: true,
-		numericIpMaskMin: true,
-		numericIpMaskMax: true,
-	});
-export type AccessRuleExtended = z.input<typeof accessRuleSchemaExtended>;

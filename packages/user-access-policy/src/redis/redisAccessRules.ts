@@ -25,6 +25,7 @@ import {
 	type AccessRulesWriter,
 	accessRuleSchema,
 } from "#policy/accessRules.js";
+import { getRedisAccessRulesQuery } from "#policy/redis/redisAccesRulesQuery.js";
 import {
 	accessRuleRedisKeyPrefix,
 	accessRulesRedisIndexName,
@@ -32,7 +33,6 @@ import {
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
 } from "#policy/redis/redisAccessRulesIndex.js";
-import {getRedisAccessRulesQuery} from "#policy/redis/redisAccesRulesQuery.js";
 
 export const createRedisAccessRulesReader = (
 	client: RedisClientType,
