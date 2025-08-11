@@ -218,11 +218,15 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		verifyRecency(challenge, timeout);
+		const recent = verifyRecency(challenge, timeout);
 
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+
+		if (!recent) {
+			return { verified: false };
+		}
 
 		let score: number | undefined;
 		if (challengeRecord.frictionlessTokenId) {

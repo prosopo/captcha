@@ -385,6 +385,7 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	ipAddress?: bigint; // TODO: Once released and stable, this should be required
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 }
@@ -406,6 +407,7 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
+		ipAddress: { type: BigInt, required: false }, // TODO: Once released and stable, this should be required
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 		storedAtTimestamp: { type: Date, required: false },
 		lastUpdatedTimestamp: { type: Date, required: false },

@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Không tìm thấy giải pháp người dùng Dapp",
 		"NO_CAPTCHA": "Không tìm thấy CAPTCHA",
 		"NO_SESSION_FOUND": "Không tìm thấy phiên",
+		"IP_ADDRESS_MISMATCH": "Phát hiện không khớp địa chỉ IP",
 		"INVALID_TOKEN": "Token không hợp lệ",
 		"INVALID_SOLUTION": "Giải pháp không hợp lệ",
 		"DECRYPTION_ERROR": "Lỗi giải mã"

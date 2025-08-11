@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Solutia utilizatorului Dapp nu a fost gasita",
 		"NO_CAPTCHA": "Niciun captcha gasit",
 		"NO_SESSION_FOUND": "Nicio sesiune gasita",
+		"IP_ADDRESS_MISMATCH": "Adresele IP nu se potrivesc",
 		"INVALID_TOKEN": "Token invalid",
 		"INVALID_SOLUTION": "Solutie invalida",
 		"DECRYPTION_ERROR": "Eroare la decriptare"

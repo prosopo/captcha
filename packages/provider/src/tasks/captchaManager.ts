@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoApiError, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
@@ -29,6 +29,7 @@ import type {
 	UserScopeApiInput,
 	UserScopeApiOutput,
 } from "@prosopo/user-access-policy";
+import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
@@ -49,11 +50,47 @@ export class CaptchaManager {
 		return tokenRecord ? (tokenRecord._id as FrictionlessTokenId) : undefined;
 	}
 
+	async validateFrictionlessTokenIP(
+		sessionRecord: Session,
+		currentIP: string,
+	): Promise<{ valid: boolean; reason?: TranslationKey }> {
+		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
+			sessionRecord.tokenId,
+		);
+
+		if (!tokenRecord) {
+			this.logger.info(() => ({
+				msg: "No frictionless token found for session",
+				data: { sessionId: sessionRecord.sessionId },
+			}));
+			return { valid: false, reason: "CAPTCHA.NO_SESSION_FOUND" };
+		}
+
+		if (tokenRecord.ipAddress !== undefined) {
+			const currentIPBigInt = getIPAddress(currentIP).bigInt();
+			if (tokenRecord.ipAddress !== currentIPBigInt) {
+				this.logger.info(() => ({
+					msg: "IP address mismatch for frictionless token",
+					data: {
+						sessionId: sessionRecord.sessionId,
+						tokenId: tokenRecord._id,
+						originalIP: tokenRecord.ipAddress?.toString() || "unknown",
+						currentIP: currentIPBigInt.toString(),
+					},
+				}));
+				return { valid: false, reason: "CAPTCHA.IP_ADDRESS_MISMATCH" };
+			}
+		}
+
+		return { valid: true };
+	}
+
 	async isValidRequest(
 		clientSettings: ClientRecord | IUserDataSlim,
 		requestedCaptchaType: CaptchaType,
 		sessionId?: string,
 		userAccessPolicy?: AccessPolicy,
+		currentIP?: string,
 	): Promise<{
 		valid: boolean;
 		reason?: TranslationKey;
@@ -107,6 +144,22 @@ export class CaptchaManager {
 						type: requestedCaptchaType,
 					};
 				}
+
+				// Validate IP address if currentIP is provided
+				if (currentIP) {
+					const ipValidation = await this.validateFrictionlessTokenIP(
+						sessionRecord,
+						currentIP,
+					);
+					if (!ipValidation.valid) {
+						return {
+							valid: false,
+							reason: ipValidation.reason,
+							type: requestedCaptchaType,
+						};
+					}
+				}
+
 				const frictionlessTokenId =
 					await this.getFrictionlessTokenIdFromSession(sessionRecord);
 
