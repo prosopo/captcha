@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp 사용자 솔루션이 없음",
 		"NO_CAPTCHA": "캡차 없음",
 		"NO_SESSION_FOUND": "세션을 찾을 수 없음",
+		"IP_ADDRESS_MISMATCH": "IP 주소가 일치하지 않습니다",
 		"INVALID_TOKEN": "유효하지 않은 토큰",
 		"INVALID_SOLUTION": "유효하지 않은 솔루션",
 		"DECRYPTION_ERROR": "해제 오류"

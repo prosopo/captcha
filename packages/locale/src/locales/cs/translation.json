@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Řešení uživatele Dapp nenalezeno",
 		"NO_CAPTCHA": "CAPTCHA nenalezena",
 		"NO_SESSION_FOUND": "Žádná relace nenalezena",
+		"IP_ADDRESS_MISMATCH": "IP adresy se neshodují",
 		"INVALID_TOKEN": "Neplatný token",
 		"INVALID_SOLUTION": "Neplatné řešení",
 		"DECRYPTION_ERROR": "Chyba dešifrování"

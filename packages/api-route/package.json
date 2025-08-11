@@ -27,7 +27,10 @@
 		"zod": "3.23.8",
 		"@prosopo/config": "3.1.5"
 	},
-	"devDependencies": {},
+	"devDependencies": {
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0"
+	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"bugs": {
