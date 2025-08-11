@@ -24,18 +24,18 @@ import {
 	policyScopeSchema,
 	userScopeInputSchema,
 } from "#policy/accessPolicy.js";
-import type { AccessRulesWriter } from "#policy/accessRules.js";
+import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
 
 export const insertRulesEndpointSchema: z.ZodType<{
 	accessPolicy: z.infer<typeof accessPolicySchema>;
 	policyScope?: z.infer<typeof policyScopeSchema>;
-    groupId?: string;
+	groupId?: string;
 	userScopes: z.input<typeof userScopeInputSchema>[];
 	expirationTimestamp?: number;
 }> = z.object({
 	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
-    groupId: z.string().optional(),
+	groupId: z.string().optional(),
 	userScopes: z.array(userScopeInputSchema),
 	expirationTimestamp: z
 		.number()
@@ -104,16 +104,12 @@ export class InsertRulesEndpoint
 
 		const createPromises = [];
 		for (const userScope of args.userScopes) {
-			const rule = {
+			const rule: AccessRule = {
 				...args.accessPolicy,
 				...policyScope,
 				...userScope,
+				...(args.groupId ? { groupId: args.groupId } : {}),
 			};
-
-            if(args.groupId) {
-                // fixme rule doesn't have groupId (only extended
-                //  rule.groupId = args.groupId;
-            }
 
 			createPromises.push(
 				this.accessRulesWriter.insertRule(rule, args.expirationTimestamp),

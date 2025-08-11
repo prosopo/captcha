@@ -15,9 +15,9 @@
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { DeleteAllRulesEndpoint } from "#policy/api/deleteAllRulesEndpoint.js";
+import { DeleteRuleGroupsEndpoint } from "#policy/api/deleteRuleGroupsEndpoint.js";
 import { DeleteRulesEndpoint } from "./deleteRulesEndpoint.js";
 import { InsertRulesEndpoint } from "./insertRulesEndpoint.js";
-import {DeleteRuleGroupsEndpoint} from "#policy/api/deleteRuleGroupsEndpoint.js";
 
 export enum accessRuleApiPaths {
 	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",

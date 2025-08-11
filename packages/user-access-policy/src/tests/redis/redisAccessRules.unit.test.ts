@@ -14,73 +14,61 @@
 
 import { describe, expect, it } from "vitest";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import {getRedisAccessRulesQuery} from "#policy/redis/redisAccesRulesQuery.js";
+import { getRedisAccessRulesQuery } from "#policy/redis/redisAccesRulesQuery.js";
 
 describe("getPolicyScopeQuery", () => {
+	it("puts value for field x passed in when policy scope match is exact", () => {
+		const filter = {
+			policyScope: {
+				clientId: "clientId",
+			},
+			policyScopeMatch: ScopeMatch.Exact,
+		} as PolicyFilter;
 
-    it("puts value for field x passed in when policy scope match is exact", () => {
-        const filter = {
-            policyScope: {
-                clientId: "clientId",
-            },
-            policyScopeMatch: ScopeMatch.Exact,
-        } as PolicyFilter;
+		const query = getRedisAccessRulesQuery(filter, false);
 
-        const query = getRedisAccessRulesQuery(filter, false);
+		expect(query).toBe("@clientId:{clientId}");
+	});
 
-        expect(query).toBe(
-            "@clientId:{clientId}",
-        );
-    });
+	it("puts ismissing(x) for field x passed in as `undefined` when policy scope match is exact", () => {
+		const filter = {
+			policyScope: {
+				clientId: undefined,
+			},
+			policyScopeMatch: ScopeMatch.Exact,
+		} as PolicyFilter;
 
+		const query = getRedisAccessRulesQuery(filter, false);
 
-    it("puts ismissing(x) for field x passed in as `undefined` when policy scope match is exact", () => {
-        const filter = {
-            policyScope: {
-                clientId: undefined,
-            },
-            policyScopeMatch: ScopeMatch.Exact,
-        } as PolicyFilter;
+		expect(query).toBe("ismissing(@clientId)");
+	});
 
-        const query = getRedisAccessRulesQuery(filter, false);
+	it("does not put ismissing(x) for field x passed in as `undefined` when policy scope match is greedy", () => {
+		const filter = {
+			policyScope: {
+				clientId: undefined,
+			},
+			policyScopeMatch: ScopeMatch.Greedy,
+		} as PolicyFilter;
 
-        expect(query).toBe(
-            "ismissing(@clientId)",
-        );
-    });
+		const query = getRedisAccessRulesQuery(filter, false);
 
-    it("does not put ismissing(x) for field x passed in as `undefined` when policy scope match is greedy", () => {
-        const filter = {
-            policyScope: {
-                clientId: undefined,
-            },
-            policyScopeMatch: ScopeMatch.Greedy,
-        } as PolicyFilter;
+		expect(query).toBe("*");
+	});
 
-        const query = getRedisAccessRulesQuery(filter, false);
+	it("puts value and ismissing(x) for field x passed in when policy scope match is greedy", () => {
+		const filter = {
+			policyScope: {
+				clientId: "clientId",
+			},
+			policyScopeMatch: ScopeMatch.Greedy,
+		} as PolicyFilter;
 
-        expect(query).toBe(
-            "*",
-        );
-    });
+		const query = getRedisAccessRulesQuery(filter, false);
 
-    it("puts value and ismissing(x) for field x passed in when policy scope match is greedy", () => {
-        const filter = {
-            policyScope: {
-                clientId: "clientId",
-            },
-            policyScopeMatch: ScopeMatch.Greedy,
-        } as PolicyFilter;
-
-        const query = getRedisAccessRulesQuery(filter, false);
-
-        expect(query).toBe(
-            "( @clientId:{clientId} | ismissing(@clientId) )",
-        );
-    });
-
+		expect(query).toBe("( @clientId:{clientId} | ismissing(@clientId) )");
+	});
 });
-
 
 describe("getUserScopeQuery", () => {
 	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact", () => {
