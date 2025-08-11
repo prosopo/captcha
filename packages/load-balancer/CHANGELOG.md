@@ -1,5 +1,13 @@
 # @prosopo/load-balancer
 
+## 2.6.20
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 2.6.19
 ### Patch Changes
 
