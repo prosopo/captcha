@@ -9,13 +9,13 @@
 	"include": ["./src"],
 	"references": [
 		{
+			"path": "../../../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../vue-procaptcha-wrapper"
 		},
 		{
 			"path": "../../../procaptcha-integration-build-config"
-		},
-		{
-			"path": "../../../../packages/types"
 		}
 	]
 }

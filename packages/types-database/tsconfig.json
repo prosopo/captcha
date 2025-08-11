@@ -13,6 +13,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../common"
 		},
 		{
@@ -20,6 +23,9 @@
 		},
 		{
 			"path": "../user-access-policy"
+		},
+		{
+			"path": "../locale"
 		}
 	]
 }

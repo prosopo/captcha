@@ -120,6 +120,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Soluzione dell'utente Dapp non trovata",
 		"NO_CAPTCHA": "Nessun captcha trovato",
 		"NO_SESSION_FOUND": "Nessuna sessione trovata",
+		"IP_ADDRESS_MISMATCH": "Gli indirizzi IP non corrispondono",
 		"INVALID_TOKEN": "Token non valido",
 		"INVALID_SOLUTION": "Soluzione non valida",
 		"DECRYPTION_ERROR": "Errore di decodifica"

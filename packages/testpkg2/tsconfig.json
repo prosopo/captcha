@@ -10,5 +10,10 @@
 		"src/**/*.ts",
 		"src/**/*.tsx",
 		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		}
 	]
 }
