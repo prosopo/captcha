@@ -39,13 +39,6 @@ export const withTimeout = async <T>(
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 ): Promise<BotDetectionFunctionResult> => {
-
-	// Get random active provider with timeout
-	const provider = await withTimeout(
-		getRandomActiveProvider(config),
-		10000, // 10 second timeout
-	);
-
 	const detect = await DetectorLoader();
 	const botScore = (await detect()) as { token: string };
 	const ext = new (await ExtensionLoader(config.web2))();
@@ -55,7 +48,11 @@ const customDetectBot: BotDetectionFunction = async (
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
-
+	// Get random active provider with timeout
+	const provider = await withTimeout(
+		getRandomActiveProvider(config),
+		10000, // 10 second timeout
+	);
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,
