@@ -1,5 +1,12 @@
 # @prosopo/env
 
+## 3.1.10
+### Patch Changes
+
+- Updated dependencies [e64160c]
+  - @prosopo/database@3.0.19
+  - @prosopo/types-env@2.7.23
+
 ## 3.1.9
 ### Patch Changes
 
