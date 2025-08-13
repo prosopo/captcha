@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-pow",
-	"version": "2.7.23",
+	"version": "2.7.24",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -26,10 +26,12 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
-		"@prosopo/api": "3.1.8",
+		"@prosopo/api": "3.1.9",
 		"@prosopo/common": "3.1.5",
 		"@prosopo/locale": "3.1.5",
 		"@prosopo/procaptcha-common": "2.7.17",
