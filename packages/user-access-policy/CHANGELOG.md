@@ -1,10 +1,5 @@
 # @prosopo/user-access-policy
 
-## 3.5.4
-### Patch Changes
-
-- 553025d: Index
-
 ## 3.5.3
 ### Patch Changes
 

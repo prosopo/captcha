@@ -1,12 +1,5 @@
 # @prosopo/procaptcha-frictionless
 
-## 2.6.38
-### Patch Changes
-
-  - @prosopo/api@3.1.9
-  - @prosopo/procaptcha-pow@2.7.24
-  - @prosopo/procaptcha-react@2.6.38
-
 ## 2.6.37
 ### Patch Changes
 

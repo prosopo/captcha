@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/server",
-	"version": "2.9.20",
+	"version": "2.9.19",
 	"description": "NodeJS package for server side communication with the prosopo captcha client",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -35,7 +35,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/api": "3.1.9",
+		"@prosopo/api": "3.1.8",
 		"@prosopo/common": "3.1.5",
 		"@prosopo/config": "3.1.5",
 		"@prosopo/keyring": "2.8.12",
