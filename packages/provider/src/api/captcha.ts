@@ -277,7 +277,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						parsed[ApiParams.signature].user.timestamp,
 						Number.parseInt(parsed[ApiParams.timestamp]),
 						parsed[ApiParams.signature].provider.requestHash,
-						getIPAddress(req.ip || "").bigInt(),
+						getIPAddress(req.ip || ""),
 						flatten(req.headers),
 						req.ja4,
 					);
