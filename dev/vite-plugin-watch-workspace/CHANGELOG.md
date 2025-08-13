@@ -1,10 +1,5 @@
 # @prosopo/vite-plugin-watch-workspace
 
-## 2.6.11
-### Patch Changes
-
-- 7c75167: Cleanup unused deps
-
 ## 2.6.10
 ### Patch Changes
 

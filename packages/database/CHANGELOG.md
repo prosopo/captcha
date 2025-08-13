@@ -1,13 +1,5 @@
 # @prosopo/database
 
-## 3.0.19
-### Patch Changes
-
-- e64160c: The way mongo memory server works has changed
-- Updated dependencies [553025d]
-  - @prosopo/user-access-policy@3.5.4
-  - @prosopo/types-database@3.0.19
-
 ## 3.0.18
 ### Patch Changes
 
