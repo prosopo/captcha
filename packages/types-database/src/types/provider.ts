@@ -77,6 +77,29 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
 
+export enum IpAddressType {
+	v4 = "v4",
+	v6 = "v6",
+}
+
+export interface CompositeIpAddress {
+	lower: bigint; // IPv4 OR Low IPv6 Bits
+	upper?: bigint; // High IPv6 Bits
+	type: IpAddressType;
+}
+
+export const CompositeIpAddressSchema = object({
+	lower: bigint(),
+	upper: bigint().optional(),
+	type: nativeEnum(IpAddressType),
+});
+
+const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
+	lower: { type: BigInt, required: true },
+	upper: { type: BigInt, required: false },
+	type: { type: String, enum: IpAddressType, required: true },
+});
+
 export interface StoredCaptcha {
 	result: {
 		status: CaptchaStatus;
@@ -85,7 +108,7 @@ export interface StoredCaptcha {
 	};
 	requestedAtTimestamp: Timestamp;
 	deadlineTimestamp?: Timestamp;
-	ipAddress: bigint;
+	ipAddress: CompositeIpAddress;
 	headers: RequestHeaders;
 	ja4: string;
 	userSubmitted: boolean;
@@ -118,7 +141,7 @@ export const UserCommitmentSchema = object({
 	id: string(),
 	result: CaptchaResultSchema,
 	userSignature: string(),
-	ipAddress: bigint(),
+	ipAddress: CompositeIpAddressSchema,
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),
@@ -192,7 +215,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		error: { type: String, required: false },
 	},
 	difficulty: { type: Number, required: true },
-	ipAddress: { type: BigInt, required: true },
+	ipAddress: CompositeIpAddressRecordSchema,
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -229,7 +252,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		error: { type: String, required: false },
 	},
-	ipAddress: { type: BigInt, required: true },
+	ipAddress: CompositeIpAddressRecordSchema,
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
@@ -324,7 +347,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	requestHash: { type: String, required: true },
 	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
-	ipAddress: { type: BigInt, required: true },
+	ipAddress: CompositeIpAddressRecordSchema,
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -385,7 +408,7 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
-	ipAddress?: bigint; // TODO: Once released and stable, this should be required
+	ipAddress: CompositeIpAddress;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 }
@@ -407,7 +430,7 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
-		ipAddress: { type: BigInt, required: false }, // TODO: Once released and stable, this should be required
+		ipAddress: CompositeIpAddressRecordSchema,
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 		storedAtTimestamp: { type: Date, required: false },
 		lastUpdatedTimestamp: { type: Date, required: false },
@@ -499,7 +522,7 @@ export interface IProviderDatabase extends IDatabase {
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void>;
@@ -598,7 +621,7 @@ export interface IProviderDatabase extends IDatabase {
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		headers: RequestHeaders,
 		ja4: string,
 		frictionlessTokenId?: FrictionlessTokenId,
