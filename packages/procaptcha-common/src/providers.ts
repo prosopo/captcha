@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import { type HardcodedProvider, loadBalancer } from "@prosopo/load-balancer";
 import type {
 	ProcaptchaClientConfigOutput,
@@ -23,12 +22,9 @@ let providers: HardcodedProvider[] = [];
 
 export const getRandomActiveProvider = async (
 	config: ProcaptchaClientConfigOutput,
-	seed: string,
 ): Promise<RandomProvider> => {
-	// const randomIntBetween = (min: number, max: number) =>
-	// 	Math.floor(Math.random() * (max - min + 1) + min);
-
-
+	const randomIntBetween = (min: number, max: number) =>
+		Math.floor(Math.random() * (max - min + 1) + min);
 
 	// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
 	//  to ensure that the random selection was completed within a certain timeframe
