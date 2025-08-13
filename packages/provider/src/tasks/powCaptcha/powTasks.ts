@@ -28,6 +28,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
+import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
 import { validateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -186,11 +187,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			return { verified: false };
 		}
 
-		const ipValidation = validateIpAddress(
-			ip,
+		const challengeIpAddress = getIpAddressFromComposite(
 			challengeRecord.ipAddress,
-			this.logger,
 		);
+
+		const ipValidation = validateIpAddress(ip, challengeIpAddress, this.logger);
 		if (!ipValidation.isValid) {
 			return { verified: false };
 		}

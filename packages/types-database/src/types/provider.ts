@@ -84,13 +84,13 @@ export enum IpAddressType {
 
 export interface CompositeIpAddress {
 	lower: bigint; // IPv4 OR Low IPv6 Bits
-	upper?: bigint; // High IPv6 Bits
+	upper: bigint; // High IPv6 Bits
 	type: IpAddressType;
 }
 
 export const CompositeIpAddressSchema = object({
 	lower: bigint(),
-	upper: bigint().optional(),
+	upper: bigint().optional().default(0n),
 	type: nativeEnum(IpAddressType),
 });
 
