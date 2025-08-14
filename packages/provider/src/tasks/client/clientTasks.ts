@@ -348,16 +348,39 @@ export class ClientTaskManager {
 
 	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
-		if (clientDomain === "*") return true;
 		try {
-			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
-			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
+			const referrerHost = parseUrl(referrer).hostname.replace(/\.$/, "");
+			const pattern = clientDomain.trim().toLowerCase();
 
-			return (
-				referrerDomain === allowedDomain ||
-				referrerDomain.endsWith(`.${allowedDomain}`)
-			);
-		} catch {
+			// Global wildcard
+			if (pattern === "*") return true;
+
+			// Localhost allowance
+			if (pattern === "localhost") {
+				return referrerHost === "localhost" || referrerHost.startsWith("localhost:");
+			}
+
+			// Subdomain wildcard: *.example.com
+			if (pattern.startsWith("*.")) {
+				const suffix = pattern.slice(2);
+				const allowed = parseUrl(suffix).hostname.replace(/\.$/, "");
+				// Only subdomains, not the apex itself
+				return referrerHost.endsWith(`.${allowed}`);
+			}
+
+			// General glob pattern: convert * to .*
+			if (pattern.includes("*")) {
+				const escaped = pattern
+					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
+					.replace(/\*/g, ".*");
+				const regex = new RegExp(`^${escaped}$`, "i");
+				return regex.test(referrerHost);
+			}
+
+			// Exact or subdomain match for plain domains
+			const allowedHost = parseUrl(pattern).hostname.replace(/\.$/, "");
+			return referrerHost === allowedHost || referrerHost.endsWith(`.${allowedHost}`);
+		} catch (e) {
 			this.logger.error(() => ({
 				msg: "Error in isSubdomainOrExactMatch",
 				data: { referrer, clientDomain },

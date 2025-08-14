@@ -647,5 +647,53 @@ describe("ClientTaskManager", () => {
 				),
 			).toBe(true);
 		});
+
+			it("should support subdomain wildcard patterns", () => {
+				expect(
+					clientTaskManager.isSubdomainOrExactMatch(
+						"a.b.example.com",
+						"*.example.com",
+					),
+				).toBe(true);
+				expect(
+					clientTaskManager.isSubdomainOrExactMatch(
+						"example.com",
+						"*.example.com",
+					),
+				).toBe(false);
+				expect(
+					clientTaskManager.isSubdomainOrExactMatch(
+						"dev.test.example.com",
+						"*.test.example.com",
+					),
+				).toBe(true);
+			});
+
+			it("should support simple glob patterns with * anywhere", () => {
+				expect(
+					clientTaskManager.isSubdomainOrExactMatch(
+						"fooexamplebar.com",
+						"*example*",
+					),
+				).toBe(true);
+				expect(
+					clientTaskManager.isSubdomainOrExactMatch(
+						"example.net",
+						"*example*",
+					),
+				).toBe(true);
+				expect(
+					clientTaskManager.isSubdomainOrExactMatch(
+						"mysite.org",
+						"*example*",
+					),
+				).toBe(false);
+			});
+
+			it("should allow global star * pattern", () => {
+				expect(
+					clientTaskManager.isSubdomainOrExactMatch("anything.com", "*"),
+				).toBe(true);
+			});
 	});
 });
