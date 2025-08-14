@@ -13,10 +13,8 @@
 // limitations under the License.
 
 import { IpAddressType } from "@prosopo/types-database";
-
-import { describe, expect, it } from "vitest";
-
 import { Address4, Address6 } from "ip-address";
+import { describe, expect, it } from "vitest";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -97,6 +95,13 @@ describe("compositeIpAddress", () => {
 				upper: ip.upper,
 				type: IpAddressType.v6,
 			});
+		});
+
+		it("writes wrong format ip string as proper numbers", () => {
+			const wrongFormatComposite = getCompositeIpAddress("::ffff:127.0.0.1");
+			const rightFormatComposite = getCompositeIpAddress("::ffff:7f00:1");
+
+			expect(wrongFormatComposite).toEqual(rightFormatComposite);
 		});
 
 		it("gets ip object from composite", async () => {
