@@ -481,10 +481,7 @@ describe("ClientTaskManager", () => {
 				clientTaskManager.domainPatternMatcher("localhost", "localhost"),
 			).toBe(true);
 			expect(
-				clientTaskManager.domainPatternMatcher(
-					"localhost:3000",
-					"localhost",
-				),
+				clientTaskManager.domainPatternMatcher("localhost:3000", "localhost"),
 			).toBe(true);
 
 			// Invalid localhost cases
@@ -522,16 +519,10 @@ describe("ClientTaskManager", () => {
 				false,
 			);
 			expect(
-				clientTaskManager.domainPatternMatcher(
-					"example.com.",
-					"example.com",
-				),
+				clientTaskManager.domainPatternMatcher("example.com.", "example.com"),
 			).toBe(true); // trailing dot
 			expect(
-				clientTaskManager.domainPatternMatcher(
-					"example.com",
-					"example.com.",
-				),
+				clientTaskManager.domainPatternMatcher("example.com", "example.com."),
 			).toBe(true); // trailing dot
 		});
 
@@ -558,10 +549,7 @@ describe("ClientTaskManager", () => {
 
 		it("should handle exotic domain names", () => {
 			expect(
-				clientTaskManager.domainPatternMatcher(
-					"⭐⭐⭐⭐.com",
-					"⭐⭐⭐⭐.com",
-				),
+				clientTaskManager.domainPatternMatcher("⭐⭐⭐⭐.com", "⭐⭐⭐⭐.com"),
 			).toBe(true);
 			expect(
 				clientTaskManager.domainPatternMatcher(
@@ -656,10 +644,7 @@ describe("ClientTaskManager", () => {
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.domainPatternMatcher(
-					"example.com",
-					"*.example.com",
-				),
+				clientTaskManager.domainPatternMatcher("example.com", "*.example.com"),
 			).toBe(false);
 			expect(
 				clientTaskManager.domainPatternMatcher(
@@ -685,9 +670,9 @@ describe("ClientTaskManager", () => {
 		});
 
 		it("should allow global star * pattern", () => {
-			expect(
-				clientTaskManager.domainPatternMatcher("anything.com", "*"),
-			).toBe(true);
+			expect(clientTaskManager.domainPatternMatcher("anything.com", "*")).toBe(
+				true,
+			);
 		});
 	});
 });
