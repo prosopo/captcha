@@ -357,7 +357,9 @@ export class ClientTaskManager {
 
 			// Localhost allowance
 			if (pattern === "localhost") {
-				return referrerHost === "localhost" || referrerHost.startsWith("localhost:");
+				return (
+					referrerHost === "localhost" || referrerHost.startsWith("localhost:")
+				);
 			}
 
 			// Subdomain wildcard: *.example.com
@@ -379,7 +381,9 @@ export class ClientTaskManager {
 
 			// Exact or subdomain match for plain domains
 			const allowedHost = parseUrl(pattern).hostname.replace(/\.$/, "");
-			return referrerHost === allowedHost || referrerHost.endsWith(`.${allowedHost}`);
+			return (
+				referrerHost === allowedHost || referrerHost.endsWith(`.${allowedHost}`)
+			);
 		} catch (e) {
 			this.logger.error(() => ({
 				msg: "Error in isSubdomainOrExactMatch",

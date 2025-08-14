@@ -62,29 +62,29 @@ export const domainIsLocalhost = (domain: string) =>
 // - "localhost"       → allowed
 // This does NOT accept full regex; only '*' is supported as a wildcard.
 export const validateDomainPattern = (input: string): boolean => {
-  if (!input) return false;
-  const domain = input.trim().toLowerCase();
-  if (domain === "*") return true;
-  if (domain === "localhost") return true;
+	if (!input) return false;
+	const domain = input.trim().toLowerCase();
+	if (domain === "*") return true;
+	if (domain === "localhost") return true;
 
-  // Must only contain hostname characters or '*'
-  if (!/^[a-z0-9\-\.*]+(\.[a-z0-9\-\.*]+)*$/.test(domain)) {
-    return false;
-  }
+	// Must only contain hostname characters or '*'
+	if (!/^[a-z0-9\-\.*]+(\.[a-z0-9\-\.*]+)*$/.test(domain)) {
+		return false;
+	}
 
-  // Subdomain wildcard pattern: *.example.com
-  if (/^\*\.[^*]+$/.test(domain)) {
-    const suffix = domain.slice(2);
-    // Validate the suffix as a standard domain
-    return validateDomain(suffix);
-  }
+	// Subdomain wildcard pattern: *.example.com
+	if (/^\*\.[^*]+$/.test(domain)) {
+		const suffix = domain.slice(2);
+		// Validate the suffix as a standard domain
+		return validateDomain(suffix);
+	}
 
-  // General glob pattern like *example* or example* or *example.com
-  if (domain.includes("*")) {
-    // Ensure at least one non-wildcard character exists
-    return /[a-z0-9]/.test(domain.replace(/\*/g, ""));
-  }
+	// General glob pattern like *example* or example* or *example.com
+	if (domain.includes("*")) {
+		// Ensure at least one non-wildcard character exists
+		return /[a-z0-9]/.test(domain.replace(/\*/g, ""));
+	}
 
-  // Fall back to strict domain validation
-  return validateDomain(domain);
+	// Fall back to strict domain validation
+	return validateDomain(domain);
 };
