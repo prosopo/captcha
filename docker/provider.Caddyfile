@@ -31,7 +31,9 @@
 
 # HTTP metrics endpoint on all interfaces
 :{$CADDY_METRICS_PORT} {
-	tls off
+	servers {
+		protocols h1
+	}
 	metrics /metrics
 }
 
