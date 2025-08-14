@@ -75,7 +75,6 @@ export const validateDomainPattern = (input: string): boolean => {
 	// Subdomain wildcard pattern: *.example.com
 	if (/^\*\.[^*]+$/.test(domain)) {
 		const suffix = domain.slice(2);
-		// Validate the suffix as a standard domain
 		return validateDomain(suffix);
 	}
 
@@ -85,6 +84,5 @@ export const validateDomainPattern = (input: string): boolean => {
 		return /[a-z0-9]/.test(domain.replace(/\*/g, ""));
 	}
 
-	// Fall back to strict domain validation
 	return validateDomain(domain);
 };
