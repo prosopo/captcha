@@ -1,15 +1,55 @@
-# enable vector's api
+# Vector Configuration for Prosopo Captcha Provider Logging
+# 
+# This configuration file sets up Vector (a log aggregation tool) to collect and forward
+# logs from various Docker containers to OpenObserve (oo) for centralized logging and monitoring.
+# 
+# The pipeline consists of:
+# 1. Sources: Collect logs from Docker containers and events
+# 2. Transforms: Process and format the collected data
+# 3. Sinks: Forward processed data to OpenObserve instances
+#
+# Environment Variables Required:
+# - OO_HOST: Host identifier for the machine
+# - NODE_ENV: Environment (staging, production, etc.)
+# - OO_USERNAME: OpenObserve authentication username
+# - OO_PASSWORD: OpenObserve authentication password
+
+# =============================================================================
+# CONFIGURATION NOTES
+# =============================================================================
+#
+# Rate Limiting: Set to 10 requests per second to avoid overwhelming the API
+# Batch Timeout: 15 seconds to balance between latency and throughput
+# Buffer Size: ~256MB disk buffer to handle temporary network issues
+# Compression: Gzip enabled to reduce bandwidth usage
+# Health Checks: Enabled to monitor sink connectivity
+#
+# To enable console output for debugging, uncomment the console sink sections
+# and comment out the corresponding OpenObserve sinks.
+
+# =============================================================================
+# API CONFIGURATION
+# =============================================================================
+
+# Enable Vector's API for monitoring and management
 [api]
 enabled = true
-# only allow localhost to hit the api
+# Restrict API access to localhost only for security
 address = "127.0.0.1:8686"
 
-# take logs from docker containers with the correct label set
+# =============================================================================
+# PROVIDER LOGS PIPELINE
+# =============================================================================
+
+# Source: Collect logs from Docker containers labeled with vector.provider=true
+# This captures application logs from the captcha provider services
 [sources.provider]
 type = "docker_logs"
 include_labels = ["vector.provider=true"]
 
-# format the logs for a provider
+# Transform: Format provider logs for consistent structure
+# - Parses JSON messages if available, otherwise treats as plain text
+# - Adds metadata like host, container name, image, and stream type
 [transforms.provider_format]
 type = "remap"
 inputs = ["provider"]
@@ -29,13 +69,8 @@ output.source_type=.source_type
 .=output
 '''
 
-# print to console the provider logs
-#[sinks.console]
-#type = "console"
-#inputs = ["provider_format"]
-#encoding.codec = "json"
-
-# send provider logs to tiger-stairs
+# Sink: Forward provider logs to primary OpenObserve instance (oo.prosopo.io)
+# Configuration includes authentication, batching, rate limiting, and buffering
 [sinks.oo_provider]
 type = "http"
 inputs = ["provider_format"]
@@ -54,14 +89,16 @@ buffer.type = "disk"
 buffer.max_size = 268435488
 compression = "gzip"
 
+# Sink: Forward provider logs to secondary OpenObserve instance (oo2.prosopo.io)
+# Backup/fallback logging destination for redundancy
 [sinks.oo2_provider]
 type = "http"
 inputs = ["provider_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_node/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
+auth.user = "${OO2_USERNAME:?err}"
+auth.password = "${OO2_PASSWORD:?err}"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
@@ -72,24 +109,32 @@ buffer.type = "disk"
 buffer.max_size = 268435488
 compression = "gzip"
 
-# listen to docker events for containers starting+ending
+# =============================================================================
+# DOCKER EVENTS PIPELINE
+# =============================================================================
+
+# Source: Monitor Docker container lifecycle events
+# Executes docker events command to capture container start/stop/restart events
+# Only monitors containers labeled with vector.docker=true
 [sources.docker]
 type = "exec"
-# only containers with the correct label are listened to
-# https://docs.docker.com/reference/cli/docker/system/events/#containers
-# start – Indicates that the container has been started.
-# stop – Indicates that the container has been stopped.
-# restart – Indicates that the container has been restarted.
-# die – Indicates that the container has stopped running (either due to a crash or intentional termination).
-# pause – Indicates that the container is paused, meaning it is not actively running but hasn't been stopped.
-# unpause – Indicates that the container has resumed running after being paused.
-# kill – Indicates that the container has been forcefully terminated.
-# oom – Indicates that the container was terminated due to running out of memory (Out-Of-Memory).
+# Docker events documentation: https://docs.docker.com/reference/cli/docker/system/events/#containers
+# Event types being monitored:
+# - start: Container has been started
+# - stop: Container has been stopped
+# - restart: Container has been restarted
+# - die: Container has stopped running (crash or intentional termination)
+# - pause: Container is paused (not actively running but not stopped)
+# - unpause: Container has resumed running after being paused
+# - kill: Container has been forcefully terminated
+# - oom: Container was terminated due to running out of memory
 command = [ "docker", "events", "--format", "json", "--filter", "label=vector.docker=true", "--filter", "event=start", "--filter", "event=stop", "--filter", "event=restart", "--filter", "event=die", "--filter", "event=pause", "--filter", "event=unpause", "--filter", "event=kill", "--filter", "event=oom" ]
 mode = "streaming"
 decoding.codec = "json"
 
-# delete useless info and add the host to identify what machine the logs are coming from
+# Transform: Format Docker events for consistent structure
+# - Parses JSON messages and adds host identification
+# - Extracts container metadata for better observability
 [transforms.docker_format]
 type = "remap"
 inputs = ["docker"]
@@ -110,13 +155,7 @@ output.name=.Actor.Attributes.name
 .=output
 '''
 
-# print docker events to console
-#[sinks.console]
-#type = "console"
-#inputs = ["docker_format"]
-#encoding.codec = "json"
-
-# send to openobserve
+# Sink: Forward Docker events to primary OpenObserve instance
 [sinks.oo_docker]
 type = "http"
 inputs = ["docker_format"]
@@ -135,14 +174,15 @@ request.rate_limit_num = 10
 buffer.type = "disk"
 buffer.max_size = 268435488
 
+# Sink: Forward Docker events to secondary OpenObserve instance
 [sinks.oo2_docker]
 type = "http"
 inputs = ["docker_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_docker/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
+auth.user = "${OO2_USERNAME:?err}"
+auth.password = "${OO2_PASSWORD:?err}"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
@@ -153,10 +193,19 @@ request.rate_limit_num = 10
 buffer.type = "disk"
 buffer.max_size = 268435488
 
+# =============================================================================
+# CADDY WEB SERVER LOGS PIPELINE
+# =============================================================================
+
+# Source: Collect logs from Caddy web server containers
+# Caddy is used as a reverse proxy and load balancer
 [sources.caddy]
 type = "docker_logs"
 include_labels = ["vector.caddy=true"]
 
+# Transform: Format Caddy logs for consistent structure
+# - Parses JSON messages and adds host identification
+# - Extracts request ID from response headers for request tracing
 [transforms.caddy_format]
 type = "remap"
 inputs = ["caddy"]
@@ -177,7 +226,7 @@ output.request_id = get(.resp_headers, ["X-Request-Id"])[0] ?? null
 .=output
 '''
 
-# send to openobserve
+# Sink: Forward Caddy logs to primary OpenObserve instance
 [sinks.oo_caddy]
 type = "http"
 inputs = ["caddy_format"]
@@ -196,18 +245,176 @@ request.rate_limit_num = 10
 buffer.type = "disk"
 buffer.max_size = 268435488
 
+# Sink: Forward Caddy logs to secondary OpenObserve instance
 [sinks.oo2_caddy]
 type = "http"
 inputs = ["caddy_format"]
-uri = "https://oo2.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_caddy/_json"
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_caddy/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "${OO_USERNAME:?err}"
-auth.password = "${OO_PASSWORD:?err}"
+auth.user = "${OO2_USERNAME:?err}"
+auth.password = "${OO2_PASSWORD:?err}"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+
+# =============================================================================
+# METRICS PIPELINE
+# =============================================================================
+#
+# This section collects various system and application metrics for monitoring
+# and alerting purposes. Metrics are collected from multiple sources and
+# forwarded to OpenObserve using Prometheus Remote Write protocol.
+
+# =============================================================================
+# HOST METRICS
+# =============================================================================
+
+# Source: Collect system-level metrics from the host machine
+# Includes CPU, memory, disk, network, and other hardware metrics
+[sources.host_metrics]
+type = "host_metrics"
+scrape_interval_secs = 15
+
+# Transform: Add host and environment tags to host metrics
+# Enables filtering and grouping metrics by host and environment
+[transforms.host_metrics_format]
+type = "remap"
+inputs = ["host_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# VECTOR INTERNAL METRICS
+# =============================================================================
+
+# Source: Collect Vector's own internal metrics
+# Includes performance metrics, error rates, and pipeline statistics
+[sources.vector_metrics]
+type = "internal_metrics"
+scrape_interval_secs = 15
+
+# Transform: Add host and environment tags to Vector metrics
+# Helps monitor Vector's health and performance across different environments
+[transforms.vector_metrics_format]
+type = "remap"
+inputs = ["vector_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# CADVISOR CONTAINER METRICS
+# =============================================================================
+
+# Source: Collect container metrics from cAdvisor
+# cAdvisor provides detailed container resource usage metrics
+# Endpoint: cAdvisor exposes metrics on port 8080
+[sources.cadvisor_metrics]
+type = "prometheus_scrape"
+endpoints = [ "http://cadvisor:8080/metrics" ]
+scrape_interval_secs = 15
+
+# Transform: Add host and environment tags to cAdvisor metrics
+# Enables container-level monitoring and resource tracking
+[transforms.cadvisor_metrics_format]
+type = "remap"
+inputs = ["cadvisor_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# CADDY METRICS
+# =============================================================================
+# Source: Collect metrics from caddy instance
+[sources.caddy_metrics]
+type = "http_client"
+endpoint = "http://caddy:2019/metrics"
+
+[transforms.caddy_metrics_format]
+type = "remap"
+inputs = ["caddy_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# REDIS METRICS
+# =============================================================================
+
+# Source: Collect metrics from Redis instance
+# Monitors Redis performance, memory usage, and connection statistics
+[sources.redis_metrics]
+type = "redis"
+key = "vector"
+url = "redis://redis-stack:6379/0"
+
+[transforms.redis_metrics_format]
+type = "remap"
+inputs = ["redis_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# MONGODB METRICS
+# =============================================================================
+
+# Source: Collect metrics from MongoDB instance
+# This source uses the mongodb_metrics Vector source to scrape metrics from the MongoDB database.
+[sources.mongodb_metrics]
+type = "mongodb_metrics"
+endpoints = ["mongodb://${MONGO_INITDB_ROOT_USERNAME:?err}:${MONGO_INITDB_ROOT_PASSWORD:?err}@database:27017"]
+
+[transforms.mongodb_metrics_format]
+type = "remap"
+inputs = ["mongodb_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# METRICS SINKS
+# =============================================================================
+
+# Sink: Forward all metrics to primary OpenObserve instance
+# Uses Prometheus Remote Write protocol for efficient metric transmission
+[sinks.oo_metrics]
+type = "prometheus_remote_write"
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+endpoint = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/prometheus/api/v1/write"
+auth.strategy = "basic"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+
+# Sink: Forward all metrics to secondary OpenObserve instance
+# Backup destination for metrics redundancy and disaster recovery
+[sinks.oo2_metrics]
+type = "prometheus_remote_write"
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+endpoint = "https://oo2.prosopo.io/api/default/prometheus/api/v1/write"
+auth.strategy = "basic"
+auth.user = "${OO2_USERNAME:?err}"
+auth.password = "${OO2_PASSWORD:?err}"
 batch.timeout_secs = 15
 request.rate_limit_duration_secs = 1
 request.rate_limit_num = 10
