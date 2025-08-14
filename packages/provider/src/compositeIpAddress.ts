@@ -30,17 +30,25 @@ export const getCompositeIpAddress = (
 	} catch (e) {
 		return {
 			lower: 0n,
-			upper: 0n,
 			type: IpAddressType.v4,
 		};
 	}
 
+	const compositeIpAddress = getCompositeFromIpAddress(ipAddress);
+
+	// fixme logging and test
+
+	return compositeIpAddress;
+};
+
+const getCompositeFromIpAddress = (
+	ipAddress: IPAddress,
+): CompositeIpAddress => {
 	const numericIp = ipAddress.bigInt();
 
 	if (ipAddress instanceof Address4) {
 		return {
 			lower: numericIp,
-			upper: 0n,
 			type: IpAddressType.v4,
 		};
 	}
@@ -62,7 +70,7 @@ export const getIpAddressFromComposite = (
 			return Address4.fromBigInt(compositeIpAddress.lower);
 		case IpAddressType.v6:
 			return Address6.fromBigInt(
-				(compositeIpAddress.upper << 64n) | compositeIpAddress.lower,
+				((compositeIpAddress.upper || 0n) << 64n) | compositeIpAddress.lower,
 			);
 		default:
 			never();
