@@ -346,7 +346,12 @@ export class ClientTaskManager {
 		await this.providerDB.removeDetectorKey(detectorKey);
 	}
 
-	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
+	/**
+	 * Matches a request referrer against an allowed domain pattern.
+	 * Supports global '*', subdomain '*.example.com', glob '*example*',
+	 * plain domains (exact or subdomain), and 'localhost'.
+	 */
+	domainPatternMatcher(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
 		try {
 			const referrerHost = parseUrl(referrer).hostname.replace(/\.$/, "");
@@ -386,7 +391,7 @@ export class ClientTaskManager {
 			);
 		} catch (e) {
 			this.logger.error(() => ({
-				msg: "Error in isSubdomainOrExactMatch",
+				msg: "Error in domainPatternMatcher",
 				data: { referrer, clientDomain },
 			}));
 			return false;
