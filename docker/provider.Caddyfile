@@ -31,10 +31,6 @@
 # HTTP metrics endpoint on all interfaces
 http://:{$CADDY_METRICS_PORT} {
 	metrics /metrics
-
-	servers :{$CADDY_METRICS_PORT} {
-		protocols h1
-	}
 }
 
 {$CADDY_DOMAIN} {
