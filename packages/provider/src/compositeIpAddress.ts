@@ -20,6 +20,9 @@ import {
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 
+const V6_SHIFT = 64n;
+const v6_LOWER_MASK = (1n << V6_SHIFT) - 1n;
+
 export const getCompositeIpAddress = (
 	ip: string | IPAddress,
 ): CompositeIpAddress => {
@@ -34,11 +37,7 @@ export const getCompositeIpAddress = (
 		};
 	}
 
-	const compositeIpAddress = getCompositeFromIpAddress(ipAddress);
-
-	// fixme logging and test
-
-	return compositeIpAddress;
+	return getCompositeFromIpAddress(ipAddress);
 };
 
 const getCompositeFromIpAddress = (
@@ -56,8 +55,8 @@ const getCompositeFromIpAddress = (
 	ipAddress satisfies Address6;
 
 	return {
-		lower: numericIp & 0xffffffffffffn,
-		upper: numericIp >> 64n,
+		lower: numericIp & v6_LOWER_MASK,
+		upper: numericIp >> V6_SHIFT,
 		type: IpAddressType.v6,
 	};
 };
@@ -70,7 +69,8 @@ export const getIpAddressFromComposite = (
 			return Address4.fromBigInt(compositeIpAddress.lower);
 		case IpAddressType.v6:
 			return Address6.fromBigInt(
-				((compositeIpAddress.upper || 0n) << 64n) | compositeIpAddress.lower,
+				((compositeIpAddress.upper || 0n) << V6_SHIFT) |
+					(compositeIpAddress.lower & v6_LOWER_MASK),
 			);
 		default:
 			never();
