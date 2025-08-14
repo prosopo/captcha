@@ -29,6 +29,11 @@
 	}
 }
 
+# HTTP metrics endpoint on all interfaces
+:{$CADDY_METRICS_PORT} {
+	metrics /metrics
+}
+
 {$CADDY_DOMAIN} {
 	route {
 		client_hello
@@ -46,12 +51,6 @@
 			# Prevent search engines from indexing
 			X-Robots-Tag "none"
 		}
-
-		# basicauth /metrics {
-		# 	 # this has to be the username<space><bcrypted password>
-		# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
-		# 	 {$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
-		# }
 
 		# enable prometheus metrics
 		metrics /metrics
