@@ -16,7 +16,6 @@
 	servers {
 		protocols h1 h2
 		listener_wrappers {
-			http_redirect
 			client_hello
 			tls
 		}
@@ -39,6 +38,12 @@ http://:{$CADDY_METRICS_PORT} {
 }
 
 {$CADDY_DOMAIN} {
+
+    @httpOnly {
+        protocol http
+    }
+    redir @httpOnly https://{host}{uri}
+
 	route {
 		client_hello
 		request_id
