@@ -645,7 +645,7 @@ describe("ClientTaskManager", () => {
 			).toBe(true);
 			expect(
 				clientTaskManager.domainPatternMatcher("example.com", "*.example.com"),
-			).toBe(false);
+			).toBe(true);
 			expect(
 				clientTaskManager.domainPatternMatcher(
 					"dev.test.example.com",

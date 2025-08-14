@@ -371,8 +371,7 @@ export class ClientTaskManager {
 			if (pattern.startsWith("*.")) {
 				const suffix = pattern.slice(2);
 				const allowed = parseUrl(suffix).hostname.replace(/\.$/, "");
-				// Only subdomains, not the apex itself
-				return referrerHost.endsWith(`.${allowed}`);
+				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
 			}
 
 			// General glob pattern: convert * to .*
