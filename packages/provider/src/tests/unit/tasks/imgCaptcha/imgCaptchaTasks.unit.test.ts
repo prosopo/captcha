@@ -25,12 +25,13 @@ import {
 	CaptchaStatus,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PendingCaptchaRequest,
-	UserCommitment,
+import {
+	type IProviderDatabase,
+	IpAddressType,
+	type PendingCaptchaRequest,
+	type UserCommitment,
 } from "@prosopo/types-database";
-import { getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { getIPAddress } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
@@ -447,7 +448,11 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: 0,
-			ipAddress: getIPAddress("1.1.1.1").bigInt(),
+			ipAddress: {
+				lower: getIPAddress("1.1.1.1").bigInt(),
+				upper: 0n,
+				type: IpAddressType.v4,
+			},
 			headers: { a: "1", b: "2", c: "3" },
 			ja4: "ja4",
 			lastUpdatedTimestamp: Date.now(),
@@ -493,7 +498,11 @@ describe("ImgCaptchaManager", () => {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: 0,
-				ipAddress: getIPAddress("1.1.1.1").bigInt(),
+				ipAddress: {
+					lower: getIPAddress("1.1.1.1").bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
 				headers: { a: "1", b: "2", c: "3" },
 				ja4: "ja4",
 				lastUpdatedTimestamp: Date.now(),
@@ -544,7 +553,11 @@ describe("ImgCaptchaManager", () => {
 			userSubmitted: true,
 			serverChecked: false,
 			requestedAtTimestamp: 0,
-			ipAddress: getIPAddress("8.8.8.8").bigInt(),
+			ipAddress: {
+				lower: getIPAddress("8.8.8.8").bigInt(),
+				upper: 0n,
+				type: IpAddressType.v4,
+			},
 			headers: { a: "1", b: "2", c: "3" },
 			ja4: "ja4",
 		};

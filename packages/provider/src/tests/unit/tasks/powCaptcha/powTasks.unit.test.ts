@@ -27,6 +27,7 @@ import type {
 } from "@prosopo/types-database";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
@@ -135,7 +136,7 @@ describe("PowCaptchaManager", () => {
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
-				ipAddress: ipAddress.bigInt(),
+				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				ja4: "ja4",
 				providerSignature,
@@ -240,7 +241,7 @@ describe("PowCaptchaManager", () => {
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
-				ipAddress: ipAddress.bigInt(),
+				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				ja4: "ja4",
 				providerSignature: "testSignature",
