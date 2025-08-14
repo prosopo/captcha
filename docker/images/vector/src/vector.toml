@@ -340,7 +340,7 @@ source = '''
 # Source: Collect metrics from caddy instance
 [sources.caddy_metrics]
 type = "http_client"
-endpoint = "http://caddy:2019/metrics"
+endpoint = "http://caddy:${CADDY_METRICS_PORT:?err}/metrics"
 
 [transforms.caddy_metrics_format]
 type = "remap"
