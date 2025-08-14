@@ -31,7 +31,7 @@
 
 # HTTP metrics endpoint on all interfaces
 :{$CADDY_METRICS_PORT} {
-	auto_https disable
+	tls off
 	metrics /metrics
 }
 
