@@ -83,8 +83,9 @@ export enum IpAddressType {
 }
 
 export interface CompositeIpAddress {
-	lower: bigint; // IPv4 OR Low IPv6 Bits
-	upper?: bigint; // High IPv6 Bits
+	// mongoose accepts "BigInt", but returns "number" from the DB
+	lower: number | bigint; // IPv4 OR Low IPv6 Bits
+	upper?: number | bigint; // High IPv6 Bits
 	type: IpAddressType;
 }
 
@@ -95,8 +96,14 @@ export const CompositeIpAddressSchema = object({
 });
 
 const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
-	lower: { type: BigInt, required: true },
-	upper: { type: BigInt, required: false },
+	lower: {
+		type: BigInt,
+		required: true,
+	},
+	upper: {
+		type: BigInt,
+		required: false,
+	},
 	type: { type: String, enum: IpAddressType, required: true },
 });
 

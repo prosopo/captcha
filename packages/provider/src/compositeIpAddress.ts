@@ -66,17 +66,19 @@ export const getIpAddressFromComposite = (
 ): IPAddress => {
 	switch (compositeIpAddress.type) {
 		case IpAddressType.v4:
-			return Address4.fromBigInt(compositeIpAddress.lower);
+			return Address4.fromBigInt(getBigInt(compositeIpAddress.lower));
 		case IpAddressType.v6:
 			return Address6.fromBigInt(
-				((compositeIpAddress.upper || 0n) << V6_SHIFT) |
-					(compositeIpAddress.lower & v6_LOWER_MASK),
+				(getBigInt(compositeIpAddress.upper) << V6_SHIFT) |
+					(getBigInt(compositeIpAddress.lower) & v6_LOWER_MASK),
 			);
 		default:
 			never();
 			return Address4.fromBigInt(0n);
 	}
 };
+
+const getBigInt = (number: bigint | number | undefined) => BigInt(number || 0n);
 
 const never = (): never => {
 	throw new Error("Unhandled type");
