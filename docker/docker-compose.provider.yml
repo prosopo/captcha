@@ -44,7 +44,7 @@ services:
         labels:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         pull_policy: build
         env_file:
             - ../.env.2.${NODE_ENV}
@@ -62,7 +62,7 @@ services:
         depends_on:
             - redis-stack
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ]  # ping the healthz endpoint
+            test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ] # ping the healthz endpoint
             interval: 5m
             retries: 3
             start_period: 30s
@@ -159,6 +159,26 @@ services:
         networks:
             internal:
                 ipv4_address: 172.18.0.8
+
+    cadvisor:
+        image: gcr.io/cadvisor/cadvisor:v0.52.1
+        container_name: cadvisor
+        command:
+            - '--enable_metrics=cpu,cpuLoad,memory,disk,diskIO,network,process,pressure,oom_event,percpu,app,tcp,udp'
+            - '--store_container_labels=false'
+            - '--whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project'
+            - '--docker_only=true'
+        volumes:
+            - /:/rootfs:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /var/run:/var/run:ro
+            - /sys:/sys:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+            - /dev/disk/:/dev/disk:ro
+        restart: unless-stopped
+        networks:
+            - internal
+
     vector:
         container_name: vector
         profiles:
