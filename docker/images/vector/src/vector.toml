@@ -21,7 +21,7 @@ if parsed != null {
 } else {
     output.message = .message
 }
-output.host="$OO_HOST"
+output.host=get_env_var!("OO_HOST")
 output.container_name=.container_name
 output.image=.image
 output.stream=.stream
@@ -36,37 +36,41 @@ output.source_type=.source_type
 #encoding.codec = "json"
 
 # send provider logs to tiger-stairs
-[sinks.prosopo_provider]
+[sinks.oo_provider]
 type = "http"
 inputs = ["provider_format"]
-uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_node/_json"
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_node/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
-compression = "gzip"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+compression = "gzip"
 
-[sinks.prosopo_provider2]
+[sinks.oo2_provider]
 type = "http"
 inputs = ["provider_format"]
-uri = "https://oo2.prosopo.io/api/default/${NODE_ENV}_provider_node/_json"
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_node/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO2_USERNAME"
-auth.password = "$OO2_PASSWORD"
-compression = "gzip"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+compression = "gzip"
 
 # listen to docker events for containers starting+ending
 [sources.docker]
@@ -97,7 +101,7 @@ if parsed != null {
 } else {
     output.message = .message
 }
-output.host="$OO_HOST"
+output.host=get_env_var!("OO_HOST")
 output.container_name=.container_name
 output.image=.image
 output.stream=.stream
@@ -107,43 +111,47 @@ output.name=.Actor.Attributes.name
 '''
 
 # print docker events to console
-[sinks.console]
-type = "console"
-inputs = ["docker_format"]
-encoding.codec = "json"
+#[sinks.console]
+#type = "console"
+#inputs = ["docker_format"]
+#encoding.codec = "json"
 
 # send to openobserve
-[sinks.prosopo_docker]
+[sinks.oo_docker]
 type = "http"
 inputs = ["docker_format"]
-uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_docker/_json"
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_docker/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
 
-[sinks.prosopo_docker2]
+[sinks.oo2_docker]
 type = "http"
 inputs = ["docker_format"]
-uri = "https://oo2.prosopo.io/api/default/${NODE_ENV}_provider_docker/_json"
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_docker/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO2_USERNAME"
-auth.password = "$OO2_PASSWORD"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
 
 [sources.caddy]
 type = "docker_logs"
@@ -160,7 +168,7 @@ if parsed != null {
 } else {
     output.message = .message
 }
-output.host="$OO_HOST"
+output.host=get_env_var!("OO_HOST")
 output.container_name=.container_name
 output.image=.image
 output.stream=.stream
@@ -170,34 +178,38 @@ output.request_id = get(.resp_headers, ["X-Request-Id"])[0] ?? null
 '''
 
 # send to openobserve
-[sinks.prosopo_caddy]
+[sinks.oo_caddy]
 type = "http"
 inputs = ["caddy_format"]
-uri = "https://oo.prosopo.io/api/$OO_ORG/${NODE_ENV}_provider_caddy/_json"
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_caddy/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO_USERNAME"
-auth.password = "$OO_PASSWORD"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
 
-[sinks.prosopo_caddy2]
+[sinks.oo2_caddy]
 type = "http"
 inputs = ["caddy_format"]
-uri = "https://oo2.prosopo.io/api/default/${NODE_ENV}_provider_caddy/_json"
+uri = "https://oo2.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_caddy/_json"
 method = "post"
 auth.strategy = "basic"
-auth.user = "$OO2_USERNAME"
-auth.password = "$OO2_PASSWORD"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
 compression = "gzip"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
 healthcheck.enabled = true
-batch.timeout_secs = 10 # time to wait before sending a batch
-batch.max_bytes = 10485760 # 10mb, max number of bytes per batch
-batch.max_events = 100000 # max number of events per batch
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
