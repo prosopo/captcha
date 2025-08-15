@@ -51,6 +51,21 @@ import {
 } from "@prosopo/user-access-policy";
 import HttpClientBase from "./HttpClientBase.js";
 
+// Page protect response types
+interface PageProtectSuccessResponse {
+	success: true;
+	message: string;
+	redirectUrl?: string;
+}
+
+interface PageProtectErrorResponse {
+	success: false;
+	message: string;
+	requiresAction?: boolean;
+}
+
+type PageProtectResponse = PageProtectSuccessResponse | PageProtectErrorResponse;
+
 export default class ProviderApi
 	extends HttpClientBase
 	implements ProviderApiInterface
@@ -359,5 +374,20 @@ export default class ProviderApi
 				},
 			},
 		);
+	}
+
+	public validatePageProtect(
+		token: string,
+		splashPageSrc: string,
+	): Promise<PageProtectResponse> {
+		const body = {
+			token,
+			splashPageSrc,
+		};
+		return this.post('/page-protect/validate', body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+			},
+		});
 	}
 }

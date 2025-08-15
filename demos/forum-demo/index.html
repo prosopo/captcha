@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechForum - Community Discussion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-comments text-blue-600 text-2xl mr-2"></i>
+                        <h1 class="text-xl font-bold text-gray-900">TechForum</h1>
+                    </div>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="text-blue-600 font-medium">Home</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-700">Categories</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-700">Popular</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-700">Recent</a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Main Content -->
+            <div class="lg:col-span-3">
+                <!-- Categories Section -->
+                <div class="bg-white rounded-lg shadow-sm border mb-8">
+                    <div class="px-6 py-4 border-b">
+                        <h2 class="text-lg font-semibold text-gray-900">Forum Categories</h2>
+                    </div>
+                    <div class="divide-y">
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-code text-blue-600 text-xl mr-4"></i>
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Web Development</h3>
+                                        <p class="text-sm text-gray-500">HTML, CSS, JavaScript, React, Vue.js</p>
+                                    </div>
+                                </div>
+                                <div class="text-right text-sm text-gray-500">
+                                    <div>1,247 posts</div>
+                                    <div>Latest: 2 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-mobile-alt text-green-600 text-xl mr-4"></i>
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Mobile Development</h3>
+                                        <p class="text-sm text-gray-500">iOS, Android, React Native, Flutter</p>
+                                    </div>
+                                </div>
+                                <div class="text-right text-sm text-gray-500">
+                                    <div>892 posts</div>
+                                    <div>Latest: 1 hour ago</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-database text-purple-600 text-xl mr-4"></i>
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Backend Development</h3>
+                                        <p class="text-sm text-gray-500">Node.js, Python, Java, Databases</p>
+                                    </div>
+                                </div>
+                                <div class="text-right text-sm text-gray-500">
+                                    <div>634 posts</div>
+                                    <div>Latest: 3 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Posts Section -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="px-6 py-4 border-b">
+                        <h2 class="text-lg font-semibold text-gray-900">Recent Discussions</h2>
+                    </div>
+                    <div class="divide-y">
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex space-x-4">
+                                <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="User avatar">
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                                            How to implement JWT authentication in React?
+                                        </h3>
+                                        <span class="text-xs text-gray-500">2 hours ago</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">I'm trying to implement JWT authentication in my React app but running into some issues with token storage...</p>
+                                    <div class="flex items-center mt-3 space-x-4 text-xs text-gray-500">
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">React</span>
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded">Authentication</span>
+                                        <span class="flex items-center"><i class="fas fa-comments mr-1"></i> 12 replies</span>
+                                        <span class="flex items-center"><i class="fas fa-eye mr-1"></i> 156 views</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex space-x-4">
+                                <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1494790108755-2616b612b3fd?w=40&h=40&fit=crop&crop=face" alt="User avatar">
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                                            Best practices for API rate limiting
+                                        </h3>
+                                        <span class="text-xs text-gray-500">4 hours ago</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">What are the current best practices for implementing rate limiting in REST APIs? Looking for both client and server-side approaches...</p>
+                                    <div class="flex items-center mt-3 space-x-4 text-xs text-gray-500">
+                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">API</span>
+                                        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">Backend</span>
+                                        <span class="flex items-center"><i class="fas fa-comments mr-1"></i> 8 replies</span>
+                                        <span class="flex items-center"><i class="fas fa-eye mr-1"></i> 89 views</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex space-x-4">
+                                <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face" alt="User avatar">
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                                            CSS Grid vs Flexbox - When to use what?
+                                        </h3>
+                                        <span class="text-xs text-gray-500">6 hours ago</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">I'm always confused about when to use CSS Grid versus Flexbox. Can someone explain the key differences and use cases?</p>
+                                    <div class="flex items-center mt-3 space-x-4 text-xs text-gray-500">
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded">CSS</span>
+                                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Layout</span>
+                                        <span class="flex items-center"><i class="fas fa-comments mr-1"></i> 15 replies</span>
+                                        <span class="flex items-center"><i class="fas fa-eye mr-1"></i> 203 views</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-6 py-4 hover:bg-gray-50">
+                            <div class="flex space-x-4">
+                                <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face" alt="User avatar">
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                                            Docker containerization for Node.js apps
+                                        </h3>
+                                        <span class="text-xs text-gray-500">8 hours ago</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">Looking for advice on containerizing Node.js applications with Docker. What are the best practices for production deployments?</p>
+                                    <div class="flex items-center mt-3 space-x-4 text-xs text-gray-500">
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">Docker</span>
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded">Node.js</span>
+                                        <span class="flex items-center"><i class="fas fa-comments mr-1"></i> 6 replies</span>
+                                        <span class="flex items-center"><i class="fas fa-eye mr-1"></i> 124 views</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Forum Stats -->
+                <div class="bg-white rounded-lg shadow-sm border mb-6">
+                    <div class="px-6 py-4 border-b">
+                        <h3 class="font-semibold text-gray-900">Forum Stats</h3>
+                    </div>
+                    <div class="px-6 py-4 space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Posts</span>
+                            <span class="font-semibold">2,847</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Active Users</span>
+                            <span class="font-semibold">1,234</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Online Now</span>
+                            <span class="font-semibold text-green-600">47</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Contributors -->
+                <div class="bg-white rounded-lg shadow-sm border mb-6">
+                    <div class="px-6 py-4 border-b">
+                        <h3 class="font-semibold text-gray-900">Top Contributors</h3>
+                    </div>
+                    <div class="px-6 py-4 space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <img class="w-8 h-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" alt="">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">Alex Johnson</div>
+                                <div class="text-xs text-gray-500">147 posts</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <img class="w-8 h-8 rounded-full" src="https://images.unsplash.com/photo-1494790108755-2616b612b3fd?w=32&h=32&fit=crop&crop=face" alt="">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">Sarah Chen</div>
+                                <div class="text-xs text-gray-500">132 posts</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <img class="w-8 h-8 rounded-full" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face" alt="">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">Mike Torres</div>
+                                <div class="text-xs text-gray-500">98 posts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-lg shadow-sm border">
+                    <div class="px-6 py-4 border-b">
+                        <h3 class="font-semibold text-gray-900">Recent Activity</h3>
+                    </div>
+                    <div class="px-6 py-4 space-y-3 text-sm">
+                        <div class="flex items-start space-x-2">
+                            <i class="fas fa-comment text-blue-600 text-xs mt-1"></i>
+                            <div>
+                                <span class="font-medium">Alex</span> replied to 
+                                <span class="text-blue-600 hover:underline cursor-pointer">"JWT Auth"</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="fas fa-plus text-green-600 text-xs mt-1"></i>
+                            <div>
+                                <span class="font-medium">Sarah</span> started 
+                                <span class="text-blue-600 hover:underline cursor-pointer">"API Rate Limiting"</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="fas fa-heart text-red-600 text-xs mt-1"></i>
+                            <div>
+                                <span class="font-medium">Mike</span> liked 
+                                <span class="text-blue-600 hover:underline cursor-pointer">"CSS Grid Guide"</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center text-gray-500 text-sm">
+                <p>&copy; 2024 TechForum. A demo forum for testing page protection.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
