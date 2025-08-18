@@ -82,6 +82,7 @@ import {
 } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
 import { type RedisClientType, createClient } from "redis";
+import { string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -363,21 +364,6 @@ export class ProviderDatabase
 	 */
 	async getSolutions(datasetId: string): Promise<SolutionRecord[]> {
 		const filter: Pick<SolutionRecord, "datasetId"> = { datasetId };
-		const docs = await this.tables?.solution
-			.find(filter)
-			.lean<SolutionRecord[]>();
-		return docs ? docs : [];
-	}
-
-	/** @description Get solutions by captchaIds
-	 * @param {string[]} captchaIds
-	 */
-	async getSolutionsByCaptchaIds(
-		captchaIds: string[],
-	): Promise<SolutionRecord[]> {
-		const filter: {
-			[key in keyof Pick<SolutionRecord, "captchaId">]: { $in: string[] };
-		} = { captchaId: { $in: captchaIds } };
 		const docs = await this.tables?.solution
 			.find(filter)
 			.lean<SolutionRecord[]>();
@@ -1391,25 +1377,29 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Get dapp user solutions by commitmentId
-	 * @param {string} commitmentId
+	 * @description Get dapp user solution by ID
+	 * @param {string[]} commitmentIds
 	 */
-	async getDappUserSolutionById(
-		commitmentId: string,
-	): Promise<UserSolutionRecord[] | undefined> {
-		const filter: Pick<UserSolutionRecord, "commitmentId"> = {
-			commitmentId: commitmentId,
+	async getDappUserSolutionsById(
+		commitmentIds: string[],
+	): Promise<UserSolutionRecord[]> {
+		const filter: {
+			[key in keyof Pick<UserSolutionRecord, "commitmentId">]: {
+				$in: string[];
+			};
+		} = {
+			commitmentId: { $in: commitmentIds },
 		};
 		const project = { projection: { _id: 0 } };
-		const cursor = this.tables?.usersolution?.find(filter, project).lean();
+		const cursor = this.tables?.usersolution?.findOne(filter, project).lean();
 		const doc = await cursor;
 
 		if (doc) {
-			return doc as unknown as UserSolutionRecord[];
+			return doc as unknown as UserSolutionRecord;
 		}
 
 		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {
-			context: { failedFuncName: this.getCaptchaById.name, commitmentId },
+			context: { failedFuncName: this.getCaptchaById.name, commitmentIds },
 		});
 	}
 

@@ -32,18 +32,18 @@ export default (
 
 	return {
 		command: "dump_captcha",
-		describe: "Dump a captcha an optional solution to a directory",
+		describe: "Dump captchas and optional solutions to a directory",
 		builder: (yargs: Argv) =>
 			yargs
 				.option("dir", {
 					type: "string" as const,
 					demandOption: true,
-					desc: "The directory to dump the captcha to",
+					desc: "The directory to dump the captchas to",
 				} as const)
-				.option("commitmentId", {
-					type: "string" as const,
+				.option("commitmentIds", {
+					type: "array" as const,
 					demandOption: true,
-					desc: "The commitment ID of the captcha to dump",
+					desc: "The commitment IDs to dump",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -53,108 +53,112 @@ export default (
 				const tasks = new Tasks(env);
 
 				const dir = z.string().parse(argv.dir);
-				const commitmentId = z.string().parse(argv.commitmentId);
-				const userSolutions =
-					await tasks.db.getDappUserSolutionById(commitmentId);
-				if (!userSolutions || userSolutions.length === 0) {
-					logger.error(() => ({
-						err: "No solutions found for this commitment ID",
-					}));
-					return;
-				}
-				const captchaIds = userSolutions.map((captcha) => captcha.captchaId);
-				const captchas = await tasks.db.getCaptchaById(captchaIds);
+				const commitmentIds = z.string().array().parse(argv.commitmentIds);
 
-				if (!captchas || captchas.length === 0) {
-					logger.error(() => ({
-						err: "No captchas found for this commitment ID",
-					}));
-					return;
-				}
+				for (const commitmentId of commitmentIds) {
+					const userSolutions = await tasks.db.getDappUserSolutionsById([
+						commitmentId,
+					]);
+					if (!userSolutions || userSolutions.length === 0) {
+						logger.error(() => ({
+							err: `No solutions found for commitment ID ${commitmentId}`,
+						}));
+						continue;
+					}
+					const captchaIds = userSolutions.map((captcha) => captcha.captchaId);
+					const captchas = await tasks.db.getCaptchaById(captchaIds);
 
-				const solutions = await tasks.db.getSolutionsByCaptchaIds(captchaIds);
-
-				if (!solutions || solutions.length === 0) {
-					logger.error(() => ({
-						err: "No solutions found for this commitment ID",
-					}));
-					return;
-				}
-
-				// add the solutions to the captchas object
-				const captchasWithSolutions = captchas.map((captcha) => {
-					const userSolution = userSolutions.find(
-						(s) => s.captchaId === captcha.captchaId,
-					);
-					return {
-						...captcha,
-						usersolution: userSolution ? userSolution.solution : null,
-						solution: solutions.find((s) => s.captchaId === captcha.captchaId)
-							?.solution,
-					};
-				});
-
-				const directory = path.resolve(dir);
-				const commitmentDir = path.resolve(directory, commitmentId);
-
-				// create a for the commitmentId if it doesn't exist
-				if (!fs.existsSync(commitmentDir)) {
-					fs.mkdirSync(commitmentDir);
-				}
-
-				// dump the captchasWithSolutions to the directory as a JSON file
-				const filePath = path.join(commitmentDir, `${commitmentId}.json`);
-				logger.info(() => ({ msg: `Writing to ${filePath}` }));
-				fs.writeFileSync(
-					filePath,
-					JSON.stringify(captchasWithSolutions, null, 2),
-				);
-
-				// for each captcha in captchaWithSolutions, get the image and save it to the directory
-				for (const captcha of captchasWithSolutions) {
-					// make a directory with captchaId
-					const captchaDirectory = path.join(
-						commitmentDir,
-						`${captcha.captchaId}`,
-					);
-					if (!fs.existsSync(captchaDirectory)) {
-						fs.mkdirSync(captchaDirectory);
+					if (!captchas || captchas.length === 0) {
+						logger.error(() => ({
+							err: `No captchas found for commitment ID ${commitmentId}`,
+						}));
+						continue;
 					}
 
-					for (const item of captcha.items) {
-						if (item.type === "image") {
-							const imageUrl = item.data;
-							const imageHash = item.hash;
+					const solutions = await tasks.db.getSolutionsByCaptchaIds(captchaIds);
 
-							const imageResponse = await fetch(imageUrl);
-							const imageBuffer = Buffer.from(
-								await imageResponse.arrayBuffer(),
-							);
-							// if the item hash was in the user's solutions prefix the filename with solution. Otherwise no prefix
-							const userSolution = userSolutions.find(
-								(s) =>
-									s.captchaId === captcha.captchaId &&
-									s.solution.includes(imageHash),
-							)
-								? "_USER_SOLUTION"
-								: "";
+					if (!solutions || solutions.length === 0) {
+						logger.error(() => ({
+							err: `No solutions found for commitment ID ${commitmentId}`,
+						}));
+						continue;
+					}
 
-							// check if the image is in captcha.solution
-							const solution = solutions.find(
-								(s) =>
-									s.captchaId === captcha.captchaId &&
-									s.solution.includes(imageHash),
-							)
-								? "_SOLUTION"
-								: "";
+					// add the solutions to the captchas object
+					const captchasWithSolutions = captchas.map((captcha) => {
+						const userSolution = userSolutions.find(
+							(s) => s.captchaId === captcha.captchaId,
+						);
+						return {
+							...captcha,
+							usersolution: userSolution ? userSolution.solution : null,
+							solution: solutions.find((s) => s.captchaId === captcha.captchaId)
+								?.solution,
+						};
+					});
 
-							const imageFilePath = path.join(
-								captchaDirectory,
-								`${imageHash}${solution}${userSolution}.jpg`,
-							);
+					const directory = path.resolve(dir);
+					const commitmentDir = path.resolve(directory, commitmentId);
 
-							logger.info(() => ({ msg: `Writing to ${imageFilePath}` }));
-							fs.writeFileSync(imageFilePath, imageBuffer);
+					// create a directory for the commitmentId if it doesn't exist
+					if (!fs.existsSync(commitmentDir)) {
+						fs.mkdirSync(commitmentDir, { recursive: true });
+					}
+
+					// dump the captchasWithSolutions to the directory as a JSON file
+					const filePath = path.join(commitmentDir, `${commitmentId}.json`);
+					logger.info(() => ({ msg: `Writing to ${filePath}` }));
+					fs.writeFileSync(
+						filePath,
+						JSON.stringify(captchasWithSolutions, null, 2),
+					);
+
+					// for each captcha in captchaWithSolutions, get the image and save it to the directory
+					for (const captcha of captchasWithSolutions) {
+						// make a directory with captchaId
+						const captchaDirectory = path.join(
+							commitmentDir,
+							`${captcha.captchaId}`,
+						);
+						if (!fs.existsSync(captchaDirectory)) {
+							fs.mkdirSync(captchaDirectory);
+						}
+
+						for (const item of captcha.items) {
+							if (item.type === "image") {
+								const imageUrl = item.data;
+								const imageHash = item.hash;
+
+								const imageResponse = await fetch(imageUrl);
+								const imageBuffer = Buffer.from(
+									await imageResponse.arrayBuffer(),
+								);
+								// if the item hash was in the user's solutions prefix the filename with solution. Otherwise no prefix
+								const userSolution = userSolutions.find(
+									(s) =>
+										s.captchaId === captcha.captchaId &&
+										s.solution.includes(imageHash),
+								)
+									? "_USER_SOLUTION"
+									: "";
+
+								// check if the image is in captcha.solution
+								const solution = solutions.find(
+									(s) =>
+										s.captchaId === captcha.captchaId &&
+										s.solution.includes(imageHash),
+								)
+									? "_SOLUTION"
+									: "";
+
+								const imageFilePath = path.join(
+									captchaDirectory,
+									`${imageHash}${solution}${userSolution}.jpg`,
+								);
+
+								logger.info(() => ({ msg: `Writing to ${imageFilePath}` }));
+								fs.writeFileSync(imageFilePath, imageBuffer);
+							}
 						}
 					}
 				}
