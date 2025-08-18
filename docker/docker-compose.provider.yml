@@ -175,6 +175,8 @@ services:
         environment:
             - REDIS_ADDR=redis://redis-stack:6379
             - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD}
+        networks:
+            - internal
 
     cadvisor:
         image: gcr.io/cadvisor/cadvisor:v0.52.1
