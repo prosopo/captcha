@@ -26,4 +26,6 @@ RUN apt-get update \
 
 COPY vector.toml /etc/vector/vector.toml
 
+ENV VECTOR_LOG_FORMAT=json
+
 ENTRYPOINT ["vector", "--config", "/etc/vector/vector.toml"]
