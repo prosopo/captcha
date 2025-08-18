@@ -210,8 +210,6 @@ services:
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
-            - /proc:/host/proc:ro
-            - /sys:/host/sys:ro
         networks:
             - internal
             - external
