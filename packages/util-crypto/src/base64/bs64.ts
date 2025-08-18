@@ -54,8 +54,8 @@ export const base64Encode = /*#__PURE__*/ createEncode(config);
 export const base64URLDecode = (input: string): Uint8Array => {
 	// Convert base64url to base64 by replacing URL-safe characters
 	const b64 = input.replace(/-/g, "+").replace(/_/g, "/");
-	// Decode the base64 string
-	return base64Decode(b64);
+	const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+	return base64Decode(padded);
 };
 
 /**
