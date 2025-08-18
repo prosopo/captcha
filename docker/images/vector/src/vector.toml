@@ -13,6 +13,10 @@
 # - NODE_ENV: Environment (staging, production, etc.)
 # - OO_USERNAME: OpenObserve authentication username
 # - OO_PASSWORD: OpenObserve authentication password
+# - OO2_USERNAME: Secondary OpenObserve authentication username
+# - OO2_PASSWORD: Secondary OpenObserve authentication password
+# - MONGO_INITDB_ROOT_USERNAME: MongoDB root username
+# - MONGO_INITDB_ROOT_PASSWORD: MongoDB root password
 
 # =============================================================================
 # CONFIGURATION NOTES
@@ -95,6 +99,77 @@ compression = "gzip"
 type = "http"
 inputs = ["provider_format"]
 uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_node/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "${OO2_USERNAME:?err}"
+auth.password = "${OO2_PASSWORD:?err}"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+compression = "gzip"
+
+# =============================================================================
+# MONGO LOGS PIPELINE
+# =============================================================================
+
+# Source: Collect logs from Docker containers labeled with vector.mongo=true
+[sources.mongo]
+type = "docker_logs"
+include_labels = ["vector.mongo=true"]
+
+# Transform: Format mongo logs for consistent structure
+# - Parses JSON messages if available, otherwise treats as plain text
+# - Adds metadata like host, container name, image, and stream type
+[transforms.mongo_format]
+type = "remap"
+inputs = ["mongo"]
+source = '''
+output={}
+parsed=parse_json(.message) ?? null
+if parsed != null {
+    output = parsed
+} else {
+    output.message = .message
+}
+output.host=get_env_var!("OO_HOST")
+output.container_name=.container_name
+output.image=.image
+output.stream=.stream
+output.source_type=.source_type
+.=output
+'''
+
+# Sink: Forward mongo logs to primary OpenObserve instance (oo.prosopo.io)
+# Configuration includes authentication, batching, rate limiting, and buffering
+[sinks.oo_mongo]
+type = "http"
+inputs = ["mongo_format"]
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_mongo/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+compression = "gzip"
+
+# Sink: Forward mongo logs to secondary OpenObserve instance (oo2.prosopo.io)
+# Backup/fallback logging destination for redundancy
+[sinks.oo2_mongo]
+type = "http"
+inputs = ["mongo_format"]
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_mongo/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "${OO2_USERNAME:?err}"
@@ -265,6 +340,156 @@ buffer.type = "disk"
 buffer.max_size = 268435488
 
 # =============================================================================
+# VECTOR INTERNAL LOGS PIPELINE
+# =============================================================================
+
+# Source: Collect Vector's own internal logs
+# This helps monitor Vector's health and troubleshoot Vector-related issues
+[sources.vector]
+type = "internal_logs"
+
+# Transform: Add host identification to Vector logs
+[transforms.vector_format]
+type = "remap"
+inputs = ["vector"]
+source = '''
+.host=get_env_var!("OO_HOST")
+'''
+
+# Sink: Forward Vector logs to primary OpenObserve instance
+[sinks.oo_vector]
+type = "http"
+inputs = ["vector_format"]
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_vector/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+
+# Sink: Forward Vector logs to secondary OpenObserve instance
+[sinks.oo2_vector]
+type = "http"
+inputs = ["vector_format"]
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_vector/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "${OO2_USERNAME:?err}"
+auth.password = "${OO2_PASSWORD:?err}"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+
+# =============================================================================
+# REDIS LOGS PIPELINE
+# =============================================================================
+
+# Source: Collect Redis logs from Docker containers
+# Note: This source is incorrectly configured as "internal_logs" - should be "docker_logs"
+# with appropriate labels for Redis containers
+[sources.redis]
+type = "docker_logs"
+include_labels = ["vector.redis=true"]
+
+# Transform: Parse and format Redis logs
+# Redis logs have a specific format that needs parsing for better observability
+[transforms.redis_format]
+type = "remap"
+inputs = ["redis"]
+source = '''
+# Example Redis line:
+# 12345:M 29 Aug 2023 12:34:56.789 * Ready to accept connections
+
+# Start with a clean object
+. = {}
+
+# Keep the raw line just in case
+.raw = string!(.message)
+
+# Regex parse pieces from the raw line
+match = parse_regex!(.raw, r'^(?P<pid>\d+):(?P<role>[A-Z])\s+(?P<day>\d{1,2})\s+(?P<mon>[A-Za-z]{3})\s+(?P<year>\d{4})\s+(?P<time>\d{2}:\d{2}:\d{2}\.\d{3})\s+(?P<level_symbol>.)\s+(?P<msg>.*)$')
+
+.pid          = to_int!(match.pid)
+.role         = match.role            # e.g. M, C, S, R (master/server, child, slave/replica, sentinel)
+.level_symbol = match.level_symbol    # e.g. "*", "#", "X", "-"
+.message      = match.msg
+
+# Optional: map role letters to friendly names
+.role_name = if .role == "M" { "server" }
+else if .role == "C" { "child" }
+else if .role == "S" { "replica" }
+else if .role == "R" { "sentinel" }
+else { "unknown" }
+
+# Optional: map symbols to levels (adjust to your policy)
+# Many folks treat:
+# "*" as info/notice, "#" as warning, "-" as notice, and "X" as crit.
+.level = if .level_symbol == "*" { "info" }
+else if .level_symbol == "#" { "warn" }
+else if .level_symbol == "X" { "error" }
+else { "notice" }
+
+# Build timestamp
+ts_str = format!("{day} {mon} {year} {time}", 
+  day: match.day, mon: match.mon, year: match.year, time: match.time)
+.timestamp = parse_timestamp!(ts_str, "%d %b %Y %T%.3f")
+
+.host=get_env_var!("OO_HOST")
+'''
+
+# Sink: Forward Redis logs to primary OpenObserve instance
+[sinks.oo_redis]
+type = "http"
+inputs = ["redis_format"]
+uri = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/${NODE_ENV:?err}_provider_redis/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "${OO_USERNAME:?err}"
+auth.password = "${OO_PASSWORD:?err}"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+
+# Sink: Forward Redis logs to secondary OpenObserve instance
+[sinks.oo2_redis]
+type = "http"
+inputs = ["redis_format"]
+uri = "https://oo2.prosopo.io/api/default/${NODE_ENV:?err}_provider_redis/_json"
+method = "post"
+auth.strategy = "basic"
+auth.user = "${OO2_USERNAME:?err}"
+auth.password = "${OO2_PASSWORD:?err}"
+compression = "gzip"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+healthcheck.enabled = true
+batch.timeout_secs = 15
+request.rate_limit_duration_secs = 1
+request.rate_limit_num = 10
+buffer.type = "disk"
+buffer.max_size = 268435488
+
+# =============================================================================
 # METRICS PIPELINE
 # =============================================================================
 #
@@ -318,7 +543,7 @@ source = '''
 
 # Source: Collect container metrics from cAdvisor
 # cAdvisor provides detailed container resource usage metrics
-# Endpoint: cAdvisor exposes metrics on port 8080
+# Endpoint: cAdvisor exposes metrics on configurable port
 [sources.cadvisor_metrics]
 type = "prometheus_scrape"
 endpoints = [ "http://cadvisor:8080/metrics" ]
@@ -337,11 +562,15 @@ source = '''
 # =============================================================================
 # CADDY METRICS
 # =============================================================================
-# Source: Collect metrics from caddy instance
-[sources.caddy_metrics]
-type = "http_client"
-endpoint = "http://caddy:${CADDY_METRICS_PORT:?err}/metrics"
 
+# Source: Collect metrics from caddy instance
+# Caddy exposes metrics in Prometheus format on a configurable port
+[sources.caddy_metrics]
+type = "prometheus_scrape"
+endpoints = ["http://caddy:9090/metrics"]
+scrape_interval_secs = 15
+
+# Transform: Add host and environment tags to Caddy metrics
 [transforms.caddy_metrics_format]
 type = "remap"
 inputs = ["caddy_metrics"]
@@ -356,10 +585,13 @@ source = '''
 
 # Source: Collect metrics from Redis instance
 # Monitors Redis performance, memory usage, and connection statistics
+# Uses redis-exporter to expose Redis metrics in Prometheus format
 [sources.redis_metrics]
 type = "prometheus_scrape"
 endpoints = [ "http://redis-exporter:9121/metrics" ]
+scrape_interval_secs = 15
 
+# Transform: Add host and environment tags to Redis metrics
 [transforms.redis_metrics_format]
 type = "remap"
 inputs = ["redis_metrics"]
@@ -377,7 +609,9 @@ source = '''
 [sources.mongodb_metrics]
 type = "mongodb_metrics"
 endpoints = ["mongodb://${MONGO_INITDB_ROOT_USERNAME:?err}:${MONGO_INITDB_ROOT_PASSWORD:?err}@database:27017"]
+scrape_interval_secs = 15
 
+# Transform: Add host and environment tags to MongoDB metrics
 [transforms.mongodb_metrics_format]
 type = "remap"
 inputs = ["mongodb_metrics"]

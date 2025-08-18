@@ -29,7 +29,7 @@
 }
 
 # HTTP metrics endpoint on all interfaces
-http://:{$CADDY_METRICS_PORT} {
+http://:9090 {
 	metrics /metrics
 }
 

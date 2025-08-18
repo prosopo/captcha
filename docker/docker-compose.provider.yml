@@ -173,7 +173,7 @@ services:
             redis-stack:
                 condition: service_healthy
         environment:
-            - REDIS_ADDR=redis://redis-stack:6379
+            - REDIS_ADDR=${REDIS_CONNECTION_URL}
             - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD}
         networks:
             - internal
