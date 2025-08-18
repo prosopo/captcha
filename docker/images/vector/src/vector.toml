@@ -429,23 +429,15 @@ match = parse_regex!(.raw, r'^(?P<pid>\d+):(?P<role>[A-Z])\s+(?P<day>\d{1,2})\s+
 .message      = match.msg
 
 # Optional: map role letters to friendly names
-.role_name = if .role == "M" { "server" }
-else if .role == "C" { "child" }
-else if .role == "S" { "replica" }
-else if .role == "R" { "sentinel" }
-else { "unknown" }
+.role_name = if .role == "M" { "server" } else if .role == "C" { "child" } else if .role == "S" { "replica" } else if .role == "R" { "sentinel" } else { "unknown" }
 
 # Optional: map symbols to levels (adjust to your policy)
 # Many folks treat:
 # "*" as info/notice, "#" as warning, "-" as notice, and "X" as crit.
-.level = if .level_symbol == "*" { "info" }
-else if .level_symbol == "#" { "warn" }
-else if .level_symbol == "X" { "error" }
-else { "notice" }
+.level = if .level_symbol == "*" { "info" } else if .level_symbol == "#" { "warn" } else if .level_symbol == "X" { "error" } else { "notice" }
 
 # Build timestamp
-ts_str = format!("{day} {mon} {year} {time}", 
-  day: match.day, mon: match.mon, year: match.year, time: match.time)
+ts_str = string!(match.day) + " " + string!(match.mon) + " " + string!(match.year) + " " + string!(match.time)
 .timestamp = parse_timestamp!(ts_str, "%d %b %Y %T%.3f")
 
 .host=get_env_var!("OO_HOST")
