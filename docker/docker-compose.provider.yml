@@ -159,6 +159,12 @@ services:
         networks:
             internal:
                 ipv4_address: 172.18.0.8
+        healthcheck:
+            test: [ "CMD", "redis-cli", "ping" ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 10s
 
     cadvisor:
         image: gcr.io/cadvisor/cadvisor:v0.52.1
@@ -210,6 +216,10 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+        depends_on:
+            redis:
+                condition: service_healthy
+
 networks:
     internal:
         name: internal
