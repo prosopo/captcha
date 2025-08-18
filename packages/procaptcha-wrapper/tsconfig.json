@@ -4,13 +4,22 @@
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},
-	"include": ["./src"],
+	"include": [
+		"./src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
-			"path": "../../integration/procaptcha-integration-build-config"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../types"
+		},
+		{
+			"path": "../locale"
 		}
 	]
 }

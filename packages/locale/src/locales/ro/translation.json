@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Extensia Polkadot nu a fost gasit"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Selecteaza tot ce contine urmatoarele",
-		"IF_NONE_CLICK_NEXT": "Daca nu exista, apasa Urmatorul",
-		"NEXT": "Urmatorul",
-		"SUBMIT": "Trimite",
-		"CANCEL": "Anuleaza",
-		"I_AM_HUMAN": "Sunt om",
-		"NO_ACCOUNTS_FOUND": "Niciun cont gasit",
-		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
-		"NO_EXTENSION_FOUND": "Nicio extensie gasita"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Cheie secretă lipsă",
+		"SITE_KEY_NOT_FOUND": "Cheie site negasita",
 		"JSON_LOAD_FAILED": "Nu s-a putut incarca fisierul JSON",
 		"MNEMONIC_UNDEFINED": "Mnemonic indefinit. Te rog seteaza mnemonicul in variabilele de mediu",
 		"NO_MNEMONIC_OR_SEED": "Nu s-a furnizat niciun mnemonic sau seed",
@@ -24,69 +12,16 @@
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
 		"INVALID_TIMESTAMP": "Timestamp invalid"
 	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Eroare la codificarea adresei invalide",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Solutia captcha pentru angajament nu exista",
-		"SIGNER_UNDEFINED": "Semnatarul nu este definit",
-		"CANNOT_FIND_KEYPAIR": "Nu se poate gasi keypair-ul",
-		"INVALID_DATA_FORMAT": "Format de date invalid"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Mediu necunoscut solicitat",
-		"INVALID_CAPTCHA_NUMBER": "Te rog configureaza corect configuratiile captcha",
-		"INVALID_LOG_LEVEL": "Nivel de log invalid",
-		"INVALID_PACKAGE_DIR": "Director pachet invalid"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Eroare la parsarea setului de date",
-		"SOLUTION_PARSE_ERROR": "Eroare la parsarea setului de date",
-		"HASH_ERROR": "Eroare la realizarea hasului pentru setul de date",
-		"DATASET_ID_UNDEFINED": "Id-ul setului de date este indefinit",
-		"NOT_ENOUGH_LABELS": "Nu sunt suficiente etichete",
-		"NOT_ENOUGH_IMAGES": "Nu sunt suficiente imagini",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Numarul de captchas din setul de date este mai mic decat numarul configurat de captchas",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Numarul de solutii din setul de date este mai mic decat numarul configurat de solutii",
-		"DUPLICATE_IMAGE": "Imagine duplicata detectata",
-		"MERKLE_ERROR": "Eroare la crearea arborelui Merkle"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Nu s-a putut importa motorul de baza de date",
-		"DATABASE_UNDEFINED": "Clientul bazei de date nu este conectat",
-		"DATABASE_HOST_UNDEFINED": "Adresa gazdei bazei de date nu este definita",
-		"DATASET_LOAD_FAILED": "Incarcarea setului de date a esuat",
-		"DATASET_GET_FAILED": "Esuata la preluarea setului de date",
-		"CAPTCHA_GET_FAILED": "Esuata la preluarea captcha",
-		"CAPTCHA_UPDATE_FAILED": "Esuata la actualizarea captcha",
-		"IMAGE_GET_FAILED": "Esuata la preluarea imagini",
-		"PENDING_RECORD_NOT_FOUND": "Nu s-a gasit niciun inregistrare in asteptare",
-		"INVALID_HASH": "Hash invalid",
-		"SOLUTION_GET_FAILED": "Esuata la preluarea solutiei",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Niciun set de date gasit cu numarul necesar de solutii",
-		"SOLUTION_APPROVE_FAILED": "Esuata la aprobarea solutiei",
-		"SOLUTION_FLAG_FAILED": "Esuata la marcarea solutiei ca procesata",
-		"TABLES_UNDEFINED": "Tabelele sunt nedefinite",
-		"CONNECTION_UNDEFINED": "Conexiunea este nedefinita",
-		"COMMITMENT_FLAG_FAILED": "Esuata la marcarea angajamentului ca procesat",
-		"UNKNOWN": "Eroare necunoscuta la baza de date"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Eroare la parsarea captcha-ului",
-		"INVALID_CAPTCHA_ID": "Id captcha invalid",
-		"INVALID_ITEM_FORMAT": "Se permit doar tipurile de item-uri imagini si text",
-		"INVALID_SOLUTION_TYPE": "Tip de solutie invalid",
-		"INVALID_ITEM_HASH": "Hash de item invalid",
-		"DIFFERENT_DATASET_IDS": "Id-urile seturilor de date nu se potrivesc",
-		"ID_MISMATCH": "neconcordanta id captcha",
-		"MISSING_ITEM_HASH": "hash-ul elementului lipsa",
-		"INVALID_CAPTCHA_CHALLENGE": "Provocare captcha invalida",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Solutia utilizatorului Dapp nu a fost gasita",
-		"NO_CAPTCHA": "Niciun captcha gasit",
-		"NO_SESSION_FOUND": "Nicio sesiune gasita",
-		"INVALID_TOKEN": "Token invalid",
-		"INVALID_SOLUTION": "Solutie invalida",
-		"DECRYPTION_ERROR": "Eroare la decriptare"
-	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permisiuni insuficiente pentru a efectua aceasta actiune",
+		"MISSING_QUERY_PARAMETERS": "Parametrii de interogare lipsesc",
+		"MISSING_AUTHORIZATION_HEADER": "Header de autorizare lipsa",
+		"TIMESTAMP_TOO_OLD": "Marca de timp prea veche",
+		"FORBIDDEN": "Interzis",
+		"PROVIDER_VERIFY_FAILED": "Verificarea furnizorului a esuat",
+		"UNAUTHORIZED": "Neautorizat",
+		"MISSING_BODY": "Corp lipsă",
+		"NO_CONTENT_TYPE_HEADER": "Fără antet de tip conținut. S-a presupus corp codat JSON dar nu s-a reușit parsarea.",
 		"CAPTCHA_FAILED": "Ai raspuns incorect la unul sau mai multe captchas. Te rog sa incerci din nou",
 		"CAPTCHA_PASSED": "Ai raspuns corect la captchas",
 		"BAD_REQUEST": "Cerere incorecta",
@@ -105,24 +40,31 @@
 		"INVALID_BODY": "Corp invalid",
 		"PARSE_ERROR": "Eroare la parsare"
 	},
-	"CLI": {
-		"PARAMETER_ERROR": "Parametru invalid"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY nu este setat in fisierul .env",
-		"PROVIDER_NO_CAPTCHA": "Niciun captcha returnat de la furnizor",
-		"MISSING_PROVIDER_PAIR": "Pereche de furnizori lipsa",
-		"MISSING_ENV_VARIABLE": "Variabila de mediu lipsa",
-		"GENERAL": "Eroare generala de dezvoltare, vezi contextul",
-		"MISSING_SECRET_KEY": "Cheie secreta lipsa",
-		"METHOD_NOT_IMPLEMENTED": "Metoda neimplementata"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "Fisierul nu a fost gasit",
-		"FILE_ALREADY_EXISTS": "Fisierul deja exista",
-		"INVALID_DIR_FORMAT": "Format de director invalid"
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",
+		"CANNOT_DELETE_OWN_USER": "Nu puteti sterge propriul cont",
+		"CANNOT_DELETE_LAST_USER": "Nu se poate sterge ultimul utilizator",
+		"USER_ALREADY_EXISTS": "Utilizatorul exista deja",
+		"NO_SUGGESTIONS_FOUND": "Nu s-au gasit sugestii",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nu se poate dezactiva ultimul site activ"
 	},
 	"TARGET": {
+		"airplanes": "avioane",
+		"american-flag": "steag american",
+		"bonsai": "bonsai",
+		"buddha": "Buddha",
+		"cannon": "tun",
+		"coffee-mug": "cana de cafea",
+		"flashlight": "lanternă",
+		"floppy-disk": "disc flexibil",
+		"football-helmet": "casca de fotbal",
+		"grand-piano": "pianoforte",
+		"jesus-christ": "Isus Hristos",
+		"knife": "cuțit",
+		"leopards": "lei",
+		"sword": "sabie",
+		"syringe": "seringă",
+		"tambourine": "tamburină",
 		"bird": "pasare",
 		"bus": "autobuz",
 		"car": "masina",
@@ -404,5 +346,98 @@
 		"xylophone": "xiolofon",
 		"yo-yo": "yo-yo",
 		"zebra": "zebra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Extensia Polkadot nu a fost gasit"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Selecteaza tot ce contine urmatoarele",
+		"IF_NONE_CLICK_NEXT": "Daca nu exista, apasa Urmatorul",
+		"NEXT": "Urmatorul",
+		"SUBMIT": "Trimite",
+		"CANCEL": "Anuleaza",
+		"I_AM_HUMAN": "Sunt om",
+		"NO_ACCOUNTS_FOUND": "Niciun cont gasit",
+		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
+		"NO_EXTENSION_FOUND": "Nicio extensie gasita"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Eroare la codificarea adresei invalide",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Solutia captcha pentru angajament nu exista",
+		"SIGNER_UNDEFINED": "Semnatarul nu este definit",
+		"CANNOT_FIND_KEYPAIR": "Nu se poate gasi keypair-ul",
+		"INVALID_DATA_FORMAT": "Format de date invalid"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Mediu necunoscut solicitat",
+		"INVALID_CAPTCHA_NUMBER": "Te rog configureaza corect configuratiile captcha",
+		"INVALID_LOG_LEVEL": "Nivel de log invalid",
+		"INVALID_PACKAGE_DIR": "Director pachet invalid"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Eroare la parsarea setului de date",
+		"SOLUTION_PARSE_ERROR": "Eroare la parsarea setului de date",
+		"HASH_ERROR": "Eroare la realizarea hasului pentru setul de date",
+		"DATASET_ID_UNDEFINED": "Id-ul setului de date este indefinit",
+		"NOT_ENOUGH_LABELS": "Nu sunt suficiente etichete",
+		"NOT_ENOUGH_IMAGES": "Nu sunt suficiente imagini",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Numarul de captchas din setul de date este mai mic decat numarul configurat de captchas",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Numarul de solutii din setul de date este mai mic decat numarul configurat de solutii",
+		"DUPLICATE_IMAGE": "Imagine duplicata detectata",
+		"MERKLE_ERROR": "Eroare la crearea arborelui Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Nu s-a putut importa motorul de baza de date",
+		"DATABASE_UNDEFINED": "Clientul bazei de date nu este conectat",
+		"DATABASE_HOST_UNDEFINED": "Adresa gazdei bazei de date nu este definita",
+		"DATASET_LOAD_FAILED": "Incarcarea setului de date a esuat",
+		"DATASET_GET_FAILED": "Esuata la preluarea setului de date",
+		"CAPTCHA_GET_FAILED": "Esuata la preluarea captcha",
+		"CAPTCHA_UPDATE_FAILED": "Esuata la actualizarea captcha",
+		"IMAGE_GET_FAILED": "Esuata la preluarea imagini",
+		"PENDING_RECORD_NOT_FOUND": "Nu s-a gasit niciun inregistrare in asteptare",
+		"INVALID_HASH": "Hash invalid",
+		"SOLUTION_GET_FAILED": "Esuata la preluarea solutiei",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Niciun set de date gasit cu numarul necesar de solutii",
+		"SOLUTION_APPROVE_FAILED": "Esuata la aprobarea solutiei",
+		"SOLUTION_FLAG_FAILED": "Esuata la marcarea solutiei ca procesata",
+		"TABLES_UNDEFINED": "Tabelele sunt nedefinite",
+		"CONNECTION_UNDEFINED": "Conexiunea este nedefinita",
+		"COMMITMENT_FLAG_FAILED": "Esuata la marcarea angajamentului ca procesat",
+		"UNKNOWN": "Eroare necunoscuta la baza de date"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Eroare la parsarea captcha-ului",
+		"INVALID_CAPTCHA_ID": "Id captcha invalid",
+		"INVALID_ITEM_FORMAT": "Se permit doar tipurile de item-uri imagini si text",
+		"INVALID_SOLUTION_TYPE": "Tip de solutie invalid",
+		"INVALID_ITEM_HASH": "Hash de item invalid",
+		"DIFFERENT_DATASET_IDS": "Id-urile seturilor de date nu se potrivesc",
+		"ID_MISMATCH": "neconcordanta id captcha",
+		"MISSING_ITEM_HASH": "hash-ul elementului lipsa",
+		"INVALID_CAPTCHA_CHALLENGE": "Provocare captcha invalida",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Solutia utilizatorului Dapp nu a fost gasita",
+		"NO_CAPTCHA": "Niciun captcha gasit",
+		"NO_SESSION_FOUND": "Nicio sesiune gasita",
+		"IP_ADDRESS_MISMATCH": "Adresele IP nu se potrivesc",
+		"INVALID_TOKEN": "Token invalid",
+		"INVALID_SOLUTION": "Solutie invalida",
+		"DECRYPTION_ERROR": "Eroare la decriptare"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parametru invalid"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY nu este setat in fisierul .env",
+		"PROVIDER_NO_CAPTCHA": "Niciun captcha returnat de la furnizor",
+		"MISSING_PROVIDER_PAIR": "Pereche de furnizori lipsa",
+		"MISSING_ENV_VARIABLE": "Variabila de mediu lipsa",
+		"GENERAL": "Eroare generala de dezvoltare, vezi contextul",
+		"METHOD_NOT_IMPLEMENTED": "Metoda neimplementata"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Fisierul nu a fost gasit",
+		"FILE_ALREADY_EXISTS": "Fisierul deja exista",
+		"INVALID_DIR_FORMAT": "Format de director invalid"
 	}
 }

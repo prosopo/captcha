@@ -5,16 +5,13 @@
 		"outDir": "./dist",
 		"types": ["vite/client"]
 	},
-	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
-	"references": [
-		{
-			"path": "../../packages/common"
-		},
-		{
-			"path": "../../packages/types"
-		},
-		{
-			"path": "../../packages/util"
-		}
+	"include": [
+		"./src/**/*.ts",
+		"./src/**/*.d.ts",
+		"./src/**/*.tsx",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
 	]
 }

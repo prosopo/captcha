@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Nie znaleziono rozszerzenia Polkadot"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Zaznacz wszystkie zawierające następujące",
-		"IF_NONE_CLICK_NEXT": "Jeśli nie ma żadnego, kliknij Dalej",
-		"NEXT": "Następny",
-		"SUBMIT": "Zatwierdź",
-		"CANCEL": "Anuluj",
-		"I_AM_HUMAN": "Jestem człowiekiem",
-		"NO_ACCOUNTS_FOUND": "Nie znaleziono kont",
-		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
-		"NO_EXTENSION_FOUND": "Nie znaleziono rozszerzenia"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Brakujący klucz tajny",
+		"SITE_KEY_NOT_FOUND": "Nie znaleziono klucza witryny",
 		"JSON_LOAD_FAILED": "Nie można załadować pliku JSON",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Proszę ustawić mnemonik w zmiennych środowiskowych",
 		"NO_MNEMONIC_OR_SEED": "Nie podano mnemonika ani seeda",
@@ -24,69 +12,16 @@
 		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
 		"INVALID_TIMESTAMP": "Nieprawidłowy znacznik czasu"
 	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Nie udało się zakodować nieprawidłowego adresu",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Zobowiązanie do rozwiązania captchy nie istnieje",
-		"SIGNER_UNDEFINED": "Sygnatariusz niezdefiniowany",
-		"CANNOT_FIND_KEYPAIR": "Nie można znaleźć keypair",
-		"INVALID_DATA_FORMAT": "Nieprawidłowy format danych"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Wymagane środowisko jest nieznane",
-		"INVALID_CAPTCHA_NUMBER": "Proszę skonfigurować poprawnie konfiguracje captchy",
-		"INVALID_LOG_LEVEL": "Nieprawidłowy poziom logowania",
-		"INVALID_PACKAGE_DIR": "Nieprawidłowy katalog pakietu"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Błąd parsowania zbioru danych",
-		"SOLUTION_PARSE_ERROR": "Błąd parsowania zbioru danych",
-		"HASH_ERROR": "Błąd hashowania zbioru danych",
-		"DATASET_ID_UNDEFINED": "Nieokreślone ID zbioru danych",
-		"NOT_ENOUGH_LABELS": "Niewystarczająca liczba etykiet",
-		"NOT_ENOUGH_IMAGES": "Niewystarczająca liczba obrazów",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Liczba captch w zbiorze danych jest mniejsza niż skonfigurowana liczba captch",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Liczba rozwiązań w zbiorze danych jest mniejsza niż skonfigurowana liczba rozwiązań",
-		"DUPLICATE_IMAGE": "Wykryto zduplikowany obraz",
-		"MERKLE_ERROR": "Błąd tworzenia drzewa Merkle'a"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Nie udało się zaimportować silnika bazy danych",
-		"DATABASE_UNDEFINED": "Klient bazy danych nie jest podłączony",
-		"DATABASE_HOST_UNDEFINED": "Adres hosta bazy danych nie jest zdefiniowany",
-		"DATASET_LOAD_FAILED": "Nie udało się załadować zestawu danych",
-		"DATASET_GET_FAILED": "Nie udało się pobrać zbioru danych",
-		"CAPTCHA_GET_FAILED": "Nie udało się pobrać captchy",
-		"CAPTCHA_UPDATE_FAILED": "Nie udało się zaktualizować captchy",
-		"IMAGE_GET_FAILED": "Nie udało się pobrać obrazu",
-		"PENDING_RECORD_NOT_FOUND": "Nie znaleziono oczekującego rekordu",
-		"INVALID_HASH": "Nieprawidłowy skrót",
-		"SOLUTION_GET_FAILED": "Nie udało się pobrać rozwiązania",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nie znaleziono zbioru danych z wymaganą liczbą rozwiązań",
-		"SOLUTION_APPROVE_FAILED": "Nie udało się zatwierdzić rozwiązania",
-		"SOLUTION_FLAG_FAILED": "Nie udało się oznaczyć rozwiązania jako przetworzone",
-		"TABLES_UNDEFINED": "Tabele niezdefiniowane",
-		"CONNECTION_UNDEFINED": "Połączenie niezdefiniowane",
-		"COMMITMENT_FLAG_FAILED": "Nie udało się oznaczyć zobowiązania jako przetworzone",
-		"UNKNOWN": "Nieznany błąd bazy danych"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Błąd parsowania captchy",
-		"INVALID_CAPTCHA_ID": "Nieprawidłowe ID captchy",
-		"INVALID_ITEM_FORMAT": "Dozwolone są tylko typy elementów obrazu i tekstu",
-		"INVALID_SOLUTION_TYPE": "Nieprawidłowy typ rozwiązania",
-		"INVALID_ITEM_HASH": "Nieprawidłowy skrót elementu",
-		"DIFFERENT_DATASET_IDS": "Identyfikatory zestawów danych nie pasują",
-		"ID_MISMATCH": "niezgodność id captcha",
-		"MISSING_ITEM_HASH": "brakujący skrót elementu",
-		"INVALID_CAPTCHA_CHALLENGE": "Nieprawidłowe wyzwanie captcha",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Nie znaleziono rozwiązania użytkownika Dapp",
-		"NO_CAPTCHA": "Nie znaleziono captchy",
-		"NO_SESSION_FOUND": "Nie znaleziono sesji",
-		"INVALID_TOKEN": "Nieprawidłowy token",
-		"INVALID_SOLUTION": "Nieprawidłowe rozwiązanie",
-		"DECRYPTION_ERROR": "Błąd deszyfrowania"
-	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Niewystarczające uprawnienia do wykonania tej akcji",
+		"MISSING_QUERY_PARAMETERS": "Brakujące parametry zapytania",
+		"MISSING_AUTHORIZATION_HEADER": "Brak nagłówka autoryzacji",
+		"TIMESTAMP_TOO_OLD": "Zbyt stary znacznik czasu",
+		"FORBIDDEN": "Zabronione",
+		"PROVIDER_VERIFY_FAILED": "Weryfikacja dostawcy nie powiodła się",
+		"UNAUTHORIZED": "Nieautoryzowany",
+		"MISSING_BODY": "Brak ciała",
+		"NO_CONTENT_TYPE_HEADER": "Brak nagłówka typu zawartości. Przyjęto zakodowane ciało JSON, ale nie udało się sparsować.",
 		"CAPTCHA_FAILED": "Odpowiedziałeś nieprawidłowo na jedną lub więcej captchy. Spróbuj ponownie",
 		"CAPTCHA_PASSED": "Poprawnie odpowiedziałeś na captchy",
 		"BAD_REQUEST": "Żądanie nieprawidłowe",
@@ -105,24 +40,31 @@
 		"INVALID_BODY": "Nieprawidłowe ciało",
 		"PARSE_ERROR": "Błąd parsowania żądania"
 	},
-	"CLI": {
-		"PARAMETER_ERROR": "Nieprawidłowy parametr"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY nie jest ustawione w pliku .env",
-		"PROVIDER_NO_CAPTCHA": "Brak captchy zwróconej przez dostawcę",
-		"MISSING_PROVIDER_PAIR": "Brakująca para dostawcy",
-		"MISSING_ENV_VARIABLE": "Brak zmiennej środowiskowej",
-		"GENERAL": "Ogólny błąd dewelopera, zobacz kontekst",
-		"MISSING_SECRET_KEY": "Brakujący klucz tajny",
-		"METHOD_NOT_IMPLEMENTED": "Metoda niezaimplementowana"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "Plik nie znaleziony",
-		"FILE_ALREADY_EXISTS": "Plik już istnieje",
-		"INVALID_DIR_FORMAT": "Nieprawidłowy format katalogu"
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nie można zmodyfikować właściciela użytkownika",
+		"CANNOT_DELETE_OWN_USER": "Nie można usunąć własnego konta",
+		"CANNOT_DELETE_LAST_USER": "Nie można usunąć ostatniego użytkownika",
+		"USER_ALREADY_EXISTS": "Użytkownik już istnieje",
+		"NO_SUGGESTIONS_FOUND": "Nie znaleziono sugestii",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nie można dezaktywować ostatniej aktywnej witryny"
 	},
 	"TARGET": {
+		"airplanes": "samoloty",
+		"american-flag": "flaga amerykańska",
+		"bonsai": "bonsai",
+		"buddha": "Budda",
+		"cannon": "armata",
+		"coffee-mug": "kubek do kawy",
+		"flashlight": "latarka",
+		"floppy-disk": "dyskietka",
+		"football-helmet": "hełm do futbolu amerykańskiego",
+		"grand-piano": "fortepian",
+		"jesus-christ": "Jezus Chrystus",
+		"knife": "nóż",
+		"leopards": "leopardy",
+		"sword": "miecz",
+		"syringe": "strzykawka",
+		"tambourine": "tamburyn",
 		"bird": "ptak",
 		"bus": "autobus",
 		"car": "samochód",
@@ -404,5 +346,98 @@
 		"xylophone": "ksylofon",
 		"yo-yo": "jo-jo",
 		"zebra": "zebra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Nie znaleziono rozszerzenia Polkadot"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Zaznacz wszystkie zawierające następujące",
+		"IF_NONE_CLICK_NEXT": "Jeśli nie ma żadnego, kliknij Dalej",
+		"NEXT": "Następny",
+		"SUBMIT": "Zatwierdź",
+		"CANCEL": "Anuluj",
+		"I_AM_HUMAN": "Jestem człowiekiem",
+		"NO_ACCOUNTS_FOUND": "Nie znaleziono kont",
+		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
+		"NO_EXTENSION_FOUND": "Nie znaleziono rozszerzenia"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Nie udało się zakodować nieprawidłowego adresu",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Zobowiązanie do rozwiązania captchy nie istnieje",
+		"SIGNER_UNDEFINED": "Sygnatariusz niezdefiniowany",
+		"CANNOT_FIND_KEYPAIR": "Nie można znaleźć keypair",
+		"INVALID_DATA_FORMAT": "Nieprawidłowy format danych"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Wymagane środowisko jest nieznane",
+		"INVALID_CAPTCHA_NUMBER": "Proszę skonfigurować poprawnie konfiguracje captchy",
+		"INVALID_LOG_LEVEL": "Nieprawidłowy poziom logowania",
+		"INVALID_PACKAGE_DIR": "Nieprawidłowy katalog pakietu"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Błąd parsowania zbioru danych",
+		"SOLUTION_PARSE_ERROR": "Błąd parsowania zbioru danych",
+		"HASH_ERROR": "Błąd hashowania zbioru danych",
+		"DATASET_ID_UNDEFINED": "Nieokreślone ID zbioru danych",
+		"NOT_ENOUGH_LABELS": "Niewystarczająca liczba etykiet",
+		"NOT_ENOUGH_IMAGES": "Niewystarczająca liczba obrazów",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Liczba captch w zbiorze danych jest mniejsza niż skonfigurowana liczba captch",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Liczba rozwiązań w zbiorze danych jest mniejsza niż skonfigurowana liczba rozwiązań",
+		"DUPLICATE_IMAGE": "Wykryto zduplikowany obraz",
+		"MERKLE_ERROR": "Błąd tworzenia drzewa Merkle'a"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Nie udało się zaimportować silnika bazy danych",
+		"DATABASE_UNDEFINED": "Klient bazy danych nie jest podłączony",
+		"DATABASE_HOST_UNDEFINED": "Adres hosta bazy danych nie jest zdefiniowany",
+		"DATASET_LOAD_FAILED": "Nie udało się załadować zestawu danych",
+		"DATASET_GET_FAILED": "Nie udało się pobrać zbioru danych",
+		"CAPTCHA_GET_FAILED": "Nie udało się pobrać captchy",
+		"CAPTCHA_UPDATE_FAILED": "Nie udało się zaktualizować captchy",
+		"IMAGE_GET_FAILED": "Nie udało się pobrać obrazu",
+		"PENDING_RECORD_NOT_FOUND": "Nie znaleziono oczekującego rekordu",
+		"INVALID_HASH": "Nieprawidłowy skrót",
+		"SOLUTION_GET_FAILED": "Nie udało się pobrać rozwiązania",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nie znaleziono zbioru danych z wymaganą liczbą rozwiązań",
+		"SOLUTION_APPROVE_FAILED": "Nie udało się zatwierdzić rozwiązania",
+		"SOLUTION_FLAG_FAILED": "Nie udało się oznaczyć rozwiązania jako przetworzone",
+		"TABLES_UNDEFINED": "Tabele niezdefiniowane",
+		"CONNECTION_UNDEFINED": "Połączenie niezdefiniowane",
+		"COMMITMENT_FLAG_FAILED": "Nie udało się oznaczyć zobowiązania jako przetworzone",
+		"UNKNOWN": "Nieznany błąd bazy danych"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Błąd parsowania captchy",
+		"INVALID_CAPTCHA_ID": "Nieprawidłowe ID captchy",
+		"INVALID_ITEM_FORMAT": "Dozwolone są tylko typy elementów obrazu i tekstu",
+		"INVALID_SOLUTION_TYPE": "Nieprawidłowy typ rozwiązania",
+		"INVALID_ITEM_HASH": "Nieprawidłowy skrót elementu",
+		"DIFFERENT_DATASET_IDS": "Identyfikatory zestawów danych nie pasują",
+		"ID_MISMATCH": "niezgodność id captcha",
+		"MISSING_ITEM_HASH": "brakujący skrót elementu",
+		"INVALID_CAPTCHA_CHALLENGE": "Nieprawidłowe wyzwanie captcha",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Nie znaleziono rozwiązania użytkownika Dapp",
+		"NO_CAPTCHA": "Nie znaleziono captchy",
+		"NO_SESSION_FOUND": "Nie znaleziono sesji",
+		"IP_ADDRESS_MISMATCH": "Adresy IP nie pasują",
+		"INVALID_TOKEN": "Nieprawidłowy token",
+		"INVALID_SOLUTION": "Nieprawidłowe rozwiązanie",
+		"DECRYPTION_ERROR": "Błąd deszyfrowania"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Nieprawidłowy parametr"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY nie jest ustawione w pliku .env",
+		"PROVIDER_NO_CAPTCHA": "Brak captchy zwróconej przez dostawcę",
+		"MISSING_PROVIDER_PAIR": "Brakująca para dostawcy",
+		"MISSING_ENV_VARIABLE": "Brak zmiennej środowiskowej",
+		"GENERAL": "Ogólny błąd dewelopera, zobacz kontekst",
+		"METHOD_NOT_IMPLEMENTED": "Metoda niezaimplementowana"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Plik nie znaleziony",
+		"FILE_ALREADY_EXISTS": "Plik już istnieje",
+		"INVALID_DIR_FORMAT": "Nieprawidłowy format katalogu"
 	}
 }

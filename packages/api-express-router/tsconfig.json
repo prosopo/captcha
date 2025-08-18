@@ -4,13 +4,32 @@
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},
-	"include": ["./src", "express.d.ts"],
+	"include": [
+		"./src",
+		"express.d.ts",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
 			"path": "../api-route"
 		},
 		{
 			"path": "../common"
+		},
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
+			"path": "../env"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../types"
 		}
 	]
 }

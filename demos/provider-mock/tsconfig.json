@@ -5,8 +5,17 @@
 		"outDir": "./dist",
 		"module": "NodeNext"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
 		{
 			"path": "../../packages/api-express-router"
 		},
@@ -18,6 +27,18 @@
 		},
 		{
 			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/database"
+		},
+		{
+			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/locale"
+		},
+		{
+			"path": "../../packages/types-database"
 		}
 	]
 }

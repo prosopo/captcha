@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +11,11 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
+
+import fs from "node:fs";
+import path from "node:path";
 
 export const nodejsPolarsNativeFilePlugin = (
-	logger: Logger,
 	nodeFiles: string[],
 	outDir: string,
 ) => {
@@ -28,7 +27,7 @@ export const nodejsPolarsNativeFilePlugin = (
 			// return the id if this plugin can resolve the import
 			for (const file of nodeFiles) {
 				if (path.basename(source) === path.basename(file)) {
-					logger.debug(name, "resolves", source, "imported by", importer);
+					console.debug(name, "resolves", source, "imported by", importer);
 					return source;
 				}
 			}
@@ -38,7 +37,7 @@ export const nodejsPolarsNativeFilePlugin = (
 			for (const file of nodeFiles) {
 				// rewrite the code to import the .node file
 				if (path.basename(id) === path.basename(file)) {
-					logger.debug(name, "transform", id);
+					console.debug(name, "transform", id);
 					// https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
 					// this makes the .node file load at runtime from an esm context. .node files aren't native to esm, so we have to create a custom require function to load them. The custom require function is equivalent to the require function in commonjs, thus allowing the .node file to be loaded.
 					return `
@@ -59,7 +58,7 @@ export const nodejsPolarsNativeFilePlugin = (
 		load(id: string) {
 			for (const file of nodeFiles) {
 				if (path.basename(id) === path.basename(file)) {
-					logger.debug(name, "load", id);
+					console.debug(name, "load", id);
 					// whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
 					const newCode = "";
 					return newCode;
@@ -74,7 +73,7 @@ export const nodejsPolarsNativeFilePlugin = (
 				// copy the .node file to the output directory
 				const out = `${outDir}/${file}`;
 				const src = `${fileAbs}`;
-				logger.debug(name, "copy", src, "to", out);
+				console.debug(name, "copy", src, "to", out);
 				const nodeFile = fs.readFileSync(src);
 				fs.mkdirSync(path.dirname(out), { recursive: true });
 				fs.writeFileSync(out, nodeFile);

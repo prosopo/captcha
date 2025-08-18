@@ -1,51 +1,52 @@
 {
 	"name": "@prosopo/provider",
-	"version": "2.5.5",
+	"version": "3.6.2",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
-	"main": "./dist/index.js",
 	"type": "module",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
-		}
-	},
 	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit npx vitest run --config ./vite.test.config.ts",
+		"test:integration": "NODE_ENV=${NODE_ENV:-test}; NX_PARALLEL=1 TEST_TYPE=integration npx vitest run --config ./vite.test.config.ts",
+		"test": "npm run test:unit && npm run test:integration",
 		"mnemonic": "tsx ./scripts/generateMnemonic.ts"
 	},
 	"dependencies": {
-		"@noble/hashes": "1.5.0",
-		"@polkadot/keyring": "12.6.2",
+		"@noble/hashes": "1.8.0",
 		"@polkadot/util": "12.6.2",
-		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/api-express-router": "2.5.5",
-		"@prosopo/api-route": "2.5.5",
-		"@prosopo/common": "2.5.5",
-		"@prosopo/config": "2.5.5",
-		"@prosopo/database": "2.5.5",
-		"@prosopo/datasets": "2.5.5",
-		"@prosopo/env": "2.5.5",
-		"@prosopo/keyring": "2.5.5",
-		"@prosopo/types": "2.5.5",
-		"@prosopo/types-database": "2.5.5",
-		"@prosopo/types-env": "2.5.5",
-		"@prosopo/user-access-policy": "2.5.5",
-		"@prosopo/util": "2.5.5",
+		"@prosopo/api": "3.1.9",
+		"@prosopo/api-express-router": "3.0.10",
+		"@prosopo/api-route": "2.6.13",
+		"@prosopo/common": "3.1.5",
+		"@prosopo/config": "3.1.5",
+		"@prosopo/database": "3.0.19",
+		"@prosopo/datasets": "3.0.19",
+		"@prosopo/env": "3.1.10",
+		"@prosopo/keyring": "2.8.12",
+		"@prosopo/load-balancer": "2.6.20",
+		"@prosopo/locale": "3.1.5",
+		"@prosopo/types": "3.0.9",
+		"@prosopo/types-database": "3.0.19",
+		"@prosopo/types-env": "2.7.23",
+		"@prosopo/user-access-policy": "3.5.4",
+		"@prosopo/util": "3.0.8",
+		"@prosopo/util-crypto": "13.5.7",
 		"cron": "3.1.7",
 		"express": "4.21.2",
+		"i18next": "24.1.0",
 		"ip-address": "10.0.1",
-		"node-fetch": "3.3.2",
+		"mongodb": "6.9.0",
+		"mongoose": "8.13.0",
 		"read-tls-client-hello": "1.1.0",
-		"uuid": "10.0.0",
+		"uuid": "11.1.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
@@ -55,11 +56,11 @@
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
 	},
 	"repository": {
@@ -71,5 +72,14 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false
+	"sideEffects": false,
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	}
 }

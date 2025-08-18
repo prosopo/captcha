@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto/address";
-import { handleErrors } from "@prosopo/api-express-router";
+import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
@@ -27,9 +26,9 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
-import { verifySignature } from "./authMiddleware.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -39,7 +38,6 @@ import { verifySignature } from "./authMiddleware.js";
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
-	const tasks = new Tasks(env);
 
 	/**
 	 * Verifies a dapp's solution as being approved or not
@@ -54,6 +52,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
+
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
 			try {
@@ -69,7 +69,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			// We don't want to expose any other errors to the client except for specific situations
-			const { dappSignature, token } = parsed;
+			const { dappSignature, token, ip, maxVerifiedTime } = parsed;
 			try {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId } =
@@ -102,10 +102,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						user,
 						dapp,
 						commitmentId,
-						parsed.maxVerifiedTime,
+						maxVerifiedTime,
+						ip,
 					);
 
-				req.logger.debug(response);
+				req.logger.debug(() => ({ data: { response } }));
 				const verificationResponse: ImageVerificationResponse =
 					tasks.imgCaptchaManager.getVerificationResponse(
 						response[ApiParams.verified],
@@ -116,7 +117,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					);
 				res.json(verificationResponse);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				req.logger.error(() => ({ err, data: { body: req.body } }));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
@@ -138,7 +139,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
+			const tasks = new Tasks(env, req.logger);
+
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
+
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			try {
 				parsed = ServerPowCaptchaVerifyRequestBody.parse(req.body);
@@ -154,7 +158,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			// We don't want to expose any other errors to the client
 			try {
-				const { token, dappSignature, verifiedTimeout } = parsed;
+				const { token, dappSignature, verifiedTimeout, ip } = parsed;
 
 				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge } =
@@ -195,6 +199,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						dapp,
 						challenge,
 						verifiedTimeout,
+						ip,
 					);
 
 				const verificationResponse: VerificationResponse =
@@ -207,7 +212,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 				return res.json(verificationResponse);
 			} catch (err) {
-				req.logger.error({ err, body: req.body });
+				console.error("\nError in verifyPowCaptchaSolution:", err);
+				req.logger.error(() => ({ err, data: { body: req.body } }));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: { code: 500, error: err },

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util",
-	"version": "2.5.5",
+	"version": "3.0.8",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -9,16 +9,19 @@
 		"npm": "10.8.2"
 	},
 	"scripts": {
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
 		"cli": "node ./dist/js/cli.js",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
-	"main": "./dist/index.js",
+	"main": "dist/index.js",
 	"type": "module",
 	"exports": {
 		".": {
+			"types": "dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
@@ -29,26 +32,27 @@
 			"default": "./dist/lodash.js"
 		}
 	},
-	"types": "./dist/index.d.ts",
+	"types": "dist/index.d.ts",
 	"dependencies": {
-		"@noble/hashes": "1.5.0",
-		"@prosopo/config": "2.5.5",
+		"@noble/hashes": "1.8.0",
+		"@prosopo/config": "3.1.5",
 		"dotenv": "16.4.5",
-		"express": "4.21.2",
+		"ip-address": "10.0.1",
 		"lodash": "4.17.21",
 		"seedrandom": "3.0.5"
 	},
 	"devDependencies": {
 		"@types/lodash": "4.17.7",
+		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
 	},
 	"repository": {

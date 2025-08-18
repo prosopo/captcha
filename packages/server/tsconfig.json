@@ -5,8 +5,17 @@
 		"outDir": "./dist",
 		"lib": ["es6", "dom"]
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
 		{
 			"path": "../api"
 		},
@@ -21,6 +30,9 @@
 		},
 		{
 			"path": "../load-balancer"
+		},
+		{
+			"path": "../util"
 		}
 	]
 }

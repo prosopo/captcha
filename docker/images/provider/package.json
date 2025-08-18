@@ -1,9 +1,29 @@
 {
-	"name": "@prosopo/provider-container",
-	"type": "module",
+	"name": "@prosopo/provider-docker",
+	"version": "3.1.12",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
 	},
-	"version": "2.5.5"
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"dependencies": {
+		"@prosopo/cli": "3.0.2",
+		"@prosopo/config": "3.1.0",
+		"@prosopo/locale": "3.0.1"
+	},
+	"scripts": {
+		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
+		"build": "npm run clean && cp -r src dist && docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"publish:docker": "docker push $(npm run --silent docker-tag)"
+	}
 }

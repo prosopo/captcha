@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Chave secreta em falta",
+		"SITE_KEY_NOT_FOUND": "Chave do site não encontrada",
+		"JSON_LOAD_FAILED": "Falha ao carregar o arquivo JSON",
+		"MNEMONIC_UNDEFINED": "Mnemônico indefinido. Por favor, defina o mnemônico nas variáveis de ambiente",
+		"NO_MNEMONIC_OR_SEED": "Nenhum mnemônico ou seed fornecido",
+		"CANT_FIND_KEYRINGPAIR": "Não é possível encontrar o keyringpair para {{address}}",
+		"ENVIRONMENT_NOT_READY": "Ambiente não pronto",
+		"INVALID_SIGNATURE": "Assinatura inválida",
+		"SITE_KEY_MISSING": "CHAVE DO SITE ausente",
+		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
+		"INVALID_TIMESTAMP": "Carimbo de data/hora inválido"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permissões insuficientes para realizar esta ação",
+		"MISSING_QUERY_PARAMETERS": "Parâmetros de consulta em falta",
+		"MISSING_AUTHORIZATION_HEADER": "Cabeçalho de autorização em falta",
+		"TIMESTAMP_TOO_OLD": "Timestamp muito antigo",
+		"FORBIDDEN": "Proibido",
+		"PROVIDER_VERIFY_FAILED": "Falha na verificação do fornecedor",
+		"UNAUTHORIZED": "Não autorizado",
+		"MISSING_BODY": "Corpo ausente",
+		"NO_CONTENT_TYPE_HEADER": "Cabeçalho sem tipo de conteúdo. Suposto corpo codificado em JSON, mas falhou ao analisar.",
+		"CAPTCHA_FAILED": "Você respondeu incorretamente a um ou mais captchas. Por favor, tente novamente",
+		"CAPTCHA_PASSED": "Você respondeu corretamente aos captchas",
+		"BAD_REQUEST": "Solicitação Inválida",
+		"USER_VERIFIED": "Usuário verificado",
+		"USER_NOT_VERIFIED": "Usuário não verificado",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Usuário não verificado. A solução do captcha expirou.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Usuário não verificado. Nenhuma solução de captcha encontrada.",
+		"USER_ALREADY_VERIFIED": "Esta solução já foi verificada. O usuário deve completar um novo captcha.",
+		"UNKNOWN": "Erro desconhecido na API",
+		"SITE_KEY_NOT_REGISTERED": "Chave do site não registrada",
+		"INCORRECT_CAPTCHA_TYPE": "Tipo de CAPTCHA incorreto",
+		"UNAUTHORIZED_ORIGIN_URL": "URL de origem não autorizada",
+		"INVALID_SITE_KEY": "Chave de site inválida",
+		"INVALID_IP": "IP inválido",
+		"INVALID_URL": "URL inválido",
+		"INVALID_BODY": "Corpo inválido",
+		"PARSE_ERROR": "Erro ao analisar a resposta"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o utilizador proprietário",
+		"CANNOT_DELETE_OWN_USER": "Não é possível eliminar a sua própria conta",
+		"CANNOT_DELETE_LAST_USER": "Não é possível eliminar o último utilizador",
+		"USER_ALREADY_EXISTS": "Utilizador já existe",
+		"NO_SUGGESTIONS_FOUND": "Nenhuma sugestão encontrada",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Não é possível desativar o último site ativo"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extensão Polkadot não encontrada"
 	},
@@ -12,17 +61,6 @@
 		"NO_ACCOUNTS_FOUND": "Nenhuma conta encontrada",
 		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
 		"NO_EXTENSION_FOUND": "Nenhuma extensão encontrada"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Falha ao carregar o arquivo JSON",
-		"MNEMONIC_UNDEFINED": "Mnemônico indefinido. Por favor, defina o mnemônico nas variáveis de ambiente",
-		"NO_MNEMONIC_OR_SEED": "Nenhum mnemônico ou seed fornecido",
-		"CANT_FIND_KEYRINGPAIR": "Não é possível encontrar o keyringpair para {{address}}",
-		"ENVIRONMENT_NOT_READY": "Ambiente não pronto",
-		"INVALID_SIGNATURE": "Assinatura inválida",
-		"SITE_KEY_MISSING": "CHAVE DO SITE ausente",
-		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
-		"INVALID_TIMESTAMP": "Carimbo de data/hora inválido"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Falha ao codificar endereço inválido",
@@ -82,28 +120,10 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Solução do usuário da Dapp não encontrada",
 		"NO_CAPTCHA": "Nenhum captcha encontrado",
 		"NO_SESSION_FOUND": "Nenhuma sessão encontrada",
+		"IP_ADDRESS_MISMATCH": "Endereços IP não coincidem",
 		"INVALID_TOKEN": "Token inválido",
 		"INVALID_SOLUTION": "Solução inválida",
 		"DECRYPTION_ERROR": "Erro de desencriptação"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Você respondeu incorretamente a um ou mais captchas. Por favor, tente novamente",
-		"CAPTCHA_PASSED": "Você respondeu corretamente aos captchas",
-		"BAD_REQUEST": "Solicitação Inválida",
-		"USER_VERIFIED": "Usuário verificado",
-		"USER_NOT_VERIFIED": "Usuário não verificado",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Usuário não verificado. A solução do captcha expirou.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Usuário não verificado. Nenhuma solução de captcha encontrada.",
-		"USER_ALREADY_VERIFIED": "Esta solução já foi verificada. O usuário deve completar um novo captcha.",
-		"UNKNOWN": "Erro desconhecido na API",
-		"SITE_KEY_NOT_REGISTERED": "Chave do site não registrada",
-		"INCORRECT_CAPTCHA_TYPE": "Tipo de CAPTCHA incorreto",
-		"UNAUTHORIZED_ORIGIN_URL": "URL de origem não autorizada",
-		"INVALID_SITE_KEY": "Chave de site inválida",
-		"INVALID_IP": "IP inválido",
-		"INVALID_URL": "URL inválido",
-		"INVALID_BODY": "Corpo inválido",
-		"PARSE_ERROR": "Erro ao analisar a resposta"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parâmetro inválido"
@@ -114,7 +134,6 @@
 		"MISSING_PROVIDER_PAIR": "Par de provedor ausente",
 		"MISSING_ENV_VARIABLE": "Variável de ambiente ausente",
 		"GENERAL": "Erro geral de desenvolvimento, veja o contexto",
-		"MISSING_SECRET_KEY": "Chave secreta ausente",
 		"METHOD_NOT_IMPLEMENTED": "Método não implementado"
 	},
 	"FS": {
@@ -403,6 +422,22 @@
 		"woodpecker": "pica-pau",
 		"xylophone": "xilofone",
 		"yo-yo": "ioiô",
-		"zebra": "zebra"
+		"zebra": "zebra",
+		"airplanes": "aviões",
+		"american-flag": "bandeira americana",
+		"bonsai": "bonsai",
+		"buddha": "buda",
+		"cannon": "canhão",
+		"coffee-mug": "chávena de café",
+		"flashlight": "lanterna",
+		"floppy-disk": "disquete",
+		"football-helmet": "capacete de futebol americano",
+		"grand-piano": "piano de cauda",
+		"jesus-christ": "jesus cristo",
+		"knife": "faca",
+		"leopards": "leopardos",
+		"sword": "espada",
+		"syringe": "seringa",
+		"tambourine": "tamborim"
 	}
 }

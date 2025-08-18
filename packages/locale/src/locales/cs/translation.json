@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Rozšíření Polkadot nenalezeno"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Vyberte vše obsahující následující",
-		"IF_NONE_CLICK_NEXT": "Pokud neexistují žádné, klikněte na Další",
-		"NEXT": "Další",
-		"SUBMIT": "Odeslat",
-		"CANCEL": "Zrušit",
-		"I_AM_HUMAN": "Jsem člověk",
-		"NO_ACCOUNTS_FOUND": "Nebyly nalezeny žádné účty",
-		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
-		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Chybějící tajný klíč",
+		"SITE_KEY_NOT_FOUND": "Klíč webu nenalezen",
 		"JSON_LOAD_FAILED": "Nepodařilo se načíst soubor JSON",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Nastavte prosím mnemoniku v prostředí",
 		"NO_MNEMONIC_OR_SEED": "Nebyla poskytnuta mnemonika nebo seed",
@@ -24,69 +12,16 @@
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
 		"INVALID_TIMESTAMP": "Neplatný časový razítko"
 	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Závazek řešení captchy neexistuje",
-		"SIGNER_UNDEFINED": "Signatář nedefinován",
-		"CANNOT_FIND_KEYPAIR": "Nelze najít keypair",
-		"INVALID_DATA_FORMAT": "Neplatný formát dat"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Požadováno neznámé prostředí",
-		"INVALID_CAPTCHA_NUMBER": "Prosím nakonfigurujte konfigurace captch správně",
-		"INVALID_LOG_LEVEL": "Neplatná úroveň záznamů",
-		"INVALID_PACKAGE_DIR": "Neplatný adresář balíku"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Chyba při analýze datasetu",
-		"SOLUTION_PARSE_ERROR": "Chyba při analýze datasetu",
-		"HASH_ERROR": "Chyba při hašování datasetu",
-		"DATASET_ID_UNDEFINED": "ID datasetu není definováno",
-		"NOT_ENOUGH_LABELS": "Nedostatečný počet štítků",
-		"NOT_ENOUGH_IMAGES": "Nedostatečný počet obrázků",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Počet captch v datasetu je menší než konfigurovaný počet captch",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Počet řešení v datasetu je menší než konfigurovaný počet řešení",
-		"DUPLICATE_IMAGE": "Detekován duplicitní obrázek",
-		"MERKLE_ERROR": "Chyba při vytváření stromu Merkle"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Selhal import databázového enginu",
-		"DATABASE_UNDEFINED": "Klient databáze není připojen",
-		"DATABASE_HOST_UNDEFINED": "Není definována adresa hostitele databáze",
-		"DATASET_LOAD_FAILED": "Selhalo načtení datové sady",
-		"DATASET_GET_FAILED": "Nepodařilo se získat dataset",
-		"CAPTCHA_GET_FAILED": "Nepodařilo se získat captcha",
-		"CAPTCHA_UPDATE_FAILED": "Nepodařilo se aktualizovat captchu",
-		"IMAGE_GET_FAILED": "Nepodařilo se získat obrázek",
-		"PENDING_RECORD_NOT_FOUND": "Nebyl nalezen žádný čekající záznam",
-		"INVALID_HASH": "Neplatný hash",
-		"SOLUTION_GET_FAILED": "Nepodařilo se získat řešení",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nebyly nalezeny datasety s požadovaným počtem řešení",
-		"SOLUTION_APPROVE_FAILED": "Selhalo schválení řešení",
-		"SOLUTION_FLAG_FAILED": "Nepodařilo se označit řešení jako zpracované",
-		"TABLES_UNDEFINED": "Tabulky nedefinovány",
-		"CONNECTION_UNDEFINED": "Připojení není definováno",
-		"COMMITMENT_FLAG_FAILED": "Nepodařilo se označit závazek jako zpracovaný",
-		"UNKNOWN": "Neznámá chyba databáze"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Chyba při analýze captcha",
-		"INVALID_CAPTCHA_ID": "Neplatné ID captchy",
-		"INVALID_ITEM_FORMAT": "Povoleny jsou pouze typy položek obrázku a textu",
-		"INVALID_SOLUTION_TYPE": "Neplatný typ řešení",
-		"INVALID_ITEM_HASH": "Neplatný hash položky",
-		"DIFFERENT_DATASET_IDS": "Identifikátory souborů s daty nejsou shodné",
-		"ID_MISMATCH": "neshoda identifikačního čísla",
-		"MISSING_ITEM_HASH": "chybějící hash položky",
-		"INVALID_CAPTCHA_CHALLENGE": "Neplatná výzva CAPTCHA",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Řešení uživatele Dapp nenalezeno",
-		"NO_CAPTCHA": "CAPTCHA nenalezena",
-		"NO_SESSION_FOUND": "Žádná relace nenalezena",
-		"INVALID_TOKEN": "Neplatný token",
-		"INVALID_SOLUTION": "Neplatné řešení",
-		"DECRYPTION_ERROR": "Chyba dešifrování"
-	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Nedostatečná oprávnění k provedení této akce",
+		"MISSING_QUERY_PARAMETERS": "Chybějící parametry dotazu",
+		"MISSING_AUTHORIZATION_HEADER": "Chybějící hlavička autorizace",
+		"TIMESTAMP_TOO_OLD": "Příliš starý časový údaj",
+		"FORBIDDEN": "Zakázáno",
+		"PROVIDER_VERIFY_FAILED": "Ověření poskytovatele selhalo",
+		"UNAUTHORIZED": "Neoprávněný",
+		"MISSING_BODY": "Chybějící tělo",
+		"NO_CONTENT_TYPE_HEADER": "Chybí hlavička typu obsahu. Předpokládáno, že tělo je kódované ve formátu JSON, ale nepodařilo se ho analyzovat.",
 		"CAPTCHA_FAILED": "Odpověděli jste špatně na jednu nebo více CAPTCHA. Zkuste to prosím znovu",
 		"CAPTCHA_PASSED": "Správně jste odpověděli na CAPTCHA",
 		"BAD_REQUEST": "Špatný požadavek",
@@ -105,24 +40,31 @@
 		"INVALID_BODY": "Neplatné tělo",
 		"PARSE_ERROR": "Chyba při zpracování požadavku"
 	},
-	"CLI": {
-		"PARAMETER_ERROR": "Neplatný parametr"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY není nastaven v souboru .env.",
-		"PROVIDER_NO_CAPTCHA": "Poskytovatel nenavrátí žádné CAPTCHA",
-		"MISSING_PROVIDER_PAIR": "Chybějící dvojice poskytovatelů",
-		"MISSING_ENV_VARIABLE": "Chybějící proměnná prostředí",
-		"GENERAL": "Obecná chyba vývoje, viz kontext",
-		"MISSING_SECRET_KEY": "Chybějící tajný klíč",
-		"METHOD_NOT_IMPLEMENTED": "Metoda není implementována"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "Soubor nenalezen",
-		"FILE_ALREADY_EXISTS": "Soubor již existuje",
-		"INVALID_DIR_FORMAT": "Neplatný formát adresáře"
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nelze upravit vlastníka uživatele",
+		"CANNOT_DELETE_OWN_USER": "Nelze smazat vlastní účet",
+		"CANNOT_DELETE_LAST_USER": "Nelze smazat posledního uživatele",
+		"USER_ALREADY_EXISTS": "Uživatel již existuje",
+		"NO_SUGGESTIONS_FOUND": "Nebyly nalezeny žádné návrhy",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nelze deaktivovat poslední aktivní web"
 	},
 	"TARGET": {
+		"airplanes": "letadla",
+		"american-flag": "americká vlajka",
+		"bonsai": "bonsai",
+		"buddha": "Buddha",
+		"cannon": "dělo",
+		"coffee-mug": "kávová hrnčířství",
+		"flashlight": "svítilna",
+		"floppy-disk": "disketa",
+		"football-helmet": "fotbalová přilba",
+		"grand-piano": "velké piano",
+		"jesus-christ": "Ježíš Kristus",
+		"knife": "nůž",
+		"leopards": "levharti",
+		"sword": "meč",
+		"syringe": "stříkačka",
+		"tambourine": "tamburína",
 		"bird": "pták",
 		"bus": "autobus",
 		"car": "auto",
@@ -404,5 +346,98 @@
 		"xylophone": "xylofon",
 		"yo-yo": "začalo",
 		"zebra": "zebra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Rozšíření Polkadot nenalezeno"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Vyberte vše obsahující následující",
+		"IF_NONE_CLICK_NEXT": "Pokud neexistují žádné, klikněte na Další",
+		"NEXT": "Další",
+		"SUBMIT": "Odeslat",
+		"CANCEL": "Zrušit",
+		"I_AM_HUMAN": "Jsem člověk",
+		"NO_ACCOUNTS_FOUND": "Nebyly nalezeny žádné účty",
+		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
+		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Závazek řešení captchy neexistuje",
+		"SIGNER_UNDEFINED": "Signatář nedefinován",
+		"CANNOT_FIND_KEYPAIR": "Nelze najít keypair",
+		"INVALID_DATA_FORMAT": "Neplatný formát dat"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Požadováno neznámé prostředí",
+		"INVALID_CAPTCHA_NUMBER": "Prosím nakonfigurujte konfigurace captch správně",
+		"INVALID_LOG_LEVEL": "Neplatná úroveň záznamů",
+		"INVALID_PACKAGE_DIR": "Neplatný adresář balíku"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Chyba při analýze datasetu",
+		"SOLUTION_PARSE_ERROR": "Chyba při analýze datasetu",
+		"HASH_ERROR": "Chyba při hašování datasetu",
+		"DATASET_ID_UNDEFINED": "ID datasetu není definováno",
+		"NOT_ENOUGH_LABELS": "Nedostatečný počet štítků",
+		"NOT_ENOUGH_IMAGES": "Nedostatečný počet obrázků",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Počet captch v datasetu je menší než konfigurovaný počet captch",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Počet řešení v datasetu je menší než konfigurovaný počet řešení",
+		"DUPLICATE_IMAGE": "Detekován duplicitní obrázek",
+		"MERKLE_ERROR": "Chyba při vytváření stromu Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Selhal import databázového enginu",
+		"DATABASE_UNDEFINED": "Klient databáze není připojen",
+		"DATABASE_HOST_UNDEFINED": "Není definována adresa hostitele databáze",
+		"DATASET_LOAD_FAILED": "Selhalo načtení datové sady",
+		"DATASET_GET_FAILED": "Nepodařilo se získat dataset",
+		"CAPTCHA_GET_FAILED": "Nepodařilo se získat captcha",
+		"CAPTCHA_UPDATE_FAILED": "Nepodařilo se aktualizovat captchu",
+		"IMAGE_GET_FAILED": "Nepodařilo se získat obrázek",
+		"PENDING_RECORD_NOT_FOUND": "Nebyl nalezen žádný čekající záznam",
+		"INVALID_HASH": "Neplatný hash",
+		"SOLUTION_GET_FAILED": "Nepodařilo se získat řešení",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nebyly nalezeny datasety s požadovaným počtem řešení",
+		"SOLUTION_APPROVE_FAILED": "Selhalo schválení řešení",
+		"SOLUTION_FLAG_FAILED": "Nepodařilo se označit řešení jako zpracované",
+		"TABLES_UNDEFINED": "Tabulky nedefinovány",
+		"CONNECTION_UNDEFINED": "Připojení není definováno",
+		"COMMITMENT_FLAG_FAILED": "Nepodařilo se označit závazek jako zpracovaný",
+		"UNKNOWN": "Neznámá chyba databáze"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Chyba při analýze captcha",
+		"INVALID_CAPTCHA_ID": "Neplatné ID captchy",
+		"INVALID_ITEM_FORMAT": "Povoleny jsou pouze typy položek obrázku a textu",
+		"INVALID_SOLUTION_TYPE": "Neplatný typ řešení",
+		"INVALID_ITEM_HASH": "Neplatný hash položky",
+		"DIFFERENT_DATASET_IDS": "Identifikátory souborů s daty nejsou shodné",
+		"ID_MISMATCH": "neshoda identifikačního čísla",
+		"MISSING_ITEM_HASH": "chybějící hash položky",
+		"INVALID_CAPTCHA_CHALLENGE": "Neplatná výzva CAPTCHA",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Řešení uživatele Dapp nenalezeno",
+		"NO_CAPTCHA": "CAPTCHA nenalezena",
+		"NO_SESSION_FOUND": "Žádná relace nenalezena",
+		"IP_ADDRESS_MISMATCH": "IP adresy se neshodují",
+		"INVALID_TOKEN": "Neplatný token",
+		"INVALID_SOLUTION": "Neplatné řešení",
+		"DECRYPTION_ERROR": "Chyba dešifrování"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Neplatný parametr"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY není nastaven v souboru .env.",
+		"PROVIDER_NO_CAPTCHA": "Poskytovatel nenavrátí žádné CAPTCHA",
+		"MISSING_PROVIDER_PAIR": "Chybějící dvojice poskytovatelů",
+		"MISSING_ENV_VARIABLE": "Chybějící proměnná prostředí",
+		"GENERAL": "Obecná chyba vývoje, viz kontext",
+		"METHOD_NOT_IMPLEMENTED": "Metoda není implementována"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Soubor nenalezen",
+		"FILE_ALREADY_EXISTS": "Soubor již existuje",
+		"INVALID_DIR_FORMAT": "Neplatný formát adresáře"
 	}
 }

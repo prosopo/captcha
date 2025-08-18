@@ -13,13 +13,12 @@
 // limitations under the License.
 import fs from "node:fs";
 import type { Server } from "node:net";
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
-import type { ProsopoConfigOutput } from "@prosopo/types";
+import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import type { AwaitedProcessedArgs } from "./argv.js";
-import { start, startDev } from "./start.js";
+import { start } from "./start.js";
 
 const log = getLogger(LogLevel.enum.info, "CLI");
 
@@ -51,40 +50,34 @@ export default class ReloadingAPI {
 	}
 
 	get env() {
+		if (!this._env) {
+			throw new Error("Environment not initialized. Call start() first.");
+		}
+
 		return this._env;
 	}
 
 	public async start(reloadEnv = false) {
-		log.info("Starting API");
-		this._envWatcher = await this._watchEnv();
+		log.info(() => ({ msg: "Starting API" }));
+
 		loadEnv();
-		if (!this._env && reloadEnv) {
-			const env = new ProviderEnvironment(
+		if (!this._env || reloadEnv) {
+			this._env = new ProviderEnvironment(
 				this._config,
 				this._pair,
 				this._authAccount,
 			);
-			await env.isReady();
-			this._env = env;
 		}
-		this.api = await start(this.env, !!this._processedArgs.adminApi);
-	}
+		await this.env.isReady();
 
-	public async startDev() {
-		log.info("Starting API");
-		this._envWatcher = await this._watchEnv();
-		loadEnv();
-		const env = new ProviderEnvironment(
-			this._config,
-			this._pair,
-			this._authAccount,
-		);
-		await env.isReady();
-		this.api = await startDev(env, !!this._processedArgs.adminApi);
+		this.api = await start(this.env, !!this._processedArgs.adminApi);
+		if (process.env.NODE_ENV === "development") {
+			this._envWatcher = await this._watchEnv();
+		}
 	}
 
 	public async stop() {
-		log.info("Stopping API");
+		log.info(() => ({ msg: "Stopping API" }));
 		return new Promise((resolve) => {
 			if (this.api) {
 				this.api.close(resolve);
@@ -93,8 +86,11 @@ export default class ReloadingAPI {
 	}
 
 	private async _watchEnv() {
-		return fs.watchFile(this._envPath, async () => {
-			log.info(`env file change detected. Restarting: ${this._restarting}`);
+		return fs.watch(this._envPath, async () => {
+			log.info(() => ({
+				data: { restarting: this._restarting },
+				msg: "env file change detected. Restarting",
+			}));
 			if (!this._restarting) {
 				this._restarting = true;
 				await this.stop();

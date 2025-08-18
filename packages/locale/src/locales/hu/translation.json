@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "A Polkadot kiterjesztés nem található"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Válassza ki az összes következőt tartalmazót",
-		"IF_NONE_CLICK_NEXT": "Ha nincs egy sem, kattintson a Következő gombra",
-		"NEXT": "Következő",
-		"SUBMIT": "Küldés",
-		"CANCEL": "Mégse",
-		"I_AM_HUMAN": "Ember vagyok",
-		"NO_ACCOUNTS_FOUND": "Nem található felhasználó",
-		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
-		"NO_EXTENSION_FOUND": "Nincs kiterjesztés található"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Hiányzó titkos kulcs",
+		"SITE_KEY_NOT_FOUND": "Webhely kulcs nem található",
 		"JSON_LOAD_FAILED": "JSON fájl betöltése sikertelen",
 		"MNEMONIC_UNDEFINED": "Mnemonic nincs meghatározva. Kérjük állítsa be a mnemonicot környezeti változókban",
 		"NO_MNEMONIC_OR_SEED": "Nincs megadva mnemonic vagy mag",
@@ -24,69 +12,16 @@
 		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
 		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg"
 	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Nem sikerült kódolni az érvénytelen címet",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "A captcha megoldás elkötelezettsége nem létezik",
-		"SIGNER_UNDEFINED": "Aláíró nincs meghatározva",
-		"CANNOT_FIND_KEYPAIR": "Nem található kulcspár",
-		"INVALID_DATA_FORMAT": "Érvénytelen adatformátum"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Ismeretlen környezet lett kérve",
-		"INVALID_CAPTCHA_NUMBER": "Kérjük konfigurálja a captcha beállításokat megfelelően",
-		"INVALID_LOG_LEVEL": "Érvénytelen naplózási szint",
-		"INVALID_PACKAGE_DIR": "Érvénytelen csomagkönyvtár"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Hiba az adatkészlet elemzésekor",
-		"SOLUTION_PARSE_ERROR": "Hiba az adatkészlet elemzésekor",
-		"HASH_ERROR": "Hiba az adatkészlet hashelésekor",
-		"DATASET_ID_UNDEFINED": "Az adatkészlet azonosítója nincs meghatározva",
-		"NOT_ENOUGH_LABELS": "Nem elég címke",
-		"NOT_ENOUGH_IMAGES": "Nem elég kép",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Az adatkészletben található captcha-k száma kevesebb, mint a konfigurált captcha-k száma",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Az adatkészletben található megoldások száma kevesebb, mint a konfigurált megoldások száma",
-		"DUPLICATE_IMAGE": "Ismétlődő kép észlelve",
-		"MERKLE_ERROR": "Hiba a merkle fa létrehozásakor"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Adatbázis motor importálása sikertelen",
-		"DATABASE_UNDEFINED": "Az adatbázis kliens nincs csatlakoztatva",
-		"DATABASE_HOST_UNDEFINED": "Az adatbázis host címe nincs meghatározva",
-		"DATASET_LOAD_FAILED": "Az adatkészlet betöltése sikertelen",
-		"DATASET_GET_FAILED": "Az adatkészlet lekérdezése sikertelen",
-		"CAPTCHA_GET_FAILED": "A captcha lekérdezése sikertelen",
-		"CAPTCHA_UPDATE_FAILED": "A captcha frissítése sikertelen",
-		"IMAGE_GET_FAILED": "A kép lekérdezése sikertelen",
-		"PENDING_RECORD_NOT_FOUND": "Nem található függőben lévő rekord",
-		"INVALID_HASH": "Érvénytelen hash",
-		"SOLUTION_GET_FAILED": "A megoldás lekérdezése sikertelen",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nem található adatkészlet a szükséges megoldások számával",
-		"SOLUTION_APPROVE_FAILED": "A megoldás jóváhagyása sikertelen",
-		"SOLUTION_FLAG_FAILED": "A megoldás jelzése feldolgozottként sikertelen",
-		"TABLES_UNDEFINED": "Táblák nincsenek meghatározva",
-		"CONNECTION_UNDEFINED": "Kapcsolat meghatározatlan",
-		"COMMITMENT_FLAG_FAILED": "Az elkötelezettség jelzése feldolgozottként sikertelen",
-		"UNKNOWN": "Ismeretlen adatbázis hiba"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Hiba a captcha elemzésekor",
-		"INVALID_CAPTCHA_ID": "Érvénytelen captcha azonosító",
-		"INVALID_ITEM_FORMAT": "Csak kép és szöveg típusú elemek engedélyezettek",
-		"INVALID_SOLUTION_TYPE": "Érvénytelen megoldás típus",
-		"INVALID_ITEM_HASH": "Érvénytelen elem hash",
-		"DIFFERENT_DATASET_IDS": "Az adathalmaz azonosítói nem egyeznek",
-		"ID_MISMATCH": "captcha azonosító nem egyezik",
-		"MISSING_ITEM_HASH": "hiányzó tétel hash",
-		"INVALID_CAPTCHA_CHALLENGE": "Érvénytelen captcha kihívás",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp felhasználó megoldása nem található",
-		"NO_CAPTCHA": "Nincs captcha található",
-		"NO_SESSION_FOUND": "Nincs található munkamenet",
-		"INVALID_TOKEN": "Érvénytelen token",
-		"INVALID_SOLUTION": "Érvénytelen megoldás",
-		"DECRYPTION_ERROR": "Hiba a titkosítás közben"
-	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Nincs elegendő engedély a művelet végrehajtásához",
+		"MISSING_QUERY_PARAMETERS": "Hiányzó lekérdezési paraméterek",
+		"MISSING_AUTHORIZATION_HEADER": "Hiányzó azonosítási fejléc",
+		"TIMESTAMP_TOO_OLD": "Az időbélyeg túl régi",
+		"FORBIDDEN": "tiltott",
+		"PROVIDER_VERIFY_FAILED": "Szolgáltató ellenőrzése sikertelen",
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Hiányzó test",
+		"NO_CONTENT_TYPE_HEADER": "Nincs tartalom-típus fejléc. Feltételezett JSON kódolt test, de nem sikerült értelmezni.",
 		"CAPTCHA_FAILED": "Egy vagy több captcha kérdés helytelenül lett megválaszolva. Kérjük, próbáld meg újra",
 		"CAPTCHA_PASSED": "Helyesen megválaszoltad a captcha kérdéseket",
 		"BAD_REQUEST": "BadRequest",
@@ -105,24 +40,31 @@
 		"INVALID_BODY": "Érvénytelen test",
 		"PARSE_ERROR": "Hiba az adatkérések elemzése közben"
 	},
-	"CLI": {
-		"PARAMETER_ERROR": "Érvénytelen paraméter"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "A PROSOPO_SITE_KEY nincs beállítva az .env fájlban.",
-		"PROVIDER_NO_CAPTCHA": "Nincsenek captcha-k az ellátótól",
-		"MISSING_PROVIDER_PAIR": "Hiányzó ellátópár",
-		"MISSING_ENV_VARIABLE": "Hiányzó környezeti változó",
-		"GENERAL": "Általános fejlesztői hiba, lásd a kontextust",
-		"MISSING_SECRET_KEY": "Hiányzó titkos kulcs",
-		"METHOD_NOT_IMPLEMENTED": "Az eljárás nincs implementálva"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "Fájl nem található",
-		"FILE_ALREADY_EXISTS": "A fájl már létezik",
-		"INVALID_DIR_FORMAT": "Érvénytelen könyvtár formátum"
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",
+		"CANNOT_DELETE_OWN_USER": "Nem törölheti saját fiókját",
+		"CANNOT_DELETE_LAST_USER": "Nem törölheti az utolsó felhasználót",
+		"USER_ALREADY_EXISTS": "A felhasználó már létezik",
+		"NO_SUGGESTIONS_FOUND": "Nincsenek javaslatok",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nem lehet inaktiválni az utolsó aktív webhelyet"
 	},
 	"TARGET": {
+		"airplanes": "repülőgépek",
+		"american-flag": "amerikai zászló",
+		"bonsai": "bonsai",
+		"buddha": "Buddha",
+		"cannon": "ágyú",
+		"coffee-mug": "kávés bögre",
+		"flashlight": "zseblámpa",
+		"floppy-disk": "floppy lemez",
+		"football-helmet": "foci sisak",
+		"grand-piano": "nagy zongora",
+		"jesus-christ": "Jézus Krisztus",
+		"knife": "kés",
+		"leopards": "leopárdok",
+		"sword": "kard",
+		"syringe": "tű",
+		"tambourine": "tamburin",
 		"bird": "madár",
 		"bus": "busz",
 		"car": "autó",
@@ -404,5 +346,98 @@
 		"xylophone": "xylofon",
 		"yo-yo": "jó-jó",
 		"zebra": "zebra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "A Polkadot kiterjesztés nem található"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Válassza ki az összes következőt tartalmazót",
+		"IF_NONE_CLICK_NEXT": "Ha nincs egy sem, kattintson a Következő gombra",
+		"NEXT": "Következő",
+		"SUBMIT": "Küldés",
+		"CANCEL": "Mégse",
+		"I_AM_HUMAN": "Ember vagyok",
+		"NO_ACCOUNTS_FOUND": "Nem található felhasználó",
+		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
+		"NO_EXTENSION_FOUND": "Nincs kiterjesztés található"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Nem sikerült kódolni az érvénytelen címet",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "A captcha megoldás elkötelezettsége nem létezik",
+		"SIGNER_UNDEFINED": "Aláíró nincs meghatározva",
+		"CANNOT_FIND_KEYPAIR": "Nem található kulcspár",
+		"INVALID_DATA_FORMAT": "Érvénytelen adatformátum"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Ismeretlen környezet lett kérve",
+		"INVALID_CAPTCHA_NUMBER": "Kérjük konfigurálja a captcha beállításokat megfelelően",
+		"INVALID_LOG_LEVEL": "Érvénytelen naplózási szint",
+		"INVALID_PACKAGE_DIR": "Érvénytelen csomagkönyvtár"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Hiba az adatkészlet elemzésekor",
+		"SOLUTION_PARSE_ERROR": "Hiba az adatkészlet elemzésekor",
+		"HASH_ERROR": "Hiba az adatkészlet hashelésekor",
+		"DATASET_ID_UNDEFINED": "Az adatkészlet azonosítója nincs meghatározva",
+		"NOT_ENOUGH_LABELS": "Nem elég címke",
+		"NOT_ENOUGH_IMAGES": "Nem elég kép",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Az adatkészletben található captcha-k száma kevesebb, mint a konfigurált captcha-k száma",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Az adatkészletben található megoldások száma kevesebb, mint a konfigurált megoldások száma",
+		"DUPLICATE_IMAGE": "Ismétlődő kép észlelve",
+		"MERKLE_ERROR": "Hiba a merkle fa létrehozásakor"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Adatbázis motor importálása sikertelen",
+		"DATABASE_UNDEFINED": "Az adatbázis kliens nincs csatlakoztatva",
+		"DATABASE_HOST_UNDEFINED": "Az adatbázis host címe nincs meghatározva",
+		"DATASET_LOAD_FAILED": "Az adatkészlet betöltése sikertelen",
+		"DATASET_GET_FAILED": "Az adatkészlet lekérdezése sikertelen",
+		"CAPTCHA_GET_FAILED": "A captcha lekérdezése sikertelen",
+		"CAPTCHA_UPDATE_FAILED": "A captcha frissítése sikertelen",
+		"IMAGE_GET_FAILED": "A kép lekérdezése sikertelen",
+		"PENDING_RECORD_NOT_FOUND": "Nem található függőben lévő rekord",
+		"INVALID_HASH": "Érvénytelen hash",
+		"SOLUTION_GET_FAILED": "A megoldás lekérdezése sikertelen",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nem található adatkészlet a szükséges megoldások számával",
+		"SOLUTION_APPROVE_FAILED": "A megoldás jóváhagyása sikertelen",
+		"SOLUTION_FLAG_FAILED": "A megoldás jelzése feldolgozottként sikertelen",
+		"TABLES_UNDEFINED": "Táblák nincsenek meghatározva",
+		"CONNECTION_UNDEFINED": "Kapcsolat meghatározatlan",
+		"COMMITMENT_FLAG_FAILED": "Az elkötelezettség jelzése feldolgozottként sikertelen",
+		"UNKNOWN": "Ismeretlen adatbázis hiba"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Hiba a captcha elemzésekor",
+		"INVALID_CAPTCHA_ID": "Érvénytelen captcha azonosító",
+		"INVALID_ITEM_FORMAT": "Csak kép és szöveg típusú elemek engedélyezettek",
+		"INVALID_SOLUTION_TYPE": "Érvénytelen megoldás típus",
+		"INVALID_ITEM_HASH": "Érvénytelen elem hash",
+		"DIFFERENT_DATASET_IDS": "Az adathalmaz azonosítói nem egyeznek",
+		"ID_MISMATCH": "captcha azonosító nem egyezik",
+		"MISSING_ITEM_HASH": "hiányzó tétel hash",
+		"INVALID_CAPTCHA_CHALLENGE": "Érvénytelen captcha kihívás",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp felhasználó megoldása nem található",
+		"NO_CAPTCHA": "Nincs captcha található",
+		"NO_SESSION_FOUND": "Nincs található munkamenet",
+		"IP_ADDRESS_MISMATCH": "Az IP címek nem egyeznek",
+		"INVALID_TOKEN": "Érvénytelen token",
+		"INVALID_SOLUTION": "Érvénytelen megoldás",
+		"DECRYPTION_ERROR": "Hiba a titkosítás közben"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Érvénytelen paraméter"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "A PROSOPO_SITE_KEY nincs beállítva az .env fájlban.",
+		"PROVIDER_NO_CAPTCHA": "Nincsenek captcha-k az ellátótól",
+		"MISSING_PROVIDER_PAIR": "Hiányzó ellátópár",
+		"MISSING_ENV_VARIABLE": "Hiányzó környezeti változó",
+		"GENERAL": "Általános fejlesztői hiba, lásd a kontextust",
+		"METHOD_NOT_IMPLEMENTED": "Az eljárás nincs implementálva"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Fájl nem található",
+		"FILE_ALREADY_EXISTS": "A fájl már létezik",
+		"INVALID_DIR_FORMAT": "Érvénytelen könyvtár formátum"
 	}
 }

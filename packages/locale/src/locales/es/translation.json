@@ -1,4 +1,53 @@
 {
+	"GENERAL": {
+		"MISSING_SECRET_KEY": "Clave secreta faltante",
+		"SITE_KEY_NOT_FOUND": "Clave del sitio no encontrada",
+		"JSON_LOAD_FAILED": "Error al cargar el archivo JSON",
+		"MNEMONIC_UNDEFINED": "Mnemónico indefinido. Por favor, establece el mnemónico en las variables de entorno",
+		"NO_MNEMONIC_OR_SEED": "No se proporcionó mnemónico ni semilla",
+		"CANT_FIND_KEYRINGPAIR": "No se puede encontrar el keyringpair para {{address}}",
+		"ENVIRONMENT_NOT_READY": "Entorno no listo",
+		"INVALID_SIGNATURE": "Firma inválida",
+		"SITE_KEY_MISSING": "Falta la CLAVE DEL SITIO",
+		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
+		"INVALID_TIMESTAMP": "Marca de tiempo inválida"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permisos insuficientes para realizar esta acción",
+		"MISSING_QUERY_PARAMETERS": "Faltan parámetros de consulta",
+		"MISSING_AUTHORIZATION_HEADER": "Falta la cabecera de autorización",
+		"TIMESTAMP_TOO_OLD": "Marca de tiempo demasiado antigua",
+		"FORBIDDEN": "Prohibido",
+		"PROVIDER_VERIFY_FAILED": "Fallo en la verificación del proveedor",
+		"UNAUTHORIZED": "No autorizado",
+		"MISSING_BODY": "Cuerpo faltante",
+		"NO_CONTENT_TYPE_HEADER": "Sin encabezado de tipo de contenido. Se asumió un cuerpo codificado en JSON pero no se pudo analizar.",
+		"CAPTCHA_FAILED": "Respondiste incorrectamente a uno o más captchas. Por favor, inténtalo de nuevo",
+		"CAPTCHA_PASSED": "Respondiste correctamente a los captchas",
+		"BAD_REQUEST": "Solicitud incorrecta",
+		"USER_VERIFIED": "Usuario verificado",
+		"USER_NOT_VERIFIED": "Usuario no verificado",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Usuario no verificado. La solución del captcha ha expirado.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Usuario no verificado. No se encontró solución de captcha.",
+		"USER_ALREADY_VERIFIED": "Esta solución ya ha sido verificada. El usuario debe completar un nuevo captcha.",
+		"UNKNOWN": "Error desconocido en el API",
+		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada",
+		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
+		"UNAUTHORIZED_ORIGIN_URL": "URL de origen no autorizada",
+		"INVALID_SITE_KEY": "Clave de sitio no válida",
+		"INVALID_IP": "IP no válida",
+		"INVALID_URL": "URL inválida",
+		"INVALID_BODY": "Cuerpo inválido",
+		"PARSE_ERROR": "Error al analizar la respuesta"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "No se puede modificar el usuario propietario",
+		"CANNOT_DELETE_OWN_USER": "No se puede eliminar tu propia cuenta",
+		"CANNOT_DELETE_LAST_USER": "No se puede eliminar el último usuario",
+		"USER_ALREADY_EXISTS": "El usuario ya existe",
+		"NO_SUGGESTIONS_FOUND": "No se encontraron sugerencias",
+		"CANNOT_DEACTIVATE_LAST_SITE": "No se puede desactivar el último sitio activo"
+	},
 	"ACCOUNT": {
 		"NO_POLKADOT_EXTENSION": "Extensión Polkadot no encontrada"
 	},
@@ -12,17 +61,6 @@
 		"NO_ACCOUNTS_FOUND": "No se encontraron cuentas",
 		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
 		"NO_EXTENSION_FOUND": "Extensión no encontrada"
-	},
-	"GENERAL": {
-		"JSON_LOAD_FAILED": "Error al cargar el archivo JSON",
-		"MNEMONIC_UNDEFINED": "Mnemónico indefinido. Por favor, establece el mnemónico en las variables de entorno",
-		"NO_MNEMONIC_OR_SEED": "No se proporcionó mnemónico ni semilla",
-		"CANT_FIND_KEYRINGPAIR": "No se puede encontrar el keyringpair para {{address}}",
-		"ENVIRONMENT_NOT_READY": "Entorno no listo",
-		"INVALID_SIGNATURE": "Firma inválida",
-		"SITE_KEY_MISSING": "Falta la CLAVE DEL SITIO",
-		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
-		"INVALID_TIMESTAMP": "Marca de tiempo inválida"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Error al codificar dirección inválida",
@@ -82,28 +120,10 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "No se encontró la solución del usuario de la Dapp",
 		"NO_CAPTCHA": "No se encontró captcha",
 		"NO_SESSION_FOUND": "No se encontró ninguna sesión",
+		"IP_ADDRESS_MISMATCH": "Las direcciones IP no coinciden",
 		"INVALID_TOKEN": "Token inválido",
 		"INVALID_SOLUTION": "Solución inválida",
 		"DECRYPTION_ERROR": "Error de descifrado"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Respondiste incorrectamente a uno o más captchas. Por favor, inténtalo de nuevo",
-		"CAPTCHA_PASSED": "Respondiste correctamente a los captchas",
-		"BAD_REQUEST": "Solicitud incorrecta",
-		"USER_VERIFIED": "Usuario verificado",
-		"USER_NOT_VERIFIED": "Usuario no verificado",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Usuario no verificado. La solución del captcha ha expirado.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Usuario no verificado. No se encontró solución de captcha.",
-		"USER_ALREADY_VERIFIED": "Esta solución ya ha sido verificada. El usuario debe completar un nuevo captcha.",
-		"UNKNOWN": "Error desconocido en el API",
-		"SITE_KEY_NOT_REGISTERED": "Clave del sitio no registrada",
-		"INCORRECT_CAPTCHA_TYPE": "Tipo di CAPTCHA errato",
-		"UNAUTHORIZED_ORIGIN_URL": "URL de origen no autorizada",
-		"INVALID_SITE_KEY": "Clave de sitio no válida",
-		"INVALID_IP": "IP no válida",
-		"INVALID_URL": "URL inválida",
-		"INVALID_BODY": "Cuerpo inválido",
-		"PARSE_ERROR": "Error al analizar la respuesta"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parámetro inválido"
@@ -114,7 +134,6 @@
 		"MISSING_PROVIDER_PAIR": "Falta el par de proveedor",
 		"MISSING_ENV_VARIABLE": "Falta una variable de entorno",
 		"GENERAL": "Error general de desarrollo, ver contexto",
-		"MISSING_SECRET_KEY": "Falta la clave secreta",
 		"METHOD_NOT_IMPLEMENTED": "Método no implementado"
 	},
 	"FS": {
@@ -403,6 +422,22 @@
 		"woodpecker": "pájaro-carpintero",
 		"xylophone": "xilófono",
 		"yo-yo": "yo-yo",
-		"zebra": "cebra"
+		"zebra": "cebra",
+		"airplanes": "aviones",
+		"american-flag": "bandera estadounidense",
+		"bonsai": "bonsái",
+		"buddha": "buda",
+		"cannon": "cañón",
+		"coffee-mug": "taza de café",
+		"flashlight": "linterna",
+		"floppy-disk": "disquete",
+		"football-helmet": "casco de fútbol americano",
+		"grand-piano": "piano de cola",
+		"jesus-christ": "jesucristo",
+		"knife": "cuchillo",
+		"leopards": "leopardos",
+		"sword": "espada",
+		"syringe": "jeringa",
+		"tambourine": "pandereta"
 	}
 }

@@ -15,8 +15,9 @@ docker compose --file ./docker/docker-compose.development.yml up -d && \
 npm i && \
 npm run build:all && \
 npm run setup:all && \
-NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle && \
-npm run start:all
+NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle
+NODE_ENV=development npm -w @prosopo/procaptcha-bundle run serve
+NODE_ENV=development npm run start:all
 ```
 
 ### 2. Visit the App

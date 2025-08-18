@@ -35,7 +35,7 @@ import {
 import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import type { OptionalId } from "mongodb";
-import { validiateSiteKey } from "../../api/validateAddress.js";
+import { validateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -91,7 +91,7 @@ export class ClientTaskManager {
 	 */
 	async storeCommitmentsExternal(): Promise<void> {
 		if (!this.config.mongoCaptchaUri) {
-			this.logger.info("Mongo env not set");
+			this.logger.info(() => ({ msg: "Mongo env not set" }));
 			return;
 		}
 
@@ -170,9 +170,9 @@ export class ClientTaskManager {
 						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
 							filteredBatch.map((record) => record.tokenId),
 						);
-					this.logger.info(
-						`Frictionless token records: ${frictionlessTokenRecords.length}`,
-					);
+					this.logger.info(() => ({
+						msg: `Frictionless token records: ${frictionlessTokenRecords.length}`,
+					}));
 					// attach scores to session records
 					const filteredBatchWithScores = filteredBatch.map((record) => {
 						const tokenRecord = frictionlessTokenRecords.find(
@@ -180,10 +180,10 @@ export class ClientTaskManager {
 								tokenRecord._id?.toString() === record.tokenId.toString(),
 						);
 						if (!tokenRecord) {
-							this.logger.error({
-								message: "No token record found",
-								context: { tokenId: record.tokenId },
-							});
+							this.logger.error(() => ({
+								msg: "No token record found",
+								data: { tokenId: record.tokenId },
+							}));
 							return {
 								...record,
 								score: 0,
@@ -224,7 +224,10 @@ export class ClientTaskManager {
 			);
 			this.captchaDB?.close();
 		} catch (e: unknown) {
-			this.logger.error(e);
+			this.logger.error(() => ({
+				err: e,
+				msg: "Error processing client tasks",
+			}));
 			this.captchaDB?.close();
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -240,7 +243,7 @@ export class ClientTaskManager {
 	 */
 	async getClientList(): Promise<void> {
 		if (!this.config.mongoClientUri) {
-			this.logger.info("Mongo env not set");
+			this.logger.info(() => ({ msg: "Mongo env not set" }));
 			return;
 		}
 
@@ -268,9 +271,9 @@ export class ClientTaskManager {
 				? lastTask.updated - tenMinuteWindow || 0
 				: 0;
 
-			this.logger.info({
-				message: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
-			});
+			this.logger.info(() => ({
+				msg: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
+			}));
 
 			const newClientRecords =
 				await clientDB.getUpdatedClients(updatedAtTimestamp);
@@ -293,7 +296,10 @@ export class ClientTaskManager {
 				context: { error: e },
 				logger: this.logger,
 			});
-			this.logger.error(getClientListError, { context: { error: e } });
+			this.logger.error(() => ({
+				err: getClientListError,
+				msg: "Error getting client list",
+			}));
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Failed,
@@ -307,7 +313,7 @@ export class ClientTaskManager {
 		tier: Tier,
 		settings: IUserSettings,
 	): Promise<void> {
-		validiateSiteKey(siteKey);
+		validateSiteKey(siteKey);
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
@@ -317,7 +323,7 @@ export class ClientTaskManager {
 		]);
 	}
 
-	async updateDetectorKey(detectorKey: string): Promise<void> {
+	async updateDetectorKey(detectorKey: string): Promise<string[]> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
@@ -325,6 +331,9 @@ export class ClientTaskManager {
 			});
 		}
 		await this.providerDB.storeDetectorKey(detectorKey);
+
+		const activeDetectorKeys = await this.providerDB.getDetectorKeys();
+		return activeDetectorKeys;
 	}
 
 	async removeDetectorKey(detectorKey: string): Promise<void> {
@@ -337,22 +346,53 @@ export class ClientTaskManager {
 		await this.providerDB.removeDetectorKey(detectorKey);
 	}
 
-	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
+	/**
+	 * Matches a request referrer against an allowed domain pattern.
+	 * Supports global '*', subdomain '*.example.com', glob '*example*',
+	 * plain domains (exact or subdomain), and 'localhost'.
+	 */
+	domainPatternMatcher(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
-		if (clientDomain === "*") return true;
 		try {
-			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
-			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
+			const referrerHost = parseUrl(referrer).hostname.replace(/\.$/, "");
+			const pattern = clientDomain.trim().toLowerCase();
 
+			// Global wildcard
+			if (pattern === "*") return true;
+
+			// Localhost allowance
+			if (pattern === "localhost") {
+				return (
+					referrerHost === "localhost" || referrerHost.startsWith("localhost:")
+				);
+			}
+
+			// Subdomain wildcard: *.example.com
+			if (pattern.startsWith("*.")) {
+				const suffix = pattern.slice(2);
+				const allowed = parseUrl(suffix).hostname.replace(/\.$/, "");
+				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
+			}
+
+			// General glob pattern: convert * to .*
+			if (pattern.includes("*")) {
+				const escaped = pattern
+					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
+					.replace(/\*/g, ".*");
+				const regex = new RegExp(`^${escaped}$`, "i");
+				return regex.test(referrerHost);
+			}
+
+			// Exact or subdomain match for plain domains
+			const allowedHost = parseUrl(pattern).hostname.replace(/\.$/, "");
 			return (
-				referrerDomain === allowedDomain ||
-				referrerDomain.endsWith(`.${allowedDomain}`)
+				referrerHost === allowedHost || referrerHost.endsWith(`.${allowedHost}`)
 			);
-		} catch {
-			this.logger.error({
-				message: "Error in isSubdomainOrExactMatch",
-				context: { referrer, clientDomain },
-			});
+		} catch (e) {
+			this.logger.error(() => ({
+				msg: "Error in domainPatternMatcher",
+				data: { referrer, clientDomain },
+			}));
 			return false;
 		}
 	}

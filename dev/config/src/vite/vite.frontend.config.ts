@@ -14,7 +14,6 @@
 
 import { builtinModules } from "node:module";
 import path from "node:path";
-import { getLogger } from "@prosopo/common";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import { wasm } from "@rollup/plugin-wasm";
@@ -24,10 +23,10 @@ import type { ExternalOption } from "rollup";
 import css from "rollup-plugin-import-css";
 import { visualizer } from "rollup-plugin-visualizer";
 import type { UserConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { filterDependencies, getDependencies } from "../dependencies.js";
 import { VitePluginCloseAndCopy } from "./index.js";
 import type { ClosePluginOptions } from "./vite-plugin-close-and-copy.js";
-const logger = getLogger("Info", "vite.config.js");
 
 export default async function (
 	packageName: string,
@@ -51,13 +50,13 @@ export default async function (
 			? process.env.NODE_ENV
 			: mode;
 
-	logger.info(`Running at ${dir} in ${mode} mode`);
+	console.info(`Running at ${dir} in ${mode} mode`);
 	const isProduction = mode === "production";
 	// NODE_ENV must be wrapped in quotes.
 	// If NODE_ENV ends up out of sync (one set to development and the other set to production), it causes
 	// issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
 	process.env.NODE_ENV = `${process.env.NODE_ENV || mode}`;
-	logger.info(`NODE_ENV: ${process.env.NODE_ENV}`);
+	console.info(`NODE_ENV: ${process.env.NODE_ENV}`);
 
 	// Set the env vars that we want to be available in the browser
 	const define = {
@@ -82,13 +81,16 @@ export default async function (
 		"process.env.PROSOPO_DOCS_URL": JSON.stringify(
 			process.env.PROSOPO_DOCS_URL,
 		),
+		"process.env.PROSOPO_LOG_LEVEL": JSON.stringify(
+			process.env.PROSOPO_LOG_LEVEL,
+		),
 		// only needed if bundling with a site key
 		"process.env.PROSOPO_SITE_KEY": JSON.stringify(
 			process.env.PROSOPO_SITE_KEY,
 		),
 	};
 
-	logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`);
+	console.info(`Env vars: ${JSON.stringify(define, null, 4)}`);
 
 	// Get all dependencies of the current package
 	const { dependencies: deps, optionalPeerDependencies } =
@@ -111,7 +113,7 @@ export default async function (
 		...external,
 		...optionalPeerDependencies,
 	];
-	logger.debug(
+	console.debug(
 		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
 	);
 
@@ -130,7 +132,7 @@ export default async function (
 
 	const rollupExternal: ExternalOption = allExternal;
 
-	logger.info("Bundle name", bundleName);
+	console.info({ bundleName }, "Bundle name");
 	return {
 		server: {
 			host: "127.0.0.1",
@@ -192,8 +194,13 @@ export default async function (
 				},
 
 				plugins: [
-					css(),
-					wasm(),
+					nodePolyfills({
+						include: ["crypto"],
+					}),
+					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+					css() as any,
+					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+					wasm() as any,
 					// @ts-ignore
 					nodeResolve({
 						browser: true,
@@ -201,7 +208,28 @@ export default async function (
 						rootDir: path.resolve(dir, "../../"),
 						dedupe: ["react", "react-dom"],
 						modulesOnly: true,
-					}),
+						// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+					}) as any,
+					// String replacement plugin for fingerprinting code
+					{
+						name: "string-replace-fingerprint",
+						generateBundle(_, bundle) {
+							for (const fileName in bundle) {
+								const chunk = bundle[fileName];
+								if (
+									chunk &&
+									chunk.type === "chunk" &&
+									"code" in chunk &&
+									chunk.code
+								) {
+									chunk.code = chunk.code.replace(
+										/var request = new XMLHttpRequest\(\);\s*request\.open\("get", "https:\/\/m1\.openfpcdn\.io\/fingerprintjs\/v"\.concat\(version, "\/npm-monitoring"\), true\);\s*request\.send\(\);/g,
+										"",
+									);
+								}
+							}
+						},
+					},
 					visualizer({
 						open: true,
 						template: "treemap", //'list',

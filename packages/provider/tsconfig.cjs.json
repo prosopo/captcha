@@ -12,6 +12,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../api-route/tsconfig.cjs.json"
 		},
 		{
@@ -21,9 +24,6 @@
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../../dev/config/tsconfig.cjs.json"
-		},
-		{
 			"path": "../database/tsconfig.cjs.json"
 		},
 		{
@@ -31,6 +31,9 @@
 		},
 		{
 			"path": "../env/tsconfig.cjs.json"
+		},
+		{
+			"path": "../load-balancer/tsconfig.cjs.json"
 		},
 		{
 			"path": "../keyring/tsconfig.cjs.json"
@@ -48,7 +51,16 @@
 			"path": "../util/tsconfig.cjs.json"
 		},
 		{
+			"path": "../util-crypto/tsconfig.cjs.json"
+		},
+		{
 			"path": "../user-access-policy/tsconfig.cjs.json"
+		},
+		{
+			"path": "../api/tsconfig.cjs.json"
+		},
+		{
+			"path": "../locale/tsconfig.cjs.json"
 		}
 	]
 }

@@ -1,0 +1,37 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"lib": ["ES2021", "dom"],
+		"types": ["cypress", "node"],
+		"noEmit": true,
+		"noEmitOnError": true,
+		"sourceMap": false
+	},
+	"include": ["src/**/*.ts"],
+	"references": [
+		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/util"
+		},
+		{
+			"path": "../../packages/common"
+		},
+		{
+			"path": "../../packages/datasets"
+		},
+		{
+			"path": "../../packages/types-database"
+		},
+		{
+			"path": "../../packages/keyring"
+		},
+		{
+			"path": "../../packages/dotenv"
+		}
+	]
+}

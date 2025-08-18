@@ -85,9 +85,11 @@ export const Manager = (
 
 	const getConfig = () => {
 		const config: ProcaptchaClientConfigInput = {
-			userAccountAddress: "",
+			userAccountAddress: configInput.userAccountAddress || "",
 			...configInput,
 		};
+
+		console.log("Using config:", config);
 
 		// overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user
 		// changes account in the middle of the captcha process.
@@ -177,6 +179,7 @@ export const Manager = (
 
 				// use the passed in account (could be web3) or create a new account
 				const user = await selectAccount();
+				console.log("User", user);
 				const userAccount = user.account.address;
 
 				// set the account created or injected by the extension
