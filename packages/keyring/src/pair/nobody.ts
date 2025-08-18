@@ -6,6 +6,7 @@ import type {
 	KeyringPair$Json,
 	KeyringPair$Meta,
 } from "@prosopo/types";
+import type { JWT } from "@prosopo/util-crypto";
 
 // empty publicKey
 const publicKey = new Uint8Array(32);
@@ -36,6 +37,12 @@ const pair: KeyringPair = {
 	derive: (_suri: string, _meta?: KeyringPair$Meta): KeyringPair => pair,
 	encodePkcs8: (_passphrase?: string): Uint8Array => new Uint8Array(0),
 	isLocked: true,
+	jwtIssue: (_options?: { expiresIn?: number; notBefore?: number }): JWT =>
+		"jwt.dummy.token",
+	jwtVerify: (
+		_jwt: JWT,
+		_options?: { ignoreExpiration?: boolean; ignoreNotBefore?: boolean },
+	): boolean => false,
 	lock: (): void => {
 		// no locking, it is always locked
 	},

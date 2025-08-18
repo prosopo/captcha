@@ -46,3 +46,23 @@ export const base64Decode = /*#__PURE__*/ createDecode(config, base64Validate);
  * From the provided input, create the base64 and return the result as a string.
  */
 export const base64Encode = /*#__PURE__*/ createEncode(config);
+
+/**
+ * @name base64URLDecode
+ * @summary Decodes a base64url value.
+ */
+export const base64URLDecode = (input: string): Uint8Array => {
+	// Convert base64url to base64 by replacing URL-safe characters
+	const b64 = input.replace(/-/g, "+").replace(/_/g, "/");
+	// Decode the base64 string
+	return base64Decode(b64);
+};
+
+/**
+ * @name base64URLEncode
+ * @summary Creates a base64url value.
+ */
+export const base64URLEncode = (input: Uint8Array | string): string => {
+	const b64 = base64Encode(input);
+	return b64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+};

@@ -4,6 +4,7 @@
 import type { HexString } from "@polkadot/util/types";
 import type {
 	EncryptedJson,
+	JWT,
 	Keypair,
 	KeypairType,
 	Prefix,
@@ -97,6 +98,8 @@ export interface KeyringPair {
 	decodePkcs8(passphrase?: string, encoded?: Uint8Array): void;
 	derive(suri: string, meta?: KeyringPair$Meta): KeyringPair;
 	encodePkcs8(passphrase?: string): Uint8Array;
+	jwtIssue(options?: { expiresIn?: number; notBefore?: number }): JWT;
+	jwtVerify(jwt: JWT): boolean;
 	lock(): void;
 	setMeta(meta: KeyringPair$Meta): void;
 	sign(message: string | Uint8Array, options?: SignOptions): Uint8Array;

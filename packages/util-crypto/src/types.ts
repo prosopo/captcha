@@ -31,3 +31,5 @@ export interface VerifyResult {
 	/** The extracted publicKey */
 	publicKey: Uint8Array;
 }
+
+export type JWT = `${string}.${string}.${string}`;
