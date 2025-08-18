@@ -10,3 +10,4 @@ export { sr25519Sign } from "./sign.js";
 export { sr25519Verify } from "./verify.js";
 export { sr25519VrfSign } from "./vrfSign.js";
 export { sr25519VrfVerify } from "./vrfVerify.js";
+export { sr25519jwtIssue, sr25519jwtVerify } from "./jwt.js";

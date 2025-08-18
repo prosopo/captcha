@@ -34,7 +34,7 @@ import { Tasks } from "../tasks/tasks.js";
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
+ * @param {ProviderEnvironment} env - The Prosopo environment
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
@@ -212,7 +212,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 				return res.json(verificationResponse);
 			} catch (err) {
-				console.error("\nError in verifyPowCaptchaSolution:", err);
 				req.logger.error(() => ({ err, data: { body: req.body } }));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {

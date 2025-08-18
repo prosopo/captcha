@@ -17,7 +17,12 @@ import {
 	u8aToU8a,
 } from "@polkadot/util";
 
-import { blake2AsU8a } from "@prosopo/util-crypto";
+import {
+	type JWT,
+	blake2AsU8a,
+	sr25519jwtIssue,
+	sr25519jwtVerify,
+} from "@prosopo/util-crypto";
 import type { EncryptedJsonEncoding } from "@prosopo/util-crypto";
 import { keyExtractPath, keyFromPath } from "@prosopo/util-crypto";
 import { secp256k1Compress } from "@prosopo/util-crypto";
@@ -59,6 +64,34 @@ const TYPE_PREFIX = {
 
 const TYPE_SIGNATURE = {
 	sr25519: sr25519Sign,
+	ed25519: () => {
+		throw new Error("Not Implemented");
+	},
+	ecdsa: () => {
+		throw new Error("Not Implemented");
+	},
+	ethereum: () => {
+		throw new Error("Not Implemented");
+	},
+};
+
+const TYPE_JWT_ISSUE = {
+	sr25519: sr25519jwtIssue,
+	ed25519: () => {
+		throw new Error("Not Implemented");
+	},
+	ecdsa: () => {
+		throw new Error("Not Implemented");
+	},
+	ethereum: () => {
+		throw new Error("Not Implemented");
+	},
+};
+
+const TYPE_JWT_VERIFY = {
+	sr25519: (jwt: JWT, publicKey: Uint8Array): boolean => {
+		return sr25519jwtVerify(jwt, publicKey);
+	},
 	ed25519: () => {
 		throw new Error("Not Implemented");
 	},
@@ -198,6 +231,15 @@ export function createPair(
 		},
 		encodePkcs8: (passphrase?: string): Uint8Array => {
 			return recode(passphrase);
+		},
+		jwtIssue: (): JWT => {
+			if (isLocked(secretKey)) {
+				throw new Error("Cannot sign with a locked key pair");
+			}
+			return TYPE_JWT_ISSUE[type]({ publicKey, secretKey });
+		},
+		jwtVerify: (jwt: JWT): boolean => {
+			return TYPE_JWT_VERIFY[type](jwt, publicKey);
 		},
 		lock: (): void => {
 			secretKey = new Uint8Array([]);

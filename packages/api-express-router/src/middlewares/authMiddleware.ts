@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { hexToU8a, isHex } from "@polkadot/util";
+import { hexToU8a, isHex, stringToU8a } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
+import { type JWT, sr25519Verify } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = (
@@ -23,13 +24,13 @@ export const authMiddleware = (
 ) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const { signature, timestamp } = extractHeaders(req);
+			const jwt = extractJWT(req);
 
 			let error: ProsopoApiError | undefined;
 
 			if (authAccount) {
 				try {
-					verifySignature(signature, timestamp, authAccount);
+					authAccount.jwtVerify(jwt);
 					next();
 					return;
 				} catch (e: unknown) {
@@ -45,7 +46,7 @@ export const authMiddleware = (
 			}
 
 			if (pair) {
-				verifySignature(signature, timestamp, pair);
+				pair.jwtVerify(jwt);
 				next();
 				return;
 			}
@@ -63,43 +64,16 @@ export const authMiddleware = (
 	};
 };
 
-const extractHeaders = (req: Request) => {
-	const signature = req.headers.signature as string;
-	const timestamp = req.headers.timestamp as string;
+const extractJWT = (req: Request) => {
+	const jwt = req.headers.jwt as string;
 
-	if (!timestamp) {
-		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
-			context: { error: "Missing timestamp", code: 400 },
+	if (!jwt) {
+		throw new ProsopoApiError("GENERAL.INVALID_JWT", {
+			context: { error: "Missing JWT", code: 400 },
 		});
 	}
 
-	if (!signature) {
-		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
-			context: { error: "Missing signature", code: 400 },
-		});
-	}
-
-	if (
-		Array.isArray(signature) ||
-		Array.isArray(timestamp) ||
-		!isHex(signature)
-	) {
-		throw new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
-			context: { error: "Invalid header format", code: 400 },
-		});
-	}
-
-	// check if timestamp is from the last 5 minutes
-	const now = new Date().getTime();
-	const ts = Number.parseInt(timestamp);
-
-	if (now - ts > 300000) {
-		throw new ProsopoApiError("GENERAL.INVALID_TIMESTAMP", {
-			context: { error: "Timestamp is too old", code: 400 },
-		});
-	}
-
-	return { signature, timestamp };
+	return jwt as JWT;
 };
 
 export const verifySignature = (
