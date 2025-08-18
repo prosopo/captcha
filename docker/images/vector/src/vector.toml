@@ -359,7 +359,7 @@ source = '''
 [sources.redis_metrics]
 type = "redis"
 key = "vector"
-url = "redis://:REDIS_CONNECTION_PASSWORD@redis-stack:6379/0"
+url = "redis://:${REDIS_CONNECTION_PASSWORD:?err}@redis-stack:6379/0"
 
 [transforms.redis_metrics_format]
 type = "remap"
