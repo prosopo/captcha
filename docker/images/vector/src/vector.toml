@@ -437,7 +437,7 @@ match = parse_regex!(.raw, r'^(?P<pid>\d+):(?P<role>[A-Z])\s+(?P<day>\d{1,2})\s+
 .level = if .level_symbol == "*" { "info" } else if .level_symbol == "#" { "warn" } else if .level_symbol == "X" { "error" } else { "notice" }
 
 # Build timestamp
-ts_str = string!(match.day) + " " + string!(match.mon) + " " + string!(match.year) + " " + string!(match.time)
+ts_str = string(match.day) + " " + string(match.mon) + " " + string(match.year) + " " + string(match.time)
 .timestamp = parse_timestamp!(ts_str, "%d %b %Y %T%.3f")
 
 .host=get_env_var!("OO_HOST")
