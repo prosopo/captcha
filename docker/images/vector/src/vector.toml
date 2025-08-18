@@ -357,7 +357,7 @@ source = '''
 # Source: Collect metrics from Redis instance
 # Monitors Redis performance, memory usage, and connection statistics
 [sources.redis_metrics]
-type = "http_client"
+type = "prometheus_scrape"
 endpoint = "http://redis-exporter:9121/metrics"
 
 [transforms.redis_metrics_format]
