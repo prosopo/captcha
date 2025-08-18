@@ -358,7 +358,7 @@ source = '''
 # Monitors Redis performance, memory usage, and connection statistics
 [sources.redis_metrics]
 type = "prometheus_scrape"
-endpoint = "http://redis-exporter:9121/metrics"
+endpoints = [ "http://redis-exporter:9121/metrics" ]
 
 [transforms.redis_metrics_format]
 type = "remap"
