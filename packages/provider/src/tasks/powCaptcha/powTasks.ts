@@ -26,7 +26,10 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaRecord,
+} from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
 import { validateIpAddress } from "../../util.js";
@@ -177,6 +180,8 @@ export class PowCaptchaManager extends CaptchaManager {
 		timeout: number,
 		ip?: string,
 	): Promise<{ verified: boolean; score?: number }> {
+		const notVerifiedResponse = { verified: false };
+
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
@@ -184,16 +189,24 @@ export class PowCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
-			return { verified: false };
+
+			return notVerifiedResponse;
 		}
 
-		const challengeIpAddress = getIpAddressFromComposite(
-			challengeRecord.ipAddress,
-		);
+		if (ip) {
+			const challengeIpAddress = getIpAddressFromComposite(
+				challengeRecord.ipAddress,
+			);
 
-		const ipValidation = validateIpAddress(ip, challengeIpAddress, this.logger);
-		if (!ipValidation.isValid) {
-			return { verified: false };
+			const ipValidation = validateIpAddress(
+				ip,
+				challengeIpAddress,
+				this.logger,
+			);
+
+			if (!ipValidation.isValid) {
+				return notVerifiedResponse;
+			}
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -205,7 +218,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return { verified: false };
+		if (challengeRecord.serverChecked) return notVerifiedResponse;
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -226,7 +239,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		]);
 
 		if (!recent) {
-			return { verified: false };
+			return notVerifiedResponse;
 		}
 
 		let score: number | undefined;

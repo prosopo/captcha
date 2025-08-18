@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { LogRecordFn, Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
 import { ScheduledTaskNames } from "@prosopo/types";
 import type {
 	IProviderDatabase,
 	ScheduledTaskRecord,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
-import { Address4 } from "ip-address";
+import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
@@ -123,7 +123,7 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when when an IPV4 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
 		const testIp = "::ffff:82.43.214.180";
-		const ipAddress = Address4.fromBigInt(BigInt(1378604724));
+		const ipAddress = Address6.fromBigInt(BigInt(1378604724));
 
 		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 
@@ -142,7 +142,7 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when when an IPV6 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
 		const testIp = "82.43.214.180";
-		const ipAddress = Address4.fromBigInt(BigInt(81472060348084n));
+		const ipAddress = Address6.fromBigInt(BigInt(1378604724n));
 
 		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 
@@ -158,7 +158,7 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when when an IPV6 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
 		const testIp = "::ffff:82.43.214.180";
-		const ipAddress = Address4.fromBigInt(BigInt(281472060348084n));
+		const ipAddress = Address6.fromBigInt(BigInt(281472060348084n));
 
 		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 

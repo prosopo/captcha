@@ -21,9 +21,10 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PoWCaptchaStored,
+import {
+	type IProviderDatabase,
+	IpAddressType,
+	type PoWCaptchaStored,
 } from "@prosopo/types-database";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -284,12 +285,12 @@ describe("PowCaptchaManager", () => {
 			const userAccount = "testUserAccount";
 			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
 			const timeout = 1000;
-			const challengeRecord = {
+			const challengeRecord: Partial<PoWCaptchaStored> = {
 				challenge,
 				dappAccount,
 				userAccount,
-				timestamp,
-				checked: false,
+				requestedAtTimestamp: timestamp,
+				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
@@ -344,14 +345,17 @@ describe("PowCaptchaManager", () => {
 			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
 			const timeout = 1000;
 			const ipAddress = "8.8.8.8";
-			const challengeRecord = {
+			const challengeRecord: Partial<PoWCaptchaStored> = {
 				challenge,
 				dappAccount,
 				userAccount,
-				timestamp,
-				checked: false,
+				requestedAtTimestamp: timestamp,
+				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
-				ipAddress: getIPAddress("1.1.1.1").bigInt(),
+				ipAddress: {
+					lower: getIPAddress("1.1.1.1").bigInt(),
+					type: IpAddressType.v4,
+				},
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
