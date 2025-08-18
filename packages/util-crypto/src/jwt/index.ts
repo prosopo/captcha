@@ -5,4 +5,4 @@
  * @summary Utilities for working with JWTs
  */
 
-export { jwtVerify } from "./verify.js";
+export { jwtVerify } from "./jwtVerify.js";
