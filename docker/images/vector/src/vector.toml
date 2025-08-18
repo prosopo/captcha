@@ -357,9 +357,8 @@ source = '''
 # Source: Collect metrics from Redis instance
 # Monitors Redis performance, memory usage, and connection statistics
 [sources.redis_metrics]
-type = "redis"
-key = "vector"
-url = "redis://:${REDIS_CONNECTION_PASSWORD:?err}@redis-stack:6379/0"
+type = "http_client"
+endpoint = "http://redis-exporter:9121/metrics"
 
 [transforms.redis_metrics_format]
 type = "remap"

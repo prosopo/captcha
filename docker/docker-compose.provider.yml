@@ -166,6 +166,16 @@ services:
             retries: 3
             start_period: 10s
 
+    redis-exporter:
+        image: oliver006/redis_exporter:latest
+        container_name: redis-exporter
+        depends_on:
+            redis-stack:
+                condition: service_healthy
+        environment:
+            - REDIS_ADDR=redis://redis-stack:6379
+            - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD}
+
     cadvisor:
         image: gcr.io/cadvisor/cadvisor:v0.52.1
         container_name: cadvisor
@@ -216,9 +226,6 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
-        depends_on:
-            redis-stack:
-                condition: service_healthy
 
 networks:
     internal:
