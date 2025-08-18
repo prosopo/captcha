@@ -82,6 +82,7 @@ import {
 } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
 import { type RedisClientType, createClient } from "redis";
+import { string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -1377,13 +1378,17 @@ export class ProviderDatabase
 
 	/**
 	 * @description Get dapp user solution by ID
-	 * @param {string[]} commitmentId
+	 * @param {string[]} commitmentIds
 	 */
-	async getDappUserSolutionById(
-		commitmentId: string,
-	): Promise<UserSolutionRecord | undefined> {
-		const filter: Pick<UserSolutionRecord, "commitmentId"> = {
-			commitmentId: commitmentId,
+	async getDappUserSolutionsById(
+		commitmentIds: string[],
+	): Promise<UserSolutionRecord[]> {
+		const filter: {
+			[key in keyof Pick<UserSolutionRecord, "commitmentId">]: {
+				$in: string[];
+			};
+		} = {
+			commitmentId: { $in: commitmentIds },
 		};
 		const project = { projection: { _id: 0 } };
 		const cursor = this.tables?.usersolution?.findOne(filter, project).lean();
@@ -1394,7 +1399,7 @@ export class ProviderDatabase
 		}
 
 		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {
-			context: { failedFuncName: this.getCaptchaById.name, commitmentId },
+			context: { failedFuncName: this.getCaptchaById.name, commitmentIds },
 		});
 	}
 

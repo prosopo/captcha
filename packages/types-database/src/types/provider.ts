@@ -528,8 +528,8 @@ export interface IProviderDatabase extends IDatabase {
 		size: number,
 	): Promise<CaptchaSolution[]>;
 
-	getDappUserSolutionById(
-		commitmentId: string,
+	getDappUserSolutionsById(
+		commitmentId: string[],
 	): Promise<UserSolutionRecord | undefined>;
 
 	getDappUserCommitmentById(
