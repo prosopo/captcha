@@ -57,21 +57,27 @@ export default (
 				const userSolutions =
 					await tasks.db.getDappUserSolutionById(commitmentId);
 				if (!userSolutions || userSolutions.length === 0) {
-					logger.error("No solutions found for this commitment ID");
+					logger.error(() => ({
+						err: "No solutions found for this commitment ID",
+					}));
 					return;
 				}
 				const captchaIds = userSolutions.map((captcha) => captcha.captchaId);
 				const captchas = await tasks.db.getCaptchaById(captchaIds);
 
 				if (!captchas || captchas.length === 0) {
-					logger.error("No captchas found for this commitment ID");
+					logger.error(() => ({
+						err: "No captchas found for this commitment ID",
+					}));
 					return;
 				}
 
 				const solutions = await tasks.db.getSolutionsByCaptchaIds(captchaIds);
 
 				if (!solutions || solutions.length === 0) {
-					logger.error("No solutions found for this commitment ID");
+					logger.error(() => ({
+						err: "No solutions found for this commitment ID",
+					}));
 					return;
 				}
 
@@ -98,7 +104,7 @@ export default (
 
 				// dump the captchasWithSolutions to the directory as a JSON file
 				const filePath = path.join(commitmentDir, `${commitmentId}.json`);
-				logger.info("Writing to", filePath);
+				logger.info(() => ({ msg: `Writing to ${filePath}` }));
 				fs.writeFileSync(
 					filePath,
 					JSON.stringify(captchasWithSolutions, null, 2),
@@ -147,13 +153,13 @@ export default (
 								`${imageHash}${solution}${userSolution}.jpg`,
 							);
 
-							logger.info("Writing to", imageFilePath);
+							logger.info(() => ({ msg: `Writing to ${imageFilePath}` }));
 							fs.writeFileSync(imageFilePath, imageBuffer);
 						}
 					}
 				}
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err: err }));
 			}
 		},
 		middlewares: [],
