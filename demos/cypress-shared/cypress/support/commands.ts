@@ -18,14 +18,12 @@ import {
 	type Captcha,
 	type CaptchaType,
 	type IUserSettings,
-	type RegisterSitekeyBodyTypeOutput,
 	Tier,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
 import { u8aToHex } from "@polkadot/util";
-import type { ApiEndpointResponse } from "@prosopo/api-route";
-import { getPairAsync } from "@prosopo/keyring";
+import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
 declare global {
@@ -47,10 +45,21 @@ declare global {
 			elementExists(element: string): Chainable<Subject>;
 
 			registerSiteKey(
+				baseCaptchaType: CaptchaType,
 				captchaType?: CaptchaType,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
+
+			// Wait for the procaptcha script to load and be ready
+			waitForProcaptchaScript(): Cypress.Chainable<void>;
 		}
+	}
+}
+
+// Extend the AUTWindow interface to include the procaptcha property
+declare global {
+	interface Window {
+		procaptcha?: unknown;
 	}
 }
 
@@ -65,38 +74,83 @@ export function getWidgetElement(
 	return cy.get(selector, options);
 }
 
-function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
-	cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
-		"getCaptcha",
-	);
-	getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+/**
+ * Wait for the procaptcha script to be loaded, handling async defer scripts
+ * This is especially important when the script has async and defer attributes
+ */
+function waitForProcaptchaScript(): Cypress.Chainable<void> {
+	return cy.window().then((win) => {
+		return new Cypress.Promise<void>((resolve) => {
+			// Check if procaptcha is already loaded
+			if (win.procaptcha) {
+				resolve();
+				return;
+			}
 
-	return cy
-		.wait("@getCaptcha", { timeout: 36000 })
-		.its("response")
-		.then((response) => {
-			expect(response).to.not.be.undefined;
-			expect(response?.statusCode).to.equal(200);
-			expect(response?.body).to.have.property("captchas");
-			const captchas = response?.body.captchas;
-			console.log(
-				"-----------------------------captchas",
-				captchas,
-				"length",
-				captchas.length,
-			);
-			expect(captchas).to.have.lengthOf(2);
-			expect(captchas[0]).to.have.property("items");
-			console.log(
-				"-----------------------------captchas[0].items",
-				captchas[0].items,
-				"length",
-				captchas[0].items.length,
-			);
-			expect(captchas[0].items).to.have.lengthOf(9);
-			return captchas;
-		})
-		.as("captchas");
+			// If not loaded yet, set up a check that runs repeatedly
+			const checkInterval = 100; // ms
+			const maxWaitTime = 10000; // 10 seconds max wait
+			let elapsed = 0;
+
+			const checkForProcaptcha = () => {
+				if (win.procaptcha) {
+					resolve();
+					return;
+				}
+
+				elapsed += checkInterval;
+				if (elapsed >= maxWaitTime) {
+					// If max wait time exceeded, continue anyway - test will likely fail but this avoids hanging
+					cy.log(
+						"Warning: procaptcha script did not load within the expected time",
+					);
+					resolve();
+					return;
+				}
+
+				setTimeout(checkForProcaptcha, checkInterval);
+			};
+
+			checkForProcaptcha();
+		});
+	});
+}
+
+function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
+	// First wait for the procaptcha script to be loaded
+	return cy.waitForProcaptchaScript().then(() => {
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+			"getCaptcha",
+		);
+		getWidgetElement(checkboxClass, { timeout: 12000 }).first().click();
+
+		return cy
+			.wait("@getCaptcha", { timeout: 36000 })
+			.its("response")
+			.then((response) => {
+				expect(response).to.not.be.undefined;
+				expect(response?.statusCode).to.equal(200);
+				expect(response?.body).to.have.property("captchas");
+				const captchas = response?.body.captchas;
+				console.log(
+					"-----------------------------captchas",
+					captchas,
+					"length",
+					captchas.length,
+				);
+				expect(captchas).to.have.lengthOf(2);
+				expect(captchas[0]).to.have.property("items");
+				console.log(
+					"-----------------------------captchas[0].items",
+					captchas[0].items,
+					"length",
+					captchas[0].items.length,
+				);
+				expect(captchas[0].items).to.have.lengthOf(9);
+				return captchas;
+			})
+			.as("captchas");
+	});
 }
 
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
@@ -183,40 +237,54 @@ function elementExists(selector: string) {
 		.then(($window) => $window.document.querySelector(selector));
 }
 
-function registerSiteKey(captchaType: CaptchaType) {
+function registerSiteKey(
+	baseCaptchaType: CaptchaType,
+	captchaType?: CaptchaType,
+) {
+	const siteKey = Cypress.env(
+		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
+	);
+	if (!siteKey) {
+		throw new Error(
+			`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()} is not set in the environment variables.`,
+		);
+	}
+
+	cy.task(
+		"log",
+		`Registering site key  ${siteKey} for captcha type: ${captchaType || baseCaptchaType}`,
+	);
 	const timestamp = new Date().getTime();
 
 	return cy.then(() => {
-		return getPairAsync(Cypress.env("PROSOPO_PROVIDER_MNEMONIC")).then(
-			(pair) => {
-				const signature = u8aToHex(pair.sign(timestamp.toString()));
-				const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
+		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const signature = u8aToHex(pair.sign(timestamp.toString()));
+		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
-				const settings: IUserSettings = {
-					captchaType: captchaType,
-					domains: ["0.0.0.0", "localhost", "*"],
-					frictionlessThreshold: 0.5,
-					powDifficulty: 2,
-				};
+		const settings: IUserSettings = {
+			captchaType: captchaType || baseCaptchaType,
+			domains: ["0.0.0.0", "localhost", "*"],
+			frictionlessThreshold: 0.5,
+			powDifficulty: 2,
+			imageThreshold: 0.8,
+		};
 
-				// Use cy.request() to ensure Cypress correctly queues the request
-				return cy.request({
-					method: "POST",
-					url: adminSiteKeyURL,
-					headers: {
-						"Content-Type": "application/json",
-						signature: signature,
-						timestamp: timestamp.toString(),
-					},
-					body: {
-						siteKey: Cypress.env("PROSOPO_SITE_KEY"),
-						tier: Tier.Free,
-						settings,
-					},
-					failOnStatusCode: false, // Allow handling of non-200 responses manually
-				});
+		// Use cy.request() to ensure Cypress correctly queues the request
+		return cy.request({
+			method: "POST",
+			url: adminSiteKeyURL,
+			headers: {
+				"Content-Type": "application/json",
+				signature: signature,
+				timestamp: timestamp.toString(),
 			},
-		);
+			body: {
+				siteKey: siteKey,
+				tier: Tier.Free,
+				settings,
+			},
+			failOnStatusCode: false, // Allow handling of non-200 responses manually
+		});
 	});
 }
 
@@ -228,4 +296,5 @@ Cypress.Commands.addAll({
 	clickNextButton,
 	elementExists,
 	registerSiteKey,
+	waitForProcaptchaScript,
 });

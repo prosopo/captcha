@@ -25,6 +25,7 @@ function createConfig(
 	language?: (typeof Languages)[keyof typeof Languages],
 	web2 = true,
 	invisible = false,
+	userAccountAddress?: string,
 ): ProcaptchaClientConfigOutput {
 	if (!siteKey) {
 		siteKey = process.env.PROSOPO_SITE_KEY || "";
@@ -34,7 +35,7 @@ function createConfig(
 		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
 			? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
 			: EnvironmentTypesSchema.enum.development,
-		userAccountAddress: "",
+		userAccountAddress: userAccountAddress || "",
 		account: {
 			address: siteKey,
 		},

@@ -1,4 +1,3 @@
-import { decodeAddress, encodeAddress } from "@polkadot/keyring";
 import {
 	hexToBn,
 	hexToString,
@@ -31,6 +30,7 @@ import {
 	keccakAsU8a,
 } from "@polkadot/util-crypto";
 import { get } from "@prosopo/util";
+import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 
 function main() {
 	const fns: {

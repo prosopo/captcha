@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
+import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 
 export default (
@@ -37,10 +37,10 @@ export default (
 				await tasks.clientTaskManager
 					.storeCommitmentsExternal()
 					.catch((err) => {
-						env.logger.error(err);
+						env.logger.error(() => ({ err }));
 					});
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

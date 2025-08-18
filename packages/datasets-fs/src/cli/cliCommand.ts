@@ -1,6 +1,3 @@
-import { Loggable } from "@prosopo/common";
-import { kebabCase } from "@prosopo/util";
-import type { Options } from "yargs";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +11,15 @@ import type { Options } from "yargs";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { getLogger } from "@prosopo/common";
+import { kebabCase } from "@prosopo/util";
+import type { Options } from "yargs";
 import type * as z from "zod";
 
-export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
+export abstract class CliCommand<T extends z.ZodTypeAny> {
+	logger = getLogger("info", import.meta.url);
+
 	// get the options for the CLI
 	public getOptions(): {
 		[key: string]: Options;
@@ -32,23 +35,23 @@ export abstract class CliCommand<T extends z.ZodTypeAny> extends Loggable {
 	public async parse(args: unknown): Promise<z.infer<T>> {
 		const argsSchema = this.getArgSchema();
 		const parsed = await argsSchema.parse(args);
-		this.logger.debug("parsed args:", parsed);
+		this.logger.debug(() => ({ data: { parsed }, msg: "parsed args:" }));
 		return parsed;
 	}
 
 	// run any checks before the main run function. This function should have no side effects, i.e. not write to disk. It's purely for conducting checks / setting up
 	public async _check(args: z.infer<T>) {
-		this.logger.debug("runChecks");
+		this.logger.debug(() => ({ msg: "runChecks", args }));
 	}
 
 	// the main run function. This should be the function that does the work
 	public async _run(args: z.infer<T>) {
-		this.logger.debug("run");
+		this.logger.debug(() => ({ msg: "run", args }));
 	}
 
 	// exec is a public facing function that should be called by the CLI. It will run the preRun, run, and postRun functions in order
 	public async exec(args: z.infer<T>) {
-		this.logger.debug("exec");
+		this.logger.debug(() => ({ msg: "exec", args }));
 		// run any checks
 		await this._check(args);
 		// then run the command

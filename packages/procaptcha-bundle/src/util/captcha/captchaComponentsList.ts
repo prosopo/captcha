@@ -19,9 +19,9 @@ import { FrictionlessCaptcha } from "./components/frictionlessCaptcha.js";
 import { ImageCaptcha } from "./components/imageCaptcha.js";
 import { PowCaptcha } from "./components/powCaptcha.js";
 
-const captchaComponentsList: Record<
-	CaptchaType,
-	React.ComponentType<CaptchaProps>
+const captchaComponentsList: Pick<
+	Record<CaptchaType, React.ComponentType<CaptchaProps>>,
+	CaptchaType.image | CaptchaType.pow | CaptchaType.frictionless
 > = {
 	[CaptchaType.image]: ImageCaptcha,
 	[CaptchaType.pow]: PowCaptcha,

@@ -1,8 +1,9 @@
 {
 	"name": "@prosopo/account",
-	"version": "2.5.5",
+	"version": "2.7.15",
 	"description": "Services and Utils for Prosopo account gen and management",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -10,15 +11,27 @@
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./extension/ExtensionWeb2": {
+			"import": "./dist/extension/ExtensionWeb2.js",
+			"require": "./dist/cjs/extension/ExtensionWeb2.cjs",
+			"default": "./dist/extension/ExtensionWeb2.js"
+		},
+		"./extension/ExtensionWeb3": {
+			"import": "./dist/extension/ExtensionWeb3.js",
+			"require": "./dist/cjs/extension/ExtensionWeb3.cjs",
+			"default": "./dist/extension/ExtensionWeb3.js"
 		}
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
 	"repository": {
 		"type": "git",
@@ -34,26 +47,26 @@
 		"@polkadot/extension-base": "0.46.9",
 		"@polkadot/extension-dapp": "0.46.9",
 		"@polkadot/extension-inject": "0.46.9",
-		"@polkadot/keyring": "12.6.2",
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "2.5.5",
-		"@prosopo/fingerprint": "2.5.5",
-		"@prosopo/types": "2.5.5",
-		"@prosopo/util": "2.5.5",
-		"express": "4.21.2",
-		"react": "18.3.1"
+		"@prosopo/common": "3.1.5",
+		"@prosopo/fingerprint": "2.6.6",
+		"@prosopo/keyring": "2.8.12",
+		"@prosopo/types": "3.0.9",
+		"@prosopo/util": "3.0.8",
+		"@prosopo/util-crypto": "13.5.7",
+		"@prosopo/config": "3.1.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "2.5.5",
+		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"npm-run-all": "2.1.0",
+		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.19.1",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.2.3",
+		"vite": "6.3.5",
 		"vitest": "3.0.9"
 	},
 	"sideEffects": false

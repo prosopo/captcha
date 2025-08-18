@@ -5,15 +5,23 @@
 		"outDir": "./dist",
 		"module": "NodeNext"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
 		{
 			"path": "../api"
 		},
 		{
 			"path": "../common"
 		},
-
 		{
 			"path": "../dotenv"
 		},
@@ -36,13 +44,16 @@
 			"path": "../util"
 		},
 		{
-			"path": "../../dev/config"
+			"path": "../util-crypto"
 		},
 		{
 			"path": "../user-access-policy"
 		},
 		{
 			"path": "../api-express-router"
+		},
+		{
+			"path": "../../dev/workspace"
 		}
 	]
 }

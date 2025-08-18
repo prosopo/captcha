@@ -14,7 +14,6 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { getLoggerDefault } from "@prosopo/common";
 import {
 	ViteFrontendConfig,
 	VitePluginRemoveUnusedTranslations,
@@ -26,8 +25,6 @@ import { defineConfig } from "vite";
 
 // load env using our util because vite loadEnv is not working for .env.development
 loadEnv();
-
-const logger = getLoggerDefault();
 
 // Vite doesn't find the tsconfig for some reason
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
@@ -84,6 +81,52 @@ export default defineConfig(async ({ command, mode }) => {
 
 	return {
 		...frontendConfig,
+		build: {
+			...frontendConfig.build,
+			rollupOptions: {
+				...frontendConfig.build?.rollupOptions,
+				output: {
+					...frontendConfig.build?.rollupOptions?.output,
+					manualChunks(id: string) {
+						if (id.includes("wasm-crypto-wasm")) {
+							return "web3Chunk";
+						}
+						// Split up the extension code into 2 chunks
+						if (id.includes("packages/account/dist/extension")) {
+							if (id.includes("ExtensionWeb3.js")) {
+								return "web3Chunk";
+							}
+							return "web2Chunk";
+						}
+						if (id.includes("packages/common/dist")) {
+							return "commonChunk";
+						}
+						if (id.includes("zod")) {
+							return "zodChunk";
+						}
+						if (id.includes("@polkadot/extension-dapp")) {
+							return "web3Chunk";
+						}
+						if (id.includes("@polkadot/keyring")) {
+							return "web3Chunk";
+						}
+						if (id.includes("packages/util-crypto/dist")) {
+							return "utilCryptoChunk";
+						}
+						if (id.includes("@noble/hash") || id.includes("@noble/curves")) {
+							return "nobleChunk";
+						}
+						if (id.includes("@polkadot/util") && !id.includes("util-crypto")) {
+							return "utilChunk";
+						}
+						if (id.includes("bn.js")) {
+							return "bnChunk";
+						}
+						return undefined;
+					},
+				},
+			},
+		},
 		plugins: [
 			{
 				name: "copy-dir",
@@ -93,7 +136,7 @@ export default defineConfig(async ({ command, mode }) => {
 						if (!fs.existsSync(containingFolder)) {
 							fs.mkdirSync(containingFolder, { recursive: true });
 						}
-						logger.info(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
+						console.log(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
 						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
 							recursive: true,
 						});

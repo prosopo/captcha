@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeypairType } from "@polkadot/util-crypto/types";
 import { ProsopoEnvError } from "@prosopo/common";
+import type { KeypairType } from "@prosopo/util-crypto";
 
 export function getSs58Format(): number {
 	return Number.parseInt(process.env.SS58_FORMAT || "") || 42;

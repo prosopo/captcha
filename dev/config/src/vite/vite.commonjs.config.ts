@@ -1,7 +1,3 @@
-import { builtinModules } from "node:module";
-import path from "node:path";
-import { getLogger } from "@prosopo/common";
-import replace from "@rollup/plugin-replace";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,20 +11,23 @@ import replace from "@rollup/plugin-replace";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { builtinModules } from "node:module";
+import path from "node:path";
+import replace from "@rollup/plugin-replace";
 import { type UserConfig, defineConfig } from "vite";
 import { default as noBundlePlugin } from "vite-plugin-no-bundle";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { getExternalsFromReferences } from "../dependencies.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
-
-const log = getLogger("Info", "vite.commonjs.config.ts");
+import VitePluginCopy from "./vite-plugin-copy.js";
 
 export default async function (
 	name: string,
 	tsConfigPath: string,
 	entry?: string,
 ): Promise<UserConfig> {
-	log.info(`ViteCommonJSConfig: ${name}`);
+	console.info(`ViteCommonJSConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [
 		/dev/,
 	]);
@@ -49,11 +48,16 @@ export default async function (
 				root: "src",
 				copy: "**/*.css",
 			}),
+			VitePluginCopy({
+				srcDir: "src",
+				destDir: "dist",
+				include: ["**/*.json"],
+			}),
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
 			VitePluginCloseAndCopy(),
 		],
 		build: {
-			emptyOutDir: true,
+			emptyOutDir: false,
 			ssr: true,
 			target: "node18",
 			outDir: "dist/cjs",

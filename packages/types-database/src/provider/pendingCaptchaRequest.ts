@@ -23,4 +23,5 @@ export interface PendingCaptchaRequest {
 	requestedAtTimestamp: number; // unix timestamp
 	ipAddress: bigint;
 	frictionlessTokenId?: FrictionlessTokenId;
+	threshold: number;
 }

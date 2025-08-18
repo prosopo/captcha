@@ -15,7 +15,7 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
-import { validateAddr, validiateSiteKey } from "./validateAddress.js";
+import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
 export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
@@ -32,7 +32,7 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 				return;
 			}
 
-			validiateSiteKey(siteKey, req.logger);
+			validateSiteKey(siteKey, req.logger);
 
 			validateAddr(user, undefined, req.logger);
 

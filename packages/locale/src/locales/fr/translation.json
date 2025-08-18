@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Extension Polkadot non trouvée"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Sélectionnez tout contenant ce qui suit",
-		"IF_NONE_CLICK_NEXT": "S'il n'y en a pas, cliquez sur Suivant",
-		"NEXT": "Suivant",
-		"SUBMIT": "Soumettre",
-		"CANCEL": "Annuler",
-		"I_AM_HUMAN": "Je suis humain",
-		"NO_ACCOUNTS_FOUND": "Aucun compte trouvé",
-		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
-		"NO_EXTENSION_FOUND": "Aucune extension trouvée"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Clé secrète manquante",
+		"SITE_KEY_NOT_FOUND": "Clé de site introuvable",
 		"JSON_LOAD_FAILED": "Échec du chargement du fichier JSON",
 		"MNEMONIC_UNDEFINED": "Mnémonique non défini. Veuillez définir la phrase mnémonique dans les variables d'environnement",
 		"NO_MNEMONIC_OR_SEED": "Aucune phrase mnémonique ou graine fournie",
@@ -23,6 +11,56 @@
 		"SITE_KEY_MISSING": "CLÉ DU SITE manquante",
 		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
 		"INVALID_TIMESTAMP": "Horodatage invalide"
+	},
+	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Permissions insuffisantes pour effectuer cette action",
+		"MISSING_QUERY_PARAMETERS": "Paramètres de requête manquants",
+		"MISSING_AUTHORIZATION_HEADER": "En-tête d'autorisation manquant",
+		"TIMESTAMP_TOO_OLD": "Horodatage trop ancien",
+		"FORBIDDEN": "Interdit",
+		"PROVIDER_VERIFY_FAILED": "Échec de la vérification du fournisseur",
+		"UNAUTHORIZED": "Non autorisé",
+		"MISSING_BODY": "Corps manquant",
+		"NO_CONTENT_TYPE_HEADER": "En-tête de type de contenu manquant. Corps encodé en JSON supposé mais erreur lors de l'analyse.",
+		"CAPTCHA_FAILED": "Vous avez répondu incorrectement à un ou plusieurs captchas. Veuillez réessayer",
+		"CAPTCHA_PASSED": "Vous avez répondu correctement aux captchas",
+		"BAD_REQUEST": "Mauvaise Requête",
+		"USER_VERIFIED": "Utilisateur vérifié",
+		"USER_NOT_VERIFIED": "Utilisateur non vérifié",
+		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utilisateur non vérifié. La solution du captcha a expiré.",
+		"USER_NOT_VERIFIED_NO_SOLUTION": "Utilisateur non vérifié. Aucune solution captcha trouvée.",
+		"USER_ALREADY_VERIFIED": "Cette solution a déjà été vérifiée. L'utilisateur doit compléter un nouveau captcha.",
+		"UNKNOWN": "Erreur API inconnue",
+		"SITE_KEY_NOT_REGISTERED": "Clé du site non enregistrée",
+		"INCORRECT_CAPTCHA_TYPE": "Type de CAPTCHA incorrect",
+		"UNAUTHORIZED_ORIGIN_URL": "URL d'origine non autorisée",
+		"INVALID_SITE_KEY": "Clé de site non valide",
+		"INVALID_IP": "IP invalide",
+		"INVALID_URL": "URL inválida",
+		"INVALID_BODY": "Cuerpo inválido",
+		"PARSE_ERROR": "Erreur d'analyse de la demande"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Impossible de modifier le propriétaire de l'utilisateur",
+		"CANNOT_DELETE_OWN_USER": "Impossible de supprimer votre propre compte",
+		"CANNOT_DELETE_LAST_USER": "Impossible de supprimer le dernier utilisateur",
+		"USER_ALREADY_EXISTS": "L'utilisateur existe déjà",
+		"NO_SUGGESTIONS_FOUND": "Aucune suggestion trouvée",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Impossible de désactiver le dernier site actif"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Extension Polkadot non trouvée"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Sélectionnez les images correspondants à",
+		"IF_NONE_CLICK_NEXT": "S'il n'y en a pas, cliquez sur Suivant",
+		"NEXT": "Suivant",
+		"SUBMIT": "Soumettre",
+		"CANCEL": "Annuler",
+		"I_AM_HUMAN": "Je suis humain",
+		"NO_ACCOUNTS_FOUND": "Aucun compte trouvé",
+		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
+		"NO_EXTENSION_FOUND": "Aucune extension trouvée"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Échec de l'encodage de l'adresse invalide",
@@ -82,28 +120,10 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Solution utilisateur Dapp non trouvée",
 		"NO_CAPTCHA": "Aucun captcha trouvé",
 		"NO_SESSION_FOUND": "Aucune session trouvée",
+		"IP_ADDRESS_MISMATCH": "Les adresses IP ne correspondent pas",
 		"INVALID_TOKEN": "Jeton invalide",
 		"INVALID_SOLUTION": "Solution invalide",
 		"DECRYPTION_ERROR": "Erreur de décryptage"
-	},
-	"API": {
-		"CAPTCHA_FAILED": "Vous avez répondu incorrectement à un ou plusieurs captchas. Veuillez réessayer",
-		"CAPTCHA_PASSED": "Vous avez répondu correctement aux captchas",
-		"BAD_REQUEST": "Mauvaise Requête",
-		"USER_VERIFIED": "Utilisateur vérifié",
-		"USER_NOT_VERIFIED": "Utilisateur non vérifié",
-		"USER_NOT_VERIFIED_TIME_EXPIRED": "Utilisateur non vérifié. La solution du captcha a expiré.",
-		"USER_NOT_VERIFIED_NO_SOLUTION": "Utilisateur non vérifié. Aucune solution captcha trouvée.",
-		"USER_ALREADY_VERIFIED": "Cette solution a déjà été vérifiée. L'utilisateur doit compléter un nouveau captcha.",
-		"UNKNOWN": "Erreur API inconnue",
-		"SITE_KEY_NOT_REGISTERED": "Clé du site non enregistrée",
-		"INCORRECT_CAPTCHA_TYPE": "Type de CAPTCHA incorrect",
-		"UNAUTHORIZED_ORIGIN_URL": "URL d'origine non autorisée",
-		"INVALID_SITE_KEY": "Clé de site non valide",
-		"INVALID_IP": "IP invalide",
-		"INVALID_URL": "URL inválida",
-		"INVALID_BODY": "Cuerpo inválido",
-		"PARSE_ERROR": "Erreur d'analyse de la demande"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Paramètre invalide"
@@ -114,7 +134,6 @@
 		"MISSING_PROVIDER_PAIR": "Paire de fournisseurs manquante",
 		"MISSING_ENV_VARIABLE": "Variable d'environnement manquante",
 		"GENERAL": "Erreur Dev Générale, voir le contexte",
-		"MISSING_SECRET_KEY": "Clé secrète manquante",
 		"METHOD_NOT_IMPLEMENTED": "Méthode non implémentée"
 	},
 	"FS": {
@@ -403,6 +422,22 @@
 		"woodpecker": "pic-vert",
 		"xylophone": "xylophone",
 		"yo-yo": "yo-yo",
-		"zebra": "zèbre"
+		"zebra": "zèbre",
+		"airplanes": "avions",
+		"american-flag": "drapeau américain",
+		"bonsai": "bonsaï",
+		"buddha": "bouddha",
+		"cannon": "canon",
+		"coffee-mug": "tasse à café",
+		"flashlight": "lampe de poche",
+		"floppy-disk": "disquette",
+		"football-helmet": "casque de football américain",
+		"grand-piano": "piano à queue",
+		"jesus-christ": "jésus-christ",
+		"knife": "couteau",
+		"leopards": "léopards",
+		"sword": "épée",
+		"syringe": "seringue",
+		"tambourine": "tambourin"
 	}
 }

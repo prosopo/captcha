@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "ไม่พบส่วนขยาย Polkadot"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "เลือกทั้งหมดที่มีดังต่อไปนี้",
-		"IF_NONE_CLICK_NEXT": "หากไม่มีให้คลิก \"ถัดไป\"",
-		"NEXT": "ถัดไป",
-		"SUBMIT": "ส่ง",
-		"CANCEL": "ยกเลิก",
-		"I_AM_HUMAN": "ฉันเป็นมนุษย์",
-		"NO_ACCOUNTS_FOUND": "ไม่พบบัญชี",
-		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
-		"NO_EXTENSION_FOUND": "ไม่พบส่วนขยาย"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "ไม่มีคีย์ลับ",
+		"SITE_KEY_NOT_FOUND": "คีย์เว็บไซต์ไม่พบ",
 		"JSON_LOAD_FAILED": "ล้มเหลวในการโหลดไฟล์ JSON",
 		"MNEMONIC_UNDEFINED": "ไม่ได้กำหนด Mnemonic กรุณาตั้งค่า Mnemonic ในตัวแปรสภาพแวดล้อม",
 		"NO_MNEMONIC_OR_SEED": "ไม่มี Mnemonic หรือ Seed ที่ให้มา",
@@ -24,69 +12,16 @@
 		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
 		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
 	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "ล้มเหลวในการเข้ารหัสที่อยู่ไม่ถูกต้อง",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "ข้อสรุปแก้ปัญหารหัสผ่านไม่มีอยู่",
-		"SIGNER_UNDEFINED": "ไม่ได้กำหนดผู้ลงนาม",
-		"CANNOT_FIND_KEYPAIR": "ไม่สามารถค้นหา keypair",
-		"INVALID_DATA_FORMAT": "รูปแบบข้อมูลไม่ถูกต้อง"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "ร้องขอสภาพแวดล้อมที่ไม่รู้จัก",
-		"INVALID_CAPTCHA_NUMBER": "โปรดกำหนดค่าการกำหนดความถูกต้องให้กับ captchas configurations อย่างเหมาะสม",
-		"INVALID_LOG_LEVEL": "ระดับการเข้าสู่ระบบไม่ถูกต้อง",
-		"INVALID_PACKAGE_DIR": "ไดเรกทอรีแพ็คเกจไม่ถูกต้อง"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ชุดข้อมูล",
-		"SOLUTION_PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ชุดข้อมูล",
-		"HASH_ERROR": "เกิดข้อผิดพลาดในการแฮชชุดข้อมูล",
-		"DATASET_ID_UNDEFINED": "ไม่ได้กำหนดรหัส dataset ไว้",
-		"NOT_ENOUGH_LABELS": "ไม่มีป้ายชื่อเพียงพอ",
-		"NOT_ENOUGH_IMAGES": "ไม่มีภาพเพียงพอ",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "จำนวน captchas ในชุดข้อมูลน้อยกว่าจำนวน captchas ที่กำหนดไว้",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "จำนวนข้อสรุปในชุดข้อมูลน้อยกว่าจำนวนข้อสรุปที่กำหนดไว้",
-		"DUPLICATE_IMAGE": "ตรวจพบภาพที่ซ้ำกัน",
-		"MERKLE_ERROR": "เกิดข้อผิดพลาดในการสร้างต้นไม้เมอร์เคิล"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "ล้มเหลวในการนำเข้าเชื่อมต่อฐานข้อมูล",
-		"DATABASE_UNDEFINED": "ผู้ใช้ฐานข้อมูลไม่ได้เชื่อมต่อ",
-		"DATABASE_HOST_UNDEFINED": "ไม่กำหนดที่อยู่โฮสต์ฐานข้อมูล",
-		"DATASET_LOAD_FAILED": "การโหลดชุดข้อมูลล้มเหลว",
-		"DATASET_GET_FAILED": "ล้มเหลวในการรับชุดข้อมูล",
-		"CAPTCHA_GET_FAILED": "ล้มเหลวในการรับ captcha",
-		"CAPTCHA_UPDATE_FAILED": "ล้มเหลวในการอัปเดต captcha",
-		"IMAGE_GET_FAILED": "ล้มเหลวในการรับภาพ",
-		"PENDING_RECORD_NOT_FOUND": "ไม่พบบันทึกที่รอดำเนินการ",
-		"INVALID_HASH": "แฮชไม่ถูกต้อง",
-		"SOLUTION_GET_FAILED": "ล้มเหลวในการรับข้อสรุป",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "ไม่พบชุดข้อมูลที่มีข้อสรุปจำนวนที่กำหนดไว้",
-		"SOLUTION_APPROVE_FAILED": "ล้มเหลวในการอนุมัติข้อสรุป",
-		"SOLUTION_FLAG_FAILED": "ล้มเหลวในการทำเครื่องหมายข้อสรุปว่าดำเนินการแล้ว",
-		"TABLES_UNDEFINED": "ตารางไม่ได้ถูกกำหนดไว้",
-		"CONNECTION_UNDEFINED": "การเชื่อมต่อไม่ได้ถูกกำหนด",
-		"COMMITMENT_FLAG_FAILED": "ล้มเหลวในการทำเครื่องหมายการสนับสนุนว่าดำเนินการแล้ว",
-		"UNKNOWN": "ข้อผิดพลาดในฐานข้อมูลที่ไม่ทราบสาเหตุ"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ captcha",
-		"INVALID_CAPTCHA_ID": "รหัส captcha ไม่ถูกต้อง",
-		"INVALID_ITEM_FORMAT": "เฉพาะชนิดรายการภาพและข้อความที่อนุญาต",
-		"INVALID_SOLUTION_TYPE": "ชนิดของการแก้ปัญหาไม่ถูกต้อง",
-		"INVALID_ITEM_HASH": "แฮชรายการไม่ถูกต้อง",
-		"DIFFERENT_DATASET_IDS": "รหัสชุดข้อมูลไม่ตรงกัน",
-		"ID_MISMATCH": "ไม่ตรงกับรหัส captcha",
-		"MISSING_ITEM_HASH": "ขาดชั่วข้อง",
-		"INVALID_CAPTCHA_CHALLENGE": "อุปทาน captcha ไม่ถูกต้อง",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "ไม่พบคำตอบของผู้ใช้ Dapp",
-		"NO_CAPTCHA": "ไม่พบ captcha",
-		"NO_SESSION_FOUND": "ไม่พบเซสชัน",
-		"INVALID_TOKEN": "โทเคนไม่ถูกต้อง",
-		"INVALID_SOLUTION": "คำตอบไม่ถูกต้อง",
-		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส"
-	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "สิทธิ์ไม่เพียงพอในการทำการกระทำนี้",
+		"MISSING_QUERY_PARAMETERS": "ขาดพารามิเตอร์การค้นหา",
+		"MISSING_AUTHORIZATION_HEADER": "หัวข้อการอนุญาตขาดหาย",
+		"TIMESTAMP_TOO_OLD": "ประทับเวลาเก่าเกินไป",
+		"FORBIDDEN": "ห้าม",
+		"PROVIDER_VERIFY_FAILED": "การตรวจสอบผู้ให้บริการล้มเหลว",
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Missing body",
+		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
 		"CAPTCHA_FAILED": "คุณตอบคำถาม captcha ผิดหนึ่งหรือหลายครั้ง กรุณาลองใหม่อีกครั้ง",
 		"CAPTCHA_PASSED": "คุณตอบคำถาม captcha ถูกต้อง",
 		"BAD_REQUEST": "คำขอไม่ถูกต้อง",
@@ -105,24 +40,31 @@
 		"INVALID_BODY": "ข้อมูลไม่ถูกต้อง",
 		"PARSE_ERROR": "ข้อผิดพลาดในการแปลคำขอ"
 	},
-	"CLI": {
-		"PARAMETER_ERROR": "พารามิเตอร์ไม่ถูกต้อง"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY ไม่ได้ตั้งค่าในไฟล์ .env",
-		"PROVIDER_NO_CAPTCHA": "ไม่มี captcha ที่ส่งคืนจากผู้ให้บริการ",
-		"MISSING_PROVIDER_PAIR": "คู่ให้บริการที่ขาดหาย",
-		"MISSING_ENV_VARIABLE": "ตัวแปรสภาพแวดล้อมที่ขาดหาย",
-		"GENERAL": "ข้อผิดพลาด Dev ทั่วไป ดูบริบท",
-		"MISSING_SECRET_KEY": "คีย์ลับที่ขาดหาย",
-		"METHOD_NOT_IMPLEMENTED": "เมธอดยังไม่ได้นำมาใช้"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "ไม่พบไฟล์",
-		"FILE_ALREADY_EXISTS": "ไฟล์มีอยู่แล้ว",
-		"INVALID_DIR_FORMAT": "รูปแบบไดเรกทอรีไม่ถูกต้อง"
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ไม่สามารถแก้ไขผู้ใช้เจ้าของ",
+		"CANNOT_DELETE_OWN_USER": "ไม่สามารถลบบัญชีของคุณเอง",
+		"CANNOT_DELETE_LAST_USER": "ไม่สามารถลบผู้ใช้สุดท้าย",
+		"USER_ALREADY_EXISTS": "ผู้ใช้มีอยู่แล้ว",
+		"NO_SUGGESTIONS_FOUND": "ไม่พบข้อเสนอ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ไม่สามารถปิดใช้งานเว็บไซต์ที่ใช้งานอยู่ครั้งสุดท้าย"
 	},
 	"TARGET": {
+		"airplanes": "เครื่องบิน",
+		"american-flag": "ธงอเมริกัน",
+		"bonsai": "บอนไซ",
+		"buddha": "พระพุทธ",
+		"cannon": "ปืนใหญ่",
+		"coffee-mug": "แก้วกาแฟ",
+		"flashlight": "ไฟฉาย",
+		"floppy-disk": "ฟลอปปี้ดิสก์",
+		"football-helmet": "หมวกกันน็อค",
+		"grand-piano": "เปียโนใหญ่",
+		"jesus-christ": "พระเยซูคริสต์",
+		"knife": "มีด",
+		"leopards": "เสือดาว",
+		"sword": "ดาบ",
+		"syringe": "กระบอกฉีดยา",
+		"tambourine": "กลองชัก",
 		"bird": "นก",
 		"bus": "รถบัส",
 		"car": "รถยนต์",
@@ -404,5 +346,98 @@
 		"xylophone": "ไซโลโฟน",
 		"yo-yo": "โยโย",
 		"zebra": "เซบรา"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "ไม่พบส่วนขยาย Polkadot"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "เลือกทั้งหมดที่มีดังต่อไปนี้",
+		"IF_NONE_CLICK_NEXT": "หากไม่มีให้คลิก \"ถัดไป\"",
+		"NEXT": "ถัดไป",
+		"SUBMIT": "ส่ง",
+		"CANCEL": "ยกเลิก",
+		"I_AM_HUMAN": "ฉันเป็นมนุษย์",
+		"NO_ACCOUNTS_FOUND": "ไม่พบบัญชี",
+		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
+		"NO_EXTENSION_FOUND": "ไม่พบส่วนขยาย"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "ล้มเหลวในการเข้ารหัสที่อยู่ไม่ถูกต้อง",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "ข้อสรุปแก้ปัญหารหัสผ่านไม่มีอยู่",
+		"SIGNER_UNDEFINED": "ไม่ได้กำหนดผู้ลงนาม",
+		"CANNOT_FIND_KEYPAIR": "ไม่สามารถค้นหา keypair",
+		"INVALID_DATA_FORMAT": "รูปแบบข้อมูลไม่ถูกต้อง"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "ร้องขอสภาพแวดล้อมที่ไม่รู้จัก",
+		"INVALID_CAPTCHA_NUMBER": "โปรดกำหนดค่าการกำหนดความถูกต้องให้กับ captchas configurations อย่างเหมาะสม",
+		"INVALID_LOG_LEVEL": "ระดับการเข้าสู่ระบบไม่ถูกต้อง",
+		"INVALID_PACKAGE_DIR": "ไดเรกทอรีแพ็คเกจไม่ถูกต้อง"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ชุดข้อมูล",
+		"SOLUTION_PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ชุดข้อมูล",
+		"HASH_ERROR": "เกิดข้อผิดพลาดในการแฮชชุดข้อมูล",
+		"DATASET_ID_UNDEFINED": "ไม่ได้กำหนดรหัส dataset ไว้",
+		"NOT_ENOUGH_LABELS": "ไม่มีป้ายชื่อเพียงพอ",
+		"NOT_ENOUGH_IMAGES": "ไม่มีภาพเพียงพอ",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "จำนวน captchas ในชุดข้อมูลน้อยกว่าจำนวน captchas ที่กำหนดไว้",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "จำนวนข้อสรุปในชุดข้อมูลน้อยกว่าจำนวนข้อสรุปที่กำหนดไว้",
+		"DUPLICATE_IMAGE": "ตรวจพบภาพที่ซ้ำกัน",
+		"MERKLE_ERROR": "เกิดข้อผิดพลาดในการสร้างต้นไม้เมอร์เคิล"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ล้มเหลวในการนำเข้าเชื่อมต่อฐานข้อมูล",
+		"DATABASE_UNDEFINED": "ผู้ใช้ฐานข้อมูลไม่ได้เชื่อมต่อ",
+		"DATABASE_HOST_UNDEFINED": "ไม่กำหนดที่อยู่โฮสต์ฐานข้อมูล",
+		"DATASET_LOAD_FAILED": "การโหลดชุดข้อมูลล้มเหลว",
+		"DATASET_GET_FAILED": "ล้มเหลวในการรับชุดข้อมูล",
+		"CAPTCHA_GET_FAILED": "ล้มเหลวในการรับ captcha",
+		"CAPTCHA_UPDATE_FAILED": "ล้มเหลวในการอัปเดต captcha",
+		"IMAGE_GET_FAILED": "ล้มเหลวในการรับภาพ",
+		"PENDING_RECORD_NOT_FOUND": "ไม่พบบันทึกที่รอดำเนินการ",
+		"INVALID_HASH": "แฮชไม่ถูกต้อง",
+		"SOLUTION_GET_FAILED": "ล้มเหลวในการรับข้อสรุป",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "ไม่พบชุดข้อมูลที่มีข้อสรุปจำนวนที่กำหนดไว้",
+		"SOLUTION_APPROVE_FAILED": "ล้มเหลวในการอนุมัติข้อสรุป",
+		"SOLUTION_FLAG_FAILED": "ล้มเหลวในการทำเครื่องหมายข้อสรุปว่าดำเนินการแล้ว",
+		"TABLES_UNDEFINED": "ตารางไม่ได้ถูกกำหนดไว้",
+		"CONNECTION_UNDEFINED": "การเชื่อมต่อไม่ได้ถูกกำหนด",
+		"COMMITMENT_FLAG_FAILED": "ล้มเหลวในการทำเครื่องหมายการสนับสนุนว่าดำเนินการแล้ว",
+		"UNKNOWN": "ข้อผิดพลาดในฐานข้อมูลที่ไม่ทราบสาเหตุ"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ captcha",
+		"INVALID_CAPTCHA_ID": "รหัส captcha ไม่ถูกต้อง",
+		"INVALID_ITEM_FORMAT": "เฉพาะชนิดรายการภาพและข้อความที่อนุญาต",
+		"INVALID_SOLUTION_TYPE": "ชนิดของการแก้ปัญหาไม่ถูกต้อง",
+		"INVALID_ITEM_HASH": "แฮชรายการไม่ถูกต้อง",
+		"DIFFERENT_DATASET_IDS": "รหัสชุดข้อมูลไม่ตรงกัน",
+		"ID_MISMATCH": "ไม่ตรงกับรหัส captcha",
+		"MISSING_ITEM_HASH": "ขาดชั่วข้อง",
+		"INVALID_CAPTCHA_CHALLENGE": "อุปทาน captcha ไม่ถูกต้อง",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "ไม่พบคำตอบของผู้ใช้ Dapp",
+		"NO_CAPTCHA": "ไม่พบ captcha",
+		"NO_SESSION_FOUND": "ไม่พบเซสชัน",
+		"IP_ADDRESS_MISMATCH": "ที่อยู่ IP ไม่ตรงกัน",
+		"INVALID_TOKEN": "โทเคนไม่ถูกต้อง",
+		"INVALID_SOLUTION": "คำตอบไม่ถูกต้อง",
+		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "พารามิเตอร์ไม่ถูกต้อง"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY ไม่ได้ตั้งค่าในไฟล์ .env",
+		"PROVIDER_NO_CAPTCHA": "ไม่มี captcha ที่ส่งคืนจากผู้ให้บริการ",
+		"MISSING_PROVIDER_PAIR": "คู่ให้บริการที่ขาดหาย",
+		"MISSING_ENV_VARIABLE": "ตัวแปรสภาพแวดล้อมที่ขาดหาย",
+		"GENERAL": "ข้อผิดพลาด Dev ทั่วไป ดูบริบท",
+		"METHOD_NOT_IMPLEMENTED": "เมธอดยังไม่ได้นำมาใช้"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ไม่พบไฟล์",
+		"FILE_ALREADY_EXISTS": "ไฟล์มีอยู่แล้ว",
+		"INVALID_DIR_FORMAT": "รูปแบบไดเรกทอรีไม่ถูกต้อง"
 	}
 }

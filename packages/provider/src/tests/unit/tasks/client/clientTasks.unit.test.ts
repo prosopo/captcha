@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -27,6 +27,8 @@ import {
 } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
+
+const loggerOuter = getLogger("info", import.meta.url);
 
 type TestScheduledTaskRecord = Pick<
 	ScheduledTaskRecord,
@@ -44,17 +46,28 @@ vi.mock(
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		const actual = (await importOriginal()) as Record<string, any>;
 
-		const mockLogger = {
-			info: vi.fn().mockImplementation(console.info),
-			debug: vi.fn().mockImplementation(console.debug),
-			error: vi.fn().mockImplementation(console.error),
-		};
-
 		class MockCaptchaDatabase {
 			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			logger: any;
 
 			constructor() {
+				const mockLogger = {
+					debug: vi
+						.fn()
+						.mockImplementation(loggerOuter.debug.bind(loggerOuter)),
+					log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
+					info: vi.fn().mockImplementation(loggerOuter.info.bind(loggerOuter)),
+					error: vi
+						.fn()
+						.mockImplementation(loggerOuter.error.bind(loggerOuter)),
+					trace: vi
+						.fn()
+						.mockImplementation(loggerOuter.trace.bind(loggerOuter)),
+					fatal: vi
+						.fn()
+						.mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
+					warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
+				} as unknown as Logger;
 				this.logger = mockLogger;
 			}
 
@@ -188,7 +201,13 @@ describe("ClientTaskManager", () => {
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(logger.info).toHaveBeenCalledWith("Mongo env not set");
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		const logFn = (logger.info as any).mock.calls[0][0];
+		const logObj = logFn();
+		expect(logObj).toMatchObject({
+			msg: "Mongo env not set",
+		});
+
 		expect(providerDB.getUnstoredDappUserCommitments).not.toHaveBeenCalled();
 	});
 
@@ -274,10 +293,13 @@ describe("ClientTaskManager", () => {
 		// Update the next ID and time (time is used as a timestamp)
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
-		logger.info("Test: Collections state updated", {
-			nextID: collections.schedulers.nextID,
-			currentTime: collections.schedulers.time,
-		});
+		logger.info(() => ({
+			data: {
+				nextID: collections.schedulers.nextID,
+				currentTime: collections.schedulers.time,
+			},
+			msg: "Test: Collections state updated",
+		}));
 
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
@@ -287,39 +309,40 @@ describe("ClientTaskManager", () => {
 		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
 			mockPoWCommitments,
 		);
-		logger.info("Test: Mock DB responses configured");
+		logger.info(() => ({ msg: "Test: Mock DB responses configured" }));
 
 		await clientTaskManager.storeCommitmentsExternal();
-		logger.info("Test: storeCommitmentsExternal completed");
+		logger.info(() => ({ msg: "Test: storeCommitmentsExternal completed" }));
 
 		// Verification steps with logging
 		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
-		logger.info("Test: Verified DB queries were made");
+		logger.info(() => ({ msg: "Test: Verified DB queries were made" }));
 
 		expect(providerDB.getLastScheduledTaskStatus).toHaveReturnedWith(
 			mockLastScheduledTask,
 		);
-		logger.info("Test: Verified last scheduled task status");
+		logger.info(() => ({ msg: "Test: Verified last scheduled task status" }));
 
 		expect(providerDB.createScheduledTaskStatus).toHaveBeenCalledWith(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			ScheduledTaskStatus.Running,
 		);
-		logger.info("Test: Verified task status creation");
+		logger.info(() => ({ msg: "Test: Verified task status creation" }));
 
 		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
-		logger.info(
-			"Test: Verified no image commitments were marked as stored (expected as they're old)",
-		);
+		logger.info(() => ({
+			msg: "Test: Verified no image commitments were marked as stored (expected as they're old)",
+		}));
 
 		const expectedPoWChallenges = mockPoWCommitments.map((c) => c.challenge);
 		expect(providerDB.markDappUserPoWCommitmentsStored).toHaveBeenCalledWith(
 			expectedPoWChallenges,
 		);
-		logger.info("Test: Verified PoW commitments were marked as stored", {
-			expectedPoWChallenges,
-		});
+		logger.info(() => ({
+			msg: "Test: Verified PoW commitments were marked as stored",
+			data: { expectedPoWChallenges },
+		}));
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fi
@@ -385,22 +408,22 @@ describe("ClientTaskManager", () => {
 		);
 	});
 
-	describe("isSubdomainOrExactMatch", () => {
+	describe("domainPatternMatcher", () => {
 		it("should match exact domains", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"https://example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"http://example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"https://example.com/",
 				),
@@ -409,25 +432,25 @@ describe("ClientTaskManager", () => {
 
 		it("should match subdomains", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.example.com",
 					"example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"a.b.example.com",
 					"example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"dev.test.example.com",
 					"test.example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"0.0.0.0",
 					"http://0.0.0.0:9230",
 				),
@@ -436,16 +459,16 @@ describe("ClientTaskManager", () => {
 
 		it("should not match different domains", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch("example.com", "example.org"),
+				clientTaskManager.domainPatternMatcher("example.com", "example.org"),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.example.com",
 					"testexample.com",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"malicious-example.com",
 				),
@@ -455,36 +478,33 @@ describe("ClientTaskManager", () => {
 		it("should handle localhost specially", () => {
 			// Valid localhost cases
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch("localhost", "localhost"),
+				clientTaskManager.domainPatternMatcher("localhost", "localhost"),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"localhost:3000",
-					"localhost",
-				),
+				clientTaskManager.domainPatternMatcher("localhost:3000", "localhost"),
 			).toBe(true);
 
 			// Invalid localhost cases
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"localhost.test.com",
 					"localhost",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"malicious.com/localhost",
 					"localhost",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"evil.com?localhost",
 					"localhost",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"localhost.malicious.com",
 					"localhost",
 				),
@@ -492,41 +512,35 @@ describe("ClientTaskManager", () => {
 		});
 
 		it("should handle edge cases", () => {
-			expect(clientTaskManager.isSubdomainOrExactMatch("", "example.com")).toBe(
+			expect(clientTaskManager.domainPatternMatcher("", "example.com")).toBe(
 				false,
 			);
-			expect(clientTaskManager.isSubdomainOrExactMatch("example.com", "")).toBe(
+			expect(clientTaskManager.domainPatternMatcher("example.com", "")).toBe(
 				false,
 			);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"example.com.",
-					"example.com",
-				),
+				clientTaskManager.domainPatternMatcher("example.com.", "example.com"),
 			).toBe(true); // trailing dot
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"example.com",
-					"example.com.",
-				),
+				clientTaskManager.domainPatternMatcher("example.com", "example.com."),
 			).toBe(true); // trailing dot
 		});
 
 		it("should handle URLs with paths and protocols", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.example.com",
 					"https://example.com/path",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"https://example.com:3000",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"example.com:3000",
 				),
@@ -535,75 +549,72 @@ describe("ClientTaskManager", () => {
 
 		it("should handle exotic domain names", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"⭐⭐⭐⭐.com",
-					"⭐⭐⭐⭐.com",
-				),
+				clientTaskManager.domainPatternMatcher("⭐⭐⭐⭐.com", "⭐⭐⭐⭐.com"),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.⭐⭐⭐⭐.com",
 					"⭐⭐⭐⭐.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"漢字漢字漢字.com",
 					"漢字漢字漢字.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.漢字漢字漢字.com",
 					"漢字漢字漢字.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"🦄.⭐.漢字.test.com",
 					"test.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					`${"a".repeat(63)}.example.com`,
 					"example.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"xn--h28h.com", // 🌟.com in punycode
 					"xn--h28h.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"café.漢字.⭐.example.com",
 					"example.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"123-456.⭐-漢字.com",
 					"⭐-漢字.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"🦄.xn--h28h.café.123-456.⭐.漢字.test.com",
 					"test.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"..⭐⭐⭐⭐..com",
 					"⭐⭐⭐⭐.com",
 				),
@@ -612,17 +623,56 @@ describe("ClientTaskManager", () => {
 
 		it("should handle URLs that are preceedded with www", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"https://www.example.com",
 					"example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"www.example.com",
 					"example.com",
 				),
 			).toBe(true);
+		});
+
+		it("should support subdomain wildcard patterns", () => {
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"a.b.example.com",
+					"*.example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("example.com", "*.example.com"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"dev.test.example.com",
+					"*.test.example.com",
+				),
+			).toBe(true);
+		});
+
+		it("should support simple glob patterns with * anywhere", () => {
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"fooexamplebar.com",
+					"*example*",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("example.net", "*example*"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("mysite.org", "*example*"),
+			).toBe(false);
+		});
+
+		it("should allow global star * pattern", () => {
+			expect(clientTaskManager.domainPatternMatcher("anything.com", "*")).toBe(
+				true,
+			);
 		});
 	});
 });

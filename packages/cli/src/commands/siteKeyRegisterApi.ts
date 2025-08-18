@@ -1,3 +1,6 @@
+import { ProviderApi } from "@prosopo/api";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import { ProviderEnvironment } from "@prosopo/env";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +14,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { ProviderApi } from "@prosopo/api";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
-import { ProviderEnvironment } from "@prosopo/env";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
@@ -80,6 +80,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "POW difficulty for settings",
+				} as const)
+				.option("image_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image threshold for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -92,6 +97,7 @@ export default (
 					url,
 					domains,
 					pow_difficulty,
+					image_threshold,
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
 				const timestamp = new Date().getTime().toString();
@@ -104,13 +110,20 @@ export default (
 						frictionlessThreshold: frictionless_threshold as number,
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
+						imageThreshold: image_threshold as number,
 					},
 					timestamp,
 					signature,
 				);
-				logger.info(`Site Key ${argv.sitekey} registered`);
+				logger.info(() => ({
+					data: { sitekey },
+					msg: "Site Key registered",
+				}));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({
+					err,
+					msg: "Error registering Site Key",
+				}));
 			}
 		},
 		middlewares: [validateSiteKey],

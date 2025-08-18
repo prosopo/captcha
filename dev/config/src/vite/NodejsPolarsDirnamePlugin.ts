@@ -11,9 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Logger } from "@prosopo/common";
 
-export const nodejsPolarsDirnamePlugin = (logger: Logger) => {
+export const nodejsPolarsDirnamePlugin = () => {
 	const name = "nodejs-polars-dirname-plugin";
 	return {
 		name,
@@ -21,7 +20,7 @@ export const nodejsPolarsDirnamePlugin = (logger: Logger) => {
 		resolveId(source: string, importer: string | undefined, options: any) {
 			// aim for the node_modules/nodejs-polars/bin/native-polars.js file
 			if (source.endsWith("nodejs-polars/bin/native-polars.js")) {
-				logger.debug(name, "resolves", source, "imported by", importer);
+				console.debug(name, "resolves", source, "imported by", importer);
 				// return the source to indicate this plugin can resolve the import
 				return source;
 			}
@@ -32,7 +31,7 @@ export const nodejsPolarsDirnamePlugin = (logger: Logger) => {
 			// aim for the node_modules/nodejs-polars/bin/native-polars.js file
 			if (id.endsWith("nodejs-polars/bin/native-polars.js")) {
 				// replace all instances of __dirname with the path relative to the output bundle
-				logger.debug(name, "transform", id);
+				console.debug(name, "transform", id);
 				const newCode = code.replaceAll(
 					"__dirname",
 					`new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')`,

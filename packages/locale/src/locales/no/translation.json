@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Polkadot tillæg ikke funnet"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Velg alle som inneholder følgende",
-		"IF_NONE_CLICK_NEXT": "Hvis det ikke er noen, klikk Neste",
-		"NEXT": "Neste",
-		"SUBMIT": "Send inn",
-		"CANCEL": "Avbryt",
-		"I_AM_HUMAN": "Jeg er menneske",
-		"NO_ACCOUNTS_FOUND": "Ingen kontoer funnet",
-		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
-		"NO_EXTENSION_FOUND": "Ingen tilleggsprogram funnet"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Manglende hemmelig nøkkel",
+		"SITE_KEY_NOT_FOUND": "Platennøkkel ikke funnet",
 		"JSON_LOAD_FAILED": "Klarte ikke å laste JSON-fil",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Vennligst sett mnemonikken i miljøvariabler",
 		"NO_MNEMONIC_OR_SEED": "Ingen mnemonikk eller frø oppgitt",
@@ -24,69 +12,16 @@
 		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
 		"INVALID_TIMESTAMP": "Ugyldig tidsstempel"
 	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Klarte ikke å kryptere ugyldig adresse",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha løsningsforpliktelse eksisterer ikke",
-		"SIGNER_UNDEFINED": "Signer undefined",
-		"CANNOT_FIND_KEYPAIR": "Kan ikke finne keypair",
-		"INVALID_DATA_FORMAT": "Ugyldig dataformat"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Ukjent miljø forespurt",
-		"INVALID_CAPTCHA_NUMBER": "Vennligst konfigurer captchaer riktig",
-		"INVALID_LOG_LEVEL": "Ugyldig loggnivå",
-		"INVALID_PACKAGE_DIR": "Ugyldig pakkekatalog"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Feil parsing dataset",
-		"SOLUTION_PARSE_ERROR": "Feil parsing dataset",
-		"HASH_ERROR": "Feil hashing dataset",
-		"DATASET_ID_UNDEFINED": "Datasett-ID ikke definert",
-		"NOT_ENOUGH_LABELS": "Ikke nok etiketter",
-		"NOT_ENOUGH_IMAGES": "Ikke nok bilder",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Antall captchas i datasettet er mindre enn konfigurert antall captchas",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Antall løsninger i datasettet er mindre enn konfigurert antall løsninger",
-		"DUPLICATE_IMAGE": "duplikatbilde oppdaget",
-		"MERKLE_ERROR": "Feil oppretting av merkel-tre"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Klarte ikke å importere databasemotor",
-		"DATABASE_UNDEFINED": "Databaseklient er ikke tilkoblet",
-		"DATABASE_HOST_UNDEFINED": "Database vertsadresse er ikke definert",
-		"DATASET_LOAD_FAILED": "Opplasting av datasett mislyktes",
-		"DATASET_GET_FAILED": "Klarte ikke å hente datasett",
-		"CAPTCHA_GET_FAILED": "Klarte ikke å hente captcha",
-		"CAPTCHA_UPDATE_FAILED": "Klarte ikke å oppdatere captcha",
-		"IMAGE_GET_FAILED": "Klarte ikke å hente bilde",
-		"PENDING_RECORD_NOT_FOUND": "Ingen ventende oppføring funnet",
-		"INVALID_HASH": "Ugyldig hash",
-		"SOLUTION_GET_FAILED": "Klarte ikke å hente løsning",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Ingen datasett funnet med nødvendig antall løsninger",
-		"SOLUTION_APPROVE_FAILED": "Klarte ikke godkjenne løsning",
-		"SOLUTION_FLAG_FAILED": "Klarte ikke å flagge løsning som behandlet",
-		"TABLES_UNDEFINED": "Tabeller er udefinert",
-		"CONNECTION_UNDEFINED": "Tilkobling udefinert",
-		"COMMITMENT_FLAG_FAILED": "Klarte ikke å flagge engasjement som behandlet",
-		"UNKNOWN": "Ukjent databasefeil"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Feil parsing captcha",
-		"INVALID_CAPTCHA_ID": "Ugyldig captcha-ID",
-		"INVALID_ITEM_FORMAT": "Bare bilde og tekstelementtyper tillatt",
-		"INVALID_SOLUTION_TYPE": "Ugyldig løsningstype",
-		"INVALID_ITEM_HASH": "Ugyldig element-hash",
-		"DIFFERENT_DATASET_IDS": "Dataset ids matchar ikkje",
-		"ID_MISMATCH": "captcha id samsvar ikkje",
-		"MISSING_ITEM_HASH": "mangler element-hash",
-		"INVALID_CAPTCHA_CHALLENGE": "Ugyldig captcha utfordring",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp brukerløsning ikkje funnet",
-		"NO_CAPTCHA": "Ingen captcha funnet",
-		"NO_SESSION_FOUND": "Ingen økt funnet",
-		"INVALID_TOKEN": "Ugyldig token",
-		"INVALID_SOLUTION": "Ugyldig løsning",
-		"DECRYPTION_ERROR": "Feil ved dekryptering"
-	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Utilstrekkelige tillatelser for å utføre denne handlingen",
+		"MISSING_QUERY_PARAMETERS": "Manglende spørringsparametere",
+		"MISSING_AUTHORIZATION_HEADER": "Mangler autorisasjonsheader",
+		"TIMESTAMP_TOO_OLD": "Tidspunkt for gammel",
+		"FORBIDDEN": "Forbudt",
+		"PROVIDER_VERIFY_FAILED": "Utdypning bekreftelse mislyktes",
+		"UNAUTHORIZED": "Oautorisert",
+		"MISSING_BODY": "Manglar kropp",
+		"NO_CONTENT_TYPE_HEADER": "Ingen innhaldstypeheader. Gjekk ut frå at kroppen var kodet i JSON, men vart ikkje tolka.",
 		"CAPTCHA_FAILED": "Du svarte feil på en eller flere captchas. Prøv igjen",
 		"CAPTCHA_PASSED": "Du svarte korrekt på captchas",
 		"BAD_REQUEST": "BadRequest",
@@ -105,24 +40,31 @@
 		"INVALID_BODY": "Ugyldig kropp",
 		"PARSE_ERROR": "Feil ved å tolke forespørsel"
 	},
-	"CLI": {
-		"PARAMETER_ERROR": "Ugyldig parameter"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY er ikkje satt i .env-fil",
-		"PROVIDER_NO_CAPTCHA": "Ingen captchas returnert fra leverandør",
-		"MISSING_PROVIDER_PAIR": "Manglende leverandørpar",
-		"MISSING_ENV_VARIABLE": "Manglende miljøvariabel",
-		"GENERAL": "Generell utviklerfeil, se kontekst",
-		"MISSING_SECRET_KEY": "Manglende hemmelig nøkkel",
-		"METHOD_NOT_IMPLEMENTED": "Metoden er ikkje implementert"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "Filen ble ikkje funnet",
-		"FILE_ALREADY_EXISTS": "Filen eksisterer allerede",
-		"INVALID_DIR_FORMAT": "Ugyldig katalogformat"
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Kan ikke endre eierbruker",
+		"CANNOT_DELETE_OWN_USER": "Kan ikke slette din egen konto",
+		"CANNOT_DELETE_LAST_USER": "Kan ikke slette siste bruker",
+		"USER_ALREADY_EXISTS": "Brukeren eksisterer allerede",
+		"NO_SUGGESTIONS_FOUND": "Ingen forslag funnet",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikke deaktivere siste aktive nettsted"
 	},
 	"TARGET": {
+		"airplanes": "flymaskiner",
+		"american-flag": "amerikansk flagg",
+		"bonsai": "bonsai",
+		"buddha": "Buddha",
+		"cannon": "kanon",
+		"coffee-mug": "kaffekopp",
+		"flashlight": "lykt",
+		"floppy-disk": "diskett",
+		"football-helmet": "fotballhjelm",
+		"grand-piano": "flygel",
+		"jesus-christ": "Jesus Kristus",
+		"knife": "kniv",
+		"leopards": "leoparder",
+		"sword": "sverd",
+		"syringe": "sprøyte",
+		"tambourine": "tamburin",
 		"bird": "fugl",
 		"bus": "buss",
 		"car": "bil",
@@ -404,5 +346,98 @@
 		"xylophone": "xylofon",
 		"yo-yo": "yo-yo",
 		"zebra": "zebra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Polkadot tillæg ikke funnet"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Velg alle som inneholder følgende",
+		"IF_NONE_CLICK_NEXT": "Hvis det ikke er noen, klikk Neste",
+		"NEXT": "Neste",
+		"SUBMIT": "Send inn",
+		"CANCEL": "Avbryt",
+		"I_AM_HUMAN": "Jeg er menneske",
+		"NO_ACCOUNTS_FOUND": "Ingen kontoer funnet",
+		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
+		"NO_EXTENSION_FOUND": "Ingen tilleggsprogram funnet"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Klarte ikke å kryptere ugyldig adresse",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha løsningsforpliktelse eksisterer ikke",
+		"SIGNER_UNDEFINED": "Signer undefined",
+		"CANNOT_FIND_KEYPAIR": "Kan ikke finne keypair",
+		"INVALID_DATA_FORMAT": "Ugyldig dataformat"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Ukjent miljø forespurt",
+		"INVALID_CAPTCHA_NUMBER": "Vennligst konfigurer captchaer riktig",
+		"INVALID_LOG_LEVEL": "Ugyldig loggnivå",
+		"INVALID_PACKAGE_DIR": "Ugyldig pakkekatalog"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Feil parsing dataset",
+		"SOLUTION_PARSE_ERROR": "Feil parsing dataset",
+		"HASH_ERROR": "Feil hashing dataset",
+		"DATASET_ID_UNDEFINED": "Datasett-ID ikke definert",
+		"NOT_ENOUGH_LABELS": "Ikke nok etiketter",
+		"NOT_ENOUGH_IMAGES": "Ikke nok bilder",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Antall captchas i datasettet er mindre enn konfigurert antall captchas",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Antall løsninger i datasettet er mindre enn konfigurert antall løsninger",
+		"DUPLICATE_IMAGE": "duplikatbilde oppdaget",
+		"MERKLE_ERROR": "Feil oppretting av merkel-tre"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Klarte ikke å importere databasemotor",
+		"DATABASE_UNDEFINED": "Databaseklient er ikke tilkoblet",
+		"DATABASE_HOST_UNDEFINED": "Database vertsadresse er ikke definert",
+		"DATASET_LOAD_FAILED": "Opplasting av datasett mislyktes",
+		"DATASET_GET_FAILED": "Klarte ikke å hente datasett",
+		"CAPTCHA_GET_FAILED": "Klarte ikke å hente captcha",
+		"CAPTCHA_UPDATE_FAILED": "Klarte ikke å oppdatere captcha",
+		"IMAGE_GET_FAILED": "Klarte ikke å hente bilde",
+		"PENDING_RECORD_NOT_FOUND": "Ingen ventende oppføring funnet",
+		"INVALID_HASH": "Ugyldig hash",
+		"SOLUTION_GET_FAILED": "Klarte ikke å hente løsning",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Ingen datasett funnet med nødvendig antall løsninger",
+		"SOLUTION_APPROVE_FAILED": "Klarte ikke godkjenne løsning",
+		"SOLUTION_FLAG_FAILED": "Klarte ikke å flagge løsning som behandlet",
+		"TABLES_UNDEFINED": "Tabeller er udefinert",
+		"CONNECTION_UNDEFINED": "Tilkobling udefinert",
+		"COMMITMENT_FLAG_FAILED": "Klarte ikke å flagge engasjement som behandlet",
+		"UNKNOWN": "Ukjent databasefeil"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Feil parsing captcha",
+		"INVALID_CAPTCHA_ID": "Ugyldig captcha-ID",
+		"INVALID_ITEM_FORMAT": "Bare bilde og tekstelementtyper tillatt",
+		"INVALID_SOLUTION_TYPE": "Ugyldig løsningstype",
+		"INVALID_ITEM_HASH": "Ugyldig element-hash",
+		"DIFFERENT_DATASET_IDS": "Dataset ids matchar ikkje",
+		"ID_MISMATCH": "captcha id samsvar ikkje",
+		"MISSING_ITEM_HASH": "mangler element-hash",
+		"INVALID_CAPTCHA_CHALLENGE": "Ugyldig captcha utfordring",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp brukerløsning ikkje funnet",
+		"NO_CAPTCHA": "Ingen captcha funnet",
+		"NO_SESSION_FOUND": "Ingen økt funnet",
+		"IP_ADDRESS_MISMATCH": "IP-adresser stemmer ikke overens",
+		"INVALID_TOKEN": "Ugyldig token",
+		"INVALID_SOLUTION": "Ugyldig løsning",
+		"DECRYPTION_ERROR": "Feil ved dekryptering"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Ugyldig parameter"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY er ikkje satt i .env-fil",
+		"PROVIDER_NO_CAPTCHA": "Ingen captchas returnert fra leverandør",
+		"MISSING_PROVIDER_PAIR": "Manglende leverandørpar",
+		"MISSING_ENV_VARIABLE": "Manglende miljøvariabel",
+		"GENERAL": "Generell utviklerfeil, se kontekst",
+		"METHOD_NOT_IMPLEMENTED": "Metoden er ikkje implementert"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Filen ble ikkje funnet",
+		"FILE_ALREADY_EXISTS": "Filen eksisterer allerede",
+		"INVALID_DIR_FORMAT": "Ugyldig katalogformat"
 	}
 }

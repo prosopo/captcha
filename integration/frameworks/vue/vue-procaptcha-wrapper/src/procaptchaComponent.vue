@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, onUpdated, useTemplateRef} from "vue";
+import {onMounted, onUpdated, ref} from "vue";
 
 import {HTMLAttributes} from "vue"
 import {type ProcaptchaRenderOptions, renderProcaptcha} from "@prosopo/procaptcha-wrapper";
@@ -14,7 +14,7 @@ type AllHtmlAttributes = HTMLAttributes & {
 };
 
 const properties = defineProps<ProcaptchaComponentProperties>();
-const wrapper = useTemplateRef("wrapper");
+const wrapper = ref<HTMLElement | null>(null);
 
 // refuse unregistered properties.
 defineOptions({

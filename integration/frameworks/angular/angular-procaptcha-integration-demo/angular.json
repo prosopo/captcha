@@ -33,7 +33,7 @@
 						"styles": ["src/styles.css"],
 						"scripts": [],
 						"customWebpackConfig": {
-							"path": "webpack.config.ts"
+							"path": "webpack.config.cjs"
 						}
 					},
 					"configurations": {

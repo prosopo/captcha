@@ -1,19 +1,7 @@
 {
-	"ACCOUNT": {
-		"NO_POLKADOT_EXTENSION": "Polkadot extension tidak ditemukan"
-	},
-	"WIDGET": {
-		"SELECT_ALL": "Pilih semua yang berisi berikut",
-		"IF_NONE_CLICK_NEXT": "Jika tidak ada, klik Berikutnya",
-		"NEXT": "Berikutnya",
-		"SUBMIT": "Kirim",
-		"CANCEL": "Batal",
-		"I_AM_HUMAN": "Saya manusia",
-		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
-		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
-		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan"
-	},
 	"GENERAL": {
+		"MISSING_SECRET_KEY": "Kunci rahasia hilang",
+		"SITE_KEY_NOT_FOUND": "Site key not found",
 		"JSON_LOAD_FAILED": "Gagal memuat file JSON",
 		"MNEMONIC_UNDEFINED": "Mnemonic Tidak Didefinisikan. Harap atur mnemonic di variabel lingkungan",
 		"NO_MNEMONIC_OR_SEED": "Tidak ada mnemonic atau seed yang disediakan",
@@ -24,69 +12,16 @@
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"INVALID_TIMESTAMP": "Timestamp tidak valid"
 	},
-	"CONTRACT": {
-		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",
-		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Komitmen solusi captcha tidak ada",
-		"SIGNER_UNDEFINED": "Penandatangan tidak ditentukan",
-		"CANNOT_FIND_KEYPAIR": "Tidak dapat menemukan keypair",
-		"INVALID_DATA_FORMAT": "Format data tidak valid"
-	},
-	"CONFIG": {
-		"UNKNOWN_ENVIRONMENT": "Lingkungan yang tidak dikenal diminta",
-		"INVALID_CAPTCHA_NUMBER": "Harap konfigurasi konfigurasi captcha dengan benar",
-		"INVALID_LOG_LEVEL": "Level log tidak valid",
-		"INVALID_PACKAGE_DIR": "Direktori paket tidak valid"
-	},
-	"DATASET": {
-		"DATASET_PARSE_ERROR": "Kesalahan parsing dataset",
-		"SOLUTION_PARSE_ERROR": "Kesalahan parsing dataset",
-		"HASH_ERROR": "Kesalahan hashing dataset",
-		"DATASET_ID_UNDEFINED": "Id dataset tidak didefinisikan",
-		"NOT_ENOUGH_LABELS": "Tidak cukup label",
-		"NOT_ENOUGH_IMAGES": "Tidak cukup gambar",
-		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Jumlah captcha dalam dataset lebih sedikit dari jumlah captcha yang dikonfigurasi",
-		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Jumlah solusi dalam dataset lebih sedikit dari jumlah solusi yang dikonfigurasi",
-		"DUPLICATE_IMAGE": "duplikat gambar terdeteksi",
-		"MERKLE_ERROR": "Kesalahan membuat pohon merkle"
-	},
-	"DATABASE": {
-		"DATABASE_IMPORT_FAILED": "Gagal mengimpor mesin database",
-		"DATABASE_UNDEFINED": "Klien database tidak terhubung",
-		"DATABASE_HOST_UNDEFINED": "Alamat host database tidak didefinisikan",
-		"DATASET_LOAD_FAILED": "Pemuatan set data gagal",
-		"DATASET_GET_FAILED": "Gagal mendapatkan dataset",
-		"CAPTCHA_GET_FAILED": "Gagal mendapatkan captcha",
-		"CAPTCHA_UPDATE_FAILED": "Gagal memperbarui captcha",
-		"IMAGE_GET_FAILED": "Gagal mendapatkan gambar",
-		"PENDING_RECORD_NOT_FOUND": "Tidak ada catatan tertunda yang ditemukan",
-		"INVALID_HASH": "Hash tidak valid",
-		"SOLUTION_GET_FAILED": "Gagal mendapatkan solusi",
-		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Tidak ada dataset yang ditemukan dengan jumlah solusi yang diperlukan",
-		"SOLUTION_APPROVE_FAILED": "Gagal menyetujui solusi",
-		"SOLUTION_FLAG_FAILED": "Gagal menandai solusi sebagai diproses",
-		"TABLES_UNDEFINED": "Tabel tidak ditentukan",
-		"CONNECTION_UNDEFINED": "Koneksi tidak ditentukan",
-		"COMMITMENT_FLAG_FAILED": "Gagal menandai komitmen sebagai diproses",
-		"UNKNOWN": "Kesalahan database tidak dikenal"
-	},
-	"CAPTCHA": {
-		"PARSE_ERROR": "Kesalahan parsing captcha",
-		"INVALID_CAPTCHA_ID": "Id captcha tidak valid",
-		"INVALID_ITEM_FORMAT": "Hanya jenis item gambar dan teks yang diizinkan",
-		"INVALID_SOLUTION_TYPE": "Jenis solusi tidak valid",
-		"INVALID_ITEM_HASH": "Hash item tidak valid",
-		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
-		"ID_MISMATCH": "captcha id mismatch",
-		"MISSING_ITEM_HASH": "missing item hash",
-		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
-		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
-		"NO_CAPTCHA": "No captcha found",
-		"NO_SESSION_FOUND": "No session found",
-		"INVALID_TOKEN": "Invalid token",
-		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
-	},
 	"API": {
+		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
+		"MISSING_QUERY_PARAMETERS": "Missing query parameters",
+		"MISSING_AUTHORIZATION_HEADER": "Missing authorization header",
+		"TIMESTAMP_TOO_OLD": "Timestamp too old",
+		"FORBIDDEN": "Forbidden",
+		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
+		"UNAUTHORIZED": "Unauthorized",
+		"MISSING_BODY": "Missing body",
+		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
 		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
 		"CAPTCHA_PASSED": "You correctly answered the captchas",
 		"BAD_REQUEST": "BadRequest",
@@ -105,24 +40,31 @@
 		"INVALID_BODY": "Invalid body",
 		"PARSE_ERROR": "Error parsing request"
 	},
-	"CLI": {
-		"PARAMETER_ERROR": "Invalid parameter"
-	},
-	"DEVELOPER": {
-		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
-		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
-		"MISSING_PROVIDER_PAIR": "Missing provider pair",
-		"MISSING_ENV_VARIABLE": "Missing environment variable",
-		"GENERAL": "General Dev Error, see context",
-		"MISSING_SECRET_KEY": "Missing secret key",
-		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
-	},
-	"FS": {
-		"FILE_NOT_FOUND": "File not found",
-		"FILE_ALREADY_EXISTS": "File already exists",
-		"INVALID_DIR_FORMAT": "Invalid directory format"
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
+		"CANNOT_DELETE_OWN_USER": "Cannot delete your own account",
+		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
+		"USER_ALREADY_EXISTS": "User already exists",
+		"NO_SUGGESTIONS_FOUND": "No suggestions found",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site"
 	},
 	"TARGET": {
+		"airplanes": "eroplano",
+		"american-flag": "watawat ng Amerika",
+		"bonsai": "bonsai",
+		"buddha": "Buddha",
+		"cannon": "kanyon",
+		"coffee-mug": "tasa ng kape",
+		"flashlight": "flashlight",
+		"floppy-disk": "floppy disk",
+		"football-helmet": "helmet ng football",
+		"grand-piano": "grand piano",
+		"jesus-christ": "Hesus Kristo",
+		"knife": "kutsilyo",
+		"leopards": "leopards",
+		"sword": "tabak",
+		"syringe": "syringe",
+		"tambourine": "tambourine",
 		"bird": "bird",
 		"bus": "bus",
 		"car": "car",
@@ -404,5 +346,98 @@
 		"xylophone": "xylophone",
 		"yo-yo": "yo-yo",
 		"zebra": "zebra"
+	},
+	"ACCOUNT": {
+		"NO_POLKADOT_EXTENSION": "Polkadot extension tidak ditemukan"
+	},
+	"WIDGET": {
+		"SELECT_ALL": "Pilih semua yang berisi berikut",
+		"IF_NONE_CLICK_NEXT": "Jika tidak ada, klik Berikutnya",
+		"NEXT": "Berikutnya",
+		"SUBMIT": "Kirim",
+		"CANCEL": "Batal",
+		"I_AM_HUMAN": "Saya manusia",
+		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
+		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
+		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Komitmen solusi captcha tidak ada",
+		"SIGNER_UNDEFINED": "Penandatangan tidak ditentukan",
+		"CANNOT_FIND_KEYPAIR": "Tidak dapat menemukan keypair",
+		"INVALID_DATA_FORMAT": "Format data tidak valid"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Lingkungan yang tidak dikenal diminta",
+		"INVALID_CAPTCHA_NUMBER": "Harap konfigurasi konfigurasi captcha dengan benar",
+		"INVALID_LOG_LEVEL": "Level log tidak valid",
+		"INVALID_PACKAGE_DIR": "Direktori paket tidak valid"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Kesalahan parsing dataset",
+		"SOLUTION_PARSE_ERROR": "Kesalahan parsing dataset",
+		"HASH_ERROR": "Kesalahan hashing dataset",
+		"DATASET_ID_UNDEFINED": "Id dataset tidak didefinisikan",
+		"NOT_ENOUGH_LABELS": "Tidak cukup label",
+		"NOT_ENOUGH_IMAGES": "Tidak cukup gambar",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Jumlah captcha dalam dataset lebih sedikit dari jumlah captcha yang dikonfigurasi",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Jumlah solusi dalam dataset lebih sedikit dari jumlah solusi yang dikonfigurasi",
+		"DUPLICATE_IMAGE": "duplikat gambar terdeteksi",
+		"MERKLE_ERROR": "Kesalahan membuat pohon merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Gagal mengimpor mesin database",
+		"DATABASE_UNDEFINED": "Klien database tidak terhubung",
+		"DATABASE_HOST_UNDEFINED": "Alamat host database tidak didefinisikan",
+		"DATASET_LOAD_FAILED": "Pemuatan set data gagal",
+		"DATASET_GET_FAILED": "Gagal mendapatkan dataset",
+		"CAPTCHA_GET_FAILED": "Gagal mendapatkan captcha",
+		"CAPTCHA_UPDATE_FAILED": "Gagal memperbarui captcha",
+		"IMAGE_GET_FAILED": "Gagal mendapatkan gambar",
+		"PENDING_RECORD_NOT_FOUND": "Tidak ada catatan tertunda yang ditemukan",
+		"INVALID_HASH": "Hash tidak valid",
+		"SOLUTION_GET_FAILED": "Gagal mendapatkan solusi",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Tidak ada dataset yang ditemukan dengan jumlah solusi yang diperlukan",
+		"SOLUTION_APPROVE_FAILED": "Gagal menyetujui solusi",
+		"SOLUTION_FLAG_FAILED": "Gagal menandai solusi sebagai diproses",
+		"TABLES_UNDEFINED": "Tabel tidak ditentukan",
+		"CONNECTION_UNDEFINED": "Koneksi tidak ditentukan",
+		"COMMITMENT_FLAG_FAILED": "Gagal menandai komitmen sebagai diproses",
+		"UNKNOWN": "Kesalahan database tidak dikenal"
+	},
+	"CAPTCHA": {
+		"PARSE_ERROR": "Kesalahan parsing captcha",
+		"INVALID_CAPTCHA_ID": "Id captcha tidak valid",
+		"INVALID_ITEM_FORMAT": "Hanya jenis item gambar dan teks yang diizinkan",
+		"INVALID_SOLUTION_TYPE": "Jenis solusi tidak valid",
+		"INVALID_ITEM_HASH": "Hash item tidak valid",
+		"DIFFERENT_DATASET_IDS": "Dataset ids do not match",
+		"ID_MISMATCH": "captcha id mismatch",
+		"MISSING_ITEM_HASH": "missing item hash",
+		"INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
+		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
+		"NO_CAPTCHA": "No captcha found",
+		"NO_SESSION_FOUND": "No session found",
+		"IP_ADDRESS_MISMATCH": "Alamat IP tidak cocok",
+		"INVALID_TOKEN": "Invalid token",
+		"INVALID_SOLUTION": "Invalid solution",
+		"DECRYPTION_ERROR": "Error decrypting"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Invalid parameter"
+	},
+	"DEVELOPER": {
+		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY is not set in .env file.",
+		"PROVIDER_NO_CAPTCHA": "No captchas returned from provider",
+		"MISSING_PROVIDER_PAIR": "Missing provider pair",
+		"MISSING_ENV_VARIABLE": "Missing environment variable",
+		"GENERAL": "General Dev Error, see context",
+		"METHOD_NOT_IMPLEMENTED": "Method not implemented"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "File not found",
+		"FILE_ALREADY_EXISTS": "File already exists",
+		"INVALID_DIR_FORMAT": "Invalid directory format"
 	}
 }

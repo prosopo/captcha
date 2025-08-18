@@ -60,3 +60,32 @@ export function* permutations(
 		i = arr.length - 1;
 	}
 }
+
+// Function to return unique subsets of an array of strings, with no repeated keys
+// e.g. ["a", "b", "c"] would return ["a", "b"], ["a", "c"], ["b", "c"], ["a", "b", "c"], ["a"], ["b"], ["c"]
+export function uniqueSubsets(arr: string[]): string[][] {
+	const result: string[][] = [];
+	const n = arr.length;
+
+	for (let i = 0; i < 1 << n; i++) {
+		const subset: string[] = [];
+		for (let j = 0; j < n; j++) {
+			if (i & (1 << j)) {
+				const arrVal = arr[j];
+				if (arrVal === undefined) {
+					throw new Error(`Undefined value at index ${j} in array: ${arr}`);
+				}
+				subset.push(arrVal);
+			}
+		}
+		if (subset.length === 0) {
+			continue; // Skip empty subsets
+		}
+		result.push(subset);
+	}
+
+	// Sort by array length, descending
+	result.sort((a, b) => b.length - a.length);
+
+	return result;
+}

@@ -12,17 +12,62 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import path from "node:path";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
 
-export default function () {
-	const testTypeEnv = process.env.TEST_TYPE || "";
-	const testTypes = testTypeEnv.trim().split(",");
+export default function (tsConfigPath?: string) {
+	const testTypeEnv = process.env.TEST_TYPE || undefined;
+	console.log(`TEST_TYPE environment variable: ${testTypeEnv}`);
+	const testTypes = testTypeEnv ? testTypeEnv.trim().split(",") : [];
 	// @(|) globs any tests which don't have their type specified, e.g. myTest.test.ts. These are included even when filtering by test type because we don't know what type of test they are. Really, they should have their type specified.
 	// If we drop ^, there's a chance the tests with no type specified get ignored by accident, which we want to avoid. Ergo, include them by default.
-	const testTypeGlob = `@(|${testTypes.map((t) => (t ? `.${t.trim()}` : "")).join("|")})`;
+	const testTypeGlob =
+		testTypes.length > 0
+			? `@(${testTypes.map((t) => `.${t}`).join("|")})`
+			: "@(|)";
 	console.log(`Filtering tests by type: ${testTypeGlob}`);
+
+	// Determine coverage include paths based on current working directory
+	const cwd = process.cwd();
+	const isRunningFromPackage =
+		cwd.includes("/packages/") && cwd.includes("/src") === false;
+
+	// If running from a package directory, include local src files
+	// If running from repo root, include all package src files
+	const coverageInclude = isRunningFromPackage
+		? ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"]
+		: ["packages/*/src/**", "captcha/packages/*/src/**"];
+
+	const coverageExclude = isRunningFromPackage
+		? [
+				"src/tests/**/*",
+				"src/**/*.d.ts",
+				"src/**/*.test.ts",
+				"src/**/*.spec.ts",
+				"src/**/*.test.tsx",
+				"src/**/*.spec.tsx",
+			]
+		: [
+				"**/tests/**/*",
+				"**/*.d.ts",
+				"**/*.test.*",
+				"**/*.spec.*",
+				"**/node_modules/**",
+				"**/dist/**",
+			];
+	const include = `src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`;
+	const plugins = [
+		VitePluginSourcemapExclude({ excludeNodeModules: true }),
+		VitePluginCloseAndCopy(),
+	];
+
+	if (tsConfigPath) {
+		plugins.push(tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }));
+	}
+
 	return defineConfig({
 		build: {
 			minify: false,
@@ -38,15 +83,14 @@ export default function () {
 		test: {
 			//root: getRootDir(),
 			reporters: ["basic"],
-			include: [
-				`src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`,
-			],
+			include: [include],
 			watch: false,
 			exclude: ["**/node_modules/**", "**/dist/**"],
 			logHeapUsage: true,
 			coverage: {
 				enabled: true,
-				include: ["packages/*/src/**"],
+				include: coverageInclude,
+				exclude: coverageExclude,
 			},
 			typecheck: {
 				enabled: true,
@@ -59,9 +103,6 @@ export default function () {
 			},
 			testTimeout: 10000,
 		},
-		plugins: [
-			VitePluginSourcemapExclude({ excludeNodeModules: true }),
-			VitePluginCloseAndCopy(),
-		],
+		plugins: plugins,
 	});
 }

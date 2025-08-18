@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from "./mnemonic.js";
 export * from "./getPair.js";
+export * from "./testAccounts.js";

@@ -76,22 +76,33 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 				try {
 					const response = await fetch(url);
 					if (!response.ok) {
-						this.logger.error(
-							`GET ${url} ${response.status} ${response.statusText}`,
-						);
+						this.logger.error(() => ({
+							url,
+							status: response.status,
+							statusText: response.statusText,
+							msg: `GET ${url} failed`,
+						}));
 					} else {
-						this.logger.log(`GET ${url} OK`);
+						this.logger.info(() => ({ msg: `GET ${url} OK` }));
 					}
 				} catch (err) {
-					this.logger.error(err);
+					this.logger.error(() => ({
+						err,
+						data: { url },
+						msg: `GET ${url} failed`,
+					}));
 				}
 			} else {
 				// resolve locally
 				try {
 					fs.readFileSync(url);
-					this.logger.log(`GET ${url} OK`);
+					this.logger.info(() => ({ msg: `GET ${url} OK` }));
 				} catch (err) {
-					this.logger.error(`GET ${url} ${err}`);
+					this.logger.error(() => ({
+						err,
+						data: { url },
+						msg: `GET ${url} failed`,
+					}));
 				}
 			}
 		}

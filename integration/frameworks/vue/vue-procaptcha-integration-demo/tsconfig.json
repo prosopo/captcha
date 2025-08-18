@@ -2,10 +2,21 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext"
 	},
-	"include": ["./src"],
+	"include": [
+		"./src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
 	"references": [
+		{
+			"path": "../../../../dev/config/tsconfig.json"
+		},
 		{
 			"path": "../vue-procaptcha-wrapper"
 		},

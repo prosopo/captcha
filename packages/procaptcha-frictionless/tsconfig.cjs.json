@@ -9,6 +9,9 @@
 	"include": ["src/index.ts", "src/index.html"],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../detector/tsconfig.cjs.json"
 		},
 		{
@@ -25,6 +28,15 @@
 		},
 		{
 			"path": "../widget-skeleton/tsconfig.cjs.json"
+		},
+		{
+			"path": "../api/tsconfig.cjs.json"
+		},
+		{
+			"path": "../common/tsconfig.cjs.json"
+		},
+		{
+			"path": "../procaptcha-common/tsconfig.cjs.json"
 		}
 	]
 }

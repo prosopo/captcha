@@ -2,10 +2,22 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"paths": {
+			"#policy/*": ["./src/*"]
+		}
 	},
-	"include": ["./src"],
+	"include": [
+		"./src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.json",
+		"src/**/*.d.ts"
+	],
 	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
 		{
 			"path": "../common"
 		},
@@ -14,6 +26,12 @@
 		},
 		{
 			"path": "../api-route"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }

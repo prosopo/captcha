@@ -16,7 +16,7 @@ import path from "node:path";
 import i18n from "i18next";
 import FSBackend from "i18next-fs-backend/cjs"; // https://github.com/i18next/i18next-fs-backend/issues/57
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
-import { LanguageSchema, Languages } from "./translations.js";
+import { i18nSharedOptions } from "./i18SharedOptions.js";
 import { isServerSide } from "./util.js";
 
 const loadPath =
@@ -25,25 +25,26 @@ const loadPath =
 		"",
 	);
 
-export function initializeI18n() {
+export function initializeI18n(
+	i18nLoadedCallback?: (value: typeof i18n) => void,
+) {
 	if (!i18n.isInitialized && isServerSide()) {
+		const lngDetector = new MiddlewareLanguageDetector(null, {
+			order: ["header", "query", "cookie"],
+		});
 		i18n
 			// @ts-ignore https://github.com/i18next/i18next-fs-backend/issues/57
 			.use(FSBackend)
-			.use(MiddlewareLanguageDetector) // this line should switch the language to the one the user reports in the Accept-Language header
+			.use(lngDetector) // this line should switch the language to the one the user reports in the Accept-Language header
 			.init({
-				debug: process.env.PROSOPO_LOG_LEVEL === "debug",
-				fallbackLng: LanguageSchema.enum.en,
-				supportedLngs: Object.values(Languages),
-
+				...i18nSharedOptions,
 				ns: ["translation"],
 				backend: {
 					loadPath,
 				},
-				detection: { order: ["header", "query", "cookie"] },
 			});
 		i18n.on("loaded", () => {
-			console.log("i18n backend loaded");
+			i18nLoadedCallback?.(i18n);
 		});
 	}
 	return i18n;

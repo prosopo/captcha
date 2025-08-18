@@ -1,4 +1,3 @@
-import { decodeAddress, encodeAddress } from "@polkadot/keyring";
 import { hexToU8a, isHex, u8aToHex } from "@polkadot/util";
 import { isAddress } from "@polkadot/util-crypto";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
@@ -15,6 +14,7 @@ import { isAddress } from "@polkadot/util-crypto";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { at } from "@prosopo/util";
+import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 
 const ss58Format = 42;
 

@@ -60,7 +60,7 @@ export default (cmdArgs?: { logger?: Logger }) => {
 					parsedArgs.hard,
 				);
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({ err }));
 			}
 		},
 		middlewares: [],

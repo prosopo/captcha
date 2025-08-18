@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { validateAddress } from "@polkadot/util-crypto";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { TFunction } from "i18next";
 import { ZodError } from "zod";
@@ -58,7 +58,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				throw unauthorizedOriginError(req.i18n, undefined, req.logger);
 
 			for (const domain of allowedDomains) {
-				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
+				if (tasks.clientTaskManager.domainPatternMatcher(origin, domain)) {
 					next();
 					return;
 				}
@@ -94,11 +94,11 @@ const siteKeyNotRegisteredError = (
 
 const invalidSiteKeyError = (
 	i18n: { t: TFunction<"translation", undefined> },
-	dapp: string,
+	siteKey: string,
 	logger?: Logger,
 ) => {
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
-		context: { code: 400, siteKey: dapp },
+		context: { code: 400, siteKey: siteKey },
 		i18n,
 		logger,
 	});

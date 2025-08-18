@@ -34,7 +34,7 @@ import { Languages } from "@prosopo/locale";
 const REPO_DIR = "/home/chris/dev/prosopo/captcha-private/captcha";
 
 import fs from "node:fs";
-import { getRootDir } from "@prosopo/config";
+import { getRootDir } from "@prosopo/workspace";
 import fg from "fast-glob";
 // keys are accessed by the code as `SECTION1.KEY1`, `SECTION1.KEY2`, `SECTION2.KEY3`, `SECTION2.KEY4`
 import json from "../../../../packages/locale/src/locales/en/translation.json" assert {
@@ -120,7 +120,7 @@ const removeUnusedKeys = (jsonPath: string, projectPath: string) => {
 
 	// for each of en.json, es.json, and pt.json, load the files, remove the unused keys, and write the files back
 	// to the same location
-	for (const lang of Languages) {
+	for (const lang of Object.values(Languages)) {
 		const langJsonPath = jsonPath.replace("en", lang);
 		const langJson = JSON.parse(fs.readFileSync(langJsonPath, "utf8"));
 		for (const key of unusedKeys) {

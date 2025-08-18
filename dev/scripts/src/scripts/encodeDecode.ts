@@ -1,4 +1,3 @@
-import { decodeAddress, encodeAddress } from "@polkadot/keyring";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +23,7 @@ import {
 } from "@polkadot/util";
 import { blake2AsHex, isAddress } from "@polkadot/util-crypto";
 import { at, consoleTableWithWrapping } from "@prosopo/util";
+import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 
 function isJSON(arg: string): boolean {
 	try {

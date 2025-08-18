@@ -12,12 +12,11 @@ import path from "node:path";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ViteCommonJSConfig } from "./src/vite/index.js";
+import ViteCommonJSConfig from "./src/vite/vite.commonjs.config.js";
 
 export default function () {
 	return ViteCommonJSConfig(
-		"config",
-		path.resolve("./tsconfig.cjs.json"),
-		"src/index.ts",
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
 	);
 }

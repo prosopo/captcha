@@ -4,10 +4,22 @@
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},
-	"include": ["src", "src/**/*.json"],
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
 	"references": [
 		{
 			"path": "../types"
+		},
+		{
+			"path": "../user-access-policy"
+		},
+		{
+			"path": "../../dev/config/tsconfig.json"
 		}
 	]
 }

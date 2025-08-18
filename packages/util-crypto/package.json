@@ -1,0 +1,65 @@
+{
+	"name": "@prosopo/util-crypto",
+	"version": "13.5.7",
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"private": false,
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"scripts": {
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"cli": "node ./dist/js/cli.js"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"dependencies": {
+		"@noble/curves": "1.9.2",
+		"@noble/hashes": "1.8.0",
+		"@polkadot/util": "12.6.2",
+		"@polkadot/x-randomvalues": "12.6.2",
+		"@prosopo/config": "3.1.5",
+		"@scure/base": "^1.1.7",
+		"@scure/sr25519": "0.2.0",
+		"dotenv": "16.4.5"
+	},
+	"devDependencies": {
+		"@types/node": "22.10.2",
+		"@vitest/coverage-v8": "3.0.9",
+		"concurrently": "9.0.1",
+		"del-cli": "6.0.0",
+		"npm-run-all": "4.1.5",
+		"tslib": "2.7.0",
+		"tsx": "4.20.3",
+		"typescript": "5.6.2",
+		"vite": "6.3.5",
+		"vitest": "3.0.9"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git"
+	},
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org"
+	},
+	"description": "Utility package to house all code that is not specific to prosopo. E.g. random number generation, string manipulation, etc.",
+	"sideEffects": false
+}

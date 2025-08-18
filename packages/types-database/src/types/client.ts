@@ -24,6 +24,7 @@ export const UserSettingsSchema = new Schema({
 	captchaType: String,
 	frictionlessThreshold: Number,
 	powDifficulty: Number,
+	imageThreshold: Number,
 	domains: [String],
 });
 

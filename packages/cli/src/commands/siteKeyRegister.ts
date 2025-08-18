@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@polkadot/keyring/types";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
@@ -32,6 +32,7 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 	frictionless_threshold: z.number().max(1).min(0),
 	pow_difficulty: z.number(),
 	domains: z.array(z.string()),
+	image_threshold: z.number().max(1).min(0),
 });
 
 export default (
@@ -76,6 +77,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "POW difficulty for settings",
+				} as const)
+				.option("image_threshold", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image threshold for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -88,6 +94,7 @@ export default (
 					frictionless_threshold,
 					pow_difficulty,
 					domains,
+					image_threshold,
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
@@ -95,10 +102,17 @@ export default (
 					frictionlessThreshold: frictionless_threshold as number,
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
+					imageThreshold: image_threshold as number,
 				});
-				logger.info(`Site Key ${argv.sitekey} registered`);
+				logger.info(() => ({
+					data: { sitekey },
+					msg: "Site Key registered",
+				}));
 			} catch (err) {
-				logger.error(err);
+				logger.error(() => ({
+					err,
+					msg: "Error registering Site Key",
+				}));
 			}
 		},
 		middlewares: [validateSiteKey],

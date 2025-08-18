@@ -16,11 +16,8 @@ import child_process from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import util from "node:util";
-import { ProsopoEnvError, getLogger } from "@prosopo/common";
-import { at } from "@prosopo/util";
 import type { ProjectReference } from "typescript";
 
-const logger = getLogger("Info", "config.dependencies.js");
 const exec = util.promisify(child_process.exec);
 // find a tScOnFiG.json file
 const tsConfigRegex = /\/[A-Za-z.]*\.json$/;
@@ -33,13 +30,13 @@ async function getPackageDir(packageName: string): Promise<string> {
 		pkg = `@prosopo/${packageName}`;
 	}
 	const pkgCommand = `npm list ${pkg} -ap`;
-	logger.info(`Running command ${pkgCommand}`);
+	console.info(`Running command ${pkgCommand}`);
 	// get package directory
 	const { stdout: packageDir, stderr } = await exec(pkgCommand);
 	if (stderr) {
-		throw new ProsopoEnvError("CONFIG.INVALID_PACKAGE_DIR", {
-			context: { stderr },
-		});
+		if (stderr.includes("ERR!")) {
+			throw new Error("CONFIG.INVALID_PACKAGE_DIR");
+		}
 	}
 	return packageDir.trim() || path.resolve();
 }
@@ -133,7 +130,7 @@ export async function getExternalsFromReferences(
 	ignorePatterns: RegExp[] = [],
 ): Promise<string[]> {
 	const tsConfigPaths = getTsConfigs(tsConfigPath, ignorePatterns, [], false);
-	logger.debug("tsConfigPaths", tsConfigPaths);
+	console.debug({ tsConfigPaths });
 	const promises: Promise<string>[] = [];
 	for (const refTsConfigPath of tsConfigPaths) {
 		const packageJsonPath = path.resolve(
@@ -164,7 +161,7 @@ export async function getExternalsFromReferences(
 		);
 	}
 	const externals = await Promise.all(promises);
-	logger.debug("externals", externals);
+	console.debug({ externals });
 	return externals;
 }
 
@@ -184,14 +181,12 @@ export async function getDependencies(
 	if (packageName) {
 		const packageDir = await getPackageDir(packageName);
 		cmd = `cd ${packageDir.trim()} && ${cmd}`;
-		logger.info(`Running command ${cmd} in ${packageDir}`);
+		console.info(`Running command ${cmd} in ${packageDir}`);
 	}
 
 	const { stdout, stderr } = await exec(cmd);
 	if (stderr) {
-		throw new ProsopoEnvError("CONFIG.INVALID_PACKAGE_DIR", {
-			context: { stderr },
-		});
+		throw new Error("CONFIG.INVALID_PACKAGE_DIR");
 	}
 	const deps: string[] = [];
 	const peerDeps: string[] = [];
@@ -201,13 +196,13 @@ export async function getDependencies(
 			//  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
 			const parts = line.match(peerDepsRegex);
 			if (parts && parts.length > 1) {
-				peerDeps.push(at(parts, 1));
+				peerDeps.push(parts[1] as string);
 			}
 		} else {
 			//  │ │ │ ├─┬ mongodb-memory-server-core@8.15.1
 			const parts = line.match(depsRegex);
 			if (parts && parts.length > 1) {
-				deps.push(at(parts, 1));
+				deps.push(parts[1] as string);
 			}
 		}
 	}

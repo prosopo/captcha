@@ -34,6 +34,7 @@ const renderPlaceholder = (
 	theme: string | undefined,
 	mode: ModeType,
 	errorMessage: string | undefined,
+	isTranslationLoaded: boolean,
 	translationFn: (key: string) => string,
 	loading: boolean,
 ) => {
@@ -48,7 +49,7 @@ const renderPlaceholder = (
 			theme={checkboxTheme}
 			onChange={async () => {}}
 			checked={false}
-			labelText={translationFn("WIDGET.I_AM_HUMAN")}
+			labelText={isTranslationLoaded ? translationFn("WIDGET.I_AM_HUMAN") : ""}
 			error={errorMessage}
 			aria-label="human checkbox"
 			loading={loading}
@@ -99,6 +100,7 @@ export const ProcaptchaFrictionless = ({
 			config.theme,
 			config.mode,
 			stateRef.current.errorMessage,
+			i18n.isInitialized,
 			i18n.t,
 			true,
 		),
@@ -124,6 +126,7 @@ export const ProcaptchaFrictionless = ({
 				config.theme,
 				config.mode,
 				errorMessage || "Cannot load CAPTCHA",
+				i18n.isInitialized,
 				i18n.t,
 				false,
 			),

@@ -14,22 +14,20 @@
 
 import type { InjectedAccount } from "@polkadot/extension-inject/types";
 import type { InjectedExtension } from "@polkadot/extension-inject/types";
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { cryptoWaitReady } from "@polkadot/util-crypto";
-import type { KeypairType } from "@polkadot/util-crypto/types";
-import { stringToU8a } from "@polkadot/util/string";
-import { u8aToHex } from "@polkadot/util/u8a";
-import { hexHash } from "@prosopo/common";
+import { stringToU8a } from "@polkadot/util";
 import { getFingerprint } from "@prosopo/fingerprint";
+import { Keyring } from "@prosopo/keyring";
+import type { KeyringPair } from "@prosopo/types";
 import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
-import { version } from "@prosopo/util";
+import { u8aToHex, version } from "@prosopo/util";
+import { hexHash } from "@prosopo/util-crypto";
+import type { KeypairType } from "@prosopo/util-crypto";
 import { Extension } from "./Extension.js";
 
 const SignerLoader = async () =>
 	(await import("@polkadot/extension-base/page/Signer")).default;
-const KeyringLoader = async () => (await import("@polkadot/keyring")).Keyring;
 const EntropyToMnemonicLoader = async () =>
-	(await import("@polkadot/util-crypto/mnemonic/bip39")).entropyToMnemonic;
+	(await import("@prosopo/util-crypto")).entropyToMnemonic;
 
 type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair };
 
@@ -62,7 +60,7 @@ export class ExtensionWeb2 extends Extension {
 			const signature = account.keypair.sign(payload.data);
 			return {
 				id: 1, // the id of the request to sign. This should be incremented each time and adjust the signature, but we're hacking around this. Hence the signature will always be the same given the same payload.
-				signature: u8aToHex(signature),
+				signature: u8aToHex(signature) as `0x${string}`,
 			};
 		};
 
@@ -88,10 +86,11 @@ export class ExtensionWeb2 extends Extension {
 	private async createAccount(
 		config: ProcaptchaClientConfigOutput,
 	): Promise<AccountWithKeyPair> {
-		await cryptoWaitReady();
-		const Keyring = await KeyringLoader();
 		const browserEntropy = await getFingerprint();
+
+		// hash the entropy and remove 0x
 		const entropy = hexHash(browserEntropy, 128).slice(2);
+
 		const u8Entropy = stringToU8a(entropy);
 		const entropyToMnemonic = await EntropyToMnemonicLoader();
 		const mnemonic = entropyToMnemonic(u8Entropy);
@@ -108,3 +107,5 @@ export class ExtensionWeb2 extends Extension {
 		};
 	}
 }
+
+export default ExtensionWeb2;
