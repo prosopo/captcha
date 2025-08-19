@@ -120,7 +120,6 @@ services:
         restart: unless-stopped
         env_file:
             - ../.env.1.${NODE_ENV}
-        command: [ "mongodb_exporter" ]
 
     caddy:
         container_name: caddy
