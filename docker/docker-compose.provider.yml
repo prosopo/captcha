@@ -120,6 +120,8 @@ services:
         restart: unless-stopped
         env_file:
             - ../.env.1.${NODE_ENV}
+        environment:
+            - MONGODB_URI=mongodb://staging:staging@database:27017
 
     caddy:
         container_name: caddy
