@@ -33,6 +33,7 @@ export interface VerifyResult {
 }
 
 export interface JWTVerifyResult extends VerifyResult {
+	payload?: JWTPayload;
 	/** Reason for failure, if any */
 	error?: string;
 }
@@ -51,6 +52,11 @@ export type JWTPayload = {
 	iat: number;
 	/** Expiration time, in seconds since epoch */
 	exp: number;
+	/** Not before time, in seconds since epoch */
+	nbf?: number;
+	/** Additional custom claims */
+	// biome-ignore lint/suspicious/noExplicitAny: Official API allows any additional claims
+	[key: string]: any;
 };
 
-export type JWT = `${string}.${string}.${string}`;
+export type JWT = string;

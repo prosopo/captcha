@@ -6,7 +6,7 @@ import type {
 	KeyringPair$Json,
 	KeyringPair$Meta,
 } from "@prosopo/types";
-import type { JWT } from "@prosopo/util-crypto";
+import type { JWT, JWTVerifyResult } from "@prosopo/util-crypto";
 
 // empty publicKey
 const publicKey = new Uint8Array(32);
@@ -42,7 +42,13 @@ const pair: KeyringPair = {
 	jwtVerify: (
 		_jwt: JWT,
 		_options?: { ignoreExpiration?: boolean; ignoreNotBefore?: boolean },
-	): boolean => false,
+	): JWTVerifyResult => ({
+		isValid: false,
+		error: "JWT verification failed",
+		crypto: "sr25519",
+		publicKey,
+		isWrapped: false,
+	}),
 	lock: (): void => {
 		// no locking, it is always locked
 	},

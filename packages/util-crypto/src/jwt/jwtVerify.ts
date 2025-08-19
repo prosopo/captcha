@@ -37,7 +37,7 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 		};
 	}
 
-	const { exp, iat, sub } = payload;
+	const { exp, iat, nbf, sub } = payload;
 	const now = Date.now() / 1000;
 
 	if (typeof exp !== "number" || typeof iat !== "number") {
@@ -58,7 +58,7 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 			isWrapped: false,
 		};
 	}
-	if (iat > now) {
+	if (nbf && nbf > now) {
 		return {
 			isValid: false,
 			error: "JWT not valid yet",

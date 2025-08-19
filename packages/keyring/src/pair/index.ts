@@ -20,8 +20,8 @@ import {
 import {
 	type JWT,
 	blake2AsU8a,
+	jwtVerify,
 	sr25519jwtIssue,
-	sr25519jwtVerify,
 } from "@prosopo/util-crypto";
 import type { EncryptedJsonEncoding } from "@prosopo/util-crypto";
 import { keyExtractPath, keyFromPath } from "@prosopo/util-crypto";
@@ -29,6 +29,7 @@ import { secp256k1Compress } from "@prosopo/util-crypto";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { sr25519FromSeed, sr25519Sign } from "@prosopo/util-crypto";
 import { sr25519VrfSign, sr25519VrfVerify } from "@prosopo/util-crypto";
+import type { JWTVerifyResult } from "@prosopo/util-crypto";
 import { decodePair } from "./decode.js";
 import { encodePair } from "./encode.js";
 import { pairToJson } from "./toJson.js";
@@ -77,21 +78,6 @@ const TYPE_SIGNATURE = {
 
 const TYPE_JWT_ISSUE = {
 	sr25519: sr25519jwtIssue,
-	ed25519: () => {
-		throw new Error("Not Implemented");
-	},
-	ecdsa: () => {
-		throw new Error("Not Implemented");
-	},
-	ethereum: () => {
-		throw new Error("Not Implemented");
-	},
-};
-
-const TYPE_JWT_VERIFY = {
-	sr25519: (jwt: JWT, publicKey: Uint8Array): boolean => {
-		return sr25519jwtVerify(jwt, publicKey);
-	},
 	ed25519: () => {
 		throw new Error("Not Implemented");
 	},
@@ -238,8 +224,8 @@ export function createPair(
 			}
 			return TYPE_JWT_ISSUE[type]({ publicKey, secretKey });
 		},
-		jwtVerify: (jwt: JWT): boolean => {
-			return TYPE_JWT_VERIFY[type](jwt, publicKey);
+		jwtVerify: (jwt: JWT): JWTVerifyResult => {
+			return jwtVerify(jwt, publicKey);
 		},
 		lock: (): void => {
 			secretKey = new Uint8Array([]);
