@@ -116,6 +116,8 @@ services:
         networks:
             - internal
         restart: unless-stopped
+        env_file:
+            - ../.env.1.${NODE_ENV}
         command:
             - '--mongodb.uri=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@database:27017'
     caddy:
@@ -185,6 +187,8 @@ services:
         depends_on:
             redis-stack:
                 condition: service_healthy
+        env_file:
+            - ../.env.1.${NODE_ENV}
         environment:
             - REDIS_ADDR=${REDIS_CONNECTION_URL}
             - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD}
