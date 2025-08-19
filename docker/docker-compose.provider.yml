@@ -1,40 +1,40 @@
 services:
-    provider1:
-        container_name: provider1
-        profiles:
-            - production
-            - staging
-        image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
-        labels:
-            - "vector.provider=true" # enable logging as a provider
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
-        pull_policy: always
-        env_file:
-            - ../.env.1.${NODE_ENV}
-        ports:
-            - '9229:9229'
-        networks:
-            external:
-            internal:
-                ipv4_address: 172.18.0.3
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        depends_on:
-            - redis-stack
-        healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the healthz endpoint
-            interval: 5m
-            retries: 3
-            start_period: 30s
-            timeout: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
+    # provider1:
+    #     container_name: provider1
+    #     profiles:
+    #         - production
+    #         - staging
+    #     image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
+    #     labels:
+    #         - "vector.provider=true" # enable logging as a provider
+    #         - "vector.docker=true" # log docker events
+    #     restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    #     pull_policy: always
+    #     env_file:
+    #         - ../.env.1.${NODE_ENV}
+    #     ports:
+    #         - '9229:9229'
+    #     networks:
+    #         external:
+    #         internal:
+    #             ipv4_address: 172.18.0.3
+    #     logging:
+    #         driver: 'json-file'
+    #         options:
+    #             max-size: '100m'
+    #             max-file: '1'
+    #     depends_on:
+    #         - redis-stack
+    #     healthcheck:
+    #         test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the healthz endpoint
+    #         interval: 5m
+    #         retries: 3
+    #         start_period: 30s
+    #         timeout: 10s
+    #     dns:
+    #         - 8.8.8.8
+    #         - 1.1.1.1
+    #         - 208.67.222.222
     provider2:
         container_name: provider2
         profiles:
