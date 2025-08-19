@@ -202,6 +202,8 @@ export const unwrapError = (
 	const statusMessage = "Bad Request";
 	jsonError.message = message;
 	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
+	jsonError.data =
+		"data" in err && err.data ? (err.data as Record<string, unknown>) : {};
 
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
@@ -210,6 +212,7 @@ export const unwrapError = (
 			err.context.translationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = i18n.t(err.message);
 		code = err.context.code ?? jsonError.code;
+		jsonError.data = err.context.data || jsonError.data;
 		// Only move to the next error if ProsopoBaseError or ZodError
 		if (
 			err.context.error &&
