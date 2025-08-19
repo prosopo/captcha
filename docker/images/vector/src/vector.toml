@@ -64,7 +64,7 @@ parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
-    output.message = .message
+    output.message = message_str
 }
 output.host=get_env_var!("OO_HOST")
 output.container_name=.container_name
@@ -136,7 +136,7 @@ parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
-    output.message = .message
+    output.message = message_str
 }
 output.host=get_env_var!("OO_HOST")
 output.container_name=.container_name
@@ -222,7 +222,7 @@ parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
-    output.message = .message
+    output.message = message_str
 }
 output.host=get_env_var!("OO_HOST")
 output.container_name=.container_name
@@ -294,7 +294,7 @@ parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
-    output.message = .message
+    output.message = message_str
 }
 output.host=get_env_var!("OO_HOST")
 output.container_name=.container_name
