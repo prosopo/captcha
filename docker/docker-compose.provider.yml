@@ -148,6 +148,9 @@ services:
             - 208.67.222.222
     redis-stack:
         container_name: redis-stack
+        labels:
+            - "vector.redis=true" # enable logging as redis
+            - "vector.docker=true" # log docker events
         # unlike "redis/redis-stack-server" this image includes Insights
         image: redis/redis-stack:${REDIS_IMAGE}
         env_file:
@@ -171,14 +174,13 @@ services:
     redis-exporter:
         image: oliver006/redis_exporter:latest
         container_name: redis-exporter
+        labels:
+            - "vector.docker=true" # log docker events
         depends_on:
             redis-stack:
                 condition: service_healthy
         env_file:
             - ../.env.1.${NODE_ENV}
-        environment:
-            - REDIS_ADDR=${REDIS_CONNECTION_URL}
-            - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD}
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         networks:
             - internal
@@ -186,6 +188,8 @@ services:
     cadvisor:
         image: gcr.io/cadvisor/cadvisor:v0.52.1
         container_name: cadvisor
+        labels:
+            - "vector.docker=true" # log docker events
         command:
             - '--enable_metrics=cpu,cpuLoad,memory,disk,diskIO,network,process,pressure,oom_event,percpu,app,tcp,udp'
             - '--store_container_labels=false'
