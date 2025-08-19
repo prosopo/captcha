@@ -29,12 +29,10 @@ export const removeAllUserAccessPolicies = async (adminPair: KeyringPair) => {
 	const providers = await loadBalancer(EnvironmentTypesSchema.enum.development);
 	const responses = [];
 	for (const provider of providers) {
-		const timestamp = Date.now();
-		const signature = u8aToHex(adminPair.sign(timestamp.toString()));
 		const providerApi = new ProviderApi(provider.url, adminPair.address);
 
 		responses.push(
-			providerApi.deleteAllUserAccessPolicies(timestamp.toString(), signature),
+			providerApi.deleteAllUserAccessPolicies(adminPair.jwtIssue()),
 		);
 	}
 	return Promise.all(responses);
@@ -111,8 +109,7 @@ export const userAccessPolicy = async (
 
 		const response = await providerApi.insertUserAccessPolicies(
 			accessPolicyBody,
-			timestamp.toString(),
-			signature,
+			adminPair.jwtIssue(),
 		);
 
 		console.log(response);

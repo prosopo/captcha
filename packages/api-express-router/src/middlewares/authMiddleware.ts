@@ -65,7 +65,15 @@ export const authMiddleware = (
 };
 
 const extractJWT = (req: Request) => {
-	const jwt = req.headers.jwt as string;
+	const authHeader = req.headers.Authorization || req.headers.authorization;
+
+	if (!authHeader || typeof authHeader !== "string") {
+		throw new ProsopoApiError("GENERAL.MISSING_AUTH_HEADER", {
+			context: { error: "Missing Authorization header", code: 401 },
+		});
+	}
+
+	const jwt = authHeader.replace("Bearer ", "");
 
 	if (!jwt) {
 		throw new ProsopoApiError("GENERAL.INVALID_JWT", {

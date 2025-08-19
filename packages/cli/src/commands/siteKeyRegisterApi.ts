@@ -100,8 +100,7 @@ export default (
 					image_threshold,
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
-				const timestamp = new Date().getTime().toString();
-				const signature = u8aToHex(authAccount.sign(timestamp));
+				const jwt = pair.jwtIssue();
 				await api.registerSiteKey(
 					sitekey as string,
 					argv.tier as Tier,
@@ -112,8 +111,7 @@ export default (
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
 					},
-					timestamp,
-					signature,
+					jwt,
 				);
 				logger.info(() => ({
 					data: { sitekey },
