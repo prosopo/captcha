@@ -97,11 +97,13 @@ export const CompositeIpAddressSchema = object({
 
 const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
 	lower: {
-		type: BigInt,
+		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
+		type: Schema.Types.Decimal128,
 		required: true,
 	},
 	upper: {
-		type: BigInt,
+		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
+		type: Schema.Types.Decimal128,
 		required: false,
 	},
 	type: { type: String, enum: IpAddressType, required: true },
