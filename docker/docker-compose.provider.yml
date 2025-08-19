@@ -215,6 +215,12 @@ services:
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+        cap_add:
+            - NET_ADMIN # Required for netlink socket access
+            - NET_RAW # Required for raw socket access
+            - SYS_ADMIN # Required for system metrics collection
+        security_opt:
+            - seccomp:unconfined # May be needed for some netlink operations
         networks:
             - internal
             - external
