@@ -218,11 +218,14 @@ export function createPair(
 		encodePkcs8: (passphrase?: string): Uint8Array => {
 			return recode(passphrase);
 		},
-		jwtIssue: (): JWT => {
+		jwtIssue: (
+			options?: { expiresIn?: number; notBefore?: number },
+			message?: { [key: string]: string },
+		): JWT => {
 			if (isLocked(secretKey)) {
 				throw new Error("Cannot sign with a locked key pair");
 			}
-			return TYPE_JWT_ISSUE[type]({ publicKey, secretKey });
+			return TYPE_JWT_ISSUE[type]({ publicKey, secretKey }, options, message);
 		},
 		jwtVerify: (jwt: JWT): JWTVerifyResult => {
 			return jwtVerify(jwt, publicKey);
