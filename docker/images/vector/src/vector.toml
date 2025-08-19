@@ -494,28 +494,6 @@ buffer.max_size = 268435488
 # forwarded to OpenObserve using Prometheus Remote Write protocol.
 
 # =============================================================================
-# HOST METRICS
-# =============================================================================
-
-# Source: Collect system-level metrics from the host machine
-# Includes CPU, memory, disk, network, and other hardware metrics
-[sources.host_metrics]
-type = "host_metrics"
-scrape_interval_secs = 15
-# Exclude TCP connection metrics that cause netlink parsing errors
-exclude = ["tcp_connections"]
-
-# Transform: Add host and environment tags to host metrics
-# Enables filtering and grouping metrics by host and environment
-[transforms.host_metrics_format]
-type = "remap"
-inputs = ["host_metrics"]
-source = '''
-.tags.host=get_env_var!("OO_HOST")
-.tags.env=get_env_var!("NODE_ENV")
-'''
-
-# =============================================================================
 # VECTOR INTERNAL METRICS
 # =============================================================================
 
