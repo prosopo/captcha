@@ -1,5 +1,24 @@
 # @prosopo/env
 
+## 3.1.10
+### Patch Changes
+
+- Updated dependencies [e64160c]
+  - @prosopo/database@3.0.19
+  - @prosopo/types-env@2.7.23
+
+## 3.1.9
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/types-env@2.7.22
+  - @prosopo/database@3.0.18
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 3.1.8
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/prosoponator-bot
 
+## 2.6.6
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 2.6.5
 ### Patch Changes
 

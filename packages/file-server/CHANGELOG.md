@@ -1,5 +1,12 @@
 # @prosopo/file-server
 
+## 2.6.10
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/util@3.0.8
+
 ## 2.6.9
 ### Patch Changes
 

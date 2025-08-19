@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/svelte-procaptcha-integration-demo",
-	"version": "1.1.11",
+	"version": "1.1.12",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -24,12 +24,12 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/svelte-procaptcha-wrapper": "1.1.11",
+		"@prosopo/svelte-procaptcha-wrapper": "1.1.12",
 		"@prosopo/config": "3.1.5",
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.1.5",
+		"@prosopo/procaptcha-integration-build-config": "1.1.6",
 		"@sveltejs/vite-plugin-svelte": "5.0.3",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",

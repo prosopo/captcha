@@ -1,5 +1,21 @@
 # @prosopo/types-env
 
+## 2.7.23
+### Patch Changes
+
+  - @prosopo/types-database@3.0.19
+
+## 2.7.22
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/types-database@3.0.18
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 2.7.21
 ### Patch Changes
 

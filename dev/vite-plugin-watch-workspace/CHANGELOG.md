@@ -1,5 +1,15 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.11
+### Patch Changes
+
+- 7c75167: Cleanup unused deps
+
+## 2.6.10
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 2.6.9
 ### Patch Changes
 

@@ -1,5 +1,22 @@
 # @prosopo/client-example-server
 
+## 2.7.24
+### Patch Changes
+
+  - @prosopo/server@2.9.20
+
+## 2.7.23
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/dotenv@3.0.10
+  - @prosopo/server@2.9.19
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 2.7.22
 ### Patch Changes
 

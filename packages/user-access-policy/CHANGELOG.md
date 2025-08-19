@@ -1,5 +1,20 @@
 # @prosopo/user-access-policy
 
+## 3.5.4
+### Patch Changes
+
+- 553025d: Index
+
+## 3.5.3
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/api-route@2.6.13
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 3.5.2
 ### Patch Changes
 

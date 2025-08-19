@@ -1,5 +1,43 @@
 # @prosopo/provider
 
+## 3.6.2
+### Patch Changes
+
+- Updated dependencies [e64160c]
+- Updated dependencies [553025d]
+  - @prosopo/database@3.0.19
+  - @prosopo/user-access-policy@3.5.4
+  - @prosopo/env@3.1.10
+  - @prosopo/api@3.1.9
+  - @prosopo/types-database@3.0.19
+  - @prosopo/api-express-router@3.0.10
+  - @prosopo/datasets@3.0.19
+  - @prosopo/types-env@2.7.23
+
+## 3.6.1
+### Patch Changes
+
+- d8e855c: Adding checks for IP consistency throughout the verification process
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/types-database@3.0.18
+  - @prosopo/locale@3.1.5
+  - @prosopo/api-express-router@3.0.9
+  - @prosopo/user-access-policy@3.5.3
+  - @prosopo/load-balancer@2.6.20
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/api-route@2.6.13
+  - @prosopo/types-env@2.7.22
+  - @prosopo/database@3.0.18
+  - @prosopo/datasets@3.0.18
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+  - @prosopo/api@3.1.8
+  - @prosopo/env@3.1.9
+
 ## 3.6.0
 ### Minor Changes
 

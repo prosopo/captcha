@@ -1,5 +1,12 @@
 # @prosopo/react-procaptcha-integration-demo
 
+## 1.1.12
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/react-procaptcha-wrapper@1.1.12
+
 ## 1.1.11
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/testpkg2
 
+## 1.0.9
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 1.0.8
 ### Patch Changes
 
