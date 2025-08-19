@@ -106,10 +106,12 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
-
     mongo-exporter:
         image: percona/mongodb_exporter:0.47.0
         container_name: mongo-exporter
+        profiles:
+            - production
+            - staging
         depends_on:
             database:
                 condition: service_healthy
@@ -118,8 +120,9 @@ services:
         restart: unless-stopped
         env_file:
             - ../.env.1.${NODE_ENV}
-        command:
-            - '--mongodb.uri=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@database:27017'
+        command: >
+            sh -c "--mongodb.uri=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@database:27017"
+
     caddy:
         container_name: caddy
         profiles:
