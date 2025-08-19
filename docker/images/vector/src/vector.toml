@@ -59,7 +59,8 @@ type = "remap"
 inputs = ["provider"]
 source = '''
 output={}
-parsed=parse_json(string(.message)) ?? null
+message_str = string(.message) ?? ""
+parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
@@ -130,7 +131,8 @@ type = "remap"
 inputs = ["mongo"]
 source = '''
 output={}
-parsed=parse_json(string(.message)) ?? null
+message_str = string(.message) ?? ""
+parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
@@ -215,7 +217,8 @@ type = "remap"
 inputs = ["docker"]
 source = '''
 output={}
-parsed=parse_json(string(.message)) ?? null
+message_str = string(.message) ?? ""
+parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
@@ -286,7 +289,8 @@ type = "remap"
 inputs = ["caddy"]
 source = '''
 output={}
-parsed=parse_json(string(.message)) ?? null
+message_str = string(.message) ?? ""
+parsed = parse_json(message_str) ?? null
 if parsed != null {
     output = parsed
 } else {
