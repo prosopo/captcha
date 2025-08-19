@@ -67,6 +67,7 @@ describe("jwtIssue", (): void => {
 	});
 	it("accepts a custom start time", (): void => {
 		const pair = sr25519FromSeed(randomAsU8a());
+		const notBefore = Math.floor((Date.now() + 24 * 60 * 60 * 1000) / 1000);
 
 		const jwt = sr25519jwtIssue(
 			{
@@ -75,7 +76,7 @@ describe("jwtIssue", (): void => {
 			},
 			{
 				expiresIn: 300,
-				notBefore: Math.floor((Date.now() + 24 * 60 * 60 * 1000) / 1000),
+				notBefore: notBefore,
 			}, // Custom start time
 		);
 
@@ -90,9 +91,7 @@ describe("jwtIssue", (): void => {
 		}
 
 		const payload = JSON.parse(atob(parts[1]));
-		const notBefore = payload.iat;
-		expect(notBefore).to.equal(
-			Math.floor(Date.now() / 1000) + 24 * 60 * 60, // Ensure notBefore is set correctly
-		);
+		const notBeforeResult = payload.nbf;
+		expect(notBefore).to.equal(notBeforeResult);
 	});
 });
