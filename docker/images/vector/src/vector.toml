@@ -599,8 +599,8 @@ source = '''
 # Source: Collect metrics from MongoDB instance
 # This source uses the mongodb_metrics Vector source to scrape metrics from the MongoDB database.
 [sources.mongodb_metrics]
-type = "mongodb_metrics"
-endpoints = ["mongodb://${MONGO_INITDB_ROOT_USERNAME:?err}:${MONGO_INITDB_ROOT_PASSWORD:?err}@database:27017"]
+type = "prometheus_scrape"
+endpoints = [ "http://database:9216/metrics" ]
 scrape_interval_secs = 15
 
 # Transform: Add host and environment tags to MongoDB metrics
