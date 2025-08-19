@@ -502,6 +502,8 @@ buffer.max_size = 268435488
 [sources.host_metrics]
 type = "host_metrics"
 scrape_interval_secs = 15
+# Exclude TCP connection metrics that cause netlink parsing errors
+exclude = ["tcp_connections"]
 
 # Transform: Add host and environment tags to host metrics
 # Enables filtering and grouping metrics by host and environment
