@@ -120,8 +120,6 @@ services:
         restart: unless-stopped
         env_file:
             - ../.env.1.${NODE_ENV}
-        command: >
-            sh -c "--mongodb.uri=mongodb://\${MONGO_INITDB_ROOT_USERNAME}:\${MONGO_INITDB_ROOT_PASSWORD}@database:27017"
 
     caddy:
         container_name: caddy
