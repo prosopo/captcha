@@ -106,6 +106,18 @@ services:
             - 8.8.8.8
             - 1.1.1.1
             - 208.67.222.222
+
+    mongo-exporter:
+        image: percona/mongodb_exporter:latest
+        container_name: mongo-exporter
+        depends_on:
+            database:
+                condition: service_healthy
+        networks:
+            - internal
+        restart: unless-stopped
+        command:
+            - '--mongodb.uri=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@database:27017'
     caddy:
         container_name: caddy
         profiles:
@@ -151,6 +163,7 @@ services:
         image: redis/redis-stack:${REDIS_IMAGE}
         env_file:
             - ../.env.1.${NODE_ENV}
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - ./data:/data # mount a volume for data persistence
             - ./redis.conf:/redis-stack.conf
@@ -175,6 +188,7 @@ services:
         environment:
             - REDIS_ADDR=${REDIS_CONNECTION_URL}
             - REDIS_PASSWORD=${REDIS_CONNECTION_PASSWORD}
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         networks:
             - internal
 
