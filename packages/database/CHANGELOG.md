@@ -1,5 +1,25 @@
 # @prosopo/database
 
+## 3.0.19
+### Patch Changes
+
+- e64160c: The way mongo memory server works has changed
+- Updated dependencies [553025d]
+  - @prosopo/user-access-policy@3.5.4
+  - @prosopo/types-database@3.0.19
+
+## 3.0.18
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/types-database@3.0.18
+  - @prosopo/locale@3.1.5
+  - @prosopo/user-access-policy@3.5.3
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 3.0.17
 ### Patch Changes
 

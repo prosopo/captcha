@@ -1,5 +1,23 @@
 # @prosopo/types-database
 
+## 3.0.19
+### Patch Changes
+
+- Updated dependencies [553025d]
+  - @prosopo/user-access-policy@3.5.4
+
+## 3.0.18
+### Patch Changes
+
+- d8e855c: Adding checks for IP consistency throughout the verification process
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/user-access-policy@3.5.3
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 3.0.17
 ### Patch Changes
 

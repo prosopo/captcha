@@ -1,5 +1,22 @@
 # @prosopo/server
 
+## 2.9.20
+### Patch Changes
+
+  - @prosopo/api@3.1.9
+
+## 2.9.19
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/load-balancer@2.6.20
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+  - @prosopo/api@3.1.8
+
 ## 2.9.18
 ### Patch Changes
 

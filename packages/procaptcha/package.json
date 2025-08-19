@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha",
-	"version": "2.7.22",
+	"version": "2.7.24",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
@@ -32,13 +32,13 @@
 	},
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
-		"@prosopo/api": "3.1.7",
-		"@prosopo/common": "3.1.4",
-		"@prosopo/datasets": "3.0.17",
-		"@prosopo/procaptcha-common": "2.7.16",
-		"@prosopo/types": "3.0.8",
-		"@prosopo/util": "3.0.7",
-		"@prosopo/util-crypto": "13.5.6",
+		"@prosopo/api": "3.1.9",
+		"@prosopo/common": "3.1.5",
+		"@prosopo/datasets": "3.0.19",
+		"@prosopo/procaptcha-common": "2.7.17",
+		"@prosopo/types": "3.0.9",
+		"@prosopo/util": "3.0.8",
+		"@prosopo/util-crypto": "13.5.7",
 		"@prosopo/config": "3.1.5"
 	},
 	"overrides": {
