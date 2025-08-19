@@ -494,6 +494,26 @@ buffer.max_size = 268435488
 # forwarded to OpenObserve using Prometheus Remote Write protocol.
 
 # =============================================================================
+# HOST METRICS
+# =============================================================================
+
+# Source: Collect system-level metrics from the host machine
+# Includes CPU, memory, disk, network, and other hardware metrics
+[sources.host_metrics]
+type = "host_metrics"
+scrape_interval_secs = 15
+
+# Transform: Add host and environment tags to host metrics
+# Enables filtering and grouping metrics by host and environment
+[transforms.host_metrics_format]
+type = "remap"
+inputs = ["host_metrics"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
 # VECTOR INTERNAL METRICS
 # =============================================================================
 
@@ -603,7 +623,7 @@ source = '''
 # Uses Prometheus Remote Write protocol for efficient metric transmission
 [sinks.oo_metrics]
 type = "prometheus_remote_write"
-inputs = ["vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/prometheus/api/v1/write"
 auth.strategy = "basic"
 auth.user = "${OO_USERNAME:?err}"
@@ -618,7 +638,7 @@ buffer.max_size = 268435488
 # Backup destination for metrics redundancy and disaster recovery
 [sinks.oo2_metrics]
 type = "prometheus_remote_write"
-inputs = ["vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo2.prosopo.io/api/default/prometheus/api/v1/write"
 auth.strategy = "basic"
 auth.user = "${OO2_USERNAME:?err}"
