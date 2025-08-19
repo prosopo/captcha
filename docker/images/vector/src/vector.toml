@@ -603,7 +603,7 @@ source = '''
 # Uses Prometheus Remote Write protocol for efficient metric transmission
 [sinks.oo_metrics]
 type = "prometheus_remote_write"
-inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/prometheus/api/v1/write"
 auth.strategy = "basic"
 auth.user = "${OO_USERNAME:?err}"
@@ -618,7 +618,7 @@ buffer.max_size = 268435488
 # Backup destination for metrics redundancy and disaster recovery
 [sinks.oo2_metrics]
 type = "prometheus_remote_write"
-inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo2.prosopo.io/api/default/prometheus/api/v1/write"
 auth.strategy = "basic"
 auth.user = "${OO2_USERNAME:?err}"
