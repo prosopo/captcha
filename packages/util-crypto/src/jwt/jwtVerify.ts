@@ -79,9 +79,12 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 	}
 
 	// signatureVerify itself already returns { isValid, isWrapped, crypto, publicKey, error? }
-	return signatureVerify(
-		`${headerPart}.${payloadPart}`,
-		signature,
-		u8aToU8a(publicKey),
-	);
+	return {
+		...signatureVerify(
+			`${headerPart}.${payloadPart}`,
+			signature,
+			u8aToU8a(publicKey),
+		),
+		payload: payload,
+	};
 };

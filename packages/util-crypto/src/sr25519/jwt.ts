@@ -26,9 +26,9 @@ export function sr25519jwtIssue(
 	const header: JWTHeader = { alg: "sr25519", typ: "JWT" };
 	const now = Math.floor(Date.now() / 1000);
 	const nbf = options?.notBefore ? Math.floor(options.notBefore) : now;
-
+	const sub = u8aToHex(publicKey);
 	const payload = {
-		sub: u8aToHex(publicKey),
+		sub: sub,
 		iat: now,
 		nbf: nbf,
 		exp: now + (options?.expiresIn ? Math.floor(options.expiresIn) : 300), // Passed in expiry or 5 min lifetime
