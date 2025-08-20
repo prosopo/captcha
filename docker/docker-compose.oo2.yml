@@ -34,7 +34,7 @@ services:
             - ../.env.${NODE_ENV}
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
-            - oo_data:/data
+            - ./oo_data:/data
         networks:
             - internal
         logging:
