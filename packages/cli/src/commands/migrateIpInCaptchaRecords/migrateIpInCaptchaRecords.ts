@@ -49,11 +49,13 @@ export const migrateIpInCaptchaRecordsCommand = (
 			try {
 				const db = await getDb(pair, config, uri, logger);
 
-				await migrateIpField(db, collectionsToUpgrade, logger);
+				if (db) {
+					await migrateIpField(db, collectionsToUpgrade, logger);
 
-				logger.info(() => ({
-					msg: "migration completed",
-				}));
+					logger.info(() => ({
+						msg: "migration completed",
+					}));
+				}
 			} catch (err) {
 				logger.error(() => ({
 					err,

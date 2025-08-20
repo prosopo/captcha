@@ -43,7 +43,7 @@
 		"express": "4.21.2",
 		"i18next": "24.1.0",
 		"ip-address": "10.0.1",
-		"mongodb": "6.9.0",
+		"mongodb": "6.15.0",
 		"mongoose": "8.13.0",
 		"read-tls-client-hello": "1.1.0",
 		"uuid": "11.1.0",
