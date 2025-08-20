@@ -1,5 +1,25 @@
 # @prosopo/procaptcha-bundle
 
+## 3.0.20
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+- a07db04: Release 3.1.12
+- Updated dependencies [b4442f0]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/procaptcha-react@2.7.0
+  - @prosopo/procaptcha-frictionless@2.6.39
+  - @prosopo/procaptcha-pow@2.7.25
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/dotenv@3.0.11
+  - @prosopo/locale@3.1.6
+  - @prosopo/procaptcha-common@2.7.18
+  - @prosopo/types@3.0.10
+  - @prosopo/widget-skeleton@2.6.7
+
 ## 3.0.19
 ### Patch Changes
 
