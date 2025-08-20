@@ -1,5 +1,23 @@
 # @prosopo/provider-mock
 
+## 2.8.3
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/database@3.1.0
+  - @prosopo/provider@3.7.0
+  - @prosopo/config@3.1.6
+  - @prosopo/api-express-router@3.0.11
+  - @prosopo/common@3.1.6
+  - @prosopo/dotenv@3.0.11
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+
 ## 2.8.2
 ### Patch Changes
 

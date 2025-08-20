@@ -1,5 +1,26 @@
 # @prosopo/procaptcha-react
 
+## 2.7.0
+### Minor Changes
+
+- b4442f0: Add image retry mechanism
+
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/procaptcha@2.7.25
+  - @prosopo/util@3.0.9
+  - @prosopo/common@3.1.6
+  - @prosopo/locale@3.1.6
+  - @prosopo/procaptcha-common@2.7.18
+  - @prosopo/types@3.0.10
+  - @prosopo/widget-skeleton@2.6.7
+
 ## 2.6.38
 ### Patch Changes
 
