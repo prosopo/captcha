@@ -6,9 +6,8 @@ services:
             - ../.env.${NODE_ENV}
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         ports:
-            - '8018:80'
-            - '44318:443'
-            - '44318:443/udp'
+            - '80:80'
+            - '443:443'
         volumes:
             - ./oo2.Caddyfile:/etc/caddy/Caddyfile
             - caddy_data:/data

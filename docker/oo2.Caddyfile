@@ -23,7 +23,6 @@
 
 {$OO_CADDY_DOMAIN} {
 	route {
-
 		header / {
 			# Enable HTTP Strict Transport Security (HSTS)
 			Strict-Transport-Security "max-age=31536000;"
@@ -48,9 +47,7 @@
 		# }
 
 		# reverse proxy to the provider container
-		reverse_proxy {$CADDY_OO_CONTAINER_NAME:oo}:{$CADDY_OO_PORT:5080} {
-			
-		}
+		reverse_proxy {$CADDY_OO_CONTAINER_NAME:oo}:{$CADDY_OO_PORT:5080}
 	}
 
 	log {
