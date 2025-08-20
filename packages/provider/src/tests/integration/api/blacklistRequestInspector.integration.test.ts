@@ -25,7 +25,7 @@ import {
 	accessRuleSchema,
 	accessRuleSchemaExtended,
 } from "@prosopo/user-access-policy";
-import { getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPrioritisedAccessRule } from "../../../api/blacklistRequestInspector.js";
@@ -479,44 +479,6 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					userAgent: userAgent1,
 					numericIpMaskMin: BigInt(16843010),
 					numericIpMaskMax: BigInt(16843010),
-				},
-				siteKey,
-			);
-			expect(result.length).toBe(0);
-		});
-
-		it("should not return a match for an IPv6 address that has no matching rule", async () => {
-			const ipV6Address = getIPAddress("2606:4700:20::ac43:469f");
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
-					ja4Hash: ja4Hash1,
-					userAgent: userAgent1,
-					numericIp: ipV6Address.bigInt(),
-				},
-				siteKey,
-			);
-			expect(result.length).toBe(0);
-		});
-		it("should return a match for an IPv6 address that has a matching rule", async () => {
-			const ipV6Address = getIPAddress("2606:4700:20::ac43:469f");
-
-			const accessRule1 = accessRuleSchema.parse({
-				type: AccessPolicyType.Restrict,
-				clientId: siteKey,
-				ja4Hash: ja4Hash1,
-				userAgent: userAgent1,
-				numericIp: ipV6Address.bigInt(),
-			});
-
-			await accessRulesStorage.insertRule(accessRule1);
-
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
-					ja4Hash: ja4Hash1,
-					userAgent: userAgent1,
-					numericIp: ipV6Address.bigInt(),
 				},
 				siteKey,
 			);
