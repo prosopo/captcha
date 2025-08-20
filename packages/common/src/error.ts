@@ -237,6 +237,11 @@ export const unwrapError = (
 	}
 
 	jsonError.code = code;
+	if(!jsonError.data) {
+		//remove the key
+		jsonError.data = undefined;
+	}
+
 	return { code, statusMessage, jsonError };
 };
 
