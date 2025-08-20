@@ -15,9 +15,8 @@
 import type { Logger } from "@prosopo/common";
 import { getCompositeIpAddress } from "@prosopo/provider";
 import { IpAddressType } from "@prosopo/types-database";
-import { Decimal128 } from "bson";
 import { Address6 } from "ip-address";
-import type { Db } from "mongodb";
+import { type Db, Decimal128 } from "mongodb";
 
 const MAX_IPV4_NUMERIC = 4294967295;
 
