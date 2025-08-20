@@ -26,4 +26,7 @@ export * from "./api/headerCheckMiddleware.js";
 export * from "./api/admin/createApiAdminRoutesProvider.js";
 export * from "./api/ignoreMiddleware.js";
 export * from "./api/robotsMiddleware.js";
-export { getCompositeIpAddress } from "./compositeIpAddress.js";
+export {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "./compositeIpAddress.js";
