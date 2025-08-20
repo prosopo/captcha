@@ -28,32 +28,20 @@ export const authMiddleware = (
 
 			let error: ProsopoApiError | undefined;
 
-			if (authAccount) {
-				try {
-					authAccount.jwtVerify(jwt);
-					next();
-					return;
-				} catch (e: unknown) {
-					// need to fall through to the verifySignature check
-					req.logger.warn(() => ({
-						err: e,
-						data: {
-							account: authAccount?.address,
-						},
-					}));
-					error = e as ProsopoApiError;
-				}
+			if (authAccount?.jwtVerify(jwt).isValid) {
+				next();
+				return;
 			}
 
-			if (pair) {
-				pair.jwtVerify(jwt);
+			if (pair?.jwtVerify(jwt).isValid) {
 				next();
 				return;
 			}
 
 			res.status(401).json({
-				error: "Unauthorized",
-				message: new ProsopoEnvError(error || "CONTRACT.CANNOT_FIND_KEYPAIR"),
+				error: new ProsopoEnvError(error || "API.UNAUTHORIZED", {
+					context: { i18n: req.i18n, code: 401 },
+				}),
 			});
 			return;
 		} catch (err) {
