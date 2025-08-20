@@ -1,0 +1,74 @@
+services:
+    caddy:
+        container_name: caddy
+        image: prosopo/caddy:latest
+        env_file:
+            - ../.env.${NODE_ENV}
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        ports:
+            - '8018:80'
+            - '44318:443'
+            - '44318:443/udp'
+        volumes:
+            - ./oo.Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            external:
+            internal:
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+    oo:
+        container_name: oo
+        image: public.ecr.aws/zinclabs/openobserve:latest
+        env_file:
+            - ../.env.${NODE_ENV}
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - oo_data:/data
+        networks:
+            - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+        healthcheck:
+            test: [ "CMD", "curl", "--fail", "http://localhost:5080/health" ]
+            interval: 1m
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+
+networks:
+    internal:
+        name: internal
+        internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
+    external:
+        name: external
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.19.0.0/16
+                  gateway: 172.19.0.1
+volumes:
+    caddy_data:
+    caddy_config:
