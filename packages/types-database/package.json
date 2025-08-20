@@ -39,7 +39,7 @@
 		"@prosopo/types": "3.0.9",
 		"@prosopo/user-access-policy": "3.5.4",
 		"@prosopo/config": "3.1.5",
-		"mongoose": "8.6.2",
+		"mongoose": "8.13.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
