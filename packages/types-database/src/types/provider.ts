@@ -100,11 +100,17 @@ const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
 		required: true,
+		// without casting to string Mongoose not able to set bigint to Decimal128
+		set: (value: bigint | string | number) =>
+			"bigint" === typeof value ? value.toString() : value,
 	},
 	upper: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
 		required: false,
+		// without casting to string Mongoose not able to set bigint to Decimal128
+		set: (value: bigint | string | number) =>
+			"bigint" === typeof value ? value.toString() : value,
 	},
 	type: { type: String, enum: IpAddressType, required: true },
 });
