@@ -19,6 +19,7 @@ import { Address6 } from "ip-address";
 import { type Db, Decimal128 } from "mongodb";
 
 const MAX_IPV4_NUMERIC = 4294967295;
+const BATCH_SIZE = 100_000;
 
 export const migrateIpField = async (
 	db: Db,
@@ -38,35 +39,48 @@ const migrateV4Records = async (db: Db, collection: string, logger: Logger) => {
 			$lte: Number(MAX_IPV4_NUMERIC),
 		},
 	};
+
+	let totalModified = 0;
+	let processed = 0;
 	const count = await db.collection(collection).countDocuments(searchArgs);
 
-	await db
-		.collection(collection)
-		.aggregate([
-			{
-				$match: searchArgs,
-			},
-			{
-				$addFields: {
-					ipAddress: {
-						lower: "$ipAddress",
-						type: IpAddressType.v4,
+	while (true) {
+		const docs = await db
+			.collection(collection)
+			.find(searchArgs, { projection: { ipAddress: 1 } })
+			.limit(BATCH_SIZE)
+			.toArray();
+
+		if (docs.length === 0) break;
+
+		const operations = docs.map((doc) => ({
+			updateOne: {
+				filter: { _id: doc._id },
+				update: {
+					$set: {
+						ipAddress: {
+							lower: doc.ipAddress,
+							type: IpAddressType.v4,
+						},
 					},
 				},
 			},
-			{
-				$merge: {
-					into: collection,
-					on: "_id",
-					whenMatched: "merge",
-				},
-			},
-		])
-		// executes the pipeline
-		.toArray();
+		}));
+
+		const bulkResult = await db
+			.collection(collection)
+			.bulkWrite(operations, { ordered: false });
+
+		totalModified += bulkResult?.modifiedCount || 0;
+		processed += docs.length;
+
+		logger.info(() => ({
+			msg: `Migrated v4 batch (${docs.length}) [${processed}/${count}] in "${collection}"`,
+		}));
+	}
 
 	logger.info(() => ({
-		msg: `Migrated ${count} v4 records in "${collection}" collection`,
+		msg: `Migrated ${count} v4 records (${totalModified} modified) in "${collection}" collection`,
 	}));
 };
 
@@ -77,49 +91,57 @@ const migrateV6Records = async (db: Db, collection: string, logger: Logger) => {
 			$gt: Number(MAX_IPV4_NUMERIC),
 		},
 	};
+
+	let totalModified = 0;
+	let processed = 0;
 	const count = await db.collection(collection).countDocuments(searchArgs);
 
-	const cursor = db
-		.collection(collection)
-		.find(searchArgs, { projection: { ipAddress: 1 } });
+	while (true) {
+		const docs = await db
+			.collection(collection)
+			.find(searchArgs, { projection: { ipAddress: 1 } })
+			.limit(BATCH_SIZE)
+			.toArray();
 
-	const operations = [];
+		if (docs.length === 0) break;
 
-	for await (const doc of cursor) {
-		const ipAddress = Address6.fromBigInt(BigInt(doc.ipAddress));
-		const compositeIpAddress = getCompositeIpAddress(ipAddress);
+		const operations = docs.map((doc) => {
+			const ipAddress = Address6.fromBigInt(BigInt(doc.ipAddress));
+			const compositeIpAddress = getCompositeIpAddress(ipAddress);
 
-		operations.push({
-			updateOne: {
-				filter: { _id: doc._id },
-				update: {
-					$set: {
-						ipAddress: {
-							// Long.fromString() for some reason leads to Int64 in records instead of NumberLong,
-							// so we use Decimal128
-							lower: Decimal128.fromString(compositeIpAddress.lower.toString()),
-							upper: Decimal128.fromString(
-								(compositeIpAddress.upper || 0n).toString(),
-							),
-							type: IpAddressType.v6,
+			return {
+				updateOne: {
+					filter: { _id: doc._id },
+					update: {
+						$set: {
+							ipAddress: {
+								lower: Decimal128.fromString(
+									compositeIpAddress.lower.toString(),
+								),
+								upper: Decimal128.fromString(
+									(compositeIpAddress.upper || 0n).toString(),
+								),
+								type: IpAddressType.v6,
+							},
 						},
 					},
 				},
-			},
+			};
 		});
-	}
 
-	let bulkResult = undefined;
-
-	if (operations.length > 0) {
-		bulkResult = await db
+		const bulkResult = await db
 			.collection(collection)
 			.bulkWrite(operations, { ordered: false });
+
+		totalModified += bulkResult?.modifiedCount || 0;
+		processed += docs.length;
+
+		logger.info(() => ({
+			msg: `Migrated v6 batch (${docs.length}) [${processed}/${count}] in "${collection}"`,
+		}));
 	}
 
-	const modifiedCount = bulkResult?.modifiedCount || 0;
-
 	logger.info(() => ({
-		msg: `Migrated ${count} v6 records (${modifiedCount} modified) in "${collection}"`,
+		msg: `Migrated ${count} v6 records (${totalModified} modified) in "${collection}"`,
 	}));
 };
