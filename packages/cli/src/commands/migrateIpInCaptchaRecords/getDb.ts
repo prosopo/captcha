@@ -29,9 +29,6 @@ export const getDb = async (
 	if (uri) {
 		logger.info(() => ({
 			msg: "Using DB connection from the URI",
-			data: {
-				uri: uri,
-			},
 		}));
 
 		db = await getByUri(uri);

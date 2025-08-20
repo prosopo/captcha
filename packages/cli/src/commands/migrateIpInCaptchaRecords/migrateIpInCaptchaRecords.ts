@@ -44,18 +44,16 @@ export const migrateIpInCaptchaRecordsCommand = (
 				desc: "DB Uri. When skipped, used the default connection based on the current environment",
 			} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
-			const uri = z.string().parse(argv.uri);
+			const uri = z.string().parse(argv.uri || "");
 
 			try {
 				const db = await getDb(pair, config, uri, logger);
 
-				if (db) {
-					await migrateIpField(db, collectionsToUpgrade, logger);
+				await migrateIpField(db, collectionsToUpgrade, logger);
 
-					logger.info(() => ({
-						msg: "migration completed",
-					}));
-				}
+				logger.info(() => ({
+					msg: "migration completed",
+				}));
 			} catch (err) {
 				logger.error(() => ({
 					err,
