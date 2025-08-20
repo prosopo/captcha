@@ -82,16 +82,16 @@ export default function (tsConfigPath?: string) {
 		},
 		test: {
 			//root: getRootDir(),
-			reporters: ["basic"],
+			reporters: ["verbose"],
 			include: [include],
 			watch: false,
 			exclude: ["**/node_modules/**", "**/dist/**"],
 			logHeapUsage: true,
-			coverage: {
-				enabled: true,
-				include: coverageInclude,
-				exclude: coverageExclude,
-			},
+			// coverage: {
+			// 	enabled: true,
+			// 	include: coverageInclude,
+			// 	exclude: coverageExclude,
+			// },
 			typecheck: {
 				enabled: true,
 			},
