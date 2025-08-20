@@ -237,7 +237,7 @@ export const unwrapError = (
 	}
 
 	jsonError.code = code;
-	if(!jsonError.data) {
+	if (jsonError.data && Object.keys(jsonError.data).length === 0) {
 		//remove the key
 		jsonError.data = undefined;
 	}
