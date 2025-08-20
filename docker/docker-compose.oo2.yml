@@ -10,7 +10,7 @@ services:
             - '44318:443'
             - '44318:443/udp'
         volumes:
-            - ./oo.Caddyfile:/etc/caddy/Caddyfile
+            - ./oo2.Caddyfile:/etc/caddy/Caddyfile
             - caddy_data:/data
             - caddy_config:/config
         networks:
