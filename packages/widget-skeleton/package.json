@@ -5,7 +5,7 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": "10.8.2"
+		"npm": "11.5.2"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
