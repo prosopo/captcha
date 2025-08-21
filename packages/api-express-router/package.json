@@ -31,6 +31,7 @@
 		"@prosopo/locale": "3.1.6",
 		"@prosopo/types": "3.0.10",
 		"@prosopo/config": "3.1.6",
+        "@prosopo/util-crypto": "13.5.7",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
 		"i18next": "24.1.0",
