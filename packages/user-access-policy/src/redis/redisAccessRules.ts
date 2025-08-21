@@ -170,8 +170,10 @@ export const createRedisAccessRulesWriter = (
 			// delete in batches of 100 to avoid recursion depth errors
 			for (let i = 0; i < ruleIds.length; i += 100) {
 				const batch = ruleIds.slice(i, i + 100);
-				const count = await client.del(batch);
-				total += count;
+				if (batch.length > 0) {
+					const count = await client.del(batch);
+					total += count;
+				}
 			}
 		},
 
@@ -185,8 +187,10 @@ export const createRedisAccessRulesWriter = (
 					COUNT: 100,
 				});
 				cursor = reply.cursor;
-				const count = await client.del(reply.keys);
-				total += count;
+				if (reply.keys.length > 0) {
+					const count = await client.del(reply.keys);
+					total += count;
+				}
 			} while (cursor !== '0');
 			return total;
 		},
