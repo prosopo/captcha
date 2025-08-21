@@ -43,6 +43,10 @@ import type {
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
+import {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "../../compositeIpAddress.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { shuffleArray, validateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
@@ -153,7 +157,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			salt,
 			deadlineTs,
 			currentTime,
-			ipAddress.bigInt(),
+			getCompositeIpAddress(ipAddress),
 			threshold,
 			frictionlessTokenId,
 		);
@@ -187,7 +191,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string, // the signature to indicate ownership of account
 		timestamp: number,
 		providerRequestHashSignature: string,
-		ipAddress: bigint,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		ja4: string,
 	): Promise<DappUserSolutionResult> {
@@ -275,7 +279,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: timestamp,
-				ipAddress,
+				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				frictionlessTokenId: pendingRecord.frictionlessTokenId,
 				ja4,
@@ -472,7 +476,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
-		const ipValidation = validateIpAddress(ip, solution.ipAddress, this.logger);
+		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
+		const ipValidation = validateIpAddress(ip, solutionIpAddress, this.logger);
 		if (!ipValidation.isValid) {
 			return { status: "API.USER_NOT_VERIFIED", verified: false };
 		}

@@ -1,5 +1,17 @@
 # @prosopo/user-access-policy
 
+## 3.5.5
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/api-route@2.6.14
+  - @prosopo/common@3.1.6
+  - @prosopo/types@3.0.10
+
 ## 3.5.4
 ### Patch Changes
 

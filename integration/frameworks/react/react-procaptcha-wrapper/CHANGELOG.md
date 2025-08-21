@@ -1,5 +1,12 @@
 # @prosopo/react-procaptcha-wrapper
 
+## 1.1.13
+### Patch Changes
+
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+  - @prosopo/procaptcha-wrapper@2.6.15
+
 ## 1.1.12
 ### Patch Changes
 

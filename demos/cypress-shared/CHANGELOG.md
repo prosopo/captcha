@@ -1,5 +1,15 @@
 # @prosopo/cypress-shared
 
+## 2.8.17
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/types@3.0.10
+
 ## 2.8.16
 ### Patch Changes
 
