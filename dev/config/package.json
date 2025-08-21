@@ -12,7 +12,7 @@
 	},
 	"engines": {
 		"node": "20",
-		"npm": "10.8.2"
+		"npm": "11.5.2"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",

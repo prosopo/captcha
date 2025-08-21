@@ -4,7 +4,7 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": "10.8.2"
+		"npm": "11.5.2"
 	},
 	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"typings": "dist/index.d.ts",

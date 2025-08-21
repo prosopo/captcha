@@ -6,7 +6,7 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": "10.8.2"
+		"npm": "11.5.2"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",

@@ -17,7 +17,7 @@
 	"type": "module",
 	"engines": {
 		"node": "20",
-		"npm": "10.8.2"
+		"npm": "11.5.2"
 	},
 	"scripts": {
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
