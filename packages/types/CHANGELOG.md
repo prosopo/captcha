@@ -1,5 +1,15 @@
 # @prosopo/types
 
+## 3.0.10
+### Patch Changes
+
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/locale@3.1.6
+  - @prosopo/util-crypto@13.5.8
+
 ## 3.0.9
 ### Patch Changes
 

@@ -1,5 +1,29 @@
 # @prosopo/cli
 
+## 3.1.13
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/provider@3.7.0
+  - @prosopo/config@3.1.6
+  - @prosopo/api-express-router@3.0.11
+  - @prosopo/user-access-policy@3.5.5
+  - @prosopo/api@3.1.10
+  - @prosopo/env@3.1.11
+  - @prosopo/util@3.0.9
+  - @prosopo/workspace@3.0.7
+  - @prosopo/common@3.1.6
+  - @prosopo/dotenv@3.0.11
+  - @prosopo/keyring@2.8.13
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
 ## 3.1.12
 ### Patch Changes
 
