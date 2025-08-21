@@ -187,7 +187,7 @@ export const createRedisAccessRulesWriter = (
 					COUNT: 100,
 				});
 				cursor = reply.cursor;
-				if (reply.keys.length > 0) {
+				if (reply.keys && reply.keys.length > 0) {
 					const count = await client.del(reply.keys);
 					total += count;
 				}
