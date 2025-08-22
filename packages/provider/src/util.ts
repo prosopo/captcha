@@ -184,10 +184,9 @@ export const deepValidateIpAddress = async (
 	shouldFlag?: boolean;
 }> => {
 	if (!ip) {
-		return { isValid: true }; // IP validation is optional
+		return { isValid: true };
 	}
 
-	// If IPs match exactly, no distance check needed
 	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
 	if (standardValidation.isValid) {
 		return standardValidation;
@@ -198,7 +197,7 @@ export const deepValidateIpAddress = async (
 	try {
 		ipV4orV6Address = getIPAddress(ip);
 	} catch (e) {
-		// Invalid IP format so just return happy
+		// Invalid IP format -> return happy
 		return { isValid: true };
 	}
 
@@ -225,7 +224,6 @@ export const deepValidateIpAddress = async (
 		}
 
 		if (comparison.ipsMatch) {
-			// Types nonsense
 			return { isValid: true };
 		}
 

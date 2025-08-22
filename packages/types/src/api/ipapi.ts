@@ -185,7 +185,7 @@ type IPDetails = {
 	country?: string;
 	city?: string;
 	coordinates?: { latitude: number; longitude: number };
-}
+};
 
 export interface IPComparisonResult {
 	ipsMatch: boolean;
