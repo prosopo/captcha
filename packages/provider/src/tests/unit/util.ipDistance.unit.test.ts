@@ -16,9 +16,9 @@ import type { Logger } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ipComparisonModule from "../../services/ipComparison.js";
-import { validateIpAddressWithDistance } from "../../util.js";
+import { deepValidateIpAddress } from "../../util.js";
 
-describe("validateIpAddressWithDistance", () => {
+describe("deepValidateIpAddress", () => {
 	let mockLogger: Logger;
 	const compareIPsSpy = vi.spyOn(ipComparisonModule, "compareIPs");
 
@@ -34,7 +34,7 @@ describe("validateIpAddressWithDistance", () => {
 	});
 
 	it("should return valid when no IP is provided", async () => {
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			undefined,
 			Address4.fromBigInt(BigInt(123456789)),
 			mockLogger,
@@ -48,7 +48,7 @@ describe("validateIpAddressWithDistance", () => {
 		const ip = "192.168.1.1";
 		const challengeIp = Address4.fromAddress4("192.168.1.1");
 
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			ip,
 			challengeIp,
 			mockLogger,
@@ -88,7 +88,7 @@ describe("validateIpAddressWithDistance", () => {
 			},
 		});
 
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			ip,
 			challengeIp,
 			mockLogger,
@@ -130,7 +130,7 @@ describe("validateIpAddressWithDistance", () => {
 			},
 		});
 
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			ip,
 			challengeIp,
 			mockLogger,
@@ -152,7 +152,7 @@ describe("validateIpAddressWithDistance", () => {
 			ip2: "8.8.8.8",
 		});
 
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			ip,
 			challengeIp,
 			mockLogger,

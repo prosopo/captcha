@@ -179,12 +179,12 @@ export type IPConnectionType =
 	| "unknown";
 
 type IPDetails = {
-				provider?: string;
-			connectionType: string;
-			isVpnOrProxy: boolean;
-			country?: string;
-			city?: string;
-			coordinates?: { latitude: number; longitude: number };
+	provider?: string;
+	connectionType: IPConnectionType;
+	isVpnOrProxy: boolean;
+	country?: string;
+	city?: string;
+	coordinates?: { latitude: number; longitude: number };
 }
 
 export interface IPComparisonResult {
