@@ -49,7 +49,12 @@ describe("deepValidateIpAddress", () => {
 		const ip = "192.168.1.1";
 		const challengeIp = new Address4("192.168.1.1");
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
+		const result = await deepValidateIpAddress(
+			ip,
+			challengeIp,
+			mockLogger,
+			"test-api-key",
+		);
 
 		expect(result.isValid).toBe(true);
 		expect(compareIPsSpy).not.toHaveBeenCalled();
@@ -85,7 +90,12 @@ describe("deepValidateIpAddress", () => {
 			},
 		});
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
+		const result = await deepValidateIpAddress(
+			ip,
+			challengeIp,
+			mockLogger,
+			"test-api-key",
+		);
 
 		expect(result.isValid).toBe(false);
 		expect(result.distanceKm).toBe(2500);
@@ -123,7 +133,12 @@ describe("deepValidateIpAddress", () => {
 			},
 		});
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
+		const result = await deepValidateIpAddress(
+			ip,
+			challengeIp,
+			mockLogger,
+			"test-api-key",
+		);
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBe(true);
@@ -141,7 +156,12 @@ describe("deepValidateIpAddress", () => {
 			ip2: "8.8.8.8",
 		});
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
+		const result = await deepValidateIpAddress(
+			ip,
+			challengeIp,
+			mockLogger,
+			"test-api-key",
+		);
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBe(true);

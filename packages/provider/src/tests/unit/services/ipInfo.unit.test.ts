@@ -86,7 +86,7 @@ describe("getIPInfo", () => {
 	});
 
 	it("should return error for invalid IP input", async () => {
-		const result = await getIPInfo("") as IPInfoError;
+		const result = (await getIPInfo("")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Invalid IP address provided");
@@ -95,7 +95,7 @@ describe("getIPInfo", () => {
 
 	it("should return error for non-string IP input", async () => {
 		// @ts-expect-error - testing invalid input
-		const result = await getIPInfo(null) as IPInfoError;
+		const result = (await getIPInfo(null)) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Invalid IP address provided");
@@ -146,7 +146,7 @@ describe("getIPInfo", () => {
 			statusText: "Internal Server Error",
 		});
 
-		const result = await getIPInfo("8.8.8.8") as IPInfoError;
+		const result = (await getIPInfo("8.8.8.8")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe(
@@ -162,7 +162,7 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockResolvedValueOnce(bogonResponse),
 		});
 
-		const result = await getIPInfo("127.0.0.1") as IPInfoError;
+		const result = (await getIPInfo("127.0.0.1")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("IP address is bogon (non-routable)");
@@ -242,7 +242,7 @@ describe("getIPInfo", () => {
 	it("should handle network errors", async () => {
 		mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-		const result = await getIPInfo("8.8.8.8") as IPInfoError;
+		const result = (await getIPInfo("8.8.8.8")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Network or parsing error: Network error");
@@ -255,7 +255,7 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockRejectedValueOnce(new Error("Invalid JSON")),
 		});
 
-		const result = await getIPInfo("8.8.8.8") as IPInfoError;
+		const result = (await getIPInfo("8.8.8.8")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Network or parsing error: Invalid JSON");

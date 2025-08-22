@@ -22,10 +22,10 @@ import {
 	IpAddressType,
 	type Session,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
-import { ProviderEnvironment } from "@prosopo/types-env";
 
 const loggerOuter = getLogger("info", import.meta.url);
 
