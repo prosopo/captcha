@@ -26,6 +26,7 @@ import {
 	IpAddressType,
 	type PoWCaptchaStored,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
@@ -34,7 +35,6 @@ import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
-import { ProviderEnvironment } from "@prosopo/types-env";
 
 vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),

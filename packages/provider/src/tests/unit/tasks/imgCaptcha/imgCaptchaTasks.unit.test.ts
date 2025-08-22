@@ -31,12 +31,12 @@ import {
 	type PendingCaptchaRequest,
 	type UserCommitment,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
-import { ProviderEnvironment } from "@prosopo/types-env";
 
 const loggerOuter = getLogger("info", import.meta.url);
 

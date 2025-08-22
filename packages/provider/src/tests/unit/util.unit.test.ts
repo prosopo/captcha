@@ -249,7 +249,12 @@ describe("deepValidateIpAddress", () => {
 		const testIp = "192.168.1.1";
 		const ipAddress = new Address4("192.168.1.1");
 
-		const result = await deepValidateIpAddress(testIp, ipAddress, mockLogger, "test-api-key");
+		const result = await deepValidateIpAddress(
+			testIp,
+			ipAddress,
+			mockLogger,
+			"test-api-key",
+		);
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBeUndefined();

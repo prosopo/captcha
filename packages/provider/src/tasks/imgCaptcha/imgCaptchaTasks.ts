@@ -41,6 +41,7 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
@@ -52,7 +53,6 @@ import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
-import { ProviderEnvironment } from "@prosopo/types-env";
 
 export class ImgCaptchaManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
@@ -483,7 +483,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				msg: "No IP API key found",
 				data: { user, dapp },
 			}));
-			throw new ProsopoEnvError("API.UNKNOWN")
+			throw new ProsopoEnvError("API.UNKNOWN");
 		}
 
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
