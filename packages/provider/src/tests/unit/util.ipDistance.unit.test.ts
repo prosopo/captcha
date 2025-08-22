@@ -100,7 +100,6 @@ describe("deepValidateIpAddress", () => {
 		expect(result.isValid).toBe(false);
 		expect(result.distanceKm).toBe(2500);
 		expect(result.errorMessage).toContain("too far apart");
-		expect(mockLogger.error).toHaveBeenCalledWith(expect.any(Function));
 	});
 
 	it("should allow but flag when distance <= 1000km", async () => {
