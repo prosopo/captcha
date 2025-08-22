@@ -18,69 +18,7 @@ import type {
 	IPInfoResult,
 } from "@prosopo/types";
 import { getIPInfo } from "./ipInfo.js";
-
-/**
- * Calculates the distance between two geographic coordinates using the Haversine formula
- * @param lat1 - Latitude of first point in degrees
- * @param lon1 - Longitude of first point in degrees
- * @param lat2 - Latitude of second point in degrees
- * @param lon2 - Longitude of second point in degrees
- * @returns Distance in kilometers
- */
-export function calculateDistance(
-	lat1: number,
-	lon1: number,
-	lat2: number,
-	lon2: number,
-): number {
-	const R = 6371; // Earth's radius in kilometers
-
-	// Convert degrees to radians
-	const dLat = ((lat2 - lat1) * Math.PI) / 180;
-	const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-	const lat1Rad = (lat1 * Math.PI) / 180;
-	const lat2Rad = (lat2 * Math.PI) / 180;
-
-	// Haversine formula
-	const a =
-		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-		Math.cos(lat1Rad) *
-			Math.cos(lat2Rad) *
-			Math.sin(dLon / 2) *
-			Math.sin(dLon / 2);
-
-	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-	return R * c; // Distance in kilometers
-}
-
-/**
- * Determines the connection type based on IP information
- * @param ipInfo - IP information from getIPInfo
- * @returns Connection type classification
- */
-export function determineConnectionType(
-	ipInfo: IPInfoResult,
-): IPConnectionType {
-	if (ipInfo.isMobile) return "mobile";
-	if (ipInfo.isDatacenter) return "datacenter";
-	if (ipInfo.isSatellite) return "satellite";
-	if (ipInfo.providerType === "isp") return "residential";
-
-	// Default classification based on provider type
-	switch (ipInfo.providerType) {
-		case "hosting":
-			return "datacenter";
-		case "business":
-		case "education":
-		case "government":
-		case "banking":
-			return "residential";
-		default:
-			return "unknown";
-	}
-}
+import { getDistance } from 'geolib';
 
 /**
  * Compares two IP addresses and provides detailed analysis including:
@@ -177,11 +115,9 @@ export async function compareIPs(
 			ip2Info.latitude !== undefined &&
 			ip2Info.longitude !== undefined
 		) {
-			distanceKm = calculateDistance(
-				ip1Info.latitude,
-				ip1Info.longitude,
-				ip2Info.latitude,
-				ip2Info.longitude,
+			distanceKm = getDistance(
+				{ latitude: ip1Info.latitude, longitude: ip1Info.longitude },
+				{ latitude: ip2Info.latitude, longitude: ip2Info.longitude },
 			);
 		}
 
