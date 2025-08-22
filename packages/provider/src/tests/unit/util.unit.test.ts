@@ -238,6 +238,7 @@ describe("deepValidateIpAddress", () => {
 			undefined,
 			Address4.fromBigInt(BigInt(123456789)),
 			mockLogger,
+			"test-api-key",
 		);
 
 		expect(result.isValid).toBe(true);
@@ -248,7 +249,7 @@ describe("deepValidateIpAddress", () => {
 		const testIp = "192.168.1.1";
 		const ipAddress = new Address4("192.168.1.1");
 
-		const result = await deepValidateIpAddress(testIp, ipAddress, mockLogger);
+		const result = await deepValidateIpAddress(testIp, ipAddress, mockLogger, "test-api-key");
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBeUndefined();
@@ -262,6 +263,7 @@ describe("deepValidateIpAddress", () => {
 			invalidIp,
 			challengeRecordIp,
 			mockLogger,
+			"test-api-key",
 		);
 
 		expect(result.isValid).toBe(false);

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/types";
+import type { Logger } from "@prosopo/common";
 import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ipComparisonModule from "../../services/ipComparison.js";
@@ -38,6 +38,7 @@ describe("deepValidateIpAddress", () => {
 			undefined,
 			Address4.fromBigInt(BigInt(123456789)),
 			mockLogger,
+			"test-api-key",
 		);
 
 		expect(result.isValid).toBe(true);
@@ -46,9 +47,9 @@ describe("deepValidateIpAddress", () => {
 
 	it("should return valid when IPs match exactly", async () => {
 		const ip = "192.168.1.1";
-		const challengeIp = Address4.fromAddress4("192.168.1.1");
+		const challengeIp = new Address4("192.168.1.1");
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger);
+		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
 
 		expect(result.isValid).toBe(true);
 		expect(compareIPsSpy).not.toHaveBeenCalled();
@@ -84,7 +85,7 @@ describe("deepValidateIpAddress", () => {
 			},
 		});
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger);
+		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
 
 		expect(result.isValid).toBe(false);
 		expect(result.distanceKm).toBe(2500);
@@ -122,7 +123,7 @@ describe("deepValidateIpAddress", () => {
 			},
 		});
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger);
+		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBe(true);
@@ -140,7 +141,7 @@ describe("deepValidateIpAddress", () => {
 			ip2: "8.8.8.8",
 		});
 
-		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger);
+		const result = await deepValidateIpAddress(ip, challengeIp, mockLogger, "test-api-key");
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBe(true);

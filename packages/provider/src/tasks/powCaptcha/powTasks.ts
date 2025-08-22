@@ -36,6 +36,7 @@ import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+import { ProviderEnvironment } from "@prosopo/types-env";
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
@@ -178,6 +179,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
+		env: ProviderEnvironment,
 		ip?: string,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
@@ -198,10 +200,19 @@ export class PowCaptchaManager extends CaptchaManager {
 				challengeRecord.ipAddress,
 			);
 
+			if (!env.config.ipApiKey) {
+				this.logger.warn(() => ({
+					msg: "No IP API key found",
+					data: { dappAccount, challenge },
+				}));
+				throw new ProsopoEnvError("API.UNKNOWN")
+			}
+
 			const ipValidation = await deepValidateIpAddress(
 				ip,
 				challengeIpAddress,
 				this.logger,
+				env.config.ipApiKey,
 			);
 
 			if (!ipValidation.isValid) {

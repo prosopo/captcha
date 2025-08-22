@@ -34,6 +34,7 @@ import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+import { ProviderEnvironment } from "@prosopo/types-env";
 
 vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
@@ -70,6 +71,7 @@ describe("PowCaptchaManager", () => {
 	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let powCaptchaManager: PowCaptchaManager;
+	let mockEnv: ProviderEnvironment;
 
 	beforeEach(() => {
 		db = {
@@ -85,6 +87,11 @@ describe("PowCaptchaManager", () => {
 		} as unknown as KeyringPair;
 
 		powCaptchaManager = new PowCaptchaManager(db, pair);
+
+		mockEnv = {
+			ipApiKey: "testKey",
+			ipApiUrl: "https://api.ipapi.is",
+		} as unknown as ProviderEnvironment;
 
 		vi.clearAllMocks();
 	});
@@ -304,6 +311,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				challenge,
 				timeout,
+				mockEnv,
 			);
 
 			expect(result.verified).toBe(true);
@@ -332,6 +340,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				challenge,
 				timeout,
+				mockEnv,
 			);
 			expect(result.verified).toBe(false);
 
@@ -368,6 +377,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				challenge,
 				timeout,
+				mockEnv,
 				ipAddress,
 			);
 

@@ -25,6 +25,7 @@ import {
 import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
+import { ProviderEnvironment } from "@prosopo/types-env";
 
 const loggerOuter = getLogger("info", import.meta.url);
 
@@ -41,6 +42,7 @@ describe("CaptchaManager", () => {
 	let pair: KeyringPair;
 	let logger: Logger;
 	let captchaManager: CaptchaManager;
+	let mockEnv: ProviderEnvironment;
 
 	beforeEach(() => {
 		db = {
@@ -66,6 +68,11 @@ describe("CaptchaManager", () => {
 
 		captchaManager = new CaptchaManager(db, pair, logger);
 
+		mockEnv = {
+			ipApiKey: "testKey",
+			ipApiUrl: "https://api.ipapi.is",
+		} as unknown as ProviderEnvironment;
+
 		vi.clearAllMocks();
 	});
 
@@ -81,6 +88,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 			);
 			expect(result).toEqual({
 				valid: true,
@@ -98,6 +106,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.pow,
+				mockEnv,
 			);
 			expect(result).toEqual({
 				valid: true,
@@ -130,6 +139,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.pow,
+				mockEnv,
 				"sessionId",
 				undefined,
 				"127.0.0.1",
@@ -167,6 +177,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 				"sessionId",
 				undefined,
 				"127.0.0.1",
@@ -201,6 +212,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 				"sessionId",
 			);
 
@@ -233,6 +245,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.pow,
+				mockEnv,
 				"sessionId",
 			);
 
@@ -264,6 +277,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 				sessionId,
 			);
 
@@ -294,6 +308,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.pow,
+				mockEnv,
 				sessionId,
 			);
 
@@ -314,6 +329,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.pow,
+				mockEnv,
 				undefined,
 			);
 
@@ -334,6 +350,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 				undefined,
 			);
 
@@ -355,6 +372,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.pow,
+				mockEnv,
 			);
 
 			expect(result).toEqual({
@@ -374,6 +392,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 			);
 
 			expect(result).toEqual({
@@ -409,6 +428,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 				"sessionId",
 				undefined,
 				"192.168.1.100", // Different IP
@@ -444,6 +464,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 				"sessionId",
 				undefined,
 				"192.168.1.100",
@@ -482,6 +503,7 @@ describe("CaptchaManager", () => {
 					},
 				},
 				CaptchaType.image,
+				mockEnv,
 				"sessionId",
 				undefined,
 				undefined, // No currentIP provided
