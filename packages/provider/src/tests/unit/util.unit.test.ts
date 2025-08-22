@@ -248,7 +248,11 @@ describe("validateIpAddressWithDistance", () => {
 		const testIp = "192.168.1.1";
 		const ipAddress = new Address4("192.168.1.1");
 
-		const result = await validateIpAddressWithDistance(testIp, ipAddress, mockLogger);
+		const result = await validateIpAddressWithDistance(
+			testIp,
+			ipAddress,
+			mockLogger,
+		);
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBeUndefined();
@@ -258,7 +262,11 @@ describe("validateIpAddressWithDistance", () => {
 		const invalidIp = "invalid.ip.address";
 		const challengeRecordIp = Address4.fromBigInt(BigInt(3232235777));
 
-		const result = await validateIpAddressWithDistance(invalidIp, challengeRecordIp, mockLogger);
+		const result = await validateIpAddressWithDistance(
+			invalidIp,
+			challengeRecordIp,
+			mockLogger,
+		);
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toBe(`Invalid IP address: ${invalidIp}`);

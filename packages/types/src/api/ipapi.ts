@@ -171,39 +171,33 @@ export interface IPInfoError {
 export type IPInfoResponse = IPInfoResult | IPInfoError;
 
 // IP Comparison Types
-export type IPConnectionType = 
-	| "datacenter" 
-	| "mobile" 
-	| "satellite" 
-	| "residential" 
+export type IPConnectionType =
+	| "datacenter"
+	| "mobile"
+	| "satellite"
+	| "residential"
 	| "unknown";
+
+type IPDetails = {
+				provider?: string;
+			connectionType: string;
+			isVpnOrProxy: boolean;
+			country?: string;
+			city?: string;
+			coordinates?: { latitude: number; longitude: number };
+}
 
 export interface IPComparisonResult {
 	ipsMatch: boolean;
 	ip1: string;
 	ip2: string;
-	// Only present if IPs don't match
 	comparison?: {
 		differentProviders: boolean;
 		differentConnectionTypes: boolean;
 		distanceKm?: number;
 		anyVpnOrProxy: boolean;
-		ip1Details: {
-			provider?: string;
-			connectionType: IPConnectionType;
-			isVpnOrProxy: boolean;
-			country?: string;
-			city?: string;
-			coordinates?: { latitude: number; longitude: number };
-		};
-		ip2Details: {
-			provider?: string;
-			connectionType: IPConnectionType;
-			isVpnOrProxy: boolean;
-			country?: string;
-			city?: string;
-			coordinates?: { latitude: number; longitude: number };
-		};
+		ip1Details: IPDetails;
+		ip2Details: IPDetails;
 	};
 }
 

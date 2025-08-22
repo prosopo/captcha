@@ -477,15 +477,19 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
-		const ipValidation = await validateIpAddressWithDistance(ip, solutionIpAddress, this.logger);
+		const ipValidation = await validateIpAddressWithDistance(
+			ip,
+			solutionIpAddress,
+			this.logger,
+		);
 		if (!ipValidation.isValid) {
 			this.logger.error(() => ({
 				msg: "IP validation failed for image captcha",
-				data: { 
-					ip, 
-					solutionIp: solutionIpAddress.address, 
+				data: {
+					ip,
+					solutionIp: solutionIpAddress.address,
 					error: ipValidation.errorMessage,
-					distanceKm: ipValidation.distanceKm
+					distanceKm: ipValidation.distanceKm,
 				},
 			}));
 			return { status: "API.USER_NOT_VERIFIED", verified: false };

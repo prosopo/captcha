@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { validateIpAddressWithDistance } from "../../util.js";
-import * as ipComparisonModule from "../../services/ipComparison.js";
-import { Address4 } from "ip-address";
 import type { Logger } from "@prosopo/types";
+import { Address4 } from "ip-address";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as ipComparisonModule from "../../services/ipComparison.js";
+import { validateIpAddressWithDistance } from "../../util.js";
 
 describe("validateIpAddressWithDistance", () => {
 	let mockLogger: Logger;
@@ -61,10 +61,10 @@ describe("validateIpAddressWithDistance", () => {
 	it("should reject when distance > 1000km", async () => {
 		const ip = "8.8.8.8";
 		const challengeIp = new Address4("1.1.1.1");
-		
+
 		compareIPsSpy.mockResolvedValueOnce({
 			ipsMatch: false,
-			ip1: "1.1.1.1", 
+			ip1: "1.1.1.1",
 			ip2: "8.8.8.8",
 			comparison: {
 				differentProviders: true,
@@ -97,19 +97,17 @@ describe("validateIpAddressWithDistance", () => {
 		expect(result.isValid).toBe(false);
 		expect(result.distanceKm).toBe(2500);
 		expect(result.errorMessage).toContain("too far apart");
-		expect(mockLogger.error).toHaveBeenCalledWith(
-			expect.any(Function)
-		);
+		expect(mockLogger.error).toHaveBeenCalledWith(expect.any(Function));
 	});
 
 	it("should allow but flag when distance <= 1000km", async () => {
 		const ip = "8.8.8.8";
 		const challengeIp = new Address4("1.1.1.1");
-		
+
 		compareIPsSpy.mockResolvedValueOnce({
 			ipsMatch: false,
 			ip1: "1.1.1.1",
-			ip2: "8.8.8.8", 
+			ip2: "8.8.8.8",
 			comparison: {
 				differentProviders: true,
 				differentConnectionTypes: false,
@@ -141,15 +139,13 @@ describe("validateIpAddressWithDistance", () => {
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBe(true);
 		expect(result.distanceKm).toBe(500);
-		expect(mockLogger.info).toHaveBeenCalledWith(
-			expect.any(Function)
-		);
+		expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
 	});
 
 	it("should be conservative on comparison errors", async () => {
 		const ip = "8.8.8.8";
 		const challengeIp = new Address4("1.1.1.1");
-		
+
 		compareIPsSpy.mockResolvedValueOnce({
 			error: "API failed",
 			ip1: "1.1.1.1",

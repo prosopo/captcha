@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getIPInfo } from "../../../services/ipInfo.js";
 import type { IPApiResponse } from "@prosopo/types";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getIPInfo } from "../../../services/ipInfo.js";
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -87,7 +87,7 @@ describe("getIPInfo", () => {
 
 	it("should return error for invalid IP input", async () => {
 		const result = await getIPInfo("");
-		
+
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Invalid IP address provided");
 		expect(mockFetch).not.toHaveBeenCalled();
@@ -96,7 +96,7 @@ describe("getIPInfo", () => {
 	it("should return error for non-string IP input", async () => {
 		// @ts-expect-error - testing invalid input
 		const result = await getIPInfo(null);
-		
+
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Invalid IP address provided");
 		expect(result.ip).toBe("undefined");
@@ -149,7 +149,9 @@ describe("getIPInfo", () => {
 		const result = await getIPInfo("8.8.8.8");
 
 		expect(result.isValid).toBe(false);
-		expect(result.error).toBe("API request failed with status 500: Internal Server Error");
+		expect(result.error).toBe(
+			"API request failed with status 500: Internal Server Error",
+		);
 		expect(result.ip).toBe("8.8.8.8");
 	});
 
