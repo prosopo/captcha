@@ -207,11 +207,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			if (!ipValidation.isValid) {
 				this.logger.error(() => ({
 					msg: "IP validation failed for PoW captcha",
-					data: { 
-						ip, 
-						challengeIp: challengeIpAddress.address, 
+					data: {
+						ip,
+						challengeIp: challengeIpAddress.address,
 						error: ipValidation.errorMessage,
-						distanceKm: ipValidation.distanceKm
+						distanceKm: ipValidation.distanceKm,
 					},
 				}));
 				return notVerifiedResponse;

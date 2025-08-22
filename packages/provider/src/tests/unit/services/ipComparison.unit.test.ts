@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { IPInfoResponse, IPInfoResult } from "@prosopo/types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	calculateDistance,
-	determineConnectionType,
 	compareIPs,
+	determineConnectionType,
 } from "../../../services/ipComparison.js";
 import * as ipInfoModule from "../../../services/ipInfo.js";
-import type { IPInfoResult, IPInfoResponse } from "@prosopo/types";
 
 // Mock the getIPInfo function
 const getIPInfoSpy = vi.spyOn(ipInfoModule, "getIPInfo");
@@ -52,7 +52,7 @@ describe("calculateDistance", () => {
 	it("should calculate distance between two points correctly", () => {
 		// Distance between New York and Los Angeles (approximately)
 		const nyLat = 40.7128;
-		const nyLon = -74.0060;
+		const nyLon = -74.006;
 		const laLat = 34.0522;
 		const laLon = -118.2437;
 
@@ -74,7 +74,12 @@ describe("calculateDistance", () => {
 		const sydneyLat = -33.8688;
 		const sydneyLon = 151.2093;
 
-		const distance = calculateDistance(londonLat, londonLon, sydneyLat, sydneyLon);
+		const distance = calculateDistance(
+			londonLat,
+			londonLon,
+			sydneyLat,
+			sydneyLon,
+		);
 
 		// Should be approximately 17,000 km
 		expect(distance).toBeCloseTo(17000, -2); // Within 100km
@@ -134,10 +139,10 @@ describe("determineConnectionType", () => {
 
 	it("should prioritize specific flags over provider type", () => {
 		// Mobile should take precedence over datacenter flag
-		const ipInfo = createMockIPInfo({ 
-			isMobile: true, 
-			isDatacenter: true, 
-			providerType: "hosting" 
+		const ipInfo = createMockIPInfo({
+			isMobile: true,
+			isDatacenter: true,
+			providerType: "hosting",
 		});
 		expect(determineConnectionType(ipInfo)).toBe("mobile");
 	});
@@ -173,7 +178,11 @@ describe("compareIPs", () => {
 	});
 
 	it("should return error when both IP lookups fail", async () => {
-		const errorResponse = { isValid: false, error: "Invalid IP", ip: "invalid" } as const;
+		const errorResponse = {
+			isValid: false,
+			error: "Invalid IP",
+			ip: "invalid",
+		} as const;
 		getIPInfoSpy
 			.mockResolvedValueOnce(errorResponse)
 			.mockResolvedValueOnce(errorResponse);
@@ -190,7 +199,11 @@ describe("compareIPs", () => {
 	});
 
 	it("should return error when first IP lookup fails", async () => {
-		const errorResponse = { isValid: false, error: "Invalid IP", ip: "invalid" } as const;
+		const errorResponse = {
+			isValid: false,
+			error: "Invalid IP",
+			ip: "invalid",
+		} as const;
 		const validResponse = createMockIPInfo({ ip: "8.8.8.8" }) as IPInfoResponse;
 
 		getIPInfoSpy
@@ -209,7 +222,11 @@ describe("compareIPs", () => {
 
 	it("should return error when second IP lookup fails", async () => {
 		const validResponse = createMockIPInfo({ ip: "8.8.8.8" }) as IPInfoResponse;
-		const errorResponse = { isValid: false, error: "Invalid IP", ip: "invalid" } as const;
+		const errorResponse = {
+			isValid: false,
+			error: "Invalid IP",
+			ip: "invalid",
+		} as const;
 
 		getIPInfoSpy
 			.mockResolvedValueOnce(validResponse)
@@ -240,15 +257,13 @@ describe("compareIPs", () => {
 			ip: "1.1.1.1",
 			providerName: "Cloudflare Inc",
 			isDatacenter: true,
-			country: "Australia", 
+			country: "Australia",
 			city: "Sydney",
 			latitude: -33.8688,
 			longitude: 151.2093,
 		}) as IPInfoResponse;
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(ip1Info)
-			.mockResolvedValueOnce(ip2Info);
+		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
@@ -273,7 +288,7 @@ describe("compareIPs", () => {
 				},
 				ip2Details: {
 					provider: "Cloudflare Inc",
-					connectionType: "datacenter", 
+					connectionType: "datacenter",
 					isVpnOrProxy: false,
 					country: "Australia",
 					city: "Sydney",
@@ -298,15 +313,13 @@ describe("compareIPs", () => {
 		}) as IPInfoResponse;
 
 		const ip2Info = createMockIPInfo({
-			ip: "1.1.1.1", 
+			ip: "1.1.1.1",
 			isVPN: true,
 			isProxy: false,
 			isTor: false,
 		}) as IPInfoResponse;
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(ip1Info)
-			.mockResolvedValueOnce(ip2Info);
+		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
@@ -328,9 +341,7 @@ describe("compareIPs", () => {
 			longitude: undefined,
 		}) as IPInfoResponse;
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(ip1Info)
-			.mockResolvedValueOnce(ip2Info);
+		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
@@ -352,9 +363,7 @@ describe("compareIPs", () => {
 			longitude: undefined,
 		}) as IPInfoResponse;
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(ip1Info)
-			.mockResolvedValueOnce(ip2Info);
+		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
@@ -379,9 +388,7 @@ describe("compareIPs", () => {
 			asnOrganization: undefined,
 		}) as IPInfoResponse;
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(ip1Info)
-			.mockResolvedValueOnce(ip2Info);
+		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
@@ -406,9 +413,7 @@ describe("compareIPs", () => {
 		const ip1Info = createMockIPInfo({ ip: "8.8.8.8" }) as IPInfoResponse;
 		const ip2Info = createMockIPInfo({ ip: "1.1.1.1" }) as IPInfoResponse;
 
-		getIPInfoSpy
-			.mockResolvedValueOnce(ip1Info)
-			.mockResolvedValueOnce(ip2Info);
+		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
 		await compareIPs("8.8.8.8", "1.1.1.1", "test-api-key");
 

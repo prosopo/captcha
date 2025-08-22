@@ -60,7 +60,9 @@ export function calculateDistance(
  * @param ipInfo - IP information from getIPInfo
  * @returns Connection type classification
  */
-export function determineConnectionType(ipInfo: IPInfoResult): IPConnectionType {
+export function determineConnectionType(
+	ipInfo: IPInfoResult,
+): IPConnectionType {
 	if (ipInfo.isMobile) return "mobile";
 	if (ipInfo.isDatacenter) return "datacenter";
 	if (ipInfo.isSatellite) return "satellite";
@@ -152,21 +154,22 @@ export async function compareIPs(
 			};
 		}
 
-		// Determine connection types
-		const ip1ConnectionType = determineConnectionType(ip1Info);
-		const ip2ConnectionType = determineConnectionType(ip2Info);
+		// Determine provider types?
+		const ip1ConnectionType = ip1Info.providerType || "unknown";
+		const ip2ConnectionType = ip2Info.providerType || "unknown";
 
-		// Check if providers are different
+		const differentConnectionTypes = ip1ConnectionType !== ip2ConnectionType;
+
+		// Different providers?
 		const ip1Provider =
 			ip1Info.providerName || ip1Info.asnOrganization || "Unknown";
 		const ip2Provider =
 			ip2Info.providerName || ip2Info.asnOrganization || "Unknown";
+
 		const differentProviders = ip1Provider !== ip2Provider;
 
-		// Check if connection types are different
-		const differentConnectionTypes = ip1ConnectionType !== ip2ConnectionType;
 
-		// Calculate distance if coordinates are available
+		// Coords for checking distance between ips
 		let distanceKm: number | undefined;
 		if (
 			ip1Info.latitude !== undefined &&
@@ -182,7 +185,6 @@ export async function compareIPs(
 			);
 		}
 
-		// Check for VPN or proxy usage
 		const ip1IsVpnOrProxy = ip1Info.isVPN || ip1Info.isProxy || ip1Info.isTor;
 		const ip2IsVpnOrProxy = ip2Info.isVPN || ip2Info.isProxy || ip2Info.isTor;
 		const anyVpnOrProxy = ip1IsVpnOrProxy || ip2IsVpnOrProxy;

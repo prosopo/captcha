@@ -14,8 +14,8 @@
 
 import type {
 	IPApiResponse,
-	IPInfoResult,
 	IPInfoResponse,
+	IPInfoResult,
 } from "@prosopo/types";
 
 /**
