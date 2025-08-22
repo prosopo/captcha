@@ -24,7 +24,7 @@ import {
 	checkIfTaskIsRunning,
 	getIPAddress,
 	validateIpAddress,
-	validateIpAddressWithDistance,
+	deepValidateIpAddress,
 } from "../../util.js";
 
 describe("checkIfTaskIsRunning", () => {
@@ -218,7 +218,7 @@ describe("validateIpAddress", () => {
 	});
 });
 
-describe("validateIpAddressWithDistance", () => {
+describe("deepValidateIpAddress", () => {
 	let mockLogger: Logger;
 
 	beforeEach(() => {
@@ -234,7 +234,7 @@ describe("validateIpAddressWithDistance", () => {
 	});
 
 	it("should return valid when IP is undefined", async () => {
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			undefined,
 			Address4.fromBigInt(BigInt(123456789)),
 			mockLogger,
@@ -248,7 +248,7 @@ describe("validateIpAddressWithDistance", () => {
 		const testIp = "192.168.1.1";
 		const ipAddress = new Address4("192.168.1.1");
 
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			testIp,
 			ipAddress,
 			mockLogger,
@@ -262,7 +262,7 @@ describe("validateIpAddressWithDistance", () => {
 		const invalidIp = "invalid.ip.address";
 		const challengeRecordIp = Address4.fromBigInt(BigInt(3232235777));
 
-		const result = await validateIpAddressWithDistance(
+		const result = await deepValidateIpAddress(
 			invalidIp,
 			challengeRecordIp,
 			mockLogger,

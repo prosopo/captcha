@@ -14,6 +14,8 @@
 
 import type {
 	IPComparisonResponse,
+	IPConnectionType,
+	IPInfoResult,
 } from "@prosopo/types";
 import { getIPInfo } from "./ipInfo.js";
 import { getDistance } from 'geolib';
@@ -90,9 +92,25 @@ export async function compareIPs(
 			};
 		}
 
-		// Determine provider types?
-		const ip1ConnectionType = ip1Info.providerType || "unknown";
-		const ip2ConnectionType = ip2Info.providerType || "unknown";
+		// Determine connection types based on provider info
+		const determineConnectionType = (ipInfo: IPInfoResult): IPConnectionType => {
+			if (ipInfo.isMobile) return "mobile";
+			if (ipInfo.isDatacenter) return "datacenter";
+			if (ipInfo.isSatellite) return "satellite";
+			if (ipInfo.providerType === "isp") return "residential";
+			
+			switch (ipInfo.providerType) {
+				case "hosting": return "datacenter";
+				case "business":
+				case "education":
+				case "government":
+				case "banking": return "residential";
+				default: return "unknown";
+			}
+		};
+
+		const ip1ConnectionType = determineConnectionType(ip1Info);
+		const ip2ConnectionType = determineConnectionType(ip2Info);
 
 		const differentConnectionTypes = ip1ConnectionType !== ip2ConnectionType;
 
@@ -113,10 +131,12 @@ export async function compareIPs(
 			ip2Info.latitude !== undefined &&
 			ip2Info.longitude !== undefined
 		) {
-			distanceKm = getDistance(
+			// getDistance returns meters, convert to kilometers
+			const distanceMeters = getDistance(
 				{ latitude: ip1Info.latitude, longitude: ip1Info.longitude },
 				{ latitude: ip2Info.latitude, longitude: ip2Info.longitude },
 			);
+			distanceKm = distanceMeters / 1000;
 		}
 
 		const ip1IsVpnOrProxy = ip1Info.isVPN || ip1Info.isProxy || ip1Info.isTor;

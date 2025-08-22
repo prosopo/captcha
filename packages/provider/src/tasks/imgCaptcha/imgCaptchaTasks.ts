@@ -48,7 +48,7 @@ import {
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { checkLangRules } from "../../rules/lang.js";
-import { shuffleArray, validateIpAddressWithDistance } from "../../util.js";
+import { shuffleArray, deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -477,7 +477,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
-		const ipValidation = await validateIpAddressWithDistance(
+		const ipValidation = await deepValidateIpAddress(
 			ip,
 			solutionIpAddress,
 			this.logger,

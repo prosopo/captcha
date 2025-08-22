@@ -167,13 +167,12 @@ export const validateIpAddress = (
 };
 
 /**
- * Enhanced IP validation with geolocation distance checking
  * @param ip - The IP address string to validate
  * @param challengeIpAddress - The IP address from the challenge record
  * @param logger - Logger instance for debug messages
  * @returns Object with validation result, optional error message, and distance info
  */
-export const validateIpAddressWithDistance = async (
+export const deepValidateIpAddress = async (
 	ip: string | undefined,
 	challengeIpAddress: IPAddress,
 	logger: Logger,
@@ -188,24 +187,22 @@ export const validateIpAddressWithDistance = async (
 		return { isValid: true }; // IP validation is optional
 	}
 
-	// Check if IPs match exactly first
-	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
-
 	// If IPs match exactly, no distance check needed
+	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
 	if (standardValidation.isValid) {
 		return standardValidation;
 	}
 
-	// IPs are different - now check if the difference is due to invalid format vs geographic difference
+	// Are the IPs different due to invalid format vs geographic difference?
 	let ipV4orV6Address: IPAddress;
 	try {
 		ipV4orV6Address = getIPAddress(ip);
 	} catch (e) {
-		// Invalid IP format - return the standard validation error
-		return standardValidation;
+		// Invalid IP format so just return happy
+		return { isValid: true };
 	}
 
-	// Both IPs are valid format but different - check distance
+	// Both IPs valid but different -> check distance
 	try {
 		const challengeIpString = challengeIpAddress.address;
 		const comparison = await compareIPs(challengeIpString, ip, apiKey);
@@ -219,7 +216,7 @@ export const validateIpAddressWithDistance = async (
 					providedIp: ip,
 				},
 			}));
-			// Conservative approach - allow but flag
+			// Something weird going on -> allow but flag
 			return {
 				isValid: true,
 				shouldFlag: true,
@@ -228,16 +225,16 @@ export const validateIpAddressWithDistance = async (
 		}
 
 		if (comparison.ipsMatch) {
-			// This shouldn't happen given our earlier check, but handle gracefully
+			// Types nonsense
 			return { isValid: true };
 		}
 
 		const distanceKm = comparison.comparison?.distanceKm;
 
+		// Distance > 1000km -> fail and log
 		if (distanceKm !== undefined && distanceKm > 1000) {
-			// Distance > 1000km - fail immediately and log
 			const errorMessage = `IP addresses are too far apart: ${distanceKm.toFixed(2)}km (>1000km limit)`;
-			logger.error(() => ({
+			logger.info(() => ({
 				msg: "IP validation failed - distance too great",
 				data: {
 					challengeIp: challengeIpString,
@@ -253,7 +250,7 @@ export const validateIpAddressWithDistance = async (
 			};
 		}
 
-		// Distance <= 1000km - allow but flag to client
+		// Distance <= 1000km -> allow flag
 		logger.info(() => ({
 			msg: "IP addresses differ but within acceptable distance",
 			data: {
@@ -275,7 +272,7 @@ export const validateIpAddressWithDistance = async (
 			err: error,
 			data: { challengeIp: challengeIpAddress.address, providedIp: ip },
 		}));
-		// Conservative approach - allow but flag
+		// Something weird going on -> allow but flag
 		return {
 			isValid: true,
 			shouldFlag: true,

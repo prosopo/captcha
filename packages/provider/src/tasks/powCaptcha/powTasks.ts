@@ -32,7 +32,7 @@ import type {
 } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
-import { validateIpAddressWithDistance } from "../../util.js";
+import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -198,7 +198,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				challengeRecord.ipAddress,
 			);
 
-			const ipValidation = await validateIpAddressWithDistance(
+			const ipValidation = await deepValidateIpAddress(
 				ip,
 				challengeIpAddress,
 				this.logger,
