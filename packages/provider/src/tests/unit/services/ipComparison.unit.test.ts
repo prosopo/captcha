@@ -14,11 +14,7 @@
 
 import type { IPInfoResponse, IPInfoResult } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	calculateDistance,
-	compareIPs,
-	determineConnectionType,
-} from "../../../services/ipComparison.js";
+import { compareIPs } from "../../../services/ipComparison.js";
 import * as ipInfoModule from "../../../services/ipInfo.js";
 
 // Mock the getIPInfo function
@@ -46,106 +42,6 @@ const createMockIPInfo = (overrides: Partial<IPInfoResult>): IPInfoResult => ({
 	longitude: -122.0775,
 	timezone: "America/Los_Angeles",
 	...overrides,
-});
-
-describe("calculateDistance", () => {
-	it("should calculate distance between two points correctly", () => {
-		// Distance between New York and Los Angeles (approximately)
-		const nyLat = 40.7128;
-		const nyLon = -74.006;
-		const laLat = 34.0522;
-		const laLon = -118.2437;
-
-		const distance = calculateDistance(nyLat, nyLon, laLat, laLon);
-
-		// Should be approximately 3936 km (adjusted based on actual result)
-		expect(distance).toBeCloseTo(3936, -1); // Within 10km
-	});
-
-	it("should return 0 for identical coordinates", () => {
-		const distance = calculateDistance(0, 0, 0, 0);
-		expect(distance).toBe(0);
-	});
-
-	it("should handle negative coordinates", () => {
-		// Distance between London and Sydney
-		const londonLat = 51.5074;
-		const londonLon = -0.1278;
-		const sydneyLat = -33.8688;
-		const sydneyLon = 151.2093;
-
-		const distance = calculateDistance(
-			londonLat,
-			londonLon,
-			sydneyLat,
-			sydneyLon,
-		);
-
-		// Should be approximately 17,000 km
-		expect(distance).toBeCloseTo(17000, -2); // Within 100km
-	});
-});
-
-describe("determineConnectionType", () => {
-	it("should return mobile for mobile IPs", () => {
-		const ipInfo = createMockIPInfo({ isMobile: true });
-		expect(determineConnectionType(ipInfo)).toBe("mobile");
-	});
-
-	it("should return datacenter for datacenter IPs", () => {
-		const ipInfo = createMockIPInfo({ isDatacenter: true });
-		expect(determineConnectionType(ipInfo)).toBe("datacenter");
-	});
-
-	it("should return satellite for satellite IPs", () => {
-		const ipInfo = createMockIPInfo({ isSatellite: true });
-		expect(determineConnectionType(ipInfo)).toBe("satellite");
-	});
-
-	it("should return residential for ISP provider type", () => {
-		const ipInfo = createMockIPInfo({ providerType: "isp" });
-		expect(determineConnectionType(ipInfo)).toBe("residential");
-	});
-
-	it("should return datacenter for hosting provider type", () => {
-		const ipInfo = createMockIPInfo({ providerType: "hosting" });
-		expect(determineConnectionType(ipInfo)).toBe("datacenter");
-	});
-
-	it("should return residential for business provider type", () => {
-		const ipInfo = createMockIPInfo({ providerType: "business" });
-		expect(determineConnectionType(ipInfo)).toBe("residential");
-	});
-
-	it("should return residential for education provider type", () => {
-		const ipInfo = createMockIPInfo({ providerType: "education" });
-		expect(determineConnectionType(ipInfo)).toBe("residential");
-	});
-
-	it("should return residential for government provider type", () => {
-		const ipInfo = createMockIPInfo({ providerType: "government" });
-		expect(determineConnectionType(ipInfo)).toBe("residential");
-	});
-
-	it("should return residential for banking provider type", () => {
-		const ipInfo = createMockIPInfo({ providerType: "banking" });
-		expect(determineConnectionType(ipInfo)).toBe("residential");
-	});
-
-	it("should return unknown for undefined provider type", () => {
-		const ipInfo = createMockIPInfo({ providerType: undefined });
-		expect(determineConnectionType(ipInfo)).toBe("unknown");
-	});
-
-	it("should prioritize specific flags over provider type", () => {
-		// Mobile should take precedence over datacenter flag
-		const ipInfo = createMockIPInfo({
-			isMobile: true,
-			isDatacenter: true,
-			providerType: "hosting",
-		});
-		expect(determineConnectionType(ipInfo)).toBe("mobile");
-	});
 });
 
 describe("compareIPs", () => {

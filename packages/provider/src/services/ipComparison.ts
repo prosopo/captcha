@@ -14,8 +14,6 @@
 
 import type {
 	IPComparisonResponse,
-	IPConnectionType,
-	IPInfoResult,
 } from "@prosopo/types";
 import { getIPInfo } from "./ipInfo.js";
 import { getDistance } from 'geolib';
