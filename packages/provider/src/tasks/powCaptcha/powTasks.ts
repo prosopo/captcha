@@ -32,7 +32,7 @@ import type {
 } from "@prosopo/types-database";
 import { at, verifyRecency } from "@prosopo/util";
 import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
-import { validateIpAddress } from "../../util.js";
+import { validateIpAddressWithDistance } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -198,13 +198,22 @@ export class PowCaptchaManager extends CaptchaManager {
 				challengeRecord.ipAddress,
 			);
 
-			const ipValidation = validateIpAddress(
+			const ipValidation = await validateIpAddressWithDistance(
 				ip,
 				challengeIpAddress,
 				this.logger,
 			);
 
 			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for PoW captcha",
+					data: { 
+						ip, 
+						challengeIp: challengeIpAddress.address, 
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm
+					},
+				}));
 				return notVerifiedResponse;
 			}
 		}

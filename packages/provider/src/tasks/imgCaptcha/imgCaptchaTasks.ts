@@ -48,7 +48,7 @@ import {
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { checkLangRules } from "../../rules/lang.js";
-import { shuffleArray, validateIpAddress } from "../../util.js";
+import { shuffleArray, validateIpAddressWithDistance } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -477,8 +477,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
-		const ipValidation = validateIpAddress(ip, solutionIpAddress, this.logger);
+		const ipValidation = await validateIpAddressWithDistance(ip, solutionIpAddress, this.logger);
 		if (!ipValidation.isValid) {
+			this.logger.error(() => ({
+				msg: "IP validation failed for image captcha",
+				data: { 
+					ip, 
+					solutionIp: solutionIpAddress.address, 
+					error: ipValidation.errorMessage,
+					distanceKm: ipValidation.distanceKm
+				},
+			}));
 			return { status: "API.USER_NOT_VERIFIED", verified: false };
 		}
 

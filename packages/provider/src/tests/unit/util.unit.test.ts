@@ -24,6 +24,7 @@ import {
 	checkIfTaskIsRunning,
 	getIPAddress,
 	validateIpAddress,
+	validateIpAddressWithDistance,
 } from "../../util.js";
 
 describe("checkIfTaskIsRunning", () => {
@@ -214,5 +215,52 @@ describe("validateIpAddress", () => {
 		validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(mockLogger.info).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("validateIpAddressWithDistance", () => {
+	let mockLogger: Logger;
+
+	beforeEach(() => {
+		mockLogger = {
+			info: vi.fn().mockImplementation(() => {}),
+			debug: vi.fn().mockImplementation(() => {}),
+			error: vi.fn().mockImplementation(() => {}),
+			log: vi.fn().mockImplementation(() => {}),
+			warn: vi.fn().mockImplementation(() => {}),
+		} as unknown as Logger;
+
+		vi.clearAllMocks();
+	});
+
+	it("should return valid when IP is undefined", async () => {
+		const result = await validateIpAddressWithDistance(
+			undefined,
+			Address4.fromBigInt(BigInt(123456789)),
+			mockLogger,
+		);
+
+		expect(result.isValid).toBe(true);
+		expect(result.shouldFlag).toBeUndefined();
+	});
+
+	it("should return valid when IPs match exactly", async () => {
+		const testIp = "192.168.1.1";
+		const ipAddress = new Address4("192.168.1.1");
+
+		const result = await validateIpAddressWithDistance(testIp, ipAddress, mockLogger);
+
+		expect(result.isValid).toBe(true);
+		expect(result.shouldFlag).toBeUndefined();
+	});
+
+	it("should return invalid for malformed IP addresses", async () => {
+		const invalidIp = "invalid.ip.address";
+		const challengeRecordIp = Address4.fromBigInt(BigInt(3232235777));
+
+		const result = await validateIpAddressWithDistance(invalidIp, challengeRecordIp, mockLogger);
+
+		expect(result.isValid).toBe(false);
+		expect(result.errorMessage).toBe(`Invalid IP address: ${invalidIp}`);
 	});
 });
