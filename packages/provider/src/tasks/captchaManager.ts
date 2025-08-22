@@ -32,7 +32,7 @@ import type {
 import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import { validateIpAddress } from "../util.js";
+import { validateIpAddressWithDistance } from "../util.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -70,11 +70,12 @@ export class CaptchaManager {
 
 		if (tokenRecord.ipAddress !== undefined) {
 			const recordIpAddress = getIpAddressFromComposite(tokenRecord.ipAddress);
-			const isValidIp = validateIpAddress(
+			const ipValidation = await validateIpAddressWithDistance(
 				currentIP,
 				recordIpAddress,
 				this.logger,
-			).isValid;
+			);
+			const isValidIp = ipValidation.isValid;
 
 			if (!isValidIp) {
 				this.logger.info(() => ({

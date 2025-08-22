@@ -29,6 +29,7 @@ import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
+import { compareIPs } from "./services/ipComparison.js";
 
 export function encodeStringAddress(address: string) {
 	try {
@@ -163,4 +164,118 @@ export const validateIpAddress = (
 	}
 
 	return { isValid: true };
+};
+
+/**
+ * Enhanced IP validation with geolocation distance checking
+ * @param ip - The IP address string to validate
+ * @param challengeIpAddress - The IP address from the challenge record
+ * @param logger - Logger instance for debug messages
+ * @returns Object with validation result, optional error message, and distance info
+ */
+export const validateIpAddressWithDistance = async (
+	ip: string | undefined,
+	challengeIpAddress: IPAddress,
+	logger: Logger,
+): Promise<{
+	isValid: boolean;
+	errorMessage?: string;
+	distanceKm?: number;
+	shouldFlag?: boolean;
+}> => {
+	if (!ip) {
+		return { isValid: true }; // IP validation is optional
+	}
+
+	// Check if IPs match exactly first
+	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
+	
+	// If IPs match exactly, no distance check needed
+	if (standardValidation.isValid) {
+		return standardValidation;
+	}
+
+	// IPs are different - now check if the difference is due to invalid format vs geographic difference
+	let ipV4orV6Address: IPAddress;
+	try {
+		ipV4orV6Address = getIPAddress(ip);
+	} catch (e) {
+		// Invalid IP format - return the standard validation error
+		return standardValidation;
+	}
+
+	// Both IPs are valid format but different - check distance
+	try {
+		const challengeIpString = challengeIpAddress.address;
+		const comparison = await compareIPs(challengeIpString, ip);
+		
+		if ("error" in comparison) {
+			logger.error(() => ({
+				msg: "Failed to get IP distance comparison",
+				data: { error: comparison.error, challengeIp: challengeIpString, providedIp: ip },
+			}));
+			// Conservative approach - allow but flag
+			return { 
+				isValid: true, 
+				shouldFlag: true,
+				errorMessage: "Could not determine IP distance"
+			};
+		}
+
+		if (comparison.ipsMatch) {
+			// This shouldn't happen given our earlier check, but handle gracefully
+			return { isValid: true };
+		}
+
+		const distanceKm = comparison.comparison?.distanceKm;
+		
+		if (distanceKm !== undefined && distanceKm > 1000) {
+			// Distance > 1000km - fail immediately and log
+			const errorMessage = `IP addresses are too far apart: ${distanceKm.toFixed(2)}km (>1000km limit)`;
+			logger.error(() => ({
+				msg: "IP validation failed - distance too great",
+				data: {
+					challengeIp: challengeIpString,
+					providedIp: ip,
+					distanceKm: distanceKm,
+					comparison: comparison.comparison,
+				},
+			}));
+			return { 
+				isValid: false, 
+				errorMessage,
+				distanceKm
+			};
+		}
+
+		// Distance <= 1000km - allow but flag to client
+		logger.info(() => ({
+			msg: "IP addresses differ but within acceptable distance",
+			data: {
+				challengeIp: challengeIpString,
+				providedIp: ip,
+				distanceKm: distanceKm,
+				comparison: comparison.comparison,
+			},
+		}));
+		
+		return { 
+			isValid: true, 
+			distanceKm,
+			shouldFlag: true 
+		};
+
+	} catch (error) {
+		logger.error(() => ({
+			msg: "Error during IP distance validation",
+			err: error,
+			data: { challengeIp: challengeIpAddress.address, providedIp: ip },
+		}));
+		// Conservative approach - allow but flag
+		return { 
+			isValid: true, 
+			shouldFlag: true,
+			errorMessage: "IP distance validation error"
+		};
+	}
 };
