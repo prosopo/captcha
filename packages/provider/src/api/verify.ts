@@ -102,6 +102,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						user,
 						dapp,
 						commitmentId,
+						env,
 						maxVerifiedTime,
 						ip,
 					);
@@ -199,6 +200,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						dapp,
 						challenge,
 						verifiedTimeout,
+						env,
 						ip,
 					);
 

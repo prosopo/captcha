@@ -52,6 +52,7 @@ import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
+import { ProviderEnvironment } from "@prosopo/types-env";
 
 export class ImgCaptchaManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
@@ -461,6 +462,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		user: string,
 		dapp: string,
 		commitmentId: string | undefined,
+		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
 	): Promise<ImageVerificationResponse> {
@@ -476,11 +478,20 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
+		if (!env.config.ipApiKey) {
+			this.logger.warn(() => ({
+				msg: "No IP API key found",
+				data: { user, dapp },
+			}));
+			throw new ProsopoEnvError("API.UNKNOWN")
+		}
+
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
 		const ipValidation = await deepValidateIpAddress(
 			ip,
 			solutionIpAddress,
 			this.logger,
+			env.config.ipApiKey,
 		);
 		if (!ipValidation.isValid) {
 			this.logger.error(() => ({

@@ -36,6 +36,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { shuffleArray } from "../../../../util.js";
+import { ProviderEnvironment } from "@prosopo/types-env";
 
 const loggerOuter = getLogger("info", import.meta.url);
 
@@ -144,6 +145,7 @@ describe("ImgCaptchaManager", () => {
 	let logger: Logger; // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	let captchaConfig: any;
 	let imgCaptchaManager: ImgCaptchaManager;
+	let mockEnv: ProviderEnvironment;
 
 	beforeEach(() => {
 		db = {
@@ -191,6 +193,11 @@ describe("ImgCaptchaManager", () => {
 		};
 
 		imgCaptchaManager = new ImgCaptchaManager(db, pair, captchaConfig, logger);
+
+		mockEnv = {
+			ipApiKey: "testKey",
+			ipApiUrl: "https://api.ipapi.is",
+		} as unknown as ProviderEnvironment;
 
 		vi.clearAllMocks();
 	});
@@ -569,6 +576,7 @@ describe("ImgCaptchaManager", () => {
 			userAccount,
 			dappAccount,
 			"commitmentId",
+			mockEnv,
 			undefined,
 			ipAddress,
 		);
