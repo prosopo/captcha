@@ -17,8 +17,8 @@ import type {
 	IPConnectionType,
 	IPInfoResult,
 } from "@prosopo/types";
+import { getDistance } from "geolib";
 import { getIPInfo } from "./ipInfo.js";
-import { getDistance } from 'geolib';
 
 /**
  * Compares two IP addresses and provides detailed analysis including:
@@ -93,19 +93,24 @@ export async function compareIPs(
 		}
 
 		// Determine connection types based on provider info
-		const determineConnectionType = (ipInfo: IPInfoResult): IPConnectionType => {
+		const determineConnectionType = (
+			ipInfo: IPInfoResult,
+		): IPConnectionType => {
 			if (ipInfo.isMobile) return "mobile";
 			if (ipInfo.isDatacenter) return "datacenter";
 			if (ipInfo.isSatellite) return "satellite";
 			if (ipInfo.providerType === "isp") return "residential";
-			
+
 			switch (ipInfo.providerType) {
-				case "hosting": return "datacenter";
+				case "hosting":
+					return "datacenter";
 				case "business":
 				case "education":
 				case "government":
-				case "banking": return "residential";
-				default: return "unknown";
+				case "banking":
+					return "residential";
+				default:
+					return "unknown";
 			}
 		};
 
@@ -121,7 +126,6 @@ export async function compareIPs(
 			ip2Info.providerName || ip2Info.asnOrganization || "Unknown";
 
 		const differentProviders = ip1Provider !== ip2Provider;
-
 
 		// Coords for checking distance between ips
 		let distanceKm: number | undefined;

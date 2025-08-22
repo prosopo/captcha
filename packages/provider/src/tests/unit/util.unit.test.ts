@@ -22,9 +22,9 @@ import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
+	deepValidateIpAddress,
 	getIPAddress,
 	validateIpAddress,
-	deepValidateIpAddress,
 } from "../../util.js";
 
 describe("checkIfTaskIsRunning", () => {
@@ -248,11 +248,7 @@ describe("deepValidateIpAddress", () => {
 		const testIp = "192.168.1.1";
 		const ipAddress = new Address4("192.168.1.1");
 
-		const result = await deepValidateIpAddress(
-			testIp,
-			ipAddress,
-			mockLogger,
-		);
+		const result = await deepValidateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(result.isValid).toBe(true);
 		expect(result.shouldFlag).toBeUndefined();

@@ -197,7 +197,10 @@ describe("compareIPs", () => {
 		});
 
 		// Distance should be calculated (adjusted for actual distance)
-		expect("comparison" in result && result.comparison?.distanceKm).toBeCloseTo(11954, -2);
+		expect("comparison" in result && result.comparison?.distanceKm).toBeCloseTo(
+			11954,
+			-2,
+		);
 	});
 
 	it("should detect VPN/proxy usage", async () => {

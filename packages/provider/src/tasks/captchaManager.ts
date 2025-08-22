@@ -23,6 +23,7 @@ import type {
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import type {
 	AccessPolicy,
 	AccessRulesStorage,
@@ -33,7 +34,6 @@ import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../util.js";
-import { ProviderEnvironment } from "@prosopo/types-env";
 
 export class CaptchaManager {
 	pair: KeyringPair;

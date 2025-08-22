@@ -48,7 +48,7 @@ import {
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { checkLangRules } from "../../rules/lang.js";
-import { shuffleArray, deepValidateIpAddress } from "../../util.js";
+import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
