@@ -197,7 +197,7 @@ describe("compareIPs", () => {
 		});
 
 		// Distance should be calculated (adjusted for actual distance)
-		expect(result.comparison?.distanceKm).toBeCloseTo(11954, -2);
+		expect("comparison" in result && result.comparison?.distanceKm).toBeCloseTo(11954, -2);
 	});
 
 	it("should detect VPN/proxy usage", async () => {
@@ -219,9 +219,11 @@ describe("compareIPs", () => {
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
-		expect(result.comparison?.anyVpnOrProxy).toBe(true);
-		expect(result.comparison?.ip1Details.isVpnOrProxy).toBe(false);
-		expect(result.comparison?.ip2Details.isVpnOrProxy).toBe(true);
+		if ("comparison" in result) {
+			expect(result.comparison?.anyVpnOrProxy).toBe(true);
+			expect(result.comparison?.ip1Details.isVpnOrProxy).toBe(false);
+			expect(result.comparison?.ip2Details.isVpnOrProxy).toBe(true);
+		}
 	});
 
 	it("should handle missing coordinates gracefully", async () => {
@@ -241,9 +243,11 @@ describe("compareIPs", () => {
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
-		expect(result.comparison?.distanceKm).toBeUndefined();
-		expect(result.comparison?.ip1Details.coordinates).toBeUndefined();
-		expect(result.comparison?.ip2Details.coordinates).toBeUndefined();
+		if ("comparison" in result) {
+			expect(result.comparison?.distanceKm).toBeUndefined();
+			expect(result.comparison?.ip1Details.coordinates).toBeUndefined();
+			expect(result.comparison?.ip2Details.coordinates).toBeUndefined();
+		}
 	});
 
 	it("should handle partial coordinate data", async () => {
@@ -263,12 +267,14 @@ describe("compareIPs", () => {
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
-		expect(result.comparison?.distanceKm).toBeUndefined();
-		expect(result.comparison?.ip1Details.coordinates).toEqual({
-			latitude: 37.4056,
-			longitude: -122.0775,
-		});
-		expect(result.comparison?.ip2Details.coordinates).toBeUndefined();
+		if ("comparison" in result) {
+			expect(result.comparison?.distanceKm).toBeUndefined();
+			expect(result.comparison?.ip1Details.coordinates).toEqual({
+				latitude: 37.4056,
+				longitude: -122.0775,
+			});
+			expect(result.comparison?.ip2Details.coordinates).toBeUndefined();
+		}
 	});
 
 	it("should handle provider fallback logic", async () => {
@@ -288,9 +294,11 @@ describe("compareIPs", () => {
 
 		const result = await compareIPs("8.8.8.8", "1.1.1.1");
 
-		expect(result.comparison?.ip1Details.provider).toBe("Google LLC");
-		expect(result.comparison?.ip2Details.provider).toBe("Unknown");
-		expect(result.comparison?.differentProviders).toBe(true);
+		if ("comparison" in result) {
+			expect(result.comparison?.ip1Details.provider).toBe("Google LLC");
+			expect(result.comparison?.ip2Details.provider).toBe("Unknown");
+			expect(result.comparison?.differentProviders).toBe(true);
+		}
 	});
 
 	it("should handle exceptions gracefully", async () => {
