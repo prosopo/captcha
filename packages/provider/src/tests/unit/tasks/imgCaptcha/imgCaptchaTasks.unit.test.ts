@@ -31,6 +31,7 @@ import {
 	type PendingCaptchaRequest,
 	type UserCommitment,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -144,6 +145,7 @@ describe("ImgCaptchaManager", () => {
 	let logger: Logger; // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 	let captchaConfig: any;
 	let imgCaptchaManager: ImgCaptchaManager;
+	let mockEnv: ProviderEnvironment;
 
 	beforeEach(() => {
 		db = {
@@ -191,6 +193,11 @@ describe("ImgCaptchaManager", () => {
 		};
 
 		imgCaptchaManager = new ImgCaptchaManager(db, pair, captchaConfig, logger);
+
+		mockEnv = {
+			ipApiKey: "testKey",
+			ipApiUrl: "https://api.ipapi.is",
+		} as unknown as ProviderEnvironment;
 
 		vi.clearAllMocks();
 	});
@@ -569,6 +576,7 @@ describe("ImgCaptchaManager", () => {
 			userAccount,
 			dappAccount,
 			"commitmentId",
+			mockEnv,
 			undefined,
 			ipAddress,
 		);

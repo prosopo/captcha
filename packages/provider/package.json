@@ -41,6 +41,7 @@
 		"@prosopo/util-crypto": "13.5.8",
 		"cron": "3.1.7",
 		"express": "4.21.2",
+		"geolib": "3.3.4",
 		"i18next": "24.1.0",
 		"ip-address": "10.0.1",
 		"mongodb": "6.15.0",

@@ -22,6 +22,7 @@ import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
+	deepValidateIpAddress,
 	getIPAddress,
 	validateIpAddress,
 } from "../../util.js";
@@ -214,5 +215,62 @@ describe("validateIpAddress", () => {
 		validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(mockLogger.info).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("deepValidateIpAddress", () => {
+	let mockLogger: Logger;
+
+	beforeEach(() => {
+		mockLogger = {
+			info: vi.fn().mockImplementation(() => {}),
+			debug: vi.fn().mockImplementation(() => {}),
+			error: vi.fn().mockImplementation(() => {}),
+			log: vi.fn().mockImplementation(() => {}),
+			warn: vi.fn().mockImplementation(() => {}),
+		} as unknown as Logger;
+
+		vi.clearAllMocks();
+	});
+
+	it("should return valid when IP is undefined", async () => {
+		const result = await deepValidateIpAddress(
+			undefined,
+			Address4.fromBigInt(BigInt(123456789)),
+			mockLogger,
+			"test-api-key",
+		);
+
+		expect(result.isValid).toBe(true);
+		expect(result.shouldFlag).toBeUndefined();
+	});
+
+	it("should return valid when IPs match exactly", async () => {
+		const testIp = "192.168.1.1";
+		const ipAddress = new Address4("192.168.1.1");
+
+		const result = await deepValidateIpAddress(
+			testIp,
+			ipAddress,
+			mockLogger,
+			"test-api-key",
+		);
+
+		expect(result.isValid).toBe(true);
+		expect(result.shouldFlag).toBeUndefined();
+	});
+
+	it("should return valid for malformed IP addresses", async () => {
+		const invalidIp = "invalid.ip.address";
+		const challengeRecordIp = Address4.fromBigInt(BigInt(3232235777));
+
+		const result = await deepValidateIpAddress(
+			invalidIp,
+			challengeRecordIp,
+			mockLogger,
+			"test-api-key",
+		);
+
+		expect(result.isValid).toBe(true);
 	});
 });

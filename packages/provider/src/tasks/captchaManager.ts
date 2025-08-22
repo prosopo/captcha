@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, getLogger } from "@prosopo/common";
+import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
@@ -23,6 +23,7 @@ import type {
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import type {
 	AccessPolicy,
 	AccessRulesStorage,
@@ -32,7 +33,7 @@ import type {
 import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import { validateIpAddress } from "../util.js";
+import { deepValidateIpAddress } from "../util.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -55,6 +56,7 @@ export class CaptchaManager {
 	async validateFrictionlessTokenIP(
 		sessionRecord: Session,
 		currentIP: string,
+		env: ProviderEnvironment,
 	): Promise<{ valid: boolean; reason?: TranslationKey }> {
 		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
 			sessionRecord.tokenId,
@@ -68,13 +70,25 @@ export class CaptchaManager {
 			return { valid: false, reason: "CAPTCHA.NO_SESSION_FOUND" };
 		}
 
+		if (!env.config.ipApiKey) {
+			this.logger.warn(() => ({
+				msg: "No IP API key found",
+				data: { sessionId: sessionRecord.sessionId },
+			}));
+			throw new ProsopoEnvError("API.UNKNOWN", {
+				context: { error: "No IP API key found" },
+			});
+		}
+
 		if (tokenRecord.ipAddress !== undefined) {
 			const recordIpAddress = getIpAddressFromComposite(tokenRecord.ipAddress);
-			const isValidIp = validateIpAddress(
+			const ipValidation = await deepValidateIpAddress(
 				currentIP,
 				recordIpAddress,
 				this.logger,
-			).isValid;
+				env.config.ipApiKey,
+			);
+			const isValidIp = ipValidation.isValid;
 
 			if (!isValidIp) {
 				this.logger.info(() => ({
@@ -96,6 +110,7 @@ export class CaptchaManager {
 	async isValidRequest(
 		clientSettings: ClientRecord | IUserDataSlim,
 		requestedCaptchaType: CaptchaType,
+		env: ProviderEnvironment,
 		sessionId?: string,
 		userAccessPolicy?: AccessPolicy,
 		currentIP?: string,
@@ -158,6 +173,7 @@ export class CaptchaManager {
 					const ipValidation = await this.validateFrictionlessTokenIP(
 						sessionRecord,
 						currentIP,
+						env,
 					);
 					if (!ipValidation.valid) {
 						return {

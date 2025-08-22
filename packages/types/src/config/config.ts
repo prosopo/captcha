@@ -292,6 +292,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
+		ipApiKey: string().optional(),
 		redisConnection: object({
 			url: string(),
 			password: string(),
