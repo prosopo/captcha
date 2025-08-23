@@ -45,6 +45,7 @@ import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js"
 import { Tasks } from "../tasks/tasks.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
+import {getRandomActiveProvider} from "@prosopo/load-balancer";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -584,8 +585,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp } =
+				const { baseBotScore, timestamp, providerSelectEntropy } =
 					await tasks.frictionlessManager.decryptPayload(token);
+
+				// Make sure provider was selected
+				const provider = await getRandomActiveProvider(
+					env.defaultEnvironment,
+					providerSelectEntropy,
+				)
+				if(provider.provider.url !== env.host) {
+
+				}
 
 				const botScore = baseBotScore + lScore;
 

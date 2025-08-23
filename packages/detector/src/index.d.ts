@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {RandomProvider} from "@prosopo/types";
+
 export function detect(): Promise<{
 	token: string;
+	provider: RandomProvider
 }>;
 //# sourceMappingURL=index.d.ts.map
