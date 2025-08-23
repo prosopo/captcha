@@ -207,9 +207,13 @@ export const Manager = (
 				if (frictionlessState?.provider) {
 					getRandomProviderResponse = frictionlessState.provider;
 				} else {
+					const randomNumberU8a = window.crypto.getRandomValues(new Uint8Array(10))
+					const randomNumber = randomNumberU8a.reduce(
+						(a, b) => a+b
+					)
 					// get a random provider
 					getRandomProviderResponse = await getRandomActiveProvider(
-						getConfig(),
+						getConfig().defaultEnvironment, randomNumber
 					);
 				}
 

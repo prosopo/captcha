@@ -11,41 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type HardcodedProvider, loadBalancer } from "@prosopo/load-balancer";
-import type {
-	ProcaptchaClientConfigOutput,
-	RandomProvider,
-} from "@prosopo/types";
-import { at } from "@prosopo/util";
 
-let providers: HardcodedProvider[] = [];
-
-export const getRandomActiveProvider = async (
-	config: ProcaptchaClientConfigOutput,
-): Promise<RandomProvider> => {
-	const randomIntBetween = (min: number, max: number) =>
-		Math.floor(Math.random() * (max - min + 1) + min);
-
-	// TODO maybe add some signing of timestamp here by the current account and then pass the timestamp to the Provider
-	//  to ensure that the random selection was completed within a certain timeframe
-
-	if (providers.length === 0) {
-		// only get the providers JSON once
-		providers = await loadBalancer(config.defaultEnvironment);
-	}
-
-	const randomProvderObj = at(
-		providers,
-		randomIntBetween(0, providers.length - 1),
-	);
-	return {
-		providerAccount: randomProvderObj.address,
-		provider: {
-			url: randomProvderObj.url,
-			datasetId: randomProvderObj.datasetId,
-		},
-	};
-};
 
 export const providerRetry = async (
 	currentFn: () => Promise<void>,
