@@ -1,5 +1,27 @@
 # @prosopo/cli
 
+## 3.2.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/provider@3.8.1
+  - @prosopo/types@3.1.1
+  - @prosopo/api-express-router@3.0.13
+  - @prosopo/user-access-policy@3.5.7
+  - @prosopo/types-database@3.1.2
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/dotenv@3.0.13
+  - @prosopo/locale@3.1.8
+  - @prosopo/workspace@3.1.1
+  - @prosopo/util@3.0.11
+  - @prosopo/api@3.1.12
+  - @prosopo/env@3.2.1
+  - @prosopo/config@3.1.8
+
 ## 3.2.0
 ### Minor Changes
 
