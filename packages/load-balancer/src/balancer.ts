@@ -25,7 +25,7 @@ type hostedProviders = Record<string, HardcodedProvider>;
 const convertHostedProvider = (
 	provider: hostedProviders,
 ): HardcodedProvider[] => {
-	return Object.values(provider);
+	return Object.values(provider).sort((a, b) => a.url.localeCompare(b.url));
 };
 
 export const loadBalancer = async (
