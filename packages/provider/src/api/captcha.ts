@@ -15,7 +15,6 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	type Captcha,
