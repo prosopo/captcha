@@ -1,5 +1,15 @@
 # @prosopo/api
 
+## 3.1.12
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/user-access-policy@3.5.7
+  - @prosopo/config@3.1.8
+
 ## 3.1.11
 ### Patch Changes
 
