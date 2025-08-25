@@ -8,6 +8,9 @@
 	"references": [
 		{
 			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../types/tsconfig.cjs.json"
 		}
 	]
 }

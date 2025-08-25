@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	CaptchaType,
 	type KeyringPair,
@@ -63,6 +64,23 @@ export class FrictionlessManager extends CaptchaManager {
 
 		await this.db.storeSessionRecord(sessionRecord);
 		return sessionRecord;
+	}
+
+	async verifyHost(entropy: number) {
+		const chosen = await getRandomActiveProvider(
+			this.config.defaultEnvironment,
+			entropy,
+		);
+
+		if (chosen.provider.url !== this.config.host) {
+			this.logger.info(() => ({
+				msg: "Host mismatch",
+				data: { expected: this.config.host, got: chosen.provider.url },
+			}));
+			return false;
+		}
+
+		return true;
 	}
 
 	async sendImageCaptcha(
@@ -176,19 +194,32 @@ export class FrictionlessManager extends CaptchaManager {
 		// if we run out of keys and the score is still not decrypted, throw an error
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
+		let providerSelectEntropy: number | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
-				const { baseBotScore: s, timestamp: t } = await getBotScore(token, key);
 				this.logger.info(() => ({
+					msg: "Attempting to decrypt score",
+					data: {
+						key: this.redactKeyForLogging(key),
+					},
+				}));
+				const {
+					baseBotScore: s,
+					timestamp: t,
+					providerSelectEntropy: p,
+				} = await getBotScore(token, key);
+				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
 						key: this.redactKeyForLogging(key),
 						baseBotScore: s,
 						timestamp: t,
+						entropy: p,
 					},
 				}));
 				baseBotScore = s;
 				timestamp = t;
+				providerSelectEntropy = p;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -198,18 +229,24 @@ export class FrictionlessManager extends CaptchaManager {
 					}));
 					baseBotScore = 1;
 					timestamp = 0;
+					providerSelectEntropy = 1;
 				}
 			}
 		}
 
-		if (baseBotScore === undefined || timestamp === undefined) {
+		if (
+			baseBotScore === undefined ||
+			timestamp === undefined ||
+			providerSelectEntropy === undefined
+		) {
 			this.logger.error(() => ({
 				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
 			}));
 			baseBotScore = 1;
 			timestamp = 0;
+			providerSelectEntropy = 1;
 		}
 
-		return { baseBotScore, timestamp };
+		return { baseBotScore, timestamp, providerSelectEntropy };
 	}
 }
