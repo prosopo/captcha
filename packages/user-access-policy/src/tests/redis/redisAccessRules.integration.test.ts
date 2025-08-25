@@ -21,11 +21,10 @@ import {
 	beforeEach,
 	describe,
 	expect,
-	it,
 	test,
 } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
+import {  ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type {
 	AccessRule,
 	AccessRulesReader,
@@ -36,11 +35,9 @@ import {
 	createRedisAccessRulesWriter,
 } from "#policy/redis/redisAccessRules.js";
 import {
-	accessRulesRedisIndexName,
 	createRedisAccessRulesIndex,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
-	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
 import { createTestRedisClient } from "./testRedisClient.js";
 
