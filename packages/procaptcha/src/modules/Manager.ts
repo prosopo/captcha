@@ -134,12 +134,13 @@ export function Manager(
 					// Get a new random provider if
 					// - we don't have a provider api instance (first time)
 					// - we do have a provider api instance but no sessionId (image captcha only)
-					const randomNumberU8a = window.crypto.getRandomValues(new Uint8Array(10))
-					const randomNumber = randomNumberU8a.reduce(
-						(a, b) => a+b
-					)
+					const randomNumberU8a = window.crypto.getRandomValues(
+						new Uint8Array(10),
+					);
+					const randomNumber = randomNumberU8a.reduce((a, b) => a + b);
 					const getRandomProviderResponse = await getRandomActiveProvider(
-						getConfig().defaultEnvironment, randomNumber
+						getConfig().defaultEnvironment,
+						randomNumber,
 					);
 
 					const providerUrl = getRandomProviderResponse.provider.url;
