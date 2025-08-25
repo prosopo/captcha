@@ -1,5 +1,21 @@
 # @prosopo/procaptcha
 
+## 2.7.25
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/datasets@3.0.20
+  - @prosopo/config@3.1.6
+  - @prosopo/api@3.1.10
+  - @prosopo/util@3.0.9
+  - @prosopo/common@3.1.6
+  - @prosopo/procaptcha-common@2.7.18
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
 ## 2.7.24
 ### Patch Changes
 

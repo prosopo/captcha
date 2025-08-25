@@ -1,5 +1,36 @@
 # @prosopo/provider
 
+## 3.7.0
+### Minor Changes
+
+- 9b92339: fix/ipv6-in-captcha-flow
+
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- ebb0168: Allowing for simple pattern matching with domains
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/database@3.1.0
+  - @prosopo/datasets@3.0.20
+  - @prosopo/config@3.1.6
+  - @prosopo/api-express-router@3.0.11
+  - @prosopo/user-access-policy@3.5.5
+  - @prosopo/types-env@2.7.24
+  - @prosopo/api@3.1.10
+  - @prosopo/env@3.1.11
+  - @prosopo/util@3.0.9
+  - @prosopo/api-route@2.6.14
+  - @prosopo/common@3.1.6
+  - @prosopo/keyring@2.8.13
+  - @prosopo/load-balancer@2.6.21
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
 ## 3.6.2
 ### Patch Changes
 

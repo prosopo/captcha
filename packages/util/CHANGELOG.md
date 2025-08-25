@@ -1,5 +1,12 @@
 # @prosopo/util
 
+## 3.0.9
+### Patch Changes
+
+- ebb0168: Allowing for simple pattern matching with domains
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+
 ## 3.0.8
 ### Patch Changes
 

@@ -1,5 +1,18 @@
 # @prosopo/api-express-router
 
+## 3.0.11
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/config@3.1.6
+  - @prosopo/env@3.1.11
+  - @prosopo/api-route@2.6.14
+  - @prosopo/common@3.1.6
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+
 ## 3.0.10
 ### Patch Changes
 

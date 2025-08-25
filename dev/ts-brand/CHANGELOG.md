@@ -1,5 +1,11 @@
 # @prosopo/ts-brand
 
+## 3.0.9
+### Patch Changes
+
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+
 ## 3.0.8
 ### Patch Changes
 

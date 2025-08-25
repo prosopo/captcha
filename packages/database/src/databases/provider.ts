@@ -38,6 +38,7 @@ import {
 	StoredStatusNames,
 } from "@prosopo/types";
 import type {
+	CompositeIpAddress,
 	FrictionlessTokenRecord,
 	SessionRecord,
 } from "@prosopo/types-database";
@@ -631,7 +632,7 @@ export class ProviderDatabase
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		headers: RequestHeaders,
 		ja4: string,
 		frictionlessTokenId?: FrictionlessTokenId,
@@ -1161,7 +1162,7 @@ export class ProviderDatabase
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {

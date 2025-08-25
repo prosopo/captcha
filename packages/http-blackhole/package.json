@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/http-blackhole",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"main": "dist/index.js",
 	"type": "module",
 	"engines": {
@@ -14,7 +14,7 @@
 	},
 	"author": "",
 	"dependencies": {
-		"@prosopo/config": "3.1.5",
+		"@prosopo/config": "3.1.6",
 		"dotenv": "^17.2.0"
 	},
 	"license": "Apache-2.0",

@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.1.6
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+
 ## 3.1.5
 ### Patch Changes
 

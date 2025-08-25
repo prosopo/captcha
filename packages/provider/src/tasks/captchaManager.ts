@@ -31,6 +31,8 @@ import type {
 } from "@prosopo/user-access-policy";
 import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
+import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import { validateIpAddress } from "../util.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -67,15 +69,21 @@ export class CaptchaManager {
 		}
 
 		if (tokenRecord.ipAddress !== undefined) {
-			const currentIPBigInt = getIPAddress(currentIP).bigInt();
-			if (tokenRecord.ipAddress !== currentIPBigInt) {
+			const recordIpAddress = getIpAddressFromComposite(tokenRecord.ipAddress);
+			const isValidIp = validateIpAddress(
+				currentIP,
+				recordIpAddress,
+				this.logger,
+			).isValid;
+
+			if (!isValidIp) {
 				this.logger.info(() => ({
 					msg: "IP address mismatch for frictionless token",
 					data: {
 						sessionId: sessionRecord.sessionId,
 						tokenId: tokenRecord._id,
-						originalIP: tokenRecord.ipAddress?.toString() || "unknown",
-						currentIP: currentIPBigInt.toString(),
+						originalIP: recordIpAddress.bigInt().toString() || "unknown",
+						currentIP: currentIP,
 					},
 				}));
 				return { valid: false, reason: "CAPTCHA.IP_ADDRESS_MISMATCH" };

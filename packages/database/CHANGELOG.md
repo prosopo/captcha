@@ -1,5 +1,23 @@
 # @prosopo/database
 
+## 3.1.0
+### Minor Changes
+
+- 9b92339: fix/ipv6-in-captcha-flow
+
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/config@3.1.6
+  - @prosopo/user-access-policy@3.5.5
+  - @prosopo/common@3.1.6
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+
 ## 3.0.19
 ### Patch Changes
 
