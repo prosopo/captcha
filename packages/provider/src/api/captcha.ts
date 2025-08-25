@@ -15,6 +15,7 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	type Captcha,
@@ -45,7 +46,6 @@ import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js"
 import { Tasks } from "../tasks/tasks.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
-import {getRandomActiveProvider} from "@prosopo/load-balancer";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -592,9 +592,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const provider = await getRandomActiveProvider(
 					env.defaultEnvironment,
 					providerSelectEntropy,
-				)
-				if(provider.provider.url !== env.host) {
-
+				);
+				if (provider.provider.url !== env.host) {
 				}
 
 				const botScore = baseBotScore + lScore;
