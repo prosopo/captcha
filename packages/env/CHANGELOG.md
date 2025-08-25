@@ -1,5 +1,23 @@
 # @prosopo/env
 
+## 3.2.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/types-env@2.7.25
+  - @prosopo/database@3.2.0
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
 ## 3.1.11
 ### Patch Changes
 

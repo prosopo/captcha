@@ -1,5 +1,12 @@
 # @prosopo/fingerprint
 
+## 2.6.8
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/config@3.1.7
+
 ## 2.6.7
 ### Patch Changes
 

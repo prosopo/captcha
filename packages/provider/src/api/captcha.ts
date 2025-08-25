@@ -596,6 +596,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 								code: 400,
 								siteKey: dapp,
 								user,
+								ip: req.ip,
 							},
 							i18n: req.i18n,
 							logger: req.logger,

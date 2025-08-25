@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util",
-	"version": "3.0.9",
+	"version": "3.0.10",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -35,7 +35,7 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"@prosopo/config": "3.1.6",
+		"@prosopo/config": "3.1.7",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
 		"lodash": "4.17.21",
