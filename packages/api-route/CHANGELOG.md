@@ -1,5 +1,13 @@
 # @prosopo/api-route
 
+## 2.6.15
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/common@3.1.7
+  - @prosopo/config@3.1.7
+
 ## 2.6.14
 ### Patch Changes
 

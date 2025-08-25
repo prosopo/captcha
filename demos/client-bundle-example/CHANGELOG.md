@@ -1,5 +1,13 @@
 # @prosopo/client-bundle-example
 
+## 2.9.10
+### Patch Changes
+
+- 181e0f5: Hot fix migrate Ips script
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/config@3.1.7
+
 ## 2.9.9
 ### Patch Changes
 

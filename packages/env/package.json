@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "3.1.11",
+	"version": "3.2.0",
 	"description": "Path env prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -24,13 +24,13 @@
 		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
 	},
 	"dependencies": {
-		"@prosopo/common": "3.1.6",
-		"@prosopo/database": "3.1.0",
-		"@prosopo/keyring": "2.8.13",
-		"@prosopo/types": "3.0.10",
-		"@prosopo/types-env": "2.7.24",
-		"@prosopo/util-crypto": "13.5.8",
-		"@prosopo/config": "3.1.6",
+		"@prosopo/common": "3.1.7",
+		"@prosopo/database": "3.2.0",
+		"@prosopo/keyring": "2.8.14",
+		"@prosopo/types": "3.1.0",
+		"@prosopo/types-env": "2.7.25",
+		"@prosopo/util-crypto": "13.5.9",
+		"@prosopo/config": "3.1.7",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
