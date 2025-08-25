@@ -19,10 +19,10 @@ import {
 	ProsopoEnvError,
 	ProsopoError,
 } from "@prosopo/common";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ExtensionLoader,
 	buildUpdateState,
-	getRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -137,7 +137,7 @@ export function Manager(
 					const randomNumberU8a = window.crypto.getRandomValues(
 						new Uint8Array(10),
 					);
-					const randomNumber = randomNumberU8a.reduce((a, b) => a + b);
+					const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
 					const getRandomProviderResponse = await getRandomActiveProvider(
 						getConfig().defaultEnvironment,
 						randomNumber,

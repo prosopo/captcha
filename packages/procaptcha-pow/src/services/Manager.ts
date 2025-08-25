@@ -15,10 +15,10 @@
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ExtensionLoader,
 	buildUpdateState,
-	getRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -210,7 +210,7 @@ export const Manager = (
 					const randomNumberU8a = window.crypto.getRandomValues(
 						new Uint8Array(10),
 					);
-					const randomNumber = randomNumberU8a.reduce((a, b) => a + b);
+					const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
 					// get a random provider
 					getRandomProviderResponse = await getRandomActiveProvider(
 						getConfig().defaultEnvironment,
