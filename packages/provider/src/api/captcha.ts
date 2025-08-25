@@ -588,12 +588,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const { baseBotScore, timestamp, providerSelectEntropy } =
 					await tasks.frictionlessManager.decryptPayload(token);
 
-				// Make sure provider was selected
-				const provider = await getRandomActiveProvider(
-					env.defaultEnvironment,
-					providerSelectEntropy,
-				);
-				if (provider.provider.url !== env.host) {
+				if (
+					!(await tasks.frictionlessManager.verifyHost(providerSelectEntropy))
+				) {
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
 				}
 
 				const botScore = baseBotScore + lScore;

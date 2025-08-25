@@ -26,11 +26,6 @@ export const getRandomActiveProvider = async (
 		providers = await loadBalancer(env);
 	}
 
-	console.log({
-		entropy,
-		providerLength: providers.length,
-		index: entropy % (providers.length - 1),
-	});
 	const randomProvderObj = at(
 		providers,
 		entropy % Math.max(providers.length - 1, 1),

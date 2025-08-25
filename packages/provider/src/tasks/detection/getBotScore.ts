@@ -21,13 +21,15 @@ export const getBotScore = async (
 	const result = (await getBotScoreFromPayload(payload, privateKeyString)) as {
 		score: number;
 		timestamp: number;
+		providerSelectEntropy: number;
 	};
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
+	const providerSelectEntropy: number = result.timestamp;
 
 	if (baseBotScore === undefined) {
 		return { baseBotScore: 1, timestamp: 0 };
 	}
 
-	return { baseBotScore, timestamp };
+	return { baseBotScore, timestamp, providerSelectEntropy };
 };
