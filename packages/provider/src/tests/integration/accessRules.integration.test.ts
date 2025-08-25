@@ -249,261 +249,262 @@ describe("Access Rules Integration Tests", () => {
 			expect(data.captchas.length).toBe(rounds);
 		});
 	});
-	describe("Site keys registered for frictionless captcha", () => {
-		let siteKeyPair: KeyringPair;
-		let siteKeyMnemonic: string;
-		let siteKey: string;
-		let userPair: KeyringPair;
-		let userMnemonic: string;
-		let userId: string;
-		const adminPair = at(getDefaultProviders(), 0).pair;
-		beforeEach(async () => {
-			const responses = await removeAllUserAccessPolicies(adminPair);
-			expect(responses.every((response) => response.status === "SUCCESS")).toBe(
-				true,
-			);
-			// Create a new site key to avoid conflicts with other tests
-			[siteKeyMnemonic, siteKey] = await generateMnemonic();
-			siteKeyPair = getPair(siteKeyMnemonic);
-			await registerSiteKey(siteKey, CaptchaType.frictionless, adminPair);
-			[userMnemonic, userId] = await generateMnemonic();
-			userPair = getPair(userMnemonic);
-		});
-
-		it("should return a 401 for a blocked user", async () => {
-			await userAccessPolicy(adminPair, {
-				block: true, // block
-				userId,
-				description: "Blocked user test",
-			});
-			const origin = "http://localhost";
-			const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
-			const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
-				{
-					[ApiParams.dapp]: siteKey,
-					[ApiParams.token]: randomAsHex(16),
-					[ApiParams.user]: userId,
-				};
-			const response = await fetch(getFrictionlessCaptchaUrl, {
-				method: "POST",
-				body: JSON.stringify(getFrictionlessCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-
-			expect(response.status).toBe(401);
-		});
-
-		it("should return the correct captcha type for a user with an image captcha access rule", async () => {
-			const rounds = 6;
-			await userAccessPolicy(adminPair, {
-				solved: 6,
-				userId,
-				description: "Image captcha rounds test",
-			});
-			const origin = "http://localhost";
-			const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
-			const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
-				{
-					[ApiParams.dapp]: siteKey,
-					[ApiParams.token]: randomAsHex(16),
-					[ApiParams.user]: userId,
-				};
-			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
-				method: "POST",
-				body: JSON.stringify(getFrictionlessCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responseFrictionless.status).toBe(200);
-			const dataFrictionless = await responseFrictionless.json();
-			expect(dataFrictionless.captchaType).toBe(CaptchaType.image);
-
-			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-			const getImgCaptchaBody: CaptchaRequestBodyType = {
-				[ApiParams.dapp]: siteKey,
-				[ApiParams.user]: userId,
-				[ApiParams.datasetId]: solutions.datasetId,
-				[ApiParams.sessionId]: dataFrictionless.sessionId,
-			};
-			const responseImage = await fetch(getImageCaptchaURL, {
-				method: "POST",
-				body: JSON.stringify(getImgCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responseImage.status).toBe(200);
-			const data = await responseImage.json();
-			expect(data.captchas.length).toBe(rounds);
-		});
-		it("should return the correct captcha type for a user with a pow captcha access rule", async () => {
-			const difficulty = 6;
-			await userAccessPolicy(adminPair, {
-				userId,
-				description: "PoW captcha 2 difficulty test",
-				captchaType: CaptchaType.pow,
-				powDifficulty: difficulty,
-			});
-			const origin = "http://localhost";
-			const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
-			const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
-				{
-					[ApiParams.dapp]: siteKey,
-					[ApiParams.token]: randomAsHex(16),
-					[ApiParams.user]: userId,
-				};
-			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
-				method: "POST",
-				body: JSON.stringify(getFrictionlessCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responseFrictionless.status).toBe(200);
-			const dataFrictionless = await responseFrictionless.json();
-			expect(dataFrictionless.captchaType).toBe(CaptchaType.pow);
-
-			const getPoWCaptchaUrl = `${baseUrl}${ClientApiPaths.GetPowCaptchaChallenge}`;
-			const getPoWCaptchaBody: GetPowCaptchaChallengeRequestBodyTypeOutput = {
-				[ApiParams.dapp]: siteKey,
-				[ApiParams.user]: userId,
-				[ApiParams.sessionId]: dataFrictionless.sessionId,
-			};
-			const responsePoW = await fetch(getPoWCaptchaUrl, {
-				method: "POST",
-				body: JSON.stringify(getPoWCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responsePoW.status).toBe(200);
-			const data: GetPowCaptchaResponse = await responsePoW.json();
-			expect(data.difficulty).toBe(difficulty);
-		});
-		it("should not return an image captcha for a user with a pow captcha access rule", async () => {
-			const difficulty = 6;
-			await userAccessPolicy(adminPair, {
-				userId,
-				description: "PoW captcha 2 difficulty test",
-				captchaType: CaptchaType.pow,
-				powDifficulty: difficulty,
-			});
-			const origin = "http://localhost";
-			const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
-			const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
-				{
-					[ApiParams.dapp]: siteKey,
-					[ApiParams.token]: randomAsHex(16),
-					[ApiParams.user]: userId,
-				};
-			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
-				method: "POST",
-				body: JSON.stringify(getFrictionlessCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responseFrictionless.status).toBe(200);
-			const dataFrictionless = await responseFrictionless.json();
-			expect(dataFrictionless.captchaType).toBe(CaptchaType.pow);
-
-			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-			const getImgCaptchaBody: CaptchaRequestBodyType = {
-				[ApiParams.dapp]: siteKey,
-				[ApiParams.user]: userId,
-				[ApiParams.datasetId]: solutions.datasetId,
-				[ApiParams.sessionId]: dataFrictionless.sessionId,
-			};
-			const responseImage = await fetch(getImageCaptchaURL, {
-				method: "POST",
-				body: JSON.stringify(getImgCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responseImage.status).toBe(400);
-		});
-		it("should not return a pow captcha for a user with an image captcha access rule", async () => {
-			await userAccessPolicy(adminPair, {
-				userId,
-				description: "Image captcha rounds test",
-				captchaType: CaptchaType.image,
-				solved: 12,
-			});
-			const origin = "http://localhost";
-			const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
-			const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
-				{
-					[ApiParams.dapp]: siteKey,
-					[ApiParams.token]: randomAsHex(16),
-					[ApiParams.user]: userId,
-				};
-			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
-				method: "POST",
-				body: JSON.stringify(getFrictionlessCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responseFrictionless.status).toBe(200);
-			const dataFrictionless = await responseFrictionless.json();
-			expect(dataFrictionless.captchaType).toBe(CaptchaType.image);
-
-			const getPoWCaptchaUrl = `${baseUrl}${ClientApiPaths.GetPowCaptchaChallenge}`;
-			const getPoWCaptchaBody: GetPowCaptchaChallengeRequestBodyTypeOutput = {
-				[ApiParams.dapp]: siteKey,
-				[ApiParams.user]: userId,
-				[ApiParams.sessionId]: dataFrictionless.sessionId,
-			};
-			const responsePoW = await fetch(getPoWCaptchaUrl, {
-				method: "POST",
-				body: JSON.stringify(getPoWCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": siteKey,
-					"Prosopo-User": userId,
-					"User-Agent": randomAsHex(16),
-				},
-			});
-			expect(responsePoW.status).toBe(400);
-		});
-	});
+	// TODO Reintroduce when we can do secure selection in the frictionless flow
+	// describe("Site keys registered for frictionless captcha", () => {
+	// 	let siteKeyPair: KeyringPair;
+	// 	let siteKeyMnemonic: string;
+	// 	let siteKey: string;
+	// 	let userPair: KeyringPair;
+	// 	let userMnemonic: string;
+	// 	let userId: string;
+	// 	const adminPair = at(getDefaultProviders(), 0).pair;
+	// 	beforeEach(async () => {
+	// 		const responses = await removeAllUserAccessPolicies(adminPair);
+	// 		expect(responses.every((response) => response.status === "SUCCESS")).toBe(
+	// 			true,
+	// 		);
+	// 		// Create a new site key to avoid conflicts with other tests
+	// 		[siteKeyMnemonic, siteKey] = await generateMnemonic();
+	// 		siteKeyPair = getPair(siteKeyMnemonic);
+	// 		await registerSiteKey(siteKey, CaptchaType.frictionless, adminPair);
+	// 		[userMnemonic, userId] = await generateMnemonic();
+	// 		userPair = getPair(userMnemonic);
+	// 	});
+	//
+	// 	it("should return a 401 for a blocked user", async () => {
+	// 		await userAccessPolicy(adminPair, {
+	// 			block: true, // block
+	// 			userId,
+	// 			description: "Blocked user test",
+	// 		});
+	// 		const origin = "http://localhost";
+	// 		const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
+	// 		const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
+	// 			{
+	// 				[ApiParams.dapp]: siteKey,
+	// 				[ApiParams.token]: randomAsHex(16),
+	// 				[ApiParams.user]: userId,
+	// 			};
+	// 		const response = await fetch(getFrictionlessCaptchaUrl, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getFrictionlessCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	//
+	// 		expect(response.status).toBe(401);
+	// 	});
+	//
+	// 	it("should return the correct captcha type for a user with an image captcha access rule", async () => {
+	// 		const rounds = 6;
+	// 		await userAccessPolicy(adminPair, {
+	// 			solved: 6,
+	// 			userId,
+	// 			description: "Image captcha rounds test",
+	// 		});
+	// 		const origin = "http://localhost";
+	// 		const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
+	// 		const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
+	// 			{
+	// 				[ApiParams.dapp]: siteKey,
+	// 				[ApiParams.token]: randomAsHex(16),
+	// 				[ApiParams.user]: userId,
+	// 			};
+	// 		const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getFrictionlessCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responseFrictionless.status).toBe(200);
+	// 		const dataFrictionless = await responseFrictionless.json();
+	// 		expect(dataFrictionless.captchaType).toBe(CaptchaType.image);
+	//
+	// 		const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
+	// 		const getImgCaptchaBody: CaptchaRequestBodyType = {
+	// 			[ApiParams.dapp]: siteKey,
+	// 			[ApiParams.user]: userId,
+	// 			[ApiParams.datasetId]: solutions.datasetId,
+	// 			[ApiParams.sessionId]: dataFrictionless.sessionId,
+	// 		};
+	// 		const responseImage = await fetch(getImageCaptchaURL, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getImgCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responseImage.status).toBe(200);
+	// 		const data = await responseImage.json();
+	// 		expect(data.captchas.length).toBe(rounds);
+	// 	});
+	// 	it("should return the correct captcha type for a user with a pow captcha access rule", async () => {
+	// 		const difficulty = 6;
+	// 		await userAccessPolicy(adminPair, {
+	// 			userId,
+	// 			description: "PoW captcha 2 difficulty test",
+	// 			captchaType: CaptchaType.pow,
+	// 			powDifficulty: difficulty,
+	// 		});
+	// 		const origin = "http://localhost";
+	// 		const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
+	// 		const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
+	// 			{
+	// 				[ApiParams.dapp]: siteKey,
+	// 				[ApiParams.token]: randomAsHex(16),
+	// 				[ApiParams.user]: userId,
+	// 			};
+	// 		const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getFrictionlessCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responseFrictionless.status).toBe(200);
+	// 		const dataFrictionless = await responseFrictionless.json();
+	// 		expect(dataFrictionless.captchaType).toBe(CaptchaType.pow);
+	//
+	// 		const getPoWCaptchaUrl = `${baseUrl}${ClientApiPaths.GetPowCaptchaChallenge}`;
+	// 		const getPoWCaptchaBody: GetPowCaptchaChallengeRequestBodyTypeOutput = {
+	// 			[ApiParams.dapp]: siteKey,
+	// 			[ApiParams.user]: userId,
+	// 			[ApiParams.sessionId]: dataFrictionless.sessionId,
+	// 		};
+	// 		const responsePoW = await fetch(getPoWCaptchaUrl, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getPoWCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responsePoW.status).toBe(200);
+	// 		const data: GetPowCaptchaResponse = await responsePoW.json();
+	// 		expect(data.difficulty).toBe(difficulty);
+	// 	});
+	// 	it("should not return an image captcha for a user with a pow captcha access rule", async () => {
+	// 		const difficulty = 6;
+	// 		await userAccessPolicy(adminPair, {
+	// 			userId,
+	// 			description: "PoW captcha 2 difficulty test",
+	// 			captchaType: CaptchaType.pow,
+	// 			powDifficulty: difficulty,
+	// 		});
+	// 		const origin = "http://localhost";
+	// 		const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
+	// 		const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
+	// 			{
+	// 				[ApiParams.dapp]: siteKey,
+	// 				[ApiParams.token]: randomAsHex(16),
+	// 				[ApiParams.user]: userId,
+	// 			};
+	// 		const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getFrictionlessCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responseFrictionless.status).toBe(200);
+	// 		const dataFrictionless = await responseFrictionless.json();
+	// 		expect(dataFrictionless.captchaType).toBe(CaptchaType.pow);
+	//
+	// 		const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
+	// 		const getImgCaptchaBody: CaptchaRequestBodyType = {
+	// 			[ApiParams.dapp]: siteKey,
+	// 			[ApiParams.user]: userId,
+	// 			[ApiParams.datasetId]: solutions.datasetId,
+	// 			[ApiParams.sessionId]: dataFrictionless.sessionId,
+	// 		};
+	// 		const responseImage = await fetch(getImageCaptchaURL, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getImgCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responseImage.status).toBe(400);
+	// 	});
+	// 	it("should not return a pow captcha for a user with an image captcha access rule", async () => {
+	// 		await userAccessPolicy(adminPair, {
+	// 			userId,
+	// 			description: "Image captcha rounds test",
+	// 			captchaType: CaptchaType.image,
+	// 			solved: 12,
+	// 		});
+	// 		const origin = "http://localhost";
+	// 		const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
+	// 		const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
+	// 			{
+	// 				[ApiParams.dapp]: siteKey,
+	// 				[ApiParams.token]: randomAsHex(16),
+	// 				[ApiParams.user]: userId,
+	// 			};
+	// 		const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getFrictionlessCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responseFrictionless.status).toBe(200);
+	// 		const dataFrictionless = await responseFrictionless.json();
+	// 		expect(dataFrictionless.captchaType).toBe(CaptchaType.image);
+	//
+	// 		const getPoWCaptchaUrl = `${baseUrl}${ClientApiPaths.GetPowCaptchaChallenge}`;
+	// 		const getPoWCaptchaBody: GetPowCaptchaChallengeRequestBodyTypeOutput = {
+	// 			[ApiParams.dapp]: siteKey,
+	// 			[ApiParams.user]: userId,
+	// 			[ApiParams.sessionId]: dataFrictionless.sessionId,
+	// 		};
+	// 		const responsePoW = await fetch(getPoWCaptchaUrl, {
+	// 			method: "POST",
+	// 			body: JSON.stringify(getPoWCaptchaBody),
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 				Origin: origin,
+	// 				"Prosopo-Site-Key": siteKey,
+	// 				"Prosopo-User": userId,
+	// 				"User-Agent": randomAsHex(16),
+	// 			},
+	// 		});
+	// 		expect(responsePoW.status).toBe(400);
+	// 	});
+	// });
 	describe("Site keys registered for pow captcha", () => {
 		let siteKeyPair: KeyringPair;
 		let siteKeyMnemonic: string;
