@@ -36,6 +36,7 @@
 	"type": "module",
 	"dependencies": {
 		"@prosopo/config": "3.1.6",
+		"@prosopo/types": "3.0.10",
 		"dotenv": "16.4.5"
 	}
 }

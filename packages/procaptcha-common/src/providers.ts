@@ -12,6 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
+import type { EnvironmentTypes } from "@prosopo/types";
+
+export const getProcaptchaRandomActiveProvider = async (
+	defaultEnvironment: EnvironmentTypes,
+) => {
+	const randomNumberU8a = window.crypto.getRandomValues(new Uint8Array(10));
+	const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
+	return await getRandomActiveProvider(defaultEnvironment, randomNumber);
+};
+
 export const providerRetry = async (
 	currentFn: () => Promise<void>,
 	retryFn: () => Promise<void>,
