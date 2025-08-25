@@ -29,7 +29,7 @@ export const getRandomActiveProvider = async (
 
 	const randomProvderObj = at(
 		providers,
-		entropy % Math.max(providers.length - 1, 1),
+		entropy % Math.max(providers.length, 1),
 	);
 	return {
 		providerAccount: randomProvderObj.address,
