@@ -12,23 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { DetectorResult } from "@prosopo/types";
 import getBotScoreFromPayload from "./decodePayload.js";
+
+const DEFAULT_ENTROPY = 1337;
 
 export const getBotScore = async (
 	payload: string,
 	privateKeyString?: string,
 ) => {
-	const result = (await getBotScoreFromPayload(payload, privateKeyString)) as {
-		score: number;
-		timestamp: number;
-		providerSelectEntropy: number;
-	};
+	const result = (await getBotScoreFromPayload(
+		payload,
+		privateKeyString,
+	)) as DetectorResult;
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
-	const providerSelectEntropy: number = result.timestamp;
+	const providerSelectEntropy: number = result.providerSelectEntropy;
 
 	if (baseBotScore === undefined) {
-		return { baseBotScore: 1, timestamp: 0 };
+		return {
+			baseBotScore: 1,
+			timestamp: 0,
+			providerSelectEntropy: DEFAULT_ENTROPY,
+		};
 	}
 
 	return { baseBotScore, timestamp, providerSelectEntropy };
