@@ -1,5 +1,13 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.15
+### Patch Changes
+
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+
 ## 2.6.14
 ### Patch Changes
 

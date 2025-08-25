@@ -1,5 +1,18 @@
 # @prosopo/types-env
 
+## 2.7.24
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/config@3.1.6
+  - @prosopo/common@3.1.6
+  - @prosopo/keyring@2.8.13
+  - @prosopo/types@3.0.10
+
 ## 2.7.23
 ### Patch Changes
 
