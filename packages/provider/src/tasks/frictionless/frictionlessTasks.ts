@@ -33,6 +33,7 @@ import { CaptchaManager } from "../captchaManager.js";
 import { getBotScore } from "../detection/getBotScore.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
+const DEFAULT_ENTROPY = 1333;
 
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
@@ -72,7 +73,12 @@ export class FrictionlessManager extends CaptchaManager {
 			entropy,
 		);
 
-		if (chosen.provider.url !== this.config.host) {
+		const domain = new URL(chosen.provider.url).hostname;
+		this.logger.info(() => ({
+			data: { entropy, chosen, host: this.config.host, domain },
+		}));
+
+		if (domain !== this.config.host) {
 			this.logger.info(() => ({
 				msg: "Host mismatch",
 				data: { expected: this.config.host, got: chosen.provider.url },
@@ -208,15 +214,6 @@ export class FrictionlessManager extends CaptchaManager {
 					timestamp: t,
 					providerSelectEntropy: p,
 				} = await getBotScore(token, key);
-				this.logger.debug(() => ({
-					msg: "Successfully decrypted score",
-					data: {
-						key: this.redactKeyForLogging(key),
-						baseBotScore: s,
-						timestamp: t,
-						entropy: p,
-					},
-				}));
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;
@@ -229,7 +226,7 @@ export class FrictionlessManager extends CaptchaManager {
 					}));
 					baseBotScore = 1;
 					timestamp = 0;
-					providerSelectEntropy = 1;
+					providerSelectEntropy = DEFAULT_ENTROPY - 1;
 				}
 			}
 		}
@@ -244,8 +241,16 @@ export class FrictionlessManager extends CaptchaManager {
 			}));
 			baseBotScore = 1;
 			timestamp = 0;
-			providerSelectEntropy = 1;
+			providerSelectEntropy = DEFAULT_ENTROPY;
 		}
+		this.logger.info(() => ({
+			msg: "decryptPayload result",
+			data: {
+				baseBotScore: baseBotScore,
+				timestamp: timestamp,
+				entropy: providerSelectEntropy,
+			},
+		}));
 
 		return { baseBotScore, timestamp, providerSelectEntropy };
 	}

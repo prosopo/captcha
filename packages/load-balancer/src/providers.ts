@@ -16,20 +16,24 @@ import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { type HardcodedProvider, loadBalancer } from "./index.js";
 
-let providers: HardcodedProvider[] = [];
+let cachedProviders: HardcodedProvider[] = [];
+
+export function _resetCache() {
+	cachedProviders = [];
+}
 
 export const getRandomActiveProvider = async (
 	env: EnvironmentTypes,
 	entropy: number,
 ): Promise<RandomProvider> => {
-	if (providers.length === 0) {
+	if (cachedProviders.length === 0) {
 		// only get the providers JSON once
-		providers = await loadBalancer(env);
+		cachedProviders = await loadBalancer(env);
 	}
 
 	const randomProvderObj = at(
-		providers,
-		entropy % Math.max(providers.length, 1),
+		cachedProviders,
+		entropy % Math.max(cachedProviders.length, 1),
 	);
 	return {
 		providerAccount: randomProvderObj.address,
