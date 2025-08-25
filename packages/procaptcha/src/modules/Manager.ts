@@ -23,6 +23,7 @@ import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getProcaptchaRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -134,14 +135,10 @@ export function Manager(
 					// Get a new random provider if
 					// - we don't have a provider api instance (first time)
 					// - we do have a provider api instance but no sessionId (image captcha only)
-					const randomNumberU8a = window.crypto.getRandomValues(
-						new Uint8Array(10),
-					);
-					const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
-					const getRandomProviderResponse = await getRandomActiveProvider(
-						getConfig().defaultEnvironment,
-						randomNumber,
-					);
+					const getRandomProviderResponse =
+						await getProcaptchaRandomActiveProvider(
+							getConfig().defaultEnvironment,
+						);
 
 					const providerUrl = getRandomProviderResponse.provider.url;
 					// get the provider api inst

@@ -19,6 +19,7 @@ import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ExtensionLoader,
 	buildUpdateState,
+	getProcaptchaRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -207,14 +208,8 @@ export const Manager = (
 				if (frictionlessState?.provider) {
 					getRandomProviderResponse = frictionlessState.provider;
 				} else {
-					const randomNumberU8a = window.crypto.getRandomValues(
-						new Uint8Array(10),
-					);
-					const randomNumber = randomNumberU8a.reduce((a, b) => a + b, 0);
-					// get a random provider
-					getRandomProviderResponse = await getRandomActiveProvider(
+					getRandomProviderResponse = await getProcaptchaRandomActiveProvider(
 						getConfig().defaultEnvironment,
-						randomNumber,
 					);
 				}
 
