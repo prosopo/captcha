@@ -75,7 +75,7 @@ export class FrictionlessManager extends CaptchaManager {
 
 		const domain = new URL(chosen.provider.url).hostname;
 		this.logger.info(() => ({
-			data: { entropy, chosen, host: this.config.host, domain },
+			data: { entropy, host: this.config.host, domain },
 		}));
 
 		if (domain !== this.config.host) {
