@@ -1,5 +1,12 @@
 # @prosopo/workspace
 
+## 3.1.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/config@3.1.8
+
 ## 3.1.0
 ### Minor Changes
 

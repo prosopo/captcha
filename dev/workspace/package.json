@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/workspace",
-	"version": "3.1.0",
+	"version": "3.1.1",
 	"description": "Prosopo workspace library",
 	"type": "module",
 	"main": "dist/index.js",
@@ -26,7 +26,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/config": "3.1.7"
+		"@prosopo/config": "3.1.8"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",

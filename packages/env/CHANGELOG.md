@@ -1,5 +1,19 @@
 # @prosopo/env
 
+## 3.2.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/types-env@2.7.26
+  - @prosopo/database@3.2.1
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/config@3.1.8
+
 ## 3.2.0
 ### Minor Changes
 

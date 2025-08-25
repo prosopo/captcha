@@ -1,5 +1,12 @@
 # @prosopo/util-crypto
 
+## 13.5.10
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/config@3.1.8
+
 ## 13.5.9
 ### Patch Changes
 
