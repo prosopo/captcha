@@ -19,7 +19,6 @@ import {
 	ProsopoEnvError,
 	ProsopoError,
 } from "@prosopo/common";
-import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ExtensionLoader,
 	buildUpdateState,
