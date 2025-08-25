@@ -1,5 +1,3 @@
-import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
-import { at } from "@prosopo/util";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,9 @@ import { at } from "@prosopo/util";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
+import { at } from "@prosopo/util";
 import { type HardcodedProvider, loadBalancer } from "./index.js";
 
 let providers: HardcodedProvider[] = [];
