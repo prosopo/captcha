@@ -115,7 +115,6 @@ export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>;
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
 	object({
-		host: string(),
 		database: DatabaseConfigSchema.optional(),
 		devOnlyWatchEvents: boolean().optional(),
 	}),
@@ -273,6 +272,7 @@ export type ProcaptchaClientConfigOutput = output<
 
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
+		host: string(),
 		captchas: ProsopoCaptchaCountConfigSchema.optional().default({
 			solved: { count: DEFAULT_SOLVED_COUNT },
 			unsolved: { count: DEFAULT_UNSOLVED_COUNT },
