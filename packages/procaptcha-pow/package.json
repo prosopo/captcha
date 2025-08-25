@@ -31,12 +31,12 @@
 		"@polkadot/util": "12.6.2",
 		"@prosopo/api": "3.1.10",
 		"@prosopo/common": "3.1.6",
+		"@prosopo/config": "3.1.6",
 		"@prosopo/locale": "3.1.6",
 		"@prosopo/procaptcha-common": "2.7.18",
 		"@prosopo/types": "3.0.10",
 		"@prosopo/util": "3.0.9",
 		"@prosopo/widget-skeleton": "2.6.7",
-		"@prosopo/config": "3.1.6",
 		"react": "18.3.1"
 	},
 	"overrides": {

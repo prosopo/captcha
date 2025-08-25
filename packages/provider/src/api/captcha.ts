@@ -584,8 +584,24 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp } =
+				const { baseBotScore, timestamp, providerSelectEntropy } =
 					await tasks.frictionlessManager.decryptPayload(token);
+
+				if (
+					!(await tasks.frictionlessManager.verifyHost(providerSelectEntropy))
+				) {
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
 
 				const botScore = baseBotScore + lScore;
 

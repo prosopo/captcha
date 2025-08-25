@@ -28,14 +28,13 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/account": "2.7.16",
-		"@prosopo/load-balancer": "2.6.21",
-		"@prosopo/types": "3.0.10",
-		"@prosopo/util": "3.0.9",
-		"@prosopo/widget-skeleton": "2.6.7",
-		"@prosopo/config": "3.1.6",
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
+		"@prosopo/account": "2.7.16",
+		"@prosopo/config": "3.1.6",
+		"@prosopo/load-balancer": "2.6.21",
+		"@prosopo/types": "3.0.10",
+		"@prosopo/widget-skeleton": "2.6.7",
 		"react": "18.3.1"
 	},
 	"devDependencies": {

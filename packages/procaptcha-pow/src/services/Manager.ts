@@ -18,7 +18,7 @@ import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
 	buildUpdateState,
-	getRandomActiveProvider,
+	getProcaptchaRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -207,9 +207,8 @@ export const Manager = (
 				if (frictionlessState?.provider) {
 					getRandomProviderResponse = frictionlessState.provider;
 				} else {
-					// get a random provider
-					getRandomProviderResponse = await getRandomActiveProvider(
-						getConfig(),
+					getRandomProviderResponse = await getProcaptchaRandomActiveProvider(
+						getConfig().defaultEnvironment,
 					);
 				}
 
