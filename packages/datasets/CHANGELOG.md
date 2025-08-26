@@ -1,5 +1,31 @@
 # @prosopo/datasets
 
+## 3.0.22
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/types-database@3.1.2
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/common@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 3.0.21
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/types-database@3.1.1
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
 ## 3.0.20
 ### Patch Changes
 
