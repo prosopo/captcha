@@ -75,6 +75,6 @@ export default async function (
 			jsx: "automatic",
 			jsxImportSource: "@emotion/react",
 			jsxDev: process.env.NODE_ENV === "development",
-		}
+		},
 	});
 }
