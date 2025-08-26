@@ -58,7 +58,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				throw unauthorizedOriginError(req.i18n, undefined, req.logger);
 
 			for (const domain of allowedDomains) {
-				if (tasks.clientTaskManager.isSubdomainOrExactMatch(origin, domain)) {
+				if (tasks.clientTaskManager.domainPatternMatcher(origin, domain)) {
 					next();
 					return;
 				}

@@ -14,11 +14,12 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
+	RandomProvider,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -40,7 +41,10 @@ const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 ): Promise<BotDetectionFunctionResult> => {
 	const detect = await DetectorLoader();
-	const botScore = (await detect()) as { token: string };
+	const botScore = (await detect(
+		config.defaultEnvironment,
+		getRandomActiveProvider,
+	)) as { token: string; provider?: RandomProvider };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);
 
@@ -49,10 +53,11 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 
 	// Get random active provider with timeout
-	const provider = await withTimeout(
-		getRandomActiveProvider(config),
-		10000, // 10 second timeout
-	);
+	const provider = botScore.provider;
+
+	if (!provider) {
+		throw new Error("Provider Selection Failed");
+	}
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,
