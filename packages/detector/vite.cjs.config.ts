@@ -18,5 +18,6 @@ export default function () {
 	return ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
+		'src/index.js'
 	);
 }

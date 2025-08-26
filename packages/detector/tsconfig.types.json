@@ -3,7 +3,9 @@
 	"compilerOptions": {
 		"emitDeclarationOnly": true,
 		"declaration": true,
-		"declarationMap": true,
-		"composite": false
+		"declarationMap": false,
+		"composite": false,
+		"sourceMap": false,
+		"inlineSourceMap": false
 	}
 }
