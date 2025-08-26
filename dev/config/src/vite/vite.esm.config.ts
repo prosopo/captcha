@@ -68,5 +68,11 @@ export default async function (
 				external: allExternal,
 			},
 		},
+		esbuild: {
+			jsx: "automatic",
+			jsxImportSource: "@emotion/react",
+			jsxDev: process.env.NODE_ENV === "development",
+
+		}
 	});
 }
