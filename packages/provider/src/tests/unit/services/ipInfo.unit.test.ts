@@ -38,7 +38,7 @@ const mockApiResponse: IPApiResponse = {
 		domain: "google.com",
 		type: "business",
 		network: "8.8.8.0 - 8.8.8.255",
-		whois: "https://api.ipapi.is/?whois=8.8.8.0",
+		whois: "https://api.service/?whois=8.8.8.0",
 	},
 	location: {
 		is_eu_member: false,
@@ -71,7 +71,7 @@ const mockApiResponse: IPApiResponse = {
 		created: "2000-03-30",
 		updated: "2012-02-24",
 		rir: "ARIN",
-		whois: "https://api.ipapi.is/?whois=AS15169",
+		whois: "https://api.service/?whois=AS15169",
 	},
 	elapsed_ms: 0.15,
 };
@@ -86,7 +86,7 @@ describe("getIPInfo", () => {
 	});
 
 	it("should return error for invalid IP input", async () => {
-		const result = (await getIPInfo("")) as IPInfoError;
+		const result = (await getIPInfo("", "test-api-url")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Invalid IP address provided");
@@ -109,9 +109,9 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockResolvedValueOnce(mockApiResponse),
 		});
 
-		await getIPInfo("8.8.8.8");
+		await getIPInfo("8.8.8.8", "test-api-url");
 
-		expect(mockFetch).toHaveBeenCalledWith("https://api.ipapi.is", {
+		expect(mockFetch).toHaveBeenCalledWith("https://api.service", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -129,7 +129,7 @@ describe("getIPInfo", () => {
 
 		await getIPInfo("8.8.8.8", "test-api-key");
 
-		expect(mockFetch).toHaveBeenCalledWith("https://api.ipapi.is", {
+		expect(mockFetch).toHaveBeenCalledWith("https://api.service", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -146,7 +146,7 @@ describe("getIPInfo", () => {
 			statusText: "Internal Server Error",
 		});
 
-		const result = (await getIPInfo("8.8.8.8")) as IPInfoError;
+		const result = (await getIPInfo("8.8.8.8", "test-api-url")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe(
@@ -162,7 +162,10 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockResolvedValueOnce(bogonResponse),
 		});
 
-		const result = (await getIPInfo("127.0.0.1")) as IPInfoError;
+		const result = (await getIPInfo(
+			"127.0.0.1",
+			"test-api-url",
+		)) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("IP address is bogon (non-routable)");
@@ -175,7 +178,7 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockResolvedValueOnce(mockApiResponse),
 		});
 
-		const result = await getIPInfo("8.8.8.8");
+		const result = await getIPInfo("8.8.8.8", "test-api-url");
 
 		expect(result.isValid).toBe(true);
 		if (result.isValid) {
@@ -198,7 +201,7 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockResolvedValueOnce(mockApiResponse),
 		});
 
-		const result = await getIPInfo("8.8.8.8", undefined, true);
+		const result = await getIPInfo("8.8.8.8", "test-api-url", undefined, true);
 
 		expect(result.isValid).toBe(true);
 		if (result.isValid) {
@@ -229,7 +232,7 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockResolvedValueOnce(vpnResponse),
 		});
 
-		const result = await getIPInfo("185.254.75.23");
+		const result = await getIPInfo("185.254.75.23", "test-api-url");
 
 		expect(result.isValid).toBe(true);
 		if (result.isValid) {
@@ -242,7 +245,7 @@ describe("getIPInfo", () => {
 	it("should handle network errors", async () => {
 		mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-		const result = (await getIPInfo("8.8.8.8")) as IPInfoError;
+		const result = (await getIPInfo("8.8.8.8", "test-api-url")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Network or parsing error: Network error");
@@ -255,7 +258,7 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockRejectedValueOnce(new Error("Invalid JSON")),
 		});
 
-		const result = (await getIPInfo("8.8.8.8")) as IPInfoError;
+		const result = (await getIPInfo("8.8.8.8", "test-api-url")) as IPInfoError;
 
 		expect(result.isValid).toBe(false);
 		expect(result.error).toBe("Network or parsing error: Invalid JSON");

@@ -253,6 +253,7 @@ export enum ModeEnum {
 	visible = "visible",
 	invisible = "invisible",
 }
+
 export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
 export type ModeType = zInfer<typeof Mode>;
 
@@ -269,6 +270,12 @@ export type ProcaptchaClientConfigInput = input<typeof ProcaptchaConfigSchema>;
 export type ProcaptchaClientConfigOutput = output<
 	typeof ProcaptchaConfigSchema
 >;
+
+export const IpApiServiceSpec = z.object({
+	apiKey: z.string().optional(),
+	baseUrl: z.string().url().optional(),
+});
+export type IpApiService = zInfer<typeof IpApiServiceSpec>;
 
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
@@ -293,7 +300,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
-		ipApiKey: string().optional(),
+		ipApi: IpApiServiceSpec,
 		redisConnection: object({
 			url: string(),
 			password: string(),
