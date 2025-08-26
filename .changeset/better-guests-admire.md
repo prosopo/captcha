@@ -1,10 +1,6 @@
 ---
-"@prosopo/angular-procaptcha-integration-demo": patch
-"@prosopo/svelte-procaptcha-integration-demo": patch
 "@prosopo/react-procaptcha-integration-demo": patch
 "@prosopo/vue-procaptcha-integration-demo": patch
-"@prosopo/angular-procaptcha-wrapper": patch
-"@prosopo/svelte-procaptcha-wrapper": patch
 "@prosopo/react-procaptcha-wrapper": patch
 "@prosopo/vue-procaptcha-wrapper": patch
 "@prosopo/procaptcha-integration-build-config": patch
@@ -19,7 +15,6 @@
 "@prosopo/procaptcha-common": patch
 "@prosopo/procaptcha-react": patch
 "@prosopo/widget-skeleton": patch
-"@prosopo/http-blackhole": patch
 "@prosopo/procaptcha-pow": patch
 "@prosopo/types-database": patch
 "@prosopo/load-balancer": patch
@@ -58,5 +53,5 @@
 "@prosopo/lint": patch
 ---
 
-Release 3.1.13
+fix type-only tsc compilation
   

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.6.39",
+	"version": "2.7.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -25,22 +25,23 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"browserslist": [
 		"> 0.5%, last 2 versions, not dead"
 	],
 	"dependencies": {
-		"@prosopo/api": "3.1.10",
-		"@prosopo/common": "3.1.6",
-		"@prosopo/detector": "3.0.7",
-		"@prosopo/locale": "3.1.6",
-		"@prosopo/procaptcha-common": "2.7.18",
-		"@prosopo/procaptcha-pow": "2.7.25",
-		"@prosopo/procaptcha-react": "2.7.0",
-		"@prosopo/types": "3.0.10",
-		"@prosopo/widget-skeleton": "2.6.7",
-		"@prosopo/config": "3.1.6",
+		"@prosopo/api": "3.1.12",
+		"@prosopo/common": "3.1.8",
+		"@prosopo/config": "3.1.8",
+		"@prosopo/detector": "3.1.1",
+		"@prosopo/load-balancer": "2.7.1",
+		"@prosopo/locale": "3.1.8",
+		"@prosopo/procaptcha-common": "2.8.1",
+		"@prosopo/procaptcha-pow": "2.8.1",
+		"@prosopo/procaptcha-react": "2.8.1",
+		"@prosopo/types": "3.1.1",
+		"@prosopo/widget-skeleton": "2.6.9",
 		"dotenv": "16.4.5",
 		"react": "18.3.1"
 	},
