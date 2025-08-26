@@ -1,5 +1,45 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.7.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/load-balancer@2.7.1
+  - @prosopo/detector@3.1.1
+  - @prosopo/types@3.1.1
+  - @prosopo/procaptcha-common@2.8.1
+  - @prosopo/procaptcha-react@2.8.1
+  - @prosopo/widget-skeleton@2.6.9
+  - @prosopo/procaptcha-pow@2.8.1
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/api@3.1.12
+  - @prosopo/config@3.1.8
+
+## 2.7.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/procaptcha-common@2.8.0
+  - @prosopo/procaptcha-react@2.8.0
+  - @prosopo/widget-skeleton@2.6.8
+  - @prosopo/procaptcha-pow@2.8.0
+  - @prosopo/load-balancer@2.7.0
+  - @prosopo/detector@3.1.0
+  - @prosopo/common@3.1.7
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/api@3.1.11
+  - @prosopo/config@3.1.7
+
 ## 2.6.39
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/testpkg2",
-	"version": "1.0.10",
+	"version": "1.0.12",
 	"description": "Test package for testing deploys, releases, etc",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -34,7 +34,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/config": "3.1.6"
+		"@prosopo/config": "3.1.8"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",

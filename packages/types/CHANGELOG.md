@@ -1,5 +1,30 @@
 # @prosopo/types
 
+## 3.1.1
+### Patch Changes
+
+- 1f980c4: Fix types mismatch in decryption
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/locale@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 3.1.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/locale@3.1.7
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
 ## 3.0.10
 ### Patch Changes
 
