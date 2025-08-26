@@ -1,5 +1,58 @@
 # @prosopo/provider
 
+## 3.8.1
+### Patch Changes
+
+- 1f980c4: Fix types mismatch in decryption
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/load-balancer@2.7.1
+  - @prosopo/types@3.1.1
+  - @prosopo/api-express-router@3.0.13
+  - @prosopo/user-access-policy@3.5.7
+  - @prosopo/types-database@3.1.2
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/api-route@2.6.16
+  - @prosopo/types-env@2.7.26
+  - @prosopo/database@3.2.1
+  - @prosopo/datasets@3.0.22
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/api@3.1.12
+  - @prosopo/env@3.2.1
+  - @prosopo/config@3.1.8
+
+## 3.8.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/api-express-router@3.0.12
+  - @prosopo/user-access-policy@3.5.6
+  - @prosopo/types-database@3.1.1
+  - @prosopo/load-balancer@2.7.0
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/api-route@2.6.15
+  - @prosopo/types-env@2.7.25
+  - @prosopo/database@3.2.0
+  - @prosopo/datasets@3.0.21
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/api@3.1.11
+  - @prosopo/env@3.2.0
+  - @prosopo/config@3.1.7
+
 ## 3.7.0
 ### Minor Changes
 

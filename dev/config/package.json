@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.1.6",
+	"version": "3.1.8",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
