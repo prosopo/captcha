@@ -7,10 +7,7 @@
 				"runtime": "node -e \"console.log(JSON.stringify(process.env))\""
 			},
 			{
-				"runtime": "node --version"
-			},
-			{
-				"runtime": "npm --version"
+				"runtime": "find dist/ -type f -exec sha256sum {} + | sort | sha256sum"
 			},
 			"{workspaceRoot}/nx.json",
 			"{workspaceRoot}/package.json",
