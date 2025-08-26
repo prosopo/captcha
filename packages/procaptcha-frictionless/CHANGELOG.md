@@ -1,5 +1,23 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.7.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/load-balancer@2.7.1
+  - @prosopo/detector@3.1.1
+  - @prosopo/types@3.1.1
+  - @prosopo/procaptcha-common@2.8.1
+  - @prosopo/procaptcha-react@2.8.1
+  - @prosopo/widget-skeleton@2.6.9
+  - @prosopo/procaptcha-pow@2.8.1
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/api@3.1.12
+  - @prosopo/config@3.1.8
+
 ## 2.7.0
 ### Minor Changes
 

@@ -1,5 +1,20 @@
 # @prosopo/procaptcha-react
 
+## 2.8.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/procaptcha-common@2.8.1
+  - @prosopo/widget-skeleton@2.6.9
+  - @prosopo/procaptcha@2.8.1
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
 ## 2.8.0
 ### Minor Changes
 
