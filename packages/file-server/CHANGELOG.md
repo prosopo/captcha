@@ -1,5 +1,29 @@
 # @prosopo/file-server
 
+## 2.6.13
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 2.6.12
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
+## 2.6.11
+### Patch Changes
+
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+
 ## 2.6.10
 ### Patch Changes
 

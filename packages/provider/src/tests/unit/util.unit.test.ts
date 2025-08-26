@@ -11,13 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { LogRecordFn, Logger } from "@prosopo/common";
+import type { Logger } from "@prosopo/common";
 import { ScheduledTaskNames } from "@prosopo/types";
 import type {
 	IProviderDatabase,
 	ScheduledTaskRecord,
 } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
+import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
@@ -78,7 +79,11 @@ describe("validateIpAddress", () => {
 	});
 
 	it("should return valid when IP is undefined", () => {
-		const result = validateIpAddress(undefined, BigInt(123456789), mockLogger);
+		const result = validateIpAddress(
+			undefined,
+			Address4.fromBigInt(BigInt(123456789)),
+			mockLogger,
+		);
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
@@ -86,9 +91,9 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when IP addresses match", () => {
 		const testIp = "212.132.203.186";
-		const ipBigInt = BigInt(3565472698);
+		const ipAddress = Address4.fromBigInt(BigInt(3565472698));
 
-		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
@@ -102,9 +107,9 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when when an IPV4 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
 		const testIp = "82.43.214.180";
-		const ipBigInt = BigInt(1378604724);
+		const ipAddress = Address4.fromBigInt(BigInt(1378604724));
 
-		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
@@ -118,9 +123,9 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when when an IPV4 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
 		const testIp = "::ffff:82.43.214.180";
-		const ipBigInt = BigInt(1378604724);
+		const ipAddress = Address6.fromBigInt(BigInt(1378604724));
 
-		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
@@ -137,9 +142,9 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when when an IPV6 big int is returned from the DB and an IPV4 string is sent in the payload", () => {
 		const testIp = "82.43.214.180";
-		const ipBigInt = 281472060348084n;
+		const ipAddress = Address6.fromBigInt(BigInt(1378604724n));
 
-		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
@@ -153,9 +158,9 @@ describe("validateIpAddress", () => {
 
 	it("should return valid when when an IPV6 big int is returned from the DB and an IPV6 string is sent in the payload", () => {
 		const testIp = "::ffff:82.43.214.180";
-		const ipBigInt = 281472060348084n;
+		const ipAddress = Address6.fromBigInt(BigInt(281472060348084n));
 
-		const result = validateIpAddress(testIp, ipBigInt, mockLogger);
+		const result = validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(result.isValid).toBe(true);
 		expect(result.errorMessage).toBeUndefined();
@@ -172,7 +177,7 @@ describe("validateIpAddress", () => {
 
 	it("should return invalid when IP address is malformed", () => {
 		const invalidIp = "invalid.ip.address";
-		const challengeRecordIp = BigInt(3232235777); // Some valid bigint
+		const challengeRecordIp = Address4.fromBigInt(BigInt(3232235777)); // Some valid bigint
 
 		const result = validateIpAddress(invalidIp, challengeRecordIp, mockLogger);
 
@@ -187,9 +192,9 @@ describe("validateIpAddress", () => {
 
 	it("should return invalid when IP addresses don't match", () => {
 		const providedIp = "192.168.1.1";
-		const storedIpBigInt = BigInt(3232235778); // Different IP as bigint
+		const storedIp = Address4.fromBigInt(BigInt(3232235778)); // Different IP as bigint
 
-		const result = validateIpAddress(providedIp, storedIpBigInt, mockLogger);
+		const result = validateIpAddress(providedIp, storedIp, mockLogger);
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("IP address mismatch:");
@@ -205,9 +210,8 @@ describe("validateIpAddress", () => {
 	it("should verify logger is called when IP validation occurs", () => {
 		const testIp = "127.0.0.1";
 		const ipAddress = getIPAddress(testIp);
-		const ipBigInt = ipAddress.bigInt();
 
-		validateIpAddress(testIp, ipBigInt, mockLogger);
+		validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(mockLogger.info).toHaveBeenCalledTimes(1);
 	});

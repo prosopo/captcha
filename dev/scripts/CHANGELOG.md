@@ -1,5 +1,75 @@
 # @prosopo/scripts
 
+## 3.1.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/provider@3.8.1
+  - @prosopo/types@3.1.1
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/types-env@2.7.26
+  - @prosopo/datasets@3.0.22
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/dotenv@3.0.13
+  - @prosopo/locale@3.1.8
+  - @prosopo/workspace@3.1.1
+  - @prosopo/util@3.0.11
+  - @prosopo/cli@3.2.1
+  - @prosopo/env@3.2.1
+  - @prosopo/config@3.1.8
+
+## 3.1.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [181e0f5]
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/cli@3.2.0
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/types-env@2.7.25
+  - @prosopo/datasets@3.0.21
+  - @prosopo/provider@3.8.0
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/dotenv@3.0.12
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/workspace@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/env@3.2.0
+  - @prosopo/config@3.1.7
+
+## 3.0.24
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/provider@3.7.0
+  - @prosopo/datasets@3.0.20
+  - @prosopo/config@3.1.6
+  - @prosopo/types-env@2.7.24
+  - @prosopo/cli@3.1.13
+  - @prosopo/env@3.1.11
+  - @prosopo/util@3.0.9
+  - @prosopo/workspace@3.0.7
+  - @prosopo/common@3.1.6
+  - @prosopo/dotenv@3.0.11
+  - @prosopo/keyring@2.8.13
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
 ## 3.0.23
 ### Patch Changes
 

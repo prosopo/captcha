@@ -346,20 +346,51 @@ export class ClientTaskManager {
 		await this.providerDB.removeDetectorKey(detectorKey);
 	}
 
-	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
+	/**
+	 * Matches a request referrer against an allowed domain pattern.
+	 * Supports global '*', subdomain '*.example.com', glob '*example*',
+	 * plain domains (exact or subdomain), and 'localhost'.
+	 */
+	domainPatternMatcher(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
-		if (clientDomain === "*") return true;
 		try {
-			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
-			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
+			const referrerHost = parseUrl(referrer).hostname.replace(/\.$/, "");
+			const pattern = clientDomain.trim().toLowerCase();
 
+			// Global wildcard
+			if (pattern === "*") return true;
+
+			// Localhost allowance
+			if (pattern === "localhost") {
+				return (
+					referrerHost === "localhost" || referrerHost.startsWith("localhost:")
+				);
+			}
+
+			// Subdomain wildcard: *.example.com
+			if (pattern.startsWith("*.")) {
+				const suffix = pattern.slice(2);
+				const allowed = parseUrl(suffix).hostname.replace(/\.$/, "");
+				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
+			}
+
+			// General glob pattern: convert * to .*
+			if (pattern.includes("*")) {
+				const escaped = pattern
+					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
+					.replace(/\*/g, ".*");
+				const regex = new RegExp(`^${escaped}$`, "i");
+				return regex.test(referrerHost);
+			}
+
+			// Exact or subdomain match for plain domains
+			const allowedHost = parseUrl(pattern).hostname.replace(/\.$/, "");
 			return (
-				referrerDomain === allowedDomain ||
-				referrerDomain.endsWith(`.${allowedDomain}`)
+				referrerHost === allowedHost || referrerHost.endsWith(`.${allowedHost}`)
 			);
-		} catch {
+		} catch (e) {
 			this.logger.error(() => ({
-				msg: "Error in isSubdomainOrExactMatch",
+				msg: "Error in domainPatternMatcher",
 				data: { referrer, clientDomain },
 			}));
 			return false;

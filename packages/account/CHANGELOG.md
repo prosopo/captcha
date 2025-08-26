@@ -1,5 +1,46 @@
 # @prosopo/account
 
+## 2.7.18
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/fingerprint@2.6.9
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 2.7.17
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/fingerprint@2.6.8
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
+## 2.7.16
+### Patch Changes
+
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/common@3.1.6
+  - @prosopo/fingerprint@2.6.7
+  - @prosopo/keyring@2.8.13
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
 ## 2.7.15
 ### Patch Changes
 

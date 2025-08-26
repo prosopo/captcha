@@ -40,6 +40,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
+import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
@@ -276,7 +277,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						parsed[ApiParams.signature].user.timestamp,
 						Number.parseInt(parsed[ApiParams.timestamp]),
 						parsed[ApiParams.signature].provider.requestHash,
-						getIPAddress(req.ip || "").bigInt(),
+						getIPAddress(req.ip || ""),
 						flatten(req.headers),
 						req.ja4,
 					);
@@ -423,7 +424,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				},
 				challenge.difficulty,
 				challenge.providerSignature,
-				getIPAddress(req.ip || "").bigInt(),
+				getCompositeIpAddress(req.ip || ""),
 				flatten(req.headers),
 				req.ja4,
 				frictionlessTokenId,
@@ -583,8 +584,25 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp } =
+				const { baseBotScore, timestamp, providerSelectEntropy } =
 					await tasks.frictionlessManager.decryptPayload(token);
+
+				if (
+					!(await tasks.frictionlessManager.verifyHost(providerSelectEntropy))
+				) {
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+								ip: req.ip,
+							},
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
+					);
+				}
 
 				const botScore = baseBotScore + lScore;
 
@@ -633,7 +651,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						baseScore: baseBotScore,
 						...(lScore && { lScore }),
 					},
-					ipAddress: getIPAddress(req.ip || "").bigInt(),
+					ipAddress: getCompositeIpAddress(req.ip || ""),
 				});
 
 				// Check if the IP address is blocked

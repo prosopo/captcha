@@ -53,6 +53,9 @@
 			"path": "../api-express-router"
 		},
 		{
+			"path": "../types-database"
+		},
+		{
 			"path": "../../dev/workspace"
 		}
 	]
