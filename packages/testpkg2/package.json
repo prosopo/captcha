@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/testpkg2",
-	"version": "1.0.10",
+	"version": "1.0.12",
 	"description": "Test package for testing deploys, releases, etc",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -20,7 +20,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",
@@ -34,7 +34,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/config": "3.1.6"
+		"@prosopo/config": "3.1.8"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",

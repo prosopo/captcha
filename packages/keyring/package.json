@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/keyring",
-	"version": "2.8.13",
+	"version": "2.8.15",
 	"description": "Keypair generator for Prosopo",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"repository": {
@@ -37,11 +37,11 @@
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
 		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "3.1.6",
-		"@prosopo/config": "3.1.6",
-		"@prosopo/types": "3.0.10",
-		"@prosopo/util": "3.0.9",
-		"@prosopo/util-crypto": "13.5.8",
+		"@prosopo/common": "3.1.8",
+		"@prosopo/config": "3.1.8",
+		"@prosopo/types": "3.1.1",
+		"@prosopo/util": "3.0.11",
+		"@prosopo/util-crypto": "13.5.10",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {

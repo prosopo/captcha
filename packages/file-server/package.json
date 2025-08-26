@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/file-server",
-	"version": "2.6.11",
+	"version": "2.6.13",
 	"description": "Simple static file server",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -21,12 +21,12 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "node ./dist/index.js"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.0.9",
-		"@prosopo/config": "3.1.6",
+		"@prosopo/util": "3.0.11",
+		"@prosopo/config": "3.1.8",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
 		"sharp": "0.33.5"
