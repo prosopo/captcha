@@ -105,13 +105,13 @@ export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
 /**
  * Validates that the provided IP address matches the challenge record's IP address
  * @param ip - The IP address string to validate
- * @param challengeRecordIpAddress - The IP address from the challenge record as bigint
+ * @param challengeIpAddress - The IP address from the challenge record
  * @param logger - Logger instance for debug messages
  * @returns Object with validation result and optional error message
  */
 export const validateIpAddress = (
 	ip: string | undefined,
-	challengeRecordIpAddress: bigint,
+	challengeIpAddress: IPAddress,
 	logger: Logger,
 ): { isValid: boolean; errorMessage?: string } => {
 	if (!ip) {
@@ -128,38 +128,34 @@ export const validateIpAddress = (
 		return { isValid: false, errorMessage };
 	}
 
-	let challengeIpV4orV6Address = getIPAddressFromBigInt(
-		challengeRecordIpAddress,
-	);
-
 	// Make sure both IP addresses are of the same type (either both IPv4 or both IPv6)
 	ipV4orV6Address =
 		"address4" in ipV4orV6Address && ipV4orV6Address.address4
 			? ipV4orV6Address.address4
 			: ipV4orV6Address;
-	challengeIpV4orV6Address =
-		"address4" in challengeIpV4orV6Address && challengeIpV4orV6Address.address4
-			? challengeIpV4orV6Address.address4
-			: challengeIpV4orV6Address;
+	challengeIpAddress =
+		"address4" in challengeIpAddress && challengeIpAddress.address4
+			? challengeIpAddress.address4
+			: challengeIpAddress;
 
-	if (ipV4orV6Address.v4 && !challengeIpV4orV6Address.v4) {
-		challengeIpV4orV6Address = new Address4(
-			(<Address6>challengeIpV4orV6Address).to4().correctForm(),
+	if (ipV4orV6Address.v4 && !challengeIpAddress.v4) {
+		challengeIpAddress = new Address4(
+			(<Address6>challengeIpAddress).to4().correctForm(),
 		);
 	}
 
-	if (!ipV4orV6Address.v4 && challengeIpV4orV6Address.v4) {
+	if (!ipV4orV6Address.v4 && challengeIpAddress.v4) {
 		ipV4orV6Address = new Address6(
 			(<Address6>ipV4orV6Address).to4().correctForm(),
 		);
 	}
 
-	if (challengeIpV4orV6Address.bigInt() - ipV4orV6Address.bigInt() !== 0n) {
-		const errorMessage = `IP address mismatch: ${challengeIpV4orV6Address.address} !== ${ipV4orV6Address.address}`;
+	if (challengeIpAddress.bigInt() - ipV4orV6Address.bigInt() !== 0n) {
+		const errorMessage = `IP address mismatch: ${challengeIpAddress.address} !== ${ipV4orV6Address.address}`;
 		logger.info(() => ({
 			msg: errorMessage,
 			data: {
-				challengeIp: challengeIpV4orV6Address.address,
+				challengeIp: challengeIpAddress.address,
 				providedIp: ipV4orV6Address.address,
 			},
 		}));
