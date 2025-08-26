@@ -16,94 +16,45 @@
 	},
 	"targetDefaults": {
 		"build": {
-			"dependsOn": [
-				"^build",
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["^build", "@prosopo/config:build"],
 			"cache": true,
-			"inputs": [
-				"^custom",
-				"custom"
-			],
-			"outputs": [
-				"{projectRoot}/dist/**/*"
-			]
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"build:cjs": {
-			"dependsOn": [
-				"^build:cjs",
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["^build:cjs", "@prosopo/config:build"],
 			"cache": true,
-			"inputs": [
-				"^custom",
-				"custom"
-			],
-			"outputs": [
-				"{projectRoot}/dist/**/*"
-			]
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle": {
-			"dependsOn": [
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["@prosopo/config:build"],
 			"cache": true,
-			"inputs": [
-				"^custom",
-				"custom"
-			],
-			"outputs": [
-				"{projectRoot}/dist/**/*"
-			]
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"bundle:webpack": {
-			"dependsOn": [
-				"@prosopo/config:build"
-			],
+			"dependsOn": ["@prosopo/config:build"],
 			"cache": true,
-			"inputs": [
-				"^custom",
-				"custom"
-			],
-			"outputs": [
-				"{projectRoot}/dist/**/*"
-			]
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"test": {
 			"cache": true,
-			"dependsOn": [
-				"@prosopo/config:build"
-			],
-			"inputs": [
-				"^custom",
-				"custom"
-			]
+			"dependsOn": ["@prosopo/config:build"],
+			"inputs": ["^custom", "custom"]
 		},
 		"typecheck": {
-			"dependsOn": [
-				"^typecheck"
-			],
+			"dependsOn": ["^typecheck"],
 			"cache": true,
-			"inputs": [
-				"^custom",
-				"custom"
-			],
-			"outputs": [
-				"{projectRoot}/dist/**/*"
-			]
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"build:tsc": {
-			"dependsOn": [
-				"^build:tsc"
-			],
+			"dependsOn": ["^build:tsc"],
 			"cache": true,
-			"inputs": [
-				"^custom",
-				"custom"
-			],
-			"outputs": [
-				"{projectRoot}/dist/**/*"
-			]
+			"inputs": ["^custom", "custom"],
+			"outputs": ["{projectRoot}/dist/**/*"]
 		},
 		"lint": {
 			"cache": false
@@ -113,17 +64,12 @@
 		},
 		"clean:deps": {
 			"cache": false,
-			"dependsOn": [
-				"clean",
-				"^clean"
-			]
+			"dependsOn": ["clean", "^clean"]
 		}
 	},
 	"defaultBase": "main",
 	"release": {
-		"projects": [
-			"*"
-		],
+		"projects": ["*"],
 		"versionPlans": true,
 		"projectsRelationship": "independent",
 		"changelog": {
