@@ -42,7 +42,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { at } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
 	getCompositeIpAddress,
@@ -478,9 +478,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
-		if (!env.config.ipApiKey) {
+		if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
 			this.logger.warn(() => ({
-				msg: "No IP API key found",
+				msg: "No IP API key or URL found",
 				data: { user, dapp },
 			}));
 			throw new ProsopoEnvError("API.UNKNOWN");
@@ -491,7 +491,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 			ip,
 			solutionIpAddress,
 			this.logger,
-			env.config.ipApiKey,
+			env.config.ipApi.apiKey,
+			env.config.ipApi.baseUrl,
 		);
 		if (!ipValidation.isValid) {
 			this.logger.error(() => ({

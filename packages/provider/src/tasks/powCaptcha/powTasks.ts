@@ -200,9 +200,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				challengeRecord.ipAddress,
 			);
 
-			if (!env.config.ipApiKey) {
+			if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
 				this.logger.warn(() => ({
-					msg: "No IP API key found",
+					msg: "No IP API Service found",
 					data: { dappAccount, challenge },
 				}));
 				throw new ProsopoEnvError("API.UNKNOWN");
@@ -212,7 +212,8 @@ export class PowCaptchaManager extends CaptchaManager {
 				ip,
 				challengeIpAddress,
 				this.logger,
-				env.config.ipApiKey,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
 			);
 
 			if (!ipValidation.isValid) {

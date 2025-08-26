@@ -23,12 +23,14 @@ import type {
  * provider details, and security threat indicators
  *
  * @param ip - The IP address to lookup
+ * @param apiUrl
  * @param apiKey - Optional API key for increased rate limits
  * @param includeRawResponse - Whether to include the raw API response for debugging
  * @returns Promise resolving to IP information or error details
  */
 export async function getIPInfo(
 	ip: string,
+	apiUrl: string,
 	apiKey?: string,
 	includeRawResponse = false,
 ): Promise<IPInfoResponse> {
@@ -43,7 +45,7 @@ export async function getIPInfo(
 		}
 
 		// Prepare API request
-		const url = "https://api.ipapi.is";
+		const url = apiUrl;
 		const body: { q: string; key?: string } = { q: ip };
 		if (apiKey) {
 			body.key = apiKey;

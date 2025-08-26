@@ -50,7 +50,7 @@ describe("compareIPs", () => {
 	});
 
 	it("should return error for invalid IP inputs", async () => {
-		const result = await compareIPs("", "8.8.8.8");
+		const result = await compareIPs("", "8.8.8.8", "test-key", "test-url");
 
 		expect(result).toEqual({
 			error: "Invalid IP addresses provided",
@@ -62,7 +62,12 @@ describe("compareIPs", () => {
 	});
 
 	it("should return match for identical IPs", async () => {
-		const result = await compareIPs("8.8.8.8", "8.8.8.8");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"8.8.8.8",
+			"test-key",
+			"test-url",
+		);
 
 		expect(result).toEqual({
 			ipsMatch: true,
@@ -83,7 +88,12 @@ describe("compareIPs", () => {
 			.mockResolvedValueOnce(errorResponse)
 			.mockResolvedValueOnce(errorResponse);
 
-		const result = await compareIPs("invalid1", "invalid2");
+		const result = await compareIPs(
+			"invalid1",
+			"invalid2",
+			"test-key",
+			"test-url",
+		);
 
 		expect(result).toEqual({
 			error: "Failed to lookup both IP addresses",
@@ -106,7 +116,12 @@ describe("compareIPs", () => {
 			.mockResolvedValueOnce(errorResponse)
 			.mockResolvedValueOnce(validResponse);
 
-		const result = await compareIPs("invalid", "8.8.8.8");
+		const result = await compareIPs(
+			"invalid",
+			"8.8.8.8",
+			"test-key",
+			"test-url",
+		);
 
 		expect(result).toEqual({
 			error: "Failed to lookup first IP address",
@@ -128,7 +143,12 @@ describe("compareIPs", () => {
 			.mockResolvedValueOnce(validResponse)
 			.mockResolvedValueOnce(errorResponse);
 
-		const result = await compareIPs("8.8.8.8", "invalid");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"invalid",
+			"test-key",
+			"test-url",
+		);
 
 		expect(result).toEqual({
 			error: "Failed to lookup second IP address",
@@ -161,7 +181,12 @@ describe("compareIPs", () => {
 
 		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
-		const result = await compareIPs("8.8.8.8", "1.1.1.1");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"1.1.1.1",
+			"test-key",
+			"test-url",
+		);
 
 		expect(result).toMatchObject({
 			ipsMatch: false,
@@ -220,7 +245,12 @@ describe("compareIPs", () => {
 
 		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
-		const result = await compareIPs("8.8.8.8", "1.1.1.1");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"1.1.1.1",
+			"test-key",
+			"test-url",
+		);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.anyVpnOrProxy).toBe(true);
@@ -244,7 +274,12 @@ describe("compareIPs", () => {
 
 		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
-		const result = await compareIPs("8.8.8.8", "1.1.1.1");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"1.1.1.1",
+			"test-key",
+			"test-url",
+		);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.distanceKm).toBeUndefined();
@@ -268,7 +303,12 @@ describe("compareIPs", () => {
 
 		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
-		const result = await compareIPs("8.8.8.8", "1.1.1.1");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"1.1.1.1",
+			"test-key",
+			"test-url",
+		);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.distanceKm).toBeUndefined();
@@ -295,7 +335,12 @@ describe("compareIPs", () => {
 
 		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
-		const result = await compareIPs("8.8.8.8", "1.1.1.1");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"1.1.1.1",
+			"test-key",
+			"test-url",
+		);
 
 		if ("comparison" in result) {
 			expect(result.comparison?.ip1Details.provider).toBe("Google LLC");
@@ -307,7 +352,12 @@ describe("compareIPs", () => {
 	it("should handle exceptions gracefully", async () => {
 		getIPInfoSpy.mockRejectedValueOnce(new Error("Network error"));
 
-		const result = await compareIPs("8.8.8.8", "1.1.1.1");
+		const result = await compareIPs(
+			"8.8.8.8",
+			"1.1.1.1",
+			"test-key",
+			"test-url",
+		);
 
 		expect(result).toEqual({
 			error: "Comparison failed: Network error",
@@ -322,7 +372,7 @@ describe("compareIPs", () => {
 
 		getIPInfoSpy.mockResolvedValueOnce(ip1Info).mockResolvedValueOnce(ip2Info);
 
-		await compareIPs("8.8.8.8", "1.1.1.1", "test-api-key");
+		await compareIPs("8.8.8.8", "1.1.1.1", "test-api-key", "test-url");
 
 		expect(getIPInfoSpy).toHaveBeenCalledWith("8.8.8.8", "test-api-key");
 		expect(getIPInfoSpy).toHaveBeenCalledWith("1.1.1.1", "test-api-key");

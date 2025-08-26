@@ -70,7 +70,7 @@ export class CaptchaManager {
 			return { valid: false, reason: "CAPTCHA.NO_SESSION_FOUND" };
 		}
 
-		if (!env.config.ipApiKey) {
+		if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
 			this.logger.warn(() => ({
 				msg: "No IP API key found",
 				data: { sessionId: sessionRecord.sessionId },
@@ -86,7 +86,8 @@ export class CaptchaManager {
 				currentIP,
 				recordIpAddress,
 				this.logger,
-				env.config.ipApiKey,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
 			);
 			const isValidIp = ipValidation.isValid;
 

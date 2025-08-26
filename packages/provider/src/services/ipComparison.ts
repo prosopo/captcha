@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {
-	IPComparisonResponse,
-	IPConnectionType,
-	IPInfoResult,
+import {
+	type IPComparisonResponse,
+	type IPConnectionType,
+	type IPInfoResult,
+	IpApiService,
 } from "@prosopo/types";
 import { getDistance } from "geolib";
 import { getIPInfo } from "./ipInfo.js";
@@ -30,13 +31,13 @@ import { getIPInfo } from "./ipInfo.js";
  *
  * @param ip1 - First IP address to compare
  * @param ip2 - Second IP address to compare
- * @param apiKey - Optional API key for ipapi.is
  * @returns Promise resolving to comparison results or error details
  */
 export async function compareIPs(
 	ip1: string,
 	ip2: string,
-	apiKey?: string,
+	apiKey: string,
+	apiUrl: string,
 ): Promise<IPComparisonResponse> {
 	try {
 		// Validate inputs
@@ -59,8 +60,8 @@ export async function compareIPs(
 
 		// Get information for both IPs
 		const [ip1Info, ip2Info] = await Promise.all([
-			getIPInfo(ip1, apiKey),
-			getIPInfo(ip2, apiKey),
+			getIPInfo(ip1, apiUrl, apiKey),
+			getIPInfo(ip2, apiUrl, apiKey),
 		]);
 
 		// Check for errors in IP lookups

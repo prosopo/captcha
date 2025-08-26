@@ -39,6 +39,7 @@ describe("deepValidateIpAddress", () => {
 			Address4.fromBigInt(BigInt(123456789)),
 			mockLogger,
 			"test-api-key",
+			"test-api-url",
 		);
 
 		expect(result.isValid).toBe(true);
@@ -54,6 +55,7 @@ describe("deepValidateIpAddress", () => {
 			challengeIp,
 			mockLogger,
 			"test-api-key",
+			"test-api-url",
 		);
 
 		expect(result.isValid).toBe(true);
@@ -95,6 +97,7 @@ describe("deepValidateIpAddress", () => {
 			challengeIp,
 			mockLogger,
 			"test-api-key",
+			"test-api-url",
 		);
 
 		expect(result.isValid).toBe(false);
@@ -137,6 +140,7 @@ describe("deepValidateIpAddress", () => {
 			challengeIp,
 			mockLogger,
 			"test-api-key",
+			"test-api-url",
 		);
 
 		expect(result.isValid).toBe(true);
@@ -160,6 +164,7 @@ describe("deepValidateIpAddress", () => {
 			challengeIp,
 			mockLogger,
 			"test-api-key",
+			"test-api-url",
 		);
 
 		expect(result.isValid).toBe(true);
