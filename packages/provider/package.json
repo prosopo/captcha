@@ -13,7 +13,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit npx vitest run --config ./vite.test.config.ts",
 		"test:integration": "NODE_ENV=${NODE_ENV:-test}; NX_PARALLEL=1 TEST_TYPE=integration npx vitest run --config ./vite.test.config.ts",
 		"test": "npm run test:unit && npm run test:integration",

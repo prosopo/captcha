@@ -1,5 +1,3 @@
-import { u8aToHex } from "@polkadot/util";
-import { loadEnv } from "@prosopo/dotenv";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +11,15 @@ import { loadEnv } from "@prosopo/dotenv";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { u8aToHex } from "@polkadot/util";
+import { loadEnv } from "@prosopo/dotenv";
 import { getPair } from "@prosopo/keyring";
 
 loadEnv();
 
-const adminPair = getPair(process.env.PROSOPO_ADMIN_SECRET);
+const adminPair = getPair(process.env.PROSOPO_ADMIN_MNEMONIC);
 
-console.log(u8aToHex(adminPair.sign(new Date().getTime().toString())));
+const timestamp = new Date().getTime().toString();
+console.log(u8aToHex(adminPair.sign(timestamp)));
+console.log(timestamp);
