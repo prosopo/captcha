@@ -416,6 +416,7 @@ export interface ScoreComponents {
 	lScore?: number;
 	timeout?: number;
 	accessPolicy?: number;
+	unverifiedHost?: number;
 }
 
 export interface FrictionlessToken {
