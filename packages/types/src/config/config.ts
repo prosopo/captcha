@@ -33,6 +33,7 @@ import {
 	FrictionlessPenalties,
 	PENALTY_ACCESS_RULE_DEFAULT,
 	PENALTY_OLD_TIMESTAMP_DEFAULT,
+	PENALTY_UNVERIFIED_HOST_DEFAULT,
 } from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
@@ -280,6 +281,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		penalties: FrictionlessPenalties.optional().default({
 			PENALTY_OLD_TIMESTAMP: PENALTY_OLD_TIMESTAMP_DEFAULT,
 			PENALTY_ACCESS_RULE: PENALTY_ACCESS_RULE_DEFAULT,
+			PENALTY_UNVERIFIED_HOST: PENALTY_UNVERIFIED_HOST_DEFAULT,
 		}),
 		scheduledTasks: object({
 			captchaScheduler: object({

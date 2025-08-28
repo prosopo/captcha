@@ -67,7 +67,7 @@ export class FrictionlessManager extends CaptchaManager {
 		return sessionRecord;
 	}
 
-	async verifyHost(entropy: number) {
+	async hostVerified(entropy: number) {
 		const chosen = await getRandomActiveProvider(
 			this.config.defaultEnvironment,
 			entropy,
@@ -83,10 +83,10 @@ export class FrictionlessManager extends CaptchaManager {
 				msg: "Host mismatch",
 				data: { expected: this.config.host, got: chosen.provider.url },
 			}));
-			return false;
+			return { verified: false, domain };
 		}
 
-		return true;
+		return { verified: true, domain };
 	}
 
 	async sendImageCaptcha(
@@ -126,6 +126,27 @@ export class FrictionlessManager extends CaptchaManager {
 			scoreComponents: {
 				baseScore: baseBotScore,
 				accessPolicy: accessPolicyPenalty,
+			},
+		});
+		return botScore;
+	}
+
+	async scoreIncreaseUnverifiedHost(
+		host: string,
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		this.logger.info(() => ({
+			msg: "Host not verified",
+			data: { requested: this.config.host, selected: host },
+		}));
+		botScore += this.config.penalties.PENALTY_UNVERIFIED_HOST;
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				unverifiedHost: this.config.penalties.PENALTY_UNVERIFIED_HOST,
 			},
 		});
 		return botScore;
