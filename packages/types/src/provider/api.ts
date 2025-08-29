@@ -375,13 +375,17 @@ export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
 
-export const RemoveDetectorKeyBodySpec = UpdateDetectorKeyBody.extend(
-	{
-		[ApiParams.expirationInSeconds]: number().positive().optional(),
-	}
-);
+export const RemoveDetectorKeyBodySpec = object({
+	[ApiParams.detectorKey]: string(),
+	[ApiParams.expirationInSeconds]: number().positive().optional(),
+});
 
-export type RemoveDetectorKeyBody = zInfer<typeof RemoveDetectorKeyBodySpec>;
+export type RemoveDetectorKeyBodyInput = input<
+	typeof RemoveDetectorKeyBodySpec
+>;
+export type RemoveDetectorKeyBodyOutput = output<
+	typeof RemoveDetectorKeyBodySpec
+>;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
 
