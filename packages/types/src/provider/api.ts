@@ -375,11 +375,13 @@ export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
 
-export const RemoveDetectorKeyBody = UpdateDetectorKeyBody.merge(
-	object({
+export const RemoveDetectorKeyBodySpec = UpdateDetectorKeyBody.extend(
+	{
 		[ApiParams.expirationInSeconds]: number().positive().optional(),
-	}),
+	}
 );
+
+export type RemoveDetectorKeyBody = zInfer<typeof RemoveDetectorKeyBodySpec>;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
 
