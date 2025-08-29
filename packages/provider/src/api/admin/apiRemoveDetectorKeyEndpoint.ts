@@ -18,20 +18,19 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { type Logger, type ProsopoApiError, getLogger } from "@prosopo/common";
-import {
-	type RemoveDetectorKeyBody, RemoveDetectorKeyBodySpec,
-	UpdateDetectorKeyBody,
-} from "@prosopo/types";
+import { RemoveDetectorKeyBodySpec } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
+type RemoveDetectorKeyBodyType = typeof RemoveDetectorKeyBodySpec;
+
 class ApiRemoveDetectorKeyEndpoint
-	implements ApiEndpoint<RemoveDetectorKeyBody>
+	implements ApiEndpoint<RemoveDetectorKeyBodyType>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
-		args: RemoveDetectorKeyBody,
+		args: z.infer<RemoveDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
 		logger = logger || getLogger("info", import.meta.url);
