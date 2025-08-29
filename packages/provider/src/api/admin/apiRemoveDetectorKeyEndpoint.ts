@@ -35,13 +35,16 @@ class ApiRemoveDetectorKeyEndpoint
 	): Promise<ApiEndpointResponse> {
 		logger = logger || getLogger("info", import.meta.url);
 		try {
-			const { detectorKey } = args;
+			const { detectorKey, expirationInSeconds } = args;
 
 			logger = logger || getLogger("info", import.meta.url);
 
 			logger.info(() => ({ msg: "Removing detector key" }));
 
-			await this.clientTaskManager.removeDetectorKey(detectorKey);
+			await this.clientTaskManager.removeDetectorKey(
+				detectorKey,
+				expirationInSeconds,
+			);
 
 			return {
 				status: ApiEndpointResponseStatus.SUCCESS,
