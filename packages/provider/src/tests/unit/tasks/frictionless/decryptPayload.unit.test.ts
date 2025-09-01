@@ -136,14 +136,14 @@ describe("decryptPayload", () => {
 		const fmImport = await import(
 			"../../../../tasks/frictionless/frictionlessTasks.js"
 		);
-		db = {
+		const db2 = {
 			updateFrictionlessTokenRecord: vi.fn(),
 			storeFrictionlessTokenRecord: vi.fn(),
 			storeSessionRecord: vi.fn(),
 			getDetectorKeys: vi.fn(() => Promise.resolve([])),
 		} as unknown as IProviderDatabase;
 		const frictionlessTaskManager = new fmImport.FrictionlessManager(
-			db,
+			db2,
 			pair,
 			config,
 		);
