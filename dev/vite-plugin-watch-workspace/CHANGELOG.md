@@ -1,5 +1,11 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.15
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+
 ## 2.6.14
 ### Patch Changes
 
