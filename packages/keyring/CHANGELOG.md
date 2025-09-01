@@ -1,5 +1,21 @@
 # @prosopo/keyring
 
+## 2.8.16
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/common@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/util@3.0.12
+  - @prosopo/config@3.1.9
+
 ## 2.8.15
 ### Patch Changes
 

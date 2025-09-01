@@ -1,5 +1,17 @@
 # @prosopo/api-route
 
+## 2.6.17
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/common@3.1.9
+  - @prosopo/config@3.1.9
+
 ## 2.6.16
 ### Patch Changes
 
