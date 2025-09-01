@@ -416,6 +416,7 @@ export interface ScoreComponents {
 	lScore?: number;
 	timeout?: number;
 	accessPolicy?: number;
+	unverifiedHost?: number;
 }
 
 export interface FrictionlessToken {
@@ -699,5 +700,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	getDetectorKeys(): Promise<string[]>;
 
-	removeDetectorKey(detectorKey: string): Promise<void>;
+	removeDetectorKey(
+		detectorKey: string,
+		expirationInSeconds?: number,
+	): Promise<void>;
 }
