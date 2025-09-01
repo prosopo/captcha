@@ -35,11 +35,11 @@ import { getBotScore } from "../detection/getBotScore.js";
 
 const getDefaultEntropy = (): number => {
 	if (process.env.PROSOPO_ENTROPY) {
-		try {
-			return Number.parseInt(process.env.PROSOPO_ENTROPY);
-		} catch (e) {
-			// ignore error and return default
+		const parsed = Number.parseInt(process.env.PROSOPO_ENTROPY);
+		if (!Number.isNaN(parsed)) {
+			return parsed;
 		}
+		// ignore invalid value and return default
 	}
 	return 13337;
 };
