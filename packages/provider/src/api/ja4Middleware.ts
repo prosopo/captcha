@@ -94,7 +94,7 @@ export const ja4Middleware = (env: ProviderEnvironment) => {
 			const ja4 = await getJA4(req.headers, req.logger);
 
 			req.ja4 = ja4.ja4PlusFingerprint || "";
-			req.logger.with({
+			req.logger = req.logger.with({
 				ja4: req.ja4,
 			});
 			next();
