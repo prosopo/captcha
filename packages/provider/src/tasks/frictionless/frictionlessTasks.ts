@@ -285,6 +285,11 @@ export class FrictionlessManager extends CaptchaManager {
 			},
 		}));
 
-		return { baseBotScore, timestamp, providerSelectEntropy };
+		// To satisfy TS - see above for undefined checks
+		return {
+			baseBotScore: Number(baseBotScore),
+			timestamp: Number(timestamp),
+			providerSelectEntropy: Number(providerSelectEntropy),
+		};
 	}
 }
