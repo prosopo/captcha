@@ -1,5 +1,30 @@
 # @prosopo/ts-brand
 
+## 3.0.11
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/config@3.1.8
+
+## 3.0.10
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/config@3.1.7
+
+## 3.0.9
+### Patch Changes
+
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+
+## 3.0.8
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 3.0.7
 ### Patch Changes
 

@@ -1,5 +1,49 @@
 # @prosopo/api
 
+## 3.1.12
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/user-access-policy@3.5.7
+  - @prosopo/config@3.1.8
+
+## 3.1.11
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/user-access-policy@3.5.6
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
+## 3.1.10
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/config@3.1.6
+  - @prosopo/user-access-policy@3.5.5
+  - @prosopo/types@3.0.10
+
+## 3.1.9
+### Patch Changes
+
+- Updated dependencies [553025d]
+  - @prosopo/user-access-policy@3.5.4
+
+## 3.1.8
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/user-access-policy@3.5.3
+  - @prosopo/types@3.0.9
+
 ## 3.1.7
 ### Patch Changes
 

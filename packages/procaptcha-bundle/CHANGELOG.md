@@ -1,5 +1,83 @@
 # @prosopo/procaptcha-bundle
 
+## 3.0.22
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/procaptcha-frictionless@2.7.1
+  - @prosopo/procaptcha-common@2.8.1
+  - @prosopo/procaptcha-react@2.8.1
+  - @prosopo/widget-skeleton@2.6.9
+  - @prosopo/procaptcha-pow@2.8.1
+  - @prosopo/dotenv@3.0.13
+  - @prosopo/locale@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 3.0.21
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/procaptcha-frictionless@2.7.0
+  - @prosopo/procaptcha-common@2.8.0
+  - @prosopo/procaptcha-react@2.8.0
+  - @prosopo/widget-skeleton@2.6.8
+  - @prosopo/procaptcha-pow@2.8.0
+  - @prosopo/dotenv@3.0.12
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
+## 3.0.20
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+- a07db04: Release 3.1.12
+- Updated dependencies [b4442f0]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/procaptcha-react@2.7.0
+  - @prosopo/procaptcha-frictionless@2.6.39
+  - @prosopo/procaptcha-pow@2.7.25
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/dotenv@3.0.11
+  - @prosopo/locale@3.1.6
+  - @prosopo/procaptcha-common@2.7.18
+  - @prosopo/types@3.0.10
+  - @prosopo/widget-skeleton@2.6.7
+
+## 3.0.19
+### Patch Changes
+
+  - @prosopo/procaptcha-frictionless@2.6.38
+  - @prosopo/procaptcha-pow@2.7.24
+  - @prosopo/procaptcha-react@2.6.38
+
+## 3.0.18
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- 3663edb: Fixing and re enabling tests marked as skip
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/procaptcha-frictionless@2.6.37
+  - @prosopo/procaptcha-common@2.7.17
+  - @prosopo/procaptcha-react@2.6.37
+  - @prosopo/widget-skeleton@2.6.6
+  - @prosopo/procaptcha-pow@2.7.23
+  - @prosopo/dotenv@3.0.10
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 3.0.17
 ### Patch Changes
 

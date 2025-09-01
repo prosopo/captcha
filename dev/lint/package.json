@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.7.11",
+	"version": "2.8.3",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -9,7 +9,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "node dist/index.js"
 	},
 	"author": "",
@@ -40,8 +40,8 @@
 		"npm": "10.8.2"
 	},
 	"dependencies": {
-		"@prosopo/config": "3.1.5",
-		"@prosopo/util": "3.0.7",
+		"@prosopo/config": "3.1.8",
+		"@prosopo/util": "3.0.11",
 		"fast-glob": "3.3.2",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"

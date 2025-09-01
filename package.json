@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "3.1.10",
+	"version": "3.2.1",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -78,6 +78,8 @@
 		"@nx/angular": "21.2.2",
 		"@nx/js": "21.1.2",
 		"@nx/vue": "21.1.2",
+		"@prosopo/dotenv": "3.0.12",
+		"@prosopo/load-balancer": "2.7.0",
 		"@swc-node/register": "1.10.10",
 		"@swc/core": "1.11.29",
 		"@taplo/cli": "0.7.0",
@@ -142,16 +144,6 @@
 		"web3-captcha"
 	],
 	"license": "Apache-2.0",
-	"dependencies": {
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
-		"esbuild": "0.25.6",
-		"express": "4.21.2",
-		"npm": "10.8.2",
-		"openpgp": "5.11.3",
-		"vue": "^3.5.13",
-		"webpack-dev-server": "5.2.2"
-	},
 	"config": {
 		"commitizen": {
 			"path": "./node_modules/cz-conventional-changelog"

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "3.0.17",
+	"version": "3.0.22",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -13,7 +13,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/cli.js"
 	},
@@ -41,12 +41,12 @@
 	},
 	"dependencies": {
 		"@polkadot/util": "12.6.2",
-		"@prosopo/common": "3.1.4",
-		"@prosopo/types": "3.0.8",
-		"@prosopo/types-database": "3.0.17",
-		"@prosopo/util": "3.0.7",
-		"@prosopo/config": "3.1.5",
-		"@prosopo/util-crypto": "13.5.6"
+		"@prosopo/common": "3.1.8",
+		"@prosopo/types": "3.1.1",
+		"@prosopo/types-database": "3.1.2",
+		"@prosopo/util": "3.0.11",
+		"@prosopo/config": "3.1.8",
+		"@prosopo/util-crypto": "13.5.10"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",

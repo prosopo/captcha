@@ -1,5 +1,61 @@
 # @prosopo/api-express-router
 
+## 3.0.13
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/api-route@2.6.16
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/env@3.2.1
+  - @prosopo/config@3.1.8
+
+## 3.0.12
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/api-route@2.6.15
+  - @prosopo/common@3.1.7
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/env@3.2.0
+  - @prosopo/config@3.1.7
+
+## 3.0.11
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/config@3.1.6
+  - @prosopo/env@3.1.11
+  - @prosopo/api-route@2.6.14
+  - @prosopo/common@3.1.6
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+
+## 3.0.10
+### Patch Changes
+
+  - @prosopo/env@3.1.10
+
+## 3.0.9
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/api-route@2.6.13
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/env@3.1.9
+
 ## 3.0.8
 ### Patch Changes
 

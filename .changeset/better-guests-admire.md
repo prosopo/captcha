@@ -1,11 +1,6 @@
 ---
-"@prosopo/lint": minor
-"@prosopo/angular-procaptcha-integration-demo": patch
-"@prosopo/svelte-procaptcha-integration-demo": patch
 "@prosopo/react-procaptcha-integration-demo": patch
 "@prosopo/vue-procaptcha-integration-demo": patch
-"@prosopo/angular-procaptcha-wrapper": patch
-"@prosopo/svelte-procaptcha-wrapper": patch
 "@prosopo/react-procaptcha-wrapper": patch
 "@prosopo/vue-procaptcha-wrapper": patch
 "@prosopo/procaptcha-integration-build-config": patch
@@ -20,7 +15,6 @@
 "@prosopo/procaptcha-common": patch
 "@prosopo/procaptcha-react": patch
 "@prosopo/widget-skeleton": patch
-"@prosopo/http-blackhole": patch
 "@prosopo/procaptcha-pow": patch
 "@prosopo/types-database": patch
 "@prosopo/load-balancer": patch
@@ -54,8 +48,10 @@
 "@prosopo/cli": patch
 "@prosopo/env": patch
 "@prosopo/scripts": patch
+"@prosopo/config": patch
 "@prosopo/flux": patch
+"@prosopo/lint": patch
 ---
 
-lint detect missing and unneccessary imports
+fix type-only tsc compilation
   

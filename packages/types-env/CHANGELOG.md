@@ -1,5 +1,58 @@
 # @prosopo/types-env
 
+## 2.7.26
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/types-database@3.1.2
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/config@3.1.8
+
+## 2.7.25
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/types-database@3.1.1
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
+## 2.7.24
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/config@3.1.6
+  - @prosopo/common@3.1.6
+  - @prosopo/keyring@2.8.13
+  - @prosopo/types@3.0.10
+
+## 2.7.23
+### Patch Changes
+
+  - @prosopo/types-database@3.0.19
+
+## 2.7.22
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/types-database@3.0.18
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 2.7.21
 ### Patch Changes
 

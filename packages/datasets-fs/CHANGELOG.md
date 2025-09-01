@@ -1,5 +1,54 @@
 # @prosopo/datasets-fs
 
+## 3.0.14
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/common@3.1.8
+  - @prosopo/workspace@3.1.1
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 3.0.13
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/workspace@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
+## 3.0.12
+### Patch Changes
+
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/workspace@3.0.7
+  - @prosopo/common@3.1.6
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
+## 3.0.11
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/workspace@3.0.6
+  - @prosopo/util@3.0.8
+
 ## 3.0.10
 ### Patch Changes
 

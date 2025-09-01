@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-integration-build-config",
-	"version": "1.1.5",
+	"version": "1.1.9",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -20,10 +20,10 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/config": "3.1.5",
+		"@prosopo/config": "3.1.8",
 		"deepmerge": "4.3.1",
 		"vite": "6.3.5",
 		"vite-plugin-dts": "4.5.4"

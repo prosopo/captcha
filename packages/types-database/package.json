@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-database",
-	"version": "3.0.17",
+	"version": "3.1.2",
 	"description": "Types for prosopo database",
 	"type": "module",
 	"main": "dist/index.js",
@@ -21,7 +21,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",
@@ -34,12 +34,12 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "3.1.4",
-		"@prosopo/locale": "3.1.4",
-		"@prosopo/types": "3.0.8",
-		"@prosopo/user-access-policy": "3.5.2",
-		"@prosopo/config": "3.1.5",
-		"mongoose": "8.6.2",
+		"@prosopo/common": "3.1.8",
+		"@prosopo/locale": "3.1.8",
+		"@prosopo/types": "3.1.1",
+		"@prosopo/user-access-policy": "3.5.7",
+		"@prosopo/config": "3.1.8",
+		"mongoose": "8.13.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

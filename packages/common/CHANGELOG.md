@@ -1,5 +1,36 @@
 # @prosopo/common
 
+## 3.1.8
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/locale@3.1.8
+  - @prosopo/config@3.1.8
+
+## 3.1.7
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/locale@3.1.7
+  - @prosopo/config@3.1.7
+
+## 3.1.6
+### Patch Changes
+
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+  - @prosopo/locale@3.1.6
+
+## 3.1.5
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+
 ## 3.1.4
 ### Patch Changes
 
