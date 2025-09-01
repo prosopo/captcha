@@ -268,12 +268,7 @@ export class FrictionlessManager extends CaptchaManager {
 			Number(baseBotScoreUndefined) +
 			Number(timestampUndefined) +
 			Number(providerSelectEntropyUndefined);
-		// Repeated to keep TS happy
-		if (
-			baseBotScore === undefined ||
-			timestamp === undefined ||
-			providerSelectEntropy === undefined
-		) {
+		if (undefinedCount > 0) {
 			this.logger.error(() => ({
 				msg: "Error decrypting score: baseBotScore or timestamp or providerSelectEntropy is undefined",
 			}));
