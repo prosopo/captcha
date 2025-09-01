@@ -1,5 +1,31 @@
 # @prosopo/cli
 
+## 3.2.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/api-express-router@3.0.14
+  - @prosopo/user-access-policy@3.5.8
+  - @prosopo/types-database@3.1.3
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/provider@3.8.2
+  - @prosopo/keyring@2.8.16
+  - @prosopo/common@3.1.9
+  - @prosopo/dotenv@3.0.14
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/workspace@3.1.2
+  - @prosopo/util@3.0.12
+  - @prosopo/api@3.1.13
+  - @prosopo/env@3.2.2
+  - @prosopo/config@3.1.9
+
 ## 3.2.1
 ### Patch Changes
 
