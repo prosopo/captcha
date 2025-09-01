@@ -248,7 +248,6 @@ export class FrictionlessManager extends CaptchaManager {
 				providerSelectEntropy = p;
 				break;
 			} catch (err) {
-				console.error(err);
 				// check if the next index exists, if not, log an error
 				if (keyIndex === decryptKeys.length - 1) {
 					this.logger.warn(() => ({
