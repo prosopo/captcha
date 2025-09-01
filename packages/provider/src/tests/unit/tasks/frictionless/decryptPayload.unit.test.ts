@@ -24,7 +24,9 @@ describe("decryptPayload", () => {
 	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let config: ProsopoConfigOutput;
+	const detectorKey = process.env.BOT_DECRYPTION_KEY;
 	beforeEach(() => {
+		process.env.BOT_DECRYPTION_KEY = "";
 		vi.clearAllMocks();
 		vi.resetAllMocks();
 		vi.resetModules();
@@ -51,6 +53,11 @@ describe("decryptPayload", () => {
 
 		vi.clearAllMocks();
 	});
+
+	afterEach(() => {
+		process.env.BOT_DECRYPTION_KEY = detectorKey;
+	});
+
 	it("should get values from the payload", async () => {
 		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
 			getBotScore: vi.fn().mockImplementation(() => {
@@ -128,11 +135,15 @@ describe("decryptPayload", () => {
 		});
 	});
 	it("should set values for the payload when there are no keys", async () => {
+		vi.unmock("../../../../tasks/detection/getBotScore.ts");
 		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
 			getBotScore: vi.fn().mockImplementation(() => {
 				throw new Error();
 			}),
 		}));
+		// override process.env.BOT_DECRYPTION_KEY,
+		process.env.BOT_DECRYPTION_KEY = "";
+
 		const fmImport = await import(
 			"../../../../tasks/frictionless/frictionlessTasks.js"
 		);
