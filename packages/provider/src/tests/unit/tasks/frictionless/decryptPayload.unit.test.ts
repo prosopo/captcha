@@ -18,7 +18,7 @@ import {
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("decryptPayload", () => {
 	let db: IProviderDatabase;
