@@ -33,7 +33,7 @@ import { CaptchaManager } from "../captchaManager.js";
 import { getBotScore } from "../detection/getBotScore.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
-const DEFAULT_ENTROPY = 1333;
+export const DEFAULT_ENTROPY = 1333;
 
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
@@ -67,7 +67,7 @@ export class FrictionlessManager extends CaptchaManager {
 		return sessionRecord;
 	}
 
-	async verifyHost(entropy: number) {
+	async hostVerified(entropy: number) {
 		const chosen = await getRandomActiveProvider(
 			this.config.defaultEnvironment,
 			entropy,
@@ -81,12 +81,12 @@ export class FrictionlessManager extends CaptchaManager {
 		if (domain !== this.config.host) {
 			this.logger.info(() => ({
 				msg: "Host mismatch",
-				data: { expected: this.config.host, got: chosen.provider.url },
+				data: { expected: this.config.host, got: domain, entropy },
 			}));
-			return false;
+			return { verified: false, domain };
 		}
 
-		return true;
+		return { verified: true, domain };
 	}
 
 	async sendImageCaptcha(
@@ -126,6 +126,27 @@ export class FrictionlessManager extends CaptchaManager {
 			scoreComponents: {
 				baseScore: baseBotScore,
 				accessPolicy: accessPolicyPenalty,
+			},
+		});
+		return botScore;
+	}
+
+	async scoreIncreaseUnverifiedHost(
+		host: string,
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		this.logger.info(() => ({
+			msg: "Host not verified",
+			data: { requested: this.config.host, selected: host },
+		}));
+		botScore += this.config.penalties.PENALTY_UNVERIFIED_HOST;
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				unverifiedHost: this.config.penalties.PENALTY_UNVERIFIED_HOST,
 			},
 		});
 		return botScore;
@@ -209,11 +230,19 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(key),
 					},
 				}));
-				const {
-					baseBotScore: s,
-					timestamp: t,
-					providerSelectEntropy: p,
-				} = await getBotScore(token, key);
+				const decrypted = await getBotScore(token, key as string);
+				const s = decrypted.baseBotScore;
+				const t = decrypted.timestamp;
+				const p = decrypted.providerSelectEntropy;
+				this.logger.debug(() => ({
+					msg: "Successfully decrypted score",
+					data: {
+						key: this.redactKeyForLogging(key),
+						baseBotScore: s,
+						timestamp: t,
+						entropy: p,
+					},
+				}));
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;
@@ -226,22 +255,25 @@ export class FrictionlessManager extends CaptchaManager {
 					}));
 					baseBotScore = 1;
 					timestamp = 0;
-					providerSelectEntropy = DEFAULT_ENTROPY - 1;
+					providerSelectEntropy = DEFAULT_ENTROPY + 1;
 				}
 			}
 		}
 
-		if (
-			baseBotScore === undefined ||
-			timestamp === undefined ||
-			providerSelectEntropy === undefined
-		) {
+		const baseBotScoreUndefined = baseBotScore === undefined;
+		const timestampUndefined = timestamp === undefined;
+		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
+		const undefinedCount =
+			Number(baseBotScoreUndefined) +
+			Number(timestampUndefined) +
+			Number(providerSelectEntropyUndefined);
+		if (undefinedCount > 0) {
 			this.logger.error(() => ({
-				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
+				msg: "Error decrypting score: baseBotScore or timestamp or providerSelectEntropy is undefined",
 			}));
 			baseBotScore = 1;
 			timestamp = 0;
-			providerSelectEntropy = DEFAULT_ENTROPY;
+			providerSelectEntropy = DEFAULT_ENTROPY - undefinedCount;
 		}
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
@@ -252,6 +284,11 @@ export class FrictionlessManager extends CaptchaManager {
 			},
 		}));
 
-		return { baseBotScore, timestamp, providerSelectEntropy };
+		// To satisfy TS - see above for undefined checks
+		return {
+			baseBotScore: Number(baseBotScore),
+			timestamp: Number(timestamp),
+			providerSelectEntropy: Number(providerSelectEntropy),
+		};
 	}
 }

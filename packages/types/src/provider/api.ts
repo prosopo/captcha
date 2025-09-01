@@ -375,6 +375,18 @@ export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
 
+export const RemoveDetectorKeyBodySpec = object({
+	[ApiParams.detectorKey]: string(),
+	[ApiParams.expirationInSeconds]: number().positive().optional(),
+});
+
+export type RemoveDetectorKeyBodyInput = input<
+	typeof RemoveDetectorKeyBodySpec
+>;
+export type RemoveDetectorKeyBodyOutput = output<
+	typeof RemoveDetectorKeyBodySpec
+>;
+
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
 
 export const ProsopoCaptchaCountConfigSchema = object({
