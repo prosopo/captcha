@@ -33,7 +33,7 @@ import { CaptchaManager } from "../captchaManager.js";
 import { getBotScore } from "../detection/getBotScore.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
-const DEFAULT_ENTROPY = 1333;
+export const DEFAULT_ENTROPY = 1333;
 
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
@@ -81,7 +81,7 @@ export class FrictionlessManager extends CaptchaManager {
 		if (domain !== this.config.host) {
 			this.logger.info(() => ({
 				msg: "Host mismatch",
-				data: { expected: this.config.host, got: chosen.provider.url },
+				data: { expected: this.config.host, got: domain, entropy },
 			}));
 			return { verified: false, domain };
 		}
@@ -230,16 +230,25 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(key),
 					},
 				}));
-				const {
-					baseBotScore: s,
-					timestamp: t,
-					providerSelectEntropy: p,
-				} = await getBotScore(token, key);
+				const decrypted = await getBotScore(token, key as string);
+				const s = decrypted.baseBotScore;
+				const t = decrypted.timestamp;
+				const p = decrypted.providerSelectEntropy;
+				this.logger.debug(() => ({
+					msg: "Successfully decrypted score",
+					data: {
+						key: this.redactKeyForLogging(key),
+						baseBotScore: s,
+						timestamp: t,
+						entropy: p,
+					},
+				}));
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;
 				break;
 			} catch (err) {
+				console.error(err);
 				// check if the next index exists, if not, log an error
 				if (keyIndex === decryptKeys.length - 1) {
 					this.logger.warn(() => ({
@@ -247,22 +256,30 @@ export class FrictionlessManager extends CaptchaManager {
 					}));
 					baseBotScore = 1;
 					timestamp = 0;
-					providerSelectEntropy = DEFAULT_ENTROPY - 1;
+					providerSelectEntropy = DEFAULT_ENTROPY + 1;
 				}
 			}
 		}
 
+		const baseBotScoreUndefined = baseBotScore === undefined;
+		const timestampUndefined = timestamp === undefined;
+		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
+		const undefinedCount =
+			Number(baseBotScoreUndefined) +
+			Number(timestampUndefined) +
+			Number(providerSelectEntropyUndefined);
+		// Repeated to keep TS happy
 		if (
 			baseBotScore === undefined ||
 			timestamp === undefined ||
 			providerSelectEntropy === undefined
 		) {
 			this.logger.error(() => ({
-				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
+				msg: "Error decrypting score: baseBotScore or timestamp or providerSelectEntropy is undefined",
 			}));
 			baseBotScore = 1;
 			timestamp = 0;
-			providerSelectEntropy = DEFAULT_ENTROPY;
+			providerSelectEntropy = DEFAULT_ENTROPY - undefinedCount;
 		}
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
