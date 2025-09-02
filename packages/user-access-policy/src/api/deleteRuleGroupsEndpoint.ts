@@ -28,11 +28,11 @@ export const deleteRuleGroupsEndpointSchema = z.array(
 	}),
 );
 
-export type DeleteRuleGroupsEndpointSchemaOutput = z.output<
+export type DeleteRuleGroupsOutputEndpointSchema = z.output<
 	typeof deleteRuleGroupsEndpointSchema
 >;
 
-export type DeleteRuleGroupsEndpointSchemaInput = z.input<
+export type DeleteRuleGroupsInputEndpointSchema = z.input<
 	typeof deleteRuleGroupsEndpointSchema
 >;
 
@@ -45,7 +45,7 @@ export class DeleteRuleGroupsEndpoint
 	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
 
 	async processRequest(
-		args: DeleteRuleGroupsEndpointSchemaInput,
+		args: DeleteRuleGroupsInputEndpointSchema,
 	): Promise<ApiEndpointResponse> {
 		const allRuleIds = [];
 

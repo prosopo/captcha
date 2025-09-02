@@ -43,6 +43,7 @@ import {
 	type DeleteRulesEndpointSchemaOutput,
 	deleteRulesEndpointSchema,
 } from "#policy/api/deleteRulesEndpoint.js";
+import type {DeleteRuleGroupsInputEndpointSchema} from "#policy/api/deleteRuleGroupsEndpoint.js";
 import {
 	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
@@ -72,6 +73,7 @@ export {
 	type DeleteAllRulesEndpointSchema,
 	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
+    type DeleteRuleGroupsInputEndpointSchema,
 	type AccessRule,
 	type UserScope,
 	type UserScopeApiInput,

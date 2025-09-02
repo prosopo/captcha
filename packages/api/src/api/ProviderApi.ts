@@ -47,6 +47,7 @@ import {
 import {
 	type DeleteRulesEndpointSchemaInput,
 	type InsertManyRulesEndpointInputSchema,
+    type DeleteRuleGroupsInputEndpointSchema,
 	accessRuleApiPaths,
 } from "@prosopo/user-access-policy";
 import HttpClientBase from "./HttpClientBase.js";
@@ -360,4 +361,22 @@ export default class ProviderApi
 			},
 		);
 	}
+
+    public deleteUserAccessPolicyGroups(
+        groups: DeleteRuleGroupsInputEndpointSchema,
+        timestamp: string,
+        signature: string,
+    ): Promise<ApiResponse> {
+        return this.post(
+            accessRuleApiPaths.DELETE_GROUPS,
+            groups,
+            {
+                headers: {
+                    "Prosopo-Site-Key": this.account,
+                    timestamp,
+                    signature,
+                },
+            },
+        );
+    }
 }
