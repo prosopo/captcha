@@ -54,8 +54,10 @@ export default defineConfig(async ({ command, mode }) => {
 				),
 			}),
 			...(process.env.PROSOPO_ENTROPY && {
-				"process.env.PROSOPO_ENTROPY": JSON.stringify(process.env.PROSOPO_ENTROPY),
-			})
+				"process.env.PROSOPO_ENTROPY": JSON.stringify(
+					process.env.PROSOPO_ENTROPY,
+				),
+			}),
 		},
 		...backendConfig,
 	});
