@@ -180,7 +180,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
 	 * @param headers
-	 * @param threshold the percentage of captchas that must be correct to return true
+	 * @param ja4
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(

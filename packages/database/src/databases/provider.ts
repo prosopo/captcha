@@ -1392,16 +1392,35 @@ export class ProviderDatabase
 			commitmentId: { $in: commitmentIds },
 		};
 		const project = { projection: { _id: 0 } };
-		const cursor = this.tables?.usersolution?.findOne(filter, project).lean();
-		const doc = await cursor;
+		const cursor = this.tables?.usersolution
+			?.find(filter, project)
+			.lean<UserSolutionRecord[]>();
+		const docs = await cursor;
 
-		if (doc) {
-			return doc as unknown as UserSolutionRecord;
-		}
+		return docs || [];
+	}
 
-		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {
-			context: { failedFuncName: this.getCaptchaById.name, commitmentIds },
-		});
+	/**
+	 * @description Get dapp user solutions by captcha ID
+	 * @param captchaIds
+	 */
+	async getSolutionsByCaptchaIds(
+		captchaIds: string[],
+	): Promise<SolutionRecord[]> {
+		const filter: {
+			[key in keyof Pick<SolutionRecord, "captchaId">]: {
+				$in: string[];
+			};
+		} = {
+			captchaId: { $in: captchaIds },
+		};
+		const project = { projection: { _id: 0 } };
+		const cursor = this.tables?.solution
+			?.find(filter, project)
+			.lean<SolutionRecord[]>();
+		const docs = await cursor;
+
+		return docs || [];
 	}
 
 	/**

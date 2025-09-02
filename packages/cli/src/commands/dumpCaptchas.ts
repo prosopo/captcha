@@ -42,6 +42,8 @@ export default (
 				} as const)
 				.option("commitmentIds", {
 					type: "array" as const,
+					array: true,
+					string: true,
 					demandOption: true,
 					desc: "The commitment IDs to dump",
 				} as const),
@@ -133,7 +135,7 @@ export default (
 								const imageBuffer = Buffer.from(
 									await imageResponse.arrayBuffer(),
 								);
-								// if the item hash was in the user's solutions prefix the filename with solution. Otherwise no prefix
+								// if the item hash was in the user's solutions prefix the filename with _USER_SOLUTION. Otherwise no prefix
 								const userSolution = userSolutions.find(
 									(s) =>
 										s.captchaId === captcha.captchaId &&
