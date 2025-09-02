@@ -15,11 +15,12 @@
 import type { Logger } from "@prosopo/common";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
+	ApiParams,
 	CaptchaType,
+	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
-import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
 import type {
 	FrictionlessTokenId,
 	IProviderDatabase,
@@ -32,8 +33,18 @@ import { checkLangRules } from "../../rules/lang.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { getBotScore } from "../detection/getBotScore.js";
 
+const getDefaultEntropy = (): number => {
+	if (process.env.PROSOPO_ENTROPY) {
+		const parsed = Number.parseInt(process.env.PROSOPO_ENTROPY);
+		if (!Number.isNaN(parsed)) {
+			return parsed;
+		}
+		// ignore invalid value and return default
+	}
+	return 13337;
+};
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
-export const DEFAULT_ENTROPY = 1333;
+export const DEFAULT_ENTROPY = getDefaultEntropy();
 
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
