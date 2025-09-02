@@ -16,5 +16,9 @@ import path from "node:path";
 import { ViteEsmConfig } from "@prosopo/config";
 
 export default function () {
-	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
+	return ViteEsmConfig(
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
+		"src/index.js",
+	);
 }

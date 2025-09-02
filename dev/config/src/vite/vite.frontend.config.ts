@@ -155,6 +155,9 @@ export default async function (
 			drop,
 			pure,
 			legalComments: "none",
+			jsx: "automatic",
+			jsxImportSource: "@emotion/react",
+			jsxDev: process.env.NODE_ENV === "development",
 		},
 		define,
 

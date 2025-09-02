@@ -1,5 +1,48 @@
 # @prosopo/api-express-router
 
+## 3.0.14
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/api-route@2.6.17
+  - @prosopo/common@3.1.9
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/env@3.2.2
+  - @prosopo/config@3.1.9
+
+## 3.0.13
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/api-route@2.6.16
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/env@3.2.1
+  - @prosopo/config@3.1.8
+
+## 3.0.12
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/api-route@2.6.15
+  - @prosopo/common@3.1.7
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/env@3.2.0
+  - @prosopo/config@3.1.7
+
 ## 3.0.11
 ### Patch Changes
 

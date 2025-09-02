@@ -1,5 +1,46 @@
 # @prosopo/types-database
 
+## 3.1.3
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- 1249ce0: Be more lenient with random provider selection
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/user-access-policy@3.5.8
+  - @prosopo/common@3.1.9
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
+## 3.1.2
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/user-access-policy@3.5.7
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/config@3.1.8
+
+## 3.1.1
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/user-access-policy@3.5.6
+  - @prosopo/common@3.1.7
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
 ## 3.1.0
 ### Minor Changes
 

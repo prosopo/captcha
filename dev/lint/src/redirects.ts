@@ -150,6 +150,7 @@ const needsTrailingSlash = (url: string): boolean => {
 		".pdf",
 		".svg",
 		".txt",
+		".webp",
 	];
 	if (fileExtensions.some((ext) => url.endsWith(ext))) {
 		return false;

@@ -584,10 +584,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp } =
+				const { baseBotScore, timestamp, providerSelectEntropy } =
 					await tasks.frictionlessManager.decryptPayload(token);
 
-				const botScore = baseBotScore + lScore;
+				let botScore = baseBotScore + lScore;
 
 				const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -683,6 +683,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
 					);
+				}
+
+				// If the host is not verified, send an image captcha
+				const hostVerified = await tasks.frictionlessManager.hostVerified(
+					providerSelectEntropy,
+				);
+				if (!hostVerified.verified) {
+					botScore =
+						await tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
+							hostVerified.domain,
+							baseBotScore,
+							botScore,
+							tokenId,
+						);
 				}
 
 				// If the bot score is greater than the threshold, send an image captcha
