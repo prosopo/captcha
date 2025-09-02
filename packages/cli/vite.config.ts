@@ -53,6 +53,9 @@ export default defineConfig(async ({ command, mode }) => {
 					process.env._DEV_ONLY_WATCH_EVENTS,
 				),
 			}),
+			...(process.env.PROSOPO_ENTROPY && {
+				"process.env.PROSOPO_ENTROPY": JSON.stringify(process.env.PROSOPO_ENTROPY),
+			})
 		},
 		...backendConfig,
 	});
