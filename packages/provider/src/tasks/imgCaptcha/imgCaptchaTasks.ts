@@ -41,7 +41,7 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import { at } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
 	getCompositeIpAddress,

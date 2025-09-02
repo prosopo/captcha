@@ -20,6 +20,7 @@ import {
 	getLogger,
 } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
+import type { JWTVerifyResult } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { authMiddleware } from "../../../middlewares/authMiddleware.js";
@@ -50,11 +51,13 @@ vi.mock("@polkadot/util", async (importOriginal) => {
 const mockPair = {
 	publicKey: "mockPublicKey",
 	verify: vi.fn(),
+	jwtVerify: vi.fn(),
 } as unknown as KeyringPair;
 const mockEnv = {
 	pair: mockPair,
 	authAccount: mockPair,
 	logger: mockLogger,
+	jwtVerify: vi.fn(),
 };
 
 describe("authMiddleware", () => {
@@ -72,8 +75,7 @@ describe("authMiddleware", () => {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
-				signature: "0x1234",
-				timestamp: new Date().getTime(),
+				Authorization: "Bearer mockToken",
 			},
 			logger: mockLogger,
 		} as unknown as Request;
@@ -87,7 +89,9 @@ describe("authMiddleware", () => {
 
 		vi.mocked(isHex).mockReturnValue(true);
 		vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
-		vi.mocked(mockPair.verify).mockReturnValue(true);
+		vi.mocked(mockPair.jwtVerify).mockReturnValue({
+			isValid: true,
+		} as unknown as JWTVerifyResult);
 
 		const middleware = authMiddleware(mockEnv.pair, mockEnv.authAccount);
 		await middleware(mockReq, mockRes, mockNext);
@@ -96,7 +100,7 @@ describe("authMiddleware", () => {
 		expect(mockRes.status).not.toHaveBeenCalled();
 	});
 
-	it("should return 401 if signature is invalid", async () => {
+	it("should return 401 if jwt is invalid", async () => {
 		const mockLogger = {
 			debug: vi.fn().mockImplementation(loggerOuter.debug.bind(loggerOuter)),
 			log: vi.fn().mockImplementation(loggerOuter.log.bind(loggerOuter)),
@@ -110,10 +114,12 @@ describe("authMiddleware", () => {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
-				signature: "0x1234",
-				timestamp: new Date().getTime(),
+				Authorization: "Bearer mockToken",
 			},
 			logger: mockLogger,
+			i18n: vi.fn().mockReturnValue({
+				t: (key: string) => key,
+			}),
 		} as unknown as Request;
 
 		const mockRes = {
@@ -125,7 +131,9 @@ describe("authMiddleware", () => {
 
 		vi.mocked(isHex).mockReturnValue(true);
 		vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
-		vi.mocked(mockPair.verify).mockReturnValue(false);
+		vi.mocked(mockPair.jwtVerify).mockReturnValue({
+			isValid: false,
+		} as unknown as JWTVerifyResult);
 
 		const middleware = authMiddleware(mockEnv.pair, mockEnv.authAccount);
 		await middleware(mockReq, mockRes, mockNext);
@@ -133,8 +141,9 @@ describe("authMiddleware", () => {
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(mockRes.status).toHaveBeenCalledWith(401);
 		expect(mockRes.json).toHaveBeenCalledWith({
-			error: "Unauthorized",
-			message: expect.any(ProsopoApiError),
+			error: new ProsopoEnvError("API.UNAUTHORIZED", {
+				context: { i18n: mockReq.i18n, code: 401 },
+			}),
 		});
 	});
 
@@ -152,8 +161,7 @@ describe("authMiddleware", () => {
 			url: "/v1/prosopo/provider/captcha/image",
 			originalUrl: "/v1/prosopo/provider/captcha/image",
 			headers: {
-				signature: "0x1234",
-				timestamp: new Date().getTime(),
+				Authorization: "Bearer mockToken",
 			},
 			logger: mockLogger,
 		} as unknown as Request;
@@ -171,8 +179,9 @@ describe("authMiddleware", () => {
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(mockRes.status).toHaveBeenCalledWith(401);
 		expect(mockRes.json).toHaveBeenCalledWith({
-			error: "Unauthorized",
-			message: expect.any(ProsopoEnvError),
+			error: new ProsopoEnvError("API.UNAUTHORIZED", {
+				context: { i18n: mockReq.i18n, code: 401 },
+			}),
 		});
 	});
 });
