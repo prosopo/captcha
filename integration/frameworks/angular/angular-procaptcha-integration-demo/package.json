@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/angular-procaptcha-integration-demo",
-	"version": "1.1.13",
+	"version": "1.1.16",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
@@ -18,8 +18,8 @@
 		"@angular/core": "^19.2.0",
 		"@angular/platform-browser": "^19.2.0",
 		"@angular/router": "^19.2.0",
-		"@prosopo/angular-procaptcha-wrapper": "1.1.13",
-		"@prosopo/config": "3.1.6"
+		"@prosopo/angular-procaptcha-wrapper": "1.1.16",
+		"@prosopo/config": "3.1.9"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

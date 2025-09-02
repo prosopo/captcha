@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/locale",
-	"version": "3.1.6",
+	"version": "3.1.9",
 	"description": "Prosopo locale library",
 	"type": "module",
 	"engines": {
@@ -25,13 +25,13 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/config": "3.1.6",
+		"@prosopo/config": "3.1.9",
 		"i18next": "24.2.2",
 		"i18next-browser-languagedetector": "8.0.2",
 		"i18next-chained-backend": "4.6.2",

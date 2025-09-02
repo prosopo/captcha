@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/react-procaptcha-wrapper",
-	"version": "1.1.13",
+	"version": "1.1.16",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -18,19 +18,19 @@
 	"scripts": {
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.15",
-		"@prosopo/config": "3.1.6"
+		"@prosopo/procaptcha-wrapper": "2.6.18",
+		"@prosopo/config": "3.1.9"
 	},
 	"peerDependencies": {
 		"react": "^18.0.0 || ^19.0.0"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.1.7",
+		"@prosopo/procaptcha-integration-build-config": "1.1.10",
 		"@types/node": "22.10.2",
 		"@vitejs/plugin-react": "4.3.4",
 		"del-cli": "6.0.0"

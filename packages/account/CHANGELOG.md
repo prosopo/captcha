@@ -1,5 +1,51 @@
 # @prosopo/account
 
+## 2.7.19
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/fingerprint@2.6.10
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/keyring@2.8.16
+  - @prosopo/common@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/util@3.0.12
+  - @prosopo/config@3.1.9
+
+## 2.7.18
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/fingerprint@2.6.9
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 2.7.17
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/fingerprint@2.6.8
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
 ## 2.7.16
 ### Patch Changes
 

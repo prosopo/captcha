@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util",
-	"version": "3.0.9",
+	"version": "3.0.12",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -13,7 +13,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"cli": "node ./dist/js/cli.js",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
@@ -35,7 +35,7 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"@prosopo/config": "3.1.6",
+		"@prosopo/config": "3.1.9",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
 		"lodash": "4.17.21",

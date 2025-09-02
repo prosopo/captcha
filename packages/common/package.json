@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/common",
-	"version": "3.1.6",
+	"version": "3.1.9",
 	"description": "Prosopo common library",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -21,19 +21,19 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/locale": "3.1.6",
-		"@prosopo/config": "3.1.6",
+		"@prosopo/locale": "3.1.9",
+		"@prosopo/config": "3.1.9",
 		"i18next": "24.1.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
-		"@prosopo/types": "3.0.10",
+		"@prosopo/types": "3.1.2",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
