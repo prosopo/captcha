@@ -156,8 +156,6 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 	public override async _run(args: Args) {
 		await super._run(args);
 
-		console.log({ args });
-
 		const outFile: string = args.output;
 
 		// get lodash (with seeded rng)
