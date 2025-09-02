@@ -18,6 +18,7 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs, { type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+	commandDumpCaptchas,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
 	commandSiteKeyRegisterApi,
@@ -46,6 +47,7 @@ function getCommands(
 		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
 		migrateIpInCaptchaRecordsCommand(pair, config, logger),
 		commandVersion(pair, config, { logger }),
+		commandDumpCaptchas(pair, config, { logger }),
 	];
 }
 
