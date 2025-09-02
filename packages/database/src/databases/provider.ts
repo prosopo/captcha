@@ -38,6 +38,7 @@ import {
 	StoredStatusNames,
 } from "@prosopo/types";
 import type {
+	CompositeIpAddress,
 	FrictionlessTokenRecord,
 	SessionRecord,
 } from "@prosopo/types-database";
@@ -632,7 +633,7 @@ export class ProviderDatabase
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		headers: RequestHeaders,
 		ja4: string,
 		frictionlessTokenId?: FrictionlessTokenId,
@@ -1162,7 +1163,7 @@ export class ProviderDatabase
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		threshold: number,
 		frictionlessTokenId?: FrictionlessTokenId,
 	): Promise<void> {
@@ -1674,12 +1675,20 @@ export class ProviderDatabase
 		});
 	}
 
-	/** @description Remove a detector key */
-	async removeDetectorKey(detectorKey: string): Promise<void> {
+	/**
+	 * @description Remove a detector key
+	 * @param detectorKey The detector key to remove
+	 * @param expirationInSeconds Optional expiration time in seconds (default is 10 minutes)
+	 * */
+	async removeDetectorKey(
+		detectorKey: string,
+		expirationInSeconds?: number,
+	): Promise<void> {
 		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
 
-		// Instead of deleting, set the expiresAt field to expire in 10 minutes
-		const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+		const expiresAt = new Date(
+			Date.now() + (expirationInSeconds || 10 * 60) * 1000,
+		);
 
 		await this.tables?.detector.updateOne(filter, {
 			$set: { expiresAt },

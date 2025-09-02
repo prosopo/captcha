@@ -18,30 +18,33 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { type Logger, type ProsopoApiError, getLogger } from "@prosopo/common";
-import { UpdateDetectorKeyBody } from "@prosopo/types";
+import { RemoveDetectorKeyBodySpec } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
-type UpdateDetectorKeyBodyType = typeof UpdateDetectorKeyBody;
+type RemoveDetectorKeyBodyType = typeof RemoveDetectorKeyBodySpec;
 
 class ApiRemoveDetectorKeyEndpoint
-	implements ApiEndpoint<UpdateDetectorKeyBodyType>
+	implements ApiEndpoint<RemoveDetectorKeyBodyType>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
-		args: z.infer<UpdateDetectorKeyBodyType>,
+		args: z.infer<RemoveDetectorKeyBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
 		logger = logger || getLogger("info", import.meta.url);
 		try {
-			const { detectorKey } = args;
+			const { detectorKey, expirationInSeconds } = args;
 
 			logger = logger || getLogger("info", import.meta.url);
 
 			logger.info(() => ({ msg: "Removing detector key" }));
 
-			await this.clientTaskManager.removeDetectorKey(detectorKey);
+			await this.clientTaskManager.removeDetectorKey(
+				detectorKey,
+				expirationInSeconds,
+			);
 
 			return {
 				status: ApiEndpointResponseStatus.SUCCESS,
@@ -55,8 +58,8 @@ class ApiRemoveDetectorKeyEndpoint
 		}
 	}
 
-	public getRequestArgsSchema(): UpdateDetectorKeyBodyType {
-		return UpdateDetectorKeyBody;
+	public getRequestArgsSchema() {
+		return RemoveDetectorKeyBodySpec;
 	}
 }
 

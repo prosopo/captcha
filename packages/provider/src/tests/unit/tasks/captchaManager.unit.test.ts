@@ -15,10 +15,12 @@
 import { type Logger, getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
-import type {
-	ClientRecord,
-	IProviderDatabase,
-	Session,
+import {
+	type ClientRecord,
+	type FrictionlessToken,
+	type IProviderDatabase,
+	IpAddressType,
+	type Session,
 } from "@prosopo/types-database";
 import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -112,8 +114,11 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
 				_id: "frictionlessTokenId",
-				ipAddress: 2130706433n, // 127.0.0.1 as bigint
-			});
+				ipAddress: {
+					lower: 2130706433n, // 127.0.0.1 as bigint
+					type: IpAddressType.v4,
+				},
+			} as Partial<FrictionlessToken>);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -146,8 +151,11 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
 				_id: "frictionlessTokenId",
-				ipAddress: 2130706433n, // 127.0.0.1 as bigint
-			});
+				ipAddress: {
+					lower: 2130706433n, // 127.0.0.1 as bigint
+					type: IpAddressType.v4,
+				},
+			} as Partial<FrictionlessToken>);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -385,8 +393,11 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
 				_id: "frictionlessTokenId",
-				ipAddress: 2130706433n, // 127.0.0.1 as bigint
-			});
+				ipAddress: {
+					lower: 2130706433n, // 127.0.0.1 as bigint
+					type: IpAddressType.v4,
+				},
+			} as Partial<FrictionlessToken>);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -455,8 +466,11 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
 				_id: "frictionlessTokenId",
-				ipAddress: 2130706433n, // 127.0.0.1 as bigint
-			});
+				ipAddress: {
+					lower: 2130706433n, // 127.0.0.1 as bigint
+					type: IpAddressType.v4,
+				},
+			} as Partial<FrictionlessToken>);
 
 			const result = await captchaManager.isValidRequest(
 				{
