@@ -1,5 +1,55 @@
 # @prosopo/types
 
+## 3.1.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- 1249ce0: Be more lenient with random provider selection
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/locale@3.1.9
+  - @prosopo/util@3.0.12
+  - @prosopo/config@3.1.9
+
+## 3.1.1
+### Patch Changes
+
+- 1f980c4: Fix types mismatch in decryption
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/locale@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 3.1.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/locale@3.1.7
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
+## 3.0.10
+### Patch Changes
+
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/locale@3.1.6
+  - @prosopo/util-crypto@13.5.8
+
 ## 3.0.9
 ### Patch Changes
 

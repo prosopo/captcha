@@ -22,11 +22,14 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 		const requestId =
 			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`; // use prefix to differentiate from other IDs
 
+		const sessionId = req.body?.sessionId ? req.body.sessionId : null;
+
 		const logger = getLogger(
 			parseLogLevel(env.config.logLevel),
 			"request-logger",
 		).with({
 			requestId,
+			...(sessionId ? { sessionId } : {}),
 		});
 
 		// Attach logger to the request

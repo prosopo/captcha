@@ -1,5 +1,36 @@
 # @prosopo/gh-actions
 
+## 2.6.10
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/config@3.1.9
+
+## 2.6.9
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/config@3.1.8
+
+## 2.6.8
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/config@3.1.7
+
+## 2.6.7
+### Patch Changes
+
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+
 ## 2.6.6
 ### Patch Changes
 

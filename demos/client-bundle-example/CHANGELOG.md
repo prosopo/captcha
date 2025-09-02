@@ -1,5 +1,37 @@
 # @prosopo/client-bundle-example
 
+## 2.9.12
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/config@3.1.9
+
+## 2.9.11
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/config@3.1.8
+
+## 2.9.10
+### Patch Changes
+
+- 181e0f5: Hot fix migrate Ips script
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/config@3.1.7
+
+## 2.9.9
+### Patch Changes
+
+- Updated dependencies [9eed772]
+  - @prosopo/config@3.1.6
+
 ## 2.9.8
 ### Patch Changes
 

@@ -1,5 +1,75 @@
 # @prosopo/provider-mock
 
+## 2.8.6
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/api-express-router@3.0.14
+  - @prosopo/types-database@3.1.3
+  - @prosopo/database@3.2.2
+  - @prosopo/provider@3.8.2
+  - @prosopo/common@3.1.9
+  - @prosopo/dotenv@3.0.14
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
+## 2.8.5
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/provider@3.8.1
+  - @prosopo/types@3.1.1
+  - @prosopo/api-express-router@3.0.13
+  - @prosopo/types-database@3.1.2
+  - @prosopo/database@3.2.1
+  - @prosopo/common@3.1.8
+  - @prosopo/dotenv@3.0.13
+  - @prosopo/locale@3.1.8
+  - @prosopo/config@3.1.8
+
+## 2.8.4
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/api-express-router@3.0.12
+  - @prosopo/types-database@3.1.1
+  - @prosopo/database@3.2.0
+  - @prosopo/provider@3.8.0
+  - @prosopo/common@3.1.7
+  - @prosopo/dotenv@3.0.12
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
+## 2.8.3
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/database@3.1.0
+  - @prosopo/provider@3.7.0
+  - @prosopo/config@3.1.6
+  - @prosopo/api-express-router@3.0.11
+  - @prosopo/common@3.1.6
+  - @prosopo/dotenv@3.0.11
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+
 ## 2.8.2
 ### Patch Changes
 

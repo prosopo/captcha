@@ -1,5 +1,61 @@
 # @prosopo/procaptcha-common
 
+## 2.8.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/widget-skeleton@2.6.10
+  - @prosopo/load-balancer@2.7.2
+  - @prosopo/account@2.7.19
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
+## 2.8.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/load-balancer@2.7.1
+  - @prosopo/types@3.1.1
+  - @prosopo/widget-skeleton@2.6.9
+  - @prosopo/account@2.7.18
+  - @prosopo/config@3.1.8
+
+## 2.8.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/widget-skeleton@2.6.8
+  - @prosopo/load-balancer@2.7.0
+  - @prosopo/account@2.7.17
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
+## 2.7.18
+### Patch Changes
+
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/account@2.7.16
+  - @prosopo/load-balancer@2.6.21
+  - @prosopo/types@3.0.10
+  - @prosopo/widget-skeleton@2.6.7
+
 ## 2.7.17
 ### Patch Changes
 

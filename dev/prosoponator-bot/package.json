@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/prosoponator-bot",
-	"version": "2.6.6",
+	"version": "2.6.10",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -8,7 +8,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "npx tsx src/index.ts"
 	},
 	"author": "",
@@ -28,7 +28,7 @@
 	"dependencies": {
 		"@actions/core": "1.10.1",
 		"@actions/github": "6.0.0",
-		"@prosopo/config": "3.1.5"
+		"@prosopo/config": "3.1.9"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

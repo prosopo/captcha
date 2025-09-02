@@ -13,12 +13,14 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
+	ApiParams,
 	CaptchaType,
+	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
-import { ApiParams, type GetFrictionlessCaptchaResponse } from "@prosopo/types";
 import type {
 	FrictionlessTokenId,
 	IProviderDatabase,
@@ -31,7 +33,18 @@ import { checkLangRules } from "../../rules/lang.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { getBotScore } from "../detection/getBotScore.js";
 
+const getDefaultEntropy = (): number => {
+	if (process.env.PROSOPO_ENTROPY) {
+		const parsed = Number.parseInt(process.env.PROSOPO_ENTROPY);
+		if (!Number.isNaN(parsed)) {
+			return parsed;
+		}
+		// ignore invalid value and return default
+	}
+	return 13337;
+};
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
+export const DEFAULT_ENTROPY = getDefaultEntropy();
 
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
@@ -63,6 +76,28 @@ export class FrictionlessManager extends CaptchaManager {
 
 		await this.db.storeSessionRecord(sessionRecord);
 		return sessionRecord;
+	}
+
+	async hostVerified(entropy: number) {
+		const chosen = await getRandomActiveProvider(
+			this.config.defaultEnvironment,
+			entropy,
+		);
+
+		const domain = new URL(chosen.provider.url).hostname;
+		this.logger.info(() => ({
+			data: { entropy, host: this.config.host, domain },
+		}));
+
+		if (domain !== this.config.host) {
+			this.logger.info(() => ({
+				msg: "Host mismatch",
+				data: { expected: this.config.host, got: domain, entropy },
+			}));
+			return { verified: false, domain };
+		}
+
+		return { verified: true, domain };
 	}
 
 	async sendImageCaptcha(
@@ -102,6 +137,27 @@ export class FrictionlessManager extends CaptchaManager {
 			scoreComponents: {
 				baseScore: baseBotScore,
 				accessPolicy: accessPolicyPenalty,
+			},
+		});
+		return botScore;
+	}
+
+	async scoreIncreaseUnverifiedHost(
+		host: string,
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		this.logger.info(() => ({
+			msg: "Host not verified",
+			data: { requested: this.config.host, selected: host },
+		}));
+		botScore += this.config.penalties.PENALTY_UNVERIFIED_HOST;
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				unverifiedHost: this.config.penalties.PENALTY_UNVERIFIED_HOST,
 			},
 		});
 		return botScore;
@@ -176,19 +232,31 @@ export class FrictionlessManager extends CaptchaManager {
 		// if we run out of keys and the score is still not decrypted, throw an error
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
+		let providerSelectEntropy: number | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
-				const { baseBotScore: s, timestamp: t } = await getBotScore(token, key);
 				this.logger.info(() => ({
+					msg: "Attempting to decrypt score",
+					data: {
+						key: this.redactKeyForLogging(key),
+					},
+				}));
+				const decrypted = await getBotScore(token, key as string);
+				const s = decrypted.baseBotScore;
+				const t = decrypted.timestamp;
+				const p = decrypted.providerSelectEntropy;
+				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
 						key: this.redactKeyForLogging(key),
 						baseBotScore: s,
 						timestamp: t,
+						entropy: p,
 					},
 				}));
 				baseBotScore = s;
 				timestamp = t;
+				providerSelectEntropy = p;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -198,18 +266,40 @@ export class FrictionlessManager extends CaptchaManager {
 					}));
 					baseBotScore = 1;
 					timestamp = 0;
+					providerSelectEntropy = DEFAULT_ENTROPY + 1;
 				}
 			}
 		}
 
-		if (baseBotScore === undefined || timestamp === undefined) {
+		const baseBotScoreUndefined = baseBotScore === undefined;
+		const timestampUndefined = timestamp === undefined;
+		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
+		const undefinedCount =
+			Number(baseBotScoreUndefined) +
+			Number(timestampUndefined) +
+			Number(providerSelectEntropyUndefined);
+		if (undefinedCount > 0) {
 			this.logger.error(() => ({
-				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
+				msg: "Error decrypting score: baseBotScore or timestamp or providerSelectEntropy is undefined",
 			}));
 			baseBotScore = 1;
 			timestamp = 0;
+			providerSelectEntropy = DEFAULT_ENTROPY - undefinedCount;
 		}
+		this.logger.info(() => ({
+			msg: "decryptPayload result",
+			data: {
+				baseBotScore: baseBotScore,
+				timestamp: timestamp,
+				entropy: providerSelectEntropy,
+			},
+		}));
 
-		return { baseBotScore, timestamp };
+		// To satisfy TS - see above for undefined checks
+		return {
+			baseBotScore: Number(baseBotScore),
+			timestamp: Number(timestamp),
+			providerSelectEntropy: Number(providerSelectEntropy),
+		};
 	}
 }

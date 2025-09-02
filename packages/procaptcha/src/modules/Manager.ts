@@ -22,7 +22,7 @@ import {
 import {
 	ExtensionLoader,
 	buildUpdateState,
-	getRandomActiveProvider,
+	getProcaptchaRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -134,9 +134,10 @@ export function Manager(
 					// Get a new random provider if
 					// - we don't have a provider api instance (first time)
 					// - we do have a provider api instance but no sessionId (image captcha only)
-					const getRandomProviderResponse = await getRandomActiveProvider(
-						getConfig(),
-					);
+					const getRandomProviderResponse =
+						await getProcaptchaRandomActiveProvider(
+							getConfig().defaultEnvironment,
+						);
 
 					const providerUrl = getRandomProviderResponse.provider.url;
 					// get the provider api inst

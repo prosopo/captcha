@@ -1,5 +1,28 @@
 # @prosopo/config
 
+## 3.1.9
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- 809b984: make vite set esbuild jsx config based on env
+- 809b984: set jsx config for esbuild from vite configs to avoid jsxDEV import bug
+
+## 3.1.8
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+
+## 3.1.7
+### Patch Changes
+
+- f304be9: Release 3.1.13
+
+## 3.1.6
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+
 ## 3.1.5
 ### Patch Changes
 
