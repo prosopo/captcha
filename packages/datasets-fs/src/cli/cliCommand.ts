@@ -35,6 +35,7 @@ export abstract class CliCommand<T extends z.ZodTypeAny> {
 	public async parse(args: unknown): Promise<z.infer<T>> {
 		const argsSchema = this.getArgSchema();
 		const parsed = await argsSchema.parse(args);
+		console.log({ parsed });
 		this.logger.debug(() => ({ data: { parsed }, msg: "parsed args:" }));
 		return parsed;
 	}
