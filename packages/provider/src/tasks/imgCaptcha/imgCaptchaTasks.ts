@@ -487,12 +487,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
+		
+		// Get client settings for IP validation rules
+		const clientRecord = await this.db.getClientRecord(dapp);
+		const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
 		const ipValidation = await deepValidateIpAddress(
 			ip,
 			solutionIpAddress,
 			this.logger,
 			env.config.ipApi.apiKey,
 			env.config.ipApi.baseUrl,
+			ipValidationRules,
 		);
 		if (!ipValidation.isValid) {
 			this.logger.error(() => ({
