@@ -299,15 +299,6 @@ export const deepValidateIpAddress = async (
 		return standardValidation;
 	}
 
-	// Are the IPs different due to invalid format vs geographic difference?
-	let ipV4orV6Address: IPAddress;
-	try {
-		ipV4orV6Address = getIPAddress(ip);
-	} catch (e) {
-		// Invalid IP format -> return happy
-		return { isValid: true };
-	}
-
 	// Both IPs valid but different -> check distance
 	try {
 		const challengeIpString = challengeIpAddress.address;
