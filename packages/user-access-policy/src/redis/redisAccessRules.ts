@@ -133,6 +133,14 @@ export const createRedisAccessRulesReader = (
 				return [];
 			}
 
+            logger.debug(() => ({
+                msg: "Executed search query for rule IDs",
+                data: {
+                   query: query,
+                    found: searchReply.documents,
+                }
+            }));
+
 			return searchReply.documents;
 		},
 	};

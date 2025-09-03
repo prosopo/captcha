@@ -23,7 +23,7 @@ import type { AccessRulesStorage } from "#policy/accessRules.js";
 
 export const deleteRuleGroupsEndpointSchema = z.array(
 	z.object({
-		clientId: z.string(),
+		clientIds: z.string().array(),
 		groupId: z.string(),
 	}),
 );
@@ -47,22 +47,28 @@ export class DeleteRuleGroupsEndpoint
 	async processRequest(
 		args: DeleteRuleGroupsInputEndpointSchema,
 	): Promise<ApiEndpointResponse> {
-		const allRuleIds = [];
+        const ruleIdPromises=[];
 
 		for (const ruleToDelete of args) {
-			const foundRuleIds = await this.accessRulesStorage.findRuleIds({
-				policyScope: {
-					clientId: ruleToDelete.clientId,
-				},
-				policyScopeMatch: ScopeMatch.Exact,
-				groupId: ruleToDelete.groupId,
-			});
+            const currentRuleIdPromises = ruleToDelete.clientIds.map(async clientId => {
+                return await this.accessRulesStorage.findRuleIds({
+                    policyScope: {
+                        clientId: clientId,
+                    },
+                    policyScopeMatch: ScopeMatch.Exact,
+                    groupId: ruleToDelete.groupId,
+                });
+            });
 
-			allRuleIds.push(...foundRuleIds);
+
+            ruleIdPromises.push(...currentRuleIdPromises);
 		}
 
+        const foundRuleIds=await Promise.all(ruleIdPromises);
+        const ruleIds=foundRuleIds.flat();
+
 		// Set() automatically removes duplicates
-		const uniqueRuleIds = [...new Set(allRuleIds)];
+		const uniqueRuleIds = [...new Set(ruleIds)];
 
 		if (uniqueRuleIds.length > 0) {
 			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
