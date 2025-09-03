@@ -1,5 +1,21 @@
 # @prosopo/procaptcha-common
 
+## 2.8.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/widget-skeleton@2.6.10
+  - @prosopo/load-balancer@2.7.2
+  - @prosopo/account@2.7.19
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
 ## 2.8.1
 ### Patch Changes
 

@@ -1,5 +1,26 @@
 # @prosopo/procaptcha-bundle
 
+## 3.0.23
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/procaptcha-frictionless@2.7.2
+  - @prosopo/procaptcha-common@2.8.2
+  - @prosopo/procaptcha-react@2.8.2
+  - @prosopo/widget-skeleton@2.6.10
+  - @prosopo/procaptcha-pow@2.8.2
+  - @prosopo/dotenv@3.0.14
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/util@3.0.12
+  - @prosopo/config@3.1.9
+
 ## 3.0.22
 ### Patch Changes
 
