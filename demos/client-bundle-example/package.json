@@ -23,12 +23,12 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV"
 	},
-	"version": "2.9.11",
+	"version": "2.9.12",
 	"dependencies": {
-		"@prosopo/config": "3.1.8"
+		"@prosopo/config": "3.1.9"
 	},
 	"devDependencies": {
-		"@prosopo/dotenv": "3.0.13",
+		"@prosopo/dotenv": "3.0.14",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",

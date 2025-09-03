@@ -15,7 +15,7 @@
 import type { DetectorResult } from "@prosopo/types";
 import getBotScoreFromPayload from "./decodePayload.js";
 
-const DEFAULT_ENTROPY = 1337;
+const DEFAULT_ENTROPY = 13837;
 
 export const getBotScore = async (
 	payload: string,

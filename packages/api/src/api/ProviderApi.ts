@@ -34,6 +34,7 @@ import {
 	PublicApiPaths,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
+	RemoveDetectorKeyBodySpec,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
@@ -303,10 +304,14 @@ export default class ProviderApi
 		detectorKey: string,
 		timestamp: string,
 		signature: string,
+		expirationInSeconds?: number,
 	): Promise<ApiResponse> {
 		return this.post(
 			AdminApiPaths.RemoveDetectorKey,
-			UpdateDetectorKeyBody.parse({ detectorKey }),
+			RemoveDetectorKeyBodySpec.parse({
+				detectorKey,
+				expirationInSeconds,
+			}),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

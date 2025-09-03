@@ -13,6 +13,7 @@
 // limitations under the License.
 export { default as VitePluginCloseAndCopy } from "./vite-plugin-close-and-copy.js";
 export { default as ViteTestConfig } from "./vite.test.config.js";
+export { default as ViteThreadsTestConfig } from "./vite.threads.test.config.js";
 export { default as VitePluginSourceMapExclude } from "./vite-plugin-sourcemap-exclude.js";
 export { default as ViteFrontendConfig } from "./vite.frontend.config.js";
 export { default as ViteBackendConfig } from "./vite.backend.config.js";

@@ -1,5 +1,19 @@
 # @prosopo/api
 
+## 3.1.13
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/user-access-policy@3.5.8
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
 ## 3.1.12
 ### Patch Changes
 

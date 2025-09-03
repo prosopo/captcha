@@ -1,5 +1,17 @@
 # @prosopo/file-server
 
+## 2.6.14
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/util@3.0.12
+  - @prosopo/config@3.1.9
+
 ## 2.6.13
 ### Patch Changes
 
