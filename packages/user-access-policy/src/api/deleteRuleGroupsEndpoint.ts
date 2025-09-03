@@ -47,25 +47,26 @@ export class DeleteRuleGroupsEndpoint
 	async processRequest(
 		args: DeleteRuleGroupsInputEndpointSchema,
 	): Promise<ApiEndpointResponse> {
-        const ruleIdPromises=[];
+		const ruleIdPromises = [];
 
 		for (const ruleToDelete of args) {
-            const currentRuleIdPromises = ruleToDelete.clientIds.map(async clientId => {
-                return await this.accessRulesStorage.findRuleIds({
-                    policyScope: {
-                        clientId: clientId,
-                    },
-                    policyScopeMatch: ScopeMatch.Exact,
-                    groupId: ruleToDelete.groupId,
-                });
-            });
+			const currentRuleIdPromises = ruleToDelete.clientIds.map(
+				async (clientId) => {
+					return await this.accessRulesStorage.findRuleIds({
+						policyScope: {
+							clientId: clientId,
+						},
+						policyScopeMatch: ScopeMatch.Exact,
+						groupId: ruleToDelete.groupId,
+					});
+				},
+			);
 
-
-            ruleIdPromises.push(...currentRuleIdPromises);
+			ruleIdPromises.push(...currentRuleIdPromises);
 		}
 
-        const foundRuleIds=await Promise.all(ruleIdPromises);
-        const ruleIds=foundRuleIds.flat();
+		const foundRuleIds = await Promise.all(ruleIdPromises);
+		const ruleIds = foundRuleIds.flat();
 
 		// Set() automatically removes duplicates
 		const uniqueRuleIds = [...new Set(ruleIds)];

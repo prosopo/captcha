@@ -24,7 +24,7 @@ import {
 	test,
 } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import {  ScopeMatch } from "#policy/accessPolicyResolver.js";
+import { ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type {
 	AccessRule,
 	AccessRulesReader,
