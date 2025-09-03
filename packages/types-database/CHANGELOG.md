@@ -1,5 +1,17 @@
 # @prosopo/types-database
 
+## 3.1.4
+### Patch Changes
+
+- a8a9251: Add index on IP parts
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/user-access-policy@3.5.9
+  - @prosopo/common@3.1.10
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
 ## 3.1.3
 ### Patch Changes
 

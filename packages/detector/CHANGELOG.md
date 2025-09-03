@@ -1,5 +1,13 @@
 # @prosopo/detector
 
+## 3.1.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
 ## 3.1.2
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.1.10
+### Patch Changes
+
+- 657a827: Release 3.2.2
+
 ## 3.1.9
 ### Patch Changes
 
