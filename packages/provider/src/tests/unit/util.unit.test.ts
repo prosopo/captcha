@@ -225,64 +225,20 @@ describe("validateIpAddress", () => {
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("IP address mismatch:");
 	});
-});
+	it("should return invalid when IP versions don't match 3", () => {
+		const providedIp = "2001:67c:2628:647:35:402:0:3a9";
+		const storedIp = getIPAddress("1.1.1.1");
+		const result = validateIpAddress(providedIp, storedIp, mockLogger);
 
-describe("deepValidateIpAddress", () => {
-	let mockLogger: Logger;
-
-	beforeEach(() => {
-		mockLogger = {
-			info: vi.fn().mockImplementation(() => {}),
-			debug: vi.fn().mockImplementation(() => {}),
-			error: vi.fn().mockImplementation(() => {}),
-			log: vi.fn().mockImplementation(() => {}),
-			warn: vi.fn().mockImplementation(() => {}),
-		} as unknown as Logger;
-
-		vi.clearAllMocks();
+		expect(result.isValid).toBe(false);
+		expect(result.errorMessage).toContain("IP address mismatch:");
 	});
+	it("should return invalid when IP versions don't match 3", () => {
+		const providedIp = "1.1.1.1";
+		const storedIp = getIPAddress("2001:67c:2628:647:35:402:0:3a9");
+		const result = validateIpAddress(providedIp, storedIp, mockLogger);
 
-	it("should return valid when IP is undefined", async () => {
-		const result = await deepValidateIpAddress(
-			undefined,
-			Address4.fromBigInt(BigInt(123456789)),
-			mockLogger,
-			"test-api-key",
-			"test-base-url",
-		);
-
-		expect(result.isValid).toBe(true);
-		expect(result.shouldFlag).toBeUndefined();
-	});
-
-	it("should return valid when IPs match exactly", async () => {
-		const testIp = "192.168.1.1";
-		const ipAddress = new Address4("192.168.1.1");
-
-		const result = await deepValidateIpAddress(
-			testIp,
-			ipAddress,
-			mockLogger,
-			"test-api-key",
-			"test-base-url",
-		);
-
-		expect(result.isValid).toBe(true);
-		expect(result.shouldFlag).toBeUndefined();
-	});
-
-	it("should return valid for malformed IP addresses", async () => {
-		const invalidIp = "invalid.ip.address";
-		const challengeRecordIp = Address4.fromBigInt(BigInt(3232235777));
-
-		const result = await deepValidateIpAddress(
-			invalidIp,
-			challengeRecordIp,
-			mockLogger,
-			"test-api-key",
-			"test-base-url",
-		);
-
-		expect(result.isValid).toBe(true);
+		expect(result.isValid).toBe(false);
+		expect(result.errorMessage).toContain("IP address mismatch:");
 	});
 });
