@@ -1,5 +1,17 @@
 # @prosopo/react-procaptcha-integration-demo
 
+## 1.1.16
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/react-procaptcha-wrapper@1.1.16
+  - @prosopo/config@3.1.9
+
 ## 1.1.15
 ### Patch Changes
 
