@@ -1,5 +1,15 @@
 # @prosopo/types
 
+## 3.1.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/locale@3.1.10
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
 ## 3.1.2
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/testpkg2
 
+## 1.0.14
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/config@3.1.10
+
 ## 1.0.13
 ### Patch Changes
 

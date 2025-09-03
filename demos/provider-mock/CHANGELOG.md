@@ -1,5 +1,23 @@
 # @prosopo/provider-mock
 
+## 2.8.7
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [36b23e0]
+- Updated dependencies [a8a9251]
+- Updated dependencies [657a827]
+- Updated dependencies [4aac849]
+  - @prosopo/provider@3.8.3
+  - @prosopo/types-database@3.1.4
+  - @prosopo/api-express-router@3.0.15
+  - @prosopo/database@3.2.3
+  - @prosopo/common@3.1.10
+  - @prosopo/dotenv@3.0.15
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
 ## 2.8.6
 ### Patch Changes
 
