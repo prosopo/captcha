@@ -208,12 +208,17 @@ export class PowCaptchaManager extends CaptchaManager {
 				throw new ProsopoEnvError("API.UNKNOWN");
 			}
 
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dappAccount);
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
 			const ipValidation = await deepValidateIpAddress(
 				ip,
 				challengeIpAddress,
 				this.logger,
 				env.config.ipApi.apiKey,
 				env.config.ipApi.baseUrl,
+				ipValidationRules,
 			);
 
 			if (!ipValidation.isValid) {

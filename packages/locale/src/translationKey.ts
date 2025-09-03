@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { z } from "zod";
-import translationEn from "./locales/en/translation.json" assert {
+import translationEn from "./locales/en/translation.json" with {
 	type: "json",
 };
 

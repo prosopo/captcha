@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { array, number, object, type output, string } from "zod";
+import { array, number, object, type output, string, z } from "zod";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -20,6 +20,42 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
+
+// IP Validation Rules
+export enum IPValidationAction {
+	Allow = "allow",
+	Reject = "reject",
+	Flag = "flag",
+}
+
+export const IPValidationActionSchema = z.nativeEnum(IPValidationAction);
+
+// IP Validation defaults
+export const countryChangeActionDefault = IPValidationAction.Allow;
+export const ispChangeActionDefault = IPValidationAction.Allow;
+export const distanceThresholdKmDefault = 1000;
+export const distanceExceedActionDefault = IPValidationAction.Reject;
+export const requireAllConditionsDefault = false;
+
+export const IPValidationRulesSchema = object({
+	countryChangeAction: IPValidationActionSchema
+		.optional()
+		.default(countryChangeActionDefault),
+	ispChangeAction: IPValidationActionSchema
+		.optional()
+		.default(ispChangeActionDefault),
+	distanceThresholdKm: number()
+		.positive()
+		.optional()
+		.default(distanceThresholdKmDefault),
+	distanceExceedAction: IPValidationActionSchema
+		.optional()
+		.default(distanceExceedActionDefault),
+	requireAllConditions: z
+		.boolean()
+		.optional()
+		.default(requireAllConditionsDefault),
+});
 
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
@@ -31,5 +67,8 @@ export const ClientSettingsSchema = object({
 		.default(frictionlessThresholdDefault),
 	powDifficulty: number().optional().default(powDifficultyDefault),
 	imageThreshold: number().optional().default(imageThresholdDefault),
+	ipValidationRules: IPValidationRulesSchema.optional(),
 });
+
 export type IUserSettings = output<typeof ClientSettingsSchema>;
+export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
