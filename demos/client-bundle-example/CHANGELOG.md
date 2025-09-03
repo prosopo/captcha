@@ -1,5 +1,12 @@
 # @prosopo/client-bundle-example
 
+## 2.9.13
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/config@3.1.10
+
 ## 2.9.12
 ### Patch Changes
 
