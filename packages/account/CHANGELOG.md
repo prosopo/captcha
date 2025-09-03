@@ -1,5 +1,18 @@
 # @prosopo/account
 
+## 2.7.20
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/fingerprint@2.6.11
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/keyring@2.8.17
+  - @prosopo/common@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
 ## 2.7.19
 ### Patch Changes
 

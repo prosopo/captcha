@@ -1,5 +1,18 @@
 # @prosopo/database
 
+## 3.2.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [a8a9251]
+- Updated dependencies [657a827]
+  - @prosopo/types-database@3.1.4
+  - @prosopo/user-access-policy@3.5.9
+  - @prosopo/common@3.1.10
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
 ## 3.2.2
 ### Patch Changes
 

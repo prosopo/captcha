@@ -1,5 +1,12 @@
 # @prosopo/fingerprint
 
+## 2.6.11
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/config@3.1.10
+
 ## 2.6.10
 ### Patch Changes
 
