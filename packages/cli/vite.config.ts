@@ -58,6 +58,16 @@ export default defineConfig(async ({ command, mode }) => {
 					process.env.PROSOPO_ENTROPY,
 				),
 			}),
+			...(process.env.PROSOPO_IPAPI_URL && {
+				"process.env.PROSOPO_IPAPI_URL": JSON.stringify(
+					process.env.PROSOPO_IPAPI_URL,
+				),
+			}),
+			...(process.env.PROSOPO_IPAPI_KEY && {
+				"process.env.PROSOPO_IPAPI_KEY": JSON.stringify(
+					process.env.PROSOPO_IPAPI_KEY,
+				),
+			}),
 		},
 		...backendConfig,
 	});
