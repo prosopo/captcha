@@ -4,7 +4,7 @@ services:
         profiles:
             - production
             - staging
-        image: prosopo/client-example-server:latest
+        image: prosopo/client-example-server:2.7.29
         labels:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
@@ -16,8 +16,6 @@ services:
             - '9228:9228'
         networks:
             external:
-            internal:
-                ipv4_address: 172.18.0.3
         logging:
             driver: 'json-file'
             options:
@@ -49,8 +47,6 @@ services:
             - caddy_config:/config
         networks:
             external:
-            internal:
-                ipv4_address: 172.18.0.6
         logging:
             driver: 'json-file'
             options:
@@ -68,21 +64,9 @@ services:
             - 208.67.222.222
 
 networks:
-    internal:
-        name: internal
-        internal: true
-        driver: bridge
-        ipam:
-            config:
-                - subnet: 172.18.0.0/16
-                  gateway: 172.18.0.1
     external:
         name: external
         driver: bridge
-        ipam:
-            config:
-                - subnet: 172.19.0.0/16
-                  gateway: 172.19.0.1
 volumes:
     caddy_data:
     caddy_config:
