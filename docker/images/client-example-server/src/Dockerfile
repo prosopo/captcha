@@ -6,9 +6,6 @@ EXPOSE 9228 80 443
 
 WORKDIR /usr/src/app
 
-# Download MongoDB binary
-RUN npm install mongodb-memory-server
-
 # Copy bundled code
 COPY ./demos/client-example-server/dist/bundle/ ./
 

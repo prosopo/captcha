@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { MongoMemoryServer } from "mongodb-memory-server";
-export async function memoryServerSetup(): Promise<string> {
 
+export async function memoryServerSetup(): Promise<string> {
+	const MongoMemoryServer = (await import("mongodb-memory-server"))
+		.MongoMemoryServer;
 	const mongod = MongoMemoryServer.create();
 	const memoryServer = await mongod;
 	return memoryServer.getUri();
