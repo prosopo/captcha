@@ -1,5 +1,12 @@
 # @prosopo/workspace
 
+## 3.1.4
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/config@3.1.11
+
 ## 3.1.3
 ### Patch Changes
 

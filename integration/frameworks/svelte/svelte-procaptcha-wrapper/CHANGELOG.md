@@ -1,5 +1,13 @@
 # @prosopo/svelte-procaptcha-wrapper
 
+## 1.1.18
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/procaptcha-wrapper@2.6.20
+  - @prosopo/config@3.1.11
+
 ## 1.1.17
 ### Patch Changes
 
