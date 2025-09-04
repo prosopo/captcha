@@ -74,7 +74,6 @@ services:
             - ../.env.${NODE_ENV}
         networks:
             internal:
-                ipv4_address: 172.18.0.5
         logging:
             driver: 'json-file'
             options:
