@@ -54,9 +54,11 @@ const getResponse = async (
 		[ApiParams.secret]: secret,
 	};
 
-	// if (process.env.NODE_ENV === "production") {
-	// 	body[ApiParams.ip] = ip;
-	// }
+	if (process.env.NODE_ENV !== "development") {
+		body[ApiParams.ip] = ip;
+	}
+
+	console.log({ body });
 
 	const response = await fetch(verifyEndpoint, {
 		method: "POST",
