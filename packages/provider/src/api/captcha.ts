@@ -131,6 +131,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
 						CaptchaType.image,
+						env,
 						sessionId,
 						userAccessPolicy,
 						req.ip,
@@ -369,6 +370,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				await tasks.powCaptchaManager.isValidRequest(
 					clientSettings,
 					CaptchaType.pow,
+					env,
 					sessionId,
 					userAccessPolicy,
 					req.ip,
@@ -605,6 +607,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.isValidRequest(
 						clientRecord,
 						CaptchaType.frictionless,
+						env,
 					);
 
 				if (!valid) {
