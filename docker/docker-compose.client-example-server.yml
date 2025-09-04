@@ -85,7 +85,7 @@ networks:
         name: external
         driver: bridge
     internal:
-        name: external
+        name: internal
         driver: bridge
 volumes:
     caddy_data:
