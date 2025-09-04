@@ -128,5 +128,9 @@ export default function getConfig(
 			password: getPassword(admin),
 			secret: getSecret(admin),
 		},
+		ipApi: {
+			url: process.env.PROSOPO_IPAPI_URL,
+			key: process.env.PROSOPO_IPAPI_KEY,
+		},
 	} as ProsopoConfigInput);
 }
