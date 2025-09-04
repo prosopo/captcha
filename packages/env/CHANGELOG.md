@@ -1,5 +1,20 @@
 # @prosopo/env
 
+## 3.2.4
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types@3.1.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/types-env@2.7.29
+  - @prosopo/database@3.2.4
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
 ## 3.2.3
 ### Patch Changes
 
