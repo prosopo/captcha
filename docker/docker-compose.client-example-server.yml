@@ -67,7 +67,7 @@ services:
         container_name: database1
         image: mongo:6.0.17
         volumes:
-            - /data/db:/data/db
+            - /data/db1:/data/db
         ports:
             - '27018:27017'
         env_file:
