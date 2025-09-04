@@ -42,6 +42,16 @@ export default defineConfig(async ({ command, mode }) => {
 	);
 	return defineConfig({
 		...backendConfig,
-		server: { port: process.env.PROSOPO_SERVER_PORT },
+		build: {
+			...backendConfig.build,
+			rollupOptions: {
+				...backendConfig.build?.rollupOptions,
+				external : [
+					...(backendConfig.build?.rollupOptions?.external as string[]),
+					'mongodb-memory-server'
+				]
+			}
+		},
+		server: { port: process.env.PROSOPO_SERVER_PORT ? Number(process.env.PROSOPO_SERVER_PORT) : 9228 },
 	});
 });
