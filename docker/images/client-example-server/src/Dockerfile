@@ -8,4 +8,4 @@ WORKDIR /usr/src/app
 
 EXPOSE 9228 80 443
 
-CMD ["node", "./prosopo_client_example_server.bundle.js"]
+CMD ["node", "./prosopo_client_example_server.app.bundle.js"]
