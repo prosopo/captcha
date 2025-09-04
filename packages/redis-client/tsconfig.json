@@ -19,22 +19,7 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../common"
-		},
-		{
-			"path": "../types"
-		},
-		{
-			"path": "../api-route"
-		},
-		{
-			"path": "../util"
-		},
-		{
-			"path": "../util-crypto"
-		},
-		{
-			"path": "../redis-client"
+			"path": "../common/tsconfig.json"
 		}
 	]
 }

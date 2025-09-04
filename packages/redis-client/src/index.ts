@@ -12,5 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./base/index.js";
-export * from "./databases/index.js";
+export {
+	type RedisConnection,
+	connectToRedis,
+	setupRedisIndex,
+} from "./redisClient.js";
+export type { RedisIndex } from "./redisIndex.js";
+export { createTestRedisClient } from "./tests/testRedisClient.js";
+
+// re-export, so all the others depend on this package instead of having multiple Redis dependencies
+export * from "redis";
+export * from "@redis/search";
+export type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";

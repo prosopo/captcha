@@ -207,11 +207,13 @@ export class ProviderDatabase
 	protected async setupRedis(): Promise<void> {
 		const redisClient = await this.createRedisClient();
 
+		// fixme keep it mind it can be time consuming on large sets
 		await createRedisAccessRulesIndex(
 			redisClient,
 			this.options.redis?.indexName,
 		);
 
+		// fixme make a promise
 		this.userAccessRulesStorage = createRedisAccessRulesStorage(
 			redisClient,
 			this.logger,

@@ -11,13 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { type RedisClientType, createClient } from "redis";
 
-export const createTestRedisClient = async (): Promise<RedisClientType> =>
-	(await createClient({
-		// /docker/redis/redis-stack.docker-compose.yml
-		url: "redis://localhost:6379",
-		password: "root",
-	})
-		.on("error", (err) => console.log("Redis Client Error", err))
-		.connect()) as RedisClientType;
+import path from "node:path";
+import { ViteEsmConfig } from "@prosopo/config";
+
+export default function () {
+	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
+}
