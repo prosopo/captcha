@@ -105,7 +105,7 @@ export default function getConfig(
 		}),
 		mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || "",
-		mongoClientUri: process.env.PROSOPO_MONGaO_CLIENT_URI || "",
+		mongoClientUri: process.env.PROSOPO_MONGO_CLIENT_URI || "",
 		redisConnection: {
 			url: process.env.REDIS_CONNECTION_URL || "",
 			password: process.env.REDIS_CONNECTION_PASSWORD || "",

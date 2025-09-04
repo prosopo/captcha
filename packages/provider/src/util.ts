@@ -329,6 +329,14 @@ export const deepValidateIpAddress = async (
 
 		// If no validation rules provided, use legacy logic (1000km threshold)
 		if (!ipValidationRules) {
+			logger.info(() => ({
+				msg: "No IP validation rules provided, using legacy logic",
+				data: {
+					challengeIp: challengeIpString,
+					providedIp: ip,
+					distanceKm: distanceKm,
+				},
+			}));
 			// Legacy distance > 1000km -> fail and log
 			if (distanceKm !== undefined && distanceKm > 1000) {
 				const errorMessage = `IP addresses are too far apart: ${distanceKm.toFixed(2)}km (>1000km limit)`;
