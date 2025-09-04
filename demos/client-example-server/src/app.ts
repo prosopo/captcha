@@ -78,7 +78,7 @@ async function main() {
 		res.sendStatus(200);
 	});
 
-	const uri = await memoryServerSetup();
+	const uri = process.env.MONGO_URI || await memoryServerSetup();
 	logger.info(() => ({ msg: "mongo uri", data: { uri } }));
 	const mongoose = connectionFactory(uri);
 	if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
