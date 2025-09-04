@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/common";
+import { createTestRedisClient } from "@prosopo/database";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
@@ -21,11 +22,10 @@ import {
 	beforeEach,
 	describe,
 	expect,
-	it,
 	test,
 } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
+import { ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type {
 	AccessRule,
 	AccessRulesReader,
@@ -36,13 +36,10 @@ import {
 	createRedisAccessRulesWriter,
 } from "#policy/redis/redisAccessRules.js";
 import {
-	accessRulesRedisIndexName,
 	createRedisAccessRulesIndex,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
-	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
-import { createTestRedisClient } from "./testRedisClient.js";
 
 describe("redisAccessRules", () => {
 	let redisClient: RedisClientType;
