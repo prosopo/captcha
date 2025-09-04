@@ -46,6 +46,11 @@ export default defineConfig(async ({ command, mode }) => {
 		...(process.env.MONGO_URI && {
 			"process.env.MONGO_URI": JSON.stringify(process.env.MONGO_URI),
 		}),
+		...(process.env.PROSOPO_VERIFICATION_TYPE && {
+			"process.env.PROSOPO_VERIFICATION_TYPE": JSON.stringify(
+				process.env.PROSOPO_VERIFICATION_TYPE,
+			),
+		}),
 	};
 	console.log({ define });
 	return defineConfig({
