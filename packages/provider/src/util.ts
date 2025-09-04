@@ -295,7 +295,7 @@ export const deepValidateIpAddress = async (
 	}
 
 	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
-	if (standardValidation.isValid) {
+	if (!standardValidation.isValid) {
 		return standardValidation;
 	}
 
@@ -303,6 +303,8 @@ export const deepValidateIpAddress = async (
 	try {
 		const challengeIpString = challengeIpAddress.address;
 		const comparison = await compareIPs(challengeIpString, ip, apiKey, apiUrl);
+
+		console.log("\n\ncomparison\n\n-------------------\n", comparison);
 
 		if ("error" in comparison) {
 			logger.error(() => ({

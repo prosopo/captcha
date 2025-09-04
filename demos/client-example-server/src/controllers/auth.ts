@@ -48,6 +48,7 @@ const verify = async (
 	verifyEndpoint: string,
 	token: ProcaptchaToken,
 	secret: string,
+	ip: string,
 ) => {
 	if (verifyType === "api") {
 		// verify using the API endpoint
@@ -58,6 +59,7 @@ const verify = async (
 			body: JSON.stringify({
 				[ApiParams.token]: token,
 				[ApiParams.secret]: secret,
+				[ApiParams.ip]: ip,
 			}),
 		});
 
@@ -107,6 +109,7 @@ const signup = async (
 			verifyEndpoint,
 			token,
 			config.account.secret,
+			req.body.ip,
 		);
 
 		if (verified) {
@@ -176,6 +179,7 @@ const login = async (
 					verifyEndpoint,
 					token,
 					config.account.secret,
+					req.body.ip,
 				);
 
 				console.log("verified", verified);
