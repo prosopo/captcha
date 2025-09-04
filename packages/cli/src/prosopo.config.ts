@@ -129,8 +129,8 @@ export default function getConfig(
 			secret: getSecret(admin),
 		},
 		ipApi: {
-			url: process.env.PROSOPO_IPAPI_URL,
-			key: process.env.PROSOPO_IPAPI_KEY,
+			apiKey: process.env.PROSOPO_IPAPI_URL,
+			apiUrl: process.env.PROSOPO_IPAPI_KEY,
 		},
 	} as ProsopoConfigInput);
 }

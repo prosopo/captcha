@@ -42,6 +42,8 @@ function hashPassword(password: string): string {
 	return u8aToHex(blake2b(password));
 }
 
+const NO_IP = "NO_IP";
+
 const getResponse = async (
 	ip: string,
 	token: ProcaptchaToken,
@@ -125,7 +127,7 @@ const signup = async (
 			verifyEndpoint,
 			token,
 			config.account.secret,
-			req.body.ip,
+			req.headers["x-client-ip"]?.toString() || NO_IP,
 		);
 
 		if (verified) {
@@ -184,7 +186,7 @@ const login = async (
 				const token = payload[ApiParams.procaptchaResponse];
 
 				if (!config.account.secret) {
-					throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
+					throw new ProsopoEnvError("GENERAL.SECRET_MISSING", {
 						context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
 					});
 				}
@@ -195,7 +197,7 @@ const login = async (
 					verifyEndpoint,
 					token,
 					config.account.secret,
-					req.body.ip,
+					req.headers["x-client-ip"]?.toString() || NO_IP,
 				);
 
 				console.log("verified", verified);
