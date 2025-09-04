@@ -111,7 +111,7 @@ describe("getIPInfo", () => {
 
 		await getIPInfo("8.8.8.8", "test-api-url");
 
-		expect(mockFetch).toHaveBeenCalledWith("https://api.service", {
+		expect(mockFetch).toHaveBeenCalledWith("test-api-url", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -127,9 +127,9 @@ describe("getIPInfo", () => {
 			json: vi.fn().mockResolvedValueOnce(mockApiResponse),
 		});
 
-		await getIPInfo("8.8.8.8", "test-api-key");
+		await getIPInfo("8.8.8.8", "test-api-url", "test-api-key");
 
-		expect(mockFetch).toHaveBeenCalledWith("https://api.service", {
+		expect(mockFetch).toHaveBeenCalledWith("test-api-url", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",

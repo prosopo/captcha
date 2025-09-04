@@ -70,7 +70,6 @@ export async function getIPInfo(
 
 		const data: IPApiResponse = await response.json();
 
-		// Check if the response indicates a bogon (invalid) IP
 		if (data.is_bogon) {
 			return {
 				isValid: false,
@@ -79,7 +78,6 @@ export async function getIPInfo(
 			};
 		}
 
-		// Extract and structure the information we need
 		const result: IPInfoResult = {
 			ip: data.ip,
 			isValid: true,

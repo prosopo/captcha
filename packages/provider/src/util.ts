@@ -307,15 +307,21 @@ export const deepValidateIpAddress = async (
 
 	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
 	if (!standardValidation.isValid) {
-		return standardValidation;
+		// Check if this is a format error or a mismatch
+		if (standardValidation.errorMessage?.includes("Invalid IP address")) {
+			// Format error - return the error
+			return standardValidation;
+		}
+		// IP mismatch - continue to distance checking
+	} else {
+		// IPs match exactly - return valid without distance checking
+		return { isValid: true };
 	}
 
 	// Both IPs valid but different -> check distance
 	try {
 		const challengeIpString = challengeIpAddress.address;
 		const comparison = await compareIPs(challengeIpString, ip, apiKey, apiUrl);
-
-		console.log("\n\ncomparison\n\n-------------------\n", comparison);
 
 		if ("error" in comparison) {
 			logger.error(() => ({
@@ -326,10 +332,9 @@ export const deepValidateIpAddress = async (
 					providedIp: ip,
 				},
 			}));
-			// Something weird going on -> allow but flag
+			// If we can't do distance comparison and IPs don't match exactly, be strict
 			return {
-				isValid: true,
-				shouldFlag: true,
+				isValid: false,
 				errorMessage: "Could not determine IP distance",
 			};
 		}
