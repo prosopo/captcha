@@ -20,9 +20,10 @@ import {
 	ProsopoEnvError,
 } from "@prosopo/common";
 import {
-	IPValidationAction,
 	type IIPValidationRules,
 	type IPAddress,
+	type IPComparisonResult,
+	IPValidationAction,
 	IpApiService,
 	type ScheduledTaskNames,
 	ScheduledTaskStatus,
@@ -171,7 +172,7 @@ export const validateIpAddress = (
  * @returns Validation result with action to take
  */
 const evaluateIpValidationRules = (
-	comparison: any,
+	comparison: IPComparisonResult,
 	rules: IIPValidationRules,
 	logger: Logger,
 ): {
@@ -179,13 +180,18 @@ const evaluateIpValidationRules = (
 	errorMessage?: string;
 	shouldFlag?: boolean;
 } => {
-	const conditions: Array<{ met: boolean; action: IPValidationAction; message: string }> = [];
+	const conditions: Array<{
+		met: boolean;
+		action: IPValidationAction;
+		message: string;
+	}> = [];
 
 	// Check country change condition
 	if (comparison.comparison) {
-		const differentCountries = 
-			comparison.comparison.ip1Details?.country !== comparison.comparison.ip2Details?.country;
-		
+		const differentCountries =
+			comparison.comparison.ip1Details?.country !==
+			comparison.comparison.ip2Details?.country;
+
 		if (differentCountries) {
 			conditions.push({
 				met: true,
@@ -222,7 +228,7 @@ const evaluateIpValidationRules = (
 
 	// Apply logic based on requireAllConditions
 	let finalAction = IPValidationAction.Allow;
-	let errorMessages: string[] = [];
+	const errorMessages: string[] = [];
 	let shouldFlag = false;
 
 	if (rules.requireAllConditions) {
@@ -232,7 +238,10 @@ const evaluateIpValidationRules = (
 			if (condition.action === IPValidationAction.Reject) {
 				finalAction = IPValidationAction.Reject;
 				errorMessages.push(condition.message);
-			} else if (condition.action === IPValidationAction.Flag && finalAction !== IPValidationAction.Reject) {
+			} else if (
+				condition.action === IPValidationAction.Flag &&
+				finalAction !== IPValidationAction.Reject
+			) {
 				finalAction = IPValidationAction.Flag;
 				shouldFlag = true;
 			}
@@ -245,7 +254,8 @@ const evaluateIpValidationRules = (
 				finalAction = IPValidationAction.Reject;
 				errorMessages.push(condition.message);
 				break; // Reject is the most restrictive, no need to check further
-			} else if (condition.action === IPValidationAction.Flag) {
+			}
+			if (condition.action === IPValidationAction.Flag) {
 				finalAction = IPValidationAction.Flag;
 				shouldFlag = true;
 			}
@@ -263,7 +273,8 @@ const evaluateIpValidationRules = (
 
 	return {
 		action: finalAction,
-		errorMessage: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
+		errorMessage:
+			errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
 		shouldFlag,
 	};
 };
@@ -377,7 +388,11 @@ export const deepValidateIpAddress = async (
 		}
 
 		// Use configurable validation rules
-		const ruleEvaluation = evaluateIpValidationRules(comparison, ipValidationRules, logger);
+		const ruleEvaluation = evaluateIpValidationRules(
+			comparison,
+			ipValidationRules,
+			logger,
+		);
 
 		switch (ruleEvaluation.action) {
 			case IPValidationAction.Reject:
@@ -393,7 +408,6 @@ export const deepValidateIpAddress = async (
 					shouldFlag: true,
 					errorMessage: ruleEvaluation.errorMessage,
 				};
-			case IPValidationAction.Allow:
 			default:
 				return {
 					isValid: true,

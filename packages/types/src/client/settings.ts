@@ -38,19 +38,19 @@ export const distanceExceedActionDefault = IPValidationAction.Reject;
 export const requireAllConditionsDefault = false;
 
 export const IPValidationRulesSchema = object({
-	countryChangeAction: IPValidationActionSchema
-		.optional()
-		.default(countryChangeActionDefault),
-	ispChangeAction: IPValidationActionSchema
-		.optional()
-		.default(ispChangeActionDefault),
+	countryChangeAction: IPValidationActionSchema.optional().default(
+		countryChangeActionDefault,
+	),
+	ispChangeAction: IPValidationActionSchema.optional().default(
+		ispChangeActionDefault,
+	),
 	distanceThresholdKm: number()
 		.positive()
 		.optional()
 		.default(distanceThresholdKmDefault),
-	distanceExceedAction: IPValidationActionSchema
-		.optional()
-		.default(distanceExceedActionDefault),
+	distanceExceedAction: IPValidationActionSchema.optional().default(
+		distanceExceedActionDefault,
+	),
 	requireAllConditions: z
 		.boolean()
 		.optional()

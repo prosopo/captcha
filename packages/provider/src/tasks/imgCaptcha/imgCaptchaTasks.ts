@@ -487,7 +487,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
-		
+
 		// Get client settings for IP validation rules
 		const clientRecord = await this.db.getClientRecord(dapp);
 		const ipValidationRules = clientRecord?.settings?.ipValidationRules;
