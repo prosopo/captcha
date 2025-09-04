@@ -23,7 +23,7 @@ type RedisOptions = {
 	indexSetup?: (client: RedisClientType) => Promise<void>;
 };
 
-type RedisConnection = {
+export type RedisConnection = {
 	isReady: () => boolean;
 	getClient: () => Promise<RedisClientType>;
 	getAwaitingTimeMs: () => number;
