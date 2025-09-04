@@ -100,11 +100,13 @@ async function main() {
 
 	app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType));
 
-	app.listen(
-		config.serverUrl
-			? Number.parseInt(at(config.serverUrl.split(":"), 2))
-			: 9228,
-	);
+	const port = config.serverUrl
+		? Number.parseInt(at(config.serverUrl.split(":"), 2))
+		: 9228;
+
+	logger.info(() => ({ msg: "Listening on port", data: { port } }));
+
+	app.listen(port);
 }
 
 main()
