@@ -69,8 +69,12 @@ describe("CaptchaManager", () => {
 		captchaManager = new CaptchaManager(db, pair, logger);
 
 		mockEnv = {
-			ipApiKey: "testKey",
-			ipApiUrl: "https://api.ipapi.is",
+			config: {
+				ipApi: {
+					apiKey: "testKey",
+					baseUrl: "https://api.ipapi.is",
+				},
+			},
 		} as unknown as ProviderEnvironment;
 
 		vi.clearAllMocks();
