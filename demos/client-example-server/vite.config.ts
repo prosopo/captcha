@@ -40,8 +40,31 @@ export default defineConfig(async ({ command, mode }) => {
 		command,
 		mode,
 	);
+	const define = {
+		...backendConfig.define,
+		// Not specifying a mongo uri will default to in-memory mongo server but does not work in a container
+		...(process.env.MONGO_URI && {
+			"process.env.MONGO_URI": JSON.stringify(process.env.MONGO_URI),
+		}),
+	};
+	console.log({ define });
 	return defineConfig({
 		...backendConfig,
-		server: { port: process.env.PROSOPO_SERVER_PORT },
+		define: define,
+		build: {
+			...backendConfig.build,
+			rollupOptions: {
+				...backendConfig.build?.rollupOptions,
+				external: [
+					...(backendConfig.build?.rollupOptions?.external as string[]),
+					"mongodb-memory-server",
+				],
+			},
+		},
+		server: {
+			port: process.env.PROSOPO_SERVER_PORT
+				? Number(process.env.PROSOPO_SERVER_PORT)
+				: 9228,
+		},
 	});
 });
