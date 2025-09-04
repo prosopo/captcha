@@ -130,7 +130,7 @@ export default function getConfig(
 		},
 		ipApi: {
 			apiKey: process.env.PROSOPO_IPAPI_URL,
-			apiUrl: process.env.PROSOPO_IPAPI_KEY,
+			baseUrl: process.env.PROSOPO_IPAPI_KEY,
 		},
 	} as ProsopoConfigInput);
 }
