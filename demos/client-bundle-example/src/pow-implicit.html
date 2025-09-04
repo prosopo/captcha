@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <script src="https://cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
     <title>Procaptcha demo: PoW - Implicit Rendering</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <script type="module">
@@ -53,7 +54,7 @@
 
             window.onActionHandler = () => {
                 updateCaptchaStatus('Form submission initiated', 'info');
-                
+
                 const procaptchaElements = document.getElementsByName('procaptcha-response');
 
                 if (!procaptchaElements.length) {
@@ -113,16 +114,16 @@
                         setMessage("Error: " + err);
                     });
             };
-            
+
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
-            
+
             // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
                         for (let i = 0; i < mutation.addedNodes.length; i++) {
                             const node = mutation.addedNodes[i];
-                            if (node.classList && (node.classList.contains('procaptcha') || 
+                            if (node.classList && (node.classList.contains('procaptcha') ||
                                   node.querySelector && node.querySelector('.procaptcha'))) {
                                 updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
                                 observer.disconnect();
@@ -132,7 +133,7 @@
                     }
                 });
             });
-            
+
             observer.observe(document.body, { childList: true, subtree: true });
         });
 
@@ -147,7 +148,7 @@
             updateCaptchaStatus('Challenge passed successfully!', 'success');
             updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
         }
-        
+
         // Add custom event listener for CAPTCHA verification stages
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
@@ -163,9 +164,9 @@
 <div class="mui-container">
     <h1>Proof of Work CAPTCHA - Implicit Rendering</h1>
     <p>This example demonstrates how to use Procaptcha in Proof of Work mode with implicit rendering.</p>
-    
+
     <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
-    
+
     <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
         <h2>Example Login Form</h2>
         <div class="mui-textfield mui-textfield--float-label">
@@ -194,10 +195,10 @@
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
         <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
     </form>
-    
+
     <!-- Console output display area -->
     <div id="console-output" class="console-output" style="display: none;"></div>
-    
+
     <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
 </body>
