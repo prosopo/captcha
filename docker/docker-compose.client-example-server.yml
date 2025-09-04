@@ -4,7 +4,7 @@ services:
         profiles:
             - production
             - staging
-        image: prosopo/client-example-server:2.7.29
+        image: prosopo/client-example-server:latest
         labels:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
