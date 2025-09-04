@@ -42,6 +42,13 @@ export default defineConfig(async ({ command, mode }) => {
 	);
 	return defineConfig({
 		...backendConfig,
+		define: {
+			...backendConfig.define,
+			// Not specifying a mongo uri will default to in-memory mongo server but does not work in a container
+			...(process.env.MONGO_URI && {
+				"process.env.MONGO_URI": JSON.stringify(process.env.MONGO_URI),
+			})
+		},
 		build: {
 			...backendConfig.build,
 			rollupOptions: {
