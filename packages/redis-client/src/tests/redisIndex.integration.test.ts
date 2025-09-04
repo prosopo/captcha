@@ -14,15 +14,8 @@
 
 import { SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	test,
-} from "vitest";
-import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
+import { beforeAll, describe, expect, test } from "vitest";
+import { type RedisIndex, createRedisIndex } from "../../redis/redisIndex.js";
 import { createTestRedisClient } from "./testRedisClient.js";
 
 let indexCount = 0;
