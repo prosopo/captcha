@@ -20,11 +20,20 @@ import type { ClientRecord, Tables } from "./provider.js";
 
 export type UserDataRecord = mongoose.Document & IUserData;
 
+export const IPValidationRulesSchema = new Schema({
+	countryChangeAction: String,
+	ispChangeAction: String,
+	distanceThresholdKm: Number,
+	distanceExceedAction: String,
+	requireAllConditions: Boolean,
+});
+
 export const UserSettingsSchema = new Schema({
 	captchaType: String,
 	frictionlessThreshold: Number,
 	powDifficulty: Number,
 	imageThreshold: Number,
+	ipValidationRules: IPValidationRulesSchema,
 	domains: [String],
 });
 
@@ -101,6 +110,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 				powDifficulty: Number,
 				captchaType: String,
 				frictionlessThreshold: Number,
+				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,
 			updatedAt: Number,
