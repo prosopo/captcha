@@ -71,6 +71,7 @@ export class CaptchaManager {
 		}
 
 		// Commenting out since I'm in a rush and this is old business logic to pass over (as a result of new knowledge about ip behaviour)
+		
 		// if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
 		// 	this.logger.warn(() => ({
 		// 		msg: "No IP API key found",
