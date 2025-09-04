@@ -34,3 +34,5 @@ network:
           - 2a02:::::::2:53
 
 ```
+
+don't forget to add a AAAA dns record for the machine's ipv6 address.
