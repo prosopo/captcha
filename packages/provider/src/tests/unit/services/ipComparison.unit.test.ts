@@ -374,7 +374,15 @@ describe("compareIPs", () => {
 
 		await compareIPs("8.8.8.8", "1.1.1.1", "test-api-key", "test-url");
 
-		expect(getIPInfoSpy).toHaveBeenCalledWith("8.8.8.8", "test-url", "test-api-key");
-		expect(getIPInfoSpy).toHaveBeenCalledWith("1.1.1.1", "test-url", "test-api-key");
+		expect(getIPInfoSpy).toHaveBeenCalledWith(
+			"8.8.8.8",
+			"test-url",
+			"test-api-key",
+		);
+		expect(getIPInfoSpy).toHaveBeenCalledWith(
+			"1.1.1.1",
+			"test-url",
+			"test-api-key",
+		);
 	});
 });

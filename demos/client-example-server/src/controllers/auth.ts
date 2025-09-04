@@ -42,6 +42,29 @@ function hashPassword(password: string): string {
 	return u8aToHex(blake2b(password));
 }
 
+const getResponse = async (
+	ip: string,
+	token: ProcaptchaToken,
+	secret: string,
+	verifyEndpoint: string,
+) => {
+	// Only include ip if environment is production
+	const body: Record<string, string> = {
+		[ApiParams.token]: token,
+		[ApiParams.secret]: secret,
+	};
+
+	if (process.env.NODE_ENV === "production") {
+		body[ApiParams.ip] = ip;
+	}
+
+	const response = await fetch(verifyEndpoint, {
+		method: "POST",
+		body: JSON.stringify(body),
+	});
+	return response.json();
+};
+
 const verify = async (
 	prosopoServer: ProsopoServer,
 	verifyType: string,
@@ -54,18 +77,9 @@ const verify = async (
 		// verify using the API endpoint
 		console.log("Verifying using the API endpoint", verifyEndpoint);
 
-		const response = await fetch(verifyEndpoint, {
-			method: "POST",
-			body: JSON.stringify({
-				[ApiParams.token]: token,
-				[ApiParams.secret]: secret,
-				[ApiParams.ip]: ip,
-			}),
-		});
-
-		const verifiedResponse = await response.json();
-		console.log(verifiedResponse);
-		return verifiedResponse.verified;
+		const response = await getResponse(ip, token, secret, verifyEndpoint);
+		console.log(response);
+		return response.verified;
 	}
 	// verify using the TypeScript library
 	const verified = await prosopoServer.isVerified(token);
