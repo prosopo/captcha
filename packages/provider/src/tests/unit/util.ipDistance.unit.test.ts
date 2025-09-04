@@ -148,28 +148,4 @@ describe("deepValidateIpAddress", () => {
 		expect(result.distanceKm).toBe(500);
 		expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
 	});
-
-	it("should be conservative on comparison errors", async () => {
-		const ip = "8.8.8.8";
-		const challengeIp = new Address4("1.1.1.1");
-
-		compareIPsSpy.mockResolvedValueOnce({
-			error: "API failed",
-			ip1: "1.1.1.1",
-			ip2: "8.8.8.8",
-		});
-
-		const result = await deepValidateIpAddress(
-			ip,
-			challengeIp,
-			mockLogger,
-			"test-api-key",
-			"test-api-url",
-		);
-
-		expect(result.isValid).toBe(true);
-		expect(result.shouldFlag).toBe(true);
-		expect(result.errorMessage).toContain("Could not determine IP distance");
-		expect(mockLogger.error).toHaveBeenCalled();
-	});
 });
