@@ -13,9 +13,11 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/common";
-import { createTestRedisClient } from "@prosopo/database";
+import {
+	type RedisClientType,
+	createTestRedisClient,
+} from "@prosopo/redis-client";
 import { randomAsHex } from "@prosopo/util-crypto";
-import type { RedisClientType } from "redis";
 import {
 	afterAll,
 	beforeAll,

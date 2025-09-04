@@ -14,9 +14,11 @@
 
 import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
-import type { SearchReply } from "@redis/search";
-import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
-import type { RedisClientType } from "redis";
+import type {
+	RedisClientType,
+	SearchNoContentReply,
+	SearchReply,
+} from "@prosopo/redis-client";
 import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
 import {
 	type AccessRule,

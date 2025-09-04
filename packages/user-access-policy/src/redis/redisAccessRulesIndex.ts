@@ -13,8 +13,11 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
-import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
-import type { RedisClientType } from "redis";
+import {
+	type FtSearchOptions,
+	type RedisClientType,
+	SCHEMA_FIELD_TYPE,
+} from "@prosopo/redis-client";
 import {
 	type PolicyScope,
 	type UserScope,
