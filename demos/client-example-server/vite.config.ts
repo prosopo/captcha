@@ -51,6 +51,11 @@ export default defineConfig(async ({ command, mode }) => {
 				process.env.PROSOPO_VERIFICATION_TYPE,
 			),
 		}),
+		...(process.env.PROSOPO_SITE_PRIVATE_KEY && {
+			"process.env.PROSOPO_SITE_PRIVATE_KEY": JSON.stringify(
+				process.env.PROSOPO_SITE_PRIVATE_KEY,
+			),
+		}),
 	};
 	console.log({ define });
 	return defineConfig({
