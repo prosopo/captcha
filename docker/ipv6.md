@@ -1,11 +1,3 @@
-put daemon.json in /etc/docker/daemon.json to enable docker ipv6
-
-```json
-{
-    "ipv6": true,
-    "fixed-cidr-v6": "2001:db8:1::/64"
-}
-```
 
 on vps's, check `/etc/netplan/01-netcfg.yaml` (or similar file) to enable ipv6. Below uses dummy ips and macs, you need to replace them with the machine's ips and macs. ipv6 is usually available on the vps provider's dashboard. Only use this as a guide, you need to adjust the file to your needs!
 
