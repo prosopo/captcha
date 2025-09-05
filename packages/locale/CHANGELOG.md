@@ -1,5 +1,13 @@
 # @prosopo/locale
 
+## 3.1.11
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/config@3.1.11
+
 ## 3.1.10
 ### Patch Changes
 

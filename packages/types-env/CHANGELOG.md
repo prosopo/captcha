@@ -1,5 +1,18 @@
 # @prosopo/types-env
 
+## 2.7.29
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types-database@3.1.5
+  - @prosopo/types@3.1.4
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
 ## 2.7.28
 ### Patch Changes
 
