@@ -85,10 +85,7 @@ async function startApi(
 	}));
 
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-	apiApp.set(
-		"trust proxy",
-		env.config.proxyCount /* number of proxies between user and server */,
-	);
+	apiApp.set("trust proxy", 1);
 
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));

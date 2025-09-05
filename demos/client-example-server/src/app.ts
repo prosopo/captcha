@@ -55,6 +55,9 @@ async function main() {
 
 	const app = express();
 
+	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+	app.set("trust proxy", 1);
+
 	app.use(cors({ origin: true, credentials: true }));
 
 	app.use(express.urlencoded({ extended: true }));

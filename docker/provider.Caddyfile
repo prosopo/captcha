@@ -126,9 +126,9 @@
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs
 
-			header_up x-forwarded-for {http.request.remote.host}
-			header_up x-forwarded-port {http.request.remote.port}
-			header_up x-forwarded-proto {http.request.scheme}
+			header_up X-Forwarded-For {http.request.remote.host}
+			header_up X-Forwarded-Port {http.request.remote.port}
+			header_up X-Forwarded-Proto {http.request.scheme}
 
 			header_up X-Request-ID "{http.request_id}"
 
