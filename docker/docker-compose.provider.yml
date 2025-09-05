@@ -18,6 +18,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.3
+                ipv6_address: fd00:internal::3
         logging:
             driver: 'json-file'
             options:
@@ -54,6 +55,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.7
+                ipv6_address: fd00:internal::7
         logging:
             driver: 'json-file'
             options:
@@ -91,6 +93,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.5
+                ipv6_address: fd00:internal::5
         logging:
             driver: 'json-file'
             options:
@@ -131,6 +134,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.6
+                ipv6_address: fd00:internal::6
         logging:
             driver: 'json-file'
             options:
@@ -160,6 +164,7 @@ services:
         networks:
             internal:
                 ipv4_address: 172.18.0.8
+                ipv6_address: fd00:internal::8
     vector:
         container_name: vector
         profiles:
