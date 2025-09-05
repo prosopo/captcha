@@ -1,4 +1,4 @@
 {
-    "ipv6": true,
-    "fixed-cidr-v6": "2001:db8:1::/64"
+	"ipv6": true,
+	"fixed-cidr-v6": "2001:db8:1::/64"
 }
