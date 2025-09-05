@@ -86,8 +86,8 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.18.0.0/16
-          gateway: 172.18.0.1
+        - subnet: 172.30.0.0/16
+          gateway: 172.30.0.1
         - subnet: fd00:aaaa::/64
           gateway: fd00:aaaa::1
 
@@ -97,8 +97,8 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.19.0.0/16
-          gateway: 172.19.0.1
+        - subnet: 172.31.0.0/16
+          gateway: 172.31.0.1
         - subnet: fd00:bbbb::/64
           gateway: fd00:bbbb::1
 volumes:
