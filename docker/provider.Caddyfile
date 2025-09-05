@@ -80,7 +80,6 @@
 
 		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
-			
 			# https://caddyserver.com/docs/modules/http.handlers.reverse_proxy
 
 			# try A, then B, then C, etc.
@@ -126,6 +125,10 @@
 
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs
+
+			header_up x-forwarded-for {http.request.remote.host}
+			header_up x-forwarded-port {http.request.remote.port}
+			header_up x-forwarded-proto {http.request.scheme}
 
 			header_up X-Request-ID "{http.request_id}"
 
