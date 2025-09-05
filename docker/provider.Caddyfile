@@ -126,10 +126,6 @@
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs
 
-			header_up X-Forwarded-For {http.request.remote.host}
-			header_up X-Forwarded-Port {http.request.remote.port}
-			header_up X-Forwarded-Proto {http.request.scheme}
-
 			header_up X-Request-ID "{http.request_id}"
 
 			header_up x-tls-version "{tls_version}"
