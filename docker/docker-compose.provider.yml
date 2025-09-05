@@ -18,7 +18,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.3
-                ipv6_address: fd00:internal::3
+                ipv6_address: fd00:aaaa::3
         logging:
             driver: 'json-file'
             options:
@@ -55,7 +55,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.7
-                ipv6_address: fd00:internal::7
+                ipv6_address: fd00:aaaa::7
         logging:
             driver: 'json-file'
             options:
@@ -93,7 +93,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.5
-                ipv6_address: fd00:internal::5
+                ipv6_address: fd00:aaaa::5
         logging:
             driver: 'json-file'
             options:
@@ -134,7 +134,7 @@ services:
             external:
             internal:
                 ipv4_address: 172.18.0.6
-                ipv6_address: fd00:internal::6
+                ipv6_address: fd00:aaaa::6
         logging:
             driver: 'json-file'
             options:
@@ -164,7 +164,7 @@ services:
         networks:
             internal:
                 ipv4_address: 172.18.0.8
-                ipv6_address: fd00:internal::8
+                ipv6_address: fd00:aaaa::8
     vector:
         container_name: vector
         profiles:
@@ -197,29 +197,27 @@ services:
             - 1.1.1.1
             - 208.67.222.222
 networks:
-    internal:
-        name: internal
-        internal: true
-        driver: bridge
-        enable_ipv6: true
-        ipam:
-            driver: default
-            config:
-                - subnet: 172.18.0.0/16
-                  gateway: 172.18.0.1
-                - subnet: fd00:internal::/64   # IPv6 subnet for internal network
-                  gateway: fd00:internal::1
-    external:
-        name: external
-        driver: bridge
-        enable_ipv6: true
-        ipam:
-            driver: default
-            config:
-                - subnet: 172.19.0.0/16
-                  gateway: 172.19.0.1
-                - subnet: fd00:external::/64   # IPv6 subnet for external network
-                  gateway: fd00:external::1
+  internal:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+        - subnet: fd00:aaaa::/64
+          gateway: fd00:aaaa::1
+
+  external:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
+        - subnet: fd00:bbbb::/64
+          gateway: fd00:bbbb::1
 volumes:
     caddy_data:
     caddy_config:
