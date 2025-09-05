@@ -80,12 +80,27 @@ services:
                 max-size: '100m'
                 max-file: '1'
 networks:
-    external:
-        name: external
-        driver: bridge
-    internal:
-        name: internal
-        driver: bridge
+  internal:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+        - subnet: fd00:aaaa::/64
+          gateway: fd00:aaaa::1
+
+  external:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
+        - subnet: fd00:bbbb::/64
+          gateway: fd00:bbbb::1
 volumes:
     caddy_data:
     caddy_config:
