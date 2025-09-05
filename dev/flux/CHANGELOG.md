@@ -1,5 +1,15 @@
 # @prosopo/flux
 
+## 2.6.21
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/common@3.1.11
+  - @prosopo/dotenv@3.0.16
+  - @prosopo/util@3.0.14
+  - @prosopo/config@3.1.11
+
 ## 2.6.20
 ### Patch Changes
 

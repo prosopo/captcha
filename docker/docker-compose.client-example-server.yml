@@ -1,0 +1,106 @@
+services:
+    server1:
+        container_name: server1
+        profiles:
+            - production
+            - staging
+        image: prosopo/client-example-server:latest
+        labels:
+            - "vector.provider=true" # enable logging as a provider
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        pull_policy: always
+        env_file:
+            - ../.env.${NODE_ENV}
+        ports:
+            - '9228:9228'
+        networks:
+            internal:
+            external:
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+    caddy:
+        container_name: caddy
+        profiles:
+            - production
+            - staging
+        image: prosopo/caddy:${CADDY_IMAGE}
+        env_file:
+            - ../.env.${NODE_ENV}
+        labels:
+            - "vector.caddy=true" # enable logging as caddy
+            - "vector.docker=true" # log docker events
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        ports:
+            - '80:80'
+            - '443:443'
+            - '443:443/udp'
+        volumes:
+            - ./client-example-server.Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            external:
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+    database1:
+        container_name: database1
+        image: mongo:6.0.17
+        volumes:
+            - /data/client-example-server:/data/db
+        ports:
+            - '27018:27017'
+        env_file:
+            - ../.env.${NODE_ENV}
+        networks:
+            internal:
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+networks:
+  internal:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/16
+          gateway: 172.30.0.1
+        - subnet: fd00:aaaa::/64
+          gateway: fd00:aaaa::1
+
+  external:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.31.0.0/16
+          gateway: 172.31.0.1
+        - subnet: fd00:bbbb::/64
+          gateway: fd00:bbbb::1
+volumes:
+    caddy_data:
+    caddy_config:

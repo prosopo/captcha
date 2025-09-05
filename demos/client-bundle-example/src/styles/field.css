@@ -1,0 +1,12 @@
+/* smooth transition by default */
+.mui-textfield--float-label label {
+	transition: opacity .15s ease, transform .15s ease;
+}
+
+/* when wrapper gets .label-hidden, hide the label visually (keeps it in DOM) */
+.mui-textfield--float-label.label-hidden > label {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
+	transform: translateY(-6px) !important;
+}

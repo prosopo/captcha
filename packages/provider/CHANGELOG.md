@@ -1,5 +1,32 @@
 # @prosopo/provider
 
+## 3.8.4
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 0d1a33e: Adding ip comparison service
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types-database@3.1.5
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/api-express-router@3.0.16
+  - @prosopo/user-access-policy@3.5.10
+  - @prosopo/load-balancer@2.7.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/api-route@2.6.19
+  - @prosopo/types-env@2.7.29
+  - @prosopo/database@3.2.4
+  - @prosopo/datasets@3.0.25
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/util@3.0.14
+  - @prosopo/api@3.1.15
+  - @prosopo/env@3.2.4
+  - @prosopo/config@3.1.11
+
 ## 3.8.3
 ### Patch Changes
 

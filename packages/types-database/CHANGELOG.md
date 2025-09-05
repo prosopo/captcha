@@ -1,5 +1,19 @@
 # @prosopo/types-database
 
+## 3.1.5
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/user-access-policy@3.5.10
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
 ## 3.1.4
 ### Patch Changes
 
