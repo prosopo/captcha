@@ -196,17 +196,25 @@ networks:
         name: internal
         internal: true
         driver: bridge
+        enable_ipv6: true
         ipam:
+            driver: default
             config:
                 - subnet: 172.18.0.0/16
                   gateway: 172.18.0.1
+                - subnet: fd00:internal::/64   # IPv6 subnet for internal network
+                  gateway: fd00:internal::1
     external:
         name: external
         driver: bridge
+        enable_ipv6: true
         ipam:
+            driver: default
             config:
                 - subnet: 172.19.0.0/16
                   gateway: 172.19.0.1
+                - subnet: fd00:external::/64   # IPv6 subnet for external network
+                  gateway: fd00:external::1
 volumes:
     caddy_data:
     caddy_config:
