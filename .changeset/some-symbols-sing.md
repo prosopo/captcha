@@ -3,5 +3,5 @@
 "@prosopo/detector": patch
 ---
 
-Ugh
+Fix TypeScript type checking by reordering project references and updating typecheck commands
   
