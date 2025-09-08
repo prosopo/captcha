@@ -18,7 +18,7 @@ export {
 	setupRedisIndex,
 } from "./redisClient.js";
 export type { RedisIndex } from "./redisIndex.js";
-export { createTestRedisClient } from "./tests/testRedisClient.js";
+export { createTestRedisConnection } from "./tests/testRedisConnection.js";
 
 // re-export, so all the others depend on this package instead of having multiple Redis dependencies
 export * from "redis";

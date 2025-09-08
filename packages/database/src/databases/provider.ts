@@ -15,6 +15,7 @@
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
+import { connectToRedis, setupRedisIndex } from "@prosopo/redis-client";
 import {
 	ApiParams,
 	type Captcha,
@@ -78,11 +79,10 @@ import {
 } from "@prosopo/types-database";
 import {
 	type AccessRulesStorage,
-	createRedisAccessRulesIndex,
 	createRedisAccessRulesStorage,
+	redisAccessRulesIndex,
 } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
-import { type RedisClientType, createClient } from "redis";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -205,33 +205,27 @@ export class ProviderDatabase
 	}
 
 	protected async setupRedis(): Promise<void> {
-		const redisClient = await this.createRedisClient();
-
-		// fixme keep it mind it can be time consuming on large sets
-		await createRedisAccessRulesIndex(
-			redisClient,
-			this.options.redis?.indexName,
-		);
-
-		// fixme make a promise
-		this.userAccessRulesStorage = createRedisAccessRulesStorage(
-			redisClient,
-			this.logger,
-		);
-	}
-
-	protected async createRedisClient(): Promise<RedisClientType> {
-		return (await createClient({
+		const redisConnection = connectToRedis({
 			url: this.options.redis?.url,
 			password: this.options.redis?.password,
-		})
-			.on("error", (error) => {
-				this.logger.error(() => ({
-					err: error,
-					msg: "Redis client error",
-				}));
-			})
-			.connect()) as RedisClientType;
+			logger: this.logger,
+		});
+
+		const accessRulesRedisConnection = setupRedisIndex(
+			redisConnection,
+			{
+				...redisAccessRulesIndex,
+				name: this.options.redis?.indexName || redisAccessRulesIndex.name,
+			},
+			this.logger,
+		);
+
+		accessRulesRedisConnection.getClient().then((redisClient) => {
+			this.userAccessRulesStorage = createRedisAccessRulesStorage(
+				redisClient,
+				this.logger,
+			);
+		});
 	}
 
 	loadTables() {
@@ -254,11 +248,7 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
-	public getUserAccessRulesStorage(): AccessRulesStorage {
-		if (null === this.userAccessRulesStorage) {
-			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED");
-		}
-
+	public getUserAccessRulesStorage(): AccessRulesStorage | null {
 		return this.userAccessRulesStorage;
 	}
 

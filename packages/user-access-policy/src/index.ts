@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoutesProvider } from "@prosopo/api-route";
-import {
+export {
 	type AccessPolicy,
 	AccessPolicyType,
 	type AccessRuleExtended,
@@ -25,70 +24,40 @@ import {
 	accessRuleSchemaExtended,
 	policyScopeSchema,
 } from "#policy/accessPolicy.js";
-import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import {
+export { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
+export {
 	type AccessRule,
 	type AccessRulesStorage,
 	accessRuleSchema,
 } from "#policy/accessRules.js";
-import {
-	AccessRuleApiRoutes,
+export {
 	accessRuleApiPaths,
 	getExpressApiRuleRateLimits,
 } from "#policy/api/accessRuleApiRoutes.js";
-import {
+export {
 	type DeleteAllRulesEndpointSchema,
 	deleteAllRulesEndpointSchema,
 } from "#policy/api/deleteAllRulesEndpoint.js";
-import {
+export {
 	type DeleteRulesEndpointSchemaInput,
 	type DeleteRulesEndpointSchemaOutput,
 	deleteRulesEndpointSchema,
 } from "#policy/api/deleteRulesEndpoint.js";
-import {
+export {
 	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
 	insertRulesEndpointSchema,
 } from "#policy/api/insertRulesEndpoint.js";
-import { createRedisAccessRulesStorage } from "#policy/redis/redisAccessRules.js";
-import { createRedisAccessRulesIndex } from "#policy/redis/redisAccessRulesIndex.js";
-import { userScopeInputSchema } from "./accessPolicy.js";
+export { createRedisAccessRulesStorage } from "#policy/redis/redisRulesStorage.js";
+export { userScopeInputSchema } from "./accessPolicy.js";
+export { redisAccessRulesIndex } from "./redis/redisRulesIndex.js";
+
+import type { ApiRoutesProvider } from "@prosopo/api-route";
+import type { AccessRulesStorage } from "#policy/accessRules.js";
+import { AccessRuleApiRoutes } from "#policy/api/accessRuleApiRoutes.js";
 
 export const createApiRuleRoutesProvider = (
 	rulesStorage: AccessRulesStorage,
 ): ApiRoutesProvider => {
 	return new AccessRuleApiRoutes(rulesStorage);
-};
-
-export {
-	type AccessPolicy,
-	type PolicyScope,
-	type AccessRulesStorage,
-	type PolicyFilter,
-	type DeleteRulesEndpointSchemaOutput,
-	type DeleteRulesEndpointSchemaInput,
-	type DeleteAllRulesEndpointSchema,
-	type InsertManyRulesEndpointInputSchema,
-	type InsertManyRulesEndpointOutputSchema,
-	type AccessRule,
-	type UserScope,
-	type UserScopeApiInput,
-	type UserScopeApiOutput,
-	type AccessRuleExtended,
-	AccessPolicyType,
-	ScopeMatch,
-	// redis
-	createRedisAccessRulesIndex,
-	createRedisAccessRulesStorage,
-	// api
-	accessRuleApiPaths,
-	accessRuleSchema,
-	accessRuleSchemaExtended,
-	accessPolicySchema,
-	policyScopeSchema,
-	insertRulesEndpointSchema,
-	deleteAllRulesEndpointSchema,
-	deleteRulesEndpointSchema,
-	getExpressApiRuleRateLimits,
-	userScopeInputSchema,
 };
