@@ -28,13 +28,25 @@ export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
 ): Promise<T> => {
+	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
-		setTimeout(() => {
+		timeoutId = setTimeout(() => {
 			reject(new ProsopoEnvError("API.UNKNOWN"));
 		}, ms);
 	});
 
-	return Promise.race([promise, timeoutPromise]);
+	try {
+		const result = await Promise.race([promise, timeoutPromise]);
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		return result;
+	} catch (error) {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		throw error;
+	}
 };
 
 const customDetectBot: BotDetectionFunction = async (
