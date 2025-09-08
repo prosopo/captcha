@@ -36,15 +36,29 @@ export const connectToRedis = (options: RedisOptions): RedisConnection => {
 		connectedAt: 0,
 	};
 
+	let isReady = false;
+
 	const masterClient = createClient({
 		url: options.url,
 		password: options.password,
 	});
 
-	let isReady = false;
+	masterClient.on("error", (error) => {
+		// we listen for errors only after connection,
+		// otherwise will be getting constant "connection refused" errors"
+		if (isReady) {
+			options.logger.error(() => ({
+				err: error,
+				msg: "Redis client error",
+			}));
+		}
+	});
 
 	options.logger.info(() => ({
 		msg: "Connecting to Redis",
+		data: {
+			url: options.url,
+		},
 	}));
 
 	const clientPromise = masterClient.connect().then(async (connectedClient) => {
@@ -54,18 +68,10 @@ export const connectToRedis = (options: RedisOptions): RedisConnection => {
 		options.logger.info(() => ({
 			msg: "Redis connected",
 			data: {
+				url: options.url,
 				awaitingTimeMs: timestamps.connectedAt - timestamps.initializedAt,
 			},
 		}));
-
-		// we listen for errors only after connection,
-		// otherwise will be getting constant "connection refused" errors"
-		masterClient.on("error", (error) => {
-			options.logger.error(() => ({
-				err: error,
-				msg: "Redis client error",
-			}));
-		});
 
 		return connectedClient as RedisClientType;
 	});
@@ -93,6 +99,8 @@ export const setupRedisIndex = (
 	let isReady = false;
 
 	const clientPromise = connection.getClient().then(async (client) => {
+		timestamps.initializedAt = Date.now();
+
 		logger.info(() => ({
 			msg: "Setting up Redis index",
 			data: {
@@ -108,6 +116,7 @@ export const setupRedisIndex = (
 		logger.info(() => ({
 			msg: "Index setup",
 			data: {
+				name: index.name,
 				awaitingTimeMs: timestamps.setupAt - timestamps.initializedAt,
 			},
 		}));

@@ -38,6 +38,10 @@ export const createRedisAccessRulesStorage = (
 			...createRedisRulesReader(client, logger),
 			...createRedisRulesWriter(client),
 		});
+
+		logger.info(() => ({
+			msg: "RedisAccessRules storage got a ready Redis client",
+		}));
 	});
 
 	return storage;
