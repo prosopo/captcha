@@ -156,7 +156,6 @@ export const ProcaptchaFrictionless = ({
 						loading: false,
 						errorMessage: result.error?.message,
 					};
-					console.log("Frictionless error", result.error?.message);
 					events.onError(new Error(result.error?.message));
 					fallOverWithStyle(result.error?.message, result.error?.key);
 					return;
