@@ -211,7 +211,7 @@ export class ProviderDatabase
 			logger: this.logger,
 		});
 
-		const accessRulesRedisConnection = setupRedisIndex(
+		const redisAccessRulesConnection = setupRedisIndex(
 			redisConnection,
 			{
 				...redisAccessRulesIndex,
@@ -220,12 +220,10 @@ export class ProviderDatabase
 			this.logger,
 		);
 
-		accessRulesRedisConnection.getClient().then((redisClient) => {
-			this.userAccessRulesStorage = createRedisAccessRulesStorage(
-				redisClient,
-				this.logger,
-			);
-		});
+		this.userAccessRulesStorage = createRedisAccessRulesStorage(
+			redisAccessRulesConnection,
+			this.logger,
+		);
 	}
 
 	loadTables() {
@@ -248,7 +246,11 @@ export class ProviderDatabase
 		return this.tables;
 	}
 
-	public getUserAccessRulesStorage(): AccessRulesStorage | null {
+	public getUserAccessRulesStorage(): AccessRulesStorage {
+		if (null === this.userAccessRulesStorage) {
+			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED");
+		}
+
 		return this.userAccessRulesStorage;
 	}
 

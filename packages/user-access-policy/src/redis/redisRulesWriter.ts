@@ -19,9 +19,7 @@ import { redisRuleKeyPrefix } from "#policy/redis/redisRulesIndex.js";
 
 const redisRuleContentHashAlgorithm = "md5";
 
-// fixme proxy or another way? to avoid if() in every method.
-
-export const createRedisAccessRulesWriter = (
+export const createRedisRulesWriter = (
 	client: RedisClientType,
 ): AccessRulesWriter => {
 	return {
@@ -57,6 +55,41 @@ export const createRedisAccessRulesWriter = (
 			if (keys.length === 0) return 0;
 
 			return await client.del(keys);
+		},
+	};
+};
+
+export const getDummyRedisRulesWriter = (logger: Logger): AccessRulesWriter => {
+	return {
+		insertRule: async (
+			rule: AccessRule,
+			expirationTimestamp?: number,
+		): Promise<string> => {
+			logger.info(() => ({
+				msg: "Dummy insertRule() has no effect (redis is not ready)",
+				data: {
+					rule,
+				},
+			}));
+
+			return "";
+		},
+
+		deleteRules: async (ruleIds: string[]): Promise<void> => {
+			logger.info(() => ({
+				msg: "Dummy deleteRules() has no effect (redis is not ready)",
+				data: {
+					ruleIds,
+				},
+			}));
+		},
+
+		deleteAllRules: async (): Promise<number> => {
+			logger.info(() => ({
+				msg: "Dummy deleteAllRules() has no effect (redis is not ready)",
+			}));
+
+			return 0;
 		},
 	};
 };
