@@ -20,7 +20,7 @@ import {
 	createRedisIndex,
 	deleteRedisIndex,
 } from "../redisIndex.js";
-import { createTestRedisClient } from "./testRedisClient.js";
+import { createTestRedisConnection } from "./testRedisConnection.js";
 
 const testIndexNames: string[] = [];
 const getTestIndexName = () => {
@@ -35,7 +35,7 @@ describe("redisIndex", () => {
 	let redisClient: RedisClientType;
 
 	beforeAll(async () => {
-		redisClient = await createTestRedisClient();
+		redisClient = await createTestRedisConnection().getClient();
 	});
 
 	afterAll(async () => {

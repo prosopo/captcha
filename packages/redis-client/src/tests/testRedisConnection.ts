@@ -12,13 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type RedisClientType, createClient } from "redis";
+import type { Logger } from "@prosopo/common";
+import { type RedisConnection, connectToRedis } from "#policy/redisClient.js";
 
-export const createTestRedisClient = async (): Promise<RedisClientType> =>
-	(await createClient({
+const mockLogger = new Proxy(
+	{},
+	{
+		get: () => () => {},
+	},
+) as unknown as Logger;
+
+export const createTestRedisConnection = (logger?: Logger): RedisConnection =>
+	connectToRedis({
 		// /docker/redis/redis-stack.docker-compose.yml
 		url: "redis://localhost:6379",
 		password: "root",
-	})
-		.on("error", (err) => console.log("Redis Client Error", err))
-		.connect()) as RedisClientType;
+		logger: logger || mockLogger,
+	});

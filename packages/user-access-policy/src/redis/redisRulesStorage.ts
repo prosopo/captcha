@@ -13,26 +13,19 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { vi } from "vitest";
+import type { RedisClientType } from "@prosopo/redis-client";
+import type { AccessRulesStorage } from "#policy/accessRules.js";
+import { createRedisAccessRulesReader } from "#policy/redis/redisRulesReader.js";
+import { createRedisAccessRulesWriter } from "#policy/redis/redisRulesWriter.js";
 
-const loggerMockedInstance: Logger = {
-	trace: vi.fn(),
-	debug: vi.fn(),
-	info: vi.fn(),
-	warn: vi.fn(),
-	error: vi.fn(),
-	fatal: vi.fn(),
-	log: vi.fn(),
-	setLogLevel: vi.fn(),
-	getLogLevel: vi.fn(),
-	with: vi.fn().mockReturnThis(),
-	getScope: vi.fn().mockReturnValue("test-scope"),
-	getPretty: vi.fn().mockReturnValue(false),
-	setPretty: vi.fn(),
-	getPrintStack: vi.fn().mockReturnValue(false),
-	setPrintStack: vi.fn(),
-	getFormat: vi.fn().mockReturnValue("json"),
-	setFormat: vi.fn(),
+// fixme use RedisConnection here
+
+export const createRedisAccessRulesStorage = (
+	client: RedisClientType,
+	logger: Logger,
+): AccessRulesStorage => {
+	return {
+		...createRedisAccessRulesReader(client, logger),
+		...createRedisAccessRulesWriter(client),
+	};
 };
-
-export { loggerMockedInstance };
