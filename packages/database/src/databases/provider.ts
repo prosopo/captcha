@@ -15,7 +15,11 @@
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
-import { connectToRedis, setupRedisIndex } from "@prosopo/redis-client";
+import {
+	type RedisConnection,
+	connectToRedis,
+	setupRedisIndex,
+} from "@prosopo/redis-client";
 import {
 	ApiParams,
 	type Captcha,
@@ -183,6 +187,7 @@ export class ProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
 	private userAccessRulesStorage: AccessRulesStorage | null;
+	private redisAccessRulesConnection: RedisConnection | null;
 
 	constructor(private readonly options: ProviderDatabaseOptions) {
 		super(
@@ -194,6 +199,7 @@ export class ProviderDatabase
 		this.tables = {} as Tables<TableNames>;
 
 		this.userAccessRulesStorage = null;
+		this.redisAccessRulesConnection = null;
 	}
 
 	override async connect(): Promise<void> {
@@ -211,7 +217,7 @@ export class ProviderDatabase
 			logger: this.logger,
 		});
 
-		const redisAccessRulesConnection = setupRedisIndex(
+		this.redisAccessRulesConnection = setupRedisIndex(
 			redisConnection,
 			{
 				...redisAccessRulesIndex,
@@ -221,7 +227,7 @@ export class ProviderDatabase
 		);
 
 		this.userAccessRulesStorage = createRedisAccessRulesStorage(
-			redisAccessRulesConnection,
+			this.redisAccessRulesConnection,
 			this.logger,
 		);
 	}
@@ -244,6 +250,16 @@ export class ProviderDatabase
 			});
 		}
 		return this.tables;
+	}
+
+	public getRedisAccessRulesConnection(): RedisConnection {
+		if (null === this.redisAccessRulesConnection) {
+			throw new ProsopoDBError(
+				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
+			);
+		}
+
+		return this.redisAccessRulesConnection;
 	}
 
 	public getUserAccessRulesStorage(): AccessRulesStorage {
