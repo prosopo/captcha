@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { type RedisConnection, connectToRedis } from "#policy/redisClient.js";
+import { type RedisConnection, connectToRedis } from "../redisClient.js";
 
 const mockLogger = new Proxy(
 	{},

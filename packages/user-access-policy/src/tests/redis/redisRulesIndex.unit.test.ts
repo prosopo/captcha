@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from "vitest";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import { getRedisAccessRulesQuery } from "#policy/redis/redisAccessRulesIndex.js";
+import { getRedisRulesQuery } from "#policy/redis/redisRulesIndex.js";
 
 describe("getUserScopeQuery", () => {
 	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact", () => {
@@ -27,7 +27,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) )",
@@ -43,7 +43,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, true);
+		const query = getRedisRulesQuery(filter, true);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) )",
@@ -62,7 +62,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -81,7 +81,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Greedy,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | @ja4Hash:{ja4Hash} )",
@@ -100,7 +100,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ismissing(@numericIp) ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -118,7 +118,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, true);
+		const query = getRedisRulesQuery(filter, true);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -137,7 +137,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, true);
+		const query = getRedisRulesQuery(filter, true);
 
 		expect(query).toBe(
 			" ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -155,7 +155,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) )",
@@ -171,7 +171,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, true);
+		const query = getRedisRulesQuery(filter, true);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) )",
@@ -190,7 +190,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -209,7 +209,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Greedy,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | @ja4Hash:{ja4Hash} )",
@@ -228,7 +228,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, false);
+		const query = getRedisRulesQuery(filter, false);
 
 		expect(query).toBe(
 			" ( ismissing(@numericIp) ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -246,7 +246,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, true);
+		const query = getRedisRulesQuery(filter, true);
 
 		expect(query).toBe(
 			" ( ( @numericIp:[100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -265,7 +265,7 @@ describe("getUserScopeQuery", () => {
 			userScopeMatch: ScopeMatch.Exact,
 		} as PolicyFilter;
 
-		const query = getRedisAccessRulesQuery(filter, true);
+		const query = getRedisRulesQuery(filter, true);
 
 		expect(query).toBe(
 			" ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
+import type { Logger } from "@prosopo/common";
 import type { RedisClientType } from "@prosopo/redis-client";
 import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
 import { redisRuleKeyPrefix } from "#policy/redis/redisRulesIndex.js";
