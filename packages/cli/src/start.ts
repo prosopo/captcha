@@ -94,7 +94,7 @@ async function startApi(
 	apiApp.use(express.json({ limit: "50mb" }));
 
 	// Put this first so that no middleware runs on it
-	apiApp.use(publicRouter());
+	apiApp.use(publicRouter(env));
 
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
