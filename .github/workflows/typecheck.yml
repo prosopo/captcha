@@ -51,6 +51,5 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
-      - run: npx nx run @prosopo/datasets:build:tsc
-      - run: npx nx run-many --target=typecheck --nxBail
+      - run: npx nx run-many --target=build:tsc --nxBail
 
