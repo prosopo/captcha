@@ -5,7 +5,7 @@ name: typecheck
 on:
   pull_request:
     branches: [main, dev, staging, release/*]
-    types: 
+    types:
       - opened # when a PR is opened
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
@@ -51,5 +51,6 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
+      - run: npx nx run @prosopo/datasets:build:tsc
       - run: npx nx run-many --target=typecheck --nxBail
 
