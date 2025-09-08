@@ -16,6 +16,7 @@ import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
 import type {
 	RedisClientType,
+	RedisConnection,
 	SearchNoContentReply,
 	SearchReply,
 } from "@prosopo/redis-client";
@@ -31,9 +32,7 @@ import {
 	redisRulesSearchOptions,
 } from "#policy/redis/redisRulesIndex.js";
 
-// fixme proxy or another way? to avoid if() in every method.
-
-export const createRedisAccessRulesReader = (
+export const createRedisRulesReader = (
 	client: RedisClientType,
 	logger: Logger,
 ): AccessRulesReader => {
@@ -133,6 +132,38 @@ export const createRedisAccessRulesReader = (
 			}
 
 			return searchReply.documents;
+		},
+	};
+};
+
+export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
+	return {
+		findRules: async (
+			filter: PolicyFilter,
+			matchingFieldsOnly = false,
+			skipEmptyUserScopes = true,
+		): Promise<AccessRule[]> => {
+			logger.info(() => ({
+				msg: "Dummy findRules() has no effect (redis is not ready)",
+				data: {
+					filter: filter,
+				},
+			}));
+
+			return [];
+		},
+		findRuleIds: async (
+			filter: PolicyFilter,
+			matchingFieldsOnly = false,
+		): Promise<string[]> => {
+			logger.info(() => ({
+				msg: "Dummy findRuleIds() has no effect (redis is not ready)",
+				data: {
+					filter: filter,
+				},
+			}));
+
+			return [];
 		},
 	};
 };

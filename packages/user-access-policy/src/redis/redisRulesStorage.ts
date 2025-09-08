@@ -13,19 +13,32 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { RedisClientType } from "@prosopo/redis-client";
+import type { RedisConnection } from "@prosopo/redis-client";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
-import { createRedisAccessRulesReader } from "#policy/redis/redisRulesReader.js";
-import { createRedisAccessRulesWriter } from "#policy/redis/redisRulesWriter.js";
-
-// fixme use RedisConnection here
+import {
+	createRedisRulesReader,
+	getDummyRedisRulesReader,
+} from "#policy/redis/redisRulesReader.js";
+import {
+	createRedisRulesWriter,
+	getDummyRedisRulesWriter,
+} from "#policy/redis/redisRulesWriter.js";
 
 export const createRedisAccessRulesStorage = (
-	client: RedisClientType,
+	connection: RedisConnection,
 	logger: Logger,
 ): AccessRulesStorage => {
-	return {
-		...createRedisAccessRulesReader(client, logger),
-		...createRedisAccessRulesWriter(client),
+	const storage: AccessRulesStorage = {
+		...getDummyRedisRulesReader(logger),
+		...getDummyRedisRulesWriter(logger),
 	};
+
+	connection.getClient().then((client) => {
+		Object.assign(storage, {
+			...createRedisRulesReader(client, logger),
+			...createRedisRulesWriter(client),
+		});
+	});
+
+	return storage;
 };
