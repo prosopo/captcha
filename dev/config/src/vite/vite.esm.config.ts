@@ -38,6 +38,7 @@ export default async function (
 		...projectExternal,
 	];
 	return defineConfig({
+		assetsInclude: ["**/*.json"],
 		ssr: { external: allExternal },
 		plugins: [
 			// @ts-ignore
