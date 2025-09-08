@@ -186,8 +186,9 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
-	private userAccessRulesStorage: AccessRulesStorage | null;
+	private redisConnection: RedisConnection | null;
 	private redisAccessRulesConnection: RedisConnection | null;
+	private userAccessRulesStorage: AccessRulesStorage | null;
 
 	constructor(private readonly options: ProviderDatabaseOptions) {
 		super(
@@ -198,8 +199,9 @@ export class ProviderDatabase
 		);
 		this.tables = {} as Tables<TableNames>;
 
-		this.userAccessRulesStorage = null;
 		this.redisAccessRulesConnection = null;
+		this.redisConnection = null;
+		this.userAccessRulesStorage = null;
 	}
 
 	override async connect(): Promise<void> {
@@ -211,14 +213,14 @@ export class ProviderDatabase
 	}
 
 	protected async setupRedis(): Promise<void> {
-		const redisConnection = connectToRedis({
+		this.redisConnection = connectToRedis({
 			url: this.options.redis?.url,
 			password: this.options.redis?.password,
 			logger: this.logger,
 		});
 
 		this.redisAccessRulesConnection = setupRedisIndex(
-			redisConnection,
+			this.redisConnection,
 			{
 				...redisAccessRulesIndex,
 				name: this.options.redis?.indexName || redisAccessRulesIndex.name,
@@ -260,6 +262,16 @@ export class ProviderDatabase
 		}
 
 		return this.redisAccessRulesConnection;
+	}
+
+	public getRedisConnection(): RedisConnection {
+		if (null === this.redisConnection) {
+			throw new ProsopoDBError(
+				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
+			);
+		}
+
+		return this.redisConnection;
 	}
 
 	public getUserAccessRulesStorage(): AccessRulesStorage {

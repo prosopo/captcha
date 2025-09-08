@@ -14,6 +14,7 @@
 
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
+import type { ProviderEnvironment } from "@prosopo/env";
 import { PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
@@ -23,7 +24,7 @@ import express, { type Router } from "express";
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  */
-export function publicRouter(): Router {
+export function publicRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 
 	router.get(PublicApiPaths.Healthz, (req, res) => {
@@ -35,9 +36,18 @@ export function publicRouter(): Router {
 	 */
 	router.get(PublicApiPaths.GetProviderDetails, async (req, res, next) => {
 		try {
-			return res.json({ version, ...{ message: "Provider online" } });
+			const db = env.getDb();
+
+			return res.json({
+				version,
+				message: "Provider online",
+				redis: {
+					isReady: db.getRedisConnection().isReady(),
+					isUapReady: db.getRedisAccessRulesConnection().isReady(),
+				},
+			});
 		} catch (err) {
-			req.logger.error(() => ({
+			env.logger.error(() => ({
 				err,
 				data: { reqParams: req.params },
 				msg: "Error getting provider details",
