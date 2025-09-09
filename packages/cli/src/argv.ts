@@ -18,6 +18,7 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs, { type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+	commandEnsureExternalIndexes,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
 	commandSiteKeyRegisterApi,
@@ -40,6 +41,7 @@ function getCommands(
 	logger: Logger,
 ): CommandModule[] {
 	return [
+		commandEnsureExternalIndexes(pair, config, { logger }),
 		commandProviderSetDataset(pair, config, { logger }),
 		commandStoreCaptchasExternally(pair, config, { logger }),
 		commandSiteKeyRegister(pair, config, { logger }),
