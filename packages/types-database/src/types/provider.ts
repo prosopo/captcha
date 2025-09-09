@@ -124,6 +124,7 @@ export interface StoredCaptcha {
 	requestedAtTimestamp: Timestamp;
 	deadlineTimestamp?: Timestamp;
 	ipAddress: CompositeIpAddress;
+	providedIp?: CompositeIpAddress;
 	headers: RequestHeaders;
 	ja4: string;
 	userSubmitted: boolean;
@@ -601,6 +602,11 @@ export interface IProviderDatabase extends IDatabase {
 	markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+
+	updateDappUserCommitment(
+		commitmentId: Hash,
+		updates: Partial<UserCommitment>,
+	);
 
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,

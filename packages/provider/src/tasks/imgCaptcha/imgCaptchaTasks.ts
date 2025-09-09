@@ -478,6 +478,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
+		// -- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution  has already been checked by the server
+		if (solution.serverChecked) {
+			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
+		}
+
 		if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
 			this.logger.warn(() => ({
 				msg: "No IP API key or URL found",
@@ -486,38 +493,43 @@ export class ImgCaptchaManager extends CaptchaManager {
 			throw new ProsopoEnvError("API.UNKNOWN");
 		}
 
+		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		// -- END WARNING --
+
 		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
 
-		// Get client settings for IP validation rules
-		const clientRecord = await this.db.getClientRecord(dapp);
-		const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+		if (ip) {
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dapp);
 
-		const ipValidation = await deepValidateIpAddress(
-			ip,
-			solutionIpAddress,
-			this.logger,
-			env.config.ipApi.apiKey,
-			env.config.ipApi.baseUrl,
-			ipValidationRules,
-		);
-		if (!ipValidation.isValid) {
-			this.logger.error(() => ({
-				msg: "IP validation failed for image captcha",
-				data: {
-					ip,
-					solutionIp: solutionIpAddress.address,
-					error: ipValidation.errorMessage,
-					distanceKm: ipValidation.distanceKm,
-				},
-			}));
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
-		}
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-		if (solution.serverChecked) {
-			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
+			await this.db.updateDappUserCommitment(solution.id, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+
+			const ipValidation = await deepValidateIpAddress(
+				ip,
+				solutionIpAddress,
+				this.logger,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
+				ipValidationRules,
+			);
+
+			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for image captcha",
+					data: {
+						ip,
+						solutionIp: solutionIpAddress.address,
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm,
+					},
+				}));
+				return { status: "API.USER_NOT_VERIFIED", verified: false };
+			}
 		}
-		// Mark solution as checked
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {

@@ -894,6 +894,16 @@ export class ProviderDatabase
 		);
 	}
 
+	/** @description Update an image captcha commitment
+	 */
+	async updateDappUserCommitment(
+		commitmentId: Hash,
+		updates: Partial<UserCommitment>,
+	) {
+		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		await this.tables?.commitment.updateOne(filter, updates);
+	}
+
 	/**
 	 * @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
 	 * @param {number} limit Maximum number of records to return
