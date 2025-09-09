@@ -49,7 +49,7 @@ class CaptchaRenderer {
 		callbacks: Callbacks,
 		isWeb2: boolean,
 		i18n: Ti18n,
-		invisible,
+		invisible: boolean,
 		widgetContainer: HTMLElement,
 	): Root {
 		const captchaType =
