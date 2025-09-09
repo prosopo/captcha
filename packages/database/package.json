@@ -44,8 +44,8 @@
 		"mongodb": "6.15.0",
 		"mongodb-memory-server": "10.0.0",
 		"mongoose": "8.13.0",
-        "@prosopo/redis-client": "1.0.0"
-    },
+		"@prosopo/redis-client": "1.0.0"
+	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.0.9",
