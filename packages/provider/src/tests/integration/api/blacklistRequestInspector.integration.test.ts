@@ -65,7 +65,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					},
 				},
 				ipApi: {
-					url: "dummyUrl",
+					url: "https://dummyUrl.com",
 					key: "dummyKey",
 				},
 			});
