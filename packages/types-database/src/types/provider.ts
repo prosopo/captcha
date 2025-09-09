@@ -249,7 +249,6 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
-PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
@@ -276,7 +275,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
-	storedAtTimestamp: { type: Number, required: false },
+	storedAtTimestamp: { type: Number, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
 	geolocation: { type: String, required: false },
@@ -289,7 +288,6 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
-UserCommitmentRecordSchema.index({ storedAtTimestamp: 1 });
 UserCommitmentRecordSchema.index({
 	storedAtTimestamp: 1,
 	lastUpdatedTimestamp: 1,
@@ -429,6 +427,7 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
@@ -451,13 +450,13 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
+		providerSelectEntropy: { type: Number, required: true },
 		ipAddress: CompositeIpAddressRecordSchema,
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
 		storedAtTimestamp: { type: Date, required: false },
 		lastUpdatedTimestamp: { type: Date, required: false },
 	});
 
-FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
 FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type Session = {
@@ -484,7 +483,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	deleted: { type: Boolean, required: false },
 });
 
-SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ storedAtTimestamp: 1 });
 SessionRecordSchema.index({ deleted: 1 });
 
@@ -498,7 +496,7 @@ export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
 	detectorKey: { type: String, required: true },
-	expiresAt: { type: Date, required: false, expires: 0 },
+	expiresAt: { type: Date, required: false },
 });
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
@@ -606,7 +604,7 @@ export interface IProviderDatabase extends IDatabase {
 	updateDappUserCommitment(
 		commitmentId: Hash,
 		updates: Partial<UserCommitment>,
-	);
+	): Promise<void>;
 
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,
