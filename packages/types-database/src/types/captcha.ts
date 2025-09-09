@@ -29,22 +29,32 @@ import {
 
 export type StoredSession = Pick<
 	SessionRecord,
-	"_id" | "sessionId" | "createdAt" | "captchaType" | "deleted" | "tokenId"
+	| "_id"
+	| "sessionId"
+	| "createdAt"
+	| "captchaType"
+	| "deleted"
+	| "tokenId"
+	| "storedAtTimestamp"
 > & {
 	score: number;
 	scoreComponents: ScoreComponents;
 	threshold: number;
+	providerSelectEntropy: number;
 };
 
 export const StoredSessionRecordSchema: Schema = new Schema({
 	sessionId: SessionRecordSchema.obj.sessionId,
-	createdAt: SessionRecordSchema.obj.createdAt,
+	createdAt: { type: Date, required: true },
+	storedAtTimestamp: { type: Date, required: true },
 	captchaType: SessionRecordSchema.obj.captchaType,
 	tokenId: SessionRecordSchema.obj.tokenId,
 	deleted: SessionRecordSchema.obj.deleted,
 	score: FrictionlessTokenRecordSchema.obj.score,
 	scoreComponents: FrictionlessTokenRecordSchema.obj.scoreComponents,
 	threshold: FrictionlessTokenRecordSchema.obj.threshold,
+	providerSelectEntropy:
+		FrictionlessTokenRecordSchema.obj.providerSelectEntropy,
 });
 
 export const StoredUserCommitmentRecordSchema: Schema = new Schema({

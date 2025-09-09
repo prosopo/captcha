@@ -198,6 +198,7 @@ export class ClientTaskManager {
 							score: tokenRecord?.score || 0,
 							scoreComponents: tokenRecord?.scoreComponents,
 							threshold: tokenRecord?.threshold || 0,
+							providerSelectEntropy: tokenRecord?.providerSelectEntropy,
 						} as StoredSession;
 					});
 
