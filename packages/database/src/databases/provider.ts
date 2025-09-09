@@ -1031,7 +1031,9 @@ export class ProviderDatabase
 		const filter: Pick<FrictionlessTokenRecord, "_id"> = {
 			_id: { $in: tokenId },
 		};
-		return this.tables.frictionlessToken.find<FrictionlessTokenRecord>(filter);
+		return this.tables.frictionlessToken
+			.find<FrictionlessTokenRecord>(filter)
+			.lean<FrictionlessTokenRecord[]>();
 	}
 
 	/**

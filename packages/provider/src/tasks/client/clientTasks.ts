@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createPrivateKey } from "node:crypto";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
-import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
+import {createPrivateKey} from "node:crypto";
+import {type Logger, ProsopoApiError} from "@prosopo/common";
+import {CaptchaDatabase, ClientDatabase} from "@prosopo/database";
 import {
 	type IUserSettings,
 	type ProsopoConfigOutput,
@@ -22,20 +22,18 @@ import {
 	ScheduledTaskStatus,
 	type Tier,
 } from "@prosopo/types";
-import {
-	type ClientRecord,
-	FrictionlessTokenRecord,
-	type IProviderDatabase,
-	type PoWCaptchaStored,
-	type ScoreComponents,
-	type SessionRecord,
-	type StoredSession,
-	type UserCommitment,
+import type {
+	ClientRecord,
+	FrictionlessTokenId,
+	IProviderDatabase,
+	PoWCaptchaStored,
+	SessionRecord,
+	StoredSession,
+	UserCommitment,
 } from "@prosopo/types-database";
-import type { FrictionlessTokenId } from "@prosopo/types-database";
-import { parseUrl } from "@prosopo/util";
-import type { OptionalId } from "mongodb";
-import { validateSiteKey } from "../../api/validateAddress.js";
+import {parseUrl} from "@prosopo/util";
+import type {OptionalId} from "mongodb";
+import {validateSiteKey} from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -193,12 +191,10 @@ export class ClientTaskManager {
 								threshold: 0,
 							} as StoredSession;
 						}
+						const { _id, token, ...tokenRecordWithoutId } = tokenRecord;
 						return {
 							...record,
-							score: tokenRecord?.score || 0,
-							scoreComponents: tokenRecord?.scoreComponents,
-							threshold: tokenRecord?.threshold || 0,
-							providerSelectEntropy: tokenRecord?.providerSelectEntropy,
+							...tokenRecordWithoutId,
 						} as StoredSession;
 					});
 

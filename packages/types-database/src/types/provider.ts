@@ -234,7 +234,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	difficulty: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchema,
-	providedIp: { ...CompositeIpAddressSchema.shape, required: false },
+	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -273,7 +273,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		error: { type: String, required: false },
 	},
 	ipAddress: CompositeIpAddressRecordSchema,
-	providedIp: { ...CompositeIpAddressSchema.shape, required: false },
+	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
@@ -476,7 +476,7 @@ export type Session = {
 export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
-	sessionId: { type: String, required: true, unique: true },
+	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
 	tokenId: {
 		type: mongoose.Schema.Types.ObjectId,
@@ -489,6 +489,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
+SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 
 export type DetectorKey = {
 	detectorKey: string;
