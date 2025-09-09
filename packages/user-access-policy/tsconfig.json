@@ -35,6 +35,9 @@
 		},
 		{
 			"path": "../redis-client"
+		},
+		{
+			"path": "../api"
 		}
 	]
 }
