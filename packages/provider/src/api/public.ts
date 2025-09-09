@@ -15,7 +15,7 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { PublicApiPaths } from "@prosopo/types";
+import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
 
@@ -38,14 +38,31 @@ export function publicRouter(env: ProviderEnvironment): Router {
 		try {
 			const db = env.getDb();
 
-			return res.json({
+			const redisConnection = db.getRedisConnection();
+			const redisAccessRulesConnection = db.getRedisAccessRulesConnection();
+
+			const response: ProviderDetails = {
 				version,
 				message: "Provider online",
-				redis: {
-					isReady: db.getRedisConnection().isReady(),
-					isUapReady: db.getRedisAccessRulesConnection().isReady(),
-				},
-			});
+				redis: [
+					{
+						actor: "General",
+						isReady: redisConnection.isReady(),
+						awaitingTimeSeconds: Math.ceil(
+							redisConnection.getAwaitingTimeMs() / 1000,
+						),
+					},
+					{
+						actor: "UAP",
+						isReady: redisAccessRulesConnection.isReady(),
+						awaitingTimeSeconds: Math.ceil(
+							redisAccessRulesConnection.getAwaitingTimeMs() / 1000,
+						),
+					},
+				],
+			};
+
+			return res.json(response);
 		} catch (err) {
 			env.logger.error(() => ({
 				err,
