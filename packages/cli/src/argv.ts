@@ -19,6 +19,7 @@ import yargs, { type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
 	commandEnsureExternalIndexes,
+	commandEnsureIndexes,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
 	commandSiteKeyRegisterApi,
@@ -41,6 +42,7 @@ function getCommands(
 	logger: Logger,
 ): CommandModule[] {
 	return [
+		commandEnsureIndexes(pair, config, { logger }),
 		commandEnsureExternalIndexes(pair, config, { logger }),
 		commandProviderSetDataset(pair, config, { logger }),
 		commandStoreCaptchasExternally(pair, config, { logger }),
