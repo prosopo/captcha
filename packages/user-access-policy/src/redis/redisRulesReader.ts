@@ -16,7 +16,6 @@ import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
 import type {
 	RedisClientType,
-	RedisConnection,
 	SearchNoContentReply,
 	SearchReply,
 } from "@prosopo/redis-client";
@@ -26,7 +25,7 @@ import {
 	type AccessRulesReader,
 	accessRuleSchema,
 } from "#policy/accessRules.js";
-import { accessRulesRedisIndexName } from "#policy/redis/redisAccessRulesIndex.js";
+import { redisRulesIndexName } from "#policy/redis/redisRulesIndex.js";
 import {
 	getRedisRulesQuery,
 	redisRulesSearchOptions,
@@ -53,7 +52,7 @@ export const createRedisRulesReader = (
 
 			try {
 				searchReply = await client.ft.search(
-					accessRulesRedisIndexName,
+					redisRulesIndexName,
 					query,
 					redisRulesSearchOptions,
 				);
@@ -106,7 +105,7 @@ export const createRedisRulesReader = (
 
 			try {
 				searchReply = await client.ft.searchNoContent(
-					accessRulesRedisIndexName,
+					redisRulesIndexName,
 					query,
 					redisRulesSearchOptions,
 				);
