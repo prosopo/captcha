@@ -64,6 +64,10 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE,
 					},
 				},
+				ipApi: {
+					url: "dummyUrl",
+					key: "dummyKey",
+				},
 			});
 			// ensure no crossover issues with the index name and other tests
 			config.redisConnection.indexName = randomAsHex(16);

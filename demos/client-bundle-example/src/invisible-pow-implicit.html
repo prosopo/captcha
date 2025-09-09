@@ -2,21 +2,24 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
+
+    <script src="index.js"></script>
     <title>Procaptcha Invisible POW Mode - Implicit Rendering</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <script type="module">
         // Function to update CAPTCHA status display is now provided by status-log-injector
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
-            
+
             // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
                         for (let i = 0; i < mutation.addedNodes.length; i++) {
                             const node = mutation.addedNodes[i];
-                            if (node.classList && (node.classList.contains('procaptcha') || 
+                            if (node.classList && (node.classList.contains('procaptcha') ||
                                   node.querySelector && node.querySelector('.procaptcha'))) {
                                 updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
                                 observer.disconnect();
@@ -26,25 +29,25 @@
                     }
                 });
             });
-            
+
             observer.observe(document.body, { childList: true, subtree: true });
         });
-        
+
         // Create a method to show CAPTCHA execution events
         document.addEventListener('procaptcha:execute', function(e) {
             updateCaptchaStatus(`CAPTCHA execution started: type=pow, mode=invisible`, 'info');
             updateCaptchaStatus(`Container: ${e.detail.containerId}, timestamp: ${new Date(e.detail.timestamp).toLocaleTimeString()}`, 'info');
         });
-        
+
         window.onSubmit = function(token) {
             console.log('Procaptcha verified, token: ' + token);
             updateCaptchaStatus('Challenge passed successfully!', 'success');
             updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
-            
+
             // Get form values
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
-            
+
             const resultElement = document.getElementById('result');
             if (resultElement) {
                 resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
@@ -53,9 +56,9 @@
 - Procaptcha verified: Yes`;
                 resultElement.style.display = 'block';
             }
-            
+
             updateCaptchaStatus('Form submission completed', 'success');
-            
+
             // Prevent actual form submission
             return false;
         }
@@ -67,38 +70,38 @@
     <div class="mui-container">
         <h1>Invisible Proof of Work CAPTCHA - Implicit Rendering</h1>
         <p>This example demonstrates how to use Procaptcha in invisible Proof of Work mode with implicit rendering directly on a button.</p>
-        
+
         <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
-        
+
         <form id="demo-form" action="javascript:void(0);" method="POST" class="mui-form">
             <h2>Example Form</h2>
             <div class="mui-textfield mui-textfield--float-label">
                 <label for="name">Name</label>
                 <input type="text" id="name" name="name" required />
             </div>
-            
+
             <div class="mui-textfield mui-textfield--float-label">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" required />
             </div>
-            
+
             <!-- Submit button with Procaptcha attributes -->
-            <button 
-                class="mui-btn mui-btn--raised procaptcha" 
-                data-sitekey="%PROSOPO_SITE_KEY_POW%" 
+            <button
+                class="mui-btn mui-btn--raised procaptcha"
+                data-sitekey="%PROSOPO_SITE_KEY_POW%"
                 data-callback="onSubmit"
                 data-captcha-type="pow"
                 data-size="invisible">
                 Submit
             </button>
         </form>
-        
+
         <div id="result" class="info-box" style="display: none;"></div>
-        
+
         <!-- Console output display area -->
         <div id="console-output" class="console-output" style="display: none;"></div>
-        
+
         <!-- Explanation will be injected by the explanation-injector plugin -->
     </div>
 </body>
-</html> 
+</html>

@@ -1,5 +1,24 @@
 # @prosopo/procaptcha-bundle
 
+## 3.0.25
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/procaptcha-frictionless@2.7.4
+  - @prosopo/procaptcha-common@2.8.4
+  - @prosopo/procaptcha-react@2.8.4
+  - @prosopo/widget-skeleton@2.6.12
+  - @prosopo/procaptcha-pow@2.8.4
+  - @prosopo/dotenv@3.0.16
+  - @prosopo/util@3.0.14
+  - @prosopo/config@3.1.11
+
 ## 3.0.24
 ### Patch Changes
 

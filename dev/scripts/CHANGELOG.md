@@ -1,5 +1,28 @@
 # @prosopo/scripts
 
+## 3.1.4
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/provider@3.8.4
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/cli@3.2.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/types-env@2.7.29
+  - @prosopo/datasets@3.0.25
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/dotenv@3.0.16
+  - @prosopo/workspace@3.1.4
+  - @prosopo/util@3.0.14
+  - @prosopo/env@3.2.4
+  - @prosopo/config@3.1.11
+
 ## 3.1.3
 ### Patch Changes
 
