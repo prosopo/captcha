@@ -27,7 +27,10 @@ import {
 	AccessPolicyType,
 } from "@prosopo/user-access-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { FrictionlessManager } from "../../../../tasks/frictionless/frictionlessTasks.js";
+import {
+	DEFAULT_ENTROPY,
+	FrictionlessManager,
+} from "../../../../tasks/frictionless/frictionlessTasks.js";
 
 describe("Frictionless Task Manager", () => {
 	let db: IProviderDatabase;
@@ -40,6 +43,7 @@ describe("Frictionless Task Manager", () => {
 			updateFrictionlessTokenRecord: vi.fn(),
 			storeFrictionlessTokenRecord: vi.fn(),
 			storeSessionRecord: vi.fn(),
+			getDetectorKeys: vi.fn(() => Promise.resolve(["test-key"])),
 		} as unknown as IProviderDatabase;
 
 		pair = {

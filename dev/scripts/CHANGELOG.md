@@ -1,5 +1,77 @@
 # @prosopo/scripts
 
+## 3.1.4
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/provider@3.8.4
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/cli@3.2.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/types-env@2.7.29
+  - @prosopo/datasets@3.0.25
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/dotenv@3.0.16
+  - @prosopo/workspace@3.1.4
+  - @prosopo/util@3.0.14
+  - @prosopo/env@3.2.4
+  - @prosopo/config@3.1.11
+
+## 3.1.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [36b23e0]
+- Updated dependencies [657a827]
+- Updated dependencies [4aac849]
+  - @prosopo/provider@3.8.3
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/types-env@2.7.28
+  - @prosopo/datasets@3.0.24
+  - @prosopo/keyring@2.8.17
+  - @prosopo/common@3.1.10
+  - @prosopo/dotenv@3.0.15
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/workspace@3.1.3
+  - @prosopo/util@3.0.13
+  - @prosopo/cli@3.2.3
+  - @prosopo/env@3.2.3
+  - @prosopo/config@3.1.10
+
+## 3.1.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- 809b984: make vite set esbuild jsx config based on env
+- cd01a72: provider api sign script
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/types-env@2.7.27
+  - @prosopo/datasets@3.0.23
+  - @prosopo/provider@3.8.2
+  - @prosopo/keyring@2.8.16
+  - @prosopo/common@3.1.9
+  - @prosopo/dotenv@3.0.14
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/workspace@3.1.2
+  - @prosopo/util@3.0.12
+  - @prosopo/cli@3.2.2
+  - @prosopo/env@3.2.2
+  - @prosopo/config@3.1.9
+
 ## 3.1.1
 ### Patch Changes
 

@@ -131,6 +131,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
 						CaptchaType.image,
+						env,
 						sessionId,
 						userAccessPolicy,
 						req.ip,
@@ -369,6 +370,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				await tasks.powCaptchaManager.isValidRequest(
 					clientSettings,
 					CaptchaType.pow,
+					env,
 					sessionId,
 					userAccessPolicy,
 					req.ip,
@@ -587,24 +589,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const { baseBotScore, timestamp, providerSelectEntropy } =
 					await tasks.frictionlessManager.decryptPayload(token);
 
-				if (
-					!(await tasks.frictionlessManager.verifyHost(providerSelectEntropy))
-				) {
-					return next(
-						new ProsopoApiError("API.BAD_REQUEST", {
-							context: {
-								code: 400,
-								siteKey: dapp,
-								user,
-								ip: req.ip,
-							},
-							i18n: req.i18n,
-							logger: req.logger,
-						}),
-					);
-				}
-
-				const botScore = baseBotScore + lScore;
+				let botScore = baseBotScore + lScore;
 
 				const clientRecord = await tasks.db.getClientRecord(dapp);
 
@@ -622,6 +607,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.isValidRequest(
 						clientRecord,
 						CaptchaType.frictionless,
+						env,
 					);
 
 				if (!valid) {
@@ -700,6 +686,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
 					);
+				}
+
+				// If the host is not verified, send an image captcha
+				const hostVerified = await tasks.frictionlessManager.hostVerified(
+					providerSelectEntropy,
+				);
+				if (!hostVerified.verified) {
+					botScore =
+						await tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
+							hostVerified.domain,
+							baseBotScore,
+							botScore,
+							tokenId,
+						);
 				}
 
 				// If the bot score is greater than the threshold, send an image captcha

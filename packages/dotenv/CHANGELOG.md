@@ -1,5 +1,33 @@
 # @prosopo/dotenv
 
+## 3.0.16
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
+## 3.0.15
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/common@3.1.10
+  - @prosopo/config@3.1.10
+
+## 3.0.14
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/common@3.1.9
+  - @prosopo/config@3.1.9
+
 ## 3.0.13
 ### Patch Changes
 
