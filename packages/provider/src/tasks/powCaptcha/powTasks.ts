@@ -26,9 +26,14 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaRecord,
+} from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, verifyRecency } from "@prosopo/util";
-import { validateIpAddress } from "../../util.js";
+import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
+import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -174,8 +179,11 @@ export class PowCaptchaManager extends CaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
+		env: ProviderEnvironment,
 		ip?: string,
 	): Promise<{ verified: boolean; score?: number }> {
+		const notVerifiedResponse = { verified: false };
+
 		const challengeRecord =
 			await this.db.getPowCaptchaRecordByChallenge(challenge);
 
@@ -183,16 +191,48 @@ export class PowCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
-			return { verified: false };
+
+			return notVerifiedResponse;
 		}
 
-		const ipValidation = validateIpAddress(
-			ip,
-			challengeRecord.ipAddress,
-			this.logger,
-		);
-		if (!ipValidation.isValid) {
-			return { verified: false };
+		if (ip) {
+			const challengeIpAddress = getIpAddressFromComposite(
+				challengeRecord.ipAddress,
+			);
+
+			if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
+				this.logger.warn(() => ({
+					msg: "No IP API Service found",
+					data: { dappAccount, challenge },
+				}));
+				throw new ProsopoEnvError("API.UNKNOWN");
+			}
+
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dappAccount);
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			const ipValidation = await deepValidateIpAddress(
+				ip,
+				challengeIpAddress,
+				this.logger,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
+				ipValidationRules,
+			);
+
+			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for PoW captcha",
+					data: {
+						ip,
+						challengeIp: challengeIpAddress.address,
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm,
+					},
+				}));
+				return notVerifiedResponse;
+			}
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -204,7 +244,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		if (challengeRecord.serverChecked) return { verified: false };
+		if (challengeRecord.serverChecked) return notVerifiedResponse;
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -225,7 +265,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		]);
 
 		if (!recent) {
-			return { verified: false };
+			return notVerifiedResponse;
 		}
 
 		let score: number | undefined;

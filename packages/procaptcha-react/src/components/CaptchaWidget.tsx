@@ -103,6 +103,15 @@ export const CaptchaWidget = ({
 								src={item.data}
 								// biome-ignore lint/a11y/noRedundantAlt: has to contain image
 								alt={`Captcha image ${index + 1}`}
+								onError={(e) => {
+									const target = e.currentTarget;
+									// @ts-ignore: custom property for retry count
+									target._retryCount = (target._retryCount || 0) + 1;
+									// @ts-ignore: custom property for retry count
+									if (target._retryCount <= 3) {
+										target.src = `${item.data}?retry=${Date.now()}`;
+									}
+								}}
 							/>
 							<div
 								style={{

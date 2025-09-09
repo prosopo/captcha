@@ -1,5 +1,117 @@
 # @prosopo/env
 
+## 3.2.4
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types@3.1.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/types-env@2.7.29
+  - @prosopo/database@3.2.4
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
+## 3.2.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/types-env@2.7.28
+  - @prosopo/database@3.2.3
+  - @prosopo/keyring@2.8.17
+  - @prosopo/common@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
+## 3.2.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/types-env@2.7.27
+  - @prosopo/database@3.2.2
+  - @prosopo/keyring@2.8.16
+  - @prosopo/common@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
+## 3.2.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/types-env@2.7.26
+  - @prosopo/database@3.2.1
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/config@3.1.8
+
+## 3.2.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/types-env@2.7.25
+  - @prosopo/database@3.2.0
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
+## 3.1.11
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/database@3.1.0
+  - @prosopo/config@3.1.6
+  - @prosopo/types-env@2.7.24
+  - @prosopo/common@3.1.6
+  - @prosopo/keyring@2.8.13
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
+## 3.1.10
+### Patch Changes
+
+- Updated dependencies [e64160c]
+  - @prosopo/database@3.0.19
+  - @prosopo/types-env@2.7.23
+
+## 3.1.9
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/types-env@2.7.22
+  - @prosopo/database@3.0.18
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 3.1.8
 ### Patch Changes
 

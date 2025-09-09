@@ -1,5 +1,78 @@
 # @prosopo/flux
 
+## 2.6.21
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/common@3.1.11
+  - @prosopo/dotenv@3.0.16
+  - @prosopo/util@3.0.14
+  - @prosopo/config@3.1.11
+
+## 2.6.20
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/common@3.1.10
+  - @prosopo/dotenv@3.0.15
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
+## 2.6.19
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/common@3.1.9
+  - @prosopo/dotenv@3.0.14
+  - @prosopo/util@3.0.12
+  - @prosopo/config@3.1.9
+
+## 2.6.18
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [6fe8570]
+  - @prosopo/common@3.1.8
+  - @prosopo/dotenv@3.0.13
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 2.6.17
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+  - @prosopo/common@3.1.7
+  - @prosopo/dotenv@3.0.12
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
+## 2.6.16
+### Patch Changes
+
+- Updated dependencies [9eed772]
+- Updated dependencies [ebb0168]
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/common@3.1.6
+  - @prosopo/dotenv@3.0.11
+
+## 2.6.15
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/common@3.1.5
+  - @prosopo/dotenv@3.0.10
+  - @prosopo/util@3.0.8
+
 ## 2.6.14
 ### Patch Changes
 

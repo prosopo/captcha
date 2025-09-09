@@ -14,11 +14,12 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
+	RandomProvider,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -27,20 +28,35 @@ export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
 ): Promise<T> => {
+	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
-		setTimeout(() => {
+		timeoutId = setTimeout(() => {
 			reject(new ProsopoEnvError("API.UNKNOWN"));
 		}, ms);
 	});
 
-	return Promise.race([promise, timeoutPromise]);
+	try {
+		const result = await Promise.race([promise, timeoutPromise]);
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		return result;
+	} catch (error) {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		throw error;
+	}
 };
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 ): Promise<BotDetectionFunctionResult> => {
 	const detect = await DetectorLoader();
-	const botScore = (await detect()) as { token: string };
+	const botScore = (await detect(
+		config.defaultEnvironment,
+		getRandomActiveProvider,
+	)) as { token: string; provider?: RandomProvider };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);
 
@@ -49,10 +65,11 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 
 	// Get random active provider with timeout
-	const provider = await withTimeout(
-		getRandomActiveProvider(config),
-		10000, // 10 second timeout
-	);
+	const provider = botScore.provider;
+
+	if (!provider) {
+		throw new Error("Provider Selection Failed");
+	}
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,

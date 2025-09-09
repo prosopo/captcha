@@ -11,8 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, type RequestHeaders } from "@prosopo/types";
-import type { FrictionlessTokenId } from "../types/index.js";
+
+import { ApiParams } from "@prosopo/types";
+import type {
+	CompositeIpAddress,
+	FrictionlessTokenId,
+} from "../types/index.js";
 
 export interface PendingCaptchaRequest {
 	accountId: string;
@@ -21,7 +25,7 @@ export interface PendingCaptchaRequest {
 	[ApiParams.requestHash]: string;
 	deadlineTimestamp: number; // unix timestamp
 	requestedAtTimestamp: number; // unix timestamp
-	ipAddress: bigint;
+	ipAddress: CompositeIpAddress;
 	frictionlessTokenId?: FrictionlessTokenId;
 	threshold: number;
 }

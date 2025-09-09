@@ -45,6 +45,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		beforeAll(async () => {
 			const config = ProsopoConfigSchema.parse({
 				defaultEnvironment: "development",
+				host: "http://localhost:9229",
 				account: {
 					secret:
 						process.env.PROVIDER_MNEMONIC ||
@@ -62,6 +63,10 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						dbname: process.env.PROSOPO_DATABASE_NAME || "prosopo_test",
 						authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE,
 					},
+				},
+				ipApi: {
+					url: "dummyUrl",
+					key: "dummyKey",
 				},
 			});
 			// ensure no crossover issues with the index name and other tests

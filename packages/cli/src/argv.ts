@@ -1,4 +1,3 @@
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +11,8 @@ import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs, { type CommandModule } from "yargs";
@@ -23,6 +24,7 @@ import {
 	commandStoreCaptchasExternally,
 	commandVersion,
 } from "./commands/index.js";
+import { migrateIpInCaptchaRecordsCommand } from "./commands/migrateIpInCaptchaRecords/migrateIpInCaptchaRecords.js";
 
 export type AwaitedProcessedArgs = {
 	[x: string]: unknown;
@@ -42,6 +44,7 @@ function getCommands(
 		commandStoreCaptchasExternally(pair, config, { logger }),
 		commandSiteKeyRegister(pair, config, { logger }),
 		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
+		migrateIpInCaptchaRecordsCommand(pair, config, logger),
 		commandVersion(pair, config, { logger }),
 	];
 }

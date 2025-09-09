@@ -1,5 +1,108 @@
 # @prosopo/datasets
 
+## 3.0.25
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types-database@3.1.5
+  - @prosopo/types@3.1.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/common@3.1.11
+  - @prosopo/util@3.0.14
+  - @prosopo/config@3.1.11
+
+## 3.0.24
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [a8a9251]
+- Updated dependencies [657a827]
+  - @prosopo/types-database@3.1.4
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/common@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
+## 3.0.23
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/types-database@3.1.3
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/common@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/util@3.0.12
+  - @prosopo/config@3.1.9
+
+## 3.0.22
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/types-database@3.1.2
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/common@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/config@3.1.8
+
+## 3.0.21
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/types-database@3.1.1
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/config@3.1.7
+
+## 3.0.20
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/types-database@3.1.0
+  - @prosopo/config@3.1.6
+  - @prosopo/util@3.0.9
+  - @prosopo/common@3.1.6
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
+## 3.0.19
+### Patch Changes
+
+  - @prosopo/types-database@3.0.19
+
+## 3.0.18
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/types-database@3.0.18
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+
 ## 3.0.17
 ### Patch Changes
 

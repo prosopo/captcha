@@ -33,6 +33,7 @@ import {
 	FrictionlessPenalties,
 	PENALTY_ACCESS_RULE_DEFAULT,
 	PENALTY_OLD_TIMESTAMP_DEFAULT,
+	PENALTY_UNVERIFIED_HOST_DEFAULT,
 } from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
@@ -253,6 +254,7 @@ export enum ModeEnum {
 	visible = "visible",
 	invisible = "invisible",
 }
+
 export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
 export type ModeType = zInfer<typeof Mode>;
 
@@ -270,8 +272,15 @@ export type ProcaptchaClientConfigOutput = output<
 	typeof ProcaptchaConfigSchema
 >;
 
+export const IpApiServiceSpec = z.object({
+	apiKey: z.string().optional(),
+	baseUrl: z.string().url().optional(),
+});
+export type IpApiService = zInfer<typeof IpApiServiceSpec>;
+
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
+		host: string(),
 		captchas: ProsopoCaptchaCountConfigSchema.optional().default({
 			solved: { count: DEFAULT_SOLVED_COUNT },
 			unsolved: { count: DEFAULT_UNSOLVED_COUNT },
@@ -279,6 +288,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		penalties: FrictionlessPenalties.optional().default({
 			PENALTY_OLD_TIMESTAMP: PENALTY_OLD_TIMESTAMP_DEFAULT,
 			PENALTY_ACCESS_RULE: PENALTY_ACCESS_RULE_DEFAULT,
+			PENALTY_UNVERIFIED_HOST: PENALTY_UNVERIFIED_HOST_DEFAULT,
 		}),
 		scheduledTasks: object({
 			captchaScheduler: object({
@@ -292,6 +302,7 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
+		ipApi: IpApiServiceSpec,
 		redisConnection: object({
 			url: string(),
 			password: string(),

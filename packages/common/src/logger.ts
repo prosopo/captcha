@@ -289,7 +289,10 @@ export class NativeLogger implements Logger {
 				dest(baseRecord);
 			}
 		} else {
-			const output = JSON.stringify(baseRecord, null, this.pretty);
+			// conversion to avoid "TypeError: Do not know how to serialize a BigInt" in JSON.stringify
+			const logRecord = stringifyBigInts(baseRecord) as object;
+
+			const output = JSON.stringify(logRecord, null, this.pretty);
 			dest(output);
 		}
 	}
@@ -343,3 +346,20 @@ export class NativeLogger implements Logger {
 		}
 	}
 }
+
+const stringifyBigInts = (value: unknown): unknown => {
+	if ("bigint" === typeof value) {
+		return value.toString();
+	}
+
+	if (isObject(value)) {
+		for (const key of Object.keys(value)) {
+			value[key] = stringifyBigInts(value[key]);
+		}
+	}
+
+	return value;
+};
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+	Object === value?.constructor;

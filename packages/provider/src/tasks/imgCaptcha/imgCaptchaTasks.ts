@@ -41,10 +41,15 @@ import type {
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { at, getIPAddress, getIPAddressFromBigInt } from "@prosopo/util";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import { at } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
+import {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "../../compositeIpAddress.js";
 import { checkLangRules } from "../../rules/lang.js";
-import { shuffleArray, validateIpAddress } from "../../util.js";
+import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
@@ -153,7 +158,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			salt,
 			deadlineTs,
 			currentTime,
-			ipAddress.bigInt(),
+			getCompositeIpAddress(ipAddress),
 			threshold,
 			frictionlessTokenId,
 		);
@@ -187,7 +192,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string, // the signature to indicate ownership of account
 		timestamp: number,
 		providerRequestHashSignature: string,
-		ipAddress: bigint,
+		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		ja4: string,
 	): Promise<DappUserSolutionResult> {
@@ -275,7 +280,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSubmitted: true,
 				serverChecked: false,
 				requestedAtTimestamp: timestamp,
-				ipAddress,
+				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				frictionlessTokenId: pendingRecord.frictionlessTokenId,
 				ja4,
@@ -457,6 +462,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		user: string,
 		dapp: string,
 		commitmentId: string | undefined,
+		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
 	): Promise<ImageVerificationResponse> {
@@ -472,8 +478,38 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
-		const ipValidation = validateIpAddress(ip, solution.ipAddress, this.logger);
+		if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
+			this.logger.warn(() => ({
+				msg: "No IP API key or URL found",
+				data: { user, dapp },
+			}));
+			throw new ProsopoEnvError("API.UNKNOWN");
+		}
+
+		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
+
+		// Get client settings for IP validation rules
+		const clientRecord = await this.db.getClientRecord(dapp);
+		const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+		const ipValidation = await deepValidateIpAddress(
+			ip,
+			solutionIpAddress,
+			this.logger,
+			env.config.ipApi.apiKey,
+			env.config.ipApi.baseUrl,
+			ipValidationRules,
+		);
 		if (!ipValidation.isValid) {
+			this.logger.error(() => ({
+				msg: "IP validation failed for image captcha",
+				data: {
+					ip,
+					solutionIp: solutionIpAddress.address,
+					error: ipValidation.errorMessage,
+					distanceKm: ipValidation.distanceKm,
+				},
+			}));
 			return { status: "API.USER_NOT_VERIFIED", verified: false };
 		}
 

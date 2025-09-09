@@ -158,10 +158,9 @@ const CaptchaComponent = ({
 								// expand to full height / width of parent
 								width: "100%",
 								height: "100%",
-								// display children in flex, spreading them evenly and wrapping when row length exceeded
+								// display children in flex, spreading them evenly
 								display: "flex",
 								flexDirection: "row",
-								flexWrap: "wrap",
 								justifyContent: "space-between",
 								gap: "10px",
 							}}

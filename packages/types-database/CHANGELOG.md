@@ -1,5 +1,106 @@
 # @prosopo/types-database
 
+## 3.1.5
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/user-access-policy@3.5.10
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
+## 3.1.4
+### Patch Changes
+
+- a8a9251: Add index on IP parts
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/user-access-policy@3.5.9
+  - @prosopo/common@3.1.10
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
+## 3.1.3
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- 1249ce0: Be more lenient with random provider selection
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/user-access-policy@3.5.8
+  - @prosopo/common@3.1.9
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
+## 3.1.2
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/user-access-policy@3.5.7
+  - @prosopo/common@3.1.8
+  - @prosopo/locale@3.1.8
+  - @prosopo/config@3.1.8
+
+## 3.1.1
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/user-access-policy@3.5.6
+  - @prosopo/common@3.1.7
+  - @prosopo/locale@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
+## 3.1.0
+### Minor Changes
+
+- 9b92339: fix/ipv6-in-captcha-flow
+
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/config@3.1.6
+  - @prosopo/user-access-policy@3.5.5
+  - @prosopo/common@3.1.6
+  - @prosopo/locale@3.1.6
+  - @prosopo/types@3.0.10
+
+## 3.0.19
+### Patch Changes
+
+- Updated dependencies [553025d]
+  - @prosopo/user-access-policy@3.5.4
+
+## 3.0.18
+### Patch Changes
+
+- d8e855c: Adding checks for IP consistency throughout the verification process
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [d8e855c]
+- Updated dependencies [6960643]
+  - @prosopo/locale@3.1.5
+  - @prosopo/user-access-policy@3.5.3
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 3.0.17
 ### Patch Changes
 

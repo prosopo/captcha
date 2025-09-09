@@ -1,5 +1,4 @@
 ---
-"@prosopo/lint": minor
 "@prosopo/angular-procaptcha-integration-demo": patch
 "@prosopo/svelte-procaptcha-integration-demo": patch
 "@prosopo/react-procaptcha-integration-demo": patch
@@ -54,8 +53,10 @@
 "@prosopo/cli": patch
 "@prosopo/env": patch
 "@prosopo/scripts": patch
+"@prosopo/config": patch
 "@prosopo/flux": patch
+"@prosopo/lint": patch
 ---
 
-lint detect missing and unneccessary imports
+Release 3.2.4
   

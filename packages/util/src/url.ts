@@ -54,3 +54,35 @@ export const validateDomain = (domain: string): boolean => {
 
 export const domainIsLocalhost = (domain: string) =>
 	domain === "localhost" || domain === "127.0.0.1";
+
+// Accepts plain domains like "example.com" as well as simple wildcard patterns:
+// - "*"               → allow all
+// - "*.example.com"   → any subdomain of example.com (not example.com itself)
+// - "*example*"       → glob-style match anywhere within the hostname
+// - "localhost"       → allowed
+// This does NOT accept full regex; only '*' is supported as a wildcard.
+export const validateDomainPattern = (input: string): boolean => {
+	if (!input) return false;
+	const domain = input.trim().toLowerCase();
+	if (domain === "*") return true;
+	if (domain === "localhost") return true;
+
+	// Must only contain hostname characters or '*'
+	if (!/^[a-z0-9\-\.*]+(\.[a-z0-9\-\.*]+)*$/.test(domain)) {
+		return false;
+	}
+
+	// Subdomain wildcard pattern: *.example.com
+	if (/^\*\.[^*]+$/.test(domain)) {
+		const suffix = domain.slice(2);
+		return validateDomain(suffix);
+	}
+
+	// General glob pattern like *example* or example* or *example.com
+	if (domain.includes("*")) {
+		// Ensure at least one non-wildcard character exists
+		return /[a-z0-9]/.test(domain.replace(/\*/g, ""));
+	}
+
+	return validateDomain(domain);
+};

@@ -1,5 +1,124 @@
 # @prosopo/procaptcha
 
+## 2.8.4
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types@3.1.4
+  - @prosopo/procaptcha-common@2.8.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/datasets@3.0.25
+  - @prosopo/common@3.1.11
+  - @prosopo/util@3.0.14
+  - @prosopo/api@3.1.15
+  - @prosopo/config@3.1.11
+
+## 2.8.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [36b23e0]
+- Updated dependencies [657a827]
+  - @prosopo/api@3.1.14
+  - @prosopo/procaptcha-common@2.8.3
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/datasets@3.0.24
+  - @prosopo/common@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
+## 2.8.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/procaptcha-common@2.8.2
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/datasets@3.0.23
+  - @prosopo/common@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/util@3.0.12
+  - @prosopo/api@3.1.13
+  - @prosopo/config@3.1.9
+
+## 2.8.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/procaptcha-common@2.8.1
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/datasets@3.0.22
+  - @prosopo/common@3.1.8
+  - @prosopo/util@3.0.11
+  - @prosopo/api@3.1.12
+  - @prosopo/config@3.1.8
+
+## 2.8.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/procaptcha-common@2.8.0
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/datasets@3.0.21
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/util@3.0.10
+  - @prosopo/api@3.1.11
+  - @prosopo/config@3.1.7
+
+## 2.7.25
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+- Updated dependencies [ebb0168]
+  - @prosopo/datasets@3.0.20
+  - @prosopo/config@3.1.6
+  - @prosopo/api@3.1.10
+  - @prosopo/util@3.0.9
+  - @prosopo/common@3.1.6
+  - @prosopo/procaptcha-common@2.7.18
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
+## 2.7.24
+### Patch Changes
+
+  - @prosopo/api@3.1.9
+  - @prosopo/datasets@3.0.19
+
+## 2.7.23
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/procaptcha-common@2.7.17
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/datasets@3.0.18
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+  - @prosopo/util@3.0.8
+  - @prosopo/api@3.1.8
+
 ## 2.7.22
 ### Patch Changes
 
