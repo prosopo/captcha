@@ -14,11 +14,9 @@
 
 import { ApiClient } from "@prosopo/api";
 import type { ApiResponse } from "@prosopo/types";
-import {
-	type DeleteRulesEndpointSchemaInput,
-	type InsertManyRulesEndpointInputSchema,
-	accessRuleApiPaths,
-} from "@prosopo/user-access-policy";
+import { accessRuleApiPaths } from "./accessRuleApiRoutes.js";
+import type { DeleteRulesEndpointSchemaInput } from "./deleteRulesEndpoint.js";
+import type { InsertManyRulesEndpointInputSchema } from "./insertRulesEndpoint.js";
 
 export class AccessRulesApiClient extends ApiClient {
 	public insertMany(
