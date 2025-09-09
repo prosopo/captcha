@@ -65,8 +65,8 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					},
 				},
 				ipApi: {
-					url: "https://dummyUrl.com",
-					key: "dummyKey",
+					baseUrl: "https://dummyUrl.com",
+					apiKey: "dummyKey",
 				},
 			});
 			// ensure no crossover issues with the index name and other tests
