@@ -289,7 +289,7 @@ const evaluateIpValidationRules = (
  * @returns Object with validation result, optional error message, and distance info
  */
 export const deepValidateIpAddress = async (
-	ip: string | undefined,
+	ip: string,
 	challengeIpAddress: IPAddress,
 	logger: Logger,
 	apiKey: string,
@@ -301,10 +301,6 @@ export const deepValidateIpAddress = async (
 	distanceKm?: number;
 	shouldFlag?: boolean;
 }> => {
-	if (!ip) {
-		return { isValid: true };
-	}
-
 	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
 	if (!standardValidation.isValid) {
 		// Check if this is a format error or a mismatch
