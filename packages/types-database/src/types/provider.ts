@@ -462,6 +462,8 @@ export const FrictionlessTokenRecordSchema =
 		lastUpdatedTimestamp: { type: Date, required: false },
 		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	});
+FrictionlessTokenRecordSchema.index({ createdAt: 1 });
+FrictionlessTokenRecordSchema.index({ providerSelectEntropy: 1 });
 
 export type Session = {
 	sessionId: string;
