@@ -179,7 +179,7 @@ export const createRedisAccessRulesWriter = (
 
 		deleteAllRules: async (): Promise<number> => {
 			let total = 0;
-			let cursor = '0';
+			let cursor = "0";
 			do {
 				// scan in batches for performance + reliability. If there's too many keys to delete in one go, the `await client.del` will fail with a recursion depth error.
 				const reply = await client.scan(cursor, {
@@ -191,7 +191,7 @@ export const createRedisAccessRulesWriter = (
 					const count = await client.del(reply.keys);
 					total += count;
 				}
-			} while (cursor !== '0');
+			} while (cursor !== "0");
 			return total;
 		},
 	};
