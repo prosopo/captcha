@@ -511,6 +511,8 @@ export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
 
+	ensureIndexes(): Promise<void>;
+
 	storeDataset(dataset: Dataset): Promise<void>;
 
 	getSolutions(datasetId: string): Promise<SolutionRecord[]>;

@@ -17,3 +17,4 @@ export { default as commandVersion } from "./version.js";
 export { default as commandSiteKeyRegister } from "./siteKeyRegister.js";
 export { default as commandSiteKeyRegisterApi } from "./siteKeyRegisterApi.js";
 export { default as commandEnsureExternalIndexes } from "./ensureExternalIndexes.js";
+export { default as commandEnsureIndexes } from "./ensureIndexes.js";

@@ -88,7 +88,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		return this.tables;
 	}
 
-	ensureIndexes(): Promise<void> {
+	async ensureIndexes(): Promise<void> {
 		const indexPromises: Promise<void>[] = [];
 		if (!this.indexesEnsured) {
 			CAPTCHA_TABLES.map(({ collectionName }) => {
@@ -112,9 +112,8 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				);
 			});
 		}
-		return Promise.all(indexPromises).then(() => {
-			this.indexesEnsured = true;
-		});
+		await Promise.all(indexPromises);
+		this.indexesEnsured = true;
 	}
 
 	async saveCaptchas(

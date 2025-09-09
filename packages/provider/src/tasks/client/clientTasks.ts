@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {createPrivateKey} from "node:crypto";
-import {type Logger, ProsopoApiError} from "@prosopo/common";
-import {CaptchaDatabase, ClientDatabase} from "@prosopo/database";
+import { createPrivateKey } from "node:crypto";
+import { type Logger, ProsopoApiError } from "@prosopo/common";
+import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
 	type IUserSettings,
 	type ProsopoConfigOutput,
@@ -31,9 +31,9 @@ import type {
 	StoredSession,
 	UserCommitment,
 } from "@prosopo/types-database";
-import {parseUrl} from "@prosopo/util";
-import type {OptionalId} from "mongodb";
-import {validateSiteKey} from "../../api/validateAddress.js";
+import { parseUrl } from "@prosopo/util";
+import type { OptionalId } from "mongodb";
+import { validateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
