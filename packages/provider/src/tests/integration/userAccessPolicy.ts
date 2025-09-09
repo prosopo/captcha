@@ -11,13 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProviderApi } from "@prosopo/api";
+
 import { loadBalancer } from "@prosopo/load-balancer";
 import {
 	CaptchaType,
 	EnvironmentTypesSchema,
 	type KeyringPair,
 } from "@prosopo/types";
+import { AccessRulesApiClient } from "@prosopo/user-access-policy";
 import {
 	AccessPolicyType,
 	type InsertManyRulesEndpointOutputSchema,
@@ -31,11 +32,12 @@ export const removeAllUserAccessPolicies = async (adminPair: KeyringPair) => {
 	for (const provider of providers) {
 		const timestamp = Date.now();
 		const signature = u8aToHex(adminPair.sign(timestamp.toString()));
-		const providerApi = new ProviderApi(provider.url, adminPair.address);
-
-		responses.push(
-			providerApi.deleteAllUserAccessPolicies(timestamp.toString(), signature),
+		const rulesApiClient = new AccessRulesApiClient(
+			provider.url,
+			adminPair.address,
 		);
+
+		responses.push(rulesApiClient.deleteAll(timestamp.toString(), signature));
 	}
 	return Promise.all(responses);
 };
@@ -107,9 +109,12 @@ export const userAccessPolicy = async (
 					: new Date().getTime() + 24 * 60 * 60 * 1000,
 		};
 
-		const providerApi = new ProviderApi(provider.url, adminPair.address);
+		const rulesApiClient = new AccessRulesApiClient(
+			provider.url,
+			adminPair.address,
+		);
 
-		const response = await providerApi.insertUserAccessPolicies(
+		const response = await rulesApiClient.insertMany(
 			accessPolicyBody,
 			timestamp.toString(),
 			signature,
