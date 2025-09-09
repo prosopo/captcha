@@ -95,18 +95,25 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				indexPromises.push(
 					new Promise((resolve) => {
 						if (this.connected) {
-							this.tables[collectionName]
-								.ensureIndexes()
-								.then(() => {
-									resolve();
-								})
-								.catch((err) => {
-									this.logger.warn(() => ({
-										err,
-										msg: `Error creating indexes for collection ${collectionName}`,
-									}));
-									resolve();
-								});
+							this.tables[collectionName].collection.dropIndexes().then(() => {
+								this.tables[collectionName]
+									.ensureIndexes()
+									.then(() => {
+										resolve();
+									})
+									.catch((err) => {
+										this.logger.warn(() => ({
+											err,
+											msg: `Error creating indexes for collection ${collectionName}`,
+										}));
+										resolve();
+									});
+							});
+						} else {
+							this.logger.info(() => ({
+								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+							}));
+							resolve();
 						}
 					}),
 				);
