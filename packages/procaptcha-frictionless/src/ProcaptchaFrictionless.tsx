@@ -76,7 +76,7 @@ export const ProcaptchaFrictionless = ({
 	restart,
 	i18n,
 	detectBot = customDetectBot,
-	container
+	container,
 }: ProcaptchaFrictionlessProps) => {
 	const stateRef = useRef(defaultLoadingState(0));
 	const events = getDefaultEvents(callbacks);

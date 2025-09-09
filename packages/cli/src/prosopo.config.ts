@@ -51,7 +51,11 @@ const getLRules = () => {
 
 const getHost = (): string | undefined => {
 	const importMeta = import.meta as { env?: { VITE_CADDY_DOMAIN: string } };
-	return process.env.CADDY_DOMAIN || importMeta.env?.VITE_CADDY_DOMAIN || "http://localhost:4444";
+	return (
+		process.env.CADDY_DOMAIN ||
+		importMeta.env?.VITE_CADDY_DOMAIN ||
+		"http://localhost:4444"
+	);
 };
 
 export default function getConfig(

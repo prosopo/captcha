@@ -121,7 +121,7 @@ class WidgetFactory {
 			isWeb2,
 			this.i18n,
 			invisible,
-			widgetContainer
+			widgetContainer,
 		);
 
 		return captchaRoot;
