@@ -81,8 +81,6 @@ export const ProcaptchaFrictionless = ({
 	const stateRef = useRef(defaultLoadingState(0));
 	const events = getDefaultEvents(callbacks);
 
-	console.log("container", container);
-
 	useEffect(() => {
 		if (config.language) {
 			if (i18n) {
