@@ -1,5 +1,14 @@
 # @prosopo/common
 
+## 3.1.11
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/config@3.1.11
+
 ## 3.1.10
 ### Patch Changes
 

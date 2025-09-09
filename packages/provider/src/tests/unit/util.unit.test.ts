@@ -22,6 +22,7 @@ import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
+	deepValidateIpAddress,
 	getIPAddress,
 	validateIpAddress,
 } from "../../util.js";

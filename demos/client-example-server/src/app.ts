@@ -55,6 +55,9 @@ async function main() {
 
 	const app = express();
 
+	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+	app.set("trust proxy", 1);
+
 	app.use(cors({ origin: true, credentials: true }));
 
 	app.use(express.urlencoded({ extended: true }));
@@ -78,7 +81,11 @@ async function main() {
 		res.sendStatus(200);
 	});
 
-	const uri = await memoryServerSetup();
+	if (!process.env.MONGO_URI && process.env.NODE_ENV !== "development") {
+		throw new Error("Cannot run mongo memory in non-development environment");
+	}
+	logger.info(() => ({ msg: process.env.MONGO_URI }));
+	const uri = process.env.MONGO_URI || (await memoryServerSetup());
 	logger.info(() => ({ msg: "mongo uri", data: { uri } }));
 	const mongoose = connectionFactory(uri);
 	if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
@@ -96,11 +103,13 @@ async function main() {
 
 	app.use(routesFactory(mongoose, config, verifyEndpoint, verifyType));
 
-	app.listen(
-		config.serverUrl
-			? Number.parseInt(at(config.serverUrl.split(":"), 2))
-			: 9228,
-	);
+	const port = config.serverUrl
+		? Number.parseInt(at(config.serverUrl.split(":"), 2))
+		: 9228;
+
+	logger.info(() => ({ msg: "Listening on port", data: { port } }));
+
+	app.listen(port);
 }
 
 main()
