@@ -96,7 +96,7 @@ export const CompositeIpAddressSchema = object({
 	type: nativeEnum(IpAddressType),
 });
 
-const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
+export const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
 	lower: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
