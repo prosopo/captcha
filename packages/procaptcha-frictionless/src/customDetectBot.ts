@@ -45,6 +45,7 @@ const customDetectBot: BotDetectionFunction = async (
 	const botScore = (await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
+		container,
 	)) as { token: string; provider?: RandomProvider };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);
