@@ -47,6 +47,7 @@ import {
 	array,
 	bigint,
 	boolean,
+	date,
 	nativeEnum,
 	object,
 	string,
@@ -321,6 +322,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 	processed: boolean(),
 	checked: boolean(),
 	commitmentId: string(),
+	createdAt: date(),
 });
 export type UserSolutionRecord = mongoose.Document &
 	zInfer<typeof UserSolutionSchema>;
@@ -333,6 +335,7 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 		processed: { type: Boolean, required: true },
 		checked: { type: Boolean, required: true },
 		commitmentId: { type: String, required: true },
+		createdAt: { type: Date, default: Date.now, expires: ONE_MONTH },
 	},
 	{ _id: false },
 );
@@ -453,11 +456,8 @@ export const FrictionlessTokenRecordSchema =
 		providerSelectEntropy: { type: Number, required: true },
 		ipAddress: CompositeIpAddressRecordSchema,
 		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
-		storedAtTimestamp: { type: Date, required: false },
 		lastUpdatedTimestamp: { type: Date, required: false },
 	});
-
-FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
 
 export type Session = {
 	sessionId: string;
