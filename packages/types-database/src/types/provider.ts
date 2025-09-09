@@ -432,7 +432,7 @@ export interface FrictionlessToken {
 	scoreComponents: ScoreComponents;
 	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
-	storedAtTimestamp?: Timestamp;
+	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Timestamp;
 }
 
@@ -455,8 +455,9 @@ export const FrictionlessTokenRecordSchema =
 		},
 		providerSelectEntropy: { type: Number, required: true },
 		ipAddress: CompositeIpAddressRecordSchema,
-		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
+		createdAt: { type: Date, default: Date.now },
 		lastUpdatedTimestamp: { type: Date, required: false },
+		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	});
 
 export type Session = {
@@ -464,8 +465,8 @@ export type Session = {
 	createdAt: Date;
 	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
-	storedAtTimestamp?: Timestamp;
-	lastUpdatedTimestamp?: Timestamp;
+	storedAtTimestamp?: Date;
+	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
 };
 
@@ -701,6 +702,10 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<SessionRecord[]>;
 
 	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
+
+	markFrictionlessTokenRecordsStored(
+		tokenIds: FrictionlessTokenId[],
+	): Promise<void>;
 
 	getUserAccessRulesStorage(): AccessRulesStorage;
 
