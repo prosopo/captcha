@@ -29,15 +29,16 @@
 		"test": "npm run test:unit && npm run test:integration"
 	},
 	"dependencies": {
+		"@prosopo/api": "3.1.15",
 		"@prosopo/api-route": "2.6.19",
 		"@prosopo/common": "3.1.11",
+		"@prosopo/config": "3.1.11",
+		"@prosopo/redis-client": "1.0.0",
 		"@prosopo/types": "3.1.4",
 		"@prosopo/util": "3.0.14",
-		"@prosopo/config": "3.1.11",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
-		"zod": "3.23.8",
-		"@prosopo/redis-client": "1.0.0"
+		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/util-crypto": "13.5.13",
