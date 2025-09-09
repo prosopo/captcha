@@ -30,6 +30,9 @@
 		},
 		{
 			"path": "../redis-client/tsconfig.cjs.json"
+		},
+		{
+			"path": "../api/tsconfig.cjs.json"
 		}
 	]
 }
