@@ -1154,10 +1154,24 @@ export class ProviderDatabase
 	/** Mark a list of session records as stored */
 	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
 		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 		await this.tables?.session.updateMany(
 			{ sessionId: { $in: sessionIds } },
+			{ $set: updateDoc },
+			{ upsert: false },
+		);
+	}
+
+	/** Mark a list of token records as stored */
+	async markFrictionlessTokenRecordsStored(
+		tokenIds: FrictionlessTokenId[],
+	): Promise<void> {
+		const updateDoc: Pick<FrictionlessTokenRecord, "storedAtTimestamp"> = {
+			storedAtTimestamp: new Date(),
+		};
+		await this.tables?.frictionlessToken.updateMany(
+			{ _id: { $in: tokenIds } },
 			{ $set: updateDoc },
 			{ upsert: false },
 		);
