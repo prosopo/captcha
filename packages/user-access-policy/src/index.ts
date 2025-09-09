@@ -51,6 +51,7 @@ export {
 export { createRedisAccessRulesStorage } from "#policy/redis/redisRulesStorage.js";
 export { userScopeInputSchema } from "./accessPolicy.js";
 export { redisAccessRulesIndex } from "./redis/redisRulesIndex.js";
+export { AccessRulesApiClient } from "./api/accessRulesApiClient.js";
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
