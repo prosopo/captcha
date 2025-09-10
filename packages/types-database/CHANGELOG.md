@@ -1,5 +1,19 @@
 # @prosopo/types-database
 
+## 3.2.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- 0555cd8: Fix type
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/config@3.1.13
+
 ## 3.2.0
 ### Minor Changes
 

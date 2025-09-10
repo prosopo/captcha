@@ -1,5 +1,35 @@
 # @prosopo/provider
 
+## 3.9.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- bebb855: ip parsing
+- 509be28: Fix IP conditions logic
+- 509be28: Fix require all conditions logic
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [0555cd8]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types-database@3.2.1
+  - @prosopo/database@3.3.1
+  - @prosopo/types@3.2.1
+  - @prosopo/api-express-router@3.0.18
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/load-balancer@2.7.6
+  - @prosopo/util-crypto@13.5.15
+  - @prosopo/api-route@2.6.21
+  - @prosopo/types-env@2.7.31
+  - @prosopo/datasets@3.0.27
+  - @prosopo/keyring@2.8.20
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/util@3.0.16
+  - @prosopo/api@3.1.17
+  - @prosopo/env@3.2.6
+  - @prosopo/config@3.1.13
+
 ## 3.9.0
 ### Minor Changes
 
