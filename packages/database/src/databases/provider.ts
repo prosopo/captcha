@@ -916,6 +916,16 @@ export class ProviderDatabase
 		);
 	}
 
+	/** @description Update an image captcha commitment
+	 */
+	async updateDappUserCommitment(
+		commitmentId: Hash,
+		updates: Partial<UserCommitment>,
+	) {
+		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		await this.tables?.commitment.updateOne(filter, updates);
+	}
+
 	/**
 	 * @description Get Dapp User PoW captcha commitments that have not been counted towards the client's total
 	 * @param {number} limit Maximum number of records to return
@@ -1166,10 +1176,24 @@ export class ProviderDatabase
 	/** Mark a list of session records as stored */
 	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
 		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 		await this.tables?.session.updateMany(
 			{ sessionId: { $in: sessionIds } },
+			{ $set: updateDoc },
+			{ upsert: false },
+		);
+	}
+
+	/** Mark a list of token records as stored */
+	async markFrictionlessTokenRecordsStored(
+		tokenIds: FrictionlessTokenId[],
+	): Promise<void> {
+		const updateDoc: Pick<FrictionlessTokenRecord, "storedAtTimestamp"> = {
+			storedAtTimestamp: new Date(),
+		};
+		await this.tables?.frictionlessToken.updateMany(
+			{ _id: { $in: tokenIds } },
 			{ $set: updateDoc },
 			{ upsert: false },
 		);
