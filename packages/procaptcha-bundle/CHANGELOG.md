@@ -1,5 +1,57 @@
 # @prosopo/procaptcha-bundle
 
+## 3.0.26
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/procaptcha-frictionless@2.7.5
+  - @prosopo/procaptcha-common@2.8.5
+  - @prosopo/procaptcha-react@2.8.5
+  - @prosopo/widget-skeleton@2.6.13
+  - @prosopo/procaptcha-pow@2.8.5
+  - @prosopo/dotenv@3.0.17
+  - @prosopo/locale@3.1.12
+  - @prosopo/util@3.0.15
+  - @prosopo/config@3.1.12
+
+## 3.0.25
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/procaptcha-frictionless@2.7.4
+  - @prosopo/procaptcha-common@2.8.4
+  - @prosopo/procaptcha-react@2.8.4
+  - @prosopo/widget-skeleton@2.6.12
+  - @prosopo/procaptcha-pow@2.8.4
+  - @prosopo/dotenv@3.0.16
+  - @prosopo/util@3.0.14
+  - @prosopo/config@3.1.11
+
+## 3.0.24
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/procaptcha-frictionless@2.7.3
+  - @prosopo/procaptcha-common@2.8.3
+  - @prosopo/procaptcha-react@2.8.3
+  - @prosopo/widget-skeleton@2.6.11
+  - @prosopo/procaptcha-pow@2.8.3
+  - @prosopo/dotenv@3.0.15
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
 ## 3.0.23
 ### Patch Changes
 

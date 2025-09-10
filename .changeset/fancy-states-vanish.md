@@ -1,6 +1,7 @@
 ---
 "@prosopo/types-database": patch
+"@prosopo/detector": patch
 ---
 
-Add index on IP parts
+Fix type
   

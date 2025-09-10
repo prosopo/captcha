@@ -1,5 +1,42 @@
 # @prosopo/types
 
+## 3.2.0
+### Minor Changes
+
+- cf48565: Store additional details. Remove duplicate indexes.
+
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [0824221]
+  - @prosopo/util-crypto@13.5.14
+  - @prosopo/locale@3.1.12
+  - @prosopo/util@3.0.15
+  - @prosopo/config@3.1.12
+
+## 3.1.4
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 0d1a33e: Adding ip comparison service
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/util@3.0.14
+  - @prosopo/config@3.1.11
+
+## 3.1.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/locale@3.1.10
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
 ## 3.1.2
 ### Patch Changes
 

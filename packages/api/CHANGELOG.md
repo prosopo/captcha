@@ -1,5 +1,36 @@
 # @prosopo/api
 
+## 3.1.16
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/user-access-policy@3.5.11
+  - @prosopo/config@3.1.12
+
+## 3.1.15
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types@3.1.4
+  - @prosopo/user-access-policy@3.5.10
+  - @prosopo/config@3.1.11
+
+## 3.1.14
+### Patch Changes
+
+- 36b23e0: Fix entropy. Fix api call. Persist ja4 through logs.
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/user-access-policy@3.5.9
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
 ## 3.1.13
 ### Patch Changes
 
