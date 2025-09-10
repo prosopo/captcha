@@ -1,6 +1,7 @@
 ---
 "@prosopo/types-database": patch
+"@prosopo/detector": patch
 ---
 
-Make schema public
+Fix type
   

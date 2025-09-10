@@ -1,5 +1,12 @@
 # @prosopo/http-blackhole
 
+## 1.0.11
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [0824221]
+  - @prosopo/config@3.1.12
+
 ## 1.0.10
 ### Patch Changes
 
