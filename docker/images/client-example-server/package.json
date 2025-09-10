@@ -2,7 +2,7 @@
 	"name": "@prosopo/client-example-server-docker",
 	"version": "2.7.31",
 	"engines": {
-		"node": ">=22",
+		"node": ">=24",
 		"npm": "10.9.2"
 	},
 	"type": "module",

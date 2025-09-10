@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:24
 
 COPY ./demos/provider-mock/dist/bundle/ /usr/src/app
 

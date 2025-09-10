@@ -5,7 +5,7 @@
 	"license": "Apache-2.0",
 	"type": "module",
 	"engines": {
-		"node": ">=22",
+		"node": ">=24",
 		"npm": "10.9.2"
 	},
 	"scripts": {

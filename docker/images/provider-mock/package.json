@@ -2,7 +2,7 @@
 	"name": "@prosopo/provider-mock-docker",
 	"version": "2.6.7",
 	"engines": {
-		"node": ">=22",
+		"node": ">=24",
 		"npm": "10.9.2"
 	},
 	"type": "module",

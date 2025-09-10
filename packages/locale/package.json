@@ -4,7 +4,7 @@
 	"description": "Prosopo locale library",
 	"type": "module",
 	"engines": {
-		"node": ">=22",
+		"node": ">=24",
 		"npm": "10.9.2"
 	},
 	"main": "dist/index.js",

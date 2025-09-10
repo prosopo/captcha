@@ -11,7 +11,7 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": ">=22",
+		"node": ">=24",
 		"npm": "10.9.2"
 	},
 	"scripts": {
