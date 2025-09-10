@@ -192,33 +192,27 @@ const evaluateIpValidationRules = (
 			comparison.comparison.ip1Details?.country !==
 			comparison.comparison.ip2Details?.country;
 
-		if (differentCountries) {
-			conditions.push({
-				met: true,
-				action: rules.countryChangeAction,
-				message: `Country changed from ${comparison.comparison.ip1Details?.country} to ${comparison.comparison.ip2Details?.country}`,
-			});
-		}
+		conditions.push({
+			met: differentCountries,
+			action: rules.countryChangeAction,
+			message: `Country changed from ${comparison.comparison.ip1Details?.country} to ${comparison.comparison.ip2Details?.country}`,
+		});
 
 		// Check ISP change condition
 		const differentProviders = comparison.comparison.differentProviders;
-		if (differentProviders) {
-			conditions.push({
-				met: true,
-				action: rules.ispChangeAction,
-				message: `ISP changed from ${comparison.comparison.ip1Details?.provider} to ${comparison.comparison.ip2Details?.provider}`,
-			});
-		}
+		conditions.push({
+			met: differentProviders,
+			action: rules.ispChangeAction,
+			message: `ISP changed from ${comparison.comparison.ip1Details?.provider} to ${comparison.comparison.ip2Details?.provider}`,
+		});
 
 		// Check distance condition
 		const distanceKm = comparison.comparison.distanceKm;
-		if (distanceKm !== undefined && distanceKm > rules.distanceThresholdKm) {
-			conditions.push({
-				met: true,
-				action: rules.distanceExceedAction,
-				message: `IP addresses are ${distanceKm.toFixed(2)}km apart (>${rules.distanceThresholdKm}km limit)`,
-			});
-		}
+		conditions.push({
+			met: distanceKm !== undefined && distanceKm > rules.distanceThresholdKm,
+			action: rules.distanceExceedAction,
+			message: `IP addresses are ${distanceKm?.toFixed(2)}km apart (>${rules.distanceThresholdKm}km limit)`,
+		});
 	}
 
 	// If no conditions are met, allow
@@ -246,12 +240,12 @@ const evaluateIpValidationRules = (
 		// ANY condition can trigger (OR logic)
 		// Find the most restrictive action among met conditions
 		for (const condition of conditions) {
-			if (condition.action === IPValidationAction.Reject) {
+			if (condition.action === IPValidationAction.Reject && condition.met) {
 				finalAction = IPValidationAction.Reject;
 				errorMessages.push(condition.message);
 				break; // Reject is the most restrictive, no need to check further
 			}
-			if (condition.action === IPValidationAction.Flag) {
+			if (condition.action === IPValidationAction.Flag && condition.met) {
 				finalAction = IPValidationAction.Flag;
 				shouldFlag = true;
 			}
