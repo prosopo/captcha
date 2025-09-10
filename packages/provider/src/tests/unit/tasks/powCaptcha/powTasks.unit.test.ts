@@ -222,7 +222,7 @@ describe("PowCaptchaManager", () => {
 			expect(validateSolution).toHaveBeenCalledWith(...validateSolutionArgs);
 
 			const updatePowCaptchaRecordArgs: Parameters<
-				typeof db.updatePowCaptchaRecord
+				typeof db.updatePowCaptchaRecordResult
 			> = [
 				challenge,
 				{ status: CaptchaStatus.approved },
@@ -231,7 +231,7 @@ describe("PowCaptchaManager", () => {
 				userSignature,
 			];
 
-			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
 				...updatePowCaptchaRecordArgs,
 			);
 		});
