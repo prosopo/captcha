@@ -77,7 +77,7 @@ describe("PowCaptchaManager", () => {
 		db = {
 			storePowCaptchaRecord: vi.fn(),
 			getPowCaptchaRecordByChallenge: vi.fn(),
-			updatePowCaptchaRecord: vi.fn(),
+			updatePowCaptchaRecordResult: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
 		} as unknown as IProviderDatabase;
 
@@ -165,7 +165,7 @@ describe("PowCaptchaManager", () => {
 				challengeRecord,
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.updatePowCaptchaRecord as any).mockResolvedValue(true); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
 
@@ -222,7 +222,7 @@ describe("PowCaptchaManager", () => {
 			expect(validateSolution).toHaveBeenCalledWith(...validateSolutionArgs);
 
 			const updatePowCaptchaRecordArgs: Parameters<
-				typeof db.updatePowCaptchaRecord
+				typeof db.updatePowCaptchaRecordResult
 			> = [
 				challenge,
 				{ status: CaptchaStatus.approved },
@@ -231,7 +231,7 @@ describe("PowCaptchaManager", () => {
 				userSignature,
 			];
 
-			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
 				...updatePowCaptchaRecordArgs,
 			);
 		});

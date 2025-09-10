@@ -32,7 +32,10 @@ import type {
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, verifyRecency } from "@prosopo/util";
-import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
+import {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -133,7 +136,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		const difficulty = challengeRecord.difficulty;
 
 		if (!verifyRecency(challenge, timeout)) {
-			await this.db.updatePowCaptchaRecord(
+			await this.db.updatePowCaptchaRecordResult(
 				challenge,
 				{
 					status: CaptchaStatus.disapproved,
@@ -156,7 +159,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.updatePowCaptchaRecord(
+		await this.db.updatePowCaptchaRecordResult(
 			challenge,
 			result,
 			false,
@@ -240,6 +243,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			// Get client settings for IP validation rules
 			const clientRecord = await this.db.getClientRecord(dappAccount);
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
 
 			const ipValidation = await deepValidateIpAddress(
 				ip,

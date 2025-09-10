@@ -783,7 +783,7 @@ export class ProviderDatabase
 	 * @param userSignature
 	 * @returns {Promise<void>} A promise that resolves when the record is updated.
 	 */
-	async updatePowCaptchaRecord(
+	async updatePowCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
 		serverChecked = false,
@@ -850,6 +850,18 @@ export class ProviderDatabase
 			}));
 			throw err;
 		}
+	}
+
+	async updatePowCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PoWCaptchaRecord>,
+	): Promise<void> {
+		const tables = this.getTables();
+		await tables.powcaptcha.updateOne(
+			{ challenge },
+			{ $set: updates },
+			{ upsert: false },
+		);
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
