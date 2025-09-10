@@ -13,11 +13,10 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { type IPValidateCondition, IPValidationAction } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ipComparisonModule from "../../services/ipComparison.js";
-import { deepValidateIpAddress, requireAllConditions } from "../../util.js";
+import { deepValidateIpAddress } from "../../util.js";
 
 describe("deepValidateIpAddress", () => {
 	let mockLogger: Logger;
