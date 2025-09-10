@@ -233,14 +233,13 @@ const evaluateIpValidationRules = (
 
 	if (rules.requireAllConditions) {
 		// ALL conditions must be met (AND logic)
-		finalAction = IPValidationAction.Reject
+		finalAction = IPValidationAction.Reject;
 
 		for (const condition of conditions) {
 			if (condition.action === IPValidationAction.Reject && !condition.met) {
 				finalAction = IPValidationAction.Allow;
 			} else {
 				errorMessages.push(condition.message);
-
 			}
 		}
 	} else {
