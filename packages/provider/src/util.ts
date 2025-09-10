@@ -172,7 +172,7 @@ export const validateIpAddress = (
  * @param logger - Logger instance
  * @returns Validation result with action to take
  */
-const evaluateIpValidationRules = (
+export const evaluateIpValidationRules = (
 	comparison: IPComparisonResult,
 	rules: IIPValidationRules,
 	logger: Logger,
@@ -192,7 +192,7 @@ const evaluateIpValidationRules = (
 		if (differentCountries) {
 			conditions.push({
 				met: true,
-				action: rules.countryChangeAction,
+				action: rules.actions.countryChangeAction,
 				message: `Country changed from ${comparison.comparison.ip1Details?.country} to ${comparison.comparison.ip2Details?.country}`,
 			});
 		}
@@ -202,7 +202,7 @@ const evaluateIpValidationRules = (
 		if (differentProviders) {
 			conditions.push({
 				met: true,
-				action: rules.ispChangeAction,
+				action: rules.actions.ispChangeAction,
 				message: `ISP changed from ${comparison.comparison.ip1Details?.provider} to ${comparison.comparison.ip2Details?.provider}`,
 			});
 		}
@@ -212,7 +212,7 @@ const evaluateIpValidationRules = (
 		if (distanceKm !== undefined && distanceKm > rules.distanceThresholdKm) {
 			conditions.push({
 				met: true,
-				action: rules.distanceExceedAction,
+				action: rules.actions.distanceExceedAction,
 				message: `IP addresses are ${distanceKm.toFixed(2)}km apart (>${rules.distanceThresholdKm}km limit)`,
 			});
 		}
@@ -229,9 +229,18 @@ const evaluateIpValidationRules = (
 	let shouldFlag = false;
 
 	if (rules.requireAllConditions) {
-		const requireAllResult = requireAllConditions(conditions);
-		finalAction = requireAllResult.finalAction;
-		errorMessages.push(...requireAllResult.errorMessages);
+		if (conditions.length === Object.keys(rules.actions).length) {
+			// ALL conditions are met (AND logic)
+			finalAction = IPValidationAction.Reject;
+		}
+		for (const condition of conditions) {
+			if (
+				condition.action === IPValidationAction.Flag ||
+				condition.action === IPValidationAction.Reject
+			) {
+				errorMessages.push(condition.message);
+			}
+		}
 	} else {
 		// ANY condition can trigger (OR logic)
 		// Find the most restrictive action among met conditions
@@ -245,6 +254,7 @@ const evaluateIpValidationRules = (
 				finalAction = IPValidationAction.Flag;
 				shouldFlag = true;
 			}
+			errorMessages.push(condition.message);
 		}
 	}
 
@@ -263,23 +273,6 @@ const evaluateIpValidationRules = (
 			errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
 		shouldFlag,
 	};
-};
-
-/** All conditions must be met (AND logic). Returns the final action and error messages.
- * @param conditions
- */
-export const requireAllConditions = (conditions: IPValidateCondition[]) => {
-	// ALL conditions must be met (AND logic)
-	let finalAction = IPValidationAction.Reject;
-	const errorMessages: string[] = [];
-	for (const condition of conditions) {
-		if (condition.action === IPValidationAction.Reject && !condition.met) {
-			finalAction = IPValidationAction.Allow;
-		} else {
-			errorMessages.push(condition.message);
-		}
-	}
-	return { finalAction, errorMessages };
 };
 
 /**
