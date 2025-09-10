@@ -235,10 +235,21 @@ const evaluateIpValidationRules = (
 		// ALL conditions must be met (AND logic)
 		finalAction = IPValidationAction.Reject;
 
+		// We need to check if any condition related to ISP is met before rejecting
+		const conditionsMet = conditions.filter((condition) => condition.met);
+
+		// If there is an ISP change condition, we allow even if country hasn't changed
+		const ispConditionMet = conditionsMet.some(
+			(condition) => condition.action === rules.ispChangeAction,
+		);
+
+		if (ispConditionMet) {
+			finalAction = IPValidationAction.Allow; // Allow if only ISP has changed
+		}
+
+		// If all conditions aren't met, we reject
 		for (const condition of conditions) {
-			if (condition.action === IPValidationAction.Reject && !condition.met) {
-				finalAction = IPValidationAction.Allow;
-			} else {
+			if (!condition.met) {
 				errorMessages.push(condition.message);
 			}
 		}
