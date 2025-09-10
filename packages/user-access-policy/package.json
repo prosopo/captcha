@@ -6,7 +6,7 @@
 	"type": "module",
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	},
 	"exports": {
 		".": {
@@ -31,19 +31,20 @@
 	"dependencies": {
 		"@prosopo/api-route": "2.6.20",
 		"@prosopo/common": "3.1.12",
+		"@prosopo/config": "3.1.12",
 		"@prosopo/types": "3.2.0",
 		"@prosopo/util": "3.0.15",
-		"@prosopo/config": "3.1.12",
 		"@redis/search": "5.0.0",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
 		"redis": "5.0.0",
+		"rollup": "4.50.1",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/util-crypto": "13.5.14",
 		"@types/node": "22.10.2",
-		"vite": "6.3.5",
+		"vite": "6.3.6",
 		"vitest": "3.0.9",
 		"yargs": "17.7.2"
 	},

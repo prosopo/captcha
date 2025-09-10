@@ -20,21 +20,22 @@
 	},
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
 		"debug": "4.3.7",
 		"esbuild": "0.25.8",
-		"fast-glob": "3.3.2"
+		"fast-glob": "3.3.2",
+		"rollup": "4.50.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.1.12",
 		"@types/debug": "4.1.12",
 		"@types/node": "24.2.1",
 		"typescript": "5.6.2",
-		"vite": "6.3.5"
+		"vite": "6.3.6"
 	},
 	"peerDependencies": {
 		"vite": "^6.0.0"

@@ -6,7 +6,7 @@
 	"private": false,
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -30,13 +30,14 @@
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
 		"@prosopo/common": "3.1.12",
+		"@prosopo/config": "3.1.12",
 		"@prosopo/types": "3.2.0",
 		"@prosopo/util": "3.0.15",
 		"@prosopo/util-crypto": "13.5.14",
 		"@prosopo/workspace": "3.1.5",
-		"@prosopo/config": "3.1.12",
 		"bcrypt": "5.1.1",
 		"cli-progress": "3.12.0",
+		"rollup": "4.50.1",
 		"sharp": "0.33.5",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"
@@ -51,9 +52,9 @@
 		"dotenv": "16.4.5",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.20.3",
+		"tsx": "^4.8.1",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
+		"vite": "6.3.6",
 		"vitest": "3.0.9"
 	},
 	"repository": {
