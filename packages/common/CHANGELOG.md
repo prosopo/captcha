@@ -1,5 +1,13 @@
 # @prosopo/common
 
+## 3.1.12
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [0824221]
+  - @prosopo/locale@3.1.12
+  - @prosopo/config@3.1.12
+
 ## 3.1.11
 ### Patch Changes
 

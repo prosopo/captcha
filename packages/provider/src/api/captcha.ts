@@ -637,6 +637,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						baseScore: baseBotScore,
 						...(lScore && { lScore }),
 					},
+					providerSelectEntropy,
 					ipAddress: getCompositeIpAddress(req.ip || ""),
 				});
 

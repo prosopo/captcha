@@ -195,18 +195,47 @@ export class PowCaptchaManager extends CaptchaManager {
 			return notVerifiedResponse;
 		}
 
+		if (challengeRecord.result.status !== CaptchaStatus.approved) {
+			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
+				context: {
+					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
+					challenge,
+				},
+			});
+		}
+
+		if (challengeRecord.serverChecked) return notVerifiedResponse;
+
+		const challengeDappAccount = challengeRecord.dappAccount;
+
+		if (dappAccount !== challengeDappAccount) {
+			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
+				context: {
+					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
+					dappAccount,
+					challengeDappAccount,
+				},
+			});
+		}
+
+		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution has already been checked by the server. Moving this code around could result in solutions being
+		// re-usable.
+		await this.db.markDappUserPoWCommitmentsChecked([
+			challengeRecord.challenge,
+		]);
+		// -- END WARNING --
+
+		const recent = verifyRecency(challenge, timeout);
+		if (!recent) {
+			return notVerifiedResponse;
+		}
+
 		if (ip) {
 			const challengeIpAddress = getIpAddressFromComposite(
 				challengeRecord.ipAddress,
 			);
-
-			if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
-				this.logger.warn(() => ({
-					msg: "No IP API Service found",
-					data: { dappAccount, challenge },
-				}));
-				throw new ProsopoEnvError("API.UNKNOWN");
-			}
 
 			// Get client settings for IP validation rules
 			const clientRecord = await this.db.getClientRecord(dappAccount);
@@ -233,39 +262,6 @@ export class PowCaptchaManager extends CaptchaManager {
 				}));
 				return notVerifiedResponse;
 			}
-		}
-
-		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
-				context: {
-					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
-					challenge,
-				},
-			});
-		}
-
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
-
-		const challengeDappAccount = challengeRecord.dappAccount;
-
-		if (dappAccount !== challengeDappAccount) {
-			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
-				context: {
-					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
-					dappAccount,
-					challengeDappAccount,
-				},
-			});
-		}
-
-		const recent = verifyRecency(challenge, timeout);
-
-		await this.db.markDappUserPoWCommitmentsChecked([
-			challengeRecord.challenge,
-		]);
-
-		if (!recent) {
-			return notVerifiedResponse;
 		}
 
 		let score: number | undefined;

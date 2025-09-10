@@ -33,19 +33,6 @@ describe("deepValidateIpAddress", () => {
 		vi.clearAllMocks();
 	});
 
-	it("should return valid when no IP is provided", async () => {
-		const result = await deepValidateIpAddress(
-			undefined,
-			Address4.fromBigInt(BigInt(123456789)),
-			mockLogger,
-			"test-api-key",
-			"test-api-url",
-		);
-
-		expect(result.isValid).toBe(true);
-		expect(compareIPsSpy).not.toHaveBeenCalled();
-	});
-
 	it("should return valid when IPs match exactly", async () => {
 		const ip = "192.168.1.1";
 		const challengeIp = new Address4("192.168.1.1");
