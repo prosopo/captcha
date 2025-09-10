@@ -159,6 +159,7 @@ export const UserCommitmentSchema = object({
 	result: CaptchaResultSchema,
 	userSignature: string(),
 	ipAddress: CompositeIpAddressSchema,
+	providedIp: CompositeIpAddressSchema.optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),
@@ -233,6 +234,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	difficulty: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchema,
+	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -271,6 +273,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		error: { type: String, required: false },
 	},
 	ipAddress: CompositeIpAddressRecordSchema,
+	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
@@ -459,6 +462,8 @@ export const FrictionlessTokenRecordSchema =
 		lastUpdatedTimestamp: { type: Date, required: false },
 		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	});
+FrictionlessTokenRecordSchema.index({ createdAt: 1 });
+FrictionlessTokenRecordSchema.index({ providerSelectEntropy: 1 });
 
 export type Session = {
 	sessionId: string;
@@ -473,7 +478,7 @@ export type Session = {
 export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
-	sessionId: { type: String, required: true, unique: true },
+	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
 	tokenId: {
 		type: mongoose.Schema.Types.ObjectId,
@@ -486,6 +491,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
+SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -506,6 +512,8 @@ DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
+
+	ensureIndexes(): Promise<void>;
 
 	storeDataset(dataset: Dataset): Promise<void>;
 

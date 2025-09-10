@@ -210,8 +210,9 @@ export class FrictionlessManager extends CaptchaManager {
 
 	async decryptPayload(token: string) {
 		const decryptKeys = [
-			process.env.BOT_DECRYPTION_KEY,
+			// Process DB keys first, then env var key last as env key will likely be invalid
 			...(await this.getDetectorKeys()),
+			process.env.BOT_DECRYPTION_KEY,
 		].filter((k) => k);
 
 		this.logger.debug(() => {
