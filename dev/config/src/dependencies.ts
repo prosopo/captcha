@@ -184,14 +184,19 @@ export async function getDependencies(
 		console.info(`Running command ${cmd} in ${packageDir}`);
 	}
 
-	const { stdout, stderr } = await exec(cmd);
-	if (stderr) {
+	let concat = "";
+	try {
+		const { stdout, stderr } = await exec(cmd);
+		concat = stdout + stderr;
+	} catch (err) {
+		console.error(err);
 		throw new Error("CONFIG.INVALID_PACKAGE_DIR");
 	}
-	const deps: string[] = [];
-	const peerDeps: string[] = [];
+
+	let deps: string[] = [];
+	let peerDeps: string[] = [];
 	// for each line, check if there is an unmet optional dependency
-	for (const line of stdout.split("\n")) {
+	for (const line of concat.split("\n")) {
 		if (line.includes("UNMET OPTIONAL DEPENDENCY")) {
 			//  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
 			const parts = line.match(peerDepsRegex);
@@ -206,6 +211,11 @@ export async function getDependencies(
 			}
 		}
 	}
+
+	// ensure deps and peerDeps are unique
+	deps = [...new Set(deps)];
+	peerDeps = [...new Set(peerDeps)];
+
 	// dedupe and return deps and peer deps
 	return {
 		dependencies: deps.filter((x, i) => i === deps.indexOf(x)),
