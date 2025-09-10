@@ -1,0 +1,81 @@
+import { ApiEndpointResponseStatus } from "@prosopo/api-route";
+import type { Logger } from "@prosopo/common";
+import { CaptchaType, type ProsopoConfigOutput, Tier } from "@prosopo/types";
+import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
+import { describe, expect, it, vi } from "vitest";
+import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
+import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
+
+describe("apiRegisterSiteKeyEndpoint", () => {
+	const mockConfig = {} as unknown as ProsopoConfigOutput;
+
+	const mockLogger = new Proxy(
+		{},
+		{
+			get: () => () => {},
+		},
+	) as Logger;
+
+	const getMockDb = () =>
+		({
+			updateClientRecords: vi.fn(),
+		}) as unknown as IProviderDatabase;
+
+	const registerSiteKey = (
+		db: IProviderDatabase,
+		record: Partial<ClientRecord>,
+	) =>
+		new ApiRegisterSiteKeyEndpoint(
+			new ClientTaskManager(mockConfig, mockLogger, db),
+		).processRequest({
+			siteKey: record.account || "",
+			tier: record.tier || Tier.Free,
+			settings: record.settings,
+		});
+
+	it("should register or update site key", async () => {
+		const record: Partial<ClientRecord> = {
+			// random, but valid account.
+			account: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
+			tier: Tier.Free,
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				domains: [],
+				frictionlessThreshold: 0.5,
+				imageThreshold: 0.5,
+				powDifficulty: 0.5,
+			},
+		};
+		const db = getMockDb();
+
+		const endpointResponse = await registerSiteKey(db, record);
+
+		expect(db.updateClientRecords).toHaveBeenCalledTimes(1);
+		expect(db.updateClientRecords).toHaveBeenCalledWith([
+			record as ClientRecord,
+		]);
+
+		expect(endpointResponse).toEqual({
+			status: ApiEndpointResponseStatus.SUCCESS,
+		});
+	});
+
+	it("should throw an api error for an invalid site key", async () => {
+		const record: Partial<ClientRecord> = {
+			account: "invalidAccount",
+			tier: Tier.Free,
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				domains: [],
+				frictionlessThreshold: 0.5,
+				imageThreshold: 0.5,
+				powDifficulty: 0.5,
+			},
+		};
+		const db = getMockDb();
+
+		const registerPromise = registerSiteKey(db, record);
+
+		await expect(registerPromise).rejects.toThrowError("API.INVALID_SITE_KEY");
+	});
+});
