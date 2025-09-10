@@ -279,7 +279,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
-	storedAtTimestamp: { type: Number, required: false, expires: ONE_MONTH },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
 	geolocation: { type: String, required: false },
