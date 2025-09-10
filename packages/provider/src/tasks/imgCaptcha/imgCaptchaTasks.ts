@@ -478,46 +478,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
-		if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
-			this.logger.warn(() => ({
-				msg: "No IP API key or URL found",
-				data: { user, dapp },
-			}));
-			throw new ProsopoEnvError("API.UNKNOWN");
-		}
-
-		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
-
-		// Get client settings for IP validation rules
-		const clientRecord = await this.db.getClientRecord(dapp);
-		const ipValidationRules = clientRecord?.settings?.ipValidationRules;
-
-		const ipValidation = await deepValidateIpAddress(
-			ip,
-			solutionIpAddress,
-			this.logger,
-			env.config.ipApi.apiKey,
-			env.config.ipApi.baseUrl,
-			ipValidationRules,
-		);
-		if (!ipValidation.isValid) {
-			this.logger.error(() => ({
-				msg: "IP validation failed for image captcha",
-				data: {
-					ip,
-					solutionIp: solutionIpAddress.address,
-					error: ipValidation.errorMessage,
-					distanceKm: ipValidation.distanceKm,
-				},
-			}));
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
-		}
-
+		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution has already been checked by the server. Moving this code around could result in solutions being
+		// re-usable.
 		if (solution.serverChecked) {
 			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
 		}
-		// Mark solution as checked
+
 		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		// -- END WARNING --
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
@@ -527,19 +497,51 @@ export class ImgCaptchaManager extends CaptchaManager {
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
 
 		// Check if solution was completed recently
-		if (maxVerifiedTime) {
-			const currentTime = Date.now();
-			const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
+		const currentTime = Date.now();
+		const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
 
-			// A solution exists but has timed out
-			if (timeSinceCompletion > maxVerifiedTime) {
-				this.logger.debug(() => ({
-					msg: "Not verified - timed out",
+		// A solution exists but has timed out
+		if (timeSinceCompletion > maxVerifiedTime) {
+			this.logger.debug(() => ({
+				msg: "Not verified - timed out",
+			}));
+			return {
+				status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
+				verified: false,
+			};
+		}
+
+		if (ip) {
+			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dapp);
+
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			await this.db.updateDappUserCommitment(solution.id, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+
+			const ipValidation = await deepValidateIpAddress(
+				ip,
+				solutionIpAddress,
+				this.logger,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
+				ipValidationRules,
+			);
+
+			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for image captcha",
+					data: {
+						ip,
+						solutionIp: solutionIpAddress.address,
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm,
+					},
 				}));
-				return {
-					status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
-					verified: false,
-				};
+				return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 		}
 

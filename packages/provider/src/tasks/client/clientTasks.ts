@@ -206,6 +206,11 @@ export class ClientTaskManager {
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
 						);
+						await this.providerDB.markFrictionlessTokenRecordsStored(
+							filteredBatch
+								.map((record) => record.tokenId)
+								.filter((id): id is OptionalId<FrictionlessTokenId> => !!id),
+						);
 					}
 					processedSessionRecords += filteredBatch.length;
 				},
