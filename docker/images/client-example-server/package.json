@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/client-example-server-docker",
-	"version": "2.7.30",
+	"version": "2.7.31",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
