@@ -23,6 +23,7 @@ import {
 	type IIPValidationRules,
 	type IPAddress,
 	type IPComparisonResult,
+	type IPValidateCondition,
 	IPValidationAction,
 	IpApiService,
 	type ScheduledTaskNames,
@@ -171,7 +172,7 @@ export const validateIpAddress = (
  * @param logger - Logger instance
  * @returns Validation result with action to take
  */
-const evaluateIpValidationRules = (
+export const evaluateIpValidationRules = (
 	comparison: IPComparisonResult,
 	rules: IIPValidationRules,
 	logger: Logger,
@@ -180,11 +181,12 @@ const evaluateIpValidationRules = (
 	errorMessage?: string;
 	shouldFlag?: boolean;
 } => {
-	const conditions: Array<{
-		met: boolean;
-		action: IPValidationAction;
-		message: string;
-	}> = [];
+	const conditions: Array<IPValidateCondition> = [];
+
+	// if no actions then pass
+	if (Object.keys(rules.actions).length === 0) {
+		return { action: IPValidationAction.Allow };
+	}
 
 	// Check country change condition
 	if (comparison.comparison) {
@@ -194,23 +196,27 @@ const evaluateIpValidationRules = (
 
 		conditions.push({
 			met: differentCountries,
-			action: rules.countryChangeAction,
-			message: `Country changed from ${comparison.comparison.ip1Details?.country} to ${comparison.comparison.ip2Details?.country}`,
+			action: rules.actions.countryChangeAction,
+			message: differentCountries
+				? `Country changed from ${comparison.comparison.ip1Details?.country} to ${comparison.comparison.ip2Details?.country}`
+				: `Country ${comparison.comparison.ip1Details?.country} did not change`,
 		});
 
 		// Check ISP change condition
 		const differentProviders = comparison.comparison.differentProviders;
 		conditions.push({
 			met: differentProviders,
-			action: rules.ispChangeAction,
-			message: `ISP changed from ${comparison.comparison.ip1Details?.provider} to ${comparison.comparison.ip2Details?.provider}`,
+			action: rules.actions.ispChangeAction,
+			message: differentProviders
+				? `ISP changed from ${comparison.comparison.ip1Details?.provider} to ${comparison.comparison.ip2Details?.provider}`
+				: `ISP ${comparison.comparison.ip2Details?.provider} did not change`,
 		});
 
 		// Check distance condition
 		const distanceKm = comparison.comparison.distanceKm;
 		conditions.push({
 			met: distanceKm !== undefined && distanceKm > rules.distanceThresholdKm,
-			action: rules.distanceExceedAction,
+			action: rules.actions.distanceExceedAction,
 			message: `IP addresses are ${distanceKm?.toFixed(2)}km apart (>${rules.distanceThresholdKm}km limit)`,
 		});
 	}
@@ -249,6 +255,7 @@ const evaluateIpValidationRules = (
 				finalAction = IPValidationAction.Flag;
 				shouldFlag = true;
 			}
+			errorMessages.push(condition.message);
 		}
 	}
 
