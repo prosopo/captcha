@@ -23,6 +23,7 @@ import {
 	type IIPValidationRules,
 	type IPAddress,
 	type IPComparisonResult,
+	type IPValidateCondition,
 	IPValidationAction,
 	IpApiService,
 	type ScheduledTaskNames,
@@ -180,11 +181,7 @@ const evaluateIpValidationRules = (
 	errorMessage?: string;
 	shouldFlag?: boolean;
 } => {
-	const conditions: Array<{
-		met: boolean;
-		action: IPValidationAction;
-		message: string;
-	}> = [];
+	const conditions: Array<IPValidateCondition> = [];
 
 	// Check country change condition
 	if (comparison.comparison) {
@@ -232,27 +229,9 @@ const evaluateIpValidationRules = (
 	let shouldFlag = false;
 
 	if (rules.requireAllConditions) {
-		// ALL conditions must be met (AND logic)
-		finalAction = IPValidationAction.Reject;
-
-		// We need to check if any condition related to ISP is met before rejecting
-		const conditionsMet = conditions.filter((condition) => condition.met);
-
-		// If there is an ISP change condition, we allow even if country hasn't changed
-		const ispConditionMet = conditionsMet.some(
-			(condition) => condition.action === rules.ispChangeAction,
-		);
-
-		if (ispConditionMet) {
-			finalAction = IPValidationAction.Allow; // Allow if only ISP has changed
-		}
-
-		// If all conditions aren't met, we reject
-		for (const condition of conditions) {
-			if (!condition.met) {
-				errorMessages.push(condition.message);
-			}
-		}
+		const requireAllResult = requireAllConditions(conditions);
+		finalAction = requireAllResult.finalAction;
+		errorMessages.push(...requireAllResult.errorMessages);
 	} else {
 		// ANY condition can trigger (OR logic)
 		// Find the most restrictive action among met conditions
@@ -284,6 +263,23 @@ const evaluateIpValidationRules = (
 			errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
 		shouldFlag,
 	};
+};
+
+/** All conditions must be met (AND logic). Returns the final action and error messages.
+ * @param conditions
+ */
+export const requireAllConditions = (conditions: IPValidateCondition[]) => {
+	// ALL conditions must be met (AND logic)
+	let finalAction = IPValidationAction.Reject;
+	const errorMessages: string[] = [];
+	for (const condition of conditions) {
+		if (condition.action === IPValidationAction.Reject && !condition.met) {
+			finalAction = IPValidationAction.Allow;
+		} else {
+			errorMessages.push(condition.message);
+		}
+	}
+	return { finalAction, errorMessages };
 };
 
 /**
