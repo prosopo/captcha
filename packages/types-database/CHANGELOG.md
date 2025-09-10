@@ -1,5 +1,23 @@
 # @prosopo/types-database
 
+## 3.2.0
+### Minor Changes
+
+- cf48565: Store additional details. Remove duplicate indexes.
+- 260de39: Fix indexes so that stuff properly expires
+
+### Patch Changes
+
+- d644c04: Make schema public
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/user-access-policy@3.5.11
+  - @prosopo/common@3.1.12
+  - @prosopo/locale@3.1.12
+  - @prosopo/config@3.1.12
+
 ## 3.1.5
 ### Patch Changes
 

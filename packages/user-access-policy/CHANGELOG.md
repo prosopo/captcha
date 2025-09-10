@@ -1,5 +1,17 @@
 # @prosopo/user-access-policy
 
+## 3.5.11
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/api-route@2.6.20
+  - @prosopo/common@3.1.12
+  - @prosopo/util@3.0.15
+  - @prosopo/config@3.1.12
+
 ## 3.5.10
 ### Patch Changes
 
