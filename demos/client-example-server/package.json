@@ -13,8 +13,8 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=22",
+		"npm": "11.5.1"
 	},
 	"scripts": {
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",

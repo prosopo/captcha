@@ -61,8 +61,8 @@
 	},
 	"private": true,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=22",
+		"npm": "11.5.1"
 	},
 	"workspaces": [
 		"dev/*",
@@ -104,7 +104,8 @@
 		"vitest": "3.0.9"
 	},
 	"overrides": {
-		"@types/express-serve-static-core": "4.19.6"
+		"@types/express-serve-static-core": "4.19.6",
+		"esbuild": "0.25.8"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
 	"bugs": {
