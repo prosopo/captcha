@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:24
 
 COPY ./demos/client-example-server/dist/bundle/ /usr/src/app
 
