@@ -7,7 +7,7 @@
 	"type": "module",
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	},
 	"exports": {
 		".": {
@@ -38,7 +38,8 @@
 		"@prosopo/common": "3.1.12",
 		"@prosopo/config": "3.1.12",
 		"@prosopo/types": "3.2.0",
-		"@prosopo/util": "3.0.15"
+		"@prosopo/util": "3.0.15",
+		"rollup": "4.50.1"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
@@ -48,9 +49,9 @@
 		"dotenv": "17.2.1",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.20.3",
+		"tsx": "^4.8.1",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
+		"vite": "6.3.6",
 		"vitest": "3.0.9"
 	},
 	"sideEffects": false

@@ -14,7 +14,7 @@
 	},
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -37,11 +37,12 @@
 		"@polkadot/extension-inject": "0.46.9",
 		"@polkadot/types": "10.13.1",
 		"@polkadot/util": "12.6.2",
+		"@prosopo/config": "3.1.12",
 		"@prosopo/locale": "3.1.12",
 		"@prosopo/util": "3.0.15",
 		"@prosopo/util-crypto": "13.5.14",
-		"@prosopo/config": "3.1.12",
 		"ip-address": "10.0.1",
+		"rollup": "4.50.1",
 		"scale-ts": "1.6.0",
 		"zod": "3.23.8"
 	},
@@ -52,9 +53,9 @@
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.20.3",
+		"tsx": "^4.8.1",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
+		"vite": "6.3.6",
 		"vitest": "3.0.9"
 	},
 	"sideEffects": false

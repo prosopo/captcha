@@ -15,7 +15,7 @@
 	},
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	},
 	"scripts": {
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
@@ -27,16 +27,17 @@
 	"dependencies": {
 		"@prosopo/api-express-router": "3.0.17",
 		"@prosopo/common": "3.1.12",
+		"@prosopo/config": "3.1.12",
 		"@prosopo/database": "3.3.0",
 		"@prosopo/dotenv": "3.0.17",
 		"@prosopo/locale": "3.1.12",
 		"@prosopo/provider": "3.9.0",
 		"@prosopo/types": "3.2.0",
 		"@prosopo/types-database": "3.2.0",
-		"@prosopo/config": "3.1.12",
 		"cors": "2.8.5",
 		"express": "4.21.2",
-		"mongoose": "8.13.0"
+		"mongoose": "8.13.0",
+		"rollup": "4.50.1"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
@@ -45,9 +46,9 @@
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.20.3",
+		"tsx": "^4.8.1",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
+		"vite": "6.3.6",
 		"vitest": "3.0.9"
 	},
 	"repository": {

@@ -4,7 +4,7 @@
 	"type": "module",
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -25,7 +25,8 @@
 	"dependencies": {
 		"@prosopo/config": "3.1.12",
 		"deepmerge": "4.3.1",
-		"vite": "6.3.5",
+		"rollup": "4.50.1",
+		"vite": "6.3.6",
 		"vite-plugin-dts": "4.5.4"
 	},
 	"devDependencies": {

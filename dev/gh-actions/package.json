@@ -20,15 +20,16 @@
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
-		"tsx": "4.20.3",
+		"tsx": "^4.8.1",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
+		"vite": "6.3.6",
 		"vitest": "3.0.9"
 	},
 	"dependencies": {
 		"@octokit/graphql": "8.1.1",
 		"@prosopo/config": "3.1.12",
-		"axios": "1.10.0"
+		"axios": "1.10.0",
+		"rollup": "4.50.1"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -41,6 +42,6 @@
 	},
 	"engines": {
 		"node": ">=22",
-		"npm": "11.5.1"
+		"npm": "10.9.2"
 	}
 }
