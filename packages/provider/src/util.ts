@@ -272,7 +272,6 @@ export const evaluateIpValidationRules = (
 		}
 	}
 
-	// Log the final evaluation result
 	logger.info(() => ({
 		msg: `IP validation rules evaluated: ${finalAction}`,
 		data: {
