@@ -113,7 +113,6 @@ describe("evaluateIpValidationRules", () => {
 		};
 		const result = evaluateIpValidationRules(comparison, rules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Flag);
-		console.log({ result });
 		expect(result.errorMessage).toContain("Country changed");
 	});
 
