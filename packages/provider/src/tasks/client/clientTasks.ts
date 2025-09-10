@@ -22,17 +22,15 @@ import {
 	ScheduledTaskStatus,
 	type Tier,
 } from "@prosopo/types";
-import {
-	type ClientRecord,
-	FrictionlessTokenRecord,
-	type IProviderDatabase,
-	type PoWCaptchaStored,
-	type ScoreComponents,
-	type SessionRecord,
-	type StoredSession,
-	type UserCommitment,
+import type {
+	ClientRecord,
+	FrictionlessTokenId,
+	IProviderDatabase,
+	PoWCaptchaStored,
+	SessionRecord,
+	StoredSession,
+	UserCommitment,
 } from "@prosopo/types-database";
-import type { FrictionlessTokenId } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import type { OptionalId } from "mongodb";
 import { validateSiteKey } from "../../api/validateAddress.js";
@@ -193,11 +191,10 @@ export class ClientTaskManager {
 								threshold: 0,
 							} as StoredSession;
 						}
+						const { _id, token, ...tokenRecordWithoutId } = tokenRecord;
 						return {
 							...record,
-							score: tokenRecord?.score || 0,
-							scoreComponents: tokenRecord?.scoreComponents,
-							threshold: tokenRecord?.threshold || 0,
+							...tokenRecordWithoutId,
 						} as StoredSession;
 					});
 
