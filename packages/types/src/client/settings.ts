@@ -28,6 +28,12 @@ export enum IPValidationAction {
 	Flag = "flag",
 }
 
+export type IPValidateCondition = {
+	met: boolean;
+	action: IPValidationAction;
+	message: string;
+};
+
 export const IPValidationActionSchema = z.nativeEnum(IPValidationAction);
 
 // IP Validation defaults

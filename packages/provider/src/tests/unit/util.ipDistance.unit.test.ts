@@ -13,10 +13,11 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
+import { type IPValidateCondition, IPValidationAction } from "@prosopo/types";
 import { Address4 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as ipComparisonModule from "../../services/ipComparison.js";
-import { deepValidateIpAddress } from "../../util.js";
+import { deepValidateIpAddress, requireAllConditions } from "../../util.js";
 
 describe("deepValidateIpAddress", () => {
 	let mockLogger: Logger;
@@ -134,5 +135,43 @@ describe("deepValidateIpAddress", () => {
 		expect(result.shouldFlag).toBe(true);
 		expect(result.distanceKm).toBe(500);
 		expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
+	});
+});
+
+describe("requireAllConditions", async () => {
+	it("returns Reject when all conditions are met and action is Reject", () => {
+		const conditions = [
+			{ met: true, action: IPValidationAction.Reject, message: "msg1" },
+			{ met: true, action: IPValidationAction.Reject, message: "msg2" },
+		];
+		const result = requireAllConditions(conditions);
+		expect(result.finalAction).toBe(IPValidationAction.Reject);
+		expect(result.errorMessages).toEqual(["msg1", "msg2"]);
+	});
+
+	it("returns Allow if any Reject condition is not met", () => {
+		const conditions = [
+			{ met: false, action: IPValidationAction.Reject, message: "msg1" },
+			{ met: true, action: IPValidationAction.Flag, message: "msg2" },
+		];
+		const result = requireAllConditions(conditions);
+		expect(result.finalAction).toBe(IPValidationAction.Allow);
+		expect(result.errorMessages).toEqual(["msg2"]);
+	});
+
+	it("collects all messages", () => {
+		const conditions = [
+			{ met: true, action: IPValidationAction.Flag, message: "flagged" },
+			{ met: true, action: IPValidationAction.Reject, message: "rejected" },
+		];
+		const result = requireAllConditions(conditions);
+		expect(result.errorMessages).toEqual(["flagged", "rejected"]);
+	});
+
+	it("returns Allow if no conditions", () => {
+		const conditions: IPValidateCondition[] = [];
+		const result = requireAllConditions(conditions);
+		expect(result.finalAction).toBe(IPValidationAction.Reject); // stays Reject by default
+		expect(result.errorMessages).toEqual([]);
 	});
 });
