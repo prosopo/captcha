@@ -233,17 +233,14 @@ const evaluateIpValidationRules = (
 
 	if (rules.requireAllConditions) {
 		// ALL conditions must be met (AND logic)
-		// Find the most restrictive action among all conditions
+		finalAction = IPValidationAction.Reject
+
 		for (const condition of conditions) {
-			if (condition.action === IPValidationAction.Reject) {
-				finalAction = IPValidationAction.Reject;
+			if (condition.action === IPValidationAction.Reject && !condition.met) {
+				finalAction = IPValidationAction.Allow;
+			} else {
 				errorMessages.push(condition.message);
-			} else if (
-				condition.action === IPValidationAction.Flag &&
-				finalAction !== IPValidationAction.Reject
-			) {
-				finalAction = IPValidationAction.Flag;
-				shouldFlag = true;
+
 			}
 		}
 	} else {
