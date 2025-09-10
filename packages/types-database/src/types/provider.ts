@@ -667,12 +667,17 @@ export interface IProviderDatabase extends IDatabase {
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null>;
 
-	updatePowCaptchaRecord(
+	updatePowCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
 		serverChecked: boolean,
 		userSubmitted: boolean,
 		userSignature?: string,
+	): Promise<void>;
+
+	updatePowCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PoWCaptchaRecord>,
 	): Promise<void>;
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
