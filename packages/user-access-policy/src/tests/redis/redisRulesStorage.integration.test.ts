@@ -14,12 +14,12 @@
 
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import {
-	type RedisClientType,
 	type RedisConnection,
 	createTestRedisConnection,
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import { randomAsHex } from "@prosopo/util-crypto";
+import type { RedisClientType } from "redis";
 import {
 	afterAll,
 	beforeAll,

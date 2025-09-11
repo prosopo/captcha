@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type RedisIndex, SCHEMA_FIELD_TYPE } from "@prosopo/redis-client";
-import type { FtSearchOptions } from "@prosopo/redis-client";
+import type { RedisIndex } from "@prosopo/redis-client";
+import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import {
 	type PolicyScope,
 	type UserScope,

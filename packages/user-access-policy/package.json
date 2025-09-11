@@ -32,12 +32,14 @@
 		"@prosopo/api": "3.1.17",
 		"@prosopo/api-route": "2.6.21",
 		"@prosopo/common": "3.1.13",
-		"@prosopo/types": "3.2.1",
-		"@prosopo/util": "3.0.16",
 		"@prosopo/config": "3.1.13",
 		"@prosopo/redis-client": "1.0.0",
+		"@prosopo/types": "3.2.1",
+		"@prosopo/util": "3.0.16",
+		"@redis/search": "5.0.0",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
+		"redis": "5.0.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
