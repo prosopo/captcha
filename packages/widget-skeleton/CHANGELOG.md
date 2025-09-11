@@ -1,5 +1,16 @@
 # @prosopo/widget-skeleton
 
+## 2.7.0
+### Minor Changes
+
+- da7577f: Adding dom manip checks
+
+### Patch Changes
+
+- c3bc3c5: Release 3.3.1
+- Updated dependencies [c3bc3c5]
+  - @prosopo/config@3.1.14
+
 ## 2.6.14
 ### Patch Changes
 
