@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
+import { type ZodRawShape, z } from "zod";
 import {
 	accessPolicySchema,
 	policyScopeSchema,
+	userScopeInputSchema,
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
 import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
@@ -23,15 +24,32 @@ import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
 export const accessRuleSchema: z.ZodObject<
 	typeof accessPolicySchema.shape &
 		typeof policyScopeSchema.shape &
-		typeof userScopeSchema.shape
+		typeof userScopeSchema.shape & { groupId: ZodRawShape["groupId"] }
 > = z.object({
 	// flat structure is used to fit the Redis requirements
 	...accessPolicySchema.shape,
 	...policyScopeSchema.shape,
 	...userScopeSchema.shape,
+	groupId: z.coerce.string().optional(),
 });
 
 export type AccessRule = z.infer<typeof accessRuleSchema>;
+
+// todo refactor: the scheme is used only in the "provider" test - get rid of it if possible
+export const accessRuleSchemaExtended = z
+	.object({
+		// flat structure is used to fit the Redis requirements
+		...accessPolicySchema.shape,
+		...policyScopeSchema.shape,
+		...userScopeInputSchema._def.schema.shape,
+	})
+	.omit({
+		numericIp: true,
+		numericIpMaskMin: true,
+		numericIpMaskMax: true,
+	});
+
+export type AccessRuleExtended = z.input<typeof accessRuleSchemaExtended>;
 
 export type AccessRulesReader = {
 	findRules(

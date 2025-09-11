@@ -25,13 +25,13 @@ import {
 	type AccessRulesWriter,
 	accessRuleSchema,
 } from "#policy/accessRules.js";
+import { getRedisAccessRulesQuery } from "#policy/redis/redisAccesRulesQuery.js";
 import {
 	accessRuleRedisKeyPrefix,
 	accessRulesRedisIndexName,
 	accessRulesRedisSearchOptions,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
-	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
 
 export const createRedisAccessRulesReader = (
@@ -132,6 +132,14 @@ export const createRedisAccessRulesReader = (
 
 				return [];
 			}
+
+			logger.debug(() => ({
+				msg: "Executed search query for rule IDs",
+				data: {
+					query: query,
+					found: searchReply.documents,
+				},
+			}));
 
 			return searchReply.documents;
 		},
