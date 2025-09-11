@@ -30,6 +30,7 @@ import {
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";

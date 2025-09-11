@@ -26,11 +26,12 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PoWCaptchaRecord,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+} from "@prosopo/user-access-policy";
 import { at, verifyRecency } from "@prosopo/util";
 import {
 	getCompositeIpAddress,
@@ -176,7 +177,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} dappAccount - the dapp that is requesting the captcha
 	 * @param {string} challenge - the starting string for the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
+	 * @param {ProviderEnvironment} env
 	 * @param ip
+	 * @param accessPolicy
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -184,6 +187,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		timeout: number,
 		env: ProviderEnvironment,
 		ip?: string,
+		accessPolicy?: AccessPolicy,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -247,6 +251,16 @@ export class PowCaptchaManager extends CaptchaManager {
 			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
 				providedIp: getCompositeIpAddress(ip),
 			});
+
+			if (accessPolicy && accessPolicy.type === AccessPolicyType.Block) {
+				this.logger.info(() => ({
+					msg: "Provided IP is blocked by access policy",
+					data: {
+						providedIp: ip,
+					},
+				}));
+				return notVerifiedResponse;
+			}
 
 			const ipValidation = await deepValidateIpAddress(
 				ip,

@@ -26,9 +26,15 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+} from "@prosopo/user-access-policy";
+import { flatten } from "@prosopo/util";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
+import { getRequestUserScope } from "./blacklistRequestInspector.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -38,6 +44,8 @@ import { Tasks } from "../tasks/tasks.js";
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
+
+	const userAccessRulesStorage = env.getDb().getUserAccessRulesStorage();
 
 	/**
 	 * Verifies a dapp's solution as being approved or not
@@ -97,6 +105,17 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), keyPair);
 
+				const providedIpAccessPolicy =
+					// Some attributes do not relate to the request so we pass empty values
+					await tasks.powCaptchaManager.computeUserScopeAndGetAccessPolicy(
+						userAccessRulesStorage,
+						dapp,
+						{},
+						ip,
+						undefined,
+						undefined,
+					);
+
 				const response =
 					await tasks.imgCaptchaManager.verifyImageCaptchaSolution(
 						user,
@@ -105,6 +124,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						env,
 						maxVerifiedTime,
 						ip,
+						providedIpAccessPolicy,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -195,6 +215,17 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
+				const providedIpAccessPolicy =
+					// Some attributes do not relate to the request so we pass empty values
+					await tasks.powCaptchaManager.computeUserScopeAndGetAccessPolicy(
+						userAccessRulesStorage,
+						dapp,
+						{},
+						ip,
+						undefined,
+						undefined,
+					);
+
 				const { verified, score } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
@@ -202,6 +233,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						verifiedTimeout,
 						env,
 						ip,
+						providedIpAccessPolicy,
 					);
 
 				const verificationResponse: VerificationResponse =
