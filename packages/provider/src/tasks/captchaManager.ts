@@ -30,10 +30,11 @@ import type {
 	UserScopeApiInput,
 	UserScopeApiOutput,
 } from "@prosopo/user-access-policy";
-import { getIPAddress } from "@prosopo/util";
-import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
-import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import { deepValidateIpAddress } from "../util.js";
+import { flatten } from "@prosopo/util";
+import {
+	getPrioritisedAccessRule,
+	getRequestUserScope,
+} from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -269,6 +270,24 @@ export class CaptchaManager {
 				[ApiParams.score]: score,
 			}),
 		};
+	}
+
+	async computeUserScopeAndGetAccessPolicy(
+		userAccessRulesStorage: AccessRulesStorage,
+		dapp: string,
+		headers: Record<string, unknown>,
+		ip?: string,
+		ja4?: string,
+		user?: string,
+	) {
+		const userScope = getRequestUserScope(flatten(headers), ja4, ip, user);
+		return (
+			await this.getPrioritisedAccessPolicies(
+				userAccessRulesStorage,
+				dapp,
+				userScope,
+			)
+		)[0];
 	}
 
 	async getPrioritisedAccessPolicies(

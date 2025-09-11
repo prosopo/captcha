@@ -42,6 +42,10 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+} from "@prosopo/user-access-policy";
 import { at } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
@@ -465,7 +469,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
+		accessPolicy?: AccessPolicy,
 	): Promise<ImageVerificationResponse> {
+		const notVerifiedResponse = {
+			status: "API.USER_NOT_VERIFIED",
+			verified: false,
+		};
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
 			: this.getDappUserCommitmentByAccount(user, dapp));
@@ -491,7 +500,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
+			return notVerifiedResponse;
 		}
 
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
@@ -522,6 +531,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 				providedIp: getCompositeIpAddress(ip),
 			});
 
+			if (accessPolicy && accessPolicy.type === AccessPolicyType.Block) {
+				this.logger.info(() => ({
+					msg: "Provided IP is blocked by access policy",
+					data: {
+						providedIp: ip,
+					},
+				}));
+				return notVerifiedResponse;
+			}
+
 			const ipValidation = await deepValidateIpAddress(
 				ip,
 				solutionIpAddress,
@@ -541,7 +560,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						distanceKm: ipValidation.distanceKm,
 					},
 				}));
-				return { status: "API.USER_NOT_VERIFIED", verified: false };
+				return notVerifiedResponse;
 			}
 		}
 

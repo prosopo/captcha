@@ -113,19 +113,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				const userScope = getRequestUserScope(
-					flatten(req.headers),
-					req.ja4,
-					req.ip,
-					user,
-				);
-				const userAccessPolicy = (
-					await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
+				const userAccessPolicy =
+					await tasks.imgCaptchaManager.computeUserScopeAndGetAccessPolicy(
 						userAccessRulesStorage,
 						dapp,
-						userScope,
-					)
-				)[0];
+						req.headers,
+						req.ip,
+						req.ja4,
+						user,
+					);
 
 				const { valid, reason, frictionlessTokenId } =
 					await tasks.imgCaptchaManager.isValidRequest(
@@ -322,6 +318,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		const tasks = new Tasks(env);
 		tasks.setLogger(req.logger);
 
+		if (!req.ip) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400, error: "IP address not found" },
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
+
 		try {
 			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
 		} catch (err) {
@@ -352,19 +358,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				req.ip,
-				user,
-			);
-			const userAccessPolicy = (
-				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
+			const userAccessPolicy =
+				await tasks.powCaptchaManager.computeUserScopeAndGetAccessPolicy(
 					userAccessRulesStorage,
 					dapp,
-					userScope,
-				)
-			)[0];
+					req.headers,
+					req.ip,
+					req.ja4,
+					user,
+				);
 
 			const { valid, reason, frictionlessTokenId } =
 				await tasks.powCaptchaManager.isValidRequest(
