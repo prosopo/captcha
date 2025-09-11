@@ -76,7 +76,7 @@
 		"@angular-devkit/core": "~19.2.0",
 		"@biomejs/biome": "1.9.1",
 		"@changesets/cli": "2.29.5",
-		"@nx/angular": "21.2.2",
+		"@nx/angular": "21.5.1",
 		"@nx/js": "21.1.2",
 		"@nx/vue": "21.1.2",
 		"@prosopo/dotenv": "3.0.12",
