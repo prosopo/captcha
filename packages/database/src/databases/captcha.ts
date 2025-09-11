@@ -56,6 +56,7 @@ const CAPTCHA_TABLES = [
 
 export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	tables: Tables<TableNames>;
+	private indexesEnsured = false;
 
 	constructor(
 		url: string,
@@ -69,6 +70,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 	override async connect(): Promise<void> {
 		await super.connect();
+
 		CAPTCHA_TABLES.map(({ collectionName, modelName, schema }) => {
 			if (this.connection) {
 				this.tables[collectionName] = this.connection.model(modelName, schema);
@@ -84,6 +86,41 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			});
 		}
 		return this.tables;
+	}
+
+	async ensureIndexes(): Promise<void> {
+		const indexPromises: Promise<void>[] = [];
+		if (!this.indexesEnsured) {
+			CAPTCHA_TABLES.map(({ collectionName }) => {
+				indexPromises.push(
+					new Promise((resolve) => {
+						if (this.connected) {
+							this.tables[collectionName].collection.dropIndexes().then(() => {
+								this.tables[collectionName]
+									.ensureIndexes()
+									.then(() => {
+										resolve();
+									})
+									.catch((err) => {
+										this.logger.warn(() => ({
+											err,
+											msg: `Error creating indexes for collection ${collectionName}`,
+										}));
+										resolve();
+									});
+							});
+						} else {
+							this.logger.info(() => ({
+								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+							}));
+							resolve();
+						}
+					}),
+				);
+			});
+		}
+		await Promise.all(indexPromises);
+		this.indexesEnsured = true;
 	}
 
 	async saveCaptchas(
