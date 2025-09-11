@@ -1,5 +1,19 @@
 # @prosopo/server
 
+## 2.9.28
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/load-balancer@2.7.6
+  - @prosopo/keyring@2.8.20
+  - @prosopo/common@3.1.13
+  - @prosopo/util@3.0.16
+  - @prosopo/api@3.1.17
+  - @prosopo/config@3.1.13
+
 ## 2.9.27
 ### Patch Changes
 
