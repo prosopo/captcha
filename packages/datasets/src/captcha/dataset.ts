@@ -19,6 +19,7 @@ import type {
 	DatasetRaw,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
+import { lodash } from "@prosopo/util/lodash";
 import {
 	computeCaptchaHash,
 	computeItemHash,
@@ -74,26 +75,39 @@ export async function validateDatasetContent(
 	return hashes.every((hash) => hash);
 }
 
+export const getRandomCaptchaSeed = (randomMax: number): number => {
+	return lodash().random(0, randomMax);
+};
+
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
 	logger.debug(() => ({ msg: "Adding solution hashes to dataset" }));
 	const dataset = await addSolutionHashesToDataset(datasetRaw);
 	logger.debug(() => ({ msg: "Building dataset merkle trees" }));
 	const contentTree = await buildCaptchaTree(dataset, false, false, true);
 	const solutionTree = await buildCaptchaTree(dataset, true, true, false);
+	dataset.randomMax = dataset.captchas.length;
 	dataset.captchas = dataset.captchas.map(
-		(captcha: CaptchaWithoutId, index: number) =>
-			({
+		(captcha: CaptchaWithoutId, index: number) => {
+			let randomSeed = index;
+			if (dataset.captchas.length > 1000) {
+				// for a large dataset, we use random seeds when generating captchas
+				randomSeed = getRandomCaptchaSeed(dataset.randomMax);
+			}
+			return {
 				...captcha,
 				captchaId: at(solutionTree.leaves, index).hash,
 				captchaContentId: at(contentTree.leaves, index).hash,
 				datasetId: solutionTree.root?.hash,
 				datasetContentId: contentTree.root?.hash,
-			}) as Captcha,
+				randomSeed: randomSeed,
+			} as Captcha;
+		},
 	);
 	dataset.solutionTree = solutionTree.layers;
 	dataset.contentTree = contentTree.layers;
 	dataset.datasetId = solutionTree.root?.hash;
 	dataset.datasetContentId = contentTree.root?.hash;
+
 	return dataset;
 }
 

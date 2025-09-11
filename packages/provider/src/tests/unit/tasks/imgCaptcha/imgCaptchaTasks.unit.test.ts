@@ -72,6 +72,7 @@ const mockCaptchas = [
 		options: ["option1"],
 		datasetId: "datasetId",
 		solved: true,
+		randomSeed: 0,
 	},
 	{
 		captchaId: "captcha2",
@@ -80,6 +81,7 @@ const mockCaptchas = [
 		options: ["option2"],
 		datasetId: "datasetId",
 		solved: true,
+		randomSeed: 1,
 	},
 	{
 		captchaId: "captcha3",
@@ -88,6 +90,7 @@ const mockCaptchas = [
 		options: ["option3"],
 		datasetId: "datasetId",
 		solved: true,
+		randomSeed: 2,
 	},
 	{
 		captchaId: "captcha4",
@@ -96,6 +99,7 @@ const mockCaptchas = [
 		options: ["option4"],
 		datasetId: "datasetId",
 		solved: true,
+		randomSeed: 3,
 	},
 	{
 		captchaId: "captcha5",
@@ -104,6 +108,7 @@ const mockCaptchas = [
 		options: ["option5"],
 		datasetId: "datasetId",
 		solved: true,
+		randomSeed: 4,
 	},
 	{
 		captchaId: "captcha6",
@@ -112,6 +117,7 @@ const mockCaptchas = [
 		options: ["option6"],
 		datasetId: "datasetId",
 		solved: false,
+		randomSeed: 5,
 	},
 	{
 		captchaId: "captcha7",
@@ -120,6 +126,7 @@ const mockCaptchas = [
 		options: ["option7"],
 		datasetId: "datasetId",
 		solved: false,
+		randomSeed: 6,
 	},
 	{
 		captchaId: "captcha8",
@@ -128,6 +135,7 @@ const mockCaptchas = [
 		options: ["option8"],
 		datasetId: "datasetId",
 		solved: false,
+		randomSeed: 7,
 	},
 	{
 		captchaId: "captcha9",
@@ -136,6 +144,7 @@ const mockCaptchas = [
 		options: ["option9"],
 		datasetId: "datasetId",
 		solved: false,
+		randomSeed: 8,
 	},
 ] as unknown as Captcha[];
 
@@ -150,7 +159,12 @@ describe("ImgCaptchaManager", () => {
 	beforeEach(() => {
 		db = {
 			getRandomCaptcha: vi.fn(
-				(solved: boolean, datasetId: string, size: number) => {
+				(
+					solved: boolean,
+					datasetId: string,
+					randomMax: number,
+					size: number,
+				) => {
 					console.log("solved", solved, "datasetId", datasetId, "size", size);
 					return mockCaptchas
 						.filter(
@@ -209,7 +223,7 @@ describe("ImgCaptchaManager", () => {
 	describe("getCaptchaWithProof", () => {
 		it("should get captcha with proof", async () => {
 			const datasetId = "datasetId";
-			const size = 3;
+			const size = 1;
 			const solved = true;
 			const captchaDocs = [
 				{
@@ -227,11 +241,17 @@ describe("ImgCaptchaManager", () => {
 			const result = await imgCaptchaManager.getCaptchaWithProof(
 				datasetId,
 				solved,
+				captchaDocs.length,
 				size,
 			);
 
 			expect(result).toEqual(captchaDocs);
-			expect(db.getRandomCaptcha).toHaveBeenCalledWith(solved, datasetId, size);
+			expect(db.getRandomCaptcha).toHaveBeenCalledWith(
+				solved,
+				datasetId,
+				captchaDocs.length,
+				size,
+			);
 		});
 
 		it("should throw an error if get captcha with proof fails", async () => {
@@ -242,7 +262,12 @@ describe("ImgCaptchaManager", () => {
 			(db.getRandomCaptcha as any).mockResolvedValue(null);
 
 			await expect(
-				imgCaptchaManager.getCaptchaWithProof(datasetId, solved, size),
+				imgCaptchaManager.getCaptchaWithProof(
+					datasetId,
+					solved,
+					mockCaptchas.length,
+					size,
+				),
 			).rejects.toThrow(
 				new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
@@ -262,6 +287,7 @@ describe("ImgCaptchaManager", () => {
 			const solvedResult = await imgCaptchaManager.getCaptchaWithProof(
 				datasetId,
 				true,
+				mockCaptchas.length,
 				size,
 			);
 
@@ -270,6 +296,7 @@ describe("ImgCaptchaManager", () => {
 			const unsolvedResult = await imgCaptchaManager.getCaptchaWithProof(
 				datasetId,
 				false,
+				mockCaptchas.length,
 				size,
 			);
 
@@ -286,7 +313,7 @@ describe("ImgCaptchaManager", () => {
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getDatasetDetails as any).mockResolvedValue(dataset); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.getRandomCaptcha as any).mockResolvedValue([]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getRandomCaptcha as any).mockResolvedValue([{ blah: 1 }]); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(randomAsHex as any).mockReturnValue("randomSalt"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(computePendingRequestHash as any).mockReturnValue("computedHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(pair.sign as any).mockReturnValue("hexSignedRequestHash"); // biome-ignore lint/suspicious/noExplicitAny: TODO fix

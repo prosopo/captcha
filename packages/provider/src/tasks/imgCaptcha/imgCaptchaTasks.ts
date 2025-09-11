@@ -70,10 +70,27 @@ export class ImgCaptchaManager extends CaptchaManager {
 	async getCaptchaWithProof(
 		datasetId: Hash,
 		solved: boolean,
+		randomMax: number,
 		size: number,
 	): Promise<Captcha[]> {
-		const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size);
-		if (!captchaDocs) {
+		let captchaDocs: Captcha[] = [];
+		const tryLimit = 10;
+		let tryCount = 0;
+		// for smaller datasets, we may need to get more than one batch of captchas if random sampling is not enough
+		while (captchaDocs.length < size) {
+			const newCaptchas = await this.db.getRandomCaptcha(
+				solved,
+				datasetId,
+				randomMax,
+				size - captchaDocs.length,
+			);
+			captchaDocs = [...captchaDocs, ...(newCaptchas || [])];
+			tryCount++;
+			if (tryCount > tryLimit) {
+				break;
+			}
+		}
+		if (!captchaDocs.length) {
 			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
 				context: {
 					failedFuncName: this.getCaptchaWithProof.name,
@@ -122,13 +139,19 @@ export class ImgCaptchaManager extends CaptchaManager {
 			throw new ProsopoEnvError("CONFIG.INVALID_CAPTCHA_NUMBER");
 		}
 
-		const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount);
+		const solved = await this.getCaptchaWithProof(
+			datasetId,
+			true,
+			dataset.randomMax,
+			solvedCount,
+		);
 
 		let unsolved: Captcha[] = [];
 		if (unsolvedCount) {
 			unsolved = await this.getCaptchaWithProof(
 				datasetId,
 				false,
+				dataset.randomMax,
 				unsolvedCount,
 			);
 		}

@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ProsopoEnvError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { Tasks } from "@prosopo/provider";
+import type { IProviderAccount } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 
 export async function setupProvider(env: ProviderEnvironment): Promise<void> {
