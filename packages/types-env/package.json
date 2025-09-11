@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-env",
-	"version": "2.7.31",
+	"version": "2.7.32",
 	"description": "Types for prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -34,11 +34,11 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "3.1.13",
-		"@prosopo/keyring": "2.8.20",
-		"@prosopo/types": "3.2.1",
-		"@prosopo/types-database": "3.2.1",
-		"@prosopo/config": "3.1.13"
+		"@prosopo/common": "3.1.14",
+		"@prosopo/keyring": "2.8.21",
+		"@prosopo/types": "3.3.0",
+		"@prosopo/types-database": "3.2.2",
+		"@prosopo/config": "3.1.14"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
