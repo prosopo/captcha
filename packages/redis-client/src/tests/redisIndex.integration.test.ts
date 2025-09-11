@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type RedisClientType, SCHEMA_FIELD_TYPE } from "@prosopo/redis-client";
+import { SCHEMA_FIELD_TYPE } from "@redis/search";
+import type { RedisClientType } from "redis";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import {
 	type RedisIndex,

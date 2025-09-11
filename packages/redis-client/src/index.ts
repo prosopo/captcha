@@ -19,15 +19,3 @@ export {
 } from "./redisClient.js";
 export type { RedisIndex } from "./redisIndex.js";
 export { createTestRedisConnection } from "./tests/testRedisConnection.js";
-
-// re-export, so all the others depend on this package instead of having multiple Redis dependencies
-// Important! Do not use wildcard exports ("export * from x") for external dependencies:
-// for some reason it makes the incomplete Vite builds
-
-export type { RedisClientType } from "redis";
-export {
-	SCHEMA_FIELD_TYPE,
-	type FtSearchOptions,
-	type SearchReply,
-} from "@redis/search";
-export type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
