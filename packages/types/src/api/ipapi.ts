@@ -187,18 +187,20 @@ type IPDetails = {
 	coordinates?: { latitude: number; longitude: number };
 };
 
+export type IPComparison = {
+	differentProviders: boolean;
+	differentConnectionTypes: boolean;
+	distanceKm?: number;
+	anyVpnOrProxy: boolean;
+	ip1Details: IPDetails;
+	ip2Details: IPDetails;
+};
+
 export interface IPComparisonResult {
 	ipsMatch: boolean;
 	ip1: string;
 	ip2: string;
-	comparison?: {
-		differentProviders: boolean;
-		differentConnectionTypes: boolean;
-		distanceKm?: number;
-		anyVpnOrProxy: boolean;
-		ip1Details: IPDetails;
-		ip2Details: IPDetails;
-	};
+	comparison?: IPComparison;
 }
 
 export interface IPComparisonError {
