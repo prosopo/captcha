@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import type { Ti18n } from "@prosopo/locale";
-import { ReactNode } from "react";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type { Account, Callbacks } from "./manager.js";
