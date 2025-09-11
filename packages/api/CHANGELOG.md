@@ -1,5 +1,15 @@
 # @prosopo/api
 
+## 3.1.18
+### Patch Changes
+
+- c3bc3c5: Release 3.3.1
+- Updated dependencies [da7577f]
+- Updated dependencies [c3bc3c5]
+  - @prosopo/types@3.3.0
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/config@3.1.14
+
 ## 3.1.17
 ### Patch Changes
 

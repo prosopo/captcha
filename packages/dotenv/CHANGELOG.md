@@ -1,5 +1,13 @@
 # @prosopo/dotenv
 
+## 3.0.19
+### Patch Changes
+
+- c3bc3c5: Release 3.3.1
+- Updated dependencies [c3bc3c5]
+  - @prosopo/common@3.1.14
+  - @prosopo/config@3.1.14
+
 ## 3.0.18
 ### Patch Changes
 

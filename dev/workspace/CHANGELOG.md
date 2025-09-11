@@ -1,5 +1,12 @@
 # @prosopo/workspace
 
+## 3.1.7
+### Patch Changes
+
+- c3bc3c5: Release 3.3.1
+- Updated dependencies [c3bc3c5]
+  - @prosopo/config@3.1.14
+
 ## 3.1.6
 ### Patch Changes
 
