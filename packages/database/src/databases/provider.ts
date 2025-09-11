@@ -275,43 +275,43 @@ export class ProviderDatabase
 		return this.redisConnection;
 	}
 
-    async ensureIndexes(): Promise<void> {
-        const indexPromises: Promise<void>[] = [];
-        if (!this.indexesEnsured) {
-            PROVIDER_TABLES.map(({ collectionName }) => {
-                indexPromises.push(
-                    new Promise((resolve) => {
-                        if (this.connected) {
-                            this.tables[collectionName].collection.dropIndexes().then(() => {
-                                this.tables[collectionName]
-                                    .ensureIndexes()
-                                    .then(() => {
-                                        this.logger.info(() => ({
-                                            msg: `Indexes ensured for collection ${collectionName}`,
-                                        }));
-                                        resolve();
-                                    })
-                                    .catch((err) => {
-                                        this.logger.warn(() => ({
-                                            err,
-                                            msg: `Error creating indexes for collection ${collectionName}`,
-                                        }));
-                                        resolve();
-                                    });
-                            });
-                        } else {
-                            this.logger.info(() => ({
-                                msg: `Skipping index creation for collection ${collectionName} as not connected`,
-                            }));
-                            resolve();
-                        }
-                    }),
-                );
-            });
-        }
-        await Promise.all(indexPromises);
-        this.indexesEnsured = true;
-    }
+	async ensureIndexes(): Promise<void> {
+		const indexPromises: Promise<void>[] = [];
+		if (!this.indexesEnsured) {
+			PROVIDER_TABLES.map(({ collectionName }) => {
+				indexPromises.push(
+					new Promise((resolve) => {
+						if (this.connected) {
+							this.tables[collectionName].collection.dropIndexes().then(() => {
+								this.tables[collectionName]
+									.ensureIndexes()
+									.then(() => {
+										this.logger.info(() => ({
+											msg: `Indexes ensured for collection ${collectionName}`,
+										}));
+										resolve();
+									})
+									.catch((err) => {
+										this.logger.warn(() => ({
+											err,
+											msg: `Error creating indexes for collection ${collectionName}`,
+										}));
+										resolve();
+									});
+							});
+						} else {
+							this.logger.info(() => ({
+								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+							}));
+							resolve();
+						}
+					}),
+				);
+			});
+		}
+		await Promise.all(indexPromises);
+		this.indexesEnsured = true;
+	}
 
 	public getUserAccessRulesStorage(): AccessRulesStorage {
 		if (null === this.userAccessRulesStorage) {
