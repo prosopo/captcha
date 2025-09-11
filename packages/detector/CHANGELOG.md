@@ -1,5 +1,18 @@
 # @prosopo/detector
 
+## 3.2.0
+### Minor Changes
+
+- da7577f: Adding dom manip checks
+
+### Patch Changes
+
+- c3bc3c5: Release 3.3.1
+- Updated dependencies [da7577f]
+- Updated dependencies [c3bc3c5]
+  - @prosopo/types@3.3.0
+  - @prosopo/config@3.1.14
+
 ## 3.1.6
 ### Patch Changes
 

@@ -1,5 +1,33 @@
 # @prosopo/provider
 
+## 3.10.0
+### Minor Changes
+
+- da7577f: Adding dom manip checks
+
+### Patch Changes
+
+- c3bc3c5: Release 3.3.1
+- Updated dependencies [da7577f]
+- Updated dependencies [c3bc3c5]
+  - @prosopo/types@3.3.0
+  - @prosopo/api-express-router@3.0.19
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/types-database@3.2.2
+  - @prosopo/load-balancer@2.7.7
+  - @prosopo/util-crypto@13.5.16
+  - @prosopo/api-route@2.6.22
+  - @prosopo/types-env@2.7.32
+  - @prosopo/database@3.3.2
+  - @prosopo/datasets@3.0.28
+  - @prosopo/keyring@2.8.21
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/util@3.0.17
+  - @prosopo/api@3.1.18
+  - @prosopo/env@3.2.7
+  - @prosopo/config@3.1.14
+
 ## 3.9.1
 ### Patch Changes
 
