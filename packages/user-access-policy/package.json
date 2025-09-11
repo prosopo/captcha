@@ -43,7 +43,7 @@
 	"devDependencies": {
 		"@prosopo/util-crypto": "13.5.16",
 		"@types/node": "22.10.2",
-		"vite": "6.3.5",
+		"vite": "6.3.6",
 		"vitest": "3.0.9",
 		"yargs": "17.7.2"
 	},
