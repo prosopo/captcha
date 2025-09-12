@@ -1,0 +1,156 @@
+[1mdiff --git a/packages/provider/src/tests/unit/util.ipDistance.unit.test.ts b/packages/provider/src/tests/unit/util.ipDistance.unit.test.ts[m
+[1mindex 9685cd706..16193988c 100644[m
+[1m--- a/packages/provider/src/tests/unit/util.ipDistance.unit.test.ts[m
+[1m+++ b/packages/provider/src/tests/unit/util.ipDistance.unit.test.ts[m
+[36m@@ -13,10 +13,11 @@[m
+ // limitations under the License.[m
+ [m
+ import type { Logger } from "@prosopo/common";[m
+[32m+[m[32mimport { type IPValidateCondition, IPValidationAction } from "@prosopo/types";[m
+ import { Address4 } from "ip-address";[m
+ import { beforeEach, describe, expect, it, vi } from "vitest";[m
+ import * as ipComparisonModule from "../../services/ipComparison.js";[m
+[31m-import { deepValidateIpAddress } from "../../util.js";[m
+[32m+[m[32mimport { deepValidateIpAddress, requireAllConditions } from "../../util.js";[m
+ [m
+ describe("deepValidateIpAddress", () => {[m
+ 	let mockLogger: Logger;[m
+[36m@@ -136,3 +137,41 @@[m [mdescribe("deepValidateIpAddress", () => {[m
+ 		expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));[m
+ 	});[m
+ });[m
+[32m+[m
+[32m+[m[32mdescribe("requireAllConditions", async () => {[m
+[32m+[m	[32mit("returns Reject when all conditions are met and action is Reject", () => {[m
+[32m+[m		[32mconst conditions = [[m
+[32m+[m			[32m{ met: true, action: IPValidationAction.Reject, message: "msg1" },[m
+[32m+[m			[32m{ met: true, action: IPValidationAction.Reject, message: "msg2" },[m
+[32m+[m		[32m];[m
+[32m+[m		[32mconst result = requireAllConditions(conditions);[m
+[32m+[m		[32mexpect(result.finalAction).toBe(IPValidationAction.Reject);[m
+[32m+[m		[32mexpect(result.errorMessages).toEqual(["msg1", "msg2"]);[m
+[32m+[m	[32m});[m
+[32m+[m
+[32m+[m	[32mit("returns Allow if any Reject condition is not met", () => {[m
+[32m+[m		[32mconst conditions = [[m
+[32m+[m			[32m{ met: false, action: IPValidationAction.Reject, message: "msg1" },[m
+[32m+[m			[32m{ met: true, action: IPValidationAction.Flag, message: "msg2" },[m
+[32m+[m		[32m];[m
+[32m+[m		[32mconst result = requireAllConditions(conditions);[m
+[32m+[m		[32mexpect(result.finalAction).toBe(IPValidationAction.Allow);[m
+[32m+[m		[32mexpect(result.errorMessages).toEqual(["msg2"]);[m
+[32m+[m	[32m});[m
+[32m+[m
+[32m+[m	[32mit("collects all messages", () => {[m
+[32m+[m		[32mconst conditions = [[m
+[32m+[m			[32m{ met: true, action: IPValidationAction.Flag, message: "flagged" },[m
+[32m+[m			[32m{ met: true, action: IPValidationAction.Reject, message: "rejected" },[m
+[32m+[m		[32m];[m
+[32m+[m		[32mconst result = requireAllConditions(conditions);[m
+[32m+[m		[32mexpect(result.errorMessages).toEqual(["flagged", "rejected"]);[m
+[32m+[m	[32m});[m
+[32m+[m
+[32m+[m	[32mit("returns Allow if no conditions", () => {[m
+[32m+[m		[32mconst conditions: IPValidateCondition[] = [];[m
+[32m+[m		[32mconst result = requireAllConditions(conditions);[m
+[32m+[m		[32mexpect(result.finalAction).toBe(IPValidationAction.Reject); // stays Reject by default[m
+[32m+[m		[32mexpect(result.errorMessages).toEqual([]);[m
+[32m+[m	[32m});[m
+[32m+[m[32m});[m
+[1mdiff --git a/packages/provider/src/util.ts b/packages/provider/src/util.ts[m
+[1mindex c445e9430..ca74bb505 100644[m
+[1m--- a/packages/provider/src/util.ts[m
+[1m+++ b/packages/provider/src/util.ts[m
+[36m@@ -23,6 +23,7 @@[m [mimport {[m
+ 	type IIPValidationRules,[m
+ 	type IPAddress,[m
+ 	type IPComparisonResult,[m
+[32m+[m	[32mtype IPValidateCondition,[m
+ 	IPValidationAction,[m
+ 	IpApiService,[m
+ 	type ScheduledTaskNames,[m
+[36m@@ -180,11 +181,7 @@[m [mconst evaluateIpValidationRules = ([m
+ 	errorMessage?: string;[m
+ 	shouldFlag?: boolean;[m
+ } => {[m
+[31m-	const conditions: Array<{[m
+[31m-		met: boolean;[m
+[31m-		action: IPValidationAction;[m
+[31m-		message: string;[m
+[31m-	}> = [];[m
+[32m+[m	[32mconst conditions: Array<IPValidateCondition> = [];[m
+ [m
+ 	// Check country change condition[m
+ 	if (comparison.comparison) {[m
+[36m@@ -232,27 +229,9 @@[m [mconst evaluateIpValidationRules = ([m
+ 	let shouldFlag = false;[m
+ [m
+ 	if (rules.requireAllConditions) {[m
+[31m-		// ALL conditions must be met (AND logic)[m
+[31m-		finalAction = IPValidationAction.Reject;[m
+[31m-[m
+[31m-		// We need to check if any condition related to ISP is met before rejecting[m
+[31m-		const conditionsMet = conditions.filter((condition) => condition.met);[m
+[31m-[m
+[31m-		// If there is an ISP change condition, we allow even if country hasn't changed[m
+[31m-		const ispConditionMet = conditionsMet.some([m
+[31m-			(condition) => condition.action === rules.ispChangeAction,[m
+[31m-		);[m
+[31m-[m
+[31m-		if (ispConditionMet) {[m
+[31m-			finalAction = IPValidationAction.Allow; // Allow if only ISP has changed[m
+[31m-		}[m
+[31m-[m
+[31m-		// If all conditions aren't met, we reject[m
+[31m-		for (const condition of conditions) {[m
+[31m-			if (!condition.met) {[m
+[31m-				errorMessages.push(condition.message);[m
+[31m-			}[m
+[31m-		}[m
+[32m+[m		[32mconst requireAllResult = requireAllConditions(conditions);[m
+[32m+[m		[32mfinalAction = requireAllResult.finalAction;[m
+[32m+[m		[32merrorMessages.push(...requireAllResult.errorMessages);[m
+ 	} else {[m
+ 		// ANY condition can trigger (OR logic)[m
+ 		// Find the most restrictive action among met conditions[m
+[36m@@ -286,6 +265,23 @@[m [mconst evaluateIpValidationRules = ([m
+ 	};[m
+ };[m
+ [m
+[32m+[m[32m/** All conditions must be met (AND logic). Returns the final action and error messages.[m
+[32m+[m[32m * @param conditions[m
+[32m+[m[32m */[m
+[32m+[m[32mexport const requireAllConditions = (conditions: IPValidateCondition[]) => {[m
+[32m+[m	[32m// ALL conditions must be met (AND logic)[m
+[32m+[m	[32mlet finalAction = IPValidationAction.Reject;[m
+[32m+[m	[32mconst errorMessages: string[] = [];[m
+[32m+[m	[32mfor (const condition of conditions) {[m
+[32m+[m		[32mif (condition.action === IPValidationAction.Reject && !condition.met) {[m
+[32m+[m			[32mfinalAction = IPValidationAction.Allow;[m
+[32m+[m		[32m} else {[m
+[32m+[m			[32merrorMessages.push(condition.message);[m
+[32m+[m		[32m}[m
+[32m+[m	[32m}[m
+[32m+[m	[32mreturn { finalAction, errorMessages };[m
+[32m+[m[32m};[m
+[32m+[m
+ /**[m
+  * @param ip - The IP address string to validate[m
+  * @param challengeIpAddress - The IP address from the challenge record[m
+[1mdiff --git a/packages/types/src/client/settings.ts b/packages/types/src/client/settings.ts[m
+[1mindex 8d198d878..5e4484724 100644[m
+[1m--- a/packages/types/src/client/settings.ts[m
+[1m+++ b/packages/types/src/client/settings.ts[m
+[36m@@ -28,6 +28,12 @@[m [mexport enum IPValidationAction {[m
+ 	Flag = "flag",[m
+ }[m
+ [m
+[32m+[m[32mexport type IPValidateCondition = {[m
+[32m+[m	[32mmet: boolean;[m
+[32m+[m	[32maction: IPValidationAction;[m
+[32m+[m	[32mmessage: string;[m
+[32m+[m[32m};[m
+[32m+[m
+ export const IPValidationActionSchema = z.nativeEnum(IPValidationAction);[m
+ [m
+ // IP Validation defaults[m

@@ -51,11 +51,13 @@ export const withTimeout = async <T>(
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
+	container: HTMLElement | undefined,
 ): Promise<BotDetectionFunctionResult> => {
 	const detect = await DetectorLoader();
 	const botScore = (await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
+		container,
 	)) as { token: string; provider?: RandomProvider };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);
