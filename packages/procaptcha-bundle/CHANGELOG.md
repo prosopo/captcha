@@ -1,5 +1,28 @@
 # @prosopo/procaptcha-bundle
 
+## 3.1.0
+### Minor Changes
+
+- 97edf3f: Adding dom manip checks
+
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/procaptcha-frictionless@2.8.0
+  - @prosopo/widget-skeleton@2.7.0
+  - @prosopo/types@3.3.0
+  - @prosopo/procaptcha-common@2.8.7
+  - @prosopo/procaptcha-react@2.8.7
+  - @prosopo/procaptcha-pow@2.8.7
+  - @prosopo/dotenv@3.0.19
+  - @prosopo/locale@3.1.14
+  - @prosopo/util@3.0.17
+  - @prosopo/config@3.1.14
+
 ## 3.0.27
 ### Patch Changes
 
