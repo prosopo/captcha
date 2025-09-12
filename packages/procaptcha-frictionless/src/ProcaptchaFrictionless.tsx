@@ -149,7 +149,7 @@ export const ProcaptchaFrictionless = ({
 				stateRef.current.attemptCount += 1;
 
 				const configOutput = ProcaptchaConfigSchema.parse(config);
-				const result = await detectBot(configOutput, container);
+				const result = await detectBot(configOutput, container, restart);
 
 				if (result.error?.message) {
 					stateRef.current = {
