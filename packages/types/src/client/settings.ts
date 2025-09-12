@@ -59,9 +59,6 @@ export const IPValidationRulesSchema = object({
 		.positive()
 		.optional()
 		.default(distanceThresholdKmDefault),
-	distanceExceedAction: IPValidationActionSchema.optional().default(
-		distanceExceedActionDefault,
-	),
 	requireAllConditions: z
 		.boolean()
 		.optional()
