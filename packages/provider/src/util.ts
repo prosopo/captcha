@@ -23,6 +23,7 @@ import {
 	type IIPValidationRules,
 	type IPAddress,
 	type IPComparisonResult,
+	type IPValidateCondition,
 	IPValidationAction,
 	IpApiService,
 	type ScheduledTaskNames,
@@ -171,7 +172,7 @@ export const validateIpAddress = (
  * @param logger - Logger instance
  * @returns Validation result with action to take
  */
-const evaluateIpValidationRules = (
+export const evaluateIpValidationRules = (
 	comparison: IPComparisonResult,
 	rules: IIPValidationRules,
 	logger: Logger,
@@ -180,45 +181,46 @@ const evaluateIpValidationRules = (
 	errorMessage?: string;
 	shouldFlag?: boolean;
 } => {
-	const conditions: Array<{
-		met: boolean;
-		action: IPValidationAction;
-		message: string;
-	}> = [];
+	// Early return if no comparison data is provided
+	if (!comparison.comparison) {
+		return { action: IPValidationAction.Allow };
+	}
 
-	// Check country change condition
-	if (comparison.comparison) {
-		const differentCountries =
-			comparison.comparison.ip1Details?.country !==
-			comparison.comparison.ip2Details?.country;
+	const conditions: IPValidateCondition[] = [];
+	const rejectActions = Object.values(rules.actions).filter(
+		(action) => action === IPValidationAction.Reject,
+	);
 
-		if (differentCountries) {
-			conditions.push({
-				met: true,
-				action: rules.countryChangeAction,
-				message: `Country changed from ${comparison.comparison.ip1Details?.country} to ${comparison.comparison.ip2Details?.country}`,
-			});
-		}
+	// Check for country change
+	const ip1Country = comparison.comparison.ip1Details?.country;
+	const ip2Country = comparison.comparison.ip2Details?.country;
+	if (ip1Country !== ip2Country) {
+		conditions.push({
+			met: true,
+			action: rules.actions.countryChangeAction,
+			message: `Country changed from ${ip1Country} to ${ip2Country}`,
+		});
+	}
 
-		// Check ISP change condition
-		const differentProviders = comparison.comparison.differentProviders;
-		if (differentProviders) {
-			conditions.push({
-				met: true,
-				action: rules.ispChangeAction,
-				message: `ISP changed from ${comparison.comparison.ip1Details?.provider} to ${comparison.comparison.ip2Details?.provider}`,
-			});
-		}
+	// Check for ISP change
+	if (comparison.comparison.differentProviders) {
+		const ip1Provider = comparison.comparison.ip1Details?.provider;
+		const ip2Provider = comparison.comparison.ip2Details?.provider;
+		conditions.push({
+			met: true,
+			action: rules.actions.ispChangeAction,
+			message: `ISP changed from ${ip1Provider} to ${ip2Provider}`,
+		});
+	}
 
-		// Check distance condition
-		const distanceKm = comparison.comparison.distanceKm;
-		if (distanceKm !== undefined && distanceKm > rules.distanceThresholdKm) {
-			conditions.push({
-				met: true,
-				action: rules.distanceExceedAction,
-				message: `IP addresses are ${distanceKm.toFixed(2)}km apart (>${rules.distanceThresholdKm}km limit)`,
-			});
-		}
+	// Check for distance exceed condition
+	const distanceKm = comparison.comparison.distanceKm;
+	if (distanceKm !== undefined && distanceKm > rules.distanceThresholdKm) {
+		conditions.push({
+			met: true,
+			action: rules.actions.distanceExceedAction,
+			message: `IP addresses are ${distanceKm.toFixed(2)}km apart (>${rules.distanceThresholdKm}km limit)`,
+		});
 	}
 
 	// If no conditions are met, allow
@@ -226,29 +228,36 @@ const evaluateIpValidationRules = (
 		return { action: IPValidationAction.Allow };
 	}
 
-	// Apply logic based on requireAllConditions
-	let finalAction = IPValidationAction.Allow;
 	const errorMessages: string[] = [];
+	let finalAction = IPValidationAction.Allow;
 	let shouldFlag = false;
 
+	// Determine action based on requireAllConditions flag
 	if (rules.requireAllConditions) {
-		// ALL conditions must be met (AND logic)
-		// Find the most restrictive action among all conditions
+		// Apply AND logic: all reject actions must be met to reject
+		const rejectConditions = conditions.filter(
+			(c) => c.action === IPValidationAction.Reject,
+		);
+
+		// If at least as many reject conditions as reject actions exist, we reject
+		if (
+			rejectConditions.length > 0 &&
+			rejectConditions.length >= rejectActions.length
+		) {
+			finalAction = IPValidationAction.Reject;
+		}
+
+		// Collect error messages for all reject/flag conditions
 		for (const condition of conditions) {
-			if (condition.action === IPValidationAction.Reject) {
-				finalAction = IPValidationAction.Reject;
-				errorMessages.push(condition.message);
-			} else if (
-				condition.action === IPValidationAction.Flag &&
-				finalAction !== IPValidationAction.Reject
+			if (
+				condition.action === IPValidationAction.Reject ||
+				condition.action === IPValidationAction.Flag
 			) {
-				finalAction = IPValidationAction.Flag;
-				shouldFlag = true;
+				errorMessages.push(condition.message);
 			}
 		}
 	} else {
-		// ANY condition can trigger (OR logic)
-		// Find the most restrictive action among met conditions
+		// Apply OR logic: the first reject condition triggers rejection
 		for (const condition of conditions) {
 			if (condition.action === IPValidationAction.Reject) {
 				finalAction = IPValidationAction.Reject;
@@ -259,18 +268,20 @@ const evaluateIpValidationRules = (
 				finalAction = IPValidationAction.Flag;
 				shouldFlag = true;
 			}
+			errorMessages.push(condition.message);
 		}
 	}
 
 	logger.info(() => ({
 		msg: `IP validation rules evaluated: ${finalAction}`,
 		data: {
-			conditions: conditions,
-			finalAction: finalAction,
+			conditions,
+			finalAction,
 			requireAllConditions: rules.requireAllConditions,
 		},
 	}));
 
+	// Return the evaluation result
 	return {
 		action: finalAction,
 		errorMessage:
@@ -289,7 +300,7 @@ const evaluateIpValidationRules = (
  * @returns Object with validation result, optional error message, and distance info
  */
 export const deepValidateIpAddress = async (
-	ip: string | undefined,
+	ip: string,
 	challengeIpAddress: IPAddress,
 	logger: Logger,
 	apiKey: string,
@@ -301,10 +312,6 @@ export const deepValidateIpAddress = async (
 	distanceKm?: number;
 	shouldFlag?: boolean;
 }> => {
-	if (!ip) {
-		return { isValid: true };
-	}
-
 	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
 	if (!standardValidation.isValid) {
 		// Check if this is a format error or a mismatch

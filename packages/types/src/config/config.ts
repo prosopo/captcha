@@ -273,8 +273,8 @@ export type ProcaptchaClientConfigOutput = output<
 >;
 
 export const IpApiServiceSpec = z.object({
-	apiKey: z.string().optional(),
-	baseUrl: z.string().url().optional(),
+	apiKey: z.string(),
+	baseUrl: z.string().url(),
 });
 export type IpApiService = zInfer<typeof IpApiServiceSpec>;
 

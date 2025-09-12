@@ -1,5 +1,31 @@
 # @prosopo/angular-procaptcha-wrapper
 
+## 1.1.21
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/procaptcha-wrapper@2.6.23
+  - @prosopo/config@3.1.14
+
+## 1.1.20
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [008d112]
+  - @prosopo/procaptcha-wrapper@2.6.22
+  - @prosopo/config@3.1.13
+
+## 1.1.19
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [0824221]
+  - @prosopo/procaptcha-wrapper@2.6.21
+  - @prosopo/config@3.1.12
+
 ## 1.1.18
 ### Patch Changes
 

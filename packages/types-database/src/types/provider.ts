@@ -47,6 +47,7 @@ import {
 	array,
 	bigint,
 	boolean,
+	date,
 	nativeEnum,
 	object,
 	string,
@@ -95,7 +96,7 @@ export const CompositeIpAddressSchema = object({
 	type: nativeEnum(IpAddressType),
 });
 
-const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
+export const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
 	lower: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
@@ -124,6 +125,7 @@ export interface StoredCaptcha {
 	requestedAtTimestamp: Timestamp;
 	deadlineTimestamp?: Timestamp;
 	ipAddress: CompositeIpAddress;
+	providedIp?: CompositeIpAddress;
 	headers: RequestHeaders;
 	ja4: string;
 	userSubmitted: boolean;
@@ -157,6 +159,7 @@ export const UserCommitmentSchema = object({
 	result: CaptchaResultSchema,
 	userSignature: string(),
 	ipAddress: CompositeIpAddressSchema,
+	providedIp: CompositeIpAddressSchema.optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),
@@ -231,6 +234,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	difficulty: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchema,
+	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -248,7 +252,6 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
-PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
@@ -270,12 +273,13 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		error: { type: String, required: false },
 	},
 	ipAddress: CompositeIpAddressRecordSchema,
+	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
-	storedAtTimestamp: { type: Number, required: false },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
 	requestedAtTimestamp: { type: Number, required: true },
 	lastUpdatedTimestamp: { type: Number, required: false },
 	geolocation: { type: String, required: false },
@@ -288,7 +292,6 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
-UserCommitmentRecordSchema.index({ storedAtTimestamp: 1 });
 UserCommitmentRecordSchema.index({
 	storedAtTimestamp: 1,
 	lastUpdatedTimestamp: 1,
@@ -322,6 +325,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 	processed: boolean(),
 	checked: boolean(),
 	commitmentId: string(),
+	createdAt: date(),
 });
 export type UserSolutionRecord = mongoose.Document &
 	zInfer<typeof UserSolutionSchema>;
@@ -334,6 +338,7 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 		processed: { type: Boolean, required: true },
 		checked: { type: Boolean, required: true },
 		commitmentId: { type: String, required: true },
+		createdAt: { type: Date, default: Date.now, expires: ONE_MONTH },
 	},
 	{ _id: false },
 );
@@ -428,8 +433,9 @@ export interface FrictionlessToken {
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
-	storedAtTimestamp?: Timestamp;
+	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Timestamp;
 }
 
@@ -450,42 +456,42 @@ export const FrictionlessTokenRecordSchema =
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
 		},
+		providerSelectEntropy: { type: Number, required: true },
 		ipAddress: CompositeIpAddressRecordSchema,
-		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
-		storedAtTimestamp: { type: Date, required: false },
+		createdAt: { type: Date, default: Date.now },
 		lastUpdatedTimestamp: { type: Date, required: false },
+		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	});
-
-FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
-FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
+FrictionlessTokenRecordSchema.index({ createdAt: 1 });
+FrictionlessTokenRecordSchema.index({ providerSelectEntropy: 1 });
 
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
 	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
-	storedAtTimestamp?: Timestamp;
-	lastUpdatedTimestamp?: Timestamp;
+	storedAtTimestamp?: Date;
+	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
-	sessionId: { type: String, required: true, unique: true },
-	createdAt: { type: Date, required: true, expires: ONE_DAY },
+	sessionId: { type: String, required: true },
+	createdAt: { type: Date, required: true },
 	tokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 	},
 	captchaType: { type: String, enum: CaptchaType, required: true },
-	storedAtTimestamp: { type: Date, required: false },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
 });
 
-SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
-SessionRecordSchema.index({ storedAtTimestamp: 1 });
+SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
+SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -497,7 +503,7 @@ export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
 	detectorKey: { type: String, required: true },
-	expiresAt: { type: Date, required: false, expires: 0 },
+	expiresAt: { type: Date, required: false },
 });
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
@@ -506,6 +512,8 @@ DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
+
+	ensureIndexes(): Promise<void>;
 
 	storeDataset(dataset: Dataset): Promise<void>;
 
@@ -602,6 +610,11 @@ export interface IProviderDatabase extends IDatabase {
 
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
+	updateDappUserCommitment(
+		commitmentId: Hash,
+		updates: Partial<UserCommitment>,
+	): Promise<void>;
+
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,
 		skip?: number,
@@ -654,12 +667,17 @@ export interface IProviderDatabase extends IDatabase {
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null>;
 
-	updatePowCaptchaRecord(
+	updatePowCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
 		serverChecked: boolean,
 		userSubmitted: boolean,
 		userSignature?: string,
+	): Promise<void>;
+
+	updatePowCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PoWCaptchaRecord>,
 	): Promise<void>;
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
@@ -697,6 +715,10 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<SessionRecord[]>;
 
 	markSessionRecordsStored(sessionIds: string[]): Promise<void>;
+
+	markFrictionlessTokenRecordsStored(
+		tokenIds: FrictionlessTokenId[],
+	): Promise<void>;
 
 	getUserAccessRulesStorage(): AccessRulesStorage;
 

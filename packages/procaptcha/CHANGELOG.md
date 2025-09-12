@@ -1,5 +1,54 @@
 # @prosopo/procaptcha
 
+## 2.8.7
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- 72810f4: Fix TypeScript type checking by reordering project references and updating typecheck commands
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/procaptcha-common@2.8.7
+  - @prosopo/util-crypto@13.5.16
+  - @prosopo/datasets@3.0.28
+  - @prosopo/common@3.1.14
+  - @prosopo/util@3.0.17
+  - @prosopo/api@3.1.18
+  - @prosopo/config@3.1.14
+
+## 2.8.6
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/procaptcha-common@2.8.6
+  - @prosopo/util-crypto@13.5.15
+  - @prosopo/datasets@3.0.27
+  - @prosopo/common@3.1.13
+  - @prosopo/util@3.0.16
+  - @prosopo/api@3.1.17
+  - @prosopo/config@3.1.13
+
+## 2.8.5
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- 72810f4: Fix TypeScript type checking by reordering project references and updating typecheck commands
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/procaptcha-common@2.8.5
+  - @prosopo/util-crypto@13.5.14
+  - @prosopo/datasets@3.0.26
+  - @prosopo/common@3.1.12
+  - @prosopo/util@3.0.15
+  - @prosopo/api@3.1.16
+  - @prosopo/config@3.1.12
+
 ## 2.8.4
 ### Patch Changes
 

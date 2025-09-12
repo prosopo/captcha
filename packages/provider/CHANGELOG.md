@@ -1,5 +1,96 @@
 # @prosopo/provider
 
+## 3.10.0
+### Minor Changes
+
+- 97edf3f: Adding dom manip checks
+
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/api-express-router@3.0.19
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/types-database@3.2.2
+  - @prosopo/load-balancer@2.7.7
+  - @prosopo/util-crypto@13.5.16
+  - @prosopo/api-route@2.6.22
+  - @prosopo/types-env@2.7.32
+  - @prosopo/database@3.3.2
+  - @prosopo/datasets@3.0.28
+  - @prosopo/keyring@2.8.21
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/util@3.0.17
+  - @prosopo/api@3.1.18
+  - @prosopo/env@3.2.7
+  - @prosopo/config@3.1.14
+
+## 3.9.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- bebb855: ip parsing
+- 509be28: Fix IP conditions logic
+- 509be28: Fix require all conditions logic
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [0555cd8]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types-database@3.2.1
+  - @prosopo/database@3.3.1
+  - @prosopo/types@3.2.1
+  - @prosopo/api-express-router@3.0.18
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/load-balancer@2.7.6
+  - @prosopo/util-crypto@13.5.15
+  - @prosopo/api-route@2.6.21
+  - @prosopo/types-env@2.7.31
+  - @prosopo/datasets@3.0.27
+  - @prosopo/keyring@2.8.20
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/util@3.0.16
+  - @prosopo/api@3.1.17
+  - @prosopo/env@3.2.6
+  - @prosopo/config@3.1.13
+
+## 3.9.0
+### Minor Changes
+
+- cf48565: Store additional details. Remove duplicate indexes.
+- 260de39: Fix indexes so that stuff properly expires
+
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [d644c04]
+- Updated dependencies [0824221]
+- Updated dependencies [260de39]
+  - @prosopo/types-database@3.2.0
+  - @prosopo/database@3.3.0
+  - @prosopo/types@3.2.0
+  - @prosopo/api-express-router@3.0.17
+  - @prosopo/user-access-policy@3.5.11
+  - @prosopo/load-balancer@2.7.5
+  - @prosopo/util-crypto@13.5.14
+  - @prosopo/api-route@2.6.20
+  - @prosopo/types-env@2.7.30
+  - @prosopo/datasets@3.0.26
+  - @prosopo/keyring@2.8.19
+  - @prosopo/common@3.1.12
+  - @prosopo/locale@3.1.12
+  - @prosopo/util@3.0.15
+  - @prosopo/api@3.1.16
+  - @prosopo/env@3.2.5
+  - @prosopo/config@3.1.12
+
 ## 3.8.4
 ### Patch Changes
 

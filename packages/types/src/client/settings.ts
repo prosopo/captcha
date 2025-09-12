@@ -28,6 +28,12 @@ export enum IPValidationAction {
 	Flag = "flag",
 }
 
+export type IPValidateCondition = {
+	met: boolean;
+	action: IPValidationAction;
+	message: string;
+};
+
 export const IPValidationActionSchema = z.nativeEnum(IPValidationAction);
 
 // IP Validation defaults
@@ -38,12 +44,17 @@ export const distanceExceedActionDefault = IPValidationAction.Reject;
 export const requireAllConditionsDefault = false;
 
 export const IPValidationRulesSchema = object({
-	countryChangeAction: IPValidationActionSchema.optional().default(
-		countryChangeActionDefault,
-	),
-	ispChangeAction: IPValidationActionSchema.optional().default(
-		ispChangeActionDefault,
-	),
+	actions: object({
+		countryChangeAction: IPValidationActionSchema.optional().default(
+			countryChangeActionDefault,
+		),
+		ispChangeAction: IPValidationActionSchema.optional().default(
+			ispChangeActionDefault,
+		),
+		distanceExceedAction: IPValidationActionSchema.optional().default(
+			distanceExceedActionDefault,
+		),
+	}),
 	distanceThresholdKm: number()
 		.positive()
 		.optional()

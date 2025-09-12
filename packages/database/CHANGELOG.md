@@ -1,5 +1,56 @@
 # @prosopo/database
 
+## 3.3.2
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/types-database@3.2.2
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/config@3.1.14
+
+## 3.3.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [0555cd8]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types-database@3.2.1
+  - @prosopo/types@3.2.1
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/config@3.1.13
+
+## 3.3.0
+### Minor Changes
+
+- cf48565: Store additional details. Remove duplicate indexes.
+- 260de39: Fix indexes so that stuff properly expires
+
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [d644c04]
+- Updated dependencies [0824221]
+- Updated dependencies [260de39]
+  - @prosopo/types-database@3.2.0
+  - @prosopo/types@3.2.0
+  - @prosopo/user-access-policy@3.5.11
+  - @prosopo/common@3.1.12
+  - @prosopo/locale@3.1.12
+  - @prosopo/config@3.1.12
+
 ## 3.2.4
 ### Patch Changes
 
