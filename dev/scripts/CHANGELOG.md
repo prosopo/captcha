@@ -1,5 +1,28 @@
 # @prosopo/scripts
 
+## 3.1.7
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/provider@3.10.0
+  - @prosopo/types@3.3.0
+  - @prosopo/cli@3.4.0
+  - @prosopo/util-crypto@13.5.16
+  - @prosopo/types-env@2.7.32
+  - @prosopo/datasets@3.0.28
+  - @prosopo/keyring@2.8.21
+  - @prosopo/common@3.1.14
+  - @prosopo/dotenv@3.0.19
+  - @prosopo/locale@3.1.14
+  - @prosopo/workspace@3.1.7
+  - @prosopo/util@3.0.17
+  - @prosopo/env@3.2.7
+  - @prosopo/config@3.1.14
+
 ## 3.1.6
 ### Patch Changes
 
