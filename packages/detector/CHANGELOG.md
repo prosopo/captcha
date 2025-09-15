@@ -1,5 +1,60 @@
 # @prosopo/detector
 
+## 3.2.0
+### Minor Changes
+
+- 97edf3f: Adding dom manip checks
+
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- 72810f4: Fix TypeScript type checking by reordering project references and updating typecheck commands
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/config@3.1.14
+
+## 3.1.6
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- 0555cd8: Fix type
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/config@3.1.13
+
+## 3.1.5
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- 72810f4: Fix TypeScript type checking by reordering project references and updating typecheck commands
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/config@3.1.12
+
+## 3.1.4
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types@3.1.4
+  - @prosopo/config@3.1.11
+
+## 3.1.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
 ## 3.1.2
 ### Patch Changes
 

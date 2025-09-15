@@ -28,22 +28,38 @@ export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
 ): Promise<T> => {
+	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
-		setTimeout(() => {
+		timeoutId = setTimeout(() => {
 			reject(new ProsopoEnvError("API.UNKNOWN"));
 		}, ms);
 	});
 
-	return Promise.race([promise, timeoutPromise]);
+	try {
+		const result = await Promise.race([promise, timeoutPromise]);
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		return result;
+	} catch (error) {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		throw error;
+	}
 };
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
+	container: HTMLElement | undefined,
+	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
 	const detect = await DetectorLoader();
 	const botScore = (await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
+		container,
+		restartFn,
 	)) as { token: string; provider?: RandomProvider };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);

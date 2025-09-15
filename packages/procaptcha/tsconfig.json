@@ -17,13 +17,13 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
+			"path": "../datasets"
+		},
+		{
 			"path": "../api"
 		},
 		{
 			"path": "../common"
-		},
-		{
-			"path": "../datasets"
 		},
 		{
 			"path": "../procaptcha-common"

@@ -1,5 +1,77 @@
 # @prosopo/types-database
 
+## 3.2.2
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/config@3.1.14
+
+## 3.2.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- 0555cd8: Fix type
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/config@3.1.13
+
+## 3.2.0
+### Minor Changes
+
+- cf48565: Store additional details. Remove duplicate indexes.
+- 260de39: Fix indexes so that stuff properly expires
+
+### Patch Changes
+
+- d644c04: Make schema public
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/user-access-policy@3.5.11
+  - @prosopo/common@3.1.12
+  - @prosopo/locale@3.1.12
+  - @prosopo/config@3.1.12
+
+## 3.1.5
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/user-access-policy@3.5.10
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
+## 3.1.4
+### Patch Changes
+
+- a8a9251: Add index on IP parts
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/user-access-policy@3.5.9
+  - @prosopo/common@3.1.10
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
 ## 3.1.3
 ### Patch Changes
 

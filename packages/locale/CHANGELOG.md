@@ -1,5 +1,43 @@
 # @prosopo/locale
 
+## 3.1.14
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/config@3.1.14
+
+## 3.1.13
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [008d112]
+  - @prosopo/config@3.1.13
+
+## 3.1.12
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [0824221]
+  - @prosopo/config@3.1.12
+
+## 3.1.11
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/config@3.1.11
+
+## 3.1.10
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/config@3.1.10
+
 ## 3.1.9
 ### Patch Changes
 

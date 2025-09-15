@@ -53,7 +53,7 @@ export abstract class Generate<
 			},
 			unlabelled: {
 				string: true,
-				demand: true,
+				demand: false,
 				description: "Path to JSON file containing unlabelled data",
 			},
 			seed: {

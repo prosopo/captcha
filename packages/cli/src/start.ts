@@ -85,10 +85,7 @@ async function startApi(
 	}));
 
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-	apiApp.set(
-		"trust proxy",
-		env.config.proxyCount /* number of proxies between user and server */,
-	);
+	apiApp.set("trust proxy", 1);
 
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
@@ -106,22 +103,22 @@ async function startApi(
 	// Specify verify router before the blocking middlewares
 	apiApp.use(prosopoVerifyRouter(env));
 
-	// Blocking middleware will run on any routes defined after this point
-	apiApp.use(blockMiddleware(env));
-
 	// Header check middleware will run on any client routes excluding verify
 	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
 
-	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
-	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
-	apiApp.use(prosopoRouter(env));
-
-	// Admin routes
+	// Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
 	apiApp.use(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
+
+	// Blocking middleware will run on any routes defined after this point
+	apiApp.use(blockMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
+	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(prosopoRouter(env));
 
 	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 	for (const userAccessRuleRoute of userAccessRuleRoutes) {
@@ -187,7 +184,12 @@ export async function start(
 		}
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
-		env.logger.debug(() => ({ msg: "Env already defined" }));
+		env.logger.debug(() => ({
+			msg: "Env already defined",
+			data: {
+				config: env?.config,
+			},
+		}));
 	}
 
 	await env.isReady();

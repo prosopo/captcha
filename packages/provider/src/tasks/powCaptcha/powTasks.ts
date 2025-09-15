@@ -30,9 +30,13 @@ import type {
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, verifyRecency } from "@prosopo/util";
-import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
-import { validateIpAddress } from "../../util.js";
+import {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "../../compositeIpAddress.js";
+import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -132,7 +136,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		const difficulty = challengeRecord.difficulty;
 
 		if (!verifyRecency(challenge, timeout)) {
-			await this.db.updatePowCaptchaRecord(
+			await this.db.updatePowCaptchaRecordResult(
 				challenge,
 				{
 					status: CaptchaStatus.disapproved,
@@ -155,7 +159,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.updatePowCaptchaRecord(
+		await this.db.updatePowCaptchaRecordResult(
 			challenge,
 			result,
 			false,
@@ -178,6 +182,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
+		env: ProviderEnvironment,
 		ip?: string,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
@@ -191,22 +196,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			}));
 
 			return notVerifiedResponse;
-		}
-
-		if (ip) {
-			const challengeIpAddress = getIpAddressFromComposite(
-				challengeRecord.ipAddress,
-			);
-
-			const ipValidation = validateIpAddress(
-				ip,
-				challengeIpAddress,
-				this.logger,
-			);
-
-			if (!ipValidation.isValid) {
-				return notVerifiedResponse;
-			}
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -232,14 +221,54 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		const recent = verifyRecency(challenge, timeout);
-
+		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution has already been checked by the server. Moving this code around could result in solutions being
+		// re-usable.
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+		// -- END WARNING --
 
+		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
 			return notVerifiedResponse;
+		}
+
+		if (ip) {
+			const challengeIpAddress = getIpAddressFromComposite(
+				challengeRecord.ipAddress,
+			);
+
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dappAccount);
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+
+			const ipValidation = await deepValidateIpAddress(
+				ip,
+				challengeIpAddress,
+				this.logger,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
+				ipValidationRules,
+			);
+
+			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for PoW captcha",
+					data: {
+						ip,
+						challengeIp: challengeIpAddress.address,
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm,
+					},
+				}));
+				return notVerifiedResponse;
+			}
 		}
 
 		let score: number | undefined;
