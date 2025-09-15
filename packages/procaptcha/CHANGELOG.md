@@ -3,9 +3,12 @@
 ## 2.8.7
 ### Patch Changes
 
-- c3bc3c5: Release 3.3.1
-- Updated dependencies [da7577f]
-- Updated dependencies [c3bc3c5]
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- 72810f4: Fix TypeScript type checking by reordering project references and updating typecheck commands
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
   - @prosopo/types@3.3.0
   - @prosopo/procaptcha-common@2.8.7
   - @prosopo/util-crypto@13.5.16

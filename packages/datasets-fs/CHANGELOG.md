@@ -3,9 +3,12 @@
 ## 3.0.20
 ### Patch Changes
 
-- c3bc3c5: Release 3.3.1
-- Updated dependencies [da7577f]
-- Updated dependencies [c3bc3c5]
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Allow zero unlabelled images in the dataset
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
   - @prosopo/types@3.3.0
   - @prosopo/util-crypto@13.5.16
   - @prosopo/common@3.1.14

@@ -3,7 +3,8 @@
 ## 2.6.20
 ### Patch Changes
 
-- c3bc3c5: Release 3.3.1
+- Release 3.3.1
+- 0824221: Release 3.2.4
 
 ## 2.6.19
 ### Patch Changes

@@ -3,9 +3,11 @@
 ## 3.1.7
 ### Patch Changes
 
-- c3bc3c5: Release 3.3.1
-- Updated dependencies [da7577f]
-- Updated dependencies [c3bc3c5]
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
   - @prosopo/provider@3.10.0
   - @prosopo/types@3.3.0
   - @prosopo/cli@3.4.0

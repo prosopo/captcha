@@ -3,8 +3,10 @@
 ## 2.6.19
 ### Patch Changes
 
-- c3bc3c5: Release 3.3.1
-- Updated dependencies [c3bc3c5]
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
   - @prosopo/util@3.0.17
   - @prosopo/config@3.1.14
 

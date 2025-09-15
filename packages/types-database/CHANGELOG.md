@@ -3,9 +3,11 @@
 ## 3.2.2
 ### Patch Changes
 
-- c3bc3c5: Release 3.3.1
-- Updated dependencies [da7577f]
-- Updated dependencies [c3bc3c5]
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
   - @prosopo/types@3.3.0
   - @prosopo/user-access-policy@3.5.13
   - @prosopo/common@3.1.14

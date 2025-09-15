@@ -3,8 +3,10 @@
 ## 2.6.24
 ### Patch Changes
 
-- c3bc3c5: Release 3.3.1
-- Updated dependencies [c3bc3c5]
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
   - @prosopo/common@3.1.14
   - @prosopo/dotenv@3.0.19
   - @prosopo/util@3.0.17
