@@ -15,15 +15,15 @@
 import HttpClientBase from "./HttpClientBase.js";
 
 export class ApiClient extends HttpClientBase {
-    protected account: string;
+	protected account: string;
 
-    constructor(baseUrl: string, account: string) {
-        const baseUrlWithProtocol = !baseUrl.startsWith("http")
-            ? `https://${baseUrl}`
-            : baseUrl;
+	constructor(baseUrl: string, account: string) {
+		const baseUrlWithProtocol = !baseUrl.startsWith("http")
+			? `https://${baseUrl}`
+			: baseUrl;
 
-        super(baseUrlWithProtocol);
+		super(baseUrlWithProtocol);
 
-        this.account = account;
-    }
+		this.account = account;
+	}
 }
