@@ -152,6 +152,17 @@ export const Checkbox: FC<CheckboxProps> = ({
 					type={"checkbox"}
 					aria-live={"assertive"}
 					aria-label={labelText}
+					onKeyDown={(e) => {
+						if (!e.isTrusted) {
+							return;
+						}
+						if (e.key === "Enter") {
+							e.preventDefault();
+							e.stopPropagation();
+							setHover(false);
+							onChange(e);
+						}
+					}}
 					onChange={(e) => {
 						if (!e.isTrusted) {
 							return;
