@@ -29,7 +29,8 @@ import {
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;
 	checked: boolean;
-	onChange: () => Promise<void>;
+	// biome-ignore lint/suspicious/noExplicitAny: don't know what it will be
+	onChange: (event: any) => Promise<void>;
 	labelText: string;
 	error?: string;
 	loading: boolean;
@@ -152,10 +153,13 @@ export const Checkbox: FC<CheckboxProps> = ({
 					aria-live={"assertive"}
 					aria-label={labelText}
 					onChange={(e) => {
+						if (!e.isTrusted) {
+							return;
+						}
 						e.preventDefault();
 						e.stopPropagation();
 						setHover(false);
-						onChange();
+						onChange(e);
 					}}
 					checked={checked}
 					style={checkboxStyle}

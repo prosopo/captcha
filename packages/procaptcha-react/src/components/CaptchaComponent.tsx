@@ -24,10 +24,10 @@ import { CaptchaWidget } from "./CaptchaWidget.js";
 export interface CaptchaComponentProps {
 	challenge: CaptchaResponseBody;
 	index: number;
-	solutions: string[][];
+	solutions: [string, number, number][][];
 	onSubmit: () => void;
 	onCancel: () => void;
-	onClick: (hash: string) => void;
+	onClick: (hash: string, x?: number, y?: number) => void;
 	onNext: () => void;
 	onReload: () => void;
 	themeColor: "light" | "dark";

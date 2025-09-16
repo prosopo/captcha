@@ -19,8 +19,8 @@ import { useMemo } from "react";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
-	solution: string[];
-	onClick: (hash: string) => void;
+	solution: [string, number, number][];
+	onClick: (hash: string, x: number, y: number) => void;
 	themeColor: "light" | "dark";
 }
 
@@ -86,7 +86,12 @@ export const CaptchaWidget = ({
 								padding: 0,
 								margin: 0,
 							}}
-							onClick={() => onClick(hash)}
+							onClick={(e) => {
+								if (!e.isTrusted) {
+									return;
+								}
+								onClick(hash, e.clientX, e.clientY);
+							}}
 						>
 							<img
 								style={{
@@ -128,7 +133,9 @@ export const CaptchaWidget = ({
 									justifyContent: "center",
 									// make bg half opacity, i.e. shadowing the item's img
 									backgroundColor: "rgba(0,0,0,0.5)",
-									visibility: solution.includes(hash) ? "visible" : "hidden",
+									visibility: solution.some((s) => s[0] === hash)
+										? "visible"
+										: "hidden",
 								}}
 							>
 								<svg
