@@ -15,6 +15,7 @@ import { ProsopoDatasetError } from "@prosopo/common";
 import type { Captcha } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { Properties } from "csstype";
+import type React from "react";
 import { useMemo } from "react";
 
 export interface CaptchaWidgetProps {
@@ -86,11 +87,20 @@ export const CaptchaWidget = ({
 								padding: 0,
 								margin: 0,
 							}}
-							onClick={(e) => {
+							onClick={(e: React.MouseEvent | React.TouchEvent) => {
 								if (!e.isTrusted) {
 									return;
 								}
-								onClick(hash, e.clientX, e.clientY);
+								if ("touches" in e && e.touches.length > 0 && e.touches[0]) {
+									onClick(hash, e.touches[0].clientX, e.touches[0].clientY);
+									return;
+								}
+
+								if ("clientX" in e && "clientY" in e) {
+									onClick(hash, e.clientX, e.clientY);
+									return;
+								}
+								onClick(hash, 0, 0);
 							}}
 						>
 							<img
