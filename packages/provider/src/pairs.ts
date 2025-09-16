@@ -38,14 +38,14 @@ export const containsIdenticalPairs = (pairsLists: [number, number][][]) => {
 	const set = new Set<string>();
 
 	for (const pairList of pairsLists) {
-		for (let i = 0; i < pairList.length; i += 2) {
-			const x = at(pairList, i);
-			const y = at(pairList, i + 1);
+		for (const pair of pairList) {
+			const x = at(pair, 0);
+			const y = at(pair, 1);
 			const coordString = `${x},${y}`;
 			set.add(coordString);
 		}
 	}
 
 	// if the size of the set is less than half the total number of coordinates, there are identical pairs
-	return set.size !== pairsLists.flat().length / 2;
+	return set.size !== pairsLists.flat().flat().length / 2;
 };
