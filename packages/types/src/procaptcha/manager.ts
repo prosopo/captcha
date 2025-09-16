@@ -42,7 +42,7 @@ export const ProcaptchaResponse = object({
 export interface ProcaptchaState {
 	isHuman: boolean; // is the user human?
 	index: number; // the index of the captcha round currently being shown
-	solutions: string[][]; // the solutions for each captcha round
+	solutions: [string, number, number][][]; // the solutions for each captcha round
 	captchaApi: ProcaptchaApiInterface | undefined; // the captcha api instance for managing captcha challenge. undefined if not set up
 	challenge: CaptchaResponseBody | undefined; // the captcha challenge from the provider. undefined if not set up
 	showModal: boolean; // whether to show the modal or not

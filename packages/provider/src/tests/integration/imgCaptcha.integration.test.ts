@@ -28,7 +28,8 @@ import {
 	CaptchaType,
 	ClientApiPaths,
 } from "@prosopo/types";
-import { at } from "@prosopo/util";
+import { at, embedData } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 import { registerSiteKey } from "./registerSitekey.js";
@@ -265,12 +266,17 @@ describe("Image Captcha Integration Tests", () => {
 			const data = (await response.json()) as CaptchaResponseBody;
 
 			const solvedCaptchas = datasetWithSolutionHashes.captchas.map(
-				(captcha) => ({
+				(captcha, index) => ({
 					captchaContentId: captcha.captchaContentId,
 					solution: captcha.solution
 						? captcha.solution.map((s) => s.toString())
 						: captcha.solution,
-					salt: captcha.salt,
+					salt: embedData(randomAsHex(), [
+						1 + index,
+						2 + index,
+						3 + index,
+						4 + index,
+					]),
 				}),
 			);
 

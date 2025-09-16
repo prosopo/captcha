@@ -49,6 +49,7 @@ import {
 	boolean,
 	date,
 	nativeEnum,
+	number,
 	object,
 	string,
 	union,
@@ -136,6 +137,7 @@ export interface StoredCaptcha {
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 	frictionlessTokenId?: FrictionlessTokenId;
+	coords?: [number, number][][];
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -171,6 +173,7 @@ export const UserCommitmentSchema = object({
 		string(),
 		zInstanceof(mongoose.Types.ObjectId),
 	]).optional(),
+	coords: array(array(array(number()))).optional(),
 });
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -248,6 +251,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
+	coords: { type: [[[Number]]], required: false },
 });
 
 // Set an index on the captchaId field, ascending
@@ -289,6 +293,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
+	coords: { type: [[[Number]]], required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -597,6 +602,7 @@ export interface IProviderDatabase extends IDatabase {
 	disapproveDappUserCommitment(
 		commitmentId: string,
 		reason?: TranslationKey,
+		coords?: [number, number][][],
 	): Promise<void>;
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
