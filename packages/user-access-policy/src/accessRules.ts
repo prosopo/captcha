@@ -51,7 +51,7 @@ export type AccessRuleExtended = z.input<typeof accessRuleSchemaExtended>;
 
 const RULE_HASH_ALGORITHM = "md5";
 
-export const getAccessRuleHash = (rule: AccessRule): string =>
+export const makeAccessRuleHash = (rule: AccessRule): string =>
 	crypto
 		.createHash(RULE_HASH_ALGORITHM)
 		.update(
@@ -61,6 +61,22 @@ export const getAccessRuleHash = (rule: AccessRule): string =>
 			),
 		)
 		.digest("hex");
+
+/**
+ * This function allows getting the exact same rule on the AWS side from the ExtendedRule, as on the provider one.
+ * It's necessary to have the same rule hash everywhere.
+ */
+export const transformExtendedRuleIntoAccessRule = (
+	extendedRule: AccessRuleExtended,
+): AccessRule => {
+	// turn ip:string into numericIp:number and make other scope transformations
+	const userScope = userScopeInputSchema.parse(extendedRule);
+
+	const ruleFields = { ...extendedRule, ...userScope };
+
+	// get rid of the unused extended fields
+	return accessRuleSchema.parse(ruleFields);
+};
 
 export type AccessRulesReader = {
 	findRules(

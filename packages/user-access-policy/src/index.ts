@@ -27,9 +27,10 @@ export {
 	type AccessRule,
 	type AccessRulesStorage,
 	accessRuleSchema,
-	getAccessRuleHash,
+	makeAccessRuleHash,
 	type AccessRuleExtended,
 	accessRuleSchemaExtended,
+	transformExtendedRuleIntoAccessRule,
 } from "#policy/accessRules.js";
 export {
 	accessRuleApiPaths,

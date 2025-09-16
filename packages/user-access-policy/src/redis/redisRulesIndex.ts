@@ -20,7 +20,7 @@ import {
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import { type AccessRule, getAccessRuleHash } from "#policy/accessRules.js";
+import { type AccessRule, makeAccessRuleHash } from "#policy/accessRules.js";
 
 export const redisRulesIndexName = "index:user-access-rules";
 
@@ -28,7 +28,7 @@ export const redisRulesIndexName = "index:user-access-rules";
 export const redisRuleKeyPrefix = "uar:";
 
 export const getRedisRuleKey = (rule: AccessRule): string =>
-	redisRuleKeyPrefix + getAccessRuleHash(rule);
+	redisRuleKeyPrefix + makeAccessRuleHash(rule);
 
 export const redisAccessRulesIndex: RedisIndex = {
 	name: redisRulesIndexName,
