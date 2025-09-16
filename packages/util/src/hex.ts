@@ -116,7 +116,7 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 
 	if (totalLength > hexString.length) {
 		throw new Error(
-			`Hex data length ${totalLength} exceeds length of hex string ${hexString.length}`,
+			`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
 		);
 	}
 
@@ -131,7 +131,7 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 
 		if (totalLength > hexString.length) {
 			throw new Error(
-				`Hex data length ${totalLength} exceeds length of hex string ${hexString.length}`,
+				`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
 			);
 		}
 
