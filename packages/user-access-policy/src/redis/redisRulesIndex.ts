@@ -20,11 +20,15 @@ import {
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type { AccessRule } from "#policy/accessRules.js";
+import { type AccessRule, getAccessRuleHash } from "#policy/accessRules.js";
 
 export const redisRulesIndexName = "index:user-access-rules";
+
 // names take space, so we use an acronym instead of the long-tailed one
 export const redisRuleKeyPrefix = "uar:";
+
+export const getRedisRuleKey = (rule: AccessRule): string =>
+	redisRuleKeyPrefix + getAccessRuleHash(rule);
 
 export const redisAccessRulesIndex: RedisIndex = {
 	name: redisRulesIndexName,
@@ -101,6 +105,7 @@ const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 	},
 };
 
+// https://redis.io/docs/latest/commands/ft.search/
 export const redisRulesSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,

@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import crypto from "node:crypto";
 import { z } from "zod";
 import {
 	accessPolicySchema,
 	policyScopeSchema,
+	userScopeInputSchema,
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
 import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
@@ -32,6 +34,33 @@ export const accessRuleSchema: z.ZodObject<
 });
 
 export type AccessRule = z.infer<typeof accessRuleSchema>;
+
+export const accessRuleSchemaExtended = z
+	.object({
+		// flat structure is used to fit the Redis requirements
+		...accessPolicySchema.shape,
+		...policyScopeSchema.shape,
+		...userScopeInputSchema._def.schema.shape,
+	})
+	.omit({
+		numericIp: true,
+		numericIpMaskMin: true,
+		numericIpMaskMax: true,
+	});
+export type AccessRuleExtended = z.input<typeof accessRuleSchemaExtended>;
+
+const RULE_HASH_ALGORITHM = "md5";
+
+export const getAccessRuleHash = (rule: AccessRule): string =>
+	crypto
+		.createHash(RULE_HASH_ALGORITHM)
+		.update(
+			JSON.stringify(rule, (key, value) =>
+				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
+				"bigint" === typeof value ? value.toString() : value,
+			),
+		)
+		.digest("hex");
 
 export type AccessRulesReader = {
 	findRules(

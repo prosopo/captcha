@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import crypto from "node:crypto";
 import type { Logger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
 import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
-import { redisRuleKeyPrefix } from "#policy/redis/redisRulesIndex.js";
-
-const redisRuleContentHashAlgorithm = "md5";
+import {
+	getRedisRuleKey,
+	redisRuleKeyPrefix,
+} from "#policy/redis/redisRulesIndex.js";
 
 export const createRedisRulesWriter = (
 	client: RedisClientType,
@@ -94,18 +94,6 @@ export const getDummyRedisRulesWriter = (logger: Logger): AccessRulesWriter => {
 		},
 	};
 };
-
-export const getRedisRuleKey = (rule: AccessRule): string =>
-	redisRuleKeyPrefix +
-	crypto
-		.createHash(redisRuleContentHashAlgorithm)
-		.update(
-			JSON.stringify(rule, (key, value) =>
-				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
-				"bigint" === typeof value ? value.toString() : value,
-			),
-		)
-		.digest("hex");
 
 export const getRedisRuleValue = (rule: AccessRule): Record<string, string> =>
 	Object.fromEntries(
