@@ -320,6 +320,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: false,
 				};
+				return response;
 			}
 
 			if (
