@@ -1,5 +1,12 @@
 # @prosopo/util-crypto
 
+## 13.5.17
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+  - @prosopo/config@3.1.15
+
 ## 13.5.16
 ### Patch Changes
 

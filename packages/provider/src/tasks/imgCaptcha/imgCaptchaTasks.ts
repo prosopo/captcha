@@ -338,11 +338,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				await this.db.approveDappUserCommitment(commitmentId);
+				await this.db.approveDappUserCommitment(commitmentId, pairs);
 			} else {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
+					pairs,
 				);
 				response = {
 					captchas: captchaIds.map((id) => ({

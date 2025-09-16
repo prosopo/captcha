@@ -1,5 +1,19 @@
 # @prosopo/env
 
+## 3.2.8
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/util-crypto@13.5.17
+  - @prosopo/types-env@2.7.33
+  - @prosopo/database@3.4.0
+  - @prosopo/keyring@2.8.22
+  - @prosopo/common@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
 ## 3.2.7
 ### Patch Changes
 

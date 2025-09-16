@@ -597,7 +597,10 @@ export interface IProviderDatabase extends IDatabase {
 		dappAccount: string,
 	): Promise<UserCommitmentRecord[]>;
 
-	approveDappUserCommitment(commitmentId: string): Promise<void>;
+	approveDappUserCommitment(
+		commitmentId: string,
+		coords?: [number, number][][],
+	): Promise<void>;
 
 	disapproveDappUserCommitment(
 		commitmentId: string,

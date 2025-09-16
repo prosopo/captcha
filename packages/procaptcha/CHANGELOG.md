@@ -1,5 +1,24 @@
 # @prosopo/procaptcha
 
+## 2.9.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/procaptcha-common@2.9.0
+  - @prosopo/util-crypto@13.5.17
+  - @prosopo/datasets@3.0.29
+  - @prosopo/common@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/util@3.1.0
+  - @prosopo/api@3.1.19
+  - @prosopo/config@3.1.15
+
 ## 2.8.7
 ### Patch Changes
 
