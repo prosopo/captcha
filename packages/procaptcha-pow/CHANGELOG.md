@@ -1,5 +1,20 @@
 # @prosopo/procaptcha-pow
 
+## 2.8.8
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/procaptcha-common@2.9.0
+  - @prosopo/widget-skeleton@2.7.1
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/util@3.1.0
+  - @prosopo/api@3.1.19
+  - @prosopo/config@3.1.15
+
 ## 2.8.7
 ### Patch Changes
 

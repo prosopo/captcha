@@ -1,5 +1,21 @@
 # @prosopo/provider-mock
 
+## 2.8.12
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/api-express-router@3.0.20
+  - @prosopo/types-database@3.3.0
+  - @prosopo/database@3.4.0
+  - @prosopo/provider@3.11.0
+  - @prosopo/common@3.1.15
+  - @prosopo/dotenv@3.0.20
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
 ## 2.8.11
 ### Patch Changes
 

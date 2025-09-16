@@ -1,5 +1,14 @@
 # @prosopo/file-server
 
+## 2.6.20
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/util@3.1.0
+  - @prosopo/config@3.1.15
+
 ## 2.6.19
 ### Patch Changes
 
