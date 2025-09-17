@@ -30,7 +30,7 @@
 }
 
 {$CADDY_DOMAIN} {
-	handle_path /robots.txt {
+	handle /robots.txt {
 		root * /srv/static
 		file_server
 		header Content-Type "text/plain"
