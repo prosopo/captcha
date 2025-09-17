@@ -30,6 +30,13 @@
 }
 
 {$CADDY_DOMAIN} {
+	handle_path /robots.txt {
+		root * /srv/static
+		file_server
+		header Content-Type "text/plain"
+		header X-Robots-Tag "noindex, nofollow"
+	}
+
 	route {
 		client_hello
 		request_id
@@ -46,14 +53,6 @@
 			# Prevent search engines from indexing
 			X-Robots-Tag "none"
 		}
-
-		handle /robots.txt {
-			root * /srv/static
-			file_server
-			header Content-Type "text/plain"
-			header X-Robots-Tag "noindex, nofollow"
-		}
-
 
 		# basicauth /metrics {
 		# 	 # this has to be the username<space><bcrypted password>
