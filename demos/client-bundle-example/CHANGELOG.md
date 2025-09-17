@@ -1,5 +1,32 @@
 # @prosopo/client-bundle-example
 
+## 2.10.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+  - @prosopo/config@3.1.15
+
+## 2.9.17
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/config@3.1.14
+
+## 2.9.16
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [008d112]
+  - @prosopo/config@3.1.13
+
 ## 2.9.15
 ### Patch Changes
 

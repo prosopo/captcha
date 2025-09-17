@@ -14,25 +14,36 @@
 
 import { SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	test,
-} from "vitest";
-import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
-import { createTestRedisClient } from "./testRedisClient.js";
+	type RedisIndex,
+	createRedisIndex,
+	deleteRedisIndex,
+} from "../redisIndex.js";
+import { createTestRedisConnection } from "./testRedisConnection.js";
 
-let indexCount = 0;
-const getTestIndexName = () => `index:${indexCount++}`;
+const testIndexNames: string[] = [];
+const getTestIndexName = () => {
+	const indexName = `test-index:${testIndexNames.length}`;
+
+	testIndexNames.push(indexName);
+
+	return indexName;
+};
 
 describe("redisIndex", () => {
 	let redisClient: RedisClientType;
 
 	beforeAll(async () => {
-		redisClient = await createTestRedisClient();
+		redisClient = await createTestRedisConnection().getClient();
+	});
+
+	afterAll(async () => {
+		const deleteIndexPromises = testIndexNames.map(
+			async (indexName) => await deleteRedisIndex(redisClient, indexName),
+		);
+
+		await Promise.all(deleteIndexPromises);
 	});
 
 	test("creates new index", async () => {

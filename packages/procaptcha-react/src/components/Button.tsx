@@ -97,6 +97,9 @@ const Button: React.FC<ButtonProps> = ({
 			onMouseLeave={() => setHover(false)}
 			style={buttonStyle}
 			onClick={(e) => {
+				if (!e.isTrusted) {
+					return;
+				}
 				e.preventDefault();
 				onClick();
 			}}

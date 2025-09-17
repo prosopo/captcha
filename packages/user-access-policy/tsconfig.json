@@ -32,6 +32,12 @@
 		},
 		{
 			"path": "../util-crypto"
+		},
+		{
+			"path": "../redis-client"
+		},
+		{
+			"path": "../api"
 		}
 	]
 }

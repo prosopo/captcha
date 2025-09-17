@@ -1,5 +1,62 @@
 # @prosopo/procaptcha-bundle
 
+## 3.1.1
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/procaptcha-frictionless@2.8.1
+  - @prosopo/procaptcha-common@2.9.0
+  - @prosopo/procaptcha-react@2.9.0
+  - @prosopo/widget-skeleton@2.7.1
+  - @prosopo/procaptcha-pow@2.8.8
+  - @prosopo/dotenv@3.0.20
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/util@3.1.0
+  - @prosopo/config@3.1.15
+
+## 3.1.0
+### Minor Changes
+
+- 97edf3f: Adding dom manip checks
+
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/procaptcha-frictionless@2.8.0
+  - @prosopo/widget-skeleton@2.7.0
+  - @prosopo/types@3.3.0
+  - @prosopo/procaptcha-common@2.8.7
+  - @prosopo/procaptcha-react@2.8.7
+  - @prosopo/procaptcha-pow@2.8.7
+  - @prosopo/dotenv@3.0.19
+  - @prosopo/locale@3.1.14
+  - @prosopo/util@3.0.17
+  - @prosopo/config@3.1.14
+
+## 3.0.27
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/procaptcha-frictionless@2.7.6
+  - @prosopo/procaptcha-common@2.8.6
+  - @prosopo/procaptcha-react@2.8.6
+  - @prosopo/widget-skeleton@2.6.14
+  - @prosopo/procaptcha-pow@2.8.6
+  - @prosopo/dotenv@3.0.18
+  - @prosopo/locale@3.1.13
+  - @prosopo/util@3.0.16
+  - @prosopo/config@3.1.13
+
 ## 3.0.26
 ### Patch Changes
 

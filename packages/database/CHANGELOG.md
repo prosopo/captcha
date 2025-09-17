@@ -1,5 +1,53 @@
 # @prosopo/database
 
+## 3.4.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/user-access-policy@3.5.14
+  - @prosopo/types-database@3.3.0
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
+## 3.3.2
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/types-database@3.2.2
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/config@3.1.14
+
+## 3.3.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [0555cd8]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types-database@3.2.1
+  - @prosopo/types@3.2.1
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/config@3.1.13
+
 ## 3.3.0
 ### Minor Changes
 

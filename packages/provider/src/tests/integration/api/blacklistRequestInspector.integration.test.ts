@@ -73,6 +73,12 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			config.redisConnection.indexName = randomAsHex(16);
 			env = new ProviderEnvironment(config);
 			await env.isReady();
+
+			const db = env.getDb();
+
+			// wait until Redis is ready
+			await db.getRedisAccessRulesConnection().getClient();
+
 			accessRulesStorage = env.getDb().getUserAccessRulesStorage();
 		});
 
@@ -183,6 +189,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result).toHaveLength(1);
 		});
+
 		it("should not return a rule when a JA4-UserAgent rule exists and the user matches the the JA4 but not the user agent", async () => {
 			const accessRule = accessRuleSchemaExtended.parse({
 				type: AccessPolicyType.Restrict,
@@ -283,6 +290,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 			expect(result).toHaveLength(1);
 		});
+
 		it("should return multiple matching rules", async () => {
 			const accessRule1 = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
@@ -311,6 +319,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result.length).toBe(2);
 		});
+
 		it("should return multiple matching rules in order of specificity", async () => {
 			const accessRule1 = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
@@ -351,6 +360,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 			expect(nonClientResult.length).toBe(0);
 		});
+
 		it("should not return a match for a different IP", async () => {
 			const accessRule1 = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
@@ -374,29 +384,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result.length).toBe(0);
 		});
-		it("should not return a match for a different IP", async () => {
-			const accessRule1 = accessRuleSchema.parse({
-				type: AccessPolicyType.Restrict,
-				clientId: siteKey,
-				ja4Hash: ja4Hash2,
-				userAgent: userAgent1,
-				numericIp: BigInt(16843009),
-			});
 
-			await accessRulesStorage.insertRule(accessRule1);
-
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
-					ja4Hash: ja4Hash2,
-					userAgent: userAgent1,
-					numericIp: BigInt(17843009),
-				},
-				siteKey,
-			);
-
-			expect(result.length).toBe(0);
-		});
 		it("should return a match for the same IP", async () => {
 			const numericIp = BigInt(16843009);
 			const accessRule1 = accessRuleSchema.parse({
@@ -421,6 +409,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result.length).toBe(1);
 		});
+
 		it("should not return a match for a different IP", async () => {
 			const accessRule1 = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
@@ -444,6 +433,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(result).toEqual([]);
 			expect(result.length).toBe(0);
 		});
+
 		it("should not return a match for a different IP 2", async () => {
 			const accessRule1 = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
@@ -466,6 +456,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 			expect(result.length).toBe(0);
 		});
+
 		it("should not return a match for a different IP 3", async () => {
 			const accessRule1 = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,

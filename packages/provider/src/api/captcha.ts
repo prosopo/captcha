@@ -206,7 +206,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					err,
 					data: req.params,
-					msg: "Error in PoW captcha solution submission",
+					msg: "Error in image captcha challenge request",
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
@@ -268,7 +268,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				// TODO allow the dapp to override the length of time that the request hash is valid for
 				const result: DappUserSolutionResult =
 					await tasks.imgCaptchaManager.dappUserSolution(
 						user,
@@ -294,7 +293,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					err,
 					body: req.body,
-					msg: "Error in PoW captcha solution submission",
+					msg: "Error in image captcha solution submission",
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
@@ -460,7 +459,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			req.logger.error(() => ({
 				err,
 				body: req.body,
-				msg: "Error in PoW captcha solution submission",
+				msg: "Error in PoW captcha challenge request",
 			}));
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
