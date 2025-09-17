@@ -47,6 +47,13 @@
 			X-Robots-Tag "none"
 		}
 
+		handle /robots.txt {
+			respond "User-agent: *\nDisallow: /\n" 200 {
+				header Content-Type "text/plain"
+				header X-Robots-Tag "noindex, nofollow"
+			}
+		}
+
 		# basicauth /metrics {
 		# 	 # this has to be the username<space><bcrypted password>
 		# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
