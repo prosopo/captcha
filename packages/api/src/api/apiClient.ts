@@ -11,6 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./HttpClientBase.js";
-export { default as ProviderApi } from "./ProviderApi.js";
-export { ApiClient } from "./apiClient.js";
+
+import HttpClientBase from "./HttpClientBase.js";
+
+export class ApiClient extends HttpClientBase {
+	protected account: string;
+
+	constructor(baseUrl: string, account: string) {
+		const baseUrlWithProtocol = !baseUrl.startsWith("http")
+			? `https://${baseUrl}`
+			: baseUrl;
+
+		super(baseUrlWithProtocol);
+
+		this.account = account;
+	}
+}

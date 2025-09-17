@@ -21,20 +21,15 @@ import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
 import {
 	type AccessRule,
 	type AccessRulesReader,
-	type AccessRulesStorage,
-	type AccessRulesWriter,
 	accessRuleSchema,
 } from "#policy/accessRules.js";
+import { redisRulesIndexName } from "#policy/redis/redisRulesIndex.js";
 import {
-	accessRuleRedisKeyPrefix,
-	accessRulesRedisIndexName,
-	accessRulesRedisSearchOptions,
-	getRedisAccessRuleKey,
-	getRedisAccessRuleValue,
-	getRedisAccessRulesQuery,
-} from "#policy/redis/redisAccessRulesIndex.js";
+	getRedisRulesQuery,
+	redisRulesSearchOptions,
+} from "#policy/redis/redisRulesIndex.js";
 
-export const createRedisAccessRulesReader = (
+export const createRedisRulesReader = (
 	client: RedisClientType,
 	logger: Logger,
 ): AccessRulesReader => {
@@ -44,7 +39,7 @@ export const createRedisAccessRulesReader = (
 			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
-			const query = getRedisAccessRulesQuery(filter, matchingFieldsOnly);
+			const query = getRedisRulesQuery(filter, matchingFieldsOnly);
 
 			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
 				// We don't want to accidentally return all rules when the filter is empty
@@ -55,9 +50,9 @@ export const createRedisAccessRulesReader = (
 
 			try {
 				searchReply = await client.ft.search(
-					accessRulesRedisIndexName,
+					redisRulesIndexName,
 					query,
-					accessRulesRedisSearchOptions,
+					redisRulesSearchOptions,
 				);
 
 				if (searchReply.total > 0) {
@@ -95,22 +90,22 @@ export const createRedisAccessRulesReader = (
 				return [];
 			}
 
-			return extractAccessRulesFromSearchReply(searchReply, logger);
+			return extractRulesFromSearchReply(searchReply, logger);
 		},
 
 		findRuleIds: async (
 			filter: PolicyFilter,
 			matchingFieldsOnly = false,
 		): Promise<string[]> => {
-			const query = getRedisAccessRulesQuery(filter, matchingFieldsOnly);
+			const query = getRedisRulesQuery(filter, matchingFieldsOnly);
 
 			let searchReply: SearchNoContentReply;
 
 			try {
 				searchReply = await client.ft.searchNoContent(
-					accessRulesRedisIndexName,
+					redisRulesIndexName,
 					query,
-					accessRulesRedisSearchOptions,
+					redisRulesSearchOptions,
 				);
 			} catch (e) {
 				// 	debug(fn: LogRecordFn): void;
@@ -138,57 +133,39 @@ export const createRedisAccessRulesReader = (
 	};
 };
 
-export const createRedisAccessRulesWriter = (
-	client: RedisClientType,
-): AccessRulesWriter => {
+export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 	return {
-		insertRule: async (
-			rule: AccessRule,
-			expirationTimestamp?: number,
-		): Promise<string> => {
-			const ruleKey = getRedisAccessRuleKey(rule);
-			const ruleValue = getRedisAccessRuleValue(rule);
+		findRules: async (
+			filter: PolicyFilter,
+			matchingFieldsOnly = false,
+			skipEmptyUserScopes = true,
+		): Promise<AccessRule[]> => {
+			logger.info(() => ({
+				msg: "Dummy findRules() has no effect (redis is not ready)",
+				data: {
+					filter: filter,
+				},
+			}));
 
-			await client.hSet(ruleKey, ruleValue);
-
-			if (expirationTimestamp) {
-				const expiryDate = new Date(expirationTimestamp);
-				if (expiryDate.getUTCFullYear() === 1970) {
-					// timestamp is already in seconds
-					await client.expireAt(ruleKey, expirationTimestamp);
-				} else {
-					const timestampInSeconds = Math.floor(expirationTimestamp / 1000);
-					await client.expireAt(ruleKey, timestampInSeconds);
-				}
-			}
-
-			return ruleKey;
+			return [];
 		},
+		findRuleIds: async (
+			filter: PolicyFilter,
+			matchingFieldsOnly = false,
+		): Promise<string[]> => {
+			logger.info(() => ({
+				msg: "Dummy findRuleIds() has no effect (redis is not ready)",
+				data: {
+					filter: filter,
+				},
+			}));
 
-		deleteRules: async (ruleIds: string[]): Promise<void> =>
-			void (await client.del(ruleIds)),
-
-		deleteAllRules: async (): Promise<number> => {
-			const keys = await client.keys(`${accessRuleRedisKeyPrefix}*`);
-
-			if (keys.length === 0) return 0;
-
-			return await client.del(keys);
+			return [];
 		},
 	};
 };
 
-export const createRedisAccessRulesStorage = (
-	client: RedisClientType,
-	logger: Logger,
-): AccessRulesStorage => {
-	return {
-		...createRedisAccessRulesReader(client, logger),
-		...createRedisAccessRulesWriter(client),
-	};
-};
-
-const extractAccessRulesFromSearchReply = (
+const extractRulesFromSearchReply = (
 	searchReply: SearchReply,
 	logger: Logger,
 ): AccessRule[] => {

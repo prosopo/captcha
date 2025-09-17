@@ -64,6 +64,15 @@ export const createRedisIndex = async (
 	await saveIndexHash(client, index.name, indexHash);
 };
 
+export const deleteRedisIndex = async (
+	client: RedisClientType,
+	indexName: string,
+): Promise<void> => {
+	await client.ft.dropIndex(indexName);
+
+	await deleteIndexHash(client, indexName);
+};
+
 const createIndexHash = (index: RedisIndex): string =>
 	crypto
 		.createHash(redisIndexHashAlgorithm)
@@ -81,3 +90,9 @@ const saveIndexHash = async (
 	indexHash: string,
 ): Promise<number> =>
 	client.hSet(redisIndexHashesRecordKey, indexName, indexHash);
+
+const deleteIndexHash = async (
+	client: RedisClientType,
+	indexName: string,
+): Promise<void> =>
+	void (await client.hDel(redisIndexHashesRecordKey, indexName));

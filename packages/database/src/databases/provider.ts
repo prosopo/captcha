@@ -16,6 +16,11 @@ import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
+	type RedisConnection,
+	connectToRedis,
+	setupRedisIndex,
+} from "@prosopo/redis-client";
+import {
 	ApiParams,
 	type Captcha,
 	type CaptchaResult,
@@ -78,11 +83,10 @@ import {
 } from "@prosopo/types-database";
 import {
 	type AccessRulesStorage,
-	createRedisAccessRulesIndex,
 	createRedisAccessRulesStorage,
+	redisAccessRulesIndex,
 } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
-import { type RedisClientType, createClient } from "redis";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -182,6 +186,8 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
+	private redisConnection: RedisConnection | null;
+	private redisAccessRulesConnection: RedisConnection | null;
 	private userAccessRulesStorage: AccessRulesStorage | null;
 	private indexesEnsured = false;
 
@@ -194,6 +200,8 @@ export class ProviderDatabase
 		);
 		this.tables = {} as Tables<TableNames>;
 
+		this.redisAccessRulesConnection = null;
+		this.redisConnection = null;
 		this.userAccessRulesStorage = null;
 	}
 
@@ -206,31 +214,25 @@ export class ProviderDatabase
 	}
 
 	protected async setupRedis(): Promise<void> {
-		const redisClient = await this.createRedisClient();
+		this.redisConnection = connectToRedis({
+			url: this.options.redis?.url,
+			password: this.options.redis?.password,
+			logger: this.logger,
+		});
 
-		await createRedisAccessRulesIndex(
-			redisClient,
-			this.options.redis?.indexName,
+		this.redisAccessRulesConnection = setupRedisIndex(
+			this.redisConnection,
+			{
+				...redisAccessRulesIndex,
+				name: this.options.redis?.indexName || redisAccessRulesIndex.name,
+			},
+			this.logger,
 		);
 
 		this.userAccessRulesStorage = createRedisAccessRulesStorage(
-			redisClient,
+			this.redisAccessRulesConnection,
 			this.logger,
 		);
-	}
-
-	protected async createRedisClient(): Promise<RedisClientType> {
-		return (await createClient({
-			url: this.options.redis?.url,
-			password: this.options.redis?.password,
-		})
-			.on("error", (error) => {
-				this.logger.error(() => ({
-					err: error,
-					msg: "Redis client error",
-				}));
-			})
-			.connect()) as RedisClientType;
 	}
 
 	loadTables() {
@@ -251,6 +253,26 @@ export class ProviderDatabase
 			});
 		}
 		return this.tables;
+	}
+
+	public getRedisAccessRulesConnection(): RedisConnection {
+		if (null === this.redisAccessRulesConnection) {
+			throw new ProsopoDBError(
+				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
+			);
+		}
+
+		return this.redisAccessRulesConnection;
+	}
+
+	public getRedisConnection(): RedisConnection {
+		if (null === this.redisConnection) {
+			throw new ProsopoDBError(
+				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
+			);
+		}
+
+		return this.redisConnection;
 	}
 
 	async ensureIndexes(): Promise<void> {

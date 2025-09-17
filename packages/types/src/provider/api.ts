@@ -84,6 +84,18 @@ export enum PublicApiPaths {
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
 }
 
+export const providerDetailsSchema = object({
+	version: string(),
+	message: string(),
+	redis: object({
+		actor: string(),
+		isReady: boolean(),
+		awaitingTimeSeconds: number(),
+	}).array(),
+});
+
+export type ProviderDetails = output<typeof providerDetailsSchema>;
+
 export type TGetImageCaptchaChallengePathAndParams =
 	`${ClientApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
 

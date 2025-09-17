@@ -11,6 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./HttpClientBase.js";
-export { default as ProviderApi } from "./ProviderApi.js";
-export { ApiClient } from "./apiClient.js";
+
+import type { Logger } from "@prosopo/common";
+import { type RedisConnection, connectToRedis } from "../redisClient.js";
+
+const mockLogger = new Proxy(
+	{},
+	{
+		get: () => () => {},
+	},
+) as unknown as Logger;
+
+export const createTestRedisConnection = (logger?: Logger): RedisConnection =>
+	connectToRedis({
+		// /docker/redis/redis-stack.docker-compose.yml
+		url: "redis://localhost:6379",
+		password: "root",
+		logger: logger || mockLogger,
+	});

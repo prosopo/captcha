@@ -11,6 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./HttpClientBase.js";
-export { default as ProviderApi } from "./ProviderApi.js";
-export { ApiClient } from "./apiClient.js";
+
+import path from "node:path";
+import { ViteCommonJSConfig } from "@prosopo/config";
+
+export default function () {
+	return ViteCommonJSConfig(
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
+	);
+}

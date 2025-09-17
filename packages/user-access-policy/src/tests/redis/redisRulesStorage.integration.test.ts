@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogger } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import {
+	type RedisConnection,
+	createTestRedisConnection,
+	setupRedisIndex,
+} from "@prosopo/redis-client";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
@@ -21,48 +26,54 @@ import {
 	beforeEach,
 	describe,
 	expect,
-	it,
 	test,
 } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
+import { ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type {
 	AccessRule,
 	AccessRulesReader,
 	AccessRulesWriter,
 } from "#policy/accessRules.js";
+import { redisAccessRulesIndex } from "#policy/redis/redisRulesIndex.js";
+import { createRedisRulesReader } from "#policy/redis/redisRulesReader.js";
 import {
-	createRedisAccessRulesReader,
-	createRedisAccessRulesWriter,
-} from "#policy/redis/redisAccessRules.js";
-import {
-	accessRulesRedisIndexName,
-	createRedisAccessRulesIndex,
-	getRedisAccessRuleKey,
-	getRedisAccessRuleValue,
-	getRedisAccessRulesQuery,
-} from "#policy/redis/redisAccessRulesIndex.js";
-import { createTestRedisClient } from "./testRedisClient.js";
+	createRedisRulesWriter,
+	getRedisRuleKey,
+	getRedisRuleValue,
+} from "#policy/redis/redisRulesWriter.js";
 
-describe("redisAccessRules", () => {
+describe("redisAccessRulesStorage", () => {
+	let redisConnection: RedisConnection;
 	let redisClient: RedisClientType;
 	let indexName: string;
+
+	const mockLogger = new Proxy(
+		{},
+		{
+			get: () => () => {},
+		},
+	) as unknown as Logger;
 
 	const getUniqueString = () => Math.random().toString(36).substring(2, 15);
 	const getIndexRecordsCount = async (indexName: string): Promise<number> =>
 		(await redisClient.ft.info(indexName)).num_docs;
 
 	const insertRule = async (rule: AccessRule) => {
-		const ruleKey = getRedisAccessRuleKey(rule);
-		const ruleValue = getRedisAccessRuleValue(rule);
+		const ruleKey = getRedisRuleKey(rule);
+		const ruleValue = getRedisRuleValue(rule);
 
 		return await redisClient.hSet(ruleKey, ruleValue);
 	};
 
 	beforeAll(async () => {
-		redisClient = await createTestRedisClient();
+		redisConnection = createTestRedisConnection();
 
-		await createRedisAccessRulesIndex(redisClient);
+		redisClient = await setupRedisIndex(
+			redisConnection,
+			redisAccessRulesIndex,
+			mockLogger,
+		).getClient();
 	});
 
 	beforeEach(async () => {
@@ -75,17 +86,19 @@ describe("redisAccessRules", () => {
 		// Get a new index name for each test
 		indexName = randomAsHex(16);
 
-		// Get a new DB for each test
-		redisClient = await createTestRedisClient();
-
-		await createRedisAccessRulesIndex(redisClient, indexName);
+		// setup a new index for each test
+		redisClient = await setupRedisIndex(
+			redisConnection,
+			{ ...redisAccessRulesIndex, name: indexName },
+			mockLogger,
+		).getClient();
 	});
 
 	describe("writer", () => {
 		let accessRulesWriter: AccessRulesWriter;
 
 		beforeAll(() => {
-			accessRulesWriter = createRedisAccessRulesWriter(redisClient);
+			accessRulesWriter = createRedisRulesWriter(redisClient);
 		});
 
 		test("inserts rule", async () => {
@@ -94,7 +107,7 @@ describe("redisAccessRules", () => {
 				type: AccessPolicyType.Block,
 				clientId: "clientId",
 			};
-			const accessRuleKey = getRedisAccessRuleKey(accessRule);
+			const accessRuleKey = getRedisRuleKey(accessRule);
 
 			// when
 			await accessRulesWriter.insertRule(accessRule);
@@ -113,7 +126,7 @@ describe("redisAccessRules", () => {
 				type: AccessPolicyType.Block,
 				clientId: "clientId",
 			};
-			const accessRuleKey = getRedisAccessRuleKey(accessRule);
+			const accessRuleKey = getRedisRuleKey(accessRule);
 			// 1 hour from now.
 			const expireIn = 60 * 60; // seconds
 			const expirationTimestamp = new Date(
@@ -125,7 +138,7 @@ describe("redisAccessRules", () => {
 
 			// when
 			await accessRulesWriter.insertRule(accessRule, expirationTimestamp);
-			const ruleKey = getRedisAccessRuleKey(accessRule);
+			const ruleKey = getRedisRuleKey(accessRule);
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
 			const insertedExpirationResult = await redisClient.expireAt(
@@ -151,13 +164,13 @@ describe("redisAccessRules", () => {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const johnAccessRuleKey = getRedisAccessRuleKey(johnAccessRule);
+			const johnAccessRuleKey = getRedisRuleKey(johnAccessRule);
 
 			const doeAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const doeAccessRuleKey = getRedisAccessRuleKey(doeAccessRule);
+			const doeAccessRuleKey = getRedisRuleKey(doeAccessRule);
 
 			await insertRule(johnAccessRule);
 			await insertRule(doeAccessRule);
@@ -225,7 +238,7 @@ describe("redisAccessRules", () => {
 		let accessRulesReader: AccessRulesReader;
 
 		beforeAll(async () => {
-			accessRulesReader = createRedisAccessRulesReader(
+			accessRulesReader = createRedisRulesReader(
 				redisClient,
 				getLogger(LogLevel.enum.info, "RedisAccessRulesReader"),
 			);
@@ -587,6 +600,7 @@ describe("redisAccessRules", () => {
 				johnIp_100_AccessRule,
 			]);
 		});
+
 		test("finds rules by exact ip match with exact policy match 2", async () => {
 			// given
 			const johnId = getUniqueString();
@@ -648,6 +662,7 @@ describe("redisAccessRules", () => {
 				globalIp_100_AccessRule,
 			]);
 		});
+
 		test("does not find rules when some criteria do not match and user scope match is exact", async () => {
 			// given
 			const accessRule: AccessRule = {
@@ -676,6 +691,7 @@ describe("redisAccessRules", () => {
 			const foundAccessRules = await accessRulesReader.findRules(query);
 			expect(foundAccessRules).toEqual([]);
 		});
+
 		test("does not find rules when query is more exact than rule and user scope match is exact", async () => {
 			// given
 			const accessRule: AccessRule = {
@@ -703,6 +719,7 @@ describe("redisAccessRules", () => {
 			const foundAccessRules = await accessRulesReader.findRules(query);
 			expect(foundAccessRules).toEqual([]);
 		});
+
 		test("does find rules when query is more exact than rule and user scope match is greedy", async () => {
 			// given
 			const accessRule: AccessRule = {
@@ -730,6 +747,7 @@ describe("redisAccessRules", () => {
 			const foundAccessRules = await accessRulesReader.findRules(query);
 			expect(foundAccessRules).toEqual([accessRule]);
 		});
+
 		test("does find rules when some criteria do not match and user scope match is exact", async () => {
 			// given
 			const accessRule: AccessRule = {
@@ -740,7 +758,7 @@ describe("redisAccessRules", () => {
 			};
 
 			// when
-			getRedisAccessRuleKey(accessRule);
+			getRedisRuleKey(accessRule);
 			await insertRule(accessRule);
 
 			// then
@@ -759,6 +777,7 @@ describe("redisAccessRules", () => {
 			const foundAccessRules = await accessRulesReader.findRules(query);
 			expect(foundAccessRules).toEqual([accessRule]);
 		});
+
 		test("if an ip rule and an ip mask rule is applied for a single IP at client level, both rules are returned with the more specific IP rule being first in the list", async () => {
 			// given
 			const accessRule: AccessRule = {

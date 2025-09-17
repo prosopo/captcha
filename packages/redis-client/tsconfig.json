@@ -2,21 +2,24 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist",
+		"paths": {
+			"#policy/*": ["./src/*"]
+		}
 	},
 	"include": [
-		"src",
-		"src/**/*.json",
+		"./src",
 		"src/**/*.ts",
 		"src/**/*.tsx",
+		"src/**/*.json",
 		"src/**/*.d.ts"
 	],
 	"references": [
 		{
-			"path": "../types"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../../dev/config/tsconfig.json"
+			"path": "../common/tsconfig.json"
 		}
 	]
 }

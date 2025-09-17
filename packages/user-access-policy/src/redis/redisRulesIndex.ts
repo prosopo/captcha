@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import crypto from "node:crypto";
+import type { RedisIndex } from "@prosopo/redis-client";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
-import type { RedisClientType } from "redis";
 import {
 	type PolicyScope,
 	type UserScope,
@@ -22,16 +21,13 @@ import {
 } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRule } from "#policy/accessRules.js";
-import { type RedisIndex, createRedisIndex } from "#policy/redis/redisIndex.js";
 
-export const accessRulesRedisIndexName = "index:user-access-rules";
+export const redisRulesIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
-export const accessRuleRedisKeyPrefix = "uar:";
-const accessRuleContentHashAlgorithm = "md5";
-const DEFAULT_SEARCH_LIMIT = 1000;
+export const redisRuleKeyPrefix = "uar:";
 
-const accessRulesIndex: RedisIndex = {
-	name: accessRulesRedisIndexName,
+export const redisAccessRulesIndex: RedisIndex = {
+	name: redisRulesIndexName,
 	/**
 	 * Note on the field type decision
 	 *
@@ -57,18 +53,8 @@ const accessRulesIndex: RedisIndex = {
 	// the satisfy statement is to guarantee that the keys are right
 	options: {
 		ON: "HASH" as const,
-		PREFIX: [accessRuleRedisKeyPrefix],
+		PREFIX: [redisRuleKeyPrefix],
 	},
-};
-
-export const createRedisAccessRulesIndex = async (
-	client: RedisClientType,
-	indexName?: string,
-): Promise<void> => {
-	if (indexName) {
-		accessRulesIndex.name = indexName;
-	}
-	return createRedisIndex(client, accessRulesIndex);
 };
 
 const numericIndexFields: Array<keyof AccessRule> = [
@@ -115,18 +101,9 @@ const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 	},
 };
 
-export const accessRulesRedisSearchOptions: FtSearchOptions = {
+export const redisRulesSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
-};
-
-export const accessRulesRedisDeleteOptions: FtSearchOptions = {
-	// #2 is a required option when the 'ismissing()' function is in the query body
-	DIALECT: 2,
-	LIMIT: {
-		from: 0,
-		size: DEFAULT_SEARCH_LIMIT,
-	},
 };
 
 /*
@@ -139,7 +116,7 @@ export const accessRulesRedisDeleteOptions: FtSearchOptions = {
  * )
  * DIALECT 2 # must have when the ismissing() function in use
  * */
-export const getRedisAccessRulesQuery = (
+export const getRedisRulesQuery = (
 	filter: PolicyFilter,
 	matchingFieldsOnly: boolean,
 ): string => {
@@ -249,22 +226,3 @@ const getUserScopeFieldQuery = (
 		? `@${fieldName}:[${fieldValue}]`
 		: `@${fieldName}:{${fieldValue}}`;
 };
-
-export const getRedisAccessRuleKey = (rule: AccessRule): string =>
-	accessRuleRedisKeyPrefix +
-	crypto
-		.createHash(accessRuleContentHashAlgorithm)
-		.update(
-			JSON.stringify(rule, (key, value) =>
-				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
-				"bigint" === typeof value ? value.toString() : value,
-			),
-		)
-		.digest("hex");
-
-export const getRedisAccessRuleValue = (
-	rule: AccessRule,
-): Record<string, string> =>
-	Object.fromEntries(
-		Object.entries(rule).map(([key, value]) => [key, String(value)]),
-	);
