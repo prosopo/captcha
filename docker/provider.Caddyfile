@@ -52,9 +52,9 @@
 				body `User-agent: *
 Disallow: /`
 				status 200
-    			header X-Robots-Tag "noindex, nofollow"
     			close
 			}
+			header X-Robots-Tag "noindex, nofollow"
 		}
 
 		# basicauth /metrics {
