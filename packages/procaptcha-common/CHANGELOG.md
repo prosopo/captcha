@@ -1,5 +1,21 @@
 # @prosopo/procaptcha-common
 
+## 2.9.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/widget-skeleton@2.7.1
+  - @prosopo/load-balancer@2.7.8
+  - @prosopo/account@2.7.25
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
 ## 2.8.7
 ### Patch Changes
 

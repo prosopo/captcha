@@ -1,5 +1,21 @@
 # @prosopo/types-database
 
+## 3.3.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/user-access-policy@3.5.14
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
 ## 3.2.2
 ### Patch Changes
 

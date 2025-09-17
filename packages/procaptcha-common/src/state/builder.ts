@@ -57,7 +57,9 @@ export const useProcaptcha = (
 ): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
 	const [isHuman, setIsHuman] = useState(false);
 	const [index, setIndex] = useState(0);
-	const [solutions, setSolutions] = useState([] as string[][]);
+	const [solutions, setSolutions] = useState(
+		[] as [string, number, number][][],
+	);
 	const [captchaApi, setCaptchaApi] = useRefAsState<
 		ProcaptchaApiInterface | undefined
 	>(useRef, undefined);

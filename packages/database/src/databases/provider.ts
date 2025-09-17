@@ -1543,15 +1543,22 @@ export class ProviderDatabase
 	/**
 	 * @description Approve a dapp user's solution
 	 * @param {string[]} commitmentId
+	 * @param coords
 	 */
-	async approveDappUserCommitment(commitmentId: string): Promise<void> {
+	async approveDappUserCommitment(
+		commitmentId: string,
+		coords?: [number, number][][],
+	): Promise<void> {
 		try {
 			const result: CaptchaResult = { status: CaptchaStatus.approved };
-			const updateDoc: Pick<StoredCaptcha, "result" | "lastUpdatedTimestamp"> =
-				{
-					result,
-					lastUpdatedTimestamp: Date.now(),
-				};
+			const updateDoc: Pick<
+				StoredCaptcha,
+				"result" | "lastUpdatedTimestamp" | "coords"
+			> = {
+				result,
+				lastUpdatedTimestamp: Date.now(),
+				...(coords ? { coords } : {}),
+			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
@@ -1566,18 +1573,23 @@ export class ProviderDatabase
 	/**
 	 * @description Disapprove a dapp user's solution
 	 * @param {string} commitmentId
+	 * @param coords
 	 * @param reason
 	 */
 	async disapproveDappUserCommitment(
 		commitmentId: string,
 		reason?: TranslationKey,
+		coords?: [number, number][][],
 	): Promise<void> {
 		try {
-			const updateDoc: Pick<StoredCaptcha, "result" | "lastUpdatedTimestamp"> =
-				{
-					result: { status: CaptchaStatus.disapproved, reason },
-					lastUpdatedTimestamp: Date.now(),
-				};
+			const updateDoc: Pick<
+				StoredCaptcha,
+				"result" | "lastUpdatedTimestamp" | "coords"
+			> = {
+				result: { status: CaptchaStatus.disapproved, reason },
+				lastUpdatedTimestamp: Date.now(),
+				...(coords ? { coords } : {}),
+			};
 
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment

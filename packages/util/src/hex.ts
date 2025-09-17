@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { at } from "./at.js";
 import { isArray } from "./checks.js";
 
 type Hash = string | number[];
@@ -79,4 +81,93 @@ export const hashToHex = (hash: Hash) => {
 		return u8aToHex(new Uint8Array(hash));
 	}
 	return hash.toString();
+};
+
+export const embedData = (hexString: string, data: number[]): `0x${string}` => {
+	const hex = hexString.replace(/^0x/, "").split("");
+
+	let cursorStart = 0;
+	let cursorEnd = hex.length - 1;
+
+	const countHex = data.length.toString(16).padStart(2, "0");
+	hex[cursorStart++] = at(countHex, 0);
+	hex[cursorStart++] = at(countHex, 1);
+
+	const positions: number[] = [];
+	const lengths: number[] = [];
+	let totalLength = 0;
+
+	for (const d of data) {
+		const hexData = d.toString(16); // original hex string
+
+		const len = hexData.length;
+		totalLength += len;
+		const startPos = cursorEnd - len + 1;
+
+		positions.push(startPos);
+		lengths.push(len);
+
+		for (let i = 0; i < len; i++) {
+			hex[startPos + i] = at(hexData, i);
+		}
+
+		cursorEnd -= len;
+	}
+
+	if (totalLength > hexString.length) {
+		throw new Error(
+			`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
+		);
+	}
+
+	for (let i = 0; i < data.length; i++) {
+		const posHex = at(positions, i).toString(16).padStart(2, "0");
+
+		totalLength += posHex.length;
+
+		const lenHex = at(lengths, i).toString(16).padStart(2, "0");
+
+		totalLength += lenHex.length;
+
+		if (totalLength > hexString.length) {
+			throw new Error(
+				`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
+			);
+		}
+
+		hex[cursorStart++] = at(posHex, 0);
+		hex[cursorStart++] = at(posHex, 1);
+		hex[cursorStart++] = at(lenHex, 0);
+		hex[cursorStart++] = at(lenHex, 1);
+	}
+
+	return `0x${hex.join("")}`;
+};
+
+export const extractData = (hexString: string) => {
+	const hex = hexString.replace(/^0x/, "").split("");
+	let cursor = 0;
+
+	const count = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
+	cursor += 2;
+
+	const positions: number[] = [];
+	const lengths: number[] = [];
+	for (let i = 0; i < count; i++) {
+		const pos = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
+		const len = Number.parseInt(at(hex, cursor + 2) + hex[cursor + 3], 16);
+		positions.push(pos);
+		lengths.push(len);
+		cursor += 4;
+	}
+
+	const results: number[] = [];
+	for (let i = 0; i < count; i++) {
+		const startPos = at(positions, i);
+		const len = at(lengths, i);
+		const valueHex = hex.slice(startPos, startPos + len).join("");
+		results.push(Number.parseInt(valueHex, 16));
+	}
+
+	return results;
 };

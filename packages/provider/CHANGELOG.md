@@ -1,5 +1,33 @@
 # @prosopo/provider
 
+## 3.11.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/api-express-router@3.0.20
+  - @prosopo/user-access-policy@3.5.14
+  - @prosopo/types-database@3.3.0
+  - @prosopo/load-balancer@2.7.8
+  - @prosopo/util-crypto@13.5.17
+  - @prosopo/api-route@2.6.23
+  - @prosopo/types-env@2.7.33
+  - @prosopo/database@3.4.0
+  - @prosopo/datasets@3.0.29
+  - @prosopo/keyring@2.8.22
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/util@3.1.0
+  - @prosopo/api@3.1.19
+  - @prosopo/env@3.2.8
+  - @prosopo/config@3.1.15
+
 ## 3.10.0
 ### Minor Changes
 
