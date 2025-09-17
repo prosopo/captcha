@@ -12,61 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RedisIndex } from "@prosopo/redis-client";
-import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import {
 	type PolicyScope,
 	type UserScope,
 	userScopeSchema,
 } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import { type AccessRule, makeAccessRuleHash } from "#policy/accessRules.js";
-
-export const redisRulesIndexName = "index:user-access-rules";
-
-// names take space, so we use an acronym instead of the long-tailed one
-export const redisRuleKeyPrefix = "uar:";
-
-export const getRedisRuleKey = (rule: AccessRule): string =>
-	redisRuleKeyPrefix + makeAccessRuleHash(rule);
-
-export const redisAccessRulesIndex: RedisIndex = {
-	name: redisRulesIndexName,
-	/**
-	 * Note on the field type decision
-	 *
-	 * TAG is designed for the exact value matching
-	 * TEXT is designed for the word-based and pattern matching
-	 *
-	 * For our goal TAG fits perfectly and, more performant
-	 */
-	schema: {
-		clientId: {
-			type: SCHEMA_FIELD_TYPE.TAG,
-			// necessary to make possible use of the ismissing() function on this field in the search
-			INDEXMISSING: true,
-		},
-		groupId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		numericIpMaskMin: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-		numericIpMaskMax: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-		userId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		numericIp: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-		ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		headersHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		userAgentHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-	} satisfies Partial<Record<keyof AccessRule, string | object>>,
-	// the satisfy statement is to guarantee that the keys are right
-	options: {
-		ON: "HASH" as const,
-		PREFIX: [redisRuleKeyPrefix],
-	},
-};
-
-export const numericIndexFields: Array<keyof AccessRule> = [
-	"numericIp",
-	"numericIpMaskMin",
-	"numericIpMaskMax",
-];
+import type { AccessRule } from "#policy/accessRules.js";
+import { numericIndexFields } from "#policy/redis/redisAccessRulesIndex.js";
 
 type CustomFieldComparisons = Record<
 	keyof AccessRule,
@@ -106,12 +59,6 @@ const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 	},
 };
 
-// https://redis.io/docs/latest/commands/ft.search/
-export const redisRulesSearchOptions: FtSearchOptions = {
-	// #2 is a required option when the 'ismissing()' function is in the query body
-	DIALECT: 2,
-};
-
 /*
  * Search command example:
  *
@@ -122,16 +69,25 @@ export const redisRulesSearchOptions: FtSearchOptions = {
  * )
  * DIALECT 2 # must have when the ismissing() function in use
  * */
-export const getRedisRulesQuery = (
+export const getRedisAccessRulesQuery = (
 	filter: PolicyFilter,
 	matchingFieldsOnly: boolean,
 ): string => {
 	const { policyScope, userScope } = filter;
+	const queryParts = [];
 
-	const policyScopeFilter = getPolicyScopeQuery(
+	if (filter.groupId) {
+		queryParts.push(`@groupId:{${filter.groupId}}`);
+	}
+
+	const policyScopeQuery = getPolicyScopeQuery(
 		policyScope,
 		filter.policyScopeMatch,
 	);
+
+	if (policyScopeQuery) {
+		queryParts.push(policyScopeQuery);
+	}
 
 	if (userScope && Object.keys(userScope).length > 0) {
 		const userScopeFilter = getUserScopeQuery(
@@ -139,25 +95,43 @@ export const getRedisRulesQuery = (
 			filter.userScopeMatch,
 			matchingFieldsOnly,
 		);
-		return `${policyScopeFilter} ( ${userScopeFilter} )`;
+
+		queryParts.push(`( ${userScopeFilter} )`);
 	}
 
-	return policyScopeFilter ? policyScopeFilter : "*";
+	return queryParts.length > 0 ? queryParts.join(" ") : "*";
 };
 
 const getPolicyScopeQuery = (
 	policyScope: PolicyScope | undefined,
 	scopeMatchType: ScopeMatch | undefined,
 ): string => {
-	const clientId = policyScope?.clientId;
+	const policyScopeFields: (keyof PolicyScope)[] = ["clientId"];
 
-	if ("string" === typeof clientId) {
+	return policyScopeFields
+		.map((scopeField) =>
+			getPolicyScopeFieldQuery(
+				scopeField,
+				policyScope?.[scopeField],
+				scopeMatchType,
+			),
+		)
+		.join(" ")
+		.trim();
+};
+
+const getPolicyScopeFieldQuery = (
+	fieldName: keyof PolicyScope,
+	fieldValue: string | undefined,
+	scopeMatchType: ScopeMatch | undefined,
+): string => {
+	if ("string" === typeof fieldValue) {
 		return ScopeMatch.Exact === scopeMatchType
-			? `@clientId:{${clientId}}`
-			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
+			? `@${fieldName}:{${fieldValue}}`
+			: `( @${fieldName}:{${fieldValue}} | ismissing(@${fieldName}) )`;
 	}
 
-	return ScopeMatch.Exact === scopeMatchType ? "ismissing(@clientId)" : "";
+	return ScopeMatch.Exact === scopeMatchType ? `ismissing(@${fieldName})` : "";
 };
 
 const getUserScopeQuery = (
