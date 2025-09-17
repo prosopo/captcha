@@ -31,8 +31,7 @@
 
 {$CADDY_DOMAIN} {
 	handle /robots.txt {
-		root * /srv/static
-		file_server
+		file /srv/static/robots.txt
 		header Content-Type "text/plain"
 		header X-Robots-Tag "noindex, nofollow"
 	}
