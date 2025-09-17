@@ -15,13 +15,11 @@
 export {
 	type AccessPolicy,
 	AccessPolicyType,
-	type AccessRuleExtended,
 	type PolicyScope,
 	type UserScope,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
 	accessPolicySchema,
-	accessRuleSchemaExtended,
 	policyScopeSchema,
 } from "#policy/accessPolicy.js";
 export { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
@@ -29,6 +27,8 @@ export {
 	type AccessRule,
 	type AccessRulesStorage,
 	accessRuleSchema,
+	type AccessRuleExtended,
+	accessRuleSchemaExtended,
 } from "#policy/accessRules.js";
 export {
 	accessRuleApiPaths,

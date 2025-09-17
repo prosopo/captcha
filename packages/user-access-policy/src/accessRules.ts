@@ -35,7 +35,6 @@ export const accessRuleSchema: z.ZodObject<
 
 export type AccessRule = z.infer<typeof accessRuleSchema>;
 
-// todo refactor: the scheme is used only in the "provider" test - get rid of it if possible
 export const accessRuleSchemaExtended = z
 	.object({
 		// flat structure is used to fit the Redis requirements
