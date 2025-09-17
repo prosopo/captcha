@@ -22,7 +22,6 @@ interface CaptchaProps {
 	config: ProcaptchaClientConfigInput;
 	callbacks: ProcaptchaCallbacks;
 	i18n: Ti18n;
-	container: HTMLElement;
 }
 
 export type { CaptchaProps };

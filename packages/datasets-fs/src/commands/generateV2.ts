@@ -107,9 +107,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 		const target = at(this.targets, i % this.targets.length);
 		const notTargets = this.targets.filter((t) => t !== target);
 		// how many labelled images should be in the captcha?
-		const nLabelled = this.unlabelled.length
-			? _.random(this.#minLabelled, this.#maxLabelled)
-			: this.#size;
+		const nLabelled = _.random(this.#minLabelled, this.#maxLabelled);
 		// how many correct labelled images should be in the captcha?
 		const maxCorrect = nLabelled - this.#minCorrect;
 		const nCorrect = _.random(this.#minCorrect, maxCorrect);
@@ -121,7 +119,7 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 			get(this.labelToImages, notTarget),
 		);
 
-		if (this.unlabelled.length > 0 && nUnlabelled > this.unlabelled.length) {
+		if (nUnlabelled > this.unlabelled.length) {
 			throw new ProsopoDatasetError(new Error("not enough unlabelled data"), {
 				translationKey: "DATASET.NOT_ENOUGH_IMAGES",
 			});
@@ -205,15 +203,13 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 
 			// get the unlabelled items
 			const unlabelledItems = new Set<Item>();
-			if (this.unlabelled.length > 0) {
-				while (unlabelledItems.size < this.#size - this.#nLabelled) {
-					// get a random image from the unlabelled data
-					const image = at(
-						this.unlabelled,
-						_.random(0, this.unlabelled.length - 1),
-					);
-					unlabelledItems.add(image);
-				}
+			while (unlabelledItems.size < this.#size - this.#nLabelled) {
+				// get a random image from the unlabelled data
+				const image = at(
+					this.unlabelled,
+					_.random(0, this.unlabelled.length - 1),
+				);
+				unlabelledItems.add(image);
 			}
 
 			const itemsConcat: Item[] = [

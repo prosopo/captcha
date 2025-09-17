@@ -46,7 +46,6 @@ import {
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
 import {
-	type DeleteRuleGroupsInputEndpointSchema,
 	type DeleteRulesEndpointSchemaInput,
 	type InsertManyRulesEndpointInputSchema,
 	accessRuleApiPaths,
@@ -365,19 +364,5 @@ export default class ProviderApi
 				},
 			},
 		);
-	}
-
-	public deleteUserAccessPolicyGroups(
-		groups: DeleteRuleGroupsInputEndpointSchema,
-		timestamp: string,
-		signature: string,
-	): Promise<ApiResponse> {
-		return this.post(accessRuleApiPaths.DELETE_GROUPS, groups, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
-			},
-		});
 	}
 }

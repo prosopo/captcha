@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import crypto from "node:crypto";
 import { CaptchaTypeSchema } from "@prosopo/types";
 import { getIPAddress } from "@prosopo/util";
 import { Address4 } from "ip-address";

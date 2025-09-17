@@ -1,50 +1,5 @@
 # @prosopo/procaptcha-frictionless
 
-## 2.8.0
-### Minor Changes
-
-- 97edf3f: Adding dom manip checks
-
-### Patch Changes
-
-- Release 3.3.1
-- 0824221: Release 3.2.4
-- Updated dependencies [97edf3f]
-- Updated dependencies
-- Updated dependencies [0824221]
-- Updated dependencies [72810f4]
-  - @prosopo/widget-skeleton@2.7.0
-  - @prosopo/detector@3.2.0
-  - @prosopo/types@3.3.0
-  - @prosopo/procaptcha-common@2.8.7
-  - @prosopo/procaptcha-react@2.8.7
-  - @prosopo/procaptcha-pow@2.8.7
-  - @prosopo/load-balancer@2.7.7
-  - @prosopo/common@3.1.14
-  - @prosopo/locale@3.1.14
-  - @prosopo/api@3.1.18
-  - @prosopo/config@3.1.14
-
-## 2.7.6
-### Patch Changes
-
-- 008d112: Release 3.3.0
-- Updated dependencies [5137f01]
-- Updated dependencies [0555cd8]
-- Updated dependencies [509be28]
-- Updated dependencies [008d112]
-  - @prosopo/detector@3.1.6
-  - @prosopo/types@3.2.1
-  - @prosopo/procaptcha-common@2.8.6
-  - @prosopo/procaptcha-react@2.8.6
-  - @prosopo/widget-skeleton@2.6.14
-  - @prosopo/procaptcha-pow@2.8.6
-  - @prosopo/load-balancer@2.7.6
-  - @prosopo/common@3.1.13
-  - @prosopo/locale@3.1.13
-  - @prosopo/api@3.1.17
-  - @prosopo/config@3.1.13
-
 ## 2.7.5
 ### Patch Changes
 

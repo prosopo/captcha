@@ -25,13 +25,13 @@ import {
 	type AccessRulesWriter,
 	accessRuleSchema,
 } from "#policy/accessRules.js";
-import { getRedisAccessRulesQuery } from "#policy/redis/redisAccesRulesQuery.js";
 import {
 	accessRuleRedisKeyPrefix,
 	accessRulesRedisIndexName,
 	accessRulesRedisSearchOptions,
 	getRedisAccessRuleKey,
 	getRedisAccessRuleValue,
+	getRedisAccessRulesQuery,
 } from "#policy/redis/redisAccessRulesIndex.js";
 
 export const createRedisAccessRulesReader = (

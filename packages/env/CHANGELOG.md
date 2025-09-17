@@ -1,36 +1,5 @@
 # @prosopo/env
 
-## 3.2.7
-### Patch Changes
-
-- Release 3.3.1
-- 0824221: Release 3.2.4
-- Updated dependencies [97edf3f]
-- Updated dependencies
-- Updated dependencies [0824221]
-  - @prosopo/types@3.3.0
-  - @prosopo/util-crypto@13.5.16
-  - @prosopo/types-env@2.7.32
-  - @prosopo/database@3.3.2
-  - @prosopo/keyring@2.8.21
-  - @prosopo/common@3.1.14
-  - @prosopo/config@3.1.14
-
-## 3.2.6
-### Patch Changes
-
-- 008d112: Release 3.3.0
-- Updated dependencies [5137f01]
-- Updated dependencies [509be28]
-- Updated dependencies [008d112]
-  - @prosopo/database@3.3.1
-  - @prosopo/types@3.2.1
-  - @prosopo/util-crypto@13.5.15
-  - @prosopo/types-env@2.7.31
-  - @prosopo/keyring@2.8.20
-  - @prosopo/common@3.1.13
-  - @prosopo/config@3.1.13
-
 ## 3.2.5
 ### Patch Changes
 

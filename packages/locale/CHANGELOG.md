@@ -1,21 +1,5 @@
 # @prosopo/locale
 
-## 3.1.14
-### Patch Changes
-
-- Release 3.3.1
-- 0824221: Release 3.2.4
-- Updated dependencies
-- Updated dependencies [0824221]
-  - @prosopo/config@3.1.14
-
-## 3.1.13
-### Patch Changes
-
-- 008d112: Release 3.3.0
-- Updated dependencies [008d112]
-  - @prosopo/config@3.1.13
-
 ## 3.1.12
 ### Patch Changes
 

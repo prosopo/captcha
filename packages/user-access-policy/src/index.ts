@@ -16,11 +16,13 @@ import type { ApiRoutesProvider } from "@prosopo/api-route";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
+	type AccessRuleExtended,
 	type PolicyScope,
 	type UserScope,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
 	accessPolicySchema,
+	accessRuleSchemaExtended,
 	policyScopeSchema,
 } from "#policy/accessPolicy.js";
 import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";

@@ -185,8 +185,13 @@ export async function getDependencies(
 	}
 
 	let concat = "";
-	const { stdout, stderr } = await exec(cmd);
-	concat = stdout + stderr;
+	try {
+		const { stdout, stderr } = await exec(cmd);
+		concat = stdout + stderr;
+	} catch (err) {
+		console.error(err);
+		throw new Error("CONFIG.INVALID_PACKAGE_DIR");
+	}
 
 	let deps: string[] = [];
 	let peerDeps: string[] = [];
