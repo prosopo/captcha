@@ -48,10 +48,9 @@
 		}
 
 		handle /robots.txt {
-			respond "User-agent: *\nDisallow: /\n" 200 {
-				header Content-Type "text/plain"
-				header X-Robots-Tag "noindex, nofollow"
-			}
+			header Content-Type "text/plain"
+			header X-Robots-Tag "noindex, nofollow"
+			respond "User-agent: *\nDisallow: /\n" 200
 		}
 
 		# basicauth /metrics {
