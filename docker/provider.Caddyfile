@@ -49,8 +49,8 @@
 
 		handle /robots.txt {
 			respond 200 text/plain <<EOF
-				User-agent: *
-				Disallow: /
+				User-agent: * \
+				Disallow: / \
 				EOF
 			header X-Robots-Tag "noindex, nofollow"
 		}
