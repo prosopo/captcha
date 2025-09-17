@@ -48,9 +48,11 @@
 		}
 
 		handle /robots.txt {
-			header Content-Type "text/plain"
+			respond <<EOF 200 text/plain
+			User-agent: *
+			Disallow: /
+			EOF
 			header X-Robots-Tag "noindex, nofollow"
-			respond "User-agent: *\nDisallow: /\n" 200
 		}
 
 		# basicauth /metrics {
