@@ -47,14 +47,13 @@
 			X-Robots-Tag "none"
 		}
 
-handle /robots.txt {
-    respond 200 text/plain <<EOF
-User-agent: *
-Disallow: /
-EOF
-
-    header X-Robots-Tag "noindex, nofollow"
-}
+		handle /robots.txt {
+			respond 200 text/plain <<EOF
+				User-agent: *
+				Disallow: /
+				EOF
+			header X-Robots-Tag "noindex, nofollow"
+		}
 
 
 		# basicauth /metrics {
