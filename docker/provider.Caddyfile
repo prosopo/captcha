@@ -48,10 +48,9 @@
 		}
 
 		handle /robots.txt {
-			respond 200 text/plain <<EOF
-				User-agent: * \
-				Disallow: / \
-				EOF
+			root * /srv/static
+			file_server
+			header Content-Type "text/plain"
 			header X-Robots-Tag "noindex, nofollow"
 		}
 
