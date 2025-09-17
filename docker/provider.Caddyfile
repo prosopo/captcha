@@ -48,7 +48,7 @@
 		}
 
 handle /robots.txt {
-    respond <<EOF 200 text/plain
+    respond 200 text/plain <<EOF
 User-agent: *
 Disallow: /
 EOF
