@@ -50,6 +50,7 @@ export {
 	type InsertManyRulesEndpointOutputSchema,
 	insertRulesEndpointSchema,
 } from "#policy/api/insertRulesEndpoint.js";
+export type { DeleteRuleGroupsInputEndpointSchema } from "#policy/api/deleteRuleGroupsEndpoint.js";
 export { createRedisAccessRulesStorage } from "#policy/redis/redisRulesStorage.js";
 export { userScopeInputSchema } from "./accessPolicy.js";
 export { redisAccessRulesIndex } from "./redis/redisRulesIndex.js";
