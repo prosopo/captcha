@@ -97,7 +97,7 @@ export const CompositeIpAddressSchema = object({
 	type: nativeEnum(IpAddressType),
 });
 
-export const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
+export const CompositeIpAddressRecordSchemaObj = {
 	lower: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
@@ -115,7 +115,22 @@ export const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
 			"bigint" === typeof value ? value.toString() : value,
 	},
 	type: { type: String, enum: IpAddressType, required: true },
-});
+};
+
+export type MongooseCompositeIpAddress = {
+	lower: { $numberDecimal: string };
+	upper?: { $numberDecimal: string };
+	type: IpAddressType;
+};
+export const parseMongooseCompositeIpAddress = (
+	ip: MongooseCompositeIpAddress,
+): CompositeIpAddress => {
+	return {
+		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
+		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
+		type: ip.type,
+	};
+};
 
 export interface StoredCaptcha {
 	result: {
@@ -236,8 +251,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		error: { type: String, required: false },
 	},
 	difficulty: { type: Number, required: true },
-	ipAddress: CompositeIpAddressRecordSchema,
-	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: { type: CompositeIpAddressRecordSchemaObj, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -276,8 +291,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		error: { type: String, required: false },
 	},
-	ipAddress: CompositeIpAddressRecordSchema,
-	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: { type: CompositeIpAddressRecordSchemaObj, required: false },
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
@@ -376,7 +391,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	requestHash: { type: String, required: true },
 	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
-	ipAddress: CompositeIpAddressRecordSchema,
+	ipAddress: CompositeIpAddressRecordSchemaObj,
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -462,7 +477,7 @@ export const FrictionlessTokenRecordSchema =
 			accessPolicy: { type: Number, required: false },
 		},
 		providerSelectEntropy: { type: Number, required: true },
-		ipAddress: CompositeIpAddressRecordSchema,
+		ipAddress: CompositeIpAddressRecordSchemaObj,
 		createdAt: { type: Date, default: Date.now },
 		lastUpdatedTimestamp: { type: Date, required: false },
 		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
