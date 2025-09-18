@@ -252,7 +252,10 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	difficulty: { type: Number, required: true },
 	ipAddress: CompositeIpAddressRecordSchemaObj,
-	providedIp: { type: CompositeIpAddressRecordSchemaObj, required: false },
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -292,7 +295,10 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		error: { type: String, required: false },
 	},
 	ipAddress: CompositeIpAddressRecordSchemaObj,
-	providedIp: { type: CompositeIpAddressRecordSchemaObj, required: false },
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
