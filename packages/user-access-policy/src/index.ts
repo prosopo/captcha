@@ -55,11 +55,13 @@ export { redisAccessRulesIndex } from "./redis/redisRulesIndex.js";
 export { AccessRulesApiClient } from "./api/accessRulesApiClient.js";
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
+import type { Logger } from "@prosopo/common";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { AccessRuleApiRoutes } from "#policy/api/accessRuleApiRoutes.js";
 
 export const createApiRuleRoutesProvider = (
 	rulesStorage: AccessRulesStorage,
+	logger: Logger,
 ): ApiRoutesProvider => {
-	return new AccessRuleApiRoutes(rulesStorage);
+	return new AccessRuleApiRoutes(rulesStorage, logger);
 };

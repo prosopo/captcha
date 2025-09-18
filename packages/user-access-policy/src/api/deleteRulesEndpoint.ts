@@ -17,6 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import type { Logger } from "@prosopo/common";
 import { z } from "zod";
 import { policyFilterSchema } from "#policy/accessPolicyResolver.js";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
@@ -36,7 +37,10 @@ export type DeleteRulesEndpointSchema = typeof deleteRulesEndpointSchema;
 export class DeleteRulesEndpoint
 	implements ApiEndpoint<DeleteRulesEndpointSchema>
 {
-	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
+	public constructor(
+		private readonly accessRulesStorage: AccessRulesStorage,
+		private readonly logger: Logger,
+	) {}
 
 	async processRequest(
 		args: DeleteRulesEndpointSchemaInput,
@@ -57,6 +61,14 @@ export class DeleteRulesEndpoint
 		if (uniqueRuleIds.length > 0) {
 			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
 		}
+
+		this.logger.info(() => ({
+			msg: "Endpoint deleted rules",
+			data: {
+				args,
+				uniqueRuleIds,
+			},
+		}));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
