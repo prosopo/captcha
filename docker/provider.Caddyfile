@@ -30,6 +30,14 @@
 }
 
 {$CADDY_DOMAIN} {
+	handle /robots.txt {
+		uri strip_prefix / # removes leading /, so it looks directly in root
+		root * /srv/static
+		file_server
+		header Content-Type "text/plain"
+		header X-Robots-Tag "noindex, nofollow"
+	}
+
 	route {
 		client_hello
 		request_id
