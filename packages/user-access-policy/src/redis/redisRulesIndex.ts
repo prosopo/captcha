@@ -72,7 +72,7 @@ type CustomFieldComparisons = Record<
 const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 	numericIp: (value, scope) => {
 		if (value !== undefined) {
-			return `( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
+			return `( @numericIp:[${value} ${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
 		}
 		// Only emit ismissing(@numericIp) if ranges are also not present
 		if (
