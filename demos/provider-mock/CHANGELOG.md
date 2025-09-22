@@ -1,5 +1,27 @@
 # @prosopo/provider-mock
 
+## 2.8.13
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [7e5613a]
+- Updated dependencies [11303d9]
+- Updated dependencies [b6794f8]
+- Updated dependencies [11303d9]
+- Updated dependencies [bac2d91]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/provider@3.11.1
+  - @prosopo/database@3.4.1
+  - @prosopo/types-database@3.3.1
+  - @prosopo/api-express-router@3.0.21
+  - @prosopo/common@3.1.16
+  - @prosopo/dotenv@3.0.21
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
 ## 2.8.12
 ### Patch Changes
 

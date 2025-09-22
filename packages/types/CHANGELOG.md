@@ -1,5 +1,18 @@
 # @prosopo/types
 
+## 3.4.1
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- 11303d9: feat/pluggable-redis
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+  - @prosopo/util-crypto@13.5.18
+  - @prosopo/locale@3.1.16
+  - @prosopo/util@3.1.1
+  - @prosopo/config@3.1.16
+
 ## 3.4.0
 ### Minor Changes
 

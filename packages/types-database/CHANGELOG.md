@@ -1,5 +1,22 @@
 # @prosopo/types-database
 
+## 3.3.1
+### Patch Changes
+
+- b6794f8: Timestamp decay fn
+- 11303d9: Release 3.4.0
+- bac2d91: Fix mongoose composite ip getting
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/user-access-policy@3.5.15
+  - @prosopo/common@3.1.16
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
 ## 3.3.0
 ### Minor Changes
 
