@@ -1,5 +1,17 @@
 # @prosopo/user-access-policy
 
+## 3.5.14
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/api-route@2.6.23
+  - @prosopo/common@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/util@3.1.0
+  - @prosopo/config@3.1.15
+
 ## 3.5.13
 ### Patch Changes
 

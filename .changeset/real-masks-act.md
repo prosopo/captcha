@@ -58,5 +58,9 @@
 "@prosopo/lint": patch
 ---
 
+<<<<<<<< HEAD:.changeset/poor-sides-sit.md
 Release 3.4.0
+========
+Release 3.4.1
+>>>>>>>> feat/access-policy-group:.changeset/real-masks-act.md
   

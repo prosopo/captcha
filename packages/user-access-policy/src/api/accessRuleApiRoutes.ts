@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import type { Logger } from "@prosopo/common";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { DeleteAllRulesEndpoint } from "#policy/api/deleteAllRulesEndpoint.js";
 import { DeleteRuleGroupsEndpoint } from "#policy/api/deleteRuleGroupsEndpoint.js";
@@ -29,25 +30,34 @@ export enum accessRuleApiPaths {
 type RuleApiPath = `${accessRuleApiPaths}`;
 
 export class AccessRuleApiRoutes implements ApiRoutesProvider {
-	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
+	public constructor(
+		private readonly accessRulesStorage: AccessRulesStorage,
+		private readonly logger: Logger,
+	) {}
 
 	public getRoutes(): ApiRoute[] {
 		return [
 			{
 				path: accessRuleApiPaths.INSERT_MANY,
-				endpoint: new InsertRulesEndpoint(this.accessRulesStorage),
+				endpoint: new InsertRulesEndpoint(this.accessRulesStorage, this.logger),
 			},
 			{
 				path: accessRuleApiPaths.DELETE_MANY,
-				endpoint: new DeleteRulesEndpoint(this.accessRulesStorage),
+				endpoint: new DeleteRulesEndpoint(this.accessRulesStorage, this.logger),
 			},
 			{
 				path: accessRuleApiPaths.DELETE_GROUPS,
-				endpoint: new DeleteRuleGroupsEndpoint(this.accessRulesStorage),
+				endpoint: new DeleteRuleGroupsEndpoint(
+					this.accessRulesStorage,
+					this.logger,
+				),
 			},
 			{
 				path: accessRuleApiPaths.DELETE_ALL,
-				endpoint: new DeleteAllRulesEndpoint(this.accessRulesStorage),
+				endpoint: new DeleteAllRulesEndpoint(
+					this.accessRulesStorage,
+					this.logger,
+				),
 			},
 		] satisfies Array<{ path: RuleApiPath; [key: string]: unknown }>;
 	}

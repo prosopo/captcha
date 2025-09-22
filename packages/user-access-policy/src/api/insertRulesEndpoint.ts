@@ -56,14 +56,14 @@ export type InsertManyRulesEndpointOutputSchema = z.output<
 export class InsertRulesEndpoint
 	implements ApiEndpoint<InsertRulesEndpointSchema>
 {
-	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
+	public constructor(
+		private readonly accessRulesWriter: AccessRulesWriter,
+		private readonly logger: Logger,
+	) {}
 
 	async processRequest(
 		args: z.infer<InsertRulesEndpointSchema>,
-		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger(LogLevel.enum.info, "InsertRulesEndpoint");
-
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
@@ -73,12 +73,19 @@ export class InsertRulesEndpoint
 		});
 
 		const createRulesPromise = this.createRules(args)
-			.then(() => ({
-				status: ApiEndpointResponseStatus.SUCCESS,
-			}))
+			.then(() => {
+				this.logger.info(() => ({
+					msg: "Endpoint inserted access rules",
+					data: { args },
+				}));
+
+				return {
+					status: ApiEndpointResponseStatus.SUCCESS,
+				};
+			})
 			.catch((error) => {
-				if (logger?.getLogLevel() === LogLevel.enum.debug) {
-					logger.error(() => ({
+				if (LogLevel.enum.debug === this.logger.getLogLevel()) {
+					this.logger.error(() => ({
 						err: error,
 						data: { args },
 						msg: "Failed to insert access rules",

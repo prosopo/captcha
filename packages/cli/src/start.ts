@@ -74,6 +74,7 @@ async function startApi(
 	);
 	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
 		env.getDb().getUserAccessRulesStorage(),
+		env.logger,
 	);
 	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 

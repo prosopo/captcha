@@ -23,7 +23,6 @@ import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import { type AccessRule, makeAccessRuleHash } from "#policy/accessRules.js";
 
 export const redisRulesIndexName = "index:user-access-rules";
-
 // names take space, so we use an acronym instead of the long-tailed one
 export const redisRuleKeyPrefix = "uar:";
 
@@ -62,6 +61,8 @@ export const redisAccessRulesIndex: RedisIndex = {
 	},
 };
 
+const DEFAULT_SEARCH_LIMIT = 1000;
+
 export const numericIndexFields: Array<keyof AccessRule> = [
 	"numericIp",
 	"numericIpMaskMin",
@@ -76,7 +77,7 @@ type CustomFieldComparisons = Record<
 const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 	numericIp: (value, scope) => {
 		if (value !== undefined) {
-			return `( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
+			return `( @numericIp:[${value} ${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
 		}
 		// Only emit ismissing(@numericIp) if ranges are also not present
 		if (
@@ -110,6 +111,10 @@ const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 export const redisRulesSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
+	LIMIT: {
+		from: 0,
+		size: DEFAULT_SEARCH_LIMIT,
+	},
 };
 
 /*
@@ -127,11 +132,20 @@ export const getRedisRulesQuery = (
 	matchingFieldsOnly: boolean,
 ): string => {
 	const { policyScope, userScope } = filter;
+	const queryParts = [];
 
-	const policyScopeFilter = getPolicyScopeQuery(
+	if (filter.groupId) {
+		queryParts.push(`@groupId:{${filter.groupId}}`);
+	}
+
+	const policyScopeQuery = getPolicyScopeQuery(
 		policyScope,
 		filter.policyScopeMatch,
 	);
+
+	if (policyScopeQuery) {
+		queryParts.push(policyScopeQuery);
+	}
 
 	if (userScope && Object.keys(userScope).length > 0) {
 		const userScopeFilter = getUserScopeQuery(
@@ -139,10 +153,11 @@ export const getRedisRulesQuery = (
 			filter.userScopeMatch,
 			matchingFieldsOnly,
 		);
-		return `${policyScopeFilter} ( ${userScopeFilter} )`;
+
+		queryParts.push(`( ${userScopeFilter} )`);
 	}
 
-	return policyScopeFilter ? policyScopeFilter : "*";
+	return queryParts.length > 0 ? queryParts.join(" ") : "*";
 };
 
 const getPolicyScopeQuery = (

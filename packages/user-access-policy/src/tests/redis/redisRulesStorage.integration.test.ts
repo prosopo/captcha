@@ -35,13 +35,11 @@ import type {
 	AccessRulesReader,
 	AccessRulesWriter,
 } from "#policy/accessRules.js";
-import {
-	getRedisRuleKey,
-	redisAccessRulesIndex,
-} from "#policy/redis/redisRulesIndex.js";
+import { redisAccessRulesIndex } from "#policy/redis/redisRulesIndex.js";
 import { createRedisRulesReader } from "#policy/redis/redisRulesReader.js";
 import {
 	createRedisRulesWriter,
+	getRedisRuleKey,
 	getRedisRuleValue,
 } from "#policy/redis/redisRulesWriter.js";
 

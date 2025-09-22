@@ -1,5 +1,10 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.21
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+
 ## 2.6.20
 ### Patch Changes
 

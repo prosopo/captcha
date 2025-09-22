@@ -48,6 +48,7 @@ export const accessRuleSchemaExtended = z
 		numericIpMaskMin: true,
 		numericIpMaskMax: true,
 	});
+
 export type AccessRuleExtended = z.input<typeof accessRuleSchemaExtended>;
 
 const RULE_HASH_ALGORITHM = "md5";
