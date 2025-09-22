@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { computeFrictionlessScore } from "../../../../tasks/frictionless/frictionlessTasksUtils.js";
+import {
+	computeFrictionlessScore,
+	timestampDecayFunction,
+} from "../../../../tasks/frictionless/frictionlessTasksUtils.js";
 
 describe("Frictionless Task Utils", () => {
 	describe("computeFrictionlessScore", () => {
@@ -45,6 +48,38 @@ describe("Frictionless Task Utils", () => {
 			};
 			const result = computeFrictionlessScore(scoreComponents);
 			expect(result).toBe(1);
+		});
+	});
+
+	describe("timestampDecayFunction", () => {
+		it("returns at least 2 for age 0", () => {
+			expect(timestampDecayFunction(0)).toBeGreaterThanOrEqual(2);
+		});
+
+		it("returns a number for positive age", () => {
+			const result = timestampDecayFunction(1000);
+			expect(typeof result).toBe("number");
+		});
+
+		it("returns higher values for larger age", () => {
+			const smallAge = timestampDecayFunction(1000);
+			const largeAge = timestampDecayFunction(1000000);
+			expect(largeAge).toBeGreaterThanOrEqual(smallAge);
+		});
+
+		it("handles very large age values", () => {
+			const result = timestampDecayFunction(Number.MAX_SAFE_INTEGER);
+			expect(result).toBeGreaterThanOrEqual(2);
+		});
+
+		it("returns 12 for age of approximately 55 years", () => {
+			const result = timestampDecayFunction(new Date("1970-01-01").getTime());
+			expect(result).toBe(12);
+		});
+		it("should return 3 for a timestamp equal to current time", async () => {
+			const now = Date.now();
+			const result = timestampDecayFunction(now);
+			expect(result).toBe(3);
 		});
 	});
 });
