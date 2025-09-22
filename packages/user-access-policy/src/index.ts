@@ -29,6 +29,8 @@ export {
 	accessRuleSchema,
 	type AccessRuleExtended,
 	accessRuleSchemaExtended,
+	makeAccessRuleHash,
+	transformExtendedRuleIntoAccessRule,
 } from "#policy/accessRules.js";
 export {
 	accessRuleApiPaths,
