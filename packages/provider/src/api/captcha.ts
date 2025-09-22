@@ -577,10 +577,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						token: existingToken,
 						msg: "Token has already been used",
 					}));
-					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
-							existingToken._id as ObjectId,
-						),
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
 					);
 				}
 
@@ -668,7 +674,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 					if (userAccessPolicy.captchaType === CaptchaType.image) {
 						return res.json(
-							await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+							await tasks.frictionlessManager.sendImageCaptcha(
+								tokenId,
+								userAccessPolicy.solvedImagesCount,
+							),
 						);
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
@@ -719,7 +728,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					}));
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							env.config.captchas.solved.count,
+						),
 					);
 				}
 
