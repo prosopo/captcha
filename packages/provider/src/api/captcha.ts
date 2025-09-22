@@ -689,7 +689,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
-							timestampDecayFunction(new Date().getTime() - timestamp),
+							timestampDecayFunction(timestamp),
 						),
 					);
 				}
