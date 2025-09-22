@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { type Logger, ProsopoApiError } from "@prosopo/common";
+import {
+	type Logger,
+	ProsopoApiError,
+	getLogger,
+	parseLogLevel,
+} from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
@@ -26,29 +31,37 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const dapp = req.headers["prosopo-site-key"] as string;
-			if (!dapp)
+			const siteKey = req.headers["prosopo-site-key"] as string;
+			if (!siteKey)
 				throw siteKeyNotRegisteredError(
 					req.i18n,
 					"No sitekey provided",
 					req.logger,
 				);
 
+			// Attach site key to the request logger
+			req.logger = getLogger(
+				parseLogLevel(env.config.logLevel),
+				"request-logger",
+			).with({
+				siteKey,
+			});
+
 			try {
-				validateAddress(dapp, false, 42);
+				validateAddress(siteKey, false, 42);
 			} catch (err) {
-				throw invalidSiteKeyError(req.i18n, dapp, req.logger);
+				throw invalidSiteKeyError(req.i18n, siteKey, req.logger);
 			}
 
-			const clientSettings = await tasks.db.getClientRecord(dapp);
+			const clientSettings = await tasks.db.getClientRecord(siteKey);
 			if (!clientSettings)
-				throw siteKeyNotRegisteredError(req.i18n, dapp, req.logger);
+				throw siteKeyNotRegisteredError(req.i18n, siteKey, req.logger);
 
 			const allowedDomains = clientSettings.settings?.domains;
 			if (!allowedDomains)
 				throw siteKeyInvalidDomainError(
 					req.i18n,
-					dapp,
+					siteKey,
 					req.hostname,
 					req.logger,
 				);
