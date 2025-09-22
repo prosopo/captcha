@@ -1,5 +1,22 @@
 # @prosopo/datasets
 
+## 3.0.30
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [b6794f8]
+- Updated dependencies [11303d9]
+- Updated dependencies [bac2d91]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/types-database@3.3.1
+  - @prosopo/util-crypto@13.5.18
+  - @prosopo/common@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/util@3.1.1
+  - @prosopo/config@3.1.16
+
 ## 3.0.29
 ### Patch Changes
 

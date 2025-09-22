@@ -23,6 +23,7 @@
 "@prosopo/procaptcha-pow": patch
 "@prosopo/types-database": patch
 "@prosopo/load-balancer": patch
+"@prosopo/redis-client": patch
 "@prosopo/cypress-shared": patch
 "@prosopo/prosoponator-bot": patch
 "@prosopo/datasets-fs": patch
@@ -58,5 +59,5 @@
 "@prosopo/lint": patch
 ---
 
-Release 3.4.0
+Release 3.4.2
   

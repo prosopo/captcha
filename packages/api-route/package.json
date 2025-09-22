@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-route",
-	"version": "2.6.23",
+	"version": "2.6.24",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -23,9 +23,9 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/common": "3.1.15",
+		"@prosopo/common": "3.1.16",
 		"zod": "3.23.8",
-		"@prosopo/config": "3.1.15"
+		"@prosopo/config": "3.1.16"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
