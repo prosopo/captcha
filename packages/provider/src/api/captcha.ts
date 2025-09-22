@@ -586,7 +586,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							},
 							i18n: req.i18n,
 							logger: req.logger,
-						}))
+						}),
+					);
 				}
 
 				const lScore = tasks.frictionlessManager.checkLangRules(
@@ -673,7 +674,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 					if (userAccessPolicy.captchaType === CaptchaType.image) {
 						return res.json(
-							await tasks.frictionlessManager.sendImageCaptcha(tokenId, userAccessPolicy.solvedImagesCount),
+							await tasks.frictionlessManager.sendImageCaptcha(
+								tokenId,
+								userAccessPolicy.solvedImagesCount,
+							),
 						);
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
@@ -724,7 +728,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					}));
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId, env.config.captchas.solved.count),
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							env.config.captchas.solved.count,
+						),
 					);
 				}
 
