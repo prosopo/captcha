@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaTypeSchema } from "@prosopo/types";
-import { getIPAddress } from "@prosopo/util";
-import { Address4 } from "ip-address";
-import { type ZodRawShape, z } from "zod";
-import { hashUserAgent } from "#policy/util.js";
+import { type CaptchaType, CaptchaTypeSchema } from "@prosopo/types";
+import mongoose from "mongoose";
+import { type ZodType, z } from "zod";
 
 export enum AccessPolicyType {
 	Block = "block",
 	Restrict = "restrict",
 }
 
-export const accessPolicySchema: z.ZodObject<{
-	type: ZodRawShape["type"];
-	captchaType: ZodRawShape["captchaType"];
-	description: ZodRawShape["description"];
-	solvedImagesCount: ZodRawShape["solvedImagesCount"];
-	imageThreshold: ZodRawShape["imageThreshold"];
-	powDifficulty: ZodRawShape["powDifficulty"];
-	unsolvedImagesCount: ZodRawShape["unsolvedImagesCount"];
-	frictionlessScore: ZodRawShape["frictionlessScore"];
-}> = z.object({
+export type AccessPolicy = {
+	type: AccessPolicyType;
+	captchaType?: CaptchaType;
+	description?: string;
+	solvedImagesCount?: number;
+	imageThreshold?: number;
+	powDifficulty?: number;
+	unsolvedImagesCount?: number;
+	frictionlessScore?: number;
+};
+
+export const accessPolicySchema = z.object({
 	type: z.nativeEnum(AccessPolicyType),
 	captchaType: CaptchaTypeSchema.optional(),
 	description: z.coerce.string().optional(),
@@ -46,63 +46,15 @@ export const accessPolicySchema: z.ZodObject<{
 	unsolvedImagesCount: z.coerce.number().optional(),
 	// used to increase the user's score
 	frictionlessScore: z.coerce.number().optional(),
+}) satisfies ZodType<AccessPolicy>;
+
+export const accessPolicyMongooseSchema = new mongoose.Schema<AccessPolicy>({
+	type: { type: String, required: true },
+	captchaType: { type: String, required: false },
+	description: { type: String, required: false },
+	solvedImagesCount: { type: Number, required: false },
+	imageThreshold: { type: Number, required: false },
+	powDifficulty: { type: Number, required: false },
+	unsolvedImagesCount: { type: Number, required: false },
+	frictionlessScore: { type: Number, required: false },
 });
-
-export const policyScopeSchema = z.object({
-	clientId: z.coerce.string().optional(),
-});
-
-export const userScopeSchema = z.object({
-	// coerce is used for safety, as e.g., incoming userId can be digital
-	userId: z.coerce.string().optional(),
-	numericIp: z.coerce.bigint().optional(),
-	numericIpMaskMin: z.coerce.bigint().optional(),
-	numericIpMaskMax: z.coerce.bigint().optional(),
-	ja4Hash: z.coerce.string().optional(),
-	headersHash: z.coerce.string().optional(),
-	userAgentHash: z.coerce.string().optional(),
-});
-
-export const userScopeInputSchema = userScopeSchema
-	.extend({
-		// human-friendly ip versions. If present, then converted to numeric and removed from the object
-		// 127.0.0.1
-		ip: z.string().optional(),
-		// 127.0.0.1/24
-		ipMask: z.string().optional(),
-		// human friendly user agent
-		userAgent: z.string().optional(),
-	})
-	.transform((inputUserScope) => {
-		// this line creates a new "userScope", without ip and ipMask
-		const { ip, ipMask, userAgent, ...userScope } = inputUserScope;
-
-		if ("string" === typeof ip) {
-			userScope.numericIp = getIPAddress(ip).bigInt();
-		}
-
-		// Assuming ipMask is already validated to be a string in CIDR format
-		if ("string" === typeof ipMask) {
-			// Create an Address4 object from the CIDR string.
-			// Address4 automatically understands CIDR notation and represents the entire network range.
-			const ipObject = new Address4(ipMask);
-
-			// The minimum IP in the CIDR range is the start address of the network.
-			userScope.numericIpMaskMin = ipObject.startAddress().bigInt();
-
-			// The maximum IP in the CIDR range is the end address of the network.
-			userScope.numericIpMaskMax = ipObject.endAddress().bigInt();
-		}
-
-		if ("string" === typeof userAgent) {
-			userScope.userAgentHash = hashUserAgent(userAgent);
-		}
-
-		return userScope;
-	});
-
-export type AccessPolicy = z.output<typeof accessPolicySchema>;
-export type PolicyScope = z.output<typeof policyScopeSchema>;
-export type UserScope = z.output<typeof userScopeSchema>;
-export type UserScopeApiInput = z.input<typeof userScopeInputSchema>;
-export type UserScopeApiOutput = z.output<typeof userScopeInputSchema>;

@@ -14,19 +14,20 @@
 
 import { describe, expect, test } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
+import { transformExtendedRuleIntoAccessRule } from "#policy/accessRules.js";
 import {
-	type AccessRuleExtended,
-	transformExtendedRuleIntoAccessRule,
-} from "#policy/accessRules.js";
+	type AccessRuleRecord,
+	transformAccessRuleRecordIntoRule,
+} from "#policy/rules/accessRule.js";
 
-describe("transformExtendedRuleIntoAccessRule", () => {
-	test("should transform extended rule fields", () => {
+describe("transformAccessRuleRecordIntoRule", () => {
+	test("should transform record fields", () => {
 		const accessRule = transformExtendedRuleIntoAccessRule({
 			type: AccessPolicyType.Restrict,
 			ip: "127.0.0.1",
 			userAgent: "test",
 			unwantedProperty: "bloatware",
-		} as unknown as AccessRuleExtended);
+		} as unknown as AccessRuleRecord);
 
 		expect(accessRule).toEqual({
 			type: AccessPolicyType.Restrict,

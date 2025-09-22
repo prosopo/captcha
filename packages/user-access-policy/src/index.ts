@@ -15,23 +15,27 @@
 export {
 	type AccessPolicy,
 	AccessPolicyType,
-	type PolicyScope,
+	accessPolicySchema,
+} from "#policy/accessPolicy.js";
+export type { PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
+export {
 	type UserScope,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
-	accessPolicySchema,
-	policyScopeSchema,
-} from "#policy/accessPolicy.js";
+	userScopeInputSchema,
+} from "#policy/userScope.js";
 export { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 export {
-	type AccessRule,
 	type AccessRulesStorage,
-	accessRuleSchema,
 	type AccessRuleExtended,
 	accessRuleSchemaExtended,
-	makeAccessRuleHash,
 	transformExtendedRuleIntoAccessRule,
 } from "#policy/accessRules.js";
+export {
+	type AccessRule,
+	accessRuleSchema,
+	makeAccessRuleHash,
+} from "#policy/accessRule.js";
 export {
 	accessRuleApiPaths,
 	getExpressApiRuleRateLimits,
@@ -52,7 +56,6 @@ export {
 	insertRulesEndpointSchema,
 } from "#policy/api/insertRulesEndpoint.js";
 export { createRedisAccessRulesStorage } from "#policy/redis/redisRulesStorage.js";
-export { userScopeInputSchema } from "./accessPolicy.js";
 export { redisAccessRulesIndex } from "./redis/redisRulesIndex.js";
 export { AccessRulesApiClient } from "./api/accessRulesApiClient.js";
 
