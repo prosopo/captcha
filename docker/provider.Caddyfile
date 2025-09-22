@@ -42,6 +42,14 @@
 		client_hello
 		request_id
 
+		@aws {
+			expression `{http.request.header.Authorization} == "Bearer {env.CADDY_AWS_BEARER_TOKEN}"`
+		}
+
+		@limited {
+			expression `{http.request.header.Authorization} != "Bearer {env.CADDY_AWS_BEARER_TOKEN}"`
+		}
+
 		header X-Request-ID "{http.request_id}"
 
 		header / {
@@ -55,35 +63,20 @@
 			X-Robots-Tag "none"
 		}
 
-		# basicauth /metrics {
-		# 	 # this has to be the username<space><bcrypted password>
-		# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
-		# 	 {$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
-		# }
-
 		# enable prometheus metrics
 		metrics /metrics
 
-		rate_limit {
-			distributed
-
-			# Means that the rate limit is applied to all GET requests, with a limit of 100 requests per minute.
-			# zone get_rate_limit {
-			# 	match {
-			# 		method GET
-			# 	}
-			# 	key static
-			# 	events 100
-			# 	window 1m
-			# }
-
-			# The rate limit is applied to `remote_host` with a limit of 6 requests per 6 seconds (60 requests per minute).
-			zone dynamic_example {
-				key {remote_host}
-				events {$CADDY_RATE_LIMIT_EVENTS}
-				window {$CADDY_RATE_LIMIT_WINDOW}
+		# Apply rate limiting only to non-AWS traffic
+		route @limited {
+			rate_limit {
+				distributed
+				zone dynamic_example {
+					key {remote_host}
+					events {$CADDY_RATE_LIMIT_EVENTS}
+					window {$CADDY_RATE_LIMIT_WINDOW}
+				}
+				log_key
 			}
-			log_key
 		}
 
 		# reverse proxy to the provider container
