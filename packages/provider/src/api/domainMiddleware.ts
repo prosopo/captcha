@@ -13,12 +13,7 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import {
-	type Logger,
-	ProsopoApiError,
-	getLogger,
-	parseLogLevel,
-} from "@prosopo/common";
+import { type Logger, ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
@@ -38,14 +33,6 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 					"No sitekey provided",
 					req.logger,
 				);
-
-			// Attach site key to the request logger
-			req.logger = getLogger(
-				parseLogLevel(env.config.logLevel),
-				"request-logger",
-			).with({
-				siteKey,
-			});
 
 			try {
 				validateAddress(siteKey, false, 42);
