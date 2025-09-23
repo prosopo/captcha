@@ -19,7 +19,7 @@ import {
 } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import { z } from "zod";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { AccessRulesStorage } from "#policy/storage/accessRulesStorage.js";
 
 export const deleteAllRulesEndpointSchema = z.object({});
 

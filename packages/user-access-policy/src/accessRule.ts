@@ -15,50 +15,51 @@
 import crypto from "node:crypto";
 import mongoose from "mongoose";
 import { z } from "zod";
-import { type AccessPolicy, accessPolicySchema } from "#policy/accessPolicy.js";
+import {
+	type AccessPolicy,
+	accessPolicyMongooseSchema,
+	accessPolicySchema,
+} from "./accessPolicy.js";
 import {
 	type PolicyScope,
 	policyScopeMongooseSchema,
 	policyScopeSchema,
-} from "#policy/rules/policyScope.js";
+} from "./policyScope.js";
 import {
-	type UserAttributes,
-	type UserAttributesRecord,
-	userAttributesMongooseSchema,
-	userAttributesSchema,
-} from "#policy/rules/userAttributes.js";
-import {
-	type NumericUserIp,
-	type UserIp,
-	numericUserIpSchema,
-	userIpMongooseSchema,
-} from "#policy/rules/userIp.js";
+	type UserScope,
+	type UserScopeRecord,
+	userScopeMongooseSchema,
+	userScopeSchema,
+} from "./userScope/userScope.js";
 
 // flat structure is used to fit the Redis requirements
 export type AccessRule = AccessPolicy &
 	PolicyScope &
-	UserAttributes &
-	NumericUserIp & {
+	UserScope & {
 		groupId?: string;
 	};
 
 export type AccessRuleRecord = AccessPolicy &
 	PolicyScope &
-	UserAttributesRecord &
-	UserIp & {
+	UserScopeRecord & {
 		ruleGroupId?: string;
 	};
 
-export const accessRuleSchema = z
+const accessRuleInputSchema = z
 	.object({
 		...accessPolicySchema.shape,
 		...policyScopeSchema.shape,
 		groupId: z.coerce.string().optional(),
 		ruleGroupId: z.coerce.string().optional(),
 	})
-	.and(userAttributesSchema)
-	.and(numericUserIpSchema)
-	.transform((inputRule): AccessRule => {
+	.and(userScopeSchema)
+	.transform(
+		// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
+		(accessRuleInput): AccessRule & AccessRuleRecord => accessRuleInput,
+	);
+
+export const accessRuleSchema = accessRuleInputSchema.transform(
+	(inputRule): AccessRule => {
 		// this line creates a new "rule", without ruleGroupId
 		const { ruleGroupId, ...rule } = inputRule;
 
@@ -67,12 +68,13 @@ export const accessRuleSchema = z
 		}
 
 		return rule;
-	});
+	},
+);
 
 export const accessRuleMongooseSchema = new mongoose.Schema<AccessRuleRecord>({
+	...accessPolicyMongooseSchema.obj,
 	...policyScopeMongooseSchema.obj,
-	...userAttributesMongooseSchema.obj,
-	...userIpMongooseSchema.obj,
+	...userScopeMongooseSchema.obj,
 	ruleGroupId: { type: String, required: false },
 });
 
@@ -89,7 +91,7 @@ export const makeAccessRuleHash = (rule: AccessRule): string =>
 		)
 		.digest("hex");
 
-// this function applies the Zod scheme with transformations, so .userAgent becomes .userAgentHash and so on.
+// this function applies all the Zod scheme transformations, so .userAgent becomes .userAgentHash and so on.
 export const transformAccessRuleRecordIntoRule = (
 	ruleRecord: AccessRuleRecord,
 ): AccessRule => accessRuleSchema.parse(ruleRecord);

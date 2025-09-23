@@ -18,39 +18,35 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
-import { string, z } from "zod";
+import { type ZodType, z } from "zod";
 import { ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { AccessRulesStorage } from "#policy/storage/accessRulesStorage.js";
 
-export const deleteRuleGroupsEndpointSchema = z.array(
+export type SiteGroup = {
+	clientIds: string[];
+	groupId: string;
+};
+
+export type SiteGroups = SiteGroup[];
+
+const deleteRuleGroupsSchema = z.array(
 	z.object({
 		clientIds: z.string().array(),
 		groupId: z.string(),
 	}),
-);
+) satisfies ZodType<SiteGroups>;
 
-export type DeleteRuleGroupsOutputEndpointSchema = z.output<
-	typeof deleteRuleGroupsEndpointSchema
->;
-
-export type DeleteRuleGroupsInputEndpointSchema = z.input<
-	typeof deleteRuleGroupsEndpointSchema
->;
-
-export type DeleteRuleGroupsEndpointSchema =
-	typeof deleteRuleGroupsEndpointSchema;
+type DeleteRuleGroupsSchema = typeof deleteRuleGroupsSchema;
 
 export class DeleteRuleGroupsEndpoint
-	implements ApiEndpoint<DeleteRuleGroupsEndpointSchema>
+	implements ApiEndpoint<DeleteRuleGroupsSchema>
 {
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
 	) {}
 
-	async processRequest(
-		args: DeleteRuleGroupsInputEndpointSchema,
-	): Promise<ApiEndpointResponse> {
+	async processRequest(args: SiteGroups): Promise<ApiEndpointResponse> {
 		const ruleIdPromises = [];
 
 		for (const ruleToDelete of args) {
@@ -95,7 +91,7 @@ export class DeleteRuleGroupsEndpoint
 		};
 	}
 
-	public getRequestArgsSchema(): DeleteRuleGroupsEndpointSchema {
-		return deleteRuleGroupsEndpointSchema;
+	public getRequestArgsSchema(): DeleteRuleGroupsSchema {
+		return deleteRuleGroupsSchema;
 	}
 }

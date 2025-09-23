@@ -13,8 +13,11 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
 import { getRedisRulesQuery } from "#policy/redis/redisRulesIndex.js";
+import {
+	type AccessRulesFilter,
+	ScopeMatch,
+} from "#policy/storage/accessRulesStorage.js";
 
 describe("getUserScopeQuery", () => {
 	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact", () => {
@@ -25,7 +28,7 @@ describe("getUserScopeQuery", () => {
 				userAgentHash: undefined,
 			},
 			userScopeMatch: ScopeMatch.Exact,
-		} as PolicyFilter;
+		} as AccessRulesFilter;
 
 		const query = getRedisRulesQuery(filter, false);
 
@@ -41,7 +44,7 @@ describe("getUserScopeQuery", () => {
 				userAgentHash: undefined,
 			},
 			userScopeMatch: ScopeMatch.Exact,
-		} as PolicyFilter;
+		} as AccessRulesFilter;
 
 		const query = getRedisRulesQuery(filter, true);
 
@@ -60,7 +63,7 @@ describe("getUserScopeQuery", () => {
 				userId: undefined,
 			},
 			userScopeMatch: ScopeMatch.Exact,
-		} as PolicyFilter;
+		} as AccessRulesFilter;
 
 		const query = getRedisRulesQuery(filter, false);
 
@@ -79,7 +82,7 @@ describe("getUserScopeQuery", () => {
 				userId: undefined,
 			},
 			userScopeMatch: ScopeMatch.Greedy,
-		} as PolicyFilter;
+		} as AccessRulesFilter;
 
 		const query = getRedisRulesQuery(filter, false);
 
@@ -98,7 +101,7 @@ describe("getUserScopeQuery", () => {
 				userId: undefined,
 			},
 			userScopeMatch: ScopeMatch.Exact,
-		} as PolicyFilter;
+		} as AccessRulesFilter;
 
 		const query = getRedisRulesQuery(filter, false);
 
@@ -116,7 +119,7 @@ describe("getUserScopeQuery", () => {
 				userId: undefined,
 			},
 			userScopeMatch: ScopeMatch.Exact,
-		} as PolicyFilter;
+		} as AccessRulesFilter;
 
 		const query = getRedisRulesQuery(filter, true);
 
@@ -135,7 +138,7 @@ describe("getUserScopeQuery", () => {
 				userId: undefined,
 			},
 			userScopeMatch: ScopeMatch.Exact,
-		} as PolicyFilter;
+		} as AccessRulesFilter;
 
 		const query = getRedisRulesQuery(filter, true);
 

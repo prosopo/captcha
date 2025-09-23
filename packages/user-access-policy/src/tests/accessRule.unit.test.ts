@@ -14,15 +14,14 @@
 
 import { describe, expect, test } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import { transformExtendedRuleIntoAccessRule } from "#policy/accessRules.js";
 import {
 	type AccessRuleRecord,
 	transformAccessRuleRecordIntoRule,
-} from "#policy/rules/accessRule.js";
+} from "#policy/accessRule.js";
 
 describe("transformAccessRuleRecordIntoRule", () => {
 	test("should transform record fields", () => {
-		const accessRule = transformExtendedRuleIntoAccessRule({
+		const accessRule = transformAccessRuleRecordIntoRule({
 			type: AccessPolicyType.Restrict,
 			ip: "127.0.0.1",
 			userAgent: "test",
@@ -40,10 +39,10 @@ describe("transformAccessRuleRecordIntoRule", () => {
 	test("should throw an error for the wrong input", () => {
 		expect(() =>
 			// required "type" property is skipped
-			transformExtendedRuleIntoAccessRule({
+			transformAccessRuleRecordIntoRule({
 				ip: "127.0.0.1",
 				userAgent: "test",
-			}),
+			} as unknown as AccessRuleRecord),
 		).toThrow();
 	});
 });

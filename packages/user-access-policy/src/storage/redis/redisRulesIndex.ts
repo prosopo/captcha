@@ -14,13 +14,16 @@
 
 import type { RedisIndex } from "@prosopo/redis-client";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
+import { type AccessRule, makeAccessRuleHash } from "#policy/accessRule.js";
+import type { PolicyScope } from "#policy/policyScope.js";
 import {
-	type PolicyScope,
+	type AccessRulesFilter,
+	ScopeMatch,
+} from "#policy/storage/accessRulesStorage.js";
+import {
 	type UserScope,
 	userScopeSchema,
-} from "#policy/accessPolicy.js";
-import { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-import { type AccessRule, makeAccessRuleHash } from "#policy/accessRules.js";
+} from "#policy/userScope/userScope.js";
 
 export const redisRulesIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
@@ -128,7 +131,7 @@ export const redisRulesSearchOptions: FtSearchOptions = {
  * DIALECT 2 # must have when the ismissing() function in use
  * */
 export const getRedisRulesQuery = (
-	filter: PolicyFilter,
+	filter: AccessRulesFilter,
 	matchingFieldsOnly: boolean,
 ): string => {
 	const { policyScope, userScope } = filter;
@@ -203,7 +206,7 @@ const getUserScopeQuery = (
 		}
 
 		// Ensure all expected fields are accounted for
-		for (const name of Object.keys(userScopeSchema.shape) as Array<
+		for (const name of Object.keys(userScopeSchema._def.schema) as Array<
 			keyof UserScope
 		>) {
 			if (!scopeMap.has(name)) {

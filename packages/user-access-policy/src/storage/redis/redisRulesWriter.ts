@@ -14,11 +14,9 @@
 
 import type { Logger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
-import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
-import {
-	getRedisRuleKey,
-	redisRuleKeyPrefix,
-} from "#policy/redis/redisRulesIndex.js";
+import type { AccessRule } from "#policy/accessRule.js";
+import type { AccessRulesWriter } from "#policy/storage/accessRulesStorage.js";
+import { getRedisRuleKey, redisRuleKeyPrefix } from "./redisRulesIndex.js";
 
 export const createRedisRulesWriter = (
 	client: RedisClientType,

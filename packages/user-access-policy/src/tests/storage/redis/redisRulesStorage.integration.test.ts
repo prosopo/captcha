@@ -29,21 +29,21 @@ import {
 	test,
 } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import { ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type {
-	AccessRule,
-	AccessRulesReader,
-	AccessRulesWriter,
-} from "#policy/accessRules.js";
-import {
-	getRedisRuleKey,
-	redisAccessRulesIndex,
-} from "#policy/redis/redisRulesIndex.js";
-import { createRedisRulesReader } from "#policy/redis/redisRulesReader.js";
+import type { AccessRule } from "#policy/accessRules.js";
 import {
 	createRedisRulesWriter,
 	getRedisRuleValue,
 } from "#policy/redis/redisRulesWriter.js";
+import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
+import type {
+	AccessRulesReader,
+	AccessRulesWriter,
+} from "#policy/storage/accessRulesStorage.js";
+import {
+	getRedisRuleKey,
+	redisAccessRulesIndex,
+} from "#policy/storage/redis/redisRulesIndex.js";
+import { createRedisRulesReader } from "#policy/storage/redis/redisRulesReader.js";
 
 describe("redisAccessRulesStorage", () => {
 	let redisConnection: RedisConnection;

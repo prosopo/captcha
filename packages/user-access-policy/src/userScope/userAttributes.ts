@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import crypto from "node:crypto";
+import { z, type ZodType } from "zod";
 import mongoose from "mongoose";
-import { z } from "zod";
+import crypto from "node:crypto";
 
 export type UserAttributes = {
 	userId?: string;
@@ -27,16 +27,17 @@ export type UserAttributesRecord = Omit<UserAttributes, "userAgentHash"> & {
 	userAgent?: string;
 };
 
-export const userAttributesSchema = z
-	.object({
-		// coerce is used for safety, as e.g., incoming userId can be digital
-		userId: z.coerce.string().optional(),
-		ja4Hash: z.coerce.string().optional(),
-		headersHash: z.coerce.string().optional(),
-		userAgent: z.coerce.string().optional(),
-		userAgentHash: z.coerce.string().optional(),
-	})
-	.transform((inputUserAttributes): UserAttributes => {
+const userAttributesInputSchema = z.object({
+	// coerce is used for safety, as e.g., incoming userId can be digital
+	userId: z.coerce.string().optional(),
+	ja4Hash: z.coerce.string().optional(),
+	headersHash: z.coerce.string().optional(),
+	userAgent: z.coerce.string().optional(),
+	userAgentHash: z.coerce.string().optional(),
+}) satisfies ZodType<UserAttributes & UserAttributesRecord>;
+
+export const userAttributesSchema = userAttributesInputSchema.transform(
+	(inputUserAttributes): UserAttributes => {
 		// this line creates a new "userAttributes", without userAgent
 		const { userAgent, ...userScope } = inputUserAttributes;
 
@@ -45,7 +46,8 @@ export const userAttributesSchema = z
 		}
 
 		return userScope;
-	});
+	},
+);
 
 export const userAttributesMongooseSchema =
 	new mongoose.Schema<UserAttributesRecord>({

@@ -17,17 +17,16 @@ import type { Logger } from "@prosopo/common";
 import type { SearchReply } from "@redis/search";
 import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
 import type { RedisClientType } from "redis";
-import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
-import {
-	type AccessRule,
-	type AccessRulesReader,
-	accessRuleSchema,
-} from "#policy/accessRules.js";
-import { redisRulesIndexName } from "#policy/redis/redisRulesIndex.js";
+import { type AccessRule, accessRuleSchema } from "#policy/accessRule.js";
+import type {
+	AccessRulesFilter,
+	AccessRulesReader,
+} from "#policy/storage/accessRulesStorage.js";
+import { redisRulesIndexName } from "./redisRulesIndex.js";
 import {
 	getRedisRulesQuery,
 	redisRulesSearchOptions,
-} from "#policy/redis/redisRulesIndex.js";
+} from "./redisRulesIndex.js";
 
 export const createRedisRulesReader = (
 	client: RedisClientType,
@@ -35,7 +34,7 @@ export const createRedisRulesReader = (
 ): AccessRulesReader => {
 	return {
 		findRules: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
@@ -94,7 +93,7 @@ export const createRedisRulesReader = (
 		},
 
 		findRuleIds: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 		): Promise<string[]> => {
 			const query = getRedisRulesQuery(filter, matchingFieldsOnly);
@@ -144,7 +143,7 @@ export const createRedisRulesReader = (
 export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 	return {
 		findRules: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
@@ -158,7 +157,7 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 			return [];
 		},
 		findRuleIds: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 		): Promise<string[]> => {
 			logger.info(() => ({

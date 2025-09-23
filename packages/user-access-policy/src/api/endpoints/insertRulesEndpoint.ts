@@ -17,53 +17,45 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
-import { z } from "zod";
+import { LogLevel, type Logger } from "@prosopo/common";
+import { type ZodType, z } from "zod";
+import { type AccessPolicy, accessPolicySchema } from "#policy/accessPolicy.js";
+import type { AccessRule } from "#policy/accessRule.js";
+import { type PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
+import type { AccessRulesWriter } from "#policy/storage/accessRulesStorage.js";
 import {
-	accessPolicySchema,
-	policyScopeSchema,
-	userScopeInputSchema,
-} from "#policy/accessPolicy.js";
-import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
+	type UserScope,
+	userScopeSchema,
+} from "#policy/userScope/userScope.js";
 
-export const insertRulesEndpointSchema: z.ZodType<{
-	accessPolicy: z.infer<typeof accessPolicySchema>;
-	policyScope?: z.infer<typeof policyScopeSchema>;
+export type RulesGroup = {
+	accessPolicy: AccessPolicy;
+	policyScope?: PolicyScope;
 	groupId?: string;
-	userScopes: z.input<typeof userScopeInputSchema>[];
+	userScopes: UserScope[];
 	expirationTimestamp?: number;
-}> = z.object({
+};
+
+const insertRulesSchema = z.object({
 	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
 	groupId: z.string().optional(),
-	userScopes: z.array(userScopeInputSchema),
+	userScopes: z.array(userScopeSchema),
 	expirationTimestamp: z
 		.number()
 		.optional()
 		.transform((val) => (val !== undefined ? Math.floor(val) : val)),
-});
+}) satisfies ZodType<RulesGroup>;
 
-export type InsertRulesEndpointSchema = typeof insertRulesEndpointSchema;
+type InsertRulesSchema = typeof insertRulesSchema;
 
-export type InsertManyRulesEndpointInputSchema = z.input<
-	typeof insertRulesEndpointSchema
->;
-
-export type InsertManyRulesEndpointOutputSchema = z.output<
-	typeof insertRulesEndpointSchema
->;
-
-export class InsertRulesEndpoint
-	implements ApiEndpoint<InsertRulesEndpointSchema>
-{
+export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(
 		private readonly accessRulesWriter: AccessRulesWriter,
 		private readonly logger: Logger,
 	) {}
 
-	async processRequest(
-		args: z.infer<InsertRulesEndpointSchema>,
-	): Promise<ApiEndpointResponse> {
+	async processRequest(args: RulesGroup): Promise<ApiEndpointResponse> {
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
@@ -100,13 +92,11 @@ export class InsertRulesEndpoint
 		return Promise.race([timeoutPromise, createRulesPromise]);
 	}
 
-	public getRequestArgsSchema(): InsertRulesEndpointSchema {
-		return insertRulesEndpointSchema;
+	public getRequestArgsSchema(): InsertRulesSchema {
+		return insertRulesSchema;
 	}
 
-	protected async createRules(
-		args: InsertManyRulesEndpointOutputSchema,
-	): Promise<string[]> {
+	protected async createRules(args: RulesGroup): Promise<string[]> {
 		const policyScope = args.policyScope || {};
 
 		const createPromises = [];

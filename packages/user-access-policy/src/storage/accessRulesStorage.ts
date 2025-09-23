@@ -13,26 +13,26 @@
 // limitations under the License.
 
 import z, { type ZodType } from "zod";
-import type { AccessRule } from "#policy/rules/accessRule.js";
+import type { AccessRule } from "#policy/accessRule.js";
+import { type PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
 import {
-	type PolicyScope,
-	policyScopeSchema,
-} from "#policy/rules/policyScope.js";
-import { type UserIp, userScopeInputSchema } from "#policy/rules/userIp.js";
+	type UserScope,
+	userScopeSchema,
+} from "#policy/userScope/userScope.js";
 
 export enum ScopeMatch {
 	Exact = "exact",
 	Greedy = "greedy",
 }
 
-export type PolicyFilter = {
+export type AccessRulesFilter = {
 	policyScope?: PolicyScope;
 	/**
 	 * Exact: "clientId" => client rules, "undefined" => global rules. Used by the API
 	 * Greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
 	 */
 	policyScopeMatch?: ScopeMatch;
-	userScope?: UserIp;
+	userScope?: UserScope;
 	/**
 	 * Exact: "clientId" => client rules, "undefined" => global rules. Used by the API
 	 * Greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
@@ -41,23 +41,23 @@ export type PolicyFilter = {
 	groupId?: string;
 };
 
-export const policyFilterSchema = z.object({
+export const accessRulesFilterSchema = z.object({
 	policyScope: policyScopeSchema.optional(),
 	policyScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
-	userScope: userScopeInputSchema.optional(),
+	userScope: userScopeSchema.optional(),
 	userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
 	groupId: z.string().optional(),
-}) satisfies ZodType<PolicyFilter>;
+}) satisfies ZodType<AccessRulesFilter>;
 
 export type AccessRulesReader = {
 	findRules(
-		filter: PolicyFilter,
+		filter: AccessRulesFilter,
 		matchingFieldsOnly?: boolean,
 		skipEmptyUserScopes?: boolean,
 	): Promise<AccessRule[]>;
 
 	findRuleIds(
-		filter: PolicyFilter,
+		filter: AccessRulesFilter,
 		matchingFieldsOnly?: boolean,
 	): Promise<string[]>;
 };

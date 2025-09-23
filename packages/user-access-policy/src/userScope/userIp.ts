@@ -12,34 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import mongoose from "mongoose";
 import { getIPAddress } from "@prosopo/util";
 import { Address4 } from "ip-address";
-import mongoose from "mongoose";
-import { type ZodType, z } from "zod";
-import { hashUserAgent } from "#policy/util.js";
+import { z, type ZodType } from "zod";
 
 export type UserIp = {
+	numericIp?: bigint;
+	numericIpMaskMin?: bigint;
+	numericIpMaskMax?: bigint;
+};
+
+export type UserIpRecord = {
 	// human-friendly ip versions.
 	ip?: string;
 	// 127.0.0.1/24
 	ipMask?: string;
 };
 
-export type NumericUserIp = {
-	numericIp?: bigint;
-	numericIpMaskMin?: bigint;
-	numericIpMaskMax?: bigint;
-};
+const userIpInputSchema = z.object({
+	ip: z.string().optional(),
+	ipMask: z.string().optional(),
+	numericIp: z.coerce.bigint().optional(),
+	numericIpMaskMin: z.coerce.bigint().optional(),
+	numericIpMaskMax: z.coerce.bigint().optional(),
+}) satisfies ZodType<UserIp & UserIpRecord>;
 
-export const numericUserIpSchema = z
-	.object({
-		ip: z.string().optional(),
-		ipMask: z.string().optional(),
-		numericIp: z.coerce.bigint().optional(),
-		numericIpMaskMin: z.coerce.bigint().optional(),
-		numericIpMaskMax: z.coerce.bigint().optional(),
-	})
-	.transform((inputNumericUserIp): NumericUserIp => {
+export const userIpSchema = userIpInputSchema.transform(
+	(inputNumericUserIp): UserIp => {
 		// this line creates a new "userScope", without ip and ipMask
 		const { ip, ipMask, ...numericUserIp } = inputNumericUserIp;
 
@@ -61,9 +61,10 @@ export const numericUserIpSchema = z
 		}
 
 		return numericUserIp;
-	});
+	},
+);
 
-export const userIpMongooseSchema = new mongoose.Schema<UserIp>({
+export const userIpMongooseSchema = new mongoose.Schema<UserIpRecord>({
 	ip: { type: String, required: false },
 	ipMask: { type: String, required: false },
 });

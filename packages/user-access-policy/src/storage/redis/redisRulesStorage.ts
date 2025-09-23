@@ -14,15 +14,15 @@
 
 import type { Logger } from "@prosopo/common";
 import type { RedisConnection } from "@prosopo/redis-client";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { AccessRulesStorage } from "#policy/storage/accessRulesStorage.js";
 import {
 	createRedisRulesReader,
 	getDummyRedisRulesReader,
-} from "#policy/redis/redisRulesReader.js";
+} from "./redisRulesReader.js";
 import {
 	createRedisRulesWriter,
 	getDummyRedisRulesWriter,
-} from "#policy/redis/redisRulesWriter.js";
+} from "./redisRulesWriter.js";
 
 export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
