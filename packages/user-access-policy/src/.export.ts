@@ -13,6 +13,7 @@
 // limitations under the License.
 
 export * from "./api/.export.js";
+export * from "./redis/.export.js";
 export * from "./userScope/.export.js";
 
 export {

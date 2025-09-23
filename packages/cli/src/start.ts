@@ -43,7 +43,7 @@ import {
 	type KeyringPair,
 } from "@prosopo/types";
 import {
-	createApiRuleRoutesProvider,
+	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy";
 import cors from "cors";
@@ -72,7 +72,7 @@ async function startApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
+	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
 		env.getDb().getUserAccessRulesStorage(),
 		env.logger,
 	);

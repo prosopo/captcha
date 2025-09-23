@@ -15,7 +15,7 @@
 import crypto from "node:crypto";
 import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
-import { z } from "zod";
+import { ZodEffects, type ZodType, z } from "zod";
 import {
 	type AccessPolicy,
 	accessPolicyMongooseSchema,
@@ -64,8 +64,8 @@ const accessRuleInputSchema = z
 		(accessRuleInput): AccessRule & AccessRuleRecord => accessRuleInput,
 	);
 
-export const accessRuleSchema = accessRuleInputSchema.transform(
-	(inputRule): AccessRule => {
+export const accessRuleSchema: ZodType<AccessRule> =
+	accessRuleInputSchema.transform((inputRule): AccessRule => {
 		// this line creates a new "rule", without ruleGroupId
 		const { ruleGroupId, ...rule } = inputRule;
 
@@ -74,8 +74,7 @@ export const accessRuleSchema = accessRuleInputSchema.transform(
 		}
 
 		return rule;
-	},
-);
+	});
 
 // this function applies all the Zod scheme transformations, so .userAgent becomes .userAgentHash and so on.
 export const transformAccessRuleRecordIntoRule = (

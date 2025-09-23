@@ -20,3 +20,4 @@ export {
 } from "./accessRuleApiRoutes.js";
 
 export { AccessRulesApiClient } from "./accessRulesApiClient.js";
+export { AccessRuleApiRoutes } from "./accessRuleApiRoutes.js";
