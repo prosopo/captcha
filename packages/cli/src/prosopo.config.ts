@@ -102,6 +102,7 @@ export default function getConfig(
 		penalties: FrictionlessPenalties.parse({
 			PENALTY_OLD_TIMESTAMP: process.env.PENALTY_OLD_TIMESTAMP,
 			PENALTY_ACCESS_RULE: process.env.PENALTY_ACCESS_RULE,
+			PENALTY_UNVERIFIED_HOST: process.env.PENALTY_UNVERIFIED_HOST,
 		}),
 		mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || "",

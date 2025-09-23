@@ -1,5 +1,26 @@
 # @prosopo/database
 
+## 3.4.1
+### Patch Changes
+
+- 11303d9: feat/pluggable-redis
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- 11303d9: feat/pluggable-redis
+- Updated dependencies [11303d9]
+- Updated dependencies [b6794f8]
+- Updated dependencies [11303d9]
+- Updated dependencies [bac2d91]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/user-access-policy@3.5.15
+  - @prosopo/redis-client@1.0.1
+  - @prosopo/types-database@3.3.1
+  - @prosopo/common@3.1.16
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
 ## 3.4.0
 ### Minor Changes
 

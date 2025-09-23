@@ -1,5 +1,23 @@
 # @prosopo/user-access-policy
 
+## 3.5.15
+### Patch Changes
+
+- 11303d9: feat/pluggable-redis
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- 11303d9: feat/pluggable-redis
+- Updated dependencies [11303d9]
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/redis-client@1.0.1
+  - @prosopo/api-route@2.6.24
+  - @prosopo/common@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/util@3.1.1
+  - @prosopo/api@3.1.20
+
 ## 3.5.14
 ### Patch Changes
 

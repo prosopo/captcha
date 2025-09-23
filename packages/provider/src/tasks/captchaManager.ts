@@ -122,6 +122,8 @@ export class CaptchaManager {
 		reason?: TranslationKey;
 		frictionlessTokenId?: FrictionlessTokenId;
 		type: CaptchaType;
+		powDifficulty?: number;
+		solvedImagesCount?: number;
 	}> {
 		this.logger.debug(() => ({
 			msg: "Validating request",
@@ -209,6 +211,12 @@ export class CaptchaManager {
 					valid: true,
 					frictionlessTokenId,
 					type: requestedCaptchaType,
+					...(sessionRecord.powDifficulty && {
+						powDifficulty: sessionRecord.powDifficulty,
+					}),
+					...(sessionRecord.solvedImagesCount && {
+						solvedImagesCount: sessionRecord.solvedImagesCount,
+					}),
 				};
 			}
 

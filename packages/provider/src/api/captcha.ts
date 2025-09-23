@@ -42,6 +42,7 @@ import express, { type Router } from "express";
 import type { ObjectId } from "mongoose";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
+import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
@@ -127,7 +128,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					)
 				)[0];
 
-				const { valid, reason, frictionlessTokenId } =
+				const { valid, reason, frictionlessTokenId, solvedImagesCount } =
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
 						CaptchaType.image,
@@ -154,6 +155,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
 						count:
+							solvedImagesCount ||
 							userAccessPolicy?.solvedImagesCount ||
 							env.config.captchas.solved.count,
 					},
@@ -365,7 +367,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				)
 			)[0];
 
-			const { valid, reason, frictionlessTokenId } =
+			const { valid, reason, frictionlessTokenId, powDifficulty } =
 				await tasks.powCaptchaManager.isValidRequest(
 					clientSettings,
 					CaptchaType.pow,
@@ -407,6 +409,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			}
 
 			const difficulty =
+				powDifficulty ||
 				userAccessPolicy?.powDifficulty ||
 				clientSettings?.settings?.powDifficulty;
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
@@ -574,10 +577,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						token: existingToken,
 						msg: "Token has already been used",
 					}));
-					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
-							existingToken._id as ObjectId,
-						),
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
 					);
 				}
 
@@ -665,7 +674,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 					if (userAccessPolicy.captchaType === CaptchaType.image) {
 						return res.json(
-							await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+							await tasks.frictionlessManager.sendImageCaptcha(
+								tokenId,
+								userAccessPolicy.solvedImagesCount,
+							),
 						);
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
@@ -684,7 +696,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						tokenId,
 					);
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							timestampDecayFunction(timestamp),
+						),
 					);
 				}
 
@@ -713,7 +728,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					}));
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							env.config.captchas.solved.count,
+						),
 					);
 				}
 
