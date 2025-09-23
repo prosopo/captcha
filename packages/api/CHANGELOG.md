@@ -1,5 +1,17 @@
 # @prosopo/api
 
+## 3.1.20
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- 11303d9: feat/pluggable-redis
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
 ## 3.1.19
 ### Patch Changes
 

@@ -1,5 +1,18 @@
 # @prosopo/load-balancer
 
+## 2.7.9
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/common@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/util@3.1.1
+  - @prosopo/config@3.1.16
+
 ## 2.7.8
 ### Patch Changes
 

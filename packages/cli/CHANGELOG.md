@@ -1,5 +1,36 @@
 # @prosopo/cli
 
+## 3.4.2
+### Patch Changes
+
+- 11303d9: feat/pluggable-redis
+- b6794f8: Timestamp decay fn
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- 11303d9: feat/pluggable-redis
+- Updated dependencies [7e5613a]
+- Updated dependencies [11303d9]
+- Updated dependencies [b6794f8]
+- Updated dependencies [11303d9]
+- Updated dependencies [bac2d91]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/provider@3.11.1
+  - @prosopo/user-access-policy@3.5.15
+  - @prosopo/types-database@3.3.1
+  - @prosopo/api-express-router@3.0.21
+  - @prosopo/util-crypto@13.5.18
+  - @prosopo/keyring@2.8.23
+  - @prosopo/common@3.1.16
+  - @prosopo/dotenv@3.0.21
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/workspace@3.1.9
+  - @prosopo/util@3.1.1
+  - @prosopo/api@3.1.20
+  - @prosopo/env@3.2.9
+  - @prosopo/config@3.1.16
+
 ## 3.4.1
 ### Patch Changes
 

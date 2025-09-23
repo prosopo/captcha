@@ -1,5 +1,21 @@
 # @prosopo/account
 
+## 2.7.26
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/fingerprint@2.6.17
+  - @prosopo/util-crypto@13.5.18
+  - @prosopo/keyring@2.8.23
+  - @prosopo/common@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/util@3.1.1
+  - @prosopo/config@3.1.16
+
 ## 2.7.25
 ### Patch Changes
 

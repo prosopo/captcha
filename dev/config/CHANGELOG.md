@@ -1,5 +1,11 @@
 # @prosopo/config
 
+## 3.1.16
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+
 ## 3.1.15
 ### Patch Changes
 
