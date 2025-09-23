@@ -41,10 +41,7 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 			req.siteKey = siteKey;
 
 			// Attach site key and user to the request logger
-			req.logger = getLogger(
-				parseLogLevel(env.config.logLevel),
-				"request-logger",
-			).with({
+			req.logger = req.logger.with({
 				user,
 				siteKey,
 			});
