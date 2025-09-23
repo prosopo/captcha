@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
 import { type ZodType, z } from "zod";
 import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
+import type { UserAttributes } from "#policy/userScope/userAttributes.js";
 
 export type PolicyScope = {
 	clientId?: string;
@@ -27,6 +29,13 @@ export const policyScopeSchema = z.object({
 export const policyScopeMongooseSchema: SchemaDefinition<PolicyScope> = {
 	clientId: { type: String, required: false },
 };
+
+export const policyScopeRedisSchema: RediSearchSchema = {
+	clientId: {
+		type: SCHEMA_FIELD_TYPE.TAG,
+		INDEXMISSING: true,
+	},
+} satisfies Record<keyof PolicyScope, object>;
 
 export const getPolicyScopeRedisQuery = (
 	policyScope: PolicyScope | undefined,

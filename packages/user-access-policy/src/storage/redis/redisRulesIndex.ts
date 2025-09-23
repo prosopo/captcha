@@ -18,12 +18,18 @@ import { type AccessRule, makeAccessRuleHash } from "#policy/accessRule.js";
 import {
 	type PolicyScope,
 	getPolicyScopeRedisQuery,
+	policyScopeRedisSchema,
 } from "#policy/policyScope.js";
 import {
 	type AccessRulesFilter,
 	ScopeMatch,
 } from "#policy/storage/accessRulesStorage.js";
-import { getUserScopeRedisQuery } from "#policy/userScope/userScope.js";
+import { userAttributesRedisSchema } from "#policy/userScope/userAttributes.js";
+import { userIpRedisSchema } from "#policy/userScope/userIp.js";
+import {
+	getUserScopeRedisQuery,
+	userScopeRedisSchema,
+} from "#policy/userScope/userScope.js";
 
 export const redisRulesIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
@@ -43,20 +49,10 @@ export const redisAccessRulesIndex: RedisIndex = {
 	 * For our goal TAG fits perfectly and, more performant
 	 */
 	schema: {
-		clientId: {
-			type: SCHEMA_FIELD_TYPE.TAG,
-			// necessary to make possible use of the ismissing() function on this field in the search
-			INDEXMISSING: true,
-		},
+		...policyScopeRedisSchema,
+		...userScopeRedisSchema,
 		groupId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		numericIpMaskMin: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-		numericIpMaskMax: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-		userId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		numericIp: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-		ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		headersHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-		userAgentHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-	} satisfies Partial<Record<keyof AccessRule, string | object>>,
+	} satisfies Partial<Record<keyof AccessRule, object>>,
 	// the satisfy statement is to guarantee that the keys are right
 	options: {
 		ON: "HASH" as const,

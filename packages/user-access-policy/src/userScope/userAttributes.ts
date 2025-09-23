@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
+import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
 import { type ZodType, z } from "zod";
+import type { UserIp } from "#policy/userScope/userIp.js";
 
 export type UserAttributes = {
 	userId?: string;
@@ -56,6 +58,13 @@ export const userAttributesMongooseSchema: SchemaDefinition<UserAttributesRecord
 		userAgent: { type: String, required: false },
 		headersHash: { type: String, required: false },
 	};
+
+export const userAttributesRedisSchema: RediSearchSchema = {
+	userId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headersHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	userAgentHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+} satisfies Record<keyof UserAttributes, object>;
 
 const hashUserAgent = (userAgent: string): string =>
 	crypto.createHash("sha256").update(userAgent).digest("hex");

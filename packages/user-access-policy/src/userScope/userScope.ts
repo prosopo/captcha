@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { RediSearchSchema } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
 import { z } from "zod";
 import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
@@ -19,6 +20,7 @@ import {
 	type UserAttributes,
 	type UserAttributesRecord,
 	userAttributesMongooseSchema,
+	userAttributesRedisSchema,
 	userAttributesSchema,
 } from "./userAttributes.js";
 import {
@@ -26,6 +28,7 @@ import {
 	type UserIpRecord,
 	userIpMongooseSchema,
 	userIpRedisQueries,
+	userIpRedisSchema,
 	userIpSchema,
 } from "./userIp.js";
 
@@ -46,6 +49,12 @@ export const userScopeMongooseSchema: SchemaDefinition<UserScopeRecord> = {
 	...userAttributesMongooseSchema,
 	...userIpMongooseSchema,
 };
+
+// fixme
+export const userScopeRedisSchema: RediSearchSchema = {
+	...userAttributesRedisSchema,
+	...userIpRedisSchema,
+} satisfies Record<keyof UserScope, object>;
 
 export const getUserScopeRedisQuery = (
 	userScope: UserScope,
