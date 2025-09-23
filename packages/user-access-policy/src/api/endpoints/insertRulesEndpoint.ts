@@ -36,24 +36,26 @@ export type RulesGroup = {
 	expirationTimestamp?: number;
 };
 
-const insertRulesSchema = z.object({
-	accessPolicy: accessPolicySchema,
-	policyScope: policyScopeSchema.optional(),
-	groupId: z.string().optional(),
-	userScopes: z.array(userScopeSchema),
-	expirationTimestamp: z
-		.number()
-		.optional()
-		.transform((val) => (val !== undefined ? Math.floor(val) : val)),
-}) satisfies ZodType<RulesGroup>;
-
-type InsertRulesSchema = typeof insertRulesSchema;
+type InsertRulesSchema = ZodType<RulesGroup>;
 
 export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(
 		private readonly accessRulesWriter: AccessRulesWriter,
 		private readonly logger: Logger,
 	) {}
+
+	public getRequestArgsSchema(): InsertRulesSchema {
+		return z.object({
+			accessPolicy: accessPolicySchema,
+			policyScope: policyScopeSchema.optional(),
+			groupId: z.string().optional(),
+			userScopes: z.array(userScopeSchema),
+			expirationTimestamp: z
+				.number()
+				.optional()
+				.transform((val) => (val !== undefined ? Math.floor(val) : val)),
+		});
+	}
 
 	async processRequest(args: RulesGroup): Promise<ApiEndpointResponse> {
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
@@ -90,10 +92,6 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 
 		// Whichever finishes first: timeout or actual rule creation
 		return Promise.race([timeoutPromise, createRulesPromise]);
-	}
-
-	public getRequestArgsSchema(): InsertRulesSchema {
-		return insertRulesSchema;
 	}
 
 	protected async createRules(args: RulesGroup): Promise<string[]> {

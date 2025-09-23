@@ -29,14 +29,7 @@ export type SiteGroup = {
 
 export type SiteGroups = SiteGroup[];
 
-const deleteRuleGroupsSchema = z.array(
-	z.object({
-		clientIds: z.string().array(),
-		groupId: z.string(),
-	}),
-) satisfies ZodType<SiteGroups>;
-
-type DeleteRuleGroupsSchema = typeof deleteRuleGroupsSchema;
+type DeleteRuleGroupsSchema = ZodType<SiteGroups>;
 
 export class DeleteRuleGroupsEndpoint
 	implements ApiEndpoint<DeleteRuleGroupsSchema>
@@ -45,6 +38,15 @@ export class DeleteRuleGroupsEndpoint
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
 	) {}
+
+	public getRequestArgsSchema(): DeleteRuleGroupsSchema {
+		return z.array(
+			z.object({
+				clientIds: z.string().array(),
+				groupId: z.string(),
+			}),
+		);
+	}
 
 	async processRequest(args: SiteGroups): Promise<ApiEndpointResponse> {
 		const ruleIdPromises = [];
@@ -89,9 +91,5 @@ export class DeleteRuleGroupsEndpoint
 				deleted_count: uniqueRuleIds.length,
 			},
 		};
-	}
-
-	public getRequestArgsSchema(): DeleteRuleGroupsSchema {
-		return deleteRuleGroupsSchema;
 	}
 }

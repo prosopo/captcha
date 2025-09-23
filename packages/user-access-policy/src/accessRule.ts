@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
-import mongoose from "mongoose";
+import type { SchemaDefinition } from "mongoose";
 import { z } from "zod";
 import {
 	type AccessPolicy,
@@ -71,12 +71,12 @@ export const accessRuleSchema = accessRuleInputSchema.transform(
 	},
 );
 
-export const accessRuleMongooseSchema = new mongoose.Schema<AccessRuleRecord>({
-	...accessPolicyMongooseSchema.obj,
-	...policyScopeMongooseSchema.obj,
-	...userScopeMongooseSchema.obj,
+export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
+	...accessPolicyMongooseSchema,
+	...policyScopeMongooseSchema,
+	...userScopeMongooseSchema,
 	ruleGroupId: { type: String, required: false },
-});
+};
 
 const RULE_HASH_ALGORITHM = "md5";
 

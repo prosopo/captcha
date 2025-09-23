@@ -15,15 +15,15 @@
 import type { RedisIndex } from "@prosopo/redis-client";
 import { type FtSearchOptions, SCHEMA_FIELD_TYPE } from "@redis/search";
 import { type AccessRule, makeAccessRuleHash } from "#policy/accessRule.js";
-import type { PolicyScope } from "#policy/policyScope.js";
+import {
+	type PolicyScope,
+	getPolicyScopeRedisQuery,
+} from "#policy/policyScope.js";
 import {
 	type AccessRulesFilter,
 	ScopeMatch,
 } from "#policy/storage/accessRulesStorage.js";
-import {
-	type UserScope,
-	userScopeSchema,
-} from "#policy/userScope/userScope.js";
+import { getUserScopeRedisQuery } from "#policy/userScope/userScope.js";
 
 export const redisRulesIndexName = "index:user-access-rules";
 // names take space, so we use an acronym instead of the long-tailed one
@@ -66,50 +66,6 @@ export const redisAccessRulesIndex: RedisIndex = {
 
 const DEFAULT_SEARCH_LIMIT = 1000;
 
-export const numericIndexFields: Array<keyof AccessRule> = [
-	"numericIp",
-	"numericIpMaskMin",
-	"numericIpMaskMax",
-];
-
-type CustomFieldComparisons = Record<
-	keyof AccessRule,
-	(value: unknown, scope: { [key in keyof AccessRule]: unknown }) => string
->;
-
-const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
-	numericIp: (value, scope) => {
-		if (value !== undefined) {
-			return `( @numericIp:[${value} ${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
-		}
-		// Only emit ismissing(@numericIp) if ranges are also not present
-		if (
-			scope.numericIpMaskMin === undefined &&
-			scope.numericIpMaskMax === undefined
-		) {
-			return "ismissing(@numericIp) ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax)";
-		}
-		// Else, let ranges handle it
-		return "";
-	},
-	numericIpMaskMin: (value, scope) => {
-		if (scope.numericIp !== undefined) {
-			return ""; // handled by numericIp
-		}
-		return value !== undefined
-			? `@numericIpMaskMin:[-inf ${value}]`
-			: "ismissing(@numericIpMaskMin)";
-	},
-	numericIpMaskMax: (value, scope) => {
-		if (scope.numericIp !== undefined) {
-			return ""; // handled by numericIp
-		}
-		return value !== undefined
-			? `@numericIpMaskMax:[${value} +inf]`
-			: "ismissing(@numericIpMaskMax)";
-	},
-};
-
 // https://redis.io/docs/latest/commands/ft.search/
 export const redisRulesSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
@@ -141,7 +97,7 @@ export const getRedisRulesQuery = (
 		queryParts.push(`@groupId:{${filter.groupId}}`);
 	}
 
-	const policyScopeQuery = getPolicyScopeQuery(
+	const policyScopeQuery = getPolicyScopeRedisQuery(
 		policyScope,
 		filter.policyScopeMatch,
 	);
@@ -151,7 +107,7 @@ export const getRedisRulesQuery = (
 	}
 
 	if (userScope && Object.keys(userScope).length > 0) {
-		const userScopeFilter = getUserScopeQuery(
+		const userScopeFilter = getUserScopeRedisQuery(
 			userScope,
 			filter.userScopeMatch,
 			matchingFieldsOnly,
@@ -161,92 +117,4 @@ export const getRedisRulesQuery = (
 	}
 
 	return queryParts.length > 0 ? queryParts.join(" ") : "*";
-};
-
-const getPolicyScopeQuery = (
-	policyScope: PolicyScope | undefined,
-	scopeMatchType: ScopeMatch | undefined,
-): string => {
-	const clientId = policyScope?.clientId;
-
-	if ("string" === typeof clientId) {
-		return ScopeMatch.Exact === scopeMatchType
-			? `@clientId:{${clientId}}`
-			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
-	}
-
-	return ScopeMatch.Exact === scopeMatchType ? "ismissing(@clientId)" : "";
-};
-
-const getUserScopeQuery = (
-	userScope: UserScope,
-	scopeMatchType: ScopeMatch | undefined,
-	matchingFieldsOnly: boolean,
-): string => {
-	let scopeEntries = Object.entries(userScope) as Array<
-		[keyof UserScope, unknown]
-	>;
-	let scopeJoinType = " ";
-
-	// skip fields with undefined values if in greedy mode and set operator to OR
-	if (scopeMatchType === ScopeMatch.Greedy) {
-		scopeEntries = scopeEntries.filter(
-			([_, value]) => value !== undefined,
-		) as Array<[keyof UserScope, unknown]>;
-		scopeJoinType = " | ";
-	}
-
-	if (matchingFieldsOnly) {
-		const scopeMap = new Map<keyof UserScope, unknown>(scopeEntries);
-
-		// If numericIp is explicitly undefined, set both range fields to undefined
-		if (scopeMap.has("numericIp") && scopeMap.get("numericIp") === undefined) {
-			scopeMap.set("numericIpMaskMin", undefined);
-			scopeMap.set("numericIpMaskMax", undefined);
-		}
-
-		// Ensure all expected fields are accounted for
-		for (const name of Object.keys(userScopeSchema._def.schema) as Array<
-			keyof UserScope
-		>) {
-			if (!scopeMap.has(name)) {
-				scopeMap.set(name, undefined);
-			}
-		}
-
-		scopeEntries = [...scopeMap.entries()];
-	}
-
-	const scopeObj = Object.fromEntries(scopeEntries) as Partial<UserScope>;
-
-	return scopeEntries
-		.map(([scopeFieldName, scopeFieldValue]) =>
-			getUserScopeFieldQuery(
-				scopeFieldName,
-				scopeFieldValue,
-				scopeMatchType,
-				scopeObj,
-			),
-		)
-		.filter(Boolean)
-		.join(scopeJoinType);
-};
-
-const getUserScopeFieldQuery = (
-	fieldName: keyof UserScope,
-	fieldValue: unknown,
-	matchType: ScopeMatch | undefined,
-	fullScope: Partial<UserScope>, // <-- NEW ARG
-): string => {
-	if ("function" === typeof greedyFieldComparisons[fieldName]) {
-		return greedyFieldComparisons[fieldName](fieldValue, fullScope);
-	}
-
-	if (fieldValue === undefined) {
-		return `ismissing(@${fieldName})`;
-	}
-
-	return numericIndexFields.includes(fieldName)
-		? `@${fieldName}:[${fieldValue}]`
-		: `@${fieldName}:{${fieldValue}}`;
 };

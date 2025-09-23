@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { type CaptchaType, CaptchaTypeSchema } from "@prosopo/types";
-import mongoose from "mongoose";
+import type { SchemaDefinition } from "mongoose";
 import { type ZodType, z } from "zod";
 
 export enum AccessPolicyType {
@@ -48,7 +48,7 @@ export const accessPolicySchema = z.object({
 	frictionlessScore: z.coerce.number().optional(),
 }) satisfies ZodType<AccessPolicy>;
 
-export const accessPolicyMongooseSchema = new mongoose.Schema<AccessPolicy>({
+export const accessPolicyMongooseSchema: SchemaDefinition<AccessPolicy> = {
 	type: { type: String, required: true },
 	captchaType: { type: String, required: false },
 	description: { type: String, required: false },
@@ -57,4 +57,4 @@ export const accessPolicyMongooseSchema = new mongoose.Schema<AccessPolicy>({
 	powDifficulty: { type: Number, required: false },
 	unsolvedImagesCount: { type: Number, required: false },
 	frictionlessScore: { type: Number, required: false },
-});
+};

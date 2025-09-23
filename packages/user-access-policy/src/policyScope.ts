@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import mongoose from "mongoose";
+import type { SchemaDefinition } from "mongoose";
 import { type ZodType, z } from "zod";
+import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
 
 export type PolicyScope = {
 	clientId?: string;
@@ -23,6 +24,21 @@ export const policyScopeSchema = z.object({
 	clientId: z.coerce.string().optional(),
 }) satisfies ZodType<PolicyScope>;
 
-export const policyScopeMongooseSchema = new mongoose.Schema<PolicyScope>({
+export const policyScopeMongooseSchema: SchemaDefinition<PolicyScope> = {
 	clientId: { type: String, required: false },
-});
+};
+
+export const getPolicyScopeRedisQuery = (
+	policyScope: PolicyScope | undefined,
+	scopeMatchType: ScopeMatch | undefined,
+): string => {
+	const clientId = policyScope?.clientId;
+
+	if ("string" === typeof clientId) {
+		return ScopeMatch.Exact === scopeMatchType
+			? `@clientId:{${clientId}}`
+			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
+	}
+
+	return ScopeMatch.Exact === scopeMatchType ? "ismissing(@clientId)" : "";
+};

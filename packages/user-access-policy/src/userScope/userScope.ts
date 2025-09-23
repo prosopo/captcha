@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import mongoose from "mongoose";
+import type { SchemaDefinition } from "mongoose";
 import { z } from "zod";
+import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
 import {
 	type UserAttributes,
 	type UserAttributesRecord,
@@ -24,6 +25,7 @@ import {
 	type UserIp,
 	type UserIpRecord,
 	userIpMongooseSchema,
+	userIpRedisQueries,
 	userIpSchema,
 } from "./userIp.js";
 
@@ -40,7 +42,78 @@ export const userScopeSchema = z
 		(userScopeInput): UserScope & UserScopeRecord => userScopeInput,
 	);
 
-export const userScopeMongooseSchema = new mongoose.Schema<UserScopeRecord>({
-	...userAttributesMongooseSchema.obj,
-	...userIpMongooseSchema.obj,
-});
+export const userScopeMongooseSchema: SchemaDefinition<UserScopeRecord> = {
+	...userAttributesMongooseSchema,
+	...userIpMongooseSchema,
+};
+
+export const getUserScopeRedisQuery = (
+	userScope: UserScope,
+	scopeMatchType: ScopeMatch | undefined,
+	matchingFieldsOnly: boolean,
+): string => {
+	let scopeEntries = Object.entries(userScope) as Array<
+		[keyof UserScope, unknown]
+	>;
+	let scopeJoinType = " ";
+
+	// skip fields with undefined values if in greedy mode and set operator to OR
+	if (scopeMatchType === ScopeMatch.Greedy) {
+		scopeEntries = scopeEntries.filter(
+			([_, value]) => value !== undefined,
+		) as Array<[keyof UserScope, unknown]>;
+		scopeJoinType = " | ";
+	}
+
+	if (matchingFieldsOnly) {
+		const scopeMap = new Map<keyof UserScope, unknown>(scopeEntries);
+
+		// If numericIp is explicitly undefined, set both range fields to undefined
+		if (scopeMap.has("numericIp") && scopeMap.get("numericIp") === undefined) {
+			scopeMap.set("numericIpMaskMin", undefined);
+			scopeMap.set("numericIpMaskMax", undefined);
+		}
+
+		// Ensure all expected fields are accounted for
+		for (const name of Object.keys(userScopeSchema._def.schema) as Array<
+			keyof UserScope
+		>) {
+			if (!scopeMap.has(name)) {
+				scopeMap.set(name, undefined);
+			}
+		}
+
+		scopeEntries = [...scopeMap.entries()];
+	}
+
+	const scopeObj = Object.fromEntries(scopeEntries) as Partial<UserScope>;
+
+	return scopeEntries
+		.map(([scopeFieldName, scopeFieldValue]) =>
+			getUserScopeRedisFieldQuery(
+				scopeFieldName,
+				scopeFieldValue,
+				scopeMatchType,
+				scopeObj,
+			),
+		)
+		.filter(Boolean)
+		.join(scopeJoinType);
+};
+
+const getUserScopeRedisFieldQuery = (
+	fieldName: keyof UserScope,
+	fieldValue: unknown,
+	matchType: ScopeMatch | undefined,
+	fullScope: Partial<UserScope>,
+): string => {
+	if (fieldName in userIpRedisQueries) {
+		const queryBuilder = userIpRedisQueries[fieldName as keyof UserIp];
+
+		return queryBuilder(fieldValue, fullScope);
+	}
+
+	return undefined === fieldValue
+		? `ismissing(@${fieldName})`
+		: `@${fieldName}:{${fieldValue}}`;
+};

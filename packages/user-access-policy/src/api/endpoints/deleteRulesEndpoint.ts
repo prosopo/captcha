@@ -26,18 +26,17 @@ import {
 } from "#policy/storage/accessRulesStorage.js";
 
 export type AccessRuleFilters = AccessRulesFilter[];
-
-const deleteRulesSchema = z.array(
-	accessRulesFilterSchema,
-) satisfies ZodType<AccessRuleFilters>;
-
-type DeleteRulesSchema = typeof deleteRulesSchema;
+type DeleteRulesSchema = ZodType<AccessRuleFilters>;
 
 export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
 	) {}
+
+	public getRequestArgsSchema(): DeleteRulesSchema {
+		return z.array(accessRulesFilterSchema);
+	}
 
 	async processRequest(args: AccessRuleFilters): Promise<ApiEndpointResponse> {
 		const allRuleIds = [];
@@ -70,9 +69,5 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 				deleted_count: uniqueRuleIds.length,
 			},
 		};
-	}
-
-	public getRequestArgsSchema(): DeleteRulesSchema {
-		return deleteRulesSchema;
 	}
 }

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z, type ZodType } from "zod";
-import mongoose from "mongoose";
 import crypto from "node:crypto";
+import type { SchemaDefinition } from "mongoose";
+import { type ZodType, z } from "zod";
 
 export type UserAttributes = {
 	userId?: string;
@@ -49,13 +49,13 @@ export const userAttributesSchema = userAttributesInputSchema.transform(
 	},
 );
 
-export const userAttributesMongooseSchema =
-	new mongoose.Schema<UserAttributesRecord>({
+export const userAttributesMongooseSchema: SchemaDefinition<UserAttributesRecord> =
+	{
 		userId: { type: String, required: false },
 		ja4Hash: { type: String, required: false },
 		userAgent: { type: String, required: false },
 		headersHash: { type: String, required: false },
-	});
+	};
 
 const hashUserAgent = (userAgent: string): string =>
 	crypto.createHash("sha256").update(userAgent).digest("hex");
