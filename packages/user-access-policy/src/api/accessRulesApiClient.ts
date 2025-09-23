@@ -14,6 +14,7 @@
 
 import { ApiClient } from "@prosopo/api";
 import type { ApiResponse } from "@prosopo/types";
+import type { DeleteRuleGroupsInputEndpointSchema } from "#policy/api/deleteRuleGroupsEndpoint.js";
 import { accessRuleApiPaths } from "./accessRuleApiRoutes.js";
 import type { DeleteRulesEndpointSchemaInput } from "./deleteRulesEndpoint.js";
 import type { InsertManyRulesEndpointInputSchema } from "./insertRulesEndpoint.js";
@@ -47,6 +48,19 @@ export class AccessRulesApiClient extends ApiClient {
 		});
 	}
 
+	public deleteGroups(
+		toDelete: DeleteRuleGroupsInputEndpointSchema,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(accessRuleApiPaths.DELETE_GROUPS, toDelete, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
 	public deleteAll(timestamp: string, signature: string): Promise<ApiResponse> {
 		return this.post(
 			accessRuleApiPaths.DELETE_ALL,

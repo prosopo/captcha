@@ -347,7 +347,7 @@ export class NativeLogger implements Logger {
 	}
 }
 
-const stringifyBigInts = (value: unknown): unknown => {
+export const stringifyBigInts = (value: unknown): unknown => {
 	if ("bigint" === typeof value) {
 		return value.toString();
 	}
@@ -355,6 +355,12 @@ const stringifyBigInts = (value: unknown): unknown => {
 	if (isObject(value)) {
 		for (const key of Object.keys(value)) {
 			value[key] = stringifyBigInts(value[key]);
+		}
+	}
+
+	if (Array.isArray(value)) {
+		for (let i = 0; i < value.length; i++) {
+			value[i] = stringifyBigInts(value[i]);
 		}
 	}
 

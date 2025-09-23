@@ -42,6 +42,7 @@ export const redisAccessRulesIndex: RedisIndex = {
 			// necessary to make possible use of the ismissing() function on this field in the search
 			INDEXMISSING: true,
 		},
+		groupId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 		numericIpMaskMin: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 		numericIpMaskMax: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 		userId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
@@ -71,7 +72,7 @@ type CustomFieldComparisons = Record<
 const greedyFieldComparisons: Partial<CustomFieldComparisons> = {
 	numericIp: (value, scope) => {
 		if (value !== undefined) {
-			return `( @numericIp:[${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
+			return `( @numericIp:[${value} ${value}] | ( @numericIpMaskMin:[-inf ${value}] @numericIpMaskMax:[${value} +inf] ) )`;
 		}
 		// Only emit ismissing(@numericIp) if ranges are also not present
 		if (
@@ -121,11 +122,20 @@ export const getRedisRulesQuery = (
 	matchingFieldsOnly: boolean,
 ): string => {
 	const { policyScope, userScope } = filter;
+	const queryParts = [];
 
-	const policyScopeFilter = getPolicyScopeQuery(
+	if (filter.groupId) {
+		queryParts.push(`@groupId:{${filter.groupId}}`);
+	}
+
+	const policyScopeQuery = getPolicyScopeQuery(
 		policyScope,
 		filter.policyScopeMatch,
 	);
+
+	if (policyScopeQuery) {
+		queryParts.push(policyScopeQuery);
+	}
 
 	if (userScope && Object.keys(userScope).length > 0) {
 		const userScopeFilter = getUserScopeQuery(
@@ -133,10 +143,11 @@ export const getRedisRulesQuery = (
 			filter.userScopeMatch,
 			matchingFieldsOnly,
 		);
-		return `${policyScopeFilter} ( ${userScopeFilter} )`;
+
+		queryParts.push(`( ${userScopeFilter} )`);
 	}
 
-	return policyScopeFilter ? policyScopeFilter : "*";
+	return queryParts.length > 0 ? queryParts.join(" ") : "*";
 };
 
 const getPolicyScopeQuery = (

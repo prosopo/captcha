@@ -15,13 +15,11 @@
 export {
 	type AccessPolicy,
 	AccessPolicyType,
-	type AccessRuleExtended,
 	type PolicyScope,
 	type UserScope,
 	type UserScopeApiInput,
 	type UserScopeApiOutput,
 	accessPolicySchema,
-	accessRuleSchemaExtended,
 	policyScopeSchema,
 } from "#policy/accessPolicy.js";
 export { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
@@ -29,6 +27,8 @@ export {
 	type AccessRule,
 	type AccessRulesStorage,
 	accessRuleSchema,
+	type AccessRuleExtended,
+	accessRuleSchemaExtended,
 } from "#policy/accessRules.js";
 export {
 	accessRuleApiPaths,
@@ -43,6 +43,7 @@ export {
 	type DeleteRulesEndpointSchemaOutput,
 	deleteRulesEndpointSchema,
 } from "#policy/api/deleteRulesEndpoint.js";
+export type { DeleteRuleGroupsInputEndpointSchema } from "#policy/api/deleteRuleGroupsEndpoint.js";
 export {
 	type InsertManyRulesEndpointInputSchema,
 	type InsertManyRulesEndpointOutputSchema,
@@ -54,11 +55,13 @@ export { redisAccessRulesIndex } from "./redis/redisRulesIndex.js";
 export { AccessRulesApiClient } from "./api/accessRulesApiClient.js";
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
+import type { Logger } from "@prosopo/common";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 import { AccessRuleApiRoutes } from "#policy/api/accessRuleApiRoutes.js";
 
 export const createApiRuleRoutesProvider = (
 	rulesStorage: AccessRulesStorage,
+	logger: Logger,
 ): ApiRoutesProvider => {
-	return new AccessRuleApiRoutes(rulesStorage);
+	return new AccessRuleApiRoutes(rulesStorage, logger);
 };
