@@ -14,19 +14,31 @@
 
 import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
-import type { SearchReply } from "@redis/search";
+import type { FtSearchOptions, SearchReply } from "@redis/search";
 import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
 import type { RedisClientType } from "redis";
-import { type AccessRule, accessRuleSchema } from "#policy/accessRule.js";
+import {
+	type AccessRule,
+	accessRuleSchema,
+	getAccessRuleRedisQuery,
+} from "#policy/accessRule.js";
 import type {
 	AccessRulesFilter,
 	AccessRulesReader,
 } from "#policy/storage/accessRulesStorage.js";
 import { redisRulesIndexName } from "./redisRulesIndex.js";
-import {
-	getRedisRulesQuery,
-	redisRulesSearchOptions,
-} from "./redisRulesIndex.js";
+
+const DEFAULT_SEARCH_LIMIT = 1000;
+
+// https://redis.io/docs/latest/commands/ft.search/
+export const redisRulesSearchOptions: FtSearchOptions = {
+	// #2 is a required option when the 'ismissing()' function is in the query body
+	DIALECT: 2,
+	LIMIT: {
+		from: 0,
+		size: DEFAULT_SEARCH_LIMIT,
+	},
+};
 
 export const createRedisRulesReader = (
 	client: RedisClientType,
@@ -38,7 +50,7 @@ export const createRedisRulesReader = (
 			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
-			const query = getRedisRulesQuery(filter, matchingFieldsOnly);
+			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
 
 			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
 				// We don't want to accidentally return all rules when the filter is empty
@@ -96,7 +108,7 @@ export const createRedisRulesReader = (
 			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 		): Promise<string[]> => {
-			const query = getRedisRulesQuery(filter, matchingFieldsOnly);
+			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
 
 			let searchReply: SearchNoContentReply;
 

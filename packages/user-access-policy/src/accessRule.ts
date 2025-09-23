@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
+import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
 import { z } from "zod";
+import type { AccessRulesFilter } from "#policy/storage/accessRulesStorage.js";
 import {
 	type AccessPolicy,
 	accessPolicyMongooseSchema,
@@ -22,13 +24,17 @@ import {
 } from "./accessPolicy.js";
 import {
 	type PolicyScope,
+	getPolicyScopeRedisQuery,
 	policyScopeMongooseSchema,
+	policyScopeRedisSchema,
 	policyScopeSchema,
 } from "./policyScope.js";
 import {
 	type UserScope,
 	type UserScopeRecord,
+	getUserScopeRedisQuery,
 	userScopeMongooseSchema,
+	userScopeRedisSchema,
 	userScopeSchema,
 } from "./userScope/userScope.js";
 
@@ -71,11 +77,73 @@ export const accessRuleSchema = accessRuleInputSchema.transform(
 	},
 );
 
+// this function applies all the Zod scheme transformations, so .userAgent becomes .userAgentHash and so on.
+export const transformAccessRuleRecordIntoRule = (
+	ruleRecord: AccessRuleRecord,
+): AccessRule => accessRuleSchema.parse(ruleRecord);
+
 export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
 	...accessPolicyMongooseSchema,
 	...policyScopeMongooseSchema,
 	...userScopeMongooseSchema,
 	ruleGroupId: { type: String, required: false },
+};
+
+/**
+ * Note on the field type decision
+ *
+ * TAG is designed for the exact value matching
+ * TEXT is designed for the word-based and pattern matching
+ *
+ * For our goal TAG fits perfectly and, more performant
+ */
+export const accessRuleRedisSchema: RediSearchSchema = {
+	...policyScopeRedisSchema,
+	...userScopeRedisSchema,
+	groupId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+} satisfies Partial<Record<keyof AccessRule, object>>;
+
+/*
+ * Search command example:
+ *
+ * ft.search index:test "( @clientId:{value} | ismissing(@clientId) )
+ * (
+ * ( @ip:[value] | ( @ipRangeMin:[-inf value] @ipRangeMax:[value +inf] ) ) |
+ * @id:{value} | @ja4Fingerprint:{value} | headersFingerprint:{value}"
+ * )
+ * DIALECT 2 # must have when the ismissing() function in use
+ * */
+export const getAccessRuleRedisQuery = (
+	filter: AccessRulesFilter,
+	matchingFieldsOnly: boolean,
+): string => {
+	const { policyScope, userScope } = filter;
+	const queryParts = [];
+
+	if (filter.groupId) {
+		queryParts.push(`@groupId:{${filter.groupId}}`);
+	}
+
+	const policyScopeQuery = getPolicyScopeRedisQuery(
+		policyScope,
+		filter.policyScopeMatch,
+	);
+
+	if (policyScopeQuery) {
+		queryParts.push(policyScopeQuery);
+	}
+
+	if (userScope && Object.keys(userScope).length > 0) {
+		const userScopeFilter = getUserScopeRedisQuery(
+			userScope,
+			filter.userScopeMatch,
+			matchingFieldsOnly,
+		);
+
+		queryParts.push(`( ${userScopeFilter} )`);
+	}
+
+	return queryParts.length > 0 ? queryParts.join(" ") : "*";
 };
 
 const RULE_HASH_ALGORITHM = "md5";
@@ -90,8 +158,3 @@ export const makeAccessRuleHash = (rule: AccessRule): string =>
 			),
 		)
 		.digest("hex");
-
-// this function applies all the Zod scheme transformations, so .userAgent becomes .userAgentHash and so on.
-export const transformAccessRuleRecordIntoRule = (
-	ruleRecord: AccessRuleRecord,
-): AccessRule => accessRuleSchema.parse(ruleRecord);

@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { RedisConnection } from "@prosopo/redis-client";
+import type { RedisConnection, RedisIndex } from "@prosopo/redis-client";
+import {
+	type AccessRule,
+	accessRuleRedisSchema,
+	makeAccessRuleHash,
+} from "#policy/accessRule.js";
 import type { AccessRulesStorage } from "#policy/storage/accessRulesStorage.js";
 import {
 	createRedisRulesReader,
@@ -23,6 +28,23 @@ import {
 	createRedisRulesWriter,
 	getDummyRedisRulesWriter,
 } from "./redisRulesWriter.js";
+
+export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";
+
+// names take space, so we use an acronym instead of the long-tailed one
+export const ACCESS_RULE_REDIS_KEY_PREFIX = "uar:";
+
+export const accessRulesRedisIndex: RedisIndex = {
+	name: ACCESS_RULES_REDIS_INDEX_NAME,
+	schema: accessRuleRedisSchema,
+	options: {
+		ON: "HASH" as const,
+		PREFIX: [ACCESS_RULE_REDIS_KEY_PREFIX],
+	},
+};
+
+export const getAccessRuleRedisKey = (rule: AccessRule): string =>
+	ACCESS_RULE_REDIS_KEY_PREFIX + makeAccessRuleHash(rule);
 
 export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
