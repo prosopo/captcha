@@ -15,13 +15,13 @@
 import { ApiClient } from "@prosopo/api";
 import type { ApiResponse } from "@prosopo/types";
 import { accessRuleApiPaths } from "./accessRuleApiRoutes.js";
-import type { SiteGroups } from "./endpoints/deleteRuleGroupsEndpoint.js";
-import type { AccessRuleFilters } from "./endpoints/deleteRulesEndpoint.js";
-import type { RulesGroup } from "./endpoints/insertRulesEndpoint.js";
+import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroupsEndpoint.js";
+import type { DeleteRuleFilters } from "./endpoints/deleteRulesEndpoint.js";
+import type { InsertRulesGroup } from "./endpoints/insertRulesEndpoint.js";
 
 export class AccessRulesApiClient extends ApiClient {
 	public insertMany(
-		rulesGroup: RulesGroup,
+		rulesGroup: InsertRulesGroup,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
@@ -35,7 +35,7 @@ export class AccessRulesApiClient extends ApiClient {
 	}
 
 	public deleteMany(
-		filters: AccessRuleFilters,
+		filters: DeleteRuleFilters,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
@@ -49,7 +49,7 @@ export class AccessRulesApiClient extends ApiClient {
 	}
 
 	public deleteGroups(
-		siteGroups: SiteGroups,
+		siteGroups: DeleteSiteGroups,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {

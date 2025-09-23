@@ -19,7 +19,7 @@ import {
 	accessRuleRedisSchema,
 	makeAccessRuleHash,
 } from "#policy/accessRule.js";
-import type { AccessRulesStorage } from "#policy/storage/accessRulesStorage.js";
+import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
 import {
 	createRedisRulesReader,
 	getDummyRedisRulesReader,

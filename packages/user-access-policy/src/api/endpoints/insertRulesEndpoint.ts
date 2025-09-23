@@ -21,14 +21,14 @@ import { LogLevel, type Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import { type AccessPolicy, accessPolicySchema } from "#policy/accessPolicy.js";
 import type { AccessRule } from "#policy/accessRule.js";
+import type { AccessRulesWriter } from "#policy/accessRulesStorage.js";
 import { type PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
-import type { AccessRulesWriter } from "#policy/storage/accessRulesStorage.js";
 import {
 	type UserScope,
 	userScopeSchema,
 } from "#policy/userScope/userScope.js";
 
-export type RulesGroup = {
+export type InsertRulesGroup = {
 	accessPolicy: AccessPolicy;
 	policyScope?: PolicyScope;
 	groupId?: string;
@@ -36,7 +36,7 @@ export type RulesGroup = {
 	expirationTimestamp?: number;
 };
 
-type InsertRulesSchema = ZodType<RulesGroup>;
+type InsertRulesSchema = ZodType<InsertRulesGroup>;
 
 export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(
@@ -57,7 +57,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 		});
 	}
 
-	async processRequest(args: RulesGroup): Promise<ApiEndpointResponse> {
+	async processRequest(args: InsertRulesGroup): Promise<ApiEndpointResponse> {
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
@@ -94,7 +94,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 		return Promise.race([timeoutPromise, createRulesPromise]);
 	}
 
-	protected async createRules(args: RulesGroup): Promise<string[]> {
+	protected async createRules(args: InsertRulesGroup): Promise<string[]> {
 		const policyScope = args.policyScope || {};
 
 		const createPromises = [];

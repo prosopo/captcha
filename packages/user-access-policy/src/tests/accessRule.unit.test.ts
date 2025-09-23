@@ -22,7 +22,7 @@ import { getAccessRuleRedisQuery } from "#policy/accessRule.js";
 import {
 	type AccessRulesFilter,
 	ScopeMatch,
-} from "#policy/storage/accessRulesStorage.js";
+} from "#policy/accessRulesStorage.js";
 
 describe("transformAccessRuleRecordIntoRule", () => {
 	it("should transform record fields", () => {

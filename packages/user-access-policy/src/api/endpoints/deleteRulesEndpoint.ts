@@ -23,10 +23,10 @@ import {
 	type AccessRulesFilter,
 	type AccessRulesStorage,
 	accessRulesFilterSchema,
-} from "#policy/storage/accessRulesStorage.js";
+} from "#policy/accessRulesStorage.js";
 
-export type AccessRuleFilters = AccessRulesFilter[];
-type DeleteRulesSchema = ZodType<AccessRuleFilters>;
+export type DeleteRuleFilters = AccessRulesFilter[];
+type DeleteRulesSchema = ZodType<DeleteRuleFilters>;
 
 export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	public constructor(
@@ -38,7 +38,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 		return z.array(accessRulesFilterSchema);
 	}
 
-	async processRequest(args: AccessRuleFilters): Promise<ApiEndpointResponse> {
+	async processRequest(args: DeleteRuleFilters): Promise<ApiEndpointResponse> {
 		const allRuleIds = [];
 
 		for (const accessRuleFilter of args) {

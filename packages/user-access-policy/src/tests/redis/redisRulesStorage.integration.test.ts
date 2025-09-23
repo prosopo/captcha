@@ -29,21 +29,21 @@ import {
 	test,
 } from "vitest";
 import { AccessPolicyType } from "#policy/accessPolicy.js";
-import type { AccessRule } from "#policy/accessRules.js";
+import type { AccessRule } from "#policy/accessRule.js";
+import {
+	type AccessRulesReader,
+	type AccessRulesWriter,
+	ScopeMatch,
+} from "#policy/accessRulesStorage.js";
+import { createRedisRulesReader } from "#policy/redis/redisRulesReader.js";
+import {
+	accessRulesRedisIndex,
+	getAccessRuleRedisKey,
+} from "#policy/redis/redisRulesStorage.js";
 import {
 	createRedisRulesWriter,
 	getRedisRuleValue,
 } from "#policy/redis/redisRulesWriter.js";
-import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
-import type {
-	AccessRulesReader,
-	AccessRulesWriter,
-} from "#policy/storage/accessRulesStorage.js";
-import {
-	getRedisRuleKey,
-	redisAccessRulesIndex,
-} from "#policy/storage/redis/redisRulesIndex.js";
-import { createRedisRulesReader } from "#policy/storage/redis/redisRulesReader.js";
 
 describe("redisAccessRulesStorage", () => {
 	let redisConnection: RedisConnection;
@@ -62,7 +62,7 @@ describe("redisAccessRulesStorage", () => {
 		(await redisClient.ft.info(indexName)).num_docs;
 
 	const insertRule = async (rule: AccessRule) => {
-		const ruleKey = getRedisRuleKey(rule);
+		const ruleKey = getAccessRuleRedisKey(rule);
 		const ruleValue = getRedisRuleValue(rule);
 
 		return await redisClient.hSet(ruleKey, ruleValue);
@@ -73,7 +73,7 @@ describe("redisAccessRulesStorage", () => {
 
 		redisClient = await setupRedisIndex(
 			redisConnection,
-			redisAccessRulesIndex,
+			accessRulesRedisIndex,
 			mockLogger,
 		).getClient();
 	});
@@ -91,7 +91,7 @@ describe("redisAccessRulesStorage", () => {
 		// setup a new index for each test
 		redisClient = await setupRedisIndex(
 			redisConnection,
-			{ ...redisAccessRulesIndex, name: indexName },
+			{ ...accessRulesRedisIndex, name: indexName },
 			mockLogger,
 		).getClient();
 	});
@@ -109,7 +109,7 @@ describe("redisAccessRulesStorage", () => {
 				type: AccessPolicyType.Block,
 				clientId: "clientId",
 			};
-			const accessRuleKey = getRedisRuleKey(accessRule);
+			const accessRuleKey = getAccessRuleRedisKey(accessRule);
 
 			// when
 			await accessRulesWriter.insertRule(accessRule);
@@ -128,7 +128,7 @@ describe("redisAccessRulesStorage", () => {
 				type: AccessPolicyType.Block,
 				clientId: "clientId",
 			};
-			const accessRuleKey = getRedisRuleKey(accessRule);
+			const accessRuleKey = getAccessRuleRedisKey(accessRule);
 			// 1 hour from now.
 			const expireIn = 60 * 60; // seconds
 			const expirationTimestamp = new Date(
@@ -140,7 +140,7 @@ describe("redisAccessRulesStorage", () => {
 
 			// when
 			await accessRulesWriter.insertRule(accessRule, expirationTimestamp);
-			const ruleKey = getRedisRuleKey(accessRule);
+			const ruleKey = getAccessRuleRedisKey(accessRule);
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
 			const insertedExpirationResult = await redisClient.expireAt(
@@ -166,13 +166,13 @@ describe("redisAccessRulesStorage", () => {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const johnAccessRuleKey = getRedisRuleKey(johnAccessRule);
+			const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
 
 			const doeAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				clientId: getUniqueString(),
 			};
-			const doeAccessRuleKey = getRedisRuleKey(doeAccessRule);
+			const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
 
 			await insertRule(johnAccessRule);
 			await insertRule(doeAccessRule);
@@ -760,7 +760,7 @@ describe("redisAccessRulesStorage", () => {
 			};
 
 			// when
-			getRedisRuleKey(accessRule);
+			getAccessRuleRedisKey(accessRule);
 			await insertRule(accessRule);
 
 			// then

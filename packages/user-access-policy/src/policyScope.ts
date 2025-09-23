@@ -15,8 +15,7 @@
 import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
 import { type ZodType, z } from "zod";
-import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
-import type { UserAttributes } from "#policy/userScope/userAttributes.js";
+import { ScopeMatch } from "#policy/accessRulesStorage.js";
 
 export type PolicyScope = {
 	clientId?: string;

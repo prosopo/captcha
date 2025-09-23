@@ -14,7 +14,7 @@
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
 import { DeleteAllRulesEndpoint } from "./endpoints/deleteAllRulesEndpoint.js";
 import { DeleteRuleGroupsEndpoint } from "./endpoints/deleteRuleGroupsEndpoint.js";
 import { DeleteRulesEndpoint } from "./endpoints/deleteRulesEndpoint.js";

@@ -16,12 +16,12 @@ import crypto from "node:crypto";
 import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
 import { z } from "zod";
-import type { AccessRulesFilter } from "#policy/storage/accessRulesStorage.js";
 import {
 	type AccessPolicy,
 	accessPolicyMongooseSchema,
 	accessPolicySchema,
 } from "./accessPolicy.js";
+import type { AccessRulesFilter } from "./accessRulesStorage.js";
 import {
 	type PolicyScope,
 	getPolicyScopeRedisQuery,

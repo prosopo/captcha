@@ -12,52 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export {
-	type AccessPolicy,
-	AccessPolicyType,
-	accessPolicySchema,
-} from "#policy/accessPolicy.js";
-export type { PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
-export {
-	type UserScope,
-	type UserScopeApiInput,
-	type UserScopeApiOutput,
-	userScopeInputSchema,
-} from "#policy/userScope.js";
-export { type PolicyFilter, ScopeMatch } from "#policy/accessPolicyResolver.js";
-export {
-	type AccessRulesStorage,
-	type AccessRuleExtended,
-	accessRuleSchemaExtended,
-	transformExtendedRuleIntoAccessRule,
-} from "#policy/accessRules.js";
-export {
-	type AccessRule,
-	accessRuleSchema,
-	makeAccessRuleHash,
-} from "#policy/accessRule.js";
-export {
-	accessRuleApiPaths,
-	getExpressApiRuleRateLimits,
-} from "#policy/api/accessRuleApiRoutes.js";
-export {
-	type DeleteAllRulesEndpointSchema,
-	deleteAllRulesEndpointSchema,
-} from "#policy/api/deleteAllRulesEndpoint.js";
-export {
-	type DeleteRulesEndpointSchemaInput,
-	type DeleteRulesEndpointSchemaOutput,
-	deleteRulesEndpointSchema,
-} from "#policy/api/deleteRulesEndpoint.js";
-export type { DeleteRuleGroupsInputEndpointSchema } from "#policy/api/deleteRuleGroupsEndpoint.js";
-export {
-	type InsertManyRulesEndpointInputSchema,
-	type InsertManyRulesEndpointOutputSchema,
-	insertRulesEndpointSchema,
-} from "#policy/api/insertRulesEndpoint.js";
+export * from "./.export.js";
+
 export { createRedisAccessRulesStorage } from "#policy/redis/redisRulesStorage.js";
 export { redisAccessRulesIndex } from "./redis/redisRulesIndex.js";
-export { AccessRulesApiClient } from "./api/accessRulesApiClient.js";
 
 import type { ApiRoutesProvider } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";

@@ -15,8 +15,11 @@
 import type { Logger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
 import type { AccessRule } from "#policy/accessRule.js";
-import type { AccessRulesWriter } from "#policy/storage/accessRulesStorage.js";
-import { getRedisRuleKey, redisRuleKeyPrefix } from "./redisRulesIndex.js";
+import type { AccessRulesWriter } from "#policy/accessRulesStorage.js";
+import {
+	ACCESS_RULE_REDIS_KEY_PREFIX,
+	getAccessRuleRedisKey,
+} from "./redisRulesStorage.js";
 
 export const createRedisRulesWriter = (
 	client: RedisClientType,
@@ -26,7 +29,7 @@ export const createRedisRulesWriter = (
 			rule: AccessRule,
 			expirationTimestamp?: number,
 		): Promise<string> => {
-			const ruleKey = getRedisRuleKey(rule);
+			const ruleKey = getAccessRuleRedisKey(rule);
 			const ruleValue = getRedisRuleValue(rule);
 
 			await client.hSet(ruleKey, ruleValue);
@@ -49,7 +52,7 @@ export const createRedisRulesWriter = (
 			void (await client.del(ruleIds)),
 
 		deleteAllRules: async (): Promise<number> => {
-			const keys = await client.keys(`${redisRuleKeyPrefix}*`);
+			const keys = await client.keys(`${ACCESS_RULE_REDIS_KEY_PREFIX}*`);
 
 			if (keys.length === 0) return 0;
 

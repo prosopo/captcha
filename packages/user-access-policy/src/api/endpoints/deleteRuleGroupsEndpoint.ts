@@ -19,17 +19,19 @@ import {
 } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
-import { ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type { AccessRulesStorage } from "#policy/storage/accessRulesStorage.js";
+import {
+	type AccessRulesStorage,
+	ScopeMatch,
+} from "#policy/accessRulesStorage.js";
 
 export type SiteGroup = {
 	clientIds: string[];
 	groupId: string;
 };
 
-export type SiteGroups = SiteGroup[];
+export type DeleteSiteGroups = SiteGroup[];
 
-type DeleteRuleGroupsSchema = ZodType<SiteGroups>;
+type DeleteRuleGroupsSchema = ZodType<DeleteSiteGroups>;
 
 export class DeleteRuleGroupsEndpoint
 	implements ApiEndpoint<DeleteRuleGroupsSchema>
@@ -48,7 +50,7 @@ export class DeleteRuleGroupsEndpoint
 		);
 	}
 
-	async processRequest(args: SiteGroups): Promise<ApiEndpointResponse> {
+	async processRequest(args: DeleteSiteGroups): Promise<ApiEndpointResponse> {
 		const ruleIdPromises = [];
 
 		for (const ruleToDelete of args) {

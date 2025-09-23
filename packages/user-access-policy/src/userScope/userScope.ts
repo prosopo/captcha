@@ -15,7 +15,7 @@
 import type { RediSearchSchema } from "@redis/search";
 import type { SchemaDefinition } from "mongoose";
 import { z } from "zod";
-import { ScopeMatch } from "#policy/storage/accessRulesStorage.js";
+import { ScopeMatch } from "#policy/accessRulesStorage.js";
 import {
 	type UserAttributes,
 	type UserAttributesRecord,
@@ -50,11 +50,10 @@ export const userScopeMongooseSchema: SchemaDefinition<UserScopeRecord> = {
 	...userIpMongooseSchema,
 };
 
-// fixme
 export const userScopeRedisSchema: RediSearchSchema = {
 	...userAttributesRedisSchema,
 	...userIpRedisSchema,
-} satisfies Record<keyof UserScope, object>;
+} satisfies Partial<Record<keyof UserScope, object>>;
 
 export const getUserScopeRedisQuery = (
 	userScope: UserScope,

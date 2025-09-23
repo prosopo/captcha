@@ -25,13 +25,13 @@ import {
 import type {
 	AccessRulesFilter,
 	AccessRulesReader,
-} from "#policy/storage/accessRulesStorage.js";
-import { redisRulesIndexName } from "./redisRulesIndex.js";
+} from "#policy/accessRulesStorage.js";
+import { ACCESS_RULES_REDIS_INDEX_NAME } from "./redisRulesStorage.js";
 
 const DEFAULT_SEARCH_LIMIT = 1000;
 
 // https://redis.io/docs/latest/commands/ft.search/
-export const redisRulesSearchOptions: FtSearchOptions = {
+export const accessRuleRedisSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
 	LIMIT: {
@@ -61,9 +61,9 @@ export const createRedisRulesReader = (
 
 			try {
 				searchReply = await client.ft.search(
-					redisRulesIndexName,
+					ACCESS_RULES_REDIS_INDEX_NAME,
 					query,
-					redisRulesSearchOptions,
+					accessRuleRedisSearchOptions,
 				);
 
 				if (searchReply.total > 0) {
@@ -114,9 +114,9 @@ export const createRedisRulesReader = (
 
 			try {
 				searchReply = await client.ft.searchNoContent(
-					redisRulesIndexName,
+					ACCESS_RULES_REDIS_INDEX_NAME,
 					query,
-					redisRulesSearchOptions,
+					accessRuleRedisSearchOptions,
 				);
 			} catch (e) {
 				// 	debug(fn: LogRecordFn): void;
