@@ -16,4 +16,5 @@ export {
 	type UserScope,
 	type UserScopeRecordFields,
 	userScopeSchema,
+	userScopeRecordFields,
 } from "./userScope.js";

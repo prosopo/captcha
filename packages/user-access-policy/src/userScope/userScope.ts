@@ -20,6 +20,7 @@ import {
 	type UserAttributes,
 	type UserAttributesRecord,
 	userAttributesMongooseSchema,
+	userAttributesRecordFields,
 	userAttributesRedisSchema,
 	userAttributesSchema,
 } from "./userAttributes.js";
@@ -27,6 +28,7 @@ import {
 	type UserIp,
 	type UserIpRecord,
 	userIpMongooseSchema,
+	userIpRecordFields,
 	userIpRedisQueries,
 	userIpRedisSchema,
 	userIpSchema,
@@ -36,7 +38,12 @@ export type UserScope = UserAttributes & UserIp;
 
 export type UserScopeRecord = UserAttributesRecord & UserIpRecord;
 
-export type UserScopeRecordFields = keyof UserScopeRecord;
+export const userScopeRecordFields = [
+	...userAttributesRecordFields,
+	...userIpRecordFields,
+] as const satisfies (keyof UserScopeRecord)[];
+
+export type UserScopeRecordFields = typeof userScopeRecordFields;
 
 export const userScopeSchema = z
 	.object({})

@@ -29,6 +29,13 @@ export type UserAttributesRecord = Omit<UserAttributes, "userAgentHash"> & {
 	userAgent?: string;
 };
 
+export const userAttributesRecordFields = [
+	"userId",
+	"ja4Hash",
+	"headersHash",
+	"userAgent",
+] as const satisfies (keyof UserAttributesRecord)[];
+
 const userAttributesInputSchema = z.object({
 	// coerce is used for safety, as e.g., incoming userId can be digital
 	userId: z.coerce.string().optional(),

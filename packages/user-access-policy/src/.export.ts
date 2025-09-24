@@ -22,7 +22,7 @@ export {
 	accessPolicySchema,
 } from "./accessPolicy.js";
 
-export type { PolicyScope, policyScopeSchema } from "./policyScope.js";
+export { type PolicyScope, policyScopeSchema } from "./policyScope.js";
 
 export {
 	type AccessRulesFilter,

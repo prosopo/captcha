@@ -31,6 +31,11 @@ export type UserIpRecord = {
 	ipMask?: string;
 };
 
+export const userIpRecordFields = [
+	"ip",
+	"ipMask",
+] as const satisfies (keyof UserIpRecord)[];
+
 const userIpInputSchema = z.object({
 	ip: z.string().optional(),
 	ipMask: z.string().optional(),
