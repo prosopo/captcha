@@ -594,7 +594,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp, providerSelectEntropy } =
+				const { baseBotScore, timestamp, providerSelectEntropy, decryptSuccess } =
 					await tasks.frictionlessManager.decryptPayload(token);
 
 				let botScore = baseBotScore + lScore;
@@ -685,6 +685,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
 						);
 					}
+				}
+
+				// If the decrypt failed, send an image captcha with 4 rounds
+				if (!decryptSuccess) {
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(tokenId, 4),
+					);
 				}
 
 				// If the timestamp is older than 10 minutes, send an image captcha

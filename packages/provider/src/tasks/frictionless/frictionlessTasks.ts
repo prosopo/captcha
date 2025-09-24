@@ -222,7 +222,12 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string) {
+	async decryptPayload(token: string): Promise<{
+		baseBotScore: number;
+		timestamp: number;
+		providerSelectEntropy: number;
+		decryptSuccess: boolean;
+	}> {		
 		const decryptKeys = [
 			// Process DB keys first, then env var key last as env key will likely be invalid
 			...(await this.getDetectorKeys()),
@@ -245,6 +250,7 @@ export class FrictionlessManager extends CaptchaManager {
 
 		// run through the keys and try to decrypt the score
 		// if we run out of keys and the score is still not decrypted, throw an error
+		let decryptSuccess = true;
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
 		let providerSelectEntropy: number | undefined;
@@ -279,6 +285,7 @@ export class FrictionlessManager extends CaptchaManager {
 					this.logger.warn(() => ({
 						msg: "Error decrypting score: no more keys to try",
 					}));
+					decryptSuccess = false;
 					baseBotScore = 1;
 					timestamp = 0;
 					providerSelectEntropy = DEFAULT_ENTROPY + 1;
@@ -315,6 +322,7 @@ export class FrictionlessManager extends CaptchaManager {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),
 			providerSelectEntropy: Number(providerSelectEntropy),
+			decryptSuccess,
 		};
 	}
 }
