@@ -83,8 +83,8 @@ import {
 } from "@prosopo/types-database";
 import {
 	type AccessRulesStorage,
+	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
-	redisAccessRulesIndex,
 } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
@@ -223,8 +223,8 @@ export class ProviderDatabase
 		this.redisAccessRulesConnection = setupRedisIndex(
 			this.redisConnection,
 			{
-				...redisAccessRulesIndex,
-				name: this.options.redis?.indexName || redisAccessRulesIndex.name,
+				...accessRulesRedisIndex,
+				name: this.options.redis?.indexName || accessRulesRedisIndex.name,
 			},
 			this.logger,
 		);

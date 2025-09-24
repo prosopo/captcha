@@ -43,7 +43,7 @@ export const userScopeRecordFields = [
 	...userIpRecordFields,
 ] as const satisfies (keyof UserScopeRecord)[];
 
-export type UserScopeRecordFields = typeof userScopeRecordFields;
+export type UserScopeRecordField = (typeof userScopeRecordFields)[number];
 
 export const userScopeSchema = z
 	.object({})

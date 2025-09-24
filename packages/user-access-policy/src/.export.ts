@@ -35,5 +35,6 @@ export {
 	type AccessRuleRecord,
 	transformAccessRuleRecordIntoRule,
 	accessRuleSchema,
+	accessRuleMongooseSchema,
 	makeAccessRuleHash,
 } from "./accessRule.js";

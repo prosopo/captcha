@@ -19,11 +19,8 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 	ScopeMatch,
-	userScopeInputSchema,
-} from "@prosopo/user-access-policy";
-import {
 	accessRuleSchema,
-	accessRuleSchemaExtended,
+	userScopeSchema,
 } from "@prosopo/user-access-policy";
 import { getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -90,7 +87,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		});
 
 		it("should return a rule when a JA4-UserAgent rule exists and the user matches the User Agent and the JA4", async () => {
-			const accessRule = accessRuleSchemaExtended.parse({
+			const accessRule = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash1,
@@ -115,7 +112,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						clientId: siteKey,
 					},
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
@@ -130,7 +127,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						clientId: siteKey,
 					},
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						userAgent: userAgent1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,
@@ -144,7 +141,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						clientId: siteKey,
 					},
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,
@@ -155,7 +152,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
@@ -167,7 +164,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						userAgent: userAgent1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,
@@ -178,7 +175,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,
@@ -191,7 +188,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		});
 
 		it("should not return a rule when a JA4-UserAgent rule exists and the user matches the the JA4 but not the user agent", async () => {
-			const accessRule = accessRuleSchemaExtended.parse({
+			const accessRule = accessRuleSchema.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash1,
@@ -214,7 +211,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
@@ -226,7 +223,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						userAgent: userAgent1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,
@@ -237,7 +234,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(spy).toHaveBeenCalledWith(
 				{
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,
@@ -251,7 +248,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						clientId: siteKey,
 					},
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
@@ -266,7 +263,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						clientId: siteKey,
 					},
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						userAgent: userAgent1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,
@@ -280,7 +277,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						clientId: siteKey,
 					},
 					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					userScope: userScopeSchema.parse({
 						ja4Hash: ja4Hash1,
 					}),
 					userScopeMatch: ScopeMatch.Exact,

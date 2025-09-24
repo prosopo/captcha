@@ -18,12 +18,12 @@ import {
 	EnvironmentTypesSchema,
 	type KeyringPair,
 } from "@prosopo/types";
-import { AccessRulesApiClient } from "@prosopo/user-access-policy";
 import {
-	AccessPolicyType,
-	type InsertManyRulesEndpointOutputSchema,
-	type UserScopeApiInput,
+	AccessRulesApiClient,
+	type InsertRulesGroup,
+	type UserScopeRecord,
 } from "@prosopo/user-access-policy";
+import { AccessPolicyType } from "@prosopo/user-access-policy";
 import { u8aToHex } from "@prosopo/util";
 
 export const removeAllUserAccessPolicies = async (adminPair: KeyringPair) => {
@@ -79,7 +79,7 @@ export const userAccessPolicy = async (
 			powDifficulty,
 		} = options;
 
-		const accessPolicyBody: InsertManyRulesEndpointOutputSchema = {
+		const accessPolicyBody: InsertRulesGroup = {
 			accessPolicy: {
 				...(block
 					? { type: AccessPolicyType.Block }
@@ -101,7 +101,7 @@ export const userAccessPolicy = async (
 					...(ja4 && { ja4Hash: ja4 }),
 					...(userId && { userId: userId }),
 					...(userAgent && { userAgent }),
-				} as UserScopeApiInput,
+				} as UserScopeRecord,
 			],
 			expirationTimestamp:
 				expiration !== undefined
