@@ -594,8 +594,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp, providerSelectEntropy, decryptSuccess } =
-					await tasks.frictionlessManager.decryptPayload(token);
+				const {
+					baseBotScore,
+					timestamp,
+					providerSelectEntropy,
+					decryptSuccess,
+				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				let botScore = baseBotScore + lScore;
 

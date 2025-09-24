@@ -227,7 +227,7 @@ export class FrictionlessManager extends CaptchaManager {
 		timestamp: number;
 		providerSelectEntropy: number;
 		decryptSuccess: boolean;
-	}> {		
+	}> {
 		const decryptKeys = [
 			// Process DB keys first, then env var key last as env key will likely be invalid
 			...(await this.getDetectorKeys()),
