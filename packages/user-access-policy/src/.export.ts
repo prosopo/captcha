@@ -26,13 +26,14 @@ export type { PolicyScope, policyScopeSchema } from "./policyScope.js";
 
 export {
 	type AccessRulesFilter,
-	ScopeMatch,
 	type AccessRulesStorage,
+	ScopeMatch,
 } from "./accessRulesStorage.js";
 
 export {
-	transformAccessRuleRecordIntoRule,
 	type AccessRule,
+	type AccessRuleRecord,
+	transformAccessRuleRecordIntoRule,
 	accessRuleSchema,
 	makeAccessRuleHash,
 } from "./accessRule.js";

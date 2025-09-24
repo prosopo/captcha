@@ -36,6 +36,8 @@ export type UserScope = UserAttributes & UserIp;
 
 export type UserScopeRecord = UserAttributesRecord & UserIpRecord;
 
+export type UserScopeRecordFields = keyof UserScopeRecord;
+
 export const userScopeSchema = z
 	.object({})
 	.and(userAttributesSchema)
