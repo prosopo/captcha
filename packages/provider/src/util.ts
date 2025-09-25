@@ -202,6 +202,17 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
+	// Check for city change
+	const ip1City = comparison.comparison.ip1Details?.city;
+	const ip2City = comparison.comparison.ip2Details?.city;
+	if (ip1City !== ip2City) {
+		conditions.push({
+			met: true,
+			action: rules.actions.cityChangeAction,
+			message: `City changed from ${ip1City} to ${ip2City}`,
+		});
+	}
+
 	// Check for ISP change
 	if (comparison.comparison.differentProviders) {
 		const ip1Provider = comparison.comparison.ip1Details?.provider;
@@ -397,6 +408,32 @@ export const deepValidateIpAddress = async (
 				distanceKm,
 				shouldFlag: true,
 			};
+		}
+
+		const comparisonObj = comparison.comparison;
+		if (comparisonObj) {
+			if (comparisonObj.ip1Details.countryCode) {
+				if (ipValidationRules.countryOverrides) {
+					if (
+						comparisonObj.ip1Details.countryCode in
+						ipValidationRules.countryOverrides
+					) {
+						ipValidationRules = {
+							...ipValidationRules,
+							...ipValidationRules.countryOverrides[
+								comparisonObj.ip1Details.countryCode
+							],
+						} as IIPValidationRules;
+						logger.info(() => ({
+							msg: `Using country-specific IP validation rules for ${comparisonObj.ip1Details.countryCode}`,
+							data: {
+								country: comparisonObj.ip1Details.countryCode,
+								rules: ipValidationRules,
+							},
+						}));
+					}
+				}
+			}
 		}
 
 		// Use configurable validation rules

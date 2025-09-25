@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { type IPComparison, IPValidationAction } from "@prosopo/types";
 import type { IIPValidationRules, IPComparisonResult } from "@prosopo/types";
+import { type IPComparison, IPValidationAction } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { evaluateIpValidationRules } from "../../util.js";
 
@@ -35,6 +35,8 @@ describe("evaluateIpValidationRules", () => {
 			countryChangeAction: IPValidationAction.Flag,
 			distanceExceedAction: IPValidationAction.Flag,
 			ispChangeAction: IPValidationAction.Reject,
+			cityChangeAction: IPValidationAction.Allow,
+			abuseScoreExceedAction: IPValidationAction.Reject,
 		},
 		distanceThresholdKm: 1000,
 		requireAllConditions: false,
@@ -150,10 +152,13 @@ describe("evaluateIpValidationRules", () => {
 		const requireAllRules: IIPValidationRules = {
 			actions: {
 				countryChangeAction: IPValidationAction.Reject,
+				cityChangeAction: IPValidationAction.Allow,
 				ispChangeAction: IPValidationAction.Reject,
 				distanceExceedAction: IPValidationAction.Allow,
+				abuseScoreExceedAction: IPValidationAction.Reject,
 			},
 			distanceThresholdKm: 1000,
+
 			requireAllConditions: true,
 		};
 		const comparison: IPComparisonResult = {

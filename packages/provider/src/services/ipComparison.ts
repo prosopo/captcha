@@ -31,6 +31,8 @@ import { getIPInfo } from "./ipInfo.js";
  *
  * @param ip1 - First IP address to compare
  * @param ip2 - Second IP address to compare
+ * @param apiKey
+ * @param apiUrl
  * @returns Promise resolving to comparison results or error details
  */
 export async function compareIPs(
@@ -175,6 +177,9 @@ export async function compareIPs(
 					country: ip1Info.country,
 					city: ip1Info.city,
 					coordinates: ip1Coordinates,
+					...(ip1Info.abuserScore && {
+						abuserScore: Number.parseFloat(ip1Info.abuserScore),
+					}),
 				},
 				ip2Details: {
 					provider: ip2Provider,
@@ -183,6 +188,9 @@ export async function compareIPs(
 					country: ip2Info.country,
 					city: ip2Info.city,
 					coordinates: ip2Coordinates,
+					...(ip1Info.abuserScore && {
+						abuserScore: Number.parseFloat(ip1Info.abuserScore),
+					}),
 				},
 			},
 		};

@@ -28,3 +28,4 @@ export * from "./api/ignoreMiddleware.js";
 export * from "./api/robotsMiddleware.js";
 export * from "./compositeIpAddress.js";
 export * from "./services/ipComparison.js";
+export * from "./services/ipInfo.js";
