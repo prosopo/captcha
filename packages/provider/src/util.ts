@@ -202,9 +202,12 @@ export const evaluateIpValidationRules = (
 				...rules.actions,
 				...countryOverride.actions,
 			},
-			distanceThresholdKm: countryOverride.distanceThresholdKm ?? rules.distanceThresholdKm,
-			abuseScoreThreshold: countryOverride.abuseScoreThreshold ?? rules.abuseScoreThreshold,
-			requireAllConditions: countryOverride.requireAllConditions ?? rules.requireAllConditions,
+			distanceThresholdKm:
+				countryOverride.distanceThresholdKm ?? rules.distanceThresholdKm,
+			abuseScoreThreshold:
+				countryOverride.abuseScoreThreshold ?? rules.abuseScoreThreshold,
+			requireAllConditions:
+				countryOverride.requireAllConditions ?? rules.requireAllConditions,
 		};
 	}
 
@@ -242,7 +245,10 @@ export const evaluateIpValidationRules = (
 
 	// Check for distance exceed condition
 	const distanceKm = comparison.comparison.distanceKm;
-	if (distanceKm !== undefined && distanceKm > effectiveRules.distanceThresholdKm) {
+	if (
+		distanceKm !== undefined &&
+		distanceKm > effectiveRules.distanceThresholdKm
+	) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.distanceExceedAction,
@@ -252,7 +258,10 @@ export const evaluateIpValidationRules = (
 
 	// Check for abuse score exceed condition
 	const ip2AbuseScore = comparison.comparison.ip2Details?.abuserScore;
-	if (ip2AbuseScore !== undefined && ip2AbuseScore > effectiveRules.abuseScoreThreshold) {
+	if (
+		ip2AbuseScore !== undefined &&
+		ip2AbuseScore > effectiveRules.abuseScoreThreshold
+	) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.abuseScoreExceedAction,

@@ -329,7 +329,11 @@ describe("evaluateIpValidationRules", () => {
 				},
 			},
 		};
-		const result = evaluateIpValidationRules(comparison, rulesWithOverrides, mockLogger);
+		const result = evaluateIpValidationRules(
+			comparison,
+			rulesWithOverrides,
+			mockLogger,
+		);
 		expect(result.action).toBe(IPValidationAction.Reject);
 		expect(result.errorMessage).toContain("Country changed from A to B");
 	});
@@ -366,9 +370,15 @@ describe("evaluateIpValidationRules", () => {
 				},
 			},
 		};
-		const result = evaluateIpValidationRules(comparison, rulesWithOverrides, mockLogger);
+		const result = evaluateIpValidationRules(
+			comparison,
+			rulesWithOverrides,
+			mockLogger,
+		);
 		expect(result.action).toBe(IPValidationAction.Flag);
-		expect(result.errorMessage).toContain("IP addresses are 800.00km apart (>500km limit)");
+		expect(result.errorMessage).toContain(
+			"IP addresses are 800.00km apart (>500km limit)",
+		);
 	});
 
 	it("returns Reject if abuse score exceeds threshold", () => {
@@ -398,7 +408,9 @@ describe("evaluateIpValidationRules", () => {
 		};
 		const result = evaluateIpValidationRules(comparison, baseRules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Reject);
-		expect(result.errorMessage).toContain("Abuse score 0.010 exceeds threshold 0.005");
+		expect(result.errorMessage).toContain(
+			"Abuse score 0.010 exceeds threshold 0.005",
+		);
 	});
 
 	it("returns Allow if abuse score does not exceed threshold", () => {
@@ -463,7 +475,11 @@ describe("evaluateIpValidationRules", () => {
 				},
 			},
 		};
-		const result = evaluateIpValidationRules(comparison, rulesWithOverrides, mockLogger);
+		const result = evaluateIpValidationRules(
+			comparison,
+			rulesWithOverrides,
+			mockLogger,
+		);
 		expect(result.action).toBe(IPValidationAction.Allow);
 	});
 
@@ -501,6 +517,8 @@ describe("evaluateIpValidationRules", () => {
 		};
 		const result = evaluateIpValidationRules(comparison, rules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Flag);
-		expect(result.errorMessage).toContain("Abuse score 0.010 exceeds threshold 0.005");
+		expect(result.errorMessage).toContain(
+			"Abuse score 0.010 exceeds threshold 0.005",
+		);
 	});
 });
