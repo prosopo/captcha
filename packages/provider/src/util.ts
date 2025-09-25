@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoEnvError } from "@prosopo/common";
+import { hexToU8a } from "@polkadot/util/hex";
+import { isHex } from "@polkadot/util/is";
+import {
+	type Logger,
+	ProsopoContractError,
+	ProsopoEnvError,
+} from "@prosopo/common";
 import {
 	type IIPValidation,
 	type IIPValidationRules,
@@ -25,9 +31,22 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
+import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 import { compareIPs } from "./services/ipComparison.js";
+
+export function encodeStringAddress(address: string) {
+	try {
+		return encodeAddress(
+			isHex(address) ? hexToU8a(address) : decodeAddress(address),
+		);
+	} catch (err) {
+		throw new ProsopoContractError("CONTRACT.INVALID_ADDRESS", {
+			context: { address },
+		});
+	}
+}
 
 export function shuffleArray<T>(array: T[]): T[] {
 	for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
