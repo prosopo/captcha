@@ -31,6 +31,8 @@ import { getIPInfo } from "./ipInfo.js";
  *
  * @param ip1 - First IP address to compare
  * @param ip2 - Second IP address to compare
+ * @param apiKey
+ * @param apiUrl
  * @returns Promise resolving to comparison results or error details
  */
 export async function compareIPs(

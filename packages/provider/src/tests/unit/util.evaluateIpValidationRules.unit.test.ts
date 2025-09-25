@@ -366,7 +366,9 @@ describe("evaluateIpValidationRules", () => {
 			...baseRules,
 			countryOverrides: {
 				B: {
+					actions: {},
 					distanceThresholdKm: 500,
+					abuseScoreThreshold: 0.01,
 				},
 			},
 		};
@@ -471,6 +473,8 @@ describe("evaluateIpValidationRules", () => {
 			...baseRules,
 			countryOverrides: {
 				B: {
+					actions: {},
+					distanceThresholdKm: 500,
 					abuseScoreThreshold: 0.01,
 				},
 			},
