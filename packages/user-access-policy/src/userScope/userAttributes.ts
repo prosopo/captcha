@@ -29,6 +29,8 @@ export type UserAttributesRecord = Omit<UserAttributes, "userAgentHash"> & {
 	userAgent?: string;
 };
 
+export type UserAttributesInput = UserAttributes & UserAttributesRecord;
+
 export const userAttributesRecordFields = [
 	"userId",
 	"ja4Hash",
@@ -43,12 +45,12 @@ const userAttributesInputSchema = z.object({
 	headersHash: z.coerce.string().optional(),
 	userAgent: z.coerce.string().optional(),
 	userAgentHash: z.coerce.string().optional(),
-}) satisfies ZodType<UserAttributes & UserAttributesRecord>;
+}) satisfies ZodType<UserAttributesInput>;
 
 export const userAttributesSchema = userAttributesInputSchema.transform(
-	(inputUserAttributes): UserAttributes => {
+	(userAttributesInput: UserAttributesInput): UserAttributes => {
 		// this line creates a new "userAttributes", without userAgent
-		const { userAgent, ...userScope } = inputUserAttributes;
+		const { userAgent, ...userScope } = userAttributesInput;
 
 		if ("string" === typeof userAgent) {
 			userScope.userAgentHash = hashUserAgent(userAgent);

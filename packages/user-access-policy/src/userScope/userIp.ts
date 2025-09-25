@@ -31,6 +31,8 @@ export type UserIpRecord = {
 	ipMask?: string;
 };
 
+export type UserIpInput = UserIp & UserIpRecord;
+
 export const userIpRecordFields = [
 	"ip",
 	"ipMask",
@@ -42,12 +44,12 @@ const userIpInputSchema = z.object({
 	numericIp: z.coerce.bigint().optional(),
 	numericIpMaskMin: z.coerce.bigint().optional(),
 	numericIpMaskMax: z.coerce.bigint().optional(),
-}) satisfies ZodType<UserIp & UserIpRecord>;
+}) satisfies ZodType<UserIpInput>;
 
 export const userIpSchema = userIpInputSchema.transform(
-	(inputNumericUserIp): UserIp => {
+	(userIpInput: UserIpInput): UserIp => {
 		// this line creates a new "userScope", without ip and ipMask
-		const { ip, ipMask, ...numericUserIp } = inputNumericUserIp;
+		const { ip, ipMask, ...numericUserIp } = userIpInput;
 
 		if ("string" === typeof ip) {
 			numericUserIp.numericIp = getIPAddress(ip).bigInt();

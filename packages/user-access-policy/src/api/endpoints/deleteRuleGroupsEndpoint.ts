@@ -24,12 +24,12 @@ import {
 	ScopeMatch,
 } from "#policy/accessRulesStorage.js";
 
-export type SiteGroup = {
+export type DeleteSiteGroup = {
 	clientIds: string[];
 	groupId: string;
 };
 
-export type DeleteSiteGroups = SiteGroup[];
+export type DeleteSiteGroups = DeleteSiteGroup[];
 
 type DeleteRuleGroupsSchema = ZodType<DeleteSiteGroups>;
 

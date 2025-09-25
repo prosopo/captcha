@@ -31,6 +31,7 @@ import {
 } from "./policyScope.js";
 import {
 	type UserScope,
+	type UserScopeInput,
 	type UserScopeRecord,
 	getUserScopeRedisQuery,
 	userScopeMongooseSchema,
@@ -51,6 +52,13 @@ export type AccessRuleRecord = AccessPolicy &
 		ruleGroupId?: string;
 	};
 
+export type AccessRuleInput = AccessPolicy &
+	PolicyScope &
+	UserScopeInput & {
+		groupId?: string;
+		ruleGroupId?: string;
+	};
+
 const accessRuleInputSchema = z
 	.object({
 		...accessPolicySchema.shape,
@@ -61,13 +69,13 @@ const accessRuleInputSchema = z
 	.and(userScopeSchema)
 	.transform(
 		// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
-		(accessRuleInput): AccessRule & AccessRuleRecord => accessRuleInput,
+		(ruleInput): AccessRuleInput => ruleInput,
 	);
 
 export const accessRuleSchema: ZodType<AccessRule> =
-	accessRuleInputSchema.transform((inputRule): AccessRule => {
+	accessRuleInputSchema.transform((ruleInput: AccessRuleInput): AccessRule => {
 		// this line creates a new "rule", without ruleGroupId
-		const { ruleGroupId, ...rule } = inputRule;
+		const { ruleGroupId, ...rule } = ruleInput;
 
 		if ("string" === typeof ruleGroupId) {
 			rule.groupId = ruleGroupId;

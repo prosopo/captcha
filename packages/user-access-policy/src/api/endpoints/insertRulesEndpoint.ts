@@ -25,26 +25,23 @@ import type { AccessRulesWriter } from "#policy/accessRulesStorage.js";
 import { type PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
 import {
 	type UserScope,
-	type UserScopeRecord,
+	type UserScopeInput,
 	userScopeSchema,
 } from "#policy/userScope/userScope.js";
 
-type InsertRulesGroupBase = {
+export type InsertRulesGroup = {
 	accessPolicy: AccessPolicy;
 	policyScope?: PolicyScope;
+	userScopes: UserScopeInput[];
 	groupId?: string;
 	expirationTimestamp?: number;
 };
 
-export type InsertRulesGroup = InsertRulesGroupBase & {
-	userScopes: (UserScope | UserScopeRecord)[];
-};
-
-export type InsertRulesGroupOutput = InsertRulesGroupBase & {
+type ParsedInsertRulesGroup = InsertRulesGroup & {
 	userScopes: UserScope[];
 };
 
-type InsertRulesSchema = ZodType<InsertRulesGroupOutput>;
+type InsertRulesSchema = ZodType<InsertRulesGroup>;
 
 export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(
@@ -66,7 +63,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	}
 
 	async processRequest(
-		args: InsertRulesGroupOutput,
+		args: ParsedInsertRulesGroup,
 	): Promise<ApiEndpointResponse> {
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
@@ -104,7 +101,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 		return Promise.race([timeoutPromise, createRulesPromise]);
 	}
 
-	protected async createRules(args: InsertRulesGroupOutput): Promise<string[]> {
+	protected async createRules(args: ParsedInsertRulesGroup): Promise<string[]> {
 		const policyScope = args.policyScope || {};
 
 		const createPromises = [];

@@ -18,6 +18,7 @@ import { z } from "zod";
 import { ScopeMatch } from "#policy/accessRulesStorage.js";
 import {
 	type UserAttributes,
+	type UserAttributesInput,
 	type UserAttributesRecord,
 	userAttributesMongooseSchema,
 	userAttributesRecordFields,
@@ -26,6 +27,7 @@ import {
 } from "./userAttributes.js";
 import {
 	type UserIp,
+	type UserIpInput,
 	type UserIpRecord,
 	userIpMongooseSchema,
 	userIpRecordFields,
@@ -37,6 +39,8 @@ import {
 export type UserScope = UserAttributes & UserIp;
 
 export type UserScopeRecord = UserAttributesRecord & UserIpRecord;
+
+export type UserScopeInput = UserAttributesInput & UserIpInput;
 
 export const userScopeRecordFields = [
 	...userAttributesRecordFields,
@@ -51,7 +55,7 @@ export const userScopeSchema = z
 	.and(userIpSchema)
 	.transform(
 		// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
-		(userScopeInput): UserScope & UserScopeRecord => userScopeInput,
+		(userScopeInput): UserScopeInput => userScopeInput,
 	);
 
 export const userScopeMongooseSchema: SchemaDefinition<UserScopeRecord> = {

@@ -17,6 +17,7 @@ import type { AccessRule } from "#policy/accessRule.js";
 import { type PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
 import {
 	type UserScope,
+	type UserScopeInput,
 	userScopeSchema,
 } from "#policy/userScope/userScope.js";
 
@@ -39,6 +40,10 @@ export type AccessRulesFilter = {
 	 */
 	userScopeMatch?: ScopeMatch;
 	groupId?: string;
+};
+
+export type AccessRulesFilterInput = AccessRulesFilter & {
+	userScope?: UserScopeInput;
 };
 
 export const accessRulesFilterSchema = z.object({

@@ -13,5 +13,8 @@
 // limitations under the License.
 
 export type { DeleteRuleFilters } from "./deleteRulesEndpoint.js";
-export type { DeleteSiteGroups } from "./deleteRuleGroupsEndpoint.js";
+export type {
+	DeleteSiteGroup,
+	DeleteSiteGroups,
+} from "./deleteRuleGroupsEndpoint.js";
 export type { InsertRulesGroup } from "./insertRulesEndpoint.js";
