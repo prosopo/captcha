@@ -12,41 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { hexToU8a } from "@polkadot/util/hex";
-import { isHex } from "@polkadot/util/is";
+import { type Logger, ProsopoEnvError } from "@prosopo/common";
 import {
-	type Logger,
-	ProsopoContractError,
-	ProsopoEnvError,
-} from "@prosopo/common";
-import {
+	type IIPValidation,
 	type IIPValidationRules,
 	type IPAddress,
 	type IPComparisonResult,
 	type IPValidateCondition,
 	IPValidationAction,
-	IpApiService,
 	type ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { at } from "@prosopo/util";
-import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
 import { compareIPs } from "./services/ipComparison.js";
-
-export function encodeStringAddress(address: string) {
-	try {
-		return encodeAddress(
-			isHex(address) ? hexToU8a(address) : decodeAddress(address),
-		);
-	} catch (err) {
-		throw new ProsopoContractError("CONTRACT.INVALID_ADDRESS", {
-			context: { address },
-		});
-	}
-}
 
 export function shuffleArray<T>(array: T[]): T[] {
 	for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
@@ -192,10 +173,17 @@ export const evaluateIpValidationRules = (
 	);
 
 	// Apply country-specific overrides if they exist
+	const ip1Country = comparison.comparison.ip1Details?.country;
 	const ip2Country = comparison.comparison.ip2Details?.country;
 	let effectiveRules = rules;
+	let countryOverride: undefined | IIPValidation = undefined;
+	if (ip1Country && rules.countryOverrides?.[ip1Country]) {
+		countryOverride = rules.countryOverrides[ip1Country];
+	}
 	if (ip2Country && rules.countryOverrides?.[ip2Country]) {
-		const countryOverride = rules.countryOverrides[ip2Country];
+		countryOverride = rules.countryOverrides[ip2Country];
+	}
+	if (countryOverride) {
 		effectiveRules = {
 			...rules,
 			actions: {
@@ -212,7 +200,6 @@ export const evaluateIpValidationRules = (
 	}
 
 	// Check for country change
-	const ip1Country = comparison.comparison.ip1Details?.country;
 	if (ip1Country !== ip2Country) {
 		conditions.push({
 			met: true,
@@ -256,6 +243,7 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
+	console.log(JSON.stringify(effectiveRules, null, 2));
 	// Check for abuse score exceed condition
 	const ip2AbuseScore = comparison.comparison.ip2Details?.abuserScore;
 	if (
@@ -265,7 +253,18 @@ export const evaluateIpValidationRules = (
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.abuseScoreExceedAction,
-			message: `Abuse score ${ip2AbuseScore.toFixed(3)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
+			message: `Abuse score ${ip2AbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
+		});
+	}
+	const ip1AbuseScore = comparison.comparison.ip1Details?.abuserScore;
+	if (
+		ip1AbuseScore !== undefined &&
+		ip1AbuseScore > effectiveRules.abuseScoreThreshold
+	) {
+		conditions.push({
+			met: true,
+			action: effectiveRules.actions.abuseScoreExceedAction,
+			message: `Abuse score ${ip1AbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
 		});
 	}
 

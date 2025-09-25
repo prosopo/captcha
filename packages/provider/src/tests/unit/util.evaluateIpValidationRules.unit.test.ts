@@ -411,7 +411,7 @@ describe("evaluateIpValidationRules", () => {
 		const result = evaluateIpValidationRules(comparison, baseRules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Reject);
 		expect(result.errorMessage).toContain(
-			"Abuse score 0.010 exceeds threshold 0.005",
+			"Abuse score 0.0100 exceeds threshold 0.005",
 		);
 	});
 
@@ -473,9 +473,11 @@ describe("evaluateIpValidationRules", () => {
 			...baseRules,
 			countryOverrides: {
 				B: {
-					actions: {},
+					actions: {
+						abuseScoreExceedAction: IPValidationAction.Flag,
+					},
 					distanceThresholdKm: 500,
-					abuseScoreThreshold: 0.01,
+					abuseScoreThreshold: 0.0001,
 				},
 			},
 		};
@@ -484,7 +486,7 @@ describe("evaluateIpValidationRules", () => {
 			rulesWithOverrides,
 			mockLogger,
 		);
-		expect(result.action).toBe(IPValidationAction.Allow);
+		expect(result.action).toBe(IPValidationAction.Flag);
 	});
 
 	it("returns Flag if abuse score triggers Flag action", () => {
@@ -522,7 +524,7 @@ describe("evaluateIpValidationRules", () => {
 		const result = evaluateIpValidationRules(comparison, rules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Flag);
 		expect(result.errorMessage).toContain(
-			"Abuse score 0.010 exceeds threshold 0.005",
+			"Abuse score 0.0100 exceeds threshold 0.005",
 		);
 	});
 });

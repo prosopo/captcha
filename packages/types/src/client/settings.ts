@@ -109,3 +109,4 @@ export const ClientSettingsSchema = object({
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
 export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
+export type IIPValidation = output<typeof IPValidationSchema>;
