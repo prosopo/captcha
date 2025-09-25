@@ -20,6 +20,7 @@ import type {
 	FtAggregateWithCursorOptions,
 } from "@redis/search/dist/lib/commands/AGGREGATE_WITHCURSOR.js";
 import type { RedisClientType } from "redis";
+import type { ZodType } from "zod";
 import {
 	type AccessRule,
 	accessRuleSchema,
@@ -29,7 +30,11 @@ import type {
 	AccessRulesFilter,
 	AccessRulesReader,
 } from "#policy/accessRulesStorage.js";
-import { ACCESS_RULES_REDIS_INDEX_NAME } from "./redisRulesStorage.js";
+import { aggregateRedisKeys } from "#policy/redis/redisAggregate.js";
+import {
+	ACCESS_RULES_REDIS_INDEX_NAME,
+	parseRedisRecords,
+} from "./redisRulesStorage.js";
 
 // maximum is 10K
 const DEFAULT_SEARCH_LIMIT = 1000;
@@ -106,7 +111,9 @@ export const createRedisRulesReader = (
 				return [];
 			}
 
-			return extractRulesFromSearchReply(searchReply, logger);
+			const records = searchReply.documents.map(({ value }) => value);
+
+			return parseRedisRecords(records, accessRuleSchema, logger);
 		},
 
 		findRuleIds: async (
@@ -115,10 +122,13 @@ export const createRedisRulesReader = (
 		): Promise<string[]> => {
 			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
 
-			let aggregateReply: AggregateWithCursorReply;
+			const ruleIds: string[] = [];
 
 			try {
-				// fixme use aggregation here.
+				// aggregation is used instead ft.search to overcome the limitation on search results number
+				const aggregatedKeys = await aggregateRedisKeys(client, query, logger);
+
+				ruleIds.push(...aggregatedKeys);
 			} catch (e) {
 				logger.error(() => ({
 					err: e,
@@ -143,11 +153,12 @@ export const createRedisRulesReader = (
 				msg: "Executed search query for rule IDs",
 				data: {
 					query: query,
-					found: searchReply.documents,
+					foundCount: ruleIds.length,
+					foundIds: ruleIds,
 				},
 			}));
 
-			return searchReply.documents;
+			return ruleIds;
 		},
 	};
 };
@@ -182,27 +193,4 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 			return [];
 		},
 	};
-};
-
-const extractRulesFromSearchReply = (
-	searchReply: SearchReply,
-	logger: Logger,
-): AccessRule[] => {
-	const accessRules: AccessRule[] = [];
-
-	searchReply.documents.map(({ id, value: document }) => {
-		const parsedDocument = accessRuleSchema.safeParse(document);
-
-		if (parsedDocument.success) {
-			accessRules.push(parsedDocument.data);
-		} else {
-			logger.debug(() => ({
-				msg: "Failed to parse access rule from search reply",
-				id: id,
-				error: parsedDocument.error,
-			}));
-		}
-	});
-
-	return accessRules;
 };

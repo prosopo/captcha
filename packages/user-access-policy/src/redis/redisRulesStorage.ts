@@ -14,6 +14,7 @@
 
 import type { Logger } from "@prosopo/common";
 import type { RedisConnection, RedisIndex } from "@prosopo/redis-client";
+import type { ZodType } from "zod";
 import {
 	type AccessRule,
 	accessRuleRedisSchema,
@@ -67,4 +68,31 @@ export const createRedisAccessRulesStorage = (
 	});
 
 	return storage;
+};
+
+export const parseRedisRecords = <T>(
+	records: object[],
+	recordSchema: ZodType<T>,
+	logger: Logger,
+): T[] => {
+	const parsedRecords: T[] = [];
+
+	records.map((record) => {
+		const parseResult = recordSchema.safeParse(record);
+
+		if (parseResult.success) {
+			parsedRecords.push(parseResult.data);
+			return;
+		}
+
+		logger.error(() => ({
+			msg: "Failed to parse Redis record",
+			data: {
+				record,
+				error: parseResult.error,
+			},
+		}));
+	});
+
+	return parsedRecords;
 };
