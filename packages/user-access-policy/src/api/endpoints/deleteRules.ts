@@ -17,36 +17,37 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { z } from "zod";
-import { policyFilterSchema } from "#policy/accessPolicyResolver.js";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { Logger } from "@prosopo/common";
+import { type ZodType, z } from "zod";
+import {
+	type AccessRulesFilter,
+	type AccessRulesFilterInput,
+	type AccessRulesStorage,
+	accessRulesFilterSchema,
+} from "#policy/accessRulesStorage.js";
 
-export const deleteRulesEndpointSchema = z.array(policyFilterSchema);
+export type DeleteRuleFilters = AccessRulesFilterInput[];
 
-export type DeleteRulesEndpointSchemaOutput = z.output<
-	typeof deleteRulesEndpointSchema
->;
+type DeleteRulesSchema = ZodType<DeleteRuleFilters>;
 
-export type DeleteRulesEndpointSchemaInput = z.input<
-	typeof deleteRulesEndpointSchema
->;
+export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
+	public constructor(
+		private readonly accessRulesStorage: AccessRulesStorage,
+		private readonly logger: Logger,
+	) {}
 
-export type DeleteRulesEndpointSchema = typeof deleteRulesEndpointSchema;
-
-export class DeleteRulesEndpoint
-	implements ApiEndpoint<DeleteRulesEndpointSchema>
-{
-	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
+	public getRequestArgsSchema(): DeleteRulesSchema {
+		return z.array(accessRulesFilterSchema);
+	}
 
 	async processRequest(
-		args: DeleteRulesEndpointSchemaInput,
+		args: AccessRulesFilter[],
 	): Promise<ApiEndpointResponse> {
 		const allRuleIds = [];
 
 		for (const accessRuleFilter of args) {
-			const parsedRules = policyFilterSchema.parse(accessRuleFilter);
 			const foundRuleIds =
-				await this.accessRulesStorage.findRuleIds(parsedRules);
+				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
 
 			allRuleIds.push(...foundRuleIds);
 		}
@@ -58,15 +59,19 @@ export class DeleteRulesEndpoint
 			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
 		}
 
+		this.logger.info(() => ({
+			msg: "Endpoint deleted rules",
+			data: {
+				args,
+				uniqueRuleIds,
+			},
+		}));
+
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
 			data: {
 				deleted_count: uniqueRuleIds.length,
 			},
 		};
-	}
-
-	public getRequestArgsSchema(): DeleteRulesEndpointSchema {
-		return deleteRulesEndpointSchema;
 	}
 }

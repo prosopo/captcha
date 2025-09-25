@@ -12,4 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./.export.js";
+export * from "./endpoints/.export.js";
+
+export {
+	accessRuleApiPaths,
+	getExpressApiRuleRateLimits,
+} from "./accessRuleApiRoutes.js";
+
+export { AccessRulesApiClient } from "./accessRulesApiClient.js";
+export { AccessRuleApiRoutes } from "./accessRuleApiRoutes.js";

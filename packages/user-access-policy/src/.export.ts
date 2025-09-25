@@ -12,4 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./.export.js";
+export * from "./api/.export.js";
+export * from "./redis/.export.js";
+export * from "./userScope/.export.js";
+
+export {
+	type AccessPolicy,
+	AccessPolicyType,
+	accessPolicySchema,
+} from "./accessPolicy.js";
+
+export { type PolicyScope, policyScopeSchema } from "./policyScope.js";
+
+export {
+	type AccessRulesFilter,
+	type AccessRulesStorage,
+	ScopeMatch,
+} from "./accessRulesStorage.js";
+
+export {
+	type AccessRule,
+	type AccessRuleRecord,
+	transformAccessRuleRecordIntoRule,
+	accessRuleSchema,
+	accessRuleMongooseSchema,
+	makeAccessRuleHash,
+} from "./accessRule.js";

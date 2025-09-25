@@ -15,16 +15,17 @@
 import { ApiClient } from "@prosopo/api";
 import type { ApiResponse } from "@prosopo/types";
 import { accessRuleApiPaths } from "./accessRuleApiRoutes.js";
-import type { DeleteRulesEndpointSchemaInput } from "./deleteRulesEndpoint.js";
-import type { InsertManyRulesEndpointInputSchema } from "./insertRulesEndpoint.js";
+import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
+import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
+import type { InsertRulesGroup } from "./endpoints/insertRules.js";
 
 export class AccessRulesApiClient extends ApiClient {
 	public insertMany(
-		toInsert: InsertManyRulesEndpointInputSchema,
+		rulesGroup: InsertRulesGroup,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
-		return this.post(accessRuleApiPaths.INSERT_MANY, toInsert, {
+		return this.post(accessRuleApiPaths.INSERT_MANY, rulesGroup, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				timestamp,
@@ -34,11 +35,25 @@ export class AccessRulesApiClient extends ApiClient {
 	}
 
 	public deleteMany(
-		toDelete: DeleteRulesEndpointSchemaInput,
+		filters: DeleteRuleFilters,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
-		return this.post(accessRuleApiPaths.DELETE_MANY, toDelete, {
+		return this.post(accessRuleApiPaths.DELETE_MANY, filters, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
+
+	public deleteGroups(
+		siteGroups: DeleteSiteGroups,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(accessRuleApiPaths.DELETE_GROUPS, siteGroups, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				timestamp,

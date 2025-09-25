@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import crypto from "node:crypto";
 import type { Logger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
-import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
-import { redisRuleKeyPrefix } from "#policy/redis/redisRulesIndex.js";
-
-const redisRuleContentHashAlgorithm = "md5";
+import type { AccessRule } from "#policy/accessRule.js";
+import type { AccessRulesWriter } from "#policy/accessRulesStorage.js";
+import {
+	ACCESS_RULE_REDIS_KEY_PREFIX,
+	getAccessRuleRedisKey,
+} from "./redisRulesStorage.js";
 
 export const createRedisRulesWriter = (
 	client: RedisClientType,
@@ -28,7 +29,7 @@ export const createRedisRulesWriter = (
 			rule: AccessRule,
 			expirationTimestamp?: number,
 		): Promise<string> => {
-			const ruleKey = getRedisRuleKey(rule);
+			const ruleKey = getAccessRuleRedisKey(rule);
 			const ruleValue = getRedisRuleValue(rule);
 
 			await client.hSet(ruleKey, ruleValue);
@@ -47,11 +48,16 @@ export const createRedisRulesWriter = (
 			return ruleKey;
 		},
 
-		deleteRules: async (ruleIds: string[]): Promise<void> =>
-			void (await client.del(ruleIds)),
+		deleteRules: async (ruleIds: string[]): Promise<void> => {
+			const ruleKeys = ruleIds.map(
+				(ruleId) => ACCESS_RULE_REDIS_KEY_PREFIX + ruleId,
+			);
+
+			await client.del(ruleKeys);
+		},
 
 		deleteAllRules: async (): Promise<number> => {
-			const keys = await client.keys(`${redisRuleKeyPrefix}*`);
+			const keys = await client.keys(`${ACCESS_RULE_REDIS_KEY_PREFIX}*`);
 
 			if (keys.length === 0) return 0;
 
@@ -94,18 +100,6 @@ export const getDummyRedisRulesWriter = (logger: Logger): AccessRulesWriter => {
 		},
 	};
 };
-
-export const getRedisRuleKey = (rule: AccessRule): string =>
-	redisRuleKeyPrefix +
-	crypto
-		.createHash(redisRuleContentHashAlgorithm)
-		.update(
-			JSON.stringify(rule, (key, value) =>
-				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
-				"bigint" === typeof value ? value.toString() : value,
-			),
-		)
-		.digest("hex");
 
 export const getRedisRuleValue = (rule: AccessRule): Record<string, string> =>
 	Object.fromEntries(

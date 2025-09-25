@@ -17,22 +17,24 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { z } from "zod";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { Logger } from "@prosopo/common";
+import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
 
-export const deleteAllRulesEndpointSchema = z.object({});
+export class DeleteAllRulesEndpoint implements ApiEndpoint<undefined> {
+	public constructor(
+		private readonly accessRulesStorage: AccessRulesStorage,
+		private readonly logger: Logger,
+	) {}
 
-export type DeleteAllRulesEndpointSchema = typeof deleteAllRulesEndpointSchema;
+	public getRequestArgsSchema(): undefined {}
 
-export class DeleteAllRulesEndpoint
-	implements ApiEndpoint<DeleteAllRulesEndpointSchema>
-{
-	public constructor(private readonly accessRulesStorage: AccessRulesStorage) {}
-
-	async processRequest(
-		args: z.infer<DeleteAllRulesEndpointSchema>,
-	): Promise<ApiEndpointResponse> {
+	async processRequest(): Promise<ApiEndpointResponse> {
 		const deletedCount = await this.accessRulesStorage.deleteAllRules();
+
+		this.logger.info(() => ({
+			msg: "Endpoint deleted all access rules",
+			data: { deletedCount },
+		}));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
@@ -40,9 +42,5 @@ export class DeleteAllRulesEndpoint
 				deleted_count: deletedCount,
 			},
 		};
-	}
-
-	getRequestArgsSchema(): DeleteAllRulesEndpointSchema {
-		return deleteAllRulesEndpointSchema;
 	}
 }

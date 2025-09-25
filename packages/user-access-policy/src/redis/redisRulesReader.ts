@@ -14,20 +14,37 @@
 
 import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
-import type { SearchReply } from "@redis/search";
-import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
+import type { FtSearchOptions, SearchReply } from "@redis/search";
 import type { RedisClientType } from "redis";
-import type { PolicyFilter } from "#policy/accessPolicyResolver.js";
 import {
 	type AccessRule,
-	type AccessRulesReader,
 	accessRuleSchema,
-} from "#policy/accessRules.js";
-import { redisRulesIndexName } from "#policy/redis/redisRulesIndex.js";
+	getAccessRuleRedisQuery,
+} from "#policy/accessRule.js";
+import type {
+	AccessRulesFilter,
+	AccessRulesReader,
+} from "#policy/accessRulesStorage.js";
+import { aggregateRedisKeys } from "#policy/redis/redisAggregate.js";
 import {
-	getRedisRulesQuery,
-	redisRulesSearchOptions,
-} from "#policy/redis/redisRulesIndex.js";
+	ACCESS_RULES_REDIS_INDEX_NAME,
+	ACCESS_RULE_REDIS_KEY_PREFIX,
+	parseRedisRecords,
+} from "./redisRulesStorage.js";
+
+// maximum is 10K
+const DEFAULT_SEARCH_LIMIT = 1000;
+
+// https://redis.io/docs/latest/commands/ft.search/
+const redisSearchOptions: FtSearchOptions = {
+	// #2 is a required option when the 'ismissing()' function is in the query body
+	DIALECT: 2,
+	// FT.search doesn't support "unlimited" selects
+	LIMIT: {
+		from: 0,
+		size: DEFAULT_SEARCH_LIMIT,
+	},
+};
 
 export const createRedisRulesReader = (
 	client: RedisClientType,
@@ -35,11 +52,11 @@ export const createRedisRulesReader = (
 ): AccessRulesReader => {
 	return {
 		findRules: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
-			const query = getRedisRulesQuery(filter, matchingFieldsOnly);
+			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
 
 			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
 				// We don't want to accidentally return all rules when the filter is empty
@@ -50,9 +67,9 @@ export const createRedisRulesReader = (
 
 			try {
 				searchReply = await client.ft.search(
-					redisRulesIndexName,
+					ACCESS_RULES_REDIS_INDEX_NAME,
 					query,
-					redisRulesSearchOptions,
+					redisSearchOptions,
 				);
 
 				if (searchReply.total > 0) {
@@ -90,25 +107,27 @@ export const createRedisRulesReader = (
 				return [];
 			}
 
-			return extractRulesFromSearchReply(searchReply, logger);
+			const records = searchReply.documents.map(({ value }) => value);
+
+			return parseRedisRecords(records, accessRuleSchema, logger);
 		},
 
 		findRuleIds: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 		): Promise<string[]> => {
-			const query = getRedisRulesQuery(filter, matchingFieldsOnly);
+			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
 
-			let searchReply: SearchNoContentReply;
+			let ruleIds: string[] = [];
 
 			try {
-				searchReply = await client.ft.searchNoContent(
-					redisRulesIndexName,
-					query,
-					redisRulesSearchOptions,
+				// aggregation is used instead ft.search to overcome the limitation on search results number
+				const ruleKeys = await aggregateRedisKeys(client, query, logger);
+
+				ruleIds = ruleKeys.map((ruleKey) =>
+					ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
 				);
 			} catch (e) {
-				// 	debug(fn: LogRecordFn): void;
 				logger.error(() => ({
 					err: e,
 					data: {
@@ -128,7 +147,16 @@ export const createRedisRulesReader = (
 				return [];
 			}
 
-			return searchReply.documents;
+			logger.debug(() => ({
+				msg: "Executed search query for rule IDs",
+				data: {
+					query: query,
+					foundCount: ruleIds.length,
+					foundIds: ruleIds,
+				},
+			}));
+
+			return ruleIds;
 		},
 	};
 };
@@ -136,7 +164,7 @@ export const createRedisRulesReader = (
 export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 	return {
 		findRules: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
@@ -150,7 +178,7 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 			return [];
 		},
 		findRuleIds: async (
-			filter: PolicyFilter,
+			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 		): Promise<string[]> => {
 			logger.info(() => ({
@@ -163,27 +191,4 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 			return [];
 		},
 	};
-};
-
-const extractRulesFromSearchReply = (
-	searchReply: SearchReply,
-	logger: Logger,
-): AccessRule[] => {
-	const accessRules: AccessRule[] = [];
-
-	searchReply.documents.map(({ id, value: document }) => {
-		const parsedDocument = accessRuleSchema.safeParse(document);
-
-		if (parsedDocument.success) {
-			accessRules.push(parsedDocument.data);
-		} else {
-			logger.debug(() => ({
-				msg: "Failed to parse access rule from search reply",
-				id: id,
-				error: parsedDocument.error,
-			}));
-		}
-	});
-
-	return accessRules;
 };

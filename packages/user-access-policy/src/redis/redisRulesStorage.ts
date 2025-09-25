@@ -13,16 +13,39 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { RedisConnection } from "@prosopo/redis-client";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { RedisConnection, RedisIndex } from "@prosopo/redis-client";
+import type { ZodType } from "zod";
+import {
+	type AccessRule,
+	accessRuleRedisSchema,
+	makeAccessRuleHash,
+} from "#policy/accessRule.js";
+import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
 import {
 	createRedisRulesReader,
 	getDummyRedisRulesReader,
-} from "#policy/redis/redisRulesReader.js";
+} from "./redisRulesReader.js";
 import {
 	createRedisRulesWriter,
 	getDummyRedisRulesWriter,
-} from "#policy/redis/redisRulesWriter.js";
+} from "./redisRulesWriter.js";
+
+export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";
+
+// names take space, so we use an acronym instead of the long-tailed one
+export const ACCESS_RULE_REDIS_KEY_PREFIX = "uar:";
+
+export const accessRulesRedisIndex: RedisIndex = {
+	name: ACCESS_RULES_REDIS_INDEX_NAME,
+	schema: accessRuleRedisSchema,
+	options: {
+		ON: "HASH" as const,
+		PREFIX: [ACCESS_RULE_REDIS_KEY_PREFIX],
+	},
+};
+
+export const getAccessRuleRedisKey = (rule: AccessRule): string =>
+	ACCESS_RULE_REDIS_KEY_PREFIX + makeAccessRuleHash(rule);
 
 export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
@@ -45,4 +68,31 @@ export const createRedisAccessRulesStorage = (
 	});
 
 	return storage;
+};
+
+export const parseRedisRecords = <T>(
+	records: object[],
+	recordSchema: ZodType<T>,
+	logger: Logger,
+): T[] => {
+	const parsedRecords: T[] = [];
+
+	records.map((record) => {
+		const parseResult = recordSchema.safeParse(record);
+
+		if (parseResult.success) {
+			parsedRecords.push(parseResult.data);
+			return;
+		}
+
+		logger.error(() => ({
+			msg: "Failed to parse Redis record",
+			data: {
+				record,
+				error: parseResult.error,
+			},
+		}));
+	});
+
+	return parsedRecords;
 };

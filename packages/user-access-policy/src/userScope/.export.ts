@@ -12,4 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./.export.js";
+export {
+	type UserScope,
+	type UserScopeRecord,
+	type UserScopeRecordField,
+	userScopeSchema,
+	userScopeRecordFields,
+} from "./userScope.js";
