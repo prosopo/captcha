@@ -39,7 +39,6 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
-import type { ObjectId } from "mongoose";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
@@ -594,8 +593,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp, providerSelectEntropy } =
-					await tasks.frictionlessManager.decryptPayload(token);
+				const {
+					baseBotScore,
+					timestamp,
+					providerSelectEntropy,
+					userId,
+					userAgent,
+				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				let botScore = baseBotScore + lScore;
 
@@ -663,6 +667,27 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						userScope,
 					)
 				)[0];
+
+				// Check the user agent in token and user id in request match request
+				const headersUserAgent = req.headers["user-agent"];
+				const headersProsopoUser = req.headers["prosopo-user"];
+				if (headersUserAgent !== userAgent || headersProsopoUser !== userId) {
+					req.logger.info(() => ({
+						message: "User agent or user id does not match",
+						data: {
+							headersUserAgent,
+							userAgent,
+							headersProsopoUser,
+							userId,
+						},
+					}));
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							timestampDecayFunction(timestamp),
+						),
+					);
+				}
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
 				if (userAccessPolicy) {
