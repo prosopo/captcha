@@ -46,7 +46,6 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 		const allRuleIds = [];
 
 		for (const accessRuleFilter of args) {
-			// fixme its limit to 10K only
 			const foundRuleIds =
 				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
 

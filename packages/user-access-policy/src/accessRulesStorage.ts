@@ -54,13 +54,6 @@ export const accessRulesFilterSchema = z.object({
 	groupId: z.string().optional(),
 }) satisfies ZodType<AccessRulesFilter>;
 
-export type AccessRulesSearchArgs = {
-	filter: AccessRulesFilter;
-	matchingFieldsOnly?: boolean;
-	skipEmptyUserScopes?: boolean;
-	limit?: number; // fixme
-};
-
 export type AccessRulesReader = {
 	findRules(
 		filter: AccessRulesFilter,

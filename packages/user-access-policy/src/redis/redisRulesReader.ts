@@ -15,7 +15,10 @@
 import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
 import type { FtSearchOptions, SearchReply } from "@redis/search";
-import type { SearchNoContentReply } from "@redis/search/dist/lib/commands/SEARCH_NOCONTENT.js";
+import type {
+	AggregateWithCursorReply,
+	FtAggregateWithCursorOptions,
+} from "@redis/search/dist/lib/commands/AGGREGATE_WITHCURSOR.js";
 import type { RedisClientType } from "redis";
 import {
 	type AccessRule,
@@ -32,9 +35,10 @@ import { ACCESS_RULES_REDIS_INDEX_NAME } from "./redisRulesStorage.js";
 const DEFAULT_SEARCH_LIMIT = 1000;
 
 // https://redis.io/docs/latest/commands/ft.search/
-export const accessRuleRedisSearchOptions: FtSearchOptions = {
+const redisSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
+	// FT.search doesn't support "unlimited" selects
 	LIMIT: {
 		from: 0,
 		size: DEFAULT_SEARCH_LIMIT,
@@ -64,7 +68,7 @@ export const createRedisRulesReader = (
 				searchReply = await client.ft.search(
 					ACCESS_RULES_REDIS_INDEX_NAME,
 					query,
-					accessRuleRedisSearchOptions,
+					redisSearchOptions,
 				);
 
 				if (searchReply.total > 0) {
@@ -111,16 +115,11 @@ export const createRedisRulesReader = (
 		): Promise<string[]> => {
 			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
 
-			let searchReply: SearchNoContentReply;
+			let aggregateReply: AggregateWithCursorReply;
 
 			try {
-				searchReply = await client.ft.searchNoContent(
-					ACCESS_RULES_REDIS_INDEX_NAME,
-					query,
-					accessRuleRedisSearchOptions,
-				);
+				// fixme use aggregation here.
 			} catch (e) {
-				// 	debug(fn: LogRecordFn): void;
 				logger.error(() => ({
 					err: e,
 					data: {
