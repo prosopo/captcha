@@ -43,6 +43,7 @@ import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
+import { hashUserAgent } from "../utils/hashUserAgent.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
@@ -669,14 +670,22 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				)[0];
 
 				// Check the user agent in token and user id in request match request
+				// Hash the request user agent to compare with the hashed user agent from the token
 				const headersUserAgent = req.headers["user-agent"];
+				const hashedHeadersUserAgent = headersUserAgent
+					? hashUserAgent(headersUserAgent)
+					: "";
 				const headersProsopoUser = req.headers["prosopo-user"];
-				if (headersUserAgent !== userAgent || headersProsopoUser !== userId) {
+				if (
+					hashedHeadersUserAgent !== userAgent ||
+					headersProsopoUser !== userId
+				) {
 					req.logger.info(() => ({
 						message: "User agent or user id does not match",
 						data: {
 							headersUserAgent,
-							userAgent,
+							hashedHeadersUserAgent,
+							userAgent: userAgent, // This is the hashed user agent from the token
 							headersProsopoUser,
 							userId,
 						},
