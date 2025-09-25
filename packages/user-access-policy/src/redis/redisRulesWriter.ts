@@ -48,8 +48,13 @@ export const createRedisRulesWriter = (
 			return ruleKey;
 		},
 
-		deleteRules: async (ruleIds: string[]): Promise<void> =>
-			void (await client.del(ruleIds)),
+		deleteRules: async (ruleIds: string[]): Promise<void> => {
+			const ruleKeys = ruleIds.map(
+				(ruleId) => ACCESS_RULE_REDIS_KEY_PREFIX + ruleId,
+			);
+
+			await client.del(ruleKeys);
+		},
 
 		deleteAllRules: async (): Promise<number> => {
 			const keys = await client.keys(`${ACCESS_RULE_REDIS_KEY_PREFIX}*`);

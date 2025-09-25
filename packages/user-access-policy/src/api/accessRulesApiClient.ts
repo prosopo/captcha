@@ -15,9 +15,9 @@
 import { ApiClient } from "@prosopo/api";
 import type { ApiResponse } from "@prosopo/types";
 import { accessRuleApiPaths } from "./accessRuleApiRoutes.js";
-import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroupsEndpoint.js";
+import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
 import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
-import type { InsertRulesGroup } from "./endpoints/insertRulesEndpoint.js";
+import type { InsertRulesGroup } from "./endpoints/insertRules.js";
 
 export class AccessRulesApiClient extends ApiClient {
 	public insertMany(

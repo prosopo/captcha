@@ -46,10 +46,10 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 		const allRuleIds = [];
 
 		for (const accessRuleFilter of args) {
-			const foundRuleIds =
+			const ruleIds =
 				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
 
-			allRuleIds.push(...foundRuleIds);
+			allRuleIds.push(...ruleIds);
 		}
 
 		// Set() automatically removes duplicates

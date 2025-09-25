@@ -21,7 +21,7 @@ export const aggregateRedisKeys = async (
 	query: string,
 	logger: Logger,
 ): Promise<string[]> => {
-	const keyField = "@__key";
+	const keyField = "__key";
 
 	const recordSchema = z.object({
 		// it's a reserved name for the record key
@@ -50,7 +50,7 @@ export const aggregateRedisKeys = async (
 		query,
 		{
 			...aggregateOptions,
-			LOAD: keyField,
+			LOAD: `@${keyField}`,
 		},
 		addRecordKeys,
 	);

@@ -15,12 +15,7 @@
 import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
 import type { FtSearchOptions, SearchReply } from "@redis/search";
-import type {
-	AggregateWithCursorReply,
-	FtAggregateWithCursorOptions,
-} from "@redis/search/dist/lib/commands/AGGREGATE_WITHCURSOR.js";
 import type { RedisClientType } from "redis";
-import type { ZodType } from "zod";
 import {
 	type AccessRule,
 	accessRuleSchema,
@@ -33,6 +28,7 @@ import type {
 import { aggregateRedisKeys } from "#policy/redis/redisAggregate.js";
 import {
 	ACCESS_RULES_REDIS_INDEX_NAME,
+	ACCESS_RULE_REDIS_KEY_PREFIX,
 	parseRedisRecords,
 } from "./redisRulesStorage.js";
 
@@ -122,13 +118,15 @@ export const createRedisRulesReader = (
 		): Promise<string[]> => {
 			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
 
-			const ruleIds: string[] = [];
+			let ruleIds: string[] = [];
 
 			try {
 				// aggregation is used instead ft.search to overcome the limitation on search results number
-				const aggregatedKeys = await aggregateRedisKeys(client, query, logger);
+				const ruleKeys = await aggregateRedisKeys(client, query, logger);
 
-				ruleIds.push(...aggregatedKeys);
+				ruleIds = ruleKeys.map((ruleKey) =>
+					ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+				);
 			} catch (e) {
 				logger.error(() => ({
 					err: e,

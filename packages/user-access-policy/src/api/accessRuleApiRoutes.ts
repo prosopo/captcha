@@ -41,7 +41,10 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 		return [
 			{
 				path: accessRuleApiPaths.FIND_IDS,
-				endpoint: new FindRuleIdsEndpoint(this.accessRulesStorage, this.logger),
+				endpoint: new FindRuleIdsEndpoint(
+					this.accessRulesStorage,
+					this.logger,
+				),
 			},
 			{
 				path: accessRuleApiPaths.INSERT_MANY,
