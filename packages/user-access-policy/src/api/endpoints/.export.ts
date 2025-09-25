@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type { DeleteRuleFilters } from "./deleteRulesEndpoint.js";
+export type { DeleteRuleFilters } from "./deleteRules.js";
 export type {
 	DeleteSiteGroup,
 	DeleteSiteGroups,
-} from "./deleteRuleGroupsEndpoint.js";
-export type { InsertRulesGroup } from "./insertRulesEndpoint.js";
+} from "./deleteRuleGroups.js";
+export type { InsertRulesGroup } from "./insertRules.js";

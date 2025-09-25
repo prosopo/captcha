@@ -28,6 +28,7 @@ import type {
 } from "#policy/accessRulesStorage.js";
 import { ACCESS_RULES_REDIS_INDEX_NAME } from "./redisRulesStorage.js";
 
+// maximum is 10K
 const DEFAULT_SEARCH_LIMIT = 1000;
 
 // https://redis.io/docs/latest/commands/ft.search/

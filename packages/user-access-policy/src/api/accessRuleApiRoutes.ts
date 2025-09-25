@@ -15,12 +15,14 @@
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
-import { DeleteAllRulesEndpoint } from "./endpoints/deleteAllRulesEndpoint.js";
-import { DeleteRuleGroupsEndpoint } from "./endpoints/deleteRuleGroupsEndpoint.js";
-import { DeleteRulesEndpoint } from "./endpoints/deleteRulesEndpoint.js";
-import { InsertRulesEndpoint } from "./endpoints/insertRulesEndpoint.js";
+import { FindRuleIdsEndpoint } from "#policy/api/endpoints/findRuleIds.js";
+import { DeleteAllRulesEndpoint } from "./endpoints/deleteAllRules.js";
+import { DeleteRuleGroupsEndpoint } from "./endpoints/deleteRuleGroups.js";
+import { DeleteRulesEndpoint } from "./endpoints/deleteRules.js";
+import { InsertRulesEndpoint } from "./endpoints/insertRules.js";
 
 export enum accessRuleApiPaths {
+	FIND_IDS = "/v1/prosopo/user-access-policy/rules/find-ids",
 	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
 	DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
 	DELETE_GROUPS = "/v1/prosopo/user-access-policy/rules/delete-groups",
@@ -37,6 +39,10 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 
 	public getRoutes(): ApiRoute[] {
 		return [
+			{
+				path: accessRuleApiPaths.FIND_IDS,
+				endpoint: new FindRuleIdsEndpoint(this.accessRulesStorage, this.logger),
+			},
 			{
 				path: accessRuleApiPaths.INSERT_MANY,
 				endpoint: new InsertRulesEndpoint(this.accessRulesStorage, this.logger),
@@ -68,6 +74,16 @@ export const getExpressApiRuleRateLimits = () => {
 	const defaultLimit = 5;
 
 	return {
+		[accessRuleApiPaths.FIND_IDS]: {
+			windowMs:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_FIND_IDS_WINDOW",
+				) || defaultWindowsMs,
+			limit:
+				getIntEnvironmentVariable(
+					"PROSOPO_USER_ACCESS_POLICY_RULE_FIND_IDS_LIMIT",
+				) || defaultLimit,
+		},
 		[accessRuleApiPaths.INSERT_MANY]: {
 			windowMs:
 				getIntEnvironmentVariable(
