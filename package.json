@@ -10,7 +10,8 @@
 	"scripts": {
 		"hostid": "dig +short ${HOSTNAME}.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
 		"build:all": "nx run-many --target=build --nxBail",
-		"build:cjs:all": "nx run-many --target=build:cjs --nxBail",
+		"build:all:tsc": "nx run-many --target=build:tsc --nxBail",
+		"build:all:cjs": "nx run-many --target=build:cjs --nxBail",
 		"bundle:all": "nx run-many --target=bundle --nxBail",
 		"clean:nx": "nx reset",
 		"clean:all": "nx run-many --target=clean --nxBail",
@@ -58,7 +59,9 @@
 		"prepare": "husky",
 		"changesets:empty": "npx @changesets/cli add --empty",
 		"changesets:add": "npx @changesets/cli add",
-		"changesets": "npx @changesets/cli status --verbose"
+		"changesets": "npx @changesets/cli status --verbose",
+		"publish:dry-run": "npm --workspaces publish --dry-run",
+		"publish": "npm --workspaces publish --access=public"
 	},
 	"private": true,
 	"engines": {
