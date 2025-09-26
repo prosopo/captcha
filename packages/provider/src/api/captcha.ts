@@ -681,7 +681,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					headersProsopoUser !== userId
 				) {
 					req.logger.info(() => ({
-						message: "User agent or user id does not match",
+						msg: "User agent or user id does not match",
 						data: {
 							headersUserAgent,
 							hashedHeadersUserAgent,
@@ -754,7 +754,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
 					req.logger.info(() => ({
-						message: "Bot score is greater than threshold",
+						msg: "Bot score is greater than threshold",
 						data: {
 							botScore,
 							botThreshold,
