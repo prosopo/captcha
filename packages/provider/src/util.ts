@@ -194,13 +194,15 @@ export const evaluateIpValidationRules = (
 	// Apply country-specific overrides if they exist
 	const ip1Country = comparison.comparison.ip1Details?.country;
 	const ip2Country = comparison.comparison.ip2Details?.country;
+	const ip1CountryCode = comparison.comparison.ip1Details?.countryCode;
+	const ip2CountryCode = comparison.comparison.ip2Details?.countryCode;
 	let effectiveRules = rules;
 	let countryOverride: undefined | IIPValidation = undefined;
-	if (ip1Country && rules.countryOverrides?.[ip1Country]) {
-		countryOverride = rules.countryOverrides[ip1Country];
+	if (ip1CountryCode && rules.countryOverrides?.[ip1CountryCode]) {
+		countryOverride = rules.countryOverrides[ip1CountryCode];
 	}
-	if (ip2Country && rules.countryOverrides?.[ip2Country]) {
-		countryOverride = rules.countryOverrides[ip2Country];
+	if (ip2CountryCode && rules.countryOverrides?.[ip2CountryCode]) {
+		countryOverride = rules.countryOverrides[ip2CountryCode];
 	}
 	if (countryOverride) {
 		effectiveRules = {

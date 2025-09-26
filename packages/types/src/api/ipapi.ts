@@ -183,6 +183,7 @@ type IPDetails = {
 	connectionType: IPConnectionType;
 	isVpnOrProxy: boolean;
 	country?: string;
+	countryCode?: string;
 	city?: string;
 	coordinates?: { latitude: number; longitude: number };
 	abuserScore?: number;
