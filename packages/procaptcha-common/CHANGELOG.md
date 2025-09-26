@@ -1,5 +1,17 @@
 # @prosopo/procaptcha-common
 
+## 2.9.2
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/widget-skeleton@2.7.3
+  - @prosopo/load-balancer@2.7.10
+  - @prosopo/account@2.7.27
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
 ## 2.9.1
 ### Patch Changes
 

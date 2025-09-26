@@ -1,5 +1,34 @@
 # @prosopo/provider
 
+## 3.12.0
+### Minor Changes
+
+- e20ad6b: IP country overrides
+
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- cf6c8a4: Hot fix the request logger
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/api-express-router@3.0.22
+  - @prosopo/user-access-policy@3.5.16
+  - @prosopo/types-database@3.3.2
+  - @prosopo/load-balancer@2.7.10
+  - @prosopo/util-crypto@13.5.19
+  - @prosopo/api-route@2.6.25
+  - @prosopo/types-env@2.7.35
+  - @prosopo/database@3.4.2
+  - @prosopo/datasets@3.0.31
+  - @prosopo/keyring@2.8.24
+  - @prosopo/common@3.1.17
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/util@3.1.2
+  - @prosopo/api@3.1.21
+  - @prosopo/env@3.2.10
+  - @prosopo/config@3.1.17
+
 ## 3.11.1
 ### Patch Changes
 
