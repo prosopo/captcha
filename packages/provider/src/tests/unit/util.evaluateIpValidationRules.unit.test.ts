@@ -63,12 +63,14 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "Y",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -91,12 +93,14 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
 					country: "B",
+					countryCode: "B",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -127,12 +131,14 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -157,6 +163,7 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					city: "CityA",
 					provider: "X",
 					connectionType: "residential",
@@ -164,6 +171,7 @@ describe("evaluateIpValidationRules", () => {
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					city: "CityB",
 					provider: "X",
 					connectionType: "residential",
@@ -186,6 +194,7 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					city: "CityA",
 					provider: "X",
 					connectionType: "residential",
@@ -193,6 +202,7 @@ describe("evaluateIpValidationRules", () => {
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					city: "CityB",
 					provider: "X",
 					connectionType: "residential",
@@ -223,6 +233,7 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					city: "CityA",
 					provider: "X",
 					connectionType: "residential",
@@ -230,6 +241,7 @@ describe("evaluateIpValidationRules", () => {
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					city: "CityB",
 					provider: "X",
 					connectionType: "residential",
@@ -272,12 +284,14 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "Y",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -304,12 +318,14 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
 					country: "B",
+					countryCode: "B",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -346,12 +362,14 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
 				},
 				ip2Details: {
 					country: "B",
+					countryCode: "B",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -391,6 +409,7 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -398,6 +417,7 @@ describe("evaluateIpValidationRules", () => {
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -423,6 +443,7 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -430,6 +451,7 @@ describe("evaluateIpValidationRules", () => {
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -452,6 +474,7 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -459,6 +482,7 @@ describe("evaluateIpValidationRules", () => {
 				},
 				ip2Details: {
 					country: "B",
+					countryCode: "B",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -497,6 +521,7 @@ describe("evaluateIpValidationRules", () => {
 			comparison: {
 				ip1Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
@@ -504,6 +529,7 @@ describe("evaluateIpValidationRules", () => {
 				},
 				ip2Details: {
 					country: "A",
+					countryCode: "A",
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
