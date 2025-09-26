@@ -1,5 +1,12 @@
 # @prosopo/widget-skeleton
 
+## 2.7.3
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/config@3.1.17
+
 ## 2.7.2
 ### Patch Changes
 

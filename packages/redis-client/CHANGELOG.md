@@ -1,5 +1,12 @@
 # @prosopo/redis-client
 
+## 1.0.2
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/common@3.1.17
+
 ## 1.0.1
 ### Patch Changes
 

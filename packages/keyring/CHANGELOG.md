@@ -1,5 +1,17 @@
 # @prosopo/keyring
 
+## 2.8.24
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/util-crypto@13.5.19
+  - @prosopo/common@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/util@3.1.2
+  - @prosopo/config@3.1.17
+
 ## 2.8.23
 ### Patch Changes
 

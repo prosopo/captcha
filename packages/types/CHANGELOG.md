@@ -1,5 +1,19 @@
 # @prosopo/types
 
+## 3.5.0
+### Minor Changes
+
+- e20ad6b: IP country overrides
+
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/util-crypto@13.5.19
+  - @prosopo/locale@3.1.17
+  - @prosopo/util@3.1.2
+  - @prosopo/config@3.1.17
+
 ## 3.4.1
 ### Patch Changes
 
