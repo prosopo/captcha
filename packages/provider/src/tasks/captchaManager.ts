@@ -114,6 +114,7 @@ export class CaptchaManager {
 		clientSettings: ClientRecord | IUserDataSlim,
 		requestedCaptchaType: CaptchaType,
 		env: ProviderEnvironment,
+		contextAwareEntropy?: number,
 		sessionId?: string,
 		userAccessPolicy?: AccessPolicy,
 		currentIP?: string,
@@ -207,6 +208,16 @@ export class CaptchaManager {
 						type: requestedCaptchaType,
 					};
 				}
+
+				// Check the context
+				if (clientSettings.settings.contextAware) {
+					const clientEntropy = await this.db.getClientEntropy(
+						clientSettings.account,
+					);
+					if (contextAwareEntropy) {
+					}
+				}
+
 				return {
 					valid: true,
 					frictionlessTokenId,

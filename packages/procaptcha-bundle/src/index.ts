@@ -40,6 +40,8 @@ const implicitRender = async () => {
 	if (elements.length) {
 		const siteKey = at(elements, 0).getAttribute("data-sitekey");
 		const web3 = at(elements, 0).getAttribute("data-web3");
+		const contextAware =
+			at(elements, 0).getAttribute("data-context-aware") === "true";
 		if (!siteKey) {
 			console.error("No siteKey found");
 			return;
@@ -52,6 +54,7 @@ const implicitRender = async () => {
 			{
 				captchaType: captchaType,
 				siteKey: siteKey,
+				contextAware: contextAware,
 			},
 			!(web3 === "true"),
 		);
@@ -68,7 +71,7 @@ const implicitRender = async () => {
 		for (const button of invisibleButtons) {
 			const siteKey = button.getAttribute("data-sitekey") || "";
 			const callback = button.getAttribute("data-callback") || "";
-
+			const contextAware = button.getAttribute("data-context-aware") === "true";
 			const captchaType = getCaptchaType([button]);
 
 			const root = await widgetFactory.createWidgets(
@@ -77,6 +80,7 @@ const implicitRender = async () => {
 					captchaType: captchaType,
 					siteKey: siteKey,
 					callback: callback,
+					contextAware,
 				},
 				true,
 				true,

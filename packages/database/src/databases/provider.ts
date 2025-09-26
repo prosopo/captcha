@@ -42,20 +42,19 @@ import {
 	type StoredStatus,
 	StoredStatusNames,
 } from "@prosopo/types";
-import type {
-	CompositeIpAddress,
-	FrictionlessTokenRecord,
-	SessionRecord,
-} from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
+	type ClientEntropyRecord,
+	ClientEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
+	type CompositeIpAddress,
 	DatasetRecordSchema,
 	DetectorRecordSchema,
 	type DetectorSchema,
 	type FrictionlessToken,
 	type FrictionlessTokenId,
+	type FrictionlessTokenRecord,
 	FrictionlessTokenRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
@@ -69,6 +68,7 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
+	type SessionRecord,
 	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
@@ -87,6 +87,7 @@ import {
 	redisAccessRulesIndex,
 } from "@prosopo/user-access-policy";
 import type { ObjectId } from "mongoose";
+import { number, string } from "zod";
 import { MongoDatabase } from "../base/mongo.js";
 
 enum TableNames {
@@ -102,6 +103,7 @@ enum TableNames {
 	frictionlessToken = "frictionlessToken",
 	session = "session",
 	detector = "detector",
+	clientEntropy = "clientEntropy",
 }
 
 const PROVIDER_TABLES = [
@@ -164,6 +166,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.detector,
 		modelName: "Detector",
 		schema: DetectorRecordSchema,
+	},
+	{
+		collectionName: TableNames.clientEntropy,
+		modelName: "ClientEntropy",
+		schema: ClientEntropyRecordSchema,
 	},
 ];
 
@@ -1764,6 +1771,14 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Get all client records
+	 */
+	async getAllClientRecords(): Promise<ClientRecord[]> {
+		const docs = await this.tables?.client.find().lean<ClientRecord[]>();
+		return docs || [];
+	}
+
+	/**
 	 * @description Get a client record
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
@@ -1817,5 +1832,72 @@ export class ProviderDatabase
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
 		return (keyRecords || []).map((record) => record.detectorKey);
+	}
+
+	/**
+	 * @description set client entropy
+	 */
+	async setClientEntropy(
+		account: string,
+		stats: { mean: number; stdDev: number; avgZScore: number; zScores: number },
+	): Promise<void> {
+		const filter: Pick<ClientEntropyRecord, "account"> = { account };
+		await this.tables?.clientEntropy.updateOne(filter, { $set: { stats } });
+	}
+
+	/**
+	 * @description get client entropy
+	 */
+	async getClientEntropy(account: string): Promise<number | undefined> {
+		const filter: Pick<ClientEntropyRecord, "account"> = { account };
+		const doc = await this.tables?.client
+			.findOne(filter)
+			.lean<ClientEntropyRecord>();
+		return doc ? doc.entropy : undefined;
+	}
+
+	/** Sample captcha records from the database */
+	async sampleEntropy(sampleSize: number, siteKey: string): Promise<number[]> {
+		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
+		const max = 10000;
+		if (size > max) {
+			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
+				context: {
+					failedFuncName: this.sampleEntropy.name,
+					sampleSize,
+				},
+			});
+		}
+		const cursor = this.tables?.powcaptcha.aggregate([
+			{ $match: { dappAccount: siteKey } },
+			{ $limit: max },
+			{ $sample: { size } },
+			{
+				$project: {
+					_id: 0,
+					frictionlessTokenId: 1,
+				},
+			},
+		]);
+		const docs = await cursor;
+
+		if (docs?.length === 0) {
+			return [0];
+		}
+
+		// Get the associated entropies from frictionlesstokenrecords
+		return (
+			await Promise.all(
+				docs.map(async (doc) => {
+					if (doc.frictionlessTokenId) {
+						const tokenRecord = await this.getFrictionlessTokenRecordByTokenId(
+							doc.frictionlessTokenId,
+						);
+						return tokenRecord?.providerSelectEntropy;
+					}
+					return undefined;
+				}),
+			)
+		).filter((entropy): entropy is number => entropy !== undefined);
 	}
 }

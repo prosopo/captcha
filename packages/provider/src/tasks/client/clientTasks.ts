@@ -54,6 +54,7 @@ export class ClientTaskManager {
 	logger: Logger;
 	providerDB: IProviderDatabase;
 	captchaDB: CaptchaDatabase | undefined;
+
 	constructor(
 		config: ProsopoConfigOutput,
 		logger: Logger,
@@ -307,6 +308,47 @@ export class ClientTaskManager {
 				ScheduledTaskStatus.Failed,
 				{ error: String(e) },
 			);
+		}
+	}
+
+	/**
+	 * @description Calculate client entropy scores and update client records with z-scores
+	 * @returns Promise<void>
+	 */
+	async calculateClientEntropy(): Promise<void> {
+		const clients = await this.providerDB.getAllClientRecords();
+
+		for (const client of clients) {
+			const sampleEntropies = await this.providerDB.sampleEntropy(
+				100,
+				client.account,
+			);
+
+			// Calculate mean
+			const mean =
+				sampleEntropies.reduce((sum, val) => sum + val, 0) /
+				sampleEntropies.length;
+
+			// Calculate standard deviation
+			const variance =
+				sampleEntropies.reduce((sum, val) => sum + (val - mean) ** 2, 0) /
+				sampleEntropies.length;
+			const stdDev = Math.sqrt(variance);
+
+			// Calculate z-score for each sample entropy
+			const zScores = sampleEntropies.map((val) =>
+				stdDev === 0 ? 0 : (val - mean) / stdDev,
+			);
+
+			// Optionally, you can store the average z-score or max z-score for the client
+			const avgZScore = zScores.reduce((sum, z) => sum + z, 0) / zScores.length;
+
+			await this.providerDB.setClientEntropy(client.account, {
+				mean,
+				stdDev,
+				avgZScore,
+				zScores,
+			});
 		}
 	}
 

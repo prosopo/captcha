@@ -264,6 +264,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
+		contextAware: boolean().optional().default(false),
 	}),
 );
 
@@ -295,6 +296,9 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 				schedule: string().optional(),
 			}).optional(),
 			clientListScheduler: object({
+				schedule: string().optional(),
+			}).optional(),
+			clientEntropyScheduler: object({
 				schedule: string().optional(),
 			}).optional(),
 		}).optional(),

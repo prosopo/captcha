@@ -248,6 +248,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
 		let providerSelectEntropy: number | undefined;
+		let contextAwareEntropy: number | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -260,6 +261,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
 				const p = decrypted.providerSelectEntropy;
+				const c = decrypted.contextAwareEntropy;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -272,6 +274,7 @@ export class FrictionlessManager extends CaptchaManager {
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;
+				contextAwareEntropy = c;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -282,6 +285,7 @@ export class FrictionlessManager extends CaptchaManager {
 					baseBotScore = 1;
 					timestamp = 0;
 					providerSelectEntropy = DEFAULT_ENTROPY + 1;
+					contextAwareEntropy = 0;
 				}
 			}
 		}
@@ -307,6 +311,7 @@ export class FrictionlessManager extends CaptchaManager {
 				baseBotScore: baseBotScore,
 				timestamp: timestamp,
 				entropy: providerSelectEntropy,
+				...(contextAwareEntropy && { contextAwareEntropy }),
 			},
 		}));
 
@@ -315,6 +320,7 @@ export class FrictionlessManager extends CaptchaManager {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),
 			providerSelectEntropy: Number(providerSelectEntropy),
+			contextAwareEntropy: Number(contextAwareEntropy),
 		};
 	}
 }

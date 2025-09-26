@@ -15,4 +15,5 @@ export type DetectorResult = {
 	score: number;
 	timestamp: number;
 	providerSelectEntropy: number;
+	contextAwareEntropy?: number;
 };

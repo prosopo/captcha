@@ -28,14 +28,21 @@ export const getBotScore = async (
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
 	const providerSelectEntropy: number = result.providerSelectEntropy;
+	const contextAwareEntropy: number | undefined = result.contextAwareEntropy;
 
 	if (baseBotScore === undefined) {
 		return {
 			baseBotScore: 1,
 			timestamp: 0,
 			providerSelectEntropy: DEFAULT_ENTROPY,
+			contextAwareEntropy: undefined,
 		};
 	}
 
-	return { baseBotScore, timestamp, providerSelectEntropy };
+	return {
+		baseBotScore,
+		timestamp,
+		providerSelectEntropy,
+		contextAwareEntropy,
+	};
 };

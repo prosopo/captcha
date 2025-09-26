@@ -26,6 +26,7 @@ function createConfig(
 	web2 = true,
 	invisible = false,
 	userAccountAddress?: string,
+	contextAware?: boolean,
 ): ProcaptchaClientConfigOutput {
 	if (!siteKey) {
 		siteKey = process.env.PROSOPO_SITE_KEY || "";
@@ -46,6 +47,7 @@ function createConfig(
 		mode: invisible ? "invisible" : "visible",
 		theme,
 		language,
+		contextAware,
 	});
 }
 

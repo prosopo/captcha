@@ -133,6 +133,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						clientRecord,
 						CaptchaType.image,
 						env,
+						undefined,
 						sessionId,
 						userAccessPolicy,
 						req.ip,
@@ -372,6 +373,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					clientSettings,
 					CaptchaType.pow,
 					env,
+					undefined,
 					sessionId,
 					userAccessPolicy,
 					req.ip,
@@ -594,8 +596,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp, providerSelectEntropy } =
-					await tasks.frictionlessManager.decryptPayload(token);
+				const {
+					baseBotScore,
+					timestamp,
+					providerSelectEntropy,
+					contextAwareEntropy,
+				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				let botScore = baseBotScore + lScore;
 
@@ -616,6 +622,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						clientRecord,
 						CaptchaType.frictionless,
 						env,
+						contextAwareEntropy,
 					);
 
 				if (!valid) {

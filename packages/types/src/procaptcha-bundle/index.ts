@@ -36,4 +36,5 @@ export interface ProcaptchaRenderOptions {
 	size?: "invisible";
 	web3?: boolean;
 	userAccountAddress?: string;
+	contextAware?: boolean;
 }
