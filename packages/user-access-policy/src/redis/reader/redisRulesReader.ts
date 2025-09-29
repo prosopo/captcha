@@ -16,21 +16,19 @@ import * as util from "node:util";
 import type { Logger } from "@prosopo/common";
 import type { FtSearchOptions, SearchReply } from "@redis/search";
 import type { RedisClientType } from "redis";
-import {
-	type AccessRule,
-	accessRuleSchema,
-	getAccessRuleRedisQuery,
-} from "#policy/accessRule.js";
-import type {
-	AccessRulesFilter,
-	AccessRulesReader,
-} from "#policy/accessRulesStorage.js";
-import { aggregateRedisKeys } from "#policy/redis/redisAggregate.js";
+import { getRulesRedisQuery } from "#policy/redis/reader/redisRulesQuery.js";
 import {
 	ACCESS_RULES_REDIS_INDEX_NAME,
 	ACCESS_RULE_REDIS_KEY_PREFIX,
-	parseRedisRecords,
-} from "./redisRulesStorage.js";
+} from "#policy/redis/redisRuleIndex.js";
+import { parseRedisRecords } from "#policy/redis/redisRulesStorage.js";
+import type { AccessRule } from "#policy/rule.js";
+import { accessRuleInput } from "#policy/ruleInput.js";
+import type {
+	AccessRulesFilter,
+	AccessRulesReader,
+} from "#policy/rulesStorage.js";
+import { aggregateRedisKeys } from "./redisAggregate.js";
 
 // maximum is 10K
 const DEFAULT_SEARCH_LIMIT = 1000;
@@ -56,7 +54,7 @@ export const createRedisRulesReader = (
 			matchingFieldsOnly = false,
 			skipEmptyUserScopes = true,
 		): Promise<AccessRule[]> => {
-			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
+			const query = getRulesRedisQuery(filter, matchingFieldsOnly);
 
 			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
 				// We don't want to accidentally return all rules when the filter is empty
@@ -109,14 +107,14 @@ export const createRedisRulesReader = (
 
 			const records = searchReply.documents.map(({ value }) => value);
 
-			return parseRedisRecords(records, accessRuleSchema, logger);
+			return parseRedisRecords(records, accessRuleInput, logger);
 		},
 
 		findRuleIds: async (
 			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
 		): Promise<string[]> => {
-			const query = getAccessRuleRedisQuery(filter, matchingFieldsOnly);
+			const query = getRulesRedisQuery(filter, matchingFieldsOnly);
 
 			let ruleIds: string[] = [];
 

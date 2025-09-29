@@ -1,11 +1,9 @@
 import type { Logger } from "@prosopo/common";
 import type { FtAggregateWithCursorOptions } from "@redis/search/dist/lib/commands/AGGREGATE_WITHCURSOR.js";
 import type { RedisClientType } from "redis";
-import { type ZodType, z } from "zod";
-import {
-	ACCESS_RULES_REDIS_INDEX_NAME,
-	parseRedisRecords,
-} from "#policy/redis/redisRulesStorage.js";
+import { z } from "zod";
+import { ACCESS_RULES_REDIS_INDEX_NAME } from "#policy/redis/redisRuleIndex.js";
+import { parseRedisRecords } from "#policy/redis/redisRulesStorage.js";
 
 const BATCH_SIZE = 1000;
 

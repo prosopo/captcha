@@ -45,7 +45,7 @@ import {
 import {
 	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
-} from "@prosopo/user-access-policy";
+} from "@prosopo/user-access-policy/api";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";

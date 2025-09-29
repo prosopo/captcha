@@ -18,12 +18,12 @@ import {
 	EnvironmentTypesSchema,
 	type KeyringPair,
 } from "@prosopo/types";
+import type { UserScopeRecord } from "@prosopo/user-access-policy";
+import { AccessPolicyType } from "@prosopo/user-access-policy";
 import {
 	AccessRulesApiClient,
 	type InsertRulesGroup,
-	type UserScopeRecord,
-} from "@prosopo/user-access-policy";
-import { AccessPolicyType } from "@prosopo/user-access-policy";
+} from "@prosopo/user-access-policy/api";
 import { u8aToHex } from "@prosopo/util";
 
 export const removeAllUserAccessPolicies = async (adminPair: KeyringPair) => {

@@ -16,11 +16,18 @@ export {
 	type AccessRule,
 	type AccessPolicy,
 	type PolicyScope,
+	type UserScope,
 	AccessPolicyType,
 	makeAccessRuleHash,
 } from "./rule.js";
 
-export { accessPolicyInput, policyScopeInput } from "./ruleInput.js";
+export {
+	accessRuleInput,
+	accessPolicyInput,
+	policyScopeInput,
+	userScopeInput,
+	transformAccessRuleRecordIntoRule,
+} from "./ruleInput.js";
 
 export {
 	type AccessRulesFilter,
@@ -34,5 +41,3 @@ export {
 	type UserScopeRecordField,
 	userScopeRecordFields,
 } from "./ruleRecord.js";
-
-export { transformAccessRuleRecordIntoRule } from "./ruleInput.js";
