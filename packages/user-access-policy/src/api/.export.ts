@@ -17,7 +17,7 @@ export * from "./endpoints/.export.js";
 export {
 	accessRuleApiPaths,
 	getExpressApiRuleRateLimits,
-} from "./accessRuleApiRoutes.js";
+} from "./ruleApiRoutes.js";
 
-export { AccessRulesApiClient } from "./accessRulesApiClient.js";
-export { AccessRuleApiRoutes } from "./accessRuleApiRoutes.js";
+export { AccessRulesApiClient } from "./rulesApiClient.js";
+export { AccessRuleApiRoutes } from "./ruleApiRoutes.js";

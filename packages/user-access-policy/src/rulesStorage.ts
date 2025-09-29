@@ -12,16 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import z, { type ZodType } from "zod";
-import type { AccessRule } from "#policy/accessRule.js";
-import { type PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
-import {
-	type UserScope,
-	type UserScopeInput,
-	userScopeSchema,
-} from "#policy/userScope/userScope.js";
+import type { AccessRule, PolicyScope, UserScope } from "#policy/rule.js";
 
-export enum ScopeMatch {
+export enum FilterScopeMatch {
 	Exact = "exact",
 	Greedy = "greedy",
 }
@@ -32,27 +25,15 @@ export type AccessRulesFilter = {
 	 * Exact: "clientId" => client rules, "undefined" => global rules. Used by the API
 	 * Greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
 	 */
-	policyScopeMatch?: ScopeMatch;
+	policyScopeMatch?: FilterScopeMatch;
 	userScope?: UserScope;
 	/**
 	 * Exact: "clientId" => client rules, "undefined" => global rules. Used by the API
 	 * Greedy: "clientId" => client + global rules, "undefined" => any rules. Used by the Express middleware
 	 */
-	userScopeMatch?: ScopeMatch;
+	userScopeMatch?: FilterScopeMatch;
 	groupId?: string;
 };
-
-export type AccessRulesFilterInput = AccessRulesFilter & {
-	userScope?: UserScopeInput;
-};
-
-export const accessRulesFilterSchema = z.object({
-	policyScope: policyScopeSchema.optional(),
-	policyScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
-	userScope: userScopeSchema.optional(),
-	userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
-	groupId: z.string().optional(),
-}) satisfies ZodType<AccessRulesFilter>;
 
 export type AccessRulesReader = {
 	findRules(

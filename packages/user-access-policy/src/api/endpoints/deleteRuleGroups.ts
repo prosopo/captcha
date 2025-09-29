@@ -21,8 +21,8 @@ import type { Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesStorage,
-	ScopeMatch,
-} from "#policy/accessRulesStorage.js";
+	FilterScopeMatch,
+} from "#policy/rulesStorage.js";
 
 export type DeleteSiteGroup = {
 	clientIds: string[];
@@ -60,7 +60,7 @@ export class DeleteRuleGroupsEndpoint
 						policyScope: {
 							clientId: clientId,
 						},
-						policyScopeMatch: ScopeMatch.Exact,
+						policyScopeMatch: FilterScopeMatch.Exact,
 						groupId: ruleToDelete.groupId,
 					});
 				},

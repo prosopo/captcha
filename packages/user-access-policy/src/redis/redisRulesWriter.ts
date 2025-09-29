@@ -19,7 +19,7 @@ import type { AccessRulesWriter } from "#policy/accessRulesStorage.js";
 import {
 	ACCESS_RULE_REDIS_KEY_PREFIX,
 	getAccessRuleRedisKey,
-} from "./redisRulesStorage.js";
+} from "./redisRuleIndex.js";
 
 export const createRedisRulesWriter = (
 	client: RedisClientType,

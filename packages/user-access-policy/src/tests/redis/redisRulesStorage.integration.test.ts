@@ -28,22 +28,21 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { AccessPolicyType } from "#policy/accessPolicy.js";
-import type { AccessRule } from "#policy/accessRule.js";
-import {
-	type AccessRulesReader,
-	type AccessRulesWriter,
-	ScopeMatch,
-} from "#policy/accessRulesStorage.js";
-import { createRedisRulesReader } from "#policy/redis/redisRulesReader.js";
+import { createRedisRulesReader } from "#policy/redis/reader/redisRulesReader.js";
 import {
 	accessRulesRedisIndex,
 	getAccessRuleRedisKey,
-} from "#policy/redis/redisRulesStorage.js";
+} from "#policy/redis/redisRuleIndex.js";
 import {
 	createRedisRulesWriter,
 	getRedisRuleValue,
 } from "#policy/redis/redisRulesWriter.js";
+import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
+import {
+	type AccessRulesReader,
+	type AccessRulesWriter,
+	FilterScopeMatch,
+} from "#policy/rulesStorage.js";
 
 describe("redisAccessRulesStorage", () => {
 	let redisConnection: RedisConnection;
@@ -270,10 +269,10 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: johnId,
 				},
-				policyScopeMatch: ScopeMatch.Greedy,
+				policyScopeMatch: FilterScopeMatch.Greedy,
 			});
 			const foundAccessRules = await accessRulesReader.findRules({
-				policyScopeMatch: ScopeMatch.Greedy,
+				policyScopeMatch: FilterScopeMatch.Greedy,
 			});
 
 			// then
@@ -316,11 +315,11 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: johnId,
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 			});
 			const foundGlobalAccessRules = await accessRulesReader.findRules(
 				{
-					policyScopeMatch: ScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Exact,
 				},
 				false,
 				false,
@@ -371,7 +370,7 @@ describe("redisAccessRulesStorage", () => {
 					numericIp: BigInt(100),
 					ja4Hash: "windows",
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			});
 
 			// then
@@ -431,7 +430,7 @@ describe("redisAccessRulesStorage", () => {
 					numericIp: BigInt(100),
 					ja4Hash: "windows",
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			});
 
 			// then
@@ -484,7 +483,7 @@ describe("redisAccessRulesStorage", () => {
 				userScope: {
 					numericIp: BigInt(0),
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			});
 			const ip_99_accessRules = await accessRulesReader.findRules({
 				policyScope: {
@@ -493,7 +492,7 @@ describe("redisAccessRulesStorage", () => {
 				userScope: {
 					numericIp: BigInt(99),
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			});
 			const ip_100_accessRules = await accessRulesReader.findRules({
 				policyScope: {
@@ -502,7 +501,7 @@ describe("redisAccessRulesStorage", () => {
 				userScope: {
 					numericIp: BigInt(100),
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			});
 			const ip_101_accessRules = await accessRulesReader.findRules({
 				policyScope: {
@@ -511,7 +510,7 @@ describe("redisAccessRulesStorage", () => {
 				userScope: {
 					numericIp: BigInt(101),
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			});
 			const ip_201_accessRules = await accessRulesReader.findRules({
 				policyScope: {
@@ -520,7 +519,7 @@ describe("redisAccessRulesStorage", () => {
 				userScope: {
 					numericIp: BigInt(201),
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			});
 
 			// then
@@ -574,21 +573,21 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: johnId,
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					numericIp: BigInt(0),
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			});
 			const ip_100_accessRules = await accessRulesReader.findRules({
 				policyScope: {
 					clientId: johnId,
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					numericIp: BigInt(100),
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			});
 
 			// then
@@ -639,18 +638,18 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: johnId,
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					numericIp: BigInt(0),
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			});
 			const ip_100_accessRules = await accessRulesReader.findRules({
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					numericIp: johnIp,
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			});
 
 			// then
@@ -682,12 +681,12 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: "clientId",
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					ja4Hash: "ja4Hash",
 					userAgentHash: "userAgentHash2",
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			};
 
 			const foundAccessRules = await accessRulesReader.findRules(query);
@@ -710,12 +709,12 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: "clientId",
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					ja4Hash: "ja4Hash",
 					userAgentHash: "userAgentHash",
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			};
 
 			const foundAccessRules = await accessRulesReader.findRules(query);
@@ -738,12 +737,12 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: "clientId",
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					ja4Hash: "ja4Hash",
 					userAgentHash: "userAgentHash",
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			};
 
 			const foundAccessRules = await accessRulesReader.findRules(query);
@@ -768,12 +767,12 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: "clientId",
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					ja4Hash: "ja4Hash",
 					userAgentHash: "userAgentHash",
 				},
-				userScopeMatch: ScopeMatch.Greedy,
+				userScopeMatch: FilterScopeMatch.Greedy,
 			};
 
 			const foundAccessRules = await accessRulesReader.findRules(query);
@@ -804,11 +803,11 @@ describe("redisAccessRulesStorage", () => {
 				policyScope: {
 					clientId: "clientId",
 				},
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 				userScope: {
 					numericIp: BigInt(10),
 				},
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			};
 
 			const foundAccessRules = await accessRulesReader.findRules(query);

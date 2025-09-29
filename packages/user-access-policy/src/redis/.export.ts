@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export {
-	createRedisAccessRulesStorage,
-	accessRulesRedisIndex,
-} from "./redisRulesStorage.js";
+export { createRedisAccessRulesStorage } from "./redisRulesStorage.js";
+
+export { accessRulesRedisIndex } from "./redisRuleIndex.js";

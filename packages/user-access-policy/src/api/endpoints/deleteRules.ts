@@ -20,11 +20,13 @@ import {
 import type { Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
-	type AccessRulesFilter,
 	type AccessRulesFilterInput,
-	type AccessRulesStorage,
-	accessRulesFilterSchema,
-} from "#policy/accessRulesStorage.js";
+	accessRulesFilterInput,
+} from "#policy/ruleInput.js";
+import type {
+	AccessRulesFilter,
+	AccessRulesStorage,
+} from "#policy/rulesStorage.js";
 
 export type DeleteRuleFilters = AccessRulesFilterInput[];
 
@@ -37,7 +39,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	) {}
 
 	public getRequestArgsSchema(): DeleteRulesSchema {
-		return z.array(accessRulesFilterSchema);
+		return z.array(accessRulesFilterInput);
 	}
 
 	async processRequest(

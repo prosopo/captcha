@@ -1,8 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
 	"version": "3.5.15",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -10,9 +8,24 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/.export.d.ts",
+			"import": "./dist/.export.js",
+			"require": "./dist/cjs/.export.cjs"
+		},
+		"./api": {
+			"types": "./dist/api/.export.d.ts",
+			"import": "./dist/api/.export.js",
+			"require": "./dist/cjs/api/.export.cjs"
+		},
+		"./redis": {
+			"types": "./dist/redis/.export.d.ts",
+			"import": "./dist/redis/.export.js",
+			"require": "./dist/cjs/redis/.export.cjs"
+		},
+		"./mongoose": {
+			"types": "./dist/mongoose/.export.d.ts",
+			"import": "./dist/mongoose/.export.js",
+			"require": "./dist/cjs/mongoose/.export.cjs"
 		}
 	},
 	"imports": {

@@ -19,15 +19,19 @@ import {
 } from "@prosopo/api-route";
 import { LogLevel, type Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
-import { type AccessPolicy, accessPolicySchema } from "#policy/accessPolicy.js";
-import type { AccessRule } from "#policy/accessRule.js";
 import type { AccessRulesWriter } from "#policy/accessRulesStorage.js";
-import { type PolicyScope, policyScopeSchema } from "#policy/policyScope.js";
+import type {
+	AccessPolicy,
+	AccessRule,
+	PolicyScope,
+	UserScope,
+} from "#policy/rule.js";
 import {
-	type UserScope,
 	type UserScopeInput,
-	userScopeSchema,
-} from "#policy/userScope/userScope.js";
+	accessPolicyInput,
+	policyScopeInput,
+	userScopeInput,
+} from "#policy/ruleInput.js";
 
 export type InsertRulesGroup = {
 	accessPolicy: AccessPolicy;
@@ -51,10 +55,10 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 
 	public getRequestArgsSchema(): InsertRulesSchema {
 		return z.object({
-			accessPolicy: accessPolicySchema,
-			policyScope: policyScopeSchema.optional(),
+			accessPolicy: accessPolicyInput,
+			policyScope: policyScopeInput.optional(),
 			groupId: z.string().optional(),
-			userScopes: z.array(userScopeSchema),
+			userScopes: z.array(userScopeInput),
 			expirationTimestamp: z
 				.number()
 				.optional()

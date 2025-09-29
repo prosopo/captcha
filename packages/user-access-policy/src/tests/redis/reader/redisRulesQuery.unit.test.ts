@@ -13,46 +13,13 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { AccessPolicyType } from "#policy/accessPolicy.js";
-import {
-	type AccessRuleRecord,
-	transformAccessRuleRecordIntoRule,
-} from "#policy/accessRule.js";
 import { getAccessRuleRedisQuery } from "#policy/accessRule.js";
 import {
 	type AccessRulesFilter,
 	ScopeMatch,
 } from "#policy/accessRulesStorage.js";
 
-describe("transformAccessRuleRecordIntoRule", () => {
-	it("should transform record fields", () => {
-		const accessRule = transformAccessRuleRecordIntoRule({
-			type: AccessPolicyType.Restrict,
-			ip: "127.0.0.1",
-			userAgent: "test",
-			unwantedProperty: "bloatware",
-		} as unknown as AccessRuleRecord);
-
-		expect(accessRule).toEqual({
-			type: AccessPolicyType.Restrict,
-			numericIp: BigInt(2130706433),
-			userAgentHash:
-				"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-		});
-	});
-
-	it("should throw an error for the wrong input", () => {
-		expect(() =>
-			// required "type" property is skipped
-			transformAccessRuleRecordIntoRule({
-				ip: "127.0.0.1",
-				userAgent: "test",
-			} as unknown as AccessRuleRecord),
-		).toThrow();
-	});
-});
-
-describe("getAccessRuleRedisQuery", () => {
+describe("getAccessRulesRedisQuery", () => {
 	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact", () => {
 		const filter = {
 			userScope: {

@@ -14,27 +14,21 @@
 
 export * from "./api/.export.js";
 export * from "./redis/.export.js";
-export * from "./userScope/.export.js";
 
 export {
+	type AccessRule,
 	type AccessPolicy,
+	type PolicyScope,
 	AccessPolicyType,
-	accessPolicySchema,
-} from "./accessPolicy.js";
-
-export { type PolicyScope, policyScopeSchema } from "./policyScope.js";
+	makeAccessRuleHash,
+} from "./rule.js";
 
 export {
 	type AccessRulesFilter,
 	type AccessRulesStorage,
-	ScopeMatch,
-} from "./accessRulesStorage.js";
+	FilterScopeMatch,
+} from "./rulesStorage.js";
 
-export {
-	type AccessRule,
-	type AccessRuleRecord,
-	transformAccessRuleRecordIntoRule,
-	accessRuleSchema,
-	accessRuleMongooseSchema,
-	makeAccessRuleHash,
-} from "./accessRule.js";
+export { type AccessRuleRecord } from "./ruleRecord.js";
+
+export { transformAccessRuleRecordIntoRule } from "./ruleInput.js";

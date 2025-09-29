@@ -13,61 +13,39 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import type { RedisConnection, RedisIndex } from "@prosopo/redis-client";
+import type { RedisConnection } from "@prosopo/redis-client";
 import type { ZodType } from "zod";
-import {
-	type AccessRule,
-	accessRuleRedisSchema,
-	makeAccessRuleHash,
-} from "#policy/accessRule.js";
 import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
 import {
 	createRedisRulesReader,
 	getDummyRedisRulesReader,
-} from "./redisRulesReader.js";
+} from "./reader/redisRulesReader.js";
 import {
 	createRedisRulesWriter,
 	getDummyRedisRulesWriter,
 } from "./redisRulesWriter.js";
 
-export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";
-
-// names take space, so we use an acronym instead of the long-tailed one
-export const ACCESS_RULE_REDIS_KEY_PREFIX = "uar:";
-
-export const accessRulesRedisIndex: RedisIndex = {
-	name: ACCESS_RULES_REDIS_INDEX_NAME,
-	schema: accessRuleRedisSchema,
-	options: {
-		ON: "HASH" as const,
-		PREFIX: [ACCESS_RULE_REDIS_KEY_PREFIX],
-	},
-};
-
-export const getAccessRuleRedisKey = (rule: AccessRule): string =>
-	ACCESS_RULE_REDIS_KEY_PREFIX + makeAccessRuleHash(rule);
-
 export const createRedisAccessRulesStorage = (
-	connection: RedisConnection,
-	logger: Logger,
+    connection: RedisConnection,
+    logger: Logger,
 ): AccessRulesStorage => {
-	const storage: AccessRulesStorage = {
-		...getDummyRedisRulesReader(logger),
-		...getDummyRedisRulesWriter(logger),
-	};
+    const storage: AccessRulesStorage = {
+        ...getDummyRedisRulesReader(logger),
+        ...getDummyRedisRulesWriter(logger),
+    };
 
-	connection.getClient().then((client) => {
-		Object.assign(storage, {
-			...createRedisRulesReader(client, logger),
-			...createRedisRulesWriter(client),
-		});
+    connection.getClient().then((client) => {
+        Object.assign(storage, {
+            ...createRedisRulesReader(client, logger),
+            ...createRedisRulesWriter(client),
+        });
 
-		logger.info(() => ({
-			msg: "RedisAccessRules storage got a ready Redis client",
-		}));
-	});
+        logger.info(() => ({
+            msg: "RedisAccessRules storage got a ready Redis client",
+        }));
+    });
 
-	return storage;
+    return storage;
 };
 
 export const parseRedisRecords = <T>(

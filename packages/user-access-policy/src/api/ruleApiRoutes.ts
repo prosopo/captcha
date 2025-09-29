@@ -14,8 +14,8 @@
 
 import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
-import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
 import { FindRuleIdsEndpoint } from "#policy/api/endpoints/findRuleIds.js";
+import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 import { DeleteAllRulesEndpoint } from "./endpoints/deleteAllRules.js";
 import { DeleteRuleGroupsEndpoint } from "./endpoints/deleteRuleGroups.js";
 import { DeleteRulesEndpoint } from "./endpoints/deleteRules.js";
@@ -41,10 +41,7 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 		return [
 			{
 				path: accessRuleApiPaths.FIND_IDS,
-				endpoint: new FindRuleIdsEndpoint(
-					this.accessRulesStorage,
-					this.logger,
-				),
+				endpoint: new FindRuleIdsEndpoint(this.accessRulesStorage, this.logger),
 			},
 			{
 				path: accessRuleApiPaths.INSERT_MANY,
