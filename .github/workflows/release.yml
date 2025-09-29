@@ -125,9 +125,8 @@ jobs:
           git tag "v${{ env.root_version }}"
 
       - name: build+bundle
-        if: ${{ env.affected != '[]' }}
         run: |
-          echo "Building and bundling affected packages"
+          echo "Building and bundling packages"
           set -x
           npm run build:all
           npm run build:all:cjs
@@ -152,7 +151,6 @@ jobs:
 
       - name: handle result
         run: |
-          echo "affected: ${{ env.affected }}"
 
           if [ "${{ job.status }}" == "failure" ]; then
             echo "Workflow failed, notifying Slack"
