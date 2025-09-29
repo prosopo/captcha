@@ -61,7 +61,8 @@
 		"changesets:add": "npx @changesets/cli add",
 		"changesets": "npx @changesets/cli status --verbose",
 		"publish:dry-run": "npm --workspaces publish --dry-run",
-		"publish": "npm --workspaces publish --access=public"
+		"publish": "npm --workspaces publish --access=public",
+		"bnb": "NODE_ENV=development npm run build:all && NODE_ENV=development npm run bundle:all"
 	},
 	"private": true,
 	"engines": {
