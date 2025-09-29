@@ -8,7 +8,7 @@
 		},
 		"emitDeclarationOnly": true
 	},
-	"include": ["./src"],
+	"include": ["./src", "src/**/.export.ts"],
 	"references": [
 		{
 			"path": "../../dev/config/tsconfig.cjs.json"

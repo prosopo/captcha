@@ -19,7 +19,6 @@ import {
 } from "@prosopo/api-route";
 import { LogLevel, type Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
-import type { AccessRulesWriter } from "#policy/accessRulesStorage.js";
 import type {
 	AccessPolicy,
 	AccessRule,
@@ -32,6 +31,7 @@ import {
 	policyScopeInput,
 	userScopeInput,
 } from "#policy/ruleInput.js";
+import type { AccessRulesWriter } from "#policy/rulesStorage.js";
 
 export type InsertRulesGroup = {
 	accessPolicy: AccessPolicy;

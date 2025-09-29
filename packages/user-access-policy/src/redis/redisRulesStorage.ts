@@ -15,7 +15,7 @@
 import type { Logger } from "@prosopo/common";
 import type { RedisConnection } from "@prosopo/redis-client";
 import type { ZodType } from "zod";
-import type { AccessRulesStorage } from "#policy/accessRulesStorage.js";
+import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 import {
 	createRedisRulesReader,
 	getDummyRedisRulesReader,
@@ -26,26 +26,26 @@ import {
 } from "./redisRulesWriter.js";
 
 export const createRedisAccessRulesStorage = (
-    connection: RedisConnection,
-    logger: Logger,
+	connection: RedisConnection,
+	logger: Logger,
 ): AccessRulesStorage => {
-    const storage: AccessRulesStorage = {
-        ...getDummyRedisRulesReader(logger),
-        ...getDummyRedisRulesWriter(logger),
-    };
+	const storage: AccessRulesStorage = {
+		...getDummyRedisRulesReader(logger),
+		...getDummyRedisRulesWriter(logger),
+	};
 
-    connection.getClient().then((client) => {
-        Object.assign(storage, {
-            ...createRedisRulesReader(client, logger),
-            ...createRedisRulesWriter(client),
-        });
+	connection.getClient().then((client) => {
+		Object.assign(storage, {
+			...createRedisRulesReader(client, logger),
+			...createRedisRulesWriter(client),
+		});
 
-        logger.info(() => ({
-            msg: "RedisAccessRules storage got a ready Redis client",
-        }));
-    });
+		logger.info(() => ({
+			msg: "RedisAccessRules storage got a ready Redis client",
+		}));
+	});
 
-    return storage;
+	return storage;
 };
 
 export const parseRedisRecords = <T>(

@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { getAccessRuleRedisQuery } from "#policy/accessRule.js";
+import { getRulesRedisQuery } from "#policy/redis/reader/redisRulesQuery.js";
 import {
 	type AccessRulesFilter,
-	ScopeMatch,
-} from "#policy/accessRulesStorage.js";
+	FilterScopeMatch,
+} from "#policy/rulesStorage.js";
 
-describe("getAccessRulesRedisQuery", () => {
+describe("getRulesRedisQuery", () => {
 	it("puts ismissing(x) for field x passed in as `undefined` when user scope match is exact", () => {
 		const filter = {
 			userScope: {
@@ -27,10 +27,10 @@ describe("getAccessRulesRedisQuery", () => {
 				ja4Hash: "ja4Hash",
 				userAgentHash: undefined,
 			},
-			userScopeMatch: ScopeMatch.Exact,
+			userScopeMatch: FilterScopeMatch.Exact,
 		} as AccessRulesFilter;
 
-		const query = getAccessRuleRedisQuery(filter, false);
+		const query = getRulesRedisQuery(filter, false);
 
 		expect(query).toBe(
 			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) )",
@@ -44,10 +44,10 @@ describe("getAccessRulesRedisQuery", () => {
 				ja4Hash: "ja4Hash",
 				userAgentHash: undefined,
 			},
-			userScopeMatch: ScopeMatch.Exact,
+			userScopeMatch: FilterScopeMatch.Exact,
 		} as AccessRulesFilter;
 
-		const query = getAccessRuleRedisQuery(filter, true);
+		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
 			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) )",
@@ -63,10 +63,10 @@ describe("getAccessRulesRedisQuery", () => {
 				headersHash: undefined,
 				userId: undefined,
 			},
-			userScopeMatch: ScopeMatch.Exact,
+			userScopeMatch: FilterScopeMatch.Exact,
 		} as AccessRulesFilter;
 
-		const query = getAccessRuleRedisQuery(filter, false);
+		const query = getRulesRedisQuery(filter, false);
 
 		expect(query).toBe(
 			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -82,10 +82,10 @@ describe("getAccessRulesRedisQuery", () => {
 				headersHash: undefined,
 				userId: undefined,
 			},
-			userScopeMatch: ScopeMatch.Greedy,
+			userScopeMatch: FilterScopeMatch.Greedy,
 		} as AccessRulesFilter;
 
-		const query = getAccessRuleRedisQuery(filter, false);
+		const query = getRulesRedisQuery(filter, false);
 
 		expect(query).toBe(
 			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | @ja4Hash:{ja4Hash} )",
@@ -101,10 +101,10 @@ describe("getAccessRulesRedisQuery", () => {
 				headersHash: undefined,
 				userId: undefined,
 			},
-			userScopeMatch: ScopeMatch.Exact,
+			userScopeMatch: FilterScopeMatch.Exact,
 		} as AccessRulesFilter;
 
-		const query = getAccessRuleRedisQuery(filter, false);
+		const query = getRulesRedisQuery(filter, false);
 
 		expect(query).toBe(
 			"( ismissing(@numericIp) ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -120,10 +120,10 @@ describe("getAccessRulesRedisQuery", () => {
 				headersHash: undefined,
 				userId: undefined,
 			},
-			userScopeMatch: ScopeMatch.Exact,
+			userScopeMatch: FilterScopeMatch.Exact,
 		} as AccessRulesFilter;
 
-		const query = getAccessRuleRedisQuery(filter, true);
+		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
 			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
@@ -140,10 +140,10 @@ describe("getAccessRulesRedisQuery", () => {
 				headersHash: undefined,
 				userId: undefined,
 			},
-			userScopeMatch: ScopeMatch.Exact,
+			userScopeMatch: FilterScopeMatch.Exact,
 		} as AccessRulesFilter;
 
-		const query = getAccessRuleRedisQuery(filter, true);
+		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
 			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",

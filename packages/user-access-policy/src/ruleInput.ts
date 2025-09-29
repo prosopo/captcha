@@ -18,10 +18,6 @@ import { getIPAddress } from "@prosopo/util";
 import { Address4 } from "ip-address";
 import { type ZodType, z } from "zod";
 import {
-	type AccessRulesFilter,
-	ScopeMatch,
-} from "#policy/accessRulesStorage.js";
-import {
 	type AccessPolicy,
 	AccessPolicyType,
 	type AccessRule,
@@ -34,6 +30,10 @@ import type {
 	UserAttributesRecord,
 	UserIpRecord,
 } from "#policy/ruleRecord.js";
+import {
+	type AccessRulesFilter,
+	FilterScopeMatch,
+} from "#policy/rulesStorage.js";
 
 export const accessPolicyInput = z.object({
 	type: z.nativeEnum(AccessPolicyType),
@@ -162,8 +162,12 @@ export type AccessRulesFilterInput = AccessRulesFilter & {
 
 export const accessRulesFilterInput = z.object({
 	policyScope: policyScopeInput.optional(),
-	policyScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
+	policyScopeMatch: z
+		.nativeEnum(FilterScopeMatch)
+		.default(FilterScopeMatch.Exact),
 	userScope: userScopeInput.optional(),
-	userScopeMatch: z.nativeEnum(ScopeMatch).default(ScopeMatch.Exact),
+	userScopeMatch: z
+		.nativeEnum(FilterScopeMatch)
+		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
 }) satisfies ZodType<AccessRulesFilter>;

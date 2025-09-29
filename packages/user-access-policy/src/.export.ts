@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./api/.export.js";
-export * from "./redis/.export.js";
-
 export {
 	type AccessRule,
 	type AccessPolicy,
@@ -23,12 +20,19 @@ export {
 	makeAccessRuleHash,
 } from "./rule.js";
 
+export { accessPolicyInput, policyScopeInput } from "./ruleInput.js";
+
 export {
 	type AccessRulesFilter,
 	type AccessRulesStorage,
 	FilterScopeMatch,
 } from "./rulesStorage.js";
 
-export { type AccessRuleRecord } from "./ruleRecord.js";
+export {
+	type AccessRuleRecord,
+	type UserScopeRecord,
+	type UserScopeRecordField,
+	userScopeRecordFields,
+} from "./ruleRecord.js";
 
 export { transformAccessRuleRecordIntoRule } from "./ruleInput.js";
