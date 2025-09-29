@@ -12,13 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteEsmConfig } from "@prosopo/config";
-
-export default function () {
-	return ViteEsmConfig(
-		path.basename("."),
-		path.resolve("./tsconfig.json"),
-		"src/.build.ts",
-	);
-}
+// single entry point for bundlers
+export * from "./.export.js";
+export * from "./api/.export.js";
+export * from "./redis/.export.js";
+export * from "./mongoose/.export.js";

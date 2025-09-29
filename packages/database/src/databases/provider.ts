@@ -81,11 +81,11 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
-	type AccessRulesStorage,
 	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
-} from "@prosopo/user-access-policy";
+} from "@prosopo/user-access-policy/redis";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 

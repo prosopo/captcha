@@ -13,7 +13,7 @@
 		"src/**/*.tsx",
 		"src/**/*.json",
 		"src/**/*.d.ts",
-		"src/**/.export.ts"
+		"src/**/.*.ts"
 	],
 	"references": [
 		{

@@ -19,6 +19,6 @@ export default function () {
 	return ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
-		"src/.export.ts", // fixme
+		"src/.build.ts",
 	);
 }

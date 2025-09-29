@@ -2,8 +2,6 @@
 	"name": "@prosopo/user-access-policy",
 	"version": "3.5.15",
 	"type": "module",
-	"main": "dist/.export.js",
-	"types": "dist/.export.d.ts",
 	"engines": {
 		"node": "20",
 		"npm": "10.8.2"
