@@ -44,7 +44,7 @@ import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js"
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
 import { hashUserAgent } from "../utils/hashUserAgent.js";
-import { hashUserIp } from "../utils/hashUserIp.js";
+import { hashUserIp as hashUserSitekeyIp } from "../utils/hashUserIp.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
@@ -667,15 +667,15 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				});
 
 				// Check if there's an existing session for this user-IP combination
-				const userIpHash = hashUserIp(user, req.ip || "");
+				const userSitekeyIpHash = hashUserSitekeyIp(user, req.ip || "", dapp);
 				const existingSession =
-					await tasks.db.getSessionByUserIpHash(userIpHash);
+					await tasks.db.getSessionByUserIpHash(userSitekeyIpHash);
 
 				if (existingSession) {
 					req.logger.info(() => ({
 						msg: "Reusing existing session for user-IP combination",
 						data: {
-							userIpHash,
+							userIpHash: userSitekeyIpHash,
 							sessionId: existingSession.sessionId,
 							captchaType: existingSession.captchaType,
 						},
@@ -727,7 +727,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							timestampDecayFunction(timestamp),
-							userIpHash,
+							userSitekeyIpHash,
 						),
 					);
 				}
@@ -745,7 +745,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							await tasks.frictionlessManager.sendImageCaptcha(
 								tokenId,
 								userAccessPolicy.solvedImagesCount,
-								userIpHash,
+								userSitekeyIpHash,
 							),
 						);
 					}
@@ -754,7 +754,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							await tasks.frictionlessManager.sendPowCaptcha(
 								tokenId,
 								undefined,
-								userIpHash,
+								userSitekeyIpHash,
 							),
 						);
 					}
@@ -772,7 +772,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							timestampDecayFunction(timestamp),
-							userIpHash,
+							userSitekeyIpHash,
 						),
 					);
 				}
@@ -805,7 +805,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							env.config.captchas.solved.count,
-							userIpHash,
+							userSitekeyIpHash,
 						),
 					);
 				}
@@ -815,7 +815,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					await tasks.frictionlessManager.sendPowCaptcha(
 						tokenId,
 						undefined,
-						userIpHash,
+						userSitekeyIpHash,
 					),
 				);
 			} catch (err) {

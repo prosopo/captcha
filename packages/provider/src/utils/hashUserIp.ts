@@ -21,9 +21,9 @@ import { createHash } from "node:crypto";
  * @param ip - The IP address
  * @returns A 64-character hex string representing the hash
  */
-export function hashUserIp(user: string, ip: string): string {
+export function hashUserIp(user: string, ip: string, sitekey: string): string {
 	// Create SHA-256 hash of user:ip combination
 	const hash = createHash("sha256");
-	hash.update(`${user}:${ip}`, "utf8");
+	hash.update(`${user}:${ip}:${sitekey}`, "utf8");
 	return hash.digest("hex");
 }
