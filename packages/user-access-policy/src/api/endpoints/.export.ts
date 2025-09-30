@@ -21,4 +21,8 @@ export type {
 
 export type { InsertRulesGroup } from "./insertRules.js";
 
-export type { FindRuleFilters } from "./findRuleIds.js";
+export type {
+	FindRuleFilters,
+	RuleIdsResponse,
+	RuleIdsEndpointResponse,
+} from "./findRuleIds.js";

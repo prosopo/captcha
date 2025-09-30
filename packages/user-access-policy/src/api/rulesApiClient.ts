@@ -14,25 +14,40 @@
 
 import { ApiClient } from "@prosopo/api";
 import type { ApiEndpointResponse } from "@prosopo/api-route";
-import type { FindRuleFilters } from "#policy/api/endpoints/findRuleIds.js";
+import {
+	type FindRuleFilters,
+	type RuleIdsEndpointResponse,
+	ruleIdsResponse,
+} from "#policy/api/endpoints/findRuleIds.js";
 import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
 import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
 import type { InsertRulesGroup } from "./endpoints/insertRules.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
 
 export class AccessRulesApiClient extends ApiClient {
-	public findIds(
+	public async findIds(
 		filters: FindRuleFilters,
 		timestamp: string,
 		signature: string,
-	): Promise<ApiEndpointResponse> {
-		return this.post(accessRuleApiPaths.FIND_IDS, filters, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+	): Promise<RuleIdsEndpointResponse> {
+		const endpointResponse: ApiEndpointResponse = await this.post(
+			accessRuleApiPaths.FIND_IDS,
+			filters,
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
 			},
-		});
+		);
+
+		const parsedData = ruleIdsResponse.safeParse(endpointResponse.data);
+
+		return {
+			...endpointResponse,
+			data: parsedData.success ? parsedData.data : undefined,
+		};
 	}
 
 	public insertMany(

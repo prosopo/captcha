@@ -32,6 +32,18 @@ export type FindRuleFilters = AccessRulesFilterInput[];
 
 type FindRulesSchema = ZodType<FindRuleFilters>;
 
+export type RuleIdsResponse = {
+	ruleIds: string[];
+};
+
+export const ruleIdsResponse = z.object({
+	ruleIds: z.string().array(),
+}) satisfies ZodType<RuleIdsResponse>;
+
+export type RuleIdsEndpointResponse = ApiEndpointResponse & {
+	data?: RuleIdsResponse;
+};
+
 export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
@@ -44,7 +56,7 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 
 	async processRequest(
 		args: AccessRulesFilter[],
-	): Promise<ApiEndpointResponse> {
+	): Promise<RuleIdsEndpointResponse> {
 		const allRuleIds = [];
 
 		for (const accessRuleFilter of args) {
@@ -69,7 +81,9 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
-			data: uniqueRuleIds,
+			data: {
+				ruleIds: uniqueRuleIds,
+			},
 		};
 	}
 }
