@@ -36,6 +36,8 @@ export type AccessRulesFilter = {
 };
 
 export type AccessRulesReader = {
+	fetchRule(ruleId: string): Promise<AccessRule | undefined>;
+
 	findRules(
 		filter: AccessRulesFilter,
 		matchingFieldsOnly?: boolean,

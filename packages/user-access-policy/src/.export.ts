@@ -27,6 +27,7 @@ export {
 	policyScopeInput,
 	userScopeInput,
 	transformAccessRuleRecordIntoRule,
+	transformAccessRuleIntoRecord,
 } from "./ruleInput.js";
 
 export {

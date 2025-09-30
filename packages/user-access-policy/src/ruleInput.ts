@@ -156,6 +156,12 @@ export const transformAccessRuleRecordIntoRule = (
 	ruleRecord: AccessRuleRecord,
 ): AccessRule => accessRuleInput.parse(ruleRecord);
 
+export const transformAccessRuleIntoRecord = (
+	rule: AccessRule,
+): AccessRuleRecord => {
+	// fixme
+};
+
 export type AccessRulesFilterInput = AccessRulesFilter & {
 	userScope?: UserScopeInput;
 };

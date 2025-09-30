@@ -26,3 +26,5 @@ export type {
 	RuleIdsResponse,
 	RuleIdsEndpointResponse,
 } from "./findRuleIds.js";
+
+export type { GetRulesOptions, GetRulesResponse } from "./getRules.js";

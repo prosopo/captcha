@@ -19,12 +19,42 @@ import {
 	type RuleIdsEndpointResponse,
 	ruleIdsResponse,
 } from "#policy/api/endpoints/findRuleIds.js";
+import {
+	type GetRulesEndpointResponse,
+	type GetRulesOptions,
+	rulesResponse,
+} from "#policy/api/endpoints/getRules.js";
 import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
 import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
 import type { InsertRulesGroup } from "./endpoints/insertRules.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
 
 export class AccessRulesApiClient extends ApiClient {
+	public async getMany(
+		getOptions: GetRulesOptions,
+		timestamp: string,
+		signature: string,
+	): Promise<GetRulesEndpointResponse> {
+		const endpointResponse: ApiEndpointResponse = await this.post(
+			accessRuleApiPaths.GET_MANY,
+			getOptions,
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+
+		const parsedData = rulesResponse.safeParse(endpointResponse.data);
+
+		return {
+			...endpointResponse,
+			data: parsedData.success ? parsedData.data : undefined,
+		};
+	}
+
 	public async findIds(
 		filters: FindRuleFilters,
 		timestamp: string,

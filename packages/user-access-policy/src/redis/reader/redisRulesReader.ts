@@ -49,6 +49,20 @@ export const createRedisRulesReader = (
 	logger: Logger,
 ): AccessRulesReader => {
 	return {
+		fetchRule: async (ruleId: string): Promise<AccessRule | undefined> => {
+			const ruleKey = `${ACCESS_RULE_REDIS_KEY_PREFIX}${ruleId}`;
+
+			const ruleData = await client.hGetAll(ruleKey);
+
+			const isRulePresent = Object.keys(ruleData).length > 0;
+
+			const rules = isRulePresent
+				? parseRedisRecords([ruleData], accessRuleInput, logger)
+				: [];
+
+			return rules.pop();
+		},
+
 		findRules: async (
 			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
@@ -161,6 +175,16 @@ export const createRedisRulesReader = (
 
 export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 	return {
+		fetchRule: async (ruleId: string): Promise<AccessRule | undefined> => {
+			logger.info(() => ({
+				msg: "Dummy fetchRule() has no effect (redis is not ready)",
+				data: {
+					ruleId,
+				},
+			}));
+
+			return undefined;
+		},
 		findRules: async (
 			filter: AccessRulesFilter,
 			matchingFieldsOnly = false,
@@ -169,7 +193,7 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 			logger.info(() => ({
 				msg: "Dummy findRules() has no effect (redis is not ready)",
 				data: {
-					filter: filter,
+					filter,
 				},
 			}));
 
@@ -182,7 +206,7 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 			logger.info(() => ({
 				msg: "Dummy findRuleIds() has no effect (redis is not ready)",
 				data: {
-					filter: filter,
+					filter,
 				},
 			}));
 
