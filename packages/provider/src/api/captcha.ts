@@ -668,8 +668,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// Check if there's an existing session for this user-IP combination
 				const userIpHash = hashUserIp(user, req.ip || "");
-				const existingSession = await tasks.db.getSessionByUserIpHash(userIpHash);
-				
+				const existingSession =
+					await tasks.db.getSessionByUserIpHash(userIpHash);
+
 				if (existingSession) {
 					req.logger.info(() => ({
 						msg: "Reusing existing session for user-IP combination",
@@ -750,7 +751,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
 						return res.json(
-							await tasks.frictionlessManager.sendPowCaptcha(tokenId, undefined, userIpHash),
+							await tasks.frictionlessManager.sendPowCaptcha(
+								tokenId,
+								undefined,
+								userIpHash,
+							),
 						);
 					}
 				}
@@ -807,7 +812,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// Otherwise, send a PoW captcha
 				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha(tokenId, undefined, userIpHash),
+					await tasks.frictionlessManager.sendPowCaptcha(
+						tokenId,
+						undefined,
+						userIpHash,
+					),
 				);
 			} catch (err) {
 				req.logger.error(() => ({

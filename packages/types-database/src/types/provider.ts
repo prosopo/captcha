@@ -746,7 +746,9 @@ export interface IProviderDatabase extends IDatabase {
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
 
-	getSessionByUserIpHash(userIpHash: string): Promise<SessionRecord | undefined>;
+	getSessionByUserIpHash(
+		userIpHash: string,
+	): Promise<SessionRecord | undefined>;
 
 	getUnstoredSessionRecords(
 		limit: number,
