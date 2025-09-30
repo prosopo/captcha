@@ -602,6 +602,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					userAgent,
 				} = await tasks.frictionlessManager.decryptPayload(token);
 
+				req.logger.debug(() => ({
+					msg: "Decrypted payload",
+					data: {
+						baseBotScore,
+						timestamp,
+						providerSelectEntropy,
+						userId,
+						userAgent,
+					},
+				}));
+
 				let botScore = baseBotScore + lScore;
 
 				const clientRecord = await tasks.db.getClientRecord(dapp);
