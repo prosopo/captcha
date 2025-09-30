@@ -112,14 +112,6 @@ async function startApi(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
-
-	// Blocking middleware will run on any routes defined after this point
-	apiApp.use(blockMiddleware(env));
-
-	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
-	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
-	apiApp.use(prosopoRouter(env));
-
 	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 	for (const userAccessRuleRoute of userAccessRuleRoutes) {
 		apiApp.use(
@@ -143,6 +135,13 @@ async function startApi(
 			),
 		),
 	);
+
+	// Blocking middleware will run on any routes defined after this point
+	apiApp.use(blockMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
+	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(prosopoRouter(env));
 
 	// Rate limiting
 	const configRateLimits = env.config.rateLimits;
