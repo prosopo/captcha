@@ -1,5 +1,12 @@
 # @prosopo/locale
 
+## 3.1.18
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/config@3.1.18
+
 ## 3.1.17
 ### Patch Changes
 

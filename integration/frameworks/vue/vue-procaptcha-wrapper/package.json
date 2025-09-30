@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/vue-procaptcha-wrapper",
-	"version": "1.1.24",
+	"version": "1.1.25",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -23,12 +23,12 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.26",
-		"@prosopo/config": "3.1.17",
+		"@prosopo/procaptcha-wrapper": "2.6.27",
+		"@prosopo/config": "3.1.18",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {
-		"@prosopo/procaptcha-integration-build-config": "1.1.18",
+		"@prosopo/procaptcha-integration-build-config": "1.1.19",
 		"@types/node": "22.10.2",
 		"@vitejs/plugin-vue": "5.2.3",
 		"del-cli": "6.0.0",

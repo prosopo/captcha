@@ -1,5 +1,16 @@
 # @prosopo/flux
 
+## 2.6.28
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [c72ecbd]
+- Updated dependencies [50c4120]
+  - @prosopo/dotenv@3.0.23
+  - @prosopo/common@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
 ## 2.6.27
 ### Patch Changes
 

@@ -1,5 +1,17 @@
 # @prosopo/detector
 
+## 3.3.3
+### Patch Changes
+
+- 52cd544: Integrity checks
+- b8cc590: New injection methods
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/config@3.1.18
+
 ## 3.3.2
 ### Patch Changes
 

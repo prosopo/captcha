@@ -1,5 +1,26 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.4
+### Patch Changes
+
+- 52cd544: Integrity checks
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b8cc590]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/detector@3.3.3
+  - @prosopo/types@3.5.1
+  - @prosopo/procaptcha-common@2.9.3
+  - @prosopo/procaptcha-react@2.9.3
+  - @prosopo/widget-skeleton@2.7.4
+  - @prosopo/procaptcha-pow@2.8.11
+  - @prosopo/load-balancer@2.7.11
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/api@3.1.22
+  - @prosopo/config@3.1.18
+
 ## 2.8.3
 ### Patch Changes
 
