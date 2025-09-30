@@ -228,6 +228,8 @@ export class FrictionlessManager extends CaptchaManager {
 		timestamp: number;
 		providerSelectEntropy: number;
 		decryptSuccess: boolean;
+		userId: string;
+		userAgent: string;
 		oldKey: boolean;
 	}> {
 		const keyRecords = await this.getDetectorKeys();
@@ -317,10 +319,14 @@ export class FrictionlessManager extends CaptchaManager {
 		const baseBotScoreUndefined = baseBotScore === undefined;
 		const timestampUndefined = timestamp === undefined;
 		const providerSelectEntropyUndefined = providerSelectEntropy === undefined;
+		const userIdUndefined = userId === undefined;
+		const userAgentUndefined = userAgent === undefined;
 		const undefinedCount =
 			Number(baseBotScoreUndefined) +
 			Number(timestampUndefined) +
-			Number(providerSelectEntropyUndefined);
+			Number(providerSelectEntropyUndefined) +
+			Number(userIdUndefined) +
+			Number(userAgentUndefined);
 		if (undefinedCount > 0) {
 			this.logger.error(() => ({
 				msg: "Error decrypting score: baseBotScore or timestamp or providerSelectEntropy is undefined",
@@ -345,8 +351,8 @@ export class FrictionlessManager extends CaptchaManager {
 			timestamp: Number(timestamp),
 			providerSelectEntropy: Number(providerSelectEntropy),
 			decryptSuccess,
-			userId,
-			userAgent,
+			userId: String(userId),
+			userAgent: String(userAgent),
 			oldKey,
 		};
 	}
