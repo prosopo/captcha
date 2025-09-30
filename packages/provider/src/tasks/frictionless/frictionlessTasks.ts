@@ -222,12 +222,7 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string): Promise<{
-		baseBotScore: number;
-		timestamp: number;
-		providerSelectEntropy: number;
-		decryptSuccess: boolean;
-	}> {
+	async decryptPayload(token: string) {
 		const decryptKeys = [
 			// Process DB keys first, then env var key last as env key will likely be invalid
 			...(await this.getDetectorKeys()),

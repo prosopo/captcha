@@ -736,7 +736,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// If the decrypt failed, send an image captcha with 4 rounds
 				if (!decryptSuccess) {
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId, 4),
+						await tasks.frictionlessManager.sendImageCaptcha(tokenId, 3),
 					);
 				}
 
