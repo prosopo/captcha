@@ -41,7 +41,7 @@ import {
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
-import { at, embedData, hashToHex } from "@prosopo/util";
+import { at, hashToHex } from "@prosopo/util";
 import { sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
@@ -229,24 +229,17 @@ export function Manager(
 				updateState({ showModal: false });
 
 				const challenge: CaptchaResponseBody = state.challenge;
+				const salt = randomAsHex();
 
 				// append solution to each captcha in the challenge
 				const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
 					(captcha, index) => {
 						const solution = at(state.solutions, index);
-						const coords = solution.flatMap(([_, x, y]) => [x, y]);
-						const salt = randomAsHex(
-							coords
-								.map((x) => x.toString(16).length + 4)
-								.reduce((acc, curr) => acc + curr, 0),
-						);
-
-						const saltCoord = embedData(salt, coords);
 						return {
 							captchaId: captcha.captchaId,
 							captchaContentId: captcha.captchaContentId,
-							salt: saltCoord,
-							solution: solution.flatMap((s) => s[0]),
+							salt,
+							solution,
 						};
 					},
 				);
@@ -361,10 +354,8 @@ export function Manager(
 	/**
 	 * (De)Select an image from the solution for the current round. If the hash is already in the solutions list, it will be removed (deselected) and if not it will be added (selected).
 	 * @param hash the hash of the image
-	 * @param x
-	 * @param y
 	 */
-	const select = (hash: string, x?: number, y?: number) => {
+	const select = (hash: string) => {
 		if (!state.challenge) {
 			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
 				context: { error: "Cannot select, no Captcha found in state" },
@@ -380,13 +371,12 @@ export function Manager(
 		const index = state.index;
 		const solutions = state.solutions;
 		const solution = at(solutions, index);
-		if (solution.some((s) => s[0] === hash)) {
+		if (solution.includes(hash)) {
 			// remove the hash from the solution
-			const newSolution = solution.filter((s) => s[0] !== hash);
-			solutions[index] = newSolution;
+			solution.splice(solution.indexOf(hash), 1);
 		} else {
 			// add the hash to the solution
-			solutions[index] = [...solution, [hash, x || 0, y || 0]];
+			solution.push(hash);
 		}
 		updateState({ solutions });
 	};

@@ -69,17 +69,12 @@ export interface ProviderApiInterface {
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse>;
-	updateDetectorKey(
-		detectorKey: string,
-		timestamp: string,
-		signature: string,
-	): Promise<ApiResponse>;
+	updateDetectorKey(detectorKey: string, jwt: string): Promise<ApiResponse>;
 	removeDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
+		expirationInSeconds?: number,
 	): Promise<ApiResponse>;
 }

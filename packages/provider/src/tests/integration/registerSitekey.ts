@@ -32,9 +32,6 @@ export const registerSiteKey = async (
 			EnvironmentTypesSchema.enum.development,
 		);
 		for (const provider of providers) {
-			const timestamp = Date.now();
-			const signature = u8aToHex(adminPair.sign(timestamp.toString()));
-
 			const providerApi = new ProviderApi(provider.url, adminPair.address);
 
 			const response = await providerApi.registerSiteKey(
@@ -46,8 +43,7 @@ export const registerSiteKey = async (
 					frictionlessThreshold: 0.5,
 					powDifficulty: 4,
 				}),
-				timestamp.toString(),
-				signature,
+				adminPair.jwtIssue(),
 			);
 		}
 	} catch (err) {

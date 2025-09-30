@@ -254,23 +254,20 @@ export default class ProviderApi
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse> {
 		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
 		return this.post(AdminApiPaths.SiteKeyRegister, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			},
 		});
 	}
 
 	public updateDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<UpdateDetectorKeyResponse> {
 		return this.post(
 			AdminApiPaths.UpdateDetectorKey,
@@ -278,8 +275,7 @@ export default class ProviderApi
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
+					Authorization: `Bearer ${jwt}`,
 				},
 			},
 		);
@@ -287,8 +283,7 @@ export default class ProviderApi
 
 	public removeDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 		expirationInSeconds?: number,
 	): Promise<ApiResponse> {
 		return this.post(
@@ -300,8 +295,7 @@ export default class ProviderApi
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
+					Authorization: `Bearer ${jwt}`,
 				},
 			},
 		);
