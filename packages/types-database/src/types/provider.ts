@@ -758,7 +758,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	storeDetectorKey(detectorKey: string): Promise<void>;
 
-	getDetectorKeys(): Promise<string[]>;
+	getDetectorKeys(): Promise<DetectorKey[]>;
 
 	removeDetectorKey(
 		detectorKey: string,

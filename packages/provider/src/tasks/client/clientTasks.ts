@@ -334,8 +334,9 @@ export class ClientTaskManager {
 		}
 		await this.providerDB.storeDetectorKey(detectorKey);
 
-		const activeDetectorKeys = await this.providerDB.getDetectorKeys();
-		return activeDetectorKeys;
+		return (await this.providerDB.getDetectorKeys()).map(
+			(key) => key.detectorKey,
+		);
 	}
 
 	async removeDetectorKey(

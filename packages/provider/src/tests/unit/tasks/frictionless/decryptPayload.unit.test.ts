@@ -77,6 +77,7 @@ describe("decryptPayload", () => {
 		const result = await frictionlessTaskManager.decryptPayload("payload");
 		expect(result).toEqual({
 			baseBotScore: 1,
+			decryptSuccess: true,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: 1,
 		});
@@ -102,6 +103,7 @@ describe("decryptPayload", () => {
 		const result = await frictionlessTaskManager.decryptPayload("payload");
 		expect(result).toEqual({
 			baseBotScore: 1,
+			decryptSuccess: true,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
 		});
@@ -130,6 +132,7 @@ describe("decryptPayload", () => {
 		const result = await frictionlessTaskManager.decryptPayload("payload");
 		expect(result).toEqual({
 			baseBotScore: 1,
+			decryptSuccess: false,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
 		});
@@ -162,6 +165,7 @@ describe("decryptPayload", () => {
 		const result = await frictionlessTaskManager.decryptPayload("payload");
 		expect(result).toEqual({
 			baseBotScore: 1,
+			decryptSuccess: true,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
 		});
