@@ -28,6 +28,8 @@ export const getBotScore = async (
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
 	const providerSelectEntropy: number = result.providerSelectEntropy;
+	const userId: string = result.userId;
+	const userAgent: string = result.userAgent;
 
 	if (baseBotScore === undefined) {
 		return {
@@ -37,5 +39,5 @@ export const getBotScore = async (
 		};
 	}
 
-	return { baseBotScore, timestamp, providerSelectEntropy };
+	return { baseBotScore, timestamp, providerSelectEntropy, userId, userAgent };
 };

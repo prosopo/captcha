@@ -1,5 +1,13 @@
 # @prosopo/svelte-procaptcha-integration-demo
 
+## 1.1.24
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/svelte-procaptcha-wrapper@1.1.24
+  - @prosopo/config@3.1.17
+
 ## 1.1.23
 ### Patch Changes
 

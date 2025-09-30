@@ -111,8 +111,12 @@ export async function getIPInfo(
 			vpnType: data.vpn?.type,
 
 			// Risk scoring
-			abuserScore: data.asn?.abuser_score,
-			companyAbuserScore: data.company?.abuser_score,
+			abuserScore: Number.parseFloat(
+				data.asn?.abuser_score.split(" ")[0] || "0",
+			),
+			companyAbuserScore: Number.parseFloat(
+				data.company?.abuser_score.split(" ")[0] || "0",
+			),
 		};
 
 		// Include raw response if requested

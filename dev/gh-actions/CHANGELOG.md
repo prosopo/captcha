@@ -1,5 +1,12 @@
 # @prosopo/gh-actions
 
+## 2.6.18
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/config@3.1.17
+
 ## 2.6.17
 ### Patch Changes
 

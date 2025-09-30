@@ -254,6 +254,8 @@ export class FrictionlessManager extends CaptchaManager {
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
 		let providerSelectEntropy: number | undefined;
+		let userId: string | undefined;
+		let userAgent: string | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -266,6 +268,8 @@ export class FrictionlessManager extends CaptchaManager {
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
 				const p = decrypted.providerSelectEntropy;
+				const a = decrypted.userId;
+				const u = decrypted.userAgent;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -273,11 +277,15 @@ export class FrictionlessManager extends CaptchaManager {
 						baseBotScore: s,
 						timestamp: t,
 						entropy: p,
+						userId: a,
+						userAgent: u,
 					},
 				}));
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;
+				userId = a;
+				userAgent = u;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -323,6 +331,8 @@ export class FrictionlessManager extends CaptchaManager {
 			timestamp: Number(timestamp),
 			providerSelectEntropy: Number(providerSelectEntropy),
 			decryptSuccess,
+			userId,
+			userAgent,
 		};
 	}
 }
