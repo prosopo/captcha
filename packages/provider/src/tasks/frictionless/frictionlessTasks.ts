@@ -22,6 +22,7 @@ import {
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
 import type {
+	DetectorKey,
 	FrictionlessTokenId,
 	IProviderDatabase,
 	Session,
@@ -222,16 +223,30 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string) {
-		const decryptKeys = [
+	async decryptPayload(token: string): Promise<{
+		baseBotScore: number;
+		timestamp: number;
+		providerSelectEntropy: number;
+		decryptSuccess: boolean;
+		oldKey: boolean;
+	}> {
+		const keyRecords = await this.getDetectorKeys();
+		const decryptKeys: DetectorKey[] = [
 			// Process DB keys first, then env var key last as env key will likely be invalid
-			...(await this.getDetectorKeys()),
-			process.env.BOT_DECRYPTION_KEY,
-		].filter((k) => k);
+			...keyRecords,
+			...(process.env.BOT_DECRYPTION_KEY
+				? [
+						{
+							detectorKey: process.env.BOT_DECRYPTION_KEY,
+							createdAt: new Date(),
+						},
+					]
+				: []),
+		];
 
 		this.logger.debug(() => {
 			const loggedKeys = decryptKeys.map((key) =>
-				this.redactKeyForLogging(key),
+				this.redactKeyForLogging(key.detectorKey),
 			);
 
 			return {
@@ -251,15 +266,16 @@ export class FrictionlessManager extends CaptchaManager {
 		let providerSelectEntropy: number | undefined;
 		let userId: string | undefined;
 		let userAgent: string | undefined;
+		let oldKey = false;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
 					msg: "Attempting to decrypt score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(key.detectorKey),
 					},
 				}));
-				const decrypted = await getBotScore(token, key as string);
+				const decrypted = await getBotScore(token, key.detectorKey);
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
 				const p = decrypted.providerSelectEntropy;
@@ -268,12 +284,13 @@ export class FrictionlessManager extends CaptchaManager {
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
-						key: this.redactKeyForLogging(key),
+						key: this.redactKeyForLogging(key.detectorKey),
 						baseBotScore: s,
 						timestamp: t,
 						entropy: p,
 						userId: a,
 						userAgent: u,
+						...(key.expiresAt && { expiresAt: key.expiresAt }),
 					},
 				}));
 				baseBotScore = s;
@@ -281,6 +298,7 @@ export class FrictionlessManager extends CaptchaManager {
 				providerSelectEntropy = p;
 				userId = a;
 				userAgent = u;
+				oldKey = key.expiresAt !== undefined;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -317,6 +335,7 @@ export class FrictionlessManager extends CaptchaManager {
 				baseBotScore: baseBotScore,
 				timestamp: timestamp,
 				entropy: providerSelectEntropy,
+				oldKey,
 			},
 		}));
 
@@ -328,6 +347,7 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptSuccess,
 			userId,
 			userAgent,
+			oldKey,
 		};
 	}
 }

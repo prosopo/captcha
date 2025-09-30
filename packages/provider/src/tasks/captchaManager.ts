@@ -18,6 +18,7 @@ import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
+	DetectorKey,
 	FrictionlessTokenId,
 	IProviderDatabase,
 	IUserDataSlim,
@@ -293,7 +294,7 @@ export class CaptchaManager {
 		);
 	}
 
-	async getDetectorKeys(): Promise<string[]> {
+	async getDetectorKeys(): Promise<DetectorKey[]> {
 		return await this.db.getDetectorKeys();
 	}
 

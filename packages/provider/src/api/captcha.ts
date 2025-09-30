@@ -601,6 +601,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					decryptSuccess,
 					userId,
 					userAgent,
+					oldKey,
 				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				req.logger.debug(() => ({

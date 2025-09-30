@@ -44,6 +44,7 @@ import {
 } from "@prosopo/types";
 import type {
 	CompositeIpAddress,
+	DetectorKey,
 	FrictionlessTokenRecord,
 	SessionRecord,
 } from "@prosopo/types-database";
@@ -1805,7 +1806,7 @@ export class ProviderDatabase
 	/**
 	 * @description Get valid detector keys
 	 */
-	async getDetectorKeys(): Promise<string[]> {
+	async getDetectorKeys(): Promise<DetectorKey[]> {
 		const keyRecords = await this.tables?.detector
 			.find(
 				{
@@ -1816,6 +1817,6 @@ export class ProviderDatabase
 			.sort({ createdAt: -1 }) // Sort by createdAt in descending order
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
-		return (keyRecords || []).map((record) => record.detectorKey);
+		return keyRecords || [];
 	}
 }
