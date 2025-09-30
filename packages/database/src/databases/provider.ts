@@ -1178,21 +1178,21 @@ export class ProviderDatabase
 
 	/**
 	 * Get an active session by user IP hash
-	 * @param userIpHash The hash of user and IP combination
+	 * @param userSitekeyIpHash The hash of user, IP and sitekey combination
 	 * @returns The session record if it exists and is not deleted, undefined otherwise
 	 */
-	async getSessionByUserIpHash(
-		userIpHash: string,
+	async getSessionByuserSitekeyIpHash(
+		userSitekeyIpHash: string,
 	): Promise<SessionRecord | undefined> {
 		this.logger.debug(() => ({
-			data: { action: "getting session by user IP hash", userIpHash },
+			data: { action: "getting session by user IP hash", userSitekeyIpHash },
 		}));
 		const filter: {
-			[key in keyof Pick<SessionRecord, "userIpHash" | "deleted">]:
+			[key in keyof Pick<SessionRecord, "userSitekeyIpHash" | "deleted">]:
 				| string
 				| { $exists: boolean };
 		} = {
-			userIpHash,
+			userSitekeyIpHash,
 			deleted: { $exists: false },
 		};
 		try {
@@ -1202,7 +1202,7 @@ export class ProviderDatabase
 			return session || undefined;
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, userIpHash },
+				context: { error: err, userSitekeyIpHash },
 				logger: this.logger,
 			});
 		}

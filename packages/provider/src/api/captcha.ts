@@ -669,13 +669,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Check if there's an existing session for this user-IP combination
 				const userSitekeyIpHash = hashUserSitekeyIp(user, req.ip || "", dapp);
 				const existingSession =
-					await tasks.db.getSessionByUserIpHash(userSitekeyIpHash);
+					await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
 
 				if (existingSession) {
 					req.logger.info(() => ({
 						msg: "Reusing existing session for user-IP combination",
 						data: {
-							userIpHash: userSitekeyIpHash,
+							userSitekeyIpHash: userSitekeyIpHash,
 							sessionId: existingSession.sessionId,
 							captchaType: existingSession.captchaType,
 						},
