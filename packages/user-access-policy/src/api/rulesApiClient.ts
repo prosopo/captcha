@@ -13,18 +13,33 @@
 // limitations under the License.
 
 import { ApiClient } from "@prosopo/api";
-import type { ApiResponse } from "@prosopo/types";
+import type { ApiEndpointResponse } from "@prosopo/api-route";
+import type { FindRuleFilters } from "#policy/api/endpoints/findRuleIds.js";
 import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
 import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
 import type { InsertRulesGroup } from "./endpoints/insertRules.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
 
 export class AccessRulesApiClient extends ApiClient {
+	public findIds(
+		filters: FindRuleFilters,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(accessRuleApiPaths.FIND_IDS, filters, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
+
 	public insertMany(
 		rulesGroup: InsertRulesGroup,
 		timestamp: string,
 		signature: string,
-	): Promise<ApiResponse> {
+	): Promise<ApiEndpointResponse> {
 		return this.post(accessRuleApiPaths.INSERT_MANY, rulesGroup, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
@@ -38,7 +53,7 @@ export class AccessRulesApiClient extends ApiClient {
 		filters: DeleteRuleFilters,
 		timestamp: string,
 		signature: string,
-	): Promise<ApiResponse> {
+	): Promise<ApiEndpointResponse> {
 		return this.post(accessRuleApiPaths.DELETE_MANY, filters, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
@@ -52,7 +67,7 @@ export class AccessRulesApiClient extends ApiClient {
 		siteGroups: DeleteSiteGroups,
 		timestamp: string,
 		signature: string,
-	): Promise<ApiResponse> {
+	): Promise<ApiEndpointResponse> {
 		return this.post(accessRuleApiPaths.DELETE_GROUPS, siteGroups, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
@@ -62,7 +77,10 @@ export class AccessRulesApiClient extends ApiClient {
 		});
 	}
 
-	public deleteAll(timestamp: string, signature: string): Promise<ApiResponse> {
+	public deleteAll(
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
 		return this.post(
 			accessRuleApiPaths.DELETE_ALL,
 			{},
