@@ -1176,6 +1176,38 @@ export class ProviderDatabase
 		}
 	}
 
+	/**
+	 * Get an active session by user IP hash
+	 * @param userIpHash The hash of user and IP combination
+	 * @returns The session record if it exists and is not deleted, undefined otherwise
+	 */
+	async getSessionByUserIpHash(
+		userIpHash: string,
+	): Promise<SessionRecord | undefined> {
+		this.logger.debug(() => ({
+			data: { action: "getting session by user IP hash", userIpHash },
+		}));
+		const filter: {
+			[key in keyof Pick<SessionRecord, "userIpHash" | "deleted">]:
+				| string
+				| { $exists: boolean };
+		} = {
+			userIpHash,
+			deleted: { $exists: false },
+		};
+		try {
+			const session = await this.tables.session
+				.findOne<SessionRecord>(filter)
+				.lean<SessionRecord>();
+			return session || undefined;
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { error: err, userIpHash },
+				logger: this.logger,
+			});
+		}
+	}
+
 	/** Get unstored session records
 	 * @description Get session records that have not been stored yet
 	 * @param limit

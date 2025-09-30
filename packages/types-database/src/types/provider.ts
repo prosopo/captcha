@@ -501,6 +501,7 @@ export type Session = {
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
+	userIpHash?: string;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -517,11 +518,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
+	userIpHash: { type: String, required: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+SessionRecordSchema.index({ userIpHash: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -742,6 +745,8 @@ export interface IProviderDatabase extends IDatabase {
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getSessionByUserIpHash(userIpHash: string): Promise<SessionRecord | undefined>;
 
 	getUnstoredSessionRecords(
 		limit: number,
