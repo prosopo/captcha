@@ -77,6 +77,13 @@ jobs:
           
           git add -u .
 
+      - run: npm ci --ignore-scripts --include=dev
+
+      - name: Build packages
+        run: |
+          echo "Building all packages"
+          npm run build:all
+
       - name: lint-fix
         run: |
           npm run lint-fix
