@@ -20,7 +20,7 @@ import {
 import type { Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import type { AccessRule } from "#policy/rule.js";
-import { accessRuleInput } from "#policy/ruleInput.js";
+import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
 export type GetRulesOptions = {
@@ -33,9 +33,9 @@ export type GetRulesResponse = {
 	rules: AccessRule[];
 };
 
-export const rulesResponse = z.object({
+export const rulesResponse: ZodType<GetRulesResponse> = z.object({
 	rules: accessRuleInput.array(),
-}) satisfies ZodType<GetRulesResponse>;
+});
 
 export type GetRulesEndpointResponse = ApiEndpointResponse & {
 	data?: GetRulesResponse;

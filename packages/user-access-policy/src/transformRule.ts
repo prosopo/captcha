@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { IpAddress, IpRange } from "cidr-calc";
 import { Address4 } from "ip-address";
 import { z } from "zod";
 import type { AccessRule } from "./rule.js";
@@ -58,24 +59,38 @@ const accessRuleToRecordScheme = z
 		}
 
 		if ("bigint" === typeof numericIp) {
-			record.ip = Address4.fromInteger(Number(numericIp)).address;
+			record.ip = getStringIpFromNumeric(numericIp);
 		}
 
 		if (
 			"bigint" === typeof numericIpMaskMin &&
 			"bigint" === typeof numericIpMaskMax
 		) {
-			// fixme
-			const networkSize =
-				Number(numericIpMaskMax) - Number(numericIpMaskMin) + 1;
-			const prefixLength = 32 - Math.round(Math.log2(networkSize));
-			const networkAddress = Address4.fromInteger(Number(numericIpMaskMin));
-
-			record.ipMask = `${networkAddress.address}/${prefixLength}`;
+			record.ipMask = getCidrFromNumericIpRange(
+				numericIpMaskMin,
+				numericIpMaskMax,
+			);
 		}
 
 		return record;
 	});
+
+const getStringIpFromNumeric = (numericIp: bigint): string =>
+	Address4.fromInteger(Number(numericIp)).address;
+
+export const getCidrFromNumericIpRange = (
+	startIp: bigint,
+	endIp: bigint,
+): string | undefined => {
+	const ipRange = new IpRange(
+		IpAddress.of(getStringIpFromNumeric(startIp)),
+		IpAddress.of(getStringIpFromNumeric(endIp)),
+	);
+
+	const cidr = ipRange.toCidrs()[0];
+
+	return cidr ? `${cidr.prefix.toString()}/${cidr.prefixLen}` : undefined;
+};
 
 export const transformAccessRuleIntoRecord = (
 	rule: AccessRule,

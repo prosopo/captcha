@@ -23,7 +23,7 @@ import {
 } from "#policy/redis/redisRuleIndex.js";
 import { parseRedisRecords } from "#policy/redis/redisRulesStorage.js";
 import type { AccessRule } from "#policy/rule.js";
-import { accessRuleInput } from "#policy/ruleInput.js";
+import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import type {
 	AccessRulesFilter,
 	AccessRulesReader,

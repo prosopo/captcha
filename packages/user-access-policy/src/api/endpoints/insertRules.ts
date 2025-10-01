@@ -26,11 +26,13 @@ import type {
 	UserScope,
 } from "#policy/rule.js";
 import {
-	type UserScopeInput,
 	accessPolicyInput,
 	policyScopeInput,
+} from "#policy/ruleInput/policyInput.js";
+import {
+	type UserScopeInput,
 	userScopeInput,
-} from "#policy/ruleInput.js";
+} from "#policy/ruleInput/userScopeInput.js";
 import type { AccessRulesWriter } from "#policy/rulesStorage.js";
 
 export type InsertRulesGroup = {

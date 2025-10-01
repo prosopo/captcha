@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { PolicyScope, UserIp, UserScope } from "#policy/rule.js";
-import { userScopeInput } from "#policy/ruleInput.js";
+import { userScopeInput } from "#policy/ruleInput/userScopeInput.js";
 import {
 	type AccessRulesFilter,
 	FilterScopeMatch,

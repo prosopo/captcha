@@ -22,7 +22,7 @@ import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
 	accessRulesFilterInput,
-} from "#policy/ruleInput.js";
+} from "#policy/ruleInput/ruleInput.js";
 import type {
 	AccessRulesFilter,
 	AccessRulesStorage,

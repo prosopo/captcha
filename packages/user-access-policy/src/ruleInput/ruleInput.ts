@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Address4 } from "ip-address";
-import { type ZodType, z } from "zod";
+import { type ZodType, type ZodTypeAny, z } from "zod";
 import type { AccessPolicy, AccessRule, PolicyScope } from "#policy/rule.js";
-import type { AccessRuleRecord } from "#policy/ruleRecord.js";
 import {
 	type AccessRulesFilter,
 	FilterScopeMatch,
@@ -34,7 +32,7 @@ export type AccessRuleInput = AccessPolicy &
 		ruleGroupId?: string;
 	};
 
-export const accessRuleInput = z
+export const accessRuleInput: ZodType<AccessRule> = z
 	.object({
 		...accessPolicyInput.shape,
 		...policyScopeInput.shape,

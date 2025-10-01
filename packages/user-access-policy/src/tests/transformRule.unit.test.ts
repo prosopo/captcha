@@ -13,13 +13,15 @@
 // limitations under the License.
 
 import { CaptchaType } from "@prosopo/types";
+import { Address4 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
+import type { AccessRuleRecord } from "#policy/ruleRecord.js";
 import {
+	getCidrFromNumericIpRange,
 	transformAccessRuleIntoRecord,
 	transformAccessRuleRecordIntoRule,
-} from "#policy/ruleInput.js";
-import type { AccessRuleRecord } from "#policy/ruleRecord.js";
+} from "#policy/transformRule.js";
 
 describe("transformRule", () => {
 	const commonProperties = {
@@ -41,8 +43,8 @@ describe("transformRule", () => {
 		const ruleRecord: Required<AccessRuleRecord> = {
 			...commonProperties,
 			ruleGroupId: "ruleGroupId",
-			ipMask: "127.0.0.1/20",
-			ip: "127.0.0.1",
+			ipMask: "127.0.0.0/20",
+			ip: "127.0.0.0",
 			userAgent: "test",
 		};
 
@@ -54,7 +56,7 @@ describe("transformRule", () => {
 		expect(accessRule).toEqual({
 			...commonProperties,
 			groupId: "ruleGroupId",
-			numericIp: 2130706433n,
+			numericIp: 2130706432n,
 			numericIpMaskMax: 2130710527n,
 			numericIpMaskMin: 2130706432n,
 			userAgentHash:
@@ -66,7 +68,7 @@ describe("transformRule", () => {
 		const accessRule: Required<AccessRule> = {
 			...commonProperties,
 			groupId: "ruleGroupId",
-			numericIp: 2130706433n,
+			numericIp: 2130706432n,
 			numericIpMaskMax: 2130710527n,
 			numericIpMaskMin: 2130706432n,
 			userAgentHash:
@@ -81,8 +83,8 @@ describe("transformRule", () => {
 		expect(accessRuleRecord).toEqual({
 			...commonProperties,
 			ruleGroupId: "ruleGroupId",
-			ipMask: "127.0.0.1/20",
-			ip: "127.0.0.1",
+			ipMask: "127.0.0.0/20",
+			ip: "127.0.0.0",
 			userAgent:
 				"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
 		});
@@ -106,5 +108,86 @@ describe("transformRule", () => {
 				userAgent: "test",
 			} as unknown as AccessRule),
 		).toThrow();
+	});
+});
+
+describe("getCidrFromNumericIpRange", () => {
+	type CirdExample = {
+		cidr: string;
+		startIp: string;
+		endIp: string;
+		description: string;
+	};
+
+	const cirdsSet: CirdExample[] = [
+		{
+			cidr: "127.0.0.0/20",
+			startIp: "127.0.0.0",
+			endIp: "127.0.15.255",
+			description: "/20 network - 4096 addresses",
+		},
+		{
+			cidr: "192.168.1.0/24",
+			startIp: "192.168.1.0",
+			endIp: "192.168.1.255",
+			description: "/24 network - 256 addresses (Class C)",
+		},
+		{
+			cidr: "10.0.0.0/8",
+			startIp: "10.0.0.0",
+			endIp: "10.255.255.255",
+			description: "/8 network - 16M addresses (Class A)",
+		},
+		{
+			cidr: "172.16.0.0/12",
+			startIp: "172.16.0.0",
+			endIp: "172.31.255.255",
+			description: "/12 network - 1M addresses",
+		},
+		{
+			cidr: "192.168.0.0/16",
+			startIp: "192.168.0.0",
+			endIp: "192.168.255.255",
+			description: "/16 network - 65536 addresses (Class B)",
+		},
+		{
+			cidr: "192.168.1.128/25",
+			startIp: "192.168.1.128",
+			endIp: "192.168.1.255",
+			description: "/25 network - 128 addresses (subnet)",
+		},
+		{
+			cidr: "10.20.30.0/28",
+			startIp: "10.20.30.0",
+			endIp: "10.20.30.15",
+			description: "/28 network - 16 addresses (small subnet)",
+		},
+		{
+			cidr: "8.8.8.8/32",
+			startIp: "8.8.8.8",
+			endIp: "8.8.8.8",
+			description: "/32 network - single IP address",
+		},
+		{
+			cidr: "203.0.113.0/30",
+			startIp: "203.0.113.0",
+			endIp: "203.0.113.3",
+			description: "/30 network - 4 addresses (point-to-point)",
+		},
+		{
+			cidr: "198.51.100.64/26",
+			startIp: "198.51.100.64",
+			endIp: "198.51.100.127",
+			description: "/26 network - 64 addresses",
+		},
+	];
+
+	it.each(cirdsSet)("should convert $description to $cidr", (cirdExample) => {
+		const cird = getCidrFromNumericIpRange(
+			new Address4(cirdExample.startIp).bigInt(),
+			new Address4(cirdExample.endIp).bigInt(),
+		);
+
+		expect(cird).toEqual(cirdExample.cidr);
 	});
 });
