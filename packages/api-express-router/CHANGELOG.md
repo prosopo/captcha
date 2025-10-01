@@ -1,5 +1,19 @@
 # @prosopo/api-express-router
 
+## 3.0.23
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/api-route@2.6.26
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/env@3.2.11
+  - @prosopo/config@3.1.18
+
 ## 3.0.22
 ### Patch Changes
 

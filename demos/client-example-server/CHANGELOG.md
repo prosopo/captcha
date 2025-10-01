@@ -1,5 +1,21 @@
 # @prosopo/client-example-server
 
+## 2.7.37
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/dotenv@3.0.23
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/server@2.9.33
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
 ## 2.7.36
 ### Patch Changes
 

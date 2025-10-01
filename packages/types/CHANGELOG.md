@@ -1,5 +1,17 @@
 # @prosopo/types
 
+## 3.5.1
+### Patch Changes
+
+- 52cd544: Integrity checks
+- b117ba3: Hot fix country code
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/locale@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
 ## 3.5.0
 ### Minor Changes
 

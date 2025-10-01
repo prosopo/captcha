@@ -1,5 +1,34 @@
 # @prosopo/provider
 
+## 3.12.1
+### Patch Changes
+
+- 52cd544: Integrity checks
+- b8cc590: New injection methods
+- b117ba3: Hot fix country code
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/database@3.4.3
+  - @prosopo/api-express-router@3.0.23
+  - @prosopo/user-access-policy@3.5.17
+  - @prosopo/types-database@3.3.3
+  - @prosopo/load-balancer@2.7.11
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/api-route@2.6.26
+  - @prosopo/types-env@2.7.36
+  - @prosopo/datasets@3.0.32
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/api@3.1.22
+  - @prosopo/env@3.2.11
+  - @prosopo/config@3.1.18
+
 ## 3.12.0
 ### Minor Changes
 
