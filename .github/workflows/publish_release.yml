@@ -66,7 +66,7 @@ jobs:
       - name: Publish to npm
         run: |
           echo "Publishing all packages to npm"
-          npm run publish:all
+          npm run publish
 
       - name: Publish to Docker Hub
         run: |
