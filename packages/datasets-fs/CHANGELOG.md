@@ -1,5 +1,17 @@
 # @prosopo/datasets-fs
 
+## 3.0.25
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/common@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/workspace@3.1.12
+  - @prosopo/util@3.1.4
+  - @prosopo/config@3.1.19
+
 ## 3.0.24
 ### Patch Changes
 

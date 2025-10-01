@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.5
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/procaptcha-common@2.9.4
+  - @prosopo/procaptcha-react@2.9.4
+  - @prosopo/widget-skeleton@2.7.5
+  - @prosopo/procaptcha-pow@2.8.12
+  - @prosopo/load-balancer@2.7.12
+  - @prosopo/detector@3.3.4
+  - @prosopo/common@3.1.19
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/api@3.1.23
+  - @prosopo/config@3.1.19
+
 ## 2.8.4
 ### Patch Changes
 

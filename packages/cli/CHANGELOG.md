@@ -1,5 +1,26 @@
 # @prosopo/cli
 
+## 3.4.5
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/api-express-router@3.0.24
+  - @prosopo/user-access-policy@3.5.18
+  - @prosopo/types-database@3.3.4
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/provider@3.12.2
+  - @prosopo/keyring@2.8.26
+  - @prosopo/common@3.1.19
+  - @prosopo/dotenv@3.0.24
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/workspace@3.1.12
+  - @prosopo/util@3.1.4
+  - @prosopo/api@3.1.23
+  - @prosopo/env@3.2.12
+  - @prosopo/config@3.1.19
+
 ## 3.4.4
 ### Patch Changes
 
