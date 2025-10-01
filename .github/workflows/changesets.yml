@@ -26,6 +26,8 @@ jobs:
   check:
     name: check
     runs-on: ubuntu-latest
+    # Skip if PR title starts with "Release v"
+    if: ${{ !startsWith(github.event.pull_request.title, 'Release v') }}
     steps:
       - name: Print contexts
         uses: prosopo/captcha/.github/actions/print_contexts@gha
