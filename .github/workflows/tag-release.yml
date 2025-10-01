@@ -1,0 +1,54 @@
+name: Tag Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tag:
+    name: Tag Release
+    runs-on: ubuntu-latest
+    # Only run if PR was merged and title starts with "Release"
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Release v')
+    steps:
+      - name: Get token for gh app
+        id: app_token
+        uses: peter-murray/workflow-application-token-action@v3
+        with:
+          application_id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+          ref: main
+
+      - name: Git config
+        run: |
+          git config user.name "prosoponator[bot]"
+          git config user.email "dev@prosopo.io"
+
+      - name: Get root version
+        id: version
+        run: |
+          root_version=$(cat package.json | jq -r '.version')
+          echo "root_version=$root_version" >> $GITHUB_OUTPUT
+          echo "Root version: $root_version"
+
+      - name: Create tag
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          root_version="${{ steps.version.outputs.root_version }}"
+          echo "Tagging v$root_version"
+          git tag "v$root_version" || echo "Tag already exists, skipping"
+          git push origin --tags
+
