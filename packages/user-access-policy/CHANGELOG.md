@@ -1,5 +1,19 @@
 # @prosopo/user-access-policy
 
+## 3.5.17
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/redis-client@1.0.3
+  - @prosopo/api-route@2.6.26
+  - @prosopo/common@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/api@3.1.22
+
 ## 3.5.16
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/ts-brand
 
+## 3.0.21
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/config@3.1.18
+
 ## 3.0.20
 ### Patch Changes
 
