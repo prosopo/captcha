@@ -77,6 +77,10 @@ jobs:
           
           git add -u .
 
+      - name: lint-fix
+        run: |
+          npm run lint-fix
+
       - name: Create release branch and PR
         if: steps.detect.outputs.has_changesets == 'true'
         env:
