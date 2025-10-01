@@ -1,4 +1,4 @@
-name: Create Release PR
+name: create_release_pr
 
 on:
   workflow_dispatch:
