@@ -1,5 +1,13 @@
 # @prosopo/api
 
+## 3.1.23
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
 ## 3.1.22
 ### Patch Changes
 
