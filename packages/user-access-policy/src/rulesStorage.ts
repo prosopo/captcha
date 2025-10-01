@@ -56,7 +56,7 @@ export type AccessRulesWriter = {
 		expirationTimestampSeconds?: number,
 	): Promise<string>;
 
-	deleteRules(ruleKeys: string[]): Promise<void>;
+	deleteRules(ruleIds: string[]): Promise<void>;
 
 	deleteAllRules(): Promise<number>;
 };

@@ -30,6 +30,7 @@ import {
 } from "vitest";
 import { createRedisRulesReader } from "#policy/redis/reader/redisRulesReader.js";
 import {
+	ACCESS_RULE_REDIS_KEY_PREFIX,
 	accessRulesRedisIndex,
 	getAccessRuleRedisKey,
 } from "#policy/redis/redisRuleIndex.js";
@@ -177,7 +178,9 @@ describe("redisAccessRulesStorage", () => {
 			await insertRule(doeAccessRule);
 
 			// when
-			await accessRulesWriter.deleteRules([johnAccessRuleKey]);
+			await accessRulesWriter.deleteRules([
+				johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			]);
 
 			// then
 			const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);

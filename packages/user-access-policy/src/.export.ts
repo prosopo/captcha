@@ -39,4 +39,5 @@ export {
 	type UserScopeRecord,
 	type UserScopeRecordField,
 	userScopeRecordFields,
+	getUserScopeRecordFromAccessRuleRecord,
 } from "./ruleRecord.js";

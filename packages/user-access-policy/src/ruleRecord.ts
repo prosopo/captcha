@@ -55,3 +55,12 @@ export type AccessRuleRecord = AccessPolicy &
 	UserScopeRecord & {
 		ruleGroupId?: string;
 	};
+
+export const getUserScopeRecordFromAccessRuleRecord = (
+	ruleRecord: AccessRuleRecord,
+): UserScopeRecord =>
+	Object.fromEntries(
+		userScopeRecordFields
+			.map((field) => [field, ruleRecord[field]])
+			.filter(([, value]) => value !== undefined),
+	);

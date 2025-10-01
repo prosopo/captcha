@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { PolicyScope, UserIp, UserScope } from "#policy/rule.js";
-import { userScopeInput } from "#policy/ruleInput/userScopeInput.js";
+import { userScopeSchema } from "#policy/ruleInput/userScopeInput.js";
 import {
 	type AccessRulesFilter,
 	FilterScopeMatch,
@@ -82,7 +82,7 @@ const getUserScopeQuery = (
 		}
 
 		// Ensure all expected fields are accounted for
-		for (const name of Object.keys(userScopeInput._def.schema) as Array<
+		for (const name of Object.keys(userScopeSchema.shape) as Array<
 			keyof UserScope
 		>) {
 			if (!scopeMap.has(name)) {
