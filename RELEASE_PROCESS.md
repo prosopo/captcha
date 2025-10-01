@@ -47,7 +47,7 @@ Once you're happy, **manually approve and merge the PR**.
 
 **Result:** The `main` branch is now tagged with the new version.
 
-Note: tag step is seperate to publish step so that failed publishes can be retried without doing a big rerun of everything.
+Note: tag step is separate to publish step so that failed publishes can be retried without doing a big rerun of everything.
 
 ---
 
