@@ -1,5 +1,12 @@
 # @prosopo/testpkg2
 
+## 1.0.22
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/config@3.1.18
+
 ## 1.0.21
 ### Patch Changes
 

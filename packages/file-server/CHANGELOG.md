@@ -1,5 +1,13 @@
 # @prosopo/file-server
 
+## 2.6.23
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
 ## 2.6.22
 ### Patch Changes
 

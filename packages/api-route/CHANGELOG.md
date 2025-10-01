@@ -1,5 +1,13 @@
 # @prosopo/api-route
 
+## 2.6.26
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/common@3.1.18
+  - @prosopo/config@3.1.18
+
 ## 2.6.25
 ### Patch Changes
 

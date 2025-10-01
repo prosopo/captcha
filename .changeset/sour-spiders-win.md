@@ -59,5 +59,5 @@
 "@prosopo/lint": patch
 ---
 
-Release 3.4.3
+Release 3.4.4
   
