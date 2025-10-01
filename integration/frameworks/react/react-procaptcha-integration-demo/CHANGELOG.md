@@ -1,5 +1,13 @@
 # @prosopo/react-procaptcha-integration-demo
 
+## 1.1.26
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/react-procaptcha-wrapper@1.1.26
+  - @prosopo/config@3.1.19
+
 ## 1.1.25
 ### Patch Changes
 

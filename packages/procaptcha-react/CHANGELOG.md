@@ -1,5 +1,20 @@
 # @prosopo/procaptcha-react
 
+## 2.9.4
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/procaptcha-common@2.9.4
+  - @prosopo/widget-skeleton@2.7.5
+  - @prosopo/procaptcha@2.9.4
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/util@3.1.4
+  - @prosopo/config@3.1.19
+
 ## 2.9.3
 ### Patch Changes
 
