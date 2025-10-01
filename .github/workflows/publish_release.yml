@@ -49,38 +49,7 @@ jobs:
 
       - run: npm ci --ignore-scripts --include=dev
 
-      - name: Find affected packages
-        id: affected
-        run: |
-          # Find packages that have this version
-          affected='[]'
-          
-          # Check root package
-          root_name=$(jq -r '.name' package.json)
-          root_version=$(jq -r '.version' package.json)
-          
-          if [ "$root_version" = "${{ steps.version.outputs.version }}" ]; then
-            affected=$(echo "$affected" | jq -c --arg name "$root_name" '. + [$name]')
-          fi
-          
-          # Check workspace packages
-          for pkg_dir in packages/*/; do
-            if [ -f "$pkg_dir/package.json" ]; then
-              pkg_name=$(jq -r '.name' "$pkg_dir/package.json")
-              pkg_version=$(jq -r '.version' "$pkg_dir/package.json")
-              
-              if [ "$pkg_version" = "${{ steps.version.outputs.version }}" ]; then
-                affected=$(echo "$affected" | jq -c --arg name "$pkg_name" '. + [$name]')
-              fi
-            fi
-          done
-          
-          echo "affected=$affected" >> $GITHUB_OUTPUT
-          echo "Affected packages:"
-          echo "$affected" | jq
-
       - name: Build packages
-        if: steps.affected.outputs.affected != '[]'
         run: |
           echo "Building all packages"
           npm run build:all
@@ -88,7 +57,6 @@ jobs:
           npm run bundle:all
 
       - name: Create procaptcha-bundle zip
-        if: steps.affected.outputs.affected != '[]'
         run: |
           cd packages/procaptcha-bundle/dist/bundle
           zip -r ../../../../procaptcha-bundle.zip .
@@ -96,60 +64,18 @@ jobs:
           ls -lh procaptcha-bundle.zip
 
       - name: Publish to npm
-        if: steps.affected.outputs.affected != '[]'
         run: |
-          affected='${{ steps.affected.outputs.affected }}'
-          results='[]'
-          
-          for pkg in $(echo "$affected" | jq -r '.[]'); do
-            # Skip workspace root
-            if [ "$pkg" = "$(jq -r '.name' package.json)" ]; then
-              echo "Skipping workspace root package"
-              continue
-            fi
-            
-            echo "Publishing $pkg to npm"
-            set +e
-            npm publish -w "$pkg" --access public --registry https://registry.npmjs.org/
-            result=$?
-            set -e
-            
-            results=$(echo "$results" | jq -c --arg pkg "$pkg" --argjson result "$result" '. + [{name: $pkg, npm: $result}]')
-            echo ""
-          done
-          
-          echo "results=$results" >> $GITHUB_ENV
-          
-          # Check for failures
-          failures=$(echo "$results" | jq '[.[] | select(.npm != 0)] | length')
-          if [ "$failures" -gt 0 ]; then
-            echo "Some packages failed to publish to npm"
-            echo "$results" | jq '.[] | select(.npm != 0)'
-            # If npm fails, don't publish to Docker Hub
-            exit 1
-          fi
+          echo "Publishing all packages to npm"
+          npm run publish:all
 
       - name: Publish to Docker Hub
-        if: steps.affected.outputs.affected != '[]'
         run: |
-          results='${{ env.results }}'
-          
           echo "Publishing provider image to Docker Hub"
           cd docker/images/provider
-          set +e
           npm run publish:docker
-          dockerhub_result=$?
-          set -e
           cd -
-          
-          # Add dockerhub result to the results
-          results=$(echo "$results" | jq -c --argjson result "$dockerhub_result" \
-            'map(. + {dockerhub: $result})')
-          
-          echo "results=$results" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        if: steps.affected.outputs.affected != '[]'
         env:
           GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
@@ -158,54 +84,16 @@ jobs:
             --generate-notes \
             procaptcha-bundle.zip
 
-      - name: Send notifications
-        if: always()
+      - name: Send success notification
+        if: success()
         run: |
-          results='${{ env.results }}'
-          
-          npm_success=$(echo "$results" | jq -r '.[] | select(.npm == 0) | .name' | paste -sd "," -)
-          npm_failure=$(echo "$results" | jq -r '.[] | select(.npm > 0) | .name' | paste -sd "," -)
-          
-          if [ -n "$npm_success" ]; then
-            curl -X POST -H 'Content-type: application/json' \
-              --data "{\"text\": \"✅ Published to npm: \`$npm_success\`\"}" \
-              "${{ secrets.SLACKBOT_DEVOPS }}"
-          fi
-          
-          if [ -n "$npm_failure" ]; then
-            curl -X POST -H 'Content-type: application/json' \
-              --data "{\"text\": \"❌ Failed to publish to npm: \`$npm_failure\`\"}" \
-              "${{ secrets.SLACKBOT_DEVOPS }}"
-          fi
-          
-          # Check if dockerhub result exists and report
-          dockerhub_result=$(echo "$results" | jq -r '.[0].dockerhub // "none"')
-          if [ "$dockerhub_result" = "0" ]; then
-            curl -X POST -H 'Content-type: application/json' \
-              --data "{\"text\": \"✅ Published provider image to Docker Hub\"}" \
-              "${{ secrets.SLACKBOT_DEVOPS }}"
-          elif [ "$dockerhub_result" != "none" ]; then
-            curl -X POST -H 'Content-type: application/json' \
-              --data "{\"text\": \"❌ Failed to publish provider image to Docker Hub\"}" \
-              "${{ secrets.SLACKBOT_DEVOPS }}"
-          fi
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"✅ Release v${{ steps.version.outputs.version }} published successfully\"}" \
+            "${{ secrets.SLACKBOT_DEVOPS }}"
 
-      - name: Check for failures
-        if: always()
+      - name: Send failure notification
+        if: failure()
         run: |
-          results='${{ env.results }}'
-          
-          # Count total failures
-          npm_failures=$(echo "$results" | jq '[.[] | select(.npm > 0)] | length')
-          dockerhub_failures=$(echo "$results" | jq '[.[] | select(.dockerhub > 0)] | length')
-          total_failures=$((npm_failures + dockerhub_failures))
-          
-          echo "Total failures: $total_failures"
-          
-          if [ "$total_failures" -gt 0 ]; then
-            echo "❌ Publish workflow failed - some packages did not publish successfully"
-            exit 1
-          else
-            echo "✅ All packages published successfully"
-          fi
-
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"❌ Release v${{ steps.version.outputs.version }} failed to publish\"}" \
+            "${{ secrets.SLACKBOT_DEVOPS }}"
