@@ -1,5 +1,50 @@
 # @prosopo/scripts
 
+## 3.1.12
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/types-env@2.7.37
+  - @prosopo/datasets@3.0.33
+  - @prosopo/provider@3.12.2
+  - @prosopo/keyring@2.8.26
+  - @prosopo/dotenv@3.0.24
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/workspace@3.1.12
+  - @prosopo/util@3.1.4
+  - @prosopo/cli@3.4.5
+  - @prosopo/env@3.2.12
+  - @prosopo/config@3.1.19
+
+## 3.1.11
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b8cc590]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/provider@3.12.1
+  - @prosopo/types@3.5.1
+  - @prosopo/dotenv@3.0.23
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/types-env@2.7.36
+  - @prosopo/datasets@3.0.32
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/workspace@3.1.11
+  - @prosopo/util@3.1.3
+  - @prosopo/cli@3.4.4
+  - @prosopo/env@3.2.11
+  - @prosopo/config@3.1.18
+
 ## 3.1.10
 ### Patch Changes
 

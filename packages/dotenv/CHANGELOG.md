@@ -1,5 +1,23 @@
 # @prosopo/dotenv
 
+## 3.0.24
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/config@3.1.19
+
+## 3.0.23
+### Patch Changes
+
+- c72ecbd: Reduce noisy logs
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/common@3.1.18
+  - @prosopo/config@3.1.18
+
 ## 3.0.22
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-common",
-	"version": "2.9.2",
+	"version": "2.9.4",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -30,11 +30,11 @@
 	"dependencies": {
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
-		"@prosopo/account": "2.7.27",
-		"@prosopo/config": "3.1.17",
-		"@prosopo/load-balancer": "2.7.10",
-		"@prosopo/types": "3.5.0",
-		"@prosopo/widget-skeleton": "2.7.3",
+		"@prosopo/account": "2.7.29",
+		"@prosopo/config": "3.1.19",
+		"@prosopo/load-balancer": "2.7.12",
+		"@prosopo/types": "3.5.2",
+		"@prosopo/widget-skeleton": "2.7.5",
 		"react": "18.3.1"
 	},
 	"devDependencies": {

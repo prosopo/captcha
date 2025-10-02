@@ -1,0 +1,99 @@
+name: publish_release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_ENV: "production"
+
+jobs:
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get token for gh app
+        id: app_token
+        uses: peter-murray/workflow-application-token-action@v3
+        with:
+          application_id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Setup npm registry
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Get version from tag
+        id: version
+        run: |
+          version=${GITHUB_REF#refs/tags/v}
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Version: $version"
+
+      - run: npm ci --ignore-scripts --include=dev
+
+      - name: Build packages
+        run: |
+          echo "Building all packages"
+          npm run build:all
+          npm run build:all:cjs
+          npm run bundle:all
+
+      - name: Create procaptcha-bundle zip
+        run: |
+          cd packages/procaptcha-bundle/dist/bundle
+          zip -r ../../../../procaptcha-bundle.zip .
+          cd -
+          ls -lh procaptcha-bundle.zip
+
+      - name: Publish to npm
+        run: |
+          echo "Publishing all packages to npm"
+          npm run publish
+
+      - name: Publish to Docker Hub
+        run: |
+          echo "Publishing provider image to Docker Hub"
+          cd docker/images/provider
+          npm run publish:docker
+          cd -
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "Release v${{ steps.version.outputs.version }}" \
+            --generate-notes \
+            procaptcha-bundle.zip
+
+      - name: Send success notification
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"✅ Release v${{ steps.version.outputs.version }} published successfully\"}" \
+            "${{ secrets.SLACKBOT_DEVOPS }}"
+
+      - name: Send failure notification
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"❌ Release v${{ steps.version.outputs.version }} failed to publish\"}" \
+            "${{ secrets.SLACKBOT_DEVOPS }}"
