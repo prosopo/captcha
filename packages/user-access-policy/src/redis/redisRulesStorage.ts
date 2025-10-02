@@ -37,7 +37,7 @@ export const createRedisAccessRulesStorage = (
 	connection.getClient().then((client) => {
 		Object.assign(storage, {
 			...createRedisRulesReader(client, logger),
-			...createRedisRulesWriter(client),
+			...createRedisRulesWriter(client, logger),
 		});
 
 		logger.info(() => ({

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import crypto from "node:crypto";
 import { IpAddress, IpRange } from "cidr-calc";
 import { Address4 } from "ip-address";
 import { z } from "zod";
@@ -24,11 +25,28 @@ import { accessRuleInput } from "./ruleInput/ruleInput.js";
 import { userScopeSchema } from "./ruleInput/userScopeInput.js";
 import type { AccessRuleRecord } from "./ruleRecord.js";
 
+const RULE_HASH_ALGORITHM = "md5";
+
+export const makeAccessRuleHash = (rule: AccessRule): string => {
+	/**
+	 * Zod parsing ensures the consistent field order, which affects the hash.
+	 * It would be better to sort alphabetically instead,
+	 * but we use parsing for back compatibility with existing rule hashes.
+	 */
+	const orderedRuleProperties = accessRuleInput.parse(rule);
+
+	return hashRule(orderedRuleProperties);
+};
+
 export const transformAccessRuleRecordIntoRule = (
 	ruleRecord: AccessRuleRecord,
 ): AccessRule =>
 	// accessRuleInput does all the record field transformations
 	accessRuleInput.parse(ruleRecord);
+
+export const transformAccessRuleIntoRecord = (
+	rule: AccessRule,
+): AccessRuleRecord => accessRuleToRecordScheme.parse(rule);
 
 const accessRuleToRecordScheme = z
 	.object({
@@ -75,6 +93,18 @@ const accessRuleToRecordScheme = z
 		return record;
 	});
 
+const hashRule = (rule: AccessRule): string =>
+	crypto
+		.createHash(RULE_HASH_ALGORITHM)
+		.update(stringifyRule(rule))
+		.digest("hex");
+
+const stringifyRule = (rule: AccessRule): string =>
+	JSON.stringify(rule, (key, value) =>
+		// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
+		"bigint" === typeof value ? value.toString() : value,
+	);
+
 const getStringIpFromNumeric = (numericIp: bigint): string =>
 	Address4.fromInteger(Number(numericIp)).address;
 
@@ -91,7 +121,3 @@ export const getCidrFromNumericIpRange = (
 
 	return cidr ? `${cidr.prefix.toString()}/${cidr.prefixLen}` : undefined;
 };
-
-export const transformAccessRuleIntoRecord = (
-	rule: AccessRule,
-): AccessRuleRecord => accessRuleToRecordScheme.parse(rule);

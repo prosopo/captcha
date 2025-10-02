@@ -14,14 +14,14 @@
 
 import type { RedisIndex } from "@prosopo/redis-client";
 import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
-import {
-	type AccessRule,
-	type PolicyScope,
-	type UserAttributes,
-	type UserIp,
-	type UserScope,
-	makeAccessRuleHash,
+import type {
+	AccessRule,
+	PolicyScope,
+	UserAttributes,
+	UserIp,
+	UserScope,
 } from "#policy/rule.js";
+import { makeAccessRuleHash } from "#policy/transformRule.js";
 
 export const userIpRedisSchema: RediSearchSchema = {
 	numericIpMaskMin: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },

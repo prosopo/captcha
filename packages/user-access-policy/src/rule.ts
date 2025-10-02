@@ -56,16 +56,3 @@ export type AccessRule = AccessPolicy &
 	UserScope & {
 		groupId?: string;
 	};
-
-const RULE_HASH_ALGORITHM = "md5";
-
-export const makeAccessRuleHash = (rule: AccessRule): string =>
-	crypto
-		.createHash(RULE_HASH_ALGORITHM)
-		.update(
-			JSON.stringify(rule, (key, value) =>
-				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
-				"bigint" === typeof value ? value.toString() : value,
-			),
-		)
-		.digest("hex");

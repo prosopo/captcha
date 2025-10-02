@@ -15,6 +15,7 @@
 export * from "./ruleInput/.export.js";
 
 export {
+	makeAccessRuleHash,
 	transformAccessRuleRecordIntoRule,
 	transformAccessRuleIntoRecord,
 } from "./transformRule.js";
@@ -25,7 +26,6 @@ export {
 	type PolicyScope,
 	type UserScope,
 	AccessPolicyType,
-	makeAccessRuleHash,
 } from "./rule.js";
 
 export {

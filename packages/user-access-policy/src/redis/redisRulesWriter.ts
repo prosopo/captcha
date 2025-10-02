@@ -23,6 +23,7 @@ import {
 
 export const createRedisRulesWriter = (
 	client: RedisClientType,
+	logger: Logger,
 ): AccessRulesWriter => {
 	return {
 		insertRule: async (

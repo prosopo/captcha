@@ -100,7 +100,7 @@ describe("redisAccessRulesStorage", () => {
 		let accessRulesWriter: AccessRulesWriter;
 
 		beforeAll(() => {
-			accessRulesWriter = createRedisRulesWriter(redisClient);
+			accessRulesWriter = createRedisRulesWriter(redisClient, mockLogger);
 		});
 
 		test("inserts rule", async () => {

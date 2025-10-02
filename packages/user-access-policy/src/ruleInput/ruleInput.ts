@@ -12,44 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type ZodType, type ZodTypeAny, z } from "zod";
+import { type ZodType, z } from "zod";
 import type { AccessPolicy, AccessRule, PolicyScope } from "#policy/rule.js";
 import {
 	type AccessRulesFilter,
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
 import { accessPolicyInput, policyScopeInput } from "./policyInput.js";
-import {
-	type UserScopeInput,
-	userScopeInput,
-	userScopeSchema,
-} from "./userScopeInput.js";
+import { type UserScopeInput, userScopeInput } from "./userScopeInput.js";
+
+type RuleGroupInput = {
+	groupId?: string;
+	ruleGroupId?: string;
+};
 
 export type AccessRuleInput = AccessPolicy &
 	PolicyScope &
-	UserScopeInput & {
-		groupId?: string;
-		ruleGroupId?: string;
-	};
+	UserScopeInput &
+	RuleGroupInput;
+
+const ruleGroupInput = z
+	.object({
+		groupId: z.coerce.string().optional(),
+		ruleGroupId: z.coerce.string().optional(),
+	})
+	.transform((ruleGroupInput: RuleGroupInput) => {
+		const { ruleGroupId, ...ruleGroup } = ruleGroupInput;
+
+		if ("string" === typeof ruleGroupId) {
+			ruleGroup.groupId = ruleGroupId;
+		}
+
+		return ruleGroup;
+	});
 
 export const accessRuleInput: ZodType<AccessRule> = z
 	.object({
 		...accessPolicyInput.shape,
 		...policyScopeInput.shape,
-		groupId: z.coerce.string().optional(),
-		ruleGroupId: z.coerce.string().optional(),
 	})
 	.and(userScopeInput)
-	.transform((ruleInput: AccessRuleInput): AccessRule => {
-		// extract ruleGroupId
-		const { ruleGroupId, ...rule } = ruleInput;
-
-		if ("string" === typeof ruleGroupId) {
-			rule.groupId = ruleGroupId;
-		}
-
-		return rule;
-	});
+	.and(ruleGroupInput)
+	// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
+	.transform((ruleInput: AccessRuleInput): AccessRule => ruleInput);
 
 export type AccessRulesFilterInput = AccessRulesFilter & {
 	userScope?: UserScopeInput;
