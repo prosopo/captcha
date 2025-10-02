@@ -27,4 +27,7 @@ export type {
 	RuleIdsEndpointResponse,
 } from "./findRuleIds.js";
 
-export type { GetRulesOptions, GetRulesResponse } from "./getRules.js";
+export type {
+	FetchRulesOptions,
+	FetchRulesResponse,
+} from "./fetchRules.js";

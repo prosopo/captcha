@@ -24,7 +24,7 @@ import { InsertRulesEndpoint } from "./endpoints/insertRules.js";
 
 export enum accessRuleApiPaths {
 	FIND_IDS = "/v1/prosopo/user-access-policy/rules/find-ids",
-	GET_MANY = "/v1/prosopo/user-access-policy/rules/get-many",
+	FETCH_MANY = "/v1/prosopo/user-access-policy/rules/fetch-many",
 	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
 	DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
 	DELETE_GROUPS = "/v1/prosopo/user-access-policy/rules/delete-groups",
@@ -46,7 +46,7 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 				endpoint: new FindRuleIdsEndpoint(this.accessRulesStorage, this.logger),
 			},
 			{
-				path: accessRuleApiPaths.GET_MANY,
+				path: accessRuleApiPaths.FETCH_MANY,
 				endpoint: new GetRulesEndpoint(this.accessRulesStorage, this.logger),
 			},
 			{
@@ -90,14 +90,14 @@ export const getExpressApiRuleRateLimits = () => {
 					"PROSOPO_USER_ACCESS_POLICY_RULE_FIND_IDS_LIMIT",
 				) || defaultLimit,
 		},
-		[accessRuleApiPaths.GET_MANY]: {
+		[accessRuleApiPaths.FETCH_MANY]: {
 			windowMs:
 				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_GET_MANY_WINDOW",
+					"PROSOPO_USER_ACCESS_POLICY_RULE_FETCH_MANY_WINDOW",
 				) || defaultWindowsMs,
 			limit:
 				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_GET_MANY_LIMIT",
+					"PROSOPO_USER_ACCESS_POLICY_RULE_FETCH_MANY_LIMIT",
 				) || defaultLimit,
 		},
 		[accessRuleApiPaths.INSERT_MANY]: {

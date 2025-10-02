@@ -25,6 +25,7 @@ import { parseRedisRecords } from "#policy/redis/redisRulesStorage.js";
 import type { AccessRule } from "#policy/rule.js";
 import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import type {
+	AccessRuleEntry,
 	AccessRulesFilter,
 	AccessRulesReader,
 } from "#policy/rulesStorage.js";
@@ -44,23 +45,38 @@ const redisSearchOptions: FtSearchOptions = {
 	},
 };
 
+// Redis returns -1 when expiration is not set
+const UNSET_EXPIRATION_VALUE = -1;
+
 export const createRedisRulesReader = (
 	client: RedisClientType,
 	logger: Logger,
 ): AccessRulesReader => {
 	return {
-		fetchRule: async (ruleId: string): Promise<AccessRule | undefined> => {
+		fetchRule: async (ruleId: string): Promise<AccessRuleEntry | undefined> => {
 			const ruleKey = `${ACCESS_RULE_REDIS_KEY_PREFIX}${ruleId}`;
 
 			const ruleData = await client.hGetAll(ruleKey);
 
 			const isRulePresent = Object.keys(ruleData).length > 0;
 
-			const rules = isRulePresent
-				? parseRedisRecords([ruleData], accessRuleInput, logger)
-				: [];
+			if (isRulePresent) {
+				const rules = parseRedisRecords([ruleData], accessRuleInput, logger);
+				const rule = rules.pop();
+				const expiresUnixTimestamp = await client.expireTime(ruleKey);
 
-			return rules.pop();
+				if (rule) {
+					return {
+						rule: rule,
+						expiresUnixTimestamp:
+							UNSET_EXPIRATION_VALUE === expiresUnixTimestamp
+								? undefined
+								: expiresUnixTimestamp,
+					};
+				}
+			}
+
+			return undefined;
 		},
 
 		findRules: async (
@@ -175,7 +191,7 @@ export const createRedisRulesReader = (
 
 export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 	return {
-		fetchRule: async (ruleId: string): Promise<AccessRule | undefined> => {
+		fetchRule: async (ruleId: string): Promise<AccessRuleEntry | undefined> => {
 			logger.info(() => ({
 				msg: "Dummy fetchRule() has no effect (redis is not ready)",
 				data: {

@@ -112,7 +112,9 @@ describe("redisAccessRulesStorage", () => {
 			const accessRuleKey = getAccessRuleRedisKey(accessRule);
 
 			// when
-			await accessRulesWriter.insertRule(accessRule);
+			await accessRulesWriter.insertRule({
+				rule: accessRule,
+			});
 
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
@@ -139,7 +141,10 @@ describe("redisAccessRulesStorage", () => {
 			);
 
 			// when
-			await accessRulesWriter.insertRule(accessRule, expirationTimestamp);
+			await accessRulesWriter.insertRule({
+				rule: accessRule,
+				expiresUnixTimestamp: expirationTimestamp,
+			});
 			const ruleKey = getAccessRuleRedisKey(accessRule);
 			// then
 			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);

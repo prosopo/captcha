@@ -30,8 +30,8 @@ const RULE_HASH_ALGORITHM = "md5";
 export const makeAccessRuleHash = (rule: AccessRule): string => {
 	/**
 	 * Zod parsing ensures the consistent field order, which affects the hash.
-	 * It would be better to sort alphabetically instead,
-	 * but we use parsing for back compatibility with existing rule hashes.
+	 * TODO It's better to sort alphabetically instead,
+	 * but it would require migration script for existing rule hashes.
 	 */
 	const orderedRuleProperties = accessRuleInput.parse(rule);
 

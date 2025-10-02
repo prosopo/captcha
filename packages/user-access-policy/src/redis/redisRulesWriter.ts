@@ -15,7 +15,10 @@
 import type { Logger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
 import type { AccessRule } from "#policy/rule.js";
-import type { AccessRulesWriter } from "#policy/rulesStorage.js";
+import type {
+	AccessRuleEntry,
+	AccessRulesWriter,
+} from "#policy/rulesStorage.js";
 import {
 	ACCESS_RULE_REDIS_KEY_PREFIX,
 	getAccessRuleRedisKey,
@@ -26,24 +29,16 @@ export const createRedisRulesWriter = (
 	logger: Logger,
 ): AccessRulesWriter => {
 	return {
-		insertRule: async (
-			rule: AccessRule,
-			expirationTimestamp?: number,
-		): Promise<string> => {
+		insertRule: async (ruleEntry: AccessRuleEntry): Promise<string> => {
+			const { rule, expiresUnixTimestamp } = ruleEntry;
+
 			const ruleKey = getAccessRuleRedisKey(rule);
 			const ruleValue = getRedisRuleValue(rule);
 
 			await client.hSet(ruleKey, ruleValue);
 
-			if (expirationTimestamp) {
-				const expiryDate = new Date(expirationTimestamp);
-				if (expiryDate.getUTCFullYear() === 1970) {
-					// timestamp is already in seconds
-					await client.expireAt(ruleKey, expirationTimestamp);
-				} else {
-					const timestampInSeconds = Math.floor(expirationTimestamp / 1000);
-					await client.expireAt(ruleKey, timestampInSeconds);
-				}
+			if (expiresUnixTimestamp) {
+				await client.expireAt(ruleKey, expiresUnixTimestamp);
 			}
 
 			return ruleKey;
@@ -69,14 +64,11 @@ export const createRedisRulesWriter = (
 
 export const getDummyRedisRulesWriter = (logger: Logger): AccessRulesWriter => {
 	return {
-		insertRule: async (
-			rule: AccessRule,
-			expirationTimestamp?: number,
-		): Promise<string> => {
+		insertRule: async (ruleEntry: AccessRuleEntry): Promise<string> => {
 			logger.info(() => ({
 				msg: "Dummy insertRule() has no effect (redis is not ready)",
 				data: {
-					rule,
+					ruleEntry,
 				},
 			}));
 

@@ -15,29 +15,29 @@
 import { ApiClient } from "@prosopo/api";
 import type { ApiEndpointResponse } from "@prosopo/api-route";
 import {
+	type FetchRulesEndpointResponse,
+	type FetchRulesOptions,
+	fetchRulesResponse,
+} from "#policy/api/endpoints/fetchRules.js";
+import {
 	type FindRuleFilters,
 	type RuleIdsEndpointResponse,
 	ruleIdsResponse,
 } from "#policy/api/endpoints/findRuleIds.js";
-import {
-	type GetRulesEndpointResponse,
-	type GetRulesOptions,
-	rulesResponse,
-} from "#policy/api/endpoints/getRules.js";
 import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
 import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
 import type { InsertRulesGroup } from "./endpoints/insertRules.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
 
 export class AccessRulesApiClient extends ApiClient {
-	public async getMany(
-		getOptions: GetRulesOptions,
+	public async fetchMany(
+		fetchOptions: FetchRulesOptions,
 		timestamp: string,
 		signature: string,
-	): Promise<GetRulesEndpointResponse> {
+	): Promise<FetchRulesEndpointResponse> {
 		const endpointResponse: ApiEndpointResponse = await this.post(
-			accessRuleApiPaths.GET_MANY,
-			getOptions,
+			accessRuleApiPaths.FETCH_MANY,
+			fetchOptions,
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
@@ -47,7 +47,7 @@ export class AccessRulesApiClient extends ApiClient {
 			},
 		);
 
-		const parsedData = rulesResponse.safeParse(endpointResponse.data);
+		const parsedData = fetchRulesResponse.safeParse(endpointResponse.data);
 
 		return {
 			...endpointResponse,

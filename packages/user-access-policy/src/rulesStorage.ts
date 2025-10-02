@@ -35,8 +35,13 @@ export type AccessRulesFilter = {
 	groupId?: string;
 };
 
+export type AccessRuleEntry = {
+	rule: AccessRule;
+	expiresUnixTimestamp?: number;
+};
+
 export type AccessRulesReader = {
-	fetchRule(ruleId: string): Promise<AccessRule | undefined>;
+	fetchRule(ruleId: string): Promise<AccessRuleEntry | undefined>;
 
 	findRules(
 		filter: AccessRulesFilter,
@@ -51,10 +56,7 @@ export type AccessRulesReader = {
 };
 
 export type AccessRulesWriter = {
-	insertRule(
-		rule: AccessRule,
-		expirationTimestampSeconds?: number,
-	): Promise<string>;
+	insertRule(ruleEntry: AccessRuleEntry): Promise<string>;
 
 	deleteRules(ruleIds: string[]): Promise<void>;
 

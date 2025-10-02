@@ -40,7 +40,7 @@ export type InsertRulesGroup = {
 	policyScope?: PolicyScope;
 	userScopes: UserScopeInput[];
 	groupId?: string;
-	expirationTimestamp?: number;
+	expiresUnixTimestamp?: number;
 };
 
 type ParsedInsertRulesGroup = InsertRulesGroup & {
@@ -61,10 +61,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 			policyScope: policyScopeInput.optional(),
 			groupId: z.string().optional(),
 			userScopes: z.array(userScopeInput),
-			expirationTimestamp: z
-				.number()
-				.optional()
-				.transform((val) => (val !== undefined ? Math.floor(val) : val)),
+			expiresUnixTimestamp: z.number().optional(),
 		});
 	}
 
@@ -132,7 +129,10 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 			};
 
 			createPromises.push(
-				this.accessRulesWriter.insertRule(rule, args.expirationTimestamp),
+				this.accessRulesWriter.insertRule({
+					rule: rule,
+					expiresUnixTimestamp: args.expiresUnixTimestamp,
+				}),
 			);
 		}
 		return Promise.all(createPromises);

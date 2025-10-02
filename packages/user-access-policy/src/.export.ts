@@ -31,6 +31,7 @@ export {
 export {
 	type AccessRulesFilter,
 	type AccessRulesStorage,
+	type AccessRuleEntry,
 	FilterScopeMatch,
 } from "./rulesStorage.js";
 

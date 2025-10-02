@@ -89,15 +89,15 @@ const userIpInput = z
 export type UserScopeInput = UserAttributesInput & UserIpInput;
 
 export const userScopeSchema = z.object({
-	...userAttributesSchema.shape,
 	...userIpSchema.shape,
+	...userAttributesSchema.shape,
 }) satisfies ZodType<UserScope>;
 
 export const userScopeInput = z
 	.object({})
 	// unlike ...shape(), .and() includes transformations
-	.and(userAttributesInput)
 	.and(userIpInput)
+	.and(userAttributesInput)
 	.transform(
 		// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
 		(userScopeInput): UserScopeInput => userScopeInput,
