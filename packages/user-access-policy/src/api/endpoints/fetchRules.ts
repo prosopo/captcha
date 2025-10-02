@@ -17,9 +17,9 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { AllKeys, Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
-import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
+import { ruleEntryInput } from "#policy/ruleInput/ruleInput.js";
 import type {
 	AccessRuleEntry,
 	AccessRulesStorage,
@@ -36,13 +36,8 @@ export type FetchRulesResponse = {
 };
 
 export const fetchRulesResponse: ZodType<FetchRulesResponse> = z.object({
-	ruleEntries: z
-		.object({
-			rule: accessRuleInput,
-			expiresUnixTimestamp: z.coerce.number().optional(),
-		})
-		.array(),
-});
+	ruleEntries: ruleEntryInput.array(),
+} satisfies AllKeys<FetchRulesResponse>);
 
 export type FetchRulesEndpointResponse = ApiEndpointResponse & {
 	data?: FetchRulesResponse;
