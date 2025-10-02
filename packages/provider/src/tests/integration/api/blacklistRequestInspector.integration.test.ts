@@ -93,7 +93,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				ja4Hash: ja4Hash1,
 				userAgent: userAgent1,
 			});
-			await accessRulesStorage.insertRule(accessRule);
+			await accessRulesStorage.insertRule({
+				rule: accessRule,
+			});
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -194,7 +196,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				ja4Hash: ja4Hash1,
 				userAgent: userAgent2,
 			});
-			await accessRulesStorage.insertRule(accessRule);
+			await accessRulesStorage.insertRule({
+				rule: accessRule,
+			});
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -299,8 +303,12 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				clientId: siteKey,
 				numericIp: BigInt(16843009),
 			});
-			await accessRulesStorage.insertRule(accessRule1);
-			await accessRulesStorage.insertRule(accessRule2);
+			await accessRulesStorage.insertRule({
+				rule: accessRule1,
+			});
+			await accessRulesStorage.insertRule({
+				rule: accessRule2,
+			});
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -329,8 +337,10 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				clientId: siteKey,
 				numericIp: BigInt(16843009),
 			});
-			await accessRulesStorage.insertRule(accessRule1);
-			await accessRulesStorage.insertRule(accessRule2);
+			await accessRulesStorage.insertRule({ rule: accessRule1 });
+			await accessRulesStorage.insertRule({
+				rule: accessRule2,
+			});
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -367,7 +377,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRule({
+				rule: accessRule1,
+			});
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -392,7 +404,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: numericIp,
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRule({
+				rule: accessRule1,
+			});
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -416,7 +430,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRule({
+				rule: accessRule1,
+			});
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -440,7 +456,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRule({
+				rule: accessRule1,
+			});
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -463,7 +481,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRule({
+				rule: accessRule1,
+			});
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,

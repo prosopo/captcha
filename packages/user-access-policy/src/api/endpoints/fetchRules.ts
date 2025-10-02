@@ -39,7 +39,7 @@ export const fetchRulesResponse: ZodType<FetchRulesResponse> = z.object({
 	ruleEntries: z
 		.object({
 			rule: accessRuleInput,
-			expireUnixTimestamp: z.number().optional(),
+			expiresUnixTimestamp: z.coerce.number().optional(),
 		})
 		.array(),
 });
@@ -81,6 +81,13 @@ export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
 			data: {
 				requestedCount: args.ids.length,
 				foundCount: rulesResponse.ruleEntries.length,
+			},
+		}));
+
+		this.logger.debug(() => ({
+			msg: "Fetched rule details",
+			data: {
+				ruleEntries: rulesResponse.ruleEntries,
 			},
 		}));
 

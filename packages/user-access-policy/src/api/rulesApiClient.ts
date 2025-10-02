@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as util from "node:util";
 import { ApiClient } from "@prosopo/api";
 import type { ApiEndpointResponse } from "@prosopo/api-route";
 import {
