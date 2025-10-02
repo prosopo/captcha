@@ -37,7 +37,7 @@ const ruleGroupInput = z
 	.object({
 		groupId: z.coerce.string().optional(),
 		ruleGroupId: z.coerce.string().optional(),
-	})
+	} satisfies ExactKeys<RuleGroupInput>)
 	.transform((ruleGroupInput: RuleGroupInput) => {
 		const { ruleGroupId, ...ruleGroup } = ruleGroupInput;
 
@@ -58,10 +58,10 @@ export const accessRuleInput: ZodType<AccessRule> = z
 	// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
 	.transform((ruleInput: AccessRuleInput): AccessRule => ruleInput);
 
-export const ruleEntryInput: ZodType<AccessRuleEntry> = z.object({
+export const ruleEntryInput = z.object({
 	rule: accessRuleInput,
 	expiresUnixTimestamp: z.coerce.number().optional(),
-} satisfies ExactKeys<AccessRuleEntry>);
+} satisfies ExactKeys<AccessRuleEntry>) satisfies ZodType<AccessRuleEntry>;
 
 export type AccessRulesFilterInput = AccessRulesFilter & {
 	userScope?: UserScopeInput;

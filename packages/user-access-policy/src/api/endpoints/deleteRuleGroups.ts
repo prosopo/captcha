@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import type { ExactKeys, Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesStorage,
@@ -46,7 +46,7 @@ export class DeleteRuleGroupsEndpoint
 			z.object({
 				clientIds: z.string().array(),
 				groupId: z.string(),
-			}),
+			} satisfies ExactKeys<DeleteSiteGroup>),
 		);
 	}
 

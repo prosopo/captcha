@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys, Logger } from "@prosopo/common";
+import type { ExactKeys, Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import { ruleEntryInput } from "#policy/ruleInput/ruleInput.js";
 import type {
@@ -35,9 +35,9 @@ export type FetchRulesResponse = {
 	ruleEntries: AccessRuleEntry[];
 };
 
-export const fetchRulesResponse: ZodType<FetchRulesResponse> = z.object({
+export const fetchRulesResponse = z.object({
 	ruleEntries: ruleEntryInput.array(),
-} satisfies AllKeys<FetchRulesResponse>);
+} satisfies ExactKeys<FetchRulesResponse>) satisfies ZodType<FetchRulesResponse>;
 
 export type FetchRulesEndpointResponse = ApiEndpointResponse & {
 	data?: FetchRulesResponse;
@@ -52,7 +52,7 @@ export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
 	public getRequestArgsSchema(): FetchRulesSchema {
 		return z.object({
 			ids: z.string().array(),
-		});
+		} satisfies ExactKeys<FetchRulesOptions>);
 	}
 
 	async processRequest(

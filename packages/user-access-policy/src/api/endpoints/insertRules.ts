@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { LogLevel, type Logger } from "@prosopo/common";
+import { type ExactKeys, LogLevel, type Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import type {
 	AccessPolicy,
@@ -62,7 +62,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 			groupId: z.string().optional(),
 			userScopes: z.array(userScopeInput),
 			expiresUnixTimestamp: z.number().optional(),
-		});
+		} satisfies ExactKeys<InsertRulesGroup>);
 	}
 
 	async processRequest(
