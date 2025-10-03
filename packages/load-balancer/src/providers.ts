@@ -39,7 +39,7 @@ export function selectWeightedProvider(
 
 	const totalWeight = providers.reduce((sum, p) => sum + p.weight, 0);
 
-	// Use entropy to generate a value between 0 and totalWeight
+	// Use entropy to generate a value between 0 and totalWeight-1
 	const randomValue = entropy % totalWeight;
 
 	// Select provider based on cumulative weight
