@@ -15,9 +15,9 @@ export const WIDGET_URL = "https://prosopo.io";
 export const WIDGET_URL_TEXT =
 	"Visit prosopo.io to learn more about the service and its accessibility options.";
 export const WIDGET_INNER_HEIGHT = 74;
-export const WIDGET_OUTER_HEIGHT = 200;
-export const WIDGET_MIN_HEIGHT = "200px";
-export const WIDGET_MAX_WIDTH = "800px";
+export const WIDGET_OUTER_HEIGHT = 80;
+export const WIDGET_MIN_HEIGHT = "80px";
+export const WIDGET_MAX_WIDTH = "302px";
 export const WIDGET_DIMENSIONS = {
 	maxWidth: WIDGET_MAX_WIDTH,
 	minHeight: `${WIDGET_OUTER_HEIGHT}px`,
