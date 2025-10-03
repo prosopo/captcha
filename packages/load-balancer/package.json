@@ -38,7 +38,6 @@
 		"@prosopo/common": "3.1.19",
 		"@prosopo/config": "3.1.19",
 		"@prosopo/types": "3.5.2",
-		"@prosopo/util": "3.1.4",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
