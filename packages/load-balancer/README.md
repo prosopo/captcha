@@ -1,10 +1,10 @@
 # @prosopo/load-balancer
 
-Provider load balancer for the Prosopo CAPTCHA system.
+Provider load balancer for Procaptcha
 
 ## Provider Selection Config
 
-Each provider in the system has the following properties:
+Each provider in the json has the following properties:
 
 ```typescript
 {
