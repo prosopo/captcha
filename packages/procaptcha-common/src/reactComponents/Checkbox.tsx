@@ -12,19 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { css } from "@emotion/react";
 import styled from "@emotion/styled";
-import {
-	type Theme,
-	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
-} from "@prosopo/widget-skeleton";
-import {
-	type ButtonHTMLAttributes,
-	type CSSProperties,
-	type FC,
-	useMemo,
-	useState,
-} from "react";
+import type { Theme } from "@prosopo/widget-skeleton";
+import { type ButtonHTMLAttributes, type FC, useState } from "react";
 
 interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	theme: Theme;
@@ -35,31 +25,6 @@ interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	error?: string;
 	loading: boolean;
 }
-
-const checkboxBefore = css`{
-    &:before {
-        content: '""';
-        position: absolute;
-        height: 100%;
-        width: 100%;
-    }
-}`;
-
-const baseStyle: CSSProperties = {
-	width: "28px",
-	height: "28px",
-	minWidth: "14px",
-	minHeight: "14px",
-	top: "auto",
-	left: "auto",
-	opacity: "1",
-	borderRadius: "12.5%",
-	appearance: "none",
-	cursor: "pointer",
-	margin: "0",
-	borderStyle: "solid",
-	borderWidth: "1px",
-};
 
 const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -86,10 +51,6 @@ export const Checkbox: FC<CheckboxProps> = ({
 	error,
 	loading,
 }: CheckboxProps) => {
-	const checkboxStyleBase: CSSProperties = {
-		...baseStyle,
-		border: `1px solid ${theme.palette.background.contrastText}`,
-	};
 	const [hover, setHover] = useState(false);
 
 	const ResponsiveLabel = styled.label<ResponsiveLabelProps>`
@@ -113,20 +74,6 @@ export const Checkbox: FC<CheckboxProps> = ({
 		}
 	`;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
-	const checkboxStyle: CSSProperties = useMemo(() => {
-		return {
-			...checkboxStyleBase,
-			borderColor: hover
-				? theme.palette.background.contrastText
-				: theme.palette.border,
-			appearance: checked ? "auto" : "none",
-			flex: 1,
-			margin: "15px",
-			minWidth: "28px",
-			minHeight: "28px",
-		};
-	}, [hover, theme, checked]);
 	const id = generateRandomId();
 
 	return (
@@ -138,32 +85,67 @@ export const Checkbox: FC<CheckboxProps> = ({
 			}}
 		>
 			{loading ? (
-				<div
-					className={WIDGET_CHECKBOX_SPINNER_CSS_CLASS}
+				<svg
+					viewBox="0 0 50 50"
 					aria-label="Loading spinner"
-				/>
+					style={{
+						width: "28px",
+						height: "28px",
+						margin: "15px",
+						animation: "spinner-rotation 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+					}}
+				>
+					<circle
+						cx="25"
+						cy="25"
+						r="20"
+						fill="none"
+						strokeWidth="4"
+						strokeLinecap="round"
+						stroke={theme.palette.background.contrastText}
+						strokeDasharray="90, 150"
+						strokeDashoffset="0"
+						style={{
+							animation: "spinner-dash 1.5s ease-in-out infinite",
+						}}
+					/>
+					<style>
+						{`
+							@keyframes spinner-rotation {
+								0% { transform: rotate(0deg); }
+								100% { transform: rotate(360deg); }
+							}
+							@keyframes spinner-dash {
+								0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+								50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+								100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+							}
+						`}
+					</style>
+				</svg>
 			) : (
-				<input
+				<button
 					name={id}
 					id={id}
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
-					css={checkboxBefore}
-					type={"checkbox"}
-					aria-live={"assertive"}
+					type="button"
+					role="checkbox"
+					aria-checked={checked}
+					aria-live="assertive"
 					aria-label={labelText}
 					onKeyDown={(e) => {
 						if (!e.isTrusted) {
 							return;
 						}
-						if (e.key === "Enter") {
+						if (e.key === "Enter" || e.key === " ") {
 							e.preventDefault();
 							e.stopPropagation();
 							setHover(false);
 							onChange(e);
 						}
 					}}
-					onChange={(e) => {
+					onClick={(e) => {
 						if (!e.isTrusted) {
 							return;
 						}
@@ -172,15 +154,60 @@ export const Checkbox: FC<CheckboxProps> = ({
 						setHover(false);
 						onChange(e);
 					}}
-					checked={checked}
-					style={checkboxStyle}
 					disabled={error !== undefined}
-					className={loading ? "checkbox__loading-spinner" : ""}
-					data-cy={"captcha-checkbox"}
-				/>
+					data-cy="captcha-checkbox"
+					style={{
+						width: "28px",
+						height: "28px",
+						minWidth: "28px",
+						minHeight: "28px",
+						margin: "15px",
+						padding: "0",
+						border: "none",
+						background: "transparent",
+						cursor: error ? "not-allowed" : "pointer",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					<svg
+						viewBox="0 0 24 24"
+						style={{
+							width: "100%",
+							height: "100%",
+							display: "block",
+						}}
+					>
+						<rect
+							x="3"
+							y="3"
+							width="18"
+							height="18"
+							rx="3"
+							fill="none"
+							stroke={
+								hover
+									? theme.palette.background.contrastText
+									: theme.palette.border
+							}
+							strokeWidth="2"
+						/>
+						{checked && (
+							<path
+								d="M7 12 L10 15 L17 8"
+								fill="none"
+								stroke={theme.palette.background.contrastText}
+								strokeWidth="2.5"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						)}
+					</svg>
+				</button>
 			)}
 			{error ? (
-				<ResponsiveLabel htmFor={id}>
+				<ResponsiveLabel htmlFor={id}>
 					<a
 						css={{
 							color: theme.palette.error.main,
@@ -191,7 +218,7 @@ export const Checkbox: FC<CheckboxProps> = ({
 					</a>
 				</ResponsiveLabel>
 			) : (
-				<ResponsiveLabel htmFor={id}>{labelText}</ResponsiveLabel>
+				<ResponsiveLabel htmlFor={id}>{labelText}</ResponsiveLabel>
 			)}
 		</span>
 	);
