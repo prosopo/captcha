@@ -189,9 +189,9 @@ export const Checkbox: FC<CheckboxProps> = ({
 							stroke={
 								hover
 									? theme.palette.background.contrastText
-									: theme.palette.border
+									: theme.palette.grey?.[500] || theme.palette.border
 							}
-							strokeWidth="2"
+							strokeWidth="1.5"
 						/>
 						{checked && (
 							<path
