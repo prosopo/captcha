@@ -54,7 +54,9 @@ jobs:
           echo "Building all packages"
           npm run build:all
           npm run build:all:cjs
-          npm run bundle:all
+      
+      - name: Bundle procaptcha-bundle
+        run: NODE_ENV="production" npx nx run @prosopo/procaptcha-bundle:bundle --nxBail
 
       - name: Create procaptcha-bundle zip
         run: |
