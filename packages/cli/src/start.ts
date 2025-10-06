@@ -100,11 +100,11 @@ async function startApi(
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 
+	// Run Header check middleware on all client routes
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+
 	// Specify verify router before the blocking middlewares
 	apiApp.use(prosopoVerifyRouter(env));
-
-	// Header check middleware will run on any client routes excluding verify
-	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
 
 	// Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
