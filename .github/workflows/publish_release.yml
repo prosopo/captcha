@@ -67,7 +67,10 @@ jobs:
           npm run build:all:cjs
       
       - name: Bundle procaptcha-bundle
-        run: NODE_ENV="production" npx nx run @prosopo/procaptcha-bundle:bundle --nxBail
+        run: |
+          echo "Bundling procaptcha-bundle"
+          NODE_ENV="production" npx nx run @prosopo/procaptcha-bundle:bundle --nxBail
+          NODE_ENV="production" npm run -w @prosopo/cli bundle
 
       - name: Create procaptcha-bundle zip
         run: |
@@ -85,6 +88,7 @@ jobs:
         run: |
           echo "Publishing provider image to Docker Hub"
           cd docker/images/provider
+          npm run build
           npm run publish:docker
           cd -
 
