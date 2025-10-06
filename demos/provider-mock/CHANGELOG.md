@@ -1,5 +1,21 @@
 # @prosopo/provider-mock
 
+## 2.8.17
+### Patch Changes
+
+- 8418bbe: removing stale tsignore
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/provider@3.12.3
+  - @prosopo/config@3.1.20
+  - @prosopo/api-express-router@3.0.25
+  - @prosopo/common@3.1.20
+  - @prosopo/database@3.4.5
+  - @prosopo/dotenv@3.0.25
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+
 ## 2.8.16
 ### Patch Changes
 

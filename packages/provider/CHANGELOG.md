@@ -1,5 +1,29 @@
 # @prosopo/provider
 
+## 3.12.3
+### Patch Changes
+
+- 04d0f1a: weighted random provider selection
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/load-balancer@2.8.0
+  - @prosopo/config@3.1.20
+  - @prosopo/api@3.1.24
+  - @prosopo/api-express-router@3.0.25
+  - @prosopo/api-route@2.6.28
+  - @prosopo/common@3.1.20
+  - @prosopo/database@3.4.5
+  - @prosopo/datasets@3.0.34
+  - @prosopo/env@3.2.13
+  - @prosopo/keyring@2.8.27
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+  - @prosopo/types-env@2.7.38
+  - @prosopo/user-access-policy@3.5.19
+  - @prosopo/util@3.1.5
+  - @prosopo/util-crypto@13.5.22
+
 ## 3.12.2
 ### Patch Changes
 

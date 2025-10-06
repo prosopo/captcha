@@ -1,5 +1,26 @@
 # @prosopo/cli
 
+## 3.4.6
+### Patch Changes
+
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/provider@3.12.3
+  - @prosopo/config@3.1.20
+  - @prosopo/workspace@3.1.13
+  - @prosopo/api@3.1.24
+  - @prosopo/api-express-router@3.0.25
+  - @prosopo/common@3.1.20
+  - @prosopo/dotenv@3.0.25
+  - @prosopo/env@3.2.13
+  - @prosopo/keyring@2.8.27
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+  - @prosopo/user-access-policy@3.5.19
+  - @prosopo/util@3.1.5
+  - @prosopo/util-crypto@13.5.22
+
 ## 3.4.5
 ### Patch Changes
 

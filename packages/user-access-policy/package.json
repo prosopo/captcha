@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.5.18",
+	"version": "3.5.19",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -29,12 +29,12 @@
 		"test": "npm run test:unit && npm run test:integration"
 	},
 	"dependencies": {
-		"@prosopo/api": "3.1.23",
-		"@prosopo/api-route": "2.6.27",
-		"@prosopo/common": "3.1.19",
-		"@prosopo/redis-client": "1.0.4",
-		"@prosopo/types": "3.5.2",
-		"@prosopo/util": "3.1.4",
+		"@prosopo/api": "3.1.24",
+		"@prosopo/api-route": "2.6.28",
+		"@prosopo/common": "3.1.20",
+		"@prosopo/redis-client": "1.0.5",
+		"@prosopo/types": "3.5.3",
+		"@prosopo/util": "3.1.5",
 		"@redis/search": "5.0.0",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
@@ -42,8 +42,8 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.19",
-		"@prosopo/util-crypto": "13.5.21",
+		"@prosopo/config": "3.1.20",
+		"@prosopo/util-crypto": "13.5.22",
 		"@types/node": "22.10.2",
 		"vite": "6.3.5",
 		"vitest": "3.0.9",
