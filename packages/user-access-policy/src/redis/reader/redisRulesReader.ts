@@ -54,7 +54,29 @@ export const createRedisRulesReader = (
 ): AccessRulesReader => {
     return {
         getMissingRuleIds: async (ruleIds: string[]): Promise<string[]> => {
-            // fixme implement
+            const ruleKeys = ruleIds.map(id => `${ACCESS_RULE_REDIS_KEY_PREFIX}${id}`);
+
+            const multi = client.multi();
+
+            ruleKeys.forEach(key => {
+                multi.exists(key);
+            });
+
+            const records: unknown[] = await multi.exec();
+
+            const missingIds: string[] = [];
+
+            records.forEach((exists, index) => {
+                if ("0" === String(exists)) {
+                    const ruleId = ruleIds[index];
+
+                    if (ruleId) {
+                        missingIds.push(ruleId);
+                    }
+                }
+            });
+
+            return missingIds;
         },
 
         fetchRule: async (ruleId: string): Promise<AccessRuleEntry | undefined> => {
