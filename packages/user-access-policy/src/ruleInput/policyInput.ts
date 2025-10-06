@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ExactKeys } from "@prosopo/common";
+import type { AllKeys } from "@prosopo/common";
 import { CaptchaTypeSchema } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import {
@@ -35,8 +35,8 @@ export const accessPolicyInput = z.object({
 	unsolvedImagesCount: z.coerce.number().optional(),
 	// used to increase the user's score
 	frictionlessScore: z.coerce.number().optional(),
-} satisfies ExactKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
+} satisfies AllKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
 
 export const policyScopeInput = z.object({
 	clientId: z.coerce.string().optional(),
-} satisfies ExactKeys<PolicyScope>) satisfies ZodType<PolicyScope>;
+} satisfies AllKeys<PolicyScope>) satisfies ZodType<PolicyScope>;

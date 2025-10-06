@@ -22,31 +22,32 @@ import type {
 	UserScope,
 } from "#policy/rule.js";
 import { makeAccessRuleHash } from "#policy/transformRule.js";
+import type { AllKeys, Keys} from "@prosopo/common";
 
 export const userIpRedisSchema: RediSearchSchema = {
 	numericIpMaskMin: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 	numericIpMaskMax: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 	numericIp: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
-} satisfies Record<keyof UserIp, object>;
+} satisfies AllKeys<UserIp>;
 
 export const userAttributesRedisSchema: RediSearchSchema = {
 	userId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	headersHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	userAgentHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-} satisfies Record<keyof UserAttributes, object>;
+} satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {
 	...userAttributesRedisSchema,
 	...userIpRedisSchema,
-} satisfies Partial<Record<keyof UserScope, object>>;
+} satisfies Keys<UserScope>;
 
 export const policyScopeRedisSchema: RediSearchSchema = {
 	clientId: {
 		type: SCHEMA_FIELD_TYPE.TAG,
 		INDEXMISSING: true,
 	},
-} satisfies Record<keyof PolicyScope, object>;
+} satisfies AllKeys<PolicyScope>;
 
 /**
  * Note on the field type decision
@@ -60,7 +61,7 @@ export const accessRuleRedisSchema: RediSearchSchema = {
 	...policyScopeRedisSchema,
 	...userScopeRedisSchema,
 	groupId: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
-} satisfies Partial<Record<keyof AccessRule, object>>;
+} satisfies Keys<AccessRule>;
 
 export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";
 

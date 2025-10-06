@@ -20,27 +20,28 @@ import type {
 	UserIpRecord,
 	UserScopeRecord,
 } from "#policy/ruleRecord.js";
+import type {AllKeys, Keys} from "@prosopo/common";
 
 const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	userId: { type: String, required: false },
 	ja4Hash: { type: String, required: false },
 	userAgent: { type: String, required: false },
 	headersHash: { type: String, required: false },
-};
+} satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {
 	ip: { type: String, required: false },
-	ipMask: { type: String, required: false },
-};
+    ipMask: { type: String, required: false },
+} satisfies AllKeys<UserIpRecord>;
 
 const userScopeSchema: SchemaDefinition<UserScopeRecord> = {
 	...userAttributesSchema,
 	...userIpSchema,
-};
+} satisfies Keys<UserScopeRecord>;
 
 const policyScopeSchema: SchemaDefinition<PolicyScope> = {
 	clientId: { type: String, required: false },
-};
+} satisfies AllKeys<PolicyScope>;
 
 const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	type: { type: String, required: true },
@@ -51,11 +52,11 @@ const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	powDifficulty: { type: Number, required: false },
 	unsolvedImagesCount: { type: Number, required: false },
 	frictionlessScore: { type: Number, required: false },
-};
+} satisfies AllKeys<AccessPolicy>;
 
 export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
 	...accessPolicySchema,
 	...policyScopeSchema,
 	...userScopeSchema,
 	ruleGroupId: { type: String, required: false },
-};
+} satisfies Keys<AccessRuleRecord>;

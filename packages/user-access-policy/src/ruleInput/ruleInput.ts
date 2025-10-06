@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ExactKeys } from "@prosopo/common";
+import type { AllKeys } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import type { AccessPolicy, AccessRule, PolicyScope } from "#policy/rule.js";
 import {
@@ -37,7 +37,7 @@ const ruleGroupInput = z
 	.object({
 		groupId: z.coerce.string().optional(),
 		ruleGroupId: z.coerce.string().optional(),
-	} satisfies ExactKeys<RuleGroupInput>)
+	} satisfies AllKeys<RuleGroupInput>)
 	.transform((ruleGroupInput: RuleGroupInput) => {
 		const { ruleGroupId, ...ruleGroup } = ruleGroupInput;
 
@@ -61,7 +61,7 @@ export const accessRuleInput: ZodType<AccessRule> = z
 export const ruleEntryInput = z.object({
 	rule: accessRuleInput,
 	expiresUnixTimestamp: z.coerce.number().optional(),
-} satisfies ExactKeys<AccessRuleEntry>) satisfies ZodType<AccessRuleEntry>;
+} satisfies AllKeys<AccessRuleEntry>) satisfies ZodType<AccessRuleEntry>;
 
 export type AccessRulesFilterInput = AccessRulesFilter & {
 	userScope?: UserScopeInput;
@@ -77,4 +77,4 @@ export const accessRulesFilterInput = z.object({
 		.nativeEnum(FilterScopeMatch)
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
-} satisfies ExactKeys<AccessRulesFilter>) satisfies ZodType<AccessRulesFilter>;
+} satisfies AllKeys<AccessRulesFilter>) satisfies ZodType<AccessRulesFilter>;

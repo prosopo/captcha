@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type ExactKeys<Type> = Record<keyof Type, unknown>;
+// syntax sugar
+export type Keys<Type> = Partial<Record<keyof Type,unknown>>;
+
+// see the usage example below
+export type AllKeys<Type> = Record<keyof Type, unknown>;
 
 /*
 By default, "satisfies Type" allows optional properties to be missing.
-But there are cases when we need to enforce it, e.g. mastering Zod schema
+But there are cases when we need to enforce it, e.g. mastering Zod or Redis schemas
 
 type MyType = {
   required: string;
@@ -35,5 +39,5 @@ export const myType: ZodType<MyType> = z.object({
 export const schema: ZodType<Type> = z.object({
     required: z.string(),
     oldRemovedProperty: z.string(),
-} satisfies ExactKeys<MyType>);
+} satisfies AllKeys<MyType>);
 */

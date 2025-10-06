@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
-import type { ExactKeys } from "@prosopo/common";
+import type { AllKeys } from "@prosopo/common";
 import { getIPAddress } from "@prosopo/util";
 import { Address4 } from "ip-address";
 import { type ZodType, z } from "zod";
@@ -28,13 +28,13 @@ const userAttributesSchema = z.object({
 	ja4Hash: z.coerce.string().optional(),
 	headersHash: z.coerce.string().optional(),
 	userAgentHash: z.coerce.string().optional(),
-} satisfies ExactKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
+} satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z
 	.object({
 		...userAttributesSchema.shape,
 		userAgent: z.coerce.string().optional(),
-	} satisfies ExactKeys<UserAttributesInput>)
+	} satisfies AllKeys<UserAttributesInput>)
 	.transform((userAttributesInput: UserAttributesInput): UserAttributes => {
 		// this line creates a new "userAttributes", without userAgent
 		const { userAgent, ...userScope } = userAttributesInput;
@@ -55,14 +55,14 @@ const userIpSchema = z.object({
 	numericIp: z.coerce.bigint().optional(),
 	numericIpMaskMin: z.coerce.bigint().optional(),
 	numericIpMaskMax: z.coerce.bigint().optional(),
-} satisfies ExactKeys<UserIp>) satisfies ZodType<UserIp>;
+} satisfies AllKeys<UserIp>) satisfies ZodType<UserIp>;
 
 const userIpInput = z
 	.object({
 		...userIpSchema.shape,
 		ip: z.string().optional(),
 		ipMask: z.string().optional(),
-	} satisfies ExactKeys<UserIpInput>)
+	} satisfies AllKeys<UserIpInput>)
 	.transform((userIpInput: UserIpInput): UserIp => {
 		// this line creates a new "userScope", without ip and ipMask
 		const { ip, ipMask, ...numericUserIp } = userIpInput;
@@ -92,7 +92,7 @@ export type UserScopeInput = UserAttributesInput & UserIpInput;
 export const userScopeSchema = z.object({
 	...userIpSchema.shape,
 	...userAttributesSchema.shape,
-} satisfies ExactKeys<UserScope>) satisfies ZodType<UserScope>;
+} satisfies AllKeys<UserScope>) satisfies ZodType<UserScope>;
 
 export const userScopeInput = z
 	.object({})

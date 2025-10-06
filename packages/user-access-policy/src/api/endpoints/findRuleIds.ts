@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { ExactKeys, Logger } from "@prosopo/common";
+import type { AllKeys, Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
@@ -38,7 +38,7 @@ export type RuleIdsResponse = {
 
 export const ruleIdsResponse = z.object({
 	ruleIds: z.string().array(),
-} satisfies ExactKeys<RuleIdsResponse>) satisfies ZodType<RuleIdsResponse>;
+} satisfies AllKeys<RuleIdsResponse>) satisfies ZodType<RuleIdsResponse>;
 
 export type RuleIdsEndpointResponse = ApiEndpointResponse & {
 	data?: RuleIdsResponse;
