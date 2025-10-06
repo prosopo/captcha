@@ -21,7 +21,7 @@ import {
     ACCESS_RULES_REDIS_INDEX_NAME,
     ACCESS_RULE_REDIS_KEY_PREFIX,
 } from "#policy/redis/redisRuleIndex.js";
-import {parseRedisRecords} from "#policy/redis/redisRulesStorage.js";
+import {parseExpirationRecords, parseRedisRecords} from "#policy/redis/redisRulesStorage.js";
 import type {AccessRule} from "#policy/rule.js";
 import {accessRuleInput} from "#policy/ruleInput/ruleInput.js";
 import type {
@@ -44,9 +44,6 @@ const redisSearchOptions: FtSearchOptions = {
         size: DEFAULT_SEARCH_LIMIT,
     },
 };
-
-// Redis returns -1 when expiration is not set
-const UNSET_EXPIRATION_VALUE = -1;
 
 export const createRedisRulesReader = (
     client: RedisClientType,
@@ -79,30 +76,39 @@ export const createRedisRulesReader = (
             return missingIds;
         },
 
-        fetchRule: async (ruleId: string): Promise<AccessRuleEntry | undefined> => {
-            const ruleKey = `${ACCESS_RULE_REDIS_KEY_PREFIX}${ruleId}`;
+        fetchRules: async (ruleIds: string[]): Promise<AccessRuleEntry[]> => {
+            const keys = ruleIds.map(id => `${ACCESS_RULE_REDIS_KEY_PREFIX}${id}`);
 
-            const ruleData = await client.hGetAll(ruleKey);
+            const rulesPipe = client.multi();
+            const expirationPipe = client.multi();
 
-            const isRulePresent = Object.keys(ruleData).length > 0;
+            keys.map((key) => {
+                rulesPipe.hGetAll(key);
+                expirationPipe.expireTime(key);
+            });
 
-            if (isRulePresent) {
-                const rules = parseRedisRecords([ruleData], accessRuleInput, logger);
-                const rule = rules.pop();
-                const expiresUnixTimestamp = await client.expireTime(ruleKey);
+            const ruleRecords = await rulesPipe.exec() as object[];
+            const expirationRecords = await expirationPipe.exec() as unknown[];
 
-                if (rule) {
-                    return {
-                        rule: rule,
-                        expiresUnixTimestamp:
-                            UNSET_EXPIRATION_VALUE === expiresUnixTimestamp
-                                ? undefined
-                                : expiresUnixTimestamp,
-                    };
+            const expirations = parseExpirationRecords(expirationRecords, logger);
+            const entries: AccessRuleEntry[] = [];
+
+            ruleRecords.forEach((ruleData, index) => {
+                const isRulePresent = Object.keys(ruleData).length > 0;
+
+                if (isRulePresent) {
+                    const rule = parseRedisRecords([ruleData], accessRuleInput, logger)[0];
+
+                    if (rule) {
+                        entries.push({
+                            rule: rule,
+                            expiresUnixTimestamp: expirations[index],
+                        })
+                    }
                 }
-            }
+            });
 
-            return undefined;
+            return entries;
         },
 
         findRules: async (
@@ -212,6 +218,16 @@ export const createRedisRulesReader = (
 
             return ruleIds;
         },
+
+        fetchAllRuleIds: async (batchHandler: (ruleIds: string[]) => Promise<void>): Promise<void> => {
+            await aggregateRedisKeys(client, "*", logger, async (keys: string[]) => {
+                const ids = keys.map((ruleKey) =>
+                    ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+                );
+
+                await batchHandler(ids);
+            });
+        }
     };
 };
 
@@ -228,15 +244,15 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
             return [];
         },
 
-        fetchRule: async (ruleId: string): Promise<AccessRuleEntry | undefined> => {
+        fetchRules: async (ruleIds: string[]): Promise<AccessRuleEntry[]> => {
             logger.info(() => ({
                 msg: "Dummy fetchRule() has no effect (redis is not ready)",
                 data: {
-                    ruleId,
+                    ruleIds,
                 },
             }));
 
-            return undefined;
+            return [];
         },
 
         findRules: async (
@@ -267,5 +283,11 @@ export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
 
             return [];
         },
+
+        fetchAllRuleIds: async (batchHandler: (ruleIds: string[]) => Promise<void>): Promise<void> => {
+            logger.info(() => ({
+                msg: "Dummy fetchAllRuleIds() has no effect (redis is not ready)",
+            }));
+        }
     };
 };

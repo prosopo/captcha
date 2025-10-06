@@ -13,128 +13,129 @@
 // limitations under the License.
 
 import {
-	type ApiEndpoint,
-	type ApiEndpointResponse,
-	ApiEndpointResponseStatus,
+    type ApiEndpoint,
+    type ApiEndpointResponse,
+    ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type AllKeys, LogLevel, type Logger } from "@prosopo/common";
-import { type ZodType, z } from "zod";
+import {type AllKeys, LogLevel, type Logger} from "@prosopo/common";
+import {type ZodType, z} from "zod";
 import type {
-	AccessPolicy,
-	AccessRule,
-	PolicyScope,
-	UserScope,
+    AccessPolicy,
+    AccessRule,
+    PolicyScope,
+    UserScope,
 } from "#policy/rule.js";
 import {
-	accessPolicyInput,
-	policyScopeInput,
+    accessPolicyInput,
+    policyScopeInput,
 } from "#policy/ruleInput/policyInput.js";
 import {
-	type UserScopeInput,
-	userScopeInput,
+    type UserScopeInput,
+    userScopeInput,
 } from "#policy/ruleInput/userScopeInput.js";
-import type { AccessRulesWriter } from "#policy/rulesStorage.js";
+import type {AccessRuleEntry, AccessRulesWriter} from "#policy/rulesStorage.js";
 
 export type InsertRulesGroup = {
-	accessPolicy: AccessPolicy;
-	policyScope?: PolicyScope;
-	userScopes: UserScopeInput[];
-	groupId?: string;
-	expiresUnixTimestamp?: number;
+    accessPolicy: AccessPolicy;
+    policyScope?: PolicyScope;
+    userScopes: UserScopeInput[];
+    groupId?: string;
+    expiresUnixTimestamp?: number;
 };
 
 type ParsedInsertRulesGroup = InsertRulesGroup & {
-	userScopes: UserScope[];
+    userScopes: UserScope[];
 };
 
 type InsertRulesSchema = ZodType<InsertRulesGroup>;
 
 export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
-	public constructor(
-		private readonly accessRulesWriter: AccessRulesWriter,
-		private readonly logger: Logger,
-	) {}
+    public constructor(
+        private readonly accessRulesWriter: AccessRulesWriter,
+        private readonly logger: Logger,
+    ) {
+    }
 
-	public getRequestArgsSchema(): InsertRulesSchema {
-		return z.object({
-			accessPolicy: accessPolicyInput,
-			policyScope: policyScopeInput.optional(),
-			groupId: z.string().optional(),
-			userScopes: z.array(userScopeInput),
-			expiresUnixTimestamp: z.number().optional(),
-		} satisfies AllKeys<InsertRulesGroup>);
-	}
+    public getRequestArgsSchema(): InsertRulesSchema {
+        return z.object({
+            accessPolicy: accessPolicyInput,
+            policyScope: policyScopeInput.optional(),
+            groupId: z.string().optional(),
+            userScopes: z.array(userScopeInput),
+            expiresUnixTimestamp: z.number().optional(),
+        } satisfies AllKeys<InsertRulesGroup>);
+    }
 
-	async processRequest(
-		args: ParsedInsertRulesGroup,
-	): Promise<ApiEndpointResponse> {
-		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
-			setTimeout(() => {
-				resolve({
-					status: ApiEndpointResponseStatus.PROCESSING,
-				});
-			}, 5000);
-		});
+    async processRequest(
+        args: ParsedInsertRulesGroup,
+    ): Promise<ApiEndpointResponse> {
+        const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    status: ApiEndpointResponseStatus.PROCESSING,
+                });
+            }, 5000);
+        });
 
-		const createRulesPromise = this.createRules(args)
-			.then((insertedIds) => {
-				this.logger.info(() => ({
-					msg: "Endpoint inserted access rules",
-					data: {
-						userScopesCount: args.userScopes.length,
-						insertedCount: insertedIds.length,
-						uniqueIdsCount: new Set(insertedIds).size,
-					},
-				}));
+        const createRulesPromise = this.createRules(args)
+            .then((insertedIds) => {
+                this.logger.info(() => ({
+                    msg: "Endpoint inserted access rules",
+                    data: {
+                        userScopesCount: args.userScopes.length,
+                        insertedCount: insertedIds.length,
+                        uniqueIdsCount: new Set(insertedIds).size,
+                    },
+                }));
 
-				this.logger.debug(() => ({
-					msg: "Inserted access rules details",
-					data: {
-						insertedIds,
-						input: args,
-					},
-				}));
+                this.logger.debug(() => ({
+                    msg: "Inserted access rules details",
+                    data: {
+                        insertedIds,
+                        input: args,
+                    },
+                }));
 
-				return {
-					status: ApiEndpointResponseStatus.SUCCESS,
-				};
-			})
-			.catch((error) => {
-				if (LogLevel.enum.debug === this.logger.getLogLevel()) {
-					this.logger.error(() => ({
-						err: error,
-						data: { args },
-						msg: "Failed to insert access rules",
-					}));
-				}
-				return {
-					status: ApiEndpointResponseStatus.FAIL,
-				};
-			});
+                return {
+                    status: ApiEndpointResponseStatus.SUCCESS,
+                };
+            })
+            .catch((error) => {
+                if (LogLevel.enum.debug === this.logger.getLogLevel()) {
+                    this.logger.error(() => ({
+                        err: error,
+                        data: {args},
+                        msg: "Failed to insert access rules",
+                    }));
+                }
+                return {
+                    status: ApiEndpointResponseStatus.FAIL,
+                };
+            });
 
-		// Whichever finishes first: timeout or actual rule creation
-		return Promise.race([timeoutPromise, createRulesPromise]);
-	}
+        // Whichever finishes first: timeout or actual rule creation
+        return Promise.race([timeoutPromise, createRulesPromise]);
+    }
 
-	protected async createRules(args: ParsedInsertRulesGroup): Promise<string[]> {
-		const policyScope = args.policyScope || {};
+    protected async createRules(args: ParsedInsertRulesGroup): Promise<string[]> {
+        const policyScope = args.policyScope || {};
 
-		const createPromises = [];
-		for (const userScope of args.userScopes) {
-			const rule: AccessRule = {
-				...args.accessPolicy,
-				...policyScope,
-				...userScope,
-				...(args.groupId ? { groupId: args.groupId } : {}),
-			};
+        const ruleEntries: AccessRuleEntry[] = [];
 
-			createPromises.push(
-				this.accessRulesWriter.insertRule({
-					rule: rule,
-					expiresUnixTimestamp: args.expiresUnixTimestamp,
-				}),
-			);
-		}
-		return Promise.all(createPromises);
-	}
+        for (const userScope of args.userScopes) {
+            const rule: AccessRule = {
+                ...args.accessPolicy,
+                ...policyScope,
+                ...userScope,
+                ...(args.groupId ? {groupId: args.groupId} : {}),
+            };
+
+            ruleEntries.push({
+                rule: rule,
+                expiresUnixTimestamp: args.expiresUnixTimestamp,
+            });
+        }
+
+        return this.accessRulesWriter.insertRules(ruleEntries);
+    }
 }

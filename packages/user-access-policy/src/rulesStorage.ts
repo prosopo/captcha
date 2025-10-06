@@ -41,7 +41,7 @@ export type AccessRuleEntry = {
 };
 
 export type AccessRulesReader = {
-    fetchRule(ruleId: string): Promise<AccessRuleEntry | undefined>;
+    fetchRules(ruleIds: string[]): Promise<AccessRuleEntry[]>;
 
     getMissingRuleIds(ruleIds: string[]): Promise<string[]>;
 
@@ -55,10 +55,12 @@ export type AccessRulesReader = {
         filter: AccessRulesFilter,
         matchingFieldsOnly?: boolean,
     ): Promise<string[]>;
+
+    fetchAllRuleIds(batchHandler: (ruleIds: string[]) => Promise<void>): Promise<void>;
 };
 
 export type AccessRulesWriter = {
-    insertRule(ruleEntry: AccessRuleEntry): Promise<string>;
+    insertRules(ruleEntries: AccessRuleEntry[]): Promise<string[]>;
 
     deleteRules(ruleIds: string[]): Promise<void>;
 

@@ -13,82 +13,74 @@
 // limitations under the License.
 
 import {
-	type ApiEndpoint,
-	type ApiEndpointResponse,
-	ApiEndpointResponseStatus,
+    type ApiEndpoint,
+    type ApiEndpointResponse,
+    ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys, Logger } from "@prosopo/common";
-import { type ZodType, z } from "zod";
-import { ruleEntryInput } from "#policy/ruleInput/ruleInput.js";
+import type {AllKeys, Logger} from "@prosopo/common";
+import {type ZodType, z} from "zod";
+import {ruleEntryInput} from "#policy/ruleInput/ruleInput.js";
 import type {
-	AccessRuleEntry,
-	AccessRulesStorage,
+    AccessRuleEntry,
+    AccessRulesStorage,
 } from "#policy/rulesStorage.js";
 
 export type FetchRulesOptions = {
-	ids: string[];
+    ids: string[];
 };
 
 type FetchRulesSchema = ZodType<FetchRulesOptions>;
 
 export type FetchRulesResponse = {
-	ruleEntries: AccessRuleEntry[];
+    ruleEntries: AccessRuleEntry[];
 };
 
 export const fetchRulesResponse = z.object({
-	ruleEntries: ruleEntryInput.array(),
+    ruleEntries: ruleEntryInput.array(),
 } satisfies AllKeys<FetchRulesResponse>) satisfies ZodType<FetchRulesResponse>;
 
 export type FetchRulesEndpointResponse = ApiEndpointResponse & {
-	data?: FetchRulesResponse;
+    data?: FetchRulesResponse;
 };
 
 export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
-	public constructor(
-		private readonly accessRulesStorage: AccessRulesStorage,
-		private readonly logger: Logger,
-	) {}
+    public constructor(
+        private readonly accessRulesStorage: AccessRulesStorage,
+        private readonly logger: Logger,
+    ) {
+    }
 
-	public getRequestArgsSchema(): FetchRulesSchema {
-		return z.object({
-			ids: z.string().array(),
-		} satisfies AllKeys<FetchRulesOptions>);
-	}
+    public getRequestArgsSchema(): FetchRulesSchema {
+        return z.object({
+            ids: z.string().array(),
+        } satisfies AllKeys<FetchRulesOptions>);
+    }
 
-	async processRequest(
-		args: FetchRulesOptions,
-	): Promise<FetchRulesEndpointResponse> {
-		const rulesResponse: FetchRulesResponse = { ruleEntries: [] };
+    async processRequest(
+        args: FetchRulesOptions,
+    ): Promise<FetchRulesEndpointResponse> {
+        const ruleEntries = await this.accessRulesStorage.fetchRules(args.ids);
 
-		for (const ruleId of args.ids) {
-			const ruleFetchResult = await this.accessRulesStorage.fetchRule(ruleId);
+        this.logger.info(() => ({
+            msg: "Endpoint fetched rules",
+            data: {
+                requestedCount: args.ids.length,
+                foundCount: ruleEntries.length,
+            },
+        }));
 
-			if (ruleFetchResult) {
-				rulesResponse.ruleEntries.push({
-					rule: ruleFetchResult.rule,
-					expiresUnixTimestamp: ruleFetchResult.expiresUnixTimestamp,
-				});
-			}
-		}
+        this.logger.debug(() => ({
+            msg: "Fetched rule details",
+            data: {
+                ruleEntries: ruleEntries,
+            },
+        }));
 
-		this.logger.info(() => ({
-			msg: "Endpoint fetched rules",
-			data: {
-				requestedCount: args.ids.length,
-				foundCount: rulesResponse.ruleEntries.length,
-			},
-		}));
-
-		this.logger.debug(() => ({
-			msg: "Fetched rule details",
-			data: {
-				ruleEntries: rulesResponse.ruleEntries,
-			},
-		}));
-
-		return {
-			status: ApiEndpointResponseStatus.SUCCESS,
-			data: rulesResponse,
-		};
-	}
+        return {
+            status: ApiEndpointResponseStatus.SUCCESS,
+            data: {
+                ruleEntries: ruleEntries,
+            },
+        };
+    }
 }

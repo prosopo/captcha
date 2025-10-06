@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as util from "node:util";
 import {ApiClient} from "@prosopo/api";
 import type {ApiEndpointResponse} from "@prosopo/api-route";
 import {
@@ -36,6 +35,16 @@ import {
 } from "#policy/api/endpoints/getMissingIds.js";
 
 export class AccessRulesApiClient extends ApiClient {
+    public async rehashAll(timestamp: string, signature: string): Promise<ApiEndpointResponse> {
+        return this.post(accessRuleApiPaths.REHASH_ALL, {}, {
+            headers: {
+                "Prosopo-Site-Key": this.account,
+                timestamp,
+                signature,
+            },
+        });
+    }
+
     public async getMissingIds(idsToCheck: MissingIds,
                                timestamp: string,
                                signature: string,): Promise<MissingIdsEndpointResponse> {

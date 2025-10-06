@@ -22,6 +22,7 @@ import {DeleteRuleGroupsEndpoint} from "./endpoints/deleteRuleGroups.js";
 import {DeleteRulesEndpoint} from "./endpoints/deleteRules.js";
 import {InsertRulesEndpoint} from "./endpoints/insertRules.js";
 import {GetMissingIdsEndpoint} from "#policy/api/endpoints/getMissingIds.js";
+import {RehashRulesEndpoint} from "#policy/api/endpoints/rehashRules.js";
 
 export enum accessRuleApiPaths {
     GET_MISSING_IDS = "/v1/prosopo/user-access-policy/rules/get-missing-ids",
@@ -31,6 +32,7 @@ export enum accessRuleApiPaths {
     DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
     DELETE_GROUPS = "/v1/prosopo/user-access-policy/rules/delete-groups",
     DELETE_ALL = "/v1/prosopo/user-access-policy/rules/delete-all",
+    REHASH_ALL = "/v1/prosopo/user-access-policy/rules/rehash-all",
 }
 
 type RuleApiPath = `${accessRuleApiPaths}`;
@@ -51,6 +53,7 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
             [accessRuleApiPaths.DELETE_MANY]: new DeleteRulesEndpoint(this.accessRulesStorage, this.logger),
             [accessRuleApiPaths.DELETE_GROUPS]: new DeleteRuleGroupsEndpoint(this.accessRulesStorage, this.logger),
             [accessRuleApiPaths.DELETE_ALL]: new DeleteAllRulesEndpoint(this.accessRulesStorage, this.logger),
+            [accessRuleApiPaths.REHASH_ALL]: new RehashRulesEndpoint(this.accessRulesStorage, this.logger),
         } satisfies AllEnumValues<accessRuleApiPaths>;
     }
 }
@@ -128,6 +131,16 @@ export const getExpressApiRuleRateLimits = () => {
             limit:
                 getIntEnvironmentVariable(
                     "PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_LIMIT",
+                ) || defaultLimit,
+        },
+        [accessRuleApiPaths.REHASH_ALL]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_REHASH_ALL_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_REHASH_ALL_LIMIT",
                 ) || defaultLimit,
         },
     } satisfies Record<RuleApiPath, Record<string, number>>;
