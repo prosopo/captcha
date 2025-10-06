@@ -13,10 +13,13 @@
 // limitations under the License.
 
 // syntax sugar
-export type Keys<Type> = Partial<Record<keyof Type,unknown>>;
+export type Keys<Type> = Partial<Record<keyof Type, unknown>>;
 
 // see the usage example below
 export type AllKeys<Type> = Record<keyof Type, unknown>;
+
+export type AllEnumValues<Type extends string | number> =
+    Record<Type, unknown>;
 
 /*
 By default, "satisfies Type" allows optional properties to be missing.

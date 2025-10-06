@@ -12,145 +12,135 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
-import { FetchRulesEndpoint } from "#policy/api/endpoints/fetchRules.js";
-import { FindRuleIdsEndpoint } from "#policy/api/endpoints/findRuleIds.js";
-import type { AccessRulesStorage } from "#policy/rulesStorage.js";
-import { DeleteAllRulesEndpoint } from "./endpoints/deleteAllRules.js";
-import { DeleteRuleGroupsEndpoint } from "./endpoints/deleteRuleGroups.js";
-import { DeleteRulesEndpoint } from "./endpoints/deleteRules.js";
-import { InsertRulesEndpoint } from "./endpoints/insertRules.js";
+import type {ApiRoutes, ApiRoutesProvider} from "@prosopo/api-route";
+import {AllEnumValues, type Logger} from "@prosopo/common";
+import {FetchRulesEndpoint} from "#policy/api/endpoints/fetchRules.js";
+import {FindRuleIdsEndpoint} from "#policy/api/endpoints/findRuleIds.js";
+import type {AccessRulesStorage} from "#policy/rulesStorage.js";
+import {DeleteAllRulesEndpoint} from "./endpoints/deleteAllRules.js";
+import {DeleteRuleGroupsEndpoint} from "./endpoints/deleteRuleGroups.js";
+import {DeleteRulesEndpoint} from "./endpoints/deleteRules.js";
+import {InsertRulesEndpoint} from "./endpoints/insertRules.js";
+import {GetMissingIdsEndpoint} from "#policy/api/endpoints/getMissingIds.js";
 
 export enum accessRuleApiPaths {
-	FIND_IDS = "/v1/prosopo/user-access-policy/rules/find-ids",
-	FETCH_MANY = "/v1/prosopo/user-access-policy/rules/fetch-many",
-	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
-	DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
-	DELETE_GROUPS = "/v1/prosopo/user-access-policy/rules/delete-groups",
-	DELETE_ALL = "/v1/prosopo/user-access-policy/rules/delete-all",
+    GET_MISSING_IDS = "/v1/prosopo/user-access-policy/rules/get-missing-ids",
+    FIND_IDS = "/v1/prosopo/user-access-policy/rules/find-ids",
+    FETCH_MANY = "/v1/prosopo/user-access-policy/rules/fetch-many",
+    INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
+    DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
+    DELETE_GROUPS = "/v1/prosopo/user-access-policy/rules/delete-groups",
+    DELETE_ALL = "/v1/prosopo/user-access-policy/rules/delete-all",
 }
 
 type RuleApiPath = `${accessRuleApiPaths}`;
 
 export class AccessRuleApiRoutes implements ApiRoutesProvider {
-	public constructor(
-		private readonly accessRulesStorage: AccessRulesStorage,
-		private readonly logger: Logger,
-	) {}
+    public constructor(
+        private readonly accessRulesStorage: AccessRulesStorage,
+        private readonly logger: Logger,
+    ) {
+    }
 
-	public getRoutes(): ApiRoute[] {
-		return [
-			{
-				path: accessRuleApiPaths.FIND_IDS,
-				endpoint: new FindRuleIdsEndpoint(this.accessRulesStorage, this.logger),
-			},
-			{
-				path: accessRuleApiPaths.FETCH_MANY,
-				endpoint: new FetchRulesEndpoint(this.accessRulesStorage, this.logger),
-			},
-			{
-				path: accessRuleApiPaths.INSERT_MANY,
-				endpoint: new InsertRulesEndpoint(this.accessRulesStorage, this.logger),
-			},
-			{
-				path: accessRuleApiPaths.DELETE_MANY,
-				endpoint: new DeleteRulesEndpoint(this.accessRulesStorage, this.logger),
-			},
-			{
-				path: accessRuleApiPaths.DELETE_GROUPS,
-				endpoint: new DeleteRuleGroupsEndpoint(
-					this.accessRulesStorage,
-					this.logger,
-				),
-			},
-			{
-				path: accessRuleApiPaths.DELETE_ALL,
-				endpoint: new DeleteAllRulesEndpoint(
-					this.accessRulesStorage,
-					this.logger,
-				),
-			},
-		] satisfies Array<{ path: RuleApiPath; [key: string]: unknown }>;
-	}
+    public getRoutes(): ApiRoutes {
+        return {
+            [accessRuleApiPaths.GET_MISSING_IDS]: new GetMissingIdsEndpoint(this.accessRulesStorage, this.logger),
+            [accessRuleApiPaths.FIND_IDS]: new FindRuleIdsEndpoint(this.accessRulesStorage, this.logger),
+            [accessRuleApiPaths.FETCH_MANY]: new FetchRulesEndpoint(this.accessRulesStorage, this.logger),
+            [accessRuleApiPaths.INSERT_MANY]: new InsertRulesEndpoint(this.accessRulesStorage, this.logger),
+            [accessRuleApiPaths.DELETE_MANY]: new DeleteRulesEndpoint(this.accessRulesStorage, this.logger),
+            [accessRuleApiPaths.DELETE_GROUPS]: new DeleteRuleGroupsEndpoint(this.accessRulesStorage, this.logger),
+            [accessRuleApiPaths.DELETE_ALL]: new DeleteAllRulesEndpoint(this.accessRulesStorage, this.logger),
+        } satisfies AllEnumValues<accessRuleApiPaths>;
+    }
 }
 
 export const getExpressApiRuleRateLimits = () => {
-	const defaultWindowsMs = 60000;
-	const defaultLimit = 5;
+    const defaultWindowsMs = 60000;
+    const defaultLimit = 5;
 
-	return {
-		[accessRuleApiPaths.FIND_IDS]: {
-			windowMs:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_FIND_IDS_WINDOW",
-				) || defaultWindowsMs,
-			limit:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_FIND_IDS_LIMIT",
-				) || defaultLimit,
-		},
-		[accessRuleApiPaths.FETCH_MANY]: {
-			windowMs:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_FETCH_MANY_WINDOW",
-				) || defaultWindowsMs,
-			limit:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_FETCH_MANY_LIMIT",
-				) || defaultLimit,
-		},
-		[accessRuleApiPaths.INSERT_MANY]: {
-			windowMs:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_WINDOW",
-				) || defaultWindowsMs,
-			limit:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_LIMIT",
-				) || defaultLimit,
-		},
-		[accessRuleApiPaths.DELETE_MANY]: {
-			windowMs:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_WINDOW",
-				) || defaultWindowsMs,
-			limit:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_LIMIT",
-				) || defaultLimit,
-		},
-		[accessRuleApiPaths.DELETE_GROUPS]: {
-			windowMs:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_GROUPS_WINDOW",
-				) || defaultWindowsMs,
-			limit:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_GROUPS_LIMIT",
-				) || defaultLimit,
-		},
-		[accessRuleApiPaths.DELETE_ALL]: {
-			windowMs:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_WINDOW",
-				) || defaultWindowsMs,
-			limit:
-				getIntEnvironmentVariable(
-					"PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_LIMIT",
-				) || defaultLimit,
-		},
-	} satisfies Record<RuleApiPath, Record<string, number>>;
+    return {
+        [accessRuleApiPaths.GET_MISSING_IDS]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_GET_MISSING_IDS_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_GET_MISSING_IDS_LIMIT",
+                ) || defaultLimit,
+        },
+        [accessRuleApiPaths.FIND_IDS]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_FIND_IDS_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_FIND_IDS_LIMIT",
+                ) || defaultLimit,
+        },
+        [accessRuleApiPaths.FETCH_MANY]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_FETCH_MANY_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_FETCH_MANY_LIMIT",
+                ) || defaultLimit,
+        },
+        [accessRuleApiPaths.INSERT_MANY]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_LIMIT",
+                ) || defaultLimit,
+        },
+        [accessRuleApiPaths.DELETE_MANY]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_MANY_LIMIT",
+                ) || defaultLimit,
+        },
+        [accessRuleApiPaths.DELETE_GROUPS]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_GROUPS_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_GROUPS_LIMIT",
+                ) || defaultLimit,
+        },
+        [accessRuleApiPaths.DELETE_ALL]: {
+            windowMs:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_WINDOW",
+                ) || defaultWindowsMs,
+            limit:
+                getIntEnvironmentVariable(
+                    "PROSOPO_USER_ACCESS_POLICY_RULE_DELETE_ALL_LIMIT",
+                ) || defaultLimit,
+        },
+    } satisfies Record<RuleApiPath, Record<string, number>>;
 };
 
 const getIntEnvironmentVariable = (
-	variableName: string,
+    variableName: string,
 ): number | undefined => {
-	const variableValue = process.env[variableName];
+    const variableValue = process.env[variableName];
 
-	const numericValue = variableValue
-		? Number.parseInt(variableValue)
-		: Number.NaN;
+    const numericValue = variableValue
+        ? Number.parseInt(variableValue)
+        : Number.NaN;
 
-	return Number.isInteger(numericValue) ? numericValue : undefined;
+    return Number.isInteger(numericValue) ? numericValue : undefined;
 };
