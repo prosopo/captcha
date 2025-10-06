@@ -39,6 +39,7 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
+import type { ObjectId } from "mongoose";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
@@ -270,6 +271,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
+				// TODO allow the dapp to override the length of time that the request hash is valid for
 				const result: DappUserSolutionResult =
 					await tasks.imgCaptchaManager.dappUserSolution(
 						user,

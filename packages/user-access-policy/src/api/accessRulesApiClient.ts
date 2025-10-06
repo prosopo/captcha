@@ -21,41 +21,36 @@ import type { InsertManyRulesEndpointInputSchema } from "./insertRulesEndpoint.j
 export class AccessRulesApiClient extends ApiClient {
 	public insertMany(
 		toInsert: InsertManyRulesEndpointInputSchema,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse> {
 		return this.post(accessRuleApiPaths.INSERT_MANY, toInsert, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			},
 		});
 	}
 
 	public deleteMany(
 		toDelete: DeleteRulesEndpointSchemaInput,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse> {
 		return this.post(accessRuleApiPaths.DELETE_MANY, toDelete, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			},
 		});
 	}
 
-	public deleteAll(timestamp: string, signature: string): Promise<ApiResponse> {
+	public deleteAll(jwt: string): Promise<ApiResponse> {
 		return this.post(
 			accessRuleApiPaths.DELETE_ALL,
 			{},
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
+					Authorization: `Bearer ${jwt}`,
 				},
 			},
 		);

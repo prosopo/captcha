@@ -254,11 +254,10 @@ function registerSiteKey(
 		"log",
 		`Registering site key  ${siteKey} for captcha type: ${captchaType || baseCaptchaType}`,
 	);
-	const timestamp = new Date().getTime();
 
 	return cy.then(() => {
 		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
-		const signature = u8aToHex(pair.sign(timestamp.toString()));
+		const jwt = pair.jwtIssue();
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
 		const settings: IUserSettings = {
@@ -275,8 +274,7 @@ function registerSiteKey(
 			url: adminSiteKeyURL,
 			headers: {
 				"Content-Type": "application/json",
-				signature: signature,
-				timestamp: timestamp.toString(),
+				Authorization: `Bearer ${jwt}`,
 			},
 			body: {
 				siteKey: siteKey,

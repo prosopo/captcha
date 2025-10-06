@@ -30,14 +30,12 @@ export const removeAllUserAccessPolicies = async (adminPair: KeyringPair) => {
 	const providers = await loadBalancer(EnvironmentTypesSchema.enum.development);
 	const responses = [];
 	for (const provider of providers) {
-		const timestamp = Date.now();
-		const signature = u8aToHex(adminPair.sign(timestamp.toString()));
 		const rulesApiClient = new AccessRulesApiClient(
 			provider.url,
 			adminPair.address,
 		);
 
-		responses.push(rulesApiClient.deleteAll(timestamp.toString(), signature));
+		responses.push(rulesApiClient.deleteAll(adminPair.jwtIssue()));
 	}
 	return Promise.all(responses);
 };
@@ -114,11 +112,9 @@ export const userAccessPolicy = async (
 			adminPair.address,
 		);
 
-		const response = await rulesApiClient.insertMany(
-			accessPolicyBody,
-			timestamp.toString(),
-			signature,
-		);
+		const jwt = adminPair.jwtIssue();
+
+		const response = await rulesApiClient.insertMany(accessPolicyBody, jwt);
 
 		console.log(response);
 	}
