@@ -1,5 +1,13 @@
 # @prosopo/detector
 
+## 3.3.5
+### Patch Changes
+
+- 04d0f1a: weighted random provider selection
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/types@3.5.3
+
 ## 3.3.4
 ### Patch Changes
 

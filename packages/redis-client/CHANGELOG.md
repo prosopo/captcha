@@ -1,5 +1,10 @@
 # @prosopo/redis-client
 
+## 1.0.5
+### Patch Changes
+
+  - @prosopo/common@3.1.20
+
 ## 1.0.4
 ### Patch Changes
 
