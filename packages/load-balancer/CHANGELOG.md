@@ -1,5 +1,17 @@
 # @prosopo/load-balancer
 
+## 2.8.0
+### Minor Changes
+
+- 04d0f1a: weighted random provider selection
+
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/types@3.5.3
+
 ## 2.7.12
 ### Patch Changes
 

@@ -1,5 +1,15 @@
 # @prosopo/user-access-policy
 
+## 3.5.19
+### Patch Changes
+
+  - @prosopo/api@3.1.24
+  - @prosopo/api-route@2.6.28
+  - @prosopo/common@3.1.20
+  - @prosopo/redis-client@1.0.5
+  - @prosopo/types@3.5.3
+  - @prosopo/util@3.1.5
+
 ## 3.5.18
 ### Patch Changes
 

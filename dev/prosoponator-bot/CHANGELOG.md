@@ -1,5 +1,11 @@
 # @prosopo/prosoponator-bot
 
+## 2.6.21
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+
 ## 2.6.20
 ### Patch Changes
 
