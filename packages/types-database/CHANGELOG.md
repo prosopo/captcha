@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 3.3.6
+### Patch Changes
+
+- 08ff50f: IP Validation Schema update
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/user-access-policy@3.5.20
+
 ## 3.3.5
 ### Patch Changes
 
