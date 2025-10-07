@@ -21,6 +21,7 @@ import { decodeProcaptchaOutput, encodeProcaptchaOutput } from "@prosopo/types";
 import { getScriptsPkgDir } from "@prosopo/workspace";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import setVersion from "../scripts/setVersion.js";
 import { setup } from "../setup/index.js";
 import { exec } from "../util/index.js";
 const rootDir = path.resolve(".");
