@@ -1,5 +1,25 @@
 # @prosopo/config
 
+## 3.1.20
+### Patch Changes
+
+- 1e3a838: making webpack stuff external in vite config
+
+## 3.1.19
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+
+## 3.1.18
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+
+## 3.1.17
+### Patch Changes
+
+- 618703f: Release 3.4.2
+
 ## 3.1.16
 ### Patch Changes
 
