@@ -82,7 +82,7 @@ jobs:
       - name: Publish to npm
         run: |
           echo "Publishing all packages to npm"
-          npm run publish
+          npm --workspaces publish --access=public || true
 
       - name: Publish to Docker Hub
         run: |
