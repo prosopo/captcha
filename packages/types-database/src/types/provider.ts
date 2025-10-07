@@ -452,6 +452,7 @@ export interface ScoreComponents {
 	timeout?: number;
 	accessPolicy?: number;
 	unverifiedHost?: number;
+	webView?: number;
 }
 
 export interface FrictionlessToken {

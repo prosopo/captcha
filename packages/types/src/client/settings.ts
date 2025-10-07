@@ -105,6 +105,7 @@ export const ClientSettingsSchema = object({
 	powDifficulty: number().optional().default(powDifficultyDefault),
 	imageThreshold: number().optional().default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
+	disallowWebView: boolean().optional().default(false),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
