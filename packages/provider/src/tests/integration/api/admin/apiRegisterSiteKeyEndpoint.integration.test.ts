@@ -58,6 +58,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
 				powDifficulty: 0.5,
+				disallowWebView: false,
 			},
 		};
 		const db = getMockDb();
@@ -84,6 +85,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
 				powDifficulty: 0.5,
+				disallowWebView: false,
 			},
 		};
 		const db = getMockDb();
