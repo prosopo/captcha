@@ -1,5 +1,10 @@
 # @prosopo/gh-actions
 
+## 2.6.22
+### Patch Changes
+
+- a4d6174: deps
+
 ## 2.6.21
 ### Patch Changes
 

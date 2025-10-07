@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.12.5
+### Patch Changes
+
+- 4ba029e: repo maintainance
+
 ## 3.12.4
 ### Patch Changes
 
