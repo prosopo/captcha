@@ -482,6 +482,8 @@ export const FrictionlessTokenRecordSchema =
 			lScore: { type: Number, required: false },
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
+			unverifiedHost: { type: Number, required: false },
+			webView: { type: Number, required: false },
 		},
 		providerSelectEntropy: { type: Number, required: true },
 		ipAddress: CompositeIpAddressRecordSchemaObj,
