@@ -1,5 +1,26 @@
 # @prosopo/cli
 
+## 3.4.8
+### Patch Changes
+
+- Updated dependencies [4ba029e]
+  - @prosopo/provider@3.12.5
+
+## 3.4.7
+### Patch Changes
+
+- 08ff50f: IP Validation Schema update
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/provider@3.12.4
+  - @prosopo/types@3.5.4
+  - @prosopo/api@3.1.25
+  - @prosopo/api-express-router@3.0.26
+  - @prosopo/env@3.2.14
+  - @prosopo/keyring@2.8.28
+  - @prosopo/user-access-policy@3.5.20
+
 ## 3.4.6
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/react-procaptcha-wrapper",
-	"version": "1.1.27",
+	"version": "1.1.28",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -23,7 +23,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.29",
+		"@prosopo/procaptcha-wrapper": "2.6.30",
 		"@prosopo/config": "3.1.20"
 	},
 	"peerDependencies": {
