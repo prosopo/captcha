@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.5.4
+### Patch Changes
+
+- 08ff50f: Hot fix country code
+
 ## 3.5.3
 ### Patch Changes
 

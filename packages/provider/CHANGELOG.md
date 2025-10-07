@@ -1,5 +1,23 @@
 # @prosopo/provider
 
+## 3.12.4
+### Patch Changes
+
+- 08ff50f: Hot fix country code
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/types@3.5.4
+  - @prosopo/database@3.4.6
+  - @prosopo/datasets@3.0.35
+  - @prosopo/types-env@2.7.39
+  - @prosopo/api@3.1.25
+  - @prosopo/api-express-router@3.0.26
+  - @prosopo/env@3.2.14
+  - @prosopo/keyring@2.8.28
+  - @prosopo/load-balancer@2.8.1
+  - @prosopo/user-access-policy@3.5.20
+
 ## 3.12.3
 ### Patch Changes
 
