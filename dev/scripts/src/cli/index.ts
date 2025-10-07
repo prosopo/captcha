@@ -21,8 +21,6 @@ import { decodeProcaptchaOutput, encodeProcaptchaOutput } from "@prosopo/types";
 import { getScriptsPkgDir } from "@prosopo/workspace";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { importContract } from "../contract/index.js";
-import setVersion from "../scripts/setVersion.js";
 import { setup } from "../setup/index.js";
 import { exec } from "../util/index.js";
 const rootDir = path.resolve(".");
@@ -73,25 +71,6 @@ export async function processArgs(args: string[]) {
 			handler: async (argv) => {
 				log.info(() => ({ msg: "Running setup scripts" }));
 				await setup(argv.provider, argv.sites);
-			},
-		})
-		.command({
-			command: "import_contract",
-			describe: "Import a contract into the contract package.",
-			builder: (yargs) =>
-				yargs
-					.option("in", {
-						type: "string",
-						demandOption: true,
-						desc: "The path to the contract's abi",
-					})
-					.option("out", {
-						type: "string",
-						demandOption: true,
-						desc: "The path to the output directory",
-					}),
-			handler: async (argv) => {
-				await importContract(argv.in, argv.out);
 			},
 		})
 		.command({
