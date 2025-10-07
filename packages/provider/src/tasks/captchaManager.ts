@@ -114,7 +114,6 @@ export class CaptchaManager {
 				type: requestedCaptchaType,
 			};
 		}
-
 		// Session ID
 
 		// If the client has a sessionId then they are requesting a frictionless captcha.

@@ -17,4 +17,5 @@ export type DetectorResult = {
 	providerSelectEntropy: number;
 	userId: string;
 	userAgent: string;
+	isWebView?: boolean;
 };

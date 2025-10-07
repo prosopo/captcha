@@ -600,6 +600,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					providerSelectEntropy,
 					userId,
 					userAgent,
+					webView,
 				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				req.logger.debug(() => ({
@@ -730,6 +731,21 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
 						);
 					}
+				}
+
+				// If the client has specified a WebView config and the user is using a WebView, send an image captcha
+				if (clientRecord.settings.disallowWebView && webView) {
+					botScore = await tasks.frictionlessManager.scoreIncreaseWebView(
+						baseBotScore,
+						botScore,
+						tokenId,
+					);
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							env.config.captchas.solved.count * 2,
+						),
+					);
 				}
 
 				// If the timestamp is older than 10 minutes, send an image captcha
