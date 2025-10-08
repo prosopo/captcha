@@ -44,6 +44,7 @@ import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js"
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
 import { hashUserAgent } from "../utils/hashUserAgent.js";
+import { hashUserIp as hashUserSitekeyIp } from "../utils/hashUserIp.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
@@ -666,6 +667,27 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					ipAddress: getCompositeIpAddress(req.ip || ""),
 				});
 
+				// Check if there's an existing session for this user-IP combination
+				const userSitekeyIpHash = hashUserSitekeyIp(user, req.ip || "", dapp);
+				const existingSession =
+					await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
+
+				if (existingSession) {
+					req.logger.info(() => ({
+						msg: "Reusing existing session for user-IP combination",
+						data: {
+							userSitekeyIpHash: userSitekeyIpHash,
+							sessionId: existingSession.sessionId,
+							captchaType: existingSession.captchaType,
+						},
+					}));
+					return res.json({
+						[ApiParams.captchaType]: existingSession.captchaType,
+						[ApiParams.sessionId]: existingSession.sessionId,
+						[ApiParams.status]: "ok",
+					});
+				}
+
 				// Check if the IP address is blocked
 				const userScope = getRequestUserScope(
 					flatten(req.headers),
@@ -706,6 +728,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							timestampDecayFunction(timestamp),
+							userSitekeyIpHash,
 						),
 					);
 				}
@@ -723,12 +746,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							await tasks.frictionlessManager.sendImageCaptcha(
 								tokenId,
 								userAccessPolicy.solvedImagesCount,
+								userSitekeyIpHash,
 							),
 						);
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
 						return res.json(
-							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+							await tasks.frictionlessManager.sendPowCaptcha(
+								tokenId,
+								undefined,
+								userSitekeyIpHash,
+							),
 						);
 					}
 				}
@@ -760,6 +788,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							timestampDecayFunction(timestamp),
+							userSitekeyIpHash,
 						),
 					);
 				}
@@ -792,13 +821,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							env.config.captchas.solved.count,
+							userSitekeyIpHash,
 						),
 					);
 				}
 
 				// Otherwise, send a PoW captcha
 				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+					await tasks.frictionlessManager.sendPowCaptcha(
+						tokenId,
+						undefined,
+						userSitekeyIpHash,
+					),
 				);
 			} catch (err) {
 				req.logger.error(() => ({
