@@ -14,11 +14,12 @@
 
 import path from "node:path";
 import { ViteEsmConfig } from "@prosopo/config";
+import { entries } from "./entries.js";
 
 export default function () {
 	return ViteEsmConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
-		"src/.build.ts",
+		entries,
 	);
 }

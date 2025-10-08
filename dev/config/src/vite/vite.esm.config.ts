@@ -26,7 +26,7 @@ import VitePluginCopy from "./vite-plugin-copy.js";
 export default async function (
 	name: string,
 	tsConfigPath: string,
-	entry?: string,
+	entry?: string | Record<string, string>,
 ): Promise<UserConfig> {
 	console.info(`ViteEsmConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [
