@@ -35,6 +35,7 @@ const defaultUserSettings: IUserSettings = {
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
+	disallowWebView: false,
 };
 
 describe("CaptchaManager", () => {

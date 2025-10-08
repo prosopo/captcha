@@ -111,6 +111,7 @@ export default (
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
+						disallowWebView: false,
 					},
 					timestamp,
 					signature,

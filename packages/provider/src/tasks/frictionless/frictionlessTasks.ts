@@ -177,6 +177,25 @@ export class FrictionlessManager extends CaptchaManager {
 		return botScore;
 	}
 
+	async scoreIncreaseWebView(
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		this.logger.debug(() => ({
+			msg: "WebView detected",
+		}));
+		botScore += this.config.penalties.PENALTY_WEBVIEW;
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				webView: this.config.penalties.PENALTY_WEBVIEW,
+			},
+		});
+		return botScore;
+	}
+
 	async scoreIncreaseTimestamp(
 		timestamp: number,
 		baseBotScore: number,
@@ -250,6 +269,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let providerSelectEntropy: number | undefined;
 		let userId: string | undefined;
 		let userAgent: string | undefined;
+		let webView: boolean | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -264,6 +284,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const p = decrypted.providerSelectEntropy;
 				const a = decrypted.userId;
 				const u = decrypted.userAgent;
+				const w = decrypted.isWebView;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -273,6 +294,7 @@ export class FrictionlessManager extends CaptchaManager {
 						entropy: p,
 						userId: a,
 						userAgent: u,
+						webView: w,
 					},
 				}));
 				baseBotScore = s;
@@ -280,6 +302,7 @@ export class FrictionlessManager extends CaptchaManager {
 				providerSelectEntropy = p;
 				userId = a;
 				userAgent = u;
+				webView = w;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -325,6 +348,7 @@ export class FrictionlessManager extends CaptchaManager {
 			providerSelectEntropy: Number(providerSelectEntropy),
 			userId,
 			userAgent,
+			webView,
 		};
 	}
 }
