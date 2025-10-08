@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.5.5
+### Patch Changes
+
+- 494c5a8: Updated payload
+
 ## 3.5.4
 ### Patch Changes
 
