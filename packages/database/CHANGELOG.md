@@ -1,5 +1,70 @@
 # @prosopo/database
 
+## 3.4.6
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/types@3.5.4
+  - @prosopo/user-access-policy@3.5.20
+
+## 3.4.5
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/locale@3.1.20
+  - @prosopo/redis-client@1.0.5
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+  - @prosopo/user-access-policy@3.5.19
+
+## 3.4.4
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/user-access-policy@3.5.18
+  - @prosopo/types-database@3.3.4
+  - @prosopo/redis-client@1.0.4
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 3.4.3
+### Patch Changes
+
+- c72ecbd: Reduce noisy logs
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/user-access-policy@3.5.17
+  - @prosopo/types-database@3.3.3
+  - @prosopo/redis-client@1.0.3
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/config@3.1.18
+
+## 3.4.2
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/user-access-policy@3.5.16
+  - @prosopo/types-database@3.3.2
+  - @prosopo/redis-client@1.0.2
+  - @prosopo/common@3.1.17
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
 ## 3.4.1
 ### Patch Changes
 

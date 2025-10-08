@@ -12,7 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IUserData, IUserSettings, Timestamp } from "@prosopo/types";
+import {
+	type IUserData,
+	type IUserSettings,
+	type Timestamp,
+	abuseScoreThresholdDefault,
+	abuseScoreThresholdExceedActionDefault,
+	cityChangeActionDefault,
+	countryChangeActionDefault,
+	distanceExceedActionDefault,
+	distanceThresholdKmDefault,
+	ispChangeActionDefault,
+	requireAllConditionsDefault,
+} from "@prosopo/types";
 import type mongoose from "mongoose";
 import { Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
@@ -21,11 +33,62 @@ import type { ClientRecord, Tables } from "./provider.js";
 export type UserDataRecord = mongoose.Document & IUserData;
 
 export const IPValidationRulesSchema = new Schema({
-	countryChangeAction: String,
-	ispChangeAction: String,
-	distanceThresholdKm: Number,
-	distanceExceedAction: String,
-	requireAllConditions: Boolean,
+	actions: {
+		countryChangeAction: {
+			type: Schema.Types.Mixed,
+			default: () => countryChangeActionDefault,
+		},
+		cityChangeAction: {
+			type: Schema.Types.Mixed,
+			default: () => cityChangeActionDefault,
+		},
+		ispChangeAction: {
+			type: Schema.Types.Mixed,
+			default: () => ispChangeActionDefault,
+		},
+		distanceExceedAction: {
+			type: Schema.Types.Mixed,
+			default: () => distanceExceedActionDefault,
+		},
+		abuseScoreExceedAction: {
+			type: Schema.Types.Mixed,
+			default: () => abuseScoreThresholdExceedActionDefault,
+		},
+	},
+
+	distanceThresholdKm: {
+		type: Number,
+		min: 0,
+		default: distanceThresholdKmDefault,
+	},
+
+	abuseScoreThreshold: {
+		type: Number,
+		min: 0,
+		default: abuseScoreThresholdDefault,
+	},
+
+	requireAllConditions: {
+		type: Boolean,
+		default: requireAllConditionsDefault,
+	},
+
+	countryOverrides: {
+		type: Map,
+		of: new Schema({
+			actions: {
+				countryChangeAction: { type: Schema.Types.Mixed },
+				cityChangeAction: { type: Schema.Types.Mixed },
+				ispChangeAction: { type: Schema.Types.Mixed },
+				distanceExceedAction: { type: Schema.Types.Mixed },
+				abuseScoreExceedAction: { type: Schema.Types.Mixed },
+			},
+			distanceThresholdKm: { type: Number, min: 0 },
+			abuseScoreThreshold: { type: Number, min: 0 },
+			requireAllConditions: { type: Boolean },
+		}),
+		default: undefined,
+	},
 });
 
 export const UserSettingsSchema = new Schema({

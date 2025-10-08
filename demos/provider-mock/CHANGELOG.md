@@ -1,5 +1,90 @@
 # @prosopo/provider-mock
 
+## 2.8.19
+### Patch Changes
+
+- Updated dependencies [4ba029e]
+  - @prosopo/provider@3.12.5
+
+## 2.8.18
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/provider@3.12.4
+  - @prosopo/types@3.5.4
+  - @prosopo/database@3.4.6
+  - @prosopo/api-express-router@3.0.26
+
+## 2.8.17
+### Patch Changes
+
+- 8418bbe: removing stale tsignore
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/provider@3.12.3
+  - @prosopo/config@3.1.20
+  - @prosopo/api-express-router@3.0.25
+  - @prosopo/common@3.1.20
+  - @prosopo/database@3.4.5
+  - @prosopo/dotenv@3.0.25
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+
+## 2.8.16
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/api-express-router@3.0.24
+  - @prosopo/types-database@3.3.4
+  - @prosopo/database@3.4.4
+  - @prosopo/provider@3.12.2
+  - @prosopo/dotenv@3.0.24
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 2.8.15
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b8cc590]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/provider@3.12.1
+  - @prosopo/types@3.5.1
+  - @prosopo/database@3.4.3
+  - @prosopo/dotenv@3.0.23
+  - @prosopo/api-express-router@3.0.23
+  - @prosopo/types-database@3.3.3
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/config@3.1.18
+
+## 2.8.14
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+- Updated dependencies [cf6c8a4]
+  - @prosopo/api-express-router@3.0.22
+  - @prosopo/types-database@3.3.2
+  - @prosopo/database@3.4.2
+  - @prosopo/provider@3.12.0
+  - @prosopo/common@3.1.17
+  - @prosopo/dotenv@3.0.22
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
 ## 2.8.13
 ### Patch Changes
 

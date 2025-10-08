@@ -1,5 +1,134 @@
 # @prosopo/provider
 
+## 3.12.5
+### Patch Changes
+
+- 4ba029e: repo maintainance
+
+## 3.12.4
+### Patch Changes
+
+- 08ff50f: Hot fix country code
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/types@3.5.4
+  - @prosopo/database@3.4.6
+  - @prosopo/datasets@3.0.35
+  - @prosopo/types-env@2.7.39
+  - @prosopo/api@3.1.25
+  - @prosopo/api-express-router@3.0.26
+  - @prosopo/env@3.2.14
+  - @prosopo/keyring@2.8.28
+  - @prosopo/load-balancer@2.8.1
+  - @prosopo/user-access-policy@3.5.20
+
+## 3.12.3
+### Patch Changes
+
+- 04d0f1a: weighted random provider selection
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/load-balancer@2.8.0
+  - @prosopo/config@3.1.20
+  - @prosopo/api@3.1.24
+  - @prosopo/api-express-router@3.0.25
+  - @prosopo/api-route@2.6.28
+  - @prosopo/common@3.1.20
+  - @prosopo/database@3.4.5
+  - @prosopo/datasets@3.0.34
+  - @prosopo/env@3.2.13
+  - @prosopo/keyring@2.8.27
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+  - @prosopo/types-env@2.7.38
+  - @prosopo/user-access-policy@3.5.19
+  - @prosopo/util@3.1.5
+  - @prosopo/util-crypto@13.5.22
+
+## 3.12.2
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/api-express-router@3.0.24
+  - @prosopo/user-access-policy@3.5.18
+  - @prosopo/types-database@3.3.4
+  - @prosopo/load-balancer@2.7.12
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/api-route@2.6.27
+  - @prosopo/types-env@2.7.37
+  - @prosopo/database@3.4.4
+  - @prosopo/datasets@3.0.33
+  - @prosopo/keyring@2.8.26
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/util@3.1.4
+  - @prosopo/api@3.1.23
+  - @prosopo/env@3.2.12
+  - @prosopo/config@3.1.19
+
+## 3.12.1
+### Patch Changes
+
+- 52cd544: Integrity checks
+- b8cc590: New injection methods
+- b117ba3: Hot fix country code
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/database@3.4.3
+  - @prosopo/api-express-router@3.0.23
+  - @prosopo/user-access-policy@3.5.17
+  - @prosopo/types-database@3.3.3
+  - @prosopo/load-balancer@2.7.11
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/api-route@2.6.26
+  - @prosopo/types-env@2.7.36
+  - @prosopo/datasets@3.0.32
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/api@3.1.22
+  - @prosopo/env@3.2.11
+  - @prosopo/config@3.1.18
+
+## 3.12.0
+### Minor Changes
+
+- e20ad6b: IP country overrides
+
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- cf6c8a4: Hot fix the request logger
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/api-express-router@3.0.22
+  - @prosopo/user-access-policy@3.5.16
+  - @prosopo/types-database@3.3.2
+  - @prosopo/load-balancer@2.7.10
+  - @prosopo/util-crypto@13.5.19
+  - @prosopo/api-route@2.6.25
+  - @prosopo/types-env@2.7.35
+  - @prosopo/database@3.4.2
+  - @prosopo/datasets@3.0.31
+  - @prosopo/keyring@2.8.24
+  - @prosopo/common@3.1.17
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/util@3.1.2
+  - @prosopo/api@3.1.21
+  - @prosopo/env@3.2.10
+  - @prosopo/config@3.1.17
+
 ## 3.11.1
 ### Patch Changes
 

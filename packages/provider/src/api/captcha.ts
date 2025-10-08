@@ -39,11 +39,11 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
-import type { ObjectId } from "mongoose";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
+import { hashUserAgent } from "../utils/hashUserAgent.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
@@ -594,8 +594,25 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp, providerSelectEntropy } =
-					await tasks.frictionlessManager.decryptPayload(token);
+				const {
+					baseBotScore,
+					timestamp,
+					providerSelectEntropy,
+					userId,
+					userAgent,
+					webView,
+				} = await tasks.frictionlessManager.decryptPayload(token);
+
+				req.logger.debug(() => ({
+					msg: "Decrypted payload",
+					data: {
+						baseBotScore,
+						timestamp,
+						providerSelectEntropy,
+						userId,
+						userAgent,
+					},
+				}));
 
 				let botScore = baseBotScore + lScore;
 
@@ -664,6 +681,35 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					)
 				)[0];
 
+				// Check the user agent in token and user id in request match request
+				// Hash the request user agent to compare with the hashed user agent from the token
+				const headersUserAgent = req.headers["user-agent"];
+				const hashedHeadersUserAgent = headersUserAgent
+					? hashUserAgent(headersUserAgent)
+					: "";
+				const headersProsopoUser = req.headers["prosopo-user"];
+				if (
+					hashedHeadersUserAgent !== userAgent ||
+					headersProsopoUser !== userId
+				) {
+					req.logger.info(() => ({
+						msg: "User agent or user id does not match",
+						data: {
+							headersUserAgent,
+							hashedHeadersUserAgent,
+							userAgent: userAgent, // This is the hashed user agent from the token
+							headersProsopoUser,
+							userId,
+						},
+					}));
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							timestampDecayFunction(timestamp),
+						),
+					);
+				}
+
 				// If the user or IP address has an image captcha config defined, send an image captcha
 				if (userAccessPolicy) {
 					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
@@ -685,6 +731,21 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
 						);
 					}
+				}
+
+				// If the client has specified a WebView config and the user is using a WebView, send an image captcha
+				if (clientRecord.settings.disallowWebView && webView) {
+					botScore = await tasks.frictionlessManager.scoreIncreaseWebView(
+						baseBotScore,
+						botScore,
+						tokenId,
+					);
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							env.config.captchas.solved.count * 2,
+						),
+					);
 				}
 
 				// If the timestamp is older than 10 minutes, send an image captcha
@@ -720,7 +781,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
 					req.logger.info(() => ({
-						message: "Bot score is greater than threshold",
+						msg: "Bot score is greater than threshold",
 						data: {
 							botScore,
 							botThreshold,

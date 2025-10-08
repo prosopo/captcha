@@ -1,5 +1,62 @@
 # @prosopo/datasets-fs
 
+## 3.0.27
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+
+## 3.0.26
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/workspace@3.1.13
+  - @prosopo/common@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/util@3.1.5
+  - @prosopo/util-crypto@13.5.22
+
+## 3.0.25
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/types@3.5.2
+  - @prosopo/workspace@3.1.12
+  - @prosopo/util@3.1.4
+  - @prosopo/config@3.1.19
+
+## 3.0.24
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/common@3.1.18
+  - @prosopo/workspace@3.1.11
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
+## 3.0.23
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/util-crypto@13.5.19
+  - @prosopo/common@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/workspace@3.1.10
+  - @prosopo/util@3.1.2
+  - @prosopo/config@3.1.17
+
 ## 3.0.22
 ### Patch Changes
 

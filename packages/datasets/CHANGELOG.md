@@ -1,5 +1,64 @@
 # @prosopo/datasets
 
+## 3.0.35
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/types@3.5.4
+
+## 3.0.34
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+  - @prosopo/util@3.1.5
+  - @prosopo/util-crypto@13.5.22
+
+## 3.0.33
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/types-database@3.3.4
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/types@3.5.2
+  - @prosopo/util@3.1.4
+  - @prosopo/config@3.1.19
+
+## 3.0.32
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/types-database@3.3.3
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/common@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
+## 3.0.31
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/types-database@3.3.2
+  - @prosopo/util-crypto@13.5.19
+  - @prosopo/common@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/util@3.1.2
+  - @prosopo/config@3.1.17
+
 ## 3.0.30
 ### Patch Changes
 

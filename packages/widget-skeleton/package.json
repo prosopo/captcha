@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.7.2",
+	"version": "2.7.6",
 	"description": "Non business logic utilities for web applications",
 	"type": "module",
 	"engines": {
@@ -34,7 +34,7 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/config": "3.1.16"
+		"@prosopo/config": "3.1.20"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",

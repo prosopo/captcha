@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "3.4.2",
+	"version": "3.4.8",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -10,7 +10,8 @@
 	"scripts": {
 		"hostid": "dig +short ${HOSTNAME}.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
 		"build:all": "nx run-many --target=build --nxBail",
-		"build:cjs:all": "nx run-many --target=build:cjs --nxBail",
+		"build:all:tsc": "nx run-many --target=build:tsc --nxBail",
+		"build:all:cjs": "nx run-many --target=build:cjs --nxBail",
 		"bundle:all": "nx run-many --target=bundle --nxBail",
 		"clean:nx": "nx reset",
 		"clean:all": "nx run-many --target=clean --nxBail",
@@ -58,7 +59,10 @@
 		"prepare": "husky",
 		"changesets:empty": "npx @changesets/cli add --empty",
 		"changesets:add": "npx @changesets/cli add",
-		"changesets": "npx @changesets/cli status --verbose"
+		"changesets": "npx @changesets/cli status --verbose",
+		"publish:dry-run": "npm --workspaces publish --dry-run",
+		"publish": "npm --workspaces publish --access=public",
+		"bnb": "NODE_ENV=development npm run build:all && NODE_ENV=development npm run bundle:all"
 	},
 	"private": true,
 	"engines": {
@@ -79,8 +83,6 @@
 		"@nx/angular": "21.2.2",
 		"@nx/js": "21.1.2",
 		"@nx/vue": "21.1.2",
-		"@prosopo/dotenv": "3.0.12",
-		"@prosopo/load-balancer": "2.7.0",
 		"@swc-node/register": "1.10.10",
 		"@swc/core": "1.11.29",
 		"@taplo/cli": "0.7.0",
