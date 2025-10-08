@@ -611,6 +611,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						providerSelectEntropy,
 						userId,
 						userAgent,
+						webView,
 					},
 				}));
 
@@ -735,6 +736,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the client has specified a WebView config and the user is using a WebView, send an image captcha
 				if (clientRecord.settings.disallowWebView && webView) {
+					tasks.logger.info(() => ({
+						msg: "WebView detected",
+					}));
 					botScore = await tasks.frictionlessManager.scoreIncreaseWebView(
 						baseBotScore,
 						botScore,
