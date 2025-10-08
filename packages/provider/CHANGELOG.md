@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.12.6
+### Patch Changes
+
+- 494c5a8: Updated payload
+- Updated dependencies [494c5a8]
+  - @prosopo/types-database@3.3.7
+  - @prosopo/types@3.5.5
+  - @prosopo/database@3.4.7
+  - @prosopo/datasets@3.0.36
+  - @prosopo/types-env@2.7.40
+  - @prosopo/api@3.1.26
+  - @prosopo/api-express-router@3.0.27
+  - @prosopo/env@3.2.15
+  - @prosopo/keyring@2.8.29
+  - @prosopo/load-balancer@2.8.2
+  - @prosopo/user-access-policy@3.5.21
+
 ## 3.12.5
 ### Patch Changes
 
