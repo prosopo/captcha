@@ -707,6 +707,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							timestampDecayFunction(timestamp),
+							webView,
 						),
 					);
 				}
@@ -724,6 +725,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							await tasks.frictionlessManager.sendImageCaptcha(
 								tokenId,
 								userAccessPolicy.solvedImagesCount,
+								webView,
 							),
 						);
 					}
@@ -752,6 +754,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							env.config.captchas.solved.count * 2,
+							webView,
 						),
 					);
 				}
@@ -768,6 +771,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							timestampDecayFunction(timestamp),
+							webView,
 						),
 					);
 				}
@@ -800,6 +804,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
 							env.config.captchas.solved.count,
+							webView,
 						),
 					);
 				}
