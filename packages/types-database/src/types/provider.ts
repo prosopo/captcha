@@ -504,6 +504,7 @@ export type Session = {
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
+	webView: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -520,6 +521,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
+	webView: { type: Boolean, required: true, default: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
