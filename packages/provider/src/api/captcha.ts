@@ -729,7 +729,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
 						return res.json(
-							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+							await tasks.frictionlessManager.sendPowCaptcha(
+								tokenId,
+								undefined,
+								webView,
+							),
 						);
 					}
 				}
@@ -802,7 +806,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// Otherwise, send a PoW captcha
 				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+					await tasks.frictionlessManager.sendPowCaptcha(
+						tokenId,
+						undefined,
+						webView,
+					),
 				);
 			} catch (err) {
 				req.logger.error(() => ({
