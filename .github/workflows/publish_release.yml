@@ -74,7 +74,7 @@ jobs:
       - name: Create staging procaptcha-bundle zip
         run: |
           cd packages/procaptcha-bundle/dist/bundle
-          bundle_name="procaptcha-bundle-${{ steps.version.outputs.version }}-staging.zip"
+          bundle_name="procaptcha.bundle.${{ steps.version.outputs.version }}-staging.zip"
           zip -r ../../../../${bundle_name} .
           ls -lh ${bundle_name}
           cd -
@@ -87,7 +87,8 @@ jobs:
       - name: Create production procaptcha-bundle zip
         run: |
           cd packages/procaptcha-bundle/dist/bundle
-          bundle_name="procaptcha-bundle-${{ steps.version.outputs.version }}.zip"
+          bundle_name="procaptcha.bundle.${{ steps.version.outputs.version }}.zip"
+          zip -r ../../../../${bundle_name} .
           ls -lh ${bundle_name}
           cd -
 
@@ -130,8 +131,8 @@ jobs:
           gh release create "v${{ steps.version.outputs.version }}" \
             --title "Release v${{ steps.version.outputs.version }}" \
             --generate-notes \
-            procaptcha-bundle-${{ steps.version.outputs.version }}.zip \
-            procaptcha-bundle-${{ steps.version.outputs.version }}-staging.zip
+            procaptcha.bundle.${{ steps.version.outputs.version }}.zip \
+            procaptcha.bundle.${{ steps.version.outputs.version }}-staging.zip
 
       - name: Send success notification
         if: success()
