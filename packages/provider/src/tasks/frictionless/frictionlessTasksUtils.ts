@@ -37,7 +37,7 @@ export const computeFrictionlessScore = (
 export const timestampDecayFunction = (timestamp: number): number => {
 	const max = new Date().getTime();
 	if (max - timestamp > 3600000) {
-		return 12;
+		return 2;
 	}
 	const min = 1000;
 	const age = max - timestamp;

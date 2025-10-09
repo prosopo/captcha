@@ -39,7 +39,7 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
-import type { ObjectId } from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
@@ -563,8 +563,9 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.GetFrictionlessCaptchaChallenge,
 		async (req, res, next) => {
+							const tasks = new Tasks(env, req.logger);
 			try {
-				const tasks = new Tasks(env, req.logger);
+
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
@@ -698,7 +699,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
 							tokenId,
-							timestampDecayFunction(timestamp),
+							2,
 						),
 					);
 				}
@@ -744,12 +745,10 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					err,
 					msg: "Error in frictionless captcha challenge",
 				}));
-				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 400, error: err },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
+				const objId = new mongoose.Types.ObjectId();
+				return res.json(
+					// @ts-ignore
+					await tasks.frictionlessManager.sendPowCaptcha(objId),
 				);
 			}
 		},
