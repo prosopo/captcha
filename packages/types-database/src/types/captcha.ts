@@ -43,7 +43,7 @@ export const StoredSessionRecordSchema: Schema = new Schema({
 const existingIndexes = StoredSessionRecordSchema.indexes();
 const filteredIndexes = existingIndexes.filter(
 	(idx: [Record<string, unknown>, Record<string, unknown>]) =>
-		!("sessionId" in idx[0]),
+		!("sessionId" in idx[0]) && !("createdAt" in idx[0]),
 );
 for (const [fields, options] of filteredIndexes) {
 	StoredSessionRecordSchema.index(fields, options);
@@ -52,6 +52,8 @@ for (const [fields, options] of filteredIndexes) {
 // Redefine the index for sessionId to make it non-unique (there were collisions)
 StoredSessionRecordSchema.index({ tokenId: 1 });
 StoredSessionRecordSchema.index({ sessionId: 1 }, { unique: false });
+// Redefine the index for createdAt without a TTL
+StoredSessionRecordSchema.index({ createdAt: -1 });
 
 export const StoredUserCommitmentRecordSchema: Schema = new Schema({
 	...UserCommitmentRecordSchema.obj,
