@@ -611,6 +611,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						providerSelectEntropy,
 						userId,
 						userAgent,
+						webView,
 					},
 				}));
 
@@ -728,13 +729,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
 						return res.json(
-							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+							await tasks.frictionlessManager.sendPowCaptcha(
+								tokenId,
+								undefined,
+								webView,
+							),
 						);
 					}
 				}
 
 				// If the client has specified a WebView config and the user is using a WebView, send an image captcha
 				if (clientRecord.settings.disallowWebView && webView) {
+					tasks.logger.info(() => ({
+						msg: "WebView detected",
+					}));
 					botScore = await tasks.frictionlessManager.scoreIncreaseWebView(
 						baseBotScore,
 						botScore,
@@ -798,7 +806,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// Otherwise, send a PoW captcha
 				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+					await tasks.frictionlessManager.sendPowCaptcha(
+						tokenId,
+						undefined,
+						webView,
+					),
 				);
 			} catch (err) {
 				req.logger.error(() => ({
