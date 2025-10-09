@@ -23,22 +23,21 @@ import type { z } from "zod";
 
 type ToggleMaintenanceModeBodyType = typeof ToggleMaintenanceModeBody;
 
-// Global maintenance mode state - defaults to false if not set in environment
-let IS_MAINTENANCE_MODE =
-	process.env.IS_MAINTENANCE_MODE?.toLowerCase() === "true" || false;
-
 /**
  * Get the current maintenance mode state
+ * Defaults to false if not set in environment
  */
 export function getMaintenanceMode(): boolean {
-	return IS_MAINTENANCE_MODE;
+	return process.env.MAINTENANCE_MODE?.toLowerCase() === "true";
 }
 
 /**
  * Set the maintenance mode state
+ * Note: This modifies process.env which persists for the lifetime of the Node.js process
+ * In Lambda, this means it persists until the container is recycled
  */
 export function setMaintenanceMode(enabled: boolean): void {
-	IS_MAINTENANCE_MODE = enabled;
+	process.env.MAINTENANCE_MODE = enabled ? "true" : "false";
 }
 
 class ApiToggleMaintenanceModeEndpoint
@@ -52,22 +51,26 @@ class ApiToggleMaintenanceModeEndpoint
 
 		logger = logger || getLogger("info", import.meta.url);
 
+		const previousMode = getMaintenanceMode();
+
 		logger.info(() => ({
-			data: { enabled, previous: IS_MAINTENANCE_MODE },
+			data: { enabled, previous: previousMode },
 			msg: "Toggling maintenance mode",
 		}));
 
 		setMaintenanceMode(enabled);
 
+		const currentMode = getMaintenanceMode();
+
 		logger.info(() => ({
-			data: { enabled: IS_MAINTENANCE_MODE },
+			data: { enabled: currentMode },
 			msg: "Maintenance mode updated",
 		}));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
 			data: {
-				maintenanceMode: IS_MAINTENANCE_MODE,
+				maintenanceMode: currentMode,
 			},
 		};
 	}

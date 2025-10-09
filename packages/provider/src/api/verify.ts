@@ -28,8 +28,8 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
-import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { Tasks } from "../tasks/tasks.js";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
