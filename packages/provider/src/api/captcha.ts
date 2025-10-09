@@ -44,6 +44,7 @@ import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js"
 import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
 import { hashUserAgent } from "../utils/hashUserAgent.js";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
@@ -239,6 +240,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.SubmitImageCaptchaSolution,
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for image captcha",
+				}));
+				const result: CaptchaSolutionResponse = {
+					status: "ok",
+					captchas: [],
+					verified: true,
+				};
+				return res.json(result);
+			}
+
 			let parsed: CaptchaSolutionBodyType;
 			try {
 				parsed = CaptchaSolutionBody.parse(req.body);
@@ -494,6 +509,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
 			const tasks = new Tasks(env, req.logger);
 
+			// If in maintenance mode, always return verified
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified",
+				}));
+				const response: PowCaptchaSolutionResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(response);
+			}
+
 			try {
 				parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
 			} catch (err) {
@@ -567,6 +594,35 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const tasks = new Tasks(env, req.logger);
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+
+				// If in maintenance mode, store dummy token and send PoW captcha
+				if (getMaintenanceMode()) {
+					req.logger.info(() => ({
+						msg: "Maintenance mode active - storing dummy token and sending PoW captcha",
+						data: { dapp, user },
+					}));
+
+					// Store a dummy frictionless token record
+					const tokenId = await tasks.db.storeFrictionlessTokenRecord({
+						token,
+						score: 0,
+						threshold: 0.5,
+						scoreComponents: {
+							baseScore: 0,
+						},
+						providerSelectEntropy: 0,
+						ipAddress: getCompositeIpAddress(req.ip || ""),
+					});
+
+					// Send PoW captcha
+					return res.json(
+						await tasks.frictionlessManager.sendPowCaptcha(
+							tokenId,
+							undefined,
+							false,
+						),
+					);
+				}
 
 				// Check if the token has already been used
 				const existingToken =
