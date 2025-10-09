@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 3.1.27
+### Patch Changes
+
+- 5d11a81: Adding maintenance mode
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+
 ## 3.1.26
 ### Patch Changes
 
