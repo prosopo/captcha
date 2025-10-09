@@ -28,6 +28,7 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { Tasks } from "../tasks/tasks.js";
 
 /**
@@ -53,6 +54,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified before any checks
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for image captcha verification",
+				}));
+				const verificationResponse: ImageVerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
@@ -141,6 +154,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified before any checks
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for PoW captcha verification",
+				}));
+				const verificationResponse: VerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
 
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
 
