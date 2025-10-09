@@ -76,8 +76,8 @@ jobs:
           cd packages/procaptcha-bundle/dist/bundle
           bundle_name="procaptcha.bundle.${{ steps.version.outputs.version }}-staging.zip"
           zip -r ../../../../${bundle_name} .
-          ls -lh ${bundle_name}
           cd -
+          ls -lh ${bundle_name}
 
       - name: Bundle production procaptcha-bundle
         run: |
@@ -89,10 +89,9 @@ jobs:
           cd packages/procaptcha-bundle/dist/bundle
           bundle_name="procaptcha.bundle.${{ steps.version.outputs.version }}.zip"
           zip -r ../../../../${bundle_name} .
-          ls -lh ${bundle_name}
           cd -
-
-
+          ls -lh ${bundle_name}
+          
       - name: Bundle the production provider CLI
         run: |
           echo "Bundling provider CLI"
