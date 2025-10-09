@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { AllKeys, Keys } from "@prosopo/common";
 import type { RedisIndex } from "@prosopo/redis-client";
 import { type RediSearchSchema, SCHEMA_FIELD_TYPE } from "@redis/search";
 import type {
@@ -22,7 +23,6 @@ import type {
 	UserScope,
 } from "#policy/rule.js";
 import { makeAccessRuleHash } from "#policy/transformRule.js";
-import type { AllKeys, Keys} from "@prosopo/common";
 
 export const userIpRedisSchema: RediSearchSchema = {
 	numericIpMaskMin: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },

@@ -13,69 +13,64 @@
 // limitations under the License.
 
 import {
-    type ApiEndpoint,
-    type ApiEndpointResponse,
-    ApiEndpointResponseStatus,
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type {AllKeys, Logger} from "@prosopo/common";
-import {type ZodType, z} from "zod";
-import type {
-    AccessRulesStorage,
-} from "#policy/rulesStorage.js";
+import type { AllKeys, Logger } from "@prosopo/common";
+import { type ZodType, z } from "zod";
+import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
 export type MissingIds = string[];
 
 type MissingIdsSchema = ZodType<MissingIds>;
 
 export type MissingIdsResponse = {
-    ids: string[];
+	ids: string[];
 };
 
 export const missingIdsResponse = z.object({
-    ids: z.string().array(),
+	ids: z.string().array(),
 } satisfies AllKeys<MissingIdsResponse>) satisfies ZodType<MissingIdsResponse>;
 
 export type MissingIdsEndpointResponse = ApiEndpointResponse & {
-    data?: MissingIdsResponse;
+	data?: MissingIdsResponse;
 };
 
 export class GetMissingIdsEndpoint implements ApiEndpoint<MissingIdsSchema> {
-    public constructor(
-        private readonly accessRulesStorage: AccessRulesStorage,
-        private readonly logger: Logger,
-    ) {
-    }
+	public constructor(
+		private readonly accessRulesStorage: AccessRulesStorage,
+		private readonly logger: Logger,
+	) {}
 
-    public getRequestArgsSchema(): MissingIdsSchema {
-        return z.string().array();
-    }
+	public getRequestArgsSchema(): MissingIdsSchema {
+		return z.string().array();
+	}
 
-    async processRequest(
-        args: MissingIds,
-    ): Promise<MissingIdsEndpointResponse> {
-        const missingIds = await this.accessRulesStorage.getMissingRuleIds(args);
+	async processRequest(args: MissingIds): Promise<MissingIdsEndpointResponse> {
+		const missingIds = await this.accessRulesStorage.getMissingRuleIds(args);
 
-        this.logger.info(() => ({
-            msg: "Endpoint checked missing ids",
-            data: {
-                idsToCheck: args.length,
-                missingIds: missingIds.length,
-            },
-        }));
+		this.logger.info(() => ({
+			msg: "Endpoint checked missing ids",
+			data: {
+				idsToCheck: args.length,
+				missingIds: missingIds.length,
+			},
+		}));
 
-        this.logger.debug(() => ({
-            msg: "Missing id details",
-            data: {
-                idsToCheck: args,
-                missingIds: missingIds,
-            },
-        }));
+		this.logger.debug(() => ({
+			msg: "Missing id details",
+			data: {
+				idsToCheck: args,
+				missingIds: missingIds,
+			},
+		}));
 
-        return {
-            status: ApiEndpointResponseStatus.SUCCESS,
-            data: {
-                ids: missingIds,
-            },
-        };
-    }
+		return {
+			status: ApiEndpointResponseStatus.SUCCESS,
+			data: {
+				ids: missingIds,
+			},
+		};
+	}
 }

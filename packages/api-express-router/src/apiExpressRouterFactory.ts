@@ -12,57 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {ApiRoutes, ApiRoutesProvider} from "@prosopo/api-route";
+import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import {
-    type NextFunction,
-    type Request,
-    type Response,
-    Router,
+	type NextFunction,
+	type Request,
+	type Response,
+	Router,
 } from "express";
-import type {ApiExpressEndpointAdapter} from "./endpointAdapter/apiExpressEndpointAdapter.js";
-import {handleErrors} from "./errorHandler.js";
+import type { ApiExpressEndpointAdapter } from "./endpointAdapter/apiExpressEndpointAdapter.js";
+import { handleErrors } from "./errorHandler.js";
 
 class ApiExpressRouterFactory {
-    public createRouter(
-        routersProvider: ApiRoutesProvider,
-        apiEndpointAdapter: ApiExpressEndpointAdapter,
-    ): Router {
-        const router = Router();
-        const apiRoutes = routersProvider.getRoutes();
+	public createRouter(
+		routersProvider: ApiRoutesProvider,
+		apiEndpointAdapter: ApiExpressEndpointAdapter,
+	): Router {
+		const router = Router();
+		const apiRoutes = routersProvider.getRoutes();
 
-        this.registerRoutes(router, apiRoutes, apiEndpointAdapter);
+		this.registerRoutes(router, apiRoutes, apiEndpointAdapter);
 
-        // Your error handler should always be at the end of your application stack. Apparently it means not only after all
-        // app.use() but also after all your app.get() and app.post() calls.
-        // https://stackoverflow.com/a/62358794/1178971
-        router.use(handleErrors);
+		// Your error handler should always be at the end of your application stack. Apparently it means not only after all
+		// app.use() but also after all your app.get() and app.post() calls.
+		// https://stackoverflow.com/a/62358794/1178971
+		router.use(handleErrors);
 
-        return router;
-    }
+		return router;
+	}
 
-    protected registerRoutes(
-        router: Router,
-        routes: ApiRoutes,
-        apiEndpointAdapter: ApiExpressEndpointAdapter,
-    ): void {
-        for (const [route, endpoint] of Object.entries(routes)) {
-            router.post(
-                route,
-                async (
-                    request: Request,
-                    response: Response,
-                    next: NextFunction,
-                ): Promise<void> => {
-                    return await apiEndpointAdapter.handleRequest(
-                        endpoint,
-                        request,
-                        response,
-                        next,
-                    );
-                },
-            );
-        }
-    }
+	protected registerRoutes(
+		router: Router,
+		routes: ApiRoutes,
+		apiEndpointAdapter: ApiExpressEndpointAdapter,
+	): void {
+		for (const [route, endpoint] of Object.entries(routes)) {
+			router.post(
+				route,
+				async (
+					request: Request,
+					response: Response,
+					next: NextFunction,
+				): Promise<void> => {
+					return await apiEndpointAdapter.handleRequest(
+						endpoint,
+						request,
+						response,
+						next,
+					);
+				},
+			);
+		}
+	}
 }
 
-export {ApiExpressRouterFactory};
+export { ApiExpressRouterFactory };

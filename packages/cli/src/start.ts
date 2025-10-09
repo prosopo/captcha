@@ -43,8 +43,8 @@ import {
 	type KeyringPair,
 } from "@prosopo/types";
 import {
-    AccessRuleApiRoutes,
-    getExpressApiRuleRateLimits,
+	AccessRuleApiRoutes,
+	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
 import cors from "cors";
 import express from "express";
@@ -69,14 +69,14 @@ async function startApi(
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;
 
-    const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
-        parseLogLevel(env.config.logLevel),
-    );
-    const apiRuleRoutesProvider = new AccessRuleApiRoutes(
-        env.getDb().getUserAccessRulesStorage(),
-        env.logger,
-    );
-    const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
+	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
+		parseLogLevel(env.config.logLevel),
+	);
+	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
+		env.getDb().getUserAccessRulesStorage(),
+		env.logger,
+	);
+	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
 	const clientPathsExcludingVerify = getClientApiPathsExcludingVerify();
 
@@ -101,18 +101,18 @@ async function startApi(
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 
-    // Run Header check middleware on all client routes
+	// Run Header check middleware on all client routes
 	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
 
 	// Specify verify router before the blocking middlewares
-    apiApp.use(prosopoVerifyRouter(env));
+	apiApp.use(prosopoVerifyRouter(env));
 
-    //  Admin routes - do not put after block middleware as this can block admin requests
-    env.logger.info(() => ({msg: "Enabling admin auth middleware"}));
-    apiApp.use(
-        "/v1/prosopo/provider/admin",
-        authMiddleware(env.pair, env.authAccount),
-    );
+	//  Admin routes - do not put after block middleware as this can block admin requests
+	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
+	apiApp.use(
+		"/v1/prosopo/provider/admin",
+		authMiddleware(env.pair, env.authAccount),
+	);
 
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
@@ -121,29 +121,26 @@ async function startApi(
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
 
-    const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
-    for (const userAccessRuleRoute in userAccessRuleRoutes) {
-        apiApp.use(
-            userAccessRuleRoute,
-            authMiddleware(env.pair, env.authAccount),
-        );
-    }
-    apiApp.use(
-        apiExpressRouterFactory.createRouter(
-            apiRuleRoutesProvider,
-            apiEndpointAdapter,
-        ),
-    );
-    apiApp.use(
-        apiExpressRouterFactory.createRouter(
-            apiAdminRoutesProvider,
-            // unlike the default one, it should have errorStatusCode as 400
-            createApiExpressDefaultEndpointAdapter(
-                parseLogLevel(env.config.logLevel),
-                400,
-            ),
-        ),
-    );
+	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
+	for (const userAccessRuleRoute in userAccessRuleRoutes) {
+		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
+	}
+	apiApp.use(
+		apiExpressRouterFactory.createRouter(
+			apiRuleRoutesProvider,
+			apiEndpointAdapter,
+		),
+	);
+	apiApp.use(
+		apiExpressRouterFactory.createRouter(
+			apiAdminRoutesProvider,
+			// unlike the default one, it should have errorStatusCode as 400
+			createApiExpressDefaultEndpointAdapter(
+				parseLogLevel(env.config.logLevel),
+				400,
+			),
+		),
+	);
 
 	// Rate limiting
 	const configRateLimits = env.config.rateLimits;

@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export type {ApiRoutes, ApiRoutesProvider} from "./apiRoutes.js";
+export type { ApiRoutes, ApiRoutesProvider } from "./apiRoutes.js";

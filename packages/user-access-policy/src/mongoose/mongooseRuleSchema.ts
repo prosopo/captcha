@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { AllKeys, Keys } from "@prosopo/common";
 import type { SchemaDefinition } from "mongoose";
 import type { AccessPolicy, PolicyScope } from "#policy/rule.js";
 import type {
@@ -20,7 +21,6 @@ import type {
 	UserIpRecord,
 	UserScopeRecord,
 } from "#policy/ruleRecord.js";
-import type {AllKeys, Keys} from "@prosopo/common";
 
 const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	userId: { type: String, required: false },
@@ -31,7 +31,7 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {
 	ip: { type: String, required: false },
-    ipMask: { type: String, required: false },
+	ipMask: { type: String, required: false },
 } satisfies AllKeys<UserIpRecord>;
 
 const userScopeSchema: SchemaDefinition<UserScopeRecord> = {

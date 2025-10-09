@@ -12,168 +12,177 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {ApiClient} from "@prosopo/api";
-import type {ApiEndpointResponse} from "@prosopo/api-route";
+import { ApiClient } from "@prosopo/api";
+import type { ApiEndpointResponse } from "@prosopo/api-route";
 import {
-    type FetchRulesEndpointResponse,
-    type FetchRulesOptions,
-    fetchRulesResponse,
+	type FetchRulesEndpointResponse,
+	type FetchRulesOptions,
+	fetchRulesResponse,
 } from "#policy/api/endpoints/fetchRules.js";
 import {
-    type FindRuleFilters,
-    type RuleIdsEndpointResponse,
-    ruleIdsResponse,
+	type FindRuleFilters,
+	type RuleIdsEndpointResponse,
+	ruleIdsResponse,
 } from "#policy/api/endpoints/findRuleIds.js";
-import type {DeleteSiteGroups} from "./endpoints/deleteRuleGroups.js";
-import type {DeleteRuleFilters} from "./endpoints/deleteRules.js";
-import type {InsertRulesGroup} from "./endpoints/insertRules.js";
-import {accessRuleApiPaths} from "./ruleApiRoutes.js";
 import {
-    type MissingIds,
-    type MissingIdsEndpointResponse,
-    missingIdsResponse
+	type MissingIds,
+	type MissingIdsEndpointResponse,
+	missingIdsResponse,
 } from "#policy/api/endpoints/getMissingIds.js";
+import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
+import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
+import type { InsertRulesGroup } from "./endpoints/insertRules.js";
+import { accessRuleApiPaths } from "./ruleApiRoutes.js";
 
 export class AccessRulesApiClient extends ApiClient {
-    public async rehashAll(timestamp: string, signature: string): Promise<ApiEndpointResponse> {
-        return this.post(accessRuleApiPaths.REHASH_ALL, {}, {
-            headers: {
-                "Prosopo-Site-Key": this.account,
-                timestamp,
-                signature,
-            },
-        });
-    }
+	public async rehashAll(
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(
+			accessRuleApiPaths.REHASH_ALL,
+			{},
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
 
-    public async getMissingIds(idsToCheck: MissingIds,
-                               timestamp: string,
-                               signature: string,): Promise<MissingIdsEndpointResponse> {
-        const endpointResponse: ApiEndpointResponse = await this.post(
-            accessRuleApiPaths.GET_MISSING_IDS,
-            idsToCheck,
-            {
-                headers: {
-                    "Prosopo-Site-Key": this.account,
-                    timestamp,
-                    signature,
-                },
-            },
-        );
+	public async getMissingIds(
+		idsToCheck: MissingIds,
+		timestamp: string,
+		signature: string,
+	): Promise<MissingIdsEndpointResponse> {
+		const endpointResponse: ApiEndpointResponse = await this.post(
+			accessRuleApiPaths.GET_MISSING_IDS,
+			idsToCheck,
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
 
-        const parsedData = missingIdsResponse.safeParse(endpointResponse.data);
+		const parsedData = missingIdsResponse.safeParse(endpointResponse.data);
 
-        return {
-            ...endpointResponse,
-            data: parsedData.success ? parsedData.data : undefined,
-        };
-    }
+		return {
+			...endpointResponse,
+			data: parsedData.success ? parsedData.data : undefined,
+		};
+	}
 
-    public async fetchMany(
-        fetchOptions: FetchRulesOptions,
-        timestamp: string,
-        signature: string,
-    ): Promise<FetchRulesEndpointResponse> {
-        const endpointResponse: ApiEndpointResponse = await this.post(
-            accessRuleApiPaths.FETCH_MANY,
-            fetchOptions,
-            {
-                headers: {
-                    "Prosopo-Site-Key": this.account,
-                    timestamp,
-                    signature,
-                },
-            },
-        );
+	public async fetchMany(
+		fetchOptions: FetchRulesOptions,
+		timestamp: string,
+		signature: string,
+	): Promise<FetchRulesEndpointResponse> {
+		const endpointResponse: ApiEndpointResponse = await this.post(
+			accessRuleApiPaths.FETCH_MANY,
+			fetchOptions,
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
 
-        const parsedData = fetchRulesResponse.safeParse(endpointResponse.data);
+		const parsedData = fetchRulesResponse.safeParse(endpointResponse.data);
 
-        return {
-            ...endpointResponse,
-            data: parsedData.success ? parsedData.data : undefined,
-        };
-    }
+		return {
+			...endpointResponse,
+			data: parsedData.success ? parsedData.data : undefined,
+		};
+	}
 
-    public async findIds(
-        filters: FindRuleFilters,
-        timestamp: string,
-        signature: string,
-    ): Promise<RuleIdsEndpointResponse> {
-        const endpointResponse: ApiEndpointResponse = await this.post(
-            accessRuleApiPaths.FIND_IDS,
-            filters,
-            {
-                headers: {
-                    "Prosopo-Site-Key": this.account,
-                    timestamp,
-                    signature,
-                },
-            },
-        );
+	public async findIds(
+		filters: FindRuleFilters,
+		timestamp: string,
+		signature: string,
+	): Promise<RuleIdsEndpointResponse> {
+		const endpointResponse: ApiEndpointResponse = await this.post(
+			accessRuleApiPaths.FIND_IDS,
+			filters,
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
 
-        const parsedData = ruleIdsResponse.safeParse(endpointResponse.data);
+		const parsedData = ruleIdsResponse.safeParse(endpointResponse.data);
 
-        return {
-            ...endpointResponse,
-            data: parsedData.success ? parsedData.data : undefined,
-        };
-    }
+		return {
+			...endpointResponse,
+			data: parsedData.success ? parsedData.data : undefined,
+		};
+	}
 
-    public insertMany(
-        rulesGroup: InsertRulesGroup,
-        timestamp: string,
-        signature: string,
-    ): Promise<ApiEndpointResponse> {
-        return this.post(accessRuleApiPaths.INSERT_MANY, rulesGroup, {
-            headers: {
-                "Prosopo-Site-Key": this.account,
-                timestamp,
-                signature,
-            },
-        });
-    }
+	public insertMany(
+		rulesGroup: InsertRulesGroup,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(accessRuleApiPaths.INSERT_MANY, rulesGroup, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
 
-    public deleteMany(
-        filters: DeleteRuleFilters,
-        timestamp: string,
-        signature: string,
-    ): Promise<ApiEndpointResponse> {
-        return this.post(accessRuleApiPaths.DELETE_MANY, filters, {
-            headers: {
-                "Prosopo-Site-Key": this.account,
-                timestamp,
-                signature,
-            },
-        });
-    }
+	public deleteMany(
+		filters: DeleteRuleFilters,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(accessRuleApiPaths.DELETE_MANY, filters, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
 
-    public deleteGroups(
-        siteGroups: DeleteSiteGroups,
-        timestamp: string,
-        signature: string,
-    ): Promise<ApiEndpointResponse> {
-        return this.post(accessRuleApiPaths.DELETE_GROUPS, siteGroups, {
-            headers: {
-                "Prosopo-Site-Key": this.account,
-                timestamp,
-                signature,
-            },
-        });
-    }
+	public deleteGroups(
+		siteGroups: DeleteSiteGroups,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(accessRuleApiPaths.DELETE_GROUPS, siteGroups, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		});
+	}
 
-    public deleteAll(
-        timestamp: string,
-        signature: string,
-    ): Promise<ApiEndpointResponse> {
-        return this.post(
-            accessRuleApiPaths.DELETE_ALL,
-            {},
-            {
-                headers: {
-                    "Prosopo-Site-Key": this.account,
-                    timestamp,
-                    signature,
-                },
-            },
-        );
-    }
+	public deleteAll(
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(
+			accessRuleApiPaths.DELETE_ALL,
+			{},
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
 }

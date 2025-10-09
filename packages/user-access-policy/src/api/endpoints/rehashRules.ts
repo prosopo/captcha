@@ -13,75 +13,72 @@
 // limitations under the License.
 
 import {
-    type ApiEndpoint,
-    type ApiEndpointResponse,
-    ApiEndpointResponseStatus,
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type {Logger} from "@prosopo/common";
-import type {AccessRulesStorage} from "#policy/rulesStorage.js";
+import type { Logger } from "@prosopo/common";
+import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
 export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
-    public constructor(
-        private readonly accessRulesStorage: AccessRulesStorage,
-        private readonly logger: Logger,
-    ) {
-    }
+	public constructor(
+		private readonly accessRulesStorage: AccessRulesStorage,
+		private readonly logger: Logger,
+	) {}
 
-    public getRequestArgsSchema(): undefined {
+	public getRequestArgsSchema(): undefined {}
 
-    }
+	async processRequest(): Promise<ApiEndpointResponse> {
+		await this.accessRulesStorage.fetchAllRuleIds(async (ruleIds: string[]) => {
+			this.logger.info(() => ({
+				msg: "Fetched rule ids batch",
+				data: {
+					count: ruleIds.length,
+					ruleIds,
+				},
+			}));
 
-    async processRequest(): Promise<ApiEndpointResponse> {
-        await this.accessRulesStorage.fetchAllRuleIds(async (ruleIds: string[]) => {
-            this.logger.info(() => ({
-                msg: "Fetched rule ids batch",
-                data: {
-                    count: ruleIds.length,
-                    ruleIds
-                }
-            }));
+			const ruleEntries = await this.accessRulesStorage.fetchRules(ruleIds);
 
-            const ruleEntries = await this.accessRulesStorage.fetchRules(ruleIds);
+			this.logger.info(() => ({
+				msg: "Fetched rules",
+				data: {
+					count: ruleEntries.length,
+				},
+			}));
 
-            this.logger.info(() => ({
-                msg: "Fetched rules",
-                data: {
-                    count: ruleEntries.length,
-                }
-            }));
+			if (ruleEntries.length !== ruleIds.length) {
+				this.logger.warn(() => ({
+					msg: "Fetched rules count is not equal to the requested count",
+					data: {
+						fetchedCount: ruleEntries.length,
+						requestedCount: ruleIds.length,
+					},
+				}));
+			}
 
-            if (ruleEntries.length !== ruleIds.length) {
-                this.logger.warn(() => ({
-                    msg: "Fetched rules count is not equal to the requested count",
-                    data: {
-                        fetchedCount: ruleEntries.length,
-                        requestedCount: ruleIds.length,
-                    }
-                }));
-            }
+			await this.accessRulesStorage.deleteRules(ruleIds);
 
-            await this.accessRulesStorage.deleteRules(ruleIds);
+			this.logger.info(() => ({
+				msg: "Deleted rules",
+				data: {
+					count: ruleIds.length,
+				},
+			}));
 
-            this.logger.info(() => ({
-                msg: "Deleted rules",
-                data: {
-                    count: ruleIds.length,
-                }
-            }));
+			await this.accessRulesStorage.insertRules(ruleEntries);
 
-            await this.accessRulesStorage.insertRules(ruleEntries);
+			this.logger.info(() => ({
+				msg: "Inserted rules",
+				data: {
+					count: ruleEntries.length,
+				},
+			}));
+		});
 
-            this.logger.info(() => ({
-                msg: "Inserted rules",
-                data: {
-                    count: ruleEntries.length,
-                }
-            }));
-        });
-
-        return {
-            status: ApiEndpointResponseStatus.SUCCESS,
-            data: {},
-        };
-    }
+		return {
+			status: ApiEndpointResponseStatus.SUCCESS,
+			data: {},
+		};
+	}
 }

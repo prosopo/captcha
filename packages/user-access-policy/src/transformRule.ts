@@ -13,109 +13,116 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
-import {IpAddress, IpRange} from "cidr-calc";
-import {Address4} from "ip-address";
-import {z} from "zod";
-import type {AccessRule} from "./rule.js";
+import { IpAddress, IpRange } from "cidr-calc";
+import { Address4 } from "ip-address";
+import { z } from "zod";
+import type { AccessRule } from "./rule.js";
 import {
-    accessPolicyInput,
-    policyScopeInput,
+	accessPolicyInput,
+	policyScopeInput,
 } from "./ruleInput/policyInput.js";
-import {accessRuleInput} from "./ruleInput/ruleInput.js";
-import {userScopeSchema} from "./ruleInput/userScopeInput.js";
-import type {AccessRuleRecord} from "./ruleRecord.js";
+import { accessRuleInput } from "./ruleInput/ruleInput.js";
+import { userScopeSchema } from "./ruleInput/userScopeInput.js";
+import type { AccessRuleRecord } from "./ruleRecord.js";
 
 const RULE_HASH_ALGORITHM = "md5";
 
 export const makeAccessRuleHash = (rule: AccessRule): string => {
-    // 1. exclude "undefined" values to ensure hash consistency
-    const valueProperties = Object.entries(rule).filter(([key, value]) => "undefined" !== typeof value);
+	// 1. exclude "undefined" values to ensure hash consistency
+	const valueProperties = Object.entries(rule).filter(
+		([key, value]) => "undefined" !== typeof value,
+	);
 
-    // 2. order alphabetically to ensure hash consistency
-    const orderedProperties = valueProperties.sort();
+	// 2. order alphabetically to ensure hash consistency
+	const orderedProperties = valueProperties.sort();
 
-    const objectToHash = Object.fromEntries(orderedProperties);
+	const objectToHash = Object.fromEntries(orderedProperties);
 
-    return hashObject(objectToHash, RULE_HASH_ALGORITHM);
+	return hashObject(objectToHash, RULE_HASH_ALGORITHM);
 };
 
 export const transformAccessRuleRecordIntoRule = (
-    ruleRecord: AccessRuleRecord,
+	ruleRecord: AccessRuleRecord,
 ): AccessRule =>
-    // accessRuleInput does all the record field transformations
-    accessRuleInput.parse(ruleRecord);
+	// accessRuleInput does all the record field transformations
+	accessRuleInput.parse(ruleRecord);
 
 export const transformAccessRuleIntoRecord = (
-    rule: AccessRule,
+	rule: AccessRule,
 ): AccessRuleRecord => accessRuleToRecordScheme.parse(rule);
 
 const accessRuleToRecordScheme = z
-    .object({
-        ...accessPolicyInput.shape,
-        ...policyScopeInput.shape,
-        ...userScopeSchema.shape,
-        groupId: z.coerce.string().optional(),
-    })
-    .transform((ruleInput: AccessRule): AccessRuleRecord => {
-        // extract groupId
-        const {
-            groupId,
-            numericIp,
-            numericIpMaskMin,
-            numericIpMaskMax,
-            userAgentHash,
-            ...rule
-        } = ruleInput;
+	.object({
+		...accessPolicyInput.shape,
+		...policyScopeInput.shape,
+		...userScopeSchema.shape,
+		groupId: z.coerce.string().optional(),
+	})
+	.transform((ruleInput: AccessRule): AccessRuleRecord => {
+		// extract groupId
+		const {
+			groupId,
+			numericIp,
+			numericIpMaskMin,
+			numericIpMaskMax,
+			userAgentHash,
+			...rule
+		} = ruleInput;
 
-        const record: AccessRuleRecord = rule;
+		const record: AccessRuleRecord = rule;
 
-        if ("string" === typeof groupId) {
-            record.ruleGroupId = groupId;
-        }
+		if ("string" === typeof groupId) {
+			record.ruleGroupId = groupId;
+		}
 
-        if ("string" === typeof userAgentHash) {
-            record.userAgent = userAgentHash;
-        }
+		if ("string" === typeof userAgentHash) {
+			record.userAgent = userAgentHash;
+		}
 
-        if ("bigint" === typeof numericIp) {
-            record.ip = getStringIpFromNumeric(numericIp);
-        }
+		if ("bigint" === typeof numericIp) {
+			record.ip = getStringIpFromNumeric(numericIp);
+		}
 
-        if (
-            "bigint" === typeof numericIpMaskMin &&
-            "bigint" === typeof numericIpMaskMax
-        ) {
-            record.ipMask = getCidrFromNumericIpRange(
-                numericIpMaskMin,
-                numericIpMaskMax,
-            );
-        }
+		if (
+			"bigint" === typeof numericIpMaskMin &&
+			"bigint" === typeof numericIpMaskMax
+		) {
+			record.ipMask = getCidrFromNumericIpRange(
+				numericIpMaskMin,
+				numericIpMaskMax,
+			);
+		}
 
-        return record;
-    });
+		return record;
+	});
 
-const hashObject = (object: Record<string, unknown>, algorithm: string): string =>
-    crypto
-        .createHash(algorithm)
-        .update(JSON.stringify(object, (key, value) =>
-            // JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
-            "bigint" === typeof value ? value.toString() : value,
-        ))
-        .digest("hex");
+const hashObject = (
+	object: Record<string, unknown>,
+	algorithm: string,
+): string =>
+	crypto
+		.createHash(algorithm)
+		.update(
+			JSON.stringify(object, (key, value) =>
+				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
+				"bigint" === typeof value ? value.toString() : value,
+			),
+		)
+		.digest("hex");
 
 const getStringIpFromNumeric = (numericIp: bigint): string =>
-    Address4.fromInteger(Number(numericIp)).address;
+	Address4.fromInteger(Number(numericIp)).address;
 
 export const getCidrFromNumericIpRange = (
-    startIp: bigint,
-    endIp: bigint,
+	startIp: bigint,
+	endIp: bigint,
 ): string | undefined => {
-    const ipRange = new IpRange(
-        IpAddress.of(getStringIpFromNumeric(startIp)),
-        IpAddress.of(getStringIpFromNumeric(endIp)),
-    );
+	const ipRange = new IpRange(
+		IpAddress.of(getStringIpFromNumeric(startIp)),
+		IpAddress.of(getStringIpFromNumeric(endIp)),
+	);
 
-    const cidr = ipRange.toCidrs()[0];
+	const cidr = ipRange.toCidrs()[0];
 
-    return cidr ? `${cidr.prefix.toString()}/${cidr.prefixLen}` : undefined;
+	return cidr ? `${cidr.prefix.toString()}/${cidr.prefixLen}` : undefined;
 };
