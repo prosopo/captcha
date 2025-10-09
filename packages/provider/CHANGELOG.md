@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.12.7
+### Patch Changes
+
+- cbc5d8e: Additional logging
+
 ## 3.12.6
 ### Patch Changes
 
