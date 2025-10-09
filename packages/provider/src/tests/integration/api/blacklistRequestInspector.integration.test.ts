@@ -191,7 +191,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(result).toHaveLength(1);
 		});
 
-		it("should not return a rule when a JA4-UserAgent rule exists and the user matches the the JA4 but not the user agent", async () => {
+		it("should not return a rule when a JA4-UserAgent rule exists and the user matches the JA4 but not the user agent", async () => {
 			const accessRule = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
@@ -293,7 +293,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				true,
 				true,
 			);
-			expect(result).toHaveLength(1);
+			expect(result).toHaveLength(0);
 		});
 
 		it("should return multiple matching rules", async () => {
