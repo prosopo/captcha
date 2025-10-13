@@ -112,6 +112,7 @@ export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
+	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -136,6 +137,7 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -397,6 +399,14 @@ export type RemoveDetectorKeyBodyInput = input<
 >;
 export type RemoveDetectorKeyBodyOutput = output<
 	typeof RemoveDetectorKeyBodySpec
+>;
+
+export const ToggleMaintenanceModeBody = object({
+	[ApiParams.enabled]: boolean(),
+});
+
+export type ToggleMaintenanceModeBodyOutput = output<
+	typeof ToggleMaintenanceModeBody
 >;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;

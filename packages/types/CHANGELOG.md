@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.5.6
+### Patch Changes
+
+- 5d11a81: Adding maintenance mode
+
 ## 3.5.5
 ### Patch Changes
 

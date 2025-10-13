@@ -34,6 +34,7 @@ import type {
 import { parseUrl } from "@prosopo/util";
 import type { OptionalId } from "mongodb";
 import { validateSiteKey } from "../../api/validateAddress.js";
+import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -189,6 +190,8 @@ export class ClientTaskManager {
 									baseScore: 0,
 								},
 								threshold: 0,
+								ipAddress: getCompositeIpAddress("0.0.0.0"),
+								providerSelectEntropy: 1e12,
 							} as StoredSession;
 						}
 						const { _id, token, ...tokenRecordWithoutId } = tokenRecord;

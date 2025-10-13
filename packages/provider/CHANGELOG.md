@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 3.12.9
+### Patch Changes
+
+- 8491159: Store webview
+
+## 3.12.8
+### Patch Changes
+
+- 5d11a81: Adding maintenance mode
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/api@3.1.27
+  - @prosopo/api-express-router@3.0.28
+  - @prosopo/database@3.4.8
+  - @prosopo/datasets@3.0.37
+  - @prosopo/env@3.2.16
+  - @prosopo/keyring@2.8.30
+  - @prosopo/load-balancer@2.8.3
+  - @prosopo/types-database@3.3.8
+  - @prosopo/types-env@2.7.41
+  - @prosopo/user-access-policy@3.5.22
+
 ## 3.12.7
 ### Patch Changes
 
