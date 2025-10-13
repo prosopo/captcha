@@ -17,15 +17,16 @@ import type { FtAggregateWithCursorOptions } from "@redis/search/dist/lib/comman
 import type { RedisClientType } from "redis";
 import { z } from "zod";
 import { ACCESS_RULES_REDIS_INDEX_NAME } from "#policy/redis/redisRuleIndex.js";
-import { parseRedisRecords } from "#policy/redis/redisRulesStorage.js";
-
-const BATCH_SIZE = 1000;
+import {
+	REDIS_BATCH_SIZE,
+	parseRedisRecords,
+} from "#policy/redis/redisRulesStorage.js";
 
 // aggregation is used for cases when we need to get "unlimited" search results
 const aggregateOptions: FtAggregateWithCursorOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
 	DIALECT: 2,
-	COUNT: BATCH_SIZE,
+	COUNT: REDIS_BATCH_SIZE,
 };
 
 export const aggregateRedisKeys = async (
@@ -95,7 +96,7 @@ const executeAggregation = async (
 		const batchReply = await client.ft.cursorRead(
 			ACCESS_RULES_REDIS_INDEX_NAME,
 			cursor,
-			{ COUNT: BATCH_SIZE },
+			{ COUNT: aggregateOptions.COUNT },
 		);
 
 		await handleBatch(batchReply.results);

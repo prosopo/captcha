@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import * as util from "node:util";
-import type { Logger } from "@prosopo/common";
+import {
+	type Logger,
+	chunkIntoBatches,
+	executeBatchesSequentially,
+} from "@prosopo/common";
 import type { FtSearchOptions, SearchReply } from "@redis/search";
 import type { RedisClientType } from "redis";
 import { getRulesRedisQuery } from "#policy/redis/reader/redisRulesQuery.js";
@@ -22,6 +26,7 @@ import {
 	ACCESS_RULE_REDIS_KEY_PREFIX,
 } from "#policy/redis/redisRuleIndex.js";
 import {
+	REDIS_BATCH_SIZE,
 	parseExpirationRecords,
 	parseRedisRecords,
 } from "#policy/redis/redisRulesStorage.js";
@@ -34,9 +39,6 @@ import type {
 } from "#policy/rulesStorage.js";
 import { aggregateRedisKeys } from "./redisAggregate.js";
 
-// maximum is 10K
-const DEFAULT_SEARCH_LIMIT = 1000;
-
 // https://redis.io/docs/latest/commands/ft.search/
 const redisSearchOptions: FtSearchOptions = {
 	// #2 is a required option when the 'ismissing()' function is in the query body
@@ -44,7 +46,8 @@ const redisSearchOptions: FtSearchOptions = {
 	// FT.search doesn't support "unlimited" selects
 	LIMIT: {
 		from: 0,
-		size: DEFAULT_SEARCH_LIMIT,
+		// 10K is a default Redis config limit
+		size: Math.min(REDIS_BATCH_SIZE, 10_000),
 	},
 };
 
@@ -57,67 +60,29 @@ export const createRedisRulesReader = (
 			const ruleKeys = ruleIds.map(
 				(id) => `${ACCESS_RULE_REDIS_KEY_PREFIX}${id}`,
 			);
+			const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
 
-			const multi = client.multi();
+			const missingKeyBatches = await executeBatchesSequentially(
+				keyBatches,
+				async (keysBatch) => getMissingKeys(client, keysBatch),
+			);
 
-			ruleKeys.map((key) => {
-				multi.exists(key);
-			});
-
-			const records: unknown[] = await multi.exec();
-
-			const missingIds: string[] = [];
-
-			records.forEach((exists, index) => {
-				if ("0" === String(exists)) {
-					const ruleId = ruleIds[index];
-
-					if (ruleId) {
-						missingIds.push(ruleId);
-					}
-				}
-			});
-
-			return missingIds;
+			return missingKeyBatches
+				.flat()
+				.map((ruleKey) => ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length));
 		},
 
 		fetchRules: async (ruleIds: string[]): Promise<AccessRuleEntry[]> => {
 			const keys = ruleIds.map((id) => `${ACCESS_RULE_REDIS_KEY_PREFIX}${id}`);
 
-			const rulesPipe = client.multi();
-			const expirationPipe = client.multi();
+			const keyBatches = chunkIntoBatches(keys, REDIS_BATCH_SIZE);
 
-			keys.map((key) => {
-				rulesPipe.hGetAll(key);
-				expirationPipe.expireTime(key);
-			});
+			const entryBatches = await executeBatchesSequentially(
+				keyBatches,
+				(keysBatch) => fetchRuleEntries(client, keysBatch, logger),
+			);
 
-			const ruleRecords = (await rulesPipe.exec()) as object[];
-			const expirationRecords = (await expirationPipe.exec()) as unknown[];
-
-			const expirations = parseExpirationRecords(expirationRecords, logger);
-			const entries: AccessRuleEntry[] = [];
-
-			ruleRecords.forEach((ruleData, index) => {
-				const isRulePresent = Object.keys(ruleData).length > 0;
-
-				if (isRulePresent) {
-					const rule = parseRedisRecords(
-						[ruleData],
-						accessRuleInput,
-						logger,
-					)[0];
-
-					if (rule) {
-						entries.push({
-							rule: rule,
-							expiresUnixTimestamp: expirations[index],
-						});
-					}
-				}
-			});
-
-			return entries;
+			return entryBatches.flat();
 		},
 
 		findRules: async (
@@ -239,6 +204,81 @@ export const createRedisRulesReader = (
 				await batchHandler(ids);
 			});
 		},
+	};
+};
+
+const getMissingKeys = async (
+	client: RedisClientType,
+	ruleKeys: string[],
+): Promise<string[]> => {
+	const queries = client.multi();
+
+	ruleKeys.map((ruleKey) => {
+		queries.exists(ruleKey);
+	});
+
+	const records: unknown[] = await queries.exec();
+
+	const missingKeys: string[] = [];
+
+	records.map((exists, recordIndex) => {
+		if ("0" === String(exists)) {
+			const ruleKey = ruleKeys[recordIndex];
+
+			if (ruleKey) {
+				missingKeys.push(ruleKey);
+			}
+		}
+	});
+
+	return missingKeys;
+};
+
+const fetchRuleEntries = async (
+	client: RedisClientType,
+	keys: string[],
+	logger: Logger,
+): Promise<AccessRuleEntry[]> => {
+	const { records, expirations } = await fetchHashRecords(client, keys, logger);
+	const entries: AccessRuleEntry[] = [];
+
+	records.map((ruleData, index) => {
+		const isRulePresent = Object.keys(ruleData).length > 0;
+
+		if (isRulePresent) {
+			const rule = parseRedisRecords([ruleData], accessRuleInput, logger)[0];
+
+			if (rule) {
+				entries.push({
+					rule: rule,
+					expiresUnixTimestamp: expirations[index],
+				});
+			}
+		}
+	});
+
+	return entries;
+};
+
+const fetchHashRecords = async (
+	client: RedisClientType,
+	keys: string[],
+	logger: Logger,
+): Promise<{ records: object[]; expirations: (number | undefined)[] }> => {
+	const rulesPipe = client.multi();
+	const expirationPipe = client.multi();
+
+	keys.map((key) => {
+		rulesPipe.hGetAll(key);
+		expirationPipe.expireTime(key);
+	});
+
+	const records = (await rulesPipe.exec()) as object[];
+	const expirationRecords = (await expirationPipe.exec()) as unknown[];
+
+	return {
+		records: records,
+		expirations: parseExpirationRecords(expirationRecords, logger),
 	};
 };
 

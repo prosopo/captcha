@@ -25,6 +25,8 @@ import {
 	getDummyRedisRulesWriter,
 } from "./redisRulesWriter.js";
 
+export const REDIS_BATCH_SIZE = 1_000;
+
 export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
 	logger: Logger,

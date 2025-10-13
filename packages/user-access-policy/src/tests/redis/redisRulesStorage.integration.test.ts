@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+import {
+	LogLevel,
+	type Logger,
+	chunkIntoBatches,
+	executeBatchesSequentially,
+	getLogger,
+} from "@prosopo/common";
 import {
 	type RedisConnection,
 	createTestRedisConnection,
@@ -61,11 +67,21 @@ describe("redisAccessRulesStorage", () => {
 	const getIndexRecordsCount = async (indexName: string): Promise<number> =>
 		(await redisClient.ft.info(indexName)).num_docs;
 
-	const insertRule = async (rule: AccessRule) => {
-		const ruleKey = getAccessRuleRedisKey(rule);
-		const ruleValue = getRedisRuleValue(rule);
+	const insertRules = async (rules: AccessRule[]) => {
+		const ruleBatches = chunkIntoBatches(rules, 1000);
 
-		return await redisClient.hSet(ruleKey, ruleValue);
+		await executeBatchesSequentially(ruleBatches, async (batchRules) => {
+			const queries = redisClient.multi();
+
+			batchRules.map((rule) => {
+				const ruleKey = getAccessRuleRedisKey(rule);
+				const ruleValue = getRedisRuleValue(rule);
+
+				queries.hSet(ruleKey, ruleValue);
+			});
+
+			await queries.exec();
+		});
 	};
 
 	beforeAll(async () => {
@@ -96,156 +112,159 @@ describe("redisAccessRulesStorage", () => {
 		).getClient();
 	});
 
-	describe("writer", () => {
-		let accessRulesWriter: AccessRulesWriter;
+	describe(
+		"writer",
+		() => {
+			let accessRulesWriter: AccessRulesWriter;
 
-		beforeAll(() => {
-			accessRulesWriter = createRedisRulesWriter(redisClient, mockLogger);
-		});
+			beforeAll(() => {
+				accessRulesWriter = createRedisRulesWriter(redisClient, mockLogger);
+			});
 
-		test("inserts rule", async () => {
-			// given
-			const accessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: "clientId",
-			};
-			const accessRuleKey = getAccessRuleRedisKey(accessRule);
+			test("inserts rule", async () => {
+				// given
+				const accessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: "clientId",
+				};
+				const accessRuleKey = getAccessRuleRedisKey(accessRule);
 
-			// when
-			await accessRulesWriter.insertRules([
-				{
-					rule: accessRule,
-				},
-			]);
+				// when
+				await accessRulesWriter.insertRules([
+					{
+						rule: accessRule,
+					},
+				]);
 
-			// then
-			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
+				// then
+				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
 
-			expect(insertedAccessRule).toEqual(accessRule);
-			expect(indexRecordsCount).toEqual(1);
-		});
+				expect(insertedAccessRule).toEqual(accessRule);
+				expect(indexRecordsCount).toEqual(1);
+			});
 
-		test("inserts time limited rule", async () => {
-			// given
-			const accessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: "clientId",
-			};
-			const accessRuleKey = getAccessRuleRedisKey(accessRule);
-			// 1 hour from now.
-			const expireIn = 60 * 60; // seconds
-			const expirationTimestamp = new Date(
-				Date.now() + expireIn * 1000,
-			).getTime();
-			const expirationTimestampInSeconds = Math.floor(
-				expirationTimestamp / 1000,
-			);
+			test("inserts time limited rule", async () => {
+				// given
+				const accessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: "clientId",
+				};
+				const accessRuleKey = getAccessRuleRedisKey(accessRule);
+				// 1 hour from now.
+				const expireIn = 60 * 60; // seconds
+				const expirationTimestamp = new Date(
+					Date.now() + expireIn * 1000,
+				).getTime();
+				const expirationTimestampInSeconds = Math.floor(
+					expirationTimestamp / 1000,
+				);
 
-			// when
-			await accessRulesWriter.insertRules([
-				{
-					rule: accessRule,
-					expiresUnixTimestamp: expirationTimestamp,
-				},
-			]);
-			const ruleKey = getAccessRuleRedisKey(accessRule);
-			// then
-			const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-			const insertedExpirationResult = await redisClient.expireAt(
-				ruleKey,
-				expirationTimestampInSeconds,
-			);
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
+				// when
+				await accessRulesWriter.insertRules([
+					{
+						rule: accessRule,
+						expiresUnixTimestamp: expirationTimestamp,
+					},
+				]);
+				const ruleKey = getAccessRuleRedisKey(accessRule);
+				// then
+				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
+				const insertedExpirationResult = await redisClient.expireAt(
+					ruleKey,
+					expirationTimestampInSeconds,
+				);
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
 
-			const recordExpirySeconds = await redisClient.ttl(ruleKey);
+				const recordExpirySeconds = await redisClient.ttl(ruleKey);
 
-			expect(insertedAccessRule).toEqual(accessRule);
-			expect(insertedExpirationResult).toBe(1);
-			expect(recordExpirySeconds).toBeLessThanOrEqual(
-				expirationTimestampInSeconds,
-			);
+				expect(insertedAccessRule).toEqual(accessRule);
+				expect(insertedExpirationResult).toBe(1);
+				expect(recordExpirySeconds).toBeLessThanOrEqual(
+					expirationTimestampInSeconds,
+				);
 
-			expect(indexRecordsCount).toBe(1);
-		});
+				expect(indexRecordsCount).toBe(1);
+			});
 
-		test("deletes rules", async () => {
-			// given
-			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
-
-			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
-
-			await insertRule(johnAccessRule);
-			await insertRule(doeAccessRule);
-
-			// when
-			await accessRulesWriter.deleteRules([
-				johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
-			]);
-
-			// then
-			const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-			expect(presentAccessRule).toEqual(doeAccessRule);
-			expect(indexRecordsCount).toBe(1);
-		});
-
-		test("deletes all rules", async () => {
-			// given
-			const johnAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-			const doeAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: getUniqueString(),
-			};
-
-			await insertRule(johnAccessRule);
-			await insertRule(doeAccessRule);
-
-			// when
-			await accessRulesWriter.deleteAllRules();
-
-			// then
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
-
-			expect(indexRecordsCount).toBe(0);
-		});
-
-		test("deletes all rules when there are 1000s of rules", async () => {
-			// given
-			const rulesCount = 10000;
-			const accessRules: AccessRule[] = Array.from(
-				{ length: rulesCount },
-				() => ({
+			test("deletes rules", async () => {
+				// given
+				const johnAccessRule: AccessRule = {
 					type: AccessPolicyType.Block,
 					clientId: getUniqueString(),
-				}),
-			);
+				};
+				const johnAccessRuleKey = getAccessRuleRedisKey(johnAccessRule);
 
-			for (const rule of accessRules) {
-				await insertRule(rule);
-			}
+				const doeAccessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				};
+				const doeAccessRuleKey = getAccessRuleRedisKey(doeAccessRule);
 
-			// when
-			await accessRulesWriter.deleteAllRules();
+				await insertRules([johnAccessRule, doeAccessRule]);
 
-			// then
-			const indexRecordsCount = await getIndexRecordsCount(indexName);
+				// when
+				await accessRulesWriter.deleteRules([
+					johnAccessRuleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+				]);
 
-			expect(indexRecordsCount).toBe(0);
-		});
-	});
+				// then
+				const presentAccessRule = await redisClient.hGetAll(doeAccessRuleKey);
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+				expect(presentAccessRule).toEqual(doeAccessRule);
+				expect(indexRecordsCount).toBe(1);
+			});
+
+			test("deletes all rules", async () => {
+				// given
+				const johnAccessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				};
+				const doeAccessRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: getUniqueString(),
+				};
+
+				await insertRules([johnAccessRule, doeAccessRule]);
+
+				// when
+				await accessRulesWriter.deleteAllRules();
+
+				// then
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+				expect(indexRecordsCount).toBe(0);
+			});
+
+			test("deletes all rules when there is 1 million of rules", async () => {
+				// given
+				const rulesCount = 1_000_000;
+
+				const accessRules: AccessRule[] = Array.from(
+					{ length: rulesCount },
+					() => ({
+						type: AccessPolicyType.Block,
+						clientId: getUniqueString(),
+					}),
+				);
+
+				await insertRules(accessRules);
+
+				// when
+				await accessRulesWriter.deleteAllRules();
+
+				// then
+				const indexRecordsCount = await getIndexRecordsCount(indexName);
+
+				expect(indexRecordsCount).toBe(0);
+			});
+		},
+		{
+			timeout: 120_000,
+		},
+	);
 
 	describe("reader", () => {
 		let accessRulesReader: AccessRulesReader;
@@ -272,9 +291,7 @@ describe("redisAccessRulesStorage", () => {
 				type: AccessPolicyType.Block,
 			};
 
-			await insertRule(johnAccessRule);
-			await insertRule(doeAccessRule);
-			await insertRule(globalAccessRule);
+			await insertRules([johnAccessRule, doeAccessRule, globalAccessRule]);
 
 			// when
 			const foundByClientAccessRules = await accessRulesReader.findRules({
@@ -318,9 +335,7 @@ describe("redisAccessRulesStorage", () => {
 				type: AccessPolicyType.Block,
 			};
 
-			await insertRule(johnAccessRule);
-			await insertRule(doeAccessRule);
-			await insertRule(globalAccessRule);
+			await insertRules([johnAccessRule, doeAccessRule, globalAccessRule]);
 
 			// when
 			const foundClientAccessRules = await accessRulesReader.findRules({
@@ -368,10 +383,12 @@ describe("redisAccessRulesStorage", () => {
 				ja4Hash: "windows",
 			};
 
-			await insertRule(johnIpAccessRule);
-			await insertRule(doeIpAccessRule);
-			await insertRule(johnHeaderAccessRule);
-			await insertRule(globalJa4AccessRule);
+			await insertRules([
+				johnIpAccessRule,
+				doeIpAccessRule,
+				johnHeaderAccessRule,
+				globalJa4AccessRule,
+			]);
 
 			// when
 			const foundAccessRules = await accessRulesReader.findRules({
@@ -427,11 +444,13 @@ describe("redisAccessRulesStorage", () => {
 				ja4Hash: "windows",
 			};
 
-			await insertRule(johnTargetAccessRule);
-			await insertRule(doeTargetAccessRule);
-			await insertRule(johnHeaderAccessRule);
-			await insertRule(globalTargetAccessRule);
-			await insertRule(globalJa4AccessRule);
+			await insertRules([
+				johnTargetAccessRule,
+				doeTargetAccessRule,
+				johnHeaderAccessRule,
+				globalTargetAccessRule,
+				globalJa4AccessRule,
+			]);
 
 			// when
 			const foundAccessRules = await accessRulesReader.findRules({
@@ -482,10 +501,12 @@ describe("redisAccessRulesStorage", () => {
 				numericIpMaskMax: BigInt(300),
 			};
 
-			await insertRule(johnIpMask_0_100_AccessRule);
-			await insertRule(johnIp_100_AccessRule);
-			await insertRule(globalIpMask_100_200_AccessRule);
-			await insertRule(doeIpMask_200_300AccessRule);
+			await insertRules([
+				johnIpMask_0_100_AccessRule,
+				johnIp_100_AccessRule,
+				globalIpMask_100_200_AccessRule,
+				doeIpMask_200_300AccessRule,
+			]);
 
 			// when
 			const ip_0_accessRules = await accessRulesReader.findRules({
@@ -575,10 +596,12 @@ describe("redisAccessRulesStorage", () => {
 				numericIp: BigInt(100),
 			};
 
-			await insertRule(johnIpMask_0_100_AccessRule);
-			await insertRule(johnIp_100_AccessRule);
-			await insertRule(globalIpMask_100_200_AccessRule);
-			await insertRule(globalIp_100_AccessRule);
+			await insertRules([
+				johnIpMask_0_100_AccessRule,
+				johnIp_100_AccessRule,
+				globalIpMask_100_200_AccessRule,
+				globalIp_100_AccessRule,
+			]);
 
 			// when
 			const ip_0_accessRules = await accessRulesReader.findRules({
@@ -640,10 +663,12 @@ describe("redisAccessRulesStorage", () => {
 				numericIp: johnIp,
 			};
 
-			await insertRule(johnIpMask_0_100_AccessRule);
-			await insertRule(johnIp_100_AccessRule);
-			await insertRule(globalIpMask_100_200_AccessRule);
-			await insertRule(globalIp_100_AccessRule);
+			await insertRules([
+				johnIpMask_0_100_AccessRule,
+				johnIp_100_AccessRule,
+				globalIpMask_100_200_AccessRule,
+				globalIp_100_AccessRule,
+			]);
 
 			// when
 			const ip_0_accessRules = await accessRulesReader.findRules({
@@ -686,7 +711,7 @@ describe("redisAccessRulesStorage", () => {
 			};
 
 			// when
-			await insertRule(accessRule);
+			await insertRules([accessRule]);
 
 			// then
 			const query = {
@@ -714,7 +739,7 @@ describe("redisAccessRulesStorage", () => {
 			};
 
 			// when
-			await insertRule(accessRule);
+			await insertRules([accessRule]);
 
 			// then
 			const query = {
@@ -742,7 +767,7 @@ describe("redisAccessRulesStorage", () => {
 			};
 
 			// when
-			await insertRule(accessRule);
+			await insertRules([accessRule]);
 
 			// then
 			const query = {
@@ -772,7 +797,7 @@ describe("redisAccessRulesStorage", () => {
 
 			// when
 			getAccessRuleRedisKey(accessRule);
-			await insertRule(accessRule);
+			await insertRules([accessRule]);
 
 			// then
 			const query = {
@@ -806,8 +831,7 @@ describe("redisAccessRulesStorage", () => {
 			};
 
 			// when
-			await insertRule(accessRule);
-			await insertRule(ipRangeAccessRule);
+			await insertRules([accessRule, ipRangeAccessRule]);
 
 			// then
 
