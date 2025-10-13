@@ -18,39 +18,61 @@ import {
 	type FetchRulesEndpointResponse,
 	type FetchRulesOptions,
 	fetchRulesResponse,
-} from "#policy/api/endpoints/fetchRules.js";
+} from "#policy/api/read/fetchRules.js";
 import {
 	type FindRuleFilters,
 	type RuleIdsEndpointResponse,
 	ruleIdsResponse,
-} from "#policy/api/endpoints/findRuleIds.js";
+} from "#policy/api/read/findRuleIds.js";
 import {
 	type MissingIds,
 	type MissingIdsEndpointResponse,
 	missingIdsResponse,
-} from "#policy/api/endpoints/getMissingIds.js";
+} from "#policy/api/read/getMissingIds.js";
 import type { DeleteSiteGroups } from "./delete/deleteRuleGroups.js";
 import type { DeleteRuleFilters } from "./delete/deleteRules.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
 import type { InsertRulesGroup } from "./write/insertRules.js";
 
 export class AccessRulesApiClient extends ApiClient {
-	public async rehashAll(
+	//// delete
+
+	public deleteMany(
+		filters: DeleteRuleFilters,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiEndpointResponse> {
 		return this.post(
-			accessRuleApiPaths.REHASH_ALL,
-			{},
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
-			},
+			accessRuleApiPaths.DELETE_MANY,
+			filters,
+			this.getAuthHeaders(timestamp, signature),
 		);
 	}
+
+	public deleteGroups(
+		siteGroups: DeleteSiteGroups,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(
+			accessRuleApiPaths.DELETE_GROUPS,
+			siteGroups,
+			this.getAuthHeaders(timestamp, signature),
+		);
+	}
+
+	public deleteAll(
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(
+			accessRuleApiPaths.DELETE_ALL,
+			{},
+			this.getAuthHeaders(timestamp, signature),
+		);
+	}
+
+	//// read
 
 	public async getMissingIds(
 		idsToCheck: MissingIds,
@@ -60,13 +82,7 @@ export class AccessRulesApiClient extends ApiClient {
 		const endpointResponse: ApiEndpointResponse = await this.post(
 			accessRuleApiPaths.GET_MISSING_IDS,
 			idsToCheck,
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
-			},
+			this.getAuthHeaders(timestamp, signature),
 		);
 
 		const parsedData = missingIdsResponse.safeParse(endpointResponse.data);
@@ -85,13 +101,7 @@ export class AccessRulesApiClient extends ApiClient {
 		const endpointResponse: ApiEndpointResponse = await this.post(
 			accessRuleApiPaths.FETCH_MANY,
 			fetchOptions,
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
-			},
+			this.getAuthHeaders(timestamp, signature),
 		);
 
 		const parsedData = fetchRulesResponse.safeParse(endpointResponse.data);
@@ -110,13 +120,7 @@ export class AccessRulesApiClient extends ApiClient {
 		const endpointResponse: ApiEndpointResponse = await this.post(
 			accessRuleApiPaths.FIND_IDS,
 			filters,
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
-			},
+			this.getAuthHeaders(timestamp, signature),
 		);
 
 		const parsedData = ruleIdsResponse.safeParse(endpointResponse.data);
@@ -127,62 +131,38 @@ export class AccessRulesApiClient extends ApiClient {
 		};
 	}
 
+	//// write
+
+	public async rehashAll(
+		timestamp: string,
+		signature: string,
+	): Promise<ApiEndpointResponse> {
+		return this.post(
+			accessRuleApiPaths.REHASH_ALL,
+			{},
+			this.getAuthHeaders(timestamp, signature),
+		);
+	}
+
 	public insertMany(
 		rulesGroup: InsertRulesGroup,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiEndpointResponse> {
-		return this.post(accessRuleApiPaths.INSERT_MANY, rulesGroup, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
-			},
-		});
-	}
-
-	public deleteMany(
-		filters: DeleteRuleFilters,
-		timestamp: string,
-		signature: string,
-	): Promise<ApiEndpointResponse> {
-		return this.post(accessRuleApiPaths.DELETE_MANY, filters, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
-			},
-		});
-	}
-
-	public deleteGroups(
-		siteGroups: DeleteSiteGroups,
-		timestamp: string,
-		signature: string,
-	): Promise<ApiEndpointResponse> {
-		return this.post(accessRuleApiPaths.DELETE_GROUPS, siteGroups, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
-			},
-		});
-	}
-
-	public deleteAll(
-		timestamp: string,
-		signature: string,
-	): Promise<ApiEndpointResponse> {
 		return this.post(
-			accessRuleApiPaths.DELETE_ALL,
-			{},
-			{
-				headers: {
-					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
-				},
-			},
+			accessRuleApiPaths.INSERT_MANY,
+			rulesGroup,
+			this.getAuthHeaders(timestamp, signature),
 		);
+	}
+
+	protected getAuthHeaders(timestamp: string, signature: string): RequestInit {
+		return {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				timestamp,
+				signature,
+			},
+		};
 	}
 }

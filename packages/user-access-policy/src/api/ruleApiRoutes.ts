@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
+import type {
+	ApiRouteLimits,
+	ApiRoutes,
+	ApiRoutesProvider,
+} from "@prosopo/api-route";
 import type { AllEnumValues, Logger } from "@prosopo/common";
 import { FetchRulesEndpoint } from "#policy/api/read/fetchRules.js";
 import { FindRuleIdsEndpoint } from "#policy/api/read/findRuleIds.js";
@@ -46,7 +50,14 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 
 	public getRoutes(): ApiRoutes {
 		return {
-			// delete
+			...this.makeDeleteEndpoints(),
+			...this.makeReadEndpoints(),
+			...this.makeWriteEndpoints(),
+		} satisfies AllEnumValues<accessRuleApiPaths>;
+	}
+
+	protected makeDeleteEndpoints() {
+		return {
 			[accessRuleApiPaths.DELETE_ALL]: new DeleteAllRulesEndpoint(
 				this.accessRulesStorage,
 				this.logger,
@@ -59,7 +70,11 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 				this.accessRulesStorage,
 				this.logger,
 			),
-			// read
+		};
+	}
+
+	protected makeReadEndpoints() {
+		return {
 			[accessRuleApiPaths.FETCH_MANY]: new FetchRulesEndpoint(
 				this.accessRulesStorage,
 				this.logger,
@@ -72,7 +87,11 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 				this.accessRulesStorage,
 				this.logger,
 			),
-			// write
+		};
+	}
+
+	protected makeWriteEndpoints() {
+		return {
 			[accessRuleApiPaths.INSERT_MANY]: new InsertRulesEndpoint(
 				this.accessRulesStorage,
 				this.logger,
@@ -81,32 +100,33 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 				this.accessRulesStorage,
 				this.logger,
 			),
-		} satisfies AllEnumValues<accessRuleApiPaths>;
+		};
 	}
 }
 
-export const getExpressApiRuleRateLimits = () => {
-	const defaultWindowsMs = 60000;
-	const defaultLimit = 5;
+export const getExpressApiRuleRateLimits =
+	(): ApiRouteLimits<accessRuleApiPaths> => {
+		const defaultWindowsMs = 60000;
+		const defaultLimit = 5;
 
-	const rateLimitEntries = Object.entries(accessRuleApiPaths).map(
-		([endpointName, endpointPath]) => [
-			endpointPath,
-			{
-				windowMs:
-					getIntEnvironmentVariable(
-						`PROSOPO_USER_ACCESS_POLICY_RULE_${endpointName}_WINDOW`,
-					) || defaultWindowsMs,
-				limit:
-					getIntEnvironmentVariable(
-						`PROSOPO_USER_ACCESS_POLICY_RULE_${endpointName}_LIMIT`,
-					) || defaultLimit,
-			},
-		],
-	);
+		const rateLimitEntries = Object.entries(accessRuleApiPaths).map(
+			([endpointName, endpointPath]) => [
+				endpointPath,
+				{
+					windowMs:
+						getIntEnvironmentVariable(
+							`PROSOPO_USER_ACCESS_POLICY_RULE_${endpointName}_WINDOW`,
+						) || defaultWindowsMs,
+					limit:
+						getIntEnvironmentVariable(
+							`PROSOPO_USER_ACCESS_POLICY_RULE_${endpointName}_LIMIT`,
+						) || defaultLimit,
+				},
+			],
+		);
 
-	return Object.fromEntries(rateLimitEntries);
-};
+		return Object.fromEntries(rateLimitEntries);
+	};
 
 const getIntEnvironmentVariable = (
 	variableName: string,

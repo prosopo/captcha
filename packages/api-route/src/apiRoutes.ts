@@ -20,3 +20,13 @@ export type ApiRoutes = Record<string, ApiEndpoint<ZodType | undefined>>;
 export interface ApiRoutesProvider {
 	getRoutes(): ApiRoutes;
 }
+
+export type ApiRouteLimit = {
+	windowMs: number;
+	limit: number;
+};
+
+export type ApiRouteLimits<Enum extends string | number> = Record<
+	Enum,
+	ApiRouteLimit
+>;
