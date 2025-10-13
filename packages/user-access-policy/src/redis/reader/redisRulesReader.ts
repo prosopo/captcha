@@ -18,21 +18,22 @@ import {
 	chunkIntoBatches,
 	executeBatchesSequentially,
 } from "@prosopo/common";
-import type { FtSearchOptions, SearchReply } from "@redis/search";
+import type { SearchReply } from "@redis/search";
 import type { RedisClientType } from "redis";
 import {
 	REDIS_QUERY_DIALECT,
 	getRulesRedisQuery,
 } from "#policy/redis/reader/redisRulesQuery.js";
 import {
+	REDIS_BATCH_SIZE,
+	fetchRedisHashRecords,
+	getMissingRedisKeys,
+	parseRedisRecords,
+} from "#policy/redis/redisClient.js";
+import {
 	ACCESS_RULES_REDIS_INDEX_NAME,
 	ACCESS_RULE_REDIS_KEY_PREFIX,
 } from "#policy/redis/redisRuleIndex.js";
-import {
-	REDIS_BATCH_SIZE,
-	parseExpirationRecords,
-	parseRedisRecords,
-} from "#policy/redis/redisRulesStorage.js";
 import type { AccessRule } from "#policy/rule.js";
 import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import type {
@@ -55,7 +56,7 @@ export const createRedisRulesReader = (
 
 			const missingKeyBatches = await executeBatchesSequentially(
 				keyBatches,
-				async (keysBatch) => getMissingKeys(client, keysBatch),
+				async (keysBatch) => getMissingRedisKeys(client, keysBatch),
 			);
 
 			return missingKeyBatches
@@ -206,39 +207,16 @@ export const createRedisRulesReader = (
 	};
 };
 
-const getMissingKeys = async (
-	client: RedisClientType,
-	ruleKeys: string[],
-): Promise<string[]> => {
-	const queries = client.multi();
-
-	ruleKeys.map((ruleKey) => {
-		queries.exists(ruleKey);
-	});
-
-	const records: unknown[] = await queries.exec();
-
-	const missingKeys: string[] = [];
-
-	records.map((exists, recordIndex) => {
-		if ("0" === String(exists)) {
-			const ruleKey = ruleKeys[recordIndex];
-
-			if (ruleKey) {
-				missingKeys.push(ruleKey);
-			}
-		}
-	});
-
-	return missingKeys;
-};
-
 const fetchRuleEntries = async (
 	client: RedisClientType,
 	keys: string[],
 	logger: Logger,
 ): Promise<AccessRuleEntry[]> => {
-	const { records, expirations } = await fetchHashRecords(client, keys, logger);
+	const { records, expirations } = await fetchRedisHashRecords(
+		client,
+		keys,
+		logger,
+	);
 	const entries: AccessRuleEntry[] = [];
 
 	records.map((ruleData, index) => {
@@ -257,28 +235,6 @@ const fetchRuleEntries = async (
 	});
 
 	return entries;
-};
-
-const fetchHashRecords = async (
-	client: RedisClientType,
-	keys: string[],
-	logger: Logger,
-): Promise<{ records: object[]; expirations: (number | undefined)[] }> => {
-	const rulesPipe = client.multi();
-	const expirationPipe = client.multi();
-
-	keys.map((key) => {
-		rulesPipe.hGetAll(key);
-		expirationPipe.expireTime(key);
-	});
-
-	const records = (await rulesPipe.exec()) as object[];
-	const expirationRecords = (await expirationPipe.exec()) as unknown[];
-
-	return {
-		records: records,
-		expirations: parseExpirationRecords(expirationRecords, logger),
-	};
 };
 
 export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {

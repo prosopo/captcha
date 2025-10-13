@@ -18,7 +18,7 @@ import {
 	executeBatchesSequentially,
 } from "@prosopo/common";
 import type { RedisClientType } from "redis";
-import { REDIS_BATCH_SIZE } from "#policy/redis/redisRulesStorage.js";
+import { REDIS_BATCH_SIZE } from "#policy/redis/redisClient.js";
 import type { AccessRule } from "#policy/rule.js";
 import type {
 	AccessRuleEntry,

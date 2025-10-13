@@ -14,7 +14,6 @@
 
 import type { Logger } from "@prosopo/common";
 import type { RedisConnection } from "@prosopo/redis-client";
-import { type ZodType, z } from "zod";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 import {
 	createRedisRulesReader,
@@ -24,8 +23,6 @@ import {
 	createRedisRulesWriter,
 	getDummyRedisRulesWriter,
 } from "./redisRulesWriter.js";
-
-export const REDIS_BATCH_SIZE = 1_000;
 
 export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
@@ -48,71 +45,4 @@ export const createRedisAccessRulesStorage = (
 	});
 
 	return storage;
-};
-
-export const parseRedisRecords = <T>(
-	records: unknown[],
-	recordSchema: ZodType<T>,
-	logger: Logger,
-): T[] => {
-	const parsedRecords: T[] = [];
-
-	records.map((record) => {
-		const parseResult = recordSchema.safeParse(record);
-
-		if (parseResult.success) {
-			parsedRecords.push(parseResult.data);
-			return;
-		}
-
-		logger.error(() => ({
-			msg: "Failed to parse Redis record",
-			data: {
-				record,
-				error: parseResult.error,
-			},
-		}));
-	});
-
-	return parsedRecords;
-};
-
-const expirationRecordSchema = z.coerce.number();
-
-// Redis returns -1 when expiration is not set
-const UNSET_EXPIRATION_VALUE = -1;
-
-export const parseExpirationRecords = <T>(
-	records: unknown[],
-	logger: Logger,
-): (number | undefined)[] => {
-	const parsedRecords: (number | undefined)[] = [];
-
-	records.map((record) => {
-		const parseResult = expirationRecordSchema.safeParse(record);
-
-		if (parseResult.success) {
-			const expiration =
-				UNSET_EXPIRATION_VALUE === parseResult.data
-					? undefined
-					: parseResult.data;
-
-			parsedRecords.push(expiration);
-
-			return;
-		}
-
-		// ensure consistent output length
-		parsedRecords.push(undefined);
-
-		logger.error(() => ({
-			msg: "Failed to parse Redis expiration record",
-			data: {
-				record,
-				error: parseResult.error,
-			},
-		}));
-	});
-
-	return parsedRecords;
 };

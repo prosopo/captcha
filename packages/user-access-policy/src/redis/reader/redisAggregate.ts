@@ -17,11 +17,11 @@ import type { FtAggregateWithCursorOptions } from "@redis/search/dist/lib/comman
 import type { RedisClientType } from "redis";
 import { z } from "zod";
 import { REDIS_QUERY_DIALECT } from "#policy/redis/reader/redisRulesQuery.js";
-import { ACCESS_RULES_REDIS_INDEX_NAME } from "#policy/redis/redisRuleIndex.js";
 import {
 	REDIS_BATCH_SIZE,
 	parseRedisRecords,
-} from "#policy/redis/redisRulesStorage.js";
+} from "#policy/redis/redisClient.js";
+import { ACCESS_RULES_REDIS_INDEX_NAME } from "#policy/redis/redisRuleIndex.js";
 
 // aggregation is used for cases when we need to get "unlimited" search results
 export const aggregateRedisKeys = async (

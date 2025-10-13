@@ -29,10 +29,10 @@ import {
 	type MissingIdsEndpointResponse,
 	missingIdsResponse,
 } from "#policy/api/endpoints/getMissingIds.js";
-import type { DeleteSiteGroups } from "./endpoints/deleteRuleGroups.js";
-import type { DeleteRuleFilters } from "./endpoints/deleteRules.js";
-import type { InsertRulesGroup } from "./endpoints/insertRules.js";
+import type { DeleteSiteGroups } from "./delete/deleteRuleGroups.js";
+import type { DeleteRuleFilters } from "./delete/deleteRules.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
+import type { InsertRulesGroup } from "./write/insertRules.js";
 
 export class AccessRulesApiClient extends ApiClient {
 	public async rehashAll(

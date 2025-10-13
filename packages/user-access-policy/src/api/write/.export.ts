@@ -12,14 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./delete/.export.js";
-export * from "./read/.export.js";
-export * from "./write/.export.js";
-
-export {
-	accessRuleApiPaths,
-	getExpressApiRuleRateLimits,
-} from "./ruleApiRoutes.js";
-
-export { AccessRulesApiClient } from "./rulesApiClient.js";
-export { AccessRuleApiRoutes } from "./ruleApiRoutes.js";
+export type { InsertRulesGroup } from "./insertRules.js";
