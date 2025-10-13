@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.12.9
+### Patch Changes
+
+- 8491159: Store webview
+
 ## 3.12.8
 ### Patch Changes
 
