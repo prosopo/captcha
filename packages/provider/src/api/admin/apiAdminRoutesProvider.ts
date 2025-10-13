@@ -34,7 +34,8 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 			[AdminApiPaths.RemoveDetectorKey]: new ApiRemoveDetectorKeyEndpoint(
 				this.tasks.clientTaskManager,
 			),
-            [AdminApiPaths.ToggleMaintenanceMode]: new ApiToggleMaintenanceModeEndpoint(),
+			[AdminApiPaths.ToggleMaintenanceMode]:
+				new ApiToggleMaintenanceModeEndpoint(),
 		};
 	}
 }
