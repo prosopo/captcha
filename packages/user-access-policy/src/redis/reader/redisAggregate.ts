@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/common";
 import type { FtAggregateWithCursorOptions } from "@redis/search/dist/lib/commands/AGGREGATE_WITHCURSOR.js";
 import type { RedisClientType } from "redis";
 import { z } from "zod";
+import { REDIS_QUERY_DIALECT } from "#policy/redis/reader/redisRulesQuery.js";
 import { ACCESS_RULES_REDIS_INDEX_NAME } from "#policy/redis/redisRuleIndex.js";
 import {
 	REDIS_BATCH_SIZE,
@@ -23,12 +24,6 @@ import {
 } from "#policy/redis/redisRulesStorage.js";
 
 // aggregation is used for cases when we need to get "unlimited" search results
-const aggregateOptions: FtAggregateWithCursorOptions = {
-	// #2 is a required option when the 'ismissing()' function is in the query body
-	DIALECT: 2,
-	COUNT: REDIS_BATCH_SIZE,
-};
-
 export const aggregateRedisKeys = async (
 	client: RedisClientType,
 	query: string,
@@ -67,7 +62,9 @@ export const aggregateRedisKeys = async (
 		client,
 		query,
 		{
-			...aggregateOptions,
+			// #2 is a required option when the 'ismissing()' function is in the query body
+			DIALECT: REDIS_QUERY_DIALECT,
+			COUNT: REDIS_BATCH_SIZE,
 			LOAD: `@${keyField}`,
 		},
 		addRecordKeys,
@@ -88,7 +85,7 @@ const executeAggregation = async (
 		aggregateOptions,
 	);
 
-	handleBatch(initialReply.results);
+	await handleBatch(initialReply.results);
 
 	let cursor = initialReply.cursor;
 

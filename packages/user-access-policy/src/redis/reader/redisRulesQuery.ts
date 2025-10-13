@@ -21,6 +21,9 @@ import {
 
 type QueryBuilder = (value: unknown, scope: UserIp) => string;
 
+// #2 is a required option when the 'ismissing()' function is in the query body
+export const REDIS_QUERY_DIALECT = 2;
+
 const userIpQueries: Record<keyof UserIp, QueryBuilder> = {
 	numericIp: (value, scope) => {
 		if (undefined !== value) {

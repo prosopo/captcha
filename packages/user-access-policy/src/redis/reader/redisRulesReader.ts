@@ -20,7 +20,10 @@ import {
 } from "@prosopo/common";
 import type { FtSearchOptions, SearchReply } from "@redis/search";
 import type { RedisClientType } from "redis";
-import { getRulesRedisQuery } from "#policy/redis/reader/redisRulesQuery.js";
+import {
+	REDIS_QUERY_DIALECT,
+	getRulesRedisQuery,
+} from "#policy/redis/reader/redisRulesQuery.js";
 import {
 	ACCESS_RULES_REDIS_INDEX_NAME,
 	ACCESS_RULE_REDIS_KEY_PREFIX,
@@ -38,18 +41,6 @@ import type {
 	AccessRulesReader,
 } from "#policy/rulesStorage.js";
 import { aggregateRedisKeys } from "./redisAggregate.js";
-
-// https://redis.io/docs/latest/commands/ft.search/
-const redisSearchOptions: FtSearchOptions = {
-	// #2 is a required option when the 'ismissing()' function is in the query body
-	DIALECT: 2,
-	// FT.search doesn't support "unlimited" selects
-	LIMIT: {
-		from: 0,
-		// 10K is a default Redis config limit
-		size: Math.min(REDIS_BATCH_SIZE, 10_000),
-	},
-};
 
 export const createRedisRulesReader = (
 	client: RedisClientType,
@@ -100,10 +91,18 @@ export const createRedisRulesReader = (
 			let searchReply: SearchReply;
 
 			try {
+				// https://redis.io/docs/latest/commands/ft.search/
 				searchReply = await client.ft.search(
 					ACCESS_RULES_REDIS_INDEX_NAME,
 					query,
-					redisSearchOptions,
+					{
+						DIALECT: REDIS_QUERY_DIALECT,
+						// FT.search doesn't support "unlimited" selects
+						LIMIT: {
+							from: 0,
+							size: REDIS_BATCH_SIZE,
+						},
+					},
 				);
 
 				if (searchReply.total > 0) {
