@@ -51,7 +51,6 @@ export const accessPolicySchema: z.ZodObject<{
 
 export const policyScopeSchema = z.object({
 	clientId: z.coerce.string().optional(),
-	ruleGroupId: z.coerce.string().optional(),
 });
 
 export const userScopeSchema = z.object({
@@ -108,17 +107,3 @@ export type PolicyScope = z.output<typeof policyScopeSchema>;
 export type UserScope = z.output<typeof userScopeSchema>;
 export type UserScopeApiInput = z.input<typeof userScopeInputSchema>;
 export type UserScopeApiOutput = z.output<typeof userScopeInputSchema>;
-
-export const accessRuleSchemaExtended = z
-	.object({
-		// flat structure is used to fit the Redis requirements
-		...accessPolicySchema.shape,
-		...policyScopeSchema.shape,
-		...userScopeInputSchema._def.schema.shape,
-	})
-	.omit({
-		numericIp: true,
-		numericIpMaskMin: true,
-		numericIpMaskMax: true,
-	});
-export type AccessRuleExtended = z.input<typeof accessRuleSchemaExtended>;

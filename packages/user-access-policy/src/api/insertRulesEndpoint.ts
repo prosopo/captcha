@@ -24,16 +24,18 @@ import {
 	policyScopeSchema,
 	userScopeInputSchema,
 } from "#policy/accessPolicy.js";
-import type { AccessRulesWriter } from "#policy/accessRules.js";
+import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
 
 export const insertRulesEndpointSchema: z.ZodType<{
 	accessPolicy: z.infer<typeof accessPolicySchema>;
 	policyScope?: z.infer<typeof policyScopeSchema>;
+	groupId?: string;
 	userScopes: z.input<typeof userScopeInputSchema>[];
 	expirationTimestamp?: number;
 }> = z.object({
 	accessPolicy: accessPolicySchema,
 	policyScope: policyScopeSchema.optional(),
+	groupId: z.string().optional(),
 	userScopes: z.array(userScopeInputSchema),
 	expirationTimestamp: z
 		.number()
@@ -54,14 +56,14 @@ export type InsertManyRulesEndpointOutputSchema = z.output<
 export class InsertRulesEndpoint
 	implements ApiEndpoint<InsertRulesEndpointSchema>
 {
-	public constructor(private readonly accessRulesWriter: AccessRulesWriter) {}
+	public constructor(
+		private readonly accessRulesWriter: AccessRulesWriter,
+		private readonly logger: Logger,
+	) {}
 
 	async processRequest(
 		args: z.infer<InsertRulesEndpointSchema>,
-		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		logger = logger || getLogger(LogLevel.enum.info, "InsertRulesEndpoint");
-
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
 				resolve({
@@ -71,12 +73,19 @@ export class InsertRulesEndpoint
 		});
 
 		const createRulesPromise = this.createRules(args)
-			.then(() => ({
-				status: ApiEndpointResponseStatus.SUCCESS,
-			}))
+			.then(() => {
+				this.logger.info(() => ({
+					msg: "Endpoint inserted access rules",
+					data: { args },
+				}));
+
+				return {
+					status: ApiEndpointResponseStatus.SUCCESS,
+				};
+			})
 			.catch((error) => {
-				if (logger?.getLogLevel() === LogLevel.enum.debug) {
-					logger.error(() => ({
+				if (LogLevel.enum.debug === this.logger.getLogLevel()) {
+					this.logger.error(() => ({
 						err: error,
 						data: { args },
 						msg: "Failed to insert access rules",
@@ -102,10 +111,11 @@ export class InsertRulesEndpoint
 
 		const createPromises = [];
 		for (const userScope of args.userScopes) {
-			const rule = {
+			const rule: AccessRule = {
 				...args.accessPolicy,
 				...policyScope,
 				...userScope,
+				...(args.groupId ? { groupId: args.groupId } : {}),
 			};
 
 			createPromises.push(

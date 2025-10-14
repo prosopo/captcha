@@ -18,24 +18,30 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
-import { z } from "zod";
-import { policyFilterSchema } from "#policy/accessPolicyResolver.js";
+import { string, z } from "zod";
+import { ScopeMatch } from "#policy/accessPolicyResolver.js";
 import type { AccessRulesStorage } from "#policy/accessRules.js";
 
-export const deleteRulesEndpointSchema = z.array(policyFilterSchema);
+export const deleteRuleGroupsEndpointSchema = z.array(
+	z.object({
+		clientIds: z.string().array(),
+		groupId: z.string(),
+	}),
+);
 
-export type DeleteRulesEndpointSchemaOutput = z.output<
-	typeof deleteRulesEndpointSchema
+export type DeleteRuleGroupsOutputEndpointSchema = z.output<
+	typeof deleteRuleGroupsEndpointSchema
 >;
 
-export type DeleteRulesEndpointSchemaInput = z.input<
-	typeof deleteRulesEndpointSchema
+export type DeleteRuleGroupsInputEndpointSchema = z.input<
+	typeof deleteRuleGroupsEndpointSchema
 >;
 
-export type DeleteRulesEndpointSchema = typeof deleteRulesEndpointSchema;
+export type DeleteRuleGroupsEndpointSchema =
+	typeof deleteRuleGroupsEndpointSchema;
 
-export class DeleteRulesEndpoint
-	implements ApiEndpoint<DeleteRulesEndpointSchema>
+export class DeleteRuleGroupsEndpoint
+	implements ApiEndpoint<DeleteRuleGroupsEndpointSchema>
 {
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
@@ -43,27 +49,32 @@ export class DeleteRulesEndpoint
 	) {}
 
 	async processRequest(
-		args: DeleteRulesEndpointSchemaInput,
+		args: DeleteRuleGroupsInputEndpointSchema,
 	): Promise<ApiEndpointResponse> {
-		const allRuleIds = [];
+		const foundRuleIdPromises = args.flatMap((ruleToDelete) =>
+			ruleToDelete.clientIds.map((clientId) =>
+				this.accessRulesStorage.findRuleIds({
+					policyScope: {
+						clientId: clientId,
+					},
+					policyScopeMatch: ScopeMatch.Exact,
+					groupId: ruleToDelete.groupId,
+				}),
+			),
+		);
 
-		for (const accessRuleFilter of args) {
-			const parsedRules = policyFilterSchema.parse(accessRuleFilter);
-			const foundRuleIds =
-				await this.accessRulesStorage.findRuleIds(parsedRules);
-
-			allRuleIds.push(...foundRuleIds);
-		}
+		const foundRuleIds = await Promise.all(foundRuleIdPromises);
+		const ruleIds = foundRuleIds.flat();
 
 		// Set() automatically removes duplicates
-		const uniqueRuleIds = [...new Set(allRuleIds)];
+		const uniqueRuleIds = [...new Set(ruleIds)];
 
 		if (uniqueRuleIds.length > 0) {
 			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
 		}
 
 		this.logger.info(() => ({
-			msg: "Endpoint deleted rules",
+			msg: "Endpoint deleted rule groups",
 			data: {
 				args,
 				uniqueRuleIds,
@@ -78,7 +89,7 @@ export class DeleteRulesEndpoint
 		};
 	}
 
-	public getRequestArgsSchema(): DeleteRulesEndpointSchema {
-		return deleteRulesEndpointSchema;
+	public getRequestArgsSchema(): DeleteRuleGroupsEndpointSchema {
+		return deleteRuleGroupsEndpointSchema;
 	}
 }
