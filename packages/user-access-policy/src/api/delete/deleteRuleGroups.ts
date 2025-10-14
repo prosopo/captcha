@@ -13,20 +13,20 @@
 // limitations under the License.
 
 import {
-    type ApiEndpoint,
-    type ApiEndpointResponse,
-    ApiEndpointResponseStatus,
+	type ApiEndpoint,
+	type ApiEndpointResponse,
+	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import type { AllKeys, Logger } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
-    type AccessRulesStorage,
-    FilterScopeMatch,
+	type AccessRulesStorage,
+	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
 
 export type DeleteSiteGroup = {
-    clientIds: string[];
-    groupId: string;
+	clientIds: string[];
+	groupId: string;
 };
 
 export type DeleteSiteGroups = DeleteSiteGroup[];
@@ -34,58 +34,58 @@ export type DeleteSiteGroups = DeleteSiteGroup[];
 type DeleteRuleGroupsSchema = ZodType<DeleteSiteGroups>;
 
 export class DeleteRuleGroupsEndpoint
-    implements ApiEndpoint<DeleteRuleGroupsSchema>
+	implements ApiEndpoint<DeleteRuleGroupsSchema>
 {
-    public constructor(
-        private readonly accessRulesStorage: AccessRulesStorage,
-        private readonly logger: Logger,
-    ) {}
+	public constructor(
+		private readonly accessRulesStorage: AccessRulesStorage,
+		private readonly logger: Logger,
+	) {}
 
-    public getRequestArgsSchema(): DeleteRuleGroupsSchema {
-        return z.array(
-            z.object({
-                clientIds: z.string().array(),
-                groupId: z.string(),
-            } satisfies AllKeys<DeleteSiteGroup>),
-        );
-    }
+	public getRequestArgsSchema(): DeleteRuleGroupsSchema {
+		return z.array(
+			z.object({
+				clientIds: z.string().array(),
+				groupId: z.string(),
+			} satisfies AllKeys<DeleteSiteGroup>),
+		);
+	}
 
-    async processRequest(args: DeleteSiteGroups): Promise<ApiEndpointResponse> {
-        const foundRuleIdPromises = args.flatMap((ruleToDelete) =>
-            ruleToDelete.clientIds.map((clientId) =>
-                this.accessRulesStorage.findRuleIds({
-                    policyScope: {
-                        clientId: clientId,
-                    },
-                    policyScopeMatch: FilterScopeMatch.Exact,
-                    groupId: ruleToDelete.groupId,
-                }),
-            ),
-        );
+	async processRequest(args: DeleteSiteGroups): Promise<ApiEndpointResponse> {
+		const foundRuleIdPromises = args.flatMap((ruleToDelete) =>
+			ruleToDelete.clientIds.map((clientId) =>
+				this.accessRulesStorage.findRuleIds({
+					policyScope: {
+						clientId: clientId,
+					},
+					policyScopeMatch: FilterScopeMatch.Exact,
+					groupId: ruleToDelete.groupId,
+				}),
+			),
+		);
 
-        const foundRuleIds = await Promise.all(foundRuleIdPromises);
-        const ruleIds = foundRuleIds.flat();
+		const foundRuleIds = await Promise.all(foundRuleIdPromises);
+		const ruleIds = foundRuleIds.flat();
 
-        // Set() automatically removes duplicates
-        const uniqueRuleIds = [...new Set(ruleIds)];
+		// Set() automatically removes duplicates
+		const uniqueRuleIds = [...new Set(ruleIds)];
 
-        if (uniqueRuleIds.length > 0) {
-            await this.accessRulesStorage.deleteRules(uniqueRuleIds);
-        }
+		if (uniqueRuleIds.length > 0) {
+			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
+		}
 
-        this.logger.info(() => ({
-            msg: "Endpoint deleted rule groups",
-            data: {
-                args,
-                uniqueRuleIds,
-            },
-        }));
+		this.logger.info(() => ({
+			msg: "Endpoint deleted rule groups",
+			data: {
+				args,
+				uniqueRuleIds,
+			},
+		}));
 
-        return {
-            status: ApiEndpointResponseStatus.SUCCESS,
-            data: {
-                deleted_count: uniqueRuleIds.length,
-            },
-        };
-    }
+		return {
+			status: ApiEndpointResponseStatus.SUCCESS,
+			data: {
+				deleted_count: uniqueRuleIds.length,
+			},
+		};
+	}
 }
