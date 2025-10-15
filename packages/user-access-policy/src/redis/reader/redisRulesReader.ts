@@ -43,259 +43,267 @@ import type {
 } from "#policy/rulesStorage.js";
 import { aggregateRedisKeys } from "./redisAggregate.js";
 
-export const createRedisRulesReader = (
-	client: RedisClientType,
-	logger: Logger,
-): AccessRulesReader => {
-	return {
-		getMissingRuleIds: async (ruleIds: string[]): Promise<string[]> => {
-			const ruleKeys = ruleIds.map(
-				(id) => `${ACCESS_RULE_REDIS_KEY_PREFIX}${id}`,
-			);
-			const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
+export class RedisRulesReader implements AccessRulesReader {
+	constructor(
+		private readonly client: RedisClientType,
+		private readonly logger: Logger,
+	) {}
 
-			const missingKeyBatches = await executeBatchesSequentially(
-				keyBatches,
-				async (keysBatch) => getMissingRedisKeys(client, keysBatch),
-			);
+	async getMissingRuleIds(ruleIds: string[]): Promise<string[]> {
+		const ruleKeys = this.getRuleKeys(ruleIds);
+		const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
 
-			return missingKeyBatches
-				.flat()
-				.map((ruleKey) => ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length));
-		},
+		const missingKeyBatches = await executeBatchesSequentially(
+			keyBatches,
+			async (keysBatch) => getMissingRedisKeys(this.client, keysBatch),
+		);
 
-		fetchRules: async (ruleIds: string[]): Promise<AccessRuleEntry[]> => {
-			const keys = ruleIds.map((id) => `${ACCESS_RULE_REDIS_KEY_PREFIX}${id}`);
+		return missingKeyBatches
+			.flat()
+			.map((ruleKey) => ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length));
+	}
 
-			const keyBatches = chunkIntoBatches(keys, REDIS_BATCH_SIZE);
+	async fetchRules(ruleIds: string[]): Promise<AccessRuleEntry[]> {
+		const ruleKeys = this.getRuleKeys(ruleIds);
 
-			const entryBatches = await executeBatchesSequentially(
-				keyBatches,
-				(keysBatch) => fetchRuleEntries(client, keysBatch, logger),
-			);
+		const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
 
-			return entryBatches.flat();
-		},
+		const entryBatches = await executeBatchesSequentially(
+			keyBatches,
+			(keysBatch) => this.fetchRuleEntries(keysBatch),
+		);
 
-		findRules: async (
-			filter: AccessRulesFilter,
-			matchingFieldsOnly = false,
-			skipEmptyUserScopes = true,
-		): Promise<AccessRule[]> => {
-			const query = getRulesRedisQuery(filter, matchingFieldsOnly);
+		return entryBatches.flat();
+	}
 
-			if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
-				// We don't want to accidentally return all rules when the filter is empty
-				return [];
-			}
+	async findRules(
+		filter: AccessRulesFilter,
+		matchingFieldsOnly = false,
+		skipEmptyUserScopes = true,
+	): Promise<AccessRule[]> {
+		const query = getRulesRedisQuery(filter, matchingFieldsOnly);
 
-			let searchReply: SearchReply;
+		if (skipEmptyUserScopes && query === "ismissing(@clientId)") {
+			// We don't want to accidentally return all rules when the filter is empty
+			return [];
+		}
 
-			try {
-				// https://redis.io/docs/latest/commands/ft.search/
-				searchReply = await client.ft.search(
-					ACCESS_RULES_REDIS_INDEX_NAME,
-					query,
-					{
-						DIALECT: REDIS_QUERY_DIALECT,
-						// FT.search doesn't support "unlimited" selects
-						LIMIT: {
-							from: 0,
-							size: REDIS_BATCH_SIZE,
-						},
+		let searchReply: SearchReply;
+
+		try {
+			// https://redis.io/docs/latest/commands/ft.search/
+			searchReply = await this.client.ft.search(
+				ACCESS_RULES_REDIS_INDEX_NAME,
+				query,
+				{
+					DIALECT: REDIS_QUERY_DIALECT,
+					// FT.search doesn't support "unlimited" selects
+					LIMIT: {
+						from: 0,
+						size: REDIS_BATCH_SIZE,
 					},
-				);
-
-				if (searchReply.total > 0) {
-					logger.debug(() => ({
-						msg: "Executed search query",
-						data: {
-							inspect: util.inspect(
-								{
-									filter: filter,
-									searchReply: searchReply,
-									query: query,
-								},
-								{ depth: null },
-							),
-						},
-					}));
-				}
-			} catch (e) {
-				logger.error(() => ({
-					err: e,
-					data: {
-						inspect: util.inspect(
-							{
-								query: query,
-								filter: filter,
-							},
-							{
-								depth: null,
-							},
-						),
-					},
-					msg: "failed to execute search query",
-				}));
-
-				return [];
-			}
-
-			const records = searchReply.documents.map(({ value }) => value);
-
-			return parseRedisRecords(records, accessRuleInput, logger);
-		},
-
-		findRuleIds: async (
-			filter: AccessRulesFilter,
-			matchingFieldsOnly = false,
-		): Promise<string[]> => {
-			const query = getRulesRedisQuery(filter, matchingFieldsOnly);
-
-			let ruleIds: string[] = [];
-
-			try {
-				// aggregation is used instead ft.search to overcome the limitation on search results number
-				const ruleKeys = await aggregateRedisKeys(client, query, logger);
-
-				ruleIds = ruleKeys.map((ruleKey) =>
-					ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
-				);
-			} catch (e) {
-				logger.error(() => ({
-					err: e,
-					data: {
-						inspect: util.inspect(
-							{
-								query: query,
-								filter: filter,
-							},
-							{
-								depth: null,
-							},
-						),
-					},
-					msg: "Failed to execute search query for rule IDs",
-				}));
-
-				return [];
-			}
-
-			logger.debug(() => ({
-				msg: "Executed search query for rule IDs",
-				data: {
-					query: query,
-					foundCount: ruleIds.length,
-					foundIds: ruleIds,
 				},
+			);
+
+			if (searchReply.total > 0) {
+				this.logger.debug(() => ({
+					msg: "Executed search query",
+					data: {
+						inspect: util.inspect(
+							{
+								filter: filter,
+								searchReply: searchReply,
+								query: query,
+							},
+							{ depth: null },
+						),
+					},
+				}));
+			}
+		} catch (e) {
+			this.logger.error(() => ({
+				err: e,
+				data: {
+					inspect: util.inspect(
+						{
+							query: query,
+							filter: filter,
+						},
+						{
+							depth: null,
+						},
+					),
+				},
+				msg: "failed to execute search query",
 			}));
 
-			return ruleIds;
-		},
+			return [];
+		}
 
-		fetchAllRuleIds: async (
-			batchHandler: (ruleIds: string[]) => Promise<void>,
-		): Promise<void> => {
-			await aggregateRedisKeys(client, "*", logger, async (keys: string[]) => {
-				const ids = keys.map((ruleKey) =>
-					ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
-				);
+		const records = searchReply.documents.map(({ value }) => value);
 
-				await batchHandler(ids);
-			});
-		},
-	};
-};
+		return parseRedisRecords(records, accessRuleInput, this.logger);
+	}
 
-const fetchRuleEntries = async (
-	client: RedisClientType,
-	keys: string[],
-	logger: Logger,
-): Promise<AccessRuleEntry[]> => {
-	const { records, expirations } = await fetchRedisHashRecords(
-		client,
-		keys,
-		logger,
-	);
-	const entries: AccessRuleEntry[] = [];
+	async findRuleIds(
+		filter: AccessRulesFilter,
+		matchingFieldsOnly = false,
+	): Promise<string[]> {
+		const query = getRulesRedisQuery(filter, matchingFieldsOnly);
 
-	records.map((ruleData, index) => {
-		const isRulePresent = Object.keys(ruleData).length > 0;
+		let ruleIds: string[] = [];
 
-		if (isRulePresent) {
-			const rule = parseRedisRecords([ruleData], accessRuleInput, logger)[0];
+		try {
+			// aggregation is used instead ft.search to overcome the limitation on search results number
+			const ruleKeys = await aggregateRedisKeys(
+				this.client,
+				query,
+				this.logger,
+			);
 
-			if (rule) {
-				entries.push({
-					rule: rule,
-					expiresUnixTimestamp: expirations[index],
-				});
+			ruleIds = ruleKeys.map((ruleKey) =>
+				ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			);
+		} catch (e) {
+			this.logger.error(() => ({
+				err: e,
+				data: {
+					inspect: util.inspect(
+						{
+							query: query,
+							filter: filter,
+						},
+						{
+							depth: null,
+						},
+					),
+				},
+				msg: "Failed to execute search query for rule IDs",
+			}));
+
+			return [];
+		}
+
+		this.logger.debug(() => ({
+			msg: "Executed search query for rule IDs",
+			data: {
+				query: query,
+				foundCount: ruleIds.length,
+				foundIds: ruleIds,
+			},
+		}));
+
+		return ruleIds;
+	}
+
+	async fetchAllRuleIds(
+		batchHandler: (ruleIds: string[]) => Promise<void>,
+	): Promise<void> {
+		const keysBatchHandler = async (keys: string[]) => {
+			const ids = keys.map((ruleKey) =>
+				ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			);
+
+			await batchHandler(ids);
+		};
+
+		await aggregateRedisKeys(this.client, "*", this.logger, keysBatchHandler);
+	}
+
+	protected async fetchRuleEntries(keys: string[]): Promise<AccessRuleEntry[]> {
+		const { records, expirations } = await fetchRedisHashRecords(
+			this.client,
+			keys,
+			this.logger,
+		);
+		const entries: AccessRuleEntry[] = [];
+
+		for (const [index, ruleData] of records.entries()) {
+			const isRulePresent = Object.keys(ruleData).length > 0;
+
+			if (isRulePresent) {
+				const rule = parseRedisRecords(
+					[ruleData],
+					accessRuleInput,
+					this.logger,
+				)[0];
+
+				if (rule) {
+					entries.push({
+						rule: rule,
+						expiresUnixTimestamp: expirations[index],
+					});
+				}
 			}
 		}
-	});
 
-	return entries;
-};
+		return entries;
+	}
 
-export const getDummyRedisRulesReader = (logger: Logger): AccessRulesReader => {
-	return {
-		getMissingRuleIds: async (ruleIds: string[]): Promise<string[]> => {
-			logger.info(() => ({
-				msg: "Dummy getMissingRuleIds() has no effect (redis is not ready)",
-				data: {
-					ruleIds,
-				},
-			}));
+	protected getRuleKeys(ruleIds: string[]): string[] {
+		return ruleIds.map((id) => `${ACCESS_RULE_REDIS_KEY_PREFIX}${id}`);
+	}
+}
 
-			return [];
-		},
+export class DummyRedisRulesReader implements AccessRulesReader {
+	constructor(private readonly logger: Logger) {}
 
-		fetchRules: async (ruleIds: string[]): Promise<AccessRuleEntry[]> => {
-			logger.info(() => ({
-				msg: "Dummy fetchRule() has no effect (redis is not ready)",
-				data: {
-					ruleIds,
-				},
-			}));
+	async getMissingRuleIds(ruleIds: string[]): Promise<string[]> {
+		this.logger.info(() => ({
+			msg: "Dummy getMissingRuleIds() has no effect (redis is not ready)",
+			data: {
+				ruleIds,
+			},
+		}));
 
-			return [];
-		},
+		return [];
+	}
 
-		findRules: async (
-			filter: AccessRulesFilter,
-			matchingFieldsOnly = false,
-			skipEmptyUserScopes = true,
-		): Promise<AccessRule[]> => {
-			logger.info(() => ({
-				msg: "Dummy findRules() has no effect (redis is not ready)",
-				data: {
-					filter,
-				},
-			}));
+	async fetchRules(ruleIds: string[]): Promise<AccessRuleEntry[]> {
+		this.logger.info(() => ({
+			msg: "Dummy fetchRule() has no effect (redis is not ready)",
+			data: {
+				ruleIds,
+			},
+		}));
 
-			return [];
-		},
+		return [];
+	}
 
-		findRuleIds: async (
-			filter: AccessRulesFilter,
-			matchingFieldsOnly = false,
-		): Promise<string[]> => {
-			logger.info(() => ({
-				msg: "Dummy findRuleIds() has no effect (redis is not ready)",
-				data: {
-					filter,
-				},
-			}));
+	async findRules(
+		filter: AccessRulesFilter,
+		matchingFieldsOnly = false,
+		skipEmptyUserScopes = true,
+	): Promise<AccessRule[]> {
+		this.logger.info(() => ({
+			msg: "Dummy findRules() has no effect (redis is not ready)",
+			data: {
+				filter,
+			},
+		}));
 
-			return [];
-		},
+		return [];
+	}
 
-		fetchAllRuleIds: async (
-			batchHandler: (ruleIds: string[]) => Promise<void>,
-		): Promise<void> => {
-			logger.info(() => ({
-				msg: "Dummy fetchAllRuleIds() has no effect (redis is not ready)",
-			}));
-		},
-	};
-};
+	async findRuleIds(
+		filter: AccessRulesFilter,
+		matchingFieldsOnly = false,
+	): Promise<string[]> {
+		this.logger.info(() => ({
+			msg: "Dummy findRuleIds() has no effect (redis is not ready)",
+			data: {
+				filter,
+			},
+		}));
+
+		return [];
+	}
+
+	async fetchAllRuleIds(
+		batchHandler: (ruleIds: string[]) => Promise<void>,
+	): Promise<void> {
+		this.logger.info(() => ({
+			msg: "Dummy fetchAllRuleIds() has no effect (redis is not ready)",
+		}));
+	}
+}

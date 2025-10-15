@@ -34,14 +34,14 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { createRedisRulesReader } from "#policy/redis/reader/redisRulesReader.js";
+import { RedisRulesReader } from "#policy/redis/reader/redisRulesReader.js";
 import {
 	ACCESS_RULE_REDIS_KEY_PREFIX,
 	accessRulesRedisIndex,
 	getAccessRuleRedisKey,
 } from "#policy/redis/redisRuleIndex.js";
 import {
-	createRedisRulesWriter,
+	RedisRulesWriter,
 	getRedisRuleValue,
 } from "#policy/redis/redisRulesWriter.js";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
@@ -118,7 +118,7 @@ describe("redisAccessRulesStorage", () => {
 			let accessRulesWriter: AccessRulesWriter;
 
 			beforeAll(() => {
-				accessRulesWriter = createRedisRulesWriter(redisClient, mockLogger);
+				accessRulesWriter = new RedisRulesWriter(redisClient, mockLogger);
 			});
 
 			test("inserts rule", async () => {
@@ -270,7 +270,7 @@ describe("redisAccessRulesStorage", () => {
 		let accessRulesReader: AccessRulesReader;
 
 		beforeAll(async () => {
-			accessRulesReader = createRedisRulesReader(
+			accessRulesReader = new RedisRulesReader(
 				redisClient,
 				getLogger(LogLevel.enum.info, "RedisAccessRulesReader"),
 			);

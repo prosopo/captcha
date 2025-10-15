@@ -53,10 +53,10 @@ export const fetchRedisHashRecords = async (
 	const rulesPipe = client.multi();
 	const expirationPipe = client.multi();
 
-	keys.map((key) => {
+	for (const key of keys) {
 		rulesPipe.hGetAll(key);
 		expirationPipe.expireTime(key);
-	});
+	}
 
 	const records = (await rulesPipe.exec()) as object[];
 	const expirationRecords = (await expirationPipe.exec()) as unknown[];
@@ -71,40 +71,31 @@ export const parseRedisRecords = <T>(
 	records: unknown[],
 	recordSchema: ZodType<T>,
 	logger: Logger,
-): T[] => {
-	const parsedRecords: T[] = [];
-
-	records.map((record) => {
+): T[] =>
+	records.flatMap((record) => {
 		const parseResult = recordSchema.safeParse(record);
 
 		if (parseResult.success) {
-			parsedRecords.push(parseResult.data);
-			return;
+			return [parseResult.data];
 		}
 
 		logger.error(() => ({
 			msg: "Failed to parse Redis record",
-			data: {
-				record,
-				error: parseResult.error,
-			},
+			data: { record, error: parseResult.error },
 		}));
+
+		return [];
 	});
 
-	return parsedRecords;
-};
+const expirationRecordSchema = z.coerce.number();
+// Redis returns -1 when expiration is not set
+const UNSET_EXPIRATION_VALUE = -1;
 
 const parseExpirationRecords = <T>(
 	records: unknown[],
 	logger: Logger,
-): (number | undefined)[] => {
-	const expirationRecordSchema = z.coerce.number();
-	// Redis returns -1 when expiration is not set
-	const UNSET_EXPIRATION_VALUE = -1;
-
-	const parsedRecords: (number | undefined)[] = [];
-
-	records.map((record) => {
+): (number | undefined)[] =>
+	records.flatMap((record) => {
 		const parseResult = expirationRecordSchema.safeParse(record);
 
 		if (parseResult.success) {
@@ -113,13 +104,8 @@ const parseExpirationRecords = <T>(
 					? undefined
 					: parseResult.data;
 
-			parsedRecords.push(expiration);
-
-			return;
+			return [expiration];
 		}
-
-		// ensure consistent output length
-		parsedRecords.push(undefined);
 
 		logger.error(() => ({
 			msg: "Failed to parse Redis expiration record",
@@ -128,7 +114,7 @@ const parseExpirationRecords = <T>(
 				error: parseResult.error,
 			},
 		}));
-	});
 
-	return parsedRecords;
-};
+		// ensure consistent output length
+		return [undefined];
+	});

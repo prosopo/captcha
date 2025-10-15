@@ -106,8 +106,12 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 
 export const getExpressApiRuleRateLimits =
 	(): ApiRouteLimits<accessRuleApiPaths> => {
-		const defaultWindowsMs = 60000;
-		const defaultLimit = 5;
+		const defaults = {
+			limit: 5,
+			windowSeconds: 60,
+		};
+
+		const defaultWindowMs = defaults.windowSeconds * 1_000;
 
 		const rateLimitEntries = Object.entries(accessRuleApiPaths).map(
 			([endpointName, endpointPath]) => [
@@ -116,11 +120,11 @@ export const getExpressApiRuleRateLimits =
 					windowMs:
 						getIntEnvironmentVariable(
 							`PROSOPO_USER_ACCESS_POLICY_RULE_${endpointName}_WINDOW`,
-						) || defaultWindowsMs,
+						) || defaultWindowMs,
 					limit:
 						getIntEnvironmentVariable(
 							`PROSOPO_USER_ACCESS_POLICY_RULE_${endpointName}_LIMIT`,
-						) || defaultLimit,
+						) || defaults.limit,
 				},
 			],
 		);

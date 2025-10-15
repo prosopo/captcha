@@ -29,125 +29,124 @@ import {
 	getAccessRuleRedisKey,
 } from "./redisRuleIndex.js";
 
-export const createRedisRulesWriter = (
-	client: RedisClientType,
-	logger: Logger,
-): AccessRulesWriter => {
-	return {
-		async insertRules(ruleEntries: AccessRuleEntry[]): Promise<string[]> {
-			const entryBatches = chunkIntoBatches(ruleEntries, REDIS_BATCH_SIZE);
+export class RedisRulesWriter implements AccessRulesWriter {
+	constructor(
+		private readonly client: RedisClientType,
+		private readonly logger: Logger,
+	) {}
 
-			const keyBatches = await executeBatchesSequentially(
-				entryBatches,
-				async (entriesBatch) => insertRuleEntries(client, entriesBatch),
-			);
+	async insertRules(ruleEntries: AccessRuleEntry[]): Promise<string[]> {
+		const entryBatches = chunkIntoBatches(ruleEntries, REDIS_BATCH_SIZE);
 
-			return keyBatches
-				.flat()
-				.map((ruleKey) => ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length));
-		},
+		const keyBatches = await executeBatchesSequentially(
+			entryBatches,
+			async (entriesBatch) => this.insertRuleEntries(entriesBatch),
+		);
 
-		async deleteRules(ruleIds: string[]): Promise<void> {
-			const ruleKeys = ruleIds.map(
-				(ruleId) => ACCESS_RULE_REDIS_KEY_PREFIX + ruleId,
-			);
+		return keyBatches.flatMap((ruleKey) =>
+			ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+		);
+	}
 
-			const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
+	async deleteRules(ruleIds: string[]): Promise<void> {
+		const ruleKeys = ruleIds.map(
+			(ruleId) => ACCESS_RULE_REDIS_KEY_PREFIX + ruleId,
+		);
 
-			await executeBatchesSequentially(keyBatches, async (keysBatch) => {
-				const queries = client.multi();
+		const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
 
-				keysBatch.map((ruleKey) => {
-					queries.del(ruleKey);
-				});
+		await executeBatchesSequentially(keyBatches, async (keysBatch) => {
+			const queries = this.client.multi();
 
-				await queries.exec();
+			for (const ruleKey of keysBatch) {
+				queries.del(ruleKey);
+			}
+
+			await queries.exec();
+		});
+	}
+
+	async deleteAllRules(): Promise<number> {
+		let cursor = "0";
+		let total = 0;
+
+		do {
+			const reply = await this.client.scan(cursor, {
+				MATCH: `${ACCESS_RULE_REDIS_KEY_PREFIX}*`,
+				COUNT: REDIS_BATCH_SIZE,
 			});
-		},
 
-		async deleteAllRules(): Promise<number> {
-			let cursor = "0";
-			let total = 0;
+			const ids = reply.keys.map((key) =>
+				key.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			);
+			await this.deleteRules(ids);
 
-			do {
-				const reply = await client.scan(cursor, {
-					MATCH: `${ACCESS_RULE_REDIS_KEY_PREFIX}*`,
-					COUNT: REDIS_BATCH_SIZE,
-				});
+			total += ids.length;
+			cursor = reply.cursor;
+		} while ("0" !== cursor);
 
-				const ids = reply.keys.map((key) =>
-					key.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
-				);
-				await this.deleteRules(ids);
+		return total;
+	}
 
-				total += ids.length;
-				cursor = reply.cursor;
-			} while ("0" !== cursor);
+	protected async insertRuleEntries(
+		ruleEntries: AccessRuleEntry[],
+	): Promise<string[]> {
+		const queries = this.client.multi();
 
-			return total;
-		},
-	};
-};
+		const ruleKeys = ruleEntries.map((ruleEntry) => {
+			const { rule, expiresUnixTimestamp } = ruleEntry;
 
-export const insertRuleEntries = async (
-	client: RedisClientType,
-	ruleEntries: AccessRuleEntry[],
-): Promise<string[]> => {
-	const queries = client.multi();
+			const ruleKey = getAccessRuleRedisKey(rule);
+			const ruleValue = getRedisRuleValue(rule);
 
-	const ruleKeys = ruleEntries.map((ruleEntry) => {
-		const { rule, expiresUnixTimestamp } = ruleEntry;
+			queries.hSet(ruleKey, ruleValue);
 
-		const ruleKey = getAccessRuleRedisKey(rule);
-		const ruleValue = getRedisRuleValue(rule);
+			if (expiresUnixTimestamp) {
+				queries.expireAt(ruleKey, expiresUnixTimestamp);
+			}
 
-		queries.hSet(ruleKey, ruleValue);
+			return ruleKey;
+		});
 
-		if (expiresUnixTimestamp) {
-			queries.expireAt(ruleKey, expiresUnixTimestamp);
-		}
+		await queries.exec();
 
-		return ruleKey;
-	});
-
-	await queries.exec();
-
-	return ruleKeys;
-};
+		return ruleKeys;
+	}
+}
 
 export const getRedisRuleValue = (rule: AccessRule): Record<string, string> =>
 	Object.fromEntries(
 		Object.entries(rule).map(([key, value]) => [key, String(value)]),
 	);
 
-export const getDummyRedisRulesWriter = (logger: Logger): AccessRulesWriter => {
-	return {
-		insertRules: async (ruleEntries: AccessRuleEntry[]): Promise<string[]> => {
-			logger.info(() => ({
-				msg: "Dummy insertRules() has no effect (redis is not ready)",
-				data: {
-					ruleEntries,
-				},
-			}));
+export class DummyRedisRulesWriter implements AccessRulesWriter {
+	constructor(private readonly logger: Logger) {}
 
-			return [];
-		},
+	async insertRules(ruleEntries: AccessRuleEntry[]): Promise<string[]> {
+		this.logger.info(() => ({
+			msg: "Dummy insertRules() has no effect (redis is not ready)",
+			data: {
+				ruleEntries,
+			},
+		}));
 
-		deleteRules: async (ruleIds: string[]): Promise<void> => {
-			logger.info(() => ({
-				msg: "Dummy deleteRules() has no effect (redis is not ready)",
-				data: {
-					ruleIds,
-				},
-			}));
-		},
+		return [];
+	}
 
-		deleteAllRules: async (): Promise<number> => {
-			logger.info(() => ({
-				msg: "Dummy deleteAllRules() has no effect (redis is not ready)",
-			}));
+	async deleteRules(ruleIds: string[]): Promise<void> {
+		this.logger.info(() => ({
+			msg: "Dummy deleteRules() has no effect (redis is not ready)",
+			data: {
+				ruleIds,
+			},
+		}));
+	}
 
-			return 0;
-		},
-	};
-};
+	async deleteAllRules(): Promise<number> {
+		this.logger.info(() => ({
+			msg: "Dummy deleteAllRules() has no effect (redis is not ready)",
+		}));
+
+		return 0;
+	}
+}

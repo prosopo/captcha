@@ -57,22 +57,20 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 	async processRequest(
 		args: AccessRulesFilter[],
 	): Promise<RuleIdsEndpointResponse> {
-		const allRuleIds = [];
+		const ruleIdPromises = args.map((ruleFilter) =>
+			this.accessRulesStorage.findRuleIds(ruleFilter),
+		);
 
-		for (const accessRuleFilter of args) {
-			const ruleIds =
-				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
-
-			allRuleIds.push(...ruleIds);
-		}
+		const ruleIdSets = await Promise.all(ruleIdPromises);
+		const ruleIds = ruleIdSets.flat();
 
 		// Set() automatically removes duplicates
-		const uniqueRuleIds = [...new Set(allRuleIds)];
+		const uniqueRuleIds = [...new Set(ruleIds)];
 
 		this.logger.info(() => ({
 			msg: "Endpoint found rules",
 			data: {
-				totalFoundCount: allRuleIds.length,
+				totalFoundCount: ruleIds.length,
 				uniqueFoundCount: uniqueRuleIds.length,
 				searchFilters: args,
 				foundIds: uniqueRuleIds,

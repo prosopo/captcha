@@ -14,30 +14,31 @@
 
 import type { Logger } from "@prosopo/common";
 import type { RedisConnection } from "@prosopo/redis-client";
-import type { AccessRulesStorage } from "#policy/rulesStorage.js";
+import type {
+	AccessRulesReader,
+	AccessRulesStorage,
+	AccessRulesWriter,
+} from "#policy/rulesStorage.js";
 import {
-	createRedisRulesReader,
-	getDummyRedisRulesReader,
+	DummyRedisRulesReader,
+	RedisRulesReader,
 } from "./reader/redisRulesReader.js";
-import {
-	createRedisRulesWriter,
-	getDummyRedisRulesWriter,
-} from "./redisRulesWriter.js";
+import { DummyRedisRulesWriter, RedisRulesWriter } from "./redisRulesWriter.js";
 
 export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
 	logger: Logger,
 ): AccessRulesStorage => {
-	const storage: AccessRulesStorage = {
-		...getDummyRedisRulesReader(logger),
-		...getDummyRedisRulesWriter(logger),
-	};
+	let storage: AccessRulesStorage = composeStorage(
+		new DummyRedisRulesReader(logger),
+		new DummyRedisRulesWriter(logger),
+	);
 
 	connection.getClient().then((client) => {
-		Object.assign(storage, {
-			...createRedisRulesReader(client, logger),
-			...createRedisRulesWriter(client, logger),
-		});
+		storage = composeStorage(
+			new RedisRulesReader(client, logger),
+			new RedisRulesWriter(client, logger),
+		);
 
 		logger.info(() => ({
 			msg: "RedisAccessRules storage got a ready Redis client",
@@ -46,3 +47,19 @@ export const createRedisAccessRulesStorage = (
 
 	return storage;
 };
+
+const composeStorage = (
+	reader: AccessRulesReader,
+	writer: AccessRulesWriter,
+): AccessRulesStorage => ({
+	// reader
+	fetchRules: reader.fetchRules.bind(reader),
+	getMissingRuleIds: reader.getMissingRuleIds.bind(reader),
+	findRules: reader.findRules.bind(reader),
+	findRuleIds: reader.findRuleIds.bind(reader),
+	fetchAllRuleIds: reader.fetchAllRuleIds.bind(reader),
+	// writer
+	insertRules: writer.insertRules.bind(writer),
+	deleteRules: writer.deleteRules.bind(writer),
+	deleteAllRules: writer.deleteAllRules.bind(writer),
+});

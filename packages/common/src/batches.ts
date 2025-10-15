@@ -15,14 +15,17 @@
 export const chunkIntoBatches = <Item>(
 	items: Item[],
 	chunkSize: number,
-): Item[][] => {
-	return Array.from(
-		{ length: Math.ceil(items.length / chunkSize) },
-		(_, index) => items.slice(index * chunkSize, (index + 1) * chunkSize),
+): Item[][] =>
+	Array.from({ length: Math.ceil(items.length / chunkSize) }, (_, index) =>
+		items.slice(index * chunkSize, (index + 1) * chunkSize),
 	);
-};
 
-export const executeBatchesSequentially = async <Batch, Response>(
+export type ExecuteBatches<Batch, Response> = (
+	batches: Batch[],
+	handler: (batch: Batch, index: number) => Promise<Response>,
+) => Promise<Response[]>;
+
+export const executeBatchesSequentially = (async <Batch, Response>(
 	batches: Batch[],
 	handler: (batch: Batch, index: number) => Promise<Response>,
 ): Promise<Response[]> => {
@@ -35,11 +38,10 @@ export const executeBatchesSequentially = async <Batch, Response>(
 	}
 
 	return results;
-};
+}) satisfies ExecuteBatches<unknown, unknown>;
 
-export const executeBatchesInParallel = async <Batch, Response>(
+export const executeBatchesInParallel = (async <Batch, Response>(
 	batches: Batch[],
-	handler: (batch: Batch) => Promise<Response>,
-): Promise<Response[]> => {
-	return Promise.all(batches.map(handler));
-};
+	handler: (batch: Batch, index: number) => Promise<Response>,
+): Promise<Response[]> =>
+	Promise.all(batches.map(handler))) satisfies ExecuteBatches<unknown, unknown>;
