@@ -12,5 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./.export.js";
-export * from "./endpoint/.export.js";
+export const entries: Record<string, string> = {
+	".export": "src/.export.ts",
+	"api/.export": "src/api/.export.ts",
+	"redis/.export": "src/redis/.export.ts",
+	"mongoose/.export": "src/mongoose/.export.ts",
+};

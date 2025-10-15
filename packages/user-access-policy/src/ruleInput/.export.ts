@@ -12,5 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./.export.js";
-export * from "./endpoint/.export.js";
+export { accessRuleInput } from "./ruleInput.js";
+
+export { accessPolicyInput, policyScopeInput } from "./policyInput.js";
+
+export { userScopeInput } from "./userScopeInput.js";

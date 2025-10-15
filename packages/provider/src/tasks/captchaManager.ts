@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
@@ -27,13 +27,10 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type {
 	AccessPolicy,
 	AccessRulesStorage,
-	UserScopeApiInput,
-	UserScopeApiOutput,
+	UserScope,
+	UserScopeRecord,
 } from "@prosopo/user-access-policy";
-import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
-import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import { deepValidateIpAddress } from "../util.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -244,9 +241,7 @@ export class CaptchaManager {
 	async getPrioritisedAccessPolicies(
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
-		userScope: {
-			[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
-		},
+		userScope: UserScope | UserScopeRecord,
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,

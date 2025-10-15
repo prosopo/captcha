@@ -17,52 +17,59 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
-import { z } from "zod";
+import { type AllKeys, LogLevel, type Logger } from "@prosopo/common";
+import { type ZodType, z } from "zod";
+import type {
+	AccessPolicy,
+	AccessRule,
+	PolicyScope,
+	UserScope,
+} from "#policy/rule.js";
 import {
-	accessPolicySchema,
-	policyScopeSchema,
-	userScopeInputSchema,
-} from "#policy/accessPolicy.js";
-import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
+	accessPolicyInput,
+	policyScopeInput,
+} from "#policy/ruleInput/policyInput.js";
+import {
+	type UserScopeInput,
+	userScopeInput,
+} from "#policy/ruleInput/userScopeInput.js";
+import type {
+	AccessRuleEntry,
+	AccessRulesWriter,
+} from "#policy/rulesStorage.js";
 
-export const insertRulesEndpointSchema: z.ZodType<{
-	accessPolicy: z.infer<typeof accessPolicySchema>;
-	policyScope?: z.infer<typeof policyScopeSchema>;
+export type InsertRulesGroup = {
+	accessPolicy: AccessPolicy;
+	policyScope?: PolicyScope;
+	userScopes: UserScopeInput[];
 	groupId?: string;
-	userScopes: z.input<typeof userScopeInputSchema>[];
-	expirationTimestamp?: number;
-}> = z.object({
-	accessPolicy: accessPolicySchema,
-	policyScope: policyScopeSchema.optional(),
-	groupId: z.string().optional(),
-	userScopes: z.array(userScopeInputSchema),
-	expirationTimestamp: z
-		.number()
-		.optional()
-		.transform((val) => (val !== undefined ? Math.floor(val) : val)),
-});
+	expiresUnixTimestamp?: number;
+};
 
-export type InsertRulesEndpointSchema = typeof insertRulesEndpointSchema;
+type ParsedInsertRulesGroup = InsertRulesGroup & {
+	userScopes: UserScope[];
+};
 
-export type InsertManyRulesEndpointInputSchema = z.input<
-	typeof insertRulesEndpointSchema
->;
+type InsertRulesSchema = ZodType<InsertRulesGroup>;
 
-export type InsertManyRulesEndpointOutputSchema = z.output<
-	typeof insertRulesEndpointSchema
->;
-
-export class InsertRulesEndpoint
-	implements ApiEndpoint<InsertRulesEndpointSchema>
-{
+export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(
 		private readonly accessRulesWriter: AccessRulesWriter,
 		private readonly logger: Logger,
 	) {}
 
+	public getRequestArgsSchema(): InsertRulesSchema {
+		return z.object({
+			accessPolicy: accessPolicyInput,
+			policyScope: policyScopeInput.optional(),
+			groupId: z.string().optional(),
+			userScopes: z.array(userScopeInput),
+			expiresUnixTimestamp: z.number().optional(),
+		} satisfies AllKeys<InsertRulesGroup>);
+	}
+
 	async processRequest(
-		args: z.infer<InsertRulesEndpointSchema>,
+		args: ParsedInsertRulesGroup,
 	): Promise<ApiEndpointResponse> {
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
@@ -73,10 +80,22 @@ export class InsertRulesEndpoint
 		});
 
 		const createRulesPromise = this.createRules(args)
-			.then(() => {
+			.then((insertedIds) => {
 				this.logger.info(() => ({
 					msg: "Endpoint inserted access rules",
-					data: { args },
+					data: {
+						userScopesCount: args.userScopes.length,
+						insertedCount: insertedIds.length,
+						uniqueIdsCount: new Set(insertedIds).size,
+					},
+				}));
+
+				this.logger.debug(() => ({
+					msg: "Inserted access rules details",
+					data: {
+						insertedIds,
+						input: args,
+					},
 				}));
 
 				return {
@@ -100,16 +119,11 @@ export class InsertRulesEndpoint
 		return Promise.race([timeoutPromise, createRulesPromise]);
 	}
 
-	public getRequestArgsSchema(): InsertRulesEndpointSchema {
-		return insertRulesEndpointSchema;
-	}
-
-	protected async createRules(
-		args: InsertManyRulesEndpointOutputSchema,
-	): Promise<string[]> {
+	protected async createRules(args: ParsedInsertRulesGroup): Promise<string[]> {
 		const policyScope = args.policyScope || {};
 
-		const createPromises = [];
+		const ruleEntries: AccessRuleEntry[] = [];
+
 		for (const userScope of args.userScopes) {
 			const rule: AccessRule = {
 				...args.accessPolicy,
@@ -118,10 +132,12 @@ export class InsertRulesEndpoint
 				...(args.groupId ? { groupId: args.groupId } : {}),
 			};
 
-			createPromises.push(
-				this.accessRulesWriter.insertRule(rule, args.expirationTimestamp),
-			);
+			ruleEntries.push({
+				rule: rule,
+				expiresUnixTimestamp: args.expiresUnixTimestamp,
+			});
 		}
-		return Promise.all(createPromises);
+
+		return this.accessRulesWriter.insertRules(ruleEntries);
 	}
 }

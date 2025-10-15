@@ -18,39 +18,38 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
-import { z } from "zod";
-import { policyFilterSchema } from "#policy/accessPolicyResolver.js";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import { type ZodType, z } from "zod";
+import {
+	type AccessRulesFilterInput,
+	accessRulesFilterInput,
+} from "#policy/ruleInput/ruleInput.js";
+import type {
+	AccessRulesFilter,
+	AccessRulesStorage,
+} from "#policy/rulesStorage.js";
 
-export const deleteRulesEndpointSchema = z.array(policyFilterSchema);
+export type DeleteRuleFilters = AccessRulesFilterInput[];
 
-export type DeleteRulesEndpointSchemaOutput = z.output<
-	typeof deleteRulesEndpointSchema
->;
+type DeleteRulesSchema = ZodType<DeleteRuleFilters>;
 
-export type DeleteRulesEndpointSchemaInput = z.input<
-	typeof deleteRulesEndpointSchema
->;
-
-export type DeleteRulesEndpointSchema = typeof deleteRulesEndpointSchema;
-
-export class DeleteRulesEndpoint
-	implements ApiEndpoint<DeleteRulesEndpointSchema>
-{
+export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
 	) {}
 
+	public getRequestArgsSchema(): DeleteRulesSchema {
+		return z.array(accessRulesFilterInput);
+	}
+
 	async processRequest(
-		args: DeleteRulesEndpointSchemaInput,
+		args: AccessRulesFilter[],
 	): Promise<ApiEndpointResponse> {
 		const allRuleIds = [];
 
 		for (const accessRuleFilter of args) {
-			const parsedRules = policyFilterSchema.parse(accessRuleFilter);
 			const foundRuleIds =
-				await this.accessRulesStorage.findRuleIds(parsedRules);
+				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
 
 			allRuleIds.push(...foundRuleIds);
 		}
@@ -76,9 +75,5 @@ export class DeleteRulesEndpoint
 				deleted_count: uniqueRuleIds.length,
 			},
 		};
-	}
-
-	public getRequestArgsSchema(): DeleteRulesEndpointSchema {
-		return deleteRulesEndpointSchema;
 	}
 }

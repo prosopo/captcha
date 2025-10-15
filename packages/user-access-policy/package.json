@@ -1,8 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
 	"version": "3.5.22",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "20",
@@ -10,9 +8,24 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/.export.d.ts",
+			"import": "./dist/.export.js",
+			"require": "./dist/cjs/.export.cjs"
+		},
+		"./api": {
+			"types": "./dist/api/.export.d.ts",
+			"import": "./dist/api/.export.js",
+			"require": "./dist/cjs/api/.export.cjs"
+		},
+		"./redis": {
+			"types": "./dist/redis/.export.d.ts",
+			"import": "./dist/redis/.export.js",
+			"require": "./dist/cjs/redis/.export.cjs"
+		},
+		"./mongoose": {
+			"types": "./dist/mongoose/.export.d.ts",
+			"import": "./dist/mongoose/.export.js",
+			"require": "./dist/cjs/mongoose/.export.cjs"
 		}
 	},
 	"imports": {
@@ -36,6 +49,7 @@
 		"@prosopo/types": "3.5.6",
 		"@prosopo/util": "3.1.5",
 		"@redis/search": "5.0.0",
+		"cidr-calc": "1.0.4",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
 		"redis": "5.0.0",
@@ -45,6 +59,7 @@
 		"@prosopo/config": "3.1.20",
 		"@prosopo/util-crypto": "13.5.22",
 		"@types/node": "22.10.2",
+		"mongoose": "8.13.0",
 		"vite": "6.3.5",
 		"vitest": "3.0.9",
 		"yargs": "17.7.2"

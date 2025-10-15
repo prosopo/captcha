@@ -17,47 +17,47 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
-import { string, z } from "zod";
-import { ScopeMatch } from "#policy/accessPolicyResolver.js";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type { AllKeys, Logger } from "@prosopo/common";
+import { type ZodType, z } from "zod";
+import {
+	type AccessRulesStorage,
+	FilterScopeMatch,
+} from "#policy/rulesStorage.js";
 
-export const deleteRuleGroupsEndpointSchema = z.array(
-	z.object({
-		clientIds: z.string().array(),
-		groupId: z.string(),
-	}),
-);
+export type DeleteSiteGroup = {
+	clientIds: string[];
+	groupId: string;
+};
 
-export type DeleteRuleGroupsOutputEndpointSchema = z.output<
-	typeof deleteRuleGroupsEndpointSchema
->;
+export type DeleteSiteGroups = DeleteSiteGroup[];
 
-export type DeleteRuleGroupsInputEndpointSchema = z.input<
-	typeof deleteRuleGroupsEndpointSchema
->;
-
-export type DeleteRuleGroupsEndpointSchema =
-	typeof deleteRuleGroupsEndpointSchema;
+type DeleteRuleGroupsSchema = ZodType<DeleteSiteGroups>;
 
 export class DeleteRuleGroupsEndpoint
-	implements ApiEndpoint<DeleteRuleGroupsEndpointSchema>
+	implements ApiEndpoint<DeleteRuleGroupsSchema>
 {
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
 	) {}
 
-	async processRequest(
-		args: DeleteRuleGroupsInputEndpointSchema,
-	): Promise<ApiEndpointResponse> {
+	public getRequestArgsSchema(): DeleteRuleGroupsSchema {
+		return z.array(
+			z.object({
+				clientIds: z.string().array(),
+				groupId: z.string(),
+			} satisfies AllKeys<DeleteSiteGroup>),
+		);
+	}
+
+	async processRequest(args: DeleteSiteGroups): Promise<ApiEndpointResponse> {
 		const foundRuleIdPromises = args.flatMap((ruleToDelete) =>
 			ruleToDelete.clientIds.map((clientId) =>
 				this.accessRulesStorage.findRuleIds({
 					policyScope: {
 						clientId: clientId,
 					},
-					policyScopeMatch: ScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Exact,
 					groupId: ruleToDelete.groupId,
 				}),
 			),
@@ -87,9 +87,5 @@ export class DeleteRuleGroupsEndpoint
 				deleted_count: uniqueRuleIds.length,
 			},
 		};
-	}
-
-	public getRequestArgsSchema(): DeleteRuleGroupsEndpointSchema {
-		return deleteRuleGroupsEndpointSchema;
 	}
 }
