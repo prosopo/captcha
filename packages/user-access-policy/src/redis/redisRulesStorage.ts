@@ -29,16 +29,19 @@ export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
 	logger: Logger,
 ): AccessRulesStorage => {
-	let storage: AccessRulesStorage = composeStorage(
+	const storage: AccessRulesStorage = composeStorage(
 		new DummyRedisRulesReader(logger),
 		new DummyRedisRulesWriter(logger),
 	);
 
 	connection.getClient().then((client) => {
-		storage = composeStorage(
+		const realStorage = composeStorage(
 			new RedisRulesReader(client, logger),
 			new RedisRulesWriter(client, logger),
 		);
+
+		// use assigning instead of var overwriting to keep the object reference
+		Object.assign(storage, realStorage);
 
 		logger.info(() => ({
 			msg: "RedisAccessRules storage got a ready Redis client",
