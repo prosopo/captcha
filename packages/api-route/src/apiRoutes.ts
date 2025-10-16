@@ -15,9 +15,18 @@
 import type { ZodType } from "zod";
 import type { ApiEndpoint } from "./endpoint/apiEndpoint.js";
 
-interface ApiRoute {
-	path: string;
-	endpoint: ApiEndpoint<ZodType | undefined>;
+export type ApiRoutes = Record<string, ApiEndpoint<ZodType | undefined>>;
+
+export interface ApiRoutesProvider {
+	getRoutes(): ApiRoutes;
 }
 
-export type { ApiRoute };
+export type ApiRouteLimit = {
+	windowMs: number;
+	limit: number;
+};
+
+export type ApiRouteLimits<Enum extends string | number> = Record<
+	Enum,
+	ApiRouteLimit
+>;

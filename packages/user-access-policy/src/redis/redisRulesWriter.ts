@@ -12,102 +12,141 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import crypto from "node:crypto";
-import type { Logger } from "@prosopo/common";
+import {
+	type Logger,
+	chunkIntoBatches,
+	executeBatchesSequentially,
+} from "@prosopo/common";
 import type { RedisClientType } from "redis";
-import type { AccessRule, AccessRulesWriter } from "#policy/accessRules.js";
-import { redisRuleKeyPrefix } from "#policy/redis/redisRulesIndex.js";
+import { REDIS_BATCH_SIZE } from "#policy/redis/redisClient.js";
+import type { AccessRule } from "#policy/rule.js";
+import type {
+	AccessRuleEntry,
+	AccessRulesWriter,
+} from "#policy/rulesStorage.js";
+import {
+	ACCESS_RULE_REDIS_KEY_PREFIX,
+	getAccessRuleRedisKey,
+} from "./redisRuleIndex.js";
 
-const redisRuleContentHashAlgorithm = "md5";
+export class RedisRulesWriter implements AccessRulesWriter {
+	constructor(
+		private readonly client: RedisClientType,
+		private readonly logger: Logger,
+	) {}
 
-export const createRedisRulesWriter = (
-	client: RedisClientType,
-): AccessRulesWriter => {
-	return {
-		insertRule: async (
-			rule: AccessRule,
-			expirationTimestamp?: number,
-		): Promise<string> => {
-			const ruleKey = getRedisRuleKey(rule);
+	async insertRules(ruleEntries: AccessRuleEntry[]): Promise<string[]> {
+		const entryBatches = chunkIntoBatches(ruleEntries, REDIS_BATCH_SIZE);
+
+		const keyBatches = await executeBatchesSequentially(
+			entryBatches,
+			async (entriesBatch) => this.insertRuleEntries(entriesBatch),
+		);
+
+		return keyBatches.flatMap((ruleKey) =>
+			ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+		);
+	}
+
+	async deleteRules(ruleIds: string[]): Promise<void> {
+		const ruleKeys = ruleIds.map(
+			(ruleId) => ACCESS_RULE_REDIS_KEY_PREFIX + ruleId,
+		);
+
+		const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
+
+		await executeBatchesSequentially(keyBatches, async (keysBatch) => {
+			const queries = this.client.multi();
+
+			for (const ruleKey of keysBatch) {
+				queries.del(ruleKey);
+			}
+
+			await queries.exec();
+		});
+	}
+
+	async deleteAllRules(): Promise<number> {
+		let cursor = "0";
+		let total = 0;
+
+		do {
+			const reply = await this.client.scan(cursor, {
+				MATCH: `${ACCESS_RULE_REDIS_KEY_PREFIX}*`,
+				COUNT: REDIS_BATCH_SIZE,
+			});
+
+			const ids = reply.keys.map((key) =>
+				key.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			);
+			await this.deleteRules(ids);
+
+			total += ids.length;
+			cursor = reply.cursor;
+		} while ("0" !== cursor);
+
+		return total;
+	}
+
+	protected async insertRuleEntries(
+		ruleEntries: AccessRuleEntry[],
+	): Promise<string[]> {
+		const queries = this.client.multi();
+
+		const ruleKeys = ruleEntries.map((ruleEntry) => {
+			const { rule, expiresUnixTimestamp } = ruleEntry;
+
+			const ruleKey = getAccessRuleRedisKey(rule);
 			const ruleValue = getRedisRuleValue(rule);
 
-			await client.hSet(ruleKey, ruleValue);
+			queries.hSet(ruleKey, ruleValue);
 
-			if (expirationTimestamp) {
-				const expiryDate = new Date(expirationTimestamp);
-				if (expiryDate.getUTCFullYear() === 1970) {
-					// timestamp is already in seconds
-					await client.expireAt(ruleKey, expirationTimestamp);
-				} else {
-					const timestampInSeconds = Math.floor(expirationTimestamp / 1000);
-					await client.expireAt(ruleKey, timestampInSeconds);
-				}
+			if (expiresUnixTimestamp) {
+				queries.expireAt(ruleKey, expiresUnixTimestamp);
 			}
 
 			return ruleKey;
-		},
+		});
 
-		deleteRules: async (ruleIds: string[]): Promise<void> =>
-			void (await client.del(ruleIds)),
+		await queries.exec();
 
-		deleteAllRules: async (): Promise<number> => {
-			const keys = await client.keys(`${redisRuleKeyPrefix}*`);
-
-			if (keys.length === 0) return 0;
-
-			return await client.del(keys);
-		},
-	};
-};
-
-export const getDummyRedisRulesWriter = (logger: Logger): AccessRulesWriter => {
-	return {
-		insertRule: async (
-			rule: AccessRule,
-			expirationTimestamp?: number,
-		): Promise<string> => {
-			logger.info(() => ({
-				msg: "Dummy insertRule() has no effect (redis is not ready)",
-				data: {
-					rule,
-				},
-			}));
-
-			return "";
-		},
-
-		deleteRules: async (ruleIds: string[]): Promise<void> => {
-			logger.info(() => ({
-				msg: "Dummy deleteRules() has no effect (redis is not ready)",
-				data: {
-					ruleIds,
-				},
-			}));
-		},
-
-		deleteAllRules: async (): Promise<number> => {
-			logger.info(() => ({
-				msg: "Dummy deleteAllRules() has no effect (redis is not ready)",
-			}));
-
-			return 0;
-		},
-	};
-};
-
-export const getRedisRuleKey = (rule: AccessRule): string =>
-	redisRuleKeyPrefix +
-	crypto
-		.createHash(redisRuleContentHashAlgorithm)
-		.update(
-			JSON.stringify(rule, (key, value) =>
-				// JSON.stringify can't handle BigInt itself: throws "Do not know how to serialize a BigInt"
-				"bigint" === typeof value ? value.toString() : value,
-			),
-		)
-		.digest("hex");
+		return ruleKeys;
+	}
+}
 
 export const getRedisRuleValue = (rule: AccessRule): Record<string, string> =>
 	Object.fromEntries(
 		Object.entries(rule).map(([key, value]) => [key, String(value)]),
 	);
+
+export class DummyRedisRulesWriter implements AccessRulesWriter {
+	constructor(private readonly logger: Logger) {}
+
+	async insertRules(ruleEntries: AccessRuleEntry[]): Promise<string[]> {
+		this.logger.info(() => ({
+			msg: "Dummy insertRules() has no effect (redis is not ready)",
+			data: {
+				ruleEntries,
+			},
+		}));
+
+		return [];
+	}
+
+	async deleteRules(ruleIds: string[]): Promise<void> {
+		this.logger.info(() => ({
+			msg: "Dummy deleteRules() has no effect (redis is not ready)",
+			data: {
+				ruleIds,
+			},
+		}));
+	}
+
+	async deleteAllRules(): Promise<number> {
+		this.logger.info(() => ({
+			msg: "Dummy deleteAllRules() has no effect (redis is not ready)",
+		}));
+
+		return 0;
+	}
+}

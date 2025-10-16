@@ -12,5 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./.export.js";
-export * from "./endpoint/.export.js";
+import { describe, expect, it } from "vitest";
+import { chunkIntoBatches } from "../batches.js";
+
+describe("chunkIntoBatches", () => {
+	it("should chunk into batches", () => {
+		const batches = chunkIntoBatches([1, 2, 3], 2);
+
+		expect(batches).toEqual([[1, 2], [3]]);
+	});
+
+	it("should handle the empty items case", () => {
+		const batches = chunkIntoBatches([], 2);
+
+		expect(batches).toEqual([]);
+	});
+});

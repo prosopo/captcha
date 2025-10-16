@@ -12,5 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./.export.js";
-export * from "./endpoint/.export.js";
+export * from "./ruleInput/.export.js";
+
+export {
+	makeAccessRuleHash,
+	transformAccessRuleRecordIntoRule,
+	transformAccessRuleIntoRecord,
+} from "./transformRule.js";
+
+export {
+	type AccessRule,
+	type AccessPolicy,
+	type PolicyScope,
+	type UserScope,
+	AccessPolicyType,
+} from "./rule.js";
+
+export {
+	type AccessRulesFilter,
+	type AccessRulesStorage,
+	type AccessRuleEntry,
+	FilterScopeMatch,
+} from "./rulesStorage.js";
+
+export {
+	type AccessRuleRecord,
+	type UserScopeRecord,
+	type UserScopeRecordField,
+	userScopeRecordFields,
+	getUserScopeRecordFromAccessRuleRecord,
+} from "./ruleRecord.js";

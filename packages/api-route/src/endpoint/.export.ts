@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import crypto from "node:crypto";
 
-export const hashUserAgent = (userAgent: string): string =>
-	crypto.createHash("sha256").update(userAgent).digest("hex");
+export type { ApiEndpoint } from "./apiEndpoint.js";
+export type { ApiEndpointResponse } from "./apiEndpointResponse.js";
+export { ApiEndpointResponseStatus } from "./apiEndpointResponseStatus.js";

@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoute } from "./apiRoute.js";
+export type {
+	FindRuleFilters,
+	RuleIdsResponse,
+	RuleIdsEndpointResponse,
+} from "./findRuleIds.js";
 
-interface ApiRoutesProvider {
-	getRoutes(): ApiRoute[];
-}
+export type {
+	FetchRulesOptions,
+	FetchRulesResponse,
+} from "./fetchRules.js";
 
-export type { ApiRoutesProvider };
+export type { MissingIds } from "./getMissingIds.js";
