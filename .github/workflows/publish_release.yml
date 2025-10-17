@@ -69,7 +69,7 @@ jobs:
       - name: Bundle staging procaptcha-bundle
         run: |
           echo "Bundling procaptcha-bundle"
-          NODE_ENV="staging" npx nx run @prosopo/procaptcha-bundle:bundle --nxBail
+          NODE_ENV="staging" npx turbo run @prosopo/procaptcha-bundle#bundle
 
       - name: Create staging procaptcha-bundle zip
         run: |
@@ -82,7 +82,7 @@ jobs:
       - name: Bundle production procaptcha-bundle
         run: |
           echo "Bundling procaptcha-bundle"
-          NODE_ENV="production" npx nx run @prosopo/procaptcha-bundle:bundle --nxBail
+          NODE_ENV="production" npx turbo run @prosopo/procaptcha-bundle#bundle
 
       - name: Create production procaptcha-bundle zip
         run: |
