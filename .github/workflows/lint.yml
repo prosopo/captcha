@@ -50,14 +50,7 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
-      # if this fails, you need to run `npx nx sync` as something is out of sync wrt deps, configs, etc
-      - name: sync check
-        run: |
-
-          # check that the changesets are present for each package which has been modified
-          npx nx sync:check
-
-      - run: npx nx run-many --target=build --projects=@prosopo/lint --nxBail
+      - run: npx turbo run @prosopo/lint#build
 
       - run: npm run lint
 

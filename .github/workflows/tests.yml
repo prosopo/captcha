@@ -58,12 +58,13 @@ jobs:
           cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
       # build all packages in workspace
-      - run: npx nx run-many --target=build,build:cjs --nxBail
+      - run: npx turbo run build
+      - run: npx turbo run build:cjs
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         run: |
-          NODE_ENV="development" npx nx run @prosopo/procaptcha-bundle:bundle:webpack --nxBail
+          NODE_ENV="development" npx turbo run @prosopo/procaptcha-bundle#bundle:webpack
 
       - name: Start the docker images
         run: |
