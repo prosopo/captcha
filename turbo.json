@@ -1,59 +1,57 @@
 {
-    "$schema": "https://turbo.build/schema.json",
-    "globalDependencies": [
-        "**/.env.*",
-        "package.json",
-        "package-lock.json",
-        "tsconfig.json",
-        "tsconfig.*.json",
-        "vite.config.*",
-        "vite.*.config.*"
-    ],
-    "globalEnv": [
-        "NODE_ENV"
-    ],
-    "ui": "tui",
-    "concurrency": "100%",
-    "daemon": false,
-    "envMode": "loose",
-    "tasks": {
-        "build": {
-            "dependsOn": [ "^build", "@prosopo/config#build" ],
-            "outputs": [ "dist/**", "*.tsbuildinfo" ]
-        },
-        "build:tsc": {
-            "dependsOn": [ "^build:tsc" ],
-            "outputs": [ "dist/**", "*.tsbuildinfo" ]
-        },
-        "build:cjs": {
-            "dependsOn": [ "^build:cjs", "@prosopo/config#build" ],
-            "outputs": [ "dist/**", "*.tsbuildinfo" ]
-        },
-        "bundle": {
-            "dependsOn": [ "@prosopo/config#build" ],
-            "outputs": [ "dist/**", "*.tsbuildinfo" ]
-        },
-        "bundle:webpack": {
-            "dependsOn": [ "@prosopo/config#build" ],
-            "outputs": [ "dist/**", "*.tsbuildinfo" ]
-        },
-        "typecheck": {
-            "dependsOn": [ "^typecheck" ],
-            "outputs": [ "dist/**", "*.tsbuildinfo" ]
-        },
-        "test": {
-            "dependsOn": [ "@prosopo/config#build" ]
-        },
-        "lint": { "dependsOn": [ "^lint" ] },
-        "clean": {
-            "cache": false
-        },
-        "clean:deps": {
-            "dependsOn": [ "clean", "^clean" ],
-            "cache": false
-        }
-    },
-    "remoteCache": {
-        "enabled": false
-    }
+	"$schema": "https://turbo.build/schema.json",
+	"globalDependencies": [
+		"**/.env.*",
+		"package.json",
+		"package-lock.json",
+		"tsconfig.json",
+		"tsconfig.*.json",
+		"vite.config.*",
+		"vite.*.config.*"
+	],
+	"globalEnv": ["NODE_ENV"],
+	"ui": "tui",
+	"concurrency": "100%",
+	"daemon": false,
+	"envMode": "loose",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build", "@prosopo/config#build"],
+			"outputs": ["dist/**", "*.tsbuildinfo"]
+		},
+		"build:tsc": {
+			"dependsOn": ["^build:tsc"],
+			"outputs": ["dist/**", "*.tsbuildinfo"]
+		},
+		"build:cjs": {
+			"dependsOn": ["^build:cjs", "@prosopo/config#build"],
+			"outputs": ["dist/**", "*.tsbuildinfo"]
+		},
+		"bundle": {
+			"dependsOn": ["@prosopo/config#build"],
+			"outputs": ["dist/**", "*.tsbuildinfo"]
+		},
+		"bundle:webpack": {
+			"dependsOn": ["@prosopo/config#build"],
+			"outputs": ["dist/**", "*.tsbuildinfo"]
+		},
+		"typecheck": {
+			"dependsOn": ["^typecheck"],
+			"outputs": ["dist/**", "*.tsbuildinfo"]
+		},
+		"test": {
+			"dependsOn": ["@prosopo/config#build"]
+		},
+		"lint": { "dependsOn": ["^lint"] },
+		"clean": {
+			"cache": false
+		},
+		"clean:deps": {
+			"dependsOn": ["clean", "^clean"],
+			"cache": false
+		}
+	},
+	"remoteCache": {
+		"enabled": false
+	}
 }
