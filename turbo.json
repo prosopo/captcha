@@ -36,8 +36,7 @@
 			"outputs": ["dist/**", "*.tsbuildinfo"]
 		},
 		"typecheck": {
-			"dependsOn": ["^typecheck"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"dependsOn": ["^typecheck"]
 		},
 		"test": {
 			"dependsOn": ["@prosopo/config#build"]
