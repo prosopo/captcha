@@ -1,0 +1,11 @@
+{
+	"extends": [ "//" ],
+	"tasks": {
+		"build": {
+			"dependsOn": [ "^build", "^typecheck" ]
+		},
+		"build:cjs": {
+			"dependsOn": [ "^build:cjs", "^typecheck" ]
+		}
+	}
+}

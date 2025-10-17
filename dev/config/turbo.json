@@ -1,0 +1,37 @@
+{
+    "extends": [ "//" ],
+    "tasks": {
+        "build": {
+            "dependsOn": [ "^build" ],
+            "outputs": [ "dist/**", "*.tsbuildinfo" ]
+        },
+        "build:tsc": {
+            "dependsOn": [ "^build:tsc" ],
+            "outputs": [ "dist/**", "*.tsbuildinfo" ]
+        },
+        "build:cjs": {
+            "dependsOn": [ "^build:cjs" ],
+            "outputs": [ "dist/**", "*.tsbuildinfo" ]
+        },
+        "bundle": {
+            "outputs": [ "dist/**", "*.tsbuildinfo" ]
+        },
+        "bundle:webpack": {
+            "outputs": [ "dist/**", "*.tsbuildinfo" ]
+        },
+        "typecheck": {
+            "dependsOn": [ "^typecheck" ],
+            "outputs": [ "dist/**", "*.tsbuildinfo" ]
+        },
+        "test": {
+        },
+        "lint": { "dependsOn": [ "^lint" ] },
+        "clean": {
+            "cache": false
+        },
+        "clean:deps": {
+            "dependsOn": [ "clean", "^clean" ],
+            "cache": false
+        }
+    }
+}
