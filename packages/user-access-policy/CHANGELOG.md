@@ -1,5 +1,19 @@
 # @prosopo/user-access-policy
 
+## 3.5.23
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/api@3.1.28
+  - @prosopo/common@3.1.21
+  - @prosopo/api-route@2.6.29
+  - @prosopo/redis-client@1.0.6
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+
 ## 3.5.22
 ### Patch Changes
 

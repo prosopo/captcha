@@ -1,5 +1,21 @@
 # @prosopo/database
 
+## 3.4.9
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+- Updated dependencies [3a027ef]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/types-database@3.3.9
+  - @prosopo/redis-client@1.0.6
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 3.4.8
 ### Patch Changes
 

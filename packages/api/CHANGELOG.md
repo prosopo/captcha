@@ -1,5 +1,13 @@
 # @prosopo/api
 
+## 3.1.28
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 3.1.27
 ### Patch Changes
 

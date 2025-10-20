@@ -1,5 +1,12 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.31
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/vue-procaptcha-wrapper@1.1.31
+
 ## 1.1.30
 ### Patch Changes
 
