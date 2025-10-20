@@ -31,7 +31,7 @@ export const getBotScore = async (
 	const userId: string = result.userId;
 	const userAgent: string = result.userAgent;
 	const isWebView: boolean = result.isWebView ?? false;
-    const isIframe: boolean = result.isIframe ?? false;
+	const isIframe: boolean = result.isIframe ?? false;
 
 	if (baseBotScore === undefined) {
 		return {
@@ -48,6 +48,6 @@ export const getBotScore = async (
 		userId,
 		userAgent,
 		isWebView,
-		isIframe
+		isIframe,
 	};
 };
