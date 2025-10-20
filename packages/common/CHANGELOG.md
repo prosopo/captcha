@@ -1,5 +1,14 @@
 # @prosopo/common
 
+## 3.1.21
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+
 ## 3.1.20
 ### Patch Changes
 

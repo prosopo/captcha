@@ -1,5 +1,11 @@
 # @prosopo/locale
 
+## 3.1.21
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
 ## 3.1.20
 ### Patch Changes
 
