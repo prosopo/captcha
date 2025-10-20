@@ -1,5 +1,18 @@
 # @prosopo/types-database
 
+## 3.3.9
+### Patch Changes
+
+- 3a027ef: Fix session storer
+- 3a027ef: Release cycle
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 3.3.8
 ### Patch Changes
 

@@ -1,5 +1,30 @@
 # @prosopo/cli
 
+## 3.4.13
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+- Updated dependencies [3a027ef]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/api@3.1.28
+  - @prosopo/common@3.1.21
+  - @prosopo/api-express-router@3.0.29
+  - @prosopo/provider@3.12.10
+  - @prosopo/config@3.1.21
+  - @prosopo/types-database@3.3.9
+  - @prosopo/dotenv@3.0.26
+  - @prosopo/env@3.2.17
+  - @prosopo/keyring@2.8.31
+  - @prosopo/workspace@3.1.14
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+  - @prosopo/util-crypto@13.5.23
+
 ## 3.4.12
 ### Patch Changes
 

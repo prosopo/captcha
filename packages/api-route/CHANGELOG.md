@@ -1,5 +1,14 @@
 # @prosopo/api-route
 
+## 2.6.29
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+
 ## 2.6.28
 ### Patch Changes
 

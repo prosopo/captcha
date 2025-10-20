@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.1.21
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+
 ## 3.1.20
 ### Patch Changes
 

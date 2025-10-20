@@ -1,5 +1,11 @@
 # @prosopo/testpkg2
 
+## 1.0.25
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
 ## 1.0.24
 ### Patch Changes
 

@@ -1,5 +1,13 @@
 # @prosopo/detector
 
+## 3.3.9
+### Patch Changes
+
+- 3a027ef: Release cycle
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 3.3.8
 ### Patch Changes
 

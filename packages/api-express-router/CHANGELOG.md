@@ -1,5 +1,18 @@
 # @prosopo/api-express-router
 
+## 3.0.29
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/api-route@2.6.29
+  - @prosopo/config@3.1.21
+  - @prosopo/env@3.2.17
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 3.0.28
 ### Patch Changes
 
