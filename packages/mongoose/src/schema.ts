@@ -26,7 +26,7 @@ import { standardMiddlewarePlugin } from "./middleware.js";
  * Creates a new mongoose schema with standard middleware plugin applied
  * This is the recommended way to create schemas to ensure middleware is applied consistently
  * @param definition Schema definition
- * @param options Schema options
+ * @param options Schema options (timestamps will be set to true if not explicitly provided)
  * @returns Schema with middleware applied via plugin
  */
 export function newSchema<T = unknown>(
@@ -34,8 +34,14 @@ export function newSchema<T = unknown>(
 	options?: SchemaOptions,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Schema<T, any, any, any> {
+	// Merge options with timestamps enabled by default
+	const schemaOptions: SchemaOptions = {
+		...options,
+		timestamps: options?.timestamps !== undefined ? options.timestamps : true,
+	};
+	
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const schema = new MongooseSchema<T, any, any, any>(definition as any, options as any);
+	const schema = new MongooseSchema<T, any, any, any>(definition as any, schemaOptions as any);
 	// Apply standard middleware via plugin
 	schema.plugin(standardMiddlewarePlugin);
 	return schema;

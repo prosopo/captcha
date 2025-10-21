@@ -143,10 +143,10 @@ export function createModelFromZodSchema<T extends z.ZodRawShape>(
 	zodSchema: z.ZodObject<T>,
 	mongooseSchema?: Schema,
 ): Model<z.infer<typeof zodSchema>> {
-	// Use provided schema or convert from Zod
+	// Use provided schema or convert from Zod with timestamps enabled
 	const schema =
 		mongooseSchema ||
-		new MongooseSchema(zodToMongooseSchema(zodSchema));
+		new MongooseSchema(zodToMongooseSchema(zodSchema), { timestamps: true });
 
 	// Apply standard middleware via plugin (timestamps, version increment)
 	schema.plugin(standardMiddlewarePlugin);
