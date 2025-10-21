@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.5.8
+### Patch Changes
+
+- e5c259d: .
+
 ## 3.5.7
 ### Patch Changes
 

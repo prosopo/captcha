@@ -1,5 +1,26 @@
 # @prosopo/provider
 
+## 3.12.11
+### Patch Changes
+
+- 4b6dc9d: Block at verify
+- e5c259d: .
+- 6420187: Save iframe
+- Updated dependencies [b10a65f]
+- Updated dependencies [e5c259d]
+- Updated dependencies [6420187]
+  - @prosopo/types-database@3.3.10
+  - @prosopo/types@3.5.8
+  - @prosopo/database@3.4.10
+  - @prosopo/datasets@3.0.39
+  - @prosopo/types-env@2.7.43
+  - @prosopo/api@3.1.29
+  - @prosopo/api-express-router@3.0.30
+  - @prosopo/env@3.2.18
+  - @prosopo/keyring@2.8.32
+  - @prosopo/load-balancer@2.8.5
+  - @prosopo/user-access-policy@3.5.24
+
 ## 3.12.10
 ### Patch Changes
 
