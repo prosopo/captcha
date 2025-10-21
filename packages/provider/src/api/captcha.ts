@@ -620,6 +620,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							tokenId,
 							undefined,
 							false,
+							false,
 						),
 					);
 				}
@@ -657,6 +658,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					userId,
 					userAgent,
 					webView,
+					iFrame,
 				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				req.logger.debug(() => ({
@@ -764,6 +766,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							tokenId,
 							timestampDecayFunction(timestamp),
 							webView,
+							iFrame,
 						),
 					);
 				}
@@ -782,6 +785,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 								tokenId,
 								userAccessPolicy.solvedImagesCount,
 								webView,
+								iFrame,
 							),
 						);
 					}
@@ -791,6 +795,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 								tokenId,
 								undefined,
 								webView,
+								iFrame,
 							),
 						);
 					}
@@ -811,6 +816,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							tokenId,
 							env.config.captchas.solved.count * 2,
 							webView,
+							iFrame,
 						),
 					);
 				}
@@ -828,6 +834,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							tokenId,
 							timestampDecayFunction(timestamp),
 							webView,
+							iFrame,
 						),
 					);
 				}
@@ -861,6 +868,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							tokenId,
 							env.config.captchas.solved.count,
 							webView,
+							iFrame,
 						),
 					);
 				}
@@ -871,6 +879,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						tokenId,
 						undefined,
 						webView,
+						iFrame,
 					),
 				);
 			} catch (err) {
