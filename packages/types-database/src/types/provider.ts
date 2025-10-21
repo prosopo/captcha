@@ -342,6 +342,8 @@ export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	format: { type: String, required: true },
 	solutionTree: { type: [[String]], required: true },
 });
+// Apply standard middleware
+applyStandardMiddleware(DatasetRecordSchema);
 // Set an index on the datasetId field, ascending
 DatasetRecordSchema.index({ datasetId: 1 });
 
@@ -353,6 +355,8 @@ export const SolutionRecordSchema = new Schema<SolutionRecord>({
 	salt: { type: String, required: true },
 	solution: { type: [String], required: true },
 });
+// Apply standard middleware
+applyStandardMiddleware(SolutionRecordSchema);
 // Set an index on the captchaId field, ascending
 SolutionRecordSchema.index({ captchaId: 1 });
 
@@ -377,6 +381,8 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 	},
 	{ _id: false },
 );
+// Apply standard middleware
+applyStandardMiddleware(UserSolutionRecordSchema);
 // Set an index on the captchaId field, ascending
 UserSolutionRecordSchema.index({ captchaId: 1 });
 // Set an index on the commitment id field, descending
@@ -413,6 +419,8 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	},
 	threshold: { type: Number, required: true, default: 0.8 },
 });
+// Apply standard middleware
+applyStandardMiddleware(PendingRecordSchema);
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
 
@@ -451,6 +459,8 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
 		required: false,
 	},
 });
+// Apply standard middleware
+applyStandardMiddleware(ScheduledTaskRecordSchema);
 ScheduledTaskRecordSchema.index({ processName: 1 });
 ScheduledTaskRecordSchema.index({ processName: 1, status: 1 });
 ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
@@ -500,6 +510,8 @@ export const FrictionlessTokenRecordSchema =
 		lastUpdatedTimestamp: { type: Date, required: false },
 		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	});
+// Apply standard middleware
+applyStandardMiddleware(FrictionlessTokenRecordSchema);
 FrictionlessTokenRecordSchema.index({ createdAt: 1 });
 FrictionlessTokenRecordSchema.index({ providerSelectEntropy: 1 });
 
@@ -534,6 +546,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
 });
+// Apply standard middleware
+applyStandardMiddleware(SessionRecordSchema);
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
@@ -551,6 +565,8 @@ export const DetectorRecordSchema = new Schema<DetectorSchema>({
 	detectorKey: { type: String, required: true },
 	expiresAt: { type: Date, required: false },
 });
+// Apply standard middleware
+applyStandardMiddleware(DetectorRecordSchema);
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

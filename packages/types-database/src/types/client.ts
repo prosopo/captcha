@@ -27,6 +27,7 @@ import {
 } from "@prosopo/types";
 import type mongoose from "mongoose";
 import { Schema } from "mongoose";
+import { applyStandardMiddleware } from "@prosopo/mongoose";
 import type { IDatabase } from "./mongo.js";
 import type { ClientRecord, Tables } from "./provider.js";
 
@@ -186,6 +187,8 @@ export const AccountSchema = new Schema<AccountRecord>({
 	],
 	deletedUsers: [],
 });
+// Apply standard middleware
+applyStandardMiddleware(AccountSchema);
 
 export enum TableNames {
 	accounts = "accounts",

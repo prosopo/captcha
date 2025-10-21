@@ -14,6 +14,7 @@
 
 import type { PoWCaptcha } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
+import { applyStandardMiddleware } from "@prosopo/mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
 	type FrictionlessTokenRecord,
@@ -38,6 +39,8 @@ export const StoredSessionRecordSchema: Schema = new Schema({
 		),
 	),
 });
+// Apply standard middleware
+applyStandardMiddleware(StoredSessionRecordSchema);
 
 // Remove any index with 'sessionId' in its fields
 const existingIndexes = StoredSessionRecordSchema.indexes();
@@ -58,11 +61,15 @@ StoredSessionRecordSchema.index({ createdAt: -1 });
 export const StoredUserCommitmentRecordSchema: Schema = new Schema({
 	...UserCommitmentRecordSchema.obj,
 });
+// Apply standard middleware
+applyStandardMiddleware(StoredUserCommitmentRecordSchema);
 StoredUserCommitmentRecordSchema.index({ frictionlessTokenId: 1 });
 
 export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
 	...PoWCaptchaRecordSchema.obj,
 });
+// Apply standard middleware
+applyStandardMiddleware(StoredPoWCaptchaRecordSchema);
 StoredPoWCaptchaRecordSchema.index({ frictionlessTokenId: 1 });
 
 export interface ICaptchaDatabase extends IDatabase {
