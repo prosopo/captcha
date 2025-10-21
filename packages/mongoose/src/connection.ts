@@ -25,10 +25,11 @@ export interface MongooseConnectionOptions {
 	authSource?: string;
 	/**
 	 * Optional logger object with debug and error methods
+	 * Compatible with @prosopo/common Logger type
 	 */
 	logger?: {
-		debug: (msg: string | (() => { data?: Record<string, unknown>; msg: string })) => void;
-		error: (msg: string | (() => { err?: unknown; data?: Record<string, unknown>; msg: string })) => void;
+		debug: (fn: () => { err?: unknown; data?: Record<string, unknown>; msg?: string }) => void;
+		error: (fn: () => { err?: unknown; data?: Record<string, unknown>; msg?: string }) => void;
 	};
 }
 

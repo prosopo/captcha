@@ -240,10 +240,11 @@ export class ProviderDatabase
 		const tables = {} as Tables<TableNames>;
 		PROVIDER_TABLES.map(({ collectionName, modelName, schema }) => {
 			if (this.connection) {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				tables[collectionName] = getOrCreateModel(
 					this.connection,
 					modelName,
-					schema,
+					schema as any,
 				);
 			}
 		});

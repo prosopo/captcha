@@ -74,10 +74,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 		CAPTCHA_TABLES.map(({ collectionName, modelName, schema }) => {
 			if (this.connection) {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				this.tables[collectionName] = getOrCreateModel(
 					this.connection,
 					modelName,
-					schema,
+					schema as any,
 				);
 			}
 		});
