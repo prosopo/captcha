@@ -20,13 +20,16 @@ interface TimestampedDocument {
 }
 
 /**
- * Adds standard middleware to a mongoose schema:
+ * Mongoose plugin that adds standard middleware to a schema:
  * - Increments __v on all mutating operations
  * - Sets createdAt only on creation
  * - Updates updatedAt on all mutations
+ * - Ensures validation runs on update operations
+ * 
  * @param schema The mongoose schema to add middleware to
+ * @param options Optional plugin options (currently unused)
  */
-export function applyStandardMiddleware<T>(schema: Schema<T>): void {
+export function standardMiddlewarePlugin<T>(schema: Schema<T>, options?: unknown): void {
 	// Add timestamps if they don't already exist
 	if (!schema.path("createdAt")) {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,4 +141,13 @@ export function applyStandardMiddleware<T>(schema: Schema<T>): void {
 		}
 		next();
 	});
+}
+
+/**
+ * Legacy function that applies the standard middleware plugin to a schema
+ * @deprecated Use schema.plugin(standardMiddlewarePlugin) instead
+ * @param schema The mongoose schema to add middleware to
+ */
+export function applyStandardMiddleware<T>(schema: Schema<T>): void {
+	standardMiddlewarePlugin(schema);
 }

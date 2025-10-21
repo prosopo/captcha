@@ -16,7 +16,7 @@ export {
 	createMongooseConnection,
 	type MongooseConnectionOptions,
 } from "./connection.js";
-export { applyStandardMiddleware } from "./middleware.js";
+export { applyStandardMiddleware, standardMiddlewarePlugin } from "./middleware.js";
 export {
 	createSchemaBuilder,
 	createSchemaWithMiddleware,

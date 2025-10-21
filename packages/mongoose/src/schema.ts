@@ -20,14 +20,14 @@ import type {
 	SchemaOptions,
 } from "mongoose";
 import { Schema as MongooseSchema } from "mongoose";
-import { applyStandardMiddleware } from "./middleware.js";
+import { standardMiddlewarePlugin } from "./middleware.js";
 
 /**
- * Creates a new mongoose schema with standard middleware applied
+ * Creates a new mongoose schema with standard middleware plugin applied
  * This is the recommended way to create schemas to ensure middleware is applied consistently
  * @param definition Schema definition
  * @param options Schema options
- * @returns Schema with middleware applied
+ * @returns Schema with middleware applied via plugin
  */
 export function newSchema<T = unknown>(
 	definition?: SchemaDefinition<T>,
@@ -36,7 +36,8 @@ export function newSchema<T = unknown>(
 ): Schema<T, any, any, any> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const schema = new MongooseSchema<T, any, any, any>(definition as any, options as any);
-	applyStandardMiddleware(schema);
+	// Apply standard middleware via plugin
+	schema.plugin(standardMiddlewarePlugin);
 	return schema;
 }
 

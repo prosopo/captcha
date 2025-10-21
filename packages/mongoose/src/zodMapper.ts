@@ -15,7 +15,7 @@
 import type { Connection, Model, Query, Schema, SchemaDefinition } from "mongoose";
 import { Schema as MongooseSchema } from "mongoose";
 import { z } from "zod";
-import { applyStandardMiddleware } from "./middleware.js";
+import { standardMiddlewarePlugin } from "./middleware.js";
 import { getOrCreateModel } from "./schema.js";
 
 /**
@@ -148,8 +148,8 @@ export function createModelFromZodSchema<T extends z.ZodRawShape>(
 		mongooseSchema ||
 		new MongooseSchema(zodToMongooseSchema(zodSchema));
 
-	// Apply standard middleware (timestamps, version increment)
-	applyStandardMiddleware(schema);
+	// Apply standard middleware via plugin (timestamps, version increment)
+	schema.plugin(standardMiddlewarePlugin);
 
 	// Add pre-save validation using Zod
 	schema.pre("save", async function (
