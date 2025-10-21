@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Connection, Model, Query, Schema, SchemaDefinition } from "mongoose";
+import { Schema as MongooseSchema } from "mongoose";
 import { z } from "zod";
 import { applyStandardMiddleware } from "./middleware.js";
 import { getOrCreateModel } from "./schema.js";
@@ -145,7 +146,7 @@ export function createModelFromZodSchema<T extends z.ZodRawShape>(
 	// Use provided schema or convert from Zod
 	const schema =
 		mongooseSchema ||
-		new (require("mongoose").Schema)(zodToMongooseSchema(zodSchema));
+		new MongooseSchema(zodToMongooseSchema(zodSchema));
 
 	// Apply standard middleware (timestamps, version increment)
 	applyStandardMiddleware(schema);
@@ -159,11 +160,11 @@ export function createModelFromZodSchema<T extends z.ZodRawShape>(
 		try {
 			await zodSchema.parseAsync(this.toObject());
 			next();
-		} catch (error) {
-			if (error instanceof z.ZodError) {
-				next(new Error(`Validation failed: ${error.message}`));
+		} catch (err) {
+			if (err instanceof z.ZodError) {
+				next(new Error(`Validation failed: ${JSON.stringify(err.format())}`));
 			} else {
-				next(error as Error);
+				next(err as Error);
 			}
 		}
 	});
@@ -192,15 +193,16 @@ export function createModelFromZodSchema<T extends z.ZodRawShape>(
 								? (update.$set as Record<string, unknown>)
 								: (update as Record<string, unknown>);
 
-						// Partial validation for updates
-						await zodSchema.partial().parseAsync(updateData);
+						// Partial validation for updates (allow optional fields)
+						const partialSchema = zodSchema.partial();
+						await partialSchema.parseAsync(updateData);
 					}
 					next();
-				} catch (error) {
-					if (error instanceof z.ZodError) {
-						next(new Error(`Update validation failed: ${error.message}`));
+				} catch (err) {
+					if (err instanceof z.ZodError) {
+						next(new Error(`Update validation failed: ${JSON.stringify(err.format())}`));
 					} else {
-						next(error as Error);
+						next(err as Error);
 					}
 				}
 			},

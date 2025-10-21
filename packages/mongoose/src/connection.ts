@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { type Logger, getLogger } from "@prosopo/common";
 import { ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
 
@@ -19,28 +20,26 @@ mongoose.set("strictQuery", false);
 
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017";
 
+// Singleton connection cache keyed by connection string
+const connectionCache = new Map<string, Promise<Connection>>();
+
 export interface MongooseConnectionOptions {
 	url?: string;
 	dbname?: string;
 	authSource?: string;
-	/**
-	 * Optional logger object with debug and error methods
-	 * Compatible with @prosopo/common Logger type
-	 */
-	logger?: {
-		debug: (fn: () => { err?: unknown; data?: Record<string, unknown>; msg?: string }) => void;
-		error: (fn: () => { err?: unknown; data?: Record<string, unknown>; msg?: string }) => void;
-	};
+	logger?: Logger;
 }
 
 /**
- * Creates and manages a mongoose connection to MongoDB
+ * Creates and manages a singleton mongoose connection to MongoDB
+ * Returns the same connection instance for the same connection parameters
  * @param options Connection options
  * @returns Promise that resolves to the mongoose Connection
  */
 export async function createMongooseConnection(
 	options: MongooseConnectionOptions,
 ): Promise<Connection> {
+	const logger = options.logger || getLogger("info", import.meta.url);
 	const baseEndpoint = options.url || DEFAULT_ENDPOINT;
 	const parsedUrl = new URL(baseEndpoint);
 
@@ -55,80 +54,84 @@ export async function createMongooseConnection(
 	const safeURL = connectionUrl.replace(/\w+:\w+/, "<Credentials>");
 	const dbname = options.dbname || parsedUrl.pathname.replace("/", "");
 
-	if (options.logger) {
-		options.logger.debug(() => ({
+	// Create a cache key from connection URL and dbname
+	const cacheKey = `${connectionUrl}::${dbname}`;
+
+	// Return existing connection if available
+	if (connectionCache.has(cacheKey)) {
+		logger.debug(() => ({
 			data: { mongoUrl: safeURL },
-			msg: "Creating mongoose connection",
+			msg: "Reusing existing mongoose connection",
 		}));
+		return connectionCache.get(cacheKey)!;
 	}
 
-	return new Promise((resolve, reject) => {
+	logger.debug(() => ({
+		data: { mongoUrl: safeURL },
+		msg: "Creating new mongoose connection",
+	}));
+
+	// Create new connection promise and cache it
+	const connectionPromise = new Promise<Connection>((resolve, reject) => {
 		const connection = mongoose.createConnection(connectionUrl, {
 			dbName: dbname,
 			serverApi: ServerApiVersion.v1,
 		});
 
 		const onConnected = () => {
-			if (options.logger) {
-				options.logger.debug(() => ({
-					data: { mongoUrl: safeURL },
-					msg: "Mongoose connection opened",
-				}));
-			}
+			logger.debug(() => ({
+				data: { mongoUrl: safeURL },
+				msg: "Mongoose connection opened",
+			}));
 			resolve(connection);
 		};
 
 		const onError = (err: unknown) => {
-			if (options.logger) {
-				options.logger.error(() => ({
-					err,
-					data: { mongoUrl: safeURL },
-					msg: "Mongoose connection error",
-				}));
-			}
+			logger.error(() => ({
+				err,
+				data: { mongoUrl: safeURL },
+				msg: "Mongoose connection error",
+			}));
+			// Remove from cache on error
+			connectionCache.delete(cacheKey);
 			reject(err);
 		};
 
 		connection.once("open", onConnected);
 		connection.once("error", onError);
 
-		// Optional: handle other events
-		if (options.logger) {
-			connection.on("disconnected", () => {
-				if (options.logger) {
-					options.logger.debug(() => ({
-						data: { mongoUrl: safeURL },
-						msg: "Mongoose disconnected",
-					}));
-				}
-			});
+		// Handle other events
+		connection.on("disconnected", () => {
+			logger.debug(() => ({
+				data: { mongoUrl: safeURL },
+				msg: "Mongoose disconnected",
+			}));
+		});
 
-			connection.on("reconnected", () => {
-				if (options.logger) {
-					options.logger.debug(() => ({
-						data: { mongoUrl: safeURL },
-						msg: "Mongoose reconnected",
-					}));
-				}
-			});
+		connection.on("reconnected", () => {
+			logger.debug(() => ({
+				data: { mongoUrl: safeURL },
+				msg: "Mongoose reconnected",
+			}));
+		});
 
-			connection.on("close", () => {
-				if (options.logger) {
-					options.logger.debug(() => ({
-						data: { mongoUrl: safeURL },
-						msg: "Mongoose connection closed",
-					}));
-				}
-			});
+		connection.on("close", () => {
+			logger.debug(() => ({
+				data: { mongoUrl: safeURL },
+				msg: "Mongoose connection closed",
+			}));
+			// Remove from cache when connection closes
+			connectionCache.delete(cacheKey);
+		});
 
-			connection.on("fullsetup", () => {
-				if (options.logger) {
-					options.logger.debug(() => ({
-						data: { mongoUrl: safeURL },
-						msg: "Mongoose connection is fully setup",
-					}));
-				}
-			});
-		}
+		connection.on("fullsetup", () => {
+			logger.debug(() => ({
+				data: { mongoUrl: safeURL },
+				msg: "Mongoose connection is fully setup",
+			}));
+		});
 	});
+
+	connectionCache.set(cacheKey, connectionPromise);
+	return connectionPromise;
 }

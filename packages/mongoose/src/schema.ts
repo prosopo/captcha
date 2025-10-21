@@ -23,12 +23,13 @@ import { Schema as MongooseSchema } from "mongoose";
 import { applyStandardMiddleware } from "./middleware.js";
 
 /**
- * Creates a mongoose schema with standard middleware applied
+ * Creates a new mongoose schema with standard middleware applied
+ * This is the recommended way to create schemas to ensure middleware is applied consistently
  * @param definition Schema definition
  * @param options Schema options
  * @returns Schema with middleware applied
  */
-export function createSchemaWithMiddleware<T = unknown>(
+export function newSchema<T = unknown>(
 	definition?: SchemaDefinition<T>,
 	options?: SchemaOptions,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,12 +40,24 @@ export function createSchemaWithMiddleware<T = unknown>(
 	return schema;
 }
 
-// Cache to store models by connection and model name
-const modelCache = new WeakMap<Connection, Map<string, Model<unknown>>>();
+/**
+ * Creates a mongoose schema with standard middleware applied
+ * @deprecated Use newSchema instead
+ * @param definition Schema definition
+ * @param options Schema options
+ * @returns Schema with middleware applied
+ */
+export function createSchemaWithMiddleware<T = unknown>(
+	definition?: SchemaDefinition<T>,
+	options?: SchemaOptions,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Schema<T, any, any, any> {
+	return newSchema<T>(definition, options);
+}
 
 /**
- * Creates or retrieves a cached model on a connection
- * This allows .model() to be called multiple times without error
+ * Creates or retrieves a model on a connection
+ * Uses mongoose's overwriteModels setting to allow multiple .model() calls
  * @param connection The mongoose connection
  * @param modelName The name of the model
  * @param schema The mongoose schema
@@ -56,30 +69,11 @@ export function getOrCreateModel<T>(
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	schema: Schema<T, any, any, any>,
 ): Model<T> {
-	// Get or create the cache for this connection
-	let connectionCache = modelCache.get(connection);
-	if (!connectionCache) {
-		connectionCache = new Map<string, Model<unknown>>();
-		modelCache.set(connection, connectionCache);
-	}
-
-	// Check if model already exists in cache
-	const cachedModel = connectionCache.get(modelName);
-	if (cachedModel) {
-		return cachedModel as Model<T>;
-	}
-
-	// Check if model exists on the connection (mongoose internal cache)
-	if (connection.models[modelName]) {
-		const existingModel = connection.models[modelName] as Model<T>;
-		connectionCache.set(modelName, existingModel as Model<unknown>);
-		return existingModel;
-	}
-
-	// Create new model
-	const model = connection.model<T>(modelName, schema);
-	connectionCache.set(modelName, model as Model<unknown>);
-	return model;
+	// Enable overwriteModels to allow redefining models without errors
+	connection.set("overwriteModels", true);
+	
+	// Simply call model - mongoose will handle caching/overwriting
+	return connection.model<T>(modelName, schema);
 }
 
 /**
@@ -92,7 +86,7 @@ export function createSchemaBuilder<T>(
 	definition?: SchemaDefinition<T>,
 	options?: SchemaOptions,
 ) {
-	const schema = createSchemaWithMiddleware<T>(definition, options);
+	const schema = newSchema<T>(definition, options);
 
 	return {
 		schema,

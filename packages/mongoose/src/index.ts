@@ -21,6 +21,7 @@ export {
 	createSchemaBuilder,
 	createSchemaWithMiddleware,
 	getOrCreateModel,
+	newSchema,
 } from "./schema.js";
 export {
 	createModelFromZodSchema,

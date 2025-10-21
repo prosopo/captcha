@@ -14,7 +14,7 @@
 
 import type { PoWCaptcha } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
-import { applyStandardMiddleware } from "@prosopo/mongoose";
+import { newSchema } from "@prosopo/mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
 	type FrictionlessTokenRecord,
@@ -31,7 +31,7 @@ import {
 export type StoredSession = SessionRecord &
 	Omit<FrictionlessTokenRecord, "token">;
 
-export const StoredSessionRecordSchema: Schema = new Schema({
+export const StoredSessionRecordSchema: Schema = newSchema({
 	...SessionRecordSchema.obj,
 	...Object.fromEntries(
 		Object.entries(FrictionlessTokenRecordSchema.obj).filter(
@@ -39,8 +39,6 @@ export const StoredSessionRecordSchema: Schema = new Schema({
 		),
 	),
 });
-// Apply standard middleware
-applyStandardMiddleware(StoredSessionRecordSchema);
 
 // Remove any index with 'sessionId' in its fields
 const existingIndexes = StoredSessionRecordSchema.indexes();
@@ -58,18 +56,14 @@ StoredSessionRecordSchema.index({ sessionId: 1 }, { unique: false });
 // Redefine the index for createdAt without a TTL
 StoredSessionRecordSchema.index({ createdAt: -1 });
 
-export const StoredUserCommitmentRecordSchema: Schema = new Schema({
+export const StoredUserCommitmentRecordSchema: Schema = newSchema({
 	...UserCommitmentRecordSchema.obj,
 });
-// Apply standard middleware
-applyStandardMiddleware(StoredUserCommitmentRecordSchema);
 StoredUserCommitmentRecordSchema.index({ frictionlessTokenId: 1 });
 
-export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
+export const StoredPoWCaptchaRecordSchema: Schema = newSchema({
 	...PoWCaptchaRecordSchema.obj,
 });
-// Apply standard middleware
-applyStandardMiddleware(StoredPoWCaptchaRecordSchema);
 StoredPoWCaptchaRecordSchema.index({ frictionlessTokenId: 1 });
 
 export interface ICaptchaDatabase extends IDatabase {

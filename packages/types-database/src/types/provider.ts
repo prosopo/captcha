@@ -41,7 +41,7 @@ import {
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
-import { applyStandardMiddleware } from "@prosopo/mongoose";
+import { newSchema } from "@prosopo/mongoose";
 import {
 	type ZodType,
 	any,
@@ -72,13 +72,11 @@ const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
 const TEN_MINUTES = 10 * 60;
 
-export const ClientRecordSchema = new Schema<ClientRecord>({
+export const ClientRecordSchema = newSchema<ClientRecord>({
 	account: String,
 	settings: UserSettingsSchema,
 	tier: { type: String, enum: Tier, required: true },
 });
-// Apply standard middleware
-applyStandardMiddleware(ClientRecordSchema);
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
 
@@ -204,7 +202,7 @@ export type Tables<E extends string | number | symbol> = {
 	[key in E]: typeof Model<any>;
 };
 
-export const CaptchaRecordSchema = new Schema<Captcha>({
+export const CaptchaRecordSchema = newSchema<Captcha>({
 	captchaId: { type: String, required: true },
 	captchaContentId: { type: String, required: true },
 	assetURI: { type: String, required: false },
@@ -227,8 +225,6 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 		required: true,
 	},
 });
-// Apply standard middleware
-applyStandardMiddleware(CaptchaRecordSchema);
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
 // Set an index on the datasetId field, ascending
@@ -240,7 +236,7 @@ export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
-export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
+export const PoWCaptchaRecordSchema = newSchema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
@@ -276,8 +272,6 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	coords: { type: [[[Number]]], required: false },
 });
-// Apply standard middleware
-applyStandardMiddleware(PoWCaptchaRecordSchema);
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
@@ -286,7 +280,7 @@ PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 
-export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
+export const UserCommitmentRecordSchema = newSchema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	providerAccount: { type: String, required: true },
@@ -323,8 +317,6 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	},
 	coords: { type: [[[Number]]], required: false },
 });
-// Apply standard middleware
-applyStandardMiddleware(UserCommitmentRecordSchema);
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
 UserCommitmentRecordSchema.index({
@@ -335,19 +327,17 @@ UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
 
-export const DatasetRecordSchema = new Schema<DatasetWithIds>({
+export const DatasetRecordSchema = newSchema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
 	datasetContentId: { type: String, required: true },
 	datasetId: { type: String, required: true },
 	format: { type: String, required: true },
 	solutionTree: { type: [[String]], required: true },
 });
-// Apply standard middleware
-applyStandardMiddleware(DatasetRecordSchema);
 // Set an index on the datasetId field, ascending
 DatasetRecordSchema.index({ datasetId: 1 });
 
-export const SolutionRecordSchema = new Schema<SolutionRecord>({
+export const SolutionRecordSchema = newSchema<SolutionRecord>({
 	captchaId: { type: String, required: true },
 	captchaContentId: { type: String, required: true },
 	datasetId: { type: String, required: true },
@@ -355,8 +345,6 @@ export const SolutionRecordSchema = new Schema<SolutionRecord>({
 	salt: { type: String, required: true },
 	solution: { type: [String], required: true },
 });
-// Apply standard middleware
-applyStandardMiddleware(SolutionRecordSchema);
 // Set an index on the captchaId field, ascending
 SolutionRecordSchema.index({ captchaId: 1 });
 
@@ -368,7 +356,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 });
 export type UserSolutionRecord = mongoose.Document &
 	zInfer<typeof UserSolutionSchema>;
-export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
+export const UserSolutionRecordSchema = newSchema<UserSolutionRecord>(
 	{
 		captchaId: { type: String, required: true },
 		captchaContentId: { type: String, required: true },
@@ -381,8 +369,6 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 	},
 	{ _id: false },
 );
-// Apply standard middleware
-applyStandardMiddleware(UserSolutionRecordSchema);
 // Set an index on the captchaId field, ascending
 UserSolutionRecordSchema.index({ captchaId: 1 });
 // Set an index on the commitment id field, descending
@@ -405,7 +391,7 @@ export type PendingCaptchaRequestMongoose = Omit<
 
 export type FrictionlessTokenId = mongoose.Schema.Types.ObjectId;
 
-export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
+export const PendingRecordSchema = newSchema<PendingCaptchaRequestMongoose>({
 	accountId: { type: String, required: true },
 	pending: { type: Boolean, required: true },
 	salt: { type: String, required: true },
@@ -419,8 +405,6 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	},
 	threshold: { type: Number, required: true, default: 0.8 },
 });
-// Apply standard middleware
-applyStandardMiddleware(PendingRecordSchema);
 // Set an index on the requestHash field, descending
 PendingRecordSchema.index({ requestHash: -1 });
 
@@ -443,7 +427,7 @@ type ScheduledTaskMongoose = Omit<ScheduledTaskRecord, "datetime"> & {
 	datetime: Date;
 };
 
-export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
+export const ScheduledTaskRecordSchema = newSchema<ScheduledTaskMongoose>({
 	processName: { type: String, enum: ScheduledTaskNames, required: true },
 	datetime: { type: Date, required: true, expires: ONE_WEEK },
 	updated: { type: Number, required: false },
@@ -459,8 +443,6 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
 		required: false,
 	},
 });
-// Apply standard middleware
-applyStandardMiddleware(ScheduledTaskRecordSchema);
 ScheduledTaskRecordSchema.index({ processName: 1 });
 ScheduledTaskRecordSchema.index({ processName: 1, status: 1 });
 ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
@@ -492,7 +474,7 @@ type FrictionlessTokenMongoose = FrictionlessTokenRecord & {
 };
 
 export const FrictionlessTokenRecordSchema =
-	new Schema<FrictionlessTokenMongoose>({
+	newSchema<FrictionlessTokenMongoose>({
 		token: { type: String, required: true, unique: true },
 		score: { type: Number, required: true },
 		threshold: { type: Number, required: true },
@@ -510,8 +492,6 @@ export const FrictionlessTokenRecordSchema =
 		lastUpdatedTimestamp: { type: Date, required: false },
 		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	});
-// Apply standard middleware
-applyStandardMiddleware(FrictionlessTokenRecordSchema);
 FrictionlessTokenRecordSchema.index({ createdAt: 1 });
 FrictionlessTokenRecordSchema.index({ providerSelectEntropy: 1 });
 
@@ -531,7 +511,7 @@ export type Session = {
 
 export type SessionRecord = mongoose.Document & Session;
 
-export const SessionRecordSchema = new Schema<SessionRecord>({
+export const SessionRecordSchema = newSchema<SessionRecord>({
 	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
 	tokenId: {
@@ -546,8 +526,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
 });
-// Apply standard middleware
-applyStandardMiddleware(SessionRecordSchema);
 
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
@@ -560,13 +538,11 @@ export type DetectorKey = {
 };
 
 export type DetectorSchema = mongoose.Document & DetectorKey;
-export const DetectorRecordSchema = new Schema<DetectorSchema>({
+export const DetectorRecordSchema = newSchema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
 	detectorKey: { type: String, required: true },
 	expiresAt: { type: Date, required: false },
 });
-// Apply standard middleware
-applyStandardMiddleware(DetectorRecordSchema);
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
