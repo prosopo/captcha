@@ -41,6 +41,7 @@ import {
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
+import { applyStandardMiddleware } from "@prosopo/mongoose";
 import {
 	type ZodType,
 	any,
@@ -76,6 +77,8 @@ export const ClientRecordSchema = new Schema<ClientRecord>({
 	settings: UserSettingsSchema,
 	tier: { type: String, enum: Tier, required: true },
 });
+// Apply standard middleware
+applyStandardMiddleware(ClientRecordSchema);
 // Set an index on the account field, ascending
 ClientRecordSchema.index({ account: 1 });
 
@@ -224,6 +227,8 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 		required: true,
 	},
 });
+// Apply standard middleware
+applyStandardMiddleware(CaptchaRecordSchema);
 // Set an index on the captchaId field, ascending
 CaptchaRecordSchema.index({ captchaId: 1 });
 // Set an index on the datasetId field, ascending
@@ -271,6 +276,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	},
 	coords: { type: [[[Number]]], required: false },
 });
+// Apply standard middleware
+applyStandardMiddleware(PoWCaptchaRecordSchema);
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
@@ -316,6 +323,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	},
 	coords: { type: [[[Number]]], required: false },
 });
+// Apply standard middleware
+applyStandardMiddleware(UserCommitmentRecordSchema);
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
 UserCommitmentRecordSchema.index({
