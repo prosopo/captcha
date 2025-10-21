@@ -191,6 +191,25 @@ export class FrictionlessManager extends CaptchaManager {
 		return botScore;
 	}
 
+	async scoreIncreaseWebView(
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		this.logger.debug(() => ({
+			msg: "WebView detected",
+		}));
+		botScore += this.config.penalties.PENALTY_WEBVIEW;
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				webView: this.config.penalties.PENALTY_WEBVIEW,
+			},
+		});
+		return botScore;
+	}
+
 	async scoreIncreaseTimestamp(
 		timestamp: number,
 		baseBotScore: number,
