@@ -583,7 +583,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 					},
 				}));
 
-				if (disallowWebView === true && (tokenRecord.scoreComponents.webView || 0) > 0) {
+				if (
+					disallowWebView === true &&
+					(tokenRecord.scoreComponents.webView || 0) > 0
+				) {
 					this.logger.info(() => ({
 						msg: "Disallowing webview access - user not verified",
 					}));
