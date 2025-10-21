@@ -90,8 +90,25 @@ export function applyStandardMiddleware<T>(schema: Schema<T>): void {
 		});
 	}
 
+	// Add validation middleware for update operations
+	for (const method of updateMethods) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		schema.pre(method as any, function (this: Query<unknown, unknown>, next: (err?: Error) => void) {
+			// Set runValidators to true to ensure validation runs on updates
+			this.setOptions({ runValidators: true });
+			next();
+		});
+	}
+
+	// Also ensure validation runs on update() method
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	schema.pre("update" as any, function (this: Query<unknown, unknown>, next: (err?: Error) => void) {
+		this.setOptions({ runValidators: true });
+		next();
+	});
+
 	// Middleware for replaceOne
-	schema.pre("replaceOne", function (this: Query<unknown, unknown>, next) {
+	schema.pre("replaceOne", function (this: Query<unknown, unknown>, next: (err?: Error) => void) {
 		const replacement = this.getUpdate();
 
 		if (replacement && typeof replacement === "object") {
@@ -106,7 +123,7 @@ export function applyStandardMiddleware<T>(schema: Schema<T>): void {
 	});
 
 	// Middleware for insertMany - only set createdAt, not updatedAt
-	schema.pre("insertMany", function (next, docs: unknown[]) {
+	schema.pre("insertMany", function (next: (err?: Error) => void, docs: unknown[]) {
 		const now = new Date();
 		for (const doc of docs) {
 			if (doc && typeof doc === "object") {

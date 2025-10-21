@@ -20,9 +20,6 @@ mongoose.set("strictQuery", false);
 
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017";
 
-// Singleton connection cache keyed by connection string
-const connectionCache = new Map<string, Promise<Connection>>();
-
 export interface MongooseConnectionOptions {
 	url?: string;
 	dbname?: string;
@@ -31,8 +28,7 @@ export interface MongooseConnectionOptions {
 }
 
 /**
- * Creates and manages a singleton mongoose connection to MongoDB
- * Returns the same connection instance for the same connection parameters
+ * Creates and manages a mongoose connection to MongoDB
  * @param options Connection options
  * @returns Promise that resolves to the mongoose Connection
  */
@@ -54,34 +50,24 @@ export async function createMongooseConnection(
 	const safeURL = connectionUrl.replace(/\w+:\w+/, "<Credentials>");
 	const dbname = options.dbname || parsedUrl.pathname.replace("/", "");
 
-	// Create a cache key from connection URL and dbname
-	const cacheKey = `${connectionUrl}::${dbname}`;
-
-	// Return existing connection if available
-	if (connectionCache.has(cacheKey)) {
-		logger.debug(() => ({
-			data: { mongoUrl: safeURL },
-			msg: "Reusing existing mongoose connection",
-		}));
-		return connectionCache.get(cacheKey)!;
-	}
-
 	logger.debug(() => ({
 		data: { mongoUrl: safeURL },
 		msg: "Creating new mongoose connection",
 	}));
 
-	// Create new connection promise and cache it
-	const connectionPromise = new Promise<Connection>((resolve, reject) => {
+	// Create new connection promise
+	return new Promise<Connection>((resolve, reject) => {
 		const connection = mongoose.createConnection(connectionUrl, {
 			dbName: dbname,
 			serverApi: ServerApiVersion.v1,
+			socketTimeoutMS: 30000, // 30 seconds
+			heartbeatFrequencyMS: 10000, // 10 seconds
 		});
 
 		const onConnected = () => {
 			logger.debug(() => ({
 				data: { mongoUrl: safeURL },
-				msg: "Mongoose connection opened",
+				msg: "Mongoose connection connected",
 			}));
 			resolve(connection);
 		};
@@ -92,12 +78,11 @@ export async function createMongooseConnection(
 				data: { mongoUrl: safeURL },
 				msg: "Mongoose connection error",
 			}));
-			// Remove from cache on error
-			connectionCache.delete(cacheKey);
 			reject(err);
 		};
 
-		connection.once("open", onConnected);
+		// Wait for 'connected' event instead of 'open'
+		connection.once("connected", onConnected);
 		connection.once("error", onError);
 
 		// Handle other events
@@ -120,8 +105,6 @@ export async function createMongooseConnection(
 				data: { mongoUrl: safeURL },
 				msg: "Mongoose connection closed",
 			}));
-			// Remove from cache when connection closes
-			connectionCache.delete(cacheKey);
 		});
 
 		connection.on("fullsetup", () => {
@@ -131,7 +114,4 @@ export async function createMongooseConnection(
 			}));
 		});
 	});
-
-	connectionCache.set(cacheKey, connectionPromise);
-	return connectionPromise;
 }
