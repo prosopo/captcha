@@ -801,7 +801,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					}
 				}
 
-				// If the client has specified a WebView config and the user is using a WebView, send an image captcha
 				if (clientRecord.settings.disallowWebView && webView) {
 					tasks.logger.info(() => ({
 						msg: "WebView detected",

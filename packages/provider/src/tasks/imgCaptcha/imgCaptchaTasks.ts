@@ -486,6 +486,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
+		disallowWebView?: boolean,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -581,6 +582,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 						score: score,
 					},
 				}));
+
+				if (disallowWebView && (tokenRecord.scoreComponents.webView || 0) > 0) {
+					this.logger.info(() => ({
+						msg: "Disallowing webview access - user not verified",
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
 			}
 		}
 
