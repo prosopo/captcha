@@ -69,6 +69,7 @@ export class FrictionlessManager extends CaptchaManager {
 		solvedImagesCount?: number,
 		powDifficulty?: number,
 		webView = false,
+		iFrame = false,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: uuidv4(),
@@ -78,6 +79,7 @@ export class FrictionlessManager extends CaptchaManager {
 			solvedImagesCount,
 			powDifficulty,
 			webView,
+			iFrame,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -110,6 +112,7 @@ export class FrictionlessManager extends CaptchaManager {
 		tokenId: ObjectId,
 		solvedImagesCount?: number,
 		webView = false,
+		iFrame = false,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
 			tokenId,
@@ -117,6 +120,7 @@ export class FrictionlessManager extends CaptchaManager {
 			solvedImagesCount,
 			undefined,
 			webView,
+			iFrame,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
@@ -129,6 +133,7 @@ export class FrictionlessManager extends CaptchaManager {
 		tokenId: ObjectId,
 		powDifficulty?: number,
 		webView = false,
+		iFrame = false,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
 			tokenId,
@@ -136,6 +141,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			powDifficulty,
 			webView,
+			iFrame,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
