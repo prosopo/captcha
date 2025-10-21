@@ -98,6 +98,10 @@ export const UserSettingsSchema = new Schema({
 	imageThreshold: Number,
 	ipValidationRules: IPValidationRulesSchema,
 	domains: [String],
+	disallowWebView: {
+		type: Boolean,
+		default: false,
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
