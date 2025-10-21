@@ -101,7 +101,7 @@ export const UserSettingsSchema = new Schema({
 	disallowWebView: {
 		type: Boolean,
 		default: false,
-	}
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
