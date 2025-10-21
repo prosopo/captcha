@@ -14,6 +14,7 @@
 
 import type { PoWCaptcha } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
+import { newSchema } from "@prosopo/mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
 	type FrictionlessTokenRecord,
@@ -30,7 +31,7 @@ import {
 export type StoredSession = SessionRecord &
 	Omit<FrictionlessTokenRecord, "token">;
 
-export const StoredSessionRecordSchema: Schema = new Schema({
+export const StoredSessionRecordSchema: Schema = newSchema({
 	...SessionRecordSchema.obj,
 	...Object.fromEntries(
 		Object.entries(FrictionlessTokenRecordSchema.obj).filter(
@@ -55,12 +56,12 @@ StoredSessionRecordSchema.index({ sessionId: 1 }, { unique: false });
 // Redefine the index for createdAt without a TTL
 StoredSessionRecordSchema.index({ createdAt: -1 });
 
-export const StoredUserCommitmentRecordSchema: Schema = new Schema({
+export const StoredUserCommitmentRecordSchema: Schema = newSchema({
 	...UserCommitmentRecordSchema.obj,
 });
 StoredUserCommitmentRecordSchema.index({ frictionlessTokenId: 1 });
 
-export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
+export const StoredPoWCaptchaRecordSchema: Schema = newSchema({
 	...PoWCaptchaRecordSchema.obj,
 });
 StoredPoWCaptchaRecordSchema.index({ frictionlessTokenId: 1 });
