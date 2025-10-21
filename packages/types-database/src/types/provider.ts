@@ -505,6 +505,7 @@ export type Session = {
 	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
 	webView: boolean;
+	iFrame: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -522,6 +523,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
 	webView: { type: Boolean, required: true, default: false },
+	iFrame: { type: Boolean, required: true, default: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
