@@ -385,7 +385,20 @@ export const deepValidateIpAddress = async (
 			// Format error - return the error
 			return standardValidation;
 		}
-		// IP mismatch - continue to distance checking
+		// IP mismatch - continue to distance checking if not forcing consistent IPs
+		if (ipValidationRules?.forceConsistentIp === true) {
+			logger.info(() => ({
+				msg: "IP validation failed - forceConsistentIp is true",
+				data: {
+					challengeIp: challengeIpAddress.address,
+					providedIp: ip,
+				},
+			}));
+			return {
+				isValid: false,
+				errorMessage: standardValidation.errorMessage,
+			};
+		}
 	} else {
 		// IPs match exactly - return valid without distance checking
 		return { isValid: true };

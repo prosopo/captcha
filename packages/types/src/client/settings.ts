@@ -92,6 +92,7 @@ export const IPValidationRulesSchema = object({
 		.default(requireAllConditionsDefault),
 	// overrides are now lightweight, not recursive
 	countryOverrides: z.record(string(), IPValidationSchema).optional(),
+	forceConsistentIp: boolean().optional().default(false),
 });
 
 export const ClientSettingsSchema = object({
