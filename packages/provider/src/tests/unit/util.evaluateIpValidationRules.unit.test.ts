@@ -41,6 +41,7 @@ describe("evaluateIpValidationRules", () => {
 		distanceThresholdKm: 1000,
 		abuseScoreThreshold: 0.005,
 		requireAllConditions: false,
+		forceConsistentIp: false,
 	};
 
 	it("returns Allow when no conditions are met", () => {
@@ -276,6 +277,7 @@ describe("evaluateIpValidationRules", () => {
 			distanceThresholdKm: 1000,
 			abuseScoreThreshold: 0.005,
 			requireAllConditions: true,
+			forceConsistentIp: false,
 		};
 		const comparison: IPComparisonResult = {
 			ipsMatch: false,
