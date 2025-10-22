@@ -73,6 +73,11 @@ export const IPValidationRulesSchema = new Schema({
 		default: requireAllConditionsDefault,
 	},
 
+	forceConsistentIp: {
+		type: Boolean,
+		default: false,
+	},
+
 	countryOverrides: {
 		type: Map,
 		of: new Schema({
