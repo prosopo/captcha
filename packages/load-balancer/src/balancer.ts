@@ -34,7 +34,7 @@ export type HardcodedProvider = z.infer<typeof HardcodedProviderSchema>;
 
 type hostedProviders = Record<string, unknown>;
 
-const convertHostedProvider = (
+export const convertHostedProvider = (
 	provider: hostedProviders,
 ): HardcodedProvider[] => {
 	const providers = Object.values(provider).map((p) =>
