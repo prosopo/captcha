@@ -51,6 +51,6 @@ export const getBotScore = async (
 		userAgent,
 		isWebView,
 		isIframe,
-        contextAwareEntropy
+		contextAwareEntropy,
 	};
 };

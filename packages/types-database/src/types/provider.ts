@@ -791,7 +791,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	setClientEntropy(
 		account: string,
-		stats: { mean: number; stdDev: number; avgZScore: number; zScores: number },
+		stats: { mean: number; stdDev: number; avgZScore: number },
 	): Promise<void>;
 
 	getClientEntropy(account: string): Promise<number | undefined>;

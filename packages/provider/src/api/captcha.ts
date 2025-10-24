@@ -661,7 +661,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					userAgent,
 					webView,
 					iFrame,
-                    contextAwareEntropy
+					contextAwareEntropy,
 				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				req.logger.debug(() => ({
@@ -675,12 +675,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						webView,
 					},
 				}));
-				const {
-					baseBotScore,
-					timestamp,
-					providerSelectEntropy,
-					contextAwareEntropy,
-				} = await tasks.frictionlessManager.decryptPayload(token);
 
 				let botScore = baseBotScore + lScore;
 

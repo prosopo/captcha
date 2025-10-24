@@ -64,7 +64,7 @@ const customDetectBot: BotDetectionFunction = async (
 		container,
 		restartFn,
 		userAccount.account.address,
-        config.contextAware,
+		config.contextAware,
 	)) as { token: string; provider?: RandomProvider };
 
 	if (!config.account.address) {

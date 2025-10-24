@@ -36,6 +36,7 @@ const defaultUserSettings: IUserSettings = {
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	disallowWebView: false,
+	contextAware: false,
 };
 
 describe("CaptchaManager", () => {
@@ -145,6 +146,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.pow,
 				mockEnv,
+				0,
 				"sessionId",
 				undefined,
 				"127.0.0.1",
@@ -183,6 +185,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.image,
 				mockEnv,
+				0,
 				"sessionId",
 				undefined,
 				"127.0.0.1",
@@ -218,6 +221,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.image,
 				mockEnv,
+				0,
 				"sessionId",
 			);
 
@@ -251,6 +255,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.pow,
 				mockEnv,
+				0,
 				"sessionId",
 			);
 
@@ -283,6 +288,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.image,
 				mockEnv,
+				0,
 				sessionId,
 			);
 
@@ -314,6 +320,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.pow,
 				mockEnv,
+				0,
 				sessionId,
 			);
 
@@ -471,6 +478,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.image,
 				mockEnv,
+				0,
 				"sessionId",
 				undefined,
 				"192.168.1.100",
@@ -510,6 +518,7 @@ describe("CaptchaManager", () => {
 				},
 				CaptchaType.image,
 				mockEnv,
+				0,
 				"sessionId",
 				undefined,
 				undefined, // No currentIP provided

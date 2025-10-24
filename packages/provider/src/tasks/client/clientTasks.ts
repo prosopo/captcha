@@ -350,7 +350,6 @@ export class ClientTaskManager {
 				mean,
 				stdDev,
 				avgZScore,
-				zScores,
 			});
 		}
 	}
