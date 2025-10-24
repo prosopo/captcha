@@ -452,6 +452,7 @@ export interface ScoreComponents {
 	timeout?: number;
 	accessPolicy?: number;
 	unverifiedHost?: number;
+	webView?: number;
 }
 
 export interface FrictionlessToken {
@@ -481,6 +482,8 @@ export const FrictionlessTokenRecordSchema =
 			lScore: { type: Number, required: false },
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
+			unverifiedHost: { type: Number, required: false },
+			webView: { type: Number, required: false },
 		},
 		providerSelectEntropy: { type: Number, required: true },
 		ipAddress: CompositeIpAddressRecordSchemaObj,
@@ -501,6 +504,8 @@ export type Session = {
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
+	webView: boolean;
+	iFrame: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -517,6 +522,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
+	webView: { type: Boolean, required: true, default: false },
+	iFrame: { type: Boolean, required: true, default: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });

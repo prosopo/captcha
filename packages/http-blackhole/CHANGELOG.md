@@ -1,5 +1,38 @@
 # @prosopo/http-blackhole
 
+## 1.0.20
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
+## 1.0.19
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+
+## 1.0.18
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/config@3.1.19
+
+## 1.0.17
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/config@3.1.18
+
+## 1.0.16
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/config@3.1.17
+
 ## 1.0.15
 ### Patch Changes
 

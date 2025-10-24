@@ -267,6 +267,7 @@ function registerSiteKey(
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
 			imageThreshold: 0.8,
+			disallowWebView: false,
 		};
 
 		// Use cy.request() to ensure Cypress correctly queues the request

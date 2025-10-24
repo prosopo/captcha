@@ -12,35 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import { AdminApiPaths } from "@prosopo/types";
 import type { Tasks } from "../../tasks/index.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
 import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
+import { ApiToggleMaintenanceModeEndpoint } from "./apiToggleMaintenanceModeEndpoint.js";
 import { ApiUpdateDetectorKeyEndpoint } from "./apiUpdateDetectorKeyEndpoint.js";
 
 class ApiAdminRoutesProvider implements ApiRoutesProvider {
 	public constructor(private readonly tasks: Tasks) {}
 
-	public getRoutes(): ApiRoute[] {
-		return [
-			{
-				path: AdminApiPaths.SiteKeyRegister,
-				endpoint: new ApiRegisterSiteKeyEndpoint(this.tasks.clientTaskManager),
-			},
-			{
-				path: AdminApiPaths.UpdateDetectorKey,
-				endpoint: new ApiUpdateDetectorKeyEndpoint(
-					this.tasks.clientTaskManager,
-				),
-			},
-			{
-				path: AdminApiPaths.RemoveDetectorKey,
-				endpoint: new ApiRemoveDetectorKeyEndpoint(
-					this.tasks.clientTaskManager,
-				),
-			},
-		];
+	public getRoutes(): ApiRoutes {
+		return {
+			[AdminApiPaths.SiteKeyRegister]: new ApiRegisterSiteKeyEndpoint(
+				this.tasks.clientTaskManager,
+			),
+			[AdminApiPaths.UpdateDetectorKey]: new ApiUpdateDetectorKeyEndpoint(
+				this.tasks.clientTaskManager,
+			),
+			[AdminApiPaths.RemoveDetectorKey]: new ApiRemoveDetectorKeyEndpoint(
+				this.tasks.clientTaskManager,
+			),
+			[AdminApiPaths.ToggleMaintenanceMode]:
+				new ApiToggleMaintenanceModeEndpoint(),
+		};
 	}
 }
 

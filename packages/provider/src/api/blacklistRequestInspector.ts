@@ -11,15 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { Logger } from "@prosopo/common";
 import { ApiPrefix } from "@prosopo/types";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
-	ScopeMatch,
-	type UserScopeApiInput,
-	type UserScopeApiOutput,
-	userScopeInputSchema,
+	FilterScopeMatch,
+	type UserScope,
+	type UserScopeRecord,
+	userScopeInput,
 } from "@prosopo/user-access-policy";
 import { uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
@@ -29,10 +30,11 @@ export const getRequestUserScope = (
 	ja4?: string,
 	ip?: string,
 	user?: string,
-): Pick<UserScopeApiInput, "userId" | "ja4Hash" | "userAgent" | "ip"> => {
+): Pick<UserScopeRecord, "userId" | "ja4Hash" | "userAgent" | "ip"> => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
 		: undefined;
+
 	return {
 		...(user && { userId: user }),
 		...(ja4 && { ja4Hash: ja4 }),
@@ -59,9 +61,7 @@ const getPrioritisedUserScopes = (userScope: {
 
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
-	userScope: {
-		[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
-	},
+	userScope: UserScope | UserScopeRecord,
 	clientId?: string,
 ) => {
 	const prioritisedUserScopes = getPrioritisedUserScopes(userScope);
@@ -74,7 +74,7 @@ export const getPrioritisedAccessRule = async (
 				continue;
 			}
 
-			const parsedUserScope = userScopeInputSchema.parse(scope);
+			const parsedUserScope = userScopeInput.parse(scope);
 
 			const filter = {
 				...(clientOrUndefined && {
@@ -82,11 +82,11 @@ export const getPrioritisedAccessRule = async (
 						clientId: clientOrUndefined,
 					},
 				}),
-				policyScopeMatch: ScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
 
 				userScope: parsedUserScope,
 
-				userScopeMatch: ScopeMatch.Exact,
+				userScopeMatch: FilterScopeMatch.Exact,
 			};
 
 			policyPromises.push(userAccessRulesStorage.findRules(filter, true, true));

@@ -68,6 +68,8 @@ export class FrictionlessManager extends CaptchaManager {
 		captchaType: CaptchaType,
 		solvedImagesCount?: number,
 		powDifficulty?: number,
+		webView = false,
+		iFrame = false,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: uuidv4(),
@@ -76,6 +78,8 @@ export class FrictionlessManager extends CaptchaManager {
 			captchaType,
 			solvedImagesCount,
 			powDifficulty,
+			webView,
+			iFrame,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -107,11 +111,16 @@ export class FrictionlessManager extends CaptchaManager {
 	async sendImageCaptcha(
 		tokenId: ObjectId,
 		solvedImagesCount?: number,
+		webView = false,
+		iFrame = false,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
 			tokenId,
 			CaptchaType.image,
 			solvedImagesCount,
+			undefined,
+			webView,
+			iFrame,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
@@ -123,11 +132,16 @@ export class FrictionlessManager extends CaptchaManager {
 	async sendPowCaptcha(
 		tokenId: ObjectId,
 		powDifficulty?: number,
+		webView = false,
+		iFrame = false,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
 			tokenId,
 			CaptchaType.pow,
+			undefined,
 			powDifficulty,
+			webView,
+			iFrame,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -172,6 +186,25 @@ export class FrictionlessManager extends CaptchaManager {
 			scoreComponents: {
 				baseScore: baseBotScore,
 				unverifiedHost: this.config.penalties.PENALTY_UNVERIFIED_HOST,
+			},
+		});
+		return botScore;
+	}
+
+	async scoreIncreaseWebView(
+		baseBotScore: number,
+		botScore: number,
+		tokenId: FrictionlessTokenId,
+	) {
+		this.logger.debug(() => ({
+			msg: "WebView detected",
+		}));
+		botScore += this.config.penalties.PENALTY_WEBVIEW;
+		await this.db.updateFrictionlessTokenRecord(tokenId, {
+			score: botScore,
+			scoreComponents: {
+				baseScore: baseBotScore,
+				webView: this.config.penalties.PENALTY_WEBVIEW,
 			},
 		});
 		return botScore;
@@ -248,6 +281,10 @@ export class FrictionlessManager extends CaptchaManager {
 		let baseBotScore: number | undefined;
 		let timestamp: number | undefined;
 		let providerSelectEntropy: number | undefined;
+		let userId: string | undefined;
+		let userAgent: string | undefined;
+		let webView: boolean | undefined;
+		let iFrame: boolean | undefined;
 		let contextAwareEntropy: number | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
@@ -261,6 +298,10 @@ export class FrictionlessManager extends CaptchaManager {
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
 				const p = decrypted.providerSelectEntropy;
+				const a = decrypted.userId;
+				const u = decrypted.userAgent;
+				const w = decrypted.isWebView;
+				const i = decrypted.isIframe;
 				const c = decrypted.contextAwareEntropy;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
@@ -269,11 +310,19 @@ export class FrictionlessManager extends CaptchaManager {
 						baseBotScore: s,
 						timestamp: t,
 						entropy: p,
+						userId: a,
+						userAgent: u,
+						webView: w,
+						iFrame: i,
 					},
 				}));
 				baseBotScore = s;
 				timestamp = t;
 				providerSelectEntropy = p;
+				userId = a;
+				userAgent = u;
+				webView = w;
+				iFrame = i;
 				contextAwareEntropy = c;
 				break;
 			} catch (err) {
@@ -311,6 +360,10 @@ export class FrictionlessManager extends CaptchaManager {
 				baseBotScore: baseBotScore,
 				timestamp: timestamp,
 				entropy: providerSelectEntropy,
+				userId,
+				userAgent,
+				webView,
+				iFrame,
 				...(contextAwareEntropy && { contextAwareEntropy }),
 			},
 		}));
@@ -320,6 +373,10 @@ export class FrictionlessManager extends CaptchaManager {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),
 			providerSelectEntropy: Number(providerSelectEntropy),
+			userId,
+			userAgent,
+			webView,
+			iFrame,
 			contextAwareEntropy: Number(contextAwareEntropy),
 		};
 	}

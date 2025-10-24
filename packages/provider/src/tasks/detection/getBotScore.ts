@@ -28,6 +28,10 @@ export const getBotScore = async (
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
 	const providerSelectEntropy: number = result.providerSelectEntropy;
+	const userId: string = result.userId;
+	const userAgent: string = result.userAgent;
+	const isWebView: boolean = result.isWebView ?? false;
+	const isIframe: boolean = result.isIframe ?? false;
 	const contextAwareEntropy: number | undefined = result.contextAwareEntropy;
 
 	if (baseBotScore === undefined) {
@@ -43,6 +47,10 @@ export const getBotScore = async (
 		baseBotScore,
 		timestamp,
 		providerSelectEntropy,
-		contextAwareEntropy,
+		userId,
+		userAgent,
+		isWebView,
+		isIframe,
+        contextAwareEntropy
 	};
 };

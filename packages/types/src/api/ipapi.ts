@@ -155,8 +155,8 @@ export interface IPInfoResult {
 	vpnType?: "exit_node" | "vpn_server";
 
 	// Risk scoring
-	abuserScore?: string;
-	companyAbuserScore?: string;
+	abuserScore?: number;
+	companyAbuserScore?: number;
 
 	// Raw response for debugging
 	rawResponse?: IPApiResponse;
@@ -183,8 +183,10 @@ type IPDetails = {
 	connectionType: IPConnectionType;
 	isVpnOrProxy: boolean;
 	country?: string;
+	countryCode?: string;
 	city?: string;
 	coordinates?: { latitude: number; longitude: number };
+	abuserScore?: number;
 };
 
 export type IPComparison = {

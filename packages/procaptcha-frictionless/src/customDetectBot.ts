@@ -54,16 +54,18 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
+	const ext = new (await ExtensionLoader(config.web2))();
+	const userAccount = await ext.getAccount(config);
+
 	const detect = await DetectorLoader();
 	const botScore = (await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
 		container,
 		restartFn,
-		config.contextAware,
+		userAccount.account.address,
+        config.contextAware,
 	)) as { token: string; provider?: RandomProvider };
-	const ext = new (await ExtensionLoader(config.web2))();
-	const userAccount = await ext.getAccount(config);
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
