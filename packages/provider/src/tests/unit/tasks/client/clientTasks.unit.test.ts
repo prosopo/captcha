@@ -146,7 +146,7 @@ describe("ClientTaskManager", () => {
 						_id,
 						processName: taskName,
 						status,
-						datetime: collections.schedulers.time,
+						datetime: new Date(collections.schedulers.time),
 					});
 					collections.schedulers.nextID += 1;
 					collections.schedulers.time += 1;
@@ -163,7 +163,7 @@ describe("ClientTaskManager", () => {
 					const task = collections.schedulers.records[taskID];
 					task.status = status;
 					task.result = result;
-					task.updated = collections.schedulers.time;
+					task.updated = new Date(collections.schedulers.time);
 					collections.schedulers.time += 1;
 				},
 			),
