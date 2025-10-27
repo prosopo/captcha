@@ -27,7 +27,7 @@ export * from "./version.js";
 export * from "./hex.js";
 export * from "./checks.js";
 export * from "./ip.js";
-export * from "./date.js"
+export * from "./date.js";
 export { verifyRecency } from "./verifyRecency.js";
 export { getIPAddress } from "./ip.js";
 export * from "./fetchWithEtag.js";

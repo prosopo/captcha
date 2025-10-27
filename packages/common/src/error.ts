@@ -219,7 +219,10 @@ export const unwrapError = (
 		const contextCode =
 			typeof err.context.code === "number" ? err.context.code : undefined;
 		code = contextCode ?? jsonError.code;
-		jsonError.data = err.context.data || jsonError.data;
+		jsonError.data =
+			(err.context.data as Record<string, unknown>) ||
+			(jsonError.data as Record<string, unknown>) ||
+			jsonError.data;
 		// Only move to the next error if ProsopoBaseError or ZodError
 		if (
 			err.context.error &&

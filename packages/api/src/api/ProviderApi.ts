@@ -304,8 +304,7 @@ export default class ProviderApi
 
 	public toggleMaintenanceMode(
 		enabled: boolean,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse> {
 		return this.post(
 			AdminApiPaths.ToggleMaintenanceMode,
