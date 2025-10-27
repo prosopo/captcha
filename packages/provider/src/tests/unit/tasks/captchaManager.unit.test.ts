@@ -234,11 +234,6 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
 
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-			});
-
 			const sessionId = "sessionId";
 
 			const result = await captchaManager.isValidRequest(
