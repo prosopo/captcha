@@ -39,7 +39,7 @@ import {
 	TimestampSchema,
 } from "@prosopo/types";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
 	type ZodType,

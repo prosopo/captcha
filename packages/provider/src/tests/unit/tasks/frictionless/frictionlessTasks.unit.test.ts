@@ -24,11 +24,11 @@ import {
 	AccessPolicyType,
 } from "@prosopo/user-access-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import {
 	DEFAULT_ENTROPY,
 	FrictionlessManager,
 } from "../../../../tasks/frictionless/frictionlessTasks.js";
-import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 
 describe("Frictionless Task Manager", () => {
 	let db: IProviderDatabase;

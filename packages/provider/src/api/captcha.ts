@@ -130,15 +130,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					)
 				)[0];
 
-				const { valid, reason, sessionId: validSessionId, solvedImagesCount } =
-					await tasks.imgCaptchaManager.isValidRequest(
-						clientRecord,
-						CaptchaType.image,
-						env,
-						sessionId,
-						userAccessPolicy,
-						req.ip,
-					);
+				const {
+					valid,
+					reason,
+					sessionId: validSessionId,
+					solvedImagesCount,
+				} = await tasks.imgCaptchaManager.isValidRequest(
+					clientRecord,
+					CaptchaType.image,
+					env,
+					sessionId,
+					userAccessPolicy,
+					req.ip,
+				);
 
 				if (!valid) {
 					return next(
@@ -383,15 +387,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				)
 			)[0];
 
-			const { valid, reason, sessionId: validSessionId, powDifficulty } =
-				await tasks.powCaptchaManager.isValidRequest(
-					clientSettings,
-					CaptchaType.pow,
-					env,
-					sessionId,
-					userAccessPolicy,
-					req.ip,
-				);
+			const {
+				valid,
+				reason,
+				sessionId: validSessionId,
+				powDifficulty,
+			} = await tasks.powCaptchaManager.isValidRequest(
+				clientSettings,
+				CaptchaType.pow,
+				env,
+				sessionId,
+				userAccessPolicy,
+				req.ip,
+			);
 
 			if (!valid) {
 				return next(
@@ -622,8 +630,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				}
 
 				// Check if the token has already been used
-				const existingToken =
-					await tasks.db.getSessionRecordByToken(token);
+				const existingToken = await tasks.db.getSessionRecordByToken(token);
 
 				if (existingToken) {
 					req.logger.info(() => ({
@@ -769,12 +776,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
 				if (userAccessPolicy) {
-					const scoreUpdate = tasks.frictionlessManager.scoreIncreaseAccessPolicy(
-						userAccessPolicy,
-						baseBotScore,
-						botScore,
-						scoreComponents,
-					);
+					const scoreUpdate =
+						tasks.frictionlessManager.scoreIncreaseAccessPolicy(
+							userAccessPolicy,
+							baseBotScore,
+							botScore,
+							scoreComponents,
+						);
 					botScore = scoreUpdate.score;
 					scoreComponents = scoreUpdate.scoreComponents;
 
@@ -868,12 +876,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					providerSelectEntropy,
 				);
 				if (!hostVerified.verified) {
-					const scoreUpdate = tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
-						hostVerified.domain,
-						baseBotScore,
-						botScore,
-						scoreComponents,
-					);
+					const scoreUpdate =
+						tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
+							hostVerified.domain,
+							baseBotScore,
+							botScore,
+							scoreComponents,
+						);
 					botScore = scoreUpdate.score;
 					scoreComponents = scoreUpdate.scoreComponents;
 				}
