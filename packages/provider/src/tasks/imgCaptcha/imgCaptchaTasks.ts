@@ -36,7 +36,6 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	PendingCaptchaRequest,
 	UserCommitment,
@@ -94,7 +93,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -161,7 +160,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			currentTime,
 			getCompositeIpAddress(ipAddress),
 			threshold,
-			frictionlessTokenId,
+			sessionId,
 		);
 		return {
 			captchas,

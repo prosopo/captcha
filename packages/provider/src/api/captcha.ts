@@ -36,6 +36,7 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
+import type { ScoreComponents } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
@@ -129,7 +130,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					)
 				)[0];
 
-				const { valid, reason, frictionlessTokenId, solvedImagesCount } =
+				const { valid, reason, sessionId: validSessionId, solvedImagesCount } =
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
 						CaptchaType.image,
@@ -174,7 +175,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						ipAddress,
 						captchaConfig,
 						clientRecord.settings.imageThreshold ?? 0.8,
-						frictionlessTokenId,
+						validSessionId,
 					);
 				const captchaResponse: CaptchaResponseBody = {
 					[ApiParams.status]: "ok",
@@ -382,7 +383,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				)
 			)[0];
 
-			const { valid, reason, frictionlessTokenId, powDifficulty } =
+			const { valid, reason, sessionId: validSessionId, powDifficulty } =
 				await tasks.powCaptchaManager.isValidRequest(
 					clientSettings,
 					CaptchaType.pow,
@@ -446,7 +447,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				getCompositeIpAddress(req.ip || ""),
 				flatten(req.headers),
 				req.ja4,
-				frictionlessTokenId,
+				validSessionId,
 			);
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
@@ -602,22 +603,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						data: { dapp, user },
 					}));
 
-					// Store a dummy frictionless token record
-					const tokenId = await tasks.db.storeFrictionlessTokenRecord({
-						token,
-						score: 0,
-						threshold: 0.5,
-						scoreComponents: {
-							baseScore: 0,
-						},
-						providerSelectEntropy: 0,
-						ipAddress: getCompositeIpAddress(req.ip || ""),
-					});
-
-					// Send PoW captcha
+					// Send PoW captcha with dummy frictionless data
 					return res.json(
 						await tasks.frictionlessManager.sendPowCaptcha(
-							tokenId,
+							token,
+							0,
+							0.5,
+							{
+								baseScore: 0,
+							},
+							0,
+							getCompositeIpAddress(req.ip || ""),
 							undefined,
 							false,
 							false,
@@ -627,7 +623,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// Check if the token has already been used
 				const existingToken =
-					await tasks.db.getFrictionlessTokenRecordByToken(token);
+					await tasks.db.getSessionRecordByToken(token);
 
 				if (existingToken) {
 					req.logger.info(() => ({
@@ -712,18 +708,13 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					clientRecord.settings?.frictionlessThreshold ||
 					DEFAULT_FRICTIONLESS_THRESHOLD;
 
-				// Store the token
-				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
-					token,
-					score: botScore,
-					threshold: botThreshold,
-					scoreComponents: {
-						baseScore: baseBotScore,
-						...(lScore && { lScore }),
-					},
-					providerSelectEntropy,
-					ipAddress: getCompositeIpAddress(req.ip || ""),
-				});
+				// Initialize score components
+				let scoreComponents: ScoreComponents = {
+					baseScore: baseBotScore,
+					...(lScore && { lScore }),
+				};
+
+				const ipAddress = getCompositeIpAddress(req.ip || "");
 
 				// Check if the IP address is blocked
 				const userScope = getRequestUserScope(
@@ -763,7 +754,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
-							tokenId,
+							token,
+							botScore,
+							botThreshold,
+							scoreComponents,
+							providerSelectEntropy,
+							ipAddress,
 							timestampDecayFunction(timestamp),
 							webView,
 							iFrame,
@@ -773,16 +769,24 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the user or IP address has an image captcha config defined, send an image captcha
 				if (userAccessPolicy) {
-					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
+					const scoreUpdate = tasks.frictionlessManager.scoreIncreaseAccessPolicy(
 						userAccessPolicy,
 						baseBotScore,
 						botScore,
-						tokenId,
+						scoreComponents,
 					);
+					botScore = scoreUpdate.score;
+					scoreComponents = scoreUpdate.scoreComponents;
+
 					if (userAccessPolicy.captchaType === CaptchaType.image) {
 						return res.json(
 							await tasks.frictionlessManager.sendImageCaptcha(
-								tokenId,
+								token,
+								botScore,
+								botThreshold,
+								scoreComponents,
+								providerSelectEntropy,
+								ipAddress,
 								userAccessPolicy.solvedImagesCount,
 								webView,
 								iFrame,
@@ -792,7 +796,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
 						return res.json(
 							await tasks.frictionlessManager.sendPowCaptcha(
-								tokenId,
+								token,
+								botScore,
+								botThreshold,
+								scoreComponents,
+								providerSelectEntropy,
+								ipAddress,
 								undefined,
 								webView,
 								iFrame,
@@ -805,14 +814,22 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					tasks.logger.info(() => ({
 						msg: "WebView detected",
 					}));
-					botScore = await tasks.frictionlessManager.scoreIncreaseWebView(
+					const scoreUpdate = tasks.frictionlessManager.scoreIncreaseWebView(
 						baseBotScore,
 						botScore,
-						tokenId,
+						scoreComponents,
 					);
+					botScore = scoreUpdate.score;
+					scoreComponents = scoreUpdate.scoreComponents;
+
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
-							tokenId,
+							token,
+							botScore,
+							botThreshold,
+							scoreComponents,
+							providerSelectEntropy,
+							ipAddress,
 							env.config.captchas.solved.count * 2,
 							webView,
 							iFrame,
@@ -822,15 +839,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 				// If the timestamp is older than 10 minutes, send an image captcha
 				if (FrictionlessManager.timestampTooOld(timestamp)) {
-					await tasks.frictionlessManager.scoreIncreaseTimestamp(
+					const scoreUpdate = tasks.frictionlessManager.scoreIncreaseTimestamp(
 						timestamp,
 						baseBotScore,
 						botScore,
-						tokenId,
+						scoreComponents,
 					);
+					botScore = scoreUpdate.score;
+					scoreComponents = scoreUpdate.scoreComponents;
+
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
-							tokenId,
+							token,
+							botScore,
+							botThreshold,
+							scoreComponents,
+							providerSelectEntropy,
+							ipAddress,
 							timestampDecayFunction(timestamp),
 							webView,
 							iFrame,
@@ -843,13 +868,14 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					providerSelectEntropy,
 				);
 				if (!hostVerified.verified) {
-					botScore =
-						await tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
-							hostVerified.domain,
-							baseBotScore,
-							botScore,
-							tokenId,
-						);
+					const scoreUpdate = tasks.frictionlessManager.scoreIncreaseUnverifiedHost(
+						hostVerified.domain,
+						baseBotScore,
+						botScore,
+						scoreComponents,
+					);
+					botScore = scoreUpdate.score;
+					scoreComponents = scoreUpdate.scoreComponents;
 				}
 
 				// If the bot score is greater than the threshold, send an image captcha
@@ -859,12 +885,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						data: {
 							botScore,
 							botThreshold,
-							tokenId,
+							token,
 						},
 					}));
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha(
-							tokenId,
+							token,
+							botScore,
+							botThreshold,
+							scoreComponents,
+							providerSelectEntropy,
+							ipAddress,
 							env.config.captchas.solved.count,
 							webView,
 							iFrame,
@@ -875,7 +906,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// Otherwise, send a PoW captcha
 				return res.json(
 					await tasks.frictionlessManager.sendPowCaptcha(
-						tokenId,
+						token,
+						botScore,
+						botThreshold,
+						scoreComponents,
+						providerSelectEntropy,
+						ipAddress,
 						undefined,
 						webView,
 						iFrame,

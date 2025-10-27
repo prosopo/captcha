@@ -22,12 +22,12 @@ import {
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
 import type {
-	FrictionlessTokenId,
+	CompositeIpAddress,
 	IProviderDatabase,
+	ScoreComponents,
 	Session,
 } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
-import type { ObjectId } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { checkLangRules } from "../../rules/lang.js";
 import { CaptchaManager } from "../captchaManager.js";
@@ -64,7 +64,12 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async createSession(
-		tokenId: ObjectId,
+		token: string,
+		score: number,
+		threshold: number,
+		scoreComponents: ScoreComponents,
+		providerSelectEntropy: number,
+		ipAddress: CompositeIpAddress,
 		captchaType: CaptchaType,
 		solvedImagesCount?: number,
 		powDifficulty?: number,
@@ -74,7 +79,12 @@ export class FrictionlessManager extends CaptchaManager {
 		const sessionRecord: Session = {
 			sessionId: uuidv4(),
 			createdAt: new Date(),
-			tokenId: tokenId,
+			token,
+			score,
+			threshold,
+			scoreComponents,
+			providerSelectEntropy,
+			ipAddress,
 			captchaType,
 			solvedImagesCount,
 			powDifficulty,
@@ -109,13 +119,23 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendImageCaptcha(
-		tokenId: ObjectId,
+		token: string,
+		score: number,
+		threshold: number,
+		scoreComponents: ScoreComponents,
+		providerSelectEntropy: number,
+		ipAddress: CompositeIpAddress,
 		solvedImagesCount?: number,
 		webView = false,
 		iFrame = false,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
-			tokenId,
+			token,
+			score,
+			threshold,
+			scoreComponents,
+			providerSelectEntropy,
+			ipAddress,
 			CaptchaType.image,
 			solvedImagesCount,
 			undefined,
@@ -130,13 +150,23 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendPowCaptcha(
-		tokenId: ObjectId,
+		token: string,
+		score: number,
+		threshold: number,
+		scoreComponents: ScoreComponents,
+		providerSelectEntropy: number,
+		ipAddress: CompositeIpAddress,
 		powDifficulty?: number,
 		webView = false,
 		iFrame = false,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
-			tokenId,
+			token,
+			score,
+			threshold,
+			scoreComponents,
+			providerSelectEntropy,
+			ipAddress,
 			CaptchaType.pow,
 			undefined,
 			powDifficulty,
@@ -150,85 +180,81 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
-	async scoreIncreaseAccessPolicy(
+	scoreIncreaseAccessPolicy(
 		accessPolicy: AccessPolicy | undefined,
 		baseBotScore: number,
 		botScore: number,
-		tokenId: FrictionlessTokenId,
-	) {
+		scoreComponents: ScoreComponents,
+	): { score: number; scoreComponents: ScoreComponents } {
 		const accessPolicyPenalty =
 			accessPolicy?.frictionlessScore ||
 			this.config.penalties.PENALTY_ACCESS_RULE;
 		botScore += accessPolicyPenalty;
-		await this.db.updateFrictionlessTokenRecord(tokenId, {
+		return {
 			score: botScore,
 			scoreComponents: {
-				baseScore: baseBotScore,
+				...scoreComponents,
 				accessPolicy: accessPolicyPenalty,
 			},
-		});
-		return botScore;
+		};
 	}
 
-	async scoreIncreaseUnverifiedHost(
+	scoreIncreaseUnverifiedHost(
 		host: string,
 		baseBotScore: number,
 		botScore: number,
-		tokenId: FrictionlessTokenId,
-	) {
+		scoreComponents: ScoreComponents,
+	): { score: number; scoreComponents: ScoreComponents } {
 		this.logger.info(() => ({
 			msg: "Host not verified",
 			data: { requested: this.config.host, selected: host },
 		}));
 		botScore += this.config.penalties.PENALTY_UNVERIFIED_HOST;
-		await this.db.updateFrictionlessTokenRecord(tokenId, {
+		return {
 			score: botScore,
 			scoreComponents: {
-				baseScore: baseBotScore,
+				...scoreComponents,
 				unverifiedHost: this.config.penalties.PENALTY_UNVERIFIED_HOST,
 			},
-		});
-		return botScore;
+		};
 	}
 
-	async scoreIncreaseWebView(
+	scoreIncreaseWebView(
 		baseBotScore: number,
 		botScore: number,
-		tokenId: FrictionlessTokenId,
-	) {
+		scoreComponents: ScoreComponents,
+	): { score: number; scoreComponents: ScoreComponents } {
 		this.logger.debug(() => ({
 			msg: "WebView detected",
 		}));
 		botScore += this.config.penalties.PENALTY_WEBVIEW;
-		await this.db.updateFrictionlessTokenRecord(tokenId, {
+		return {
 			score: botScore,
 			scoreComponents: {
-				baseScore: baseBotScore,
+				...scoreComponents,
 				webView: this.config.penalties.PENALTY_WEBVIEW,
 			},
-		});
-		return botScore;
+		};
 	}
 
-	async scoreIncreaseTimestamp(
+	scoreIncreaseTimestamp(
 		timestamp: number,
 		baseBotScore: number,
 		botScore: number,
-		tokenId: FrictionlessTokenId,
-	) {
+		scoreComponents: ScoreComponents,
+	): { score: number; scoreComponents: ScoreComponents } {
 		this.logger.info(() => ({
 			msg: "Timestamp is older than 10 minutes",
 			data: { timestamp: new Date(timestamp) },
 		}));
 		botScore += this.config.penalties.PENALTY_OLD_TIMESTAMP;
-		await this.db.updateFrictionlessTokenRecord(tokenId, {
+		return {
 			score: botScore,
 			scoreComponents: {
-				baseScore: baseBotScore,
+				...scoreComponents,
 				timeout: this.config.penalties.PENALTY_OLD_TIMESTAMP,
 			},
-		});
-		return botScore;
+		};
 	}
 
 	static timestampTooOld(timestamp: number): boolean {
