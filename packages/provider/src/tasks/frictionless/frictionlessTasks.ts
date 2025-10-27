@@ -46,6 +46,25 @@ const getDefaultEntropy = (): number => {
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 export const DEFAULT_ENTROPY = getDefaultEntropy();
 
+export interface SessionParams {
+	token: string;
+	score: number;
+	threshold: number;
+	scoreComponents: ScoreComponents;
+	providerSelectEntropy: number;
+	ipAddress: CompositeIpAddress;
+	webView?: boolean;
+	iFrame?: boolean;
+}
+
+export interface ImageCaptchaSessionParams extends SessionParams {
+	solvedImagesCount?: number;
+}
+
+export interface PowCaptchaSessionParams extends SessionParams {
+	powDifficulty?: number;
+}
+
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
 
@@ -119,28 +138,20 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendImageCaptcha(
-		token: string,
-		score: number,
-		threshold: number,
-		scoreComponents: ScoreComponents,
-		providerSelectEntropy: number,
-		ipAddress: CompositeIpAddress,
-		solvedImagesCount?: number,
-		webView = false,
-		iFrame = false,
+		params: ImageCaptchaSessionParams,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
-			token,
-			score,
-			threshold,
-			scoreComponents,
-			providerSelectEntropy,
-			ipAddress,
+			params.token,
+			params.score,
+			params.threshold,
+			params.scoreComponents,
+			params.providerSelectEntropy,
+			params.ipAddress,
 			CaptchaType.image,
-			solvedImagesCount,
+			params.solvedImagesCount,
 			undefined,
-			webView,
-			iFrame,
+			params.webView ?? false,
+			params.iFrame ?? false,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
@@ -150,28 +161,20 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendPowCaptcha(
-		token: string,
-		score: number,
-		threshold: number,
-		scoreComponents: ScoreComponents,
-		providerSelectEntropy: number,
-		ipAddress: CompositeIpAddress,
-		powDifficulty?: number,
-		webView = false,
-		iFrame = false,
+		params: PowCaptchaSessionParams,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const sessionRecord = await this.createSession(
-			token,
-			score,
-			threshold,
-			scoreComponents,
-			providerSelectEntropy,
-			ipAddress,
+			params.token,
+			params.score,
+			params.threshold,
+			params.scoreComponents,
+			params.providerSelectEntropy,
+			params.ipAddress,
 			CaptchaType.pow,
 			undefined,
-			powDifficulty,
-			webView,
-			iFrame,
+			params.powDifficulty,
+			params.webView ?? false,
+			params.iFrame ?? false,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,

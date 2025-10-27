@@ -163,7 +163,6 @@ export class ClientTaskManager {
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						// Session records now contain all frictionless token fields, no merging needed
 						await captchaDB.saveCaptchas(filteredBatch, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
