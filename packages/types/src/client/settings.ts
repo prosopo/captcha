@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { array, number, object, type output, string, z } from "zod";
+import { array, boolean, number, object, type output, string, z } from "zod";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
@@ -28,33 +28,71 @@ export enum IPValidationAction {
 	Flag = "flag",
 }
 
+export type IPValidateCondition = {
+	met: boolean;
+	action: IPValidationAction;
+	message: string;
+};
+
 export const IPValidationActionSchema = z.nativeEnum(IPValidationAction);
 
 // IP Validation defaults
 export const countryChangeActionDefault = IPValidationAction.Allow;
+export const cityChangeActionDefault = IPValidationAction.Allow;
 export const ispChangeActionDefault = IPValidationAction.Allow;
 export const distanceThresholdKmDefault = 1000;
+export const abuseScoreThresholdDefault = 0.005;
 export const distanceExceedActionDefault = IPValidationAction.Reject;
+export const abuseScoreThresholdExceedActionDefault = IPValidationAction.Reject;
 export const requireAllConditionsDefault = false;
 
+const IPValidationSchema = object({
+	actions: object({
+		countryChangeAction: IPValidationActionSchema.optional(),
+		cityChangeAction: IPValidationActionSchema.optional(),
+		ispChangeAction: IPValidationActionSchema.optional(),
+		distanceExceedAction: IPValidationActionSchema.optional(),
+		abuseScoreExceedAction: IPValidationActionSchema.optional(),
+	}).partial(), // all optional, so you can just override what you need
+
+	distanceThresholdKm: number().positive().optional(),
+	abuseScoreThreshold: number().positive().optional(),
+	requireAllConditions: boolean().optional(),
+});
+
 export const IPValidationRulesSchema = object({
-	countryChangeAction: IPValidationActionSchema.optional().default(
-		countryChangeActionDefault,
-	),
-	ispChangeAction: IPValidationActionSchema.optional().default(
-		ispChangeActionDefault,
-	),
+	actions: object({
+		countryChangeAction: IPValidationActionSchema.optional().default(
+			countryChangeActionDefault,
+		),
+		cityChangeAction: IPValidationActionSchema.optional().default(
+			cityChangeActionDefault,
+		),
+		ispChangeAction: IPValidationActionSchema.optional().default(
+			ispChangeActionDefault,
+		),
+		distanceExceedAction: IPValidationActionSchema.optional().default(
+			distanceExceedActionDefault,
+		),
+		abuseScoreExceedAction: IPValidationActionSchema.optional().default(
+			abuseScoreThresholdExceedActionDefault,
+		),
+	}),
 	distanceThresholdKm: number()
 		.positive()
 		.optional()
 		.default(distanceThresholdKmDefault),
-	distanceExceedAction: IPValidationActionSchema.optional().default(
-		distanceExceedActionDefault,
-	),
+	abuseScoreThreshold: number()
+		.positive()
+		.optional()
+		.default(abuseScoreThresholdDefault),
 	requireAllConditions: z
 		.boolean()
 		.optional()
 		.default(requireAllConditionsDefault),
+	// overrides are now lightweight, not recursive
+	countryOverrides: z.record(string(), IPValidationSchema).optional(),
+	forceConsistentIp: boolean().optional().default(false),
 });
 
 export const ClientSettingsSchema = object({
@@ -68,7 +106,9 @@ export const ClientSettingsSchema = object({
 	powDifficulty: number().optional().default(powDifficultyDefault),
 	imageThreshold: number().optional().default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
+	disallowWebView: boolean().optional().default(false),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
 export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
+export type IIPValidation = output<typeof IPValidationSchema>;

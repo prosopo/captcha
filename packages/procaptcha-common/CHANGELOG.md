@@ -1,5 +1,150 @@
 # @prosopo/procaptcha-common
 
+## 2.9.10
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/account@2.7.35
+  - @prosopo/load-balancer@2.8.5
+
+## 2.9.9
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/account@2.7.34
+  - @prosopo/load-balancer@2.8.4
+  - @prosopo/types@3.5.7
+  - @prosopo/widget-skeleton@2.7.7
+
+## 2.9.8
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/account@2.7.33
+  - @prosopo/load-balancer@2.8.3
+
+## 2.9.7
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/account@2.7.32
+  - @prosopo/load-balancer@2.8.2
+
+## 2.9.6
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/account@2.7.31
+  - @prosopo/load-balancer@2.8.1
+
+## 2.9.5
+### Patch Changes
+
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/load-balancer@2.8.0
+  - @prosopo/config@3.1.20
+  - @prosopo/account@2.7.30
+  - @prosopo/types@3.5.3
+  - @prosopo/widget-skeleton@2.7.6
+
+## 2.9.4
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/widget-skeleton@2.7.5
+  - @prosopo/load-balancer@2.7.12
+  - @prosopo/account@2.7.29
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 2.9.3
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/widget-skeleton@2.7.4
+  - @prosopo/load-balancer@2.7.11
+  - @prosopo/account@2.7.28
+  - @prosopo/config@3.1.18
+
+## 2.9.2
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/widget-skeleton@2.7.3
+  - @prosopo/load-balancer@2.7.10
+  - @prosopo/account@2.7.27
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
+## 2.9.1
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/widget-skeleton@2.7.2
+  - @prosopo/load-balancer@2.7.9
+  - @prosopo/account@2.7.26
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
+## 2.9.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/widget-skeleton@2.7.1
+  - @prosopo/load-balancer@2.7.8
+  - @prosopo/account@2.7.25
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
+## 2.8.7
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/widget-skeleton@2.7.0
+  - @prosopo/types@3.3.0
+  - @prosopo/load-balancer@2.7.7
+  - @prosopo/account@2.7.24
+  - @prosopo/config@3.1.14
+
+## 2.8.6
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/widget-skeleton@2.6.14
+  - @prosopo/load-balancer@2.7.6
+  - @prosopo/account@2.7.23
+  - @prosopo/config@3.1.13
+
 ## 2.8.5
 ### Patch Changes
 

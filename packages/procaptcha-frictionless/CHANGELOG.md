@@ -1,5 +1,228 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.11
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/detector@3.3.10
+  - @prosopo/types@3.5.8
+  - @prosopo/api@3.1.29
+  - @prosopo/load-balancer@2.8.5
+  - @prosopo/procaptcha-common@2.9.10
+  - @prosopo/procaptcha-pow@2.8.18
+  - @prosopo/procaptcha-react@2.9.10
+
+## 2.8.10
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+  - @prosopo/api@3.1.28
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/detector@3.3.9
+  - @prosopo/procaptcha-pow@2.8.17
+  - @prosopo/load-balancer@2.8.4
+  - @prosopo/procaptcha-react@2.9.9
+  - @prosopo/locale@3.1.21
+  - @prosopo/procaptcha-common@2.9.9
+  - @prosopo/types@3.5.7
+  - @prosopo/widget-skeleton@2.7.7
+
+## 2.8.9
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/api@3.1.27
+  - @prosopo/detector@3.3.8
+  - @prosopo/load-balancer@2.8.3
+  - @prosopo/procaptcha-common@2.9.8
+  - @prosopo/procaptcha-pow@2.8.16
+  - @prosopo/procaptcha-react@2.9.8
+
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/api@3.1.26
+  - @prosopo/detector@3.3.7
+  - @prosopo/load-balancer@2.8.2
+  - @prosopo/procaptcha-common@2.9.7
+  - @prosopo/procaptcha-pow@2.8.15
+  - @prosopo/procaptcha-react@2.9.7
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/api@3.1.25
+  - @prosopo/detector@3.3.6
+  - @prosopo/load-balancer@2.8.1
+  - @prosopo/procaptcha-common@2.9.6
+  - @prosopo/procaptcha-pow@2.8.14
+  - @prosopo/procaptcha-react@2.9.6
+
+## 2.8.6
+### Patch Changes
+
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/load-balancer@2.8.0
+  - @prosopo/detector@3.3.5
+  - @prosopo/config@3.1.20
+  - @prosopo/procaptcha-common@2.9.5
+  - @prosopo/api@3.1.24
+  - @prosopo/common@3.1.20
+  - @prosopo/locale@3.1.20
+  - @prosopo/procaptcha-pow@2.8.13
+  - @prosopo/procaptcha-react@2.9.5
+  - @prosopo/types@3.5.3
+  - @prosopo/widget-skeleton@2.7.6
+
+## 2.8.5
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/procaptcha-common@2.9.4
+  - @prosopo/procaptcha-react@2.9.4
+  - @prosopo/widget-skeleton@2.7.5
+  - @prosopo/procaptcha-pow@2.8.12
+  - @prosopo/load-balancer@2.7.12
+  - @prosopo/detector@3.3.4
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/api@3.1.23
+  - @prosopo/config@3.1.19
+
+## 2.8.4
+### Patch Changes
+
+- 52cd544: Integrity checks
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b8cc590]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/detector@3.3.3
+  - @prosopo/types@3.5.1
+  - @prosopo/procaptcha-common@2.9.3
+  - @prosopo/procaptcha-react@2.9.3
+  - @prosopo/widget-skeleton@2.7.4
+  - @prosopo/procaptcha-pow@2.8.11
+  - @prosopo/load-balancer@2.7.11
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/api@3.1.22
+  - @prosopo/config@3.1.18
+
+## 2.8.3
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/procaptcha-common@2.9.2
+  - @prosopo/procaptcha-react@2.9.2
+  - @prosopo/widget-skeleton@2.7.3
+  - @prosopo/procaptcha-pow@2.8.10
+  - @prosopo/load-balancer@2.7.10
+  - @prosopo/detector@3.3.2
+  - @prosopo/common@3.1.17
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/api@3.1.21
+  - @prosopo/config@3.1.17
+
+## 2.8.2
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/procaptcha-common@2.9.1
+  - @prosopo/procaptcha-react@2.9.1
+  - @prosopo/widget-skeleton@2.7.2
+  - @prosopo/procaptcha-pow@2.8.9
+  - @prosopo/load-balancer@2.7.9
+  - @prosopo/detector@3.3.1
+  - @prosopo/common@3.1.16
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/api@3.1.20
+  - @prosopo/config@3.1.16
+
+## 2.8.1
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/procaptcha-common@2.9.0
+  - @prosopo/procaptcha-react@2.9.0
+  - @prosopo/widget-skeleton@2.7.1
+  - @prosopo/procaptcha-pow@2.8.8
+  - @prosopo/load-balancer@2.7.8
+  - @prosopo/detector@3.3.0
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/api@3.1.19
+  - @prosopo/config@3.1.15
+
+## 2.8.0
+### Minor Changes
+
+- 97edf3f: Adding dom manip checks
+
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+- Updated dependencies [72810f4]
+  - @prosopo/widget-skeleton@2.7.0
+  - @prosopo/detector@3.2.0
+  - @prosopo/types@3.3.0
+  - @prosopo/procaptcha-common@2.8.7
+  - @prosopo/procaptcha-react@2.8.7
+  - @prosopo/procaptcha-pow@2.8.7
+  - @prosopo/load-balancer@2.7.7
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/api@3.1.18
+  - @prosopo/config@3.1.14
+
+## 2.7.6
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [0555cd8]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/detector@3.1.6
+  - @prosopo/types@3.2.1
+  - @prosopo/procaptcha-common@2.8.6
+  - @prosopo/procaptcha-react@2.8.6
+  - @prosopo/widget-skeleton@2.6.14
+  - @prosopo/procaptcha-pow@2.8.6
+  - @prosopo/load-balancer@2.7.6
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/api@3.1.17
+  - @prosopo/config@3.1.13
+
 ## 2.7.5
 ### Patch Changes
 

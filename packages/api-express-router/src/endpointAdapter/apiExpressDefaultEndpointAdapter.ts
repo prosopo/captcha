@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import { type LogLevel, ProsopoApiError } from "@prosopo/common";
+import {
+	type LogLevel,
+	ProsopoApiError,
+	stringifyBigInts,
+} from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
@@ -47,7 +51,10 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 				request.logger,
 			);
 
-			response.json(apiEndpointResponse);
+			// otherwise .json() will throw "TypeError: Do not know how to serialize a BigInt" as uses JSON.stringify
+			const responseObject = stringifyBigInts(apiEndpointResponse);
+
+			response.json(responseObject);
 		} catch (error) {
 			request.logger.error(() => ({
 				err: error,

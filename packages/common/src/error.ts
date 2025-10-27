@@ -29,9 +29,10 @@ type BaseErrorOptions<ContextType> = {
 };
 
 interface BaseContextParams {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO remove any
-	[key: string]: any;
+	[key: string]: unknown;
 	failedFuncName?: string;
+	translationKey?: string;
+	code?: number;
 }
 
 type EnvContextParams = BaseContextParams & { missingEnvVars?: string[] };
@@ -208,10 +209,16 @@ export const unwrapError = (
 	// unwrap the errors to get the actual error message
 	while (err instanceof ProsopoBaseError && err.context) {
 		// base error will not have a translation key
+		const contextTranslationKey =
+			typeof err.context.translationKey === "string"
+				? err.context.translationKey
+				: undefined;
 		jsonError.key =
-			err.context.translationKey || err.translationKey || "API.UNKNOWN";
+			contextTranslationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = i18n.t(err.message);
-		code = err.context.code ?? jsonError.code;
+		const contextCode =
+			typeof err.context.code === "number" ? err.context.code : undefined;
+		code = contextCode ?? jsonError.code;
 		jsonError.data = err.context.data || jsonError.data;
 		// Only move to the next error if ProsopoBaseError or ZodError
 		if (

@@ -1,5 +1,99 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.32
+### Patch Changes
+
+  - @prosopo/vue-procaptcha-wrapper@1.1.32
+
+## 1.1.31
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/vue-procaptcha-wrapper@1.1.31
+
+## 1.1.30
+### Patch Changes
+
+  - @prosopo/vue-procaptcha-wrapper@1.1.30
+
+## 1.1.29
+### Patch Changes
+
+  - @prosopo/vue-procaptcha-wrapper@1.1.29
+
+## 1.1.28
+### Patch Changes
+
+  - @prosopo/vue-procaptcha-wrapper@1.1.28
+
+## 1.1.27
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/vue-procaptcha-wrapper@1.1.27
+
+## 1.1.26
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/vue-procaptcha-wrapper@1.1.26
+  - @prosopo/config@3.1.19
+
+## 1.1.25
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/vue-procaptcha-wrapper@1.1.25
+  - @prosopo/config@3.1.18
+
+## 1.1.24
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/vue-procaptcha-wrapper@1.1.24
+  - @prosopo/config@3.1.17
+
+## 1.1.23
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+  - @prosopo/vue-procaptcha-wrapper@1.1.23
+  - @prosopo/config@3.1.16
+
+## 1.1.22
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+  - @prosopo/vue-procaptcha-wrapper@1.1.22
+  - @prosopo/config@3.1.15
+
+## 1.1.21
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/vue-procaptcha-wrapper@1.1.21
+  - @prosopo/config@3.1.14
+
+## 1.1.20
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [008d112]
+  - @prosopo/vue-procaptcha-wrapper@1.1.20
+  - @prosopo/config@3.1.13
+
 ## 1.1.19
 ### Patch Changes
 

@@ -49,6 +49,7 @@ import {
 	boolean,
 	date,
 	nativeEnum,
+	number,
 	object,
 	string,
 	union,
@@ -96,7 +97,7 @@ export const CompositeIpAddressSchema = object({
 	type: nativeEnum(IpAddressType),
 });
 
-export const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
+export const CompositeIpAddressRecordSchemaObj = {
 	lower: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
@@ -114,7 +115,22 @@ export const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
 			"bigint" === typeof value ? value.toString() : value,
 	},
 	type: { type: String, enum: IpAddressType, required: true },
-});
+};
+
+export type MongooseCompositeIpAddress = {
+	lower: { $numberDecimal: string };
+	upper?: { $numberDecimal: string };
+	type: IpAddressType;
+};
+export const parseMongooseCompositeIpAddress = (
+	ip: MongooseCompositeIpAddress,
+): CompositeIpAddress => {
+	return {
+		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
+		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
+		type: ip.type,
+	};
+};
 
 export interface StoredCaptcha {
 	result: {
@@ -136,6 +152,7 @@ export interface StoredCaptcha {
 	storedAtTimestamp?: Timestamp;
 	lastUpdatedTimestamp?: Timestamp;
 	frictionlessTokenId?: FrictionlessTokenId;
+	coords?: [number, number][][];
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -171,6 +188,7 @@ export const UserCommitmentSchema = object({
 		string(),
 		zInstanceof(mongoose.Types.ObjectId),
 	]).optional(),
+	coords: array(array(array(number()))).optional(),
 });
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -233,8 +251,11 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		error: { type: String, required: false },
 	},
 	difficulty: { type: Number, required: true },
-	ipAddress: CompositeIpAddressRecordSchema,
-	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -248,6 +269,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
+	coords: { type: [[[Number]]], required: false },
 });
 
 // Set an index on the captchaId field, ascending
@@ -272,8 +294,11 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		error: { type: String, required: false },
 	},
-	ipAddress: CompositeIpAddressRecordSchema,
-	providedIp: { type: CompositeIpAddressRecordSchema, required: false },
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
@@ -289,6 +314,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
 	},
+	coords: { type: [[[Number]]], required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
@@ -371,7 +397,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	requestHash: { type: String, required: true },
 	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
-	ipAddress: CompositeIpAddressRecordSchema,
+	ipAddress: CompositeIpAddressRecordSchemaObj,
 	frictionlessTokenId: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: false,
@@ -426,6 +452,7 @@ export interface ScoreComponents {
 	timeout?: number;
 	accessPolicy?: number;
 	unverifiedHost?: number;
+	webView?: number;
 }
 
 export interface FrictionlessToken {
@@ -455,9 +482,11 @@ export const FrictionlessTokenRecordSchema =
 			lScore: { type: Number, required: false },
 			timeout: { type: Number, required: false },
 			accessPolicy: { type: Number, required: false },
+			unverifiedHost: { type: Number, required: false },
+			webView: { type: Number, required: false },
 		},
 		providerSelectEntropy: { type: Number, required: true },
-		ipAddress: CompositeIpAddressRecordSchema,
+		ipAddress: CompositeIpAddressRecordSchemaObj,
 		createdAt: { type: Date, default: Date.now },
 		lastUpdatedTimestamp: { type: Date, required: false },
 		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
@@ -470,9 +499,13 @@ export type Session = {
 	createdAt: Date;
 	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
+	solvedImagesCount?: number;
+	powDifficulty?: number;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
+	webView: boolean;
+	iFrame: boolean;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -484,9 +517,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		type: mongoose.Schema.Types.ObjectId,
 	},
 	captchaType: { type: String, enum: CaptchaType, required: true },
+	solvedImagesCount: { type: Number, required: false },
+	powDifficulty: { type: Number, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
+	webView: { type: Boolean, required: true, default: false },
+	iFrame: { type: Boolean, required: true, default: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -592,11 +629,15 @@ export interface IProviderDatabase extends IDatabase {
 		dappAccount: string,
 	): Promise<UserCommitmentRecord[]>;
 
-	approveDappUserCommitment(commitmentId: string): Promise<void>;
+	approveDappUserCommitment(
+		commitmentId: string,
+		coords?: [number, number][][],
+	): Promise<void>;
 
 	disapproveDappUserCommitment(
 		commitmentId: string,
 		reason?: TranslationKey,
+		coords?: [number, number][][],
 	): Promise<void>;
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;

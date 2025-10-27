@@ -1,5 +1,181 @@
 # @prosopo/database
 
+## 3.4.10
+### Patch Changes
+
+- Updated dependencies [b10a65f]
+- Updated dependencies [e5c259d]
+- Updated dependencies [6420187]
+  - @prosopo/types-database@3.3.10
+  - @prosopo/types@3.5.8
+  - @prosopo/user-access-policy@3.5.24
+
+## 3.4.9
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+- Updated dependencies [3a027ef]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/types-database@3.3.9
+  - @prosopo/redis-client@1.0.6
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
+## 3.4.8
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/types-database@3.3.8
+  - @prosopo/user-access-policy@3.5.22
+
+## 3.4.7
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types-database@3.3.7
+  - @prosopo/types@3.5.5
+  - @prosopo/user-access-policy@3.5.21
+
+## 3.4.6
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/types@3.5.4
+  - @prosopo/user-access-policy@3.5.20
+
+## 3.4.5
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/locale@3.1.20
+  - @prosopo/redis-client@1.0.5
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+  - @prosopo/user-access-policy@3.5.19
+
+## 3.4.4
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/user-access-policy@3.5.18
+  - @prosopo/types-database@3.3.4
+  - @prosopo/redis-client@1.0.4
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 3.4.3
+### Patch Changes
+
+- c72ecbd: Reduce noisy logs
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/user-access-policy@3.5.17
+  - @prosopo/types-database@3.3.3
+  - @prosopo/redis-client@1.0.3
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/config@3.1.18
+
+## 3.4.2
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/user-access-policy@3.5.16
+  - @prosopo/types-database@3.3.2
+  - @prosopo/redis-client@1.0.2
+  - @prosopo/common@3.1.17
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
+## 3.4.1
+### Patch Changes
+
+- 11303d9: feat/pluggable-redis
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- 11303d9: feat/pluggable-redis
+- Updated dependencies [11303d9]
+- Updated dependencies [b6794f8]
+- Updated dependencies [11303d9]
+- Updated dependencies [bac2d91]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/user-access-policy@3.5.15
+  - @prosopo/redis-client@1.0.1
+  - @prosopo/types-database@3.3.1
+  - @prosopo/common@3.1.16
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
+## 3.4.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/user-access-policy@3.5.14
+  - @prosopo/types-database@3.3.0
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
+## 3.3.2
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/types-database@3.2.2
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/config@3.1.14
+
+## 3.3.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [0555cd8]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types-database@3.2.1
+  - @prosopo/types@3.2.1
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/config@3.1.13
+
 ## 3.3.0
 ### Minor Changes
 

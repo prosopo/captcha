@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from "./HttpClientBase.js";
 export { default as ProviderApi } from "./ProviderApi.js";
+export { ApiClient } from "./apiClient.js";

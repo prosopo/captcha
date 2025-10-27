@@ -39,10 +39,12 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import express, { type Router } from "express";
-import type { ObjectId } from "mongoose";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
 import { FrictionlessManager } from "../tasks/frictionless/frictionlessTasks.js";
+import { timestampDecayFunction } from "../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../tasks/tasks.js";
+import { hashUserAgent } from "../utils/hashUserAgent.js";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "./blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
 
@@ -127,7 +129,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					)
 				)[0];
 
-				const { valid, reason, frictionlessTokenId } =
+				const { valid, reason, frictionlessTokenId, solvedImagesCount } =
 					await tasks.imgCaptchaManager.isValidRequest(
 						clientRecord,
 						CaptchaType.image,
@@ -154,6 +156,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 					solved: {
 						count:
+							solvedImagesCount ||
 							userAccessPolicy?.solvedImagesCount ||
 							env.config.captchas.solved.count,
 					},
@@ -206,7 +209,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					err,
 					data: req.params,
-					msg: "Error in PoW captcha solution submission",
+					msg: "Error in image captcha challenge request",
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
@@ -237,6 +240,20 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.SubmitImageCaptchaSolution,
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for image captcha",
+				}));
+				const result: CaptchaSolutionResponse = {
+					status: "ok",
+					captchas: [],
+					verified: true,
+				};
+				return res.json(result);
+			}
+
 			let parsed: CaptchaSolutionBodyType;
 			try {
 				parsed = CaptchaSolutionBody.parse(req.body);
@@ -268,7 +285,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 				}
 
-				// TODO allow the dapp to override the length of time that the request hash is valid for
 				const result: DappUserSolutionResult =
 					await tasks.imgCaptchaManager.dappUserSolution(
 						user,
@@ -294,7 +310,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					err,
 					body: req.body,
-					msg: "Error in PoW captcha solution submission",
+					msg: "Error in image captcha solution submission",
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
@@ -366,7 +382,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				)
 			)[0];
 
-			const { valid, reason, frictionlessTokenId } =
+			const { valid, reason, frictionlessTokenId, powDifficulty } =
 				await tasks.powCaptchaManager.isValidRequest(
 					clientSettings,
 					CaptchaType.pow,
@@ -408,6 +424,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			}
 
 			const difficulty =
+				powDifficulty ||
 				userAccessPolicy?.powDifficulty ||
 				clientSettings?.settings?.powDifficulty;
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
@@ -460,7 +477,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 			req.logger.error(() => ({
 				err,
 				body: req.body,
-				msg: "Error in PoW captcha solution submission",
+				msg: "Error in PoW captcha challenge request",
 			}));
 			return next(
 				new ProsopoApiError("API.BAD_REQUEST", {
@@ -491,6 +508,18 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		async (req, res, next) => {
 			let parsed: SubmitPowCaptchaSolutionBodyTypeOutput;
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified",
+				}));
+				const response: PowCaptchaSolutionResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(response);
+			}
 
 			try {
 				parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
@@ -566,6 +595,36 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				const { token, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
+				// If in maintenance mode, store dummy token and send PoW captcha
+				if (getMaintenanceMode()) {
+					req.logger.info(() => ({
+						msg: "Maintenance mode active - storing dummy token and sending PoW captcha",
+						data: { dapp, user },
+					}));
+
+					// Store a dummy frictionless token record
+					const tokenId = await tasks.db.storeFrictionlessTokenRecord({
+						token,
+						score: 0,
+						threshold: 0.5,
+						scoreComponents: {
+							baseScore: 0,
+						},
+						providerSelectEntropy: 0,
+						ipAddress: getCompositeIpAddress(req.ip || ""),
+					});
+
+					// Send PoW captcha
+					return res.json(
+						await tasks.frictionlessManager.sendPowCaptcha(
+							tokenId,
+							undefined,
+							false,
+							false,
+						),
+					);
+				}
+
 				// Check if the token has already been used
 				const existingToken =
 					await tasks.db.getFrictionlessTokenRecordByToken(token);
@@ -575,10 +634,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						token: existingToken,
 						msg: "Token has already been used",
 					}));
-					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
-							existingToken._id as ObjectId,
-						),
+					return next(
+						new ProsopoApiError("API.BAD_REQUEST", {
+							context: {
+								code: 400,
+								siteKey: dapp,
+								user,
+							},
+							i18n: req.i18n,
+							logger: req.logger,
+						}),
 					);
 				}
 
@@ -586,8 +651,27 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const { baseBotScore, timestamp, providerSelectEntropy } =
-					await tasks.frictionlessManager.decryptPayload(token);
+				const {
+					baseBotScore,
+					timestamp,
+					providerSelectEntropy,
+					userId,
+					userAgent,
+					webView,
+					iFrame,
+				} = await tasks.frictionlessManager.decryptPayload(token);
+
+				req.logger.debug(() => ({
+					msg: "Decrypted payload",
+					data: {
+						baseBotScore,
+						timestamp,
+						providerSelectEntropy,
+						userId,
+						userAgent,
+						webView,
+					},
+				}));
 
 				let botScore = baseBotScore + lScore;
 
@@ -656,6 +740,37 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					)
 				)[0];
 
+				// Check the user agent in token and user id in request match request
+				// Hash the request user agent to compare with the hashed user agent from the token
+				const headersUserAgent = req.headers["user-agent"];
+				const hashedHeadersUserAgent = headersUserAgent
+					? hashUserAgent(headersUserAgent)
+					: "";
+				const headersProsopoUser = req.headers["prosopo-user"];
+				if (
+					hashedHeadersUserAgent !== userAgent ||
+					headersProsopoUser !== userId
+				) {
+					req.logger.info(() => ({
+						msg: "User agent or user id does not match",
+						data: {
+							headersUserAgent,
+							hashedHeadersUserAgent,
+							userAgent: userAgent, // This is the hashed user agent from the token
+							headersProsopoUser,
+							userId,
+						},
+					}));
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							timestampDecayFunction(timestamp),
+							webView,
+							iFrame,
+						),
+					);
+				}
+
 				// If the user or IP address has an image captcha config defined, send an image captcha
 				if (userAccessPolicy) {
 					await tasks.frictionlessManager.scoreIncreaseAccessPolicy(
@@ -666,14 +781,43 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					);
 					if (userAccessPolicy.captchaType === CaptchaType.image) {
 						return res.json(
-							await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+							await tasks.frictionlessManager.sendImageCaptcha(
+								tokenId,
+								userAccessPolicy.solvedImagesCount,
+								webView,
+								iFrame,
+							),
 						);
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
 						return res.json(
-							await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+							await tasks.frictionlessManager.sendPowCaptcha(
+								tokenId,
+								undefined,
+								webView,
+								iFrame,
+							),
 						);
 					}
+				}
+
+				if (clientRecord.settings.disallowWebView && webView) {
+					tasks.logger.info(() => ({
+						msg: "WebView detected",
+					}));
+					botScore = await tasks.frictionlessManager.scoreIncreaseWebView(
+						baseBotScore,
+						botScore,
+						tokenId,
+					);
+					return res.json(
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							env.config.captchas.solved.count * 2,
+							webView,
+							iFrame,
+						),
+					);
 				}
 
 				// If the timestamp is older than 10 minutes, send an image captcha
@@ -685,7 +829,12 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						tokenId,
 					);
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							timestampDecayFunction(timestamp),
+							webView,
+							iFrame,
+						),
 					);
 				}
 
@@ -706,7 +855,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 				// If the bot score is greater than the threshold, send an image captcha
 				if (Number(botScore) > botThreshold) {
 					req.logger.info(() => ({
-						message: "Bot score is greater than threshold",
+						msg: "Bot score is greater than threshold",
 						data: {
 							botScore,
 							botThreshold,
@@ -714,13 +863,23 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					}));
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(tokenId),
+						await tasks.frictionlessManager.sendImageCaptcha(
+							tokenId,
+							env.config.captchas.solved.count,
+							webView,
+							iFrame,
+						),
 					);
 				}
 
 				// Otherwise, send a PoW captcha
 				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha(tokenId),
+					await tasks.frictionlessManager.sendPowCaptcha(
+						tokenId,
+						undefined,
+						webView,
+						iFrame,
+					),
 				);
 			} catch (err) {
 				req.logger.error(() => ({

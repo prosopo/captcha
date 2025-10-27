@@ -1,0 +1,59 @@
+{
+	"name": "@prosopo/redis-client",
+	"version": "1.0.6",
+	"description": "Pluggable Redis client for non-blocking connections with smart index creation",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"type": "module",
+	"engines": {
+		"node": "20",
+		"npm": "10.8.2"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"scripts": {
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test:integration": "NODE_ENV=${NODE_ENV:-test}; NX_PARALLEL=1 TEST_TYPE=integration npx vitest run --config ./vite.test.config.ts",
+		"test": "npm run test:integration"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/prosopo/captcha.git"
+	},
+	"author": "Prosopo Limited",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"dependencies": {
+		"@prosopo/common": "3.1.21",
+		"@redis/search": "5.0.0",
+		"redis": "5.0.0"
+	},
+	"devDependencies": {
+		"@prosopo/config": "3.1.21",
+		"@types/node": "22.10.2",
+		"@vitest/coverage-v8": "3.0.9",
+		"concurrently": "9.0.1",
+		"del-cli": "6.0.0",
+		"dotenv": "16.4.5",
+		"npm-run-all": "4.1.5",
+		"remove": "0.1.5",
+		"tslib": "2.7.0",
+		"tsx": "4.20.3",
+		"typescript": "5.6.2",
+		"vite": "6.3.5",
+		"vitest": "3.0.9"
+	},
+	"sideEffects": false
+}

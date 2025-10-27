@@ -51,4 +51,5 @@ export enum ApiParams {
 	detectorKey = "detectorKey",
 	ip = "ip",
 	expirationInSeconds = "expirationInSeconds",
+	enabled = "enabled",
 }

@@ -42,12 +42,13 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { at } from "@prosopo/util";
+import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
+import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
@@ -181,7 +182,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
 	 * @param headers
-	 * @param threshold the percentage of captchas that must be correct to return true
+	 * @param ja4
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -255,6 +256,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
+			const flat = receivedCaptchas.map((c) => extractData(c.salt));
+			const pairs = flat.map((list) => constructPairList(list));
+
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
 
@@ -303,6 +307,22 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
+			if (containsIdenticalPairs(pairs)) {
+				await this.db.disapproveDappUserCommitment(
+					commitmentId,
+					"CAPTCHA.INVALID_SOLUTION",
+					pairs,
+				);
+				response = {
+					captchas: captchaIds.map((id) => ({
+						captchaId: id,
+						proof: [[]],
+					})),
+					verified: false,
+				};
+				return response;
+			}
+
 			if (
 				compareCaptchaSolutions(
 					receivedCaptchas,
@@ -318,11 +338,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				await this.db.approveDappUserCommitment(commitmentId);
+				await this.db.approveDappUserCommitment(commitmentId, pairs);
 			} else {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
+					pairs,
 				);
 				response = {
 					captchas: captchaIds.map((id) => ({
@@ -465,6 +486,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
+		disallowWebView?: boolean,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -560,6 +582,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 						score: score,
 					},
 				}));
+
+				if (
+					disallowWebView === true &&
+					(tokenRecord.scoreComponents.webView || 0) > 0
+				) {
+					this.logger.info(() => ({
+						msg: "Disallowing webview access - user not verified",
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
 			}
 		}
 

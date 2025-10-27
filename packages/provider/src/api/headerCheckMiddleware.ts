@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
+import { getLogger, parseLogLevel } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
@@ -38,6 +39,12 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 
 			req.user = user;
 			req.siteKey = siteKey;
+
+			// Attach site key and user to the request logger
+			req.logger = req.logger.with({
+				user,
+				siteKey,
+			});
 
 			next();
 		} catch (err) {

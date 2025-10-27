@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Logger, ProsopoEnvError, getLogger } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import type { KeyringPair } from "@prosopo/types";
 import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
@@ -27,13 +27,10 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type {
 	AccessPolicy,
 	AccessRulesStorage,
-	UserScopeApiInput,
-	UserScopeApiOutput,
+	UserScope,
+	UserScopeRecord,
 } from "@prosopo/user-access-policy";
-import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
-import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import { deepValidateIpAddress } from "../util.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -70,43 +67,6 @@ export class CaptchaManager {
 			return { valid: false, reason: "CAPTCHA.NO_SESSION_FOUND" };
 		}
 
-		// Commenting out since I'm in a rush and this is old business logic to pass over (as a result of new knowledge about ip behaviour)
-
-		// if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
-		// 	this.logger.warn(() => ({
-		// 		msg: "No IP API key found",
-		// 		data: { sessionId: sessionRecord.sessionId },
-		// 	}));
-		// 	throw new ProsopoEnvError("API.UNKNOWN", {
-		// 		context: { error: "No IP API key found" },
-		// 	});
-		// }
-
-		// if (tokenRecord.ipAddress !== undefined) {
-		// 	const recordIpAddress = getIpAddressFromComposite(tokenRecord.ipAddress);
-		// 	const ipValidation = await deepValidateIpAddress(
-		// 		currentIP,
-		// 		recordIpAddress,
-		// 		this.logger,
-		// 		env.config.ipApi.apiKey,
-		// 		env.config.ipApi.baseUrl,
-		// 	);
-		// 	const isValidIp = ipValidation.isValid;
-
-		// 	if (!isValidIp) {
-		// 		this.logger.info(() => ({
-		// 			msg: "IP address mismatch for frictionless token",
-		// 			data: {
-		// 				sessionId: sessionRecord.sessionId,
-		// 				tokenId: tokenRecord._id,
-		// 				originalIP: recordIpAddress.bigInt().toString() || "unknown",
-		// 				currentIP: currentIP,
-		// 			},
-		// 		}));
-		// 		return { valid: false, reason: "CAPTCHA.IP_ADDRESS_MISMATCH" };
-		// 	}
-		// }
-
 		return { valid: true };
 	}
 
@@ -122,6 +82,8 @@ export class CaptchaManager {
 		reason?: TranslationKey;
 		frictionlessTokenId?: FrictionlessTokenId;
 		type: CaptchaType;
+		powDifficulty?: number;
+		solvedImagesCount?: number;
 	}> {
 		this.logger.debug(() => ({
 			msg: "Validating request",
@@ -149,7 +111,6 @@ export class CaptchaManager {
 				type: requestedCaptchaType,
 			};
 		}
-
 		// Session ID
 
 		// If the client has a sessionId then they are requesting a frictionless captcha.
@@ -209,6 +170,12 @@ export class CaptchaManager {
 					valid: true,
 					frictionlessTokenId,
 					type: requestedCaptchaType,
+					...(sessionRecord.powDifficulty && {
+						powDifficulty: sessionRecord.powDifficulty,
+					}),
+					...(sessionRecord.solvedImagesCount && {
+						solvedImagesCount: sessionRecord.solvedImagesCount,
+					}),
 				};
 			}
 
@@ -274,9 +241,7 @@ export class CaptchaManager {
 	async getPrioritisedAccessPolicies(
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
-		userScope: {
-			[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
-		},
+		userScope: UserScope | UserScopeRecord,
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,

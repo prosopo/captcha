@@ -1,5 +1,153 @@
 # @prosopo/user-access-policy
 
+## 3.5.24
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/api@3.1.29
+
+## 3.5.23
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/api@3.1.28
+  - @prosopo/common@3.1.21
+  - @prosopo/api-route@2.6.29
+  - @prosopo/redis-client@1.0.6
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+
+## 3.5.22
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/api@3.1.27
+
+## 3.5.21
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/api@3.1.26
+
+## 3.5.20
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/api@3.1.25
+
+## 3.5.19
+### Patch Changes
+
+  - @prosopo/api@3.1.24
+  - @prosopo/api-route@2.6.28
+  - @prosopo/common@3.1.20
+  - @prosopo/redis-client@1.0.5
+  - @prosopo/types@3.5.3
+  - @prosopo/util@3.1.5
+
+## 3.5.18
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/redis-client@1.0.4
+  - @prosopo/api-route@2.6.27
+  - @prosopo/types@3.5.2
+  - @prosopo/util@3.1.4
+  - @prosopo/api@3.1.23
+
+## 3.5.17
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/redis-client@1.0.3
+  - @prosopo/api-route@2.6.26
+  - @prosopo/common@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/api@3.1.22
+
+## 3.5.16
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/redis-client@1.0.2
+  - @prosopo/api-route@2.6.25
+  - @prosopo/common@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/util@3.1.2
+  - @prosopo/api@3.1.21
+
+## 3.5.15
+### Patch Changes
+
+- 11303d9: feat/pluggable-redis
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- 11303d9: feat/pluggable-redis
+- Updated dependencies [11303d9]
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/redis-client@1.0.1
+  - @prosopo/api-route@2.6.24
+  - @prosopo/common@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/util@3.1.1
+  - @prosopo/api@3.1.20
+
+## 3.5.14
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/api-route@2.6.23
+  - @prosopo/common@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/util@3.1.0
+  - @prosopo/config@3.1.15
+
+## 3.5.13
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/api-route@2.6.22
+  - @prosopo/common@3.1.14
+  - @prosopo/util@3.0.17
+  - @prosopo/config@3.1.14
+
+## 3.5.12
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/api-route@2.6.21
+  - @prosopo/common@3.1.13
+  - @prosopo/util@3.0.16
+  - @prosopo/config@3.1.13
+
 ## 3.5.11
 ### Patch Changes
 

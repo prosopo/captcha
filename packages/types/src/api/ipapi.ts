@@ -155,8 +155,8 @@ export interface IPInfoResult {
 	vpnType?: "exit_node" | "vpn_server";
 
 	// Risk scoring
-	abuserScore?: string;
-	companyAbuserScore?: string;
+	abuserScore?: number;
+	companyAbuserScore?: number;
 
 	// Raw response for debugging
 	rawResponse?: IPApiResponse;
@@ -183,22 +183,26 @@ type IPDetails = {
 	connectionType: IPConnectionType;
 	isVpnOrProxy: boolean;
 	country?: string;
+	countryCode?: string;
 	city?: string;
 	coordinates?: { latitude: number; longitude: number };
+	abuserScore?: number;
+};
+
+export type IPComparison = {
+	differentProviders: boolean;
+	differentConnectionTypes: boolean;
+	distanceKm?: number;
+	anyVpnOrProxy: boolean;
+	ip1Details: IPDetails;
+	ip2Details: IPDetails;
 };
 
 export interface IPComparisonResult {
 	ipsMatch: boolean;
 	ip1: string;
 	ip2: string;
-	comparison?: {
-		differentProviders: boolean;
-		differentConnectionTypes: boolean;
-		distanceKm?: number;
-		anyVpnOrProxy: boolean;
-		ip1Details: IPDetails;
-		ip2Details: IPDetails;
-	};
+	comparison?: IPComparison;
 }
 
 export interface IPComparisonError {

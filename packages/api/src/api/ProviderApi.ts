@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import {
 	AdminApiPaths,
 	ApiParams,
@@ -39,33 +40,19 @@ import {
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
+	ToggleMaintenanceModeBody,
 	UpdateDetectorKeyBody,
 	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
-import {
-	type DeleteRulesEndpointSchemaInput,
-	type InsertManyRulesEndpointInputSchema,
-	accessRuleApiPaths,
-} from "@prosopo/user-access-policy";
-import HttpClientBase from "./HttpClientBase.js";
+import { ApiClient } from "./apiClient.js";
 
 export default class ProviderApi
-	extends HttpClientBase
+	extends ApiClient
 	implements ProviderApiInterface
 {
-	private account: string;
-
-	constructor(providerUrl: string, account: string) {
-		const providerUrlWithProtocol = !providerUrl.startsWith("http")
-			? `https://${providerUrl}`
-			: providerUrl;
-		super(providerUrlWithProtocol);
-		this.account = account;
-	}
-
 	public getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
@@ -315,34 +302,14 @@ export default class ProviderApi
 		);
 	}
 
-	public insertUserAccessPolicies(
-		rules: InsertManyRulesEndpointInputSchema,
-		jwt: string,
+	public toggleMaintenanceMode(
+		enabled: boolean,
+		timestamp: string,
+		signature: string,
 	): Promise<ApiResponse> {
-		return this.post(accessRuleApiPaths.INSERT_MANY, rules, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				Authorization: `Bearer ${jwt}`,
-			},
-		});
-	}
-
-	public deleteUserAccessPolicies(
-		rules: DeleteRulesEndpointSchemaInput,
-		jwt: string,
-	): Promise<ApiResponse> {
-		return this.post(accessRuleApiPaths.DELETE_MANY, rules, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				Authorization: `Bearer ${jwt}`,
-			},
-		});
-	}
-
-	public deleteAllUserAccessPolicies(jwt: string): Promise<ApiResponse> {
 		return this.post(
-			accessRuleApiPaths.DELETE_ALL,
-			{},
+			AdminApiPaths.ToggleMaintenanceMode,
+			ToggleMaintenanceModeBody.parse({ enabled }),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
