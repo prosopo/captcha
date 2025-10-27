@@ -639,7 +639,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const commitmentRecord = UserCommitmentSchema.parse({
 			...commit,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		});
 		if (captchas.length) {
 			const filter: Pick<UserCommitmentRecord, "id"> = {
@@ -706,7 +706,9 @@ export class ProviderDatabase
 
 		const powCaptchaRecord: PoWCaptchaStored = {
 			challenge,
-			...components,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
 			ipAddress,
 			headers,
 			ja4,
@@ -716,7 +718,7 @@ export class ProviderDatabase
 			difficulty,
 			providerSignature,
 			userSignature,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 			frictionlessTokenId,
 		};
 
@@ -957,7 +959,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 
 		await this.tables?.commitment.updateMany(
@@ -1053,7 +1055,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
@@ -1164,7 +1166,7 @@ export class ProviderDatabase
 			const session = await this.tables.session
 				.findOneAndUpdate<SessionRecord>(filter, {
 					deleted: true,
-					lastUpdatedTimestamp: Date.now(),
+					lastUpdatedTimestamp: new Date(),
 				})
 				.lean<SessionRecord>();
 			return session || undefined;
@@ -1556,7 +1558,7 @@ export class ProviderDatabase
 				"result" | "lastUpdatedTimestamp" | "coords"
 			> = {
 				result,
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 				...(coords ? { coords } : {}),
 			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -1587,7 +1589,7 @@ export class ProviderDatabase
 				"result" | "lastUpdatedTimestamp" | "coords"
 			> = {
 				result: { status: CaptchaStatus.disapproved, reason },
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 				...(coords ? { coords } : {}),
 			};
 

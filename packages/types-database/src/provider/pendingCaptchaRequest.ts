@@ -24,7 +24,7 @@ export interface PendingCaptchaRequest {
 	salt: string;
 	[ApiParams.requestHash]: string;
 	deadlineTimestamp: number; // unix timestamp
-	requestedAtTimestamp: number; // unix timestamp
+	requestedAtTimestamp: Date;
 	ipAddress: CompositeIpAddress;
 	frictionlessTokenId?: FrictionlessTokenId;
 	threshold: number;
