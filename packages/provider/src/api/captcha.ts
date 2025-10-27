@@ -613,19 +613,19 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 					// Send PoW captcha with dummy frictionless data
 					return res.json(
-						await tasks.frictionlessManager.sendPowCaptcha(
+						await tasks.frictionlessManager.sendPowCaptcha({
 							token,
-							0,
-							0.5,
-							{
+							score: 0,
+							threshold: 0.5,
+							scoreComponents: {
 								baseScore: 0,
 							},
-							0,
-							getCompositeIpAddress(req.ip || ""),
-							undefined,
-							false,
-							false,
-						),
+							providerSelectEntropy: 0,
+							ipAddress: getCompositeIpAddress(req.ip || ""),
+							powDifficulty: undefined,
+							webView: false,
+							iFrame: false,
+						}),
 					);
 				}
 
@@ -760,17 +760,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					}));
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
+						await tasks.frictionlessManager.sendImageCaptcha({
 							token,
-							botScore,
-							botThreshold,
+							score: botScore,
+							threshold: botThreshold,
 							scoreComponents,
 							providerSelectEntropy,
 							ipAddress,
-							timestampDecayFunction(timestamp),
+							solvedImagesCount: timestampDecayFunction(timestamp),
 							webView,
 							iFrame,
-						),
+						}),
 					);
 				}
 
@@ -788,32 +788,32 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 
 					if (userAccessPolicy.captchaType === CaptchaType.image) {
 						return res.json(
-							await tasks.frictionlessManager.sendImageCaptcha(
+							await tasks.frictionlessManager.sendImageCaptcha({
 								token,
-								botScore,
-								botThreshold,
+								score: botScore,
+								threshold: botThreshold,
 								scoreComponents,
 								providerSelectEntropy,
 								ipAddress,
-								userAccessPolicy.solvedImagesCount,
+								solvedImagesCount: userAccessPolicy.solvedImagesCount,
 								webView,
 								iFrame,
-							),
+							}),
 						);
 					}
 					if (userAccessPolicy.captchaType === CaptchaType.pow) {
 						return res.json(
-							await tasks.frictionlessManager.sendPowCaptcha(
+							await tasks.frictionlessManager.sendPowCaptcha({
 								token,
-								botScore,
-								botThreshold,
+								score: botScore,
+								threshold: botThreshold,
 								scoreComponents,
 								providerSelectEntropy,
 								ipAddress,
-								undefined,
+								powDifficulty: undefined,
 								webView,
 								iFrame,
-							),
+							}),
 						);
 					}
 				}
@@ -831,17 +831,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					scoreComponents = scoreUpdate.scoreComponents;
 
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
+						await tasks.frictionlessManager.sendImageCaptcha({
 							token,
-							botScore,
-							botThreshold,
+							score: botScore,
+							threshold: botThreshold,
 							scoreComponents,
 							providerSelectEntropy,
 							ipAddress,
-							env.config.captchas.solved.count * 2,
+							solvedImagesCount: env.config.captchas.solved.count * 2,
 							webView,
 							iFrame,
-						),
+						}),
 					);
 				}
 
@@ -857,17 +857,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					scoreComponents = scoreUpdate.scoreComponents;
 
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
+						await tasks.frictionlessManager.sendImageCaptcha({
 							token,
-							botScore,
-							botThreshold,
+							score: botScore,
+							threshold: botThreshold,
 							scoreComponents,
 							providerSelectEntropy,
 							ipAddress,
-							timestampDecayFunction(timestamp),
+							solvedImagesCount: timestampDecayFunction(timestamp),
 							webView,
 							iFrame,
-						),
+						}),
 					);
 				}
 
@@ -898,33 +898,33 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 						},
 					}));
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
+						await tasks.frictionlessManager.sendImageCaptcha({
 							token,
-							botScore,
-							botThreshold,
+							score: botScore,
+							threshold: botThreshold,
 							scoreComponents,
 							providerSelectEntropy,
 							ipAddress,
-							env.config.captchas.solved.count,
+							solvedImagesCount: env.config.captchas.solved.count,
 							webView,
 							iFrame,
-						),
+						}),
 					);
 				}
 
 				// Otherwise, send a PoW captcha
 				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha(
+					await tasks.frictionlessManager.sendPowCaptcha({
 						token,
-						botScore,
-						botThreshold,
+						score: botScore,
+						threshold: botThreshold,
 						scoreComponents,
 						providerSelectEntropy,
 						ipAddress,
-						undefined,
+						powDifficulty: undefined,
 						webView,
 						iFrame,
-					),
+					}),
 				);
 			} catch (err) {
 				req.logger.error(() => ({
