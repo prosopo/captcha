@@ -159,7 +159,9 @@ export interface UserCommitment extends Commit, StoredCaptcha {
 	userSignature: string;
 }
 
-export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha {}
+export interface PoWCaptchaStored
+	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
+		StoredCaptcha {}
 
 const CaptchaResultSchema = object({
 	status: nativeEnum(CaptchaStatus),

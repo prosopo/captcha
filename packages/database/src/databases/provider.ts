@@ -815,7 +815,7 @@ export class ProviderDatabase
 		userSignature?: string,
 	): Promise<void> {
 		const tables = this.getTables();
-		const timestamp = Date.now();
+		const timestamp = new Date();
 		const update: Pick<
 			PoWCaptchaRecord,
 			| "result"
@@ -942,7 +942,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 		await this.tables?.commitment.updateMany(
 			{ id: { $in: commitmentIds } },
@@ -1037,7 +1037,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 
 		await this.tables?.powcaptcha.updateMany(
@@ -1696,7 +1696,7 @@ export class ProviderDatabase
 		taskName: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
 	): Promise<ObjectId> {
-		const now = new Date().getTime();
+		const now = new Date();
 		const doc = ScheduledTaskSchema.parse({
 			processName: taskName,
 			datetime: now,
@@ -1716,7 +1716,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const update: Omit<ScheduledTask, "processName" | "datetime"> = {
 			status,
-			updated: new Date().getTime(),
+			updated: new Date(),
 			...(result && { result }),
 		};
 		const filter: Pick<ScheduledTaskRecord, "_id"> = { _id: taskId };
