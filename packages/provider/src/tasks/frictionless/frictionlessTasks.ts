@@ -67,6 +67,16 @@ export interface PowCaptchaSessionParams extends SessionParams {
 
 export class FrictionlessManager extends CaptchaManager {
 	config: ProsopoConfigOutput;
+	private sessionParams?: {
+		token: string;
+		score: number;
+		threshold: number;
+		scoreComponents: ScoreComponents;
+		providerSelectEntropy: number;
+		ipAddress: CompositeIpAddress;
+		webView: boolean;
+		iFrame: boolean;
+	};
 
 	constructor(
 		db: IProviderDatabase,
@@ -76,6 +86,26 @@ export class FrictionlessManager extends CaptchaManager {
 	) {
 		super(db, pair, logger);
 		this.config = config;
+	}
+
+	setSessionParams(params: SessionParams): void {
+		this.sessionParams = {
+			token: params.token,
+			score: params.score,
+			threshold: params.threshold,
+			scoreComponents: params.scoreComponents,
+			providerSelectEntropy: params.providerSelectEntropy,
+			ipAddress: params.ipAddress,
+			webView: params.webView ?? false,
+			iFrame: params.iFrame ?? false,
+		};
+	}
+
+	updateScore(score: number, scoreComponents: ScoreComponents): void {
+		if (this.sessionParams) {
+			this.sessionParams.score = score;
+			this.sessionParams.scoreComponents = scoreComponents;
+		}
 	}
 
 	checkLangRules(acceptLanguage: string): number {
@@ -138,20 +168,34 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendImageCaptcha(
-		params: ImageCaptchaSessionParams,
+		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
+		const effectiveParams = { ...this.sessionParams, ...params };
+		if (
+			!effectiveParams.token ||
+			effectiveParams.score === undefined ||
+			effectiveParams.threshold === undefined ||
+			!effectiveParams.scoreComponents ||
+			effectiveParams.providerSelectEntropy === undefined ||
+			!effectiveParams.ipAddress
+		) {
+			throw new Error(
+				"Session parameters must be set before calling sendImageCaptcha",
+			);
+		}
+
 		const sessionRecord = await this.createSession(
-			params.token,
-			params.score,
-			params.threshold,
-			params.scoreComponents,
-			params.providerSelectEntropy,
-			params.ipAddress,
+			effectiveParams.token,
+			effectiveParams.score,
+			effectiveParams.threshold,
+			effectiveParams.scoreComponents,
+			effectiveParams.providerSelectEntropy,
+			effectiveParams.ipAddress,
 			CaptchaType.image,
-			params.solvedImagesCount,
+			params?.solvedImagesCount,
 			undefined,
-			params.webView ?? false,
-			params.iFrame ?? false,
+			effectiveParams.webView ?? false,
+			effectiveParams.iFrame ?? false,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
@@ -161,20 +205,34 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendPowCaptcha(
-		params: PowCaptchaSessionParams,
+		params?: Partial<PowCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
+		const effectiveParams = { ...this.sessionParams, ...params };
+		if (
+			!effectiveParams.token ||
+			effectiveParams.score === undefined ||
+			effectiveParams.threshold === undefined ||
+			!effectiveParams.scoreComponents ||
+			effectiveParams.providerSelectEntropy === undefined ||
+			!effectiveParams.ipAddress
+		) {
+			throw new Error(
+				"Session parameters must be set before calling sendPowCaptcha",
+			);
+		}
+
 		const sessionRecord = await this.createSession(
-			params.token,
-			params.score,
-			params.threshold,
-			params.scoreComponents,
-			params.providerSelectEntropy,
-			params.ipAddress,
+			effectiveParams.token,
+			effectiveParams.score,
+			effectiveParams.threshold,
+			effectiveParams.scoreComponents,
+			effectiveParams.providerSelectEntropy,
+			effectiveParams.ipAddress,
 			CaptchaType.pow,
 			undefined,
-			params.powDifficulty,
-			params.webView ?? false,
-			params.iFrame ?? false,
+			params?.powDifficulty,
+			effectiveParams.webView ?? false,
+			effectiveParams.iFrame ?? false,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
