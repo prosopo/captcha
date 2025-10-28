@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import { type Logger, executeBatchesSequentially } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
@@ -43,19 +43,37 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	}
 
 	async processRequest(
-		args: AccessRulesFilter[],
+		args: AccessRulesFilterInput[],
 	): Promise<ApiEndpointResponse> {
-		const allRuleIds = [];
+		const ruleIds = [];
 
-		for (const accessRuleFilter of args) {
-			const foundRuleIds =
-				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
+		for (const filterInput of args) {
+			const { policyScopes, policyScope, ...filterBase } = filterInput;
 
-			allRuleIds.push(...foundRuleIds);
+			const allPolicyScopes = policyScopes || [];
+
+			if (policyScope) {
+				allPolicyScopes.push(policyScope);
+			}
+
+			const filters: AccessRulesFilter[] =
+				allPolicyScopes.length > 0
+					? allPolicyScopes.map((policyScope) => ({
+							...filterBase,
+							policyScope,
+						}))
+					: [filterBase];
+
+			const ruleIdBatches = await executeBatchesSequentially(
+				filters,
+				(filter) => this.accessRulesStorage.findRuleIds(filter),
+			);
+
+			ruleIds.push(...ruleIdBatches.flat());
 		}
 
 		// Set() automatically removes duplicates
-		const uniqueRuleIds = [...new Set(allRuleIds)];
+		const uniqueRuleIds = [...new Set(ruleIds)];
 
 		if (uniqueRuleIds.length > 0) {
 			await this.accessRulesStorage.deleteRules(uniqueRuleIds);

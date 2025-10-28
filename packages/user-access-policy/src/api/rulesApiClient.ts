@@ -145,13 +145,13 @@ export class AccessRulesApiClient extends ApiClient {
 	}
 
 	public insertMany(
-		rulesGroup: InsertRulesGroup,
+		ruleGroups: InsertRulesGroup[],
 		timestamp: string,
 		signature: string,
 	): Promise<ApiEndpointResponse> {
 		return this.post(
 			accessRuleApiPaths.INSERT_MANY,
-			rulesGroup,
+			ruleGroups,
 			this.getAuthHeaders(timestamp, signature),
 		);
 	}
