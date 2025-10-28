@@ -29,6 +29,9 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 // Define a custom event name for procaptcha execution
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
+// Define a custom event name for procaptcha ready
+const PROCAPTCHA_READY_EVENT = "procaptcha:ready";
+
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = async () => {
 	// Get elements with class 'procaptcha', not including buttons
@@ -251,7 +254,7 @@ export const reset = () => {
 window.procaptcha = { ready, render, reset, execute };
 
 // Dispatch a custom event to notify that window.procaptcha is ready
-const procaptchaReadyEvent = new CustomEvent("procaptcha:ready", {
+const procaptchaReadyEvent = new CustomEvent(PROCAPTCHA_READY_EVENT, {
 	detail: {
 		timestamp: Date.now(),
 	},
