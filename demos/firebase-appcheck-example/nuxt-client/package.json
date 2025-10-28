@@ -1,0 +1,22 @@
+{
+  "name": "firebase-appcheck-example-nuxt-client",
+  "version": "1.0.0",
+  "description": "Nuxt 3 client for Firebase App Check with Prosopo Procaptcha",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "nuxt": "^3.10.0",
+    "vue": "^3.4.0",
+    "firebase": "^10.8.0",
+    "@prosopo/procaptcha-vue": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
