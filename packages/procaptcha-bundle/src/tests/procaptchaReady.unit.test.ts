@@ -22,7 +22,9 @@ describe("procaptcha:ready event", () => {
 		dom = new JSDOM("<!DOCTYPE html><html><body></body></html>", {
 			url: "https://example.com",
 		});
+		// @ts-ignore
 		global.document = dom.window.document;
+		// @ts-ignore
 		global.window = dom.window as unknown as Window & typeof globalThis;
 	});
 
@@ -49,7 +51,6 @@ describe("procaptcha:ready event", () => {
 			expect(window.procaptcha?.reset).toBeDefined();
 			expect(window.procaptcha?.execute).toBeDefined();
 
-			done();
 		});
 
 		// Import the module which should set window.procaptcha and dispatch the event
