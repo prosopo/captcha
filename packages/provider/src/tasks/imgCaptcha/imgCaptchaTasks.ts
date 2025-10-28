@@ -36,7 +36,6 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	PendingCaptchaRequest,
 	UserCommitment,
@@ -94,7 +93,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -161,7 +160,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			currentTime,
 			getCompositeIpAddress(ipAddress),
 			threshold,
-			frictionlessTokenId,
+			sessionId,
 		);
 		return {
 			captchas,
@@ -286,7 +285,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				requestedAtTimestamp: new Date(timestamp),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
-				frictionlessTokenId: pendingRecord.frictionlessTokenId,
+				sessionId: pendingRecord.sessionId,
 				ja4,
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
@@ -571,22 +570,22 @@ export class ImgCaptchaManager extends CaptchaManager {
 		const isApproved = solution.result.status === CaptchaStatus.approved;
 
 		let score: number | undefined;
-		if (solution.frictionlessTokenId) {
-			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-				solution.frictionlessTokenId,
+		if (solution.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				solution.sessionId,
 			);
-			if (tokenRecord) {
-				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+			if (sessionRecord) {
+				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 				this.logger.info(() => ({
 					data: {
-						tscoreComponents: tokenRecord?.scoreComponents,
+						scoreComponents: sessionRecord?.scoreComponents,
 						score: score,
 					},
 				}));
 
 				if (
 					disallowWebView === true &&
-					(tokenRecord.scoreComponents.webView || 0) > 0
+					(sessionRecord.scoreComponents.webView || 0) > 0
 				) {
 					this.logger.info(() => ({
 						msg: "Disallowing webview access - user not verified",

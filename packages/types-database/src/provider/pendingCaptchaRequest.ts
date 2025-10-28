@@ -13,10 +13,7 @@
 // limitations under the License.
 
 import { ApiParams } from "@prosopo/types";
-import type {
-	CompositeIpAddress,
-	FrictionlessTokenId,
-} from "../types/index.js";
+import type { CompositeIpAddress } from "../types/index.js";
 
 export interface PendingCaptchaRequest {
 	accountId: string;
@@ -26,6 +23,6 @@ export interface PendingCaptchaRequest {
 	deadlineTimestamp: number; // unix timestamp
 	requestedAtTimestamp: Date;
 	ipAddress: CompositeIpAddress;
-	frictionlessTokenId?: FrictionlessTokenId;
+	sessionId?: string;
 	threshold: number;
 }
