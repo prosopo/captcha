@@ -630,7 +630,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const commitmentRecord = UserCommitmentSchema.parse({
 			...commit,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		});
 		if (captchas.length) {
 			const filter: Pick<UserCommitmentRecord, "id"> = {
@@ -697,7 +697,9 @@ export class ProviderDatabase
 
 		const powCaptchaRecord: PoWCaptchaStored = {
 			challenge,
-			...components,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
 			ipAddress,
 			headers,
 			ja4,
@@ -707,7 +709,7 @@ export class ProviderDatabase
 			difficulty,
 			providerSignature,
 			userSignature,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 			sessionId,
 		};
 
@@ -804,7 +806,7 @@ export class ProviderDatabase
 		userSignature?: string,
 	): Promise<void> {
 		const tables = this.getTables();
-		const timestamp = Date.now();
+		const timestamp = new Date();
 		const update: Pick<
 			PoWCaptchaRecord,
 			| "result"
@@ -931,7 +933,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 		await this.tables?.commitment.updateMany(
 			{ id: { $in: commitmentIds } },
@@ -948,7 +950,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 
 		await this.tables?.commitment.updateMany(
@@ -1026,7 +1028,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 
 		await this.tables?.powcaptcha.updateMany(
@@ -1044,7 +1046,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
@@ -1115,7 +1117,7 @@ export class ProviderDatabase
 			const session = await this.tables.session
 				.findOneAndUpdate<SessionRecord>(filter, {
 					deleted: true,
-					lastUpdatedTimestamp: Date.now(),
+					lastUpdatedTimestamp: new Date(),
 				})
 				.lean<SessionRecord>();
 			return session || undefined;
@@ -1493,7 +1495,7 @@ export class ProviderDatabase
 				"result" | "lastUpdatedTimestamp" | "coords"
 			> = {
 				result,
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 				...(coords ? { coords } : {}),
 			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -1524,7 +1526,7 @@ export class ProviderDatabase
 				"result" | "lastUpdatedTimestamp" | "coords"
 			> = {
 				result: { status: CaptchaStatus.disapproved, reason },
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 				...(coords ? { coords } : {}),
 			};
 
@@ -1631,7 +1633,7 @@ export class ProviderDatabase
 		taskName: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
 	): Promise<ObjectId> {
-		const now = new Date().getTime();
+		const now = new Date();
 		const doc = ScheduledTaskSchema.parse({
 			processName: taskName,
 			datetime: now,
@@ -1651,7 +1653,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const update: Omit<ScheduledTask, "processName" | "datetime"> = {
 			status,
-			updated: new Date().getTime(),
+			updated: new Date(),
 			...(result && { result }),
 		};
 		const filter: Pick<ScheduledTaskRecord, "_id"> = { _id: taskId };

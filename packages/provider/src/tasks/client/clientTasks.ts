@@ -229,7 +229,7 @@ export class ClientTaskManager {
 			// Get updated client records within a ten minute window of the last completed task
 			const tenMinuteWindow = 10 * 60 * 1000;
 			const updatedAtTimestamp = lastTask?.updated
-				? lastTask.updated - tenMinuteWindow || 0
+				? lastTask.updated.getTime() - tenMinuteWindow || 0
 				: 0;
 
 			this.logger.info(() => ({
@@ -368,7 +368,7 @@ export class ClientTaskManager {
 		return (
 			!lastUpdatedTimestamp ||
 			!storedAtTimestamp ||
-			lastUpdatedTimestamp > storedAtTimestamp
+			lastUpdatedTimestamp.getTime() > storedAtTimestamp.getTime()
 		);
 	}
 

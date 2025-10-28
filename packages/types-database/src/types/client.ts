@@ -115,14 +115,14 @@ export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
 	account: String,
 	url: String,
 	mnemonic: String,
-	createdAt: Number,
+	createdAt: Date,
 	activated: Boolean,
 	tier: String,
 	settings: {
 		type: UserSettingsSchema,
 		required: false,
 	},
-	updatedAtTimestamp: Number,
+	updatedAtTimestamp: Date,
 });
 
 type User = {

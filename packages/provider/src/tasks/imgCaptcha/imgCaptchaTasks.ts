@@ -282,7 +282,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSignature: userTimestampSignature,
 				userSubmitted: true,
 				serverChecked: false,
-				requestedAtTimestamp: timestamp,
+				requestedAtTimestamp: new Date(timestamp),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
 				sessionId: pendingRecord.sessionId,
@@ -519,7 +519,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// Check if solution was completed recently
 		const currentTime = Date.now();
-		const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
+		const timeSinceCompletion =
+			currentTime - solution.requestedAtTimestamp.getTime();
 
 		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {

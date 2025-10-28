@@ -138,8 +138,8 @@ export interface StoredCaptcha {
 		reason?: TranslationKey;
 		error?: string;
 	};
-	requestedAtTimestamp: Timestamp;
-	deadlineTimestamp?: Timestamp;
+	requestedAtTimestamp: Date;
+	deadlineTimestamp?: Date;
 	ipAddress: CompositeIpAddress;
 	providedIp?: CompositeIpAddress;
 	headers: RequestHeaders;
@@ -149,8 +149,8 @@ export interface StoredCaptcha {
 	geolocation?: string;
 	vpn?: boolean;
 	parsedUserAgentInfo?: UserAgentInfo;
-	storedAtTimestamp?: Timestamp;
-	lastUpdatedTimestamp?: Timestamp;
+	storedAtTimestamp?: Date;
+	lastUpdatedTimestamp?: Date;
 	sessionId?: string;
 	coords?: [number, number][][];
 }
@@ -159,7 +159,9 @@ export interface UserCommitment extends Commit, StoredCaptcha {
 	userSignature: string;
 }
 
-export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha {}
+export interface PoWCaptchaStored
+	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
+		StoredCaptcha {}
 
 const CaptchaResultSchema = object({
 	status: nativeEnum(CaptchaStatus),
@@ -181,9 +183,9 @@ export const UserCommitmentSchema = object({
 	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
-	storedAtTimestamp: TimestampSchema.optional(),
-	requestedAtTimestamp: TimestampSchema,
-	lastUpdatedTimestamp: TimestampSchema.optional(),
+	storedAtTimestamp: date().optional(),
+	requestedAtTimestamp: date(),
+	lastUpdatedTimestamp: date().optional(),
 	sessionId: string().optional(),
 	coords: array(array(array(number()))).optional(),
 });
@@ -236,8 +238,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
-	requestedAtTimestamp: { type: Number, required: true },
-	lastUpdatedTimestamp: { type: Number, required: false },
+	requestedAtTimestamp: { type: Date, required: true },
+	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
@@ -302,8 +304,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
-	requestedAtTimestamp: { type: Number, required: true },
-	lastUpdatedTimestamp: { type: Number, required: false },
+	requestedAtTimestamp: { type: Date, required: true },
+	lastUpdatedTimestamp: { type: Date, required: false },
 	geolocation: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
@@ -378,12 +380,7 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-export type PendingCaptchaRequestMongoose = Omit<
-	PendingCaptchaRequest,
-	"requestedAtTimestamp"
-> & {
-	requestedAtTimestamp: Date;
-};
+export type PendingCaptchaRequestMongoose = PendingCaptchaRequest;
 
 export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	accountId: { type: String, required: true },
@@ -404,8 +401,8 @@ PendingRecordSchema.index({ requestHash: -1 });
 
 export const ScheduledTaskSchema = object({
 	processName: nativeEnum(ScheduledTaskNames),
-	datetime: TimestampSchema,
-	updated: TimestampSchema.optional(),
+	datetime: date(),
+	updated: date().optional(),
 	status: nativeEnum(ScheduledTaskStatus),
 	result: object({
 		data: any().optional(),
@@ -417,14 +414,12 @@ export type ScheduledTask = zInfer<typeof ScheduledTaskSchema>;
 
 export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
-type ScheduledTaskMongoose = Omit<ScheduledTaskRecord, "datetime"> & {
-	datetime: Date;
-};
+type ScheduledTaskMongoose = ScheduledTaskRecord;
 
 export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
 	processName: { type: String, enum: ScheduledTaskNames, required: true },
 	datetime: { type: Date, required: true, expires: ONE_WEEK },
-	updated: { type: Number, required: false },
+	updated: { type: Date, required: false },
 	status: { type: String, enum: ScheduledTaskStatus, required: true },
 	result: {
 		type: new Schema<ScheduledTaskResult>(
