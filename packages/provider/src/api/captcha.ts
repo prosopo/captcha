@@ -594,7 +594,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		async (req, res, next) => {
 			try {
 				const tasks = new Tasks(env, req.logger);
-				const { token, dapp, user } =
+				const { token, encryptedKey, iv, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 				// If in maintenance mode, store dummy token and send PoW captcha
@@ -653,28 +653,62 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					req.headers["accept-language"] || "",
 				);
 
-				const {
+			const {
+				baseBotScore,
+				timestamp,
+				providerSelectEntropy,
+				userId,
+				userAgent,
+				webView,
+				iFrame,
+				contextAwareEntropy,
+				headHash,
+			} = await tasks.frictionlessManager.decryptPayload(
+				token,
+				encryptedKey,
+				iv,
+			);
+
+			req.logger.debug(() => ({
+				msg: "Decrypted payload",
+				data: {
 					baseBotScore,
 					timestamp,
 					providerSelectEntropy,
 					userId,
 					userAgent,
 					webView,
-					iFrame,
-					contextAwareEntropy,
-				} = await tasks.frictionlessManager.decryptPayload(token);
+					...(headHash && { headHash }),
+				},
+			}));
 
-				req.logger.debug(() => ({
-					msg: "Decrypted payload",
-					data: {
-						baseBotScore,
-						timestamp,
-						providerSelectEntropy,
-						userId,
-						userAgent,
-						webView,
-					},
+			// Debug logging for headHash
+			if (headHash) {
+				req.logger.info(() => ({
+					msg: "\n\n" +
+						"=".repeat(80) + "\n" +
+						"HEAD HASH RECEIVED\n" +
+						"=".repeat(80) + "\n" +
+						`User ID: ${userId}\n` +
+						`Token: ${token.substring(0, 20)}...\n` +
+						`HeadHash Length: ${headHash.length} characters\n` +
+						`HeadHash (first 64 chars): ${headHash.substring(0, 64)}...\n` +
+						`HeadHash (last 64 chars): ...${headHash.substring(headHash.length - 64)}\n` +
+						`Full HeadHash:\n${headHash}\n` +
+						"=".repeat(80) + "\n\n",
 				}));
+		} else {
+			req.logger.info(() => ({
+				msg: "\n\n" +
+					"=".repeat(80) + "\n" +
+					"HEAD HASH NOT PRESENT\n" +
+					"=".repeat(80) + "\n" +
+					`User ID: ${userId}\n` +
+					`Token: ${token.substring(0, 20)}...\n` +
+					"HeadHash is empty or missing - browser may not support it\n" +
+					"=".repeat(80) + "\n\n",
+			}));
+		}
 
 				let botScore = baseBotScore + lScore;
 
@@ -716,18 +750,35 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					clientRecord.settings?.frictionlessThreshold ||
 					DEFAULT_FRICTIONLESS_THRESHOLD;
 
-				// Store the token
-				const tokenId = await tasks.db.storeFrictionlessTokenRecord({
-					token,
-					score: botScore,
-					threshold: botThreshold,
-					scoreComponents: {
-						baseScore: baseBotScore,
-						...(lScore && { lScore }),
-					},
-					providerSelectEntropy,
-					ipAddress: getCompositeIpAddress(req.ip || ""),
-				});
+			// Store the token
+			const tokenId = await tasks.db.storeFrictionlessTokenRecord({
+				token,
+				score: botScore,
+				threshold: botThreshold,
+				scoreComponents: {
+					baseScore: baseBotScore,
+					...(lScore && { lScore }),
+				},
+				providerSelectEntropy,
+				ipAddress: getCompositeIpAddress(req.ip || ""),
+				...(headHash && { headHash }),
+			});
+
+			// Log successful storage of headHash
+			if (headHash) {
+				req.logger.info(() => ({
+					msg: "\n\n" +
+						"✓".repeat(40) + "\n" +
+						"HEAD HASH STORED IN DATABASE\n" +
+						"✓".repeat(40) + "\n" +
+						`Token ID: ${tokenId}\n` +
+						`Bot Score: ${botScore}\n` +
+						`Threshold: ${botThreshold}\n` +
+						`HeadHash Length: ${headHash.length}\n` +
+						`HeadHash: ${headHash.substring(0, 32)}...${headHash.substring(headHash.length - 32)}\n` +
+						"✓".repeat(40) + "\n\n",
+				}));
+			}
 
 				// Check if the IP address is blocked
 				const userScope = getRequestUserScope(

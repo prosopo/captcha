@@ -182,12 +182,16 @@ export default class ProviderApi
 	}
 
 	public getFrictionlessCaptcha(
-		token: string,
+		encryptedData: string,
+		encryptedKey: string,
+		iv: string,
 		dapp: string,
 		user: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body = {
-			[ApiParams.token]: token,
+			[ApiParams.token]: encryptedData,
+			[ApiParams.encryptedKey]: encryptedKey,
+			[ApiParams.iv]: iv,
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
 		};

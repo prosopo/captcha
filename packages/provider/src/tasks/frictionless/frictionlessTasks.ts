@@ -255,7 +255,11 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string) {
+	async decryptPayload(
+		encryptedData: string,
+		encryptedKey: string,
+		iv: string,
+	) {
 		const decryptKeys = [
 			// Process DB keys first, then env var key last as env key will likely be invalid
 			...(await this.getDetectorKeys()),
@@ -286,6 +290,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let webView: boolean | undefined;
 		let iFrame: boolean | undefined;
 		let contextAwareEntropy: number | undefined;
+		let headHash: string | undefined;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -294,7 +299,13 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(key),
 					},
 				}));
-				const decrypted = await getBotScore(token, key as string);
+				console.log("key", key);
+				const decrypted = await getBotScore(
+					encryptedData,
+					encryptedKey,
+					iv,
+					key as string,
+				);
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
 				const p = decrypted.providerSelectEntropy;
@@ -303,6 +314,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const w = decrypted.isWebView;
 				const i = decrypted.isIframe;
 				const c = decrypted.contextAwareEntropy;
+				const h = decrypted.headHash;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
@@ -314,6 +326,7 @@ export class FrictionlessManager extends CaptchaManager {
 						userAgent: u,
 						webView: w,
 						iFrame: i,
+						...(h && { headHash: h }),
 					},
 				}));
 				baseBotScore = s;
@@ -324,6 +337,7 @@ export class FrictionlessManager extends CaptchaManager {
 				webView = w;
 				iFrame = i;
 				contextAwareEntropy = c;
+				headHash = h;
 				break;
 			} catch (err) {
 				// check if the next index exists, if not, log an error
@@ -365,8 +379,44 @@ export class FrictionlessManager extends CaptchaManager {
 				webView,
 				iFrame,
 				...(contextAwareEntropy && { contextAwareEntropy }),
+				...(headHash && { headHash }),
 			},
 		}));
+
+		// Detailed headHash logging
+		if (headHash) {
+			this.logger.info(() => ({
+				msg: "\n\n" +
+					"🔍".repeat(40) + "\n" +
+					"HEAD HASH DECRYPTED SUCCESSFULLY\n" +
+					"🔍".repeat(40) + "\n" +
+					`User ID: ${userId}\n` +
+					`User Agent: ${userAgent?.substring(0, 50)}...\n` +
+					`WebView: ${webView}\n` +
+					`iFrame: ${iFrame}\n` +
+					`HeadHash Length: ${headHash.length} characters\n` +
+					`HeadHash Type: ${typeof headHash}\n` +
+					`HeadHash (binary string sample):\n` +
+					`  First 128 bits: ${headHash.substring(0, 128)}\n` +
+					`  Last 128 bits:  ${headHash.substring(headHash.length - 128)}\n` +
+					`Total bits: ${headHash.length} (should be 128)\n` +
+					"🔍".repeat(40) + "\n\n",
+			}));
+		} else {
+			this.logger.info(() => ({
+				msg: "\n\n" +
+					"⚠️ ".repeat(40) + "\n" +
+					"HEAD HASH NOT FOUND IN PAYLOAD\n" +
+					"⚠️ ".repeat(40) + "\n" +
+					`User ID: ${userId}\n` +
+					"Possible reasons:\n" +
+					"  1. Browser does not support document.head\n" +
+					"  2. Client is running in insecure context (non-HTTPS)\n" +
+					"  3. Payload is from legacy version\n" +
+					"  4. HeadHash computation returned empty string\n" +
+					"⚠️ ".repeat(40) + "\n\n",
+			}));
+		}
 
 		// To satisfy TS - see above for undefined checks
 		return {
@@ -378,6 +428,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView,
 			iFrame,
 			contextAwareEntropy: Number(contextAwareEntropy),
+			headHash,
 		};
 	}
 }

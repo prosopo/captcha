@@ -58,14 +58,16 @@ describe("IP Validation Integration Tests", () => {
 			const origin = "http://localhost";
 			const initialIP = "127.0.0.1";
 
-			// Step 1: Get frictionless captcha
-			const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
-			const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
-				{
-					[ApiParams.dapp]: siteKey,
-					[ApiParams.token]: randomAsHex(16),
-					[ApiParams.user]: userId,
-				};
+		// Step 1: Get frictionless captcha
+		const getFrictionlessCaptchaUrl = `${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`;
+		const getFrictionlessCaptchaBody: GetFrictionlessCaptchaChallengeRequestBodyOutput =
+			{
+				[ApiParams.dapp]: siteKey,
+				[ApiParams.token]: randomAsHex(16),
+				[ApiParams.encryptedKey]: randomAsHex(32),
+				[ApiParams.iv]: randomAsHex(12),
+				[ApiParams.user]: userId,
+			};
 
 			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
 				method: "POST",

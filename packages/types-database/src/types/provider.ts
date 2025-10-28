@@ -462,6 +462,7 @@ export interface FrictionlessToken {
 	scoreComponents: ScoreComponents;
 	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
+	headHash?: string; // SimHash of document head
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Timestamp;
 }
@@ -487,6 +488,7 @@ export const FrictionlessTokenRecordSchema =
 		},
 		providerSelectEntropy: { type: Number, required: true },
 		ipAddress: CompositeIpAddressRecordSchemaObj,
+		headHash: { type: String, required: false },
 		createdAt: { type: Date, default: Date.now },
 		lastUpdatedTimestamp: { type: Date, required: false },
 		storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },

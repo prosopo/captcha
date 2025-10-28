@@ -14,6 +14,7 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
+import type { BotDetectionResult } from "@prosopo/detector";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
@@ -58,24 +59,28 @@ const customDetectBot: BotDetectionFunction = async (
 	const userAccount = await ext.getAccount(config);
 
 	const detect = await DetectorLoader();
-	const botScore = (await detect(
+	const detectionResult: BotDetectionResult = await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
 		container,
 		restartFn,
 		userAccount.account.address,
-		config.contextAware,
-	)) as { token: string; provider?: RandomProvider };
+	);
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
 	// Get random active provider with timeout
-	const provider = botScore.provider;
+	const provider = detectionResult.provider;
 
 	if (!provider) {
 		throw new Error("Provider Selection Failed");
+	}
+
+	// Check if encryption failed (insecure context)
+	if (!detectionResult.encryptedPayload) {
+		throw new ProsopoEnvError("API.ENCRYPTION_FAILED");
 	}
 
 	const providerApi = new ProviderApi(
@@ -86,7 +91,9 @@ const customDetectBot: BotDetectionFunction = async (
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(
 		providerApi.getFrictionlessCaptcha(
-			botScore.token,
+			detectionResult.encryptedPayload.encryptedData,
+			detectionResult.encryptedPayload.encryptedKey,
+			detectionResult.encryptedPayload.iv,
 			config.account.address,
 			userAccount.account.address,
 		),

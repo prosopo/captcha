@@ -18,11 +18,13 @@ import getBotScoreFromPayload from "./decodePayload.js";
 const DEFAULT_ENTROPY = 13837;
 
 export const getBotScore = async (
-	payload: string,
+	encryptedData: string,
+	encryptedKey: string,
+	iv: string,
 	privateKeyString?: string,
 ) => {
 	const result = (await getBotScoreFromPayload(
-		payload,
+		encryptedData,
 		privateKeyString,
 	)) as DetectorResult;
 	const baseBotScore: number = result.score;
@@ -33,6 +35,7 @@ export const getBotScore = async (
 	const isWebView: boolean = result.isWebView ?? false;
 	const isIframe: boolean = result.isIframe ?? false;
 	const contextAwareEntropy: number | undefined = result.contextAwareEntropy;
+	const headHash: string | undefined = result.headHash;
 
 	if (baseBotScore === undefined) {
 		return {
@@ -52,5 +55,6 @@ export const getBotScore = async (
 		isWebView,
 		isIframe,
 		contextAwareEntropy,
+		headHash,
 	};
 };

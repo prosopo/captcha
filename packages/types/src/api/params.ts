@@ -35,6 +35,8 @@ export enum ApiParams {
 	nonce = "nonce",
 	timeouts = "timeouts",
 	token = "token",
+	encryptedKey = "encryptedKey",
+	iv = "iv",
 	secret = "secret",
 	timestamp = "timestamp",
 	signature = "signature",

@@ -20,4 +20,5 @@ export type DetectorResult = {
 	isWebView?: boolean;
 	isIframe?: boolean;
 	contextAwareEntropy?: number;
+	headHash?: string;
 };
