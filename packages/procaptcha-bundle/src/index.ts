@@ -250,4 +250,14 @@ export const reset = () => {
 // set the procaptcha attribute on the window
 window.procaptcha = { ready, render, reset, execute };
 
+// Dispatch a custom event to notify that window.procaptcha is ready
+const procaptchaReadyEvent = new CustomEvent("procaptcha:ready", {
+	detail: {
+		timestamp: Date.now(),
+	},
+	bubbles: true,
+	cancelable: false,
+});
+document.dispatchEvent(procaptchaReadyEvent);
+
 start();
