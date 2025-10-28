@@ -50,7 +50,6 @@ describe("procaptcha:ready event", () => {
 			expect(window.procaptcha?.ready).toBeDefined();
 			expect(window.procaptcha?.reset).toBeDefined();
 			expect(window.procaptcha?.execute).toBeDefined();
-
 		});
 
 		// Import the module which should set window.procaptcha and dispatch the event
