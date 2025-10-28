@@ -164,14 +164,20 @@ describe("Frictionless Task Manager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
-			const response = await frictionlessTaskManager.sendImageCaptcha(
-				mockToken,
-				mockScore,
-				mockThreshold,
-				mockScoreComponents,
-				mockEntropy,
-				mockIpAddress,
-			);
+			frictionlessTaskManager.setSessionParams({
+				token: mockToken,
+				score: mockScore,
+				threshold: mockThreshold,
+				scoreComponents: mockScoreComponents,
+				providerSelectEntropy: mockEntropy,
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+			});
+
+			const response = await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.image);
 			expect(response).toHaveProperty("sessionId");
@@ -189,14 +195,20 @@ describe("Frictionless Task Manager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
-			const response = await frictionlessTaskManager.sendPowCaptcha(
-				mockToken,
-				mockScore,
-				mockThreshold,
-				mockScoreComponents,
-				mockEntropy,
-				mockIpAddress,
-			);
+			frictionlessTaskManager.setSessionParams({
+				token: mockToken,
+				score: mockScore,
+				threshold: mockThreshold,
+				scoreComponents: mockScoreComponents,
+				providerSelectEntropy: mockEntropy,
+				ipAddress: mockIpAddress,
+				webView: false,
+				iFrame: false,
+			});
+
+			const response = await frictionlessTaskManager.sendPowCaptcha({
+				powDifficulty: undefined,
+			});
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
 			expect(response).toHaveProperty("sessionId");
