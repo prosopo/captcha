@@ -60,7 +60,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 					deletedCount += uniqueRuleIds.length;
 
 					logData.push({
-						filter: rulesFilterInput,
+						filter: ruleFilter,
 						foundRuleIdsLength: ruleIds.length,
 						uniqueRuleIdsLength: uniqueRuleIds.length,
 					});

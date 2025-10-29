@@ -93,20 +93,20 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 
 		const createRulesPromise = this.createRuleGroups(args)
 			.then((insertedIds) => {
+				this.logger.debug(() => ({
+					msg: "Inserted access rules details",
+					data: {
+						insertedIds,
+						input: args,
+					},
+				}));
+
 				this.logger.info(() => ({
 					msg: "Endpoint inserted access rules",
 					data: {
 						userScopesCount: inputRulesCount,
 						insertedCount: insertedIds.length,
 						uniqueIdsCount: new Set(insertedIds).size,
-					},
-				}));
-
-				this.logger.debug(() => ({
-					msg: "Inserted access rules details",
-					data: {
-						insertedIds,
-						input: args,
 					},
 				}));
 
