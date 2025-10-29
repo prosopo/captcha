@@ -144,7 +144,7 @@ describe("PowCaptchaManager", () => {
 				difficulty,
 				dappAccount: pair.address,
 				userAccount,
-				requestedAtTimestamp,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -152,7 +152,7 @@ describe("PowCaptchaManager", () => {
 				headers,
 				ja4: "ja4",
 				providerSignature,
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => true);
@@ -249,7 +249,7 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				dappAccount: pair.address,
 				userAccount: "testUserAccount",
-				requestedAtTimestamp: 12345,
+				requestedAtTimestamp: new Date(12345),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -258,7 +258,7 @@ describe("PowCaptchaManager", () => {
 				ja4: "ja4",
 				providerSignature: "testSignature",
 				difficulty,
-				lastUpdatedTimestamp: 0,
+				lastUpdatedTimestamp: new Date(0),
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => {
@@ -300,7 +300,7 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				dappAccount,
 				userAccount,
-				requestedAtTimestamp: timestamp,
+				requestedAtTimestamp: new Date(timestamp),
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 			};

@@ -24,7 +24,6 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	PoWCaptchaStored,
 	SessionRecord,
@@ -32,9 +31,7 @@ import type {
 	UserCommitment,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
-import type { OptionalId } from "mongodb";
 import { validateSiteKey } from "../../api/validateAddress.js";
-import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -164,52 +161,11 @@ export class ClientTaskManager {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
-					// get corresponding frictionless scores
-					const frictionlessTokenRecords =
-						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
-							filteredBatch.map((record) => record.tokenId),
-						);
-					this.logger.info(() => ({
-						msg: `Frictionless token records: ${frictionlessTokenRecords.length}`,
-					}));
-					// attach scores to session records
-					const filteredBatchWithScores = filteredBatch.map((record) => {
-						const tokenRecord = frictionlessTokenRecords.find(
-							(tokenRecord) =>
-								tokenRecord._id?.toString() === record.tokenId.toString(),
-						);
-						if (!tokenRecord) {
-							this.logger.error(() => ({
-								msg: "No token record found",
-								data: { tokenId: record.tokenId },
-							}));
-							return {
-								...record,
-								score: 0,
-								scoreComponents: {
-									baseScore: 0,
-								},
-								threshold: 0,
-								ipAddress: getCompositeIpAddress("0.0.0.0"),
-								providerSelectEntropy: 1e12,
-							} as StoredSession;
-						}
-						const { _id, token, ...tokenRecordWithoutId } = tokenRecord;
-						return {
-							...record,
-							...tokenRecordWithoutId,
-						} as StoredSession;
-					});
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatchWithScores, [], []);
+						await captchaDB.saveCaptchas(filteredBatch, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
-						);
-						await this.providerDB.markFrictionlessTokenRecordsStored(
-							filteredBatch
-								.map((record) => record.tokenId)
-								.filter((id): id is OptionalId<FrictionlessTokenId> => !!id),
 						);
 					}
 					processedSessionRecords += filteredBatch.length;
@@ -273,7 +229,7 @@ export class ClientTaskManager {
 			// Get updated client records within a ten minute window of the last completed task
 			const tenMinuteWindow = 10 * 60 * 1000;
 			const updatedAtTimestamp = lastTask?.updated
-				? lastTask.updated - tenMinuteWindow || 0
+				? lastTask.updated.getTime() - tenMinuteWindow || 0
 				: 0;
 
 			this.logger.info(() => ({
@@ -412,7 +368,7 @@ export class ClientTaskManager {
 		return (
 			!lastUpdatedTimestamp ||
 			!storedAtTimestamp ||
-			lastUpdatedTimestamp > storedAtTimestamp
+			lastUpdatedTimestamp.getTime() > storedAtTimestamp.getTime()
 		);
 	}
 
