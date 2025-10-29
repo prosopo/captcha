@@ -601,7 +601,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		async (req, res, next) => {
 			try {
 				const tasks = new Tasks(env, req.logger);
-				const { token, dapp, user } =
+				const { token, headHash, dapp, user } =
 					GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 				// If in maintenance mode, store dummy token and send PoW captcha
@@ -625,6 +625,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 							powDifficulty: undefined,
 							webView: false,
 							iFrame: false,
+							decryptedHeadHash: "",
 						}),
 					);
 				}
@@ -662,7 +663,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					userAgent,
 					webView,
 					iFrame,
-				} = await tasks.frictionlessManager.decryptPayload(token);
+					decryptedHeadHash,
+				} = await tasks.frictionlessManager.decryptPayload(token, headHash);
 
 				req.logger.debug(() => ({
 					msg: "Decrypted payload",
@@ -733,6 +735,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 					ipAddress,
 					webView,
 					iFrame,
+					decryptedHeadHash,
 				});
 
 				// Check if the IP address is blocked
