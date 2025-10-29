@@ -79,7 +79,10 @@ describe("decryptPayload", () => {
 
 		const frictionlessTaskManager = new FrictionlessManager(db, pair, config);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload", "headHash");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
@@ -109,7 +112,10 @@ describe("decryptPayload", () => {
 			config,
 		);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload", "headHash");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
@@ -142,7 +148,10 @@ describe("decryptPayload", () => {
 			config,
 		);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload", "headHash");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
@@ -179,7 +188,10 @@ describe("decryptPayload", () => {
 			config,
 		);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload", "headHash");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
