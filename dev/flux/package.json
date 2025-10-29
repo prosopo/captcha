@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/flux",
-	"version": "2.6.31",
+	"version": "2.6.32",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -35,7 +35,7 @@
 		"@prosopo/common": "3.1.21",
 		"@prosopo/config": "3.1.21",
 		"@prosopo/dotenv": "3.0.26",
-		"@prosopo/util": "3.1.6",
+		"@prosopo/util": "3.1.7",
 		"openpgp": "5.11.3",
 		"qs": "6.13.0",
 		"socket.io-client": "4.7.5",

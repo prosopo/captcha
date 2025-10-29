@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.1.7
+### Patch Changes
+
+- 005ce66: Split load balancer into URL fn and getter fn for private repo
+
 ## 3.1.6
 ### Patch Changes
 
