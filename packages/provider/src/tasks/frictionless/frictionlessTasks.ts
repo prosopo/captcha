@@ -55,6 +55,7 @@ export interface SessionParams {
 	ipAddress: CompositeIpAddress;
 	webView?: boolean;
 	iFrame?: boolean;
+	decryptedHeadHash: string;
 }
 
 export interface ImageCaptchaSessionParams extends SessionParams {
@@ -76,6 +77,7 @@ export class FrictionlessManager extends CaptchaManager {
 		ipAddress: CompositeIpAddress;
 		webView: boolean;
 		iFrame: boolean;
+		decryptedHeadHash: string;
 	};
 
 	constructor(
@@ -98,6 +100,7 @@ export class FrictionlessManager extends CaptchaManager {
 			ipAddress: params.ipAddress,
 			webView: params.webView ?? false,
 			iFrame: params.iFrame ?? false,
+			decryptedHeadHash: params.decryptedHeadHash,
 		};
 	}
 
@@ -124,6 +127,7 @@ export class FrictionlessManager extends CaptchaManager {
 		powDifficulty?: number,
 		webView = false,
 		iFrame = false,
+		decryptedHeadHash = "",
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: uuidv4(),
@@ -139,6 +143,7 @@ export class FrictionlessManager extends CaptchaManager {
 			powDifficulty,
 			webView,
 			iFrame,
+			decryptedHeadHash,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -196,6 +201,7 @@ export class FrictionlessManager extends CaptchaManager {
 			undefined,
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
+			effectiveParams.decryptedHeadHash,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
@@ -233,6 +239,7 @@ export class FrictionlessManager extends CaptchaManager {
 			params?.powDifficulty,
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
+			effectiveParams.decryptedHeadHash,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,
@@ -342,7 +349,7 @@ export class FrictionlessManager extends CaptchaManager {
 		return `${start}...${middle}...${end}`;
 	}
 
-	async decryptPayload(token: string) {
+	async decryptPayload(token: string, headHash: string) {
 		const decryptKeys = [
 			// Process DB keys first, then env var key last as env key will likely be invalid
 			...(await this.getDetectorKeys()),
@@ -372,6 +379,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let userAgent: string | undefined;
 		let webView: boolean | undefined;
 		let iFrame: boolean | undefined;
+		let decryptedHeadHash = "";
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -380,7 +388,8 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(key),
 					},
 				}));
-				const decrypted = await getBotScore(token, key as string);
+				const decrypted = await getBotScore(token, headHash, key as string);
+				decryptedHeadHash = decrypted.decryptedHeadHash || "";
 				const s = decrypted.baseBotScore;
 				const t = decrypted.timestamp;
 				const p = decrypted.providerSelectEntropy;
@@ -418,6 +427,7 @@ export class FrictionlessManager extends CaptchaManager {
 					baseBotScore = 1;
 					timestamp = 0;
 					providerSelectEntropy = DEFAULT_ENTROPY + 1;
+					decryptedHeadHash = "";
 				}
 			}
 		}
@@ -436,6 +446,7 @@ export class FrictionlessManager extends CaptchaManager {
 			baseBotScore = 1;
 			timestamp = 0;
 			providerSelectEntropy = DEFAULT_ENTROPY - undefinedCount;
+			decryptedHeadHash = "";
 		}
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
@@ -447,6 +458,7 @@ export class FrictionlessManager extends CaptchaManager {
 				userAgent,
 				webView,
 				iFrame,
+				decryptedHeadHash,
 			},
 		}));
 
@@ -459,6 +471,7 @@ export class FrictionlessManager extends CaptchaManager {
 			userAgent,
 			webView,
 			iFrame,
+			decryptedHeadHash,
 		};
 	}
 }

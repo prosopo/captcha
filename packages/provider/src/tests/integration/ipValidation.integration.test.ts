@@ -65,6 +65,7 @@ describe("IP Validation Integration Tests", () => {
 					[ApiParams.dapp]: siteKey,
 					[ApiParams.token]: randomAsHex(16),
 					[ApiParams.user]: userId,
+					[ApiParams.headHash]: randomAsHex(16),
 				};
 
 			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {
