@@ -173,6 +173,7 @@ describe("Frictionless Task Manager", () => {
 				ipAddress: mockIpAddress,
 				webView: false,
 				iFrame: false,
+				decryptedHeadHash: "",
 			});
 
 			const response = await frictionlessTaskManager.sendImageCaptcha({
@@ -204,6 +205,7 @@ describe("Frictionless Task Manager", () => {
 				ipAddress: mockIpAddress,
 				webView: false,
 				iFrame: false,
+				decryptedHeadHash: "",
 			});
 
 			const response = await frictionlessTaskManager.sendPowCaptcha({

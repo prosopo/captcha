@@ -52,4 +52,5 @@ export enum ApiParams {
 	ip = "ip",
 	expirationInSeconds = "expirationInSeconds",
 	enabled = "enabled",
+	headHash = "headHash",
 }

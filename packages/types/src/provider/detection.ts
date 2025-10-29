@@ -19,4 +19,5 @@ export type DetectorResult = {
 	userAgent: string;
 	isWebView?: boolean;
 	isIframe?: boolean;
+	decryptedHeadHash: string;
 };
