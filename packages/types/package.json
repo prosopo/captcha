@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types",
-	"version": "3.5.8",
+	"version": "3.5.9",
 	"description": "Types for prosopo TypeScript packages",
 	"type": "module",
 	"main": "dist/index.js",
@@ -38,7 +38,7 @@
 		"@polkadot/types": "10.13.1",
 		"@polkadot/util": "12.6.2",
 		"@prosopo/locale": "3.1.21",
-		"@prosopo/util": "3.1.6",
+		"@prosopo/util": "3.1.7",
 		"@prosopo/util-crypto": "13.5.23",
 		"@prosopo/config": "3.1.21",
 		"ip-address": "10.0.1",

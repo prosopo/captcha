@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-bundle
 
+## 3.2.0
+### Minor Changes
+
+- 6e69716: Add procaptcha:ready event to signal when window.procaptcha is available
+
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/procaptcha-common@2.9.11
+  - @prosopo/procaptcha-frictionless@2.8.12
+  - @prosopo/procaptcha-pow@2.8.19
+  - @prosopo/procaptcha-react@2.9.11
+
 ## 3.1.11
 ### Patch Changes
 

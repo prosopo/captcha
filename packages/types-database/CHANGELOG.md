@@ -1,5 +1,17 @@
 # @prosopo/types-database
 
+## 3.3.11
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/user-access-policy@3.5.25
+
 ## 3.3.10
 ### Patch Changes
 
