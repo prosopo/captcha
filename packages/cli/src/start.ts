@@ -195,6 +195,11 @@ export async function start(
 	// Get rid of any scheduled task records from previous runs
 	env.cleanup();
 
+	// enables readable arguments print in the console
+	if ("development" === env.defaultEnvironment) {
+		env.logger.setPretty(true);
+	}
+
 	// Start the scheduled jobs if they are defined
 	if (env.pair) {
 		const cronScheduleStorage =

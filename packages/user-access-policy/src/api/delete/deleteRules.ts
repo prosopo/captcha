@@ -43,6 +43,8 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	): Promise<ApiEndpointResponse> {
 		let deletedCount = 0;
 
+		const logData: object[] = [];
+
 		for (const rulesFilterInput of args) {
 			const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
 
@@ -57,16 +59,32 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 
 					deletedCount += uniqueRuleIds.length;
 
-					this.logger.info(() => ({
-						msg: "Endpoint deleted rules",
+					logData.push({
+						filter: rulesFilterInput,
+						foundRuleIdsLength: ruleIds.length,
+						uniqueRuleIdsLength: uniqueRuleIds.length,
+					});
+
+					this.logger.debug(() => ({
+						msg: "Endpoint deleted rules by filter",
 						data: {
-							rulesFilterInput,
-							uniqueRuleIds,
+							ruleFilter,
+							foundIdsLength: ruleIds.length,
+							uniqueIdsLength: uniqueRuleIds.length,
+							foundIds: ruleIds,
 						},
 					}));
 				}
 			});
 		}
+
+		this.logger.info(() => ({
+			msg: "Endpoint deleted rules",
+			data: {
+				totalDeletedCount: deletedCount,
+				logData,
+			},
+		}));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,

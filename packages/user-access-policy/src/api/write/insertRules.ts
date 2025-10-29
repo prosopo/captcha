@@ -85,8 +85,9 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 			}, 5000);
 		});
 
-		const userScopesCount = args.reduce(
-			(userScopesCount, group) => userScopesCount + group.userScopes.length,
+		const inputRulesCount = args.reduce(
+			(total, group) =>
+				total + group.userScopes.length * (group.policyScopes?.length || 1),
 			0,
 		);
 
@@ -95,7 +96,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 				this.logger.info(() => ({
 					msg: "Endpoint inserted access rules",
 					data: {
-						userScopesCount: userScopesCount,
+						userScopesCount: inputRulesCount,
 						insertedCount: insertedIds.length,
 						uniqueIdsCount: new Set(insertedIds).size,
 					},

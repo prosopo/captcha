@@ -43,8 +43,10 @@ export class RedisRulesWriter implements AccessRulesWriter {
 			async (entriesBatch) => this.insertRuleEntries(entriesBatch),
 		);
 
-		return keyBatches.flatMap((ruleKey) =>
-			ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+		return keyBatches.flatMap((ruleKeys) =>
+			ruleKeys.map((ruleKey) =>
+				ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			),
 		);
 	}
 
