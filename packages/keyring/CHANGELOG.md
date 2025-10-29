@@ -1,5 +1,11 @@
 # @prosopo/keyring
 
+## 2.8.34
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
 ## 2.8.33
 ### Patch Changes
 

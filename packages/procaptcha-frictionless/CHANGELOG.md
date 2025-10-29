@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.13
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/detector@3.3.12
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/load-balancer@2.8.7
+  - @prosopo/procaptcha-common@2.9.12
+  - @prosopo/procaptcha-pow@2.8.20
+  - @prosopo/procaptcha-react@2.9.12
+
 ## 2.8.12
 ### Patch Changes
 

@@ -1,5 +1,18 @@
 # @prosopo/cli
 
+## 3.4.16
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/provider@3.12.13
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/api-express-router@3.0.32
+  - @prosopo/env@3.2.20
+  - @prosopo/keyring@2.8.34
+  - @prosopo/user-access-policy@3.5.26
+
 ## 3.4.15
 ### Patch Changes
 

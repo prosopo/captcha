@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 3.1.31
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
 ## 3.1.30
 ### Patch Changes
 
