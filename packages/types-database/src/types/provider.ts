@@ -492,7 +492,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	deleted: { type: Boolean, required: false },
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
-	decryptedHeadHash: { type: String, required: true, default: "" },
+	decryptedHeadHash: { type: String, required: false, default: "" },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
