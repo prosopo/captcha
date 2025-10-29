@@ -80,3 +80,24 @@ export const accessRulesFilterInput = z.object({
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
 } satisfies AllKeys<AccessRulesFilterInput>) satisfies ZodType<AccessRulesFilterInput>;
+
+export const getAccessRuleFiltersFromInput = (
+	filterInput: AccessRulesFilterInput,
+): AccessRulesFilter[] => {
+	const { policyScopes, policyScope, ...filterBase } = filterInput;
+
+	const allPolicyScopes = policyScopes || [];
+
+	if (policyScope) {
+		allPolicyScopes.push(policyScope);
+	}
+
+	if (allPolicyScopes.length > 0) {
+		return allPolicyScopes.map((policyScope) => ({
+			...filterBase,
+			policyScope,
+		}));
+	}
+
+	return [filterBase];
+};

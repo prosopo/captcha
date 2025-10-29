@@ -20,7 +20,6 @@ import {
 	fetchRulesResponse,
 } from "#policy/api/read/fetchRules.js";
 import {
-	type FindRuleFilters,
 	type RuleIdsEndpointResponse,
 	ruleIdsResponse,
 } from "#policy/api/read/findRuleIds.js";
@@ -29,8 +28,8 @@ import {
 	type MissingIdsEndpointResponse,
 	missingIdsResponse,
 } from "#policy/api/read/getMissingIds.js";
+import type { AccessRulesFilterInput } from "#policy/ruleInput/ruleInput.js";
 import type { DeleteSiteGroups } from "./delete/deleteRuleGroups.js";
-import type { DeleteRuleFilters } from "./delete/deleteRules.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
 import type { InsertRulesGroup } from "./write/insertRules.js";
 
@@ -38,7 +37,7 @@ export class AccessRulesApiClient extends ApiClient {
 	//// delete
 
 	public deleteMany(
-		filters: DeleteRuleFilters,
+		filters: AccessRulesFilterInput[],
 		timestamp: string,
 		signature: string,
 	): Promise<ApiEndpointResponse> {
@@ -113,7 +112,7 @@ export class AccessRulesApiClient extends ApiClient {
 	}
 
 	public async findIds(
-		filters: FindRuleFilters,
+		filters: AccessRulesFilterInput[],
 		timestamp: string,
 		signature: string,
 	): Promise<RuleIdsEndpointResponse> {

@@ -22,15 +22,11 @@ import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
 	accessRulesFilterInput,
+	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
-import type {
-	AccessRulesFilter,
-	AccessRulesStorage,
-} from "#policy/rulesStorage.js";
+import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
-export type DeleteRuleFilters = AccessRulesFilterInput[];
-
-type DeleteRulesSchema = ZodType<DeleteRuleFilters>;
+type DeleteRulesSchema = ZodType<AccessRulesFilterInput[]>;
 
 export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	public constructor(
@@ -45,52 +41,37 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	async processRequest(
 		args: AccessRulesFilterInput[],
 	): Promise<ApiEndpointResponse> {
-		const ruleIds = [];
+		let deletedCount = 0;
 
-		for (const filterInput of args) {
-			const { policyScopes, policyScope, ...filterBase } = filterInput;
+		for (const rulesFilterInput of args) {
+			const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
 
-			const allPolicyScopes = policyScopes || [];
+			await executeBatchesSequentially(ruleFilters, async (ruleFilter) => {
+				const ruleIds = await this.accessRulesStorage.findRuleIds(ruleFilter);
 
-			if (policyScope) {
-				allPolicyScopes.push(policyScope);
-			}
+				// Set() automatically removes duplicates
+				const uniqueRuleIds = [...new Set(ruleIds)];
 
-			const filters: AccessRulesFilter[] =
-				allPolicyScopes.length > 0
-					? allPolicyScopes.map((policyScope) => ({
-							...filterBase,
-							policyScope,
-						}))
-					: [filterBase];
+				if (uniqueRuleIds.length > 0) {
+					await this.accessRulesStorage.deleteRules(uniqueRuleIds);
 
-			const ruleIdBatches = await executeBatchesSequentially(
-				filters,
-				(filter) => this.accessRulesStorage.findRuleIds(filter),
-			);
+					deletedCount += uniqueRuleIds.length;
 
-			ruleIds.push(...ruleIdBatches.flat());
+					this.logger.info(() => ({
+						msg: "Endpoint deleted rules",
+						data: {
+							rulesFilterInput,
+							uniqueRuleIds,
+						},
+					}));
+				}
+			});
 		}
-
-		// Set() automatically removes duplicates
-		const uniqueRuleIds = [...new Set(ruleIds)];
-
-		if (uniqueRuleIds.length > 0) {
-			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
-		}
-
-		this.logger.info(() => ({
-			msg: "Endpoint deleted rules",
-			data: {
-				args,
-				uniqueRuleIds,
-			},
-		}));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
 			data: {
-				deleted_count: uniqueRuleIds.length,
+				deleted_count: deletedCount,
 			},
 		};
 	}
