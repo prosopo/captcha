@@ -65,6 +65,11 @@ describe("decryptPayload", () => {
 					baseBotScore: 1,
 					timestamp: Date.now(),
 					providerSelectEntropy: 1,
+					userId: "testUserId",
+					userAgent: "testUserAgent",
+					isWebView: false,
+					isIframe: false,
+					decryptedHeadHash: "testHeadHash",
 				};
 			}),
 		}));
@@ -79,6 +84,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: 1,
+			userId: "testUserId",
+			userAgent: "testUserAgent",
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "testHeadHash",
 		});
 	});
 	it("should get values from the payload when some values are undefined", async () => {
@@ -104,6 +114,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: undefined,
+			iFrame: undefined,
+			decryptedHeadHash: "",
 		});
 	});
 	it("should set values for the payload when there are keys but they fail to decrypt", async () => {
@@ -132,6 +147,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: undefined,
+			iFrame: undefined,
+			decryptedHeadHash: "",
 		});
 	});
 	it("should set values for the payload when there are no keys", async () => {
@@ -164,6 +184,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
+			userId: undefined,
+			userAgent: undefined,
+			webView: undefined,
+			iFrame: undefined,
+			decryptedHeadHash: "",
 		});
 	});
 });
