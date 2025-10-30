@@ -1,5 +1,78 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.36
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 2.6.35
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 2.6.34
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 2.6.33
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
+## 2.6.32
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+
+## 2.6.31
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+
+## 2.6.30
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+
+## 2.6.29
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+
+## 2.6.28
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 2.6.27
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/locale@3.1.18
+  - @prosopo/config@3.1.18
+
 ## 2.6.26
 ### Patch Changes
 

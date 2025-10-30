@@ -1,5 +1,38 @@
 # @prosopo/common
 
+## 3.1.21
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+
+## 3.1.20
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/locale@3.1.20
+
+## 3.1.19
+### Patch Changes
+
+- f912439: Replace `any` type with `unknown` in BaseContextParams error context for improved type safety
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/locale@3.1.19
+  - @prosopo/config@3.1.19
+
+## 3.1.18
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/locale@3.1.18
+  - @prosopo/config@3.1.18
+
 ## 3.1.17
 ### Patch Changes
 

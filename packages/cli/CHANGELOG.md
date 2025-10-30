@@ -1,5 +1,203 @@
 # @prosopo/cli
 
+## 3.4.16
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/provider@3.12.13
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/api-express-router@3.0.32
+  - @prosopo/env@3.2.20
+  - @prosopo/keyring@2.8.34
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.4.15
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types-database@3.3.11
+  - @prosopo/types@3.5.9
+  - @prosopo/provider@3.12.12
+  - @prosopo/user-access-policy@3.5.25
+  - @prosopo/util@3.1.7
+  - @prosopo/api@3.1.30
+  - @prosopo/api-express-router@3.0.31
+  - @prosopo/env@3.2.19
+  - @prosopo/keyring@2.8.33
+
+## 3.4.14
+### Patch Changes
+
+- Updated dependencies [4b6dc9d]
+- Updated dependencies [b10a65f]
+- Updated dependencies [e5c259d]
+- Updated dependencies [6420187]
+  - @prosopo/provider@3.12.11
+  - @prosopo/types-database@3.3.10
+  - @prosopo/types@3.5.8
+  - @prosopo/api@3.1.29
+  - @prosopo/api-express-router@3.0.30
+  - @prosopo/env@3.2.18
+  - @prosopo/keyring@2.8.32
+  - @prosopo/user-access-policy@3.5.24
+
+## 3.4.13
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+- Updated dependencies [3a027ef]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/api@3.1.28
+  - @prosopo/common@3.1.21
+  - @prosopo/api-express-router@3.0.29
+  - @prosopo/provider@3.12.10
+  - @prosopo/config@3.1.21
+  - @prosopo/types-database@3.3.9
+  - @prosopo/dotenv@3.0.26
+  - @prosopo/env@3.2.17
+  - @prosopo/keyring@2.8.31
+  - @prosopo/workspace@3.1.14
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+  - @prosopo/util-crypto@13.5.23
+
+## 3.4.12
+### Patch Changes
+
+- Updated dependencies [8491159]
+  - @prosopo/provider@3.12.9
+
+## 3.4.11
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/provider@3.12.8
+  - @prosopo/types@3.5.6
+  - @prosopo/api@3.1.27
+  - @prosopo/api-express-router@3.0.28
+  - @prosopo/env@3.2.16
+  - @prosopo/keyring@2.8.30
+  - @prosopo/types-database@3.3.8
+  - @prosopo/user-access-policy@3.5.22
+
+## 3.4.10
+### Patch Changes
+
+- Updated dependencies [cbc5d8e]
+  - @prosopo/provider@3.12.7
+
+## 3.4.9
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types-database@3.3.7
+  - @prosopo/provider@3.12.6
+  - @prosopo/types@3.5.5
+  - @prosopo/api@3.1.26
+  - @prosopo/api-express-router@3.0.27
+  - @prosopo/env@3.2.15
+  - @prosopo/keyring@2.8.29
+  - @prosopo/user-access-policy@3.5.21
+
+## 3.4.8
+### Patch Changes
+
+- Updated dependencies [4ba029e]
+  - @prosopo/provider@3.12.5
+
+## 3.4.7
+### Patch Changes
+
+- 08ff50f: IP Validation Schema update
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/provider@3.12.4
+  - @prosopo/types@3.5.4
+  - @prosopo/api@3.1.25
+  - @prosopo/api-express-router@3.0.26
+  - @prosopo/env@3.2.14
+  - @prosopo/keyring@2.8.28
+  - @prosopo/user-access-policy@3.5.20
+
+## 3.4.6
+### Patch Changes
+
+- Updated dependencies [04d0f1a]
+- Updated dependencies [1e3a838]
+  - @prosopo/provider@3.12.3
+  - @prosopo/config@3.1.20
+  - @prosopo/workspace@3.1.13
+  - @prosopo/api@3.1.24
+  - @prosopo/api-express-router@3.0.25
+  - @prosopo/common@3.1.20
+  - @prosopo/dotenv@3.0.25
+  - @prosopo/env@3.2.13
+  - @prosopo/keyring@2.8.27
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+  - @prosopo/user-access-policy@3.5.19
+  - @prosopo/util@3.1.5
+  - @prosopo/util-crypto@13.5.22
+
+## 3.4.5
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/api-express-router@3.0.24
+  - @prosopo/user-access-policy@3.5.18
+  - @prosopo/types-database@3.3.4
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/provider@3.12.2
+  - @prosopo/keyring@2.8.26
+  - @prosopo/dotenv@3.0.24
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/workspace@3.1.12
+  - @prosopo/util@3.1.4
+  - @prosopo/api@3.1.23
+  - @prosopo/env@3.2.12
+  - @prosopo/config@3.1.19
+
+## 3.4.4
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b8cc590]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/provider@3.12.1
+  - @prosopo/types@3.5.1
+  - @prosopo/dotenv@3.0.23
+  - @prosopo/api-express-router@3.0.23
+  - @prosopo/user-access-policy@3.5.17
+  - @prosopo/types-database@3.3.3
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/workspace@3.1.11
+  - @prosopo/util@3.1.3
+  - @prosopo/api@3.1.22
+  - @prosopo/env@3.2.11
+  - @prosopo/config@3.1.18
+
 ## 3.4.3
 ### Patch Changes
 

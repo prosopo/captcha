@@ -1,5 +1,25 @@
 # @prosopo/config
 
+## 3.1.21
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+
+## 3.1.20
+### Patch Changes
+
+- 1e3a838: making webpack stuff external in vite config
+
+## 3.1.19
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+
+## 3.1.18
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+
 ## 3.1.17
 ### Patch Changes
 

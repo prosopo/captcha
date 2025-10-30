@@ -44,7 +44,6 @@ import {
 } from "@prosopo/types";
 import type {
 	CompositeIpAddress,
-	FrictionlessTokenRecord,
 	SessionRecord,
 } from "@prosopo/types-database";
 import {
@@ -54,9 +53,6 @@ import {
 	DatasetRecordSchema,
 	DetectorRecordSchema,
 	type DetectorSchema,
-	type FrictionlessToken,
-	type FrictionlessTokenId,
-	FrictionlessTokenRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type PendingCaptchaRequest,
@@ -69,6 +65,7 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
+	type Session,
 	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
@@ -81,11 +78,11 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
-	type AccessRulesStorage,
+	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
-	redisAccessRulesIndex,
-} from "@prosopo/user-access-policy";
+} from "@prosopo/user-access-policy/redis";
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
@@ -99,7 +96,6 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
-	frictionlessToken = "frictionlessToken",
 	session = "session",
 	detector = "detector",
 }
@@ -149,11 +145,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.client,
 		modelName: "Client",
 		schema: ClientRecordSchema,
-	},
-	{
-		collectionName: TableNames.frictionlessToken,
-		modelName: "FrictionlessToken",
-		schema: FrictionlessTokenRecordSchema,
 	},
 	{
 		collectionName: TableNames.session,
@@ -223,8 +214,8 @@ export class ProviderDatabase
 		this.redisAccessRulesConnection = setupRedisIndex(
 			this.redisConnection,
 			{
-				...redisAccessRulesIndex,
-				name: this.options.redis?.indexName || redisAccessRulesIndex.name,
+				...accessRulesRedisIndex,
+				name: this.options.redis?.indexName || accessRulesRedisIndex.name,
 			},
 			this.logger,
 		);
@@ -639,7 +630,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const commitmentRecord = UserCommitmentSchema.parse({
 			...commit,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		});
 		if (captchas.length) {
 			const filter: Pick<UserCommitmentRecord, "id"> = {
@@ -681,7 +672,7 @@ export class ProviderDatabase
 	 * @param ipAddress
 	 * @param headers
 	 * @param ja4
-	 * @param frictionlessTokenId
+	 * @param sessionId
 	 * @param serverChecked
 	 * @param userSubmitted
 	 * @param storedStatus
@@ -696,7 +687,7 @@ export class ProviderDatabase
 		ipAddress: CompositeIpAddress,
 		headers: RequestHeaders,
 		ja4: string,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 		serverChecked = false,
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -706,7 +697,9 @@ export class ProviderDatabase
 
 		const powCaptchaRecord: PoWCaptchaStored = {
 			challenge,
-			...components,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
 			ipAddress,
 			headers,
 			ja4,
@@ -716,8 +709,8 @@ export class ProviderDatabase
 			difficulty,
 			providerSignature,
 			userSignature,
-			lastUpdatedTimestamp: Date.now(),
-			frictionlessTokenId,
+			lastUpdatedTimestamp: new Date(),
+			sessionId,
 		};
 
 		try {
@@ -813,7 +806,7 @@ export class ProviderDatabase
 		userSignature?: string,
 	): Promise<void> {
 		const tables = this.getTables();
-		const timestamp = Date.now();
+		const timestamp = new Date();
 		const update: Pick<
 			PoWCaptchaRecord,
 			| "result"
@@ -940,7 +933,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 		await this.tables?.commitment.updateMany(
 			{ id: { $in: commitmentIds } },
@@ -957,7 +950,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 
 		await this.tables?.commitment.updateMany(
@@ -1035,7 +1028,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 
 		await this.tables?.powcaptcha.updateMany(
@@ -1053,7 +1046,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
@@ -1065,70 +1058,9 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Store a new frictionless token record
-	 */
-	async storeFrictionlessTokenRecord(
-		tokenRecord: FrictionlessToken,
-	): Promise<ObjectId> {
-		const doc =
-			await this.tables.frictionlessToken.create<FrictionlessTokenRecord>(
-				tokenRecord,
-			);
-		return doc._id;
-	}
-
-	/** Update a frictionless token record */
-	async updateFrictionlessTokenRecord(
-		tokenId: FrictionlessTokenId,
-		updates: Partial<FrictionlessTokenRecord>,
-	): Promise<void> {
-		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
-		await this.tables.frictionlessToken.updateOne(filter, updates);
-	}
-
-	/** Get a frictionless token record */
-	async getFrictionlessTokenRecordByTokenId(
-		tokenId: FrictionlessTokenId,
-	): Promise<FrictionlessTokenRecord | undefined> {
-		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
-		const doc =
-			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
-				filter,
-			);
-		return doc ? doc : undefined;
-	}
-
-	/** Get many frictionless token records */
-	async getFrictionlessTokenRecordsByTokenIds(
-		tokenId: FrictionlessTokenId[],
-	): Promise<FrictionlessTokenRecord[]> {
-		const filter: Pick<FrictionlessTokenRecord, "_id"> = {
-			_id: { $in: tokenId },
-		};
-		return this.tables.frictionlessToken
-			.find<FrictionlessTokenRecord>(filter)
-			.lean<FrictionlessTokenRecord[]>();
-	}
-
-	/**
-	 * Check if a frictionless token record exists.
-	 * Used to ensure that a token is not used more than once.
-	 */
-	async getFrictionlessTokenRecordByToken(
-		token: string,
-	): Promise<FrictionlessTokenRecord | undefined> {
-		const filter: Pick<FrictionlessTokenRecord, "token"> = { token };
-		const record =
-			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
-				filter,
-			);
-		return record || undefined;
-	}
-
-	/**
 	 * Store a new session record
 	 */
-	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
+	async storeSessionRecord(sessionRecord: Session): Promise<void> {
 		try {
 			this.logger.debug(() => ({
 				data: { action: "storing", sessionRecord },
@@ -1140,6 +1072,27 @@ export class ProviderDatabase
 				logger: this.logger,
 			});
 		}
+	}
+
+	/**
+	 * Get a session record by sessionId
+	 */
+	async getSessionRecordBySessionId(
+		sessionId: string,
+	): Promise<Session | undefined> {
+		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		const doc = await this.tables.session.findOne(filter).lean<Session>();
+		return doc || undefined;
+	}
+
+	/**
+	 * Get a session record by token
+	 * Used to ensure that a token is not used more than once.
+	 */
+	async getSessionRecordByToken(token: string): Promise<Session | undefined> {
+		const filter: Pick<Session, "token"> = { token };
+		const record = await this.tables.session.findOne(filter).lean<Session>();
+		return record || undefined;
 	}
 
 	/**
@@ -1164,7 +1117,7 @@ export class ProviderDatabase
 			const session = await this.tables.session
 				.findOneAndUpdate<SessionRecord>(filter, {
 					deleted: true,
-					lastUpdatedTimestamp: Date.now(),
+					lastUpdatedTimestamp: new Date(),
 				})
 				.lean<SessionRecord>();
 			return session || undefined;
@@ -1271,20 +1224,6 @@ export class ProviderDatabase
 		);
 	}
 
-	/** Mark a list of token records as stored */
-	async markFrictionlessTokenRecordsStored(
-		tokenIds: FrictionlessTokenId[],
-	): Promise<void> {
-		const updateDoc: Pick<FrictionlessTokenRecord, "storedAtTimestamp"> = {
-			storedAtTimestamp: new Date(),
-		};
-		await this.tables?.frictionlessToken.updateMany(
-			{ _id: { $in: tokenIds } },
-			{ $set: updateDoc },
-			{ upsert: false },
-		);
-	}
-
 	/**
 	 * @description Store a Dapp User's pending record
 	 */
@@ -1296,7 +1235,7 @@ export class ProviderDatabase
 		requestedAtTimestamp: number,
 		ipAddress: CompositeIpAddress,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1314,7 +1253,7 @@ export class ProviderDatabase
 			deadlineTimestamp,
 			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
-			frictionlessTokenId,
+			sessionId,
 			threshold,
 		};
 		await this.tables?.pending.updateOne(
@@ -1588,7 +1527,7 @@ export class ProviderDatabase
 				"result" | "lastUpdatedTimestamp" | "coords"
 			> = {
 				result,
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 				...(coords ? { coords } : {}),
 			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -1619,7 +1558,7 @@ export class ProviderDatabase
 				"result" | "lastUpdatedTimestamp" | "coords"
 			> = {
 				result: { status: CaptchaStatus.disapproved, reason },
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 				...(coords ? { coords } : {}),
 			};
 
@@ -1726,7 +1665,7 @@ export class ProviderDatabase
 		taskName: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
 	): Promise<ObjectId> {
-		const now = new Date().getTime();
+		const now = new Date();
 		const doc = ScheduledTaskSchema.parse({
 			processName: taskName,
 			datetime: now,
@@ -1746,7 +1685,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const update: Omit<ScheduledTask, "processName" | "datetime"> = {
 			status,
-			updated: new Date().getTime(),
+			updated: new Date(),
 			...(result && { result }),
 		};
 		const filter: Pick<ScheduledTaskRecord, "_id"> = { _id: taskId };

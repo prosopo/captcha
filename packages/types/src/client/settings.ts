@@ -92,6 +92,7 @@ export const IPValidationRulesSchema = object({
 		.default(requireAllConditionsDefault),
 	// overrides are now lightweight, not recursive
 	countryOverrides: z.record(string(), IPValidationSchema).optional(),
+	forceConsistentIp: boolean().optional().default(false),
 });
 
 export const ClientSettingsSchema = object({
@@ -105,6 +106,7 @@ export const ClientSettingsSchema = object({
 	powDifficulty: number().optional().default(powDifficultyDefault),
 	imageThreshold: number().optional().default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
+	disallowWebView: boolean().optional().default(false),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

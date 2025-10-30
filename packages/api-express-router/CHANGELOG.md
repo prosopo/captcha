@@ -1,5 +1,99 @@
 # @prosopo/api-express-router
 
+## 3.0.32
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/env@3.2.20
+
+## 3.0.31
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/env@3.2.19
+
+## 3.0.30
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/env@3.2.18
+
+## 3.0.29
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/api-route@2.6.29
+  - @prosopo/config@3.1.21
+  - @prosopo/env@3.2.17
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
+## 3.0.28
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/env@3.2.16
+
+## 3.0.27
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/env@3.2.15
+
+## 3.0.26
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/env@3.2.14
+
+## 3.0.25
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/api-route@2.6.28
+  - @prosopo/common@3.1.20
+  - @prosopo/env@3.2.13
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+
+## 3.0.24
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/api-route@2.6.27
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/env@3.2.12
+  - @prosopo/config@3.1.19
+
+## 3.0.23
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/api-route@2.6.26
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/env@3.2.11
+  - @prosopo/config@3.1.18
+
 ## 3.0.22
 ### Patch Changes
 

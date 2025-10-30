@@ -1,5 +1,104 @@
 # @prosopo/account
 
+## 2.7.37
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/keyring@2.8.34
+
+## 2.7.36
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/keyring@2.8.33
+
+## 2.7.35
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/keyring@2.8.32
+
+## 2.7.34
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/keyring@2.8.31
+  - @prosopo/fingerprint@2.6.22
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+  - @prosopo/util-crypto@13.5.23
+
+## 2.7.33
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/keyring@2.8.30
+
+## 2.7.32
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/keyring@2.8.29
+
+## 2.7.31
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/keyring@2.8.28
+
+## 2.7.30
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/fingerprint@2.6.21
+  - @prosopo/keyring@2.8.27
+  - @prosopo/types@3.5.3
+  - @prosopo/util@3.1.5
+  - @prosopo/util-crypto@13.5.22
+
+## 2.7.29
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/fingerprint@2.6.20
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/keyring@2.8.26
+  - @prosopo/types@3.5.2
+  - @prosopo/util@3.1.4
+  - @prosopo/config@3.1.19
+
+## 2.7.28
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/fingerprint@2.6.19
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
 ## 2.7.27
 ### Patch Changes
 

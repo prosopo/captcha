@@ -40,6 +40,7 @@ import {
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
+	ToggleMaintenanceModeBody,
 	UpdateDetectorKeyBody,
 	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
@@ -182,11 +183,13 @@ export default class ProviderApi
 
 	public getFrictionlessCaptcha(
 		token: string,
+		headHash: string,
 		dapp: string,
 		user: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body = {
 			[ApiParams.token]: token,
+			[ApiParams.headHash]: headHash,
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
 		};
@@ -297,6 +300,24 @@ export default class ProviderApi
 				detectorKey,
 				expirationInSeconds,
 			}),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
+				},
+			},
+		);
+	}
+
+	public toggleMaintenanceMode(
+		enabled: boolean,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.ToggleMaintenanceMode,
+			ToggleMaintenanceModeBody.parse({ enabled }),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,

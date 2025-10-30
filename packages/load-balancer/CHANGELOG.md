@@ -1,5 +1,90 @@
 # @prosopo/load-balancer
 
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 2.8.6
+### Patch Changes
+
+- 005ce66: Split load balancer into URL fn and getter fn for private repo
+- b58046d: Export fn
+  
+   #Please enter a summary for your changes.
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
+## 2.8.3
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+
+## 2.8.1
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+
+## 2.8.0
+### Minor Changes
+
+- 04d0f1a: weighted random provider selection
+
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/types@3.5.3
+
+## 2.7.12
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/util@3.1.4
+  - @prosopo/config@3.1.19
+
+## 2.7.11
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/common@3.1.18
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
 ## 2.7.10
 ### Patch Changes
 

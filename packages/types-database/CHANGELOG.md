@@ -1,5 +1,105 @@
 # @prosopo/types-database
 
+## 3.3.12
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.3.11
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/user-access-policy@3.5.25
+
+## 3.3.10
+### Patch Changes
+
+- b10a65f: Allow saving webview
+- 6420187: Save iframe
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/user-access-policy@3.5.24
+
+## 3.3.9
+### Patch Changes
+
+- 3a027ef: Fix session storer
+- 3a027ef: Release cycle
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
+## 3.3.8
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/user-access-policy@3.5.22
+
+## 3.3.7
+### Patch Changes
+
+- 494c5a8: Updated payload
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/user-access-policy@3.5.21
+
+## 3.3.6
+### Patch Changes
+
+- 08ff50f: IP Validation Schema update
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/user-access-policy@3.5.20
+
+## 3.3.5
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/user-access-policy@3.5.19
+
+## 3.3.4
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/user-access-policy@3.5.18
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 3.3.3
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/user-access-policy@3.5.17
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/config@3.1.18
+
 ## 3.3.2
 ### Patch Changes
 

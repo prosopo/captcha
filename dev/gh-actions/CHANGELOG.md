@@ -1,5 +1,36 @@
 # @prosopo/gh-actions
 
+## 2.6.23
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
+## 2.6.22
+### Patch Changes
+
+- a4d6174: deps
+
+## 2.6.21
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+
+## 2.6.20
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/config@3.1.19
+
+## 2.6.19
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/config@3.1.18
+
 ## 2.6.18
 ### Patch Changes
 

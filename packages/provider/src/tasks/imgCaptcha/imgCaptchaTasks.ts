@@ -36,7 +36,6 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	PendingCaptchaRequest,
 	UserCommitment,
@@ -94,7 +93,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -161,7 +160,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			currentTime,
 			getCompositeIpAddress(ipAddress),
 			threshold,
-			frictionlessTokenId,
+			sessionId,
 		);
 		return {
 			captchas,
@@ -283,10 +282,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSignature: userTimestampSignature,
 				userSubmitted: true,
 				serverChecked: false,
-				requestedAtTimestamp: timestamp,
+				requestedAtTimestamp: new Date(timestamp),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
-				frictionlessTokenId: pendingRecord.frictionlessTokenId,
+				sessionId: pendingRecord.sessionId,
 				ja4,
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
@@ -486,6 +485,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
+		disallowWebView?: boolean,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -519,7 +519,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// Check if solution was completed recently
 		const currentTime = Date.now();
-		const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
+		const timeSinceCompletion =
+			currentTime - solution.requestedAtTimestamp.getTime();
 
 		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {
@@ -569,18 +570,28 @@ export class ImgCaptchaManager extends CaptchaManager {
 		const isApproved = solution.result.status === CaptchaStatus.approved;
 
 		let score: number | undefined;
-		if (solution.frictionlessTokenId) {
-			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-				solution.frictionlessTokenId,
+		if (solution.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				solution.sessionId,
 			);
-			if (tokenRecord) {
-				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+			if (sessionRecord) {
+				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 				this.logger.info(() => ({
 					data: {
-						tscoreComponents: tokenRecord?.scoreComponents,
+						scoreComponents: sessionRecord?.scoreComponents,
 						score: score,
 					},
 				}));
+
+				if (
+					disallowWebView === true &&
+					(sessionRecord.scoreComponents.webView || 0) > 0
+				) {
+					this.logger.info(() => ({
+						msg: "Disallowing webview access - user not verified",
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
 			}
 		}
 

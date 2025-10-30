@@ -272,15 +272,15 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		let score: number | undefined;
-		if (challengeRecord.frictionlessTokenId) {
-			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-				challengeRecord.frictionlessTokenId,
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
 			);
-			if (tokenRecord) {
-				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+			if (sessionRecord) {
+				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 				this.logger.info(() => ({
 					data: {
-						tscoreComponents: { ...(tokenRecord?.scoreComponents || {}) },
+						scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
 						score,
 					},
 				}));

@@ -1,5 +1,31 @@
 # @prosopo/client-bundle-example
 
+## 2.10.6
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
+## 2.10.5
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+
+## 2.10.4
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/config@3.1.19
+
+## 2.10.3
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/config@3.1.18
+
 ## 2.10.2
 ### Patch Changes
 

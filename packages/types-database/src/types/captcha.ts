@@ -16,8 +16,6 @@ import type { PoWCaptcha } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
-	type FrictionlessTokenRecord,
-	FrictionlessTokenRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type SessionRecord,
@@ -27,41 +25,20 @@ import {
 	UserCommitmentRecordSchema,
 } from "./provider.js";
 
-export type StoredSession = SessionRecord &
-	Omit<FrictionlessTokenRecord, "token">;
+// StoredSession is now the same as SessionRecord since we merged the schemas
+export type StoredSession = SessionRecord;
 
-export const StoredSessionRecordSchema: Schema = new Schema({
-	...SessionRecordSchema.obj,
-	...Object.fromEntries(
-		Object.entries(FrictionlessTokenRecordSchema.obj).filter(
-			([key]) => key !== "token",
-		),
-	),
-});
-
-// Remove any index with 'sessionId' in its fields
-const existingIndexes = StoredSessionRecordSchema.indexes();
-const filteredIndexes = existingIndexes.filter(
-	(idx: [Record<string, unknown>, Record<string, unknown>]) =>
-		!("sessionId" in idx[0]),
-);
-for (const [fields, options] of filteredIndexes) {
-	StoredSessionRecordSchema.index(fields, options);
-}
-
-// Redefine the index for sessionId to make it non-unique (there were collisions)
-StoredSessionRecordSchema.index({ tokenId: 1 });
-StoredSessionRecordSchema.index({ sessionId: 1 }, { unique: false });
+export const StoredSessionRecordSchema: Schema = SessionRecordSchema;
 
 export const StoredUserCommitmentRecordSchema: Schema = new Schema({
 	...UserCommitmentRecordSchema.obj,
 });
-StoredUserCommitmentRecordSchema.index({ frictionlessTokenId: 1 });
+StoredUserCommitmentRecordSchema.index({ sessionId: 1 });
 
 export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
 	...PoWCaptchaRecordSchema.obj,
 });
-StoredPoWCaptchaRecordSchema.index({ frictionlessTokenId: 1 });
+StoredPoWCaptchaRecordSchema.index({ sessionId: 1 });
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(

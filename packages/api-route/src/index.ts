@@ -12,16 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoute } from "./apiRoute.js";
-import type { ApiRoutesProvider } from "./apiRoutesProvider.js";
-import type { ApiEndpoint } from "./endpoint/apiEndpoint.js";
-import type { ApiEndpointResponse } from "./endpoint/apiEndpointResponse.js";
-import { ApiEndpointResponseStatus } from "./endpoint/apiEndpointResponseStatus.js";
-
-export {
-	ApiEndpointResponseStatus,
-	type ApiEndpointResponse,
-	type ApiEndpoint,
-	type ApiRoute,
-	type ApiRoutesProvider,
-};
+export * from "./.export.js";
+export * from "./endpoint/.export.js";

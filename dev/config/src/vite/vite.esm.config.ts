@@ -26,7 +26,7 @@ import VitePluginCopy from "./vite-plugin-copy.js";
 export default async function (
 	name: string,
 	tsConfigPath: string,
-	entry?: string,
+	entry?: string | Record<string, string>,
 ): Promise<UserConfig> {
 	console.info(`ViteEsmConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [
@@ -36,6 +36,17 @@ export default async function (
 		...builtinModules,
 		...builtinModules.map((m) => `node:${m}`),
 		...projectExternal,
+		// Webpack dependencies - should not be bundled by Vite
+		"html-webpack-plugin",
+		"mini-css-extract-plugin",
+		"node-polyfill-webpack-plugin",
+		"terser-webpack-plugin",
+		"webpack",
+		"webpack-dev-server",
+		"webpack-json-access-optimizer",
+		"babel-loader",
+		"css-loader",
+		"string-replace-loader",
 	];
 	return defineConfig({
 		ssr: { external: allExternal },

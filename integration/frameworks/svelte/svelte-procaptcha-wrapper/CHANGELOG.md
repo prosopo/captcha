@@ -1,5 +1,65 @@
 # @prosopo/svelte-procaptcha-wrapper
 
+## 1.1.34
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.36
+
+## 1.1.33
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.35
+
+## 1.1.32
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.34
+
+## 1.1.31
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/procaptcha-wrapper@2.6.33
+
+## 1.1.30
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.32
+
+## 1.1.29
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.31
+
+## 1.1.28
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.30
+
+## 1.1.27
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/procaptcha-wrapper@2.6.29
+
+## 1.1.26
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/procaptcha-wrapper@2.6.28
+  - @prosopo/config@3.1.19
+
+## 1.1.25
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/procaptcha-wrapper@2.6.27
+  - @prosopo/config@3.1.18
+
 ## 1.1.24
 ### Patch Changes
 
