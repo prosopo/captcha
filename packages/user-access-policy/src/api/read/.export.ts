@@ -13,7 +13,6 @@
 // limitations under the License.
 
 export type {
-	FindRuleFilters,
 	RuleIdsResponse,
 	RuleIdsEndpointResponse,
 } from "./findRuleIds.js";

@@ -17,20 +17,20 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys, Logger } from "@prosopo/common";
+import {
+	type AllKeys,
+	type Logger,
+	executeBatchesSequentially,
+} from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
 	accessRulesFilterInput,
+	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
-import type {
-	AccessRulesFilter,
-	AccessRulesStorage,
-} from "#policy/rulesStorage.js";
+import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
-export type FindRuleFilters = AccessRulesFilterInput[];
-
-type FindRulesSchema = ZodType<FindRuleFilters>;
+type FindRulesSchema = ZodType<AccessRulesFilterInput[]>;
 
 export type RuleIdsResponse = {
 	ruleIds: string[];
@@ -55,14 +55,23 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 	}
 
 	async processRequest(
-		args: AccessRulesFilter[],
+		args: AccessRulesFilterInput[],
 	): Promise<RuleIdsEndpointResponse> {
-		const ruleIdPromises = args.map((ruleFilter) =>
-			this.accessRulesStorage.findRuleIds(ruleFilter),
+		const ruleIdBatches = await executeBatchesSequentially(
+			args,
+			async (rulesFilterInput) => {
+				const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
+
+				const ruleIds = await executeBatchesSequentially(
+					ruleFilters,
+					(ruleFilter) => this.accessRulesStorage.findRuleIds(ruleFilter),
+				);
+
+				return ruleIds.flat();
+			},
 		);
 
-		const ruleIdSets = await Promise.all(ruleIdPromises);
-		const ruleIds = ruleIdSets.flat();
+		const ruleIds = ruleIdBatches.flat();
 
 		// Set() automatically removes duplicates
 		const uniqueRuleIds = [...new Set(ruleIds)];
