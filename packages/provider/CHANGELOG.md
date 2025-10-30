@@ -1,5 +1,22 @@
 # @prosopo/provider
 
+## 3.12.13
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/database@3.4.12
+  - @prosopo/datasets@3.0.41
+  - @prosopo/types-env@2.7.45
+  - @prosopo/api-express-router@3.0.32
+  - @prosopo/env@3.2.20
+  - @prosopo/keyring@2.8.34
+  - @prosopo/load-balancer@2.8.7
+  - @prosopo/user-access-policy@3.5.26
+
 ## 3.12.12
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.5.10
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+
 ## 3.5.9
 ### Patch Changes
 
