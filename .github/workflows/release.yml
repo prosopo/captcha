@@ -247,9 +247,9 @@ jobs:
         run: |
           echo "Building and bundling affected packages"
           set -x
-          npm run build:all
-          npm run build:all:cjs
-          npm run bundle:all
+          NODE_ENV=production npm run build:all
+          NODE_ENV=production npm run build:all:cjs
+          NODE_ENV=production npm run bundle:all
 
       - name: push
         if: ${{ env.affected != '[]' }}
