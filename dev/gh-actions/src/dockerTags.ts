@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import axios from "axios";
 
 export async function fetchTags(
 	namespace: string,
@@ -25,7 +24,7 @@ export async function fetchTags(
 	while (nextPageUrl) {
 		try {
 			// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-			const response: any = await axios.get(nextPageUrl);
+			const response: any = await fetch(nextPageUrl).then((res) => res.json());
 			const data = response.data;
 			// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
 			tags.push(...data.results.map((tag: any) => tag.name));
