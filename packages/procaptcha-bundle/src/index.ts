@@ -44,7 +44,7 @@ const implicitRender = async () => {
 		const siteKey = at(elements, 0).getAttribute("data-sitekey");
 		const web3 = at(elements, 0).getAttribute("data-web3");
 		if (!siteKey) {
-			console.error("No siteKey found");
+			console.error("No site key found");
 			return;
 		}
 
