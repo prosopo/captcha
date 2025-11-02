@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-bundle
 
+## 3.2.2
+### Patch Changes
+
+- 0699e28: Release in production mode
+
 ## 3.2.1
 ### Patch Changes
 
