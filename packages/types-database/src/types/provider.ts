@@ -35,8 +35,6 @@ import {
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
-	type Timestamp,
-	TimestampSchema,
 } from "@prosopo/types";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import type mongoose from "mongoose";
@@ -52,9 +50,7 @@ import {
 	number,
 	object,
 	string,
-	union,
 	type infer as zInfer,
-	instanceof as zInstanceof,
 } from "zod";
 import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";

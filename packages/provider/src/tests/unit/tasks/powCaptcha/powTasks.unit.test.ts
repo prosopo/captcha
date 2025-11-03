@@ -21,10 +21,9 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import {
-	type IProviderDatabase,
-	IpAddressType,
-	type PoWCaptchaStored,
+import type {
+	IProviderDatabase,
+	PoWCaptchaStored,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
