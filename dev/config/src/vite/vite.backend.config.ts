@@ -104,7 +104,7 @@ export default async function (
 		},
 		esbuild: {
 			platform: "node",
-			target: "node18",
+			target: "node22",
 			// drop,
 			legalComments: "none",
 		},
@@ -113,7 +113,7 @@ export default async function (
 			outDir,
 			minify: isProduction,
 			ssr: true,
-			target: "node18",
+			target: "node22",
 			lib: {
 				entry: entriesAbsolute,
 				name: bundleName,

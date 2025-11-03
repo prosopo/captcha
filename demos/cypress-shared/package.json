@@ -13,8 +13,8 @@
 		}
 	},
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "22",
+		"npm": "11"
 	},
 	"dependencies": {
 		"@prosopo/types": "3.5.11",

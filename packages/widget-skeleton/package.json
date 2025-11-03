@@ -4,8 +4,8 @@
 	"description": "Non business logic utilities for web applications",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "22",
+		"npm": "11"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

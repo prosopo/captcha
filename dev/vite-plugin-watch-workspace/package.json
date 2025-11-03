@@ -19,8 +19,8 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "22",
+		"npm": "11"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",

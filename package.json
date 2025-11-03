@@ -66,8 +66,8 @@
 	},
 	"private": true,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "22",
+		"npm": "11"
 	},
 	"workspaces": [
 		"dev/*",
@@ -152,5 +152,5 @@
 			"path": "./node_modules/cz-conventional-changelog"
 		}
 	},
-	"nx": {}
+	"nx": { }
 }

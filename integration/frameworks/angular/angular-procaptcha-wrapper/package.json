@@ -3,8 +3,8 @@
 	"version": "1.1.35",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "22",
+		"npm": "11"
 	},
 	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"typings": "dist/index.d.ts",

@@ -59,7 +59,7 @@ export default async function (
 		build: {
 			emptyOutDir: false,
 			ssr: true,
-			target: "node18",
+			target: "node22",
 			outDir: "dist/cjs",
 			lib: {
 				name,
