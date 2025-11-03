@@ -20,15 +20,16 @@ export const jsonEncode = (
 ): string => {
 	return JSON.stringify(
 		obj,
-		(key, value) =>
-			typeof value === "bigint"
+		function (key, value) {
+			return typeof value === "bigint"
 				? {
 						type: "bigint",
 						value: value.toString(),
 					}
 				: replacer
 					? replacer.call(this, key, value)
-					: value,
+					: value;
+		},
 		space,
 	);
 };
