@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.5.11
+### Patch Changes
+
+- 8f1773a: Tweak config
+
 ## 3.5.10
 ### Patch Changes
 

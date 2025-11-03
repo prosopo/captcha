@@ -1,5 +1,16 @@
 # @prosopo/procaptcha-bundle
 
+## 3.2.2
+### Patch Changes
+
+- 0699e28: Release in production mode
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/procaptcha-common@2.9.13
+  - @prosopo/procaptcha-frictionless@2.8.14
+  - @prosopo/procaptcha-pow@2.8.21
+  - @prosopo/procaptcha-react@2.9.13
+
 ## 3.2.1
 ### Patch Changes
 
