@@ -1,5 +1,111 @@
 # @prosopo/provider
 
+## 3.12.14
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+  - @prosopo/api-express-router@3.0.33
+  - @prosopo/database@3.4.13
+  - @prosopo/datasets@3.0.42
+  - @prosopo/env@3.2.21
+  - @prosopo/keyring@2.8.35
+  - @prosopo/load-balancer@2.8.8
+  - @prosopo/types-database@3.3.13
+  - @prosopo/types-env@2.7.46
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.12.13
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/database@3.4.12
+  - @prosopo/datasets@3.0.41
+  - @prosopo/types-env@2.7.45
+  - @prosopo/api-express-router@3.0.32
+  - @prosopo/env@3.2.20
+  - @prosopo/keyring@2.8.34
+  - @prosopo/load-balancer@2.8.7
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.12.12
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [005ce66]
+- Updated dependencies [b58046d]
+- Updated dependencies [7101036]
+  - @prosopo/types-database@3.3.11
+  - @prosopo/types@3.5.9
+  - @prosopo/database@3.4.11
+  - @prosopo/user-access-policy@3.5.25
+  - @prosopo/load-balancer@2.8.6
+  - @prosopo/util@3.1.7
+  - @prosopo/datasets@3.0.40
+  - @prosopo/types-env@2.7.44
+  - @prosopo/api@3.1.30
+  - @prosopo/api-express-router@3.0.31
+  - @prosopo/env@3.2.19
+  - @prosopo/keyring@2.8.33
+
+## 3.12.11
+### Patch Changes
+
+- 4b6dc9d: Block at verify
+- e5c259d: .
+- 6420187: Save iframe
+- Updated dependencies [b10a65f]
+- Updated dependencies [e5c259d]
+- Updated dependencies [6420187]
+  - @prosopo/types-database@3.3.10
+  - @prosopo/types@3.5.8
+  - @prosopo/database@3.4.10
+  - @prosopo/datasets@3.0.39
+  - @prosopo/types-env@2.7.43
+  - @prosopo/api@3.1.29
+  - @prosopo/api-express-router@3.0.30
+  - @prosopo/env@3.2.18
+  - @prosopo/keyring@2.8.32
+  - @prosopo/load-balancer@2.8.5
+  - @prosopo/user-access-policy@3.5.24
+
+## 3.12.10
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+- 3a027ef: Fix session storer
+- 3a027ef: Release cycle
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+- Updated dependencies [3a027ef]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/api@3.1.28
+  - @prosopo/common@3.1.21
+  - @prosopo/api-express-router@3.0.29
+  - @prosopo/api-route@2.6.29
+  - @prosopo/database@3.4.9
+  - @prosopo/config@3.1.21
+  - @prosopo/types-database@3.3.9
+  - @prosopo/datasets@3.0.38
+  - @prosopo/env@3.2.17
+  - @prosopo/keyring@2.8.31
+  - @prosopo/load-balancer@2.8.4
+  - @prosopo/types-env@2.7.42
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+  - @prosopo/util-crypto@13.5.23
+
 ## 3.12.9
 ### Patch Changes
 

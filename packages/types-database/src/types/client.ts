@@ -73,6 +73,11 @@ export const IPValidationRulesSchema = new Schema({
 		default: requireAllConditionsDefault,
 	},
 
+	forceConsistentIp: {
+		type: Boolean,
+		default: false,
+	},
+
 	countryOverrides: {
 		type: Map,
 		of: new Schema({
@@ -98,6 +103,10 @@ export const UserSettingsSchema = new Schema({
 	imageThreshold: Number,
 	ipValidationRules: IPValidationRulesSchema,
 	domains: [String],
+	disallowWebView: {
+		type: Boolean,
+		default: false,
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
@@ -106,14 +115,14 @@ export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
 	account: String,
 	url: String,
 	mnemonic: String,
-	createdAt: Number,
+	createdAt: Date,
 	activated: Boolean,
 	tier: String,
 	settings: {
 		type: UserSettingsSchema,
 		required: false,
 	},
-	updatedAtTimestamp: Number,
+	updatedAtTimestamp: Date,
 });
 
 type User = {

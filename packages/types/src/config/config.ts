@@ -118,7 +118,6 @@ export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>;
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
 	object({
 		database: DatabaseConfigSchema.optional(),
-		devOnlyWatchEvents: boolean().optional(),
 	}),
 );
 

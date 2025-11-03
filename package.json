@@ -1,7 +1,7 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "3.4.12",
 	"packageManager": "npm@10.8.2",
+	"version": "3.4.17",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {

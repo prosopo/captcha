@@ -1,5 +1,43 @@
 # @prosopo/load-balancer
 
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 2.8.6
+### Patch Changes
+
+- 005ce66: Split load balancer into URL fn and getter fn for private repo
+- b58046d: Export fn
+  
+   #Please enter a summary for your changes.
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 2.8.3
 ### Patch Changes
 

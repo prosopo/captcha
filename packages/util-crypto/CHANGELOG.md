@@ -1,5 +1,11 @@
 # @prosopo/util-crypto
 
+## 13.5.23
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
 ## 13.5.22
 ### Patch Changes
 

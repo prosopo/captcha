@@ -111,7 +111,6 @@ describe("ClientTaskManager", () => {
 		};
 
 		config = {
-			devOnlyWatchEvents: true,
 			mongoEventsUri: "mongodb://localhost:27017/events",
 			mongoCaptchaUri: "mongodb://localhost:27017/captchas",
 		} as ProsopoConfigOutput;
@@ -146,7 +145,7 @@ describe("ClientTaskManager", () => {
 						_id,
 						processName: taskName,
 						status,
-						datetime: collections.schedulers.time,
+						datetime: new Date(collections.schedulers.time),
 					});
 					collections.schedulers.nextID += 1;
 					collections.schedulers.time += 1;
@@ -163,7 +162,7 @@ describe("ClientTaskManager", () => {
 					const task = collections.schedulers.records[taskID];
 					task.status = status;
 					task.result = result;
-					task.updated = collections.schedulers.time;
+					task.updated = new Date(collections.schedulers.time);
 					collections.schedulers.time += 1;
 				},
 			),
@@ -258,8 +257,8 @@ describe("ClientTaskManager", () => {
 			{
 				id: "commitment1",
 				// Image commitments were stored at time 1
-				lastUpdatedTimestamp: 1,
-				storedAtTimestamp: 1,
+				lastUpdatedTimestamp: new Date(1),
+				storedAtTimestamp: new Date(1),
 			},
 		];
 
@@ -270,8 +269,8 @@ describe("ClientTaskManager", () => {
 			{
 				challenge: "1234567___userAccount___dappAccount",
 				// PoW commitments were stored at time 3
-				lastUpdatedTimestamp: 3,
-				storedAtTimestamp: 1,
+				lastUpdatedTimestamp: new Date(3),
+				storedAtTimestamp: new Date(1),
 			},
 		];
 
@@ -284,7 +283,7 @@ describe("ClientTaskManager", () => {
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
-			updated: 1,
+			updated: new Date(1),
 		};
 
 		// Put the mock last scheduled task in the collection
@@ -368,7 +367,7 @@ describe("ClientTaskManager", () => {
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
-			updated: 1,
+			updated: new Date(1),
 		};
 
 		// Put the mock last scheduled task in the collection

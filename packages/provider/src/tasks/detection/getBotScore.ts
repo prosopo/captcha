@@ -19,10 +19,12 @@ const DEFAULT_ENTROPY = 13837;
 
 export const getBotScore = async (
 	payload: string,
+	headHash: string,
 	privateKeyString?: string,
 ) => {
 	const result = (await getBotScoreFromPayload(
 		payload,
+		headHash,
 		privateKeyString,
 	)) as DetectorResult;
 	const baseBotScore: number = result.score;
@@ -31,6 +33,8 @@ export const getBotScore = async (
 	const userId: string = result.userId;
 	const userAgent: string = result.userAgent;
 	const isWebView: boolean = result.isWebView ?? false;
+	const isIframe: boolean = result.isIframe ?? false;
+	const decryptedHeadHash: string = result.decryptedHeadHash;
 
 	if (baseBotScore === undefined) {
 		return {
@@ -47,5 +51,7 @@ export const getBotScore = async (
 		userId,
 		userAgent,
 		isWebView,
+		isIframe,
+		decryptedHeadHash,
 	};
 };

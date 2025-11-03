@@ -1,5 +1,40 @@
 # @prosopo/detector
 
+## 3.3.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+
+## 3.3.12
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 3.3.11
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 3.3.10
+### Patch Changes
+
+- e5c259d: .
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 3.3.9
+### Patch Changes
+
+- 3a027ef: Release cycle
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 3.3.8
 ### Patch Changes
 

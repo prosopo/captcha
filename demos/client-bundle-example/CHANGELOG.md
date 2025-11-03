@@ -1,5 +1,11 @@
 # @prosopo/client-bundle-example
 
+## 2.10.6
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
 ## 2.10.5
 ### Patch Changes
 

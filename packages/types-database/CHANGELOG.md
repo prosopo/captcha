@@ -1,5 +1,54 @@
 # @prosopo/types-database
 
+## 3.3.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.3.12
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.3.11
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/user-access-policy@3.5.25
+
+## 3.3.10
+### Patch Changes
+
+- b10a65f: Allow saving webview
+- 6420187: Save iframe
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/user-access-policy@3.5.24
+
+## 3.3.9
+### Patch Changes
+
+- 3a027ef: Fix session storer
+- 3a027ef: Release cycle
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
 ## 3.3.8
 ### Patch Changes
 

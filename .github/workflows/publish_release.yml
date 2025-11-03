@@ -66,32 +66,6 @@ jobs:
           npm run build:all
           npm run build:all:cjs
 
-      - name: Bundle staging procaptcha-bundle
-        run: |
-          echo "Bundling procaptcha-bundle"
-          NODE_ENV="staging" npx turbo run @prosopo/procaptcha-bundle#bundle
-
-      - name: Create staging procaptcha-bundle zip
-        run: |
-          cd packages/procaptcha-bundle/dist/bundle
-          bundle_name="procaptcha.bundle.${{ steps.version.outputs.version }}-staging.zip"
-          zip -r ../../../../${bundle_name} .
-          cd -
-          ls -lh ${bundle_name}
-
-      - name: Bundle production procaptcha-bundle
-        run: |
-          echo "Bundling procaptcha-bundle"
-          NODE_ENV="production" npx turbo run @prosopo/procaptcha-bundle#bundle
-
-      - name: Create production procaptcha-bundle zip
-        run: |
-          cd packages/procaptcha-bundle/dist/bundle
-          bundle_name="procaptcha.bundle.${{ steps.version.outputs.version }}.zip"
-          zip -r ../../../../${bundle_name} .
-          cd -
-          ls -lh ${bundle_name}
-          
       - name: Bundle the production provider CLI
         run: |
           echo "Bundling provider CLI"
@@ -129,20 +103,18 @@ jobs:
         run: |
           gh release create "v${{ steps.version.outputs.version }}" \
             --title "Release v${{ steps.version.outputs.version }}" \
-            --generate-notes \
-            procaptcha.bundle.${{ steps.version.outputs.version }}.zip \
-            procaptcha.bundle.${{ steps.version.outputs.version }}-staging.zip
+            --generate-notes
 
       - name: Send success notification
         if: success()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\": \"✅ Release v${{ steps.version.outputs.version }} published successfully\"}" \
+            --data "{\"text\": \"Release v${{ steps.version.outputs.version }} published successfully\"}" \
             "${{ secrets.SLACKBOT_DEVOPS }}"
 
       - name: Send failure notification
         if: failure()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\": \"❌ Release v${{ steps.version.outputs.version }} failed to publish\"}" \
+            --data "{\"text\": \"Release v${{ steps.version.outputs.version }} failed to publish\"}" \
             "${{ secrets.SLACKBOT_DEVOPS }}"
