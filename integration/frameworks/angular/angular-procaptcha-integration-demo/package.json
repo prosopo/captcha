@@ -2,7 +2,7 @@
 	"name": "@prosopo/angular-procaptcha-integration-demo",
 	"version": "1.1.35",
 	"engines": {
-		"node": ">=v20.3.9",
+		"node": ">=v20.0.0",
 		"npm": ">=10.6.0"
 	},
 	"type": "module",
