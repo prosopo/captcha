@@ -39,7 +39,7 @@ export const jsonDecode = (
 	// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
 	reviver?: ((this: any, key: string, value: any) => any) | null,
 ): unknown => {
-	return JSON.parse(str, (key, value) => {
+	return JSON.parse(str, function (key, value) {
 		if (
 			typeof value === "object" &&
 			value !== null &&
