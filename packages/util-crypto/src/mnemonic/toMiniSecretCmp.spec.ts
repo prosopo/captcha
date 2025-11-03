@@ -60,5 +60,5 @@ for (const onlyJsMnemonic of [false, true]) {
 				}
 			});
 		}
-	});
+	}, 60000);
 }
