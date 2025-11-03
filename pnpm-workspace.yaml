@@ -1,6 +1,0 @@
-packages:
-  - "dev/*"
-  - "packages/*"
-  - "demos/*"
-  - "integration/*"
-  - "integration/frameworks/*/*"
