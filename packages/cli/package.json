@@ -41,7 +41,6 @@
 		"@prosopo/locale": "3.1.21",
 		"@prosopo/provider": "3.12.14",
 		"@prosopo/types": "3.5.11",
-		"@prosopo/types-database": "3.3.13",
 		"@prosopo/user-access-policy": "3.5.27",
 		"@prosopo/util": "3.1.7",
 		"@prosopo/util-crypto": "13.5.23",
@@ -50,9 +49,6 @@
 		"cron-parser": "4.9.0",
 		"dotenv": "16.4.5",
 		"express-rate-limit": "7.4.0",
-		"ip-address": "10.0.1",
-		"mongodb": "6.15.0",
-		"mongoose": "8.13.0",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"
 	},
