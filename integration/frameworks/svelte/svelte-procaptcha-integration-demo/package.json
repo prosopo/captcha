@@ -30,7 +30,7 @@
 	},
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.22",
-		"@sveltejs/vite-plugin-svelte": "5.0.3",
+		"@sveltejs/vite-plugin-svelte": "6.2.1",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
 		"svelte-check": "4.2.2"

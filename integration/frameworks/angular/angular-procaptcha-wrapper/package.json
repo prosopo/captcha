@@ -24,7 +24,7 @@
 	"devDependencies": {
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
-		"ng-packagr": "19.2.0"
+		"ng-packagr": "^20.3.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

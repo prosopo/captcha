@@ -24,7 +24,7 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@polkadot/util": "12.6.2",
+		"@polkadot/util": "13.5.7",
 		"@prosopo/api-route": "2.6.29",
 		"@prosopo/common": "3.1.21",
 		"@prosopo/env": "3.2.21",
@@ -39,7 +39,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
-		"vitest": "3.0.9"
+		"vitest": "3.2.4"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

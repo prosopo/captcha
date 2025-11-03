@@ -31,7 +31,7 @@
 		}
 	},
 	"dependencies": {
-		"@polkadot/util": "12.6.2",
+		"@polkadot/util": "13.5.7",
 		"@prosopo/api": "3.1.32",
 		"@prosopo/common": "3.1.21",
 		"@prosopo/config": "3.1.21",
@@ -41,21 +41,9 @@
 		"@prosopo/util": "3.1.7",
 		"@prosopo/util-crypto": "13.5.23"
 	},
-	"overrides": {
-		"@polkadot/extension-inject": {
-			"@polkadot/api": {
-				"version": "10.13.1"
-			}
-		},
-		"@polkadot/extension-dapp": {
-			"@polkadot/api": {
-				"version": "10.13.1"
-			}
-		}
-	},
 	"devDependencies": {
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "3.0.9",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
@@ -63,8 +51,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"keywords": [],
 	"repository": {

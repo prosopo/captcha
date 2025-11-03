@@ -32,7 +32,7 @@
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.22",
 		"@types/node": "22.10.2",
-		"@vitejs/plugin-react": "4.3.4",
+		"@vitejs/plugin-react": "5.1.0",
 		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
