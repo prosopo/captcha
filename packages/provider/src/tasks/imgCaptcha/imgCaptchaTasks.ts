@@ -51,6 +51,7 @@ import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
@@ -484,6 +485,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		maxVerifiedTime?: number,
 		ip?: string,
 		disallowWebView?: boolean,
+		contextAwareEnabled = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -587,6 +589,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 				) {
 					this.logger.info(() => ({
 						msg: "Disallowing webview access - user not verified",
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
+				if (
+					contextAwareEnabled &&
+					sessionRecord.reason ===
+						FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
+				) {
+					this.logger.info(() => ({
+						msg: "Context aware validation failed - user not verified",
 					}));
 					return { status: "API.USER_NOT_VERIFIED", verified: false };
 				}

@@ -1789,7 +1789,7 @@ export class ProviderDatabase
 	 */
 	async getClientEntropy(account: string): Promise<string | undefined> {
 		const filter: Pick<ClientEntropyRecord, "account"> = { account };
-		const doc = await this.tables?.client
+		const doc = await this.tables?.clientEntropy
 			.findOne(filter)
 			.lean<ClientEntropyRecord>();
 		return doc ? doc.entropy : undefined;
@@ -1844,6 +1844,6 @@ export class ProviderDatabase
 					return undefined;
 				}),
 			)
-		).filter((headHash): headHash is string => false);
+		).filter((headHash): headHash is string => headHash !== undefined);
 	}
 }

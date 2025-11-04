@@ -192,7 +192,6 @@ export default (
 
 						code: 500,
 						params: req.params,
-						context: err,
 					},
 					i18n: req.i18n,
 					logger: req.logger,

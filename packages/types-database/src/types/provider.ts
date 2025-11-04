@@ -460,6 +460,7 @@ export type Session = {
 	webView: boolean;
 	iFrame: boolean;
 	decryptedHeadHash: string;
+	reason?: string;
 };
 
 export type SessionRecord = mongoose.Document & Session;

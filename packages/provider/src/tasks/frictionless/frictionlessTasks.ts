@@ -55,39 +55,15 @@ export enum FrictionlessReason {
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 }
 
-export interface SessionParams {
-	token: string;
-	score: number;
-	threshold: number;
-	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
-	ipAddress: CompositeIpAddress;
-	webView?: boolean;
-	iFrame?: boolean;
-	decryptedHeadHash: string;
-	reason?: FrictionlessReason;
-}
+export interface ImageCaptchaSessionParams extends Session {}
 
-export interface ImageCaptchaSessionParams extends SessionParams {
-	solvedImagesCount?: number;
-}
-
-export interface PowCaptchaSessionParams extends SessionParams {
-	powDifficulty?: number;
-}
+export interface PowCaptchaSessionParams extends Session {}
 
 export class FrictionlessManager extends CaptchaManager {
-	private sessionParams?: {
-		token: string;
-		score: number;
-		threshold: number;
-		scoreComponents: ScoreComponents;
-		providerSelectEntropy: number;
-		ipAddress: CompositeIpAddress;
-		webView: boolean;
-		iFrame: boolean;
-		decryptedHeadHash: string;
-	};
+	private sessionParams?: Omit<
+		Session,
+		"sessionId" | "createdAt" | "captchaType"
+	>;
 
 	constructor(
 		db: IProviderDatabase,
@@ -99,7 +75,7 @@ export class FrictionlessManager extends CaptchaManager {
 		this.config = config;
 	}
 
-	setSessionParams(params: SessionParams): void {
+	setSessionParams(params: Session): void {
 		this.sessionParams = {
 			token: params.token,
 			score: params.score,
@@ -137,6 +113,7 @@ export class FrictionlessManager extends CaptchaManager {
 		webView = false,
 		iFrame = false,
 		decryptedHeadHash = "",
+		reason?: FrictionlessReason,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: uuidv4(),
@@ -153,6 +130,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView,
 			iFrame,
 			decryptedHeadHash,
+			reason,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -211,6 +189,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
+			effectiveParams.reason as FrictionlessReason | undefined,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
