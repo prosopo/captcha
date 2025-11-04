@@ -517,6 +517,21 @@ DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+export type ClientEntropy = {
+	account: string;
+	entropy: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
+export type ClientEntropyRecord = mongoose.Document & ClientEntropy;
+export const ClientEntropyRecordSchema = new Schema<ClientEntropyRecord>({
+	account: { type: String, required: true, unique: true },
+	entropy: { type: String, required: true },
+	createdAt: { type: Date, required: true },
+	updatedAt: { type: Date, required: true },
+});
+ClientEntropyRecordSchema.index({ account: 1 }, { unique: true });
+
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
@@ -694,6 +709,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
+	getAllClientRecords(): Promise<ClientRecord[]>;
+
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
@@ -721,4 +738,10 @@ export interface IProviderDatabase extends IDatabase {
 		detectorKey: string,
 		expirationInSeconds?: number,
 	): Promise<void>;
+
+	setClientEntropy(account: string, entropy: string): Promise<void>;
+
+	getClientEntropy(account: string): Promise<string | undefined>;
+
+	sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]>;
 }

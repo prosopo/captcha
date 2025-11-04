@@ -30,7 +30,7 @@ import type {
 	StoredSession,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { parseUrl } from "@prosopo/util";
+import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
@@ -266,6 +266,26 @@ export class ClientTaskManager {
 				ScheduledTaskStatus.Failed,
 				{ error: String(e) },
 			);
+		}
+	}
+
+	/**
+	 * @description Calculate client entropy scores and update in db
+	 * @returns Promise<void>
+	 */
+	async calculateClientEntropy(): Promise<void> {
+		const clients = await this.providerDB.getAllClientRecords();
+
+		for (const client of clients) {
+			const sampleEntropies = await this.providerDB.sampleEntropy(
+				100,
+				client.account,
+			);
+
+			// Calculate majority average entropy
+			const avgEntropy = majorityAverage(sampleEntropies);
+
+			await this.providerDB.setClientEntropy(client.account, avgEntropy);
 		}
 	}
 
