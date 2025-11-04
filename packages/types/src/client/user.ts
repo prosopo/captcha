@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { z } from "zod";
-import type { Timestamp } from "../datasets/index.js";
 
 import type { IUserSettings } from "./settings.js";
 

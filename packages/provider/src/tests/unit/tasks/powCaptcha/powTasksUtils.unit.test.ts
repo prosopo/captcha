@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { describe, expect, it, vi } from "vitest";
 import {

@@ -5,8 +5,8 @@
 	"license": "Apache-2.0",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=v20.0.0",
+		"npm": ">=10.6.0"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -21,7 +21,7 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"@polkadot/util": "12.6.2",
+		"@polkadot/util": "13.5.7",
 		"@prosopo/api": "3.1.32",
 		"@prosopo/api-express-router": "3.0.33",
 		"@prosopo/api-route": "2.6.29",
@@ -52,7 +52,7 @@
 	"devDependencies": {
 		"@types/node": "22.5.5",
 		"@types/uuid": "10.0.0",
-		"@vitest/coverage-v8": "3.0.9",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
@@ -60,8 +60,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"repository": {
 		"type": "git",

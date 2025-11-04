@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogger, parseLogLevel } from "@prosopo/common";
+import { getLogger, parseLogLevel } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { generateMnemonic } from "@prosopo/keyring";
 import { updateEnvFile } from "../setup/index.js";

@@ -15,11 +15,10 @@
 import { type Logger, getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
-import {
-	type ClientRecord,
-	type IProviderDatabase,
-	IpAddressType,
-	type Session,
+import type {
+	ClientRecord,
+	IProviderDatabase,
+	Session,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { beforeEach, describe, expect, it, vi } from "vitest";

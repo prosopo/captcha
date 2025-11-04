@@ -16,8 +16,7 @@
 import "@cypress/xpath";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { type Captcha, CaptchaType } from "@prosopo/types";
-import { at } from "@prosopo/util";
+import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
