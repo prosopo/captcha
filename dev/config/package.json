@@ -17,6 +17,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
+		"@rollup/plugin-node-resolve": "16.0.3",
 		"@rollup/plugin-typescript": "11.1.6",
 		"@rollup/plugin-wasm": "6.2.2",
 		"@vitejs/plugin-react": "5.1.0",
