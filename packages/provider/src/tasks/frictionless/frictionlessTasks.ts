@@ -46,6 +46,15 @@ const getDefaultEntropy = (): number => {
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 export const DEFAULT_ENTROPY = getDefaultEntropy();
 
+export enum FrictionlessReason {
+	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
+	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
+	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
+	OLD_TIMESTAMP = "OLD_TIMESTAMP",
+	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
+	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
+}
+
 export interface SessionParams {
 	token: string;
 	score: number;
@@ -56,6 +65,7 @@ export interface SessionParams {
 	webView?: boolean;
 	iFrame?: boolean;
 	decryptedHeadHash: string;
+	reason?: FrictionlessReason;
 }
 
 export interface ImageCaptchaSessionParams extends SessionParams {
@@ -472,5 +482,9 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame,
 			decryptedHeadHash,
 		};
+	}
+
+	async getClientEntropy(siteKey: string): Promise<string | undefined> {
+		return this.db.getClientEntropy(siteKey);
 	}
 }

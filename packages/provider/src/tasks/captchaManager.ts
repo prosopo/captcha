@@ -34,7 +34,6 @@ import type {
 	UserScope,
 	UserScopeRecord,
 } from "@prosopo/user-access-policy";
-import { compareBinaryStrings } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
@@ -157,51 +156,6 @@ export class CaptchaManager {
 						reason: "CAPTCHA.NO_SESSION_FOUND",
 						type: requestedCaptchaType,
 					};
-				}
-
-				// Check the context
-				if (clientSettings.settings.contextAware?.enabled) {
-					const clientEntropy = await this.db.getClientEntropy(
-						clientSettings.account,
-					);
-					if (!clientEntropy) {
-						this.logger.warn(() => ({
-							msg: "No client entropy found for context aware client",
-						}));
-						return {
-							valid: true,
-							type: requestedCaptchaType,
-						};
-					}
-					if (!sessionRecord.decryptedHeadHash) {
-						this.logger.warn(() => ({
-							msg: "No head hash in session for context aware client",
-							data: {
-								account: clientSettings.account,
-								sessionId: sessionId,
-							},
-						}));
-						return {
-							valid: false,
-							reason: "CAPTCHA.NO_SESSION_FOUND",
-							type: requestedCaptchaType,
-						};
-					}
-					const sim = compareBinaryStrings(
-						sessionRecord.decryptedHeadHash,
-						clientEntropy,
-					);
-					const isValidContext =
-						sim >= clientSettings.settings.contextAware.threshold;
-					if (!isValidContext) {
-						return {
-							valid: true,
-							type: CaptchaType.image,
-							reason: "API.CONTEXT_AWARE_VALIDATION_FAILED",
-							solvedImagesCount:
-								this.config.captchas.solved.count * Math.round(1 / sim),
-						};
-					}
 				}
 
 				return {

@@ -20,7 +20,7 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
-export const contextAwareThresholdDefault = 0.85;
+export const contextAwareThresholdDefault = 0.9;
 
 // IP Validation Rules
 export enum IPValidationAction {
