@@ -88,6 +88,8 @@ import {
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
+const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
+
 enum TableNames {
 	captcha = "captcha",
 	dataset = "dataset",
@@ -1810,7 +1812,7 @@ export class ProviderDatabase
 				$match: {
 					dappAccount: siteKey,
 					requestedAtTimestamp: {
-						$gt: new Date(new Date().getTime() - 24 * 60 * 60 * 1000),
+						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
 					},
 				},
 			},
