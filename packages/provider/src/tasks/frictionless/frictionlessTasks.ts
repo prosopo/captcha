@@ -67,7 +67,6 @@ export interface PowCaptchaSessionParams extends SessionParams {
 }
 
 export class FrictionlessManager extends CaptchaManager {
-	config: ProsopoConfigOutput;
 	private sessionParams?: {
 		token: string;
 		score: number;
@@ -86,7 +85,7 @@ export class FrictionlessManager extends CaptchaManager {
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 	) {
-		super(db, pair, logger);
+		super(db, pair, config, logger);
 		this.config = config;
 	}
 

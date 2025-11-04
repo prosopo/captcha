@@ -14,8 +14,13 @@
 
 import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
-import type { KeyringPair } from "@prosopo/types";
-import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
+import {
+	ApiParams,
+	CaptchaType,
+	type KeyringPair,
+	type ProsopoConfigOutput,
+	Tier,
+} from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
@@ -29,16 +34,24 @@ import type {
 	UserScope,
 	UserScopeRecord,
 } from "@prosopo/user-access-policy";
+import { compareBinaryStrings } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
+	config: ProsopoConfigOutput;
 	logger: Logger;
 
-	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
+	constructor(
+		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
+	) {
 		this.pair = pair;
 		this.db = db;
+		this.config = config;
 		this.logger = logger || getLogger("info", import.meta.url);
 	}
 
@@ -147,10 +160,19 @@ export class CaptchaManager {
 				}
 
 				// Check the context
-				if (clientSettings.settings.contextAware) {
+				if (clientSettings.settings.contextAware?.enabled) {
 					const clientEntropy = await this.db.getClientEntropy(
 						clientSettings.account,
 					);
+					if (!clientEntropy) {
+						this.logger.warn(() => ({
+							msg: "No client entropy found for context aware client",
+						}));
+						return {
+							valid: true,
+							type: requestedCaptchaType,
+						};
+					}
 					if (!sessionRecord.decryptedHeadHash) {
 						this.logger.warn(() => ({
 							msg: "No head hash in session for context aware client",
@@ -165,13 +187,21 @@ export class CaptchaManager {
 							type: requestedCaptchaType,
 						};
 					}
-					// compare clientEntropy with decryptedHeadHash
-					// TODO
-					return {
-						valid: true,
-						sessionId: sessionRecord.sessionId,
-						type: requestedCaptchaType,
-					};
+					const sim = compareBinaryStrings(
+						sessionRecord.decryptedHeadHash,
+						clientEntropy,
+					);
+					const isValidContext =
+						sim >= clientSettings.settings.contextAware.threshold;
+					if (!isValidContext) {
+						return {
+							valid: true,
+							type: CaptchaType.image,
+							reason: "API.CONTEXT_AWARE_VALIDATION_FAILED",
+							solvedImagesCount:
+								this.config.captchas.solved.count * Math.round(1 / sim),
+						};
+					}
 				}
 
 				return {

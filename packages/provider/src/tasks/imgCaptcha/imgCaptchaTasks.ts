@@ -55,15 +55,13 @@ import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
-	config: ProsopoConfigOutput;
-
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 	) {
-		super(db, pair, logger);
+		super(db, pair, config, logger);
 		this.config = config;
 	}
 

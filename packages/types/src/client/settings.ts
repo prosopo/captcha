@@ -20,6 +20,7 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
+export const contextAwareThresholdDefault = 0.85;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -106,8 +107,13 @@ export const ClientSettingsSchema = object({
 	powDifficulty: number().optional().default(powDifficultyDefault),
 	imageThreshold: number().optional().default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
-	disallowWebView: boolean().optional().default(false),
-	contextAware: boolean().optional().default(false),
+	disallowWebView: boolean().optional().default(false).optional(),
+	contextAware: z
+		.object({
+			enabled: boolean().optional().default(false),
+			threshold: number().optional().default(contextAwareThresholdDefault),
+		})
+		.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
