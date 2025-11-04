@@ -1,5 +1,21 @@
 # @prosopo/provider
 
+## 3.12.14
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+  - @prosopo/api-express-router@3.0.33
+  - @prosopo/database@3.4.13
+  - @prosopo/datasets@3.0.42
+  - @prosopo/env@3.2.21
+  - @prosopo/keyring@2.8.35
+  - @prosopo/load-balancer@2.8.8
+  - @prosopo/types-database@3.3.13
+  - @prosopo/types-env@2.7.46
+  - @prosopo/user-access-policy@3.5.27
+
 ## 3.12.13
 ### Patch Changes
 
