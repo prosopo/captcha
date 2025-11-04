@@ -75,7 +75,9 @@ export class FrictionlessManager extends CaptchaManager {
 		this.config = config;
 	}
 
-	setSessionParams(params: Session): void {
+	setSessionParams(
+		params: Omit<Session, "sessionId" | "createdAt" | "captchaType">,
+	): void {
 		this.sessionParams = {
 			token: params.token,
 			score: params.score,
@@ -457,8 +459,8 @@ export class FrictionlessManager extends CaptchaManager {
 			providerSelectEntropy: Number(providerSelectEntropy),
 			userId,
 			userAgent,
-			webView,
-			iFrame,
+			webView: webView || false,
+			iFrame: iFrame || false,
 			decryptedHeadHash,
 		};
 	}
