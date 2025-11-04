@@ -17,20 +17,16 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { Logger } from "@prosopo/common";
+import { type Logger, executeBatchesSequentially } from "@prosopo/common";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
 	accessRulesFilterInput,
+	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
-import type {
-	AccessRulesFilter,
-	AccessRulesStorage,
-} from "#policy/rulesStorage.js";
+import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
-export type DeleteRuleFilters = AccessRulesFilterInput[];
-
-type DeleteRulesSchema = ZodType<DeleteRuleFilters>;
+type DeleteRulesSchema = ZodType<AccessRulesFilterInput[]>;
 
 export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	public constructor(
@@ -43,36 +39,39 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	}
 
 	async processRequest(
-		args: AccessRulesFilter[],
+		args: AccessRulesFilterInput[],
 	): Promise<ApiEndpointResponse> {
-		const allRuleIds = [];
+		let deletedCount = 0;
 
-		for (const accessRuleFilter of args) {
-			const foundRuleIds =
-				await this.accessRulesStorage.findRuleIds(accessRuleFilter);
+		for (const rulesFilterInput of args) {
+			const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
 
-			allRuleIds.push(...foundRuleIds);
+			await executeBatchesSequentially(ruleFilters, async (ruleFilter) => {
+				const ruleIds = await this.accessRulesStorage.findRuleIds(ruleFilter);
+
+				// Set() automatically removes duplicates
+				const uniqueRuleIds = [...new Set(ruleIds)];
+
+				if (uniqueRuleIds.length > 0) {
+					await this.accessRulesStorage.deleteRules(uniqueRuleIds);
+
+					deletedCount += uniqueRuleIds.length;
+
+					this.logger.info(() => ({
+						msg: "Endpoint deleted rules",
+						data: {
+							rulesFilterInput,
+							uniqueRuleIds,
+						},
+					}));
+				}
+			});
 		}
-
-		// Set() automatically removes duplicates
-		const uniqueRuleIds = [...new Set(allRuleIds)];
-
-		if (uniqueRuleIds.length > 0) {
-			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
-		}
-
-		this.logger.info(() => ({
-			msg: "Endpoint deleted rules",
-			data: {
-				args,
-				uniqueRuleIds,
-			},
-		}));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
 			data: {
-				deleted_count: uniqueRuleIds.length,
+				deleted_count: deletedCount,
 			},
 		};
 	}

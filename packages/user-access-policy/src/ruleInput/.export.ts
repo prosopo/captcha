@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export { accessRuleInput } from "./ruleInput.js";
+export { accessRuleInput, type AccessRulesFilterInput } from "./ruleInput.js";
 
 export { accessPolicyInput, policyScopeInput } from "./policyInput.js";
 
