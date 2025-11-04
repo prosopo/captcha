@@ -55,15 +55,6 @@
 		"mongoose": "8.13.0",
 		"zod": "3.23.8"
 	},
-	"overrides": {
-		"mongodb-memory-server": {
-			"mongodb-memory-server-core": {
-				"find-cache-dir": {
-					"make-dir": "^4.0.0"
-				}
-			}
-		}
-	},
 	"devDependencies": {
 		"@types/jsonwebtoken": "9.0.6",
 		"@types/node": "22.10.2",
