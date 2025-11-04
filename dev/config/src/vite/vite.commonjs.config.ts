@@ -50,7 +50,7 @@ export default async function (
 							"code" in chunk &&
 							chunk.code
 						) {
-							chunk.code = chunk.code.replace(/import\.meta\.url/g, "module");
+							chunk.code = chunk.code.replace(/import\.meta\.url/g, "require('url').pathToFileURL(__filename).href");
 						}
 					}
 				},
