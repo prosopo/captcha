@@ -14,7 +14,6 @@
 
 import { builtinModules } from "node:module";
 import path from "node:path";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { wasm } from "@rollup/plugin-wasm";
 import type { Drop } from "esbuild";
 import css from "rollup-plugin-import-css";
@@ -129,7 +128,7 @@ export default async function (
 					entryFileNames: `${bundleName}.[name].bundle.js`,
 				},
 				// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
-				plugins: [css() as any, wasm() as any, nodeResolve() as any],
+				plugins: [css() as any, wasm() as any],
 			},
 		},
 		plugins: [
