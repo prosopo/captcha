@@ -27,7 +27,6 @@ import type {
 	IProviderDatabase,
 	PoWCaptchaStored,
 	SessionRecord,
-	StoredSession,
 	UserCommitment,
 } from "@prosopo/types-database";
 import { majorityAverage, parseUrl } from "@prosopo/util";

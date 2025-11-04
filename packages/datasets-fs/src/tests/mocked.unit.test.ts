@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { blake2b } from "@noble/hashes/blake2b";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@ import { blake2b } from "@noble/hashes/blake2b";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchasContainerSchema, DataSchema } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
 import { hexHash } from "@prosopo/util-crypto";
 import { getRootDir, getTestResultsDir } from "@prosopo/workspace";
 import sharp from "sharp";

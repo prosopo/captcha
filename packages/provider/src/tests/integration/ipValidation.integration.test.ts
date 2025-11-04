@@ -24,7 +24,6 @@ import {
 	CaptchaType,
 	ClientApiPaths,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
-	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type KeyringPair,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";

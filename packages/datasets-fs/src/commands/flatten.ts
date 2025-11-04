@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import { blake2b } from "@noble/hashes/blake2b";
 import { ProsopoDatasetError } from "@prosopo/common";
 import {
 	CaptchaItemTypes,
@@ -21,7 +20,6 @@ import {
 	DataSchema,
 	type LabelledItem,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
 import { at } from "@prosopo/util";
 import { hexHash } from "@prosopo/util-crypto";
 import { lodash } from "@prosopo/util/lodash";
