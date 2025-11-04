@@ -14,8 +14,6 @@
 
 import { builtinModules } from "node:module";
 import path from "node:path";
-import replace from "@rollup/plugin-replace";
-import fg from "fast-glob";
 import { type UserConfig, defineConfig } from "vite";
 import { default as noBundlePlugin } from "vite-plugin-no-bundle";
 import tsconfigPaths from "vite-tsconfig-paths";

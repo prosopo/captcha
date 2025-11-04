@@ -26,7 +26,6 @@ import {
 	commandStoreCaptchasExternally,
 	commandVersion,
 } from "./commands/index.js";
-import { migrateIpInCaptchaRecordsCommand } from "./commands/migrateIpInCaptchaRecords/migrateIpInCaptchaRecords.js";
 
 export type AwaitedProcessedArgs = {
 	[x: string]: unknown;
@@ -48,7 +47,6 @@ function getCommands(
 		commandStoreCaptchasExternally(pair, config, { logger }),
 		commandSiteKeyRegister(pair, config, { logger }),
 		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
-		migrateIpInCaptchaRecordsCommand(pair, config, logger),
 		commandVersion(pair, config, { logger }),
 	];
 }

@@ -3,7 +3,6 @@
 
 import { describe, expect, it } from "vitest";
 import { mnemonicValidate } from "./validate.js";
-import { french as frenchWords } from "./wordlists/index.js";
 
 describe("mnemonicValidate", (): void => {
 	for (const onlyJs of [undefined, true]) {

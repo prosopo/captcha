@@ -5,7 +5,7 @@ name: lint
 on:
   pull_request:
     branches: [main, dev, staging, release/*]
-    types: 
+    types:
       - opened # when a PR is opened
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
@@ -45,6 +45,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:

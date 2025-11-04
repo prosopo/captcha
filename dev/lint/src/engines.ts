@@ -14,8 +14,6 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { env } from "node:process";
-import { at, get } from "@prosopo/util";
 import fg from "fast-glob";
 import type { Argv } from "yargs";
 import z from "zod";

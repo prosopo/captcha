@@ -47,6 +47,11 @@ jobs:
         with:
           submodules: "recursive"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
           npm_ci_args: '--include=dev'
