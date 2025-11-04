@@ -104,6 +104,7 @@ export default (
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
 					disallowWebView: false,
+					contextAware: false,
 				});
 				logger.info(() => ({
 					data: { sitekey },

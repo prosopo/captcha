@@ -107,6 +107,7 @@ export const ClientSettingsSchema = object({
 	imageThreshold: number().optional().default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false),
+	contextAware: boolean().optional().default(false),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

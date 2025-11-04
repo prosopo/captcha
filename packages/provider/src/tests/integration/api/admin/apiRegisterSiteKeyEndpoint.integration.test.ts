@@ -59,6 +59,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				imageThreshold: 0.5,
 				powDifficulty: 0.5,
 				disallowWebView: false,
+				contextAware: false,
 			},
 		};
 		const db = getMockDb();
@@ -86,6 +87,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				imageThreshold: 0.5,
 				powDifficulty: 0.5,
 				disallowWebView: false,
+				contextAware: false,
 			},
 		};
 		const db = getMockDb();

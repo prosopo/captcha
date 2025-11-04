@@ -145,6 +145,35 @@ export class CaptchaManager {
 						type: requestedCaptchaType,
 					};
 				}
+
+				// Check the context
+				if (clientSettings.settings.contextAware) {
+					const clientEntropy = await this.db.getClientEntropy(
+						clientSettings.account,
+					);
+					if (!sessionRecord.decryptedHeadHash) {
+						this.logger.warn(() => ({
+							msg: "No head hash in session for context aware client",
+							data: {
+								account: clientSettings.account,
+								sessionId: sessionId,
+							},
+						}));
+						return {
+							valid: false,
+							reason: "CAPTCHA.NO_SESSION_FOUND",
+							type: requestedCaptchaType,
+						};
+					}
+					// compare clientEntropy with decryptedHeadHash
+					// TODO
+					return {
+						valid: true,
+						sessionId: sessionRecord.sessionId,
+						type: requestedCaptchaType,
+					};
+				}
+
 				return {
 					valid: true,
 					sessionId: sessionRecord.sessionId,

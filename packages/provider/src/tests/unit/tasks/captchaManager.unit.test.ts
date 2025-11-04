@@ -33,6 +33,7 @@ const defaultUserSettings: IUserSettings = {
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	disallowWebView: false,
+	contextAware: false,
 };
 
 describe("CaptchaManager", () => {
