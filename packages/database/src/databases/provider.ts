@@ -1781,7 +1781,11 @@ export class ProviderDatabase
 	 */
 	async setClientEntropy(account: string, entropy: string): Promise<void> {
 		const filter: Pick<ClientEntropyRecord, "account"> = { account };
-		await this.tables?.clientEntropy.updateOne(filter, { $set: { entropy } });
+		await this.tables?.clientEntropy.updateOne(
+			filter,
+			{ $set: { entropy } },
+			{ upsert: true },
+		);
 	}
 
 	/**
