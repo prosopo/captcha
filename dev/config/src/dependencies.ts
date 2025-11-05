@@ -165,6 +165,31 @@ export async function getExternalsFromReferences(
 	return externals;
 }
 
+const shell = (cmd: string): Promise<{ exitCode: number, stdout: string, stderr: string }> => {
+	return new Promise((resolve, reject) => {
+		const p = spawn(cmd, { shell: true })
+
+		const stdouts: Buffer[] = []
+		const stderrs: Buffer[] = []
+
+		p.stdout.on('data', (data) => {
+			stdouts.push(data)
+		})
+
+		p.stderr.on('data', (data) => {
+			stderrs.push(data)
+		})
+
+		p.on('close', exitCode => {
+			resolve({
+				exitCode,
+				stdout: stdouts.join(''),
+				stderr: stderrs.join(''),
+			})
+		})
+	})
+}
+
 /**
  * Get the dependencies for a package
  * @param packageName
@@ -185,7 +210,7 @@ export async function getDependencies(
 	}
 
 	let concat = "";
-	const { stdout, stderr } = await exec(cmd);
+	const { stdout, stderr } = await shell(cmd)
 	concat = stdout + stderr;
 
 	let deps: string[] = [];
