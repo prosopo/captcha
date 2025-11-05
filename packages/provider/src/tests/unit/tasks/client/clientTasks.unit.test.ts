@@ -180,6 +180,16 @@ describe("ClientTaskManager", () => {
 					);
 				},
 			),
+			getAllClientRecords: vi.fn(() => {
+				return [
+					{ account: "mockClientRecord1" },
+					{ account: "mockClientRecord2" },
+				];
+			}),
+			sampleEntropy: vi.fn(() => {
+				return ["00000000", "11111111"];
+			}),
+			setClientEntropy: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -671,6 +681,22 @@ describe("ClientTaskManager", () => {
 		it("should allow global star * pattern", () => {
 			expect(clientTaskManager.domainPatternMatcher("anything.com", "*")).toBe(
 				true,
+			);
+		});
+	});
+	describe("Context awareness", () => {
+		it("Should calculate the client context and save to the database", async () => {
+			await clientTaskManager.calculateClientEntropy();
+
+			expect(providerDB.getAllClientRecords).toHaveBeenCalled();
+			expect(providerDB.sampleEntropy).toHaveBeenCalled();
+			expect(providerDB.setClientEntropy).toHaveBeenCalledWith(
+				"mockClientRecord1",
+				"11111111",
+			);
+			expect(providerDB.setClientEntropy).toHaveBeenCalledWith(
+				"mockClientRecord2",
+				"11111111",
 			);
 		});
 	});

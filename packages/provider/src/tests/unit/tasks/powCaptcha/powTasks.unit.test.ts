@@ -85,8 +85,6 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(db, pair);
-
 		mockEnv = {
 			config: {
 				ipApi: {
@@ -95,6 +93,8 @@ describe("PowCaptchaManager", () => {
 				},
 			},
 		} as unknown as ProviderEnvironment;
+
+		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
 
 		vi.clearAllMocks();
 	});

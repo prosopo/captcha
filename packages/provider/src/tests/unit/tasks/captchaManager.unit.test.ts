@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { type Logger, getLogger } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
+import { type KeyringPair, contextAwareThresholdDefault } from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -33,6 +33,7 @@ const defaultUserSettings: IUserSettings = {
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	disallowWebView: false,
+	contextAware: { enabled: false, threshold: contextAwareThresholdDefault },
 };
 
 describe("CaptchaManager", () => {
@@ -63,8 +64,6 @@ describe("CaptchaManager", () => {
 		} as unknown as Logger;
 		logger = mockLogger;
 
-		captchaManager = new CaptchaManager(db, pair, logger);
-
 		mockEnv = {
 			config: {
 				ipApi: {
@@ -73,6 +72,8 @@ describe("CaptchaManager", () => {
 				},
 			},
 		} as unknown as ProviderEnvironment;
+
+		captchaManager = new CaptchaManager(db, pair, mockEnv.config, logger);
 
 		vi.clearAllMocks();
 	});

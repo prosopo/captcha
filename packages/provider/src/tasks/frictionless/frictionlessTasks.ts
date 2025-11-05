@@ -46,39 +46,24 @@ const getDefaultEntropy = (): number => {
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 export const DEFAULT_ENTROPY = getDefaultEntropy();
 
-export interface SessionParams {
-	token: string;
-	score: number;
-	threshold: number;
-	scoreComponents: ScoreComponents;
-	providerSelectEntropy: number;
-	ipAddress: CompositeIpAddress;
-	webView?: boolean;
-	iFrame?: boolean;
-	decryptedHeadHash: string;
+export enum FrictionlessReason {
+	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
+	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
+	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
+	OLD_TIMESTAMP = "OLD_TIMESTAMP",
+	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
+	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 }
 
-export interface ImageCaptchaSessionParams extends SessionParams {
-	solvedImagesCount?: number;
-}
+export interface ImageCaptchaSessionParams extends Session {}
 
-export interface PowCaptchaSessionParams extends SessionParams {
-	powDifficulty?: number;
-}
+export interface PowCaptchaSessionParams extends Session {}
 
 export class FrictionlessManager extends CaptchaManager {
-	config: ProsopoConfigOutput;
-	private sessionParams?: {
-		token: string;
-		score: number;
-		threshold: number;
-		scoreComponents: ScoreComponents;
-		providerSelectEntropy: number;
-		ipAddress: CompositeIpAddress;
-		webView: boolean;
-		iFrame: boolean;
-		decryptedHeadHash: string;
-	};
+	private sessionParams?: Omit<
+		Session,
+		"sessionId" | "createdAt" | "captchaType"
+	>;
 
 	constructor(
 		db: IProviderDatabase,
@@ -86,11 +71,13 @@ export class FrictionlessManager extends CaptchaManager {
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 	) {
-		super(db, pair, logger);
+		super(db, pair, config, logger);
 		this.config = config;
 	}
 
-	setSessionParams(params: SessionParams): void {
+	setSessionParams(
+		params: Omit<Session, "sessionId" | "createdAt" | "captchaType">,
+	): void {
 		this.sessionParams = {
 			token: params.token,
 			score: params.score,
@@ -128,6 +115,7 @@ export class FrictionlessManager extends CaptchaManager {
 		webView = false,
 		iFrame = false,
 		decryptedHeadHash = "",
+		reason?: FrictionlessReason,
 	): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: uuidv4(),
@@ -144,6 +132,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView,
 			iFrame,
 			decryptedHeadHash,
+			reason,
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -202,6 +191,7 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
+			effectiveParams.reason as FrictionlessReason | undefined,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.image,
@@ -469,9 +459,13 @@ export class FrictionlessManager extends CaptchaManager {
 			providerSelectEntropy: Number(providerSelectEntropy),
 			userId,
 			userAgent,
-			webView,
-			iFrame,
+			webView: webView || false,
+			iFrame: iFrame || false,
 			decryptedHeadHash,
 		};
+	}
+
+	async getClientEntropy(siteKey: string): Promise<string | undefined> {
+		return this.db.getClientEntropy(siteKey);
 	}
 }

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaType,
 	FrictionlessPenalties,
+	type KeyringPair,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
