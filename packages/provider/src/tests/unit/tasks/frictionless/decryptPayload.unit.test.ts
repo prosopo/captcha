@@ -122,8 +122,8 @@ describe("decryptPayload", () => {
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
 			userId: undefined,
 			userAgent: undefined,
-			webView: undefined,
-			iFrame: undefined,
+			webView: false,
+			iFrame: false,
 			decryptedHeadHash: "",
 		});
 	});
@@ -158,8 +158,8 @@ describe("decryptPayload", () => {
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
 			userId: undefined,
 			userAgent: undefined,
-			webView: undefined,
-			iFrame: undefined,
+			webView: false,
+			iFrame: false,
 			decryptedHeadHash: "",
 		});
 	});
@@ -198,8 +198,8 @@ describe("decryptPayload", () => {
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
 			userId: undefined,
 			userAgent: undefined,
-			webView: undefined,
-			iFrame: undefined,
+			webView: false,
+			iFrame: false,
 			decryptedHeadHash: "",
 		});
 	});
