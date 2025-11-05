@@ -183,8 +183,8 @@ const shell = (cmd: string): Promise<{ exitCode: number, stdout: string, stderr:
 		p.on('close', exitCode => {
 			resolve({
 				exitCode,
-				stdout: stdouts.join(''),
-				stderr: stderrs.join(''),
+				stdout: stdouts.map(b => b.toString()).join(''),
+				stderr: stderrs.map(b => b.toString()).join(''),
 			})
 		})
 	})
