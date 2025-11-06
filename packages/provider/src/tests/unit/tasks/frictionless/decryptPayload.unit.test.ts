@@ -82,6 +82,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
 		});
 	});
 	it("should get values from the payload when some values are undefined", async () => {
