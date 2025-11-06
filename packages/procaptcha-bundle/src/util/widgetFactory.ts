@@ -21,7 +21,6 @@ import {
 import {
 	type Callbacks,
 	CaptchaType,
-	type ProcaptchaCallbacks,
 	type ProcaptchaRenderOptions,
 } from "@prosopo/types";
 import {

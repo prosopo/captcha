@@ -1,5 +1,34 @@
 # @prosopo/database
 
+## 3.4.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/types-database@3.3.13
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.4.12
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/types@3.5.10
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.4.11
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types-database@3.3.11
+  - @prosopo/types@3.5.9
+  - @prosopo/user-access-policy@3.5.25
+
 ## 3.4.10
 ### Patch Changes
 

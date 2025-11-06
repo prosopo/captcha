@@ -1,9 +1,9 @@
 {
 	"name": "@prosopo/provider-docker",
-	"version": "3.4.14",
+	"version": "3.4.17",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=v20.0.0",
+		"npm": ">=10.6.0"
 	},
 	"type": "module",
 	"main": "dist/index.js",

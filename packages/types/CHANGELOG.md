@@ -1,5 +1,23 @@
 # @prosopo/types
 
+## 3.5.11
+### Patch Changes
+
+- 8f1773a: Tweak config
+
+## 3.5.10
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+
+## 3.5.9
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- 7101036: Force consistent IPs logic
+- Updated dependencies [005ce66]
+  - @prosopo/util@3.1.7
+
 ## 3.5.8
 ### Patch Changes
 

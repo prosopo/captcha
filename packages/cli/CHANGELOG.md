@@ -1,5 +1,49 @@
 # @prosopo/cli
 
+## 3.4.17
+### Patch Changes
+
+- 8f1773a: Tweak config
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+  - @prosopo/api-express-router@3.0.33
+  - @prosopo/env@3.2.21
+  - @prosopo/keyring@2.8.35
+  - @prosopo/provider@3.12.14
+  - @prosopo/types-database@3.3.13
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.4.16
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/provider@3.12.13
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/api-express-router@3.0.32
+  - @prosopo/env@3.2.20
+  - @prosopo/keyring@2.8.34
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.4.15
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types-database@3.3.11
+  - @prosopo/types@3.5.9
+  - @prosopo/provider@3.12.12
+  - @prosopo/user-access-policy@3.5.25
+  - @prosopo/util@3.1.7
+  - @prosopo/api@3.1.30
+  - @prosopo/api-express-router@3.0.31
+  - @prosopo/env@3.2.19
+  - @prosopo/keyring@2.8.33
+
 ## 3.4.14
 ### Patch Changes
 

@@ -30,6 +30,7 @@ Building configs (for Vite):
 `dev/config/src/vite`:
 
 * `vite.frontend.config.ts`
+* `vite.backend.config.ts`
 
 ## 2. Code Quality & Style
 

@@ -1,5 +1,30 @@
 # @prosopo/user-access-policy
 
+## 3.5.27
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+
+## 3.5.26
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+
+## 3.5.25
+### Patch Changes
+
+- 005ce66: Split load balancer into URL fn and getter fn for private repo
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/api@3.1.30
+
 ## 3.5.24
 ### Patch Changes
 

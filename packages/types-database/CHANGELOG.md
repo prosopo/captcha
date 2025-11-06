@@ -1,5 +1,32 @@
 # @prosopo/types-database
 
+## 3.3.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.3.12
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.3.11
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/user-access-policy@3.5.25
+
 ## 3.3.10
 ### Patch Changes
 

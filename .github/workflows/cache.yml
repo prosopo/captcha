@@ -41,6 +41,11 @@ jobs:
         with:
           submodules: "recursive"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
       - run: npm cache clean --force
 
