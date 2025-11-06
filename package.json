@@ -74,7 +74,8 @@
 		"packages/*",
 		"demos/*",
 		"integration/*",
-		"integration/frameworks/*/*"
+		"integration/frameworks/*/*",
+		"docker/images/*"
 	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
