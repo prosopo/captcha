@@ -69,20 +69,21 @@ export default (
 				}));
 
 				// Send PoW captcha with dummy frictionless data
-				tasks.frictionlessManager.setSessionParams({
-					token,
-					score: 0,
-					threshold: 0.5,
-					scoreComponents: {
-						baseScore: 0,
-					},
-					providerSelectEntropy: 0,
-					ipAddress: getCompositeIpAddress(req.ip || ""),
-					webView: false,
-					iFrame: false,
-					decryptedHeadHash: "",
-				});
-				return res.json(await tasks.frictionlessManager.sendPowCaptcha());
+				return res.json(
+					await tasks.frictionlessManager.sendPowCaptcha({
+						token,
+						score: 0,
+						threshold: 0.5,
+						scoreComponents: {
+							baseScore: 0,
+						},
+						providerSelectEntropy: 0,
+						ipAddress: getCompositeIpAddress(req.ip || ""),
+						webView: false,
+						iFrame: false,
+						decryptedHeadHash: "",
+					}),
+				);
 			}
 
 			// Check if the token has already been used
