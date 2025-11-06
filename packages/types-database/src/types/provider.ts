@@ -492,6 +492,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
+	reason: { type: String, required: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });
