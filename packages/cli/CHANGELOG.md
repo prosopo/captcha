@@ -1,5 +1,12 @@
 # @prosopo/cli
 
+## 3.5.1
+### Patch Changes
+
+- 447179c: Fix config and client getter
+- Updated dependencies [447179c]
+  - @prosopo/provider@3.13.1
+
 ## 3.5.0
 ### Minor Changes
 

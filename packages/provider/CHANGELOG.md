@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.13.1
+### Patch Changes
+
+- 447179c: Fix config and client getter
+
 ## 3.13.0
 ### Minor Changes
 
