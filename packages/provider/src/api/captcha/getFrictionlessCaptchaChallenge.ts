@@ -35,6 +35,16 @@ import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
+
+const getRoundsFromSimScore = (simScore: number, defaultRounds: number) => {
+	if (simScore >= 0.9) return 0;
+	if (simScore >= 0.8) return 3;
+	if (simScore >= 0.7) return 4;
+	if (simScore >= 0.6) return 6;
+	if (simScore >= 0.5) return 7;
+	return 8;
+};
+
 export default (
 	env: ProviderEnvironment,
 	userAccessRulesStorage: AccessRulesStorage,
@@ -286,9 +296,10 @@ export default (
 					if (!isValidContext) {
 						return res.json(
 							await tasks.frictionlessManager.sendImageCaptcha({
-								solvedImagesCount:
-									tasks.frictionlessManager.config.captchas.solved.count *
-									Math.round(1 / sim),
+								solvedImagesCount: getRoundsFromSimScore(
+									sim,
+									tasks.frictionlessManager.config.captchas.solved.count,
+								),
 								reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 							}),
 						);
