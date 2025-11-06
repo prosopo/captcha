@@ -598,9 +598,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 						FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
 				) {
 					this.logger.info(() => ({
-						msg: "Context aware validation failed - user not verified",
+						msg: "Context aware validation failed",
 					}));
-					return { status: "API.USER_NOT_VERIFIED", verified: false };
+					//return { status: "API.USER_NOT_VERIFIED", verified: false };
 				}
 			}
 		}
