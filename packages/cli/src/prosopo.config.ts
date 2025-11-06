@@ -122,6 +122,9 @@ export default function getConfig(
 			clientListScheduler: {
 				schedule: process.env.CLIENT_LIST_SCHEDULE,
 			},
+			clientEntropyScheduler: {
+				schedule: process.env.CLIENT_ENTROPY_SCHEDULE,
+			},
 		},
 		lRules: getLRules(),
 		authAccount: {

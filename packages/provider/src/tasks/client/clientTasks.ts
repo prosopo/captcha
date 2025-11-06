@@ -227,9 +227,16 @@ export class ClientTaskManager {
 
 			// Get updated client records within a ten minute window of the last completed task
 			const tenMinuteWindow = 10 * 60 * 1000;
-			const updatedAtTimestamp = lastTask?.updated
-				? lastTask.updated.getTime() - tenMinuteWindow || 0
-				: 0;
+
+			// Handle non-existent or invalid last updated times (were previously numbers). Delete this code after a few runs.
+			const updatedAtTimestamp = (() => {
+				const raw = lastTask?.updated;
+				if (!raw) return 0;
+				const ts =
+					raw instanceof Date ? raw.getTime() : Date.parse(String(raw));
+				if (Number.isNaN(ts)) return 0;
+				return Math.max(ts - tenMinuteWindow, 0);
+			})();
 
 			this.logger.info(() => ({
 				msg: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
