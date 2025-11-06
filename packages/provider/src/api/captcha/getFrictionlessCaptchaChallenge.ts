@@ -109,7 +109,6 @@ export default (
 			// Calculate the hash for this user-IP-sitekey combination
 			const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
 
-			// Check if there's an existing session for this user-IP combination
 			const existingSession =
 				await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
 

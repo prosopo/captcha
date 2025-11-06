@@ -16,13 +16,13 @@ import { createHash } from "node:crypto";
 
 /**
  * Hash a user and IP address combination to create a unique session identifier
+ * SHA-256 hash of user:ip:sitekey combination
  *
  * @param user - The user identifier
  * @param ip - The IP address
  * @returns A 64-character hex string representing the hash
  */
 export function hashUserIp(user: string, ip: string, sitekey: string): string {
-	// Create SHA-256 hash of user:ip combination
 	const hash = createHash("sha256");
 	hash.update(`${user}:${ip}:${sitekey}`, "utf8");
 	return hash.digest("hex");
