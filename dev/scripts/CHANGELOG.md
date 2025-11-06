@@ -1,5 +1,35 @@
 # @prosopo/scripts
 
+## 3.1.25
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [fdef625]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [aa8216a]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [6ac5367]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/provider@3.13.0
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/cli@3.5.0
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/types-env@2.7.47
+  - @prosopo/datasets@3.0.43
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/locale@3.1.22
+  - @prosopo/workspace@3.1.15
+  - @prosopo/env@3.2.22
+  - @prosopo/config@3.1.22
+
 ## 3.1.24
 ### Patch Changes
 

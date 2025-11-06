@@ -1,5 +1,19 @@
 # @prosopo/detector
 
+## 3.3.14
+### Patch Changes
+
+- aa8216a: bump
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/config@3.1.22
+
 ## 3.3.13
 ### Patch Changes
 

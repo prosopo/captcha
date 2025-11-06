@@ -1,5 +1,16 @@
 # @prosopo/svelte-procaptcha-integration-demo
 
+## 1.1.36
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/svelte-procaptcha-wrapper@1.1.36
+  - @prosopo/config@3.1.22
+
 ## 1.1.35
 ### Patch Changes
 
