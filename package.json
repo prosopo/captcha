@@ -80,7 +80,7 @@
 	],
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
-		"@changesets/cli": "2.29.5",
+		"@changesets/cli": "2.29.7",
 		"@types/node": "22.5.5",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

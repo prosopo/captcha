@@ -11,23 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export enum ScheduledTaskNames {
-	BatchCommitment = "BatchCommitment",
-	CalculateSolution = "CalculateSolution",
-	StoreCommitmentsExternal = "StoreCommitmentsExternal",
-	GetClientList = "GetClientList",
-	SetClientEntropy = "SetClientEntropy",
-}
+/**
+ * Calculates Hamming distance between two binary strings
+ * @returns the number of differing bits
+ */
+export function hammingDistance(hash1: string, hash2: string): number {
+	if (hash1.length !== hash2.length) {
+		throw new Error("Hashes must be of equal length");
+	}
 
-export enum ScheduledTaskStatus {
-	Pending = "Pending",
-	Running = "Running",
-	Completed = "Completed",
-	Failed = "Failed",
-}
-
-export interface ScheduledTaskResult {
-	error?: string;
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	data?: Record<string, any>;
+	let distance = 0;
+	for (let i = 0; i < hash1.length; i++) {
+		if (hash1[i] !== hash2[i]) {
+			distance++;
+		}
+	}
+	return distance;
 }

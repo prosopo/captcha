@@ -48,6 +48,8 @@ import type {
 } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
+	type ClientEntropyRecord,
+	ClientEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
@@ -86,6 +88,8 @@ import {
 import type { ObjectId } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 
+const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
+
 enum TableNames {
 	captcha = "captcha",
 	dataset = "dataset",
@@ -98,6 +102,7 @@ enum TableNames {
 	client = "client",
 	session = "session",
 	detector = "detector",
+	clientEntropy = "clientEntropy",
 }
 
 const PROVIDER_TABLES = [
@@ -155,6 +160,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.detector,
 		modelName: "Detector",
 		schema: DetectorRecordSchema,
+	},
+	{
+		collectionName: TableNames.clientEntropy,
+		modelName: "ClientEntropy",
+		schema: ClientEntropyRecordSchema,
 	},
 ];
 
@@ -1703,6 +1713,14 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Get all client records
+	 */
+	async getAllClientRecords(): Promise<ClientRecord[]> {
+		const docs = await this.tables?.client.find().lean<ClientRecord[]>();
+		return docs || [];
+	}
+
+	/**
 	 * @description Get a client record
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
@@ -1756,5 +1774,80 @@ export class ProviderDatabase
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
 		return (keyRecords || []).map((record) => record.detectorKey);
+	}
+
+	/**
+	 * @description set client entropy
+	 */
+	async setClientEntropy(account: string, entropy: string): Promise<void> {
+		const filter: Pick<ClientEntropyRecord, "account"> = { account };
+		await this.tables?.clientEntropy.updateOne(
+			filter,
+			{ $set: { entropy } },
+			{ upsert: true },
+		);
+	}
+
+	/**
+	 * @description get client entropy
+	 */
+	async getClientEntropy(account: string): Promise<string | undefined> {
+		const filter: Pick<ClientEntropyRecord, "account"> = { account };
+		const doc = await this.tables?.clientEntropy
+			.findOne(filter)
+			.lean<ClientEntropyRecord>();
+		return doc ? doc.entropy : undefined;
+	}
+
+	/** Sample captcha records from the database */
+	async sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]> {
+		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
+		const max = 10000;
+		if (size > max) {
+			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
+				context: {
+					failedFuncName: this.sampleEntropy.name,
+					sampleSize,
+				},
+			});
+		}
+		const cursor = this.tables?.powcaptcha.aggregate([
+			{
+				$match: {
+					dappAccount: siteKey,
+					requestedAtTimestamp: {
+						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
+					},
+				},
+			},
+			{ $limit: max },
+			{ $sample: { size } },
+			{
+				$project: {
+					_id: 0,
+					frictionlessTokenId: 1,
+				},
+			},
+		]);
+		const docs = await cursor;
+
+		if (docs?.length === 0) {
+			return [];
+		}
+
+		// Get the associated entropies from frictionlesstokenrecords
+		return (
+			await Promise.all(
+				docs.map(async (doc) => {
+					if (doc.frictionlessTokenId) {
+						const tokenRecord = await this.getSessionRecordByToken(
+							doc.frictionlessTokenId,
+						);
+						return tokenRecord?.decryptedHeadHash;
+					}
+					return undefined;
+				}),
+			)
+		).filter((headHash): headHash is string => headHash !== undefined);
 	}
 }
