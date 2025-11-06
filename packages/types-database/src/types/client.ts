@@ -19,6 +19,7 @@ import {
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
 	cityChangeActionDefault,
+	contextAwareThresholdDefault,
 	countryChangeActionDefault,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
@@ -106,6 +107,10 @@ export const UserSettingsSchema = new Schema({
 	disallowWebView: {
 		type: Boolean,
 		default: false,
+	},
+	contextAware: {
+		enabled: { type: Boolean, default: false },
+		threshold: { type: Number, default: contextAwareThresholdDefault },
 	},
 });
 
