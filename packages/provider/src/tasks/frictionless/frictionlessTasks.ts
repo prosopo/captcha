@@ -164,8 +164,6 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendImageCaptcha(
-		solvedImagesCount?: number,
-		userSitekeyIpHash?: string,
 		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -190,9 +188,9 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.providerSelectEntropy,
 			effectiveParams.ipAddress,
 			CaptchaType.image,
-			solvedImagesCount,
+			effectiveParams.solvedImagesCount,
 			undefined,
-			userSitekeyIpHash,
+			effectiveParams.userSitekeyIpHash,
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
@@ -206,8 +204,6 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async sendPowCaptcha(
-		powDifficulty?: number,
-		userSitekeyIpHash?: string,
 		params?: Partial<PowCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -233,11 +229,12 @@ export class FrictionlessManager extends CaptchaManager {
 			effectiveParams.ipAddress,
 			CaptchaType.pow,
 			undefined,
-			powDifficulty,
-			userSitekeyIpHash,
+			effectiveParams.powDifficulty,
+			effectiveParams.userSitekeyIpHash,
 			effectiveParams.webView ?? false,
 			effectiveParams.iFrame ?? false,
 			effectiveParams.decryptedHeadHash,
+			effectiveParams.reason as FrictionlessReason | undefined,
 		);
 		return {
 			[ApiParams.captchaType]: CaptchaType.pow,

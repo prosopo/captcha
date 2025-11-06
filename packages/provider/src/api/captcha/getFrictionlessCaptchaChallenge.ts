@@ -82,9 +82,7 @@ export default (
 					iFrame: false,
 					decryptedHeadHash: "",
 				});
-				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha(undefined),
-				);
+				return res.json(await tasks.frictionlessManager.sendPowCaptcha());
 			}
 
 			// Check if the token has already been used
@@ -254,11 +252,11 @@ export default (
 					},
 				}));
 				return res.json(
-					await tasks.frictionlessManager.sendImageCaptcha(
-						timestampDecayFunction(timestamp),
+					await tasks.frictionlessManager.sendImageCaptcha({
+						solvedImagesCount: timestampDecayFunction(timestamp),
 						userSitekeyIpHash,
-						{ reason: FrictionlessReason.USER_AGENT_MISMATCH },
-					),
+						reason: FrictionlessReason.USER_AGENT_MISMATCH,
+					}),
 				);
 			}
 
@@ -276,20 +274,19 @@ export default (
 
 				if (userAccessPolicy.captchaType === CaptchaType.image) {
 					return res.json(
-						await tasks.frictionlessManager.sendImageCaptcha(
-							userAccessPolicy.solvedImagesCount,
+						await tasks.frictionlessManager.sendImageCaptcha({
+							solvedImagesCount: userAccessPolicy.solvedImagesCount,
 							userSitekeyIpHash,
-							{ reason: FrictionlessReason.USER_ACCESS_POLICY },
-						),
+							reason: FrictionlessReason.USER_ACCESS_POLICY,
+						}),
 					);
 				}
 				if (userAccessPolicy.captchaType === CaptchaType.pow) {
 					return res.json(
-						await tasks.frictionlessManager.sendPowCaptcha(
-							undefined,
+						await tasks.frictionlessManager.sendPowCaptcha({
 							userSitekeyIpHash,
-							{ reason: FrictionlessReason.USER_ACCESS_POLICY },
-						),
+							reason: FrictionlessReason.USER_ACCESS_POLICY,
+						}),
 					);
 				}
 			}
@@ -323,11 +320,11 @@ export default (
 						sim >= clientRecord.settings.contextAware.threshold;
 					if (!isValidContext) {
 						return res.json(
-							await tasks.frictionlessManager.sendImageCaptcha(
-								getRoundsFromSimScore(sim),
+							await tasks.frictionlessManager.sendImageCaptcha({
+								solvedImagesCount: getRoundsFromSimScore(sim),
 								userSitekeyIpHash,
-								{ reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED },
-							),
+								reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
+							}),
 						);
 					}
 				}
@@ -348,11 +345,11 @@ export default (
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 
 				return res.json(
-					await tasks.frictionlessManager.sendImageCaptcha(
-						env.config.captchas.solved.count * 2,
+					await tasks.frictionlessManager.sendImageCaptcha({
+						solvedImagesCount: env.config.captchas.solved.count * 2,
 						userSitekeyIpHash,
-						{ reason: FrictionlessReason.WEBVIEW_DETECTED },
-					),
+						reason: FrictionlessReason.WEBVIEW_DETECTED,
+					}),
 				);
 			}
 
@@ -369,11 +366,11 @@ export default (
 				tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 
 				return res.json(
-					await tasks.frictionlessManager.sendImageCaptcha(
-						timestampDecayFunction(timestamp),
+					await tasks.frictionlessManager.sendImageCaptcha({
+						solvedImagesCount: timestampDecayFunction(timestamp),
 						userSitekeyIpHash,
-						{ reason: FrictionlessReason.OLD_TIMESTAMP },
-					),
+						reason: FrictionlessReason.OLD_TIMESTAMP,
+					}),
 				);
 			}
 
@@ -405,20 +402,19 @@ export default (
 					},
 				}));
 				return res.json(
-					await tasks.frictionlessManager.sendImageCaptcha(
-						env.config.captchas.solved.count,
+					await tasks.frictionlessManager.sendImageCaptcha({
+						solvedImagesCount: env.config.captchas.solved.count,
 						userSitekeyIpHash,
-						{ reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD },
-					),
+						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+					}),
 				);
 			}
 
 			// Otherwise, send a PoW captcha
 			return res.json(
-				await tasks.frictionlessManager.sendPowCaptcha(
-					undefined,
+				await tasks.frictionlessManager.sendPowCaptcha({
 					userSitekeyIpHash,
-				),
+				}),
 			);
 		} catch (err) {
 			req.logger.error(() => ({
