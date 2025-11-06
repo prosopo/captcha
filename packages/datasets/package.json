@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "3.0.43",
+	"version": "3.0.44",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -43,7 +43,7 @@
 		"@polkadot/util": "13.5.7",
 		"@prosopo/common": "3.1.22",
 		"@prosopo/types": "3.6.0",
-		"@prosopo/types-database": "4.0.0",
+		"@prosopo/types-database": "4.0.1",
 		"@prosopo/util": "3.2.0",
 		"@prosopo/config": "3.1.22",
 		"@prosopo/util-crypto": "13.5.24"
