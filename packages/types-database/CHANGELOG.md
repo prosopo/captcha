@@ -1,5 +1,10 @@
 # @prosopo/types-database
 
+## 4.0.1
+### Patch Changes
+
+- 3e5d80a: add reason field
+
 ## 4.0.0
 ### Major Changes
 

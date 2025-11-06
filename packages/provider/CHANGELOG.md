@@ -1,5 +1,16 @@
 # @prosopo/provider
 
+## 3.13.2
+### Patch Changes
+
+- Updated dependencies [3e5d80a]
+  - @prosopo/types-database@4.0.1
+  - @prosopo/database@3.5.1
+  - @prosopo/datasets@3.0.44
+  - @prosopo/types-env@2.7.48
+  - @prosopo/env@3.2.23
+  - @prosopo/api-express-router@3.0.35
+
 ## 3.13.1
 ### Patch Changes
 
