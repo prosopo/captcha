@@ -1,5 +1,31 @@
 # @prosopo/provider-mock
 
+## 2.8.29
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [fdef625]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [aa8216a]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [6ac5367]
+- Updated dependencies [8f22479]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/provider@3.13.0
+  - @prosopo/types@3.6.0
+  - @prosopo/types-database@4.0.0
+  - @prosopo/database@3.5.0
+  - @prosopo/api-express-router@3.0.34
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
 ## 2.8.28
 ### Patch Changes
 

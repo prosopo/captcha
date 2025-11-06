@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-database",
-	"version": "3.3.13",
+	"version": "4.0.0",
 	"description": "Types for prosopo database",
 	"type": "module",
 	"main": "dist/index.js",
@@ -34,11 +34,11 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/common": "3.1.21",
-		"@prosopo/locale": "3.1.21",
-		"@prosopo/types": "3.5.11",
-		"@prosopo/user-access-policy": "3.5.27",
-		"@prosopo/config": "3.1.21",
+		"@prosopo/common": "3.1.22",
+		"@prosopo/locale": "3.1.22",
+		"@prosopo/types": "3.6.0",
+		"@prosopo/user-access-policy": "3.5.28",
+		"@prosopo/config": "3.1.22",
 		"mongoose": "8.13.0",
 		"zod": "3.23.8"
 	},

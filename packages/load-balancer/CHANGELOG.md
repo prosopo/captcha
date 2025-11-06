@@ -1,5 +1,19 @@
 # @prosopo/load-balancer
 
+## 2.8.9
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
 ## 2.8.8
 ### Patch Changes
 

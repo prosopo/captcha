@@ -1,5 +1,15 @@
 # @prosopo/ts-brand
 
+## 3.0.25
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/config@3.1.22
+
 ## 3.0.24
 ### Patch Changes
 

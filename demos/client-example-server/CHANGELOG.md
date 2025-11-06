@@ -1,5 +1,23 @@
 # @prosopo/client-example-server
 
+## 2.7.48
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/server@2.9.44
+  - @prosopo/config@3.1.22
+
 ## 2.7.47
 ### Patch Changes
 

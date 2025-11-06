@@ -1,5 +1,19 @@
 # @prosopo/flux
 
+## 2.6.33
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/util@3.2.0
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/config@3.1.22
+
 ## 2.6.32
 ### Patch Changes
 
