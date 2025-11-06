@@ -16,6 +16,11 @@ import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
 import {
+	type RedisConnection,
+	connectToRedis,
+	setupRedisIndex,
+} from "@prosopo/redis-client";
+import {
 	ApiParams,
 	type Captcha,
 	type CaptchaResult,
@@ -38,19 +43,18 @@ import {
 	StoredStatusNames,
 } from "@prosopo/types";
 import type {
-	FrictionlessTokenRecord,
+	CompositeIpAddress,
 	SessionRecord,
 } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
+	type ClientEntropyRecord,
+	ClientEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
 	DetectorRecordSchema,
 	type DetectorSchema,
-	type FrictionlessToken,
-	type FrictionlessTokenId,
-	FrictionlessTokenRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type PendingCaptchaRequest,
@@ -63,6 +67,7 @@ import {
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
+	type Session,
 	SessionRecordSchema,
 	type SolutionRecord,
 	SolutionRecordSchema,
@@ -75,14 +80,15 @@ import {
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
-	type AccessRulesStorage,
-	createRedisAccessRulesIndex,
+	accessRulesRedisIndex,
 	createRedisAccessRulesStorage,
-} from "@prosopo/user-access-policy";
+} from "@prosopo/user-access-policy/redis";
 import type { ObjectId } from "mongoose";
-import { type RedisClientType, createClient } from "redis";
 import { MongoDatabase } from "../base/mongo.js";
+
+const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
 
 enum TableNames {
 	captcha = "captcha",
@@ -94,9 +100,9 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	client = "client",
-	frictionlessToken = "frictionlessToken",
 	session = "session",
 	detector = "detector",
+	clientEntropy = "clientEntropy",
 }
 
 const PROVIDER_TABLES = [
@@ -146,11 +152,6 @@ const PROVIDER_TABLES = [
 		schema: ClientRecordSchema,
 	},
 	{
-		collectionName: TableNames.frictionlessToken,
-		modelName: "FrictionlessToken",
-		schema: FrictionlessTokenRecordSchema,
-	},
-	{
 		collectionName: TableNames.session,
 		modelName: "Session",
 		schema: SessionRecordSchema,
@@ -159,6 +160,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.detector,
 		modelName: "Detector",
 		schema: DetectorRecordSchema,
+	},
+	{
+		collectionName: TableNames.clientEntropy,
+		modelName: "ClientEntropy",
+		schema: ClientEntropyRecordSchema,
 	},
 ];
 
@@ -181,7 +187,10 @@ export class ProviderDatabase
 	implements IProviderDatabase
 {
 	tables = {} as Tables<TableNames>;
+	private redisConnection: RedisConnection | null;
+	private redisAccessRulesConnection: RedisConnection | null;
 	private userAccessRulesStorage: AccessRulesStorage | null;
+	private indexesEnsured = false;
 
 	constructor(private readonly options: ProviderDatabaseOptions) {
 		super(
@@ -192,6 +201,8 @@ export class ProviderDatabase
 		);
 		this.tables = {} as Tables<TableNames>;
 
+		this.redisAccessRulesConnection = null;
+		this.redisConnection = null;
 		this.userAccessRulesStorage = null;
 	}
 
@@ -204,31 +215,25 @@ export class ProviderDatabase
 	}
 
 	protected async setupRedis(): Promise<void> {
-		const redisClient = await this.createRedisClient();
+		this.redisConnection = connectToRedis({
+			url: this.options.redis?.url,
+			password: this.options.redis?.password,
+			logger: this.logger,
+		});
 
-		await createRedisAccessRulesIndex(
-			redisClient,
-			this.options.redis?.indexName,
+		this.redisAccessRulesConnection = setupRedisIndex(
+			this.redisConnection,
+			{
+				...accessRulesRedisIndex,
+				name: this.options.redis?.indexName || accessRulesRedisIndex.name,
+			},
+			this.logger,
 		);
 
 		this.userAccessRulesStorage = createRedisAccessRulesStorage(
-			redisClient,
+			this.redisAccessRulesConnection,
 			this.logger,
 		);
-	}
-
-	protected async createRedisClient(): Promise<RedisClientType> {
-		return (await createClient({
-			url: this.options.redis?.url,
-			password: this.options.redis?.password,
-		})
-			.on("error", (error) => {
-				this.logger.error(() => ({
-					err: error,
-					msg: "Redis client error",
-				}));
-			})
-			.connect()) as RedisClientType;
 	}
 
 	loadTables() {
@@ -249,6 +254,64 @@ export class ProviderDatabase
 			});
 		}
 		return this.tables;
+	}
+
+	public getRedisAccessRulesConnection(): RedisConnection {
+		if (null === this.redisAccessRulesConnection) {
+			throw new ProsopoDBError(
+				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
+			);
+		}
+
+		return this.redisAccessRulesConnection;
+	}
+
+	public getRedisConnection(): RedisConnection {
+		if (null === this.redisConnection) {
+			throw new ProsopoDBError(
+				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
+			);
+		}
+
+		return this.redisConnection;
+	}
+
+	async ensureIndexes(): Promise<void> {
+		const indexPromises: Promise<void>[] = [];
+		if (!this.indexesEnsured) {
+			PROVIDER_TABLES.map(({ collectionName }) => {
+				indexPromises.push(
+					new Promise((resolve) => {
+						if (this.connected) {
+							this.tables[collectionName].collection.dropIndexes().then(() => {
+								this.tables[collectionName]
+									.ensureIndexes()
+									.then(() => {
+										this.logger.info(() => ({
+											msg: `Indexes ensured for collection ${collectionName}`,
+										}));
+										resolve();
+									})
+									.catch((err) => {
+										this.logger.warn(() => ({
+											err,
+											msg: `Error creating indexes for collection ${collectionName}`,
+										}));
+										resolve();
+									});
+							});
+						} else {
+							this.logger.info(() => ({
+								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+							}));
+							resolve();
+						}
+					}),
+				);
+			});
+		}
+		await Promise.all(indexPromises);
+		this.indexesEnsured = true;
 	}
 
 	public getUserAccessRulesStorage(): AccessRulesStorage {
@@ -577,7 +640,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const commitmentRecord = UserCommitmentSchema.parse({
 			...commit,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		});
 		if (captchas.length) {
 			const filter: Pick<UserCommitmentRecord, "id"> = {
@@ -619,7 +682,7 @@ export class ProviderDatabase
 	 * @param ipAddress
 	 * @param headers
 	 * @param ja4
-	 * @param frictionlessTokenId
+	 * @param sessionId
 	 * @param serverChecked
 	 * @param userSubmitted
 	 * @param storedStatus
@@ -631,10 +694,10 @@ export class ProviderDatabase
 		components: PoWChallengeComponents,
 		difficulty: number,
 		providerSignature: string,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		headers: RequestHeaders,
 		ja4: string,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 		serverChecked = false,
 		userSubmitted = false,
 		storedStatus: StoredStatus = StoredStatusNames.notStored,
@@ -644,7 +707,9 @@ export class ProviderDatabase
 
 		const powCaptchaRecord: PoWCaptchaStored = {
 			challenge,
-			...components,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
 			ipAddress,
 			headers,
 			ja4,
@@ -654,8 +719,8 @@ export class ProviderDatabase
 			difficulty,
 			providerSignature,
 			userSignature,
-			lastUpdatedTimestamp: Date.now(),
-			frictionlessTokenId,
+			lastUpdatedTimestamp: new Date(),
+			sessionId,
 		};
 
 		try {
@@ -743,7 +808,7 @@ export class ProviderDatabase
 	 * @param userSignature
 	 * @returns {Promise<void>} A promise that resolves when the record is updated.
 	 */
-	async updatePowCaptchaRecord(
+	async updatePowCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
 		serverChecked = false,
@@ -751,7 +816,7 @@ export class ProviderDatabase
 		userSignature?: string,
 	): Promise<void> {
 		const tables = this.getTables();
-		const timestamp = Date.now();
+		const timestamp = new Date();
 		const update: Pick<
 			PoWCaptchaRecord,
 			| "result"
@@ -812,6 +877,18 @@ export class ProviderDatabase
 		}
 	}
 
+	async updatePowCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PoWCaptchaRecord>,
+	): Promise<void> {
+		const tables = this.getTables();
+		await tables.powcaptcha.updateOne(
+			{ challenge },
+			{ $set: updates },
+			{ upsert: false },
+		);
+	}
+
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
 	 */
 	async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
@@ -866,7 +943,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 		await this.tables?.commitment.updateMany(
 			{ id: { $in: commitmentIds } },
@@ -883,7 +960,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 
 		await this.tables?.commitment.updateMany(
@@ -891,6 +968,16 @@ export class ProviderDatabase
 			{ $set: updateDoc },
 			{ upsert: false },
 		);
+	}
+
+	/** @description Update an image captcha commitment
+	 */
+	async updateDappUserCommitment(
+		commitmentId: Hash,
+		updates: Partial<UserCommitment>,
+	) {
+		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		await this.tables?.commitment.updateOne(filter, updates);
 	}
 
 	/**
@@ -951,7 +1038,7 @@ export class ProviderDatabase
 	 */
 	async markDappUserPoWCommitmentsStored(challenges: string[]): Promise<void> {
 		const updateDoc: Pick<StoredCaptcha, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 
 		await this.tables?.powcaptcha.updateMany(
@@ -969,7 +1056,7 @@ export class ProviderDatabase
 			"serverChecked" | "lastUpdatedTimestamp"
 		> = {
 			[StoredStatusNames.serverChecked]: true,
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 		await this.tables?.powcaptcha.updateMany(
 			{ challenge: { $in: challenges } },
@@ -981,67 +1068,9 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Store a new frictionless token record
-	 */
-	async storeFrictionlessTokenRecord(
-		tokenRecord: FrictionlessToken,
-	): Promise<ObjectId> {
-		const doc =
-			await this.tables.frictionlessToken.create<FrictionlessTokenRecord>(
-				tokenRecord,
-			);
-		return doc._id;
-	}
-
-	/** Update a frictionless token record */
-	async updateFrictionlessTokenRecord(
-		tokenId: FrictionlessTokenId,
-		updates: Partial<FrictionlessTokenRecord>,
-	): Promise<void> {
-		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
-		await this.tables.frictionlessToken.updateOne(filter, updates);
-	}
-
-	/** Get a frictionless token record */
-	async getFrictionlessTokenRecordByTokenId(
-		tokenId: FrictionlessTokenId,
-	): Promise<FrictionlessTokenRecord | undefined> {
-		const filter: Pick<FrictionlessTokenRecord, "_id"> = { _id: tokenId };
-		const doc =
-			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
-				filter,
-			);
-		return doc ? doc : undefined;
-	}
-	/** Get many frictionless token records */
-	async getFrictionlessTokenRecordsByTokenIds(
-		tokenId: FrictionlessTokenId[],
-	): Promise<FrictionlessTokenRecord[]> {
-		const filter: Pick<FrictionlessTokenRecord, "_id"> = {
-			_id: { $in: tokenId },
-		};
-		return this.tables.frictionlessToken.find<FrictionlessTokenRecord>(filter);
-	}
-
-	/**
-	 * Check if a frictionless token record exists.
-	 * Used to ensure that a token is not used more than once.
-	 */
-	async getFrictionlessTokenRecordByToken(
-		token: string,
-	): Promise<FrictionlessTokenRecord | undefined> {
-		const filter: Pick<FrictionlessTokenRecord, "token"> = { token };
-		const record =
-			await this.tables.frictionlessToken.findOne<FrictionlessTokenRecord>(
-				filter,
-			);
-		return record || undefined;
-	}
-
-	/**
 	 * Store a new session record
 	 */
-	async storeSessionRecord(sessionRecord: SessionRecord): Promise<void> {
+	async storeSessionRecord(sessionRecord: Session): Promise<void> {
 		try {
 			this.logger.debug(() => ({
 				data: { action: "storing", sessionRecord },
@@ -1053,6 +1082,27 @@ export class ProviderDatabase
 				logger: this.logger,
 			});
 		}
+	}
+
+	/**
+	 * Get a session record by sessionId
+	 */
+	async getSessionRecordBySessionId(
+		sessionId: string,
+	): Promise<Session | undefined> {
+		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
+		const doc = await this.tables.session.findOne(filter).lean<Session>();
+		return doc || undefined;
+	}
+
+	/**
+	 * Get a session record by token
+	 * Used to ensure that a token is not used more than once.
+	 */
+	async getSessionRecordByToken(token: string): Promise<Session | undefined> {
+		const filter: Pick<Session, "token"> = { token };
+		const record = await this.tables.session.findOne(filter).lean<Session>();
+		return record || undefined;
 	}
 
 	/**
@@ -1077,7 +1127,7 @@ export class ProviderDatabase
 			const session = await this.tables.session
 				.findOneAndUpdate<SessionRecord>(filter, {
 					deleted: true,
-					lastUpdatedTimestamp: Date.now(),
+					lastUpdatedTimestamp: new Date(),
 				})
 				.lean<SessionRecord>();
 			return session || undefined;
@@ -1143,7 +1193,7 @@ export class ProviderDatabase
 	/** Mark a list of session records as stored */
 	async markSessionRecordsStored(sessionIds: string[]): Promise<void> {
 		const updateDoc: Pick<SessionRecord, "storedAtTimestamp"> = {
-			storedAtTimestamp: Date.now(),
+			storedAtTimestamp: new Date(),
 		};
 		await this.tables?.session.updateMany(
 			{ sessionId: { $in: sessionIds } },
@@ -1161,9 +1211,9 @@ export class ProviderDatabase
 		salt: string,
 		deadlineTimestamp: number,
 		requestedAtTimestamp: number,
-		ipAddress: bigint,
+		ipAddress: CompositeIpAddress,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
@@ -1181,7 +1231,7 @@ export class ProviderDatabase
 			deadlineTimestamp,
 			requestedAtTimestamp: new Date(requestedAtTimestamp),
 			ipAddress,
-			frictionlessTokenId,
+			sessionId,
 			threshold,
 		};
 		await this.tables?.pending.updateOne(
@@ -1442,15 +1492,22 @@ export class ProviderDatabase
 	/**
 	 * @description Approve a dapp user's solution
 	 * @param {string[]} commitmentId
+	 * @param coords
 	 */
-	async approveDappUserCommitment(commitmentId: string): Promise<void> {
+	async approveDappUserCommitment(
+		commitmentId: string,
+		coords?: [number, number][][],
+	): Promise<void> {
 		try {
 			const result: CaptchaResult = { status: CaptchaStatus.approved };
-			const updateDoc: Pick<StoredCaptcha, "result" | "lastUpdatedTimestamp"> =
-				{
-					result,
-					lastUpdatedTimestamp: Date.now(),
-				};
+			const updateDoc: Pick<
+				StoredCaptcha,
+				"result" | "lastUpdatedTimestamp" | "coords"
+			> = {
+				result,
+				lastUpdatedTimestamp: new Date(),
+				...(coords ? { coords } : {}),
+			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
@@ -1465,18 +1522,23 @@ export class ProviderDatabase
 	/**
 	 * @description Disapprove a dapp user's solution
 	 * @param {string} commitmentId
+	 * @param coords
 	 * @param reason
 	 */
 	async disapproveDappUserCommitment(
 		commitmentId: string,
 		reason?: TranslationKey,
+		coords?: [number, number][][],
 	): Promise<void> {
 		try {
-			const updateDoc: Pick<StoredCaptcha, "result" | "lastUpdatedTimestamp"> =
-				{
-					result: { status: CaptchaStatus.disapproved, reason },
-					lastUpdatedTimestamp: Date.now(),
-				};
+			const updateDoc: Pick<
+				StoredCaptcha,
+				"result" | "lastUpdatedTimestamp" | "coords"
+			> = {
+				result: { status: CaptchaStatus.disapproved, reason },
+				lastUpdatedTimestamp: new Date(),
+				...(coords ? { coords } : {}),
+			};
 
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
@@ -1581,7 +1643,7 @@ export class ProviderDatabase
 		taskName: ScheduledTaskNames,
 		status: ScheduledTaskStatus,
 	): Promise<ObjectId> {
-		const now = new Date().getTime();
+		const now = new Date();
 		const doc = ScheduledTaskSchema.parse({
 			processName: taskName,
 			datetime: now,
@@ -1601,7 +1663,7 @@ export class ProviderDatabase
 	): Promise<void> {
 		const update: Omit<ScheduledTask, "processName" | "datetime"> = {
 			status,
-			updated: new Date().getTime(),
+			updated: new Date(),
 			...(result && { result }),
 		};
 		const filter: Pick<ScheduledTaskRecord, "_id"> = { _id: taskId };
@@ -1651,6 +1713,14 @@ export class ProviderDatabase
 	}
 
 	/**
+	 * @description Get all client records
+	 */
+	async getAllClientRecords(): Promise<ClientRecord[]> {
+		const docs = await this.tables?.client.find().lean<ClientRecord[]>();
+		return docs || [];
+	}
+
+	/**
 	 * @description Get a client record
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
@@ -1669,12 +1739,20 @@ export class ProviderDatabase
 		});
 	}
 
-	/** @description Remove a detector key */
-	async removeDetectorKey(detectorKey: string): Promise<void> {
+	/**
+	 * @description Remove a detector key
+	 * @param detectorKey The detector key to remove
+	 * @param expirationInSeconds Optional expiration time in seconds (default is 10 minutes)
+	 * */
+	async removeDetectorKey(
+		detectorKey: string,
+		expirationInSeconds?: number,
+	): Promise<void> {
 		const filter: Pick<DetectorSchema, "detectorKey"> = { detectorKey };
 
-		// Instead of deleting, set the expiresAt field to expire in 10 minutes
-		const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+		const expiresAt = new Date(
+			Date.now() + (expirationInSeconds || 10 * 60) * 1000,
+		);
 
 		await this.tables?.detector.updateOne(filter, {
 			$set: { expiresAt },
@@ -1696,5 +1774,80 @@ export class ProviderDatabase
 			.lean<DetectorSchema[]>(); // Improve performance by returning a plain object
 
 		return (keyRecords || []).map((record) => record.detectorKey);
+	}
+
+	/**
+	 * @description set client entropy
+	 */
+	async setClientEntropy(account: string, entropy: string): Promise<void> {
+		const filter: Pick<ClientEntropyRecord, "account"> = { account };
+		await this.tables?.clientEntropy.updateOne(
+			filter,
+			{ $set: { entropy } },
+			{ upsert: true },
+		);
+	}
+
+	/**
+	 * @description get client entropy
+	 */
+	async getClientEntropy(account: string): Promise<string | undefined> {
+		const filter: Pick<ClientEntropyRecord, "account"> = { account };
+		const doc = await this.tables?.clientEntropy
+			.findOne(filter)
+			.lean<ClientEntropyRecord>();
+		return doc ? doc.entropy : undefined;
+	}
+
+	/** Sample captcha records from the database */
+	async sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]> {
+		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
+		const max = 10000;
+		if (size > max) {
+			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
+				context: {
+					failedFuncName: this.sampleEntropy.name,
+					sampleSize,
+				},
+			});
+		}
+		const cursor = this.tables?.powcaptcha.aggregate([
+			{
+				$match: {
+					dappAccount: siteKey,
+					requestedAtTimestamp: {
+						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
+					},
+				},
+			},
+			{ $limit: max },
+			{ $sample: { size } },
+			{
+				$project: {
+					_id: 0,
+					frictionlessTokenId: 1,
+				},
+			},
+		]);
+		const docs = await cursor;
+
+		if (docs?.length === 0) {
+			return [];
+		}
+
+		// Get the associated entropies from frictionlesstokenrecords
+		return (
+			await Promise.all(
+				docs.map(async (doc) => {
+					if (doc.frictionlessTokenId) {
+						const tokenRecord = await this.getSessionRecordByToken(
+							doc.frictionlessTokenId,
+						);
+						return tokenRecord?.decryptedHeadHash;
+					}
+					return undefined;
+				}),
+			)
+		).filter((headHash): headHash is string => headHash !== undefined);
 	}
 }

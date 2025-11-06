@@ -1,18 +1,31 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.5.2",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"version": "3.5.27",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=v20.0.0",
+		"npm": ">=10.6.0"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/cjs/index.cjs"
+			"types": "./dist/.export.d.ts",
+			"import": "./dist/.export.js",
+			"require": "./dist/cjs/.export.cjs"
+		},
+		"./api": {
+			"types": "./dist/api/.export.d.ts",
+			"import": "./dist/api/.export.js",
+			"require": "./dist/cjs/api/.export.cjs"
+		},
+		"./redis": {
+			"types": "./dist/redis/.export.d.ts",
+			"import": "./dist/redis/.export.js",
+			"require": "./dist/cjs/redis/.export.cjs"
+		},
+		"./mongoose": {
+			"types": "./dist/mongoose/.export.d.ts",
+			"import": "./dist/mongoose/.export.js",
+			"require": "./dist/cjs/mongoose/.export.cjs"
 		}
 	},
 	"imports": {
@@ -23,28 +36,33 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit npx vitest run --config ./vite.test.config.ts",
 		"test:integration": "NODE_ENV=${NODE_ENV:-test}; NX_PARALLEL=1 TEST_TYPE=integration npx vitest run --config ./vite.test.config.ts",
 		"test": "npm run test:unit && npm run test:integration"
 	},
 	"dependencies": {
-		"@prosopo/api-route": "2.6.12",
-		"@prosopo/common": "3.1.4",
-		"@prosopo/types": "3.0.8",
-		"@prosopo/util": "3.0.7",
-		"@prosopo/config": "3.1.5",
+		"@prosopo/api": "3.1.32",
+		"@prosopo/api-route": "2.6.29",
+		"@prosopo/common": "3.1.21",
+		"@prosopo/redis-client": "1.0.6",
+		"@prosopo/types": "3.5.11",
+		"@prosopo/util": "3.1.7",
 		"@redis/search": "5.0.0",
+		"@redis/client": "5.0.0",
+		"cidr-calc": "1.0.4",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
 		"redis": "5.0.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/util-crypto": "13.5.6",
+		"@prosopo/config": "3.1.21",
+		"@prosopo/util-crypto": "13.5.23",
 		"@types/node": "22.10.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9",
+		"mongoose": "8.13.0",
+		"vite": "6.4.1",
+		"vitest": "3.2.4",
 		"yargs": "17.7.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

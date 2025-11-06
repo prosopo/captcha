@@ -1,13 +1,7 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-	hexToU8a,
-	stringToU8a,
-	u8aConcat,
-	u8aToHex,
-	u8aWrapBytes,
-} from "@polkadot/util";
+import { hexToU8a, u8aConcat, u8aToHex, u8aWrapBytes } from "@polkadot/util";
 import { describe, expect, it } from "vitest";
 
 import { decodeAddress } from "../address/index.js";

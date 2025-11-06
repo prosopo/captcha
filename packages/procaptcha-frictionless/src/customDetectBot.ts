@@ -14,11 +14,12 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
-import { getRandomActiveProvider } from "@prosopo/procaptcha-common";
+import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
+	RandomProvider,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -27,32 +28,54 @@ export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
 ): Promise<T> => {
+	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
-		setTimeout(() => {
+		timeoutId = setTimeout(() => {
 			reject(new ProsopoEnvError("API.UNKNOWN"));
 		}, ms);
 	});
 
-	return Promise.race([promise, timeoutPromise]);
+	try {
+		const result = await Promise.race([promise, timeoutPromise]);
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		return result;
+	} catch (error) {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		throw error;
+	}
 };
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
+	container: HTMLElement | undefined,
+	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
-	const detect = await DetectorLoader();
-	const botScore = (await detect()) as { token: string };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);
+
+	const detect = await DetectorLoader();
+	const detectionResult = (await detect(
+		config.defaultEnvironment,
+		getRandomActiveProvider,
+		container,
+		restartFn,
+		userAccount.account.address,
+	)) as { token: string; provider?: RandomProvider; encryptHeadHash: string };
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
 	// Get random active provider with timeout
-	const provider = await withTimeout(
-		getRandomActiveProvider(config),
-		10000, // 10 second timeout
-	);
+	const provider = detectionResult.provider;
+
+	if (!provider) {
+		throw new Error("Provider Selection Failed");
+	}
 
 	const providerApi = new ProviderApi(
 		provider.provider.url,
@@ -62,7 +85,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(
 		providerApi.getFrictionlessCaptcha(
-			botScore.token,
+			detectionResult.token,
+			detectionResult.encryptHeadHash,
 			config.account.address,
 			userAccount.account.address,
 		),

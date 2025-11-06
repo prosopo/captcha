@@ -33,6 +33,8 @@ import {
 	FrictionlessPenalties,
 	PENALTY_ACCESS_RULE_DEFAULT,
 	PENALTY_OLD_TIMESTAMP_DEFAULT,
+	PENALTY_UNVERIFIED_HOST_DEFAULT,
+	PENALTY_WEBVIEW_DEFAULT,
 } from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
@@ -116,7 +118,6 @@ export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>;
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
 	object({
 		database: DatabaseConfigSchema.optional(),
-		devOnlyWatchEvents: boolean().optional(),
 	}),
 );
 
@@ -253,6 +254,7 @@ export enum ModeEnum {
 	visible = "visible",
 	invisible = "invisible",
 }
+
 export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
 export type ModeType = zInfer<typeof Mode>;
 
@@ -262,6 +264,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
+		contextAware: boolean().optional().default(false),
 	}),
 );
 
@@ -270,8 +273,15 @@ export type ProcaptchaClientConfigOutput = output<
 	typeof ProcaptchaConfigSchema
 >;
 
+export const IpApiServiceSpec = z.object({
+	apiKey: z.string(),
+	baseUrl: z.string().url(),
+});
+export type IpApiService = zInfer<typeof IpApiServiceSpec>;
+
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
+		host: string(),
 		captchas: ProsopoCaptchaCountConfigSchema.optional().default({
 			solved: { count: DEFAULT_SOLVED_COUNT },
 			unsolved: { count: DEFAULT_UNSOLVED_COUNT },
@@ -279,6 +289,8 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		penalties: FrictionlessPenalties.optional().default({
 			PENALTY_OLD_TIMESTAMP: PENALTY_OLD_TIMESTAMP_DEFAULT,
 			PENALTY_ACCESS_RULE: PENALTY_ACCESS_RULE_DEFAULT,
+			PENALTY_UNVERIFIED_HOST: PENALTY_UNVERIFIED_HOST_DEFAULT,
+			PENALTY_WEBVIEW: PENALTY_WEBVIEW_DEFAULT,
 		}),
 		scheduledTasks: object({
 			captchaScheduler: object({
@@ -287,11 +299,15 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			clientListScheduler: object({
 				schedule: string().optional(),
 			}).optional(),
+			clientEntropyScheduler: object({
+				schedule: string().optional(),
+			}).optional(),
 		}).optional(),
 		server: ProsopoApiConfigSchema.optional(),
 		mongoEventsUri: string().optional(),
 		mongoCaptchaUri: string().optional(),
 		mongoClientUri: string().optional(),
+		ipApi: IpApiServiceSpec,
 		redisConnection: object({
 			url: string(),
 			password: string(),

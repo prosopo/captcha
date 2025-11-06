@@ -1,5 +1,328 @@
 # @prosopo/env
 
+## 3.2.21
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/database@3.4.13
+  - @prosopo/keyring@2.8.35
+  - @prosopo/types-env@2.7.46
+
+## 3.2.20
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/database@3.4.12
+  - @prosopo/types-env@2.7.45
+  - @prosopo/keyring@2.8.34
+
+## 3.2.19
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/database@3.4.11
+  - @prosopo/types-env@2.7.44
+  - @prosopo/keyring@2.8.33
+
+## 3.2.18
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/database@3.4.10
+  - @prosopo/types-env@2.7.43
+  - @prosopo/keyring@2.8.32
+
+## 3.2.17
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/database@3.4.9
+  - @prosopo/config@3.1.21
+  - @prosopo/keyring@2.8.31
+  - @prosopo/types-env@2.7.42
+  - @prosopo/types@3.5.7
+  - @prosopo/util-crypto@13.5.23
+
+## 3.2.16
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/database@3.4.8
+  - @prosopo/keyring@2.8.30
+  - @prosopo/types-env@2.7.41
+
+## 3.2.15
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/database@3.4.7
+  - @prosopo/types-env@2.7.40
+  - @prosopo/keyring@2.8.29
+
+## 3.2.14
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/database@3.4.6
+  - @prosopo/types-env@2.7.39
+  - @prosopo/keyring@2.8.28
+
+## 3.2.13
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/database@3.4.5
+  - @prosopo/keyring@2.8.27
+  - @prosopo/types@3.5.3
+  - @prosopo/types-env@2.7.38
+  - @prosopo/util-crypto@13.5.22
+
+## 3.2.12
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/util-crypto@13.5.21
+  - @prosopo/types-env@2.7.37
+  - @prosopo/database@3.4.4
+  - @prosopo/keyring@2.8.26
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 3.2.11
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/database@3.4.3
+  - @prosopo/util-crypto@13.5.20
+  - @prosopo/types-env@2.7.36
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/config@3.1.18
+
+## 3.2.10
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/util-crypto@13.5.19
+  - @prosopo/types-env@2.7.35
+  - @prosopo/database@3.4.2
+  - @prosopo/keyring@2.8.24
+  - @prosopo/common@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
+## 3.2.9
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/database@3.4.1
+  - @prosopo/util-crypto@13.5.18
+  - @prosopo/types-env@2.7.34
+  - @prosopo/keyring@2.8.23
+  - @prosopo/common@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
+## 3.2.8
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/util-crypto@13.5.17
+  - @prosopo/types-env@2.7.33
+  - @prosopo/database@3.4.0
+  - @prosopo/keyring@2.8.22
+  - @prosopo/common@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
+## 3.2.7
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/util-crypto@13.5.16
+  - @prosopo/types-env@2.7.32
+  - @prosopo/database@3.3.2
+  - @prosopo/keyring@2.8.21
+  - @prosopo/common@3.1.14
+  - @prosopo/config@3.1.14
+
+## 3.2.6
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/database@3.3.1
+  - @prosopo/types@3.2.1
+  - @prosopo/util-crypto@13.5.15
+  - @prosopo/types-env@2.7.31
+  - @prosopo/keyring@2.8.20
+  - @prosopo/common@3.1.13
+  - @prosopo/config@3.1.13
+
+## 3.2.5
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+- Updated dependencies [260de39]
+  - @prosopo/database@3.3.0
+  - @prosopo/types@3.2.0
+  - @prosopo/util-crypto@13.5.14
+  - @prosopo/types-env@2.7.30
+  - @prosopo/keyring@2.8.19
+  - @prosopo/common@3.1.12
+  - @prosopo/config@3.1.12
+
+## 3.2.4
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types@3.1.4
+  - @prosopo/util-crypto@13.5.13
+  - @prosopo/types-env@2.7.29
+  - @prosopo/database@3.2.4
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
+## 3.2.3
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/util-crypto@13.5.12
+  - @prosopo/types-env@2.7.28
+  - @prosopo/database@3.2.3
+  - @prosopo/keyring@2.8.17
+  - @prosopo/common@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/config@3.1.10
+
+## 3.2.2
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/util-crypto@13.5.11
+  - @prosopo/types-env@2.7.27
+  - @prosopo/database@3.2.2
+  - @prosopo/keyring@2.8.16
+  - @prosopo/common@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/config@3.1.9
+
+## 3.2.1
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+- Updated dependencies [1f980c4]
+- Updated dependencies [6fe8570]
+  - @prosopo/types@3.1.1
+  - @prosopo/util-crypto@13.5.10
+  - @prosopo/types-env@2.7.26
+  - @prosopo/database@3.2.1
+  - @prosopo/keyring@2.8.15
+  - @prosopo/common@3.1.8
+  - @prosopo/config@3.1.8
+
+## 3.2.0
+### Minor Changes
+
+- 8bdc7f0: Using detector to select provider
+
+### Patch Changes
+
+- f304be9: Release 3.1.13
+- Updated dependencies [f304be9]
+- Updated dependencies [8bdc7f0]
+  - @prosopo/util-crypto@13.5.9
+  - @prosopo/types-env@2.7.25
+  - @prosopo/database@3.2.0
+  - @prosopo/keyring@2.8.14
+  - @prosopo/common@3.1.7
+  - @prosopo/types@3.1.0
+  - @prosopo/config@3.1.7
+
+## 3.1.11
+### Patch Changes
+
+- a07db04: Release 3.1.12
+- Updated dependencies [9b92339]
+- Updated dependencies [9eed772]
+- Updated dependencies [a07db04]
+  - @prosopo/database@3.1.0
+  - @prosopo/config@3.1.6
+  - @prosopo/types-env@2.7.24
+  - @prosopo/common@3.1.6
+  - @prosopo/keyring@2.8.13
+  - @prosopo/types@3.0.10
+  - @prosopo/util-crypto@13.5.8
+
+## 3.1.10
+### Patch Changes
+
+- Updated dependencies [e64160c]
+  - @prosopo/database@3.0.19
+  - @prosopo/types-env@2.7.23
+
+## 3.1.9
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+- Updated dependencies [6960643]
+  - @prosopo/util-crypto@13.5.7
+  - @prosopo/types-env@2.7.22
+  - @prosopo/database@3.0.18
+  - @prosopo/keyring@2.8.12
+  - @prosopo/common@3.1.5
+  - @prosopo/types@3.0.9
+
 ## 3.1.8
 ### Patch Changes
 

@@ -37,7 +37,7 @@ import fs from "node:fs";
 import { getRootDir } from "@prosopo/workspace";
 import fg from "fast-glob";
 // keys are accessed by the code as `SECTION1.KEY1`, `SECTION1.KEY2`, `SECTION2.KEY3`, `SECTION2.KEY4`
-import json from "../../../../packages/locale/src/locales/en/translation.json" assert {
+import json from "../../../../packages/locale/src/locales/en/translation.json" with {
 	type: "json",
 };
 

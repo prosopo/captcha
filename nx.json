@@ -3,9 +3,15 @@
 	"namedInputs": {
 		"custom": [
 			"{projectRoot}/**",
-			"!{projectRoot}/node_modules/**",
-			"!{projectRoot}/coverage/**",
-			"{projectRoot}/dist/**/*"
+			{
+				"runtime": "node -e \"console.log(JSON.stringify(process.env))\""
+			},
+			{
+				"runtime": "find dist/ -type f -exec sha256sum {} + | sort | sha256sum"
+			},
+			"{workspaceRoot}/nx.json",
+			"{workspaceRoot}/package.json",
+			"{workspaceRoot}/package-lock.json"
 		]
 	},
 	"targetDefaults": {

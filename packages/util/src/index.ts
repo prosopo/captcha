@@ -29,3 +29,5 @@ export * from "./checks.js";
 export * from "./ip.js";
 export { verifyRecency } from "./verifyRecency.js";
 export { getIPAddress } from "./ip.js";
+export * from "./fetchWithEtag.js";
+export * from "./binaryString.js";

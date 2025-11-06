@@ -14,88 +14,70 @@
 
 import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
-import type { KeyringPair } from "@prosopo/types";
-import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
+import {
+	ApiParams,
+	CaptchaType,
+	type KeyringPair,
+	type ProsopoConfigOutput,
+	Tier,
+} from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import type {
 	AccessPolicy,
 	AccessRulesStorage,
-	UserScopeApiInput,
-	UserScopeApiOutput,
+	UserScope,
+	UserScopeRecord,
 } from "@prosopo/user-access-policy";
-import { getIPAddress } from "@prosopo/util";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
+	config: ProsopoConfigOutput;
 	logger: Logger;
 
-	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
+	constructor(
+		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
+	) {
 		this.pair = pair;
 		this.db = db;
+		this.config = config;
 		this.logger = logger || getLogger("info", import.meta.url);
 	}
 
-	async getFrictionlessTokenIdFromSession(sessionRecord: Session) {
-		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-			sessionRecord.tokenId,
-		);
-		return tokenRecord ? (tokenRecord._id as FrictionlessTokenId) : undefined;
-	}
-
-	async validateFrictionlessTokenIP(
+	async validateSessionIP(
 		sessionRecord: Session,
 		currentIP: string,
+		env: ProviderEnvironment,
 	): Promise<{ valid: boolean; reason?: TranslationKey }> {
-		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-			sessionRecord.tokenId,
-		);
-
-		if (!tokenRecord) {
-			this.logger.info(() => ({
-				msg: "No frictionless token found for session",
-				data: { sessionId: sessionRecord.sessionId },
-			}));
-			return { valid: false, reason: "CAPTCHA.NO_SESSION_FOUND" };
-		}
-
-		if (tokenRecord.ipAddress !== undefined) {
-			const currentIPBigInt = getIPAddress(currentIP).bigInt();
-			if (tokenRecord.ipAddress !== currentIPBigInt) {
-				this.logger.info(() => ({
-					msg: "IP address mismatch for frictionless token",
-					data: {
-						sessionId: sessionRecord.sessionId,
-						tokenId: tokenRecord._id,
-						originalIP: tokenRecord.ipAddress?.toString() || "unknown",
-						currentIP: currentIPBigInt.toString(),
-					},
-				}));
-				return { valid: false, reason: "CAPTCHA.IP_ADDRESS_MISMATCH" };
-			}
-		}
-
+		// Session record now contains IP address directly
+		// No validation needed as the session already has all required info
 		return { valid: true };
 	}
 
 	async isValidRequest(
 		clientSettings: ClientRecord | IUserDataSlim,
 		requestedCaptchaType: CaptchaType,
+		env: ProviderEnvironment,
 		sessionId?: string,
 		userAccessPolicy?: AccessPolicy,
 		currentIP?: string,
 	): Promise<{
 		valid: boolean;
 		reason?: TranslationKey;
-		frictionlessTokenId?: FrictionlessTokenId;
+		sessionId?: string;
 		type: CaptchaType;
+		powDifficulty?: number;
+		solvedImagesCount?: number;
 	}> {
 		this.logger.debug(() => ({
 			msg: "Validating request",
@@ -123,7 +105,6 @@ export class CaptchaManager {
 				type: requestedCaptchaType,
 			};
 		}
-
 		// Session ID
 
 		// If the client has a sessionId then they are requesting a frictionless captcha.
@@ -147,9 +128,10 @@ export class CaptchaManager {
 
 				// Validate IP address if currentIP is provided
 				if (currentIP) {
-					const ipValidation = await this.validateFrictionlessTokenIP(
+					const ipValidation = await this.validateSessionIP(
 						sessionRecord,
 						currentIP,
+						env,
 					);
 					if (!ipValidation.valid) {
 						return {
@@ -159,9 +141,6 @@ export class CaptchaManager {
 						};
 					}
 				}
-
-				const frictionlessTokenId =
-					await this.getFrictionlessTokenIdFromSession(sessionRecord);
 
 				// Check the captcha type of the session is the same as the requested captcha type
 				if (sessionRecord.captchaType !== requestedCaptchaType) {
@@ -178,10 +157,17 @@ export class CaptchaManager {
 						type: requestedCaptchaType,
 					};
 				}
+
 				return {
 					valid: true,
-					frictionlessTokenId,
+					sessionId: sessionRecord.sessionId,
 					type: requestedCaptchaType,
+					...(sessionRecord.powDifficulty && {
+						powDifficulty: sessionRecord.powDifficulty,
+					}),
+					...(sessionRecord.solvedImagesCount && {
+						solvedImagesCount: sessionRecord.solvedImagesCount,
+					}),
 				};
 			}
 
@@ -247,9 +233,7 @@ export class CaptchaManager {
 	async getPrioritisedAccessPolicies(
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
-		userScope: {
-			[key in keyof UserScopeApiInput & UserScopeApiOutput]?: bigint | string;
-		},
+		userScope: UserScope | UserScopeRecord,
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,

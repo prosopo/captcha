@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoute, ApiRoutesProvider } from "@prosopo/api-route";
+import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import {
 	type NextFunction,
 	type Request,
@@ -42,19 +42,19 @@ class ApiExpressRouterFactory {
 
 	protected registerRoutes(
 		router: Router,
-		routes: ApiRoute[],
+		routes: ApiRoutes,
 		apiEndpointAdapter: ApiExpressEndpointAdapter,
 	): void {
-		for (const route of routes) {
+		for (const [route, endpoint] of Object.entries(routes)) {
 			router.post(
-				route.path,
+				route,
 				async (
 					request: Request,
 					response: Response,
 					next: NextFunction,
 				): Promise<void> => {
 					return await apiEndpointAdapter.handleRequest(
-						route.endpoint,
+						endpoint,
 						request,
 						response,
 						next,

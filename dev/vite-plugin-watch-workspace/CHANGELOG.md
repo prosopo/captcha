@@ -1,5 +1,89 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.25
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+
+## 2.6.24
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+
+## 2.6.23
+### Patch Changes
+
+- 618703f: Release 3.4.2
+
+## 2.6.22
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+
+## 2.6.21
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+
+## 2.6.20
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+
+## 2.6.19
+### Patch Changes
+
+- 008d112: Release 3.3.0
+
+## 2.6.18
+### Patch Changes
+
+- 0824221: Release 3.2.4
+
+## 2.6.17
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+
+## 2.6.16
+### Patch Changes
+
+- 657a827: Release 3.2.2
+
+## 2.6.15
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+
+## 2.6.14
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+
+## 2.6.13
+### Patch Changes
+
+- f304be9: Release 3.1.13
+
+## 2.6.12
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+- a07db04: Release 3.1.12
+
+## 2.6.11
+### Patch Changes
+
+- 7c75167: Cleanup unused deps
+
+## 2.6.10
+### Patch Changes
+
+- 6960643: lint detect missing and unneccessary imports
+
 ## 2.6.9
 ### Patch Changes
 
