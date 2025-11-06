@@ -13,18 +13,9 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import "@cypress/xpath";
-import { u8aToHex } from "@polkadot/util";
 import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { getPair } from "@prosopo/keyring";
-import {
-	AdminApiPaths,
-	type Captcha,
-	type CaptchaType,
-	type IUserSettings,
-	type RegisterSitekeyBodyTypeOutput,
-	Tier,
-} from "@prosopo/types";
+import type { Captcha, CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";

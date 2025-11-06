@@ -15,7 +15,7 @@
 import { type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import type { KeyringPair } from "@prosopo/types";
-import { type ProsopoConfigOutput, ScheduledTaskNames } from "@prosopo/types";
+import type { ProsopoConfigOutput } from "@prosopo/types";
 import { CronJob } from "cron";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";

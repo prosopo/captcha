@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaType,
 	FrictionlessPenalties,
+	type KeyringPair,
 	type ProsopoConfigOutput,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -25,10 +25,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
-import {
-	DEFAULT_ENTROPY,
-	FrictionlessManager,
-} from "../../../../tasks/frictionless/frictionlessTasks.js";
+import { FrictionlessManager } from "../../../../tasks/frictionless/frictionlessTasks.js";
 
 describe("Frictionless Task Manager", () => {
 	let db: IProviderDatabase;

@@ -46,9 +46,6 @@
 			"path": "../api-express-router/tsconfig.cjs.json"
 		},
 		{
-			"path": "../types-database/tsconfig.cjs.json"
-		},
-		{
 			"path": "../../dev/workspace/tsconfig.cjs.json"
 		}
 	]

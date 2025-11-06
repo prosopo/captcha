@@ -1,10 +1,10 @@
 {
 	"name": "@prosopo/react-procaptcha-wrapper",
-	"version": "1.1.34",
+	"version": "1.1.35",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=v20.0.0",
+		"npm": ">=10.6.0"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -23,7 +23,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.36",
+		"@prosopo/procaptcha-wrapper": "2.6.37",
 		"@prosopo/config": "3.1.21"
 	},
 	"peerDependencies": {
@@ -32,7 +32,7 @@
 	"devDependencies": {
 		"@prosopo/procaptcha-integration-build-config": "1.1.22",
 		"@types/node": "22.10.2",
-		"@vitejs/plugin-react": "4.3.4",
+		"@vitejs/plugin-react": "5.1.0",
 		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

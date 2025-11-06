@@ -14,8 +14,13 @@
 
 import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
-import type { KeyringPair } from "@prosopo/types";
-import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
+import {
+	ApiParams,
+	CaptchaType,
+	type KeyringPair,
+	type ProsopoConfigOutput,
+	Tier,
+} from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
@@ -34,11 +39,18 @@ import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 export class CaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
+	config: ProsopoConfigOutput;
 	logger: Logger;
 
-	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
+	constructor(
+		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
+	) {
 		this.pair = pair;
 		this.db = db;
+		this.config = config;
 		this.logger = logger || getLogger("info", import.meta.url);
 	}
 
@@ -145,6 +157,7 @@ export class CaptchaManager {
 						type: requestedCaptchaType,
 					};
 				}
+
 				return {
 					valid: true,
 					sessionId: sessionRecord.sessionId,

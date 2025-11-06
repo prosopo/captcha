@@ -173,6 +173,7 @@ const validateWorkspace = async (args: {
 		const invalidTsConfigs = await validateDependencies({
 			packageJson,
 			workspacePackageNames,
+			ignore: args.ignore,
 		});
 
 		if (invalidTsConfigs.length > 0) {
@@ -262,6 +263,7 @@ export function getImportsFromTsFile(filePath: string): string[] {
 const validateDependencies = async (args: {
 	packageJson: File;
 	workspacePackageNames: string[];
+	ignore: string[];
 }): Promise<InvalidTsConfig[]> => {
 	const packageJson = args.packageJson;
 
@@ -299,10 +301,12 @@ const validateDependencies = async (args: {
 
 		// validate references against dependencies
 		const unnecessaryReferences: string[] = referencedPackageNames.filter(
-			(ref) => !workspaceDependencies.includes(ref),
+			(ref) =>
+				!workspaceDependencies.includes(ref) && !args.ignore.includes(ref),
 		);
 		const missingReferences: string[] = workspaceDependencies.filter(
-			(dep) => !referencedPackageNames.includes(dep),
+			(dep) =>
+				!referencedPackageNames.includes(dep) && !args.ignore.includes(dep),
 		);
 
 		// grep the source code for imports
@@ -395,14 +399,18 @@ const validateDependencies = async (args: {
 
 		// record all the imports that are not in the package.json or tsconfig.json
 		const missingDependencies = Array.from(allImports).filter(
-			(importPath) => !allDependencies.includes(importPath),
+			(importPath) =>
+				!allDependencies.includes(importPath) &&
+				!args.ignore.includes(importPath),
 		);
 
 		// record all the dependencies that are not imported, unless specified as devDependencies
 		const devDependencies = getDevDependencies(packageJson);
 		const unnecessaryDependencies = allDependencies.filter(
 			(dependency) =>
-				!allImports.has(dependency) && !devDependencies.includes(dependency),
+				!allImports.has(dependency) &&
+				!devDependencies.includes(dependency) &&
+				!args.ignore.includes(dependency),
 		);
 
 		if (

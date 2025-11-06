@@ -15,7 +15,7 @@
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
+import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -26,10 +26,7 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PoWCaptchaRecord,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, verifyRecency } from "@prosopo/util";
 import {
@@ -46,8 +43,13 @@ const DEFAULT_POW_DIFFICULTY = 4;
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 
-	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
-		super(db, pair, logger);
+	constructor(
+		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
+	) {
+		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 	}
 

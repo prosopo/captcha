@@ -1,10 +1,10 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.6.36",
+	"version": "2.6.37",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=v20.0.0",
+		"npm": ">=10.6.0"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -23,7 +23,7 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/types": "3.5.10",
+		"@prosopo/types": "3.5.11",
 		"@prosopo/config": "3.1.21",
 		"@prosopo/locale": "3.1.21"
 	},

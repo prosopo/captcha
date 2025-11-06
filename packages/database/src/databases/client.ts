@@ -20,7 +20,6 @@ import {
 	type IClientDatabase,
 	TableNames,
 	type Tables,
-	UserDataSchema,
 } from "@prosopo/types-database";
 import { MongoDatabase } from "../base/index.js";
 

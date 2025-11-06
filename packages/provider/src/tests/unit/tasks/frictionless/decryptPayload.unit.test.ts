@@ -110,6 +110,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
 		});
 	});
 	it("should set values for the payload when there are keys but they fail to decrypt", async () => {
@@ -141,6 +146,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
 		});
 	});
 	it("should set values for the payload when there are no keys", async () => {
@@ -176,6 +186,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
 		});
 	});
 });

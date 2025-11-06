@@ -35,8 +35,6 @@ import {
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
-	type Timestamp,
-	TimestampSchema,
 } from "@prosopo/types";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import type mongoose from "mongoose";
@@ -52,9 +50,7 @@ import {
 	number,
 	object,
 	string,
-	union,
 	type infer as zInfer,
-	instanceof as zInstanceof,
 } from "zod";
 import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
@@ -465,6 +461,7 @@ export type Session = {
 	webView: boolean;
 	iFrame: boolean;
 	decryptedHeadHash: string;
+	reason?: string;
 };
 
 export type SessionRecord = mongoose.Document & Session;
@@ -519,6 +516,21 @@ export const DetectorRecordSchema = new Schema<DetectorSchema>({
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+export type ClientEntropy = {
+	account: string;
+	entropy: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
+export type ClientEntropyRecord = mongoose.Document & ClientEntropy;
+export const ClientEntropyRecordSchema = new Schema<ClientEntropyRecord>({
+	account: { type: String, required: true, unique: true },
+	entropy: { type: String, required: true },
+	createdAt: { type: Date, required: true },
+	updatedAt: { type: Date, required: true },
+});
+ClientEntropyRecordSchema.index({ account: 1 }, { unique: true });
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -697,6 +709,8 @@ export interface IProviderDatabase extends IDatabase {
 
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
 
+	getAllClientRecords(): Promise<ClientRecord[]>;
+
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
@@ -728,4 +742,10 @@ export interface IProviderDatabase extends IDatabase {
 		detectorKey: string,
 		expirationInSeconds?: number,
 	): Promise<void>;
+
+	setClientEntropy(account: string, entropy: string): Promise<void>;
+
+	getClientEntropy(account: string): Promise<string | undefined>;
+
+	sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]>;
 }

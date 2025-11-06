@@ -21,10 +21,9 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import {
-	type IProviderDatabase,
-	IpAddressType,
-	type PoWCaptchaStored,
+import type {
+	IProviderDatabase,
+	PoWCaptchaStored,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
@@ -86,8 +85,6 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(db, pair);
-
 		mockEnv = {
 			config: {
 				ipApi: {
@@ -96,6 +93,8 @@ describe("PowCaptchaManager", () => {
 				},
 			},
 		} as unknown as ProviderEnvironment;
+
+		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
 
 		vi.clearAllMocks();
 	});
