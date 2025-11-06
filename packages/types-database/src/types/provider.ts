@@ -457,6 +457,7 @@ export type Session = {
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
+	userSitekeyIpHash?: string;
 	webView: boolean;
 	iFrame: boolean;
 	decryptedHeadHash: string;
@@ -487,6 +488,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
+	userSitekeyIpHash: { type: String, required: false },
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
@@ -495,6 +497,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+SessionRecordSchema.index({ userSitekeyIpHash: 1 });
 SessionRecordSchema.index({ providerSelectEntropy: 1 });
 SessionRecordSchema.index({ token: 1 });
 
@@ -717,6 +720,10 @@ export interface IProviderDatabase extends IDatabase {
 	getSessionRecordByToken(token: string): Promise<Session | undefined>;
 
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getSessionByuserSitekeyIpHash(
+		userSitekeyIpHash: string,
+	): Promise<SessionRecord | undefined>;
 
 	getUnstoredSessionRecords(
 		limit: number,

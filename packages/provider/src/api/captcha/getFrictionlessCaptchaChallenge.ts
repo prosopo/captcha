@@ -13,6 +13,7 @@
 // limitations under the License.
 import { ProsopoApiError } from "@prosopo/common";
 import {
+	ApiParams,
 	CaptchaType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 } from "@prosopo/types";
@@ -31,6 +32,7 @@ import {
 import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../../tasks/index.js";
 import { hashUserAgent } from "../../utils/hashUserAgent.js";
+import { hashUserIp } from "../../utils/hashUserIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 
@@ -67,22 +69,20 @@ export default (
 				}));
 
 				// Send PoW captcha with dummy frictionless data
-				return res.json(
-					await tasks.frictionlessManager.sendPowCaptcha({
-						token,
-						score: 0,
-						threshold: 0.5,
-						scoreComponents: {
-							baseScore: 0,
-						},
-						providerSelectEntropy: 0,
-						ipAddress: getCompositeIpAddress(req.ip || ""),
-						powDifficulty: undefined,
-						webView: false,
-						iFrame: false,
-						decryptedHeadHash: "",
-					}),
-				);
+				tasks.frictionlessManager.setSessionParams({
+					token,
+					score: 0,
+					threshold: 0.5,
+					scoreComponents: {
+						baseScore: 0,
+					},
+					providerSelectEntropy: 0,
+					ipAddress: getCompositeIpAddress(req.ip || ""),
+					webView: false,
+					iFrame: false,
+					decryptedHeadHash: "",
+				});
+				return res.json(await tasks.frictionlessManager.sendPowCaptcha());
 			}
 
 			// Check if the token has already been used
@@ -104,6 +104,28 @@ export default (
 						logger: req.logger,
 					}),
 				);
+			}
+
+			// Calculate the hash for this user-IP-sitekey combination
+			const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
+
+			const existingSession =
+				await tasks.db.getSessionByuserSitekeyIpHash(userSitekeyIpHash);
+
+			if (existingSession) {
+				req.logger.info(() => ({
+					msg: "Reusing existing session for user-IP-sitekey combination",
+					data: {
+						userSitekeyIpHash,
+						sessionId: existingSession.sessionId,
+						captchaType: existingSession.captchaType,
+					},
+				}));
+				return res.json({
+					[ApiParams.captchaType]: existingSession.captchaType,
+					[ApiParams.sessionId]: existingSession.sessionId,
+					[ApiParams.status]: "ok",
+				});
 			}
 
 			const lScore = tasks.frictionlessManager.checkLangRules(
@@ -231,6 +253,7 @@ export default (
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(timestamp),
+						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 					}),
 				);
@@ -252,6 +275,7 @@ export default (
 					return res.json(
 						await tasks.frictionlessManager.sendImageCaptcha({
 							solvedImagesCount: userAccessPolicy.solvedImagesCount,
+							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 						}),
 					);
@@ -259,7 +283,7 @@ export default (
 				if (userAccessPolicy.captchaType === CaptchaType.pow) {
 					return res.json(
 						await tasks.frictionlessManager.sendPowCaptcha({
-							powDifficulty: undefined,
+							userSitekeyIpHash,
 							reason: FrictionlessReason.USER_ACCESS_POLICY,
 						}),
 					);
@@ -297,6 +321,7 @@ export default (
 						return res.json(
 							await tasks.frictionlessManager.sendImageCaptcha({
 								solvedImagesCount: getRoundsFromSimScore(sim),
+								userSitekeyIpHash,
 								reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
 							}),
 						);
@@ -321,6 +346,7 @@ export default (
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: env.config.captchas.solved.count * 2,
+						userSitekeyIpHash,
 						reason: FrictionlessReason.WEBVIEW_DETECTED,
 					}),
 				);
@@ -341,6 +367,7 @@ export default (
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(timestamp),
+						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 					}),
 				);
@@ -376,6 +403,7 @@ export default (
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: env.config.captchas.solved.count,
+						userSitekeyIpHash,
 						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 					}),
 				);
@@ -384,7 +412,7 @@ export default (
 			// Otherwise, send a PoW captcha
 			return res.json(
 				await tasks.frictionlessManager.sendPowCaptcha({
-					powDifficulty: undefined,
+					userSitekeyIpHash,
 				}),
 			);
 		} catch (err) {
