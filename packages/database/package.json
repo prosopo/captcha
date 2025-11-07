@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "3.5.1",
+	"version": "3.5.2",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -40,7 +40,7 @@
 		"@prosopo/locale": "3.1.22",
 		"@prosopo/redis-client": "1.0.7",
 		"@prosopo/types": "3.6.0",
-		"@prosopo/types-database": "4.0.1",
+		"@prosopo/types-database": "4.0.2",
 		"@prosopo/user-access-policy": "3.5.28",
 		"make-dir": "3.1.0",
 		"mongodb": "6.15.0",

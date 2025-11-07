@@ -1,5 +1,11 @@
 # @prosopo/database
 
+## 3.5.2
+### Patch Changes
+
+- Updated dependencies [0a9887c]
+  - @prosopo/types-database@4.0.2
+
 ## 3.5.1
 ### Patch Changes
 

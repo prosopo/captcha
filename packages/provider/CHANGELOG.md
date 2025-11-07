@@ -1,5 +1,17 @@
 # @prosopo/provider
 
+## 3.13.3
+### Patch Changes
+
+- 3be9174: Create scheduled task status
+- Updated dependencies [0a9887c]
+  - @prosopo/types-database@4.0.2
+  - @prosopo/database@3.5.2
+  - @prosopo/datasets@3.0.45
+  - @prosopo/types-env@2.7.49
+  - @prosopo/env@3.2.24
+  - @prosopo/api-express-router@3.0.36
+
 ## 3.13.2
 ### Patch Changes
 
