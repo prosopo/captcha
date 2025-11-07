@@ -301,10 +301,7 @@ export class ClientTaskManager {
 					client.account,
 				);
 
-				if (
-					sampleEntropies.length === 0 ||
-					sampleEntropies.length < SAMPLE_SIZE
-				) {
+				if (sampleEntropies.length < SAMPLE_SIZE) {
 					this.logger.info(() => ({
 						msg: `Skipping entropy calculation for client ${client.account} due to insufficient samples (${sampleEntropies.length}/${SAMPLE_SIZE})`,
 					}));
