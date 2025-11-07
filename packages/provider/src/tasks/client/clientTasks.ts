@@ -280,18 +280,51 @@ export class ClientTaskManager {
 	 * @returns Promise<void>
 	 */
 	async calculateClientEntropy(): Promise<void> {
-		const clients = await this.providerDB.getAllClientRecords();
+		const taskID = await this.providerDB.createScheduledTaskStatus(
+			ScheduledTaskNames.SetClientEntropy,
+			ScheduledTaskStatus.Running,
+		);
 
-		for (const client of clients) {
-			const sampleEntropies = await this.providerDB.sampleEntropy(
-				100,
-				client.account,
+		try {
+			const clients = await this.providerDB.getAllClientRecords();
+
+			for (const client of clients) {
+				const sampleEntropies = await this.providerDB.sampleEntropy(
+					100,
+					client.account,
+				);
+
+				// Calculate majority average entropy
+				const avgEntropy = majorityAverage(sampleEntropies);
+
+				await this.providerDB.setClientEntropy(client.account, avgEntropy);
+			}
+			await this.providerDB.updateScheduledTaskStatus(
+				taskID,
+				ScheduledTaskStatus.Completed,
+				{
+					data: {
+						clientRecords: clients.length,
+					},
+				},
 			);
-
-			// Calculate majority average entropy
-			const avgEntropy = majorityAverage(sampleEntropies);
-
-			await this.providerDB.setClientEntropy(client.account, avgEntropy);
+		} catch (e: unknown) {
+			const calculateClientEntropiesError = new ProsopoApiError(
+				"DATABASE.UNKNOWN",
+				{
+					context: { error: e },
+					logger: this.logger,
+				},
+			);
+			this.logger.error(() => ({
+				err: calculateClientEntropiesError,
+				msg: "Error calculating client entropy",
+			}));
+			await this.providerDB.updateScheduledTaskStatus(
+				taskID,
+				ScheduledTaskStatus.Failed,
+				{ error: String(e) },
+			);
 		}
 	}
 
