@@ -20,7 +20,7 @@ import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
-	type Tier,
+	Tier,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -280,19 +280,36 @@ export class ClientTaskManager {
 	 * @returns Promise<void>
 	 */
 	async calculateClientEntropy(): Promise<void> {
+		const SAMPLE_SIZE = 100;
 		const taskID = await this.providerDB.createScheduledTaskStatus(
 			ScheduledTaskNames.SetClientEntropy,
 			ScheduledTaskStatus.Running,
 		);
 
 		try {
-			const clients = await this.providerDB.getAllClientRecords();
+			let clients = await this.providerDB.getAllClientRecords();
+
+			clients = clients.filter((client) => client.tier !== Tier.Free);
+
+			this.logger.info(() => ({
+				msg: `Calculating entropies for ${clients.length} clients`,
+			}));
 
 			for (const client of clients) {
 				const sampleEntropies = await this.providerDB.sampleEntropy(
-					100,
+					SAMPLE_SIZE,
 					client.account,
 				);
+
+				if (
+					sampleEntropies.length === 0 ||
+					sampleEntropies.length < SAMPLE_SIZE
+				) {
+					this.logger.info(() => ({
+						msg: `Skipping entropy calculation for client ${client.account} due to insufficient samples (${sampleEntropies.length}/${SAMPLE_SIZE})`,
+					}));
+					continue;
+				}
 
 				// Calculate majority average entropy
 				const avgEntropy = majorityAverage(sampleEntropies);
