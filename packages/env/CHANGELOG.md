@@ -1,5 +1,11 @@
 # @prosopo/env
 
+## 3.2.24
+### Patch Changes
+
+  - @prosopo/database@3.5.2
+  - @prosopo/types-env@2.7.49
+
 ## 3.2.23
 ### Patch Changes
 

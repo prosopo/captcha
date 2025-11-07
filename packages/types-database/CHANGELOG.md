@@ -1,5 +1,10 @@
 # @prosopo/types-database
 
+## 4.0.2
+### Patch Changes
+
+- 0a9887c: Remove unique from token index
+
 ## 4.0.1
 ### Patch Changes
 
