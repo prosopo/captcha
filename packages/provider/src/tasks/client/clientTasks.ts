@@ -314,6 +314,10 @@ export class ClientTaskManager {
 				// Calculate majority average entropy
 				const avgEntropy = majorityAverage(sampleEntropies);
 
+				this.logger.info(() => ({
+					msg: `Calculated entropy for client ${client.account}: ${avgEntropy}`,
+				}));
+
 				await this.providerDB.setClientEntropy(client.account, avgEntropy);
 			}
 			await this.providerDB.updateScheduledTaskStatus(
