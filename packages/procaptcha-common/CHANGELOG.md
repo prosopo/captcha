@@ -1,5 +1,11 @@
 # @prosopo/procaptcha-common
 
+## 2.9.15
+### Patch Changes
+
+- 9128d5e: correcting types
+- 9128d5e: adding super fun tests
+
 ## 2.9.14
 ### Patch Changes
 
