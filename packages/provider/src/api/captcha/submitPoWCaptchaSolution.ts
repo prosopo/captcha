@@ -13,6 +13,7 @@
 // limitations under the License.
 import { ProsopoApiError } from "@prosopo/common";
 import {
+	DemoKeyBehavior,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
@@ -22,6 +23,10 @@ import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/tasks.js";
+import {
+	logDemoKeyUsage,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -74,6 +79,32 @@ export default (env: ProviderEnvironment) =>
 						logger: req.logger,
 					}),
 				);
+			}
+
+			// Handle demo key - always pass
+			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"pow_captcha_solution",
+				);
+
+				const response: PowCaptchaSolutionResponse = { status: "ok", verified: true };
+				return res.json(response);
+			}
+
+			// Handle demo key - always fail
+			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"pow_captcha_solution",
+				);
+
+				const response: PowCaptchaSolutionResponse = { status: "ok", verified: false };
+				return res.json(response);
 			}
 
 			const verified = await tasks.powCaptchaManager.verifyPowCaptchaSolution(

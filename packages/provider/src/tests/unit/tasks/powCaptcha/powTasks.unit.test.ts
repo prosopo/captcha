@@ -78,6 +78,7 @@ describe("PowCaptchaManager", () => {
 			getPowCaptchaRecordByChallenge: vi.fn(),
 			updatePowCaptchaRecordResult: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
+			getClientRecord: vi.fn().mockResolvedValue(null), // Return null to skip demo key logic
 		} as unknown as IProviderDatabase;
 
 		pair = {

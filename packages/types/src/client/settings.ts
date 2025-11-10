@@ -96,6 +96,20 @@ export const IPValidationRulesSchema = object({
 	forceConsistentIp: boolean().optional().default(false),
 });
 
+export enum DemoKeyBehavior {
+	AlwaysPass = "always_pass",
+	AlwaysFail = "always_fail",
+}
+
+export const DemoKeyBehaviorSchema = z.nativeEnum(DemoKeyBehavior);
+
+export const DemoKeyConfigSchema = object({
+	enabled: boolean().default(false),
+	behavior: DemoKeyBehaviorSchema,
+	createdAt: z.date().optional(),
+	notes: string().optional(),
+});
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string())
@@ -114,8 +128,10 @@ export const ClientSettingsSchema = object({
 			threshold: number().optional().default(contextAwareThresholdDefault),
 		})
 		.optional(),
+	demoKeyConfig: DemoKeyConfigSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
 export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
 export type IIPValidation = output<typeof IPValidationSchema>;
+export type IDemoKeyConfig = output<typeof DemoKeyConfigSchema>;

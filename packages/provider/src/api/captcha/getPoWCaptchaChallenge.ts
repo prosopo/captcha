@@ -15,6 +15,7 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
+	DemoKeyBehavior,
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
@@ -26,6 +27,10 @@ import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import {
+	logDemoKeyUsage,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -70,6 +75,58 @@ export default (
 						logger: req.logger,
 					}),
 				);
+			}
+
+			// Handle demo key - always pass (trivial difficulty)
+			if (
+				shouldBypassForDemoKey(clientSettings, DemoKeyBehavior.AlwaysPass)
+			) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"pow_captcha_challenge",
+				);
+
+				const response: GetPowCaptchaResponse = {
+					[ApiParams.challenge]: "demo_challenge_pass",
+					[ApiParams.difficulty]: 1, // Trivially solvable
+					[ApiParams.signature]: {
+						[ApiParams.provider]: {
+							[ApiParams.challenge]: "demo_provider_challenge",
+							[ApiParams.proof]: "demo_proof",
+						},
+						[ApiParams.timestamp]: Date.now().toString(),
+					},
+				};
+
+				return res.json(response);
+			}
+
+			// Handle demo key - always fail (impossible difficulty)
+			if (
+				shouldBypassForDemoKey(clientSettings, DemoKeyBehavior.AlwaysFail)
+			) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"pow_captcha_challenge",
+				);
+
+				const response: GetPowCaptchaResponse = {
+					[ApiParams.challenge]: "demo_challenge_fail",
+					[ApiParams.difficulty]: 1000000, // Impossibly hard
+					[ApiParams.signature]: {
+						[ApiParams.provider]: {
+							[ApiParams.challenge]: "demo_provider_challenge",
+							[ApiParams.proof]: "demo_proof",
+						},
+						[ApiParams.timestamp]: Date.now().toString(),
+					},
+				};
+
+				return res.json(response);
 			}
 
 			const userScope = getRequestUserScope(

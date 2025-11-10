@@ -15,6 +15,7 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
+	DemoKeyBehavior,
 	GetFrictionlessCaptchaChallengeRequestBody,
 } from "@prosopo/types";
 import type { ScoreComponents } from "@prosopo/types-database";
@@ -31,6 +32,11 @@ import {
 } from "../../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../../tasks/index.js";
+import {
+	getDemoKeyBehavior,
+	logDemoKeyUsage,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
@@ -166,6 +172,79 @@ export default (
 						context: { code: 400, siteKey: dapp },
 						i18n: req.i18n,
 						logger: req.logger,
+					}),
+				);
+			}
+
+			// Handle demo key - always pass
+			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"frictionless_challenge",
+				);
+
+				const ipAddress = getCompositeIpAddress(req.ip || "");
+				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
+
+				// Set session params with perfect score
+				tasks.frictionlessManager.setSessionParams({
+					token,
+					score: 0,
+					threshold: 0.5,
+					scoreComponents: {
+						baseScore: 0,
+					},
+					providerSelectEntropy: 0,
+					ipAddress,
+					webView: false,
+					iFrame: false,
+					decryptedHeadHash: "",
+				});
+
+				// Return trivial PoW captcha that will auto-pass
+				return res.json(
+					await tasks.frictionlessManager.sendPowCaptcha({
+						powDifficulty: 1,
+						userSitekeyIpHash,
+					}),
+				);
+			}
+
+			// Handle demo key - always fail
+			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"frictionless_challenge",
+				);
+
+				const ipAddress = getCompositeIpAddress(req.ip || "");
+				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
+
+				// Set session params with maximum penalty score
+				tasks.frictionlessManager.setSessionParams({
+					token,
+					score: 1.0,
+					threshold: 0.5,
+					scoreComponents: {
+						baseScore: 1.0,
+					},
+					providerSelectEntropy: 0,
+					ipAddress,
+					webView: false,
+					iFrame: false,
+					decryptedHeadHash: "",
+				});
+
+				// Return maximum difficulty image captcha
+				return res.json(
+					await tasks.frictionlessManager.sendImageCaptcha({
+						solvedImagesCount: env.config.captchas.solved.count * 10,
+						userSitekeyIpHash,
+						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 					}),
 				);
 			}
