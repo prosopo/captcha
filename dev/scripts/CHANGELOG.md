@@ -1,5 +1,11 @@
 # @prosopo/scripts
 
+## 3.1.29
+### Patch Changes
+
+- Updated dependencies [5adeb05]
+  - @prosopo/cli@3.5.4
+
 ## 3.1.28
 ### Patch Changes
 
