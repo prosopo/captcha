@@ -115,6 +115,7 @@ describe("state/builder", () => {
 			const useState = vi.fn((defaultValue) => [defaultValue, vi.fn()]);
 			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
 
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
 			expect(state.isHuman).toBe(false);
@@ -132,6 +133,7 @@ describe("state/builder", () => {
 		});
 
 		it("should call appropriate setters when updating state", () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Mock setter functions
 			const setters: Record<string, any> = {};
 
 			const useState = vi.fn((defaultValue) => {
@@ -153,6 +155,7 @@ describe("state/builder", () => {
 
 			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
 
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
 			updateFn({
@@ -172,12 +175,14 @@ describe("state/builder", () => {
 
 		it("should handle solutions array correctly with slice", () => {
 			const setSolutions = vi.fn();
+			// biome-ignore lint/suspicious/noExplicitAny: Mock solutions array
 			let solutionsValue: any[] = [];
 
 			const useState = vi.fn((defaultValue) => {
 				if (Array.isArray(defaultValue)) {
 					return [
 						solutionsValue,
+						// biome-ignore lint/suspicious/noExplicitAny: Mock setter function
 						(newValue: any) => {
 							solutionsValue = newValue;
 							setSolutions(newValue);
@@ -189,6 +194,7 @@ describe("state/builder", () => {
 
 			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
 
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
 			const newSolutions: [string, number, number][][] = [[["test", 1, 2]]];
@@ -205,7 +211,9 @@ describe("state/builder", () => {
 			const setIsHuman = vi.fn();
 			const setIndex = vi.fn();
 
+			// biome-ignore lint/suspicious/noExplicitAny: Mock setter tracking
 			let isHumanSetter: any;
+			// biome-ignore lint/suspicious/noExplicitAny: Mock setter tracking
 			let indexSetter: any;
 
 			const useState = vi.fn((defaultValue) => {
@@ -222,6 +230,7 @@ describe("state/builder", () => {
 
 			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
 
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
 			updateFn({ isHuman: true });
@@ -242,6 +251,7 @@ describe("state/builder", () => {
 
 			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
 
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
 			const errorObj = { message: "Test error", key: "testKey" };

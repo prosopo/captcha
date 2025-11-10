@@ -22,15 +22,17 @@ describe("elements/window", () => {
 		afterEach(() => {
 			// Clean up window object
 			const keys = Object.keys(window);
-			keys.forEach((key) => {
+			for (const key of keys) {
 				if (key.startsWith("test")) {
+					// biome-ignore lint/suspicious/noExplicitAny: Dynamic property cleanup
 					delete (window as any)[key];
 				}
-			});
+			}
 		});
 
 		it("should retrieve a function from window object", () => {
 			const testFn = () => "test";
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = testFn;
 
 			const result = getWindowCallback("testCallback");
@@ -39,6 +41,7 @@ describe("elements/window", () => {
 
 		it("should handle window. prefix in callback name", () => {
 			const testFn = () => "test";
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = testFn;
 
 			const result = getWindowCallback("window.testCallback");
@@ -46,6 +49,7 @@ describe("elements/window", () => {
 		});
 
 		it("should throw error if callback is not a function", () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = "not a function";
 
 			expect(() => getWindowCallback("testCallback")).toThrow(
@@ -60,6 +64,7 @@ describe("elements/window", () => {
 		});
 
 		it("should handle callback that is undefined", () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = undefined;
 
 			expect(() => getWindowCallback("testCallback")).toThrow(
@@ -68,6 +73,7 @@ describe("elements/window", () => {
 		});
 
 		it("should handle callback that is null", () => {
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = null;
 
 			expect(() => getWindowCallback("testCallback")).toThrow(
@@ -77,6 +83,7 @@ describe("elements/window", () => {
 
 		it("should work with arrow functions", () => {
 			const arrowFn = (x: number) => x * 2;
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testArrowCallback = arrowFn;
 
 			const result = getWindowCallback("testArrowCallback");
@@ -88,6 +95,7 @@ describe("elements/window", () => {
 			function regularFn(x: number) {
 				return x * 2;
 			}
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testRegularCallback = regularFn;
 
 			const result = getWindowCallback("testRegularCallback");

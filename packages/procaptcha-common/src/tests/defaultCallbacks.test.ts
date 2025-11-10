@@ -195,6 +195,7 @@ describe("callbacks/defaultCallbacks", () => {
 			const dataCallback = vi.fn();
 			const renderCallback = vi.fn();
 
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).dataCallbackFn = dataCallback;
 			widget.setAttribute("data-callback", "dataCallbackFn");
 
@@ -211,6 +212,7 @@ describe("callbacks/defaultCallbacks", () => {
 			expect(dataCallback).toHaveBeenCalledWith(token);
 			expect(renderCallback).not.toHaveBeenCalled();
 
+			// biome-ignore lint/suspicious/noExplicitAny: Test cleanup
 			(window as any).dataCallbackFn = undefined;
 		});
 
@@ -221,9 +223,11 @@ describe("callbacks/defaultCallbacks", () => {
 			document.body.appendChild(form);
 
 			const namedCallback = vi.fn();
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).myCallback = namedCallback;
 
 			const renderOptions: ProcaptchaRenderOptions = {
+				// biome-ignore lint/suspicious/noExplicitAny: Test string callback
 				callback: "myCallback" as any,
 			};
 
@@ -235,6 +239,7 @@ describe("callbacks/defaultCallbacks", () => {
 
 			expect(namedCallback).toHaveBeenCalledWith(token);
 
+			// biome-ignore lint/suspicious/noExplicitAny: Test cleanup
 			(window as any).myCallback = undefined;
 		});
 

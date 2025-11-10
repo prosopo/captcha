@@ -43,7 +43,9 @@ describe("providers", () => {
 				10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
 			]);
 			const mockGetRandomValues = vi.fn(() => mockRandomValues);
-			global.window.crypto.getRandomValues = mockGetRandomValues as any;
+			global.window.crypto.getRandomValues = mockGetRandomValues as (
+				array: Uint8Array,
+			) => Uint8Array;
 
 			// Mock the getRandomActiveProvider import
 			const { getRandomActiveProvider } = await import(
@@ -51,6 +53,7 @@ describe("providers", () => {
 			);
 			vi.mocked(getRandomActiveProvider).mockResolvedValue({
 				providerUrl: "https://test-provider.com",
+				// biome-ignore lint/suspicious/noExplicitAny: Mock return type
 			} as any);
 
 			const result = await getProcaptchaRandomActiveProvider("development");
@@ -67,11 +70,14 @@ describe("providers", () => {
 				arr.fill(callCount);
 				return arr;
 			});
-			global.window.crypto.getRandomValues = mockGetRandomValues as any;
+			global.window.crypto.getRandomValues = mockGetRandomValues as (
+				array: Uint8Array,
+			) => Uint8Array;
 
 			const { getRandomActiveProvider } = await import(
 				"@prosopo/load-balancer"
 			);
+			// biome-ignore lint/suspicious/noExplicitAny: Mock return type
 			vi.mocked(getRandomActiveProvider).mockResolvedValue({} as any);
 
 			await getProcaptchaRandomActiveProvider("development");
