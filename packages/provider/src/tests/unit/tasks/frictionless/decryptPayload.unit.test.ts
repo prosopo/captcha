@@ -65,11 +65,6 @@ describe("decryptPayload", () => {
 					baseBotScore: 1,
 					timestamp: Date.now(),
 					providerSelectEntropy: 1,
-					userId: "testUserId",
-					userAgent: "testUserAgent",
-					isWebView: false,
-					isIframe: false,
-					decryptedHeadHash: "testHeadHash",
 				};
 			}),
 		}));
@@ -87,11 +82,11 @@ describe("decryptPayload", () => {
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: 1,
-			userId: "testUserId",
-			userAgent: "testUserAgent",
+			userId: undefined,
+			userAgent: undefined,
 			webView: false,
 			iFrame: false,
-			decryptedHeadHash: "testHeadHash",
+			decryptedHeadHash: "",
 		});
 	});
 	it("should get values from the payload when some values are undefined", async () => {

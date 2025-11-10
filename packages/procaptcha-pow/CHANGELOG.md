@@ -1,5 +1,24 @@
 # @prosopo/procaptcha-pow
 
+## 2.8.22
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/procaptcha-common@2.9.14
+  - @prosopo/widget-skeleton@2.7.8
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/config@3.1.22
+
 ## 2.8.21
 ### Patch Changes
 

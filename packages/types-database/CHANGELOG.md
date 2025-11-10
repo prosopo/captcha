@@ -1,5 +1,42 @@
 # @prosopo/types-database
 
+## 4.0.2
+### Patch Changes
+
+- 0a9887c: Remove unique from token index
+
+## 4.0.1
+### Patch Changes
+
+- 3e5d80a: add reason field
+
+## 4.0.0
+### Major Changes
+
+- 8f22479: Update settings schema
+
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- 55a64c6: stop refresh image to pow
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- 55a64c6: Persist sessions for user ip combinations
+- Updated dependencies [8ce9205]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/user-access-policy@3.5.28
+  - @prosopo/types@3.6.0
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
 ## 3.3.13
 ### Patch Changes
 

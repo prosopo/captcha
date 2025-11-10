@@ -1,5 +1,16 @@
 # @prosopo/dotenv
 
+## 3.0.27
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
 ## 3.0.26
 ### Patch Changes
 

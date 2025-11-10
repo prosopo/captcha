@@ -1,5 +1,74 @@
 # @prosopo/provider
 
+## 3.13.3
+### Patch Changes
+
+- 3be9174: Create scheduled task status
+- Updated dependencies [0a9887c]
+  - @prosopo/types-database@4.0.2
+  - @prosopo/database@3.5.2
+  - @prosopo/datasets@3.0.45
+  - @prosopo/types-env@2.7.49
+  - @prosopo/env@3.2.24
+  - @prosopo/api-express-router@3.0.36
+
+## 3.13.2
+### Patch Changes
+
+- Updated dependencies [3e5d80a]
+  - @prosopo/types-database@4.0.1
+  - @prosopo/database@3.5.1
+  - @prosopo/datasets@3.0.44
+  - @prosopo/types-env@2.7.48
+  - @prosopo/env@3.2.23
+  - @prosopo/api-express-router@3.0.35
+
+## 3.13.1
+### Patch Changes
+
+- 447179c: Fix config and client getter
+
+## 3.13.0
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- fdef625: fix maint mode
+- 55a64c6: stop refresh image to pow
+- aa8216a: bump
+- 8ce9205: Change engine requirements
+- 6ac5367: Less drastic reaction to bad sim score
+- b6e98b2: Run npm audit
+- 55a64c6: Persist sessions for user ip combinations
+- Updated dependencies [8ce9205]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [8f22479]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/user-access-policy@3.5.28
+  - @prosopo/types@3.6.0
+  - @prosopo/types-database@4.0.0
+  - @prosopo/database@3.5.0
+  - @prosopo/util@3.2.0
+  - @prosopo/api-express-router@3.0.34
+  - @prosopo/load-balancer@2.8.9
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/api-route@2.6.30
+  - @prosopo/types-env@2.7.47
+  - @prosopo/datasets@3.0.43
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/env@3.2.22
+  - @prosopo/config@3.1.22
+
 ## 3.12.14
 ### Patch Changes
 

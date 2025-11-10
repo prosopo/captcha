@@ -1,5 +1,22 @@
 # @prosopo/user-access-policy
 
+## 3.5.28
+### Patch Changes
+
+- 8ce9205: enhance/uap-rules-push
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/redis-client@1.0.7
+  - @prosopo/api-route@2.6.30
+  - @prosopo/common@3.1.22
+  - @prosopo/api@3.1.33
+
 ## 3.5.27
 ### Patch Changes
 

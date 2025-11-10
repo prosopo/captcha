@@ -1,5 +1,38 @@
 # @prosopo/procaptcha-bundle
 
+## 3.2.5
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.16
+  - @prosopo/procaptcha-frictionless@2.8.17
+
+## 3.2.4
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.15
+  - @prosopo/procaptcha-frictionless@2.8.16
+
+## 3.2.3
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/procaptcha-frictionless@2.8.15
+  - @prosopo/procaptcha-common@2.9.14
+  - @prosopo/procaptcha-react@2.9.14
+  - @prosopo/widget-skeleton@2.7.8
+  - @prosopo/procaptcha-pow@2.8.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
 ## 3.2.2
 ### Patch Changes
 

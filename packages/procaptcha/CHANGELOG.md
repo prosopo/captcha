@@ -1,5 +1,34 @@
 # @prosopo/procaptcha
 
+## 2.9.16
+### Patch Changes
+
+  - @prosopo/datasets@3.0.45
+
+## 2.9.15
+### Patch Changes
+
+  - @prosopo/datasets@3.0.44
+
+## 2.9.14
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/procaptcha-common@2.9.14
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/datasets@3.0.43
+  - @prosopo/common@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/config@3.1.22
+
 ## 2.9.13
 ### Patch Changes
 

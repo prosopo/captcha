@@ -1,5 +1,21 @@
 # @prosopo/procaptcha-common
 
+## 2.9.14
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/widget-skeleton@2.7.8
+  - @prosopo/load-balancer@2.8.9
+  - @prosopo/account@2.7.39
+  - @prosopo/config@3.1.22
+
 ## 2.9.13
 ### Patch Changes
 

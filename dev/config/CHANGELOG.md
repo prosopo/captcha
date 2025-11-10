@@ -1,5 +1,12 @@
 # @prosopo/config
 
+## 3.1.22
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- df79c03: More dep fixes
+- b6e98b2: Run npm audit
+
 ## 3.1.21
 ### Patch Changes
 
