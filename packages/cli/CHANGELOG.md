@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.5.4
+### Patch Changes
+
+- 5adeb05: fixing biome ignore that not used
+
 ## 3.5.3
 ### Patch Changes
 
