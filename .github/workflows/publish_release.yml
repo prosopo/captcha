@@ -68,9 +68,8 @@ jobs:
       - name: Build packages
         run: |
           echo "Building all packages in production mode"
-          export NODE_ENV=production
-          npm run build:all
-          npm run build:all:cjs
+          NODE_ENV=production npm run build:all
+          NODE_ENV=production npm run build:all:cjs
 
       - name: Bundle the production provider CLI
         run: |
