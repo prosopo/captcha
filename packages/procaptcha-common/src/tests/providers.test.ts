@@ -25,7 +25,8 @@ vi.mock("@prosopo/load-balancer", () => ({
 
 describe("providers", () => {
 	describe("getProcaptchaRandomActiveProvider", () => {
-		let originalGetRandomValues: (array: Uint8Array) => Uint8Array;
+		// biome-ignore lint/suspicious/noExplicitAny: Store original crypto function
+		let originalGetRandomValues: any;
 
 		beforeEach(() => {
 			originalGetRandomValues = global.window.crypto.getRandomValues.bind(
@@ -43,9 +44,8 @@ describe("providers", () => {
 				10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
 			]);
 			const mockGetRandomValues = vi.fn(() => mockRandomValues);
-			global.window.crypto.getRandomValues = mockGetRandomValues as (
-				array: Uint8Array,
-			) => Uint8Array;
+			// biome-ignore lint/suspicious/noExplicitAny: Mock crypto API
+			global.window.crypto.getRandomValues = mockGetRandomValues as any;
 
 			// Mock the getRandomActiveProvider import
 			const { getRandomActiveProvider } = await import(
@@ -70,9 +70,8 @@ describe("providers", () => {
 				arr.fill(callCount);
 				return arr;
 			});
-			global.window.crypto.getRandomValues = mockGetRandomValues as (
-				array: Uint8Array,
-			) => Uint8Array;
+			// biome-ignore lint/suspicious/noExplicitAny: Mock crypto API
+			global.window.crypto.getRandomValues = mockGetRandomValues as any;
 
 			const { getRandomActiveProvider } = await import(
 				"@prosopo/load-balancer"

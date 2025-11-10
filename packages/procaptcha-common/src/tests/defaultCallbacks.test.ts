@@ -168,12 +168,16 @@ describe("callbacks/defaultCallbacks", () => {
 			document.body.appendChild(form);
 
 			const userCallback = vi.fn();
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				callback: userCallback,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			const token = "test-token" as ProcaptchaToken;
 			callbacks.onHuman(token);
@@ -199,12 +203,16 @@ describe("callbacks/defaultCallbacks", () => {
 			(window as any).dataCallbackFn = dataCallback;
 			widget.setAttribute("data-callback", "dataCallbackFn");
 
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				callback: renderCallback,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			const token = "test-token" as ProcaptchaToken;
 			callbacks.onHuman(token);
@@ -226,13 +234,17 @@ describe("callbacks/defaultCallbacks", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).myCallback = namedCallback;
 
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				// biome-ignore lint/suspicious/noExplicitAny: Test string callback
 				callback: "myCallback" as any,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			const token = "test-token" as ProcaptchaToken;
 			callbacks.onHuman(token);
@@ -247,12 +259,16 @@ describe("callbacks/defaultCallbacks", () => {
 			const widget = document.createElement("div");
 			const expiredCallback = vi.fn();
 
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				"expired-callback": expiredCallback,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			callbacks.onExpired();
 
@@ -263,12 +279,16 @@ describe("callbacks/defaultCallbacks", () => {
 			const widget = document.createElement("div");
 			const errorCallback = vi.fn();
 
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				"error-callback": errorCallback,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			const error = new Error("Test error");
 			callbacks.onError(error);
@@ -280,12 +300,16 @@ describe("callbacks/defaultCallbacks", () => {
 			const widget = document.createElement("div");
 			const failedCallback = vi.fn();
 
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				"failed-callback": failedCallback,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			callbacks.onFailed();
 
@@ -296,12 +320,16 @@ describe("callbacks/defaultCallbacks", () => {
 			const widget = document.createElement("div");
 			const resetCallback = vi.fn();
 
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				"reset-callback": resetCallback,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			callbacks.onReset();
 
@@ -322,13 +350,17 @@ describe("callbacks/defaultCallbacks", () => {
 			const openCallback = vi.fn();
 			const closeCallback = vi.fn();
 
-			const renderOptions: ProcaptchaRenderOptions = {
+			const renderOptions: Partial<ProcaptchaRenderOptions> = {
 				"open-callback": openCallback,
 				"close-callback": closeCallback,
 			};
 
 			const callbacks = getDefaultCallbacks(widget);
-			setUserCallbacks(renderOptions, callbacks, widget);
+			setUserCallbacks(
+				renderOptions as ProcaptchaRenderOptions,
+				callbacks,
+				widget,
+			);
 
 			callbacks.onOpen();
 			callbacks.onClose();

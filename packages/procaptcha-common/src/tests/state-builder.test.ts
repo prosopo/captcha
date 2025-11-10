@@ -202,7 +202,8 @@ describe("state/builder", () => {
 
 			expect(setSolutions).toHaveBeenCalled();
 			// Verify that slice was called by checking that we got a new array reference
-			const callArg = setSolutions.mock.calls[0][0];
+			const callArg = setSolutions.mock.calls[0]?.[0];
+			expect(callArg).toBeDefined();
 			expect(callArg).not.toBe(newSolutions);
 			expect(callArg).toEqual(newSolutions);
 		});
