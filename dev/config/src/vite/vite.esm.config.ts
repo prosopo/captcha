@@ -61,7 +61,6 @@ export default async function (
 			}),
 			// @ts-ignore - Type mismatch due to duplicate Vite installations
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
-			// @ts-ignore - Type mismatch due to duplicate Vite installations
 			VitePluginCloseAndCopy(),
 		],
 		build: {

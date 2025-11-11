@@ -43,21 +43,21 @@ export default function (tsConfigPath?: string) {
 
 	const coverageExclude = isRunningFromPackage
 		? [
-				"src/tests/**/*",
-				"src/**/*.d.ts",
-				"src/**/*.test.ts",
-				"src/**/*.spec.ts",
-				"src/**/*.test.tsx",
-				"src/**/*.spec.tsx",
-			]
+			"src/tests/**/*",
+			"src/**/*.d.ts",
+			"src/**/*.test.ts",
+			"src/**/*.spec.ts",
+			"src/**/*.test.tsx",
+			"src/**/*.spec.tsx",
+		]
 		: [
-				"**/tests/**/*",
-				"**/*.d.ts",
-				"**/*.test.*",
-				"**/*.spec.*",
-				"**/node_modules/**",
-				"**/dist/**",
-			];
+			"**/tests/**/*",
+			"**/*.d.ts",
+			"**/*.test.*",
+			"**/*.spec.*",
+			"**/node_modules/**",
+			"**/dist/**",
+		];
 	const include = `src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`;
 	const plugins = [
 		VitePluginSourcemapExclude({ excludeNodeModules: true }),
@@ -65,6 +65,7 @@ export default function (tsConfigPath?: string) {
 	];
 
 	if (tsConfigPath) {
+		// @ts-ignore - Type mismatch due to duplicate Vite installations
 		plugins.push(tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }));
 	}
 
