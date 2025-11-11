@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/gh-actions",
-	"version": "2.6.24",
+	"version": "2.6.25",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@octokit/graphql": "8.1.1",
-		"@prosopo/config": "3.1.22"
+		"@prosopo/config": "3.1.23"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

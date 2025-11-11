@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 3.13.4
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/api-express-router@3.0.37
+  - @prosopo/api-route@2.6.31
+  - @prosopo/common@3.1.23
+  - @prosopo/database@3.5.3
+  - @prosopo/datasets@3.0.46
+  - @prosopo/env@3.2.25
+  - @prosopo/keyring@2.8.37
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+  - @prosopo/types-database@4.0.3
+  - @prosopo/types-env@2.7.50
+  - @prosopo/user-access-policy@3.5.29
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
 ## 3.13.3
 ### Patch Changes
 

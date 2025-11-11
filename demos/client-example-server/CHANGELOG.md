@@ -1,5 +1,18 @@
 # @prosopo/client-example-server
 
+## 2.7.49
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/keyring@2.8.37
+  - @prosopo/server@2.9.45
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
 ## 2.7.48
 ### Patch Changes
 

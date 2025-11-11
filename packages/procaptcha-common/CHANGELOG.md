@@ -1,5 +1,16 @@
 # @prosopo/procaptcha-common
 
+## 2.9.16
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/account@2.7.40
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/types@3.6.1
+  - @prosopo/widget-skeleton@2.7.9
+
 ## 2.9.15
 ### Patch Changes
 

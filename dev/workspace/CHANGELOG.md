@@ -1,5 +1,12 @@
 # @prosopo/workspace
 
+## 3.1.16
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
 ## 3.1.15
 ### Patch Changes
 

@@ -1,5 +1,13 @@
 # @prosopo/lint
 
+## 2.8.19
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/util@3.2.1
+
 ## 2.8.18
 ### Patch Changes
 
