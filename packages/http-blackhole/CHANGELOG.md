@@ -1,5 +1,12 @@
 # @prosopo/http-blackhole
 
+## 1.0.22
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
 ## 1.0.21
 ### Patch Changes
 

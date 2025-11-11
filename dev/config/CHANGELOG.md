@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.1.23
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+
 ## 3.1.22
 ### Patch Changes
 

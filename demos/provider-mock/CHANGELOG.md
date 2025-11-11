@@ -1,5 +1,20 @@
 # @prosopo/provider-mock
 
+## 2.8.33
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api-express-router@3.0.37
+  - @prosopo/common@3.1.23
+  - @prosopo/database@3.5.3
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/locale@3.1.23
+  - @prosopo/provider@3.13.4
+  - @prosopo/types@3.6.1
+  - @prosopo/types-database@4.0.3
+
 ## 2.8.32
 ### Patch Changes
 

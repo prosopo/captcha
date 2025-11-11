@@ -1,5 +1,15 @@
 # @prosopo/flux
 
+## 2.6.34
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/util@3.2.1
+
 ## 2.6.33
 ### Patch Changes
 

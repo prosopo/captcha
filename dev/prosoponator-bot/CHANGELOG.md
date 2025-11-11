@@ -1,5 +1,12 @@
 # @prosopo/prosoponator-bot
 
+## 2.6.24
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
 ## 2.6.23
 ### Patch Changes
 

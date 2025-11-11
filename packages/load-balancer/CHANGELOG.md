@@ -1,5 +1,14 @@
 # @prosopo/load-balancer
 
+## 2.8.10
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/types@3.6.1
+
 ## 2.8.9
 ### Patch Changes
 

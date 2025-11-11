@@ -1,5 +1,13 @@
 # @prosopo/common
 
+## 3.1.23
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/locale@3.1.23
+
 ## 3.1.22
 ### Patch Changes
 
