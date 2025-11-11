@@ -30,7 +30,10 @@ export const computeFrictionlessScore = (
 	);
 };
 
-export const timestampDecayFunction = (timestamp: number): number => {
+export const timestampDecayFunction = (timestamp: number, decryptionFailed: boolean): number => {
+	if (decryptionFailed) {
+		return 6;
+	}
 	const max = new Date().getTime();
 	if (max - timestamp > 3600000) {
 		return 12;
