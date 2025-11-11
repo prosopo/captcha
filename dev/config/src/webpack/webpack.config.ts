@@ -14,11 +14,11 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Configuration } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
 import TerserPlugin from "terser-webpack-plugin";
+import type { Configuration } from "webpack";
 
 const moduleDirs = [path.resolve("./node_modules")];
 
@@ -135,14 +135,14 @@ export default (mode: string): Configuration => {
 			minimize: isProduction,
 			minimizer: isProduction
 				? [
-					new TerserPlugin({
-						terserOptions: {
-							compress: {
-								drop_console: true,
+						new TerserPlugin({
+							terserOptions: {
+								compress: {
+									drop_console: true,
+								},
 							},
-						},
-					}),
-				]
+						}),
+					]
 				: [],
 			usedExports: true,
 		},
