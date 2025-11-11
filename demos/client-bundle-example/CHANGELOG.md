@@ -1,5 +1,12 @@
 # @prosopo/client-bundle-example
 
+## 2.10.8
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
 ## 2.10.7
 ### Patch Changes
 

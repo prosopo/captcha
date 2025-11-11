@@ -1,5 +1,12 @@
 # @prosopo/util-crypto
 
+## 13.5.25
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
 ## 13.5.24
 ### Patch Changes
 

@@ -1,5 +1,18 @@
 # @prosopo/account
 
+## 2.7.40
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/fingerprint@2.6.24
+  - @prosopo/keyring@2.8.37
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
 ## 2.7.39
 ### Patch Changes
 

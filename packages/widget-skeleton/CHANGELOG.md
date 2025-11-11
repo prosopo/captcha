@@ -1,5 +1,12 @@
 # @prosopo/widget-skeleton
 
+## 2.7.9
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
 ## 2.7.8
 ### Patch Changes
 

@@ -1,5 +1,19 @@
 # @prosopo/procaptcha
 
+## 2.9.18
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/common@3.1.23
+  - @prosopo/datasets@3.0.46
+  - @prosopo/procaptcha-common@2.9.16
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
 ## 2.9.17
 ### Patch Changes
 

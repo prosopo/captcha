@@ -1,5 +1,13 @@
 # @prosopo/api-route
 
+## 2.6.31
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+
 ## 2.6.30
 ### Patch Changes
 
