@@ -1,5 +1,13 @@
 # @prosopo/detector
 
+## 3.3.15
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/types@3.6.1
+
 ## 3.3.14
 ### Patch Changes
 

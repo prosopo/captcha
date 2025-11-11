@@ -1,5 +1,13 @@
 # @prosopo/dotenv
 
+## 3.0.28
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+
 ## 3.0.27
 ### Patch Changes
 

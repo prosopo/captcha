@@ -1,5 +1,14 @@
 # @prosopo/cypress-shared
 
+## 2.8.41
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
 ## 2.8.40
 ### Patch Changes
 

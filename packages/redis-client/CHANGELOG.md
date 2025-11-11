@@ -1,5 +1,12 @@
 # @prosopo/redis-client
 
+## 1.0.8
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/common@3.1.23
+
 ## 1.0.7
 ### Patch Changes
 

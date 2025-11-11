@@ -1,5 +1,31 @@
 # @prosopo/scripts
 
+## 3.1.30
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/workspace@3.1.16
+  - @prosopo/cli@3.5.5
+  - @prosopo/common@3.1.23
+  - @prosopo/datasets@3.0.46
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/env@3.2.25
+  - @prosopo/keyring@2.8.37
+  - @prosopo/locale@3.1.23
+  - @prosopo/provider@3.13.4
+  - @prosopo/types@3.6.1
+  - @prosopo/types-env@2.7.50
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 3.1.29
+### Patch Changes
+
+- Updated dependencies [5adeb05]
+  - @prosopo/cli@3.5.4
+
 ## 3.1.28
 ### Patch Changes
 

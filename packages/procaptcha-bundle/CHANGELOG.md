@@ -1,5 +1,31 @@
 # @prosopo/procaptcha-bundle
 
+## 3.2.7
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/locale@3.1.23
+  - @prosopo/procaptcha-common@2.9.16
+  - @prosopo/procaptcha-frictionless@2.8.19
+  - @prosopo/procaptcha-pow@2.8.24
+  - @prosopo/procaptcha-react@2.9.18
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+  - @prosopo/widget-skeleton@2.7.9
+
+## 3.2.6
+### Patch Changes
+
+- Updated dependencies [9128d5e]
+- Updated dependencies [9128d5e]
+  - @prosopo/procaptcha-common@2.9.15
+  - @prosopo/procaptcha-frictionless@2.8.18
+  - @prosopo/procaptcha-pow@2.8.23
+  - @prosopo/procaptcha-react@2.9.17
+
 ## 3.2.5
 ### Patch Changes
 

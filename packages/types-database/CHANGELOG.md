@@ -1,5 +1,16 @@
 # @prosopo/types-database
 
+## 4.0.3
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+  - @prosopo/user-access-policy@3.5.29
+
 ## 4.0.2
 ### Patch Changes
 

@@ -1,5 +1,13 @@
 # @prosopo/file-server
 
+## 2.6.29
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/util@3.2.1
+
 ## 2.6.28
 ### Patch Changes
 
