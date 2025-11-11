@@ -29,7 +29,7 @@
 		"vite-plugin-dts": "4.5.4"
 	},
 	"devDependencies": {
-		"@types/node": "24.2.1",
+		"@types/node": "^24.0.0",
 		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

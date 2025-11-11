@@ -44,7 +44,7 @@
 	"devDependencies": {
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
-		"@types/node": "24.2.1",
+		"@types/node": "^24.0.0",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
