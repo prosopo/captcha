@@ -73,7 +73,10 @@ describe("Frictionless Task Utils", () => {
 		});
 
 		it("returns 12 for age of approximately 55 years", () => {
-			const result = timestampDecayFunction(new Date("1970-01-01").getTime(), false);
+			const result = timestampDecayFunction(
+				new Date("1970-01-01").getTime(),
+				false,
+			);
 			expect(result).toBe(12);
 		});
 		it("should return 3 for a timestamp equal to current time", async () => {

@@ -30,7 +30,10 @@ export const computeFrictionlessScore = (
 	);
 };
 
-export const timestampDecayFunction = (timestamp: number, decryptionFailed: boolean): number => {
+export const timestampDecayFunction = (
+	timestamp: number,
+	decryptionFailed: boolean,
+): number => {
 	if (decryptionFailed) {
 		return 6;
 	}

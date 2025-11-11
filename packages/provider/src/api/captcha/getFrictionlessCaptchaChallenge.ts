@@ -133,17 +133,17 @@ export default (
 				req.headers["accept-language"] || "",
 			);
 
-		const {
-			baseBotScore,
-			timestamp,
-			providerSelectEntropy,
-			userId,
-			userAgent,
-			webView,
-			iFrame,
-			decryptedHeadHash,
-			decryptionFailed,
-		} = await tasks.frictionlessManager.decryptPayload(token, headHash);
+			const {
+				baseBotScore,
+				timestamp,
+				providerSelectEntropy,
+				userId,
+				userAgent,
+				webView,
+				iFrame,
+				decryptedHeadHash,
+				decryptionFailed,
+			} = await tasks.frictionlessManager.decryptPayload(token, headHash);
 
 			req.logger.debug(() => ({
 				msg: "Decrypted payload",
@@ -262,7 +262,6 @@ export default (
 				}
 			}
 
-			
 			// Check the user agent in token and user id in request match request
 			// Hash the request user agent to compare with the hashed user agent from the token
 			const headersUserAgent = req.headers["user-agent"];
@@ -286,7 +285,10 @@ export default (
 				}));
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: timestampDecayFunction(timestamp, decryptionFailed),
+						solvedImagesCount: timestampDecayFunction(
+							timestamp,
+							decryptionFailed,
+						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.USER_AGENT_MISMATCH,
 					}),
@@ -369,7 +371,10 @@ export default (
 
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: timestampDecayFunction(timestamp, decryptionFailed),
+						solvedImagesCount: timestampDecayFunction(
+							timestamp,
+							decryptionFailed,
+						),
 						userSitekeyIpHash,
 						reason: FrictionlessReason.OLD_TIMESTAMP,
 					}),
