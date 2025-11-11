@@ -67,14 +67,27 @@ jobs:
 
       - name: Build packages
         run: |
-          echo "Building all packages"
-          npm run build:all
-          npm run build:all:cjs
+          echo "Building all packages in production mode"
+          NODE_ENV=production npm run build:all
+          NODE_ENV=production npm run build:all:cjs
 
       - name: Bundle the production provider CLI
         run: |
           echo "Bundling provider CLI"
           NODE_ENV="production" npm run -w @prosopo/cli bundle
+
+      - name: Verify production build
+        run: |
+          echo "Verifying production builds..."
+          if grep -r "@emotion/react/jsx-runtime" integration/frameworks/react/react-procaptcha-wrapper/dist/ 2>/dev/null; then
+            echo "❌ ERROR: Dev build detected in react-procaptcha-wrapper - found @emotion/react/jsx-runtime"
+            exit 1
+          fi
+          if grep -r "@emotion/vue/jsx-runtime" integration/frameworks/vue/vue-procaptcha-wrapper/dist/ 2>/dev/null; then
+            echo "❌ ERROR: Dev build detected in vue-procaptcha-wrapper - found @emotion/vue/jsx-runtime"
+            exit 1
+          fi
+          echo "✅ Build verification passed"
 
       - name: Publish to npm
         run: |

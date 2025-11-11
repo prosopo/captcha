@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util-crypto",
-	"version": "13.5.24",
+	"version": "13.5.25",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -32,7 +32,7 @@
 		"@noble/hashes": "1.8.0",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/x-randomvalues": "13.5.7",
-		"@prosopo/config": "3.1.22",
+		"@prosopo/config": "3.1.23",
 		"@scure/base": "^1.1.7",
 		"@scure/sr25519": "0.2.0",
 		"dotenv": "16.4.5"

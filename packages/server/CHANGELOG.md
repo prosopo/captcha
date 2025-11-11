@@ -1,5 +1,18 @@
 # @prosopo/server
 
+## 2.9.45
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/common@3.1.23
+  - @prosopo/keyring@2.8.37
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
 ## 2.9.44
 ### Patch Changes
 

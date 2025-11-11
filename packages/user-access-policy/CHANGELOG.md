@@ -1,5 +1,17 @@
 # @prosopo/user-access-policy
 
+## 3.5.29
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/api@3.1.34
+  - @prosopo/api-route@2.6.31
+  - @prosopo/common@3.1.23
+  - @prosopo/redis-client@1.0.8
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
 ## 3.5.28
 ### Patch Changes
 

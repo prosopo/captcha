@@ -1,5 +1,24 @@
 # @prosopo/env
 
+## 3.2.25
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/database@3.5.3
+  - @prosopo/keyring@2.8.37
+  - @prosopo/types@3.6.1
+  - @prosopo/types-env@2.7.50
+  - @prosopo/util-crypto@13.5.25
+
+## 3.2.24
+### Patch Changes
+
+  - @prosopo/database@3.5.2
+  - @prosopo/types-env@2.7.49
+
 ## 3.2.23
 ### Patch Changes
 

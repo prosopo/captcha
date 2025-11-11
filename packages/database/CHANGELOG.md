@@ -1,5 +1,24 @@
 # @prosopo/database
 
+## 3.5.3
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/redis-client@1.0.8
+  - @prosopo/types@3.6.1
+  - @prosopo/types-database@4.0.3
+  - @prosopo/user-access-policy@3.5.29
+
+## 3.5.2
+### Patch Changes
+
+- Updated dependencies [0a9887c]
+  - @prosopo/types-database@4.0.2
+
 ## 3.5.1
 ### Patch Changes
 

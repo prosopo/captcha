@@ -1,5 +1,13 @@
 # @prosopo/svelte-procaptcha-wrapper
 
+## 1.1.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/procaptcha-wrapper@2.6.39
+
 ## 1.1.36
 ### Patch Changes
 

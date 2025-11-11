@@ -1,5 +1,15 @@
 # @prosopo/types
 
+## 3.6.1
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
 ## 3.6.0
 ### Minor Changes
 
