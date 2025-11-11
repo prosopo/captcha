@@ -81,7 +81,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@changesets/cli": "2.29.7",
-		"@types/node": "22.5.5",
+		"@types/node": "24.2.1",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
@@ -91,12 +91,9 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"turbo": "2.5.8",
-		"typescript": "5.6.2",
+		"typescript": "5.8.3",
 		"vite": "6.4.1",
-		"vitest": "3.0.9"
-	},
-	"overrides": {
-		"@types/express-serve-static-core": "4.19.6"
+		"vitest": "3.2.4"
 	},
 	"description": "Prosopo Procaptcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes.",
 	"bugs": {
