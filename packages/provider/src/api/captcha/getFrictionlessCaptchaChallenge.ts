@@ -231,36 +231,6 @@ export default (
 				)
 			)[0];
 
-			// Check the user agent in token and user id in request match request
-			// Hash the request user agent to compare with the hashed user agent from the token
-			const headersUserAgent = req.headers["user-agent"];
-			const hashedHeadersUserAgent = headersUserAgent
-				? hashUserAgent(headersUserAgent)
-				: "";
-			const headersProsopoUser = req.headers["prosopo-user"];
-			if (
-				hashedHeadersUserAgent !== userAgent ||
-				headersProsopoUser !== userId
-			) {
-				req.logger.info(() => ({
-					msg: "User agent or user id does not match",
-					data: {
-						headersUserAgent,
-						hashedHeadersUserAgent,
-						userAgent: userAgent, // This is the hashed user agent from the token
-						headersProsopoUser,
-						userId,
-					},
-				}));
-				return res.json(
-					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: timestampDecayFunction(timestamp, decryptionFailed),
-						userSitekeyIpHash,
-						reason: FrictionlessReason.USER_AGENT_MISMATCH,
-					}),
-				);
-			}
-
 			// If the user or IP address has an image captcha config defined, send an image captcha
 			if (userAccessPolicy) {
 				const scoreUpdate = tasks.frictionlessManager.scoreIncreaseAccessPolicy(
@@ -290,6 +260,37 @@ export default (
 						}),
 					);
 				}
+			}
+
+			
+			// Check the user agent in token and user id in request match request
+			// Hash the request user agent to compare with the hashed user agent from the token
+			const headersUserAgent = req.headers["user-agent"];
+			const hashedHeadersUserAgent = headersUserAgent
+				? hashUserAgent(headersUserAgent)
+				: "";
+			const headersProsopoUser = req.headers["prosopo-user"];
+			if (
+				hashedHeadersUserAgent !== userAgent ||
+				headersProsopoUser !== userId
+			) {
+				req.logger.info(() => ({
+					msg: "User agent or user id does not match",
+					data: {
+						headersUserAgent,
+						hashedHeadersUserAgent,
+						userAgent: userAgent, // This is the hashed user agent from the token
+						headersProsopoUser,
+						userId,
+					},
+				}));
+				return res.json(
+					await tasks.frictionlessManager.sendImageCaptcha({
+						solvedImagesCount: timestampDecayFunction(timestamp, decryptionFailed),
+						userSitekeyIpHash,
+						reason: FrictionlessReason.USER_AGENT_MISMATCH,
+					}),
+				);
 			}
 
 			// Check the context
