@@ -80,7 +80,7 @@ export default async function (
 		esbuild: {
 			jsx: "automatic",
 			jsxImportSource: "@emotion/react",
-			jsxDev: process.env.NODE_ENV === "development",
+			jsxDev: process.env.NODE_ENV !== "production",
 		},
 	});
 }

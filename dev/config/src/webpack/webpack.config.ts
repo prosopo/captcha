@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import type { Configuration } from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
@@ -31,7 +32,7 @@ function resolveEntryFile(): string {
 	);
 }
 
-export default (mode: string) => {
+export default (mode: string): Configuration => {
 	const isProduction = mode === "production";
 	const libraryName = "react_app";
 
@@ -134,14 +135,14 @@ export default (mode: string) => {
 			minimize: isProduction,
 			minimizer: isProduction
 				? [
-						new TerserPlugin({
-							terserOptions: {
-								compress: {
-									drop_console: true,
-								},
+					new TerserPlugin({
+						terserOptions: {
+							compress: {
+								drop_console: true,
 							},
-						}),
-					]
+						},
+					}),
+				]
 				: [],
 			usedExports: true,
 		},

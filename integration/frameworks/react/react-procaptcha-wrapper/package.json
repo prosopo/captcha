@@ -23,6 +23,7 @@
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
+		"@emotion/react": "11.11.1",
 		"@prosopo/procaptcha-wrapper": "2.6.39",
 		"@prosopo/config": "3.1.23"
 	},
