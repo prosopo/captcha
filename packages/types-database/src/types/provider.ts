@@ -603,11 +603,9 @@ export interface IProviderDatabase extends IDatabase {
 		size: number,
 	): Promise<CaptchaSolution[]>;
 
-	getDappUserSolutionsById(
-		commitmentId: string[],
-	): Promise<UserSolutionRecord[]>;
-
-	getSolutionsByCaptchaIds(captchaIds: string[]): Promise<SolutionRecord[]>;
+	getDappUserSolutionById(
+		commitmentId: string,
+	): Promise<UserSolutionRecord | undefined>;
 
 	getDappUserCommitmentById(
 		commitmentId: string,
