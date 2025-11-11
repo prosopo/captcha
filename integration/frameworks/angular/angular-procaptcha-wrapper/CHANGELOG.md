@@ -1,5 +1,157 @@
 # @prosopo/angular-procaptcha-wrapper
 
+## 1.1.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/procaptcha-wrapper@2.6.39
+
+## 1.1.36
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/procaptcha-wrapper@2.6.38
+  - @prosopo/config@3.1.22
+
+## 1.1.35
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.37
+
+## 1.1.34
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.36
+
+## 1.1.33
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.35
+
+## 1.1.32
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.34
+
+## 1.1.31
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/procaptcha-wrapper@2.6.33
+
+## 1.1.30
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.32
+
+## 1.1.29
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.31
+
+## 1.1.28
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.30
+
+## 1.1.27
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/procaptcha-wrapper@2.6.29
+
+## 1.1.26
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [5659b24]
+  - @prosopo/procaptcha-wrapper@2.6.28
+  - @prosopo/config@3.1.19
+
+## 1.1.25
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/procaptcha-wrapper@2.6.27
+  - @prosopo/config@3.1.18
+
+## 1.1.24
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/procaptcha-wrapper@2.6.26
+  - @prosopo/config@3.1.17
+
+## 1.1.23
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+  - @prosopo/procaptcha-wrapper@2.6.25
+  - @prosopo/config@3.1.16
+
+## 1.1.22
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+  - @prosopo/procaptcha-wrapper@2.6.24
+  - @prosopo/config@3.1.15
+
+## 1.1.21
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/procaptcha-wrapper@2.6.23
+  - @prosopo/config@3.1.14
+
+## 1.1.20
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [008d112]
+  - @prosopo/procaptcha-wrapper@2.6.22
+  - @prosopo/config@3.1.13
+
+## 1.1.19
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [0824221]
+  - @prosopo/procaptcha-wrapper@2.6.21
+  - @prosopo/config@3.1.12
+
+## 1.1.18
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/procaptcha-wrapper@2.6.20
+  - @prosopo/config@3.1.11
+
+## 1.1.17
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/procaptcha-wrapper@2.6.19
+  - @prosopo/config@3.1.10
+
 ## 1.1.16
 ### Patch Changes
 

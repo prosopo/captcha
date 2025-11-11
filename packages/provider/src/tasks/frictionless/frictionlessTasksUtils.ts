@@ -11,11 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {
-	FrictionlessTokenId,
-	IProviderDatabase,
-	ScoreComponents,
-} from "@prosopo/types-database";
+import type { ScoreComponents } from "@prosopo/types-database";
 
 export const computeFrictionlessScore = (
 	scoreComponents:
@@ -31,5 +27,24 @@ export const computeFrictionlessScore = (
 				.filter((x) => x !== undefined)
 				.reduce((acc, val) => acc + val, 0),
 		).toFixed(2),
+	);
+};
+
+export const timestampDecayFunction = (timestamp: number): number => {
+	const max = new Date().getTime();
+	if (max - timestamp > 3600000) {
+		return 12;
+	}
+	const min = 1000;
+	const age = max - timestamp;
+	const decay = Math.log10(2000) / max;
+	const bigScore = max * (1 - (1 - Math.exp(decay * age) ** 24));
+
+	return Math.max(
+		2,
+		Math.round(
+			((Math.log(bigScore) - Math.log(min)) / (Math.log(max) - Math.log(min))) *
+				2.5,
+		),
 	);
 };

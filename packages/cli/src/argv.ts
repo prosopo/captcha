@@ -19,13 +19,14 @@ import yargs, { type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
 	commandDumpCaptchas,
+	commandEnsureExternalIndexes,
+	commandEnsureIndexes,
 	commandProviderSetDataset,
 	commandSiteKeyRegister,
 	commandSiteKeyRegisterApi,
 	commandStoreCaptchasExternally,
 	commandVersion,
 } from "./commands/index.js";
-import { migrateIpInCaptchaRecordsCommand } from "./commands/migrateIpInCaptchaRecords/migrateIpInCaptchaRecords.js";
 
 export type AwaitedProcessedArgs = {
 	[x: string]: unknown;
@@ -41,11 +42,12 @@ function getCommands(
 	logger: Logger,
 ): CommandModule[] {
 	return [
+		commandEnsureIndexes(pair, config, { logger }),
+		commandEnsureExternalIndexes(pair, config, { logger }),
 		commandProviderSetDataset(pair, config, { logger }),
 		commandStoreCaptchasExternally(pair, config, { logger }),
 		commandSiteKeyRegister(pair, config, { logger }),
 		commandSiteKeyRegisterApi(pair, authAccount, config, { logger }),
-		migrateIpInCaptchaRecordsCommand(pair, config, logger),
 		commandVersion(pair, config, { logger }),
 		commandDumpCaptchas(pair, config, { logger }),
 	];

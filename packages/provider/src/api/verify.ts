@@ -29,6 +29,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -53,6 +54,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified before any checks
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for image captcha verification",
+				}));
+				const verificationResponse: ImageVerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
 
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
@@ -102,8 +115,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						user,
 						dapp,
 						commitmentId,
+						env,
 						maxVerifiedTime,
 						ip,
+						clientRecord.settings.disallowWebView,
+						clientRecord.settings.contextAware?.enabled,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -140,6 +156,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified before any checks
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for PoW captcha verification",
+				}));
+				const verificationResponse: VerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
 
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
 
@@ -199,6 +227,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						dapp,
 						challenge,
 						verifiedTimeout,
+						env,
 						ip,
 					);
 

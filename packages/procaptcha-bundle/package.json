@@ -1,14 +1,14 @@
 {
 	"name": "@prosopo/procaptcha-bundle",
-	"version": "3.0.23",
+	"version": "3.2.7",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=v20.0.0",
+		"npm": ">=10.6.0"
 	},
 	"exports": {
 		".": {
@@ -37,16 +37,16 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/dotenv": "3.0.14",
-		"@prosopo/locale": "3.1.9",
-		"@prosopo/procaptcha-common": "2.8.2",
-		"@prosopo/procaptcha-frictionless": "2.7.2",
-		"@prosopo/procaptcha-pow": "2.8.2",
-		"@prosopo/procaptcha-react": "2.8.2",
-		"@prosopo/types": "3.1.2",
-		"@prosopo/util": "3.0.12",
-		"@prosopo/widget-skeleton": "2.6.10",
-		"@prosopo/config": "3.1.9",
+		"@prosopo/dotenv": "3.0.28",
+		"@prosopo/locale": "3.1.23",
+		"@prosopo/procaptcha-common": "2.9.16",
+		"@prosopo/procaptcha-frictionless": "2.8.19",
+		"@prosopo/procaptcha-pow": "2.8.24",
+		"@prosopo/procaptcha-react": "2.9.18",
+		"@prosopo/types": "3.6.1",
+		"@prosopo/util": "3.2.1",
+		"@prosopo/widget-skeleton": "2.7.9",
+		"@prosopo/config": "3.1.23",
 		"dotenv": "16.4.5",
 		"fast-glob": "3.3.2",
 		"jsdom": "25.0.0",
@@ -72,15 +72,15 @@
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",
 		"@types/react-dom": "18.3.1",
-		"@vitest/coverage-v8": "3.0.9",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"overrides": {
 		"@types/react": "18.3.1"

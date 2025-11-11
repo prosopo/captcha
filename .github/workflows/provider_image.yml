@@ -51,6 +51,11 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       - name: env
         run: |
           # Copy the .env.production from the dev script to the cli folder and root folder

@@ -347,7 +347,16 @@ export class NativeLogger implements Logger {
 	}
 }
 
-const stringifyBigInts = (value: unknown): unknown => {
+/**
+ * Recursively converts BigInt values to strings throughout an object, array, or primitive value.
+ *
+ * BigInts must be cast to strings before applying JSON.stringify(), as it cannot serialize BigInt values and will
+ * throw "TypeError: Do not know how to serialize a BigInt".
+ *
+ * @param value - The value to process (can be a primitive, object, or array)
+ * @returns The same value with all BigInt instances converted to strings
+ */
+export const stringifyBigInts = (value: unknown): unknown => {
 	if ("bigint" === typeof value) {
 		return value.toString();
 	}
@@ -355,6 +364,12 @@ const stringifyBigInts = (value: unknown): unknown => {
 	if (isObject(value)) {
 		for (const key of Object.keys(value)) {
 			value[key] = stringifyBigInts(value[key]);
+		}
+	}
+
+	if (Array.isArray(value)) {
+		for (let i = 0; i < value.length; i++) {
+			value[i] = stringifyBigInts(value[i]);
 		}
 	}
 

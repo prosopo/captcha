@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
+
+    <script src="index.js"></script>
     <title>Procaptcha demo: Invisible Frictionless - Implicit Rendering</title>
 <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <script type="module">
@@ -19,7 +22,7 @@
 
         window.onActionHandler = function(token) {
             updateCaptchaStatus('CAPTCHA callback executed with token', 'success');
-            
+
             if (!token) {
                 updateCaptchaStatus('Error: No token received from CAPTCHA', 'error');
                 alert("Must complete captcha");
@@ -77,8 +80,8 @@
         };
 
         window.addEventListener('load', () => {
-            
-            
+
+
             window.setIsError = (isError) => {
                 const messageContainer = document.getElementById('messageContainer');
                 messageContainer.style.color = isError ? 'red' : 'black';
@@ -114,16 +117,16 @@
                         console.log(err);
                     });
             };
-            
+
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
-            
+
             // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
                         for (let i = 0; i < mutation.addedNodes.length; i++) {
                             const node = mutation.addedNodes[i];
-                            if (node.classList && (node.classList.contains('procaptcha') || 
+                            if (node.classList && (node.classList.contains('procaptcha') ||
                                   node.querySelector && node.querySelector('.procaptcha'))) {
                                 updateCaptchaStatus('CAPTCHA DOM elements initialized', 'info');
                                 observer.disconnect();
@@ -133,16 +136,16 @@
                     }
                 });
             });
-            
+
             observer.observe(document.body, { childList: true, subtree: true });
         });
-        
+
         // Create a method to show CAPTCHA execution events
         document.addEventListener('procaptcha:execute', function(e) {
             updateCaptchaStatus(`CAPTCHA execution started: type=frictionless, mode=invisible`, 'info');
             updateCaptchaStatus(`Container: ${e.detail.containerId}, timestamp: ${new Date(e.detail.timestamp).toLocaleTimeString()}`, 'info');
         });
-        
+
         // Add custom event listener for CAPTCHA verification stages
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
@@ -158,9 +161,9 @@
 <div class="mui-container">
     <h1>Invisible Frictionless CAPTCHA - Implicit Rendering</h1>
     <p>This example demonstrates how to use Procaptcha in invisible frictionless mode with implicit rendering directly on a button.</p>
-    
+
     <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
-    
+
     <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
         <h2>Example Login Form</h2>
         <div class="mui-textfield mui-textfield--float-label">
@@ -179,10 +182,10 @@
             <!-- The div here was empty, we don't need it for invisible mode -->
         </div>
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
-        <button 
-            type="button" 
-            class="mui-btn mui-btn--raised procaptcha" 
-            data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%" 
+        <button
+            type="button"
+            class="mui-btn mui-btn--raised procaptcha"
+            data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%"
             data-callback="onActionHandler"
             data-failed-callback="onCaptchaFailed"
             data-captcha-type="frictionless"
@@ -191,10 +194,10 @@
             Submit
         </button>
     </form>
-    
+
     <!-- Console output display area -->
     <div id="console-output" class="console-output" style="display: none;"></div>
-    
+
     <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
 </body>

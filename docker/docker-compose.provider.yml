@@ -1,211 +1,219 @@
 services:
-    provider1:
-        container_name: provider1
-        profiles:
-            - production
-            - staging
-        image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
-        labels:
-            - "vector.provider=true" # enable logging as a provider
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
-        pull_policy: always
-        env_file:
-            - ../.env.1.${NODE_ENV}
-        ports:
-            - '9229:9229'
-        networks:
-            external:
-            internal:
-                ipv4_address: 172.18.0.3
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        depends_on:
-            - redis-stack
-        healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the healthz endpoint
-            interval: 5m
-            retries: 3
-            start_period: 30s
-            timeout: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
-    provider2:
-        container_name: provider2
-        profiles:
-            - production
-            - staging
-        image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
-        labels:
-            - "vector.provider=true" # enable logging as a provider
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped  # unless the container has been stopped, it will be restarted, even on reboot
-        pull_policy: build
-        env_file:
-            - ../.env.2.${NODE_ENV}
-        ports:
-            - '9339:9339'
-        networks:
-            external:
-            internal:
-                ipv4_address: 172.18.0.7
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        depends_on:
-            - redis-stack
-        healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ]  # ping the healthz endpoint
-            interval: 5m
-            retries: 3
-            start_period: 30s
-            timeout: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
-    database:
-        container_name: database
-        profiles:
-            - production
-            - staging
-        image: mongo:6.0.17
-        labels:
-            - "vector.mongo=true" # enable logging as a provider
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
-        volumes:
-            - /data/db:/data/db
-        ports:
-            - '27017:27017'
-        env_file:
-            - ../.env.1.${NODE_ENV}
-        networks:
-            external:
-            internal:
-                ipv4_address: 172.18.0.5
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        healthcheck:
-            test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
-            interval: 5m
-            retries: 3
-            start_period: 30s
-            timeout: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
-    caddy:
-        container_name: caddy
-        profiles:
-            - production
-            - staging
-        image: prosopo/caddy:${CADDY_IMAGE}
-        env_file:
-            - ../.env.1.${NODE_ENV}
-        labels:
-            - "vector.caddy=true" # enable logging as caddy
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
-        ports:
-            - '80:80'
-            - '443:443'
-            - '443:443/udp'
-        volumes:
-            - ./provider.Caddyfile:/etc/caddy/Caddyfile
-            - caddy_data:/data
-            - caddy_config:/config
-        networks:
-            external:
-            internal:
-                ipv4_address: 172.18.0.6
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
-            interval: 5m
-            retries: 3
-            start_period: 30s
-            timeout: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
-    redis-stack:
-        container_name: redis-stack
-        # unlike "redis/redis-stack-server" this image includes Insights
-        image: redis/redis-stack:${REDIS_IMAGE}
-        env_file:
-            - ../.env.1.${NODE_ENV}
-        volumes:
-            - ./data:/data # mount a volume for data persistence
-            - ./redis.conf:/redis-stack.conf
-        ports:
-            - '6379:6379' # DB
-        networks:
-            internal:
-                ipv4_address: 172.18.0.8
-    vector:
-        container_name: vector
-        profiles:
-            - production
-            - staging
-        image: prosopo/vector:${VECTOR_IMAGE}
-        env_file:
-            - ../.env.1.${NODE_ENV}
-        labels:
-            - "vector.docker=true" # log docker events
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
-        networks:
-            - internal
-            - external
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
-            interval: 30s
-            timeout: 10s
-            retries: 1
-            start_period: 10s
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
+  provider1:
+    container_name: provider1
+    profiles:
+      - production
+      - staging
+    image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
+    labels:
+      - "vector.provider=true" # enable logging as a provider
+      - "vector.docker=true" # log docker events
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    pull_policy: always
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    ports:
+      - '9229:9229'
+    networks:
+      external:
+      internal:
+        ipv4_address: 172.18.0.3
+        ipv6_address: fd00:aaaa::3
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the healthz endpoint
+      interval: 5m
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 208.67.222.222
+  provider2:
+    container_name: provider2
+    profiles:
+      - production
+      - staging
+    image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
+    labels:
+      - "vector.provider=true" # enable logging as a provider
+      - "vector.docker=true" # log docker events
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    pull_policy: build
+    env_file:
+      - ../.env.2.${NODE_ENV}
+    ports:
+      - '9339:9339'
+    networks:
+      external:
+      internal:
+        ipv4_address: 172.18.0.7
+        ipv6_address: fd00:aaaa::7
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ] # ping the healthz endpoint
+      interval: 5m
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 208.67.222.222
+  database:
+    container_name: database
+    profiles:
+      - production
+      - staging
+    image: mongo:6.0.17
+    labels:
+      - "vector.mongo=true" # enable logging as a provider
+      - "vector.docker=true" # log docker events
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    volumes:
+      - /data/db:/data/db
+    ports:
+      - '27017:27017'
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    networks:
+      external:
+      internal:
+        ipv4_address: 172.18.0.5
+        ipv6_address: fd00:aaaa::5
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet" ] # ping the mongo server
+      interval: 5m
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 208.67.222.222
+  caddy:
+    container_name: caddy
+    profiles:
+      - production
+      - staging
+    image: prosopo/caddy:${CADDY_IMAGE}
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    labels:
+      - "vector.caddy=true" # enable logging as caddy
+      - "vector.docker=true" # log docker events
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "[::]:80:80"
+      - "[::]:443:443"
+    volumes:
+      - ./provider.Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      external:
+      internal:
+        ipv4_address: 172.18.0.6
+        ipv6_address: fd00:aaaa::6
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+      interval: 5m
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 208.67.222.222
+  redis-stack:
+    container_name: redis-stack
+    # unlike "redis/redis-stack-server" this image includes Insights
+    image: redis/redis-stack:${REDIS_IMAGE}
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    volumes:
+      - ./data:/data # mount a volume for data persistence
+      - ./redis.conf:/redis-stack.conf
+    ports:
+      - '6379:6379' # DB
+    networks:
+      internal:
+        ipv4_address: 172.18.0.8
+        ipv6_address: fd00:aaaa::8
+  vector:
+    container_name: vector
+    profiles:
+      - production
+      - staging
+    image: prosopo/vector:${VECTOR_IMAGE}
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    labels:
+      - "vector.docker=true" # log docker events
+    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+    networks:
+      - internal
+      - external
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "localhost:8686/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 1
+      start_period: 10s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 208.67.222.222
 networks:
-    internal:
-        name: internal
-        internal: true
-        driver: bridge
-        ipam:
-            config:
-                - subnet: 172.18.0.0/16
-                  gateway: 172.18.0.1
-    external:
-        name: external
-        driver: bridge
-        ipam:
-            config:
-                - subnet: 172.19.0.0/16
-                  gateway: 172.19.0.1
+  internal:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+        - subnet: fd00:aaaa::/64
+          gateway: fd00:aaaa::1
+
+  external:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
+        - subnet: fd00:bbbb::/64
+          gateway: fd00:bbbb::1
 volumes:
-    caddy_data:
-    caddy_config:
+  caddy_data:
+  caddy_config:

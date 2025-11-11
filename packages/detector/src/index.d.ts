@@ -16,6 +16,7 @@ import type { RandomProvider } from "@prosopo/types";
 
 export function detect(): Promise<{
 	token: string;
+	encryptHeadHash: string;
 	provider: RandomProvider;
 }>;
 //# sourceMappingURL=index.d.ts.map

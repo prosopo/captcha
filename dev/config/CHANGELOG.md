@@ -1,5 +1,79 @@
 # @prosopo/config
 
+## 3.1.23
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+
+## 3.1.22
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- df79c03: More dep fixes
+- b6e98b2: Run npm audit
+
+## 3.1.21
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+
+## 3.1.20
+### Patch Changes
+
+- 1e3a838: making webpack stuff external in vite config
+
+## 3.1.19
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+
+## 3.1.18
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+
+## 3.1.17
+### Patch Changes
+
+- 618703f: Release 3.4.2
+
+## 3.1.16
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+
+## 3.1.15
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+
+## 3.1.14
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+
+## 3.1.13
+### Patch Changes
+
+- 008d112: Release 3.3.0
+
+## 3.1.12
+### Patch Changes
+
+- 0824221: Release 3.2.4
+
+## 3.1.11
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+
+## 3.1.10
+### Patch Changes
+
+- 657a827: Release 3.2.2
+
 ## 3.1.9
 ### Patch Changes
 

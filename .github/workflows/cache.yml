@@ -36,10 +36,15 @@ jobs:
 
       - name: Set NX_PARALLEL environment variable
         run: echo "NX_PARALLEL=$(nproc)" >> $GITHUB_ENV
-          
+
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
       # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
       - run: npm cache clean --force
@@ -59,7 +64,7 @@ jobs:
       - run: npx nx run-many --target=build --nxBail
       - run: npx nx run-many --target=build:cjs --nxBail
       - run: npx nx run-many --target=bundle --nxBail
-      - run: npx nx run-many --target=bundle:webpack --nxBail
+      - run: NODE_ENV=development npx nx run-many --target=bundle:webpack --nxBail
 
       - name: Save npm cache
         uses: prosopo/captcha/.github/actions/save_npm_cache@gha

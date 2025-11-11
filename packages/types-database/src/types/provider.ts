@@ -35,11 +35,9 @@ import {
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
-	type Timestamp,
-	TimestampSchema,
 } from "@prosopo/types";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
 import {
 	type ZodType,
@@ -47,12 +45,12 @@ import {
 	array,
 	bigint,
 	boolean,
+	date,
 	nativeEnum,
+	number,
 	object,
 	string,
-	union,
 	type infer as zInfer,
-	instanceof as zInstanceof,
 } from "zod";
 import type { PendingCaptchaRequest } from "../provider/pendingCaptchaRequest.js";
 import { UserSettingsSchema } from "./client.js";
@@ -95,7 +93,7 @@ export const CompositeIpAddressSchema = object({
 	type: nativeEnum(IpAddressType),
 });
 
-const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
+export const CompositeIpAddressRecordSchemaObj = {
 	lower: {
 		// INT64 isn't enough capable - it reserves extra bits for the sign bit, etc, so Decimal128 guarantees no overflow
 		type: Schema.Types.Decimal128,
@@ -113,7 +111,22 @@ const CompositeIpAddressRecordSchema = new Schema<CompositeIpAddress>({
 			"bigint" === typeof value ? value.toString() : value,
 	},
 	type: { type: String, enum: IpAddressType, required: true },
-});
+};
+
+export type MongooseCompositeIpAddress = {
+	lower: { $numberDecimal: string };
+	upper?: { $numberDecimal: string };
+	type: IpAddressType;
+};
+export const parseMongooseCompositeIpAddress = (
+	ip: MongooseCompositeIpAddress,
+): CompositeIpAddress => {
+	return {
+		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
+		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
+		type: ip.type,
+	};
+};
 
 export interface StoredCaptcha {
 	result: {
@@ -121,9 +134,10 @@ export interface StoredCaptcha {
 		reason?: TranslationKey;
 		error?: string;
 	};
-	requestedAtTimestamp: Timestamp;
-	deadlineTimestamp?: Timestamp;
+	requestedAtTimestamp: Date;
+	deadlineTimestamp?: Date;
 	ipAddress: CompositeIpAddress;
+	providedIp?: CompositeIpAddress;
 	headers: RequestHeaders;
 	ja4: string;
 	userSubmitted: boolean;
@@ -131,16 +145,19 @@ export interface StoredCaptcha {
 	geolocation?: string;
 	vpn?: boolean;
 	parsedUserAgentInfo?: UserAgentInfo;
-	storedAtTimestamp?: Timestamp;
-	lastUpdatedTimestamp?: Timestamp;
-	frictionlessTokenId?: FrictionlessTokenId;
+	storedAtTimestamp?: Date;
+	lastUpdatedTimestamp?: Date;
+	sessionId?: string;
+	coords?: [number, number][][];
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
 	userSignature: string;
 }
 
-export interface PoWCaptchaStored extends PoWCaptchaUser, StoredCaptcha {}
+export interface PoWCaptchaStored
+	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
+		StoredCaptcha {}
 
 const CaptchaResultSchema = object({
 	status: nativeEnum(CaptchaStatus),
@@ -157,17 +174,16 @@ export const UserCommitmentSchema = object({
 	result: CaptchaResultSchema,
 	userSignature: string(),
 	ipAddress: CompositeIpAddressSchema,
+	providedIp: CompositeIpAddressSchema.optional(),
 	headers: object({}).catchall(string()),
 	ja4: string(),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
-	storedAtTimestamp: TimestampSchema.optional(),
-	requestedAtTimestamp: TimestampSchema,
-	lastUpdatedTimestamp: TimestampSchema.optional(),
-	frictionlessTokenId: union([
-		string(),
-		zInstanceof(mongoose.Types.ObjectId),
-	]).optional(),
+	storedAtTimestamp: date().optional(),
+	requestedAtTimestamp: date(),
+	lastUpdatedTimestamp: date().optional(),
+	sessionId: string().optional(),
+	coords: array(array(array(number()))).optional(),
 });
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -218,8 +234,8 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
-	requestedAtTimestamp: { type: Number, required: true },
-	lastUpdatedTimestamp: { type: Number, required: false },
+	requestedAtTimestamp: { type: Date, required: true },
+	lastUpdatedTimestamp: { type: Date, required: false },
 	result: {
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
@@ -230,7 +246,11 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		error: { type: String, required: false },
 	},
 	difficulty: { type: Number, required: true },
-	ipAddress: CompositeIpAddressRecordSchema,
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: false },
@@ -240,15 +260,15 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	geolocation: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
-	frictionlessTokenId: {
-		type: mongoose.Schema.Types.ObjectId,
+	sessionId: {
+		type: String,
 		required: false,
 	},
+	coords: { type: [[[Number]]], required: false },
 });
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
-PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
@@ -269,26 +289,30 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		},
 		error: { type: String, required: false },
 	},
-	ipAddress: CompositeIpAddressRecordSchema,
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	providedIp: {
+		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 	headers: { type: Object, required: true },
 	ja4: { type: String, required: true },
 	userSignature: { type: String, required: true },
 	userSubmitted: { type: Boolean, required: true },
 	serverChecked: { type: Boolean, required: true },
-	storedAtTimestamp: { type: Number, required: false },
-	requestedAtTimestamp: { type: Number, required: true },
-	lastUpdatedTimestamp: { type: Number, required: false },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
+	requestedAtTimestamp: { type: Date, required: true },
+	lastUpdatedTimestamp: { type: Date, required: false },
 	geolocation: { type: String, required: false },
 	vpn: { type: Boolean, required: false },
 	parsedUserAgentInfo: { type: Object, required: false },
-	frictionlessTokenId: {
-		type: mongoose.Schema.Types.ObjectId,
+	sessionId: {
+		type: String,
 		required: false,
 	},
+	coords: { type: [[[Number]]], required: false },
 });
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
-UserCommitmentRecordSchema.index({ storedAtTimestamp: 1 });
 UserCommitmentRecordSchema.index({
 	storedAtTimestamp: 1,
 	lastUpdatedTimestamp: 1,
@@ -322,6 +346,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 	processed: boolean(),
 	checked: boolean(),
 	commitmentId: string(),
+	createdAt: date(),
 });
 export type UserSolutionRecord = mongoose.Document &
 	zInfer<typeof UserSolutionSchema>;
@@ -334,6 +359,7 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
 		processed: { type: Boolean, required: true },
 		checked: { type: Boolean, required: true },
 		commitmentId: { type: String, required: true },
+		createdAt: { type: Date, default: Date.now, expires: ONE_MONTH },
 	},
 	{ _id: false },
 );
@@ -350,14 +376,7 @@ export type UserCommitmentWithSolutions = zInfer<
 	typeof UserCommitmentWithSolutionsSchema
 >;
 
-export type PendingCaptchaRequestMongoose = Omit<
-	PendingCaptchaRequest,
-	"requestedAtTimestamp"
-> & {
-	requestedAtTimestamp: Date;
-};
-
-export type FrictionlessTokenId = mongoose.Schema.Types.ObjectId;
+export type PendingCaptchaRequestMongoose = PendingCaptchaRequest;
 
 export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	accountId: { type: String, required: true },
@@ -366,9 +385,9 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
 	requestHash: { type: String, required: true },
 	deadlineTimestamp: { type: Number, required: true }, // unix timestamp
 	requestedAtTimestamp: { type: Date, required: true, expires: ONE_WEEK },
-	ipAddress: CompositeIpAddressRecordSchema,
-	frictionlessTokenId: {
-		type: mongoose.Schema.Types.ObjectId,
+	ipAddress: CompositeIpAddressRecordSchemaObj,
+	sessionId: {
+		type: String,
 		required: false,
 	},
 	threshold: { type: Number, required: true, default: 0.8 },
@@ -378,8 +397,8 @@ PendingRecordSchema.index({ requestHash: -1 });
 
 export const ScheduledTaskSchema = object({
 	processName: nativeEnum(ScheduledTaskNames),
-	datetime: TimestampSchema,
-	updated: TimestampSchema.optional(),
+	datetime: date(),
+	updated: date().optional(),
 	status: nativeEnum(ScheduledTaskStatus),
 	result: object({
 		data: any().optional(),
@@ -391,14 +410,12 @@ export type ScheduledTask = zInfer<typeof ScheduledTaskSchema>;
 
 export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
-type ScheduledTaskMongoose = Omit<ScheduledTaskRecord, "datetime"> & {
-	datetime: Date;
-};
+type ScheduledTaskMongoose = ScheduledTaskRecord;
 
 export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
 	processName: { type: String, enum: ScheduledTaskNames, required: true },
 	datetime: { type: Date, required: true, expires: ONE_WEEK },
-	updated: { type: Number, required: false },
+	updated: { type: Date, required: false },
 	status: { type: String, enum: ScheduledTaskStatus, required: true },
 	result: {
 		type: new Schema<ScheduledTaskResult>(
@@ -421,71 +438,69 @@ export interface ScoreComponents {
 	timeout?: number;
 	accessPolicy?: number;
 	unverifiedHost?: number;
+	webView?: number;
 }
 
-export interface FrictionlessToken {
+// Session now includes all frictionless token fields
+export type Session = {
+	sessionId: string;
+	createdAt: Date;
 	token: string;
 	score: number;
 	threshold: number;
 	scoreComponents: ScoreComponents;
+	providerSelectEntropy: number;
 	ipAddress: CompositeIpAddress;
-	storedAtTimestamp?: Timestamp;
-	lastUpdatedTimestamp?: Timestamp;
-}
-
-export type FrictionlessTokenRecord = mongoose.Document & FrictionlessToken;
-
-type FrictionlessTokenMongoose = FrictionlessTokenRecord & {
-	createdAt: Date;
-};
-
-export const FrictionlessTokenRecordSchema =
-	new Schema<FrictionlessTokenMongoose>({
-		token: { type: String, required: true, unique: true },
-		score: { type: Number, required: true },
-		threshold: { type: Number, required: true },
-		scoreComponents: {
-			baseScore: { type: Number, required: true },
-			lScore: { type: Number, required: false },
-			timeout: { type: Number, required: false },
-			accessPolicy: { type: Number, required: false },
-		},
-		ipAddress: CompositeIpAddressRecordSchema,
-		createdAt: { type: Date, default: Date.now, expires: ONE_DAY },
-		storedAtTimestamp: { type: Date, required: false },
-		lastUpdatedTimestamp: { type: Date, required: false },
-	});
-
-FrictionlessTokenRecordSchema.index({ token: 1 }, { unique: true });
-FrictionlessTokenRecordSchema.index({ storedAtTimestamp: 1 });
-
-export type Session = {
-	sessionId: string;
-	createdAt: Date;
-	tokenId: FrictionlessTokenId;
 	captchaType: CaptchaType;
-	storedAtTimestamp?: Timestamp;
-	lastUpdatedTimestamp?: Timestamp;
+	solvedImagesCount?: number;
+	powDifficulty?: number;
+	storedAtTimestamp?: Date;
+	lastUpdatedTimestamp?: Date;
 	deleted?: boolean;
+	userSitekeyIpHash?: string;
+	webView: boolean;
+	iFrame: boolean;
+	decryptedHeadHash: string;
+	reason?: string;
 };
 
 export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
-	sessionId: { type: String, required: true, unique: true },
-	createdAt: { type: Date, required: true, expires: ONE_DAY },
-	tokenId: {
-		type: mongoose.Schema.Types.ObjectId,
+	sessionId: { type: String, required: true },
+	createdAt: { type: Date, required: true },
+	token: { type: String, required: true },
+	score: { type: Number, required: true },
+	threshold: { type: Number, required: true },
+	scoreComponents: {
+		baseScore: { type: Number, required: true },
+		lScore: { type: Number, required: false },
+		timeout: { type: Number, required: false },
+		accessPolicy: { type: Number, required: false },
+		unverifiedHost: { type: Number, required: false },
+		webView: { type: Number, required: false },
 	},
+	providerSelectEntropy: { type: Number, required: true },
+	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },
-	storedAtTimestamp: { type: Date, required: false },
+	solvedImagesCount: { type: Number, required: false },
+	powDifficulty: { type: Number, required: false },
+	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	deleted: { type: Boolean, required: false },
+	userSitekeyIpHash: { type: String, required: false },
+	webView: { type: Boolean, required: true, default: false },
+	iFrame: { type: Boolean, required: true, default: false },
+	decryptedHeadHash: { type: String, required: false, default: "" },
+	reason: { type: String, required: false },
 });
 
-SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
-SessionRecordSchema.index({ storedAtTimestamp: 1 });
+SessionRecordSchema.index({ createdAt: 1 });
 SessionRecordSchema.index({ deleted: 1 });
+SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
+SessionRecordSchema.index({ userSitekeyIpHash: 1 });
+SessionRecordSchema.index({ providerSelectEntropy: 1 });
+SessionRecordSchema.index({ token: 1 });
 
 export type DetectorKey = {
 	detectorKey: string;
@@ -497,15 +512,32 @@ export type DetectorSchema = mongoose.Document & DetectorKey;
 export const DetectorRecordSchema = new Schema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
 	detectorKey: { type: String, required: true },
-	expiresAt: { type: Date, required: false, expires: 0 },
+	expiresAt: { type: Date, required: false },
 });
 DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+export type ClientEntropy = {
+	account: string;
+	entropy: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
+export type ClientEntropyRecord = mongoose.Document & ClientEntropy;
+export const ClientEntropyRecordSchema = new Schema<ClientEntropyRecord>({
+	account: { type: String, required: true, unique: true },
+	entropy: { type: String, required: true },
+	createdAt: { type: Date, required: true },
+	updatedAt: { type: Date, required: true },
+});
+ClientEntropyRecordSchema.index({ account: 1 }, { unique: true });
+
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
+
+	ensureIndexes(): Promise<void>;
 
 	storeDataset(dataset: Dataset): Promise<void>;
 
@@ -544,7 +576,7 @@ export interface IProviderDatabase extends IDatabase {
 		requestedAtTimestamp: number,
 		ipAddress: CompositeIpAddress,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<void>;
 
 	getPendingImageCommitment(
@@ -586,11 +618,15 @@ export interface IProviderDatabase extends IDatabase {
 		dappAccount: string,
 	): Promise<UserCommitmentRecord[]>;
 
-	approveDappUserCommitment(commitmentId: string): Promise<void>;
+	approveDappUserCommitment(
+		commitmentId: string,
+		coords?: [number, number][][],
+	): Promise<void>;
 
 	disapproveDappUserCommitment(
 		commitmentId: string,
 		reason?: TranslationKey,
+		coords?: [number, number][][],
 	): Promise<void>;
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
@@ -603,6 +639,11 @@ export interface IProviderDatabase extends IDatabase {
 	markDappUserCommitmentsStored(commitmentIds: Hash[]): Promise<void>;
 
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+
+	updateDappUserCommitment(
+		commitmentId: Hash,
+		updates: Partial<UserCommitment>,
+	): Promise<void>;
 
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,
@@ -646,7 +687,7 @@ export interface IProviderDatabase extends IDatabase {
 		ipAddress: CompositeIpAddress,
 		headers: RequestHeaders,
 		ja4: string,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 		serverChecked?: boolean,
 		userSubmitted?: boolean,
 		userSignature?: string,
@@ -656,7 +697,7 @@ export interface IProviderDatabase extends IDatabase {
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null>;
 
-	updatePowCaptchaRecord(
+	updatePowCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
 		serverChecked: boolean,
@@ -664,34 +705,28 @@ export interface IProviderDatabase extends IDatabase {
 		userSignature?: string,
 	): Promise<void>;
 
+	updatePowCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PoWCaptchaRecord>,
+	): Promise<void>;
+
 	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
+
+	getAllClientRecords(): Promise<ClientRecord[]>;
 
 	getClientRecord(account: string): Promise<ClientRecord | undefined>;
 
-	storeFrictionlessTokenRecord(
-		tokenRecord: FrictionlessToken,
-	): Promise<ObjectId>;
-
-	updateFrictionlessTokenRecord(
-		tokenId: FrictionlessTokenId,
-		updates: Partial<FrictionlessTokenRecord>,
-	): Promise<void>;
-
-	getFrictionlessTokenRecordByTokenId(
-		tokenId: FrictionlessTokenId,
-	): Promise<FrictionlessTokenRecord | undefined>;
-
-	getFrictionlessTokenRecordsByTokenIds(
-		tokenId: FrictionlessTokenId[],
-	): Promise<FrictionlessTokenRecord[]>;
-
-	getFrictionlessTokenRecordByToken(
-		token: string,
-	): Promise<FrictionlessTokenRecord | undefined>;
-
 	storeSessionRecord(sessionRecord: Session): Promise<void>;
 
+	getSessionRecordBySessionId(sessionId: string): Promise<Session | undefined>;
+
+	getSessionRecordByToken(token: string): Promise<Session | undefined>;
+
 	checkAndRemoveSession(sessionId: string): Promise<Session | undefined>;
+
+	getSessionByuserSitekeyIpHash(
+		userSitekeyIpHash: string,
+	): Promise<SessionRecord | undefined>;
 
 	getUnstoredSessionRecords(
 		limit: number,
@@ -710,4 +745,10 @@ export interface IProviderDatabase extends IDatabase {
 		detectorKey: string,
 		expirationInSeconds?: number,
 	): Promise<void>;
+
+	setClientEntropy(account: string, entropy: string): Promise<void>;
+
+	getClientEntropy(account: string): Promise<string | undefined>;
+
+	sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]>;
 }

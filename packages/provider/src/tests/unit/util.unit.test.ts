@@ -38,9 +38,10 @@ describe("checkIfTaskIsRunning", () => {
 	it("should return false if the task is running and completed", async () => {
 		const taskName = ScheduledTaskNames.StoreCommitmentsExternal;
 		const db = {
-			getLastScheduledTaskStatus: vi
-				.fn()
-				.mockResolvedValue({ _id: "123" } as Pick<ScheduledTaskRecord, "_id">),
+			getLastScheduledTaskStatus: vi.fn().mockResolvedValue({
+				_id: "123",
+				datetime: new Date(),
+			} as Pick<ScheduledTaskRecord, "_id" | "datetime">),
 			getScheduledTaskStatus: vi.fn().mockResolvedValue({
 				_id: "123",
 				status: "Completed",
@@ -54,8 +55,8 @@ describe("checkIfTaskIsRunning", () => {
 		const db = {
 			getLastScheduledTaskStatus: vi.fn().mockResolvedValue({
 				_id: "123",
-				datetime: new Date().getTime(),
-			} as Pick<ScheduledTaskRecord, "_id">),
+				datetime: new Date(),
+			} as Pick<ScheduledTaskRecord, "_id" | "datetime">),
 			getScheduledTaskStatus: vi.fn().mockResolvedValue(null),
 		} as unknown as IProviderDatabase;
 		const result = await checkIfTaskIsRunning(taskName, db);
@@ -214,5 +215,30 @@ describe("validateIpAddress", () => {
 		validateIpAddress(testIp, ipAddress, mockLogger);
 
 		expect(mockLogger.info).toHaveBeenCalledTimes(1);
+	});
+
+	it("should return invalid when IP versions don't match 2", () => {
+		const providedIp = "2607:fb90:7321:84d:ac39:3cd1:4f69:9ac8";
+		const storedIp = getIPAddress("1.1.1.1");
+		const result = validateIpAddress(providedIp, storedIp, mockLogger);
+
+		expect(result.isValid).toBe(false);
+		expect(result.errorMessage).toContain("IP address mismatch:");
+	});
+	it("should return invalid when IP versions don't match 3", () => {
+		const providedIp = "2001:67c:2628:647:35:402:0:3a9";
+		const storedIp = getIPAddress("1.1.1.1");
+		const result = validateIpAddress(providedIp, storedIp, mockLogger);
+
+		expect(result.isValid).toBe(false);
+		expect(result.errorMessage).toContain("IP address mismatch:");
+	});
+	it("should return invalid when IP versions don't match 3", () => {
+		const providedIp = "1.1.1.1";
+		const storedIp = getIPAddress("2001:67c:2628:647:35:402:0:3a9");
+		const result = validateIpAddress(providedIp, storedIp, mockLogger);
+
+		expect(result.isValid).toBe(false);
+		expect(result.errorMessage).toContain("IP address mismatch:");
 	});
 });

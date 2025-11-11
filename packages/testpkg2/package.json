@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/testpkg2",
-	"version": "1.0.13",
+	"version": "1.0.27",
 	"description": "Test package for testing deploys, releases, etc",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -13,8 +13,8 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": ">=v20.0.0",
+		"npm": ">=10.6.0"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -34,7 +34,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/config": "3.1.9"
+		"@prosopo/config": "3.1.23"
 	},
 	"devDependencies": {
 		"@types/node": "22.10.2",

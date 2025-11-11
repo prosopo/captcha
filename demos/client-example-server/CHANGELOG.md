@@ -1,5 +1,267 @@
 # @prosopo/client-example-server
 
+## 2.7.49
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/keyring@2.8.37
+  - @prosopo/server@2.9.45
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
+## 2.7.48
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/server@2.9.44
+  - @prosopo/config@3.1.22
+
+## 2.7.47
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/keyring@2.8.35
+  - @prosopo/server@2.9.43
+
+## 2.7.46
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/keyring@2.8.34
+  - @prosopo/server@2.9.42
+
+## 2.7.45
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/keyring@2.8.33
+  - @prosopo/server@2.9.41
+
+## 2.7.44
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/keyring@2.8.32
+  - @prosopo/server@2.9.40
+
+## 2.7.43
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/server@2.9.39
+  - @prosopo/dotenv@3.0.26
+  - @prosopo/keyring@2.8.31
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+
+## 2.7.42
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/keyring@2.8.30
+  - @prosopo/server@2.9.38
+
+## 2.7.41
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/keyring@2.8.29
+  - @prosopo/server@2.9.37
+
+## 2.7.40
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/keyring@2.8.28
+  - @prosopo/server@2.9.36
+
+## 2.7.39
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/server@2.9.35
+  - @prosopo/common@3.1.20
+  - @prosopo/dotenv@3.0.25
+  - @prosopo/keyring@2.8.27
+  - @prosopo/types@3.5.3
+  - @prosopo/util@3.1.5
+
+## 2.7.38
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/keyring@2.8.26
+  - @prosopo/dotenv@3.0.24
+  - @prosopo/server@2.9.34
+  - @prosopo/types@3.5.2
+  - @prosopo/util@3.1.4
+  - @prosopo/config@3.1.19
+
+## 2.7.37
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [c72ecbd]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/dotenv@3.0.23
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/server@2.9.33
+  - @prosopo/util@3.1.3
+  - @prosopo/config@3.1.18
+
+## 2.7.36
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/keyring@2.8.24
+  - @prosopo/common@3.1.17
+  - @prosopo/dotenv@3.0.22
+  - @prosopo/server@2.9.32
+  - @prosopo/types@3.5.0
+  - @prosopo/util@3.1.2
+  - @prosopo/config@3.1.17
+
+## 2.7.35
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/keyring@2.8.23
+  - @prosopo/common@3.1.16
+  - @prosopo/dotenv@3.0.21
+  - @prosopo/server@2.9.31
+  - @prosopo/types@3.4.1
+  - @prosopo/util@3.1.1
+  - @prosopo/config@3.1.16
+
+## 2.7.34
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/keyring@2.8.22
+  - @prosopo/common@3.1.15
+  - @prosopo/dotenv@3.0.20
+  - @prosopo/server@2.9.30
+  - @prosopo/types@3.4.0
+  - @prosopo/util@3.1.0
+  - @prosopo/config@3.1.15
+
+## 2.7.33
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/keyring@2.8.21
+  - @prosopo/common@3.1.14
+  - @prosopo/dotenv@3.0.19
+  - @prosopo/server@2.9.29
+  - @prosopo/util@3.0.17
+  - @prosopo/config@3.1.14
+
+## 2.7.32
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/keyring@2.8.20
+  - @prosopo/common@3.1.13
+  - @prosopo/dotenv@3.0.18
+  - @prosopo/server@2.9.28
+  - @prosopo/util@3.0.16
+  - @prosopo/config@3.1.13
+
+## 2.7.31
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/keyring@2.8.19
+  - @prosopo/common@3.1.12
+  - @prosopo/dotenv@3.0.17
+  - @prosopo/server@2.9.27
+  - @prosopo/util@3.0.15
+  - @prosopo/config@3.1.12
+
+## 2.7.30
+### Patch Changes
+
+- 0d1a33e: Adding ipcomparison service with user features
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/types@3.1.4
+  - @prosopo/keyring@2.8.18
+  - @prosopo/common@3.1.11
+  - @prosopo/dotenv@3.0.16
+  - @prosopo/server@2.9.26
+  - @prosopo/util@3.0.14
+  - @prosopo/config@3.1.11
+
+## 2.7.29
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/keyring@2.8.17
+  - @prosopo/common@3.1.10
+  - @prosopo/dotenv@3.0.15
+  - @prosopo/server@2.9.25
+  - @prosopo/types@3.1.3
+  - @prosopo/util@3.0.13
+  - @prosopo/config@3.1.10
+
 ## 2.7.28
 ### Patch Changes
 
