@@ -25,7 +25,7 @@
 		"@angular/compiler-cli": "20.3.9",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
-		"ng-packagr": "^20.3.0"
+		"ng-packagr": "20.3.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

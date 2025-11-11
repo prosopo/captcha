@@ -68,7 +68,6 @@ export default async function (
 				destDir: "dist",
 				include: ["**/*.json"],
 			}),
-			// @ts-ignore - Type mismatch due to duplicate Vite installations
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
 			VitePluginCloseAndCopy(),
 		],

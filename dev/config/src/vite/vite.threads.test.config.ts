@@ -65,7 +65,6 @@ export default function (tsConfigPath?: string) {
 	];
 
 	if (tsConfigPath) {
-		// @ts-ignore - Type mismatch due to duplicate Vite installations
 		plugins.push(tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }));
 	}
 
