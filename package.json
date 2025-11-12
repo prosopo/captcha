@@ -14,7 +14,7 @@
 		"build:all:tsc": "turbo run                  build:tsc",
 		"build:all:cjs": "turbo run build:cjs",
 		"bundle:all": "turbo run bundle",
-		"clean:nx": "turbo reset",
+		"clean:nx": "nx reset",
 		"clean:turbo": "rm -rf .turbo",
 		"clean:all": "turbo run clean",
 		"clean-npm:node-modules": "del-cli --verbose '**/node_modules'",
@@ -90,6 +90,7 @@
 		"nx": "21.1.2",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
+		"turbo": "2.6.1",
 		"typescript": "5.6.2"
 	},
 	"overrides": {
