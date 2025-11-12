@@ -67,20 +67,22 @@ export function standardMiddlewarePlugin<T>(schema: Schema<T>, options?: unknown
 		schema.pre(method as any, function (this: Query<unknown, unknown>, next: (err?: Error) => void) {
 			const update = this.getUpdate();
 
-			// Increment __v
+			// Increment __v and manage timestamps
 			if (update && typeof update === "object") {
 				// Handle both $set and direct updates
 				if ("$set" in update) {
 					(update.$set as Record<string, unknown>).updatedAt = new Date();
 					// Prevent createdAt from being overwritten
 					delete (update.$set as Record<string, unknown>).createdAt;
+					// Remove __v from $set if present to avoid conflict with $inc
+					delete (update.$set as Record<string, unknown>).__v;
 				} else if (!("$setOnInsert" in update)) {
 					(update as Record<string, unknown>).updatedAt = new Date();
 					// Prevent createdAt from being overwritten
 					delete (update as Record<string, unknown>).createdAt;
 				}
 
-				// Increment version
+				// Increment version - only if not using $set with __v
 				if ("$inc" in update) {
 					(update.$inc as Record<string, number>).__v =
 						((update.$inc as Record<string, number>).__v || 0) + 1;

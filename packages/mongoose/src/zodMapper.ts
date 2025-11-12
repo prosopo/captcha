@@ -178,8 +178,9 @@ export function createModelFromZodSchema<T extends z.ZodRawShape>(
 	] as const;
 
 	for (const method of updateMethods) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		schema.pre(
-			method,
+			method as any,
 			async function (
 				this: Query<unknown, unknown>,
 				next: (err?: Error) => void,
