@@ -27,13 +27,13 @@
 	},
 	"types": "dist/index.d.ts",
 	"dependencies": {
-		"@prosopo/common": "3.1.21",
+		"@prosopo/common": "3.1.23",
 		"mongodb": "6.15.0",
 		"mongoose": "8.13.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.21",
+		"@prosopo/config": "3.1.23",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.0.9",
 		"concurrently": "9.0.1",
