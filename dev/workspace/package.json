@@ -20,8 +20,8 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",

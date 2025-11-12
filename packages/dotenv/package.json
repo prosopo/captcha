@@ -14,8 +14,8 @@
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",

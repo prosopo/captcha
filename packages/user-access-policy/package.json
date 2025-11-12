@@ -3,8 +3,8 @@
 	"version": "3.5.29",
 	"type": "module",
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
