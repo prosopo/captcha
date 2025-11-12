@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-react
 
+## 2.9.20
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/locale@3.1.25
+  - @prosopo/procaptcha@2.9.20
+  - @prosopo/procaptcha-common@2.9.18
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+  - @prosopo/widget-skeleton@2.7.11
+
 ## 2.9.19
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/redis-client
 
+## 1.0.10
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+
 ## 1.0.9
 ### Patch Changes
 

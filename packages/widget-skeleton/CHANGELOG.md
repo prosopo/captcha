@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.7.11
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 2.7.10
 ### Patch Changes
 

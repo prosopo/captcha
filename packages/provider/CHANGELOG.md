@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 3.13.6
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api@3.1.36
+  - @prosopo/api-express-router@3.0.39
+  - @prosopo/api-route@2.6.33
+  - @prosopo/common@3.1.25
+  - @prosopo/database@3.5.5
+  - @prosopo/datasets@3.0.48
+  - @prosopo/env@3.2.27
+  - @prosopo/keyring@2.8.39
+  - @prosopo/load-balancer@2.8.12
+  - @prosopo/locale@3.1.25
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+  - @prosopo/types-env@2.7.52
+  - @prosopo/user-access-policy@3.5.31
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
 ## 3.13.5
 ### Patch Changes
 

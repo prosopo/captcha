@@ -1,5 +1,10 @@
 # @prosopo/testpkg2
 
+## 1.0.29
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 1.0.28
 ### Patch Changes
 

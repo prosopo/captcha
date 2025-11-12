@@ -1,5 +1,14 @@
 # @prosopo/flux
 
+## 2.6.36
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/util@3.2.3
+
 ## 2.6.35
 ### Patch Changes
 

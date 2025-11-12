@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 3.1.36
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/types@3.6.3
+
 ## 3.1.35
 ### Patch Changes
 

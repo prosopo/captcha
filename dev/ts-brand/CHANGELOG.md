@@ -1,5 +1,10 @@
 # @prosopo/ts-brand
 
+## 3.0.28
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 3.0.27
 ### Patch Changes
 

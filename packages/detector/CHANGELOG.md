@@ -1,5 +1,12 @@
 # @prosopo/detector
 
+## 3.3.17
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/types@3.6.3
+
 ## 3.3.16
 ### Patch Changes
 

@@ -1,5 +1,12 @@
 # @prosopo/file-server
 
+## 2.6.31
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/util@3.2.3
+
 ## 2.6.30
 ### Patch Changes
 

@@ -1,5 +1,24 @@
 # @prosopo/cli
 
+## 3.5.7
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/workspace@3.1.18
+  - @prosopo/api@3.1.36
+  - @prosopo/api-express-router@3.0.39
+  - @prosopo/common@3.1.25
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/env@3.2.27
+  - @prosopo/keyring@2.8.39
+  - @prosopo/locale@3.1.25
+  - @prosopo/provider@3.13.6
+  - @prosopo/types@3.6.3
+  - @prosopo/user-access-policy@3.5.31
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
 ## 3.5.6
 ### Patch Changes
 

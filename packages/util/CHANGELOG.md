@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.2.3
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 3.2.2
 ### Patch Changes
 

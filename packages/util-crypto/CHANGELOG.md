@@ -1,5 +1,10 @@
 # @prosopo/util-crypto
 
+## 13.5.27
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 13.5.26
 ### Patch Changes
 

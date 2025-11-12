@@ -1,5 +1,12 @@
 # @prosopo/common
 
+## 3.1.25
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/locale@3.1.25
+
 ## 3.1.24
 ### Patch Changes
 

@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 3.5.5
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/locale@3.1.25
+  - @prosopo/redis-client@1.0.10
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+  - @prosopo/user-access-policy@3.5.31
+
 ## 3.5.4
 ### Patch Changes
 

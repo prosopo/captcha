@@ -1,5 +1,15 @@
 # @prosopo/types-env
 
+## 2.7.52
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/keyring@2.8.39
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+
 ## 2.7.51
 ### Patch Changes
 

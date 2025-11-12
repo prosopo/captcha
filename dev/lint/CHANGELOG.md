@@ -1,5 +1,12 @@
 # @prosopo/lint
 
+## 2.8.21
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/util@3.2.3
+
 ## 2.8.20
 ### Patch Changes
 
