@@ -1,8 +1,8 @@
 {
-    "extends": [ "//" ],
-    "tasks": {
-        "typecheck": {
-            "dependsOn": [ "^typecheck", "build" ]
-        }
-    }
+	"extends": ["//"],
+	"tasks": {
+		"typecheck": {
+			"dependsOn": ["^typecheck", "build"]
+		}
+	}
 }
