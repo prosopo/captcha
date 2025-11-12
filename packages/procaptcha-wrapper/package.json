@@ -24,10 +24,10 @@
 	},
 	"dependencies": {
 		"@prosopo/types": "3.6.1",
-		"@prosopo/config": "3.1.23",
 		"@prosopo/locale": "3.1.23"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},
