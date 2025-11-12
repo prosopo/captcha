@@ -1,5 +1,30 @@
 # @prosopo/provider
 
+## 3.13.5
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- e843e62: Adding more sensible punishment for invalid decryption key
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/api-express-router@3.0.38
+  - @prosopo/user-access-policy@3.5.30
+  - @prosopo/types-database@4.0.4
+  - @prosopo/load-balancer@2.8.11
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/api-route@2.6.32
+  - @prosopo/types-env@2.7.51
+  - @prosopo/database@3.5.4
+  - @prosopo/datasets@3.0.47
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+  - @prosopo/env@3.2.26
+
 ## 3.13.4
 ### Patch Changes
 

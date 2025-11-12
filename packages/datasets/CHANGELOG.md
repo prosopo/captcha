@@ -1,5 +1,18 @@
 # @prosopo/datasets
 
+## 3.0.47
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/types-database@4.0.4
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+
 ## 3.0.46
 ### Patch Changes
 

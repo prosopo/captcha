@@ -1,5 +1,13 @@
 # @prosopo/redis-client
 
+## 1.0.9
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/common@3.1.24
+
 ## 1.0.8
 ### Patch Changes
 

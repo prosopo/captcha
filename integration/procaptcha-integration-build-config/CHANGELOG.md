@@ -1,5 +1,11 @@
 # @prosopo/procaptcha-integration-build-config
 
+## 1.1.25
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
 ## 1.1.24
 ### Patch Changes
 
