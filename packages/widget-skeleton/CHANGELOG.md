@@ -1,5 +1,11 @@
 # @prosopo/widget-skeleton
 
+## 2.7.10
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
 ## 2.7.9
 ### Patch Changes
 

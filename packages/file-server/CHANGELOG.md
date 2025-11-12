@@ -1,5 +1,14 @@
 # @prosopo/file-server
 
+## 2.6.30
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/util@3.2.2
+
 ## 2.6.29
 ### Patch Changes
 

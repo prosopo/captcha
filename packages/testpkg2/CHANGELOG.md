@@ -1,5 +1,11 @@
 # @prosopo/testpkg2
 
+## 1.0.28
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
 ## 1.0.27
 ### Patch Changes
 

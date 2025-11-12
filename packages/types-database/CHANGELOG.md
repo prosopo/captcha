@@ -1,5 +1,17 @@
 # @prosopo/types-database
 
+## 4.0.4
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/user-access-policy@3.5.30
+  - @prosopo/common@3.1.24
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+
 ## 4.0.3
 ### Patch Changes
 

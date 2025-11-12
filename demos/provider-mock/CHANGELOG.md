@@ -1,5 +1,22 @@
 # @prosopo/provider-mock
 
+## 2.8.34
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+- Updated dependencies [e843e62]
+  - @prosopo/api-express-router@3.0.38
+  - @prosopo/types-database@4.0.4
+  - @prosopo/database@3.5.4
+  - @prosopo/provider@3.13.5
+  - @prosopo/common@3.1.24
+  - @prosopo/dotenv@3.0.29
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+
 ## 2.8.33
 ### Patch Changes
 
