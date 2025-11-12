@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
+import { getOrCreateModel } from "@prosopo/mongoose";
 import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
@@ -73,7 +74,12 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 		CAPTCHA_TABLES.map(({ collectionName, modelName, schema }) => {
 			if (this.connection) {
-				this.tables[collectionName] = this.connection.model(modelName, schema);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				this.tables[collectionName] = getOrCreateModel(
+					this.connection,
+					modelName,
+					schema as any,
+				);
 			}
 		});
 	}

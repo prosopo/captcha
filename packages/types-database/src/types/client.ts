@@ -28,6 +28,7 @@ import {
 } from "@prosopo/types";
 import type mongoose from "mongoose";
 import { Schema } from "mongoose";
+import { newSchema } from "@prosopo/mongoose";
 import type { IDatabase } from "./mongo.js";
 import type { ClientRecord, Tables } from "./provider.js";
 
@@ -160,7 +161,7 @@ type AccountRecord = mongoose.Document & {
 };
 
 // Account format
-export const AccountSchema = new Schema<AccountRecord>({
+export const AccountSchema = newSchema<AccountRecord>({
 	createdAt: Number,
 	updatedAt: Number,
 	signupEmail: String,

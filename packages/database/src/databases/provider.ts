@@ -15,6 +15,7 @@
 import { isHex } from "@polkadot/util/is";
 import { type Logger, ProsopoDBError } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
+import { getOrCreateModel } from "@prosopo/mongoose";
 import {
 	type RedisConnection,
 	connectToRedis,
@@ -240,7 +241,12 @@ export class ProviderDatabase
 		const tables = {} as Tables<TableNames>;
 		PROVIDER_TABLES.map(({ collectionName, modelName, schema }) => {
 			if (this.connection) {
-				tables[collectionName] = this.connection.model(modelName, schema);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				tables[collectionName] = getOrCreateModel(
+					this.connection,
+					modelName,
+					schema as any,
+				);
 			}
 		});
 		this.tables = tables;

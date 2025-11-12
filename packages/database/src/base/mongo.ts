@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
+import { createMongooseConnection } from "@prosopo/mongoose";
 import type { IDatabase } from "@prosopo/types-database";
-import { ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
 
 mongoose.set("strictQuery", false);
@@ -98,70 +98,17 @@ export class MongoDatabase implements IDatabase {
 			}
 
 			// Start a new connection
-			this.connecting = new Promise((resolve, reject) => {
-				const connection = mongoose.createConnection(this.url, {
-					dbName: this.dbname,
-					serverApi: ServerApiVersion.v1,
+			this.connecting = (async () => {
+				const connection = await createMongooseConnection({
+					url: this.url,
+					dbname: this.dbname,
+					logger: this.logger,
 				});
 
-				const onConnected = () => {
-					this.logger.debug(() => ({
-						data: { mongoUrl: this.safeURL },
-						msg: "Database connection opened",
-					}));
-					this.connected = true;
-					this.connection = connection;
-					this.connecting = undefined;
-					resolve();
-				};
-
-				const onError = (err: unknown) => {
-					this.logger.error(() => ({
-						err,
-						data: { mongoUrl: this.safeURL },
-						msg: "Database error",
-					}));
-					this.connected = false;
-					this.connecting = undefined;
-					reject(err);
-				};
-
-				connection.once("open", onConnected);
-				connection.once("error", onError);
-
-				// Optional: handle other events
-				connection.on("disconnected", () => {
-					this.connected = false;
-					this.logger.debug(() => ({
-						data: { mongoUrl: this.safeURL },
-						msg: "Database disconnected",
-					}));
-				});
-
-				connection.on("reconnected", () => {
-					this.connected = true;
-					this.logger.debug(() => ({
-						data: { mongoUrl: this.safeURL },
-						msg: "Database reconnected",
-					}));
-				});
-
-				connection.on("close", () => {
-					this.connected = false;
-					this.logger.debug(() => ({
-						data: { mongoUrl: this.safeURL },
-						msg: "Database connection closed",
-					}));
-				});
-
-				connection.on("fullsetup", () => {
-					this.connected = true;
-					this.logger.debug(() => ({
-						data: { mongoUrl: this.safeURL },
-						msg: "Database connection is fully setup",
-					}));
-				});
-			});
+				this.connected = true;
+				this.connection = connection;
+				this.connecting = undefined;
+			})();
 
 			return this.connecting;
 		} catch (e) {

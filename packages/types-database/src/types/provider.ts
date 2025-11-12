@@ -39,6 +39,7 @@ import {
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import type mongoose from "mongoose";
 import { type Document, type Model, type ObjectId, Schema } from "mongoose";
+import { newSchema } from "@prosopo/mongoose";
 import {
 	type ZodType,
 	any,
@@ -67,7 +68,7 @@ const ONE_WEEK = ONE_DAY * 7;
 const ONE_MONTH = ONE_WEEK * 4;
 const TEN_MINUTES = 10 * 60;
 
-export const ClientRecordSchema = new Schema<ClientRecord>({
+export const ClientRecordSchema = newSchema<ClientRecord>({
 	account: String,
 	settings: UserSettingsSchema,
 	tier: { type: String, enum: Tier, required: true },
@@ -196,7 +197,7 @@ export type Tables<E extends string | number | symbol> = {
 	[key in E]: typeof Model<any>;
 };
 
-export const CaptchaRecordSchema = new Schema<Captcha>({
+export const CaptchaRecordSchema = newSchema<Captcha>({
 	captchaId: { type: String, required: true },
 	captchaContentId: { type: String, required: true },
 	assetURI: { type: String, required: false },
@@ -230,7 +231,7 @@ export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
-export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
+export const PoWCaptchaRecordSchema = newSchema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
@@ -274,7 +275,7 @@ PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
 
-export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
+export const UserCommitmentRecordSchema = newSchema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	providerAccount: { type: String, required: true },
@@ -321,7 +322,7 @@ UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
 
-export const DatasetRecordSchema = new Schema<DatasetWithIds>({
+export const DatasetRecordSchema = newSchema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
 	datasetContentId: { type: String, required: true },
 	datasetId: { type: String, required: true },
@@ -331,7 +332,7 @@ export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 // Set an index on the datasetId field, ascending
 DatasetRecordSchema.index({ datasetId: 1 });
 
-export const SolutionRecordSchema = new Schema<SolutionRecord>({
+export const SolutionRecordSchema = newSchema<SolutionRecord>({
 	captchaId: { type: String, required: true },
 	captchaContentId: { type: String, required: true },
 	datasetId: { type: String, required: true },
@@ -350,7 +351,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 });
 export type UserSolutionRecord = mongoose.Document &
 	zInfer<typeof UserSolutionSchema>;
-export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
+export const UserSolutionRecordSchema = newSchema<UserSolutionRecord>(
 	{
 		captchaId: { type: String, required: true },
 		captchaContentId: { type: String, required: true },
@@ -378,7 +379,7 @@ export type UserCommitmentWithSolutions = zInfer<
 
 export type PendingCaptchaRequestMongoose = PendingCaptchaRequest;
 
-export const PendingRecordSchema = new Schema<PendingCaptchaRequestMongoose>({
+export const PendingRecordSchema = newSchema<PendingCaptchaRequestMongoose>({
 	accountId: { type: String, required: true },
 	pending: { type: Boolean, required: true },
 	salt: { type: String, required: true },
@@ -412,7 +413,7 @@ export type ScheduledTaskRecord = mongoose.Document & ScheduledTask;
 
 type ScheduledTaskMongoose = ScheduledTaskRecord;
 
-export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskMongoose>({
+export const ScheduledTaskRecordSchema = newSchema<ScheduledTaskMongoose>({
 	processName: { type: String, enum: ScheduledTaskNames, required: true },
 	datetime: { type: Date, required: true, expires: ONE_WEEK },
 	updated: { type: Date, required: false },
@@ -466,7 +467,7 @@ export type Session = {
 
 export type SessionRecord = mongoose.Document & Session;
 
-export const SessionRecordSchema = new Schema<SessionRecord>({
+export const SessionRecordSchema = newSchema<SessionRecord>({
 	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
 	token: { type: String, required: true },
@@ -509,7 +510,7 @@ export type DetectorKey = {
 };
 
 export type DetectorSchema = mongoose.Document & DetectorKey;
-export const DetectorRecordSchema = new Schema<DetectorSchema>({
+export const DetectorRecordSchema = newSchema<DetectorSchema>({
 	createdAt: { type: Date, required: true },
 	detectorKey: { type: String, required: true },
 	expiresAt: { type: Date, required: false },

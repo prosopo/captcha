@@ -37,6 +37,7 @@
 		"@polkadot/util": "13.5.7",
 		"@prosopo/common": "3.1.23",
 		"@prosopo/locale": "3.1.23",
+		"@prosopo/mongoose": "1.0.0",
 		"@prosopo/redis-client": "1.0.8",
 		"@prosopo/types": "3.6.1",
 		"@prosopo/types-database": "4.0.3",

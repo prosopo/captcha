@@ -14,6 +14,7 @@
 
 import type { PoWCaptcha } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
+import { newSchema } from "@prosopo/mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
 	type PoWCaptchaRecord,
@@ -30,12 +31,12 @@ export type StoredSession = SessionRecord;
 
 export const StoredSessionRecordSchema: Schema = SessionRecordSchema;
 
-export const StoredUserCommitmentRecordSchema: Schema = new Schema({
+export const StoredUserCommitmentRecordSchema: Schema = newSchema({
 	...UserCommitmentRecordSchema.obj,
 });
 StoredUserCommitmentRecordSchema.index({ sessionId: 1 });
 
-export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
+export const StoredPoWCaptchaRecordSchema: Schema = newSchema({
 	...PoWCaptchaRecordSchema.obj,
 });
 StoredPoWCaptchaRecordSchema.index({ sessionId: 1 });

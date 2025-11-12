@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { type Logger, ProsopoDBError } from "@prosopo/common";
+import { getOrCreateModel } from "@prosopo/mongoose";
 import type { Timestamp } from "@prosopo/types";
 import {
 	AccountSchema,
@@ -48,7 +49,12 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 		await super.connect();
 		CLIENT_TABLES.map(({ collectionName, modelName, schema }) => {
 			if (this.connection) {
-				this.tables[collectionName] = this.connection.model(modelName, schema);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				this.tables[collectionName] = getOrCreateModel(
+					this.connection,
+					modelName,
+					schema as any,
+				);
 			}
 		});
 	}
