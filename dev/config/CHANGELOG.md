@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.1.25
+### Patch Changes
+
+- 93d92a7: correcting jsx import source
+
 ## 3.1.24
 ### Patch Changes
 

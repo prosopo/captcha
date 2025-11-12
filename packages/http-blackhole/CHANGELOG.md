@@ -1,5 +1,10 @@
 # @prosopo/http-blackhole
 
+## 1.0.24
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 1.0.23
 ### Patch Changes
 

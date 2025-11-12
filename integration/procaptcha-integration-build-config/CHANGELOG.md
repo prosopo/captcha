@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-integration-build-config
 
+## 1.1.26
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 1.1.25
 ### Patch Changes
 

@@ -1,5 +1,17 @@
 # @prosopo/client-example-server
 
+## 2.7.51
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/keyring@2.8.39
+  - @prosopo/server@2.9.47
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+
 ## 2.7.50
 ### Patch Changes
 

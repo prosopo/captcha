@@ -1,5 +1,12 @@
 # @prosopo/api-route
 
+## 2.6.33
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+
 ## 2.6.32
 ### Patch Changes
 

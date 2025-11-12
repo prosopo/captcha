@@ -1,5 +1,15 @@
 # @prosopo/types-database
 
+## 4.0.5
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/locale@3.1.25
+  - @prosopo/types@3.6.3
+  - @prosopo/user-access-policy@3.5.31
+
 ## 4.0.4
 ### Patch Changes
 

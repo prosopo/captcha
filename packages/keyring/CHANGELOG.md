@@ -1,5 +1,15 @@
 # @prosopo/keyring
 
+## 2.8.39
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
 ## 2.8.38
 ### Patch Changes
 

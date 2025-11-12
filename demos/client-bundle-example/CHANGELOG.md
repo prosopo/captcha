@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.10.10
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 2.10.9
 ### Patch Changes
 

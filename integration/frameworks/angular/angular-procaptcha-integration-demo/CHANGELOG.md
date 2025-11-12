@@ -1,5 +1,12 @@
 # @prosopo/angular-procaptcha-integration-demo
 
+## 1.1.39
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/angular-procaptcha-wrapper@1.1.39
+
 ## 1.1.38
 ### Patch Changes
 

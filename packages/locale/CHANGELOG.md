@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.1.25
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 3.1.24
 ### Patch Changes
 
