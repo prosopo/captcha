@@ -16,7 +16,9 @@
 		}
 	},
 	"dependencies": {
-		"@prosopo/provider-mock": "2.8.23",
+		"@prosopo/provider-mock": "2.8.23"
+	},
+	"devDependencies": {
 		"@prosopo/config": "3.1.20"
 	},
 	"scripts": {

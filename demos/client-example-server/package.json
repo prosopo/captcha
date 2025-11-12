@@ -46,7 +46,6 @@
 		"@prosopo/server": "2.9.45",
 		"@prosopo/types": "3.6.1",
 		"@prosopo/util": "3.2.1",
-		"@prosopo/config": "3.1.23",
 		"@typegoose/auto-increment": "4.13.0",
 		"cors": "2.8.5",
 		"express": "4.21.2",
@@ -56,6 +55,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@types/jsonwebtoken": "9.0.6",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",

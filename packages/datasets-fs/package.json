@@ -34,7 +34,6 @@
 		"@prosopo/util": "3.2.1",
 		"@prosopo/util-crypto": "13.5.25",
 		"@prosopo/workspace": "3.1.16",
-		"@prosopo/config": "3.1.23",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
 		"sharp": "0.33.5",
@@ -42,6 +41,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",

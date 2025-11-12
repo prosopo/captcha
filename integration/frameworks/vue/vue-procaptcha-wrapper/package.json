@@ -24,10 +24,10 @@
 	},
 	"dependencies": {
 		"@prosopo/procaptcha-wrapper": "2.6.39",
-		"@prosopo/config": "3.1.23",
 		"vue": "3.5.13"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@prosopo/procaptcha-integration-build-config": "1.1.24",
 		"@types/node": "22.10.2",
 		"@vitejs/plugin-vue": "5.2.3",

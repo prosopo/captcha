@@ -29,7 +29,6 @@
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@prosopo/common": "3.1.23",
-		"@prosopo/config": "3.1.23",
 		"@prosopo/locale": "3.1.23",
 		"@prosopo/procaptcha": "2.9.18",
 		"@prosopo/procaptcha-common": "2.9.16",
@@ -41,6 +40,7 @@
 		"react-dom": "18.3.1"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@emotion/react": "11.11.1",
 		"@types/node": "22.10.2",
 		"@types/react-dom": "18.3.1",
