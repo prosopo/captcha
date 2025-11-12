@@ -1,5 +1,154 @@
 # @prosopo/provider
 
+## 3.13.4
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/api-express-router@3.0.37
+  - @prosopo/api-route@2.6.31
+  - @prosopo/common@3.1.23
+  - @prosopo/database@3.5.3
+  - @prosopo/datasets@3.0.46
+  - @prosopo/env@3.2.25
+  - @prosopo/keyring@2.8.37
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+  - @prosopo/types-database@4.0.3
+  - @prosopo/types-env@2.7.50
+  - @prosopo/user-access-policy@3.5.29
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 3.13.3
+### Patch Changes
+
+- 3be9174: Create scheduled task status
+- Updated dependencies [0a9887c]
+  - @prosopo/types-database@4.0.2
+  - @prosopo/database@3.5.2
+  - @prosopo/datasets@3.0.45
+  - @prosopo/types-env@2.7.49
+  - @prosopo/env@3.2.24
+  - @prosopo/api-express-router@3.0.36
+
+## 3.13.2
+### Patch Changes
+
+- Updated dependencies [3e5d80a]
+  - @prosopo/types-database@4.0.1
+  - @prosopo/database@3.5.1
+  - @prosopo/datasets@3.0.44
+  - @prosopo/types-env@2.7.48
+  - @prosopo/env@3.2.23
+  - @prosopo/api-express-router@3.0.35
+
+## 3.13.1
+### Patch Changes
+
+- 447179c: Fix config and client getter
+
+## 3.13.0
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- fdef625: fix maint mode
+- 55a64c6: stop refresh image to pow
+- aa8216a: bump
+- 8ce9205: Change engine requirements
+- 6ac5367: Less drastic reaction to bad sim score
+- b6e98b2: Run npm audit
+- 55a64c6: Persist sessions for user ip combinations
+- Updated dependencies [8ce9205]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [8f22479]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/user-access-policy@3.5.28
+  - @prosopo/types@3.6.0
+  - @prosopo/types-database@4.0.0
+  - @prosopo/database@3.5.0
+  - @prosopo/util@3.2.0
+  - @prosopo/api-express-router@3.0.34
+  - @prosopo/load-balancer@2.8.9
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/api-route@2.6.30
+  - @prosopo/types-env@2.7.47
+  - @prosopo/datasets@3.0.43
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/env@3.2.22
+  - @prosopo/config@3.1.22
+
+## 3.12.14
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+  - @prosopo/api-express-router@3.0.33
+  - @prosopo/database@3.4.13
+  - @prosopo/datasets@3.0.42
+  - @prosopo/env@3.2.21
+  - @prosopo/keyring@2.8.35
+  - @prosopo/load-balancer@2.8.8
+  - @prosopo/types-database@3.3.13
+  - @prosopo/types-env@2.7.46
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.12.13
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/database@3.4.12
+  - @prosopo/datasets@3.0.41
+  - @prosopo/types-env@2.7.45
+  - @prosopo/api-express-router@3.0.32
+  - @prosopo/env@3.2.20
+  - @prosopo/keyring@2.8.34
+  - @prosopo/load-balancer@2.8.7
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.12.12
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [005ce66]
+- Updated dependencies [b58046d]
+- Updated dependencies [7101036]
+  - @prosopo/types-database@3.3.11
+  - @prosopo/types@3.5.9
+  - @prosopo/database@3.4.11
+  - @prosopo/user-access-policy@3.5.25
+  - @prosopo/load-balancer@2.8.6
+  - @prosopo/util@3.1.7
+  - @prosopo/datasets@3.0.40
+  - @prosopo/types-env@2.7.44
+  - @prosopo/api@3.1.30
+  - @prosopo/api-express-router@3.0.31
+  - @prosopo/env@3.2.19
+  - @prosopo/keyring@2.8.33
+
 ## 3.12.11
 ### Patch Changes
 

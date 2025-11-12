@@ -14,7 +14,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { stringToHex } from "@polkadot/util";
-import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
+import { ProsopoApiError } from "@prosopo/common";
 import { signatureVerify } from "@prosopo/util-crypto";
 
 export const validateSolution = (

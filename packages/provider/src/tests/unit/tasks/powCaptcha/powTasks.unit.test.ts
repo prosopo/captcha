@@ -21,10 +21,9 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import {
-	type IProviderDatabase,
-	IpAddressType,
-	type PoWCaptchaStored,
+import type {
+	IProviderDatabase,
+	PoWCaptchaStored,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
@@ -86,8 +85,6 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(db, pair);
-
 		mockEnv = {
 			config: {
 				ipApi: {
@@ -96,6 +93,8 @@ describe("PowCaptchaManager", () => {
 				},
 			},
 		} as unknown as ProviderEnvironment;
+
+		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
 
 		vi.clearAllMocks();
 	});
@@ -144,7 +143,7 @@ describe("PowCaptchaManager", () => {
 				difficulty,
 				dappAccount: pair.address,
 				userAccount,
-				requestedAtTimestamp,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -152,7 +151,7 @@ describe("PowCaptchaManager", () => {
 				headers,
 				ja4: "ja4",
 				providerSignature,
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => true);
@@ -249,7 +248,7 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				dappAccount: pair.address,
 				userAccount: "testUserAccount",
-				requestedAtTimestamp: 12345,
+				requestedAtTimestamp: new Date(12345),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -258,7 +257,7 @@ describe("PowCaptchaManager", () => {
 				ja4: "ja4",
 				providerSignature: "testSignature",
 				difficulty,
-				lastUpdatedTimestamp: 0,
+				lastUpdatedTimestamp: new Date(0),
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => {
@@ -300,7 +299,7 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				dappAccount,
 				userAccount,
-				requestedAtTimestamp: timestamp,
+				requestedAtTimestamp: new Date(timestamp),
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 			};

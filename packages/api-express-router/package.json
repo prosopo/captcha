@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/api-express-router",
-	"version": "3.0.30",
+	"version": "3.0.37",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
@@ -24,13 +24,12 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@polkadot/util": "12.6.2",
-		"@prosopo/api-route": "2.6.29",
-		"@prosopo/common": "3.1.21",
-		"@prosopo/env": "3.2.18",
-		"@prosopo/locale": "3.1.21",
-		"@prosopo/types": "3.5.8",
-		"@prosopo/config": "3.1.21",
+		"@polkadot/util": "13.5.7",
+		"@prosopo/api-route": "2.6.31",
+		"@prosopo/common": "3.1.23",
+		"@prosopo/env": "3.2.25",
+		"@prosopo/locale": "3.1.23",
+		"@prosopo/types": "3.6.1",
 		"dotenv": "16.4.5",
 		"express": "4.21.2",
 		"i18next": "24.1.0",
@@ -38,8 +37,9 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@types/node": "22.10.2",
-		"vitest": "3.0.9"
+		"vitest": "3.2.4"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

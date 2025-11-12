@@ -108,7 +108,7 @@ export const getExpressApiRuleRateLimits =
 	(): ApiRouteLimits<accessRuleApiPaths> => {
 		const defaults = {
 			limit: 5,
-			windowSeconds: 60,
+			windowSeconds: 10,
 		};
 
 		const defaultWindowMs = defaults.windowSeconds * 1_000;

@@ -1,5 +1,21 @@
 # @prosopo/redis-client
 
+## 1.0.8
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/common@3.1.23
+
+## 1.0.7
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [b6e98b2]
+  - @prosopo/common@3.1.22
+
 ## 1.0.6
 ### Patch Changes
 

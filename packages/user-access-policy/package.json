@@ -1,10 +1,10 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.5.24",
+	"version": "3.5.29",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
@@ -42,13 +42,14 @@
 		"test": "npm run test:unit && npm run test:integration"
 	},
 	"dependencies": {
-		"@prosopo/api": "3.1.29",
-		"@prosopo/api-route": "2.6.29",
-		"@prosopo/common": "3.1.21",
-		"@prosopo/redis-client": "1.0.6",
-		"@prosopo/types": "3.5.8",
-		"@prosopo/util": "3.1.6",
+		"@prosopo/api": "3.1.34",
+		"@prosopo/api-route": "2.6.31",
+		"@prosopo/common": "3.1.23",
+		"@prosopo/redis-client": "1.0.8",
+		"@prosopo/types": "3.6.1",
+		"@prosopo/util": "3.2.1",
 		"@redis/search": "5.0.0",
+		"@redis/client": "5.0.0",
 		"cidr-calc": "1.0.4",
 		"dotenv": "16.4.5",
 		"ip-address": "10.0.1",
@@ -56,12 +57,12 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.21",
-		"@prosopo/util-crypto": "13.5.23",
+		"@prosopo/config": "3.1.23",
+		"@prosopo/util-crypto": "13.5.25",
 		"@types/node": "22.10.2",
 		"mongoose": "8.13.0",
-		"vite": "6.3.5",
-		"vitest": "3.0.9",
+		"vite": "6.4.1",
+		"vitest": "3.2.4",
 		"yargs": "17.7.2"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

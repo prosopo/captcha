@@ -2,8 +2,8 @@
 	"name": "@prosopo/vector-docker",
 	"version": "2.6.4",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"type": "module",
 	"scripts": {
@@ -21,7 +21,7 @@
 			"types": "./dist/index.d.ts"
 		}
 	},
-	"dependencies": {
+	"devDependencies": {
 		"@prosopo/config": "3.1.20"
 	}
 }

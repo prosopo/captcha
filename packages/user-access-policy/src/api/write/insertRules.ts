@@ -40,8 +40,10 @@ import type {
 
 export type InsertRulesGroup = {
 	accessPolicy: AccessPolicy;
-	policyScope?: PolicyScope;
 	userScopes: UserScopeInput[];
+	// a single client may have multiple siteKeys,
+	// so for batch requests we take multiple policyScopes as apply all the rules to every scope
+	policyScopes?: PolicyScope[];
 	groupId?: string;
 	expiresUnixTimestamp?: number;
 };
@@ -50,7 +52,9 @@ type ParsedInsertRulesGroup = InsertRulesGroup & {
 	userScopes: UserScope[];
 };
 
-type InsertRulesSchema = ZodType<InsertRulesGroup>;
+type ParsedInsertRuleGroups = ParsedInsertRulesGroup[];
+
+type InsertRulesSchema = ZodType<InsertRulesGroup[]>;
 
 export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	public constructor(
@@ -59,17 +63,19 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	) {}
 
 	public getRequestArgsSchema(): InsertRulesSchema {
-		return z.object({
-			accessPolicy: accessPolicyInput,
-			policyScope: policyScopeInput.optional(),
-			groupId: z.string().optional(),
-			userScopes: z.array(userScopeInput),
-			expiresUnixTimestamp: z.number().optional(),
-		} satisfies AllKeys<InsertRulesGroup>);
+		return z.array(
+			z.object({
+				accessPolicy: accessPolicyInput,
+				policyScopes: z.array(policyScopeInput).optional(),
+				groupId: z.string().optional(),
+				userScopes: z.array(userScopeInput),
+				expiresUnixTimestamp: z.number().optional(),
+			} satisfies AllKeys<InsertRulesGroup>),
+		);
 	}
 
 	async processRequest(
-		args: ParsedInsertRulesGroup,
+		args: ParsedInsertRuleGroups,
 	): Promise<ApiEndpointResponse> {
 		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
 			setTimeout(() => {
@@ -79,12 +85,17 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 			}, 5000);
 		});
 
-		const createRulesPromise = this.createRules(args)
+		const userScopesCount = args.reduce(
+			(userScopesCount, group) => userScopesCount + group.userScopes.length,
+			0,
+		);
+
+		const createRulesPromise = this.createRuleGroups(args)
 			.then((insertedIds) => {
 				this.logger.info(() => ({
 					msg: "Endpoint inserted access rules",
 					data: {
-						userScopesCount: args.userScopes.length,
+						userScopesCount: userScopesCount,
 						insertedCount: insertedIds.length,
 						uniqueIdsCount: new Set(insertedIds).size,
 					},
@@ -119,23 +130,44 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 		return Promise.race([timeoutPromise, createRulesPromise]);
 	}
 
-	protected async createRules(args: ParsedInsertRulesGroup): Promise<string[]> {
-		const policyScope = args.policyScope || {};
+	protected async createRuleGroups(
+		groups: ParsedInsertRuleGroups,
+	): Promise<string[]> {
+		const ruleIdPromises = groups.map((group) => this.createRulesGroup(group));
 
+		const ruleIdSets = await Promise.all(ruleIdPromises);
+
+		return ruleIdSets.flat();
+	}
+
+	protected async createRulesGroup(
+		group: ParsedInsertRulesGroup,
+	): Promise<string[]> {
 		const ruleEntries: AccessRuleEntry[] = [];
+		const policyScopes = group.policyScopes || [];
 
-		for (const userScope of args.userScopes) {
-			const rule: AccessRule = {
-				...args.accessPolicy,
-				...policyScope,
+		for (const userScope of group.userScopes) {
+			const ruleBase: AccessRule = {
+				...group.accessPolicy,
 				...userScope,
-				...(args.groupId ? { groupId: args.groupId } : {}),
+				...(group.groupId ? { groupId: group.groupId } : {}),
 			};
 
-			ruleEntries.push({
-				rule: rule,
-				expiresUnixTimestamp: args.expiresUnixTimestamp,
-			});
+			if (policyScopes.length > 0) {
+				for (const policyScope of policyScopes) {
+					ruleEntries.push({
+						rule: {
+							...ruleBase,
+							...policyScope,
+						},
+					});
+				}
+			} else {
+				ruleEntries.push({
+					rule: ruleBase,
+					expiresUnixTimestamp: group.expiresUnixTimestamp,
+				});
+			}
 		}
 
 		return this.accessRulesWriter.insertRules(ruleEntries);

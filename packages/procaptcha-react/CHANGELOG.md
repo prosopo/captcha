@@ -1,5 +1,83 @@
 # @prosopo/procaptcha-react
 
+## 2.9.18
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/procaptcha@2.9.18
+  - @prosopo/procaptcha-common@2.9.16
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+  - @prosopo/widget-skeleton@2.7.9
+
+## 2.9.17
+### Patch Changes
+
+- Updated dependencies [9128d5e]
+- Updated dependencies [9128d5e]
+  - @prosopo/procaptcha-common@2.9.15
+  - @prosopo/procaptcha@2.9.17
+
+## 2.9.16
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.16
+
+## 2.9.15
+### Patch Changes
+
+  - @prosopo/procaptcha@2.9.15
+
+## 2.9.14
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/procaptcha-common@2.9.14
+  - @prosopo/widget-skeleton@2.7.8
+  - @prosopo/procaptcha@2.9.14
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
+## 2.9.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/procaptcha@2.9.13
+  - @prosopo/procaptcha-common@2.9.13
+
+## 2.9.12
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/procaptcha@2.9.12
+  - @prosopo/procaptcha-common@2.9.12
+
+## 2.9.11
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/procaptcha@2.9.11
+  - @prosopo/procaptcha-common@2.9.11
+
 ## 2.9.10
 ### Patch Changes
 

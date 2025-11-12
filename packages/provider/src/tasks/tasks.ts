@@ -61,6 +61,7 @@ export class Tasks {
 		this.powCaptchaManager = new PowCaptchaManager(
 			this.db,
 			this.pair,
+			this.config,
 			this.logger,
 		);
 		this.datasetManager = new DatasetManager(

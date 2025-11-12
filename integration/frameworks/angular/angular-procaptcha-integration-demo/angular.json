@@ -22,7 +22,7 @@
 						"outputPath": "dist/prosopo/angular-procaptcha-integration-demo",
 						"index": "src/index.html",
 						"main": "src/main.ts",
-						"polyfills": ["zone.js"],
+						"polyfills": [],
 						"tsConfig": "tsconfig.app.json",
 						"assets": [
 							{
@@ -78,7 +78,7 @@
 				"test": {
 					"builder": "@angular-devkit/build-angular:karma",
 					"options": {
-						"polyfills": ["zone.js", "zone.js/testing"],
+						"polyfills": [],
 						"tsConfig": "tsconfig.spec.json",
 						"assets": [
 							{

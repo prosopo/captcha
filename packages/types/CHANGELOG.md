@@ -1,5 +1,52 @@
 # @prosopo/types
 
+## 3.6.1
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 3.6.0
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- 15ae7cf: Change slider defaults
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/util@3.2.0
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.5.11
+### Patch Changes
+
+- 8f1773a: Tweak config
+
+## 3.5.10
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+
+## 3.5.9
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- 7101036: Force consistent IPs logic
+- Updated dependencies [005ce66]
+  - @prosopo/util@3.1.7
+
 ## 3.5.8
 ### Patch Changes
 

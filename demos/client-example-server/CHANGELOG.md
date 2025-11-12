@@ -1,5 +1,63 @@
 # @prosopo/client-example-server
 
+## 2.7.49
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/keyring@2.8.37
+  - @prosopo/server@2.9.45
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
+## 2.7.48
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/server@2.9.44
+  - @prosopo/config@3.1.22
+
+## 2.7.47
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/keyring@2.8.35
+  - @prosopo/server@2.9.43
+
+## 2.7.46
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/keyring@2.8.34
+  - @prosopo/server@2.9.42
+
+## 2.7.45
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/keyring@2.8.33
+  - @prosopo/server@2.9.41
+
 ## 2.7.44
 ### Patch Changes
 

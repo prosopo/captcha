@@ -1,5 +1,80 @@
 # @prosopo/types-database
 
+## 4.0.3
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+  - @prosopo/user-access-policy@3.5.29
+
+## 4.0.2
+### Patch Changes
+
+- 0a9887c: Remove unique from token index
+
+## 4.0.1
+### Patch Changes
+
+- 3e5d80a: add reason field
+
+## 4.0.0
+### Major Changes
+
+- 8f22479: Update settings schema
+
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- 55a64c6: stop refresh image to pow
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- 55a64c6: Persist sessions for user ip combinations
+- Updated dependencies [8ce9205]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/user-access-policy@3.5.28
+  - @prosopo/types@3.6.0
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.3.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.3.12
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.3.11
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/user-access-policy@3.5.25
+
 ## 3.3.10
 ### Patch Changes
 

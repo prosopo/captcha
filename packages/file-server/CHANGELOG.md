@@ -1,5 +1,31 @@
 # @prosopo/file-server
 
+## 2.6.29
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/util@3.2.1
+
+## 2.6.28
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/util@3.2.0
+  - @prosopo/config@3.1.22
+
+## 2.6.27
+### Patch Changes
+
+- Updated dependencies [005ce66]
+  - @prosopo/util@3.1.7
+
 ## 2.6.26
 ### Patch Changes
 

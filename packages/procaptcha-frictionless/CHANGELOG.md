@@ -1,5 +1,104 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.19
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/common@3.1.23
+  - @prosopo/detector@3.3.15
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/locale@3.1.23
+  - @prosopo/procaptcha-common@2.9.16
+  - @prosopo/procaptcha-pow@2.8.24
+  - @prosopo/procaptcha-react@2.9.18
+  - @prosopo/types@3.6.1
+  - @prosopo/widget-skeleton@2.7.9
+
+## 2.8.18
+### Patch Changes
+
+- Updated dependencies [9128d5e]
+- Updated dependencies [9128d5e]
+  - @prosopo/procaptcha-common@2.9.15
+  - @prosopo/procaptcha-pow@2.8.23
+  - @prosopo/procaptcha-react@2.9.17
+
+## 2.8.17
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.16
+
+## 2.8.16
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.15
+
+## 2.8.15
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [aa8216a]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/detector@3.3.14
+  - @prosopo/procaptcha-common@2.9.14
+  - @prosopo/procaptcha-react@2.9.14
+  - @prosopo/widget-skeleton@2.7.8
+  - @prosopo/procaptcha-pow@2.8.22
+  - @prosopo/load-balancer@2.8.9
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/config@3.1.22
+
+## 2.8.14
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+  - @prosopo/detector@3.3.13
+  - @prosopo/load-balancer@2.8.8
+  - @prosopo/procaptcha-common@2.9.13
+  - @prosopo/procaptcha-pow@2.8.21
+  - @prosopo/procaptcha-react@2.9.13
+
+## 2.8.13
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/detector@3.3.12
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/load-balancer@2.8.7
+  - @prosopo/procaptcha-common@2.9.12
+  - @prosopo/procaptcha-pow@2.8.20
+  - @prosopo/procaptcha-react@2.9.12
+
+## 2.8.12
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [b58046d]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/load-balancer@2.8.6
+  - @prosopo/api@3.1.30
+  - @prosopo/detector@3.3.11
+  - @prosopo/procaptcha-common@2.9.11
+  - @prosopo/procaptcha-pow@2.8.19
+  - @prosopo/procaptcha-react@2.9.11
+
 ## 2.8.11
 ### Patch Changes
 

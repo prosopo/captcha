@@ -1,5 +1,66 @@
 # @prosopo/api-express-router
 
+## 3.0.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api-route@2.6.31
+  - @prosopo/common@3.1.23
+  - @prosopo/env@3.2.25
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+
+## 3.0.36
+### Patch Changes
+
+  - @prosopo/env@3.2.24
+
+## 3.0.35
+### Patch Changes
+
+  - @prosopo/env@3.2.23
+
+## 3.0.34
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/api-route@2.6.30
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/env@3.2.22
+  - @prosopo/config@3.1.22
+
+## 3.0.33
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/env@3.2.21
+
+## 3.0.32
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/env@3.2.20
+
+## 3.0.31
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/env@3.2.19
+
 ## 3.0.30
 ### Patch Changes
 

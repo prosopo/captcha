@@ -1,5 +1,59 @@
 # @prosopo/user-access-policy
 
+## 3.5.29
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/api@3.1.34
+  - @prosopo/api-route@2.6.31
+  - @prosopo/common@3.1.23
+  - @prosopo/redis-client@1.0.8
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
+## 3.5.28
+### Patch Changes
+
+- 8ce9205: enhance/uap-rules-push
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/redis-client@1.0.7
+  - @prosopo/api-route@2.6.30
+  - @prosopo/common@3.1.22
+  - @prosopo/api@3.1.33
+
+## 3.5.27
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+
+## 3.5.26
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+
+## 3.5.25
+### Patch Changes
+
+- 005ce66: Split load balancer into URL fn and getter fn for private repo
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/api@3.1.30
+
 ## 3.5.24
 ### Patch Changes
 

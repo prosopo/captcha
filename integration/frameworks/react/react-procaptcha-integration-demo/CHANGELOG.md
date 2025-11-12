@@ -1,5 +1,39 @@
 # @prosopo/react-procaptcha-integration-demo
 
+## 1.1.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/react-procaptcha-wrapper@1.1.37
+
+## 1.1.36
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/react-procaptcha-wrapper@1.1.36
+  - @prosopo/config@3.1.22
+
+## 1.1.35
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.35
+
+## 1.1.34
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.34
+
+## 1.1.33
+### Patch Changes
+
+  - @prosopo/react-procaptcha-wrapper@1.1.33
+
 ## 1.1.32
 ### Patch Changes
 

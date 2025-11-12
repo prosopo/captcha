@@ -1,5 +1,79 @@
 # @prosopo/env
 
+## 3.2.25
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/database@3.5.3
+  - @prosopo/keyring@2.8.37
+  - @prosopo/types@3.6.1
+  - @prosopo/types-env@2.7.50
+  - @prosopo/util-crypto@13.5.25
+
+## 3.2.24
+### Patch Changes
+
+  - @prosopo/database@3.5.2
+  - @prosopo/types-env@2.7.49
+
+## 3.2.23
+### Patch Changes
+
+  - @prosopo/database@3.5.1
+  - @prosopo/types-env@2.7.48
+
+## 3.2.22
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/types@3.6.0
+  - @prosopo/database@3.5.0
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/types-env@2.7.47
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.2.21
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/database@3.4.13
+  - @prosopo/keyring@2.8.35
+  - @prosopo/types-env@2.7.46
+
+## 3.2.20
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/database@3.4.12
+  - @prosopo/types-env@2.7.45
+  - @prosopo/keyring@2.8.34
+
+## 3.2.19
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/database@3.4.11
+  - @prosopo/types-env@2.7.44
+  - @prosopo/keyring@2.8.33
+
 ## 3.2.18
 ### Patch Changes
 
