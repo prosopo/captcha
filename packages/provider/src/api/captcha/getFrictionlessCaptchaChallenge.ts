@@ -35,6 +35,10 @@ import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import {
+	determineContextType,
+	getContextThreshold,
+} from "./contextAwareValidation.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -294,7 +298,7 @@ export default (
 			// Check the context
 			if (clientRecord.settings.contextAware?.enabled) {
 				// Determine the context type based on the request
-				const contextType = webView ? "webview" : "default";
+				const contextType = determineContextType(webView);
 
 				// First try to get context-specific entropy
 				let clientEntropy =
@@ -328,13 +332,11 @@ export default (
 						);
 					}
 
-					// Find the threshold for this context if specified
-					let threshold = clientRecord.settings.contextAware.threshold;
-					const contexts = clientRecord.settings.contextAware.contexts || [];
-					const contextConfig = contexts.find((c) => c.type === contextType);
-					if (contextConfig) {
-						threshold = contextConfig.threshold;
-					}
+					// Get the threshold for this context
+					const threshold = getContextThreshold(
+						clientRecord.settings,
+						contextType,
+					);
 
 					const sim = compareBinaryStrings(decryptedHeadHash, clientEntropy);
 					const isValidContext = sim >= threshold;

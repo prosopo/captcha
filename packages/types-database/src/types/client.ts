@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+	ContextType,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
@@ -113,7 +114,10 @@ export const UserSettingsSchema = new Schema({
 		threshold: { type: Number, default: contextAwareThresholdDefault },
 		contexts: [
 			{
-				type: { type: String, enum: ["webview", "default"] },
+				type: {
+					type: String,
+					enum: Object.values(ContextType),
+				},
 				threshold: { type: Number, default: contextAwareThresholdDefault },
 			},
 		],

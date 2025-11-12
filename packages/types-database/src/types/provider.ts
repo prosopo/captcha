@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
-import { CaptchaType, Tier } from "@prosopo/types";
+import { CaptchaType, ContextType, Tier } from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -535,7 +535,7 @@ ClientEntropyRecordSchema.index({ account: 1 }, { unique: true });
 
 export type ClientContextEntropy = {
 	account: string;
-	contextType: string;
+	contextType: ContextType;
 	entropy: string;
 	createdAt: Date;
 	updatedAt: Date;
@@ -545,7 +545,11 @@ export type ClientContextEntropyRecord = mongoose.Document &
 export const ClientContextEntropyRecordSchema =
 	new Schema<ClientContextEntropyRecord>({
 		account: { type: String, required: true },
-		contextType: { type: String, required: true },
+		contextType: {
+			type: String,
+			enum: Object.values(ContextType),
+			required: true,
+		},
 		entropy: { type: String, required: true },
 		createdAt: { type: Date, required: true },
 		updatedAt: { type: Date, required: true },
@@ -774,18 +778,18 @@ export interface IProviderDatabase extends IDatabase {
 
 	setClientContextEntropy(
 		account: string,
-		contextType: string,
+		contextType: ContextType,
 		entropy: string,
 	): Promise<void>;
 
 	getClientContextEntropy(
 		account: string,
-		contextType: string,
+		contextType: ContextType,
 	): Promise<string | undefined>;
 
 	sampleContextEntropy(
 		sampleSize: number,
 		siteKey: string,
-		contextType: string,
+		contextType: ContextType,
 	): Promise<string[]>;
 }

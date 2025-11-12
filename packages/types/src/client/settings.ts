@@ -96,9 +96,14 @@ export const IPValidationRulesSchema = object({
 	forceConsistentIp: boolean().optional().default(false),
 });
 
-// Context type for filtering entropy samples
-export const ContextTypeSchema = z.enum(["webview", "default"]);
-export type ContextType = z.infer<typeof ContextTypeSchema>;
+// Context type enum for filtering entropy samples
+export enum ContextType {
+	Webview = "webview",
+	Default = "default",
+}
+
+// Zod schema for context type
+export const ContextTypeSchema = z.nativeEnum(ContextType);
 
 // Individual context configuration
 export const ContextConfigSchema = z.object({

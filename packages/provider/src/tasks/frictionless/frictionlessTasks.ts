@@ -17,6 +17,7 @@ import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	CaptchaType,
+	ContextType,
 	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
@@ -476,7 +477,7 @@ export class FrictionlessManager extends CaptchaManager {
 
 	async getClientContextEntropy(
 		siteKey: string,
-		contextType: string,
+		contextType: ContextType,
 	): Promise<string | undefined> {
 		return this.db.getClientContextEntropy(siteKey, contextType);
 	}

@@ -16,6 +16,7 @@ import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	ContextType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -304,7 +305,7 @@ export class ClientTaskManager {
 					const contexts = client.settings.contextAware.contexts || [];
 
 					// Always calculate for default and webview contexts
-					const contextTypes = ["default", "webview"];
+					const contextTypes = [ContextType.Default, ContextType.Webview];
 
 					for (const contextType of contextTypes) {
 						const contextSamples = await this.providerDB.sampleContextEntropy(

@@ -27,6 +27,7 @@ import {
 	type CaptchaSolution,
 	CaptchaStates,
 	CaptchaStatus,
+	ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -1903,16 +1904,17 @@ export class ProviderDatabase
 	 */
 	async setClientContextEntropy(
 		account: string,
-		contextType: string,
+		contextType: ContextType,
 		entropy: string,
 	): Promise<void> {
 		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
 			{ account, contextType };
+		const now = new Date();
 		await this.tables?.clientContextEntropy.updateOne(
 			filter,
 			{
-				$set: { entropy, updatedAt: new Date() },
-				$setOnInsert: { createdAt: new Date() },
+				$set: { account, contextType, entropy, updatedAt: now },
+				$setOnInsert: { createdAt: now },
 			},
 			{ upsert: true },
 		);
@@ -1923,7 +1925,7 @@ export class ProviderDatabase
 	 */
 	async getClientContextEntropy(
 		account: string,
-		contextType: string,
+		contextType: ContextType,
 	): Promise<string | undefined> {
 		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
 			{ account, contextType };
@@ -1937,7 +1939,7 @@ export class ProviderDatabase
 	async sampleContextEntropy(
 		sampleSize: number,
 		siteKey: string,
-		contextType: string,
+		contextType: ContextType,
 	): Promise<string[]> {
 		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
 		const max = 10000;
@@ -1977,13 +1979,13 @@ export class ProviderDatabase
 		];
 
 		// Add context-specific filter
-		if (contextType === "webview") {
+		if (contextType === ContextType.Webview) {
 			pipeline.push({
 				$match: {
 					"sessionData.webView": true,
 				},
 			});
-		} else if (contextType === "default") {
+		} else if (contextType === ContextType.Default) {
 			pipeline.push({
 				$match: {
 					"sessionData.webView": false,
