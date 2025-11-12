@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 3.6.3
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/locale@3.1.25
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
 ## 3.6.2
 ### Patch Changes
 

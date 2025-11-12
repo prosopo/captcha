@@ -1,5 +1,10 @@
 # @prosopo/prosoponator-bot
 
+## 2.6.26
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 2.6.25
 ### Patch Changes
 

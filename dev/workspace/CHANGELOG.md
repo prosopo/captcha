@@ -1,5 +1,10 @@
 # @prosopo/workspace
 
+## 3.1.18
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 3.1.17
 ### Patch Changes
 

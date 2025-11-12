@@ -1,5 +1,13 @@
 # @prosopo/cypress-shared
 
+## 2.8.43
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+
 ## 2.8.42
 ### Patch Changes
 

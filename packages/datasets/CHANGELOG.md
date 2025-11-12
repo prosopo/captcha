@@ -1,5 +1,16 @@
 # @prosopo/datasets
 
+## 3.0.48
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
 ## 3.0.47
 ### Patch Changes
 

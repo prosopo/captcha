@@ -1,5 +1,10 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.29
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
 ## 2.6.28
 ### Patch Changes
 

@@ -1,5 +1,19 @@
 # @prosopo/provider-mock
 
+## 2.8.35
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api-express-router@3.0.39
+  - @prosopo/common@3.1.25
+  - @prosopo/database@3.5.5
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/locale@3.1.25
+  - @prosopo/provider@3.13.6
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+
 ## 2.8.34
 ### Patch Changes
 
