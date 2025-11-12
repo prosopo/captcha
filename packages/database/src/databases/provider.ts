@@ -1827,7 +1827,10 @@ export class ProviderDatabase
 		const filter: Pick<ClientEntropyRecord, "account"> = { account };
 		await this.tables?.clientEntropy.updateOne(
 			filter,
-			{ $set: { entropy } },
+			{
+				$set: { entropy, updatedAt: new Date() },
+				$setOnInsert: { createdAt: new Date() },
+			},
 			{ upsert: true },
 		);
 	}
@@ -1907,7 +1910,10 @@ export class ProviderDatabase
 			{ account, contextType };
 		await this.tables?.clientContextEntropy.updateOne(
 			filter,
-			{ $set: { entropy, updatedAt: new Date() } },
+			{
+				$set: { entropy, updatedAt: new Date() },
+				$setOnInsert: { createdAt: new Date() },
+			},
 			{ upsert: true },
 		);
 	}
@@ -1944,50 +1950,71 @@ export class ProviderDatabase
 			});
 		}
 
-		// Build the match condition based on context type
-		const matchCondition: {
-			dappAccount: string;
-			requestedAtTimestamp: { $gt: Date };
-			webView?: boolean;
-		} = {
-			dappAccount: siteKey,
-			requestedAtTimestamp: {
-				$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
+		// Use aggregation to join with session records and filter by context
+		const pipeline: unknown[] = [
+			{
+				$match: {
+					dappAccount: siteKey,
+					requestedAtTimestamp: {
+						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
+					},
+				},
 			},
-		};
+			{
+				$lookup: {
+					from: "session",
+					localField: "sessionId",
+					foreignField: "sessionId",
+					as: "sessionData",
+				},
+			},
+			{
+				$unwind: {
+					path: "$sessionData",
+					preserveNullAndEmptyArrays: false,
+				},
+			},
+		];
 
 		// Add context-specific filter
 		if (contextType === "webview") {
-			matchCondition.webView = true;
+			pipeline.push({
+				$match: {
+					"sessionData.webView": true,
+				},
+			});
 		} else if (contextType === "default") {
-			matchCondition.webView = false;
+			pipeline.push({
+				$match: {
+					"sessionData.webView": false,
+				},
+			});
 		}
 
-		const cursor = this.tables?.powcaptcha.aggregate([
-			{ $match: matchCondition },
+		pipeline.push(
 			{ $limit: max },
 			{ $sample: { size } },
 			{
 				$project: {
 					_id: 0,
-					frictionlessTokenId: 1,
+					sessionId: 1,
 				},
 			},
-		]);
+		);
+
+		const cursor = this.tables?.powcaptcha.aggregate(pipeline);
 		const docs = await cursor;
 
 		if (docs?.length === 0) {
 			return [];
 		}
 
-		// Get the associated entropies from frictionlesstokenrecords
+		// Get the associated entropies from session records
 		return (
 			await Promise.all(
 				docs.map(async (doc) => {
-					if (doc.frictionlessTokenId) {
-						const tokenRecord = await this.getSessionRecordByToken(
-							doc.frictionlessTokenId,
-						);
+					if (doc.sessionId) {
+						const tokenRecord = await this.getSessionRecordByToken(doc.sessionId);
 						return tokenRecord?.decryptedHeadHash;
 					}
 					return undefined;
