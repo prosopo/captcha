@@ -290,20 +290,8 @@ export class ClientTaskManager {
 			const clients = await this.providerDB.getAllClientRecords();
 
 			for (const client of clients) {
-				const sampleEntropies = await this.providerDB.sampleEntropy(
-					100,
-					client.account,
-				);
-
-				// Calculate majority average entropy
-				const avgEntropy = majorityAverage(sampleEntropies);
-
-				await this.providerDB.setClientEntropy(client.account, avgEntropy);
-
 				// Calculate context-specific entropy if client has context awareness enabled
 				if (client.settings?.contextAware?.enabled) {
-					const contexts = client.settings.contextAware.contexts || [];
-
 					// Always calculate for default and webview contexts
 					const contextTypes = [ContextType.Default, ContextType.Webview];
 

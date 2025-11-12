@@ -300,19 +300,12 @@ export default (
 				// Determine the context type based on the request
 				const contextType = determineContextType(webView);
 
-				// First try to get context-specific entropy
-				let clientEntropy =
+				// Get context-specific entropy
+				const clientEntropy =
 					await tasks.frictionlessManager.getClientContextEntropy(
 						clientRecord.account,
 						contextType,
 					);
-
-				// If context-specific entropy doesn't exist, fall back to global entropy
-				if (!clientEntropy) {
-					clientEntropy = await tasks.frictionlessManager.getClientEntropy(
-						clientRecord.account,
-					);
-				}
 
 				if (clientEntropy) {
 					if (!decryptedHeadHash) {

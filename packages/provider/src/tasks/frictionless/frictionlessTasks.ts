@@ -471,10 +471,6 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
-	async getClientEntropy(siteKey: string): Promise<string | undefined> {
-		return this.db.getClientEntropy(siteKey);
-	}
-
 	async getClientContextEntropy(
 		siteKey: string,
 		contextType: ContextType,
