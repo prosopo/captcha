@@ -55,6 +55,7 @@ jobs:
 
       # clean the nx cache
       - run: npx nx reset
+      - run: npm run clean:turbo
 
       # install cypress so we don't have to do that every time
       - run: npx cypress install
