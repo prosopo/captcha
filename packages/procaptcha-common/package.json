@@ -34,13 +34,13 @@
 		"@emotion/react": "11.11.1",
 		"@emotion/styled": "11.11.0",
 		"@prosopo/account": "2.7.40",
-		"@prosopo/config": "3.1.23",
 		"@prosopo/load-balancer": "2.8.10",
 		"@prosopo/types": "3.6.1",
 		"@prosopo/widget-skeleton": "2.7.9",
 		"react": "18.3.1"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",

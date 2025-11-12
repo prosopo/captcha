@@ -33,7 +33,6 @@
 		"@polkadot/util": "13.5.7",
 		"@polkadot/util-crypto": "13.5.7",
 		"@prosopo/common": "3.1.23",
-		"@prosopo/config": "3.1.23",
 		"@prosopo/dotenv": "3.0.28",
 		"@prosopo/util": "3.2.1",
 		"openpgp": "5.11.3",
@@ -44,6 +43,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@types/node": "22.10.2",
 		"@types/qs": "6.9.18",
 		"@vitest/coverage-v8": "3.2.4",

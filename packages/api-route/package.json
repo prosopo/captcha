@@ -24,10 +24,10 @@
 	},
 	"dependencies": {
 		"@prosopo/common": "3.1.23",
-		"zod": "3.23.8",
-		"@prosopo/config": "3.1.23"
+		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.23",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},
