@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 3.5.6
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/locale@3.1.26
+  - @prosopo/redis-client@1.0.11
+  - @prosopo/types@3.6.4
+  - @prosopo/types-database@4.0.6
+  - @prosopo/user-access-policy@3.5.32
+
 ## 3.5.5
 ### Patch Changes
 

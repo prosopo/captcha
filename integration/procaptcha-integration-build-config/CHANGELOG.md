@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-integration-build-config
 
+## 1.1.27
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 1.1.26
 ### Patch Changes
 

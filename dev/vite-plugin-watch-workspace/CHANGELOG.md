@@ -1,5 +1,10 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.30
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 2.6.29
 ### Patch Changes
 

@@ -1,5 +1,24 @@
 # @prosopo/scripts
 
+## 3.1.33
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/workspace@3.1.19
+  - @prosopo/cli@3.5.8
+  - @prosopo/common@3.1.26
+  - @prosopo/datasets@3.0.49
+  - @prosopo/dotenv@3.0.31
+  - @prosopo/env@3.2.28
+  - @prosopo/keyring@2.8.40
+  - @prosopo/locale@3.1.26
+  - @prosopo/provider@3.13.7
+  - @prosopo/types@3.6.4
+  - @prosopo/types-env@2.7.53
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.1.32
 ### Patch Changes
 

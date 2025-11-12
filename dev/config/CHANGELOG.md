@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.1.26
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 3.1.25
 ### Patch Changes
 

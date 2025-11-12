@@ -1,5 +1,13 @@
 # @prosopo/load-balancer
 
+## 2.8.13
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/types@3.6.4
+
 ## 2.8.12
 ### Patch Changes
 
