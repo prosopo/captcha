@@ -48,6 +48,8 @@ import type {
 } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
+	type ClientContextEntropyRecord,
+	ClientContextEntropyRecordSchema,
 	type ClientEntropyRecord,
 	ClientEntropyRecordSchema,
 	type ClientRecord,
@@ -103,6 +105,7 @@ enum TableNames {
 	session = "session",
 	detector = "detector",
 	clientEntropy = "clientEntropy",
+	clientContextEntropy = "clientContextEntropy",
 }
 
 const PROVIDER_TABLES = [
@@ -165,6 +168,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.clientEntropy,
 		modelName: "ClientEntropy",
 		schema: ClientEntropyRecordSchema,
+	},
+	{
+		collectionName: TableNames.clientContextEntropy,
+		modelName: "ClientContextEntropy",
+		schema: ClientContextEntropyRecordSchema,
 	},
 ];
 
@@ -1856,6 +1864,107 @@ export class ProviderDatabase
 					},
 				},
 			},
+			{ $limit: max },
+			{ $sample: { size } },
+			{
+				$project: {
+					_id: 0,
+					frictionlessTokenId: 1,
+				},
+			},
+		]);
+		const docs = await cursor;
+
+		if (docs?.length === 0) {
+			return [];
+		}
+
+		// Get the associated entropies from frictionlesstokenrecords
+		return (
+			await Promise.all(
+				docs.map(async (doc) => {
+					if (doc.frictionlessTokenId) {
+						const tokenRecord = await this.getSessionRecordByToken(
+							doc.frictionlessTokenId,
+						);
+						return tokenRecord?.decryptedHeadHash;
+					}
+					return undefined;
+				}),
+			)
+		).filter((headHash): headHash is string => headHash !== undefined);
+	}
+
+	/**
+	 * @description set client context-specific entropy
+	 */
+	async setClientContextEntropy(
+		account: string,
+		contextType: string,
+		entropy: string,
+	): Promise<void> {
+		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
+			{ account, contextType };
+		await this.tables?.clientContextEntropy.updateOne(
+			filter,
+			{ $set: { entropy, updatedAt: new Date() } },
+			{ upsert: true },
+		);
+	}
+
+	/**
+	 * @description get client context-specific entropy
+	 */
+	async getClientContextEntropy(
+		account: string,
+		contextType: string,
+	): Promise<string | undefined> {
+		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
+			{ account, contextType };
+		const doc = await this.tables?.clientContextEntropy
+			.findOne(filter)
+			.lean<ClientContextEntropyRecord>();
+		return doc ? doc.entropy : undefined;
+	}
+
+	/** Sample captcha records from the database for a specific context */
+	async sampleContextEntropy(
+		sampleSize: number,
+		siteKey: string,
+		contextType: string,
+	): Promise<string[]> {
+		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
+		const max = 10000;
+		if (size > max) {
+			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
+				context: {
+					failedFuncName: this.sampleContextEntropy.name,
+					sampleSize,
+				},
+			});
+		}
+
+		// Build the match condition based on context type
+		const matchCondition: {
+			dappAccount: string;
+			requestedAtTimestamp: { $gt: Date };
+			webView?: boolean;
+		} = {
+			dappAccount: siteKey,
+			requestedAtTimestamp: {
+				$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
+			},
+		};
+
+		// Add context-specific filter
+		if (contextType === "webview") {
+			matchCondition.webView = true;
+		} else if (contextType === "default") {
+			matchCondition.webView = false;
+		}
+
+		const cursor = this.tables?.powcaptcha.aggregate([
+			{ $match: matchCondition },
 			{ $limit: max },
 			{ $sample: { size } },
 			{

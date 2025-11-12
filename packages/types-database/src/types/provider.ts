@@ -533,6 +533,28 @@ export const ClientEntropyRecordSchema = new Schema<ClientEntropyRecord>({
 });
 ClientEntropyRecordSchema.index({ account: 1 }, { unique: true });
 
+export type ClientContextEntropy = {
+	account: string;
+	contextType: string;
+	entropy: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
+export type ClientContextEntropyRecord = mongoose.Document &
+	ClientContextEntropy;
+export const ClientContextEntropyRecordSchema =
+	new Schema<ClientContextEntropyRecord>({
+		account: { type: String, required: true },
+		contextType: { type: String, required: true },
+		entropy: { type: String, required: true },
+		createdAt: { type: Date, required: true },
+		updatedAt: { type: Date, required: true },
+	});
+ClientContextEntropyRecordSchema.index(
+	{ account: 1, contextType: 1 },
+	{ unique: true },
+);
+
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
@@ -749,4 +771,21 @@ export interface IProviderDatabase extends IDatabase {
 	getClientEntropy(account: string): Promise<string | undefined>;
 
 	sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]>;
+
+	setClientContextEntropy(
+		account: string,
+		contextType: string,
+		entropy: string,
+	): Promise<void>;
+
+	getClientContextEntropy(
+		account: string,
+		contextType: string,
+	): Promise<string | undefined>;
+
+	sampleContextEntropy(
+		sampleSize: number,
+		siteKey: string,
+		contextType: string,
+	): Promise<string[]>;
 }

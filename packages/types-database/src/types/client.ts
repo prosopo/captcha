@@ -111,6 +111,12 @@ export const UserSettingsSchema = new Schema({
 	contextAware: {
 		enabled: { type: Boolean, default: false },
 		threshold: { type: Number, default: contextAwareThresholdDefault },
+		contexts: [
+			{
+				type: { type: String, enum: ["webview", "default"] },
+				threshold: { type: Number, default: contextAwareThresholdDefault },
+			},
+		],
 	},
 });
 

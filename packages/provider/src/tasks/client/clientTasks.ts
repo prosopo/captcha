@@ -298,6 +298,31 @@ export class ClientTaskManager {
 				const avgEntropy = majorityAverage(sampleEntropies);
 
 				await this.providerDB.setClientEntropy(client.account, avgEntropy);
+
+				// Calculate context-specific entropy if client has context awareness enabled
+				if (client.settings?.contextAware?.enabled) {
+					const contexts = client.settings.contextAware.contexts || [];
+
+					// Always calculate for default and webview contexts
+					const contextTypes = ["default", "webview"];
+
+					for (const contextType of contextTypes) {
+						const contextSamples = await this.providerDB.sampleContextEntropy(
+							100,
+							client.account,
+							contextType,
+						);
+
+						if (contextSamples.length > 0) {
+							const contextAvgEntropy = majorityAverage(contextSamples);
+							await this.providerDB.setClientContextEntropy(
+								client.account,
+								contextType,
+								contextAvgEntropy,
+							);
+						}
+					}
+				}
 			}
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,

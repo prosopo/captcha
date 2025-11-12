@@ -96,6 +96,18 @@ export const IPValidationRulesSchema = object({
 	forceConsistentIp: boolean().optional().default(false),
 });
 
+// Context type for filtering entropy samples
+export const ContextTypeSchema = z.enum(["webview", "default"]);
+export type ContextType = z.infer<typeof ContextTypeSchema>;
+
+// Individual context configuration
+export const ContextConfigSchema = z.object({
+	type: ContextTypeSchema,
+	threshold: number().optional().default(contextAwareThresholdDefault),
+});
+
+export type IContextConfig = z.infer<typeof ContextConfigSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string())
@@ -112,6 +124,7 @@ export const ClientSettingsSchema = object({
 		.object({
 			enabled: boolean().optional().default(false),
 			threshold: number().optional().default(contextAwareThresholdDefault),
+			contexts: array(ContextConfigSchema).optional(),
 		})
 		.optional(),
 });

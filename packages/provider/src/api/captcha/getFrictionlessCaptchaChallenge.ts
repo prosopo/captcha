@@ -293,9 +293,22 @@ export default (
 
 			// Check the context
 			if (clientRecord.settings.contextAware?.enabled) {
-				const clientEntropy = await tasks.frictionlessManager.getClientEntropy(
-					clientRecord.account,
-				);
+				// Determine the context type based on the request
+				const contextType = webView ? "webview" : "default";
+
+				// First try to get context-specific entropy
+				let clientEntropy =
+					await tasks.frictionlessManager.getClientContextEntropy(
+						clientRecord.account,
+						contextType,
+					);
+
+				// If context-specific entropy doesn't exist, fall back to global entropy
+				if (!clientEntropy) {
+					clientEntropy = await tasks.frictionlessManager.getClientEntropy(
+						clientRecord.account,
+					);
+				}
 
 				if (clientEntropy) {
 					if (!decryptedHeadHash) {
@@ -315,9 +328,16 @@ export default (
 						);
 					}
 
+					// Find the threshold for this context if specified
+					let threshold = clientRecord.settings.contextAware.threshold;
+					const contexts = clientRecord.settings.contextAware.contexts || [];
+					const contextConfig = contexts.find((c) => c.type === contextType);
+					if (contextConfig) {
+						threshold = contextConfig.threshold;
+					}
+
 					const sim = compareBinaryStrings(decryptedHeadHash, clientEntropy);
-					const isValidContext =
-						sim >= clientRecord.settings.contextAware.threshold;
+					const isValidContext = sim >= threshold;
 					if (!isValidContext) {
 						return res.json(
 							await tasks.frictionlessManager.sendImageCaptcha({
