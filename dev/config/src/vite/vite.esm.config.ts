@@ -72,16 +72,16 @@ export default async function (
 				formats: ["es"],
 				entry: entry || "src/index.ts", // required
 			},
-		rollupOptions: {
-			treeshake: false,
-			external: allExternal,
+			rollupOptions: {
+				treeshake: false,
+				external: allExternal,
+			},
 		},
-	},
-	esbuild: {
-		jsx: "automatic",
-		// Use standard React JSX for library packages
-		// Frontend apps using ViteFrontendConfig will override to Emotion
-		jsxDev: process.env.NODE_ENV === "development",
-	},
-});
+		esbuild: {
+			jsx: "automatic",
+			// Use standard React JSX for library packages
+			// Frontend apps using ViteFrontendConfig will override to Emotion
+			jsxDev: process.env.NODE_ENV === "development",
+		},
+	});
 }
