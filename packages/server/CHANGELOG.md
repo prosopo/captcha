@@ -1,5 +1,19 @@
 # @prosopo/server
 
+## 2.9.46
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/load-balancer@2.8.11
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+
 ## 2.9.45
 ### Patch Changes
 

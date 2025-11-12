@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.40
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+
 ## 2.6.39
 ### Patch Changes
 

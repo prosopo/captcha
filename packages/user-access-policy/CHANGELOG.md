@@ -1,5 +1,18 @@
 # @prosopo/user-access-policy
 
+## 3.5.30
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/redis-client@1.0.9
+  - @prosopo/api-route@2.6.32
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+
 ## 3.5.29
 ### Patch Changes
 

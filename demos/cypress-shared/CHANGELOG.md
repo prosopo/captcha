@@ -1,5 +1,15 @@
 # @prosopo/cypress-shared
 
+## 2.8.42
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+
 ## 2.8.41
 ### Patch Changes
 
