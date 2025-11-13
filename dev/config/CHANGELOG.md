@@ -1,5 +1,27 @@
 # @prosopo/config
 
+## 3.1.25
+### Patch Changes
+
+- 93d92a7: correcting jsx import source
+
+## 3.1.24
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+
+## 3.1.23
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+
+## 3.1.22
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- df79c03: More dep fixes
+- b6e98b2: Run npm audit
+
 ## 3.1.21
 ### Patch Changes
 

@@ -29,16 +29,6 @@ async function main() {
 
 	const config: ProsopoConfigOutput = getConfig();
 
-	if (config.devOnlyWatchEvents) {
-		log.warn(() => ({
-			msg: `
-        ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
-        EVENT TRACKING ON. IF NOT DEVELOPMENT, PLEASE STOP, CHANGE THE ENVIRONMENT, AND RESTART
-        ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
-            `,
-		}));
-	}
-
 	const pair = getPair(config.account.secret, config.account.address);
 
 	const authAccount = getPair(

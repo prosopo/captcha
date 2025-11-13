@@ -119,6 +119,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						maxVerifiedTime,
 						ip,
 						clientRecord.settings.disallowWebView,
+						clientRecord.settings.contextAware?.enabled,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));

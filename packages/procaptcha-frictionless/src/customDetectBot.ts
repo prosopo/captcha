@@ -58,20 +58,20 @@ const customDetectBot: BotDetectionFunction = async (
 	const userAccount = await ext.getAccount(config);
 
 	const detect = await DetectorLoader();
-	const botScore = (await detect(
+	const detectionResult = (await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
 		container,
 		restartFn,
 		userAccount.account.address,
-	)) as { token: string; provider?: RandomProvider };
+	)) as { token: string; provider?: RandomProvider; encryptHeadHash: string };
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
 	// Get random active provider with timeout
-	const provider = botScore.provider;
+	const provider = detectionResult.provider;
 
 	if (!provider) {
 		throw new Error("Provider Selection Failed");
@@ -85,7 +85,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(
 		providerApi.getFrictionlessCaptcha(
-			botScore.token,
+			detectionResult.token,
+			detectionResult.encryptHeadHash,
 			config.account.address,
 			userAccount.account.address,
 		),

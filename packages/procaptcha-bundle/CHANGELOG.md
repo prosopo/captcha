@@ -1,5 +1,134 @@
 # @prosopo/procaptcha-bundle
 
+## 3.2.9
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/locale@3.1.25
+  - @prosopo/procaptcha-common@2.9.18
+  - @prosopo/procaptcha-frictionless@2.8.21
+  - @prosopo/procaptcha-pow@2.8.26
+  - @prosopo/procaptcha-react@2.9.20
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+  - @prosopo/widget-skeleton@2.7.11
+
+## 3.2.8
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/procaptcha-frictionless@2.8.20
+  - @prosopo/procaptcha-common@2.9.17
+  - @prosopo/procaptcha-react@2.9.19
+  - @prosopo/widget-skeleton@2.7.10
+  - @prosopo/procaptcha-pow@2.8.25
+  - @prosopo/dotenv@3.0.29
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+
+## 3.2.7
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/locale@3.1.23
+  - @prosopo/procaptcha-common@2.9.16
+  - @prosopo/procaptcha-frictionless@2.8.19
+  - @prosopo/procaptcha-pow@2.8.24
+  - @prosopo/procaptcha-react@2.9.18
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+  - @prosopo/widget-skeleton@2.7.9
+
+## 3.2.6
+### Patch Changes
+
+- Updated dependencies [9128d5e]
+- Updated dependencies [9128d5e]
+  - @prosopo/procaptcha-common@2.9.15
+  - @prosopo/procaptcha-frictionless@2.8.18
+  - @prosopo/procaptcha-pow@2.8.23
+  - @prosopo/procaptcha-react@2.9.17
+
+## 3.2.5
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.16
+  - @prosopo/procaptcha-frictionless@2.8.17
+
+## 3.2.4
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.15
+  - @prosopo/procaptcha-frictionless@2.8.16
+
+## 3.2.3
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/procaptcha-frictionless@2.8.15
+  - @prosopo/procaptcha-common@2.9.14
+  - @prosopo/procaptcha-react@2.9.14
+  - @prosopo/widget-skeleton@2.7.8
+  - @prosopo/procaptcha-pow@2.8.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.2.2
+### Patch Changes
+
+- 0699e28: Release in production mode
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/procaptcha-common@2.9.13
+  - @prosopo/procaptcha-frictionless@2.8.14
+  - @prosopo/procaptcha-pow@2.8.21
+  - @prosopo/procaptcha-react@2.9.13
+
+## 3.2.1
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/procaptcha-frictionless@2.8.13
+  - @prosopo/types@3.5.10
+  - @prosopo/procaptcha-common@2.9.12
+  - @prosopo/procaptcha-pow@2.8.20
+  - @prosopo/procaptcha-react@2.9.12
+
+## 3.2.0
+### Minor Changes
+
+- 6e69716: Add procaptcha:ready event to signal when window.procaptcha is available
+
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/procaptcha-common@2.9.11
+  - @prosopo/procaptcha-frictionless@2.8.12
+  - @prosopo/procaptcha-pow@2.8.19
+  - @prosopo/procaptcha-react@2.9.11
+
 ## 3.1.11
 ### Patch Changes
 

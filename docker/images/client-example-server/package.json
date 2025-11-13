@@ -2,8 +2,8 @@
 	"name": "@prosopo/client-example-server-docker",
 	"version": "2.7.31",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"type": "module",
 	"main": "dist/index.js",
@@ -16,7 +16,9 @@
 		}
 	},
 	"dependencies": {
-		"@prosopo/client-example-server": "2.7.42",
+		"@prosopo/client-example-server": "2.7.42"
+	},
+	"devDependencies": {
 		"@prosopo/config": "3.1.20"
 	},
 	"scripts": {

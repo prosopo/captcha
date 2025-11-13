@@ -1,5 +1,113 @@
 # @prosopo/procaptcha
 
+## 2.9.20
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api@3.1.36
+  - @prosopo/common@3.1.25
+  - @prosopo/datasets@3.0.48
+  - @prosopo/procaptcha-common@2.9.18
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
+## 2.9.19
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/procaptcha-common@2.9.17
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/datasets@3.0.47
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+
+## 2.9.18
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/common@3.1.23
+  - @prosopo/datasets@3.0.46
+  - @prosopo/procaptcha-common@2.9.16
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 2.9.17
+### Patch Changes
+
+- Updated dependencies [9128d5e]
+- Updated dependencies [9128d5e]
+  - @prosopo/procaptcha-common@2.9.15
+
+## 2.9.16
+### Patch Changes
+
+  - @prosopo/datasets@3.0.45
+
+## 2.9.15
+### Patch Changes
+
+  - @prosopo/datasets@3.0.44
+
+## 2.9.14
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/procaptcha-common@2.9.14
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/datasets@3.0.43
+  - @prosopo/common@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/config@3.1.22
+
+## 2.9.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+  - @prosopo/datasets@3.0.42
+  - @prosopo/procaptcha-common@2.9.13
+
+## 2.9.12
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/datasets@3.0.41
+  - @prosopo/procaptcha-common@2.9.12
+
+## 2.9.11
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/datasets@3.0.40
+  - @prosopo/api@3.1.30
+  - @prosopo/procaptcha-common@2.9.11
+
 ## 2.9.10
 ### Patch Changes
 

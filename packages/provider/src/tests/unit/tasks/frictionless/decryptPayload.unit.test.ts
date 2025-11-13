@@ -74,11 +74,20 @@ describe("decryptPayload", () => {
 
 		const frictionlessTaskManager = new FrictionlessManager(db, pair, config);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			decryptionFailed: false,
 		});
 	});
 	it("should get values from the payload when some values are undefined", async () => {
@@ -99,11 +108,20 @@ describe("decryptPayload", () => {
 			config,
 		);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			decryptionFailed: true,
 		});
 	});
 	it("should set values for the payload when there are keys but they fail to decrypt", async () => {
@@ -127,11 +145,20 @@ describe("decryptPayload", () => {
 			config,
 		);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY + 1,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			decryptionFailed: true,
 		});
 	});
 	it("should set values for the payload when there are no keys", async () => {
@@ -159,11 +186,20 @@ describe("decryptPayload", () => {
 			config,
 		);
 
-		const result = await frictionlessTaskManager.decryptPayload("payload");
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+		);
 		expect(result).toEqual({
 			baseBotScore: 1,
 			timestamp: expect.any(Number),
 			providerSelectEntropy: fmImport.DEFAULT_ENTROPY - 3,
+			userId: undefined,
+			userAgent: undefined,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			decryptionFailed: true,
 		});
 	});
 });

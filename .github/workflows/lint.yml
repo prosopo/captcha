@@ -5,12 +5,16 @@ name: lint
 on:
   pull_request:
     branches: [main, dev, staging, release/*]
-    types: 
+    types:
       - opened # when a PR is opened
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -46,18 +50,16 @@ jobs:
         with:
           submodules: "recursive"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
           npm_ci_args: '--include=dev'
 
-      # if this fails, you need to run `npx nx sync` as something is out of sync wrt deps, configs, etc
-      - name: sync check
-        run: |
-
-          # check that the changesets are present for each package which has been modified
-          npx nx sync:check
-
-      - run: npx nx run-many --target=build --projects=@prosopo/lint --nxBail
+      - run: npx turbo run @prosopo/lint#build
 
       - run: npm run lint
 

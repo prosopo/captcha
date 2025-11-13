@@ -1,5 +1,55 @@
 # @prosopo/svelte-procaptcha-integration-demo
 
+## 1.1.39
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/svelte-procaptcha-wrapper@1.1.39
+
+## 1.1.38
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/svelte-procaptcha-wrapper@1.1.38
+
+## 1.1.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/svelte-procaptcha-wrapper@1.1.37
+
+## 1.1.36
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/svelte-procaptcha-wrapper@1.1.36
+  - @prosopo/config@3.1.22
+
+## 1.1.35
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.35
+
+## 1.1.34
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.34
+
+## 1.1.33
+### Patch Changes
+
+  - @prosopo/svelte-procaptcha-wrapper@1.1.33
+
 ## 1.1.32
 ### Patch Changes
 

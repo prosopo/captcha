@@ -12,6 +12,10 @@ on:
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -47,6 +51,11 @@ jobs:
         with:
           submodules: "recursive"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       - uses: prosopo/captcha/.github/actions/npm@gha
         with:
           npm_ci_args: '--include=dev'
@@ -64,7 +73,7 @@ jobs:
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace
-      - run: npx nx run-many --target=build --nxBail
+      - run: npx turbo run build
 
       - name: Start the docker images
         run: |
@@ -78,7 +87,7 @@ jobs:
       # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
       # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
       # by the cypress tests to find the elements they need to interact with
-      - run: NODE_ENV="development" npx nx run @prosopo/procaptcha-bundle:bundle --nxBail
+      - run: NODE_ENV="development" npx turbo run @prosopo/procaptcha-bundle#bundle
 
       - name: Run the cypress tests on client-bundle-example
         run: |

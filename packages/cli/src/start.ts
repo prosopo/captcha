@@ -34,6 +34,7 @@ import {
 	prosopoVerifyRouter,
 	publicRouter,
 	robotsMiddleware,
+	setClientEntropy,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import { blockMiddleware, ja4Middleware } from "@prosopo/provider";
@@ -216,6 +217,20 @@ export async function start(
 					context: { failedFuncName: getClientList.name },
 				}));
 			});
+		}
+
+		const cronClientEntropySetter =
+			env.config.scheduledTasks?.clientEntropyScheduler?.schedule;
+		if (cronClientEntropySetter) {
+			setClientEntropy(env.pair, cronClientEntropySetter, env.config).catch(
+				(err) => {
+					env.logger.error(() => ({
+						msg: "Failed to start client entropy scheduler",
+						err,
+						context: { failedFuncName: setClientEntropy.name },
+					}));
+				},
+			);
 		}
 	}
 

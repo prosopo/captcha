@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: read
+
 defaults:
   run:
     shell: bash
@@ -30,6 +34,11 @@ jobs:
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
           ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
       - name: Git config
         run: |

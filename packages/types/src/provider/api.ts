@@ -366,6 +366,7 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.token]: string(),
 	[ApiParams.user]: string(),
+	[ApiParams.headHash]: string(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

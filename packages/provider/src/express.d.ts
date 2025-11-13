@@ -14,6 +14,17 @@
 
 import type { Logger } from "@prosopo/common";
 import type { TFunction } from "i18next";
+export interface AugmentedRequest {
+	t: TFunction;
+	i18n: {
+		t: TFunction;
+	};
+	user?: string;
+	siteKey?: string;
+	ja4: string;
+	logger: Logger;
+	requestId?: string;
+}
 
 declare global {
 	namespace Express {

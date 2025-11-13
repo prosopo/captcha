@@ -1,5 +1,87 @@
 # @prosopo/procaptcha-common
 
+## 2.9.18
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/account@2.7.42
+  - @prosopo/load-balancer@2.8.12
+  - @prosopo/types@3.6.3
+  - @prosopo/widget-skeleton@2.7.11
+
+## 2.9.17
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/widget-skeleton@2.7.10
+  - @prosopo/load-balancer@2.8.11
+  - @prosopo/account@2.7.41
+  - @prosopo/types@3.6.2
+
+## 2.9.16
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/account@2.7.40
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/types@3.6.1
+  - @prosopo/widget-skeleton@2.7.9
+
+## 2.9.15
+### Patch Changes
+
+- 9128d5e: correcting types
+- 9128d5e: adding super fun tests
+
+## 2.9.14
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/widget-skeleton@2.7.8
+  - @prosopo/load-balancer@2.8.9
+  - @prosopo/account@2.7.39
+  - @prosopo/config@3.1.22
+
+## 2.9.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/account@2.7.38
+  - @prosopo/load-balancer@2.8.8
+
+## 2.9.12
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/account@2.7.37
+  - @prosopo/load-balancer@2.8.7
+
+## 2.9.11
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [b58046d]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/load-balancer@2.8.6
+  - @prosopo/account@2.7.36
+
 ## 2.9.10
 ### Patch Changes
 
