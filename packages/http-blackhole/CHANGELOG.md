@@ -1,5 +1,16 @@
 # @prosopo/http-blackhole
 
+## 1.0.24
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
+## 1.0.23
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
 ## 1.0.22
 ### Patch Changes
 

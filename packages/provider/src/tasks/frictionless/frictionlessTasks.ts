@@ -376,6 +376,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let webView: boolean | undefined;
 		let iFrame: boolean | undefined;
 		let decryptedHeadHash = "";
+		let decryptionFailed = false;
 		for (const [keyIndex, key] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -424,6 +425,7 @@ export class FrictionlessManager extends CaptchaManager {
 					timestamp = 0;
 					providerSelectEntropy = DEFAULT_ENTROPY + 1;
 					decryptedHeadHash = "";
+					decryptionFailed = true;
 				}
 			}
 		}
@@ -443,6 +445,7 @@ export class FrictionlessManager extends CaptchaManager {
 			timestamp = 0;
 			providerSelectEntropy = DEFAULT_ENTROPY - undefinedCount;
 			decryptedHeadHash = "";
+			decryptionFailed = true;
 		}
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
@@ -455,6 +458,7 @@ export class FrictionlessManager extends CaptchaManager {
 				webView,
 				iFrame,
 				decryptedHeadHash,
+				decryptionFailed,
 			},
 		}));
 
@@ -468,6 +472,7 @@ export class FrictionlessManager extends CaptchaManager {
 			webView: webView || false,
 			iFrame: iFrame || false,
 			decryptedHeadHash,
+			decryptionFailed,
 		};
 	}
 

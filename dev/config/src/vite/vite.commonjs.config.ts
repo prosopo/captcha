@@ -88,7 +88,8 @@ export default async function (
 		},
 		esbuild: {
 			jsx: "automatic",
-			jsxImportSource: "@emotion/react",
+			// Use standard React JSX for library packages
+			// Frontend apps using ViteFrontendConfig will override to Emotion
 			jsxDev: process.env.NODE_ENV === "development",
 		},
 	});

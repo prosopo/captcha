@@ -1,5 +1,17 @@
 # @prosopo/client-bundle-example
 
+## 2.10.10
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
+## 2.10.9
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- 9a853c3: missing deps
+- cfee479: make @prosopo/config a dev dep
+
 ## 2.10.8
 ### Patch Changes
 

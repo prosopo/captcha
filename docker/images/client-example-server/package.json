@@ -16,7 +16,9 @@
 		}
 	},
 	"dependencies": {
-		"@prosopo/client-example-server": "2.7.42",
+		"@prosopo/client-example-server": "2.7.42"
+	},
+	"devDependencies": {
 		"@prosopo/config": "3.1.20"
 	},
 	"scripts": {

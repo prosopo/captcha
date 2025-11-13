@@ -3,6 +3,10 @@ name: create_release_pr
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 defaults:
   run:
     shell: bash

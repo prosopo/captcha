@@ -7,6 +7,10 @@ on:
     #   - build/*
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false # queue the new runs until previous have finished. This avoids version bumps overlapping with each other

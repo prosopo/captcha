@@ -1,5 +1,39 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.21
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api@3.1.36
+  - @prosopo/common@3.1.25
+  - @prosopo/detector@3.3.17
+  - @prosopo/load-balancer@2.8.12
+  - @prosopo/locale@3.1.25
+  - @prosopo/procaptcha-common@2.9.18
+  - @prosopo/procaptcha-pow@2.8.26
+  - @prosopo/procaptcha-react@2.9.20
+  - @prosopo/types@3.6.3
+  - @prosopo/widget-skeleton@2.7.11
+
+## 2.8.20
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/procaptcha-common@2.9.17
+  - @prosopo/procaptcha-react@2.9.19
+  - @prosopo/widget-skeleton@2.7.10
+  - @prosopo/procaptcha-pow@2.8.25
+  - @prosopo/load-balancer@2.8.11
+  - @prosopo/detector@3.3.16
+  - @prosopo/common@3.1.24
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/api@3.1.35
+
 ## 2.8.19
 ### Patch Changes
 
