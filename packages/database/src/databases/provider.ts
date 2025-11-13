@@ -1926,7 +1926,9 @@ export class ProviderDatabase
 			await Promise.all(
 				docs.map(async (doc) => {
 					if (doc.sessionId) {
-						const tokenRecord = await this.getSessionRecordByToken(doc.sessionId);
+						const tokenRecord = await this.getSessionRecordByToken(
+							doc.sessionId,
+						);
 						return tokenRecord?.decryptedHeadHash;
 					}
 					return undefined;

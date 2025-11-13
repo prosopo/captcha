@@ -17,7 +17,7 @@ import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	CaptchaType,
-	ContextType,
+	type ContextType,
 	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
