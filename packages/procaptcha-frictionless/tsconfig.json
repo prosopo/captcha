@@ -16,10 +16,16 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../detector"
 		},
 		{
 			"path": "../locale"
+		},
+		{
+			"path": "../load-balancer"
 		},
 		{
 			"path": "../procaptcha-pow"
@@ -32,6 +38,15 @@
 		},
 		{
 			"path": "../widget-skeleton"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../procaptcha-common"
 		}
 	]
 }

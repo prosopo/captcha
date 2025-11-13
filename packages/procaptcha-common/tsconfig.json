@@ -15,16 +15,13 @@
 	],
 	"references": [
 		{
-			"path": "../common"
+			"path": "../../dev/config/tsconfig.json"
 		},
 		{
 			"path": "../load-balancer"
 		},
 		{
 			"path": "../types"
-		},
-		{
-			"path": "../util"
 		},
 		{
 			"path": "../widget-skeleton"

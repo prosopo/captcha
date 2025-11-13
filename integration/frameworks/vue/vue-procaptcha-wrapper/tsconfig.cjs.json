@@ -7,13 +7,13 @@
 	"include": ["./src"],
 	"references": [
 		{
+			"path": "../../../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../../../../packages/procaptcha-wrapper"
 		},
 		{
 			"path": "../../../procaptcha-integration-build-config"
-		},
-		{
-			"path": "../../../../packages/types"
 		}
 	]
 }

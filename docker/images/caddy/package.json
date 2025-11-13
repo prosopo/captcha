@@ -1,9 +1,9 @@
 {
 	"name": "@prosopo/caddy-docker",
-	"version": "2.5.5",
+	"version": "2.5.6",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"type": "module",
 	"scripts": {
@@ -21,7 +21,7 @@
 			"types": "./dist/index.d.ts"
 		}
 	},
-	"dependencies": {
-		"@prosopo/config": "3.1.0"
+	"devDependencies": {
+		"@prosopo/config": "3.1.20"
 	}
 }

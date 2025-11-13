@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/scripts",
-	"version": "3.0.21",
+	"version": "3.1.32",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -13,14 +13,14 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"cli": "node dist/cli/index.js",
 		"setup": "node dist/cli/index.js setup"
 	},
@@ -28,49 +28,38 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"@iarna/toml": "2.2.5",
-		"@polkadot/api": "10.13.1",
-		"@polkadot/api-contract": "10.13.1",
-		"@polkadot/keyring": "12.6.2",
-		"@polkadot/util": "12.6.2",
-		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/account": "2.7.14",
-		"@prosopo/cli": "3.1.10",
-		"@prosopo/common": "3.1.4",
-		"@prosopo/config": "3.1.5",
-		"@prosopo/datasets": "3.0.17",
-		"@prosopo/dotenv": "3.0.9",
-		"@prosopo/env": "3.1.8",
-		"@prosopo/keyring": "2.8.11",
-		"@prosopo/provider": "3.6.0",
-		"@prosopo/types": "3.0.8",
-		"@prosopo/types-database": "3.0.17",
-		"@prosopo/types-env": "2.7.21",
-		"@prosopo/util": "3.0.7",
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
+		"@polkadot/util": "13.5.7",
+		"@polkadot/util-crypto": "13.5.7",
+		"@prosopo/cli": "3.5.7",
+		"@prosopo/common": "3.1.25",
+		"@prosopo/datasets": "3.0.48",
+		"@prosopo/dotenv": "3.0.30",
+		"@prosopo/env": "3.2.27",
+		"@prosopo/keyring": "2.8.39",
+		"@prosopo/locale": "3.1.25",
+		"@prosopo/provider": "3.13.6",
+		"@prosopo/types": "3.6.3",
+		"@prosopo/types-env": "2.7.52",
+		"@prosopo/util": "3.2.3",
+		"@prosopo/util-crypto": "13.5.27",
+		"@prosopo/workspace": "3.1.18",
 		"dotenv": "16.4.5",
-		"esbuild": "0.25.6",
-		"express": "4.21.2",
 		"fast-glob": "3.3.2",
 		"fs-extra": "11.2.0",
-		"mongodb": "6.9.0",
-		"yargs": "17.7.2",
-		"openpgp": "5.11.3",
-		"webpack-dev-server": "5.2.2"
-	},
-	"overrides": {
-		"@polkadot/keyring": "12.6.2"
+		"yargs": "17.7.2"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.25",
 		"@types/fs-extra": "11.0.4",
-		"@vitest/coverage-v8": "3.0.9",
+		"@types/node": "22.10.2",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	}
 }

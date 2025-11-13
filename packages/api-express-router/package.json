@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/api-express-router",
-	"version": "3.0.8",
+	"version": "3.0.39",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
@@ -20,17 +20,27 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/api-route": "2.6.12",
-		"@prosopo/common": "3.1.4",
+		"@polkadot/util": "13.5.7",
+		"@prosopo/api-route": "2.6.33",
+		"@prosopo/common": "3.1.25",
+		"@prosopo/env": "3.2.27",
+		"@prosopo/locale": "3.1.25",
+		"@prosopo/types": "3.6.3",
+		"dotenv": "16.4.5",
+		"express": "4.21.2",
+		"i18next": "24.1.0",
 		"uuid": "11.1.0",
-		"zod": "3.23.8",
-		"@prosopo/config": "3.1.5"
+		"zod": "3.23.8"
 	},
-	"devDependencies": {},
+	"devDependencies": {
+		"@prosopo/config": "3.1.25",
+		"@types/node": "22.10.2",
+		"vitest": "3.2.4"
+	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"bugs": {

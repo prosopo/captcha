@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
     <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
+
+    <script src="index.js"></script>
     <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
     <title>Procaptcha demo: Frictionless CAPTCHA</title>
     <script type="text/javascript">
@@ -175,30 +178,33 @@
 
 </div>
 <script type="module">
-    // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
-    import { render } from "%VITE_BUNDLE_URL%"
+    (async () => {
+        // Pattern to avoid race condition between Procaptcha script loading and Procaptcha render function call
+        const {render} = await import(import.meta.env.VITE_BUNDLE_URL);
 
-    // Define a callback function to be called when the CAPTCHA is verified
-    function onCaptchaVerified(output) {
-        console.log('Challenge passed');
-        window.updateCaptchaStatus('Challenge passed successfully!', 'success');
-        window.updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
-    }
-
-    const captchaContainer = document.getElementById('procaptcha-container');
-
-    // Render the CAPTCHA
-    const widgetId = render(captchaContainer, {
-        siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
-        captchaType: "frictionless",
-        callback: onCaptchaVerified,
-        "failed-callback": function () {
-            console.log('Challenge failed');
-            window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+        // Define a callback function to be called when the CAPTCHA is verified
+        function onCaptchaVerified(output) {
+            console.log('Challenge passed');
+            window.updateCaptchaStatus('Challenge passed successfully!', 'success');
+            window.updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
         }
-    });
 
-    window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
+        const captchaContainer = document.getElementById('procaptcha-container');
+
+        // Render the CAPTCHA
+        const widgetId = render(captchaContainer, {
+            siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
+            captchaType: "frictionless",
+            callback: onCaptchaVerified,
+            "failed-callback": function () {
+                console.log('Challenge failed');
+                window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+            }
+        });
+
+        window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
+    })();
 </script>
+
 </body>
 </html>

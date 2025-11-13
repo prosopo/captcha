@@ -1,0 +1,20 @@
+{
+	"extends": "../../tsconfig.cjs.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/cjs",
+		"paths": {
+			"#policy/*": ["./src/*"]
+		},
+		"emitDeclarationOnly": true
+	},
+	"include": ["./src"],
+	"references": [
+		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../common/tsconfig.cjs.json"
+		}
+	]
+}

@@ -15,6 +15,9 @@
 	],
 	"references": [
 		{
+			"path": "../../../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../react-procaptcha-wrapper"
 		},
 		{

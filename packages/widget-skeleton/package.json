@@ -1,11 +1,11 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.6.5",
+	"version": "2.7.11",
 	"description": "Non business logic utilities for web applications",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",
@@ -33,28 +33,18 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"dependencies": {
-		"@emotion/react": "11.13.3",
-		"@emotion/styled": "11.13.0",
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
-		"esbuild": "0.25.6",
-		"express": "4.21.2",
-		"@prosopo/config": "3.1.5",
-		"openpgp": "5.11.3",
-		"react": "18.3.1",
-		"webpack-dev-server": "5.2.2"
-	},
 	"devDependencies": {
-		"@vitest/coverage-v8": "3.0.9",
+		"@prosopo/config": "3.1.25",
+		"@types/node": "22.10.2",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"sideEffects": false
 }

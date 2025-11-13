@@ -22,7 +22,7 @@ import {
 import {
 	ExtensionLoader,
 	buildUpdateState,
-	getRandomActiveProvider,
+	getProcaptchaRandomActiveProvider,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { getDefaultEvents } from "@prosopo/procaptcha-common";
@@ -41,7 +41,7 @@ import {
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
-import { at, hashToHex } from "@prosopo/util";
+import { at, embedData, hashToHex } from "@prosopo/util";
 import { sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import ProsopoCaptchaApi from "./ProsopoCaptchaApi.js";
@@ -134,9 +134,10 @@ export function Manager(
 					// Get a new random provider if
 					// - we don't have a provider api instance (first time)
 					// - we do have a provider api instance but no sessionId (image captcha only)
-					const getRandomProviderResponse = await getRandomActiveProvider(
-						getConfig(),
-					);
+					const getRandomProviderResponse =
+						await getProcaptchaRandomActiveProvider(
+							getConfig().defaultEnvironment,
+						);
 
 					const providerUrl = getRandomProviderResponse.provider.url;
 					// get the provider api inst
@@ -228,17 +229,24 @@ export function Manager(
 				updateState({ showModal: false });
 
 				const challenge: CaptchaResponseBody = state.challenge;
-				const salt = randomAsHex();
 
 				// append solution to each captcha in the challenge
 				const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map(
 					(captcha, index) => {
 						const solution = at(state.solutions, index);
+						const coords = solution.flatMap(([_, x, y]) => [x, y]);
+						const salt = randomAsHex(
+							coords
+								.map((x) => x.toString(16).length + 4)
+								.reduce((acc, curr) => acc + curr, 0),
+						);
+
+						const saltCoord = embedData(salt, coords);
 						return {
 							captchaId: captcha.captchaId,
 							captchaContentId: captcha.captchaContentId,
-							salt,
-							solution,
+							salt: saltCoord,
+							solution: solution.flatMap((s) => s[0]),
 						};
 					},
 				);
@@ -353,8 +361,10 @@ export function Manager(
 	/**
 	 * (De)Select an image from the solution for the current round. If the hash is already in the solutions list, it will be removed (deselected) and if not it will be added (selected).
 	 * @param hash the hash of the image
+	 * @param x
+	 * @param y
 	 */
-	const select = (hash: string) => {
+	const select = (hash: string, x?: number, y?: number) => {
 		if (!state.challenge) {
 			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
 				context: { error: "Cannot select, no Captcha found in state" },
@@ -370,12 +380,13 @@ export function Manager(
 		const index = state.index;
 		const solutions = state.solutions;
 		const solution = at(solutions, index);
-		if (solution.includes(hash)) {
+		if (solution.some((s) => s[0] === hash)) {
 			// remove the hash from the solution
-			solution.splice(solution.indexOf(hash), 1);
+			const newSolution = solution.filter((s) => s[0] !== hash);
+			solutions[index] = newSolution;
 		} else {
 			// add the hash to the solution
-			solution.push(hash);
+			solutions[index] = [...solution, [hash, x || 0, y || 0]];
 		}
 		updateState({ solutions });
 	};

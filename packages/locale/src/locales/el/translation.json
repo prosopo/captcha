@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Δε βρέθηκε λύση χρήστη Dapp",
 		"NO_CAPTCHA": "Δε βρέθηκε captcha",
 		"NO_SESSION_FOUND": "Δε βρέθηκε συνεδρία",
+		"IP_ADDRESS_MISMATCH": "Οι διευθύνσεις IP δεν ταιριάζουν",
 		"INVALID_TOKEN": "Μη έγκυρο τεκμήριο",
 		"INVALID_SOLUTION": "Μη έγκυρη λύση",
 		"DECRYPTION_ERROR": "Σφάλμα αποκρυπτογράφησης"

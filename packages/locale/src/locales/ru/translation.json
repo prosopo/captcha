@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Решение пользователя Dapp не найдено",
 		"NO_CAPTCHA": "Капча не найдена",
 		"NO_SESSION_FOUND": "Сеанс не найден",
+		"IP_ADDRESS_MISMATCH": "IP адреса не совпадают",
 		"INVALID_TOKEN": "Недействительный токен",
 		"INVALID_SOLUTION": "Недопустимое решение",
 		"DECRYPTION_ERROR": "Ошибка расшифровки"

@@ -4,8 +4,7 @@
 		"rootDir": "./src",
 		"outDir": "./dist",
 		"lib": ["es6", "dom"],
-		"allowJs": true,
-		"jsxImportSource": "@emotion/react"
+		"allowJs": true
 	},
 	"include": [
 		"src",
@@ -16,6 +15,9 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../common"
 		},
 		{
@@ -23,6 +25,9 @@
 		},
 		{
 			"path": "../util-crypto"
+		},
+		{
+			"path": "../util"
 		}
 	]
 }

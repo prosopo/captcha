@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/workspace",
-	"version": "3.0.5",
+	"version": "3.1.18",
 	"description": "Prosopo workspace library",
 	"type": "module",
 	"main": "dist/index.js",
@@ -15,19 +15,21 @@
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
-	"dependencies": {
-		"@prosopo/config": "3.1.5"
+	"devDependencies": {
+		"@prosopo/config": "3.1.25",
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0"
 	},
-	"devDependencies": {},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/prosopo/captcha.git"

@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp felhasználó megoldása nem található",
 		"NO_CAPTCHA": "Nincs captcha található",
 		"NO_SESSION_FOUND": "Nincs található munkamenet",
+		"IP_ADDRESS_MISMATCH": "Az IP címek nem egyeznek",
 		"INVALID_TOKEN": "Érvénytelen token",
 		"INVALID_SOLUTION": "Érvénytelen megoldás",
 		"DECRYPTION_ERROR": "Hiba a titkosítás közben"

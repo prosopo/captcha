@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp istifadəçi həlli tapılmadı",
 		"NO_CAPTCHA": "Captcha tapılmadı",
 		"NO_SESSION_FOUND": "Seans tapılmadı",
+		"IP_ADDRESS_MISMATCH": "IP ünvanları uyğun gəlmir",
 		"INVALID_TOKEN": "Yanlış token",
 		"INVALID_SOLUTION": "Yanlış həll",
 		"DECRYPTION_ERROR": "Şifrəni çözərkən səhv"

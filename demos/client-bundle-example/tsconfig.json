@@ -16,7 +16,16 @@
 	],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
 			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/locale"
+		},
+		{
+			"path": "../../packages/types"
 		}
 	]
 }

@@ -12,9 +12,13 @@
 		"src/**/*.ts",
 		"src/**/*.tsx",
 		"src/**/*.json",
-		"src/**/*.d.ts"
+		"src/**/*.d.ts",
+		"src/**/.*.ts"
 	],
 	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
 		{
 			"path": "../common"
 		},
@@ -26,6 +30,15 @@
 		},
 		{
 			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
+		},
+		{
+			"path": "../redis-client"
+		},
+		{
+			"path": "../api"
 		}
 	]
 }

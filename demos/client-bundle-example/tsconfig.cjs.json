@@ -10,7 +10,16 @@
 	"include": ["**/*.ts"],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/locale"
+		},
+		{
+			"path": "../../packages/types"
 		}
 	]
 }

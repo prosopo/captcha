@@ -16,40 +16,29 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoDatabase } from "./mongo.js";
 
 export class MongoMemoryDatabase extends MongoDatabase {
-	protected override readonly _url: string;
+	protected override _url = "";
 	private mongod: MongoMemoryServer | undefined;
-	private running = false;
 
 	constructor(
-		url: string,
+		_url: string, // this param is unused, but kept for compatibility
 		dbname: string,
 		logger: Logger,
 		authSource?: string,
 	) {
-		const mongod = new MongoMemoryServer();
-		const mongoMemoryURL = mongod.getUri();
-		super(mongoMemoryURL, dbname, authSource, logger);
-		this.mongod = mongod;
-		this._url = mongoMemoryURL;
+		super("", dbname, authSource, logger); // temporarily use empty URL, will set it later in connect()
 	}
 
-	override connect(): Promise<void> {
-		if (!this.running) {
-			// start the mongo memory server if not already running
-			// this will error if already running
-			this.mongod?.start();
-			this.running = true;
-		} else {
-			// already running, do nothing
+	override async connect(): Promise<void> {
+		if (!this.mongod) {
+			this.mongod = await MongoMemoryServer.create();
+			this._url = this.mongod.getUri();
 		}
-		return super.connect();
+		await super.connect();
 	}
 
 	override async close(): Promise<void> {
 		await super.close();
-		// stop the mongo memory server
-		// this will not error if already stopped
 		await this.mongod?.stop();
-		this.running = false;
+		this.mongod = undefined;
 	}
 }

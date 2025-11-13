@@ -22,19 +22,14 @@ import {
 	ScheduledTaskStatus,
 	type Tier,
 } from "@prosopo/types";
-import {
-	type ClientRecord,
-	FrictionlessTokenRecord,
-	type IProviderDatabase,
-	type PoWCaptchaStored,
-	type ScoreComponents,
-	type SessionRecord,
-	type StoredSession,
-	type UserCommitment,
+import type {
+	ClientRecord,
+	IProviderDatabase,
+	PoWCaptchaStored,
+	SessionRecord,
+	UserCommitment,
 } from "@prosopo/types-database";
-import type { FrictionlessTokenId } from "@prosopo/types-database";
-import { parseUrl } from "@prosopo/util";
-import type { OptionalId } from "mongodb";
+import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
 
 const isValidPrivateKey = (privateKeyString: string) => {
@@ -165,44 +160,9 @@ export class ClientTaskManager {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
-					// get corresponding frictionless scores
-					const frictionlessTokenRecords =
-						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
-							filteredBatch.map((record) => record.tokenId),
-						);
-					this.logger.info(() => ({
-						msg: `Frictionless token records: ${frictionlessTokenRecords.length}`,
-					}));
-					// attach scores to session records
-					const filteredBatchWithScores = filteredBatch.map((record) => {
-						const tokenRecord = frictionlessTokenRecords.find(
-							(tokenRecord) =>
-								tokenRecord._id?.toString() === record.tokenId.toString(),
-						);
-						if (!tokenRecord) {
-							this.logger.error(() => ({
-								msg: "No token record found",
-								data: { tokenId: record.tokenId },
-							}));
-							return {
-								...record,
-								score: 0,
-								scoreComponents: {
-									baseScore: 0,
-								},
-								threshold: 0,
-							} as StoredSession;
-						}
-						return {
-							...record,
-							score: tokenRecord?.score || 0,
-							scoreComponents: tokenRecord?.scoreComponents,
-							threshold: tokenRecord?.threshold || 0,
-						} as StoredSession;
-					});
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatchWithScores, [], []);
+						await captchaDB.saveCaptchas(filteredBatch, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
 						);
@@ -267,9 +227,16 @@ export class ClientTaskManager {
 
 			// Get updated client records within a ten minute window of the last completed task
 			const tenMinuteWindow = 10 * 60 * 1000;
-			const updatedAtTimestamp = lastTask?.updated
-				? lastTask.updated - tenMinuteWindow || 0
-				: 0;
+
+			// Handle non-existent or invalid last updated times (were previously numbers). Delete this code after a few runs.
+			const updatedAtTimestamp = (() => {
+				const raw = lastTask?.updated;
+				if (!raw) return 0;
+				const ts =
+					raw instanceof Date ? raw.getTime() : Date.parse(String(raw));
+				if (Number.isNaN(ts)) return 0;
+				return Math.max(ts - tenMinuteWindow, 0);
+			})();
 
 			this.logger.info(() => ({
 				msg: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
@@ -308,6 +275,59 @@ export class ClientTaskManager {
 		}
 	}
 
+	/**
+	 * @description Calculate client entropy scores and update in db
+	 * @returns Promise<void>
+	 */
+	async calculateClientEntropy(): Promise<void> {
+		const taskID = await this.providerDB.createScheduledTaskStatus(
+			ScheduledTaskNames.SetClientEntropy,
+			ScheduledTaskStatus.Running,
+		);
+
+		try {
+			const clients = await this.providerDB.getAllClientRecords();
+
+			for (const client of clients) {
+				const sampleEntropies = await this.providerDB.sampleEntropy(
+					100,
+					client.account,
+				);
+
+				// Calculate majority average entropy
+				const avgEntropy = majorityAverage(sampleEntropies);
+
+				await this.providerDB.setClientEntropy(client.account, avgEntropy);
+			}
+			await this.providerDB.updateScheduledTaskStatus(
+				taskID,
+				ScheduledTaskStatus.Completed,
+				{
+					data: {
+						clientRecords: clients.length,
+					},
+				},
+			);
+		} catch (e: unknown) {
+			const calculateClientEntropiesError = new ProsopoApiError(
+				"DATABASE.UNKNOWN",
+				{
+					context: { error: e },
+					logger: this.logger,
+				},
+			);
+			this.logger.error(() => ({
+				err: calculateClientEntropiesError,
+				msg: "Error calculating client entropy",
+			}));
+			await this.providerDB.updateScheduledTaskStatus(
+				taskID,
+				ScheduledTaskStatus.Failed,
+				{ error: String(e) },
+			);
+		}
+	}
+
 	async registerSiteKey(
 		siteKey: string,
 		tier: Tier,
@@ -336,30 +356,64 @@ export class ClientTaskManager {
 		return activeDetectorKeys;
 	}
 
-	async removeDetectorKey(detectorKey: string): Promise<void> {
+	async removeDetectorKey(
+		detectorKey: string,
+		expirationInSeconds?: number,
+	): Promise<void> {
 		if (!isValidPrivateKey(detectorKey)) {
 			throw new ProsopoApiError("INVALID_DETECTOR_KEY", {
 				context: { detectorKey },
 				logger: this.logger,
 			});
 		}
-		await this.providerDB.removeDetectorKey(detectorKey);
+		await this.providerDB.removeDetectorKey(detectorKey, expirationInSeconds);
 	}
 
-	isSubdomainOrExactMatch(referrer: string, clientDomain: string): boolean {
+	/**
+	 * Matches a request referrer against an allowed domain pattern.
+	 * Supports global '*', subdomain '*.example.com', glob '*example*',
+	 * plain domains (exact or subdomain), and 'localhost'.
+	 */
+	domainPatternMatcher(referrer: string, clientDomain: string): boolean {
 		if (!referrer || !clientDomain) return false;
-		if (clientDomain === "*") return true;
 		try {
-			const referrerDomain = parseUrl(referrer).hostname.replace(/\.$/, "");
-			const allowedDomain = parseUrl(clientDomain).hostname.replace(/\.$/, "");
+			const referrerHost = parseUrl(referrer).hostname.replace(/\.$/, "");
+			const pattern = clientDomain.trim().toLowerCase();
 
+			// Global wildcard
+			if (pattern === "*") return true;
+
+			// Localhost allowance
+			if (pattern === "localhost") {
+				return (
+					referrerHost === "localhost" || referrerHost.startsWith("localhost:")
+				);
+			}
+
+			// Subdomain wildcard: *.example.com
+			if (pattern.startsWith("*.")) {
+				const suffix = pattern.slice(2);
+				const allowed = parseUrl(suffix).hostname.replace(/\.$/, "");
+				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
+			}
+
+			// General glob pattern: convert * to .*
+			if (pattern.includes("*")) {
+				const escaped = pattern
+					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
+					.replace(/\*/g, ".*");
+				const regex = new RegExp(`^${escaped}$`, "i");
+				return regex.test(referrerHost);
+			}
+
+			// Exact or subdomain match for plain domains
+			const allowedHost = parseUrl(pattern).hostname.replace(/\.$/, "");
 			return (
-				referrerDomain === allowedDomain ||
-				referrerDomain.endsWith(`.${allowedDomain}`)
+				referrerHost === allowedHost || referrerHost.endsWith(`.${allowedHost}`)
 			);
-		} catch {
+		} catch (e) {
 			this.logger.error(() => ({
-				msg: "Error in isSubdomainOrExactMatch",
+				msg: "Error in domainPatternMatcher",
 				data: { referrer, clientDomain },
 			}));
 			return false;
@@ -373,7 +427,7 @@ export class ClientTaskManager {
 		return (
 			!lastUpdatedTimestamp ||
 			!storedAtTimestamp ||
-			lastUpdatedTimestamp > storedAtTimestamp
+			lastUpdatedTimestamp.getTime() > storedAtTimestamp.getTime()
 		);
 	}
 

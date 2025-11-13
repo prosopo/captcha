@@ -8,6 +8,9 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../../packages/common"
 		},
 		{
@@ -21,6 +24,9 @@
 		},
 		{
 			"path": "../../packages/util"
+		},
+		{
+			"path": "../../packages/keyring"
 		}
 	]
 }

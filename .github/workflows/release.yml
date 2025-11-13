@@ -1,10 +1,10 @@
 name: release
 
 on:
-  push:
-    branches: # on push to these branches
-      - main
-      - build/*
+  # push:
+    # branches: # on push to these branches
+    #   - main
+    #   - build/*
   workflow_dispatch:
 
 concurrency:
@@ -49,6 +49,11 @@ jobs:
           submodules: 'recursive'
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0 # fetch all history
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
       - name: setup npm registry
         run: |
@@ -247,9 +252,9 @@ jobs:
         run: |
           echo "Building and bundling affected packages"
           set -x
-          npm run build:all
-          npm run build:all:cjs
-          npm run bundle:all
+          NODE_ENV=production npm run build:all
+          NODE_ENV=production npm run build:all:cjs
+          NODE_ENV=production npm run bundle:all
 
       - name: push
         if: ${{ env.affected != '[]' }}

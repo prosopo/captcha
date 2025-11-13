@@ -7,6 +7,9 @@
 	"include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../api/tsconfig.cjs.json"
 		},
 		{
@@ -41,6 +44,9 @@
 		},
 		{
 			"path": "../api-express-router/tsconfig.cjs.json"
+		},
+		{
+			"path": "../../dev/workspace/tsconfig.cjs.json"
 		}
 	]
 }

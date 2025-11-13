@@ -16,7 +16,7 @@
 			"path": "../types"
 		},
 		{
-			"path": "../user-access-policy"
+			"path": "../../dev/config/tsconfig.json"
 		}
 	]
 }

@@ -419,6 +419,7 @@
 		"DAPP_USER_SOLUTION_NOT_FOUND": "Dapp kullanıcı çözümü bulunamadı",
 		"NO_CAPTCHA": "Hiçbir captcha bulunamadı",
 		"NO_SESSION_FOUND": "Oturum bulunamadı",
+		"IP_ADDRESS_MISMATCH": "IP adresleri eşleşmiyor",
 		"INVALID_TOKEN": "Geçersiz belirteç",
 		"INVALID_SOLUTION": "Geçersiz çözüm",
 		"DECRYPTION_ERROR": "Şifreleme hatası"

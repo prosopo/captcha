@@ -8,6 +8,9 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
+			"path": "../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../../packages/api-express-router"
 		},
 		{
@@ -18,6 +21,18 @@
 		},
 		{
 			"path": "../../packages/types"
+		},
+		{
+			"path": "../../packages/database"
+		},
+		{
+			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/locale"
+		},
+		{
+			"path": "../../packages/types-database"
 		}
 	]
 }

@@ -9,6 +9,9 @@
 	"include": ["./src"],
 	"references": [
 		{
+			"path": "../../../../dev/config/tsconfig.cjs.json"
+		},
+		{
 			"path": "../react-procaptcha-wrapper"
 		},
 		{

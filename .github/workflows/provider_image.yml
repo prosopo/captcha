@@ -51,15 +51,22 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       - name: env
         run: |
+          # Copy the .env.production from the dev script to the cli folder and root folder
           cp ./dev/scripts/env.production ./packages/cli/.env.production
           cp ./dev/scripts/env.production ./.env.production
-          # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
-          echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
+          
+          # Append the development PROVIDER_MNEMONIC from env.development to the .env.production file
+          grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
 
-      - run: NODE_ENV="production" npx nx run @prosopo/cli:build --nxBail
-      - run: NODE_ENV="production" npx nx run @prosopo/cli:bundle --nxBail
+      - run: NODE_ENV="production" npx turbo run @prosopo/cli#build
+      - run: NODE_ENV="production" npx turbo run @prosopo/cli#bundle
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

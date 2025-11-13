@@ -14,19 +14,16 @@
 	],
 	"references": [
 		{
-			"path": "../account"
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
+			"path": "../datasets"
 		},
 		{
 			"path": "../api"
 		},
 		{
 			"path": "../common"
-		},
-		{
-			"path": "../datasets"
-		},
-		{
-			"path": "../load-balancer"
 		},
 		{
 			"path": "../procaptcha-common"

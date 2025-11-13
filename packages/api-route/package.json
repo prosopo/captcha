@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/api-route",
-	"version": "2.6.12",
+	"version": "2.6.33",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
@@ -20,14 +20,17 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --build --declaration --emitDeclarationOnly"
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/common": "3.1.4",
-		"zod": "3.23.8",
-		"@prosopo/config": "3.1.5"
+		"@prosopo/common": "3.1.25",
+		"zod": "3.23.8"
 	},
-	"devDependencies": {},
+	"devDependencies": {
+		"@prosopo/config": "3.1.25",
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0"
+	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"bugs": {
