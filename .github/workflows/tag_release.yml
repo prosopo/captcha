@@ -6,6 +6,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: read
+  metadata: read
+
 defaults:
   run:
     shell: bash

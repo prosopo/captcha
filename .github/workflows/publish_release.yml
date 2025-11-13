@@ -11,6 +11,11 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+  packages: write
+  metadata: read
+
 defaults:
   run:
     shell: bash

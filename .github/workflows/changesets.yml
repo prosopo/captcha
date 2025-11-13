@@ -14,6 +14,11 @@ on:
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: read
+  metadata: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
