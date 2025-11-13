@@ -39,6 +39,14 @@ http://:9090 {
         protocol http
     }
     redir @httpOnly https://{host}{uri}
+	
+	handle /robots.txt {
+		uri strip_prefix / # removes leading /, so it looks directly in root
+		root * /srv/static
+		file_server
+		header Content-Type "text/plain"
+		header X-Robots-Tag "noindex, nofollow"
+	}
 
 	route {
 		client_hello
@@ -84,7 +92,6 @@ http://:9090 {
 
 		# reverse proxy to the provider container
 		reverse_proxy {$CADDY_PROVIDER_CONTAINER_NAME:provider1}:{$CADDY_PROVIDER_PORT:9229} {$CADDY_PROVIDER_CONTAINER_NAME:provider2}:{$CADDY_PROVIDER_PORT2:9339} {
-			
 			# https://caddyserver.com/docs/modules/http.handlers.reverse_proxy
 
 			# try A, then B, then C, etc.
@@ -130,6 +137,10 @@ http://:9090 {
 
 			# https://caddyserver.com/docs/caddyfile/concepts#placeholders
 			# https://caddyserver.com/docs/json/apps/http/#docs
+
+			header_up X-Forwarded-For {http.request.remote.host}
+			header_up X-Forwarded-Port {http.request.remote.port}
+			header_up X-Forwarded-Proto {http.request.scheme}
 
 			header_up X-Request-ID "{http.request_id}"
 

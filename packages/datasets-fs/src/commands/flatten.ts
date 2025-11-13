@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import { blake2b } from "@noble/hashes/blake2b";
 import { ProsopoDatasetError } from "@prosopo/common";
 import {
 	CaptchaItemTypes,
@@ -21,8 +20,8 @@ import {
 	DataSchema,
 	type LabelledItem,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
 import { at } from "@prosopo/util";
+import { hexHash } from "@prosopo/util-crypto";
 import { lodash } from "@prosopo/util/lodash";
 import cliProgress from "cli-progress";
 import * as z from "zod";
@@ -107,8 +106,7 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 				// read file to bytes
 				const content = fs.readFileSync(`${dataDir}/${label}/${image}`);
 				// hash based on the content of the image
-				const hash = blake2b(content);
-				const hex = u8aToHex(hash);
+				const hex = hexHash(content);
 				const name = `${hex}.${extension}`;
 				if (fs.existsSync(`${imageDir}/${name}`)) {
 					for (const item of items) {

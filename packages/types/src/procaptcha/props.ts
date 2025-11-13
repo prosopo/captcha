@@ -37,4 +37,5 @@ export interface ProcaptchaProps {
 	frictionlessState?: FrictionlessState;
 	// display an error message
 	errorMessage?: string;
+	container?: HTMLElement;
 }

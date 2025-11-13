@@ -15,12 +15,13 @@ import { ProsopoDatasetError } from "@prosopo/common";
 import type { Captcha } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { Properties } from "csstype";
+import type React from "react";
 import { useMemo } from "react";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
-	solution: string[];
-	onClick: (hash: string) => void;
+	solution: [string, number, number][];
+	onClick: (hash: string, x: number, y: number) => void;
 	themeColor: "light" | "dark";
 }
 
@@ -86,7 +87,21 @@ export const CaptchaWidget = ({
 								padding: 0,
 								margin: 0,
 							}}
-							onClick={() => onClick(hash)}
+							onClick={(e: React.MouseEvent | React.TouchEvent) => {
+								if (!e.isTrusted) {
+									return;
+								}
+								if ("touches" in e && e.touches.length > 0 && e.touches[0]) {
+									onClick(hash, e.touches[0].clientX, e.touches[0].clientY);
+									return;
+								}
+
+								if ("clientX" in e && "clientY" in e) {
+									onClick(hash, e.clientX, e.clientY);
+									return;
+								}
+								onClick(hash, 0, 0);
+							}}
 						>
 							<img
 								style={{
@@ -104,9 +119,13 @@ export const CaptchaWidget = ({
 								// biome-ignore lint/a11y/noRedundantAlt: has to contain image
 								alt={`Captcha image ${index + 1}`}
 								onError={(e) => {
-									// Retry logic, e.g. add a cache-busting param
 									const target = e.currentTarget;
-									target.src = `${item.data}?retry=${Date.now()}`;
+									// @ts-ignore: custom property for retry count
+									target._retryCount = (target._retryCount || 0) + 1;
+									// @ts-ignore: custom property for retry count
+									if (target._retryCount <= 3) {
+										target.src = `${item.data}?retry=${Date.now()}`;
+									}
 								}}
 							/>
 							<div
@@ -124,7 +143,9 @@ export const CaptchaWidget = ({
 									justifyContent: "center",
 									// make bg half opacity, i.e. shadowing the item's img
 									backgroundColor: "rgba(0,0,0,0.5)",
-									visibility: solution.includes(hash) ? "visible" : "hidden",
+									visibility: solution.some((s) => s[0] === hash)
+										? "visible"
+										: "hidden",
 								}}
 							>
 								<svg

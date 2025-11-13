@@ -141,7 +141,11 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			</Modal>
 			<Checkbox
 				theme={theme}
-				onChange={async () => {
+				onChange={async (e: { isTrusted: boolean }) => {
+					if (!e.isTrusted) {
+						return;
+					}
+
 					if (loading) {
 						return;
 					}

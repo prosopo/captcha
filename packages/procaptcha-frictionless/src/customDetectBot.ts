@@ -28,32 +28,50 @@ export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
 ): Promise<T> => {
+	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
-		setTimeout(() => {
+		timeoutId = setTimeout(() => {
 			reject(new ProsopoEnvError("API.UNKNOWN"));
 		}, ms);
 	});
 
-	return Promise.race([promise, timeoutPromise]);
+	try {
+		const result = await Promise.race([promise, timeoutPromise]);
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		return result;
+	} catch (error) {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		throw error;
+	}
 };
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
+	container: HTMLElement | undefined,
+	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
-	const detect = await DetectorLoader();
-	const botScore = (await detect(
-		config.defaultEnvironment,
-		getRandomActiveProvider,
-	)) as { token: string; provider?: RandomProvider };
 	const ext = new (await ExtensionLoader(config.web2))();
 	const userAccount = await ext.getAccount(config);
+
+	const detect = await DetectorLoader();
+	const detectionResult = (await detect(
+		config.defaultEnvironment,
+		getRandomActiveProvider,
+		container,
+		restartFn,
+		userAccount.account.address,
+	)) as { token: string; provider?: RandomProvider; encryptHeadHash: string };
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
 	// Get random active provider with timeout
-	const provider = botScore.provider;
+	const provider = detectionResult.provider;
 
 	if (!provider) {
 		throw new Error("Provider Selection Failed");
@@ -67,7 +85,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(
 		providerApi.getFrictionlessCaptcha(
-			botScore.token,
+			detectionResult.token,
+			detectionResult.encryptHeadHash,
 			config.account.address,
 			userAccount.account.address,
 		),

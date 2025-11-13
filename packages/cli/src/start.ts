@@ -34,6 +34,7 @@ import {
 	prosopoVerifyRouter,
 	publicRouter,
 	robotsMiddleware,
+	setClientEntropy,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import { blockMiddleware, ja4Middleware } from "@prosopo/provider";
@@ -43,9 +44,9 @@ import {
 	type KeyringPair,
 } from "@prosopo/types";
 import {
-	createApiRuleRoutesProvider,
+	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
-} from "@prosopo/user-access-policy";
+} from "@prosopo/user-access-policy/api";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
@@ -72,8 +73,9 @@ async function startApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
+	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
 		env.getDb().getUserAccessRulesStorage(),
+		env.logger,
 	);
 	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
@@ -85,16 +87,13 @@ async function startApi(
 	}));
 
 	// https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-	apiApp.set(
-		"trust proxy",
-		env.config.proxyCount /* number of proxies between user and server */,
-	);
+	apiApp.set("trust proxy", 1);
 
 	apiApp.use(cors());
 	apiApp.use(express.json({ limit: "50mb" }));
 
 	// Put this first so that no middleware runs on it
-	apiApp.use(publicRouter());
+	apiApp.use(publicRouter(env));
 
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
@@ -103,32 +102,29 @@ async function startApi(
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 
+	// Run Header check middleware on all client routes
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+
 	// Specify verify router before the blocking middlewares
 	apiApp.use(prosopoVerifyRouter(env));
 
-	// Blocking middleware will run on any routes defined after this point
-	apiApp.use(blockMiddleware(env));
-
-	// Header check middleware will run on any client routes excluding verify
-	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
-
-	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
-	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
-	apiApp.use(prosopoRouter(env));
-
-	// Admin routes
+	//  Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
 	apiApp.use(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
 
+	// Blocking middleware will run on any routes defined after this point
+	apiApp.use(blockMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
+	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(prosopoRouter(env));
+
 	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
-	for (const userAccessRuleRoute of userAccessRuleRoutes) {
-		apiApp.use(
-			userAccessRuleRoute.path,
-			authMiddleware(env.pair, env.authAccount),
-		);
+	for (const userAccessRuleRoute in userAccessRuleRoutes) {
+		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
 	}
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
@@ -187,7 +183,12 @@ export async function start(
 		}
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
-		env.logger.debug(() => ({ msg: "Env already defined" }));
+		env.logger.debug(() => ({
+			msg: "Env already defined",
+			data: {
+				config: env?.config,
+			},
+		}));
 	}
 
 	await env.isReady();
@@ -216,6 +217,20 @@ export async function start(
 					context: { failedFuncName: getClientList.name },
 				}));
 			});
+		}
+
+		const cronClientEntropySetter =
+			env.config.scheduledTasks?.clientEntropyScheduler?.schedule;
+		if (cronClientEntropySetter) {
+			setClientEntropy(env.pair, cronClientEntropySetter, env.config).catch(
+				(err) => {
+					env.logger.error(() => ({
+						msg: "Failed to start client entropy scheduler",
+						err,
+						context: { failedFuncName: setClientEntropy.name },
+					}));
+				},
+			);
 		}
 	}
 

@@ -15,7 +15,7 @@
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
+import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -26,13 +26,14 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PoWCaptchaRecord,
-} from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, verifyRecency } from "@prosopo/util";
-import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
-import { validateIpAddress } from "../../util.js";
+import {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "../../compositeIpAddress.js";
+import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -42,8 +43,13 @@ const DEFAULT_POW_DIFFICULTY = 4;
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 
-	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
-		super(db, pair, logger);
+	constructor(
+		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
+	) {
+		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 	}
 
@@ -132,7 +138,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		const difficulty = challengeRecord.difficulty;
 
 		if (!verifyRecency(challenge, timeout)) {
-			await this.db.updatePowCaptchaRecord(
+			await this.db.updatePowCaptchaRecordResult(
 				challenge,
 				{
 					status: CaptchaStatus.disapproved,
@@ -155,7 +161,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.updatePowCaptchaRecord(
+		await this.db.updatePowCaptchaRecordResult(
 			challenge,
 			result,
 			false,
@@ -178,6 +184,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
+		env: ProviderEnvironment,
 		ip?: string,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
@@ -191,22 +198,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			}));
 
 			return notVerifiedResponse;
-		}
-
-		if (ip) {
-			const challengeIpAddress = getIpAddressFromComposite(
-				challengeRecord.ipAddress,
-			);
-
-			const ipValidation = validateIpAddress(
-				ip,
-				challengeIpAddress,
-				this.logger,
-			);
-
-			if (!ipValidation.isValid) {
-				return notVerifiedResponse;
-			}
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -232,26 +223,66 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		const recent = verifyRecency(challenge, timeout);
-
+		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution has already been checked by the server. Moving this code around could result in solutions being
+		// re-usable.
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+		// -- END WARNING --
 
+		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
 			return notVerifiedResponse;
 		}
 
-		let score: number | undefined;
-		if (challengeRecord.frictionlessTokenId) {
-			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-				challengeRecord.frictionlessTokenId,
+		if (ip) {
+			const challengeIpAddress = getIpAddressFromComposite(
+				challengeRecord.ipAddress,
 			);
-			if (tokenRecord) {
-				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dappAccount);
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+
+			const ipValidation = await deepValidateIpAddress(
+				ip,
+				challengeIpAddress,
+				this.logger,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
+				ipValidationRules,
+			);
+
+			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for PoW captcha",
+					data: {
+						ip,
+						challengeIp: challengeIpAddress.address,
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm,
+					},
+				}));
+				return notVerifiedResponse;
+			}
+		}
+
+		let score: number | undefined;
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			if (sessionRecord) {
+				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 				this.logger.info(() => ({
 					data: {
-						tscoreComponents: { ...(tokenRecord?.scoreComponents || {}) },
+						scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
 						score,
 					},
 				}));

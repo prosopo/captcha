@@ -1,5 +1,153 @@
 # @prosopo/dotenv
 
+## 3.0.30
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+
+## 3.0.29
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/common@3.1.24
+
+## 3.0.28
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+
+## 3.0.27
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.0.26
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+
+## 3.0.25
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+
+## 3.0.24
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/config@3.1.19
+
+## 3.0.23
+### Patch Changes
+
+- c72ecbd: Reduce noisy logs
+- 50c4120: Release 3.4.3
+- Updated dependencies [50c4120]
+  - @prosopo/common@3.1.18
+  - @prosopo/config@3.1.18
+
+## 3.0.22
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+  - @prosopo/common@3.1.17
+  - @prosopo/config@3.1.17
+
+## 3.0.21
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+  - @prosopo/common@3.1.16
+  - @prosopo/config@3.1.16
+
+## 3.0.20
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+  - @prosopo/common@3.1.15
+  - @prosopo/config@3.1.15
+
+## 3.0.19
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/common@3.1.14
+  - @prosopo/config@3.1.14
+
+## 3.0.18
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [008d112]
+  - @prosopo/common@3.1.13
+  - @prosopo/config@3.1.13
+
+## 3.0.17
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [0824221]
+  - @prosopo/common@3.1.12
+  - @prosopo/config@3.1.12
+
+## 3.0.16
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [1a23649]
+  - @prosopo/common@3.1.11
+  - @prosopo/config@3.1.11
+
+## 3.0.15
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/common@3.1.10
+  - @prosopo/config@3.1.10
+
+## 3.0.14
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [809b984]
+  - @prosopo/common@3.1.9
+  - @prosopo/config@3.1.9
+
 ## 3.0.13
 ### Patch Changes
 

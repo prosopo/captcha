@@ -26,8 +26,8 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			const dapp = req.headers["prosopo-site-key"] as string;
-			if (!dapp)
+			const siteKey = req.headers["prosopo-site-key"] as string;
+			if (!siteKey)
 				throw siteKeyNotRegisteredError(
 					req.i18n,
 					"No sitekey provided",
@@ -35,20 +35,20 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				);
 
 			try {
-				validateAddress(dapp, false, 42);
+				validateAddress(siteKey, false, 42);
 			} catch (err) {
-				throw invalidSiteKeyError(req.i18n, dapp, req.logger);
+				throw invalidSiteKeyError(req.i18n, siteKey, req.logger);
 			}
 
-			const clientSettings = await tasks.db.getClientRecord(dapp);
+			const clientSettings = await tasks.db.getClientRecord(siteKey);
 			if (!clientSettings)
-				throw siteKeyNotRegisteredError(req.i18n, dapp, req.logger);
+				throw siteKeyNotRegisteredError(req.i18n, siteKey, req.logger);
 
 			const allowedDomains = clientSettings.settings?.domains;
 			if (!allowedDomains)
 				throw siteKeyInvalidDomainError(
 					req.i18n,
-					dapp,
+					siteKey,
 					req.hostname,
 					req.logger,
 				);

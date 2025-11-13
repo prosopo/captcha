@@ -2,8 +2,8 @@
 	"name": "@prosopo/provider-mock-docker",
 	"version": "2.6.7",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"type": "module",
 	"main": "dist/index.js",
@@ -16,8 +16,10 @@
 		}
 	},
 	"dependencies": {
-		"@prosopo/provider-mock": "2.7.7",
-		"@prosopo/config": "3.1.0"
+		"@prosopo/provider-mock": "2.8.23"
+	},
+	"devDependencies": {
+		"@prosopo/config": "3.1.20"
 	},
 	"scripts": {
 		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",

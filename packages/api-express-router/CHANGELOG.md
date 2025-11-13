@@ -1,5 +1,294 @@
 # @prosopo/api-express-router
 
+## 3.0.39
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api-route@2.6.33
+  - @prosopo/common@3.1.25
+  - @prosopo/env@3.2.27
+  - @prosopo/locale@3.1.25
+  - @prosopo/types@3.6.3
+
+## 3.0.38
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/api-route@2.6.32
+  - @prosopo/common@3.1.24
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/env@3.2.26
+
+## 3.0.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api-route@2.6.31
+  - @prosopo/common@3.1.23
+  - @prosopo/env@3.2.25
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+
+## 3.0.36
+### Patch Changes
+
+  - @prosopo/env@3.2.24
+
+## 3.0.35
+### Patch Changes
+
+  - @prosopo/env@3.2.23
+
+## 3.0.34
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/api-route@2.6.30
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/env@3.2.22
+  - @prosopo/config@3.1.22
+
+## 3.0.33
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/env@3.2.21
+
+## 3.0.32
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/env@3.2.20
+
+## 3.0.31
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/env@3.2.19
+
+## 3.0.30
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/env@3.2.18
+
+## 3.0.29
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/api-route@2.6.29
+  - @prosopo/config@3.1.21
+  - @prosopo/env@3.2.17
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
+## 3.0.28
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/env@3.2.16
+
+## 3.0.27
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/env@3.2.15
+
+## 3.0.26
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/env@3.2.14
+
+## 3.0.25
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/api-route@2.6.28
+  - @prosopo/common@3.1.20
+  - @prosopo/env@3.2.13
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+
+## 3.0.24
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/api-route@2.6.27
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/env@3.2.12
+  - @prosopo/config@3.1.19
+
+## 3.0.23
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/api-route@2.6.26
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/env@3.2.11
+  - @prosopo/config@3.1.18
+
+## 3.0.22
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/api-route@2.6.25
+  - @prosopo/common@3.1.17
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/env@3.2.10
+  - @prosopo/config@3.1.17
+
+## 3.0.21
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/api-route@2.6.24
+  - @prosopo/common@3.1.16
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/env@3.2.9
+  - @prosopo/config@3.1.16
+
+## 3.0.20
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/api-route@2.6.23
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/env@3.2.8
+  - @prosopo/config@3.1.15
+
+## 3.0.19
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/api-route@2.6.22
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/env@3.2.7
+  - @prosopo/config@3.1.14
+
+## 3.0.18
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/api-route@2.6.21
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/env@3.2.6
+  - @prosopo/config@3.1.13
+
+## 3.0.17
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/api-route@2.6.20
+  - @prosopo/common@3.1.12
+  - @prosopo/locale@3.1.12
+  - @prosopo/env@3.2.5
+  - @prosopo/config@3.1.12
+
+## 3.0.16
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+- Updated dependencies [0d1a33e]
+- Updated dependencies [0d1a33e]
+- Updated dependencies [1a23649]
+  - @prosopo/locale@3.1.11
+  - @prosopo/types@3.1.4
+  - @prosopo/api-route@2.6.19
+  - @prosopo/common@3.1.11
+  - @prosopo/env@3.2.4
+  - @prosopo/config@3.1.11
+
+## 3.0.15
+### Patch Changes
+
+- 657a827: Release 3.2.2
+- Updated dependencies [657a827]
+  - @prosopo/api-route@2.6.18
+  - @prosopo/common@3.1.10
+  - @prosopo/locale@3.1.10
+  - @prosopo/types@3.1.3
+  - @prosopo/env@3.2.3
+  - @prosopo/config@3.1.10
+
+## 3.0.14
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- Updated dependencies [4440947]
+- Updated dependencies [7bdaca6]
+- Updated dependencies [809b984]
+- Updated dependencies [1249ce0]
+- Updated dependencies [809b984]
+  - @prosopo/api-route@2.6.17
+  - @prosopo/common@3.1.9
+  - @prosopo/locale@3.1.9
+  - @prosopo/types@3.1.2
+  - @prosopo/env@3.2.2
+  - @prosopo/config@3.1.9
+
 ## 3.0.13
 ### Patch Changes
 

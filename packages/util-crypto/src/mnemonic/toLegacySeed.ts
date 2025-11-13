@@ -1,8 +1,3 @@
-// Copyright 2017-2025 @polkadot/util-crypto authors & contributors
-// SPDX-License-Identifier: Apache-2.0
-
-import { hasBigInt } from "@polkadot/util";
-
 import { mnemonicToSeedSync } from "./bip39.js";
 import { mnemonicValidate } from "./validate.js";
 

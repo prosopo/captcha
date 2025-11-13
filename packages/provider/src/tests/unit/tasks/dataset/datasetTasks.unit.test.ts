@@ -62,7 +62,6 @@ describe("DatasetManager", () => {
 
 	beforeEach(() => {
 		config = {
-			devOnlyWatchEvents: true,
 			mongoEventsUri: "mongodb://localhost:27017/events",
 			mongoCaptchaUri: "mongodb://localhost:27017/captchas",
 		} as ProsopoConfigOutput;

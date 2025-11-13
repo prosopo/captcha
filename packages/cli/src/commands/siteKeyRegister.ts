@@ -15,7 +15,7 @@
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
-import type { KeyringPair } from "@prosopo/types";
+import { type KeyringPair, contextAwareThresholdDefault } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
@@ -103,6 +103,11 @@ export default (
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
+					disallowWebView: false,
+					contextAware: {
+						enabled: false,
+						threshold: contextAwareThresholdDefault,
+					},
 				});
 				logger.info(() => ({
 					data: { sitekey },

@@ -18,12 +18,9 @@ import { DatabaseTypes, ProsopoConfigSchema } from "@prosopo/types";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
-	ScopeMatch,
-	userScopeInputSchema,
-} from "@prosopo/user-access-policy";
-import {
-	accessRuleSchema,
-	accessRuleSchemaExtended,
+	FilterScopeMatch,
+	accessRuleInput,
+	userScopeInput,
 } from "@prosopo/user-access-policy";
 import { getIPAddressFromBigInt } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -64,11 +61,21 @@ describe("blacklistRequestInspector Integration Tests", () => {
 						authSource: process.env.PROSOPO_DATABASE_AUTH_SOURCE,
 					},
 				},
+				ipApi: {
+					baseUrl: "https://dummyUrl.com",
+					apiKey: "dummyKey",
+				},
 			});
 			// ensure no crossover issues with the index name and other tests
 			config.redisConnection.indexName = randomAsHex(16);
 			env = new ProviderEnvironment(config);
 			await env.isReady();
+
+			const db = env.getDb();
+
+			// wait until Redis is ready
+			await db.getRedisAccessRulesConnection().getClient();
+
 			accessRulesStorage = env.getDb().getUserAccessRulesStorage();
 		});
 
@@ -80,13 +87,17 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		});
 
 		it("should return a rule when a JA4-UserAgent rule exists and the user matches the User Agent and the JA4", async () => {
-			const accessRule = accessRuleSchemaExtended.parse({
+			const accessRule = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash1,
 				userAgent: userAgent1,
 			});
-			await accessRulesStorage.insertRule(accessRule);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -104,12 +115,12 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
@@ -119,11 +130,11 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
@@ -133,45 +144,45 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
 			);
 			expect(spy).toHaveBeenCalledWith(
 				{
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
 			);
 			expect(spy).toHaveBeenCalledWith(
 				{
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
 			);
 			expect(spy).toHaveBeenCalledWith(
 				{
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
@@ -179,14 +190,19 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result).toHaveLength(1);
 		});
-		it("should not return a rule when a JA4-UserAgent rule exists and the user matches the the JA4 but not the user agent", async () => {
-			const accessRule = accessRuleSchemaExtended.parse({
+
+		it("should not return a rule when a JA4-UserAgent rule exists and the user matches the JA4 but not the user agent", async () => {
+			const accessRule = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash1,
 				userAgent: userAgent2,
 			});
-			await accessRulesStorage.insertRule(accessRule);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -202,34 +218,34 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(spy).toHaveBeenCalledWith(
 				{
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
 			);
 			expect(spy).toHaveBeenCalledWith(
 				{
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
 			);
 			expect(spy).toHaveBeenCalledWith(
 				{
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
@@ -239,12 +255,12 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
@@ -254,11 +270,11 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						userAgent: userAgent1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
@@ -268,30 +284,39 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					policyScope: {
 						clientId: siteKey,
 					},
-					policyScopeMatch: ScopeMatch.Exact,
-					userScope: userScopeInputSchema.parse({
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: userScopeInput.parse({
 						ja4Hash: ja4Hash1,
 					}),
-					userScopeMatch: ScopeMatch.Exact,
+					userScopeMatch: FilterScopeMatch.Exact,
 				},
 				true,
 				true,
 			);
-			expect(result).toHaveLength(1);
+			expect(result).toHaveLength(0);
 		});
+
 		it("should return multiple matching rules", async () => {
-			const accessRule1 = accessRuleSchema.parse({
+			const accessRule1 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash2,
 			});
-			const accessRule2 = accessRuleSchema.parse({
+			const accessRule2 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				numericIp: BigInt(16843009),
 			});
-			await accessRulesStorage.insertRule(accessRule1);
-			await accessRulesStorage.insertRule(accessRule2);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule1,
+				},
+			]);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule2,
+				},
+			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -307,20 +332,25 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result.length).toBe(2);
 		});
+
 		it("should return multiple matching rules in order of specificity", async () => {
-			const accessRule1 = accessRuleSchema.parse({
+			const accessRule1 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash2,
 				numericIp: BigInt(16843009),
 			});
-			const accessRule2 = accessRuleSchema.parse({
+			const accessRule2 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				numericIp: BigInt(16843009),
 			});
-			await accessRulesStorage.insertRule(accessRule1);
-			await accessRulesStorage.insertRule(accessRule2);
+			await accessRulesStorage.insertRules([{ rule: accessRule1 }]);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule2,
+				},
+			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
 			const result = await getPrioritisedAccessRule(
@@ -347,8 +377,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 			expect(nonClientResult.length).toBe(0);
 		});
+
 		it("should not return a match for a different IP", async () => {
-			const accessRule1 = accessRuleSchema.parse({
+			const accessRule1 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash2,
@@ -356,7 +387,11 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule1,
+				},
+			]);
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -370,32 +405,10 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result.length).toBe(0);
 		});
-		it("should not return a match for a different IP", async () => {
-			const accessRule1 = accessRuleSchema.parse({
-				type: AccessPolicyType.Restrict,
-				clientId: siteKey,
-				ja4Hash: ja4Hash2,
-				userAgent: userAgent1,
-				numericIp: BigInt(16843009),
-			});
 
-			await accessRulesStorage.insertRule(accessRule1);
-
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
-					ja4Hash: ja4Hash2,
-					userAgent: userAgent1,
-					numericIp: BigInt(17843009),
-				},
-				siteKey,
-			);
-
-			expect(result.length).toBe(0);
-		});
 		it("should return a match for the same IP", async () => {
 			const numericIp = BigInt(16843009);
-			const accessRule1 = accessRuleSchema.parse({
+			const accessRule1 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash2,
@@ -403,7 +416,11 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: numericIp,
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule1,
+				},
+			]);
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -417,8 +434,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 			expect(result.length).toBe(1);
 		});
+
 		it("should not return a match for a different IP", async () => {
-			const accessRule1 = accessRuleSchema.parse({
+			const accessRule1 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash2,
@@ -426,7 +444,11 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule1,
+				},
+			]);
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -440,8 +462,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(result).toEqual([]);
 			expect(result.length).toBe(0);
 		});
+
 		it("should not return a match for a different IP 2", async () => {
-			const accessRule1 = accessRuleSchema.parse({
+			const accessRule1 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash2,
@@ -449,7 +472,11 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule1,
+				},
+			]);
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,
@@ -462,8 +489,9 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 			expect(result.length).toBe(0);
 		});
+
 		it("should not return a match for a different IP 3", async () => {
-			const accessRule1 = accessRuleSchema.parse({
+			const accessRule1 = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
 				ja4Hash: ja4Hash2,
@@ -471,7 +499,11 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				numericIp: BigInt(16843009),
 			});
 
-			await accessRulesStorage.insertRule(accessRule1);
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule1,
+				},
+			]);
 
 			const result = await getPrioritisedAccessRule(
 				accessRulesStorage,

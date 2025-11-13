@@ -84,6 +84,18 @@ export enum PublicApiPaths {
 	GetProviderDetails = "/v1/prosopo/provider/public/details",
 }
 
+export const providerDetailsSchema = object({
+	version: string(),
+	message: string(),
+	redis: object({
+		actor: string(),
+		isReady: boolean(),
+		awaitingTimeSeconds: number(),
+	}).array(),
+});
+
+export type ProviderDetails = output<typeof providerDetailsSchema>;
+
 export type TGetImageCaptchaChallengePathAndParams =
 	`${ClientApiPaths.GetImageCaptchaChallenge}/${DatasetID}/${UserAccount}/${DappAccount}`;
 
@@ -100,6 +112,7 @@ export enum AdminApiPaths {
 	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
+	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -124,6 +137,7 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.UpdateDetectorKey]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveDetectorKey]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
 };
 
 type RateLimit = {
@@ -351,6 +365,7 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: string(),
 	[ApiParams.token]: string(),
 	[ApiParams.user]: string(),
+	[ApiParams.headHash]: string(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -374,6 +389,26 @@ export const RegisterSitekeyBody = object({
 export const UpdateDetectorKeyBody = object({
 	[ApiParams.detectorKey]: string(),
 });
+
+export const RemoveDetectorKeyBodySpec = object({
+	[ApiParams.detectorKey]: string(),
+	[ApiParams.expirationInSeconds]: number().positive().optional(),
+});
+
+export type RemoveDetectorKeyBodyInput = input<
+	typeof RemoveDetectorKeyBodySpec
+>;
+export type RemoveDetectorKeyBodyOutput = output<
+	typeof RemoveDetectorKeyBodySpec
+>;
+
+export const ToggleMaintenanceModeBody = object({
+	[ApiParams.enabled]: boolean(),
+});
+
+export type ToggleMaintenanceModeBodyOutput = output<
+	typeof ToggleMaintenanceModeBody
+>;
 
 export type RegisterSitekeyBodyTypeOutput = output<typeof RegisterSitekeyBody>;
 

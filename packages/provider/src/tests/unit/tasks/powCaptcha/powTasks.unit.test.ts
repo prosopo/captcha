@@ -21,11 +21,11 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import {
-	type IProviderDatabase,
-	IpAddressType,
-	type PoWCaptchaStored,
+import type {
+	IProviderDatabase,
+	PoWCaptchaStored,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
@@ -70,12 +70,13 @@ describe("PowCaptchaManager", () => {
 	let db: IProviderDatabase;
 	let pair: KeyringPair;
 	let powCaptchaManager: PowCaptchaManager;
+	let mockEnv: ProviderEnvironment;
 
 	beforeEach(() => {
 		db = {
 			storePowCaptchaRecord: vi.fn(),
 			getPowCaptchaRecordByChallenge: vi.fn(),
-			updatePowCaptchaRecord: vi.fn(),
+			updatePowCaptchaRecordResult: vi.fn(),
 			markDappUserPoWCommitmentsChecked: vi.fn(),
 		} as unknown as IProviderDatabase;
 
@@ -84,7 +85,16 @@ describe("PowCaptchaManager", () => {
 			address: "testAddress",
 		} as unknown as KeyringPair;
 
-		powCaptchaManager = new PowCaptchaManager(db, pair);
+		mockEnv = {
+			config: {
+				ipApi: {
+					apiKey: "testKey",
+					baseUrl: "https://api.ipapi.is",
+				},
+			},
+		} as unknown as ProviderEnvironment;
+
+		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
 
 		vi.clearAllMocks();
 	});
@@ -133,7 +143,7 @@ describe("PowCaptchaManager", () => {
 				difficulty,
 				dappAccount: pair.address,
 				userAccount,
-				requestedAtTimestamp,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -141,7 +151,7 @@ describe("PowCaptchaManager", () => {
 				headers,
 				ja4: "ja4",
 				providerSignature,
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => true);
@@ -154,7 +164,7 @@ describe("PowCaptchaManager", () => {
 				challengeRecord,
 			);
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.updatePowCaptchaRecord as any).mockResolvedValue(true); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true); // biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(true);
 
@@ -211,7 +221,7 @@ describe("PowCaptchaManager", () => {
 			expect(validateSolution).toHaveBeenCalledWith(...validateSolutionArgs);
 
 			const updatePowCaptchaRecordArgs: Parameters<
-				typeof db.updatePowCaptchaRecord
+				typeof db.updatePowCaptchaRecordResult
 			> = [
 				challenge,
 				{ status: CaptchaStatus.approved },
@@ -220,7 +230,7 @@ describe("PowCaptchaManager", () => {
 				userSignature,
 			];
 
-			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
 				...updatePowCaptchaRecordArgs,
 			);
 		});
@@ -238,7 +248,7 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				dappAccount: pair.address,
 				userAccount: "testUserAccount",
-				requestedAtTimestamp: 12345,
+				requestedAtTimestamp: new Date(12345),
 				result: { status: CaptchaStatus.pending },
 				userSubmitted: false,
 				serverChecked: false,
@@ -247,7 +257,7 @@ describe("PowCaptchaManager", () => {
 				ja4: "ja4",
 				providerSignature: "testSignature",
 				difficulty,
-				lastUpdatedTimestamp: 0,
+				lastUpdatedTimestamp: new Date(0),
 			};
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(verifyRecency as any).mockImplementation(() => {
@@ -289,7 +299,7 @@ describe("PowCaptchaManager", () => {
 				challenge,
 				dappAccount,
 				userAccount,
-				requestedAtTimestamp: timestamp,
+				requestedAtTimestamp: new Date(timestamp),
 				serverChecked: false,
 				result: { status: CaptchaStatus.approved },
 			};
@@ -304,6 +314,7 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				challenge,
 				timeout,
+				mockEnv,
 			);
 
 			expect(result.verified).toBe(true);
@@ -332,46 +343,11 @@ describe("PowCaptchaManager", () => {
 				dappAccount,
 				challenge,
 				timeout,
+				mockEnv,
 			);
 			expect(result.verified).toBe(false);
 
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
-		});
-
-		it("should return verified:false if an ip is received and it does not match the one on the challenge record", async () => {
-			const dappAccount = "dappAccount";
-			const timestamp = 123456789;
-			const userAccount = "testUserAccount";
-			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
-			const timeout = 1000;
-			const ipAddress = "8.8.8.8";
-			const challengeRecord: Partial<PoWCaptchaStored> = {
-				challenge,
-				dappAccount,
-				userAccount,
-				requestedAtTimestamp: timestamp,
-				serverChecked: false,
-				result: { status: CaptchaStatus.approved },
-				ipAddress: {
-					lower: getIPAddress("1.1.1.1").bigInt(),
-					type: IpAddressType.v4,
-				},
-			};
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
-				challengeRecord,
-			);
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			(verifyRecency as any).mockImplementation(() => true);
-
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				ipAddress,
-			);
-
-			expect(result.verified).toBe(false);
 		});
 	});
 });

@@ -20,7 +20,12 @@ import {
 	ProsopoEnvError,
 } from "@prosopo/common";
 import {
+	type IIPValidation,
+	type IIPValidationRules,
 	type IPAddress,
+	type IPComparisonResult,
+	type IPValidateCondition,
+	IPValidationAction,
 	type ScheduledTaskNames,
 	ScheduledTaskStatus,
 } from "@prosopo/types";
@@ -29,6 +34,7 @@ import { at } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 import { Address4, Address6 } from "ip-address";
 import type { ObjectId } from "mongoose";
+import { compareIPs } from "./services/ipComparison.js";
 
 export function encodeStringAddress(address: string) {
 	try {
@@ -69,7 +75,7 @@ export async function checkIfTaskIsRunning(
 	const twoMinutesAgo = new Date().getTime() - 1000 * 60 * 2;
 	// If the task is running and the task was started within the last 2 minutes
 	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
-	if (runningTask && runningTask.datetime > twoMinutesAgo) {
+	if (runningTask && runningTask.datetime.getTime() > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
 			runningTask._id as ObjectId,
 			ScheduledTaskStatus.Completed,
@@ -144,12 +150,6 @@ export const validateIpAddress = (
 		);
 	}
 
-	if (!ipV4orV6Address.v4 && challengeIpAddress.v4) {
-		ipV4orV6Address = new Address6(
-			(<Address6>ipV4orV6Address).to4().correctForm(),
-		);
-	}
-
 	if (challengeIpAddress.bigInt() - ipV4orV6Address.bigInt() !== 0n) {
 		const errorMessage = `IP address mismatch: ${challengeIpAddress.address} !== ${ipV4orV6Address.address}`;
 		logger.info(() => ({
@@ -163,4 +163,359 @@ export const validateIpAddress = (
 	}
 
 	return { isValid: true };
+};
+
+/**
+ * Evaluates IP validation rules based on IP comparison results
+ * @param comparison - IP comparison results from compareIPs
+ * @param rules - IP validation rules configuration
+ * @param logger - Logger instance
+ * @returns Validation result with action to take
+ */
+export const evaluateIpValidationRules = (
+	comparison: IPComparisonResult,
+	rules: IIPValidationRules,
+	logger: Logger,
+): {
+	action: IPValidationAction;
+	errorMessage?: string;
+	shouldFlag?: boolean;
+} => {
+	// Early return if no comparison data is provided
+	if (!comparison.comparison) {
+		return { action: IPValidationAction.Allow };
+	}
+
+	const conditions: IPValidateCondition[] = [];
+	const rejectActions = Object.values(rules.actions).filter(
+		(action) => action === IPValidationAction.Reject,
+	);
+
+	// Apply country-specific overrides if they exist
+	const ip1Country = comparison.comparison.ip1Details?.country;
+	const ip2Country = comparison.comparison.ip2Details?.country;
+	const ip1CountryCode = comparison.comparison.ip1Details?.countryCode;
+	const ip2CountryCode = comparison.comparison.ip2Details?.countryCode;
+	let effectiveRules = rules;
+	let countryOverride: undefined | IIPValidation = undefined;
+	if (ip1CountryCode && rules.countryOverrides?.[ip1CountryCode]) {
+		countryOverride = rules.countryOverrides[ip1CountryCode];
+	}
+	if (ip2CountryCode && rules.countryOverrides?.[ip2CountryCode]) {
+		countryOverride = rules.countryOverrides[ip2CountryCode];
+	}
+	if (countryOverride) {
+		effectiveRules = {
+			...rules,
+			actions: {
+				...rules.actions,
+				...countryOverride.actions,
+			},
+			distanceThresholdKm:
+				countryOverride.distanceThresholdKm ?? rules.distanceThresholdKm,
+			abuseScoreThreshold:
+				countryOverride.abuseScoreThreshold ?? rules.abuseScoreThreshold,
+			requireAllConditions:
+				countryOverride.requireAllConditions ?? rules.requireAllConditions,
+		};
+	}
+
+	// Check for country change
+	if (ip1Country !== ip2Country) {
+		conditions.push({
+			met: true,
+			action: effectiveRules.actions.countryChangeAction,
+			message: `Country changed from ${ip1Country} to ${ip2Country}`,
+		});
+	}
+
+	// Check for city change
+	const ip1City = comparison.comparison.ip1Details?.city;
+	const ip2City = comparison.comparison.ip2Details?.city;
+	if (ip1City !== ip2City) {
+		conditions.push({
+			met: true,
+			action: effectiveRules.actions.cityChangeAction,
+			message: `City changed from ${ip1City} to ${ip2City}`,
+		});
+	}
+
+	// Check for ISP change
+	if (comparison.comparison.differentProviders) {
+		const ip1Provider = comparison.comparison.ip1Details?.provider;
+		const ip2Provider = comparison.comparison.ip2Details?.provider;
+		conditions.push({
+			met: true,
+			action: effectiveRules.actions.ispChangeAction,
+			message: `ISP changed from ${ip1Provider} to ${ip2Provider}`,
+		});
+	}
+
+	// Check for distance exceed condition
+	const distanceKm = comparison.comparison.distanceKm;
+	if (
+		distanceKm !== undefined &&
+		distanceKm > effectiveRules.distanceThresholdKm
+	) {
+		conditions.push({
+			met: true,
+			action: effectiveRules.actions.distanceExceedAction,
+			message: `IP addresses are ${distanceKm.toFixed(2)}km apart (>${effectiveRules.distanceThresholdKm}km limit)`,
+		});
+	}
+
+	console.log(JSON.stringify(effectiveRules, null, 2));
+	// Check for abuse score exceed condition
+	const ip2AbuseScore = comparison.comparison.ip2Details?.abuserScore;
+	if (
+		ip2AbuseScore !== undefined &&
+		ip2AbuseScore > effectiveRules.abuseScoreThreshold
+	) {
+		conditions.push({
+			met: true,
+			action: effectiveRules.actions.abuseScoreExceedAction,
+			message: `Abuse score ${ip2AbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
+		});
+	}
+	const ip1AbuseScore = comparison.comparison.ip1Details?.abuserScore;
+	if (
+		ip1AbuseScore !== undefined &&
+		ip1AbuseScore > effectiveRules.abuseScoreThreshold
+	) {
+		conditions.push({
+			met: true,
+			action: effectiveRules.actions.abuseScoreExceedAction,
+			message: `Abuse score ${ip1AbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
+		});
+	}
+
+	// If no conditions are met, allow
+	if (conditions.length === 0) {
+		return { action: IPValidationAction.Allow };
+	}
+
+	const errorMessages: string[] = [];
+	let finalAction = IPValidationAction.Allow;
+	let shouldFlag = false;
+
+	// Determine action based on requireAllConditions flag
+	if (effectiveRules.requireAllConditions) {
+		// Apply AND logic: all reject actions must be met to reject
+		const rejectConditions = conditions.filter(
+			(c) => c.action === IPValidationAction.Reject,
+		);
+
+		// If at least as many reject conditions as reject actions exist, we reject
+		if (
+			rejectConditions.length > 0 &&
+			rejectConditions.length >= rejectActions.length
+		) {
+			finalAction = IPValidationAction.Reject;
+		}
+
+		// Collect error messages for all reject/flag conditions
+		for (const condition of conditions) {
+			if (
+				condition.action === IPValidationAction.Reject ||
+				condition.action === IPValidationAction.Flag
+			) {
+				errorMessages.push(condition.message);
+			}
+		}
+	} else {
+		// Apply OR logic: the first reject condition triggers rejection
+		for (const condition of conditions) {
+			if (condition.action === IPValidationAction.Reject) {
+				finalAction = IPValidationAction.Reject;
+				errorMessages.push(condition.message);
+				break; // Reject is the most restrictive, no need to check further
+			}
+			if (condition.action === IPValidationAction.Flag) {
+				finalAction = IPValidationAction.Flag;
+				shouldFlag = true;
+			}
+			errorMessages.push(condition.message);
+		}
+	}
+
+	logger.info(() => ({
+		msg: `IP validation rules evaluated: ${finalAction}`,
+		data: {
+			conditions,
+			finalAction,
+			requireAllConditions: effectiveRules.requireAllConditions,
+		},
+	}));
+
+	// Return the evaluation result
+	return {
+		action: finalAction,
+		errorMessage:
+			errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
+		shouldFlag,
+	};
+};
+
+/**
+ * @param ip - The IP address string to validate
+ * @param challengeIpAddress - The IP address from the challenge record
+ * @param logger - Logger instance for debug messages
+ * @param apiKey
+ * @param apiUrl
+ * @param ipValidationRules - IP validation rules configuration
+ * @returns Object with validation result, optional error message, and distance info
+ */
+export const deepValidateIpAddress = async (
+	ip: string,
+	challengeIpAddress: IPAddress,
+	logger: Logger,
+	apiKey: string,
+	apiUrl: string,
+	ipValidationRules?: IIPValidationRules,
+): Promise<{
+	isValid: boolean;
+	errorMessage?: string;
+	distanceKm?: number;
+	shouldFlag?: boolean;
+}> => {
+	const standardValidation = validateIpAddress(ip, challengeIpAddress, logger);
+	if (!standardValidation.isValid) {
+		// Check if this is a format error or a mismatch
+		if (standardValidation.errorMessage?.includes("Invalid IP address")) {
+			// Format error - return the error
+			return standardValidation;
+		}
+		// IP mismatch - continue to distance checking if not forcing consistent IPs
+		if (ipValidationRules?.forceConsistentIp === true) {
+			logger.info(() => ({
+				msg: "IP validation failed - forceConsistentIp is true",
+				data: {
+					challengeIp: challengeIpAddress.address,
+					providedIp: ip,
+				},
+			}));
+			return {
+				isValid: false,
+				errorMessage: standardValidation.errorMessage,
+			};
+		}
+	} else {
+		// IPs match exactly - return valid without distance checking
+		return { isValid: true };
+	}
+
+	// Both IPs valid but different -> check distance
+	try {
+		const challengeIpString = challengeIpAddress.address;
+		const comparison = await compareIPs(challengeIpString, ip, apiKey, apiUrl);
+
+		if ("error" in comparison) {
+			logger.error(() => ({
+				msg: "Failed to get IP distance comparison",
+				data: {
+					error: comparison.error,
+					challengeIp: challengeIpString,
+					providedIp: ip,
+				},
+			}));
+			// If we can't do distance comparison and IPs don't match exactly, be strict
+			return {
+				isValid: false,
+				errorMessage: "Could not determine IP distance",
+			};
+		}
+
+		if (comparison.ipsMatch) {
+			return { isValid: true };
+		}
+
+		const distanceKm = comparison.comparison?.distanceKm;
+
+		// If no validation rules provided, use legacy logic (1000km threshold)
+		if (!ipValidationRules) {
+			logger.info(() => ({
+				msg: "No IP validation rules provided, using legacy logic",
+				data: {
+					challengeIp: challengeIpString,
+					providedIp: ip,
+					distanceKm: distanceKm,
+				},
+			}));
+			// Legacy distance > 1000km -> fail and log
+			if (distanceKm !== undefined && distanceKm > 1000) {
+				const errorMessage = `IP addresses are too far apart: ${distanceKm.toFixed(2)}km (>1000km limit)`;
+				logger.info(() => ({
+					msg: "IP validation failed - distance too great",
+					data: {
+						challengeIp: challengeIpString,
+						providedIp: ip,
+						distanceKm: distanceKm,
+						comparison: comparison.comparison,
+					},
+				}));
+				return {
+					isValid: false,
+					errorMessage,
+					distanceKm,
+				};
+			}
+
+			// Legacy distance <= 1000km -> allow flag
+			logger.info(() => ({
+				msg: "IP addresses differ but within acceptable distance",
+				data: {
+					challengeIp: challengeIpString,
+					providedIp: ip,
+					distanceKm: distanceKm,
+					comparison: comparison.comparison,
+				},
+			}));
+
+			return {
+				isValid: true,
+				distanceKm,
+				shouldFlag: true,
+			};
+		}
+
+		// Use configurable validation rules
+		const ruleEvaluation = evaluateIpValidationRules(
+			comparison,
+			ipValidationRules,
+			logger,
+		);
+
+		switch (ruleEvaluation.action) {
+			case IPValidationAction.Reject:
+				return {
+					isValid: false,
+					errorMessage: ruleEvaluation.errorMessage,
+					distanceKm,
+				};
+			case IPValidationAction.Flag:
+				return {
+					isValid: true,
+					distanceKm,
+					shouldFlag: true,
+					errorMessage: ruleEvaluation.errorMessage,
+				};
+			default:
+				return {
+					isValid: true,
+					distanceKm,
+				};
+		}
+	} catch (error) {
+		logger.error(() => ({
+			msg: "Error during IP distance validation",
+			err: error,
+			data: { challengeIp: challengeIpAddress.address, providedIp: ip },
+		}));
+		// Something weird going on -> allow but flag
+		return {
+			isValid: true,
+			shouldFlag: true,
+			errorMessage: "IP distance validation error",
+		};
+	}
 };
