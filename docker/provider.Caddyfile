@@ -16,7 +16,6 @@
 	servers {
 		protocols h1 h2
 		listener_wrappers {
-			http_redirect
 			client_hello
 			tls
 		}
@@ -29,7 +28,18 @@
 	}
 }
 
+# HTTP metrics endpoint on all interfaces
+http://:9090 {
+	metrics /metrics
+}
+
 {$CADDY_DOMAIN} {
+
+    @httpOnly {
+        protocol http
+    }
+    redir @httpOnly https://{host}{uri}
+	
 	handle /robots.txt {
 		uri strip_prefix / # removes leading /, so it looks directly in root
 		root * /srv/static
@@ -54,12 +64,6 @@
 			# Prevent search engines from indexing
 			X-Robots-Tag "none"
 		}
-
-		# basicauth /metrics {
-		# 	 # this has to be the username<space><bcrypted password>
-		# 	 # to generate, run `htpasswd -nbB <username> <password>` which will spit out `<username>:<bcrypted password>`
-		# 	 {$CADDY_METRICS_USER} {$CADDY_METRICS_PASSWORD}
-		# }
 
 		# enable prometheus metrics
 		metrics /metrics
