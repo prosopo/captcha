@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContextType, type IUserSettings } from "@prosopo/types";
+import {
+	ContextType,
+	type IUserSettings,
+	contextAwareThresholdDefault,
+} from "@prosopo/types";
 
 /**
  * Determines the context type based on the webView flag
@@ -35,7 +39,7 @@ export function getContextThreshold(
 ): number {
 	const contextAware = settings.contextAware;
 	if (!contextAware) {
-		return 0.7; // Default threshold
+		return contextAwareThresholdDefault;
 	}
 
 	// Check if there's a context-specific threshold

@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContextType, type IUserSettings } from "@prosopo/types";
+import {
+	ContextType,
+	type IUserSettings,
+	contextAwareThresholdDefault,
+} from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	determineContextType,
@@ -36,7 +40,7 @@ describe("contextAwareValidation", () => {
 		it("should return default threshold when contextAware is not set", () => {
 			const settings: IUserSettings = {} as IUserSettings;
 			const result = getContextThreshold(settings, ContextType.Default);
-			expect(result).toBe(0.7);
+			expect(result).toBe(contextAwareThresholdDefault);
 		});
 
 		it("should return global threshold when no context-specific threshold is set", () => {
