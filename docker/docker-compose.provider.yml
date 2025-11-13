@@ -161,6 +161,42 @@ services:
       internal:
         ipv4_address: 172.18.0.8
         ipv6_address: fd00:aaaa::8
+
+    redis-exporter:
+      image: oliver006/redis_exporter:latest
+      container_name: redis-exporter
+      labels:
+        - "vector.docker=true" # log docker events
+      depends_on:
+        redis-stack:
+          condition: service_healthy
+      env_file:
+        - ../.env.1.${NODE_ENV}
+      restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+      networks:
+        - internal
+
+    cadvisor:
+      image: gcr.io/cadvisor/cadvisor:v0.52.1
+      container_name: cadvisor
+      labels:
+        - "vector.docker=true" # log docker events
+      command:
+        - '--enable_metrics=cpu,cpuLoad,memory,disk,diskIO,network,process,pressure,oom_event,percpu,app,tcp,udp'
+        - '--store_container_labels=false'
+        - '--whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project'
+        - '--docker_only=true'
+      volumes:
+        - /:/rootfs:ro
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - /var/run:/var/run:ro
+        - /sys:/sys:ro
+        - /var/lib/docker/:/var/lib/docker:ro
+        - /dev/disk/:/dev/disk:ro
+      restart: unless-stopped
+      networks:
+        - internal
+
   vector:
     container_name: vector
     profiles:
