@@ -1863,7 +1863,7 @@ export class ProviderDatabase
 		}
 
 		// Use aggregation to join with session records and filter by context
-		const pipeline: unknown[] = [
+		const pipeline = [
 			{
 				$match: {
 					dappAccount: siteKey,
