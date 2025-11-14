@@ -16,6 +16,7 @@ import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	ContextType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -289,15 +290,28 @@ export class ClientTaskManager {
 			const clients = await this.providerDB.getAllClientRecords();
 
 			for (const client of clients) {
-				const sampleEntropies = await this.providerDB.sampleEntropy(
-					100,
-					client.account,
-				);
+				// Calculate context-specific entropy if client has context awareness enabled
+				if (client.settings?.contextAware?.enabled) {
+					// Always calculate for default and webview contexts
+					const contextTypes = [ContextType.Default, ContextType.Webview];
 
-				// Calculate majority average entropy
-				const avgEntropy = majorityAverage(sampleEntropies);
+					for (const contextType of contextTypes) {
+						const contextSamples = await this.providerDB.sampleContextEntropy(
+							100,
+							client.account,
+							contextType,
+						);
 
-				await this.providerDB.setClientEntropy(client.account, avgEntropy);
+						if (contextSamples.length > 0) {
+							const contextAvgEntropy = majorityAverage(contextSamples);
+							await this.providerDB.setClientContextEntropy(
+								client.account,
+								contextType,
+								contextAvgEntropy,
+							);
+						}
+					}
+				}
 			}
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
