@@ -1863,7 +1863,8 @@ export class ProviderDatabase
 		}
 
 		// Use aggregation to join with session records and filter by context
-		const pipeline = [
+		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
+		const pipeline: any[] = [
 			{
 				$match: {
 					dappAccount: siteKey,
