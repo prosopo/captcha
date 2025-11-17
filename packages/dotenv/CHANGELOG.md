@@ -1,5 +1,21 @@
 # @prosopo/dotenv
 
+## 3.0.30
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+
+## 3.0.29
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/common@3.1.24
+
 ## 3.0.28
 ### Patch Changes
 

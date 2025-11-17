@@ -87,6 +87,7 @@ describe("decryptPayload", () => {
 			webView: false,
 			iFrame: false,
 			decryptedHeadHash: "",
+			decryptionFailed: false,
 		});
 	});
 	it("should get values from the payload when some values are undefined", async () => {
@@ -120,6 +121,7 @@ describe("decryptPayload", () => {
 			webView: false,
 			iFrame: false,
 			decryptedHeadHash: "",
+			decryptionFailed: true,
 		});
 	});
 	it("should set values for the payload when there are keys but they fail to decrypt", async () => {
@@ -156,6 +158,7 @@ describe("decryptPayload", () => {
 			webView: false,
 			iFrame: false,
 			decryptedHeadHash: "",
+			decryptionFailed: true,
 		});
 	});
 	it("should set values for the payload when there are no keys", async () => {
@@ -196,6 +199,7 @@ describe("decryptPayload", () => {
 			webView: false,
 			iFrame: false,
 			decryptedHeadHash: "",
+			decryptionFailed: true,
 		});
 	});
 });

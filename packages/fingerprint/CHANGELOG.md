@@ -1,5 +1,16 @@
 # @prosopo/fingerprint
 
+## 2.6.26
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
+## 2.6.25
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
 ## 2.6.24
 ### Patch Changes
 

@@ -1,5 +1,46 @@
 # @prosopo/cli
 
+## 3.5.7
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/workspace@3.1.18
+  - @prosopo/api@3.1.36
+  - @prosopo/api-express-router@3.0.39
+  - @prosopo/common@3.1.25
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/env@3.2.27
+  - @prosopo/keyring@2.8.39
+  - @prosopo/locale@3.1.25
+  - @prosopo/provider@3.13.6
+  - @prosopo/types@3.6.3
+  - @prosopo/user-access-policy@3.5.31
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
+## 3.5.6
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+- Updated dependencies [e843e62]
+  - @prosopo/api-express-router@3.0.38
+  - @prosopo/user-access-policy@3.5.30
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/provider@3.13.5
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/dotenv@3.0.29
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/workspace@3.1.17
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+  - @prosopo/env@3.2.26
+
 ## 3.5.5
 ### Patch Changes
 

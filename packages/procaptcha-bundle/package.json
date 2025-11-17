@@ -1,14 +1,14 @@
 {
 	"name": "@prosopo/procaptcha-bundle",
-	"version": "3.2.7",
+	"version": "3.2.9",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
@@ -37,16 +37,15 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/dotenv": "3.0.28",
-		"@prosopo/locale": "3.1.23",
-		"@prosopo/procaptcha-common": "2.9.16",
-		"@prosopo/procaptcha-frictionless": "2.8.19",
-		"@prosopo/procaptcha-pow": "2.8.24",
-		"@prosopo/procaptcha-react": "2.9.18",
-		"@prosopo/types": "3.6.1",
-		"@prosopo/util": "3.2.1",
-		"@prosopo/widget-skeleton": "2.7.9",
-		"@prosopo/config": "3.1.23",
+		"@prosopo/dotenv": "3.0.30",
+		"@prosopo/locale": "3.1.25",
+		"@prosopo/procaptcha-common": "2.9.18",
+		"@prosopo/procaptcha-frictionless": "2.8.21",
+		"@prosopo/procaptcha-pow": "2.8.26",
+		"@prosopo/procaptcha-react": "2.9.20",
+		"@prosopo/types": "3.6.3",
+		"@prosopo/util": "3.2.3",
+		"@prosopo/widget-skeleton": "2.7.11",
 		"dotenv": "16.4.5",
 		"fast-glob": "3.3.2",
 		"jsdom": "25.0.0",
@@ -68,6 +67,7 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.25",
 		"@types/jsdom": "21.1.7",
 		"@types/node": "22.10.2",
 		"@types/react": "18.3.1",

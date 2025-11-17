@@ -1,13 +1,13 @@
 {
 	"name": "@prosopo/util-crypto",
-	"version": "13.5.25",
+	"version": "13.5.27",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"type": "module",
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -32,12 +32,12 @@
 		"@noble/hashes": "1.8.0",
 		"@polkadot/util": "13.5.7",
 		"@polkadot/x-randomvalues": "13.5.7",
-		"@prosopo/config": "3.1.23",
 		"@scure/base": "^1.1.7",
 		"@scure/sr25519": "0.2.0",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.25",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

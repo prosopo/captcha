@@ -1,5 +1,31 @@
 # @prosopo/env
 
+## 3.2.27
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/database@3.5.5
+  - @prosopo/keyring@2.8.39
+  - @prosopo/types@3.6.3
+  - @prosopo/types-env@2.7.52
+  - @prosopo/util-crypto@13.5.27
+
+## 3.2.26
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/types-env@2.7.51
+  - @prosopo/database@3.5.4
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+
 ## 3.2.25
 ### Patch Changes
 

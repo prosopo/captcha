@@ -1,11 +1,11 @@
 {
 	"name": "@prosopo/detector",
-	"version": "3.3.15",
+	"version": "3.3.17",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
@@ -21,7 +21,13 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
+	"type": "module",
+	"dependencies": {
+		"@prosopo/types": "3.6.3",
+		"dotenv": "16.4.5"
+	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.25",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
@@ -32,11 +38,5 @@
 		"typescript": "5.6.2",
 		"vite": "6.4.1",
 		"vitest": "3.2.4"
-	},
-	"type": "module",
-	"dependencies": {
-		"@prosopo/config": "3.1.23",
-		"@prosopo/types": "3.6.1",
-		"dotenv": "16.4.5"
 	}
 }
