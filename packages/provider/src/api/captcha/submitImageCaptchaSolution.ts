@@ -103,7 +103,6 @@ export default (
 					status: "ok",
 					captchas: [],
 					verified: true,
-					[ApiParams.commitmentId]: parsed.commitmentId,
 				};
 				return res.json(result);
 			}

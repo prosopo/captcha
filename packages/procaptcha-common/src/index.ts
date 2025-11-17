@@ -20,3 +20,5 @@ export * from "./extensionLoader.js";
 export * from "./elements/window.js";
 export * from "./reactComponents/Reload.js";
 export * from "./reactComponents/Checkbox.js";
+export * from "./reactComponents/DemoKeyBanner.js";
+export * from "./util/demoKeys.js";

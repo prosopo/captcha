@@ -49,7 +49,7 @@ const renderPlaceholder = (
 			theme={checkboxTheme}
 			onChange={async () => {}}
 			checked={false}
-			labelText={isTranslationLoaded ? translationFn("WIDGET.I_AM_HUMAN") : ""}
+			labelText="asdf"
 			error={errorMessage}
 			aria-label="human checkbox"
 			loading={loading}

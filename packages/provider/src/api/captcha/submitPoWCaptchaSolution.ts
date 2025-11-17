@@ -51,9 +51,40 @@ export default (env: ProviderEnvironment) =>
 			return res.json(response);
 		}
 
+		// DEBUG: Log incoming request body
+		req.logger.info(() => ({
+			msg: "=== [Backend] submitPoWCaptchaSolution received request ===",
+			body: req.body,
+			bodyString: JSON.stringify(req.body, null, 2),
+		}));
+
+		if (req.body.challenge) {
+			req.logger.info(() => ({
+				msg: "[Backend] Challenge details",
+				challenge: req.body.challenge,
+				challengeType: typeof req.body.challenge,
+				challengeParts: req.body.challenge?.split?.("___"),
+				challengePartsCount: req.body.challenge?.split?.("___")?.length,
+			}));
+		}
+
 		try {
+			req.logger.info(() => ({
+				msg: "[Backend] About to validate with SubmitPowCaptchaSolutionBody.parse",
+			}));
 			parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
+			req.logger.info(() => ({
+				msg: "[Backend] ✓ Validation passed!",
+				parsed,
+			}));
 		} catch (err) {
+			req.logger.error(() => ({
+				msg: "=== [Backend] VALIDATION ERROR ===",
+				error: err,
+				errorMessage: (err as Error).message,
+				body: req.body,
+				bodyString: JSON.stringify(req.body, null, 2),
+			}));
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err, body: req.body },

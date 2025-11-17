@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
+
+    <script src="index.js"></script>
+    <title>Procaptcha Demo Keys - Testing</title>
+    <link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <style>
+        .demo-section {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .demo-section h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        .demo-key-info {
+            background: #fff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .demo-key-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .demo-key-warning strong {
+            color: #ff5722;
+        }
+        .explanation {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .explanation h2 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .explanation ul {
+            margin: 10px 0;
+        }
+        .explanation li {
+            margin: 8px 0;
+        }
+        .code-box {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+    <script type="module">
+        // updateCaptchaStatus is provided by status-log-injector
+
+        window.addEventListener('load', () => {
+            updateCaptchaStatus('Page loaded - Demo Keys page initialized', 'info');
+        });
+
+        window.onCaptchaFailed = function () {
+            console.log('Challenge failed');
+            updateCaptchaStatus('Challenge failed - This is expected for "Always Fail" demo key', 'warning');
+        }
+
+        window.onCaptchaVerified = (output) => {
+            console.log('Challenge passed', output);
+            updateCaptchaStatus('Challenge passed successfully!', 'success');
+            updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
+        }
+
+        window.onCaptchaExpired = () => {
+            console.log('Challenge expired');
+            updateCaptchaStatus('Challenge expired - please try again', 'warning');
+        }
+    </script>
+    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%" async defer></script>
+</head>
+<body>
+
+<div class="mui-container">
+    <h1>🔑 Demo Keys - Testing & Development</h1>
+    
+    <!-- Explanation Section -->
+    <div class="explanation">
+        <h2>What are Demo Keys?</h2>
+        <p>
+            Demo keys are special hardcoded site keys that provide predictable CAPTCHA behavior for testing and development purposes.
+            They allow developers to test both success and failure scenarios without requiring a real provider setup.
+        </p>
+        
+        <h3>Why Use Demo Keys?</h3>
+        <ul>
+            <li><strong>Testing:</strong> Verify your integration handles both success and failure cases</li>
+            <li><strong>Development:</strong> Build and debug your application without provider dependencies</li>
+            <li><strong>CI/CD:</strong> Run automated tests with predictable CAPTCHA responses</li>
+            <li><strong>Demos:</strong> Show CAPTCHA functionality in controlled environments</li>
+        </ul>
+
+        <h3>Available Demo Keys</h3>
+        <div class="code-box">
+            // Always Pass Demo Key (Alice - Polkadot.js well-known account)<br/>
+            5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+        </div>
+        <div class="code-box">
+            // Always Fail Demo Key (Eve - Polkadot.js well-known account)<br/>
+            5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw
+        </div>
+
+        <div class="demo-key-warning">
+            <strong>⚠️ WARNING:</strong> Demo keys are for development/testing only and are automatically disabled in production environments.
+            A visible warning banner will appear on the widget when demo keys are used.
+        </div>
+    </div>
+
+    <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
+
+    <!-- Always Pass Demo Section -->
+    <div class="demo-section">
+        <h3>✅ "Always Pass" Demo Key</h3>
+        <p>This demo key will always return trivial CAPTCHAs that automatically pass verification.</p>
+        
+        <div class="demo-key-info">
+            <strong>Site Key:</strong> 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY (Alice)
+        </div>
+
+        <form class="mui-form">
+            <h4>Test Form - Always Pass</h4>
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name-pass">Name</label>
+                <input id="name-pass" type="text" name="name" placeholder="Enter any name"/>
+            </div>
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email-pass">Email</label>
+                <input id="email-pass" type="email" name="email" placeholder="test@example.com"/>
+            </div>
+            <div class="mui-textfield mui-textfield--float-label">
+                <!-- Always Pass Demo Key -->
+                <div
+                    class="procaptcha"
+                    data-theme="light"
+                    data-sitekey="5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+                    data-failed-callback="onCaptchaFailed"
+                    data-callback="onCaptchaVerified"
+                    data-expired-callback="onCaptchaExpired"
+                    data-captcha-type="frictionless"
+                ></div>
+            </div>
+            <button type="submit" class="mui-btn mui-btn--raised" onclick="event.preventDefault(); updateCaptchaStatus('Form submitted with Always Pass key', 'success');">
+                Submit
+            </button>
+        </form>
+        
+        <p style="margin-top: 15px; color: #666; font-size: 14px;">
+            <strong>Expected Behavior:</strong> The CAPTCHA will present a trivial PoW challenge with difficulty 1 
+            and automatically verify successfully. You'll see a red warning banner at the bottom of the widget.
+        </p>
+    </div>
+
+    <!-- Always Fail Demo Section -->
+    <div class="demo-section">
+        <h3>❌ "Always Fail" Demo Key</h3>
+        <p>This demo key will always fail verification, allowing you to test error handling.</p>
+        
+        <div class="demo-key-info">
+            <strong>Site Key:</strong> 5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw (Eve)
+        </div>
+
+        <form class="mui-form">
+            <h4>Test Form - Always Fail</h4>
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name-fail">Name</label>
+                <input id="name-fail" type="text" name="name" placeholder="Enter any name"/>
+            </div>
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email-fail">Email</label>
+                <input id="email-fail" type="email" name="email" placeholder="test@example.com"/>
+            </div>
+            <div class="mui-textfield mui-textfield--float-label">
+                <!-- Always Fail Demo Key -->
+                <div
+                    class="procaptcha"
+                    data-theme="dark"
+                    data-sitekey="5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
+                    data-failed-callback="onCaptchaFailed"
+                    data-callback="onCaptchaVerified"
+                    data-expired-callback="onCaptchaExpired"
+                    data-captcha-type="frictionless"
+                ></div>
+            </div>
+            <button type="submit" class="mui-btn mui-btn--raised" onclick="event.preventDefault(); updateCaptchaStatus('Form submitted with Always Fail key', 'info');">
+                Submit
+            </button>
+        </form>
+        
+        <p style="margin-top: 15px; color: #666; font-size: 14px;">
+            <strong>Expected Behavior:</strong> The CAPTCHA will present the same trivial challenge but verification 
+            will always fail. The failed callback will be triggered. You'll see a red warning banner at the bottom of the widget.
+        </p>
+    </div>
+
+    <!-- Implementation Notes -->
+    <div class="explanation">
+        <h2>🔧 Implementation Notes</h2>
+        
+        <h3>Frontend (Widget) Behavior</h3>
+        <ul>
+            <li>Demo keys are detected by comparing the site key to hardcoded demo key values</li>
+            <li>A prominent red warning banner is displayed at the bottom of the widget</li>
+            <li>Banner shows the demo mode type: "DEMO MODE (ALWAYS PASS)" or "DEMO MODE (ALWAYS FAIL)"</li>
+            <li>Banner includes a "Learn More" link to documentation</li>
+        </ul>
+
+        <h3>Backend (Provider) Behavior</h3>
+        <ul>
+            <li><strong>Always Pass:</strong> Returns trivial PoW challenges (difficulty 1) and always verifies as successful</li>
+            <li><strong>Always Fail:</strong> Returns the same trivial challenges but always fails verification</li>
+            <li>All demo key usage is logged with warnings in provider logs</li>
+            <li>Demo keys are automatically disabled in production environments</li>
+        </ul>
+
+        <h3>Use Cases</h3>
+        <ul>
+            <li><strong>Unit Tests:</strong> Test success/failure handling without mocking</li>
+            <li><strong>Integration Tests:</strong> Verify full flow with predictable outcomes</li>
+            <li><strong>UI Development:</strong> Build and style success/error states</li>
+            <li><strong>Demos & Presentations:</strong> Show functionality without complexity</li>
+        </ul>
+
+        <h3>Code Example</h3>
+        <div class="code-box">
+&lt;div class="procaptcha"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-sitekey="5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-callback="onSuccess"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-failed-callback="onFailure"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;data-captcha-type="frictionless"<br/>
+&gt;&lt;/div&gt;
+        </div>
+    </div>
+
+    <!-- Console output display area -->
+    <div id="console-output" class="console-output" style="display: none;"></div>
+
+    <!-- Explanation will be injected by the explanation-injector plugin -->
+</div>
+</body>
+</html>
+

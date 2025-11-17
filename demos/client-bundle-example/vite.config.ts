@@ -181,6 +181,7 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-frictionless-explicit.html",
 					),
+					"demo-keys": path.resolve(__dirname, "src/demo-keys.html"),
 				},
 			},
 		},

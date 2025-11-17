@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { DemoKeyBehavior } from "@prosopo/types";
-import type { ClientRecord } from "@prosopo/types-database";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	DEMO_KEY_ALWAYS_FAIL,
+	DEMO_KEY_ALWAYS_PASS,
+	DemoKeyBehavior,
 	areDemoKeysEnabled,
 	getDemoKeyBehavior,
-	isDemoKey,
+	isAlwaysFailDemoKey,
+	isAlwaysPassDemoKey,
 	shouldBypassForDemoKey,
-	validateDemoKeyEnvironment,
 } from "../../../utils/demoKeys.js";
 
 describe("Demo Keys Utility Functions", () => {
@@ -37,213 +38,158 @@ describe("Demo Keys Utility Functions", () => {
 	});
 
 	describe("areDemoKeysEnabled", () => {
-		it("should return false when ENABLE_DEMO_KEYS is not set", () => {
-			delete process.env.ENABLE_DEMO_KEYS;
-			expect(areDemoKeysEnabled()).toBe(false);
-		});
-
-		it("should return false when ENABLE_DEMO_KEYS is false", () => {
-			process.env.ENABLE_DEMO_KEYS = "false";
-			expect(areDemoKeysEnabled()).toBe(false);
-		});
-
-		it("should return true when ENABLE_DEMO_KEYS is true and in development", () => {
-			process.env.ENABLE_DEMO_KEYS = "true";
-			process.env.NODE_ENV = "development";
-			expect(areDemoKeysEnabled()).toBe(true);
-		});
-
-		it("should return true when ENABLE_DEMO_KEYS is true and in test", () => {
-			process.env.ENABLE_DEMO_KEYS = "true";
-			process.env.NODE_ENV = "test";
-			expect(areDemoKeysEnabled()).toBe(true);
-		});
-
-		it("should return false when ENABLE_DEMO_KEYS is true but in production", () => {
-			process.env.ENABLE_DEMO_KEYS = "true";
+		it("should return false when in production", () => {
 			process.env.NODE_ENV = "production";
 			expect(areDemoKeysEnabled()).toBe(false);
 		});
 
+		it("should return true in development", () => {
+			process.env.NODE_ENV = "development";
+			expect(areDemoKeysEnabled()).toBe(true);
+		});
+
+		it("should return true in test", () => {
+			process.env.NODE_ENV = "test";
+			expect(areDemoKeysEnabled()).toBe(true);
+		});
+
 		it("should respect custom allowed environments", () => {
-			process.env.ENABLE_DEMO_KEYS = "true";
 			process.env.NODE_ENV = "staging";
 			process.env.DEMO_KEYS_ALLOWED_ENVIRONMENTS = "staging,development";
 			expect(areDemoKeysEnabled()).toBe(true);
 		});
 	});
 
-	describe("isDemoKey", () => {
-		it("should return false for client record without demo config", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {},
-			} as ClientRecord;
-			expect(isDemoKey(clientRecord)).toBe(false);
+	describe("isAlwaysPassDemoKey", () => {
+		beforeEach(() => {
+			process.env.NODE_ENV = "development";
 		});
 
-		it("should return false for client record with disabled demo config", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: false,
-						behavior: DemoKeyBehavior.AlwaysPass,
-					},
-				},
-			} as ClientRecord;
-			expect(isDemoKey(clientRecord)).toBe(false);
+		it("should return true for DEMO_KEY_ALWAYS_PASS", () => {
+			expect(isAlwaysPassDemoKey(DEMO_KEY_ALWAYS_PASS)).toBe(true);
 		});
 
-		it("should return true for client record with enabled demo config", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: true,
-						behavior: DemoKeyBehavior.AlwaysPass,
-					},
-				},
-			} as ClientRecord;
-			expect(isDemoKey(clientRecord)).toBe(true);
+		it("should return false for DEMO_KEY_ALWAYS_FAIL", () => {
+			expect(isAlwaysPassDemoKey(DEMO_KEY_ALWAYS_FAIL)).toBe(false);
+		});
+
+		it("should return false for other keys", () => {
+			expect(isAlwaysPassDemoKey("5SomeOtherKey")).toBe(false);
+		});
+
+		it("should return false when demo keys are disabled", () => {
+			process.env.NODE_ENV = "production";
+			expect(isAlwaysPassDemoKey(DEMO_KEY_ALWAYS_PASS)).toBe(false);
+		});
+	});
+
+	describe("isAlwaysFailDemoKey", () => {
+		beforeEach(() => {
+			process.env.NODE_ENV = "development";
+		});
+
+		it("should return true for DEMO_KEY_ALWAYS_FAIL", () => {
+			expect(isAlwaysFailDemoKey(DEMO_KEY_ALWAYS_FAIL)).toBe(true);
+		});
+
+		it("should return false for DEMO_KEY_ALWAYS_PASS", () => {
+			expect(isAlwaysFailDemoKey(DEMO_KEY_ALWAYS_PASS)).toBe(false);
+		});
+
+		it("should return false for other keys", () => {
+			expect(isAlwaysFailDemoKey("5SomeOtherKey")).toBe(false);
+		});
+
+		it("should return false when demo keys are disabled", () => {
+			process.env.NODE_ENV = "production";
+			expect(isAlwaysFailDemoKey(DEMO_KEY_ALWAYS_FAIL)).toBe(false);
 		});
 	});
 
 	describe("getDemoKeyBehavior", () => {
-		it("should return null for non-demo key", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {},
-			} as ClientRecord;
-			expect(getDemoKeyBehavior(clientRecord)).toBeNull();
+		beforeEach(() => {
+			process.env.NODE_ENV = "development";
 		});
 
-		it("should return AlwaysPass for demo key with AlwaysPass behavior", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: true,
-						behavior: DemoKeyBehavior.AlwaysPass,
-					},
-				},
-			} as ClientRecord;
-			expect(getDemoKeyBehavior(clientRecord)).toBe(DemoKeyBehavior.AlwaysPass);
+		it("should return AlwaysPass for DEMO_KEY_ALWAYS_PASS", () => {
+			expect(getDemoKeyBehavior(DEMO_KEY_ALWAYS_PASS)).toBe(
+				DemoKeyBehavior.AlwaysPass,
+			);
 		});
 
-		it("should return AlwaysFail for demo key with AlwaysFail behavior", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: true,
-						behavior: DemoKeyBehavior.AlwaysFail,
-					},
-				},
-			} as ClientRecord;
-			expect(getDemoKeyBehavior(clientRecord)).toBe(DemoKeyBehavior.AlwaysFail);
+		it("should return AlwaysFail for DEMO_KEY_ALWAYS_FAIL", () => {
+			expect(getDemoKeyBehavior(DEMO_KEY_ALWAYS_FAIL)).toBe(
+				DemoKeyBehavior.AlwaysFail,
+			);
+		});
+
+		it("should return null for non-demo keys", () => {
+			expect(getDemoKeyBehavior("5SomeOtherKey")).toBeNull();
+			expect(getDemoKeyBehavior("")).toBeNull();
+		});
+
+		it("should return null when demo keys are disabled", () => {
+			process.env.NODE_ENV = "production";
+			expect(getDemoKeyBehavior(DEMO_KEY_ALWAYS_PASS)).toBeNull();
+			expect(getDemoKeyBehavior(DEMO_KEY_ALWAYS_FAIL)).toBeNull();
 		});
 	});
 
 	describe("shouldBypassForDemoKey", () => {
 		beforeEach(() => {
-			process.env.ENABLE_DEMO_KEYS = "true";
 			process.env.NODE_ENV = "development";
 		});
 
-		it("should return false when demo keys are not enabled", () => {
-			process.env.ENABLE_DEMO_KEYS = "false";
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: true,
-						behavior: DemoKeyBehavior.AlwaysPass,
-					},
-				},
-			} as ClientRecord;
-			expect(
-				shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass),
-			).toBe(false);
-		});
-
-		it("should return false for non-demo key", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {},
-			} as ClientRecord;
-			expect(
-				shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass),
-			).toBe(false);
-		});
-
-		it("should return false when behavior does not match", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: true,
-						behavior: DemoKeyBehavior.AlwaysFail,
-					},
-				},
-			} as ClientRecord;
-			expect(
-				shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass),
-			).toBe(false);
-		});
-
 		it("should return true when behavior matches AlwaysPass", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: true,
-						behavior: DemoKeyBehavior.AlwaysPass,
-					},
-				},
-			} as ClientRecord;
 			expect(
-				shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass),
+				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_PASS, DemoKeyBehavior.AlwaysPass),
 			).toBe(true);
 		});
 
 		it("should return true when behavior matches AlwaysFail", () => {
-			const clientRecord: ClientRecord = {
-				account: "test",
-				settings: {
-					demoKeyConfig: {
-						enabled: true,
-						behavior: DemoKeyBehavior.AlwaysFail,
-					},
-				},
-			} as ClientRecord;
 			expect(
-				shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail),
+				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_FAIL, DemoKeyBehavior.AlwaysFail),
 			).toBe(true);
+		});
+
+		it("should return false when behavior does not match", () => {
+			expect(
+				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_PASS, DemoKeyBehavior.AlwaysFail),
+			).toBe(false);
+			expect(
+				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_FAIL, DemoKeyBehavior.AlwaysPass),
+			).toBe(false);
+		});
+
+		it("should return false for non-demo keys", () => {
+			expect(
+				shouldBypassForDemoKey("5SomeOtherKey", DemoKeyBehavior.AlwaysPass),
+			).toBe(false);
+		});
+
+		it("should return false when demo keys are disabled", () => {
+			process.env.NODE_ENV = "production";
+			expect(
+				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_PASS, DemoKeyBehavior.AlwaysPass),
+			).toBe(false);
 		});
 	});
 
-	describe("validateDemoKeyEnvironment", () => {
-		it("should not throw when demo keys are disabled", () => {
-			process.env.ENABLE_DEMO_KEYS = "false";
-			process.env.NODE_ENV = "production";
-			expect(() => validateDemoKeyEnvironment()).not.toThrow();
-		});
-
-		it("should not throw when demo keys are enabled in development", () => {
-			process.env.ENABLE_DEMO_KEYS = "true";
-			process.env.NODE_ENV = "development";
-			expect(() => validateDemoKeyEnvironment()).not.toThrow();
-		});
-
-		it("should throw when demo keys are enabled in production", () => {
-			process.env.ENABLE_DEMO_KEYS = "true";
-			process.env.NODE_ENV = "production";
-			process.env.DEMO_KEYS_ALLOWED_ENVIRONMENTS = "development,test";
-			expect(() => validateDemoKeyEnvironment()).toThrow(
-				/CRITICAL.*Demo keys.*production/i,
+	describe("Demo Key Constants", () => {
+		it("should have correct DEMO_KEY_ALWAYS_PASS value", () => {
+			expect(DEMO_KEY_ALWAYS_PASS).toBe(
+				"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 			);
+		});
+
+		it("should have correct DEMO_KEY_ALWAYS_FAIL value", () => {
+			expect(DEMO_KEY_ALWAYS_FAIL).toBe(
+				"5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+			);
+		});
+
+		it("should not have the same value", () => {
+			expect(DEMO_KEY_ALWAYS_PASS).not.toBe(DEMO_KEY_ALWAYS_FAIL);
 		});
 	});
 });
-

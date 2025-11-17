@@ -18,6 +18,7 @@ import {
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
+	type PoWChallengeId,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -88,15 +89,27 @@ export default (
 				"pow_captcha_challenge",
 			);
 
+				const timestamp = Date.now();
+				const nonce = Math.floor(Math.random() * 1000000);
+				const challengeId = `${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
+				
+				// Debug logging
+				req.logger.debug(() => ({
+					msg: "Demo key PoW challenge generated",
+					challenge: challengeId,
+					parts: challengeId.split("___"),
+					partsCount: challengeId.split("___").length,
+				}));
+				
 				const response: GetPowCaptchaResponse = {
-					[ApiParams.challenge]: "demo_challenge_pass",
+					[ApiParams.status]: "ok",
+					[ApiParams.challenge]: challengeId,
 					[ApiParams.difficulty]: 1, // Trivially solvable
+					[ApiParams.timestamp]: timestamp.toString(),
 					[ApiParams.signature]: {
 						[ApiParams.provider]: {
 							[ApiParams.challenge]: "demo_provider_challenge",
-							[ApiParams.proof]: "demo_proof",
 						},
-						[ApiParams.timestamp]: Date.now().toString(),
 					},
 				};
 
@@ -114,15 +127,27 @@ export default (
 				"pow_captcha_challenge",
 			);
 
+				const timestamp = Date.now();
+				const nonce = Math.floor(Math.random() * 1000000);
+				const challengeId = `${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
+				
+				// Debug logging
+				req.logger.debug(() => ({
+					msg: "Demo key PoW challenge generated (always fail)",
+					challenge: challengeId,
+					parts: challengeId.split("___"),
+					partsCount: challengeId.split("___").length,
+				}));
+				
 				const response: GetPowCaptchaResponse = {
-					[ApiParams.challenge]: "demo_challenge_fail",
+					[ApiParams.status]: "ok",
+					[ApiParams.challenge]: challengeId,
 					[ApiParams.difficulty]: 1000000, // Impossibly hard
+					[ApiParams.timestamp]: timestamp.toString(),
 					[ApiParams.signature]: {
 						[ApiParams.provider]: {
 							[ApiParams.challenge]: "demo_provider_challenge",
-							[ApiParams.proof]: "demo_proof",
 						},
-						[ApiParams.timestamp]: Date.now().toString(),
 					},
 				};
 
