@@ -1,5 +1,102 @@
 # @prosopo/provider-mock
 
+## 2.8.35
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api-express-router@3.0.39
+  - @prosopo/common@3.1.25
+  - @prosopo/database@3.5.5
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/locale@3.1.25
+  - @prosopo/provider@3.13.6
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+
+## 2.8.34
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+- Updated dependencies [e843e62]
+  - @prosopo/api-express-router@3.0.38
+  - @prosopo/types-database@4.0.4
+  - @prosopo/database@3.5.4
+  - @prosopo/provider@3.13.5
+  - @prosopo/common@3.1.24
+  - @prosopo/dotenv@3.0.29
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+
+## 2.8.33
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api-express-router@3.0.37
+  - @prosopo/common@3.1.23
+  - @prosopo/database@3.5.3
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/locale@3.1.23
+  - @prosopo/provider@3.13.4
+  - @prosopo/types@3.6.1
+  - @prosopo/types-database@4.0.3
+
+## 2.8.32
+### Patch Changes
+
+- Updated dependencies [0a9887c]
+- Updated dependencies [3be9174]
+  - @prosopo/types-database@4.0.2
+  - @prosopo/provider@3.13.3
+  - @prosopo/database@3.5.2
+  - @prosopo/api-express-router@3.0.36
+
+## 2.8.31
+### Patch Changes
+
+- Updated dependencies [3e5d80a]
+  - @prosopo/types-database@4.0.1
+  - @prosopo/database@3.5.1
+  - @prosopo/provider@3.13.2
+  - @prosopo/api-express-router@3.0.35
+
+## 2.8.30
+### Patch Changes
+
+- Updated dependencies [447179c]
+  - @prosopo/provider@3.13.1
+
+## 2.8.29
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [fdef625]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [aa8216a]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [6ac5367]
+- Updated dependencies [8f22479]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/provider@3.13.0
+  - @prosopo/types@3.6.0
+  - @prosopo/types-database@4.0.0
+  - @prosopo/database@3.5.0
+  - @prosopo/api-express-router@3.0.34
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
 ## 2.8.28
 ### Patch Changes
 

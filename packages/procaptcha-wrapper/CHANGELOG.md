@@ -1,5 +1,46 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.41
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/locale@3.1.25
+  - @prosopo/types@3.6.3
+
+## 2.6.40
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+
+## 2.6.39
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+
+## 2.6.38
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
 ## 2.6.37
 ### Patch Changes
 

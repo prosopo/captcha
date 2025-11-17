@@ -1,5 +1,62 @@
 # @prosopo/server
 
+## 2.9.47
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api@3.1.36
+  - @prosopo/common@3.1.25
+  - @prosopo/keyring@2.8.39
+  - @prosopo/load-balancer@2.8.12
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+
+## 2.9.46
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/load-balancer@2.8.11
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+
+## 2.9.45
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/common@3.1.23
+  - @prosopo/keyring@2.8.37
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
+## 2.9.44
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/load-balancer@2.8.9
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/config@3.1.22
+
 ## 2.9.43
 ### Patch Changes
 

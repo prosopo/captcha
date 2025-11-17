@@ -1,5 +1,128 @@
 # @prosopo/cli
 
+## 3.5.7
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/workspace@3.1.18
+  - @prosopo/api@3.1.36
+  - @prosopo/api-express-router@3.0.39
+  - @prosopo/common@3.1.25
+  - @prosopo/dotenv@3.0.30
+  - @prosopo/env@3.2.27
+  - @prosopo/keyring@2.8.39
+  - @prosopo/locale@3.1.25
+  - @prosopo/provider@3.13.6
+  - @prosopo/types@3.6.3
+  - @prosopo/user-access-policy@3.5.31
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
+## 3.5.6
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+- Updated dependencies [e843e62]
+  - @prosopo/api-express-router@3.0.38
+  - @prosopo/user-access-policy@3.5.30
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/provider@3.13.5
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/dotenv@3.0.29
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/workspace@3.1.17
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+  - @prosopo/env@3.2.26
+
+## 3.5.5
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/workspace@3.1.16
+  - @prosopo/api@3.1.34
+  - @prosopo/api-express-router@3.0.37
+  - @prosopo/common@3.1.23
+  - @prosopo/dotenv@3.0.28
+  - @prosopo/env@3.2.25
+  - @prosopo/keyring@2.8.37
+  - @prosopo/locale@3.1.23
+  - @prosopo/provider@3.13.4
+  - @prosopo/types@3.6.1
+  - @prosopo/user-access-policy@3.5.29
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 3.5.4
+### Patch Changes
+
+- 5adeb05: fixing biome ignore that not used
+
+## 3.5.3
+### Patch Changes
+
+- Updated dependencies [3be9174]
+  - @prosopo/provider@3.13.3
+  - @prosopo/env@3.2.24
+  - @prosopo/api-express-router@3.0.36
+
+## 3.5.2
+### Patch Changes
+
+  - @prosopo/provider@3.13.2
+  - @prosopo/env@3.2.23
+  - @prosopo/api-express-router@3.0.35
+
+## 3.5.1
+### Patch Changes
+
+- 447179c: Fix config and client getter
+- Updated dependencies [447179c]
+  - @prosopo/provider@3.13.1
+
+## 3.5.0
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [fdef625]
+- Updated dependencies [8ce9205]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [aa8216a]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [6ac5367]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/provider@3.13.0
+  - @prosopo/user-access-policy@3.5.28
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/api-express-router@3.0.34
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/dotenv@3.0.27
+  - @prosopo/locale@3.1.22
+  - @prosopo/workspace@3.1.15
+  - @prosopo/api@3.1.33
+  - @prosopo/env@3.2.22
+  - @prosopo/config@3.1.22
+
 ## 3.4.17
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/gh-actions",
-	"version": "2.6.23",
+	"version": "2.6.27",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -13,7 +13,11 @@
 	},
 	"author": "",
 	"license": "ISC",
+	"dependencies": {
+		"@octokit/graphql": "8.1.1"
+	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.25",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
@@ -25,10 +29,6 @@
 		"vite": "6.4.1",
 		"vitest": "3.2.4"
 	},
-	"dependencies": {
-		"@octokit/graphql": "8.1.1",
-		"@prosopo/config": "3.1.21"
-	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"exports": {
@@ -39,7 +39,7 @@
 		}
 	},
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	}
 }

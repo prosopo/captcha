@@ -1741,6 +1741,10 @@ export class ProviderDatabase
 				},
 			};
 		});
+		if (!ops || ops.length === 0) {
+			await this.logger.debug(() => ({ msg: "No client updates to apply" }));
+			return;
+		}
 		await this.tables?.client.bulkWrite(ops);
 	}
 

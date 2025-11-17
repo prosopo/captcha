@@ -1,5 +1,68 @@
 # @prosopo/api-express-router
 
+## 3.0.39
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api-route@2.6.33
+  - @prosopo/common@3.1.25
+  - @prosopo/env@3.2.27
+  - @prosopo/locale@3.1.25
+  - @prosopo/types@3.6.3
+
+## 3.0.38
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/api-route@2.6.32
+  - @prosopo/common@3.1.24
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/env@3.2.26
+
+## 3.0.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api-route@2.6.31
+  - @prosopo/common@3.1.23
+  - @prosopo/env@3.2.25
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+
+## 3.0.36
+### Patch Changes
+
+  - @prosopo/env@3.2.24
+
+## 3.0.35
+### Patch Changes
+
+  - @prosopo/env@3.2.23
+
+## 3.0.34
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/api-route@2.6.30
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/env@3.2.22
+  - @prosopo/config@3.1.22
+
 ## 3.0.33
 ### Patch Changes
 

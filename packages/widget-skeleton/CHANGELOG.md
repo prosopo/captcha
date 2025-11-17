@@ -1,5 +1,33 @@
 # @prosopo/widget-skeleton
 
+## 2.7.11
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
+## 2.7.10
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
+## 2.7.9
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
+## 2.7.8
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/config@3.1.22
+
 ## 2.7.7
 ### Patch Changes
 

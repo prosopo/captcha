@@ -469,7 +469,7 @@ export type SessionRecord = mongoose.Document & Session;
 export const SessionRecordSchema = new Schema<SessionRecord>({
 	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
-	token: { type: String, required: true, unique: true },
+	token: { type: String, required: true },
 	score: { type: Number, required: true },
 	threshold: { type: Number, required: true },
 	scoreComponents: {
@@ -492,6 +492,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	webView: { type: Boolean, required: true, default: false },
 	iFrame: { type: Boolean, required: true, default: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
+	reason: { type: String, required: false },
 });
 
 SessionRecordSchema.index({ createdAt: 1 });

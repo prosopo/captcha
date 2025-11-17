@@ -1,4 +1,5 @@
 ---
+"@prosopo/react-procaptcha-wrapper": patch
 "@prosopo/client-bundle-example": patch
 "@prosopo/client-example-server": patch
 "@prosopo/cypress-shared": patch
@@ -15,7 +16,6 @@
 "@prosopo/angular-procaptcha-integration-demo": patch
 "@prosopo/angular-procaptcha-wrapper": patch
 "@prosopo/react-procaptcha-integration-demo": patch
-"@prosopo/react-procaptcha-wrapper": patch
 "@prosopo/svelte-procaptcha-integration-demo": patch
 "@prosopo/svelte-procaptcha-wrapper": patch
 "@prosopo/vue-procaptcha-integration-demo": patch
@@ -59,5 +59,5 @@
 "@prosopo/widget-skeleton": patch
 ---
 
-Run npm audit
+bump
   

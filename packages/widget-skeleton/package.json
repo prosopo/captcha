@@ -1,11 +1,11 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.7.7",
+	"version": "2.7.11",
 	"description": "Non business logic utilities for web applications",
 	"type": "module",
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -33,10 +33,8 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"dependencies": {
-		"@prosopo/config": "3.1.21"
-	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.25",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",

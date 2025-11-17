@@ -53,33 +53,40 @@ describe("Frictionless Task Utils", () => {
 
 	describe("timestampDecayFunction", () => {
 		it("returns at least 2 for age 0", () => {
-			expect(timestampDecayFunction(0)).toBeGreaterThanOrEqual(2);
+			expect(timestampDecayFunction(0, false)).toBeGreaterThanOrEqual(2);
 		});
 
 		it("returns a number for positive age", () => {
-			const result = timestampDecayFunction(1000);
+			const result = timestampDecayFunction(1000, false);
 			expect(typeof result).toBe("number");
 		});
 
 		it("returns higher values for larger age", () => {
-			const smallAge = timestampDecayFunction(1000);
-			const largeAge = timestampDecayFunction(1000000);
+			const smallAge = timestampDecayFunction(1000, false);
+			const largeAge = timestampDecayFunction(1000000, false);
 			expect(largeAge).toBeGreaterThanOrEqual(smallAge);
 		});
 
 		it("handles very large age values", () => {
-			const result = timestampDecayFunction(Number.MAX_SAFE_INTEGER);
+			const result = timestampDecayFunction(Number.MAX_SAFE_INTEGER, false);
 			expect(result).toBeGreaterThanOrEqual(2);
 		});
 
 		it("returns 12 for age of approximately 55 years", () => {
-			const result = timestampDecayFunction(new Date("1970-01-01").getTime());
+			const result = timestampDecayFunction(
+				new Date("1970-01-01").getTime(),
+				false,
+			);
 			expect(result).toBe(12);
 		});
 		it("should return 3 for a timestamp equal to current time", async () => {
 			const now = Date.now();
-			const result = timestampDecayFunction(now);
+			const result = timestampDecayFunction(now, false);
 			expect(result).toBe(3);
+		});
+		it("returns 6 for decryption failure", () => {
+			const result = timestampDecayFunction(0, true);
+			expect(result).toBe(6);
 		});
 	});
 });

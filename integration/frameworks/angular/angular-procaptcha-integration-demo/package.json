@@ -1,9 +1,9 @@
 {
 	"name": "@prosopo/angular-procaptcha-integration-demo",
-	"version": "1.1.35",
+	"version": "1.1.39",
 	"engines": {
-		"node": ">=v20.0.0",
-		"npm": ">=10.6.0"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"type": "module",
 	"scripts": {
@@ -19,8 +19,7 @@
 		"@angular/core": "^20.3.9",
 		"@angular/platform-browser": "^20.3.9",
 		"@angular/router": "^20.3.9",
-		"@prosopo/angular-procaptcha-wrapper": "1.1.35",
-		"@prosopo/config": "3.1.21"
+		"@prosopo/angular-procaptcha-wrapper": "1.1.39"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -32,6 +31,7 @@
 		}
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.1.25",
 		"@angular-builders/custom-webpack": "^20.0.0",
 		"@angular-devkit/build-angular": "^20.3.8",
 		"@angular/cli": "^20.3.8",
