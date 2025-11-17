@@ -19,7 +19,6 @@ import {
 	CaptchaRequestBody,
 	type CaptchaRequestBodyTypeOutput,
 	type CaptchaResponseBody,
-	CaptchaStatus,
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 } from "@prosopo/types";
@@ -29,11 +28,6 @@ import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
-import {
-	DemoKeyBehavior,
-	logDemoKeyUsage,
-	shouldBypassForDemoKey,
-} from "../../utils/demoKeys.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -89,108 +83,6 @@ export default (
 						logger: req.logger,
 					}),
 				);
-			}
-
-		// Handle demo key - always pass
-		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysPass,
-				"image_captcha_challenge",
-			);
-
-				// Create a minimal dataset with pre-approved solution
-				const captchas: Captcha[] = [
-					{
-						captchaId: "demo_pass",
-						captchaContentId: "demo_pass",
-						solved: true,
-						salt: "demo",
-						items: [{ hash: "demo", data: "demo", type: "text" }],
-						target: "demo",
-						solution: ["demo"],
-						unlabelled: [],
-					},
-				];
-
-				// Store commitment as pre-approved
-				const tree = await tasks.imgCaptchaManager.buildCaptchaTree(
-					captchas,
-					dapp,
-					ipAddress.address,
-				);
-				const commitmentId =
-					await tasks.imgCaptchaManager.storeDappUserCommitment(
-						user,
-						dapp,
-						tree.root.hash,
-						{
-							status: CaptchaStatus.approved,
-							captchas: captchas,
-						},
-						ipAddress,
-						sessionId || undefined,
-					);
-
-				const response: CaptchaResponseBody = {
-					[ApiParams.captchas]: parseCaptchaAssets(captchas, ""),
-					[ApiParams.requestHash]: tree.root.hash,
-					[ApiParams.commitmentId]: commitmentId,
-				};
-
-				return res.json(response);
-			}
-
-		// Handle demo key - always fail
-		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysFail,
-				"image_captcha_challenge",
-			);
-
-				// Create unsolvable captcha (pre-disapproved)
-				const captchas: Captcha[] = [
-					{
-						captchaId: "demo_fail",
-						captchaContentId: "demo_fail",
-						solved: false,
-						salt: "demo",
-						items: [{ hash: "demo", data: "demo", type: "text" }],
-						target: "impossible",
-						solution: ["impossible"],
-						unlabelled: [],
-					},
-				];
-
-				// Store commitment as pre-disapproved
-				const tree = await tasks.imgCaptchaManager.buildCaptchaTree(
-					captchas,
-					dapp,
-					ipAddress.address,
-				);
-				const commitmentId =
-					await tasks.imgCaptchaManager.storeDappUserCommitment(
-						user,
-						dapp,
-						tree.root.hash,
-						{
-							status: CaptchaStatus.disapproved,
-							captchas: captchas,
-						},
-						ipAddress,
-						sessionId || undefined,
-					);
-
-				const response: CaptchaResponseBody = {
-					[ApiParams.captchas]: parseCaptchaAssets(captchas, ""),
-					[ApiParams.requestHash]: tree.root.hash,
-					[ApiParams.commitmentId]: commitmentId,
-				};
-
-				return res.json(response);
 			}
 
 			const userScope = getRequestUserScope(

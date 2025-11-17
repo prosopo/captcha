@@ -214,6 +214,8 @@ export default (
 			}
 
 		// Handle demo key - always fail
+		// NOTE: This returns a PoW captcha just like "always pass" so that we can
+		// always get to a sensible captcha validation step for testing purposes
 		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
 			logDemoKeyUsage(
 				req.logger,
@@ -225,13 +227,13 @@ export default (
 				const ipAddress = getCompositeIpAddress(req.ip || "");
 				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
 
-				// Set session params with maximum penalty score
+				// Set session params with perfect score (same as always pass)
 				tasks.frictionlessManager.setSessionParams({
 					token,
-					score: 1.0,
+					score: 0,
 					threshold: 0.5,
 					scoreComponents: {
-						baseScore: 1.0,
+						baseScore: 0,
 					},
 					providerSelectEntropy: 0,
 					ipAddress,
@@ -240,12 +242,11 @@ export default (
 					decryptedHeadHash: "",
 				});
 
-				// Return maximum difficulty image captcha
+				// Return trivial PoW captcha (same as always pass)
 				return res.json(
-					await tasks.frictionlessManager.sendImageCaptcha({
-						solvedImagesCount: env.config.captchas.solved.count * 10,
+					await tasks.frictionlessManager.sendPowCaptcha({
+						powDifficulty: 1,
 						userSitekeyIpHash,
-						reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 					}),
 				);
 			}
