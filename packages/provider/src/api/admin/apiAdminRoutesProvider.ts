@@ -15,11 +15,6 @@
 import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import { AdminApiPaths } from "@prosopo/types";
 import type { Tasks } from "../../tasks/index.js";
-import {
-	ApiGetDemoKeyEndpoint,
-	ApiRemoveDemoKeyEndpoint,
-	ApiSetDemoKeyEndpoint,
-} from "./apiDemoKeyEndpoints.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
 import { ApiRemoveDetectorKeyEndpoint } from "./apiRemoveDetectorKeyEndpoint.js";
 import { ApiToggleMaintenanceModeEndpoint } from "./apiToggleMaintenanceModeEndpoint.js";
@@ -41,11 +36,6 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 			),
 			[AdminApiPaths.ToggleMaintenanceMode]:
 				new ApiToggleMaintenanceModeEndpoint(),
-			[AdminApiPaths.SetDemoKey]: new ApiSetDemoKeyEndpoint(this.tasks.db),
-			[AdminApiPaths.RemoveDemoKey]: new ApiRemoveDemoKeyEndpoint(
-				this.tasks.db,
-			),
-			[AdminApiPaths.GetDemoKey]: new ApiGetDemoKeyEndpoint(this.tasks.db),
 		};
 	}
 }
