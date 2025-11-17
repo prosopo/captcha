@@ -142,7 +142,7 @@ export default (
 				const response: GetPowCaptchaResponse = {
 					[ApiParams.status]: "ok",
 					[ApiParams.challenge]: challengeId,
-					[ApiParams.difficulty]: 1000000, // Impossibly hard
+					[ApiParams.difficulty]: 1, // Very easy, will fail later in flow
 					[ApiParams.timestamp]: timestamp.toString(),
 					[ApiParams.signature]: {
 						[ApiParams.provider]: {
@@ -230,6 +230,7 @@ export default (
 					requestedAtTimestamp: challenge.requestedAtTimestamp,
 					userAccount: user,
 					dappAccount: dapp,
+					nonce: Number.parseInt(challenge.challenge.split("___")[3] ?? "2", 10),
 				},
 				challenge.difficulty,
 				challenge.providerSignature,

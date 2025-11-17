@@ -131,11 +131,11 @@ describe("PowCaptchaManager", () => {
 		it("should verify a valid PoW captcha solution", async () => {
 			const requestedAtTimestamp = 123456789;
 			const userAccount = "testUserAccount";
-			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const nonce = 12345;
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}${POW_SEPARATOR}${nonce}`;
 			const difficulty = 4;
 			const providerSignature = "testSignature";
 			const userSignature = "testTimestampSignature";
-			const nonce = 12345;
 			const timeout = 1000;
 			const ipAddress = getIPAddress("1.1.1.1");
 			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
@@ -237,10 +237,10 @@ describe("PowCaptchaManager", () => {
 		});
 
 		it("should throw an error if PoW captcha solution is invalid", async () => {
-			const challenge: PoWChallengeId = `${12345}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount`;
+			const nonce = 12345;
+			const challenge: PoWChallengeId = `${12345}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount${POW_SEPARATOR}${nonce}`;
 			const difficulty = 4;
 			const signature = "testSignature";
-			const nonce = 12345;
 			const timeout = 1000;
 			const timestampSignature = "testTimestampSignature";
 			const ipAddress = getIPAddress("1.1.1.1");
@@ -294,7 +294,8 @@ describe("PowCaptchaManager", () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456789;
 			const userAccount = "testUserAccount";
-			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const nonce = 12345;
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}${POW_SEPARATOR}${nonce}`;
 			const timeout = 1000;
 			const challengeRecord: Partial<PoWCaptchaStored> = {
 				challenge,
@@ -335,7 +336,8 @@ describe("PowCaptchaManager", () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456678;
 			const userAccount = "testUserAccount";
-			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const nonce = 12345;
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}${POW_SEPARATOR}${nonce}`;
 			const timeout = 1000;
 			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(null);

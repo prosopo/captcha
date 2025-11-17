@@ -79,7 +79,8 @@ export default function navigationInjector(): Plugin {
 		},
 		testing: {
 			demoKeys: {
-				overview: { path: "demo-keys.html", exists: true },
+				alwaysPass: { path: "demo-keys-always-pass.html", exists: true },
+				alwaysFail: { path: "demo-keys-always-fail.html", exists: true },
 			},
 		},
 	};
