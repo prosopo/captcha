@@ -181,13 +181,13 @@ describe("ClientTaskManager", () => {
 					);
 				},
 			),
-		getAllClientRecords: vi.fn().mockResolvedValue([
-			{ account: "mockClientRecord1", tier: Tier.Professional },
-			{ account: "mockClientRecord2", tier: Tier.Professional },
-		]),
-		sampleEntropy: vi.fn().mockResolvedValue(
-			Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
-		),
+			getAllClientRecords: vi.fn().mockResolvedValue([
+				{ account: "mockClientRecord1", tier: Tier.Professional },
+				{ account: "mockClientRecord2", tier: Tier.Professional },
+			]),
+			sampleEntropy: vi.fn().mockResolvedValue(
+				Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
+			),
 			setClientEntropy: vi.fn(),
 		} as unknown as IProviderDatabase;
 
