@@ -19,7 +19,6 @@ import {
 	type CaptchaSolutionResponse,
 	CaptchaStatus,
 	type DappUserSolutionResult,
-	DemoKeyBehavior,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -28,6 +27,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import {
+	DemoKeyBehavior,
 	getDemoKeyBehavior,
 	logDemoKeyUsage,
 	shouldBypassForDemoKey,
@@ -90,14 +90,14 @@ export default (
 				);
 			}
 
-			// Handle demo key - always pass
-			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysPass,
-					"image_captcha_solution",
-				);
+		// Handle demo key - always pass
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"image_captcha_solution",
+			);
 
 				const result: CaptchaSolutionResponse = {
 					status: "ok",
@@ -108,14 +108,14 @@ export default (
 				return res.json(result);
 			}
 
-			// Handle demo key - always fail
-			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysFail,
-					"image_captcha_solution",
-				);
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"image_captcha_solution",
+			);
 
 				const result: CaptchaSolutionResponse = {
 					status: "ok",

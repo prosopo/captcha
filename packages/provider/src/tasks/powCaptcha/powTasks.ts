@@ -20,7 +20,6 @@ import {
 	ApiParams,
 	type CaptchaResult,
 	CaptchaStatus,
-	DemoKeyBehavior,
 	type IPAddress,
 	POW_SEPARATOR,
 	type PoWCaptcha,
@@ -35,7 +34,10 @@ import {
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
-import { shouldBypassForDemoKey } from "../../utils/demoKeys.js";
+import {
+	DemoKeyBehavior,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -112,14 +114,8 @@ export class PowCaptchaManager extends CaptchaManager {
 		const userAccount = at(challengeSplit, 1);
 		const dappAccount = at(challengeSplit, 2);
 
-		// Get client record for demo key check
-		const clientRecord = await this.db.getClientRecord(dappAccount);
-
 		// Handle demo key - always pass
-		if (
-			clientRecord &&
-			shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass)
-		) {
+		if (shouldBypassForDemoKey(dappAccount, DemoKeyBehavior.AlwaysPass)) {
 			this.logger.debug(() => ({
 				msg: "Demo key - always pass",
 				data: { challenge },
@@ -128,16 +124,16 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Handle demo key - always fail
-		if (
-			clientRecord &&
-			shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail)
-		) {
+		if (shouldBypassForDemoKey(dappAccount, DemoKeyBehavior.AlwaysFail)) {
 			this.logger.debug(() => ({
 				msg: "Demo key - always fail",
 				data: { challenge },
 			}));
 			return false;
 		}
+
+		// Get client record for remaining logic
+		const clientRecord = await this.db.getClientRecord(dappAccount);
 
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(

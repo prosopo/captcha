@@ -15,7 +15,6 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
-	DemoKeyBehavior,
 	GetFrictionlessCaptchaChallengeRequestBody,
 } from "@prosopo/types";
 import type { ScoreComponents } from "@prosopo/types-database";
@@ -33,6 +32,7 @@ import {
 import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../../tasks/index.js";
 import {
+	DemoKeyBehavior,
 	getDemoKeyBehavior,
 	logDemoKeyUsage,
 	shouldBypassForDemoKey,
@@ -177,14 +177,14 @@ export default (
 				);
 			}
 
-			// Handle demo key - always pass
-			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysPass,
-					"frictionless_challenge",
-				);
+		// Handle demo key - always pass
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"frictionless_challenge",
+			);
 
 				const ipAddress = getCompositeIpAddress(req.ip || "");
 				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
@@ -213,14 +213,14 @@ export default (
 				);
 			}
 
-			// Handle demo key - always fail
-			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysFail,
-					"frictionless_challenge",
-				);
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"frictionless_challenge",
+			);
 
 				const ipAddress = getCompositeIpAddress(req.ip || "");
 				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);

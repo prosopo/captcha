@@ -21,7 +21,6 @@ import {
 	type CaptchaResponseBody,
 	CaptchaStatus,
 	CaptchaType,
-	DemoKeyBehavior,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -31,6 +30,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import {
+	DemoKeyBehavior,
 	logDemoKeyUsage,
 	shouldBypassForDemoKey,
 } from "../../utils/demoKeys.js";
@@ -91,14 +91,14 @@ export default (
 				);
 			}
 
-			// Handle demo key - always pass
-			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysPass,
-					"image_captcha_challenge",
-				);
+		// Handle demo key - always pass
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"image_captcha_challenge",
+			);
 
 				// Create a minimal dataset with pre-approved solution
 				const captchas: Captcha[] = [
@@ -142,14 +142,14 @@ export default (
 				return res.json(response);
 			}
 
-			// Handle demo key - always fail
-			if (shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail)) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysFail,
-					"image_captcha_challenge",
-				);
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"image_captcha_challenge",
+			);
 
 				// Create unsolvable captcha (pre-disapproved)
 				const captchas: Captcha[] = [

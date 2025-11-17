@@ -15,7 +15,6 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
-	DemoKeyBehavior,
 	GetPowCaptchaChallengeRequestBody,
 	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type GetPowCaptchaResponse,
@@ -28,6 +27,7 @@ import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import {
+	DemoKeyBehavior,
 	logDemoKeyUsage,
 	shouldBypassForDemoKey,
 } from "../../utils/demoKeys.js";
@@ -77,16 +77,16 @@ export default (
 				);
 			}
 
-			// Handle demo key - always pass (trivial difficulty)
-			if (
-				shouldBypassForDemoKey(clientSettings, DemoKeyBehavior.AlwaysPass)
-			) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysPass,
-					"pow_captcha_challenge",
-				);
+		// Handle demo key - always pass (trivial difficulty)
+		if (
+			shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)
+		) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysPass,
+				"pow_captcha_challenge",
+			);
 
 				const response: GetPowCaptchaResponse = {
 					[ApiParams.challenge]: "demo_challenge_pass",
@@ -103,16 +103,16 @@ export default (
 				return res.json(response);
 			}
 
-			// Handle demo key - always fail (impossible difficulty)
-			if (
-				shouldBypassForDemoKey(clientSettings, DemoKeyBehavior.AlwaysFail)
-			) {
-				logDemoKeyUsage(
-					req.logger,
-					dapp,
-					DemoKeyBehavior.AlwaysFail,
-					"pow_captcha_challenge",
-				);
+		// Handle demo key - always fail (impossible difficulty)
+		if (
+			shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)
+		) {
+			logDemoKeyUsage(
+				req.logger,
+				dapp,
+				DemoKeyBehavior.AlwaysFail,
+				"pow_captcha_challenge",
+			);
 
 				const response: GetPowCaptchaResponse = {
 					[ApiParams.challenge]: "demo_challenge_fail",

@@ -13,8 +13,18 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { DemoKeyBehavior } from "@prosopo/types";
-import type { ClientRecord } from "@prosopo/types-database";
+
+/**
+ * Hardcoded demo keys for testing (Polkadot.js sr25519 well-known accounts)
+ * These keys should NEVER be used in production
+ */
+export const DEMO_KEY_ALWAYS_PASS = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"; // Alice
+export const DEMO_KEY_ALWAYS_FAIL = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"; // Eve
+
+export enum DemoKeyBehavior {
+	AlwaysPass = "always_pass",
+	AlwaysFail = "always_fail",
+}
 
 /**
  * Check if demo keys are enabled in the environment
@@ -25,42 +35,51 @@ export function areDemoKeysEnabled(): boolean {
 		"test",
 	];
 	const currentEnv = process.env.NODE_ENV || "development";
-	return (
-		process.env.ENABLE_DEMO_KEYS === "true" &&
-		enabledEnvs.includes(currentEnv)
-	);
-}
-
-/**
- * Check if a client record is a demo key
- */
-export function isDemoKey(clientRecord: ClientRecord): boolean {
-	return clientRecord.settings?.demoKeyConfig?.enabled === true;
-}
-
-/**
- * Get the demo key behavior (always_pass or always_fail)
- */
-export function getDemoKeyBehavior(
-	clientRecord: ClientRecord,
-): DemoKeyBehavior | null {
-	if (!isDemoKey(clientRecord)) {
-		return null;
+	
+	// Prevent demo keys in production
+	if (currentEnv === "production") {
+		return false;
 	}
-	return clientRecord.settings?.demoKeyConfig?.behavior || null;
+	
+	return enabledEnvs.includes(currentEnv);
+}
+
+/**
+ * Check if a site key is the hardcoded "always pass" demo key
+ */
+export function isAlwaysPassDemoKey(siteKey: string): boolean {
+	return areDemoKeysEnabled() && siteKey === DEMO_KEY_ALWAYS_PASS;
+}
+
+/**
+ * Check if a site key is the hardcoded "always fail" demo key
+ */
+export function isAlwaysFailDemoKey(siteKey: string): boolean {
+	return areDemoKeysEnabled() && siteKey === DEMO_KEY_ALWAYS_FAIL;
+}
+
+/**
+ * Get the demo key behavior for a site key
+ */
+export function getDemoKeyBehavior(siteKey: string): DemoKeyBehavior | null {
+	if (isAlwaysPassDemoKey(siteKey)) {
+		return DemoKeyBehavior.AlwaysPass;
+	}
+	if (isAlwaysFailDemoKey(siteKey)) {
+		return DemoKeyBehavior.AlwaysFail;
+	}
+	return null;
 }
 
 /**
  * Check if we should bypass normal logic for a demo key with specific behavior
  */
 export function shouldBypassForDemoKey(
-	clientRecord: ClientRecord,
+	siteKey: string,
 	behavior: DemoKeyBehavior,
 ): boolean {
-	if (!areDemoKeysEnabled()) {
-		return false;
-	}
-	return isDemoKey(clientRecord) && getDemoKeyBehavior(clientRecord) === behavior;
+	const keyBehavior = getDemoKeyBehavior(siteKey);
+	return keyBehavior === behavior;
 }
 
 /**
@@ -81,19 +100,5 @@ export function logDemoKeyUsage(
 			environment: process.env.NODE_ENV,
 		},
 	}));
-}
-
-/**
- * Validate that demo keys are not being used inappropriately
- */
-export function validateDemoKeyEnvironment(): void {
-	if (
-		process.env.NODE_ENV === "production" &&
-		process.env.ENABLE_DEMO_KEYS === "true"
-	) {
-		throw new Error(
-			"CRITICAL: Demo keys are enabled in production environment! This is a security risk.",
-		);
-	}
 }
 

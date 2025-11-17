@@ -113,9 +113,6 @@ export enum AdminApiPaths {
 	UpdateDetectorKey = "/v1/prosopo/provider/admin/detector/update",
 	RemoveDetectorKey = "/v1/prosopo/provider/admin/detector/remove",
 	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
-	SetDemoKey = "/v1/prosopo/provider/admin/demokey/set",
-	RemoveDemoKey = "/v1/prosopo/provider/admin/demokey/remove",
-	GetDemoKey = "/v1/prosopo/provider/admin/demokey/get",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;

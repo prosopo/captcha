@@ -26,7 +26,6 @@ import {
 	type CaptchaSolution,
 	CaptchaStatus,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
-	DemoKeyBehavior,
 	type DappUserSolutionResult,
 	type Hash,
 	type IPAddress,
@@ -51,7 +50,10 @@ import {
 import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
-import { shouldBypassForDemoKey } from "../../utils/demoKeys.js";
+import {
+	DemoKeyBehavior,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -489,14 +491,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		disallowWebView?: boolean,
 		contextAwareEnabled = false,
 	): Promise<ImageVerificationResponse> {
-		// Get client record for demo key check
-		const clientRecord = await this.db.getClientRecord(dapp);
-
 		// Handle demo key - always pass
-		if (
-			clientRecord &&
-			shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysPass)
-		) {
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
 			return {
 				status: "API.USER_VERIFIED",
 				verified: true,
@@ -506,16 +502,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// Handle demo key - always fail
-		if (
-			clientRecord &&
-			shouldBypassForDemoKey(clientRecord, DemoKeyBehavior.AlwaysFail)
-		) {
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
 			return {
 				status: "API.USER_NOT_VERIFIED",
 				verified: false,
 				score: 0.0,
 			};
 		}
+
+		// Get client record for remaining logic
+		const clientRecord = await this.db.getClientRecord(dapp);
 
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
