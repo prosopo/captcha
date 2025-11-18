@@ -1922,12 +1922,12 @@ export class ProviderDatabase
 			return [];
 		}
 
-		// Get the associated entropies from session records
+		// Get the associated entropies from sessions
 		return (
 			await Promise.all(
 				docs.map(async (doc) => {
 					if (doc.sessionId) {
-						const tokenRecord = await this.getSessionRecordByToken(
+						const tokenRecord = await this.getSessionRecordBySessionId(
 							doc.sessionId,
 						);
 						return tokenRecord?.decryptedHeadHash;

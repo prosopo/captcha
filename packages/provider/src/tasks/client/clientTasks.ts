@@ -21,7 +21,7 @@ import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
-	type Tier,
+	Tier,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -33,6 +33,7 @@ import type {
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
 
+const SAMPLE_SIZE = 100;
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
@@ -287,7 +288,13 @@ export class ClientTaskManager {
 		);
 
 		try {
-			const clients = await this.providerDB.getAllClientRecords();
+			let clients = await this.providerDB.getAllClientRecords();
+
+			clients = clients.filter((client) => client.tier !== Tier.Free);
+
+			this.logger.info(() => ({
+				msg: `Calculating entropies for ${clients.length} clients`,
+			}));
 
 			for (const client of clients) {
 				// Calculate context-specific entropy if client has context awareness enabled
@@ -297,19 +304,29 @@ export class ClientTaskManager {
 
 					for (const contextType of contextTypes) {
 						const contextSamples = await this.providerDB.sampleContextEntropy(
-							100,
+							SAMPLE_SIZE,
 							client.account,
 							contextType,
 						);
 
-						if (contextSamples.length > 0) {
-							const contextAvgEntropy = majorityAverage(contextSamples);
-							await this.providerDB.setClientContextEntropy(
-								client.account,
-								contextType,
-								contextAvgEntropy,
-							);
+						if (contextSamples.length < SAMPLE_SIZE) {
+							this.logger.info(() => ({
+								msg: `Skipping ${contextType} entropy calculation for client ${client.account} due to insufficient samples (${contextSamples.length}/${SAMPLE_SIZE})`,
+							}));
+							continue;
 						}
+
+						const contextAvgEntropy = majorityAverage(contextSamples);
+
+						this.logger.info(() => ({
+							msg: `Calculated ${contextType} entropy for client ${client.account}: ${contextAvgEntropy}`,
+						}));
+
+						await this.providerDB.setClientContextEntropy(
+							client.account,
+							contextType,
+							contextAvgEntropy,
+						);
 					}
 				}
 			}
