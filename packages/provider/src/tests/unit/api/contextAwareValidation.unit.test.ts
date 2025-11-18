@@ -38,7 +38,7 @@ describe("contextAwareValidation", () => {
 
 	describe("getContextThreshold", () => {
 		it("should return default threshold when contextAware is not set", () => {
-			const settings = {} as IUserSettings;
+			const settings = {} as unknown as IUserSettings;
 			const result = getContextThreshold(settings, ContextType.Default);
 			expect(result).toBe(contextAwareThresholdDefault);
 		});
@@ -49,7 +49,7 @@ describe("contextAwareValidation", () => {
 					enabled: true,
 					threshold: 0.8,
 				},
-			} as IUserSettings;
+			} as unknown as IUserSettings;
 			const result = getContextThreshold(settings, ContextType.Default);
 			expect(result).toBe(0.8);
 		});
@@ -64,7 +64,7 @@ describe("contextAwareValidation", () => {
 						{ type: ContextType.Default, threshold: 0.6 },
 					],
 				},
-			} as IUserSettings;
+			} as unknown as IUserSettings;
 
 			const webviewResult = getContextThreshold(settings, ContextType.Webview);
 			expect(webviewResult).toBe(0.9);
@@ -80,7 +80,7 @@ describe("contextAwareValidation", () => {
 					threshold: 0.75,
 					contexts: [{ type: ContextType.Webview, threshold: 0.9 }],
 				},
-			} as IUserSettings;
+			} as unknown as IUserSettings;
 
 			const result = getContextThreshold(settings, ContextType.Default);
 			expect(result).toBe(0.75);
@@ -93,7 +93,7 @@ describe("contextAwareValidation", () => {
 					threshold: 0.8,
 					contexts: [],
 				},
-			} as IUserSettings;
+			} as unknown as IUserSettings;
 
 			const result = getContextThreshold(settings, ContextType.Default);
 			expect(result).toBe(0.8);
