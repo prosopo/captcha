@@ -53,11 +53,15 @@ describe("Demo Keys Utility", () => {
 
 	describe("Demo Key Constants", () => {
 		it("should have correct DEMO_KEY_ALWAYS_PASS value", () => {
-			expect(DEMO_KEY_ALWAYS_PASS).toBe("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY");
+			expect(DEMO_KEY_ALWAYS_PASS).toBe(
+				"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			);
 		});
 
 		it("should have correct DEMO_KEY_ALWAYS_FAIL value", () => {
-			expect(DEMO_KEY_ALWAYS_FAIL).toBe("5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw");
+			expect(DEMO_KEY_ALWAYS_FAIL).toBe(
+				"5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+			);
 		});
 
 		it("should not have the same value", () => {
@@ -65,4 +69,3 @@ describe("Demo Keys Utility", () => {
 		});
 	});
 });
-

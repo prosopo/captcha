@@ -33,7 +33,6 @@ import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTas
 import { Tasks } from "../../tasks/index.js";
 import {
 	DemoKeyBehavior,
-	getDemoKeyBehavior,
 	logDemoKeyUsage,
 	shouldBypassForDemoKey,
 } from "../../utils/demoKeys.js";
@@ -177,14 +176,14 @@ export default (
 				);
 			}
 
-		// Handle demo key - always pass
-		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysPass,
-				"frictionless_challenge",
-			);
+			// Handle demo key - always pass
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"frictionless_challenge",
+				);
 
 				const ipAddress = getCompositeIpAddress(req.ip || "");
 				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
@@ -213,16 +212,16 @@ export default (
 				);
 			}
 
-		// Handle demo key - always fail
-		// NOTE: This returns a PoW captcha just like "always pass" so that we can
-		// always get to a sensible captcha validation step for testing purposes
-		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysFail,
-				"frictionless_challenge",
-			);
+			// Handle demo key - always fail
+			// NOTE: This returns a PoW captcha just like "always pass" so that we can
+			// always get to a sensible captcha validation step for testing purposes
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"frictionless_challenge",
+				);
 
 				const ipAddress = getCompositeIpAddress(req.ip || "");
 				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);

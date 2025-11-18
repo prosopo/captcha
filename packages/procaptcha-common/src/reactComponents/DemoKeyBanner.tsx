@@ -46,13 +46,14 @@ const linkStyles = css`
 `;
 
 export const DemoKeyBanner: FC<DemoKeyBannerProps> = ({ behavior }) => {
-	const behaviorText = behavior === "always_pass" ? "ALWAYS PASS" : "ALWAYS FAIL";
+	const behaviorText =
+		behavior === "always_pass" ? "ALWAYS PASS" : "ALWAYS FAIL";
 	const docsUrl = process.env.PROSOPO_DOCS_URL || "https://docs.prosopo.io";
-	
+
 	return (
 		<div css={bannerStyles} data-testid="demo-key-banner">
 			⚠️ DEMO MODE ({behaviorText}) - NOT FOR PRODUCTION •{" "}
-			<a 
+			<a
 				href={`${docsUrl}/demo-keys`}
 				target="_blank"
 				rel="noopener noreferrer"
@@ -65,4 +66,3 @@ export const DemoKeyBanner: FC<DemoKeyBannerProps> = ({ behavior }) => {
 };
 
 export default DemoKeyBanner;
-

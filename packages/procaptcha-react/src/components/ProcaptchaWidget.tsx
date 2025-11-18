@@ -16,7 +16,12 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
-import { Checkbox, DemoKeyBanner, getDemoKeyBehavior, useProcaptcha } from "@prosopo/procaptcha-common";
+import {
+	Checkbox,
+	DemoKeyBanner,
+	getDemoKeyBehavior,
+	useProcaptcha,
+} from "@prosopo/procaptcha-common";
 import { ProcaptchaConfigSchema, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -42,7 +47,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		frictionlessState,
 	);
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
-	
+
 	// Check if using a demo key
 	const demoKeyBehavior = getDemoKeyBehavior(config.account.address || "");
 

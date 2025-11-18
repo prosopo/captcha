@@ -18,8 +18,10 @@ import type { Logger } from "@prosopo/common";
  * Hardcoded demo keys for testing (Polkadot.js sr25519 well-known accounts)
  * These keys should NEVER be used in production
  */
-export const DEMO_KEY_ALWAYS_PASS = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"; // Alice
-export const DEMO_KEY_ALWAYS_FAIL = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"; // Eve
+export const DEMO_KEY_ALWAYS_PASS =
+	"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"; // Alice
+export const DEMO_KEY_ALWAYS_FAIL =
+	"5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"; // Eve
 
 export enum DemoKeyBehavior {
 	AlwaysPass = "always_pass",
@@ -30,17 +32,16 @@ export enum DemoKeyBehavior {
  * Check if demo keys are enabled in the environment
  */
 export function areDemoKeysEnabled(): boolean {
-	const enabledEnvs = process.env.DEMO_KEYS_ALLOWED_ENVIRONMENTS?.split(",") || [
-		"development",
-		"test",
-	];
+	const enabledEnvs = process.env.DEMO_KEYS_ALLOWED_ENVIRONMENTS?.split(
+		",",
+	) || ["development", "test"];
 	const currentEnv = process.env.NODE_ENV || "development";
-	
+
 	// Prevent demo keys in production
 	if (currentEnv === "production") {
 		return false;
 	}
-	
+
 	return enabledEnvs.includes(currentEnv);
 }
 
@@ -101,4 +102,3 @@ export function logDemoKeyUsage(
 		},
 	}));
 }
-

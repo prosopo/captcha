@@ -14,7 +14,11 @@
 
 import { loadI18next, useTranslation } from "@prosopo/locale";
 import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
-import { Checkbox } from "@prosopo/procaptcha-common";
+import {
+	Checkbox,
+	DemoKeyBanner,
+	getDemoKeyBehavior,
+} from "@prosopo/procaptcha-common";
 import { ModeEnum, type ProcaptchaProps } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { useEffect, useRef, useState } from "react";
@@ -37,6 +41,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const manager = useRef(
 		Manager(config, state, updateState, callbacks, frictionlessState),
 	);
+
+	// Check if using a demo key
+	const demoKeyBehavior = getDemoKeyBehavior(config.account.address || "");
 
 	useEffect(() => {
 		if (config.language) {
@@ -95,27 +102,34 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	}, [config.mode]);
 
 	if (config.mode === ModeEnum.invisible) {
+		// Return demo banner for invisible mode if using demo key
+		if (demoKeyBehavior) {
+			return <DemoKeyBanner behavior={demoKeyBehavior} />;
+		}
 		// Return null for invisible mode - no UI needed
 		return null;
 	}
 
 	return (
-		<Checkbox
-			checked={state.isHuman}
-			onChange={async () => {
-				if (loading) {
-					return;
-				}
-				setLoading(true);
-				await manager.current.start();
-				setLoading(false);
-			}}
-			theme={theme}
-			labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
-			error={state.error?.message}
-			aria-label="human checkbox"
-			loading={loading}
-		/>
+		<div>
+			{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
+			<Checkbox
+				checked={state.isHuman}
+				onChange={async () => {
+					if (loading) {
+						return;
+					}
+					setLoading(true);
+					await manager.current.start();
+					setLoading(false);
+				}}
+				theme={theme}
+				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
+				error={state.error?.message}
+				aria-label="human checkbox"
+				loading={loading}
+			/>
+		</div>
 	);
 };
 export default Procaptcha;

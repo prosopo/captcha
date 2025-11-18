@@ -13,31 +13,13 @@
 // limitations under the License.
 
 /**
- * Demo keys for testing - these should match the provider's demo keys
- * Polkadot.js sr25519 well-known accounts
+ * Re-export demo key utilities from @prosopo/util
+ * This allows frontend packages to access demo key checking without needing the full util package
  */
-export const DEMO_KEY_ALWAYS_PASS = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"; // Alice
-export const DEMO_KEY_ALWAYS_FAIL = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"; // Eve
-
-export type DemoKeyBehavior = "always_pass" | "always_fail" | null;
-
-/**
- * Check if a site key is a demo key and return its behavior
- */
-export function getDemoKeyBehavior(siteKey: string): DemoKeyBehavior {
-	if (siteKey === DEMO_KEY_ALWAYS_PASS) {
-		return "always_pass";
-	}
-	if (siteKey === DEMO_KEY_ALWAYS_FAIL) {
-		return "always_fail";
-	}
-	return null;
-}
-
-/**
- * Check if a site key is a demo key
- */
-export function isDemoKey(siteKey: string): boolean {
-	return getDemoKeyBehavior(siteKey) !== null;
-}
-
+export {
+	DEMO_KEY_ALWAYS_PASS,
+	DEMO_KEY_ALWAYS_FAIL,
+	getDemoKeyBehavior,
+	isDemoKey,
+	type DemoKeyBehavior,
+} from "@prosopo/util";

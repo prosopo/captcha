@@ -47,4 +47,3 @@ describe("DemoKeyBanner", () => {
 		expect(link.getAttribute("rel")).toBe("noopener noreferrer");
 	});
 });
-

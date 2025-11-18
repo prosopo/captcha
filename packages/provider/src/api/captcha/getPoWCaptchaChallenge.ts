@@ -78,20 +78,19 @@ export default (
 				);
 			}
 
-		// Handle demo key - always pass (trivial difficulty)
-		if (
-			shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)
-		) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysPass,
-				"pow_captcha_challenge",
-			);
+			// Handle demo key - always pass (trivial difficulty)
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"pow_captcha_challenge",
+				);
 
 				const timestamp = Date.now();
 				const nonce = Math.floor(Math.random() * 1000000);
-				const challengeId = `${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
+				const challengeId =
+					`${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
 
 				const response: GetPowCaptchaResponse = {
 					[ApiParams.status]: "ok",
@@ -108,20 +107,19 @@ export default (
 				return res.json(response);
 			}
 
-		// Handle demo key - always fail (impossible difficulty)
-		if (
-			shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)
-		) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysFail,
-				"pow_captcha_challenge",
-			);
+			// Handle demo key - always fail (impossible difficulty)
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"pow_captcha_challenge",
+				);
 
 				const timestamp = Date.now();
 				const nonce = Math.floor(Math.random() * 1000000);
-				const challengeId = `${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
+				const challengeId =
+					`${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
 
 				const response: GetPowCaptchaResponse = {
 					[ApiParams.status]: "ok",
@@ -214,7 +212,10 @@ export default (
 					requestedAtTimestamp: challenge.requestedAtTimestamp,
 					userAccount: user,
 					dappAccount: dapp,
-					nonce: Number.parseInt(challenge.challenge.split("___")[3] ?? "2", 10),
+					nonce: Number.parseInt(
+						challenge.challenge.split("___")[3] ?? "2",
+						10,
+					),
 				},
 				challenge.difficulty,
 				challenge.providerSignature,

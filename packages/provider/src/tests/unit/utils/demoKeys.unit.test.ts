@@ -142,22 +142,34 @@ describe("Demo Keys Utility Functions", () => {
 
 		it("should return true when behavior matches AlwaysPass", () => {
 			expect(
-				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_PASS, DemoKeyBehavior.AlwaysPass),
+				shouldBypassForDemoKey(
+					DEMO_KEY_ALWAYS_PASS,
+					DemoKeyBehavior.AlwaysPass,
+				),
 			).toBe(true);
 		});
 
 		it("should return true when behavior matches AlwaysFail", () => {
 			expect(
-				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_FAIL, DemoKeyBehavior.AlwaysFail),
+				shouldBypassForDemoKey(
+					DEMO_KEY_ALWAYS_FAIL,
+					DemoKeyBehavior.AlwaysFail,
+				),
 			).toBe(true);
 		});
 
 		it("should return false when behavior does not match", () => {
 			expect(
-				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_PASS, DemoKeyBehavior.AlwaysFail),
+				shouldBypassForDemoKey(
+					DEMO_KEY_ALWAYS_PASS,
+					DemoKeyBehavior.AlwaysFail,
+				),
 			).toBe(false);
 			expect(
-				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_FAIL, DemoKeyBehavior.AlwaysPass),
+				shouldBypassForDemoKey(
+					DEMO_KEY_ALWAYS_FAIL,
+					DemoKeyBehavior.AlwaysPass,
+				),
 			).toBe(false);
 		});
 
@@ -170,7 +182,10 @@ describe("Demo Keys Utility Functions", () => {
 		it("should return false when demo keys are disabled", () => {
 			process.env.NODE_ENV = "production";
 			expect(
-				shouldBypassForDemoKey(DEMO_KEY_ALWAYS_PASS, DemoKeyBehavior.AlwaysPass),
+				shouldBypassForDemoKey(
+					DEMO_KEY_ALWAYS_PASS,
+					DemoKeyBehavior.AlwaysPass,
+				),
 			).toBe(false);
 		});
 	});

@@ -1,18 +1,10 @@
 {
 	"targets": {
 		"build": {
-			"dependsOn": [
-				"^build",
-				"^typecheck",
-				"typecheck"
-			]
+			"dependsOn": ["^build", "^typecheck", "typecheck"]
 		},
 		"build:cjs": {
-			"dependsOn": [
-				"^build:cjs",
-				"^typecheck",
-				"typecheck"
-			]
+			"dependsOn": ["^build:cjs", "^typecheck", "typecheck"]
 		}
 	}
 }

@@ -85,29 +85,35 @@ export default (env: ProviderEnvironment) =>
 				);
 			}
 
-		// Handle demo key - always pass
-		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysPass,
-				"pow_captcha_solution",
-			);
+			// Handle demo key - always pass
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"pow_captcha_solution",
+				);
 
-				const response: PowCaptchaSolutionResponse = { status: "ok", verified: true };
+				const response: PowCaptchaSolutionResponse = {
+					status: "ok",
+					verified: true,
+				};
 				return res.json(response);
 			}
 
-		// Handle demo key - always fail
-		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
-			logDemoKeyUsage(
-				req.logger,
-				dapp,
-				DemoKeyBehavior.AlwaysFail,
-				"pow_captcha_solution",
-			);
+			// Handle demo key - always fail
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"pow_captcha_solution",
+				);
 
-				const response: PowCaptchaSolutionResponse = { status: "ok", verified: false };
+				const response: PowCaptchaSolutionResponse = {
+					status: "ok",
+					verified: false,
+				};
 				return res.json(response);
 			}
 

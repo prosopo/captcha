@@ -15,7 +15,9 @@
 import { loadI18next } from "@prosopo/locale";
 import {
 	Checkbox,
+	DemoKeyBanner,
 	getDefaultEvents,
+	getDemoKeyBehavior,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import { ProcaptchaPow } from "@prosopo/procaptcha-pow";
@@ -37,23 +39,34 @@ const renderPlaceholder = (
 	isTranslationLoaded: boolean,
 	translationFn: (key: string) => string,
 	loading: boolean,
+	siteKey?: string,
 ) => {
 	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
+	const demoKeyBehavior = siteKey ? getDemoKeyBehavior(siteKey) : null;
 
 	if (mode === "invisible") {
+		// Show demo banner even in invisible mode if using demo key
+		if (demoKeyBehavior) {
+			return <DemoKeyBanner behavior={demoKeyBehavior} />;
+		}
 		return null;
 	}
 
 	return (
-		<Checkbox
-			theme={checkboxTheme}
-			onChange={async () => {}}
-			checked={false}
-			labelText={isTranslationLoaded ? translationFn("WIDGET.I_AM_HUMAN") : ""}
-			error={errorMessage}
-			aria-label="human checkbox"
-			loading={loading}
-		/>
+		<div>
+			{demoKeyBehavior && <DemoKeyBanner behavior={demoKeyBehavior} />}
+			<Checkbox
+				theme={checkboxTheme}
+				onChange={async () => {}}
+				checked={false}
+				labelText={
+					isTranslationLoaded ? translationFn("WIDGET.I_AM_HUMAN") : ""
+				}
+				error={errorMessage}
+				aria-label="human checkbox"
+				loading={loading}
+			/>
+		</div>
 	);
 };
 
@@ -104,6 +117,7 @@ export const ProcaptchaFrictionless = ({
 			i18n.isInitialized,
 			i18n.t,
 			true,
+			config.account.address,
 		),
 	);
 
@@ -130,6 +144,7 @@ export const ProcaptchaFrictionless = ({
 				i18n.isInitialized,
 				i18n.t,
 				false,
+				config.account.address,
 			),
 		);
 	};
