@@ -43,21 +43,21 @@ export default function (tsConfigPath?: string) {
 
 	const coverageExclude = isRunningFromPackage
 		? [
-				"src/tests/**/*",
-				"src/**/*.d.ts",
-				"src/**/*.test.ts",
-				"src/**/*.spec.ts",
-				"src/**/*.test.tsx",
-				"src/**/*.spec.tsx",
-			]
+			"src/tests/**/*",
+			"src/**/*.d.ts",
+			"src/**/*.test.ts",
+			"src/**/*.spec.ts",
+			"src/**/*.test.tsx",
+			"src/**/*.spec.tsx",
+		]
 		: [
-				"**/tests/**/*",
-				"**/*.d.ts",
-				"**/*.test.*",
-				"**/*.spec.*",
-				"**/node_modules/**",
-				"**/dist/**",
-			];
+			"**/tests/**/*",
+			"**/*.d.ts",
+			"**/*.test.*",
+			"**/*.spec.*",
+			"**/node_modules/**",
+			"**/dist/**",
+		];
 	const include = `src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`;
 	const plugins = [
 		VitePluginSourcemapExclude({ excludeNodeModules: true }),
@@ -100,6 +100,9 @@ export default function (tsConfigPath?: string) {
 				forks: {
 					isolate: true,
 				},
+			},
+			sequence: {
+				shuffle: true,
 			},
 			testTimeout: 10000,
 		},
