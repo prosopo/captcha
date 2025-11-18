@@ -42,10 +42,28 @@ export function getContextThreshold(
 		return contextAwareThresholdDefault;
 	}
 
-	// Check if there's a context-specific threshold
-	const contexts = contextAware.contexts || [];
-	const contextConfig = contexts.find((c) => c.type === contextType);
+	const contexts = contextAware.contexts;
+	let contextConfig: { type: ContextType; threshold: number } | undefined;
 
-	// Return context-specific threshold if found, otherwise return global threshold
-	return contextConfig?.threshold ?? contextAware.threshold;
+	if (contexts) {
+		if ("default" in contexts) {
+			// contexts is an object with a default context
+			contextConfig =
+				(contexts as Record<string, { type: ContextType; threshold: number }>)[
+					contextType
+				] ||
+				(contexts as Record<string, { type: ContextType; threshold: number }>)[
+					ContextType.Default
+				];
+		} else {
+			// contexts is a Partial<Record<ContextType, { type: ContextType; threshold: number }>>
+			contextConfig = (
+				contexts as Partial<
+					Record<ContextType, { type: ContextType; threshold: number }>
+				>
+			)[contextType];
+		}
+	}
+
+	return contextConfig?.threshold ?? contextAwareThresholdDefault;
 }

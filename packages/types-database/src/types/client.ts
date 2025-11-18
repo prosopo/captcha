@@ -27,7 +27,7 @@ import {
 	ispChangeActionDefault,
 	requireAllConditionsDefault,
 } from "@prosopo/types";
-import type mongoose from "mongoose";
+import mongoose from "mongoose";
 import { Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import type { ClientRecord, Tables } from "./provider.js";
@@ -111,16 +111,19 @@ export const UserSettingsSchema = new Schema({
 	},
 	contextAware: {
 		enabled: { type: Boolean, default: false },
-		threshold: { type: Number, default: contextAwareThresholdDefault },
-		contexts: [
-			{
-				type: {
-					type: String,
-					enum: Object.values(ContextType),
+		contexts: {
+			type: mongoose.Schema.Types.Mixed,
+			default: {
+				[ContextType.Default]: {
+					type: ContextType.Default,
+					threshold: contextAwareThresholdDefault,
 				},
-				threshold: { type: Number, default: contextAwareThresholdDefault },
+				[ContextType.Webview]: {
+					type: ContextType.Webview,
+					threshold: contextAwareThresholdDefault,
+				},
 			},
-		],
+		},
 	},
 });
 
