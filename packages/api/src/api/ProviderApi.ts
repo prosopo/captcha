@@ -157,21 +157,8 @@ export default class ProviderApi
 		userTimestampSignature: string,
 		timeout?: number,
 	): Promise<PowCaptchaSolutionResponse> {
-		// Debug: Log the challenge value to help diagnose validation errors
-		const challengeValue = challenge.challenge;
-		console.log("=== [ProviderApi] submitPowCaptchaSolution DEBUG START ===");
-		console.log("[ProviderApi] Full challenge object:", JSON.stringify(challenge, null, 2));
-		console.log("[ProviderApi] Challenge value:", challengeValue);
-		console.log("[ProviderApi] Challenge type:", typeof challengeValue);
-		console.log("[ProviderApi] Challenge split by '___':", challengeValue?.split?.("___"));
-		console.log("[ProviderApi] Challenge parts count:", challengeValue?.split?.("___")?.length);
-		console.log("[ProviderApi] User account:", userAccount);
-		console.log("[ProviderApi] Dapp account:", dappAccount);
-		console.log("[ProviderApi] Nonce:", nonce);
-		console.log("[ProviderApi] Timeout:", timeout);
-
-		const bodyToValidate = {
-			[ApiParams.challenge]: challengeValue,
+		const body = SubmitPowCaptchaSolutionBody.parse({
+			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.difficulty]: challenge.difficulty,
 			[ApiParams.timestamp]: challenge.timestamp,
 			[ApiParams.user]: userAccount.toString(),
@@ -185,25 +172,7 @@ export default class ProviderApi
 					[ApiParams.timestamp]: userTimestampSignature,
 				},
 			},
-		};
-
-		console.log("[ProviderApi] Body before validation:", JSON.stringify(bodyToValidate, null, 2));
-
-		let body;
-		try {
-			body = SubmitPowCaptchaSolutionBody.parse(bodyToValidate);
-			console.log("[ProviderApi] ✓ Validation passed!");
-			console.log("=== [ProviderApi] submitPowCaptchaSolution DEBUG END ===");
-		} catch (error) {
-			console.error("=== [ProviderApi] VALIDATION ERROR ===");
-			console.error("[ProviderApi] Zod validation failed!");
-			console.error("[ProviderApi] Error:", error);
-			console.error("[ProviderApi] Error message:", (error as Error).message);
-			console.error("[ProviderApi] Body that failed:", JSON.stringify(bodyToValidate, null, 2));
-			console.error("=== [ProviderApi] VALIDATION ERROR END ===");
-			throw error;
-		}
-
+		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,

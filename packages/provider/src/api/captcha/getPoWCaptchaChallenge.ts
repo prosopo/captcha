@@ -92,15 +92,7 @@ export default (
 				const timestamp = Date.now();
 				const nonce = Math.floor(Math.random() * 1000000);
 				const challengeId = `${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
-				
-				// Debug logging
-				req.logger.debug(() => ({
-					msg: "Demo key PoW challenge generated",
-					challenge: challengeId,
-					parts: challengeId.split("___"),
-					partsCount: challengeId.split("___").length,
-				}));
-				
+
 				const response: GetPowCaptchaResponse = {
 					[ApiParams.status]: "ok",
 					[ApiParams.challenge]: challengeId,
@@ -130,15 +122,7 @@ export default (
 				const timestamp = Date.now();
 				const nonce = Math.floor(Math.random() * 1000000);
 				const challengeId = `${timestamp}___${user}___${dapp}___${nonce}` as PoWChallengeId;
-				
-				// Debug logging
-				req.logger.debug(() => ({
-					msg: "Demo key PoW challenge generated (always fail)",
-					challenge: challengeId,
-					parts: challengeId.split("___"),
-					partsCount: challengeId.split("___").length,
-				}));
-				
+
 				const response: GetPowCaptchaResponse = {
 					[ApiParams.status]: "ok",
 					[ApiParams.challenge]: challengeId,
