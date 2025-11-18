@@ -1861,7 +1861,7 @@ export class ProviderDatabase
 			{
 				$project: {
 					_id: 0,
-					frictionlessTokenId: 1,
+					sessionId: 1,
 				},
 			},
 		]);
@@ -1871,13 +1871,13 @@ export class ProviderDatabase
 			return [];
 		}
 
-		// Get the associated entropies from frictionlesstokenrecords
+		// Get the associated entropies from sessions
 		return (
 			await Promise.all(
 				docs.map(async (doc) => {
-					if (doc.frictionlessTokenId) {
-						const tokenRecord = await this.getSessionRecordByToken(
-							doc.frictionlessTokenId,
+					if (doc.sessionId) {
+						const tokenRecord = await this.getSessionRecordBySessionId(
+							doc.sessionId,
 						);
 						return tokenRecord?.decryptedHeadHash;
 					}
