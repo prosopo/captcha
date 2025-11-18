@@ -189,7 +189,16 @@ describe("ClientTaskManager", () => {
 					settings: {
 						contextAware: {
 							enabled: true,
-							threshold: 0.7,
+							contexts: {
+								[ContextType.Default]: {
+									type: ContextType.Default,
+									threshold: 0.7,
+								},
+								[ContextType.Webview]: {
+									type: ContextType.Webview,
+									threshold: 0.7,
+								},
+							},
 						},
 					},
 				},
@@ -199,7 +208,16 @@ describe("ClientTaskManager", () => {
 					settings: {
 						contextAware: {
 							enabled: true,
-							threshold: 0.7,
+							contexts: {
+								[ContextType.Default]: {
+									type: ContextType.Default,
+									threshold: 0.7,
+								},
+								[ContextType.Webview]: {
+									type: ContextType.Webview,
+									threshold: 0.7,
+								},
+							},
 						},
 					},
 				},

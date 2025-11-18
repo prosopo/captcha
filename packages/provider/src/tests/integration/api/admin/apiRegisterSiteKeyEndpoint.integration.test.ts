@@ -16,6 +16,7 @@ import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import {
 	CaptchaType,
+	ContextType,
 	type ProsopoConfigOutput,
 	Tier,
 	contextAwareThresholdDefault,
@@ -66,7 +67,12 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,
-					threshold: contextAwareThresholdDefault,
+					contexts: {
+						default: {
+							type: ContextType.Default,
+							threshold: contextAwareThresholdDefault,
+						},
+					},
 				},
 			},
 		};
@@ -97,7 +103,12 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				disallowWebView: false,
 				contextAware: {
 					enabled: false,
-					threshold: contextAwareThresholdDefault,
+					contexts: {
+						default: {
+							type: ContextType.Default,
+							threshold: contextAwareThresholdDefault,
+						},
+					},
 				},
 			},
 		};
