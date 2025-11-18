@@ -38,13 +38,13 @@ describe("contextAwareValidation", () => {
 
 	describe("getContextThreshold", () => {
 		it("should return default threshold when contextAware is not set", () => {
-			const settings: IUserSettings = {} as IUserSettings;
+			const settings = {} as IUserSettings;
 			const result = getContextThreshold(settings, ContextType.Default);
 			expect(result).toBe(contextAwareThresholdDefault);
 		});
 
 		it("should return global threshold when no context-specific threshold is set", () => {
-			const settings: IUserSettings = {
+			const settings = {
 				contextAware: {
 					enabled: true,
 					threshold: 0.8,
@@ -55,7 +55,7 @@ describe("contextAwareValidation", () => {
 		});
 
 		it("should return context-specific threshold when configured", () => {
-			const settings: IUserSettings = {
+			const settings = {
 				contextAware: {
 					enabled: true,
 					threshold: 0.7,
@@ -74,7 +74,7 @@ describe("contextAwareValidation", () => {
 		});
 
 		it("should return global threshold when context not found in array", () => {
-			const settings: IUserSettings = {
+			const settings = {
 				contextAware: {
 					enabled: true,
 					threshold: 0.75,
@@ -87,7 +87,7 @@ describe("contextAwareValidation", () => {
 		});
 
 		it("should handle empty contexts array", () => {
-			const settings: IUserSettings = {
+			const settings = {
 				contextAware: {
 					enabled: true,
 					threshold: 0.8,
