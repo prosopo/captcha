@@ -38,31 +38,19 @@ export function getContextThreshold(
 	contextType: ContextType,
 ): number {
 	const contextAware = settings.contextAware;
-	if (!contextAware) {
+	if (contextAware === undefined) {
 		return contextAwareThresholdDefault;
 	}
 
 	const contexts = contextAware.contexts;
 	let contextConfig: { type: ContextType; threshold: number } | undefined;
 
-	if (contexts) {
-		if ("default" in contexts) {
-			// contexts is an object with a default context
-			contextConfig =
-				(contexts as Record<string, { type: ContextType; threshold: number }>)[
-					contextType
-				] ||
-				(contexts as Record<string, { type: ContextType; threshold: number }>)[
-					ContextType.Default
-				];
-		} else {
-			// contexts is a Partial<Record<ContextType, { type: ContextType; threshold: number }>>
-			contextConfig = (
-				contexts as Partial<
-					Record<ContextType, { type: ContextType; threshold: number }>
-				>
-			)[contextType];
-		}
+	if (contexts !== undefined) {
+		contextConfig = (
+			contexts as Partial<
+				Record<ContextType, { type: ContextType; threshold: number }>
+			>
+		)[contextType];
 	}
 
 	return contextConfig?.threshold ?? contextAwareThresholdDefault;

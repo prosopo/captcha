@@ -47,7 +47,12 @@ describe("contextAwareValidation", () => {
 			const settings = {
 				contextAware: {
 					enabled: true,
-					threshold: 0.8,
+					contexts: {
+						[ContextType.Default]: {
+							type: ContextType.Default,
+							threshold: 0.8,
+						},
+					},
 				},
 			} as unknown as IUserSettings;
 			const result = getContextThreshold(settings, ContextType.Default);
@@ -58,11 +63,16 @@ describe("contextAwareValidation", () => {
 			const settings = {
 				contextAware: {
 					enabled: true,
-					threshold: 0.7,
-					contexts: [
-						{ type: ContextType.Webview, threshold: 0.9 },
-						{ type: ContextType.Default, threshold: 0.6 },
-					],
+					contexts: {
+						[ContextType.Webview]: {
+							type: ContextType.Webview,
+							threshold: 0.9,
+						},
+						[ContextType.Default]: {
+							type: ContextType.Default,
+							threshold: 0.6,
+						},
+					},
 				},
 			} as unknown as IUserSettings;
 
@@ -73,30 +83,33 @@ describe("contextAwareValidation", () => {
 			expect(defaultResult).toBe(0.6);
 		});
 
-		it("should return global threshold when context not found in array", () => {
+		it("should return default threshold when context not found in object", () => {
 			const settings = {
 				contextAware: {
 					enabled: true,
-					threshold: 0.75,
-					contexts: [{ type: ContextType.Webview, threshold: 0.9 }],
+					contexts: {
+						[ContextType.Webview]: {
+							type: ContextType.Webview,
+							threshold: 0.9,
+						},
+					},
 				},
 			} as unknown as IUserSettings;
 
 			const result = getContextThreshold(settings, ContextType.Default);
-			expect(result).toBe(0.75);
+			expect(result).toBe(contextAwareThresholdDefault);
 		});
 
-		it("should handle empty contexts array", () => {
+		it("should handle empty contexts object", () => {
 			const settings = {
 				contextAware: {
 					enabled: true,
-					threshold: 0.8,
-					contexts: [],
+					contexts: {},
 				},
 			} as unknown as IUserSettings;
 
 			const result = getContextThreshold(settings, ContextType.Default);
-			expect(result).toBe(0.8);
+			expect(result).toBe(contextAwareThresholdDefault);
 		});
 	});
 });
