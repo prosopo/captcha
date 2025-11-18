@@ -144,8 +144,6 @@ export const PowChallengeIdSchema = custom<PoWChallengeId>((val: string) => {
 		Number.parseInt(valSplit[0]);
 		return valSplit.length === 4;
 	} catch (e) {
-		console.log("VALSPLIT", valSplit)
-		console.log(e)
 		return false;
 	}
 });
