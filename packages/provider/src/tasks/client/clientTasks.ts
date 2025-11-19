@@ -301,7 +301,7 @@ export class ClientTaskManager {
 				if (client.settings?.contextAware?.enabled) {
 					// Get context types from client settings
 					const contextTypes = Object.keys(
-						client.settings.contextAware.contexts,
+						client.settings.contextAware.contexts ?? {},
 					) as ContextType[];
 
 					for (const contextType of contextTypes) {
