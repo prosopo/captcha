@@ -18,7 +18,6 @@ import { wasm } from "@rollup/plugin-wasm";
 import type { Drop } from "esbuild";
 import css from "rollup-plugin-import-css";
 import type { UserConfig } from "vite";
-import { filterDependencies, getDependencies } from "../dependencies.js";
 import { default as ClosePlugin } from "./vite-plugin-close-and-copy.js";
 import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js";
 
@@ -34,34 +33,16 @@ export default async function (
 ): Promise<UserConfig> {
 	const isProduction = mode === "production";
 
-	// Get all dependencies of the current package
-	const { dependencies: deps, optionalPeerDependencies } =
-		await getDependencies(packageName, true);
-
 	// Output directory is custom or relative to directory of the package
 	const outDir = outputDir
 		? path.resolve(outputDir)
 		: path.resolve(packageDir, "dist/bundle");
 
-	// Get rid of any dependencies we don't want to bundle
-	const { external, internal } = filterDependencies(deps, [
-		"aws",
-		"webpack",
-		"vite",
-		"biome",
-	]);
-
 	// Add the node builtins (path, fs, os, etc.) to the external list
 	const allExternal = [
 		...builtinModules,
 		...builtinModules.map((m) => `node:${m}`),
-		...external,
-		...optionalPeerDependencies,
 	];
-
-	console.info(
-		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
-	);
 
 	const define = {
 		"process.env.WS_NO_BUFFER_UTIL": "true",
@@ -90,7 +71,7 @@ export default async function (
 
 	return {
 		ssr: {
-			noExternal: internal,
+			noExternal: true,
 			external: allExternal,
 		},
 		optimizeDeps: {
