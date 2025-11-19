@@ -1,5 +1,13 @@
 # @prosopo/cypress-shared
 
+## 2.8.45
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+
 ## 2.8.44
 ### Patch Changes
 

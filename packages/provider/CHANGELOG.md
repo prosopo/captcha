@@ -1,5 +1,43 @@
 # @prosopo/provider
 
+## 3.14.0
+### Minor Changes
+
+- ce70a2b: Add context-aware entropy calculation for WebView and default contexts
+  
+  - Added ContextType enum to distinguish between WebView and default browser contexts
+  - Implemented context-specific entropy calculation and storage
+  - Created clientContextEntropy collection with automatic timestamp management
+  - Removed legacy clientEntropy table in favor of context-specific approach
+  - Added helper functions for context determination and threshold retrieval
+  - Included comprehensive unit tests for context validation logic
+
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- 5ad6f48: Fix detect webview iphones
+- f6b5094: Allow different context to override default
+- e3a8948: Run job for pro+ only
+- e01227b: add turbo
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/types-database@4.1.0
+  - @prosopo/database@3.6.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/api@3.1.38
+  - @prosopo/api-express-router@3.0.41
+  - @prosopo/common@3.1.27
+  - @prosopo/datasets@3.0.50
+  - @prosopo/env@3.2.29
+  - @prosopo/keyring@2.8.41
+  - @prosopo/load-balancer@2.8.14
+  - @prosopo/types-env@2.7.54
+  - @prosopo/user-access-policy@3.5.33
+  - @prosopo/api-route@2.6.35
+
 ## 3.13.7
 ### Patch Changes
 

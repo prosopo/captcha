@@ -1,5 +1,15 @@
 # @prosopo/detector
 
+## 3.3.19
+### Patch Changes
+
+- 5ad6f48: Fix detect webview iphones
+- e01227b: add turbo
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+
 ## 3.3.18
 ### Patch Changes
 

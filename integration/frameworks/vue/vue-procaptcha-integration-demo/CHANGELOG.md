@@ -1,5 +1,12 @@
 # @prosopo/vue-procaptcha-integration-demo
 
+## 1.1.41
+### Patch Changes
+
+- e01227b: add turbo
+- Updated dependencies [e01227b]
+  - @prosopo/vue-procaptcha-wrapper@1.1.41
+
 ## 1.1.40
 ### Patch Changes
 
