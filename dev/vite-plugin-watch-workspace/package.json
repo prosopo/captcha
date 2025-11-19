@@ -30,7 +30,7 @@
 		"fast-glob": "3.3.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.26",
+		"@prosopo/config": "3.1.27",
 		"@types/debug": "4.1.12",
 		"@types/node": "24.2.1",
 		"typescript": "5.6.2",

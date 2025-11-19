@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.1.27
+### Patch Changes
+
+- e01227b: add turbo
+
 ## 3.1.26
 ### Patch Changes
 

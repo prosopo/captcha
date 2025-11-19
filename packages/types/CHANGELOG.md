@@ -1,5 +1,24 @@
 # @prosopo/types
 
+## 3.7.0
+### Minor Changes
+
+- ce70a2b: Add context-aware entropy calculation for WebView and default contexts
+  
+  - Added ContextType enum to distinguish between WebView and default browser contexts
+  - Implemented context-specific entropy calculation and storage
+  - Created clientContextEntropy collection with automatic timestamp management
+  - Removed legacy clientEntropy table in favor of context-specific approach
+  - Added helper functions for context determination and threshold retrieval
+  - Included comprehensive unit tests for context validation logic
+
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- f6b5094: Allow different context to override default
+- Updated dependencies [e01227b]
+  - @prosopo/locale@3.1.27
+
 ## 3.6.4
 ### Patch Changes
 

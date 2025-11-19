@@ -1,5 +1,10 @@
 # @prosopo/dotenv
 
+## 3.0.32
+### Patch Changes
+
+  - @prosopo/common@3.1.27
+
 ## 3.0.31
 ### Patch Changes
 

@@ -1,5 +1,26 @@
 # @prosopo/cli
 
+## 3.5.9
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [5ad6f48]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e3a8948]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/provider@3.14.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/api@3.1.38
+  - @prosopo/api-express-router@3.0.41
+  - @prosopo/common@3.1.27
+  - @prosopo/env@3.2.29
+  - @prosopo/keyring@2.8.41
+  - @prosopo/user-access-policy@3.5.33
+  - @prosopo/dotenv@3.0.32
+
 ## 3.5.8
 ### Patch Changes
 

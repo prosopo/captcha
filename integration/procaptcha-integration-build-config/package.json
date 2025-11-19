@@ -28,7 +28,7 @@
 		"vite-plugin-dts": "4.5.4"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.26",
+		"@prosopo/config": "3.1.27",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0"
 	},
