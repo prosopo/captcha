@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 3.13.7
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api@3.1.37
+  - @prosopo/api-express-router@3.0.40
+  - @prosopo/api-route@2.6.34
+  - @prosopo/common@3.1.26
+  - @prosopo/database@3.5.6
+  - @prosopo/datasets@3.0.49
+  - @prosopo/env@3.2.28
+  - @prosopo/keyring@2.8.40
+  - @prosopo/load-balancer@2.8.13
+  - @prosopo/locale@3.1.26
+  - @prosopo/types@3.6.4
+  - @prosopo/types-database@4.0.6
+  - @prosopo/types-env@2.7.53
+  - @prosopo/user-access-policy@3.5.32
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.13.6
 ### Patch Changes
 

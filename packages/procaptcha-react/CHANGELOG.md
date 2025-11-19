@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-react
 
+## 2.9.21
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/locale@3.1.26
+  - @prosopo/procaptcha@2.9.21
+  - @prosopo/procaptcha-common@2.9.19
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+  - @prosopo/widget-skeleton@2.7.12
+
 ## 2.9.20
 ### Patch Changes
 

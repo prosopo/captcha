@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.7.12
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 2.7.11
 ### Patch Changes
 

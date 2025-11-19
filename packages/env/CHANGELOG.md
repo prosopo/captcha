@@ -1,5 +1,17 @@
 # @prosopo/env
 
+## 3.2.28
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/database@3.5.6
+  - @prosopo/keyring@2.8.40
+  - @prosopo/types@3.6.4
+  - @prosopo/types-env@2.7.53
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.2.27
 ### Patch Changes
 

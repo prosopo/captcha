@@ -1,5 +1,19 @@
 # @prosopo/provider-mock
 
+## 2.8.36
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api-express-router@3.0.40
+  - @prosopo/common@3.1.26
+  - @prosopo/database@3.5.6
+  - @prosopo/dotenv@3.0.31
+  - @prosopo/locale@3.1.26
+  - @prosopo/provider@3.13.7
+  - @prosopo/types@3.6.4
+  - @prosopo/types-database@4.0.6
+
 ## 2.8.35
 ### Patch Changes
 

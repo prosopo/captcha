@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 3.6.4
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/locale@3.1.26
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.6.3
 ### Patch Changes
 

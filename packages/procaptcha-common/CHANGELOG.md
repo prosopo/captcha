@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-common
 
+## 2.9.19
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/account@2.7.43
+  - @prosopo/load-balancer@2.8.13
+  - @prosopo/types@3.6.4
+  - @prosopo/widget-skeleton@2.7.12
+
 ## 2.9.18
 ### Patch Changes
 

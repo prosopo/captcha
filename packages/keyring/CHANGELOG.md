@@ -1,5 +1,15 @@
 # @prosopo/keyring
 
+## 2.8.40
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 2.8.39
 ### Patch Changes
 

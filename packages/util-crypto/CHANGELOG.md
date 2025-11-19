@@ -1,5 +1,10 @@
 # @prosopo/util-crypto
 
+## 13.5.28
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 13.5.27
 ### Patch Changes
 

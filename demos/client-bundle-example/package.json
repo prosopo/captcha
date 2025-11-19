@@ -23,13 +23,13 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV"
 	},
-	"version": "2.10.10",
+	"version": "2.10.11",
 	"devDependencies": {
 		"@emotion/cache": "11.11.0",
-		"@prosopo/config": "3.1.25",
-		"@prosopo/dotenv": "3.0.30",
-		"@prosopo/locale": "3.1.25",
-		"@prosopo/types": "3.6.3",
+		"@prosopo/config": "3.1.26",
+		"@prosopo/dotenv": "3.0.31",
+		"@prosopo/locale": "3.1.26",
+		"@prosopo/types": "3.6.4",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
