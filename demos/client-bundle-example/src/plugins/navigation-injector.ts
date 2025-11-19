@@ -77,6 +77,12 @@ export default function navigationInjector(): Plugin {
 			// 	explicit: { path: "invisible-slider-explicit.html", exists: true },
 			// },
 		},
+		testing: {
+			demoKeys: {
+				alwaysPass: { path: "demo-keys-always-pass.html", exists: true },
+				alwaysFail: { path: "demo-keys-always-fail.html", exists: true },
+			},
+		},
 	};
 
 	// Style for the navigation bar
@@ -498,6 +504,11 @@ export default function navigationInjector(): Plugin {
 					pageDefinitions.invisible,
 					pagePath,
 				);
+				const testingNav = buildCaptchaNavGroup(
+					"Testing & Development",
+					pageDefinitions.testing,
+					pagePath,
+				);
 
 				const navHtml = `
           <div id="nav-topbar" class="nav-topbar">
@@ -522,6 +533,7 @@ export default function navigationInjector(): Plugin {
                 <div class="nav-sections">
                   ${standardNav}
                   ${invisibleNav}
+                  ${testingNav}
                 </div>
               </div>
             </div>

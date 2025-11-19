@@ -181,6 +181,14 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-frictionless-explicit.html",
 					),
+					"demo-keys-always-pass": path.resolve(
+						__dirname,
+						"src/demo-keys-always-pass.html",
+					),
+					"demo-keys-always-fail": path.resolve(
+						__dirname,
+						"src/demo-keys-always-fail.html",
+					),
 				},
 			},
 		},

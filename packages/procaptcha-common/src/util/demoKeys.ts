@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export * from "./providers.js";
-export * from "./state/builder.js";
-export * from "./callbacks/defaultCallbacks.js";
-export * from "./callbacks/defaultEvents.js";
-export * from "./extensionLoader.js";
-export * from "./elements/window.js";
-export * from "./reactComponents/Reload.js";
-export * from "./reactComponents/Checkbox.js";
-export * from "./reactComponents/DemoKeyBanner.js";
-export * from "./util/demoKeys.js";
+/**
+ * Re-export demo key utilities from @prosopo/util
+ * This allows frontend packages to access demo key checking without needing the full util package
+ */
+export {
+	DEMO_KEY_ALWAYS_PASS,
+	DEMO_KEY_ALWAYS_FAIL,
+	getDemoKeyBehavior,
+	isDemoKey,
+	type DemoKeyBehavior,
+} from "@prosopo/util";

@@ -25,6 +25,11 @@ import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
+import {
+	DemoKeyBehavior,
+	logDemoKeyUsage,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -81,6 +86,40 @@ export default (
 						logger: req.logger,
 					}),
 				);
+			}
+
+			// Handle demo key - always pass
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"image_captcha_solution",
+				);
+
+				const result: CaptchaSolutionResponse = {
+					status: "ok",
+					captchas: [],
+					verified: true,
+				};
+				return res.json(result);
+			}
+
+			// Handle demo key - always fail
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"image_captcha_solution",
+				);
+
+				const result: CaptchaSolutionResponse = {
+					status: "ok",
+					captchas: [],
+					verified: false,
+				};
+				return res.json(result);
 			}
 
 			const result: DappUserSolutionResult =

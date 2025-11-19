@@ -34,6 +34,10 @@ import {
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
+import {
+	DemoKeyBehavior,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
@@ -105,6 +109,32 @@ export class PowCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 	): Promise<boolean> {
+		// Extract dapp from challenge for demo key check
+		const challengeSplit = challenge.split(this.POW_SEPARATOR);
+		const userAccount = at(challengeSplit, 1);
+		const dappAccount = at(challengeSplit, 2);
+
+		// Handle demo key - always pass
+		if (shouldBypassForDemoKey(dappAccount, DemoKeyBehavior.AlwaysPass)) {
+			this.logger.debug(() => ({
+				msg: "Demo key - always pass",
+				data: { challenge },
+			}));
+			return true;
+		}
+
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dappAccount, DemoKeyBehavior.AlwaysFail)) {
+			this.logger.debug(() => ({
+				msg: "Demo key - always fail",
+				data: { challenge },
+			}));
+			return false;
+		}
+
+		// Get client record for remaining logic
+		const clientRecord = await this.db.getClientRecord(dappAccount);
+
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
 			challenge,
@@ -113,9 +143,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			ApiParams.challenge,
 		);
 
-		const challengeSplit = challenge.split(this.POW_SEPARATOR);
 		const timestamp = Number.parseInt(at(challengeSplit, 0));
-		const userAccount = at(challengeSplit, 1);
 
 		checkPowSignature(
 			timestamp.toString(),

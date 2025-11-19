@@ -31,6 +31,11 @@ import {
 } from "../../tasks/frictionless/frictionlessTasks.js";
 import { timestampDecayFunction } from "../../tasks/frictionless/frictionlessTasksUtils.js";
 import { Tasks } from "../../tasks/index.js";
+import {
+	DemoKeyBehavior,
+	logDemoKeyUsage,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
@@ -171,6 +176,80 @@ export default (
 						context: { code: 400, siteKey: dapp },
 						i18n: req.i18n,
 						logger: req.logger,
+					}),
+				);
+			}
+
+			// Handle demo key - always pass
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysPass,
+					"frictionless_challenge",
+				);
+
+				const ipAddress = getCompositeIpAddress(req.ip || "");
+				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
+
+				// Set session params with perfect score
+				tasks.frictionlessManager.setSessionParams({
+					token,
+					score: 0,
+					threshold: 0.5,
+					scoreComponents: {
+						baseScore: 0,
+					},
+					providerSelectEntropy: 0,
+					ipAddress,
+					webView: false,
+					iFrame: false,
+					decryptedHeadHash: "",
+				});
+
+				// Return trivial PoW captcha that will auto-pass
+				return res.json(
+					await tasks.frictionlessManager.sendPowCaptcha({
+						powDifficulty: 1,
+						userSitekeyIpHash,
+					}),
+				);
+			}
+
+			// Handle demo key - always fail
+			// NOTE: This returns a PoW captcha just like "always pass" so that we can
+			// always get to a sensible captcha validation step for testing purposes
+			if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+				logDemoKeyUsage(
+					req.logger,
+					dapp,
+					DemoKeyBehavior.AlwaysFail,
+					"frictionless_challenge",
+				);
+
+				const ipAddress = getCompositeIpAddress(req.ip || "");
+				const userSitekeyIpHash = hashUserIp(user, req.ip || "", dapp);
+
+				// Set session params with perfect score (same as always pass)
+				tasks.frictionlessManager.setSessionParams({
+					token,
+					score: 0,
+					threshold: 0.5,
+					scoreComponents: {
+						baseScore: 0,
+					},
+					providerSelectEntropy: 0,
+					ipAddress,
+					webView: false,
+					iFrame: false,
+					decryptedHeadHash: "",
+				});
+
+				// Return trivial PoW captcha (same as always pass)
+				return res.json(
+					await tasks.frictionlessManager.sendPowCaptcha({
+						powDifficulty: 1,
+						userSitekeyIpHash,
 					}),
 				);
 			}

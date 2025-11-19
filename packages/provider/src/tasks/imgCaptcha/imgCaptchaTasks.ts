@@ -50,6 +50,10 @@ import {
 import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
+import {
+	DemoKeyBehavior,
+	shouldBypassForDemoKey,
+} from "../../utils/demoKeys.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -487,6 +491,28 @@ export class ImgCaptchaManager extends CaptchaManager {
 		disallowWebView?: boolean,
 		contextAwareEnabled = false,
 	): Promise<ImageVerificationResponse> {
+		// Handle demo key - always pass
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysPass)) {
+			return {
+				status: "API.USER_VERIFIED",
+				verified: true,
+				score: 1.0,
+				...(commitmentId && { commitmentId: commitmentId.toString() }),
+			};
+		}
+
+		// Handle demo key - always fail
+		if (shouldBypassForDemoKey(dapp, DemoKeyBehavior.AlwaysFail)) {
+			return {
+				status: "API.USER_NOT_VERIFIED",
+				verified: false,
+				score: 0.0,
+			};
+		}
+
+		// Get client record for remaining logic
+		const clientRecord = await this.db.getClientRecord(dapp);
+
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
 			: this.getDappUserCommitmentByAccount(user, dapp));
