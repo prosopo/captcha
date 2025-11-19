@@ -139,9 +139,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			decryptPayload: vi.fn(),
 			checkLangRules: vi.fn().mockReturnValue(0),
 			setSessionParams: vi.fn(),
-			getClientContextEntropy: vi.fn(() => {
-				console.log("default mock getClientContextEntropy");
-			}),
+			getClientContextEntropy: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
 			getPrioritisedAccessPolicies: vi.fn().mockResolvedValue([]),
