@@ -113,10 +113,10 @@ export const ContextConfigSchema = z.object({
 
 export type IContextConfig = z.infer<typeof ContextConfigSchema>;
 
-const ContextsSchema = z.object({
-	[ContextType.Default]: ContextConfigSchema,
-	[ContextType.Webview]: ContextConfigSchema.optional(),
-});
+const ContextsSchema = z.record(
+	z.enum([ContextType.Default, ContextType.Webview]),
+	ContextConfigSchema,
+);
 
 export type IContexts = z.infer<typeof ContextsSchema>;
 
