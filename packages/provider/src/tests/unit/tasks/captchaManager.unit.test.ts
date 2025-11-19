@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { type Logger, getLogger } from "@prosopo/common";
-import { type KeyringPair, contextAwareThresholdDefault } from "@prosopo/types";
+import {
+	ContextType,
+	type KeyringPair,
+	contextAwareThresholdDefault,
+} from "@prosopo/types";
 import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -33,7 +37,15 @@ const defaultUserSettings: IUserSettings = {
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	disallowWebView: false,
-	contextAware: { enabled: false, threshold: contextAwareThresholdDefault },
+	contextAware: {
+		enabled: false,
+		contexts: {
+			default: {
+				type: ContextType.Default,
+				threshold: contextAwareThresholdDefault,
+			},
+		},
+	},
 };
 
 describe("CaptchaManager", () => {
