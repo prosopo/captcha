@@ -30,6 +30,7 @@ import {
 	getClientList,
 	headerCheckMiddleware,
 	ignoreMiddleware,
+	pageProtectRouter,
 	prosopoRouter,
 	prosopoVerifyRouter,
 	publicRouter,
@@ -93,7 +94,8 @@ async function startApi(
 	apiApp.use(express.json({ limit: "50mb" }));
 
 	// Put this first so that no middleware runs on it
-	apiApp.use(publicRouter(env));
+	apiApp.use(publicRouter());
+	apiApp.use(pageProtectRouter());
 
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
