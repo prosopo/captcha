@@ -148,7 +148,8 @@ services:
       - 208.67.222.222
   redis-stack:
     container_name: redis-stack
-    image: redis/redis:${REDIS_IMAGE}
+    # unlike "redis/redis-stack-server" this image includes Insights
+    image: redis/redis-stack:${REDIS_IMAGE}
     env_file:
       - ../.env.1.${NODE_ENV}
     volumes:
@@ -160,7 +161,6 @@ services:
       internal:
         ipv4_address: 172.18.0.8
         ipv6_address: fd00:aaaa::8
-
   vector:
     container_name: vector
     profiles:
