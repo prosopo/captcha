@@ -27,6 +27,7 @@ import {
 	type CaptchaSolution,
 	CaptchaStates,
 	CaptchaStatus,
+	ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -48,8 +49,8 @@ import type {
 } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
-	type ClientEntropyRecord,
-	ClientEntropyRecordSchema,
+	type ClientContextEntropyRecord,
+	ClientContextEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
@@ -102,7 +103,7 @@ enum TableNames {
 	client = "client",
 	session = "session",
 	detector = "detector",
-	clientEntropy = "clientEntropy",
+	clientContextEntropy = "clientContextEntropy",
 }
 
 const PROVIDER_TABLES = [
@@ -162,9 +163,9 @@ const PROVIDER_TABLES = [
 		schema: DetectorRecordSchema,
 	},
 	{
-		collectionName: TableNames.clientEntropy,
-		modelName: "ClientEntropy",
-		schema: ClientEntropyRecordSchema,
+		collectionName: TableNames.clientContextEntropy,
+		modelName: "ClientContextEntropy",
+		schema: ClientContextEntropyRecordSchema,
 	},
 ];
 
@@ -1813,41 +1814,57 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description set client entropy
+	 * @description set client context-specific entropy
 	 */
-	async setClientEntropy(account: string, entropy: string): Promise<void> {
-		const filter: Pick<ClientEntropyRecord, "account"> = { account };
-		await this.tables?.clientEntropy.updateOne(
+	async setClientContextEntropy(
+		account: string,
+		contextType: ContextType,
+		entropy: string,
+	): Promise<void> {
+		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
+			{ account, contextType };
+		await this.tables?.clientContextEntropy.updateOne(
 			filter,
-			{ $set: { entropy } },
+			{ $set: { account, contextType, entropy } },
 			{ upsert: true },
 		);
 	}
 
 	/**
-	 * @description get client entropy
+	 * @description get client context-specific entropy
 	 */
-	async getClientEntropy(account: string): Promise<string | undefined> {
-		const filter: Pick<ClientEntropyRecord, "account"> = { account };
-		const doc = await this.tables?.clientEntropy
+	async getClientContextEntropy(
+		account: string,
+		contextType: ContextType,
+	): Promise<string | undefined> {
+		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
+			{ account, contextType };
+		const doc = await this.tables?.clientContextEntropy
 			.findOne(filter)
-			.lean<ClientEntropyRecord>();
+			.lean<ClientContextEntropyRecord>();
 		return doc ? doc.entropy : undefined;
 	}
 
-	/** Sample captcha records from the database */
-	async sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]> {
+	/** Sample captcha records from the database for a specific context */
+	async sampleContextEntropy(
+		sampleSize: number,
+		siteKey: string,
+		contextType: ContextType,
+	): Promise<string[]> {
 		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
 		const max = 10000;
 		if (size > max) {
 			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
 				context: {
-					failedFuncName: this.sampleEntropy.name,
+					failedFuncName: this.sampleContextEntropy.name,
 					sampleSize,
 				},
 			});
 		}
-		const cursor = this.tables?.powcaptcha.aggregate([
+
+		// Use aggregation to join with session records and filter by context
+		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
+		const pipeline: any[] = [
 			{
 				$match: {
 					dappAccount: siteKey,
@@ -1856,6 +1873,38 @@ export class ProviderDatabase
 					},
 				},
 			},
+			{
+				$lookup: {
+					from: "session",
+					localField: "sessionId",
+					foreignField: "sessionId",
+					as: "sessionData",
+				},
+			},
+			{
+				$unwind: {
+					path: "$sessionData",
+					preserveNullAndEmptyArrays: false,
+				},
+			},
+		];
+
+		// Add context-specific filter
+		if (contextType === ContextType.Webview) {
+			pipeline.push({
+				$match: {
+					"sessionData.webView": true,
+				},
+			});
+		} else if (contextType === ContextType.Default) {
+			pipeline.push({
+				$match: {
+					"sessionData.webView": false,
+				},
+			});
+		}
+
+		pipeline.push(
 			{ $limit: max },
 			{ $sample: { size } },
 			{
@@ -1864,7 +1913,9 @@ export class ProviderDatabase
 					sessionId: 1,
 				},
 			},
-		]);
+		);
+
+		const cursor = this.tables?.powcaptcha.aggregate(pipeline);
 		const docs = await cursor;
 
 		if (docs?.length === 0) {

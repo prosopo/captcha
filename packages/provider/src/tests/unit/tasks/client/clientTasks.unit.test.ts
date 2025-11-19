@@ -13,6 +13,7 @@
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/common";
 import {
+	ContextType,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -182,13 +183,49 @@ describe("ClientTaskManager", () => {
 				},
 			),
 			getAllClientRecords: vi.fn().mockResolvedValue([
-				{ account: "mockClientRecord1", tier: Tier.Professional },
-				{ account: "mockClientRecord2", tier: Tier.Professional },
+				{
+					account: "mockClientRecord1",
+					tier: Tier.Professional,
+					settings: {
+						contextAware: {
+							enabled: true,
+							contexts: {
+								[ContextType.Default]: {
+									type: ContextType.Default,
+									threshold: 0.7,
+								},
+								[ContextType.Webview]: {
+									type: ContextType.Webview,
+									threshold: 0.7,
+								},
+							},
+						},
+					},
+				},
+				{
+					account: "mockClientRecord2",
+					tier: Tier.Professional,
+					settings: {
+						contextAware: {
+							enabled: true,
+							contexts: {
+								[ContextType.Default]: {
+									type: ContextType.Default,
+									threshold: 0.7,
+								},
+								[ContextType.Webview]: {
+									type: ContextType.Webview,
+									threshold: 0.7,
+								},
+							},
+						},
+					},
+				},
 			]),
-			sampleEntropy: vi.fn().mockResolvedValue(
+			sampleContextEntropy: vi.fn().mockResolvedValue(
 				Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
 			),
-			setClientEntropy: vi.fn(),
+			setClientContextEntropy: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -688,13 +725,26 @@ describe("ClientTaskManager", () => {
 			await clientTaskManager.calculateClientEntropy();
 
 			expect(providerDB.getAllClientRecords).toHaveBeenCalled();
-			expect(providerDB.sampleEntropy).toHaveBeenCalled();
-			expect(providerDB.setClientEntropy).toHaveBeenCalledWith(
+			expect(providerDB.sampleContextEntropy).toHaveBeenCalled();
+			// Should be called for both Default and Webview contexts for each client
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
 				"mockClientRecord1",
+				ContextType.Default,
 				"11111111",
 			);
-			expect(providerDB.setClientEntropy).toHaveBeenCalledWith(
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
+				"mockClientRecord1",
+				ContextType.Webview,
+				"11111111",
+			);
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
 				"mockClientRecord2",
+				ContextType.Default,
+				"11111111",
+			);
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
+				"mockClientRecord2",
+				ContextType.Webview,
 				"11111111",
 			);
 		});

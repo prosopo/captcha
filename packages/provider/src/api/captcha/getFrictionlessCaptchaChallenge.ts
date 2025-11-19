@@ -40,6 +40,10 @@ import { hashUserAgent } from "../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../utils/hashUserIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import {
+	determineContextType,
+	getContextThreshold,
+} from "./contextAwareValidation.js";
 
 const DEFAULT_FRICTIONLESS_THRESHOLD = 0.5;
 
@@ -376,9 +380,15 @@ export default (
 
 			// Check the context
 			if (clientRecord.settings.contextAware?.enabled) {
-				const clientEntropy = await tasks.frictionlessManager.getClientEntropy(
-					clientRecord.account,
-				);
+				// Determine the context type based on the request
+				const contextType = determineContextType(webView);
+
+				// Get context-specific entropy
+				const clientEntropy =
+					await tasks.frictionlessManager.getClientContextEntropy(
+						clientRecord.account,
+						contextType,
+					);
 
 				if (clientEntropy) {
 					if (!decryptedHeadHash) {
@@ -398,9 +408,14 @@ export default (
 						);
 					}
 
+					// Get the threshold for this context
+					const threshold = getContextThreshold(
+						clientRecord.settings,
+						contextType,
+					);
+
 					const sim = compareBinaryStrings(decryptedHeadHash, clientEntropy);
-					const isValidContext =
-						sim >= clientRecord.settings.contextAware.threshold;
+					const isValidContext = sim >= threshold;
 					if (!isValidContext) {
 						return res.json(
 							await tasks.frictionlessManager.sendImageCaptcha({

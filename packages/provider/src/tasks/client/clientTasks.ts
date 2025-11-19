@@ -16,6 +16,7 @@ import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	type ContextType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -296,26 +297,40 @@ export class ClientTaskManager {
 			}));
 
 			for (const client of clients) {
-				const sampleEntropies = await this.providerDB.sampleEntropy(
-					SAMPLE_SIZE,
-					client.account,
-				);
+				// Calculate context-specific entropy if client has context awareness enabled
+				if (client.settings?.contextAware?.enabled) {
+					// Get context types from client settings
+					const contextTypes = Object.keys(
+						client.settings.contextAware.contexts,
+					) as ContextType[];
 
-				if (sampleEntropies.length < SAMPLE_SIZE) {
-					this.logger.info(() => ({
-						msg: `Skipping entropy calculation for client ${client.account} due to insufficient samples (${sampleEntropies.length}/${SAMPLE_SIZE})`,
-					}));
-					continue;
+					for (const contextType of contextTypes) {
+						const contextSamples = await this.providerDB.sampleContextEntropy(
+							SAMPLE_SIZE,
+							client.account,
+							contextType,
+						);
+
+						if (contextSamples.length < SAMPLE_SIZE) {
+							this.logger.info(() => ({
+								msg: `Skipping ${contextType} entropy calculation for client ${client.account} due to insufficient samples (${contextSamples.length}/${SAMPLE_SIZE})`,
+							}));
+							continue;
+						}
+
+						const contextAvgEntropy = majorityAverage(contextSamples);
+
+						this.logger.info(() => ({
+							msg: `Calculated ${contextType} entropy for client ${client.account}: ${contextAvgEntropy}`,
+						}));
+
+						await this.providerDB.setClientContextEntropy(
+							client.account,
+							contextType,
+							contextAvgEntropy,
+						);
+					}
 				}
-
-				// Calculate majority average entropy
-				const avgEntropy = majorityAverage(sampleEntropies);
-
-				this.logger.info(() => ({
-					msg: `Calculated entropy for client ${client.account}: ${avgEntropy}`,
-				}));
-
-				await this.providerDB.setClientEntropy(client.account, avgEntropy);
 			}
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
