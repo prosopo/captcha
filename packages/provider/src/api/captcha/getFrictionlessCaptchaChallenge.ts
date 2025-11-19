@@ -302,7 +302,6 @@ export default (
 			}
 
 			// Check the context
-			console.log({ clientRecord });
 			if (clientRecord.settings.contextAware?.enabled) {
 				// Determine available contexts
 				const contexts = clientRecord.settings.contextAware?.contexts || {};
@@ -325,13 +324,8 @@ export default (
 					contextType = undefined;
 				}
 
-				console.log({ contextType });
 				if (contextType) {
 					// Get context-specific entropy
-					console.log({
-						account: clientRecord.account,
-						contextType,
-					});
 					const clientEntropy =
 						await tasks.frictionlessManager.getClientContextEntropy(
 							clientRecord.account,
