@@ -1875,7 +1875,7 @@ export class ProviderDatabase
 			},
 			{
 				$lookup: {
-					from: "session",
+					from: "sessions",
 					localField: "sessionId",
 					foreignField: "sessionId",
 					as: "sessionData",
