@@ -167,6 +167,10 @@ export const ProcaptchaFrictionless = ({
 					sessionId: result.sessionId,
 					userAccount: result.userAccount,
 					restart, // Pass restart function
+					behaviorCollector1: result.behaviorCollector1,
+					behaviorCollector2: result.behaviorCollector2,
+					behaviorCollector3: result.behaviorCollector3,
+					deviceCapability: result.deviceCapability,
 				};
 
 				if (result.captchaType === "image") {

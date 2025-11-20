@@ -64,7 +64,31 @@ const customDetectBot: BotDetectionFunction = async (
 		container,
 		restartFn,
 		userAccount.account.address,
-	)) as { token: string; provider?: RandomProvider; encryptHeadHash: string };
+	)) as {
+		token: string;
+		provider?: RandomProvider;
+		encryptHeadHash: string;
+		mouseTracker?: {
+			start: () => void;
+			stop: () => void;
+			getData: () => Array<Record<string, unknown>>;
+			clear: () => void;
+		};
+		touchTracker?: {
+			start: () => void;
+			stop: () => void;
+			getData: () => Array<Record<string, unknown>>;
+			clear: () => void;
+		};
+		clickTracker?: {
+			start: () => void;
+			stop: () => void;
+			getData: () => Array<Record<string, unknown>>;
+			clear: () => void;
+		};
+		hasTouchSupport?: string;
+		encryptBehavioralData?: (data: string) => Promise<string>;
+	};
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
@@ -100,6 +124,12 @@ const customDetectBot: BotDetectionFunction = async (
 		status: captcha.status,
 		userAccount: userAccount,
 		error: captcha.error,
+		// Map specific trackers to generic behavioral collectors
+		behaviorCollector1: detectionResult.mouseTracker,
+		behaviorCollector2: detectionResult.touchTracker,
+		behaviorCollector3: detectionResult.clickTracker,
+		deviceCapability: detectionResult.hasTouchSupport,
+		encryptBehavioralData: detectionResult.encryptBehavioralData,
 	};
 };
 

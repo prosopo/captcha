@@ -148,6 +148,12 @@ export const Manager = (
 	};
 
 	const start = async () => {
+		console.log("[DEBUG] PoW Manager start() called");
+		console.log("[DEBUG] Initial frictionlessState:", frictionlessState);
+		console.log(
+			"[DEBUG] frictionlessState keys:",
+			frictionlessState ? Object.keys(frictionlessState) : "null",
+		);
 		await providerRetry(
 			async () => {
 				if (state.loading) {
@@ -222,6 +228,8 @@ export const Manager = (
 					frictionlessState?.sessionId,
 				);
 
+				console.log("Challenge:", challenge);
+
 				if (challenge.error) {
 					updateState({
 						loading: false,
@@ -250,6 +258,94 @@ export const Manager = (
 						type: "bytes",
 					});
 
+					console.log("[DEBUG] About to check frictionlessState");
+					console.log("[DEBUG] frictionlessState:", frictionlessState);
+					console.log(
+						"[DEBUG] Has encryptBehavioralData:",
+						!!frictionlessState?.encryptBehavioralData,
+					);
+					console.log(
+						"[DEBUG] Has behaviorCollector1:",
+						!!frictionlessState?.behaviorCollector1,
+					);
+					console.log(
+						"[DEBUG] Has behaviorCollector2:",
+						!!frictionlessState?.behaviorCollector2,
+					);
+					console.log(
+						"[DEBUG] Has behaviorCollector3:",
+						!!frictionlessState?.behaviorCollector3,
+					);
+
+					// Collect and encrypt behavioral data before submission
+					if (
+						frictionlessState?.encryptBehavioralData &&
+						(frictionlessState?.behaviorCollector1 ||
+							frictionlessState?.behaviorCollector2 ||
+							frictionlessState?.behaviorCollector3)
+					) {
+						console.log("[DEBUG] Inside behavioral data collection block");
+						try {
+							const behavioralData = {
+								collector1:
+									frictionlessState.behaviorCollector1?.getData() || [],
+								collector2:
+									frictionlessState.behaviorCollector2?.getData() || [],
+								collector3:
+									frictionlessState.behaviorCollector3?.getData() || [],
+								deviceCapability:
+									frictionlessState.deviceCapability || "unknown",
+							};
+
+							console.log(
+								"[DEBUG] Behavioral data collected:",
+								behavioralData,
+							);
+							console.log(
+								"[DEBUG] Collector1 data length:",
+								behavioralData.collector1.length,
+							);
+							console.log(
+								"[DEBUG] Collector2 data length:",
+								behavioralData.collector2.length,
+							);
+							console.log(
+								"[DEBUG] Collector3 data length:",
+								behavioralData.collector3.length,
+							);
+
+							const stringifiedData = JSON.stringify(behavioralData);
+							console.log(
+								"[DEBUG] Stringified data length:",
+								stringifiedData.length,
+							);
+
+							console.log("[DEBUG] About to encrypt behavioral data");
+							const encryptedBehavioralData =
+								await frictionlessState.encryptBehavioralData(
+									stringifiedData,
+								);
+							console.log(
+								"[DEBUG] Encryption complete, encrypted length:",
+								encryptedBehavioralData.length,
+							);
+							console.log(
+								"[Encrypted Behavioral Data]:",
+								encryptedBehavioralData,
+							);
+						} catch (error) {
+							console.error(
+								"[DEBUG] Error encrypting behavioral data:",
+								error,
+							);
+						}
+					} else {
+						console.log(
+							"[DEBUG] Skipping behavioral data collection - conditions not met",
+						);
+					}
+
+					console.log("[DEBUG] About to submit PoW captcha solution");
 					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,

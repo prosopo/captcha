@@ -17,11 +17,32 @@ import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type { Account, Callbacks } from "./manager.js";
 
+// Generic behavioral data collectors for analytics
 export type FrictionlessState = {
 	provider: RandomProvider;
 	userAccount: Account;
 	restart: () => void;
 	sessionId?: string;
+	behaviorCollector1?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => Array<Record<string, unknown>>;
+		clear: () => void;
+	};
+	behaviorCollector2?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => Array<Record<string, unknown>>;
+		clear: () => void;
+	};
+	behaviorCollector3?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => Array<Record<string, unknown>>;
+		clear: () => void;
+	};
+	deviceCapability?: string;
+	encryptBehavioralData?: (data: string) => Promise<string>;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;

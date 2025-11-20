@@ -19,9 +19,30 @@ import type {
 	RandomProvider,
 } from "../provider/api.js";
 
+// Generic behavioral data collectors for analytics
 export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	provider: RandomProvider;
 	userAccount: Account;
+	behaviorCollector1?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => Array<Record<string, unknown>>;
+		clear: () => void;
+	};
+	behaviorCollector2?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => Array<Record<string, unknown>>;
+		clear: () => void;
+	};
+	behaviorCollector3?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => Array<Record<string, unknown>>;
+		clear: () => void;
+	};
+	deviceCapability?: string;
+	encryptBehavioralData?: (data: string) => Promise<string>;
 };
 
 export type BotDetectionFunction = (
