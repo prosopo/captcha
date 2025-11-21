@@ -1,5 +1,13 @@
 # @prosopo/types-database
 
+## 4.1.1
+### Patch Changes
+
+- 345b25b: pow coord
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/user-access-policy@3.5.34
+
 ## 4.1.0
 ### Minor Changes
 

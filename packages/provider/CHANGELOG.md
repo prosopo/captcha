@@ -1,5 +1,24 @@
 # @prosopo/provider
 
+## 3.14.1
+### Patch Changes
+
+- b5b21f8: Reduce Sample Size
+- 345b25b: pow coord
+- 1fd84de: Make sure session Ids are unique
+- Updated dependencies [345b25b]
+  - @prosopo/types-database@4.1.1
+  - @prosopo/database@3.6.1
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+  - @prosopo/datasets@3.0.51
+  - @prosopo/types-env@2.7.55
+  - @prosopo/env@3.2.30
+  - @prosopo/api-express-router@3.0.42
+  - @prosopo/keyring@2.8.42
+  - @prosopo/load-balancer@2.8.15
+  - @prosopo/user-access-policy@3.5.34
+
 ## 3.14.0
 ### Minor Changes
 

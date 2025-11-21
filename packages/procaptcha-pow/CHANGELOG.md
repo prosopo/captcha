@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-pow
 
+## 2.8.29
+### Patch Changes
+
+- 345b25b: pow coord
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+  - @prosopo/procaptcha-common@2.9.21
+
 ## 2.8.28
 ### Patch Changes
 

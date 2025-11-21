@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.7.1
+### Patch Changes
+
+- 345b25b: pow coord
+
 ## 3.7.0
 ### Minor Changes
 
