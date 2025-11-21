@@ -120,7 +120,7 @@ export class FrictionlessManager extends CaptchaManager {
 		reason?: FrictionlessReason,
 	): Promise<Session> {
 		const sessionRecord: Session = {
-			sessionId: uuidv4(),
+			sessionId: `${this.config.host}-${uuidv4()}`,
 			createdAt: new Date(),
 			token,
 			score,
