@@ -236,7 +236,7 @@ export const Manager = (
 
 					// Create salt with encoded coordinates if coordinates are provided
 					let salt: string | undefined;
-					if (x !== 0 || y !== 0) {
+					if (x !== undefined && y !== undefined) {
 						const coords = [x, y];
 						const randomSalt = randomAsHex(
 							coords
