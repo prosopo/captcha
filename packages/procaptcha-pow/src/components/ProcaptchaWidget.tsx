@@ -102,15 +102,33 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	return (
 		<Checkbox
 			checked={state.isHuman}
-			onChange={async () => {
+			theme={theme}
+			onChange={async (event: React.MouseEvent | React.TouchEvent) => {
 				if (loading) {
 					return;
 				}
 				setLoading(true);
-				await manager.current.start();
+
+				// Capture click coordinates
+				let x = 0;
+				let y = 0;
+				if (!event.isTrusted) {
+					// Don't capture coordinates for non-trusted events
+				} else if (
+					"touches" in event &&
+					event.touches.length > 0 &&
+					event.touches[0]
+				) {
+					x = event.touches[0].clientX;
+					y = event.touches[0].clientY;
+				} else if ("clientX" in event && "clientY" in event) {
+					x = event.clientX;
+					y = event.clientY;
+				}
+
+				await manager.current.start(x, y);
 				setLoading(false);
 			}}
-			theme={theme}
 			labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 			error={state.error?.message}
 			aria-label="human checkbox"
@@ -118,4 +136,5 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		/>
 	);
 };
+
 export default Procaptcha;

@@ -815,6 +815,7 @@ export class ProviderDatabase
 		serverChecked = false,
 		userSubmitted = false,
 		userSignature?: string,
+		coords?: [number, number][][],
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
@@ -826,12 +827,14 @@ export class ProviderDatabase
 			| "storedAtTimestamp"
 			| "userSignature"
 			| "lastUpdatedTimestamp"
+			| "coords"
 		> = {
 			result,
 			serverChecked,
 			userSubmitted,
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
+			...(coords && { coords }),
 		};
 		try {
 			const updateResult = await tables.powcaptcha.updateOne(
