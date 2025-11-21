@@ -145,7 +145,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				const extractedData = extractData(salt);
 				// Convert extracted data to coordinate pairs
 				if (extractedData.length >= 2) {
-					coords = [[extractedData[0], extractedData[1]] as [number, number]];
+					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
 				}
 			} catch (error) {
 				this.logger.warn(() => ({
