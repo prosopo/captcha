@@ -58,6 +58,7 @@ export interface ProviderApiInterface {
 		nonce: number,
 		userTimestampSignature: string,
 		timeout?: number,
+		salt?: string,
 	): Promise<PowCaptchaSolutionResponse>;
 	submitUserEvents(
 		events: StoredEvents,

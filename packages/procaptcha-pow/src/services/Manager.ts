@@ -33,8 +33,9 @@ import {
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
-import { sleep } from "@prosopo/util";
+import { embedData, sleep } from "@prosopo/util";
 import { solvePoW } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 
 export const Manager = (
 	configInput: ProcaptchaClientConfigInput,
@@ -147,7 +148,7 @@ export const Manager = (
 		updateState({ successfullChallengeTimeout });
 	};
 
-	const start = async () => {
+	const start = async (x = 0, y = 0) => {
 		await providerRetry(
 			async () => {
 				if (state.loading) {
@@ -233,6 +234,18 @@ export const Manager = (
 				} else {
 					const solution = solvePoW(challenge.challenge, challenge.difficulty);
 
+					// Create salt with encoded coordinates if coordinates are provided
+					let salt: string | undefined;
+					if (x !== undefined && y !== undefined) {
+						const coords = [x, y];
+						const randomSalt = randomAsHex(
+							coords
+								.map((coord) => coord.toString(16).length + 4)
+								.reduce((acc, curr) => acc + curr, 0),
+						);
+						salt = embedData(randomSalt, coords);
+					}
+
 					const signer = user.extension?.signer;
 
 					if (!signer || !signer.signRaw) {
@@ -257,6 +270,7 @@ export const Manager = (
 						solution,
 						userTimestampSignature.signature.toString(),
 						config.captchas.pow.verifiedTimeout,
+						salt,
 					);
 					if (verifiedSolution[ApiParams.verified]) {
 						updateState({

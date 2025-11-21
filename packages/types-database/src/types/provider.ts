@@ -713,6 +713,7 @@ export interface IProviderDatabase extends IDatabase {
 		serverChecked: boolean,
 		userSubmitted: boolean,
 		userSignature?: string,
+		coords?: [number, number][][],
 	): Promise<void>;
 
 	updatePowCaptchaRecord(

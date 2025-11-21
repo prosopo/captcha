@@ -35,6 +35,7 @@
 		"@prosopo/procaptcha-common": "2.9.20",
 		"@prosopo/types": "3.7.0",
 		"@prosopo/util": "3.2.4",
+		"@prosopo/util-crypto": "13.5.28",
 		"@prosopo/widget-skeleton": "2.7.12",
 		"react": "18.3.1"
 	},
