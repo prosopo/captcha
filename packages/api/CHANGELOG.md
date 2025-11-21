@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 3.1.39
+### Patch Changes
+
+- 345b25b: pow coord
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+
 ## 3.1.38
 ### Patch Changes
 
