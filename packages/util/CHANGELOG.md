@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.2.4
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 3.2.3
 ### Patch Changes
 

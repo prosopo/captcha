@@ -1,5 +1,28 @@
 # @prosopo/detector
 
+## 3.3.20
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+
+## 3.3.19
+### Patch Changes
+
+- 5ad6f48: Fix detect webview iphones
+- e01227b: add turbo
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+
+## 3.3.18
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/types@3.6.4
+
 ## 3.3.17
 ### Patch Changes
 

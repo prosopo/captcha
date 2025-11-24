@@ -1,5 +1,10 @@
 # @prosopo/prosoponator-bot
 
+## 2.6.27
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 2.6.26
 ### Patch Changes
 
