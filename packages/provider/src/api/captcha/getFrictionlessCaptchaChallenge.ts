@@ -269,6 +269,7 @@ export default (
 
 			// Check the user agent in token and user id in request match request
 			// Hash the request user agent to compare with the hashed user agent from the token
+			console.log(req.headers);
 			const headersUserAgent = req.headers["user-agent"];
 			const hashedHeadersUserAgent = headersUserAgent
 				? hashUserAgent(headersUserAgent)
@@ -288,6 +289,13 @@ export default (
 						userId,
 					},
 				}));
+
+				console.log({
+					userAgent,
+					hashedHeadersUserAgent,
+					userId,
+					headersProsopoUser,
+				});
 
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
