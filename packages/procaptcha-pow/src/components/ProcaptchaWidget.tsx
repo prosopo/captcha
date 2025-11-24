@@ -112,18 +112,25 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				// Capture click coordinates
 				let x = 0;
 				let y = 0;
-				if (!event.isTrusted) {
+
+				// Try to get coordinates from the change event's underlying mouse event
+				// The original mouse event might be available in the event chain
+				const mouseOrTouchEvent = event.nativeEvent;
+				if (!mouseOrTouchEvent.isTrusted) {
 					// Don't capture coordinates for non-trusted events
 				} else if (
-					"touches" in event &&
-					event.touches.length > 0 &&
-					event.touches[0]
+					"touches" in mouseOrTouchEvent &&
+					mouseOrTouchEvent.touches.length > 0 &&
+					mouseOrTouchEvent.touches[0]
 				) {
-					x = event.touches[0].clientX;
-					y = event.touches[0].clientY;
-				} else if ("clientX" in event && "clientY" in event) {
-					x = event.clientX;
-					y = event.clientY;
+					x = mouseOrTouchEvent.touches[0].clientX;
+					y = mouseOrTouchEvent.touches[0].clientY;
+				} else if (
+					"clientX" in mouseOrTouchEvent &&
+					"clientY" in mouseOrTouchEvent
+				) {
+					x = mouseOrTouchEvent.clientX;
+					y = mouseOrTouchEvent.clientY;
 				}
 
 				await manager.current.start(x, y);
