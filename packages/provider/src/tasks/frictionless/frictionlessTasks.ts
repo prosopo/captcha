@@ -47,8 +47,8 @@ const getDefaultEntropy = (): number => {
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 export const DEFAULT_ENTROPY = getDefaultEntropy();
 
-const getSessionIDPrefix = (host: string): string => {
-	return host.replace(".prosopo.io", "");
+const getSessionIDPrefix = (host?: string): string => {
+	return host ? host.replace(".prosopo.io", "") : "local";
 };
 
 export enum FrictionlessReason {
