@@ -463,17 +463,6 @@ export class FrictionlessManager extends CaptchaManager {
 		}));
 
 		// To satisfy TS - see above for undefined checks
-		console.log({
-			baseBotScore: Number(baseBotScore),
-			timestamp: Number(timestamp),
-			providerSelectEntropy: Number(providerSelectEntropy),
-			userId,
-			userAgent,
-			webView: webView || false,
-			iFrame: iFrame || false,
-			decryptedHeadHash,
-			decryptionFailed,
-		});
 		return {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),

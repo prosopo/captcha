@@ -32,10 +32,6 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	const callbacks = props.callbacks || {};
 	const [state, _updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
-	const [coords, setCoords] = useState<{ x: number; y: number }>({
-		x: 0,
-		y: 0,
-	});
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const manager = useRef(
