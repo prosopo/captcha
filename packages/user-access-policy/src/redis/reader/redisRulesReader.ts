@@ -40,6 +40,7 @@ import type {
 	AccessRuleEntry,
 	AccessRulesFilter,
 	AccessRulesReader,
+	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
 import { aggregateRedisKeys } from "./redisAggregate.js";
 
@@ -88,6 +89,69 @@ export class RedisRulesReader implements AccessRulesReader {
 			return [];
 		}
 
+		// For greedy matching (comprehensive queries), use aggregation to get unlimited results
+		const useAggregation = filter.userScopeMatch === FilterScopeMatch.Greedy ||
+							  filter.policyScopeMatch === FilterScopeMatch.Greedy;
+
+		if (useAggregation) {
+			return this.findRulesWithAggregation(query, filter);
+		}
+
+		// For exact matching, use regular search with limited results
+		return this.findRulesWithSearch(query, filter);
+	}
+
+	private async findRulesWithAggregation(
+		query: string,
+		filter: AccessRulesFilter,
+	): Promise<AccessRule[]> {
+		try {
+			// Get all matching rule keys using aggregation (unlimited)
+			const ruleKeys = await aggregateRedisKeys(
+				this.client,
+				query,
+				this.logger,
+			);
+
+			if (ruleKeys.length === 0) {
+				return [];
+			}
+
+			// Fetch rule data in batches
+			const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
+			const entryBatches = await executeBatchesSequentially(
+				keyBatches,
+				(keysBatch) => this.fetchRuleEntries(keysBatch),
+			);
+
+			const entries = entryBatches.flat();
+			return entries.map(entry => entry.rule);
+
+		} catch (e) {
+			this.logger.error(() => ({
+				err: e,
+				data: {
+					inspect: util.inspect(
+						{
+							query: query,
+							filter: filter,
+						},
+						{
+							depth: null,
+						},
+					),
+				},
+				msg: "Failed to execute aggregation query for rules",
+			}));
+
+			return [];
+		}
+	}
+
+	private async findRulesWithSearch(
+		query: string,
+		filter: AccessRulesFilter,
+	): Promise<AccessRule[]> {
 		let searchReply: SearchReply;
 
 		try {

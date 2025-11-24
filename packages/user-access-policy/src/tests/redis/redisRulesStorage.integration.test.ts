@@ -849,6 +849,321 @@ describe("redisAccessRulesStorage", () => {
 			const foundAccessRules = await accessRulesReader.findRules(query);
 			expect(foundAccessRules).toEqual([accessRule, ipRangeAccessRule]);
 		});
+
+		describe("Header-based Access Rules", () => {
+			test("creates and finds rules based on individual header fields", async () => {
+				// given
+				const chromeRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: "test-client",
+					headerSecChUa: '"Chromium";v="119", "Not?A_Brand";v="24"',
+					headerSecChUaMobile: "?0",
+				};
+
+				const languageRule: AccessRule = {
+					type: AccessPolicyType.Restrict,
+					headerAcceptLanguage: "zh-CN,zh;q=0.9",
+					headerSecChUaPlatform: '"Linux"',
+				};
+
+				const priorityRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					headerPriority: "u=1, i",
+				};
+
+				await insertRules([chromeRule, languageRule, priorityRule]);
+
+				// when - find Chrome-based rule
+				const chromeQuery = {
+					userScope: {
+						headerSecChUa: '"Chromium";v="119", "Not?A_Brand";v="24"',
+						headerSecChUaMobile: "?0",
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundChromeRules = await accessRulesReader.findRules(chromeQuery);
+
+				// then
+				expect(foundChromeRules).toEqual([chromeRule]);
+			});
+
+			test("creates and finds rules based on headers hash", async () => {
+				// given
+				const hashRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					headersHash: "abc123def456789",
+					clientId: "hash-client",
+				};
+
+				await insertRules([hashRule]);
+
+				// when
+				const hashQuery = {
+					policyScope: { clientId: "hash-client" },
+					userScope: {
+						headersHash: "abc123def456789",
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundHashRules = await accessRulesReader.findRules(hashQuery);
+
+				// then
+				expect(foundHashRules).toEqual([hashRule]);
+			});
+
+			test("creates and finds rules with duration 'gt' operator", async () => {
+				// given
+				const slowRequestRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					headerXDurationMs: 500,
+					headerXDurationMsOperator: "gt" as const,
+					description: "Block slow requests",
+				};
+
+				await insertRules([slowRequestRule]);
+
+				// when - query with same rule pattern
+				const slowQuery = {
+					userScope: {
+						headerXDurationMs: 500,
+						headerXDurationMsOperator: "gt" as const,
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundSlowRules = await accessRulesReader.findRules(slowQuery);
+
+				// then
+				expect(foundSlowRules).toEqual([slowRequestRule]);
+			});
+
+			test("creates and finds rules with duration 'lt' operator", async () => {
+				// given
+				const fastRequestRule: AccessRule = {
+					type: AccessPolicyType.Restrict,
+					headerXDurationMs: 50,
+					headerXDurationMsOperator: "lt" as const,
+					description: "Challenge fast automated requests",
+				};
+
+				await insertRules([fastRequestRule]);
+
+				// when - query with same rule pattern
+				const fastQuery = {
+					userScope: {
+						headerXDurationMs: 50,
+						headerXDurationMsOperator: "lt" as const,
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundFastRules = await accessRulesReader.findRules(fastQuery);
+
+				// then
+				expect(foundFastRules).toEqual([fastRequestRule]);
+			});
+
+			test("creates and finds rules with duration 'eq' operator", async () => {
+				// given
+				const exactTimingRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					headerXDurationMs: 250,
+					headerXDurationMsOperator: "eq" as const,
+					description: "Block specific timing signature",
+				};
+
+				await insertRules([exactTimingRule]);
+
+				// when - query with same rule pattern
+				const exactQuery = {
+					userScope: {
+						headerXDurationMs: 250,
+						headerXDurationMsOperator: "eq" as const,
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundExactRules = await accessRulesReader.findRules(exactQuery);
+
+				// then
+				expect(foundExactRules).toEqual([exactTimingRule]);
+			});
+
+			test("creates and finds complex header rules combining multiple fields", async () => {
+				// given
+				const complexRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					clientId: "complex-client",
+					userId: "user123",
+					headerSecChUa: '"Chrome";v="119"',
+					headerAcceptLanguage: "en-US",
+					headerXDurationMs: 100,
+					headerXDurationMsOperator: "lt" as const,
+					ja4Hash: "ja4_abc123",
+				};
+
+				const partialRule: AccessRule = {
+					type: AccessPolicyType.Restrict,
+					headerSecChUa: '"Chrome";v="119"',
+					headerXDurationMs: 200,
+					headerXDurationMsOperator: "gt" as const,
+				};
+
+				await insertRules([complexRule, partialRule]);
+
+				// when - query matching complex rule exactly
+				const complexQuery = {
+					policyScope: { clientId: "complex-client" },
+					userScope: {
+						userId: "user123",
+						headerSecChUa: '"Chrome";v="119"',
+						headerAcceptLanguage: "en-US",
+						headerXDurationMs: 100,
+						headerXDurationMsOperator: "lt" as const,
+						ja4Hash: "ja4_abc123",
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundComplexRules = await accessRulesReader.findRules(complexQuery);
+
+				// then
+				expect(foundComplexRules).toEqual([complexRule]);
+			});
+
+			test("finds rules with greedy header matching", async () => {
+				// given
+				const chromeRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					headerSecChUa: '"Chrome";v="119"',
+				};
+
+				const languageRule: AccessRule = {
+					type: AccessPolicyType.Restrict,
+					headerAcceptLanguage: "fr-FR",
+				};
+
+				const durationRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					headerXDurationMs: 150,
+					headerXDurationMsOperator: "lt" as const,
+				};
+
+				await insertRules([chromeRule, languageRule, durationRule]);
+
+				// when - greedy query that should match multiple rules
+				const greedyQuery = {
+					userScope: {
+						headerSecChUa: '"Chrome";v="119"',
+						headerAcceptLanguage: "fr-FR",
+						headerXDurationMs: 150,
+						headerXDurationMsOperator: "lt" as const,
+					},
+					userScopeMatch: FilterScopeMatch.Greedy,
+				};
+
+				const foundRules = await accessRulesReader.findRules(greedyQuery);
+
+				// then - should find all three rules
+				expect(foundRules).toHaveLength(3);
+				expect(foundRules).toEqual(
+					expect.arrayContaining([chromeRule, languageRule, durationRule])
+				);
+			});
+
+			test("handles mixed header and traditional fields", async () => {
+				// given
+				const mixedRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					userId: "mixeduser",
+					numericIp: BigInt(167772161), // 10.0.0.1
+					headerAcceptLanguage: "de-DE",
+					headerXDurationMs: 300,
+					headerXDurationMsOperator: "gt" as const,
+				};
+
+				await insertRules([mixedRule]);
+
+				// when
+				const mixedQuery = {
+					userScope: {
+						userId: "mixeduser",
+						numericIp: BigInt(167772161),
+						headerAcceptLanguage: "de-DE",
+						headerXDurationMs: 300,
+						headerXDurationMsOperator: "gt" as const,
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundMixedRules = await accessRulesReader.findRules(mixedQuery);
+
+				// then
+				expect(foundMixedRules).toEqual([mixedRule]);
+			});
+
+			// ...existing code...
+
+			test("finds no rules when header values don't match", async () => {
+				// given
+				const specificRule: AccessRule = {
+					type: AccessPolicyType.Block,
+					headerSecChUa: '"Edge";v="118"',
+					headerXDurationMs: 100,
+					headerXDurationMsOperator: "eq" as const,
+				};
+
+				await insertRules([specificRule]);
+
+				// when - query with different header values
+				const mismatchQuery = {
+					userScope: {
+						headerSecChUa: '"Chrome";v="119"', // Different browser
+						headerXDurationMs: 200, // Different duration
+						headerXDurationMsOperator: "eq" as const,
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundMismatchRules = await accessRulesReader.findRules(mismatchQuery);
+
+				// then
+				expect(foundMismatchRules).toEqual([]);
+			});
+
+			test("handles rules with missing optional header fields", async () => {
+				// given
+				const minimalRule: AccessRule = {
+					type: AccessPolicyType.Restrict,
+					clientId: "minimal-client",
+					headerAcceptLanguage: "es-ES",
+					// No other header fields specified
+				};
+
+				await insertRules([minimalRule]);
+
+				// when - query with matching language but additional fields
+				const extendedQuery = {
+					policyScope: { clientId: "minimal-client" },
+					userScope: {
+						headerAcceptLanguage: "es-ES",
+						headerSecChUa: undefined, // Explicitly undefined
+						headerXDurationMs: undefined,
+					},
+					userScopeMatch: FilterScopeMatch.Exact,
+					policyScopeMatch: FilterScopeMatch.Exact,
+				};
+
+				const foundMinimalRules = await accessRulesReader.findRules(extendedQuery, true);
+
+				// then
+				expect(foundMinimalRules).toEqual([minimalRule]);
+			});
+		});
 	});
 
 	afterAll(async () => {

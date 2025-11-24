@@ -35,6 +35,17 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	headersHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	userAgentHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	// Individual header fields for precise rule targeting
+	headerAcceptLanguage: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerPriority: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerSecChUa: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerSecChUaMobile: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerSecChUaPlatform: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerXDurationMs: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true }, // Numeric for range queries
+	headerXDurationMsOperator: {
+		type: SCHEMA_FIELD_TYPE.TAG,
+		INDEXMISSING: true,
+	}, // Comparison operator
 } satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {

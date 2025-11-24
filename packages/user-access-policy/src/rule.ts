@@ -44,6 +44,14 @@ export type UserAttributes = {
 	ja4Hash?: string;
 	headersHash?: string;
 	userAgentHash?: string;
+	// Individual header fields for precise rule targeting
+	headerAcceptLanguage?: string;
+	headerPriority?: string;
+	headerSecChUa?: string;
+	headerSecChUaMobile?: string;
+	headerSecChUaPlatform?: string;
+	headerXDurationMs?: number; // Numeric for range queries (above/below average)
+	headerXDurationMsOperator?: 'gt' | 'lt' | 'eq'; // greater than, less than, or equal to
 };
 
 export type UserScope = UserAttributes & UserIp;

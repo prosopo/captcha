@@ -20,6 +20,7 @@ import {
 } from "#policy/rulesStorage.js";
 
 type QueryBuilder = (value: unknown, scope: UserIp) => string;
+type HeaderQueryBuilder = (value: unknown, scope: UserScope) => string;
 
 // #2 is a required option when the 'ismissing()' function is in the query body
 export const REDIS_QUERY_DIALECT = 2;
@@ -54,6 +55,28 @@ const userIpQueries: Record<keyof UserIp, QueryBuilder> = {
 		return value !== undefined
 			? `@numericIpMaskMax:[${value} +inf]`
 			: "ismissing(@numericIpMaskMax)";
+	},
+};
+
+// Numeric header queries for fields that support range operations
+const numericHeaderQueries: Record<string, HeaderQueryBuilder> = {
+	headerXDurationMs: (value, scope) => {
+		if (value === undefined) {
+			return "ismissing(@headerXDurationMs)";
+		}
+
+		const operator = scope.headerXDurationMsOperator;
+
+		// Build Redis range query based on operator
+		switch (operator) {
+			case 'gt':
+				return `@headerXDurationMs:[(${value} +inf]`; // Greater than (exclusive)
+			case 'lt':
+				return `@headerXDurationMs:[-inf (${value}]`; // Less than (exclusive)
+			case 'eq':
+			default:
+				return `@headerXDurationMs:[${value} ${value}]`; // Equal (inclusive range)
+		}
 	},
 };
 
@@ -119,8 +142,17 @@ const getUserScopeFieldQuery = (
 ): string => {
 	if (fieldName in userIpQueries) {
 		const queryBuilder = userIpQueries[fieldName as keyof UserIp];
-
 		return queryBuilder(fieldValue, fullScope);
+	}
+
+	if (fieldName in numericHeaderQueries) {
+		const queryBuilder = numericHeaderQueries[fieldName as string];
+		return queryBuilder(fieldValue, fullScope);
+	}
+
+	// Skip operator fields as they are handled by their corresponding numeric fields
+	if (fieldName === 'headerXDurationMsOperator') {
+		return '';
 	}
 
 	return undefined === fieldValue

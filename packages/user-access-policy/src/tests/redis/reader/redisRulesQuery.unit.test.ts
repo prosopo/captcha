@@ -149,4 +149,189 @@ describe("getRulesRedisQuery", () => {
 			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
 		);
 	});
+
+	describe("Header-based Rules", () => {
+		it("generates correct query for individual header fields", () => {
+			const filter = {
+				userScope: {
+					headerAcceptLanguage: "en-US",
+					headerSecChUa: '"Chrome";v="119"',
+					headerSecChUaMobile: "?0",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe(
+				"( @headerAcceptLanguage:{en-US} @headerSecChUa:{\"Chrome\";v=\"119\"} @headerSecChUaMobile:{?0} )",
+			);
+		});
+
+		it("generates correct query for composite headers hash", () => {
+			const filter = {
+				userScope: {
+					headersHash: "abc123def456789",
+					ja4Hash: "ja4hash123",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe(
+				"( @headersHash:{abc123def456789} @ja4Hash:{ja4hash123} )",
+			);
+		});
+
+		it("generates correct query for duration with 'gt' operator", () => {
+			const filter = {
+				userScope: {
+					headerXDurationMs: 500,
+					headerXDurationMsOperator: "gt",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe("( @headerXDurationMs:[(500 +inf] )");
+		});
+
+		it("generates correct query for duration with 'lt' operator", () => {
+			const filter = {
+				userScope: {
+					headerXDurationMs: 100,
+					headerXDurationMsOperator: "lt",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe("( @headerXDurationMs:[-inf (100] )");
+		});
+
+		it("generates correct query for duration with 'eq' operator", () => {
+			const filter = {
+				userScope: {
+					headerXDurationMs: 250,
+					headerXDurationMsOperator: "eq",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe("( @headerXDurationMs:[250 250] )");
+		});
+
+		it("generates correct query for duration without operator (defaults to eq)", () => {
+			const filter = {
+				userScope: {
+					headerXDurationMs: 150,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe("( @headerXDurationMs:[150 150] )");
+		});
+
+		it("handles missing duration fields correctly", () => {
+			const filter = {
+				userScope: {
+					headerXDurationMs: undefined,
+					headerAcceptLanguage: "en-US",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe(
+				"( ismissing(@headerXDurationMs) @headerAcceptLanguage:{en-US} )",
+			);
+		});
+
+		it("generates OR queries for greedy header matching", () => {
+			const filter = {
+				userScope: {
+					headerAcceptLanguage: "en-US",
+					headerSecChUa: '"Chrome";v="119"',
+					headerXDurationMs: 150,
+					headerXDurationMsOperator: "lt",
+				},
+				userScopeMatch: FilterScopeMatch.Greedy,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe(
+				"( @headerAcceptLanguage:{en-US} | @headerSecChUa:{\"Chrome\";v=\"119\"} | @headerXDurationMs:[-inf (150] )",
+			);
+		});
+
+		it("combines header fields with other user scope fields", () => {
+			const filter = {
+				userScope: {
+					userId: "user123",
+					ja4Hash: "ja4abc123",
+					headerAcceptLanguage: "fr-FR",
+					headerXDurationMs: 200,
+					headerXDurationMsOperator: "gt",
+					numericIp: BigInt(167772161), // 10.0.0.1
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			expect(query).toBe(
+				"( @userId:{user123} @ja4Hash:{ja4abc123} @headerAcceptLanguage:{fr-FR} @headerXDurationMs:[(200 +inf] ( @numericIp:[167772161 167772161] | ( @numericIpMaskMin:[-inf 167772161] @numericIpMaskMax:[167772161 +inf] ) ) )",
+			);
+		});
+
+		it("excludes operator field from query generation", () => {
+			const filter = {
+				userScope: {
+					headerXDurationMsOperator: "gt",
+					// Note: no headerXDurationMs value
+					headerAcceptLanguage: "en-US",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, false);
+
+			// Should only include headerAcceptLanguage, operator field should be skipped
+			expect(query).toBe("( @headerAcceptLanguage:{en-US} )");
+		});
+
+		it("handles all header fields with ismissing for exact match", () => {
+			const filter = {
+				userScope: {
+					headerAcceptLanguage: undefined,
+					headerPriority: undefined,
+					headerSecChUa: undefined,
+					headerSecChUaMobile: undefined,
+					headerSecChUaPlatform: undefined,
+					headerXDurationMs: undefined,
+					headersHash: "onlyhash123",
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			} as AccessRulesFilter;
+
+			const query = getRulesRedisQuery(filter, true);
+
+			expect(query).toContain("ismissing(@headerAcceptLanguage)");
+			expect(query).toContain("ismissing(@headerPriority)");
+			expect(query).toContain("ismissing(@headerSecChUa)");
+			expect(query).toContain("ismissing(@headerSecChUaMobile)");
+			expect(query).toContain("ismissing(@headerSecChUaPlatform)");
+			expect(query).toContain("ismissing(@headerXDurationMs)");
+			expect(query).toContain("@headersHash:{onlyhash123}");
+		});
+	});
 });
