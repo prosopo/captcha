@@ -47,6 +47,10 @@ const getDefaultEntropy = (): number => {
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 export const DEFAULT_ENTROPY = getDefaultEntropy();
 
+const getSessionIDPrefix = (host: string): string => {
+	return host.replace(".prosopo.io", "");
+};
+
 export enum FrictionlessReason {
 	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
 	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
@@ -120,7 +124,7 @@ export class FrictionlessManager extends CaptchaManager {
 		reason?: FrictionlessReason,
 	): Promise<Session> {
 		const sessionRecord: Session = {
-			sessionId: `${this.config.host}-${uuidv4()}`,
+			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),
 			token,
 			score,
