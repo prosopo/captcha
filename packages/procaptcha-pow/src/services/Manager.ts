@@ -277,6 +277,8 @@ export const Manager = (
 						!!frictionlessState?.behaviorCollector3,
 					);
 
+					let encryptedBehavioralData: string | undefined;
+
 					// Collect and encrypt behavioral data before submission
 					if (
 						frictionlessState?.encryptBehavioralData &&
@@ -321,7 +323,7 @@ export const Manager = (
 							);
 
 							console.log("[DEBUG] About to encrypt behavioral data");
-							const encryptedBehavioralData =
+							encryptedBehavioralData =
 								await frictionlessState.encryptBehavioralData(
 									stringifiedData,
 								);
@@ -353,6 +355,7 @@ export const Manager = (
 						solution,
 						userTimestampSignature.signature.toString(),
 						config.captchas.pow.verifiedTimeout,
+						encryptedBehavioralData,
 					);
 					if (verifiedSolution[ApiParams.verified]) {
 						updateState({

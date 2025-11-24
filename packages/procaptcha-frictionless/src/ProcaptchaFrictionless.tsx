@@ -171,6 +171,7 @@ export const ProcaptchaFrictionless = ({
 					behaviorCollector2: result.behaviorCollector2,
 					behaviorCollector3: result.behaviorCollector3,
 					deviceCapability: result.deviceCapability,
+					encryptBehavioralData: result.encryptBehavioralData,
 				};
 
 				if (result.captchaType === "image") {

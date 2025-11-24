@@ -104,6 +104,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		behavioralData?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -168,6 +169,62 @@ export class PowCaptchaManager extends CaptchaManager {
 			true,
 			userTimestampSignature,
 		);
+
+		// Process behavioral data if provided
+		if (behavioralData) {
+			try {
+				const { getBehavioralData } = await import(
+					"../detection/getBehavioralData.js"
+				);
+
+				// Get decryption keys: detector keys from DB first, then env var as fallback
+				const decryptKeys = [
+					// Process DB keys first, then env var key last as env key will likely be invalid
+					...(await this.getDetectorKeys()),
+					process.env.BOT_DECRYPTION_KEY,
+				];
+
+				const decryptedBehavior = await getBehavioralData(
+					behavioralData,
+					decryptKeys,
+					this.logger,
+				);
+
+				if (decryptedBehavior) {
+					const dappAccount = at(challengeSplit, 2);
+					// Log behavioral analytics
+					this.logger?.info(() => ({
+						msg: "Behavioral analysis completed",
+						data: {
+							userAccount,
+							dappAccount,
+							challenge,
+							mouseEvents: decryptedBehavior.collector1.length,
+							touchEvents: decryptedBehavior.collector2.length,
+							clickEvents: decryptedBehavior.collector3.length,
+							deviceCapability: decryptedBehavior.deviceCapability,
+							captchaResult: correct ? "passed" : "failed",
+						},
+					}));
+
+					// Optional: Store in database for future analysis
+					// await this.db.storeBehavioralData({
+					//     userAccount,
+					//     dappAccount,
+					//     challenge,
+					//     data: decryptedBehavior,
+					//     result: correct,
+					// });
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process behavioral data",
+					err: error,
+				}));
+				// Don't fail the captcha if behavioral analysis fails
+			}
+		}
+
 		return correct;
 	}
 
