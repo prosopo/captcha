@@ -149,6 +149,10 @@ export interface StoredCaptcha {
 	lastUpdatedTimestamp?: Date;
 	sessionId?: string;
 	coords?: [number, number][][];
+	mouseEvents?: Array<Record<string, unknown>>;
+	touchEvents?: Array<Record<string, unknown>>;
+	clickEvents?: Array<Record<string, unknown>>;
+	deviceCapability?: string;
 }
 
 export interface UserCommitment extends Commit, StoredCaptcha {
@@ -265,6 +269,10 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
+	mouseEvents: { type: [Object], required: false },
+	touchEvents: { type: [Object], required: false },
+	clickEvents: { type: [Object], required: false },
+	deviceCapability: { type: String, required: false },
 });
 
 // Set an index on the captchaId field, ascending

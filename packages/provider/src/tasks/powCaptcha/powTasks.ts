@@ -207,14 +207,13 @@ export class PowCaptchaManager extends CaptchaManager {
 						},
 					}));
 
-					// Optional: Store in database for future analysis
-					// await this.db.storeBehavioralData({
-					//     userAccount,
-					//     dappAccount,
-					//     challenge,
-					//     data: decryptedBehavior,
-					//     result: correct,
-					// });
+					// Store behavioral data in database for future analysis
+					await this.db.updatePowCaptchaRecord(challenge, {
+						mouseEvents: decryptedBehavior.collector1,
+						touchEvents: decryptedBehavior.collector2,
+						clickEvents: decryptedBehavior.collector3,
+						deviceCapability: decryptedBehavior.deviceCapability,
+					});
 				}
 			} catch (error) {
 				this.logger?.error(() => ({

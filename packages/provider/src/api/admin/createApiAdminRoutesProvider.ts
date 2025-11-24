@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiRoutesProvider } from "@prosopo/api-route";
+import type { ApiRoutesProvider } from "../../../../cli/api-route/src/index.js";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { Tasks } from "../../tasks/index.js";
 import { ApiAdminRoutesProvider } from "./apiAdminRoutesProvider.js";

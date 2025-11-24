@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiEndpointResponseStatus } from "@prosopo/api-route";
+import { ApiEndpointResponseStatus } from "../../../../../../cli/api-route/src/index.js";
 import type { Logger } from "@prosopo/common";
 import {
 	CaptchaType,
