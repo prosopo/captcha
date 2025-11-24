@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-pow
 
+## 2.8.30
+### Patch Changes
+
+- 141e462: Capture correct event
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+  - @prosopo/procaptcha-common@2.9.22
+
 ## 2.8.29
 ### Patch Changes
 

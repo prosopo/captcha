@@ -1,5 +1,14 @@
 # @prosopo/procaptcha
 
+## 2.9.24
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+  - @prosopo/datasets@3.0.52
+  - @prosopo/procaptcha-common@2.9.22
+
 ## 2.9.23
 ### Patch Changes
 

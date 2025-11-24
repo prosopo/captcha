@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 3.7.2
+### Patch Changes
+
+- 141e462: Capture correct event
+
 ## 3.7.1
 ### Patch Changes
 

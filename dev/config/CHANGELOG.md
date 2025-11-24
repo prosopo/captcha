@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.2.0
+### Minor Changes
+
+- 30a2102: Remove problematic getDependencies step
+
 ## 3.1.27
 ### Patch Changes
 
