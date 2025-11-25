@@ -113,7 +113,7 @@ jobs:
           EXIT_CODE="$(docker wait "$CONTAINER" || echo "timeout")"
           
           # Capture logs
-          docker logs "$CONTAINER" >& provider.log 2>&1
+          docker logs "$CONTAINER" > provider.log 2>&1
           cat provider.log
           
           # Check if container exited successfully

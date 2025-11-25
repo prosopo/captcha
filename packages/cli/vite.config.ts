@@ -41,12 +41,14 @@ export default defineConfig(async ({ command, mode }) => {
 		mode,
 	);
 	return defineConfig({
-		external: [
-			...(backendConfig.ssr?.external
-				? (backendConfig.ssr.external as string[])
-				: []),
-			"kerberos",
-		],
+		ssr: {
+			external: [
+				...(backendConfig.ssr?.external
+					? (backendConfig.ssr.external as string[])
+					: []),
+				"kerberos",
+			] as string[],
+		},
 		define: {
 			...backendConfig.define,
 			...(process.env.PROSOPO_MONGO_EVENTS_URI && {
