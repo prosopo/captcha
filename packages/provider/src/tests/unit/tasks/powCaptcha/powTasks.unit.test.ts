@@ -178,6 +178,7 @@ describe("PowCaptchaManager", () => {
 				userSignature,
 				ipAddress,
 				headers,
+				undefined, // salt (optional)
 			];
 
 			const result = await powCaptchaManager.verifyPowCaptchaSolution(
@@ -228,6 +229,7 @@ describe("PowCaptchaManager", () => {
 				false,
 				true,
 				userSignature,
+				undefined, // coords (optional)
 			];
 
 			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
@@ -281,6 +283,7 @@ describe("PowCaptchaManager", () => {
 					timestampSignature,
 					ipAddress,
 					headers,
+					undefined, // salt (optional)
 				),
 			).toBe(false);
 

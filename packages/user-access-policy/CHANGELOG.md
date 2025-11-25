@@ -1,5 +1,43 @@
 # @prosopo/user-access-policy
 
+## 3.5.35
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+
+## 3.5.34
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+
+## 3.5.33
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/api@3.1.38
+  - @prosopo/common@3.1.27
+  - @prosopo/api-route@2.6.35
+  - @prosopo/redis-client@1.0.12
+
+## 3.5.32
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api@3.1.37
+  - @prosopo/api-route@2.6.34
+  - @prosopo/common@3.1.26
+  - @prosopo/redis-client@1.0.11
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+
 ## 3.5.31
 ### Patch Changes
 

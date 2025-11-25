@@ -194,10 +194,6 @@ describe("ClientTaskManager", () => {
 									type: ContextType.Default,
 									threshold: 0.7,
 								},
-								[ContextType.Webview]: {
-									type: ContextType.Webview,
-									threshold: 0.7,
-								},
 							},
 						},
 					},
@@ -209,10 +205,6 @@ describe("ClientTaskManager", () => {
 						contextAware: {
 							enabled: true,
 							contexts: {
-								[ContextType.Default]: {
-									type: ContextType.Default,
-									threshold: 0.7,
-								},
 								[ContextType.Webview]: {
 									type: ContextType.Webview,
 									threshold: 0.7,
@@ -729,16 +721,6 @@ describe("ClientTaskManager", () => {
 			// Should be called for both Default and Webview contexts for each client
 			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
 				"mockClientRecord1",
-				ContextType.Default,
-				"11111111",
-			);
-			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
-				"mockClientRecord1",
-				ContextType.Webview,
-				"11111111",
-			);
-			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
-				"mockClientRecord2",
 				ContextType.Default,
 				"11111111",
 			);

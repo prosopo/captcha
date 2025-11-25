@@ -1,5 +1,10 @@
 # @prosopo/gh-actions
 
+## 2.6.28
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 2.6.27
 ### Patch Changes
 

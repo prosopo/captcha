@@ -15,6 +15,7 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
+	ContextType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 } from "@prosopo/types";
 import type { ScoreComponents } from "@prosopo/types-database";
@@ -287,6 +288,7 @@ export default (
 						userId,
 					},
 				}));
+
 				return res.json(
 					await tasks.frictionlessManager.sendImageCaptcha({
 						solvedImagesCount: timestampDecayFunction(
@@ -301,50 +303,70 @@ export default (
 
 			// Check the context
 			if (clientRecord.settings.contextAware?.enabled) {
-				// Determine the context type based on the request
-				const contextType = determineContextType(webView);
+				// Determine available contexts
+				const contexts = clientRecord.settings.contextAware?.contexts || {};
+				const hasDefault = contexts[ContextType.Default] !== undefined;
+				const hasWebview = contexts[ContextType.Webview] !== undefined;
 
-				// Get context-specific entropy
-				const clientEntropy =
-					await tasks.frictionlessManager.getClientContextEntropy(
-						clientRecord.account,
-						contextType,
-					);
+				// Choose contextType according to rules:
+				// - if both exist, use determineContextType(webView)
+				// - if only default exists, use Default
+				// - if only webview exists, use Webview
+				// - if neither, skip context-aware validation
+				let contextType: ContextType | undefined;
+				if (hasDefault && hasWebview) {
+					contextType = determineContextType(webView);
+				} else if (hasDefault) {
+					contextType = ContextType.Default;
+				} else if (hasWebview) {
+					contextType = ContextType.Webview;
+				} else {
+					contextType = undefined;
+				}
 
-				if (clientEntropy) {
-					if (!decryptedHeadHash) {
-						tasks.logger.info(() => ({
-							msg: "No decryptedHeadHash in session for context aware client",
-						}));
-						return next(
-							new ProsopoApiError("API.BAD_REQUEST", {
-								context: {
-									code: 400,
-									siteKey: dapp,
-									user,
-								},
-								i18n: req.i18n,
-								logger: req.logger,
-							}),
+				if (contextType) {
+					// Get context-specific entropy
+					const clientEntropy =
+						await tasks.frictionlessManager.getClientContextEntropy(
+							clientRecord.account,
+							contextType,
 						);
-					}
 
-					// Get the threshold for this context
-					const threshold = getContextThreshold(
-						clientRecord.settings,
-						contextType,
-					);
+					if (clientEntropy) {
+						if (!decryptedHeadHash) {
+							tasks.logger.info(() => ({
+								msg: "No decryptedHeadHash in session for context aware client",
+							}));
+							return next(
+								new ProsopoApiError("API.BAD_REQUEST", {
+									context: {
+										code: 400,
+										siteKey: dapp,
+										user,
+									},
+									i18n: req.i18n,
+									logger: req.logger,
+								}),
+							);
+						}
 
-					const sim = compareBinaryStrings(decryptedHeadHash, clientEntropy);
-					const isValidContext = sim >= threshold;
-					if (!isValidContext) {
-						return res.json(
-							await tasks.frictionlessManager.sendImageCaptcha({
-								solvedImagesCount: getRoundsFromSimScore(sim),
-								userSitekeyIpHash,
-								reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
-							}),
+						// Get the threshold for this context
+						const threshold = getContextThreshold(
+							clientRecord.settings,
+							contextType,
 						);
+
+						const sim = compareBinaryStrings(decryptedHeadHash, clientEntropy);
+						const isValidContext = sim >= threshold;
+						if (!isValidContext) {
+							return res.json(
+								await tasks.frictionlessManager.sendImageCaptcha({
+									solvedImagesCount: getRoundsFromSimScore(sim),
+									userSitekeyIpHash,
+									reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
+								}),
+							);
+						}
 					}
 				}
 			}

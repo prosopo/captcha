@@ -54,4 +54,5 @@ export enum ApiParams {
 	enabled = "enabled",
 	headHash = "headHash",
 	behavioralData = "behavioralData",
+	salt = "salt",
 }

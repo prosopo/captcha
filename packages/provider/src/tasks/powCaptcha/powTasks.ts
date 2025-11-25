@@ -28,7 +28,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { at, verifyRecency } from "@prosopo/util";
+import { at, extractData, verifyRecency } from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -105,6 +105,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		behavioralData?: string,
+		salt?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -138,6 +139,24 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
+		// Extract coordinates from salt if provided
+		let coords: [number, number][][] | undefined;
+		if (salt) {
+			try {
+				const extractedData = extractData(salt);
+				// Convert extracted data to coordinate pairs
+				if (extractedData.length >= 2) {
+					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to extract coordinates from salt",
+					error,
+					salt,
+				}));
+			}
+		}
+
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecordResult(
 				challenge,
@@ -148,6 +167,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				false, //serverchecked
 				true, // usersubmitted
 				userTimestampSignature,
+				coords,
 			);
 			return false;
 		}
@@ -168,6 +188,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			false,
 			true,
 			userTimestampSignature,
+			coords,
 		);
 
 		// Process behavioral data if provided

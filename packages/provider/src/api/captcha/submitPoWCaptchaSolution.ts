@@ -66,6 +66,7 @@ export default (env: ProviderEnvironment) =>
 			dapp,
 			user,
 			behavioralData,
+			salt
 		} = parsed;
 
 		validateSiteKey(dapp);
@@ -93,6 +94,7 @@ export default (env: ProviderEnvironment) =>
 				getIPAddress(req.ip || ""),
 				flatten(req.headers),
 				behavioralData,
+				salt,
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);

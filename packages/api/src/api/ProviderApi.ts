@@ -157,6 +157,7 @@ export default class ProviderApi
 		userTimestampSignature: string,
 		timeout?: number,
 		behavioralData?: string,
+		salt?: string,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -174,6 +175,7 @@ export default class ProviderApi
 				},
 			},
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(salt && { [ApiParams.salt]: salt }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {

@@ -1,5 +1,10 @@
 # @prosopo/http-blackhole
 
+## 1.0.25
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 1.0.24
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/util",
-	"version": "3.2.3",
+	"version": "3.2.4",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -41,7 +41,7 @@
 		"seedrandom": "3.0.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.25",
+		"@prosopo/config": "3.2.0",
 		"@types/lodash": "4.17.7",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
