@@ -31,7 +31,7 @@
 		}
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.0",
+		"@prosopo/config": "3.2.1",
 		"@angular-builders/custom-webpack": "^20.0.0",
 		"@angular-devkit/build-angular": "^20.3.8",
 		"@angular/cli": "^20.3.8",

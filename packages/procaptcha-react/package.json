@@ -40,7 +40,7 @@
 		"react-dom": "18.3.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.0",
+		"@prosopo/config": "3.2.1",
 		"@emotion/react": "11.11.1",
 		"@types/node": "22.10.2",
 		"@types/react-dom": "18.3.1",

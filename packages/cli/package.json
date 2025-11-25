@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cli",
-	"version": "3.5.11",
+	"version": "3.5.12",
 	"description": "CLI for Prosopo Provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -52,7 +52,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.0",
+		"@prosopo/config": "3.2.1",
 		"@polkadot-api/substrate-client": "0.1.4",
 		"@types/cors": "2.8.17",
 		"@types/node": "22.10.2",
