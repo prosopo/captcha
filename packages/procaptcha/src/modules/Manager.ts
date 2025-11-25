@@ -342,9 +342,14 @@ export function Manager(
 							behavioralData.collector3.length,
 						);
 
-						const stringifiedData = JSON.stringify(behavioralData);
+						// Pack the behavioral data before stringifying
+						const dataToEncrypt = frictionlessState.packBehavioralData
+							? frictionlessState.packBehavioralData(behavioralData)
+							: behavioralData;
+
+						const stringifiedData = JSON.stringify(dataToEncrypt);
 						console.log(
-							"[DEBUG] Stringified data length:",
+							"[DEBUG] Stringified data length (after packing):",
 							stringifiedData.length,
 						);
 

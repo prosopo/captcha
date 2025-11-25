@@ -88,6 +88,17 @@ const customDetectBot: BotDetectionFunction = async (
 		};
 		hasTouchSupport?: string;
 		encryptBehavioralData?: (data: string) => Promise<string>;
+		packBehavioralData?: (data: {
+			collector1: Array<Record<string, unknown>>;
+			collector2: Array<Record<string, unknown>>;
+			collector3: Array<Record<string, unknown>>;
+			deviceCapability: string;
+		}) => {
+			c1: unknown[];
+			c2: unknown[];
+			c3: unknown[];
+			d: string;
+		};
 	};
 
 	console.log("[DEBUG] Detection result from detector:", detectionResult);
@@ -158,6 +169,7 @@ const customDetectBot: BotDetectionFunction = async (
 		behaviorCollector3: detectionResult.clickTracker,
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
+		packBehavioralData: detectionResult.packBehavioralData,
 	};
 };
 
