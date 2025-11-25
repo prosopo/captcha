@@ -1,5 +1,13 @@
 # @prosopo/types-env
 
+## 2.7.56
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/keyring@2.8.43
+  - @prosopo/types-database@4.1.2
+
 ## 2.7.55
 ### Patch Changes
 
