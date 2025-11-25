@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.5.12
+### Patch Changes
+
+- f4545dd: Exclude kerberos and change workflow to check for broken imports in provider image
+
 ## 3.5.11
 ### Patch Changes
 

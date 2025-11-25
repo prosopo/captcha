@@ -21,7 +21,7 @@
 		"@prosopo/util": "3.2.4"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.0",
+		"@prosopo/config": "3.2.1",
 		"@cypress/xpath": "2.0.3",
 		"@polkadot/util": "13.5.7",
 		"@prosopo/common": "3.1.27",

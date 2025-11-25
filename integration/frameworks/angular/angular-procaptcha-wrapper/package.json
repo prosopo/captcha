@@ -21,7 +21,7 @@
 		"@angular/core": "^20.3.9"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.0",
+		"@prosopo/config": "3.2.1",
 		"@angular/compiler-cli": "20.3.9",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
