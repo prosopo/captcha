@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.3.22
+### Patch Changes
+
+- ea5f1f8: Fix detectors
+
 ## 3.3.21
 ### Patch Changes
 

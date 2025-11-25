@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 3.14.3
+### Patch Changes
+
+- ea5f1f8: Fix detectors
+
 ## 3.14.2
 ### Patch Changes
 
