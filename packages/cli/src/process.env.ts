@@ -15,16 +15,6 @@
 import { ProsopoEnvError } from "@prosopo/common";
 import type { KeypairType } from "@prosopo/util-crypto";
 
-export function getSs58Format(): number {
-	return Number.parseInt(process.env.SS58_FORMAT || "") || 42;
-}
-
-export function getPairType(): KeypairType {
-	return (
-		(process.env.PROSOPO_PAIR_TYPE as KeypairType) || ("sr25519" as KeypairType)
-	);
-}
-
 export function getAddress(who?: string): string | undefined {
 	if (!who) {
 		who = "PROVIDER";
