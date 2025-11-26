@@ -1,5 +1,10 @@
 # @prosopo/database
 
+## 3.6.3
+### Patch Changes
+
+- 9ab5f11: Remove ts-ignore for package bump
+
 ## 3.6.2
 ### Patch Changes
 
