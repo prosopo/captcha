@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RandomProvider, Account } from "@prosopo/types";
+import type { Account, RandomProvider } from "@prosopo/types";
 
 export function detect(): Promise<{
 	token: string;
 	encryptHeadHash: string;
 	provider: RandomProvider;
-	userAccount: Account
+	userAccount: Account;
 }>;
 //# sourceMappingURL=index.d.ts.map

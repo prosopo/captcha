@@ -57,7 +57,6 @@ const customDetectBot: BotDetectionFunction = async (
 ): Promise<BotDetectionFunctionResult> => {
 	const ext = new (await ExtensionLoader(config.web2))();
 
-	console.time("Detection Time");
 	const detect = await DetectorLoader();
 	const detectionResult = (await detect(
 		config.defaultEnvironment,
@@ -65,7 +64,12 @@ const customDetectBot: BotDetectionFunction = async (
 		container,
 		restartFn,
 		() => ext.getAccount(config),
-	)) as { token: string; provider?: RandomProvider; encryptHeadHash: string, userAccount: Account };
+	)) as {
+		token: string;
+		provider?: RandomProvider;
+		encryptHeadHash: string;
+		userAccount: Account;
+	};
 
 	const userAccount = detectionResult.userAccount;
 
@@ -84,7 +88,6 @@ const customDetectBot: BotDetectionFunction = async (
 		provider.provider.url,
 		config.account.address,
 	);
-	console.timeEnd("Detection Time");
 
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(

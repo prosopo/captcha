@@ -21,10 +21,10 @@ export default defineConfig({
 		host: true,
 		cors: true,
 		watch: {
-		// Ensure the dev server watches the `dist/bundle` public directory so
-		// changes there trigger a full reload.
-		ignored: ['**/node_modules/**', '**/.git/**'],
-	},
+			// Ensure the dev server watches the `dist/bundle` public directory so
+			// changes there trigger a full reload.
+			ignored: ["**/node_modules/**", "**/.git/**"],
+		},
 	},
 	// Change the default public directory if needed
 	publicDir: "dist/bundle", // assets in the "assets" folder at the project root will be served
