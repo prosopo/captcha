@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.8.26",
+	"version": "2.8.27",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -31,7 +31,7 @@
 	"dependencies": {
 		"@prosopo/api": "3.1.40",
 		"@prosopo/common": "3.1.27",
-		"@prosopo/detector": "3.3.22",
+		"@prosopo/detector": "3.3.23",
 		"@prosopo/load-balancer": "2.8.16",
 		"@prosopo/locale": "3.1.27",
 		"@prosopo/procaptcha-common": "2.9.22",

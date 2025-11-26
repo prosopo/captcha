@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.3.23
+### Patch Changes
+
+- caf53e2: Async user creation
+
 ## 3.3.22
 ### Patch Changes
 
