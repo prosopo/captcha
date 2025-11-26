@@ -1,5 +1,12 @@
 # @prosopo/scripts
 
+## 3.1.39
+### Patch Changes
+
+  - @prosopo/env@3.2.32
+  - @prosopo/provider@3.14.4
+  - @prosopo/cli@3.5.14
+
 ## 3.1.38
 ### Patch Changes
 
