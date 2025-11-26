@@ -1324,6 +1324,7 @@ export class ProviderDatabase
 			});
 		}
 
+		// @ts-ignore
 		const filter: Pick<PendingCaptchaRequest, [ApiParams.requestHash]> = {
 			[ApiParams.requestHash]: requestHash,
 		};
