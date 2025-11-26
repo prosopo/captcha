@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cli",
-	"version": "3.5.14",
+	"version": "3.5.15",
 	"description": "CLI for Prosopo Provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -42,7 +42,6 @@
 		"@prosopo/types": "3.7.2",
 		"@prosopo/user-access-policy": "3.5.35",
 		"@prosopo/util": "3.2.4",
-		"@prosopo/util-crypto": "13.5.28",
 		"@prosopo/workspace": "3.1.19",
 		"cors": "2.8.5",
 		"cron-parser": "4.9.0",

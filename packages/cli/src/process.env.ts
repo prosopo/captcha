@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { ProsopoEnvError } from "@prosopo/common";
-import type { KeypairType } from "@prosopo/util-crypto";
 
 export function getAddress(who?: string): string | undefined {
 	if (!who) {

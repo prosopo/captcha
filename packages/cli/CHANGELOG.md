@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.5.15
+### Patch Changes
+
+- 7a1f3a0: Remove used fns
+
 ## 3.5.14
 ### Patch Changes
 
