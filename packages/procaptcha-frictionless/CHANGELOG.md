@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.27
+### Patch Changes
+
+- caf53e2: Async user creation
+- Updated dependencies [caf53e2]
+  - @prosopo/detector@3.3.23
+
 ## 2.8.26
 ### Patch Changes
 
