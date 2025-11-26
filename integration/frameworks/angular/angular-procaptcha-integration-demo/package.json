@@ -15,7 +15,7 @@
 		"dev": "npm run start"
 	},
 	"dependencies": {
-		"@angular/common": "^20.3.9",
+		"@angular/common": "^20.3.14",
 		"@angular/core": "^20.3.9",
 		"@angular/platform-browser": "^20.3.9",
 		"@angular/router": "^20.3.9",
