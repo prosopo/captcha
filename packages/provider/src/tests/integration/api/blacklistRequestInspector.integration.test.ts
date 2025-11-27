@@ -569,7 +569,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		});
 
 		it("should return a rule when a coords rule exists and the user matches the coords", async () => {
-			const coords1 = '[[[100,200]]]';
+			const coords1 = "[[[100,200]]]";
 			const accessRule = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
@@ -594,8 +594,8 @@ describe("blacklistRequestInspector Integration Tests", () => {
 		});
 
 		it("should not return a rule when coords does not match", async () => {
-			const coords1 = '[[[100,200]]]';
-			const coords2 = '[[[300,400]]]';
+			const coords1 = "[[[100,200]]]";
+			const coords2 = "[[[300,400]]]";
 			const accessRule = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
@@ -620,7 +620,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 		it("should return a rule when combined headHash and coords match", async () => {
 			const headHash1 = "abc123def456";
-			const coords1 = '[[[100,200]]]';
+			const coords1 = "[[[100,200]]]";
 			const accessRule = accessRuleInput.parse({
 				type: AccessPolicyType.Restrict,
 				clientId: siteKey,
@@ -649,7 +649,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 
 		it("should return a rule when headHash, coords, and IP all match", async () => {
 			const headHash1 = "abc123def456";
-			const coords1 = '[[[100,200]]]';
+			const coords1 = "[[[100,200]]]";
 			const numericIp = BigInt(16843009);
 			const accessRule = accessRuleInput.parse({
 				type: AccessPolicyType.Block,

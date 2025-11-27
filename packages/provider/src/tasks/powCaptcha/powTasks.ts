@@ -33,11 +33,11 @@ import {
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
 import { at, extractData, verifyRecency } from "@prosopo/util";
+import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
-import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
