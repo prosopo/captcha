@@ -50,7 +50,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) ismissing(@headHash) ismissing(@coords) )",
 		);
 	});
 
@@ -126,7 +126,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) )",
 		);
 	});
 
@@ -146,7 +146,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
+			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) )",
 		);
 	});
 
@@ -163,7 +163,7 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toBe("( @headHash:{abc123def456} )");
 	});
 
-	it("includes coords in query when provided", () => {
+	it("includes coords in query when provided with escaped special characters", () => {
 		const filter = {
 			userScope: {
 				coords: "[[[100,200]]]",
@@ -173,7 +173,8 @@ describe("getRulesRedisQuery", () => {
 
 		const query = getRulesRedisQuery(filter, false);
 
-		expect(query).toContain("@coords:");
+		// Special characters like [, ], and , should be escaped
+		expect(query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
 	});
 
 	it("includes both headHash and coords when both provided", () => {
@@ -188,7 +189,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, false);
 
 		expect(query).toContain("@headHash:{abc123def456}");
-		expect(query).toContain("@coords:");
+		expect(query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
 	});
 
 	it("puts ismissing(headHash) and ismissing(coords) when not provided and matchingFieldsOnly is true", () => {

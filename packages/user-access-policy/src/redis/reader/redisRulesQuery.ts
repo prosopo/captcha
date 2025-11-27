@@ -21,6 +21,15 @@ import {
 
 type QueryBuilder = (value: unknown, scope: UserIp) => string;
 
+/**
+ * Escapes special characters for Redis TAG field queries.
+ * Redis TAG fields treat these characters as special and they must be escaped with a backslash.
+ */
+const escapeTagValue = (value: string): string => {
+	// Characters that need escaping in Redis TAG queries
+	return value.replace(/([,.<>{}\[\]"':;!@#$%^&*()\-+=~|/\\])/g, "\\$1");
+};
+
 // #2 is a required option when the 'ismissing()' function is in the query body
 export const REDIS_QUERY_DIALECT = 2;
 
@@ -123,9 +132,13 @@ const getUserScopeFieldQuery = (
 		return queryBuilder(fieldValue, fullScope);
 	}
 
-	return undefined === fieldValue
-		? `ismissing(@${fieldName})`
-		: `@${fieldName}:{${fieldValue}}`;
+	if (undefined === fieldValue) {
+		return `ismissing(@${fieldName})`;
+	}
+
+	// Escape special characters for TAG field queries
+	const escapedValue = escapeTagValue(String(fieldValue));
+	return `@${fieldName}:{${escapedValue}}`;
 };
 
 const getPolicyScopeQuery = (
@@ -135,9 +148,10 @@ const getPolicyScopeQuery = (
 	const clientId = policyScope?.clientId;
 
 	if ("string" === typeof clientId) {
+		const escapedClientId = escapeTagValue(clientId);
 		return FilterScopeMatch.Exact === scopeMatch
-			? `@clientId:{${clientId}}`
-			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
+			? `@clientId:{${escapedClientId}}`
+			: `( @clientId:{${escapedClientId}} | ismissing(@clientId) )`;
 	}
 
 	return FilterScopeMatch.Exact === scopeMatch ? "ismissing(@clientId)" : "";
@@ -161,7 +175,8 @@ export const getRulesRedisQuery = (
 	const queryParts = [];
 
 	if (filter.groupId) {
-		queryParts.push(`@groupId:{${filter.groupId}}`);
+		const escapedGroupId = escapeTagValue(filter.groupId);
+		queryParts.push(`@groupId:{${escapedGroupId}}`);
 	}
 
 	const policyScopeQuery = getPolicyScopeQuery(
