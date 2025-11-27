@@ -149,4 +149,78 @@ describe("getRulesRedisQuery", () => {
 			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) )",
 		);
 	});
+
+	it("includes headHash in query when provided", () => {
+		const filter = {
+			userScope: {
+				headHash: "abc123def456",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("( @headHash:{abc123def456} )");
+	});
+
+	it("includes coords in query when provided", () => {
+		const filter = {
+			userScope: {
+				coords: "[[[100,200]]]",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toContain("@coords:");
+	});
+
+	it("includes both headHash and coords when both provided", () => {
+		const filter = {
+			userScope: {
+				headHash: "abc123def456",
+				coords: "[[[100,200]]]",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toContain("@headHash:{abc123def456}");
+		expect(query).toContain("@coords:");
+	});
+
+	it("puts ismissing(headHash) and ismissing(coords) when not provided and matchingFieldsOnly is true", () => {
+		const filter = {
+			userScope: {
+				ja4Hash: "ja4Hash",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, true);
+
+		expect(query).toContain("ismissing(@headHash)");
+		expect(query).toContain("ismissing(@coords)");
+	});
+
+	it("combines headHash with other fields correctly in exact match", () => {
+		const filter = {
+			userScope: {
+				numericIp: BigInt(100),
+				ja4Hash: "ja4Hash",
+				headHash: "abc123def456",
+				userAgentHash: undefined,
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toContain("@numericIp:[100 100]");
+		expect(query).toContain("@ja4Hash:{ja4Hash}");
+		expect(query).toContain("@headHash:{abc123def456}");
+		expect(query).toContain("ismissing(@userAgentHash)");
+	});
 });

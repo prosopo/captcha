@@ -35,6 +35,8 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	ja4Hash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	headersHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	userAgentHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	coords: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {

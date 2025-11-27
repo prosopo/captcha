@@ -517,5 +517,165 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			);
 			expect(result.length).toBe(0);
 		});
+
+		it("should return a rule when a headHash rule exists and the user matches the headHash", async () => {
+			const headHash1 = "abc123def456";
+			const accessRule = accessRuleInput.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				headHash: headHash1,
+			});
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					headHash: headHash1,
+				},
+				siteKey,
+			);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.headHash).toBe(headHash1);
+		});
+
+		it("should not return a rule when headHash does not match", async () => {
+			const headHash1 = "abc123def456";
+			const headHash2 = "xyz789ghi012";
+			const accessRule = accessRuleInput.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				headHash: headHash1,
+			});
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					headHash: headHash2,
+				},
+				siteKey,
+			);
+
+			expect(result).toHaveLength(0);
+		});
+
+		it("should return a rule when a coords rule exists and the user matches the coords", async () => {
+			const coords1 = '[[[100,200]]]';
+			const accessRule = accessRuleInput.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				coords: coords1,
+			});
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					coords: coords1,
+				},
+				siteKey,
+			);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.coords).toBe(coords1);
+		});
+
+		it("should not return a rule when coords does not match", async () => {
+			const coords1 = '[[[100,200]]]';
+			const coords2 = '[[[300,400]]]';
+			const accessRule = accessRuleInput.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				coords: coords1,
+			});
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					coords: coords2,
+				},
+				siteKey,
+			);
+
+			expect(result).toHaveLength(0);
+		});
+
+		it("should return a rule when combined headHash and coords match", async () => {
+			const headHash1 = "abc123def456";
+			const coords1 = '[[[100,200]]]';
+			const accessRule = accessRuleInput.parse({
+				type: AccessPolicyType.Restrict,
+				clientId: siteKey,
+				headHash: headHash1,
+				coords: coords1,
+			});
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					headHash: headHash1,
+					coords: coords1,
+				},
+				siteKey,
+			);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.headHash).toBe(headHash1);
+			expect(result[0]?.coords).toBe(coords1);
+		});
+
+		it("should return a rule when headHash, coords, and IP all match", async () => {
+			const headHash1 = "abc123def456";
+			const coords1 = '[[[100,200]]]';
+			const numericIp = BigInt(16843009);
+			const accessRule = accessRuleInput.parse({
+				type: AccessPolicyType.Block,
+				clientId: siteKey,
+				headHash: headHash1,
+				coords: coords1,
+				numericIp: numericIp,
+			});
+			await accessRulesStorage.insertRules([
+				{
+					rule: accessRule,
+				},
+			]);
+
+			const result = await getPrioritisedAccessRule(
+				accessRulesStorage,
+				{
+					headHash: headHash1,
+					coords: coords1,
+					ip: getIPAddressFromBigInt(numericIp).address,
+				},
+				siteKey,
+			);
+
+			expect(result).toHaveLength(1);
+			expect(result[0]?.type).toBe(AccessPolicyType.Block);
+		});
 	});
 });

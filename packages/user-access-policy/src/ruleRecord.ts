@@ -27,6 +27,8 @@ export const userAttributesRecordFields = [
 	"ja4Hash",
 	"headersHash",
 	"userAgent",
+	"headHash",
+	"coords",
 ] as const satisfies (keyof UserAttributesRecord)[];
 
 export type UserIpRecord = {

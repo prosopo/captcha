@@ -28,11 +28,16 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import {
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
 import { at, extractData, verifyRecency } from "@prosopo/util";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
+import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
@@ -95,6 +100,8 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param salt
+	 * @param userAccessRulesStorage - storage for querying user access policies
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
@@ -105,6 +112,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		salt?: string,
+		userAccessRulesStorage?: AccessRulesStorage,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -152,6 +160,76 @@ export class PowCaptchaManager extends CaptchaManager {
 					msg: "Failed to extract coordinates from salt",
 					error,
 					salt,
+				}));
+			}
+		}
+
+		// Check user access policies for hard blocks
+		// Only interested in Block policies, ignore image/frictionless policies
+		if (userAccessRulesStorage) {
+			try {
+				// Get headHash from session record if available
+				let headHash: string | undefined;
+				if (challengeRecord.sessionId) {
+					const sessionRecord = await this.db.getSessionRecordBySessionId(
+						challengeRecord.sessionId,
+					);
+					headHash = sessionRecord?.decryptedHeadHash;
+				}
+
+				// Serialize coords to string for querying
+				const coordsString = coords ? JSON.stringify(coords) : undefined;
+
+				const ipAddressRecord = getIpAddressFromComposite(
+					challengeRecord.ipAddress,
+				);
+
+				const userScope = getRequestUserScope(
+					headers,
+					challengeRecord.ja4,
+					ipAddressRecord.address,
+					userAccount,
+					headHash,
+					coordsString,
+				);
+
+				const accessPolicies = await this.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					challengeRecord.dappAccount,
+					userScope,
+				);
+
+				const blockPolicy = accessPolicies.find(
+					(policy) =>
+						policy.type === AccessPolicyType.Block && !policy.captchaType,
+				);
+
+				if (blockPolicy) {
+					this.logger.info(() => ({
+						msg: "User blocked by access policy in PoW verification",
+						data: {
+							challenge,
+							userAccount,
+							policy: blockPolicy,
+						},
+					}));
+					await this.db.updatePowCaptchaRecordResult(
+						challenge,
+						{
+							status: CaptchaStatus.disapproved,
+							reason: "CAPTCHA.USER_BLOCKED",
+						},
+						false,
+						true,
+						userTimestampSignature,
+						coords,
+					);
+					return false;
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check user access policies in PoW verification",
+					error,
 				}));
 			}
 		}

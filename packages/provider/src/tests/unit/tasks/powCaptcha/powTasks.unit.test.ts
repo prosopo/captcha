@@ -24,8 +24,13 @@ import {
 import type {
 	IProviderDatabase,
 	PoWCaptchaStored,
+	Session,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import {
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
@@ -288,6 +293,279 @@ describe("PowCaptchaManager", () => {
 			).toBe(false);
 
 			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
+		});
+
+		it("should return false when user is blocked by access policy", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const dappAccount = "testDappAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const sessionId = "test-session-id";
+			const decryptedHeadHash = "abc123def456";
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				providerSelectEntropy: 13337,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				captchaType: "pow" as any,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash,
+			};
+
+			// Mock the user access rules storage with a Block policy
+			const mockAccessRulesStorage: AccessRulesStorage = {
+				findRules: vi.fn().mockResolvedValue([
+					{
+						type: AccessPolicyType.Block,
+						headHash: decryptedHeadHash,
+						// No captchaType - this should be treated as hard block
+					},
+				]),
+				insertRules: vi.fn(),
+				deleteRules: vi.fn(),
+				deleteAllRules: vi.fn(),
+				fetchRules: vi.fn(),
+				getMissingRuleIds: vi.fn(),
+				findRuleIds: vi.fn(),
+				fetchAllRuleIds: vi.fn(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getSessionRecordBySessionId as any) = vi
+				.fn()
+				.mockResolvedValue(sessionRecord);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // salt
+				mockAccessRulesStorage,
+			);
+
+			expect(result).toBe(false);
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
+				challenge,
+				{ status: CaptchaStatus.disapproved, reason: "CAPTCHA.USER_BLOCKED" },
+				false,
+				true,
+				userSignature,
+				undefined,
+			);
+		});
+
+		it("should not block when access policy has captchaType (not a hard block)", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const dappAccount = "testDappAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			const sessionId = "test-session-id";
+			const decryptedHeadHash = "abc123def456";
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				providerSelectEntropy: 13337,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				captchaType: "pow" as any,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash,
+			};
+
+			// Mock the user access rules storage with a Block policy that has captchaType
+			// This should NOT be treated as a hard block
+			const mockAccessRulesStorage: AccessRulesStorage = {
+				findRules: vi.fn().mockResolvedValue([
+					{
+						type: AccessPolicyType.Block,
+						headHash: decryptedHeadHash,
+						captchaType: "image", // Has captchaType - should be ignored
+					},
+				]),
+				insertRules: vi.fn(),
+				deleteRules: vi.fn(),
+				deleteAllRules: vi.fn(),
+				fetchRules: vi.fn(),
+				getMissingRuleIds: vi.fn(),
+				findRuleIds: vi.fn(),
+				fetchAllRuleIds: vi.fn(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getSessionRecordBySessionId as any) = vi
+				.fn()
+				.mockResolvedValue(sessionRecord);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // salt
+				mockAccessRulesStorage,
+			);
+
+			// Should pass since the Block policy has captchaType (not a hard block)
+			expect(result).toBe(true);
+		});
+
+		it("should verify successfully when no blocking access policy exists", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const dappAccount = "testDappAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+			};
+
+			// Mock the user access rules storage with empty rules (no blocking policy)
+			const mockAccessRulesStorage: AccessRulesStorage = {
+				findRules: vi.fn().mockResolvedValue([]),
+				insertRules: vi.fn(),
+				deleteRules: vi.fn(),
+				deleteAllRules: vi.fn(),
+				fetchRules: vi.fn(),
+				getMissingRuleIds: vi.fn(),
+				findRuleIds: vi.fn(),
+				fetchAllRuleIds: vi.fn(),
+			};
+
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(checkPowSignature as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(validateSolution as any).mockImplementation(() => true);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.updatePowCaptchaRecordResult as any).mockResolvedValue(true);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				providerSignature,
+				nonce,
+				timeout,
+				userSignature,
+				ipAddress,
+				headers,
+				undefined, // salt
+				mockAccessRulesStorage,
+			);
+
+			expect(result).toBe(true);
 		});
 	});
 
