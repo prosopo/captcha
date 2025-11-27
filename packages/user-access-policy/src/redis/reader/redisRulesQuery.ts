@@ -138,6 +138,11 @@ const getUserScopeQuery = (
 	return fieldQueries.join(scopeJoinType);
 };
 
+// Fields that may contain special characters requiring escaping in Redis TAG queries
+const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
+	"coords",
+]);
+
 const getUserScopeFieldQuery = (
 	fieldName: keyof UserScope,
 	fieldValue: unknown,
@@ -154,9 +159,13 @@ const getUserScopeFieldQuery = (
 		return `ismissing(@${fieldName})`;
 	}
 
-	// Escape special characters for TAG field queries
-	const escapedValue = escapeTagValue(String(fieldValue));
-	return `@${fieldName}:{${escapedValue}}`;
+	const stringValue = String(fieldValue);
+	// Only escape fields that may contain special characters (like coords with JSON)
+	const queryValue = FIELDS_REQUIRING_ESCAPE.has(fieldName)
+		? escapeTagValue(stringValue)
+		: stringValue;
+
+	return `@${fieldName}:{${queryValue}}`;
 };
 
 const getPolicyScopeQuery = (
@@ -166,10 +175,9 @@ const getPolicyScopeQuery = (
 	const clientId = policyScope?.clientId;
 
 	if ("string" === typeof clientId) {
-		const escapedClientId = escapeTagValue(clientId);
 		return FilterScopeMatch.Exact === scopeMatch
-			? `@clientId:{${escapedClientId}}`
-			: `( @clientId:{${escapedClientId}} | ismissing(@clientId) )`;
+			? `@clientId:{${clientId}}`
+			: `( @clientId:{${clientId}} | ismissing(@clientId) )`;
 	}
 
 	return FilterScopeMatch.Exact === scopeMatch ? "ismissing(@clientId)" : "";
@@ -193,8 +201,7 @@ export const getRulesRedisQuery = (
 	const queryParts = [];
 
 	if (filter.groupId) {
-		const escapedGroupId = escapeTagValue(filter.groupId);
-		queryParts.push(`@groupId:{${escapedGroupId}}`);
+		queryParts.push(`@groupId:{${filter.groupId}}`);
 	}
 
 	const policyScopeQuery = getPolicyScopeQuery(
