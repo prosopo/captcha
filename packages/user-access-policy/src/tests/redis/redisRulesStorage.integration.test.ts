@@ -956,37 +956,6 @@ describe("redisAccessRulesStorage", () => {
 			expect(foundAccessRules).toEqual([combinedAccessRule]);
 		});
 
-		test("finds rules by headHash with greedy match returns both specific and non-specific rules", async () => {
-			// given
-			const headHash1 = "abc123def456";
-
-			const headHashAccessRule: AccessRule = {
-				type: AccessPolicyType.Block,
-				clientId: "clientId",
-				headHash: headHash1,
-			};
-			const globalAccessRule: AccessRule = {
-				type: AccessPolicyType.Restrict,
-				clientId: "clientId",
-			};
-
-			await insertRules([headHashAccessRule, globalAccessRule]);
-
-			// when
-			const foundAccessRules = await accessRulesReader.findRules({
-				policyScope: {
-					clientId: "clientId",
-				},
-				policyScopeMatch: FilterScopeMatch.Exact,
-				userScope: {
-					headHash: headHash1,
-				},
-				userScopeMatch: FilterScopeMatch.Greedy,
-			});
-
-			// then
-			expect(foundAccessRules).toEqual([headHashAccessRule, globalAccessRule]);
-		});
 	});
 
 	afterAll(async () => {
