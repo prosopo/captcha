@@ -26,11 +26,11 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -40,8 +40,9 @@ import type { AccessRulesStorage } from "@prosopo/user-access-policy";
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
-	const userAccessRulesStorage: AccessRulesStorage =
-		env.getDb().getUserAccessRulesStorage();
+	const userAccessRulesStorage: AccessRulesStorage = env
+		.getDb()
+		.getUserAccessRulesStorage();
 
 	/**
 	 * Verifies a dapp's solution as being approved or not

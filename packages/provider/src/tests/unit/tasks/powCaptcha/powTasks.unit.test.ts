@@ -295,7 +295,6 @@ describe("PowCaptchaManager", () => {
 
 			expect(verifyRecency).toHaveBeenCalledWith(challenge, timeout);
 		});
-
 	});
 
 	describe("serverVerifyPowCaptchaSolution", () => {
