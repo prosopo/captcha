@@ -246,7 +246,10 @@ export class PowCaptchaManager extends CaptchaManager {
 					}));
 					await this.db.updatePowCaptchaRecordResult(
 						challenge,
-						{ status: CaptchaStatus.disapproved, reason: "CAPTCHA.USER_BLOCKED" },
+						{
+							status: CaptchaStatus.disapproved,
+							reason: "CAPTCHA.USER_BLOCKED",
+						},
 						false,
 						true,
 						userTimestampSignature,
