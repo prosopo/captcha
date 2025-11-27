@@ -18,7 +18,6 @@ import {
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
@@ -26,10 +25,7 @@ import { Tasks } from "../../tasks/tasks.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
-export default (
-	env: ProviderEnvironment,
-	userAccessRulesStorage: AccessRulesStorage,
-) =>
+export default (env: ProviderEnvironment) =>
 	async (
 		req: Request & AugmentedRequest,
 		res: Response,
@@ -90,7 +86,6 @@ export default (
 				getIPAddress(req.ip || ""),
 				flatten(req.headers),
 				salt,
-				userAccessRulesStorage,
 			);
 			const response: PowCaptchaSolutionResponse = { status: "ok", verified };
 			return res.json(response);

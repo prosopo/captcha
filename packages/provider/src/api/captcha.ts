@@ -58,7 +58,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * Verifies a user's PoW solution as being approved or not
 	 */
 	router.post(ClientApiPaths.SubmitPowCaptchaSolution, (req, res, next) =>
-		submitPoWCaptchaSolution(env, userAccessRulesStorage)(req, res, next),
+		submitPoWCaptchaSolution(env)(req, res, next),
 	);
 
 	/**

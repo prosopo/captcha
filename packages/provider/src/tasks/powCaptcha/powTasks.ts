@@ -165,7 +165,6 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param ipAddress
 	 * @param headers
 	 * @param salt
-	 * @param userAccessRulesStorage - storage for querying user access policies
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
@@ -176,7 +175,6 @@ export class PowCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
 		salt?: string,
-		userAccessRulesStorage?: AccessRulesStorage,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -228,43 +226,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Check user access policies for hard blocks
-		if (userAccessRulesStorage) {
-			try {
-				const blockPolicy = await this.checkForHardBlock(
-					userAccessRulesStorage,
-					challengeRecord,
-					userAccount,
-					headers,
-					coords,
-				);
-
-				if (blockPolicy) {
-					this.logger.info(() => ({
-						msg: "User blocked by access policy in PoW verification",
-						data: { challenge, userAccount, policy: blockPolicy },
-					}));
-					await this.db.updatePowCaptchaRecordResult(
-						challenge,
-						{
-							status: CaptchaStatus.disapproved,
-							reason: "CAPTCHA.USER_BLOCKED",
-						},
-						false,
-						true,
-						userTimestampSignature,
-						coords,
-					);
-					return false;
-				}
-			} catch (error) {
-				this.logger.warn(() => ({
-					msg: "Failed to check user access policies in PoW verification",
-					error,
-				}));
-			}
-		}
-
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecordResult(
 				challenge,
@@ -308,7 +269,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} dappAccount - the dapp that is requesting the captcha
 	 * @param {string} challenge - the starting string for the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
-	 * @param ip
+	 * @param env - provider environment
+	 * @param ip - optional IP address for validation
+	 * @param userAccessRulesStorage - storage for querying user access policies
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -316,6 +279,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		timeout: number,
 		env: ProviderEnvironment,
 		ip?: string,
+		userAccessRulesStorage?: AccessRulesStorage,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -365,6 +329,37 @@ export class PowCaptchaManager extends CaptchaManager {
 		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
 			return notVerifiedResponse;
+		}
+
+		// Check user access policies for hard blocks
+		if (userAccessRulesStorage) {
+			try {
+				const blockPolicy = await this.checkForHardBlock(
+					userAccessRulesStorage,
+					challengeRecord,
+					challengeRecord.userAccount,
+					challengeRecord.headers,
+					challengeRecord.coords,
+				);
+
+				if (blockPolicy) {
+					this.logger.info(() => ({
+						msg: "User blocked by access policy in server PoW verification",
+						data: {
+							challenge,
+							userAccount: challengeRecord.userAccount,
+							dappAccount,
+							policy: blockPolicy,
+						},
+					}));
+					return notVerifiedResponse;
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check user access policies in server PoW verification",
+					error,
+				}));
+			}
 		}
 
 		if (ip) {
