@@ -28,6 +28,8 @@ const userAttributesSchema = z.object({
 	ja4Hash: z.coerce.string().optional(),
 	headersHash: z.coerce.string().optional(),
 	userAgentHash: z.coerce.string().optional(),
+	headHash: z.coerce.string().optional(),
+	coords: z.coerce.string().optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z
