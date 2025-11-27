@@ -955,7 +955,6 @@ describe("redisAccessRulesStorage", () => {
 			// then
 			expect(foundAccessRules).toEqual([combinedAccessRule]);
 		});
-
 	});
 
 	afterAll(async () => {
