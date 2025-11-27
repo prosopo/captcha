@@ -66,6 +66,18 @@ const userIpQueries: Record<keyof UserIp, QueryBuilder> = {
 	},
 };
 
+/**
+ * Generates a query clause that matches rules with NO user scope fields set (catch-all rules).
+ * These are rules that apply to all users regardless of their attributes.
+ */
+const getCatchAllUserScopeQuery = (): string => {
+	const allFields = Object.keys(userScopeSchema.shape) as Array<
+		keyof UserScope
+	>;
+	// Match rules where ALL user scope fields are missing
+	return `( ${allFields.map((field) => `ismissing(@${field})`).join(" ")} )`;
+};
+
 const getUserScopeQuery = (
 	userScope: UserScope,
 	FilterScopeMatchType: FilterScopeMatch | undefined,
@@ -107,7 +119,7 @@ const getUserScopeQuery = (
 
 	const scopeObj = Object.fromEntries(scopeEntries) as Partial<UserScope>;
 
-	return scopeEntries
+	const fieldQueries = scopeEntries
 		.map(([scopeFieldName, scopeFieldValue]) =>
 			getUserScopeFieldQuery(
 				scopeFieldName,
@@ -116,8 +128,14 @@ const getUserScopeQuery = (
 				scopeObj,
 			),
 		)
-		.filter(Boolean)
-		.join(scopeJoinType);
+		.filter(Boolean);
+
+	// In greedy mode, also match catch-all rules (rules with no user scope fields)
+	if (FilterScopeMatchType === FilterScopeMatch.Greedy) {
+		fieldQueries.push(getCatchAllUserScopeQuery());
+	}
+
+	return fieldQueries.join(scopeJoinType);
 };
 
 const getUserScopeFieldQuery = (
@@ -138,12 +156,6 @@ const getUserScopeFieldQuery = (
 
 	// Escape special characters for TAG field queries
 	const escapedValue = escapeTagValue(String(fieldValue));
-
-	// In greedy mode, also match rules that don't have this field specified
-	if (scopeMatch === FilterScopeMatch.Greedy) {
-		return `( @${fieldName}:{${escapedValue}} | ismissing(@${fieldName}) )`;
-	}
-
 	return `@${fieldName}:{${escapedValue}}`;
 };
 

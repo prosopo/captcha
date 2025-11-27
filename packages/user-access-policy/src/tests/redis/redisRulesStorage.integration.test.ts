@@ -376,7 +376,8 @@ describe("redisAccessRulesStorage", () => {
 			};
 			const johnHeaderAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				headersHash: "chrome",
+				headersHash:
+					"00110110100001111101001101100101101101001000011111010011011001010101000110000111110100110110010111010100100011011101101010000011",
 			};
 			const globalJa4AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
@@ -430,7 +431,8 @@ describe("redisAccessRulesStorage", () => {
 
 			const johnHeaderAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				headersHash: "chrome",
+				headersHash:
+					"00110110100001111101001101100101101101001000011111010011011001010101000110000111110100110110010111010100100011011101101010000011",
 			};
 
 			const globalTargetAccessRule: AccessRule = {

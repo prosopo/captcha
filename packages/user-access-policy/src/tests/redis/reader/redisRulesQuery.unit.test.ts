@@ -73,7 +73,7 @@ describe("getRulesRedisQuery", () => {
 		);
 	});
 
-	it("in greedy mode, adds ismissing() for fields with values to also match rules without those fields", () => {
+	it("in greedy mode, adds catch-all clause to also match rules without any user scope fields", () => {
 		const filter = {
 			userScope: {
 				numericIp: BigInt(100),
@@ -87,10 +87,16 @@ describe("getRulesRedisQuery", () => {
 
 		const query = getRulesRedisQuery(filter, false);
 
-		// In greedy mode, ja4Hash query includes ismissing to match rules without ja4Hash set
-		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | ( @ja4Hash:{ja4Hash} | ismissing(@ja4Hash) ) )",
-		);
+		// In greedy mode, adds a catch-all clause to match rules with NO user scope fields
+		expect(query).toContain("@numericIp:[100 100]");
+		expect(query).toContain("@ja4Hash:{ja4Hash}");
+		// Should include catch-all clause for rules with no user scope fields
+		expect(query).toContain("ismissing(@userId)");
+		expect(query).toContain("ismissing(@ja4Hash)");
+		expect(query).toContain("ismissing(@headersHash)");
+		expect(query).toContain("ismissing(@userAgentHash)");
+		expect(query).toContain("ismissing(@headHash)");
+		expect(query).toContain("ismissing(@coords)");
 	});
 
 	it("puts ismissing(x) for multiple fields passed in as `undefined` when user scope match is exact 2", () => {
