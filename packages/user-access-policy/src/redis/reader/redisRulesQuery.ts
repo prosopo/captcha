@@ -138,6 +138,12 @@ const getUserScopeFieldQuery = (
 
 	// Escape special characters for TAG field queries
 	const escapedValue = escapeTagValue(String(fieldValue));
+
+	// In greedy mode, also match rules that don't have this field specified
+	if (scopeMatch === FilterScopeMatch.Greedy) {
+		return `( @${fieldName}:{${escapedValue}} | ismissing(@${fieldName}) )`;
+	}
+
 	return `@${fieldName}:{${escapedValue}}`;
 };
 

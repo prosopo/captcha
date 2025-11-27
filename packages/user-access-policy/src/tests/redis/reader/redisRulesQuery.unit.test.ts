@@ -73,7 +73,7 @@ describe("getRulesRedisQuery", () => {
 		);
 	});
 
-	it("does not put ismissing(x) for multiple fields passed in as `undefined` when user scope match is greedy", () => {
+	it("in greedy mode, adds ismissing() for fields with values to also match rules without those fields", () => {
 		const filter = {
 			userScope: {
 				numericIp: BigInt(100),
@@ -87,8 +87,9 @@ describe("getRulesRedisQuery", () => {
 
 		const query = getRulesRedisQuery(filter, false);
 
+		// In greedy mode, ja4Hash query includes ismissing to match rules without ja4Hash set
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | @ja4Hash:{ja4Hash} )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) | ( @ja4Hash:{ja4Hash} | ismissing(@ja4Hash) ) )",
 		);
 	});
 
