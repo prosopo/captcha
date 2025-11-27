@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiClient } from "@prosopo/api";
-import type { ApiEndpointResponse } from "../../../cli/api-route/src/index.js";
+import type { ApiEndpointResponse } from "@prosopo/api-route";
 import {
 	type FetchRulesEndpointResponse,
 	type FetchRulesOptions,

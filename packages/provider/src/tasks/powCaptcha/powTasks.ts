@@ -26,7 +26,10 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	BehavioralDataPacked,
+	IProviderDatabase,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { at, extractData, verifyRecency } from "@prosopo/util";
 import {
@@ -194,10 +197,6 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Process behavioral data if provided
 		if (behavioralData) {
 			try {
-				const { getBehavioralData } = await import(
-					"../detection/getBehavioralData.js"
-				);
-
 				// Get decryption keys: detector keys from DB first, then env var as fallback
 				const decryptKeys = [
 					// Process DB keys first, then env var key last as env key will likely be invalid
@@ -205,46 +204,34 @@ export class PowCaptchaManager extends CaptchaManager {
 					process.env.BOT_DECRYPTION_KEY,
 				];
 
-				const decryptedBehavior = await getBehavioralData(
+				// Decrypt the behavioral data directly to packed format
+				const packedData = await this.decryptBehavioralDataPacked(
 					behavioralData,
 					decryptKeys,
-					this.logger,
 				);
 
-				if (decryptedBehavior) {
+				if (packedData) {
 					const dappAccount = at(challengeSplit, 2);
-					// Log behavioral analytics (unpacked for readability)
+					// Log behavioral analytics using packed data counts
 					this.logger?.info(() => ({
 						msg: "Behavioral analysis completed",
 						data: {
 							userAccount,
 							dappAccount,
 							challenge,
-							mouseEvents: decryptedBehavior.collector1.length,
-							touchEvents: decryptedBehavior.collector2.length,
-							clickEvents: decryptedBehavior.collector3.length,
-							deviceCapability: decryptedBehavior.deviceCapability,
+							mouseEventsCount: packedData.c1.length,
+							touchEventsCount: packedData.c2.length,
+							clickEventsCount: packedData.c3.length,
+							deviceCapability: packedData.d,
 							captchaResult: correct ? "passed" : "failed",
 						},
 					}));
 
-					// Store PACKED behavioral data in database to minimize storage size
-					// The data was already packed by the client before encryption, and we should
-					// keep it packed in the database. It can be unpacked later for analysis if needed.
-					// Note: decryptedBehavior contains the unpacked data for logging, but we need
-					// to get the packed format from the original decrypted JSON before it was unpacked
-					const packedData = await this.getPackedBehavioralData(
-						behavioralData,
-						decryptKeys,
-					);
-
-					if (packedData) {
-						await this.db.updatePowCaptchaRecord(challenge, {
-							// Store the packed data (c1, c2, c3, d format) to save database space
-							behavioralDataPacked: packedData,
-							deviceCapability: decryptedBehavior.deviceCapability,
-						});
-					}
+					// Store the packed data directly to database
+					await this.db.updatePowCaptchaRecord(challenge, {
+						behavioralDataPacked: packedData,
+						deviceCapability: packedData.d,
+					});
 				}
 			} catch (error) {
 				this.logger?.error(() => ({
@@ -380,22 +367,24 @@ export class PowCaptchaManager extends CaptchaManager {
 	}
 
 	/**
-	 * Decrypts behavioral data but keeps it in packed format for efficient storage
+	 * Decrypts behavioral data in packed format
 	 * @param encryptedData - The encrypted behavioral data
 	 * @param decryptKeys - Array of possible decryption keys to try
 	 * @returns Packed behavioral data in {c1, c2, c3, d} format, or null if decryption fails
 	 */
-	private async getPackedBehavioralData(
+	private async decryptBehavioralDataPacked(
 		encryptedData: string,
 		decryptKeys: (string | undefined)[],
-	): Promise<{ c1: unknown[]; c2: unknown[]; c3: unknown[]; d: string } | null> {
-		const { NIaPdCU } = await import("@prosopo/catcher/providerDecryptBehavior.js");
+	): Promise<BehavioralDataPacked | null> {
+		const decryptBehavioralData = (
+			await import("../detection/decodeBehavior.js")
+		).default;
 
 		const validKeys = decryptKeys.filter((k) => k);
 
 		if (validKeys.length === 0) {
 			this.logger?.error(() => ({
-				msg: "No decryption keys provided for packed data",
+				msg: "No decryption keys provided for behavioral data",
 			}));
 			return null;
 		}
@@ -404,34 +393,31 @@ export class PowCaptchaManager extends CaptchaManager {
 		for (const [keyIndex, key] of validKeys.entries()) {
 			try {
 				this.logger?.debug(() => ({
-					msg: "Attempting to decrypt behavioral data (packed format)",
+					msg: "Attempting to decrypt behavioral data",
 					data: {
 						keyIndex: keyIndex + 1,
 						totalKeys: validKeys.length,
 					},
 				}));
 
-				// NIaPdCU decrypts and parses the JSON, but doesn't unpack the data structure
-				// It returns the packed format: {c1, c2, c3, d, timestamp}
-				const result = await NIaPdCU(encryptedData, key);
+				// Decrypt and parse the JSON - data from client is already in packed format: {c1, c2, c3, d}
+				const result = (await decryptBehavioralData(
+					encryptedData,
+					key,
+				)) as unknown as BehavioralDataPacked;
 
 				this.logger?.info(() => ({
-					msg: "Behavioral data decrypted successfully (packed format)",
+					msg: "Behavioral data decrypted successfully",
 					data: {
 						keyIndex: keyIndex + 1,
-						packedDataSizeC1: result.c1?.length || 0,
-						packedDataSizeC2: result.c2?.length || 0,
-						packedDataSizeC3: result.c3?.length || 0,
+						c1Length: result.c1?.length || 0,
+						c2Length: result.c2?.length || 0,
+						c3Length: result.c3?.length || 0,
 						deviceCapability: result.d,
 					},
 				}));
 
-				return {
-					c1: result.c1,
-					c2: result.c2,
-					c3: result.c3,
-					d: result.d,
-				};
+				return result;
 			} catch (error) {
 				this.logger?.debug(() => ({
 					msg: "Failed to decrypt with key, trying next",
@@ -447,7 +433,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		// All keys failed
 		this.logger?.error(() => ({
-			msg: "Failed to decrypt behavioral data (packed format) with all available keys",
+			msg: "Failed to decrypt behavioral data with all available keys",
 			data: {
 				totalKeysAttempted: validKeys.length,
 			},

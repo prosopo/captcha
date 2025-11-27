@@ -16,7 +16,7 @@ import type {
 	ApiRouteLimits,
 	ApiRoutes,
 	ApiRoutesProvider,
-} from "../../../cli/api-route/src/index.js";
+} from "@prosopo/api-route";
 import type { AllEnumValues, Logger } from "@prosopo/common";
 import { FetchRulesEndpoint } from "#policy/api/read/fetchRules.js";
 import { FindRuleIdsEndpoint } from "#policy/api/read/findRuleIds.js";

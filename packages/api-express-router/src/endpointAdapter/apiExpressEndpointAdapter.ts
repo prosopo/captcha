@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiEndpoint } from "../../../cli/api-route/src/index.js";
+import { ApiEndpoint } from "@prosopo/api-route";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 

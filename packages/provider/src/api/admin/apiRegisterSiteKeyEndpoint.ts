@@ -16,7 +16,7 @@ import {
 	type ApiEndpoint,
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
-} from "../../../../cli/api-route/src/index.js";
+} from "@prosopo/api-route";
 import { type Logger, getLogger } from "@prosopo/common";
 import { ClientSettingsSchema, RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";

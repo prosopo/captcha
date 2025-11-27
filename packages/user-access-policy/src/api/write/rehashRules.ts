@@ -16,7 +16,7 @@ import {
 	type ApiEndpoint,
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
-} from "../../../../cli/api-route/src/index.js";
+} from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 

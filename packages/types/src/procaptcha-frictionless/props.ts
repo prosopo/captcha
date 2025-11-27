@@ -43,6 +43,7 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	};
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
+	packBehavioralData?: (data: string) => Promise<string>;
 };
 
 export type BotDetectionFunction = (
