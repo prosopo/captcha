@@ -26,9 +26,13 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
+	type AccessPolicy,
 	AccessPolicyType,
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
@@ -43,6 +47,19 @@ import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
 
+/**
+ * Finds a hard block policy from access policies.
+ * A hard block is a Block policy without a captchaType specified.
+ * Policies with captchaType are for captcha type selection, not hard blocking.
+ */
+const findHardBlockPolicy = (
+	accessPolicies: AccessPolicy[],
+): AccessPolicy | undefined => {
+	return accessPolicies.find(
+		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
+	);
+};
+
 const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager extends CaptchaManager {
@@ -56,6 +73,53 @@ export class PowCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+	}
+
+	/**
+	 * Checks if a user should be hard blocked based on access policies
+	 * Only checks for Block policies without captchaType
+	 *
+	 * @returns The blocking policy if user should be blocked, undefined otherwise
+	 */
+	private async checkForHardBlock(
+		userAccessRulesStorage: AccessRulesStorage,
+		challengeRecord: PoWCaptchaRecord,
+		userAccount: string,
+		headers: RequestHeaders,
+		coords?: [number, number][][],
+	): Promise<AccessPolicy | undefined> {
+		// Get headHash from session record if available
+		let headHash: string | undefined;
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			headHash = sessionRecord?.decryptedHeadHash;
+		}
+
+		// Serialize coords to string for querying
+		const coordsString = coords ? JSON.stringify(coords) : undefined;
+
+		const ipAddressRecord = getIpAddressFromComposite(
+			challengeRecord.ipAddress,
+		);
+
+		const userScope = getRequestUserScope(
+			headers,
+			challengeRecord.ja4,
+			ipAddressRecord.address,
+			userAccount,
+			headHash,
+			coordsString,
+		);
+
+		const accessPolicies = await this.getPrioritisedAccessPolicies(
+			userAccessRulesStorage,
+			challengeRecord.dappAccount,
+			userScope,
+		);
+
+		return findHardBlockPolicy(accessPolicies);
 	}
 
 	/**
@@ -165,60 +229,24 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Check user access policies for hard blocks
-		// Only interested in Block policies, ignore image/frictionless policies
 		if (userAccessRulesStorage) {
 			try {
-				// Get headHash from session record if available
-				let headHash: string | undefined;
-				if (challengeRecord.sessionId) {
-					const sessionRecord = await this.db.getSessionRecordBySessionId(
-						challengeRecord.sessionId,
-					);
-					headHash = sessionRecord?.decryptedHeadHash;
-				}
-
-				// Serialize coords to string for querying
-				const coordsString = coords ? JSON.stringify(coords) : undefined;
-
-				const ipAddressRecord = getIpAddressFromComposite(
-					challengeRecord.ipAddress,
-				);
-
-				const userScope = getRequestUserScope(
-					headers,
-					challengeRecord.ja4,
-					ipAddressRecord.address,
-					userAccount,
-					headHash,
-					coordsString,
-				);
-
-				const accessPolicies = await this.getPrioritisedAccessPolicies(
+				const blockPolicy = await this.checkForHardBlock(
 					userAccessRulesStorage,
-					challengeRecord.dappAccount,
-					userScope,
-				);
-
-				const blockPolicy = accessPolicies.find(
-					(policy) =>
-						policy.type === AccessPolicyType.Block && !policy.captchaType,
+					challengeRecord,
+					userAccount,
+					headers,
+					coords,
 				);
 
 				if (blockPolicy) {
 					this.logger.info(() => ({
 						msg: "User blocked by access policy in PoW verification",
-						data: {
-							challenge,
-							userAccount,
-							policy: blockPolicy,
-						},
+						data: { challenge, userAccount, policy: blockPolicy },
 					}));
 					await this.db.updatePowCaptchaRecordResult(
 						challenge,
-						{
-							status: CaptchaStatus.disapproved,
-							reason: "CAPTCHA.USER_BLOCKED",
-						},
+						{ status: CaptchaStatus.disapproved, reason: "CAPTCHA.USER_BLOCKED" },
 						false,
 						true,
 						userTimestampSignature,
