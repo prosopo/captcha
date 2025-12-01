@@ -1,5 +1,10 @@
 # @prosopo/user-access-policy
 
+## 3.5.36
+### Patch Changes
+
+- 7c475dc: Add headHash and coords fields to user access policies, and implement user access policy checks in server-side PoW verification
+
 ## 3.5.35
 ### Patch Changes
 

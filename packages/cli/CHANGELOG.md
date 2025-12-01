@@ -1,5 +1,15 @@
 # @prosopo/cli
 
+## 3.5.16
+### Patch Changes
+
+- a31ae35: Release bump
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+  - @prosopo/provider@3.14.5
+  - @prosopo/env@3.2.33
+  - @prosopo/api-express-router@3.0.45
+
 ## 3.5.15
 ### Patch Changes
 
