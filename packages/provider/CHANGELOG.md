@@ -1,5 +1,18 @@
 # @prosopo/provider
 
+## 3.14.5
+### Patch Changes
+
+- 7c475dc: Add headHash and coords fields to user access policies, and implement user access policy checks in server-side PoW verification
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+  - @prosopo/database@3.6.4
+  - @prosopo/types-database@4.1.3
+  - @prosopo/env@3.2.33
+  - @prosopo/datasets@3.0.53
+  - @prosopo/types-env@2.7.57
+  - @prosopo/api-express-router@3.0.45
+
 ## 3.14.4
 ### Patch Changes
 

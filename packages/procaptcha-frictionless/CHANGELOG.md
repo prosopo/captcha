@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.28
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.25
+
 ## 2.8.27
 ### Patch Changes
 
