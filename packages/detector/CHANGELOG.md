@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.3.24
+### Patch Changes
+
+- c6faa77: Fix
+
 ## 3.3.23
 ### Patch Changes
 

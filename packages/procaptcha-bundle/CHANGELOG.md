@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-bundle
 
+## 3.2.17
+### Patch Changes
+
+  - @prosopo/procaptcha-frictionless@2.8.29
+
 ## 3.2.16
 ### Patch Changes
 
