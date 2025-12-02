@@ -39,7 +39,7 @@
 		"@prosopo/util": "3.2.4",
 		"@prosopo/util-crypto": "13.5.28",
 		"cron": "3.1.7",
-		"express": "4.21.2",
+		"express": "4.22.0",
 		"geolib": "3.3.4",
 		"i18next": "24.1.0",
 		"ip-address": "10.0.1",
