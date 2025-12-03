@@ -16,11 +16,12 @@ import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	type ContextType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
-	type Tier,
+	Tier,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -32,6 +33,7 @@ import type {
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
 
+const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
@@ -286,18 +288,49 @@ export class ClientTaskManager {
 		);
 
 		try {
-			const clients = await this.providerDB.getAllClientRecords();
+			let clients = await this.providerDB.getAllClientRecords();
+
+			clients = clients.filter((client) => client.tier !== Tier.Free);
+
+			this.logger.info(() => ({
+				msg: `Calculating entropies for ${clients.length} clients`,
+			}));
 
 			for (const client of clients) {
-				const sampleEntropies = await this.providerDB.sampleEntropy(
-					100,
-					client.account,
-				);
+				// Calculate context-specific entropy if client has context awareness enabled
+				if (client.settings?.contextAware?.enabled) {
+					// Get context types from client settings
+					const contextTypes = Object.keys(
+						client.settings.contextAware.contexts ?? {},
+					) as ContextType[];
 
-				// Calculate majority average entropy
-				const avgEntropy = majorityAverage(sampleEntropies);
+					for (const contextType of contextTypes) {
+						const contextSamples = await this.providerDB.sampleContextEntropy(
+							SAMPLE_SIZE,
+							client.account,
+							contextType,
+						);
 
-				await this.providerDB.setClientEntropy(client.account, avgEntropy);
+						if (contextSamples.length < SAMPLE_SIZE) {
+							this.logger.info(() => ({
+								msg: `Skipping ${contextType} entropy calculation for client ${client.account} due to insufficient samples (${contextSamples.length}/${SAMPLE_SIZE})`,
+							}));
+							continue;
+						}
+
+						const contextAvgEntropy = majorityAverage(contextSamples);
+
+						this.logger.info(() => ({
+							msg: `Calculated ${contextType} entropy for client ${client.account}: ${contextAvgEntropy}`,
+						}));
+
+						await this.providerDB.setClientContextEntropy(
+							client.account,
+							contextType,
+							contextAvgEntropy,
+						);
+					}
+				}
 			}
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,

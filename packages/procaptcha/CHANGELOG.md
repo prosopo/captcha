@@ -1,5 +1,53 @@
 # @prosopo/procaptcha
 
+## 2.9.25
+### Patch Changes
+
+  - @prosopo/datasets@3.0.53
+
+## 2.9.24
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+  - @prosopo/datasets@3.0.52
+  - @prosopo/procaptcha-common@2.9.22
+
+## 2.9.23
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+  - @prosopo/datasets@3.0.51
+  - @prosopo/procaptcha-common@2.9.21
+
+## 2.9.22
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/api@3.1.38
+  - @prosopo/common@3.1.27
+  - @prosopo/datasets@3.0.50
+  - @prosopo/procaptcha-common@2.9.20
+
+## 2.9.21
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api@3.1.37
+  - @prosopo/common@3.1.26
+  - @prosopo/datasets@3.0.49
+  - @prosopo/procaptcha-common@2.9.19
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 2.9.20
 ### Patch Changes
 

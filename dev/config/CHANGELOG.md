@@ -1,5 +1,25 @@
 # @prosopo/config
 
+## 3.2.1
+### Patch Changes
+
+- 55fa825: Reinstate npm ls
+
+## 3.2.0
+### Minor Changes
+
+- 30a2102: Remove problematic getDependencies step
+
+## 3.1.27
+### Patch Changes
+
+- e01227b: add turbo
+
+## 3.1.26
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 3.1.25
 ### Patch Changes
 

@@ -15,7 +15,7 @@
 import { ProviderApi } from "@prosopo/api";
 import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import { ProviderEnvironment } from "@prosopo/env";
-import { type KeyringPair, contextAwareThresholdDefault } from "@prosopo/types";
+import type { KeyringPair } from "@prosopo/types";
 import {
 	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
@@ -112,10 +112,6 @@ export default (
 						powDifficulty: pow_difficulty as number,
 						imageThreshold: image_threshold as number,
 						disallowWebView: false,
-						contextAware: {
-							enabled: false,
-							threshold: contextAwareThresholdDefault,
-						},
 					},
 					jwt,
 				);

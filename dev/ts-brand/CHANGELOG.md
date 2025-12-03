@@ -1,5 +1,10 @@
 # @prosopo/ts-brand
 
+## 3.0.29
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 3.0.28
 ### Patch Changes
 

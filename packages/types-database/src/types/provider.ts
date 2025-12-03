@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
-import { CaptchaType, Tier } from "@prosopo/types";
+import { CaptchaType, ContextType, Tier } from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -518,20 +518,32 @@ DetectorRecordSchema.index({ createdAt: 1 }, { unique: true });
 // TTL index for automatic cleanup of expired keys
 DetectorRecordSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export type ClientEntropy = {
+export type ClientContextEntropy = {
 	account: string;
+	contextType: ContextType;
 	entropy: string;
 	createdAt: Date;
 	updatedAt: Date;
 };
-export type ClientEntropyRecord = mongoose.Document & ClientEntropy;
-export const ClientEntropyRecordSchema = new Schema<ClientEntropyRecord>({
-	account: { type: String, required: true, unique: true },
-	entropy: { type: String, required: true },
-	createdAt: { type: Date, required: true },
-	updatedAt: { type: Date, required: true },
-});
-ClientEntropyRecordSchema.index({ account: 1 }, { unique: true });
+export type ClientContextEntropyRecord = mongoose.Document &
+	ClientContextEntropy;
+export const ClientContextEntropyRecordSchema =
+	new Schema<ClientContextEntropyRecord>(
+		{
+			account: { type: String, required: true },
+			contextType: {
+				type: String,
+				enum: Object.values(ContextType),
+				required: true,
+			},
+			entropy: { type: String, required: true },
+		},
+		{ timestamps: { createdAt: true, updatedAt: true } },
+	);
+ClientContextEntropyRecordSchema.index(
+	{ account: 1, contextType: 1 },
+	{ unique: true },
+);
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -701,6 +713,7 @@ export interface IProviderDatabase extends IDatabase {
 		serverChecked: boolean,
 		userSubmitted: boolean,
 		userSignature?: string,
+		coords?: [number, number][][],
 	): Promise<void>;
 
 	updatePowCaptchaRecord(
@@ -744,9 +757,20 @@ export interface IProviderDatabase extends IDatabase {
 		expirationInSeconds?: number,
 	): Promise<void>;
 
-	setClientEntropy(account: string, entropy: string): Promise<void>;
+	setClientContextEntropy(
+		account: string,
+		contextType: ContextType,
+		entropy: string,
+	): Promise<void>;
 
-	getClientEntropy(account: string): Promise<string | undefined>;
+	getClientContextEntropy(
+		account: string,
+		contextType: ContextType,
+	): Promise<string | undefined>;
 
-	sampleEntropy(sampleSize: number, siteKey: string): Promise<string[]>;
+	sampleContextEntropy(
+		sampleSize: number,
+		siteKey: string,
+		contextType: ContextType,
+	): Promise<string[]>;
 }

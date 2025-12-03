@@ -17,6 +17,7 @@ import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	CaptchaType,
+	type ContextType,
 	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 	type ProsopoConfigOutput,
@@ -45,6 +46,10 @@ const getDefaultEntropy = (): number => {
 };
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 export const DEFAULT_ENTROPY = getDefaultEntropy();
+
+const getSessionIDPrefix = (host?: string): string => {
+	return host ? host.replace(".prosopo.io", "") : "local";
+};
 
 export enum FrictionlessReason {
 	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
@@ -119,7 +124,7 @@ export class FrictionlessManager extends CaptchaManager {
 		reason?: FrictionlessReason,
 	): Promise<Session> {
 		const sessionRecord: Session = {
-			sessionId: uuidv4(),
+			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),
 			token,
 			score,
@@ -475,7 +480,10 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
-	async getClientEntropy(siteKey: string): Promise<string | undefined> {
-		return this.db.getClientEntropy(siteKey);
+	async getClientContextEntropy(
+		siteKey: string,
+		contextType: ContextType,
+	): Promise<string | undefined> {
+		return this.db.getClientContextEntropy(siteKey, contextType);
 	}
 }

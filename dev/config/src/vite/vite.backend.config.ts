@@ -90,7 +90,7 @@ export default async function (
 
 	return {
 		ssr: {
-			noExternal: internal,
+			noExternal: true,
 			external: allExternal,
 		},
 		optimizeDeps: {

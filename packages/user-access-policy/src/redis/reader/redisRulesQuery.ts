@@ -21,6 +21,15 @@ import {
 
 type QueryBuilder = (value: unknown, scope: UserIp) => string;
 
+/**
+ * Escapes special characters for Redis TAG field queries.
+ * Redis TAG fields treat these characters as special and they must be escaped with a backslash.
+ */
+const escapeTagValue = (value: string): string => {
+	// Characters that need escaping in Redis TAG queries
+	return value.replace(/([,.<>{}\[\]"':;!@#$%^&*()\-+=~|/\\])/g, "\\$1");
+};
+
 // #2 is a required option when the 'ismissing()' function is in the query body
 export const REDIS_QUERY_DIALECT = 2;
 
@@ -111,6 +120,11 @@ const getUserScopeQuery = (
 		.join(scopeJoinType);
 };
 
+// Fields that may contain special characters requiring escaping in Redis TAG queries
+const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
+	"coords",
+]);
+
 const getUserScopeFieldQuery = (
 	fieldName: keyof UserScope,
 	fieldValue: unknown,
@@ -123,9 +137,17 @@ const getUserScopeFieldQuery = (
 		return queryBuilder(fieldValue, fullScope);
 	}
 
-	return undefined === fieldValue
-		? `ismissing(@${fieldName})`
-		: `@${fieldName}:{${fieldValue}}`;
+	if (undefined === fieldValue) {
+		return `ismissing(@${fieldName})`;
+	}
+
+	const stringValue = String(fieldValue);
+	// Only escape fields that may contain special characters (like coords with JSON)
+	const queryValue = FIELDS_REQUIRING_ESCAPE.has(fieldName)
+		? escapeTagValue(stringValue)
+		: stringValue;
+
+	return `@${fieldName}:{${queryValue}}`;
 };
 
 const getPolicyScopeQuery = (
