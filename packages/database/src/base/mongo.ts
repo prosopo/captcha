@@ -15,6 +15,7 @@ import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
 import type { IDatabase } from "@prosopo/types-database";
 import { ServerApiVersion } from "mongodb";
 import mongoose, { type Connection } from "mongoose";
+import { fileURLToPath } from "url";
 
 mongoose.set("strictQuery", false);
 
@@ -99,9 +100,21 @@ export class MongoDatabase implements IDatabase {
 
 			// Start a new connection
 			this.connecting = new Promise((resolve, reject) => {
+				const appName = fileURLToPath(import.meta.url);
 				const connection = mongoose.createConnection(this.url, {
 					dbName: this.dbname,
-					serverApi: ServerApiVersion.v1,
+					serverApi: {
+						version: ServerApiVersion.v1,
+						strict: true,
+						deprecationErrors: true,
+					},
+					serverSelectionTimeoutMS: 20000,
+					socketTimeoutMS: 30000,
+					minPoolSize: 0,
+					maxIdleTimeMS: 300000,
+					connectTimeoutMS: 10000,
+					maxPoolSize: 10,
+					appName,
 				});
 
 				const onConnected = () => {
