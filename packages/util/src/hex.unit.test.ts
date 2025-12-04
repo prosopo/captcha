@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from "vitest";
-import { embedData, extractData } from "../hex.js";
+import { embedData, extractData } from "./hex.js";
 
 const hex =
 	"0x0101010101010101010101010101010101010101010101010101010101010101";

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { compareBinaryStrings, majorityAverage } from "../binaryString.js";
+import { compareBinaryStrings, majorityAverage } from "./binaryString.js";
 
 describe("majorityAverage", () => {
 	it("returns empty string for empty input", () => {

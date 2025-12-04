@@ -12,7 +12,7 @@ import { describe, expect, test } from "vitest";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { at } from "../at.js";
+import { at } from "./at.js";
 
 describe("at", () => {
 	test("types", () => {
