@@ -15,11 +15,21 @@ import {
 	AutoIncrementID,
 	type AutoIncrementIDOptions,
 } from "@typegoose/auto-increment";
+import { getMongoConnectionOptions } from "@prosopo/database";
 import mongoose, { type Connection } from "mongoose";
+import { fileURLToPath } from "url";
 import UserSchema from "../models/user.js";
 
 function connectionFactory(uri: string): Connection {
-	const conn = mongoose.createConnection(uri);
+	const appName = fileURLToPath(import.meta.url);
+
+	const conn = mongoose.createConnection(
+		uri,
+		getMongoConnectionOptions({
+			url: uri,
+			appName,
+		}),
+	);
 	if (!conn.models.user) {
 		UserSchema.plugin(AutoIncrementID, {
 			field: "id",
