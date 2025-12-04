@@ -76,6 +76,9 @@ export interface MongoConnectionOptions extends Partial<ConnectOptions> {
     maxIdleTimeMS: number;
     appName: string;
     serverSelectionTimeoutMS: number;
+    keepAlive: boolean;
+    keepAliveInitialDelay: number;
+    maxConnecting: number;
     compressors: ("zstd" | "none" | "snappy" | "zlib")[];
     dbName?: string;
 }
@@ -119,11 +122,14 @@ export const getMongoConnectionOptions = (
         },
         maxPoolSize, // allow up to N connections at any given time. >1 connection allows parallel db operations
         minPoolSize: 0, // allow pool to close idle connections down to this amount, 0 keep no connections open if they've been idle for longer than maxIdleTimeMS
+        maxConnecting: 2, // maximum number of concurrent connection attempts
         connectTimeoutMS: 10000, // max time to connect to the database
         socketTimeoutMS: 30000, // max time to wait for a response from the database when doing an operation
         maxIdleTimeMS: 300000, // max time spent idle before closing the connection
         appName,
         serverSelectionTimeoutMS: 20000, // max time to wait for a response from the database
+        keepAlive: true, // enable keep-alive
+        keepAliveInitialDelay: 120000, // initial delay before sending keep-alive probes (2 minutes)
         compressors,
     };
 
