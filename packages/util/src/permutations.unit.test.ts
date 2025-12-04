@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it, test } from "vitest";
-import { permutations, uniqueSubsets } from "../permutations.js";
+import { permutations, uniqueSubsets } from "./permutations.js";
 
 describe("permutations", () => {
 	test("handles empty array", () => {

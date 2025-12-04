@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from "vitest";
-import { rng, seedLodash } from "../lodash.js";
+import { rng, seedLodash } from "./lodash.js";
 
 describe("rng", () => {
 	test("generates random numbers using a seed", () => {
