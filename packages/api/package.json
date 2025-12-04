@@ -21,7 +21,10 @@
 		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=test vitest run --config ./vite.test.config.ts --mode test",
+		"test:watch": "NODE_ENV=test vitest --config ./vite.test.config.ts --mode test",
+		"test:coverage": "NODE_ENV=test vitest run --coverage --config ./vite.test.config.ts --mode test"
 	},
 	"repository": {
 		"type": "git",
