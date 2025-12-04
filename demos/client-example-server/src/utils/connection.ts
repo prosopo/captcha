@@ -15,27 +15,21 @@ import {
 	AutoIncrementID,
 	type AutoIncrementIDOptions,
 } from "@typegoose/auto-increment";
-import { ServerApiVersion } from "mongodb";
+import { getMongoConnectionOptions } from "@prosopo/database";
 import mongoose, { type Connection } from "mongoose";
 import { fileURLToPath } from "url";
 import UserSchema from "../models/user.js";
 
 function connectionFactory(uri: string): Connection {
 	const appName = fileURLToPath(import.meta.url);
-	const conn = mongoose.createConnection(uri, {
-		serverApi: {
-			version: ServerApiVersion.v1,
-			strict: true,
-			deprecationErrors: true,
-		},
-		serverSelectionTimeoutMS: 20000,
-		socketTimeoutMS: 30000,
-		minPoolSize: 0,
-		maxIdleTimeMS: 300000,
-		connectTimeoutMS: 10000,
-		maxPoolSize: 10,
-		appName,
-	});
+
+	const conn = mongoose.createConnection(
+		uri,
+		getMongoConnectionOptions({
+			url: uri,
+			appName,
+		}),
+	);
 	if (!conn.models.user) {
 		UserSchema.plugin(AutoIncrementID, {
 			field: "id",

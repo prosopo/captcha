@@ -13,7 +13,7 @@
 // limitations under the License.
 import { type Logger, ProsopoDBError, getLogger } from "@prosopo/common";
 import type { IDatabase } from "@prosopo/types-database";
-import { ServerApiVersion } from "mongodb";
+import { getMongoConnectionOptions } from "../mongooseOptions.js";
 import mongoose, { type Connection } from "mongoose";
 import { fileURLToPath } from "url";
 
@@ -101,21 +101,15 @@ export class MongoDatabase implements IDatabase {
 			// Start a new connection
 			this.connecting = new Promise((resolve, reject) => {
 				const appName = fileURLToPath(import.meta.url);
-				const connection = mongoose.createConnection(this.url, {
-					dbName: this.dbname,
-					serverApi: {
-						version: ServerApiVersion.v1,
-						strict: true,
-						deprecationErrors: true,
-					},
-					serverSelectionTimeoutMS: 20000,
-					socketTimeoutMS: 30000,
-					minPoolSize: 0,
-					maxIdleTimeMS: 300000,
-					connectTimeoutMS: 10000,
-					maxPoolSize: 10,
-					appName,
-				});
+
+				const connection = mongoose.createConnection(
+					this.url,
+					getMongoConnectionOptions({
+						url: this.url,
+						appName,
+						dbName: this.dbname,
+					}),
+				);
 
 				const onConnected = () => {
 					this.logger.debug(() => ({
