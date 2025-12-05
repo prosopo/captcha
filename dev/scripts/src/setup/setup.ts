@@ -158,6 +158,7 @@ export async function setup(provider: boolean, sites: boolean) {
 					msg: `Registering ${siteKey.secret} siteKey ... ${siteKey.pair?.address}`,
 				}));
 
+
 				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
 
 				env.logger.debug(() => ({
