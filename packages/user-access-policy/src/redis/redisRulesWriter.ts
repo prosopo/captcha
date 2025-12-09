@@ -103,9 +103,10 @@ export class RedisRulesWriter implements AccessRulesWriter {
 
 			if (expiresUnixTimestamp) {
 				// Redis expireAt expects seconds. Detect if timestamp is in milliseconds or seconds.
-				// Timestamps > 10 billion are likely milliseconds (e.g., year 2286+ in seconds, or year 1970+ in ms)
-				// Timestamps < 10 billion are likely seconds (covers dates up to year 2286)
-				const isMilliseconds = expiresUnixTimestamp > 10_000_000_000;
+				// Unix timestamps in milliseconds (since 1970) are > 10 billion
+				// Unix timestamps in seconds won't reach 10 billion until year 2286
+				const MILLISECOND_THRESHOLD = 10_000_000_000;
+				const isMilliseconds = expiresUnixTimestamp > MILLISECOND_THRESHOLD;
 				const expiresUnixTimestampInSeconds = isMilliseconds
 					? Math.floor(expiresUnixTimestamp / 1000)
 					: expiresUnixTimestamp;
