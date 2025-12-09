@@ -147,18 +147,15 @@ export async function getExternalsFromReferences(
 					if (err) {
 						reject(err);
 					}
-					fs.readFile(
-						new URL(packageJsonPath, import.meta.url),
-						(err, buffer) => {
-							if (err) {
-								reject(err);
-							} else {
-								const packageJson = JSON.parse(buffer.toString());
-								const pkg = packageJson.name;
-								resolve(pkg);
-							}
-						},
-					);
+					fs.readFile(packageJsonPath, (err, buffer) => {
+						if (err) {
+							reject(err);
+						} else {
+							const packageJson = JSON.parse(buffer.toString());
+							const pkg = packageJson.name;
+							resolve(pkg);
+						}
+					});
 				});
 			}),
 		);
