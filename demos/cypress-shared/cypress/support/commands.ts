@@ -22,7 +22,6 @@ import {
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
-import { u8aToHex } from "@polkadot/util";
 import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 

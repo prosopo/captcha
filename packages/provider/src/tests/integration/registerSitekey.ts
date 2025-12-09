@@ -20,7 +20,6 @@ import {
 	type KeyringPair,
 	Tier,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
 
 export const registerSiteKey = async (
 	siteKey: string,

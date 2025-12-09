@@ -16,7 +16,6 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { ClientApiPaths } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, { type Router } from "express";
-import type { ObjectId } from "mongoose";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";

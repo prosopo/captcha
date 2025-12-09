@@ -3,11 +3,7 @@
 
 import { u8aToHex } from "@polkadot/util";
 import { describe, expect, it } from "vitest";
-import {
-	sr25519FromSeed,
-	sr25519Sign,
-	sr25519jwtIssue,
-} from "../sr25519/index.js";
+import { sr25519FromSeed, sr25519jwtIssue } from "../sr25519/index.js";
 import type { JWT } from "../types.js";
 import { jwtVerify } from "./index.js";
 

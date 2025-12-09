@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { hexToU8a, isHex, stringToU8a } from "@polkadot/util";
+import { hexToU8a } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
-import { type JWT, sr25519Verify } from "@prosopo/util-crypto";
+import type { JWT } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = (
