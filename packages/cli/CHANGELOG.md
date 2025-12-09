@@ -1,5 +1,110 @@
 # @prosopo/cli
 
+## 3.5.17
+### Patch Changes
+
+- Updated dependencies [c6faa77]
+  - @prosopo/provider@3.14.6
+
+## 3.5.16
+### Patch Changes
+
+- a31ae35: Release bump
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+  - @prosopo/provider@3.14.5
+  - @prosopo/env@3.2.33
+  - @prosopo/api-express-router@3.0.45
+
+## 3.5.15
+### Patch Changes
+
+- 7a1f3a0: Remove used fns
+
+## 3.5.14
+### Patch Changes
+
+  - @prosopo/env@3.2.32
+  - @prosopo/provider@3.14.4
+  - @prosopo/api-express-router@3.0.44
+
+## 3.5.13
+### Patch Changes
+
+- Updated dependencies [ea5f1f8]
+  - @prosopo/provider@3.14.3
+
+## 3.5.12
+### Patch Changes
+
+- f4545dd: Exclude kerberos and change workflow to check for broken imports in provider image
+
+## 3.5.11
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+  - @prosopo/api-express-router@3.0.43
+  - @prosopo/env@3.2.31
+  - @prosopo/keyring@2.8.43
+  - @prosopo/provider@3.14.2
+  - @prosopo/user-access-policy@3.5.35
+
+## 3.5.10
+### Patch Changes
+
+- Updated dependencies [b5b21f8]
+- Updated dependencies [345b25b]
+- Updated dependencies [1fd84de]
+  - @prosopo/provider@3.14.1
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+  - @prosopo/env@3.2.30
+  - @prosopo/api-express-router@3.0.42
+  - @prosopo/keyring@2.8.42
+  - @prosopo/user-access-policy@3.5.34
+
+## 3.5.9
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [5ad6f48]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e3a8948]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/provider@3.14.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/api@3.1.38
+  - @prosopo/api-express-router@3.0.41
+  - @prosopo/common@3.1.27
+  - @prosopo/env@3.2.29
+  - @prosopo/keyring@2.8.41
+  - @prosopo/user-access-policy@3.5.33
+  - @prosopo/dotenv@3.0.32
+
+## 3.5.8
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/workspace@3.1.19
+  - @prosopo/api@3.1.37
+  - @prosopo/api-express-router@3.0.40
+  - @prosopo/common@3.1.26
+  - @prosopo/dotenv@3.0.31
+  - @prosopo/env@3.2.28
+  - @prosopo/keyring@2.8.40
+  - @prosopo/locale@3.1.26
+  - @prosopo/provider@3.13.7
+  - @prosopo/types@3.6.4
+  - @prosopo/user-access-policy@3.5.32
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
 ## 3.5.7
 ### Patch Changes
 

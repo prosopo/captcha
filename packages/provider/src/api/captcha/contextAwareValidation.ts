@@ -38,14 +38,20 @@ export function getContextThreshold(
 	contextType: ContextType,
 ): number {
 	const contextAware = settings.contextAware;
-	if (!contextAware) {
+	if (contextAware === undefined) {
 		return contextAwareThresholdDefault;
 	}
 
-	// Check if there's a context-specific threshold
-	const contexts = contextAware.contexts || [];
-	const contextConfig = contexts.find((c) => c.type === contextType);
+	const contexts = contextAware.contexts;
+	let contextConfig: { type: ContextType; threshold: number } | undefined;
 
-	// Return context-specific threshold if found, otherwise return global threshold
-	return contextConfig?.threshold ?? contextAware.threshold;
+	if (contexts !== undefined) {
+		contextConfig = (
+			contexts as Partial<
+				Record<ContextType, { type: ContextType; threshold: number }>
+			>
+		)[contextType];
+	}
+
+	return contextConfig?.threshold ?? contextAwareThresholdDefault;
 }

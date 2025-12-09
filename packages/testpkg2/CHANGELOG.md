@@ -1,5 +1,10 @@
 # @prosopo/testpkg2
 
+## 1.0.30
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 1.0.29
 ### Patch Changes
 

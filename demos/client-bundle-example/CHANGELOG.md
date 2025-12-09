@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.10.11
+### Patch Changes
+
+- 7d5eb3f: bump
+
 ## 2.10.10
 ### Patch Changes
 

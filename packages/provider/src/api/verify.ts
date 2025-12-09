@@ -26,6 +26,7 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
@@ -39,6 +40,9 @@ import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js"
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
+	const userAccessRulesStorage: AccessRulesStorage = env
+		.getDb()
+		.getUserAccessRulesStorage();
 
 	/**
 	 * Verifies a dapp's solution as being approved or not
@@ -229,6 +233,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						verifiedTimeout,
 						env,
 						ip,
+						userAccessRulesStorage,
 					);
 
 				const verificationResponse: VerificationResponse =

@@ -98,8 +98,8 @@ export const IPValidationRulesSchema = object({
 
 // Context type enum for filtering entropy samples
 export enum ContextType {
-	Webview = "webview",
 	Default = "default",
+	Webview = "webview",
 }
 
 // Zod schema for context type
@@ -113,6 +113,20 @@ export const ContextConfigSchema = z.object({
 
 export type IContextConfig = z.infer<typeof ContextConfigSchema>;
 
+const ContextsSchema = z.record(
+	z.enum([ContextType.Default, ContextType.Webview]),
+	ContextConfigSchema,
+);
+
+export type IContexts = z.infer<typeof ContextsSchema>;
+
+const ContextAwareSchema = object({
+	enabled: boolean().optional().default(false),
+	contexts: ContextsSchema,
+});
+
+export type IContextAware = z.infer<typeof ContextAwareSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string())
@@ -125,13 +139,7 @@ export const ClientSettingsSchema = object({
 	imageThreshold: number().optional().default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
-	contextAware: z
-		.object({
-			enabled: boolean().optional().default(false),
-			threshold: number().optional().default(contextAwareThresholdDefault),
-			contexts: array(ContextConfigSchema).optional(),
-		})
-		.optional(),
+	contextAware: ContextAwareSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

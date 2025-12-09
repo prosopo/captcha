@@ -16,7 +16,7 @@ import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
-	ContextType,
+	type ContextType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
@@ -33,7 +33,7 @@ import type {
 import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
 
-const SAMPLE_SIZE = 100;
+const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
@@ -299,8 +299,10 @@ export class ClientTaskManager {
 			for (const client of clients) {
 				// Calculate context-specific entropy if client has context awareness enabled
 				if (client.settings?.contextAware?.enabled) {
-					// Always calculate for default and webview contexts
-					const contextTypes = [ContextType.Default, ContextType.Webview];
+					// Get context types from client settings
+					const contextTypes = Object.keys(
+						client.settings.contextAware.contexts ?? {},
+					) as ContextType[];
 
 					for (const contextType of contextTypes) {
 						const contextSamples = await this.providerDB.sampleContextEntropy(

@@ -815,6 +815,7 @@ export class ProviderDatabase
 		serverChecked = false,
 		userSubmitted = false,
 		userSignature?: string,
+		coords?: [number, number][][],
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
@@ -826,12 +827,14 @@ export class ProviderDatabase
 			| "storedAtTimestamp"
 			| "userSignature"
 			| "lastUpdatedTimestamp"
+			| "coords"
 		> = {
 			result,
 			serverChecked,
 			userSubmitted,
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
+			...(coords && { coords }),
 		};
 		try {
 			const updateResult = await tables.powcaptcha.updateOne(
@@ -1322,7 +1325,7 @@ export class ProviderDatabase
 		}
 
 		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
+		const filter: Pick<PendingCaptchaRequest, [ApiParams.requestHash]> = {
 			[ApiParams.requestHash]: requestHash,
 		};
 		await this.tables?.pending.updateOne<PendingCaptchaRequest>(
@@ -1875,7 +1878,7 @@ export class ProviderDatabase
 			},
 			{
 				$lookup: {
-					from: "session",
+					from: "sessions",
 					localField: "sessionId",
 					foreignField: "sessionId",
 					as: "sessionData",

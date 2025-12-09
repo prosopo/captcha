@@ -26,9 +26,18 @@ import {
 	type PoWChallengeId,
 	type RequestHeaders,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	PoWCaptchaRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { at, verifyRecency } from "@prosopo/util";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
+import { at, extractData, verifyRecency } from "@prosopo/util";
+import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -37,6 +46,19 @@ import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+
+/**
+ * Finds a hard block policy from access policies.
+ * A hard block is a Block policy without a captchaType specified.
+ * Policies with captchaType are for captcha type selection, not hard blocking.
+ */
+const findHardBlockPolicy = (
+	accessPolicies: AccessPolicy[],
+): AccessPolicy | undefined => {
+	return accessPolicies.find(
+		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
+	);
+};
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
@@ -51,6 +73,53 @@ export class PowCaptchaManager extends CaptchaManager {
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+	}
+
+	/**
+	 * Checks if a user should be hard blocked based on access policies
+	 * Only checks for Block policies without captchaType
+	 *
+	 * @returns The blocking policy if user should be blocked, undefined otherwise
+	 */
+	private async checkForHardBlock(
+		userAccessRulesStorage: AccessRulesStorage,
+		challengeRecord: PoWCaptchaRecord,
+		userAccount: string,
+		headers: RequestHeaders,
+		coords?: [number, number][][],
+	): Promise<AccessPolicy | undefined> {
+		// Get headHash from session record if available
+		let headHash: string | undefined;
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			headHash = sessionRecord?.decryptedHeadHash;
+		}
+
+		// Serialize coords to string for querying
+		const coordsString = coords ? JSON.stringify(coords) : undefined;
+
+		const ipAddressRecord = getIpAddressFromComposite(
+			challengeRecord.ipAddress,
+		);
+
+		const userScope = getRequestUserScope(
+			headers,
+			challengeRecord.ja4,
+			ipAddressRecord.address,
+			userAccount,
+			headHash,
+			coordsString,
+		);
+
+		const accessPolicies = await this.getPrioritisedAccessPolicies(
+			userAccessRulesStorage,
+			challengeRecord.dappAccount,
+			userScope,
+		);
+
+		return findHardBlockPolicy(accessPolicies);
 	}
 
 	/**
@@ -95,6 +164,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param salt
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
@@ -104,6 +174,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		salt?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -137,6 +208,24 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
+		// Extract coordinates from salt if provided
+		let coords: [number, number][][] | undefined;
+		if (salt) {
+			try {
+				const extractedData = extractData(salt);
+				// Convert extracted data to coordinate pairs
+				if (extractedData.length >= 2) {
+					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to extract coordinates from salt",
+					error,
+					salt,
+				}));
+			}
+		}
+
 		if (!verifyRecency(challenge, timeout)) {
 			await this.db.updatePowCaptchaRecordResult(
 				challenge,
@@ -147,6 +236,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				false, //serverchecked
 				true, // usersubmitted
 				userTimestampSignature,
+				coords,
 			);
 			return false;
 		}
@@ -167,6 +257,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			false,
 			true,
 			userTimestampSignature,
+			coords,
 		);
 		return correct;
 	}
@@ -178,7 +269,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} dappAccount - the dapp that is requesting the captcha
 	 * @param {string} challenge - the starting string for the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
-	 * @param ip
+	 * @param env - provider environment
+	 * @param ip - optional IP address for validation
+	 * @param userAccessRulesStorage - storage for querying user access policies
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -186,6 +279,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		timeout: number,
 		env: ProviderEnvironment,
 		ip?: string,
+		userAccessRulesStorage?: AccessRulesStorage,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -235,6 +329,37 @@ export class PowCaptchaManager extends CaptchaManager {
 		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
 			return notVerifiedResponse;
+		}
+
+		// Check user access policies for hard blocks
+		if (userAccessRulesStorage) {
+			try {
+				const blockPolicy = await this.checkForHardBlock(
+					userAccessRulesStorage,
+					challengeRecord,
+					challengeRecord.userAccount,
+					challengeRecord.headers,
+					challengeRecord.coords,
+				);
+
+				if (blockPolicy) {
+					this.logger.info(() => ({
+						msg: "User blocked by access policy in server PoW verification",
+						data: {
+							challenge,
+							userAccount: challengeRecord.userAccount,
+							dappAccount,
+							policy: blockPolicy,
+						},
+					}));
+					return notVerifiedResponse;
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check user access policies in server PoW verification",
+					error,
+				}));
+			}
 		}
 
 		if (ip) {

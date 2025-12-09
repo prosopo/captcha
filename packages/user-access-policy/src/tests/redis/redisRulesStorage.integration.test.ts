@@ -376,7 +376,8 @@ describe("redisAccessRulesStorage", () => {
 			};
 			const johnHeaderAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				headersHash: "chrome",
+				headersHash:
+					"00110110100001111101001101100101101101001000011111010011011001010101000110000111110100110110010111010100100011011101101010000011",
 			};
 			const globalJa4AccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
@@ -430,7 +431,8 @@ describe("redisAccessRulesStorage", () => {
 
 			const johnHeaderAccessRule: AccessRule = {
 				type: AccessPolicyType.Block,
-				headersHash: "chrome",
+				headersHash:
+					"00110110100001111101001101100101101101001000011111010011011001010101000110000111110100110110010111010100100011011101101010000011",
 			};
 
 			const globalTargetAccessRule: AccessRule = {
@@ -848,6 +850,110 @@ describe("redisAccessRulesStorage", () => {
 
 			const foundAccessRules = await accessRulesReader.findRules(query);
 			expect(foundAccessRules).toEqual([accessRule, ipRangeAccessRule]);
+		});
+
+		test("finds rules by headHash with exact match", async () => {
+			// given
+			const headHash1 = "abc123def456";
+			const headHash2 = "xyz789ghi012";
+
+			const headHashAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				headHash: headHash1,
+			};
+			const otherHeadHashAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				headHash: headHash2,
+			};
+
+			await insertRules([headHashAccessRule, otherHeadHashAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					headHash: headHash1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([headHashAccessRule]);
+		});
+
+		test("finds rules by coords with exact match", async () => {
+			// given
+			const coords1 = "[[[100,200]]]";
+			const coords2 = "[[[300,400]]]";
+
+			const coordsAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				coords: coords1,
+			};
+			const otherCoordsAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				coords: coords2,
+			};
+
+			await insertRules([coordsAccessRule, otherCoordsAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					coords: coords1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([coordsAccessRule]);
+		});
+
+		test("finds rules by combined headHash and coords with exact match", async () => {
+			// given
+			const headHash1 = "abc123def456";
+			const coords1 = "[[[100,200]]]";
+
+			const combinedAccessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "clientId",
+				headHash: headHash1,
+				coords: coords1,
+			};
+			const headHashOnlyAccessRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				clientId: "clientId",
+				headHash: headHash1,
+			};
+
+			await insertRules([combinedAccessRule, headHashOnlyAccessRule]);
+
+			// when
+			const foundAccessRules = await accessRulesReader.findRules({
+				policyScope: {
+					clientId: "clientId",
+				},
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: {
+					headHash: headHash1,
+					coords: coords1,
+				},
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			// then
+			expect(foundAccessRules).toEqual([combinedAccessRule]);
 		});
 	});
 
