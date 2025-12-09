@@ -102,10 +102,13 @@ export class RedisRulesWriter implements AccessRulesWriter {
 			queries.hSet(ruleKey, ruleValue);
 
 			if (expiresUnixTimestamp) {
-				// Convert milliseconds to seconds as Redis expireAt expects seconds
-				const expiresUnixTimestampInSeconds = Math.floor(
-					expiresUnixTimestamp / 1000,
-				);
+				// Redis expireAt expects seconds. Detect if timestamp is in milliseconds or seconds.
+				// Timestamps > 10 billion are likely milliseconds (e.g., year 2286+ in seconds, or year 1970+ in ms)
+				// Timestamps < 10 billion are likely seconds (covers dates up to year 2286)
+				const isMilliseconds = expiresUnixTimestamp > 10_000_000_000;
+				const expiresUnixTimestampInSeconds = isMilliseconds
+					? Math.floor(expiresUnixTimestamp / 1000)
+					: expiresUnixTimestamp;
 				queries.expireAt(ruleKey, expiresUnixTimestampInSeconds);
 			}
 
