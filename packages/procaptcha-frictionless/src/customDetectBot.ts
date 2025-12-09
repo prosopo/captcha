@@ -89,35 +89,8 @@ const customDetectBot: BotDetectionFunction = async (
 		hasTouchSupport?: string;
 		encryptBehavioralData?: (data: string) => Promise<string>;
 		packBehavioralData?: (data: string) => Promise<string>;
+		userAccount: Account;
 	};
-
-	console.log("[DEBUG] Detection result from detector:", detectionResult);
-	console.log("[DEBUG] Detection result keys:", Object.keys(detectionResult));
-	console.log(
-		"[DEBUG] Has mouseTracker:",
-		!!detectionResult.mouseTracker,
-		typeof detectionResult.mouseTracker,
-	);
-	console.log(
-		"[DEBUG] Has touchTracker:",
-		!!detectionResult.touchTracker,
-		typeof detectionResult.touchTracker,
-	);
-	console.log(
-		"[DEBUG] Has clickTracker:",
-		!!detectionResult.clickTracker,
-		typeof detectionResult.clickTracker,
-	);
-	console.log(
-		"[DEBUG] Has encryptBehavioralData:",
-		!!detectionResult.encryptBehavioralData,
-		typeof detectionResult.encryptBehavioralData,
-	);
-	console.log(
-		"[DEBUG] Has hasTouchSupport:",
-		!!detectionResult.hasTouchSupport,
-		detectionResult.hasTouchSupport,
-	);
 
 	const userAccount = detectionResult.userAccount;
 

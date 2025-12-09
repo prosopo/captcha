@@ -90,8 +90,6 @@ export const Manager = (
 			...configInput,
 		};
 
-		console.log("Using config:", config);
-
 		// overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user
 		// changes account in the middle of the captcha process.
 		if (state.account) {
@@ -180,7 +178,6 @@ export const Manager = (
 
 				// use the passed in account (could be web3) or create a new account
 				const user = await selectAccount();
-				console.log("User", user);
 				const userAccount = user.account.address;
 
 				// set the account created or injected by the extension
@@ -223,8 +220,6 @@ export const Manager = (
 					frictionlessState?.sessionId,
 				);
 
-				console.log("Challenge:", challenge);
-
 				if (challenge.error) {
 					updateState({
 						loading: false,
@@ -259,108 +254,48 @@ export const Manager = (
 						});
 					}
 
-					const userTimestampSignature = await signer.signRaw({
-						address: userAccount,
-						data: stringToHex(challenge[ApiParams.timestamp].toString()),
-						type: "bytes",
-					});
+				const userTimestampSignature = await signer.signRaw({
+					address: userAccount,
+					data: stringToHex(challenge[ApiParams.timestamp].toString()),
+					type: "bytes",
+				});
 
-					console.log("[DEBUG] About to check frictionlessState");
-					console.log("[DEBUG] frictionlessState:", frictionlessState);
-					console.log(
-						"[DEBUG] Has encryptBehavioralData:",
-						!!frictionlessState?.encryptBehavioralData,
-					);
-					console.log(
-						"[DEBUG] Has behaviorCollector1:",
-						!!frictionlessState?.behaviorCollector1,
-					);
-					console.log(
-						"[DEBUG] Has behaviorCollector2:",
-						!!frictionlessState?.behaviorCollector2,
-					);
-					console.log(
-						"[DEBUG] Has behaviorCollector3:",
-						!!frictionlessState?.behaviorCollector3,
-					);
+				let encryptedBehavioralData: string | undefined;
 
-					let encryptedBehavioralData: string | undefined;
+				// Collect and encrypt behavioral data before submission
+				if (
+					frictionlessState?.encryptBehavioralData &&
+					(frictionlessState?.behaviorCollector1 ||
+						frictionlessState?.behaviorCollector2 ||
+						frictionlessState?.behaviorCollector3)
+				) {
+					try {
+						const behavioralData = {
+							collector1:
+								frictionlessState.behaviorCollector1?.getData() || [],
+							collector2:
+								frictionlessState.behaviorCollector2?.getData() || [],
+							collector3:
+								frictionlessState.behaviorCollector3?.getData() || [],
+							deviceCapability:
+								frictionlessState.deviceCapability || "unknown",
+						};
 
-					// Collect and encrypt behavioral data before submission
-					if (
-						frictionlessState?.encryptBehavioralData &&
-						(frictionlessState?.behaviorCollector1 ||
-							frictionlessState?.behaviorCollector2 ||
-							frictionlessState?.behaviorCollector3)
-					) {
-						console.log("[DEBUG] Inside behavioral data collection block");
-						try {
-							const behavioralData = {
-								collector1:
-									frictionlessState.behaviorCollector1?.getData() || [],
-								collector2:
-									frictionlessState.behaviorCollector2?.getData() || [],
-								collector3:
-									frictionlessState.behaviorCollector3?.getData() || [],
-								deviceCapability:
-									frictionlessState.deviceCapability || "unknown",
-							};
+						// Pack the behavioral data before stringifying
+						const dataToEncrypt = frictionlessState.packBehavioralData
+							? frictionlessState.packBehavioralData(behavioralData)
+							: behavioralData;
 
-							console.log(
-								"[DEBUG] Behavioral data collected:",
-								behavioralData,
+						encryptedBehavioralData =
+							await frictionlessState.encryptBehavioralData(
+								JSON.stringify(dataToEncrypt),
 							);
-							console.log(
-								"[DEBUG] Collector1 data length:",
-								behavioralData.collector1.length,
-							);
-							console.log(
-								"[DEBUG] Collector2 data length:",
-								behavioralData.collector2.length,
-							);
-							console.log(
-								"[DEBUG] Collector3 data length:",
-								behavioralData.collector3.length,
-							);
-
-							// Pack the behavioral data before stringifying
-							const dataToEncrypt = frictionlessState.packBehavioralData
-								? frictionlessState.packBehavioralData(behavioralData)
-								: behavioralData;
-
-							const stringifiedData = JSON.stringify(dataToEncrypt);
-							console.log(
-								"[DEBUG] Stringified data length (after packing):",
-								stringifiedData.length,
-							);
-
-							console.log("[DEBUG] About to encrypt behavioral data");
-							encryptedBehavioralData =
-								await frictionlessState.encryptBehavioralData(
-									stringifiedData,
-								);
-							console.log(
-								"[DEBUG] Encryption complete, encrypted length:",
-								encryptedBehavioralData.length,
-							);
-							console.log(
-								"[Encrypted Behavioral Data]:",
-								encryptedBehavioralData,
-							);
-						} catch (error) {
-							console.error(
-								"[DEBUG] Error encrypting behavioral data:",
-								error,
-							);
-						}
-					} else {
-						console.log(
-							"[DEBUG] Skipping behavioral data collection - conditions not met",
-						);
+					} catch {
+						// Silently ignore behavioral data errors - captcha should still work
 					}
+				}
 
-					console.log("[DEBUG] About to submit PoW captcha solution");
-					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
+				const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
 						getDappAccount(),
