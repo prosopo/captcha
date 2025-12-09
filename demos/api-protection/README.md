@@ -114,20 +114,23 @@ Returns demo configuration and information.
 ### Environment Variables
 - `PROSOPO_SITE_KEY`: Your Procaptcha site key
 - `PROSOPO_SERVER_URL`: Procaptcha server URL (default: http://localhost:9229)
-- `VITE_BUNDLE_URL`: Procaptcha bundle URL (default: http://localhost:9269/procaptcha.bundle.js)
-- `VITE_RENDER_SCRIPT_URL`: React wrapper script URL (default: same as bundle URL)
-- `VITE_RENDER_SCRIPT_ID`: Script ID for the wrapper (default: procaptcha-script)
+- `VITE_PROSOPO_SITE_KEY`: Site key for Procaptcha (passed to frontend)
+- `VITE_API_URL`: Backend API URL (default: http://localhost:9234)
+- `VITE_RENDER_SCRIPT_URL`: Procaptcha bundle URL (default: http://localhost:9269/procaptcha.bundle.js)
+- `VITE_RENDER_SCRIPT_ID`: Script ID for the bundle (default: procaptcha-script)
 - `PORT`: Backend server port (default: 9234)
 
 ### Frontend Configuration
-The frontend automatically configures itself using environment variables passed through Vite:
+The frontend uses `@prosopo/react-procaptcha-wrapper` which automatically loads and manages the Procaptcha bundle:
 - `VITE_PROSOPO_SITE_KEY`: Site key for Procaptcha
 - `VITE_API_URL`: Backend API URL
-- `VITE_BUNDLE_URL`: Procaptcha bundle URL
+- `VITE_RENDER_SCRIPT_URL`: URL to the Procaptcha bundle script (loaded automatically)
+- `VITE_RENDER_SCRIPT_ID`: ID for the script element
 
-## React Wrapper Usage
+## React Wrapper Integration
 
-This demo uses the official `@prosopo/react-procaptcha-wrapper` for seamless integration:
+This demo uses the official `@prosopo/react-procaptcha-wrapper` which provides a clean React API for Procaptcha.
+The wrapper automatically handles loading the Procaptcha bundle script, so developers don't need to manage it manually:
 
 ```tsx
 import { ProcaptchaComponent } from '@prosopo/react-procaptcha-wrapper';
@@ -214,12 +217,13 @@ The wrapper eliminates common integration issues and provides a clean, React-nat
 ## Troubleshooting
 
 ### Procaptcha Not Loading
-- Check that the bundle server is running on localhost:9269
-- Verify `VITE_BUNDLE_URL` environment variable
-- Check browser console for JavaScript errors
+- Ensure the Procaptcha bundle server is running on `localhost:9269`
+- Verify `VITE_RENDER_SCRIPT_URL` environment variable points to the bundle
+- Check browser console for script loading errors
+- Verify `VITE_PROSOPO_SITE_KEY` is set correctly
 
 ### Token Validation Failures  
-- Ensure Procaptcha server is running on localhost:9229
+- Ensure Procaptcha server is running on the correct URL
 - Verify `PROSOPO_SERVER_URL` environment variable
 - Check server logs for validation errors
 

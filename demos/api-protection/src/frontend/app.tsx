@@ -12,231 +12,211 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useState, useEffect } from 'react';
-import { HotelSearch } from './components/HotelSearch';
-import { HotelResults } from './components/HotelResults';
-import { Header } from './components/Header';
-import { ProcaptchaProvider } from './components/ProcaptchaProvider';
-import type { SearchParams, Hotel } from './types';
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Header } from "./components/Header";
+import { HotelResults } from "./components/HotelResults";
+import { HotelSearch } from "./components/HotelSearch";
+import { ProcaptchaProvider } from "./components/ProcaptchaProvider";
+import type { Hotel, SearchParams } from "./types";
 
 declare global {
-  interface Window {
-    procaptcha?: {
-      execute: () => void;
-    };
-  }
+	interface Window {
+		procaptcha?: {
+			execute: () => void;
+		};
+	}
 }
 
-const SITE_KEY = import.meta.env.VITE_PROSOPO_SITE_KEY || '5GCP69mhanZqJqnTvaaGvJCJZWSahz6xE2c7bTGETqSB5KDK';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:9234';
+const SITE_KEY = import.meta.env.VITE_PROSOPO_SITE_KEY;
+const API_URL = import.meta.env.VITE_API_URL;
+const RENDER_SCRIPT_URL = import.meta.env.VITE_RENDER_SCRIPT_URL;
+const RENDER_SCRIPT_ID = import.meta.env.VITE_RENDER_SCRIPT_ID;
 
+console.log("Demo starting with site key:", SITE_KEY);
 
 export const App: React.FC = () => {
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [procaptchaToken, setProcaptchaToken] = useState<string | null>(null);
+	const [hotels, setHotels] = useState<Hotel[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [hasSearched, setHasSearched] = useState(false);
+	const [procaptchaToken, setProcaptchaToken] = useState<string | null>(null);
+	const [pendingSearch, setPendingSearch] = useState<SearchParams | null>(null);
+	const [isVerifying, setIsVerifying] = useState(false);
 
-  // Auto-execute procaptcha for invisible mode after component mounts
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // Listen for procaptcha:execute event to trigger verification
-      const handleExecute = () => {
-        console.log('Auto-executing Procaptcha for invisible mode');
-      };
+	// Load the Procaptcha bundle script
+	useEffect(() => {
+		if (document.getElementById(RENDER_SCRIPT_ID)) {
+			return; // Script already loaded
+		}
 
-      document.addEventListener('procaptcha:execute', handleExecute);
+		const script = document.createElement("script");
+		script.id = RENDER_SCRIPT_ID;
+		script.src = RENDER_SCRIPT_URL;
+		script.async = true;
+		document.head.appendChild(script);
 
-      // Trigger execution if procaptcha is ready
-      if (window.procaptcha?.execute) {
-        window.procaptcha.execute();
-      }
+		return () => {
+			// Cleanup function to remove script if component unmounts
+			const existingScript = document.getElementById(RENDER_SCRIPT_ID);
+			if (existingScript) {
+				document.head.removeChild(existingScript);
+			}
+		};
+	}, []);
 
-      return () => {
-        document.removeEventListener('procaptcha:execute', handleExecute);
-      };
-    }, 2000);
+	// Execute search when we have both a token and pending search params
+	useEffect(() => {
+		if (procaptchaToken && pendingSearch) {
+			console.log(
+				"Procaptcha verified, executing search with params:",
+				pendingSearch,
+			);
+			executeSearch(pendingSearch);
+			setPendingSearch(null);
+		}
+	}, [procaptchaToken, pendingSearch]);
 
-    return () => clearTimeout(timer);
-  }, []);
+	const executeSearch = async (searchParams: SearchParams) => {
+		if (!procaptchaToken) {
+			console.error("No Procaptcha token available for search");
+			return;
+		}
 
-  const handleSearch = async (searchParams: SearchParams) => {
-    if (!procaptchaToken) {
-      setError('Please wait for security verification to complete');
+		setLoading(true);
+		setError(null);
+		setIsVerifying(false);
 
-      // Try to trigger procaptcha if not already verified
-      if (window.procaptcha?.execute) {
-        window.procaptcha.execute();
-      }
-      return;
-    }
+		try {
+			const response = await fetch(`${API_URL}/api/search`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					...searchParams,
+					procaptchaResponse: procaptchaToken,
+				}),
+			});
 
-    setLoading(true);
-    setError(null);
+			if (!response.ok) {
+				throw new Error("Search failed. Please try again.");
+			}
 
-    try {
-      const response = await fetch(`${API_URL}/api/search`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...searchParams,
-          procaptchaResponse: procaptchaToken,
-        }),
-      });
+			const data = await response.json();
+			setHotels(data.hotels || []);
+			setHasSearched(true);
 
-      if (!response.ok) {
-        throw new Error('Search failed. Please try again.');
-      }
+			// Reset token after successful use
+			setProcaptchaToken(null);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "An error occurred");
+			setHotels([]);
+			setProcaptchaToken(null);
+		} finally {
+			setLoading(false);
+			setIsVerifying(false);
+		}
+	};
 
-      const data = await response.json();
-      setHotels(data.hotels || []);
-      setHasSearched(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setHotels([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+	const handleSearch = async (searchParams: SearchParams) => {
+		console.log("Search initiated with params:", searchParams);
 
-  const handleProcaptchaSuccess = (token: string) => {
-    console.log('Procaptcha verification successful');
-    setProcaptchaToken(token);
-    setError(null);
-  };
+		if (procaptchaToken) {
+			// If we already have a token, execute search immediately
+			await executeSearch(searchParams);
+		} else {
+			// Store search params and start verification
+			setPendingSearch(searchParams);
+			setIsVerifying(true);
+			setError(null);
 
-  const handleProcaptchaError = (error: string) => {
-    console.error('Procaptcha verification failed:', error);
-    setError(`Verification failed: ${error}`);
-    setProcaptchaToken(null);
-  };
+			// Trigger procaptcha execution via custom event
+			const executeEvent = new CustomEvent("procaptcha:execute", {
+				detail: { timestamp: Date.now() },
+			});
+			document.dispatchEvent(executeEvent);
+		}
+	};
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+	const handleProcaptchaSuccess = useCallback((token: string) => {
+		console.log("Procaptcha verification successful, token received");
+		setProcaptchaToken(token);
+		setError(null);
+	}, []);
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Find Your Perfect Stay
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Search thousands of hotels worldwide with our secure booking platform.
-              Protected by Procaptcha to ensure genuine searches.
-            </p>
-          </div>
+	const handleProcaptchaError = useCallback((error: string) => {
+		console.error("Procaptcha verification failed:", error);
+		setError(`Verification failed: ${error}`);
+		setProcaptchaToken(null);
+		setIsVerifying(false);
+		setPendingSearch(null);
+	}, []);
 
-          {/* Search Form */}
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <ProcaptchaProvider
-              siteKey={SITE_KEY}
-              onSuccess={handleProcaptchaSuccess}
-              onError={handleProcaptchaError}
-            >
-              <HotelSearch
-                onSearch={handleSearch}
-                loading={loading}
-                procaptchaToken={procaptchaToken}
-              />
-            </ProcaptchaProvider>
-          </div>
+	return (
+		<ProcaptchaProvider
+			siteKey={SITE_KEY}
+			onSuccess={handleProcaptchaSuccess}
+			onError={handleProcaptchaError}
+		>
+			<div className="min-h-screen bg-gray-50">
+				<Header />
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-red-400"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-800">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
+				<main className="container mx-auto px-4 py-8">
+					<div className="max-w-6xl mx-auto">
+						{/* Hero Section */}
+						<div className="text-center mb-12">
+							<h1 className="text-4xl font-bold text-gray-900 mb-4">
+								Find Your Perfect Stay
+							</h1>
+							<p className="text-xl text-gray-600 max-w-2xl mx-auto">
+								Search thousands of hotels worldwide with our secure booking
+								platform. Protected by Procaptcha to ensure genuine searches.
+							</p>
+						</div>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-600"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <span className="text-lg text-gray-700">Searching hotels...</span>
-              </div>
-            </div>
-          )}
+						{/* Search Form */}
+						<div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+							<HotelSearch
+								onSearch={handleSearch}
+								loading={loading}
+								procaptchaToken={procaptchaToken}
+								isVerifying={isVerifying}
+							/>
+						</div>
 
-          {/* Results */}
-          {!loading && hasSearched && (
-            <HotelResults hotels={hotels} />
-          )}
+						{/* Error Message */}
+						{error && (
+							<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+								<div className="flex items-center">
+									<div className="flex-shrink-0">
+										<svg
+											className="h-5 w-5 text-red-400"
+											viewBox="0 0 20 20"
+											fill="currentColor"
+										>
+											<title>Error</title>
+											<path
+												fillRule="evenodd"
+												d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+												clipRule="evenodd"
+											/>
+										</svg>
+									</div>
+									<div className="ml-3">
+										<p className="text-red-700">{error}</p>
+									</div>
+								</div>
+							</div>
+						)}
 
-          {/* Demo Information */}
-          <div className="mt-16 bg-blue-50 rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-blue-900 mb-4">
-              🔒 API Protection Demo
-            </h2>
-            <div className="text-blue-800 space-y-3">
-              <p>
-                This demo showcases how Procaptcha protects APIs from automated scraping and abuse:
-              </p>
-              <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>
-                  <strong>Invisible Protection:</strong> Procaptcha runs silently in the background
-                </li>
-                <li>
-                  <strong>Proof-of-Work:</strong> Legitimate users complete a computational challenge
-                </li>
-                <li>
-                  <strong>Server Validation:</strong> The backend verifies each Procaptcha token
-                </li>
-                <li>
-                  <strong>Seamless UX:</strong> Human users experience no friction
-                </li>
-              </ul>
-              <p className="mt-4">
-                <strong>Try it:</strong> Search for hotels above. The form is protected by Procaptcha,
-                but you won't notice any additional steps - it works invisibly!
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+						{/* Results */}
+						<HotelResults hotels={hotels} />
+					</div>
+				</main>
+			</div>
+		</ProcaptchaProvider>
+	);
 };
 
 export default App;

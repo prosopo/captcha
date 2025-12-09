@@ -35,6 +35,7 @@ import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 class WidgetFactory {
 	private captchaRenderer: CaptchaRenderer | null = null;
 	private _i18n: Ti18n | null = null;
+	private createdWidgets = new WeakSet<Element>(); // Track which containers already have widgets
 
 	public constructor(
 		private readonly widgetThemeResolver: WidgetThemeResolver,
@@ -75,6 +76,17 @@ class WidgetFactory {
 		isWeb2 = true,
 		invisible = false,
 	): Promise<Root> {
+		// Prevent duplicate widget creation in the same container
+		if (this.createdWidgets.has(container)) {
+			console.warn(
+				"Widget already exists in this container, skipping creation",
+			);
+			throw new Error("Widget already exists in this container");
+		}
+
+		// Mark this container as having a widget
+		this.createdWidgets.add(container);
+
 		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
 			container,
 			renderOptions,

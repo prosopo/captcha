@@ -13,45 +13,45 @@
 // limitations under the License.
 
 export interface SearchParams {
-  destination: string;
-  checkinDate: string;
-  checkoutDate: string;
-  guests: number;
-  rooms: number;
+	destination: string;
+	checkinDate: string;
+	checkoutDate: string;
+	guests: number;
+	rooms: number;
 }
 
 export interface Hotel {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  price: number;
-  currency: string;
-  amenities: string[];
-  location: {
-    address: string;
-    city: string;
-    country: string;
-    coordinates: {
-      lat: number;
-      lng: number;
-    };
-  };
-  availability: boolean;
-  cancellationPolicy: string;
+	id: string;
+	name: string;
+	description: string;
+	image: string;
+	rating: number;
+	reviewCount: number;
+	price: number;
+	currency: string;
+	amenities: string[];
+	location: {
+		address: string;
+		city: string;
+		country: string;
+		coordinates: {
+			lat: number;
+			lng: number;
+		};
+	};
+	availability: boolean;
+	cancellationPolicy: string;
 }
 
 export interface SearchResponse {
-  hotels: Hotel[];
-  total: number;
-  searchId: string;
-  timestamp: string;
+	hotels: Hotel[];
+	total: number;
+	searchId: string;
+	timestamp: string;
 }
 
 export interface ApiError {
-  error: string;
-  code?: string;
-  details?: string;
+	error: string;
+	code?: string;
+	details?: string;
 }
