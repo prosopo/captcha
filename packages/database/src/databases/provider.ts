@@ -1325,7 +1325,7 @@ export class ProviderDatabase
 		}
 
 		// @ts-ignore
-		const filter: Pick<PendingCaptchaRequest, "requestHash"> = {
+		const filter: Pick<PendingCaptchaRequest, [ApiParams.requestHash]> = {
 			[ApiParams.requestHash]: requestHash,
 		};
 		await this.tables?.pending.updateOne<PendingCaptchaRequest>(

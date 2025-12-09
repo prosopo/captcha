@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.2.1
+### Patch Changes
+
+- 55fa825: Reinstate npm ls
+
 ## 3.2.0
 ### Minor Changes
 

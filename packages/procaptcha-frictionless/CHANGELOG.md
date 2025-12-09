@@ -1,5 +1,29 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.8.29
+### Patch Changes
+
+- Updated dependencies [c6faa77]
+  - @prosopo/detector@3.3.24
+
+## 2.8.28
+### Patch Changes
+
+  - @prosopo/procaptcha-react@2.9.25
+
+## 2.8.27
+### Patch Changes
+
+- caf53e2: Async user creation
+- Updated dependencies [caf53e2]
+  - @prosopo/detector@3.3.23
+
+## 2.8.26
+### Patch Changes
+
+- Updated dependencies [ea5f1f8]
+  - @prosopo/detector@3.3.22
+
 ## 2.8.25
 ### Patch Changes
 

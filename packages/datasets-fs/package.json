@@ -41,7 +41,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.0",
+		"@prosopo/config": "3.2.1",
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",

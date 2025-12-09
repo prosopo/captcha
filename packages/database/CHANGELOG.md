@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 3.6.4
+### Patch Changes
+
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+  - @prosopo/types-database@4.1.3
+
+## 3.6.3
+### Patch Changes
+
+- 9ab5f11: Remove ts-ignore for package bump
+
 ## 3.6.2
 ### Patch Changes
 

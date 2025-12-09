@@ -17,6 +17,7 @@ import { ProsopoEnvError } from "@prosopo/common";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
+	Account,
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
 	RandomProvider,
@@ -55,7 +56,6 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
 	const ext = new (await ExtensionLoader(config.web2))();
-	const userAccount = await ext.getAccount(config);
 
 	const detect = await DetectorLoader();
 	const detectionResult = (await detect(
@@ -63,7 +63,7 @@ const customDetectBot: BotDetectionFunction = async (
 		getRandomActiveProvider,
 		container,
 		restartFn,
-		userAccount.account.address,
+		() => ext.getAccount(config),
 	)) as {
 		token: string;
 		provider?: RandomProvider;
@@ -118,6 +118,8 @@ const customDetectBot: BotDetectionFunction = async (
 		!!detectionResult.hasTouchSupport,
 		detectionResult.hasTouchSupport,
 	);
+
+	const userAccount = detectionResult.userAccount;
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");

@@ -1,5 +1,20 @@
 # @prosopo/detector
 
+## 3.3.24
+### Patch Changes
+
+- c6faa77: Fix
+
+## 3.3.23
+### Patch Changes
+
+- caf53e2: Async user creation
+
+## 3.3.22
+### Patch Changes
+
+- ea5f1f8: Fix detectors
+
 ## 3.3.21
 ### Patch Changes
 

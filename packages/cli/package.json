@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cli",
-	"version": "3.5.11",
+	"version": "3.5.17",
 	"description": "CLI for Prosopo Provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -32,17 +32,16 @@
 	"dependencies": {
 		"@polkadot/types-codec": "16.4.9",
 		"@prosopo/api": "3.1.40",
-		"@prosopo/api-express-router": "3.0.43",
+		"@prosopo/api-express-router": "3.0.45",
 		"@prosopo/common": "3.1.27",
 		"@prosopo/dotenv": "3.0.32",
-		"@prosopo/env": "3.2.31",
+		"@prosopo/env": "3.2.33",
 		"@prosopo/keyring": "2.8.43",
 		"@prosopo/locale": "3.1.27",
-		"@prosopo/provider": "3.14.2",
+		"@prosopo/provider": "3.14.6",
 		"@prosopo/types": "3.7.2",
-		"@prosopo/user-access-policy": "3.5.35",
+		"@prosopo/user-access-policy": "3.5.36",
 		"@prosopo/util": "3.2.4",
-		"@prosopo/util-crypto": "13.5.28",
 		"@prosopo/workspace": "3.1.19",
 		"cors": "2.8.5",
 		"cron-parser": "4.9.0",
@@ -52,7 +51,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.2.0",
+		"@prosopo/config": "3.2.1",
 		"@polkadot-api/substrate-client": "0.1.4",
 		"@types/cors": "2.8.17",
 		"@types/node": "22.10.2",

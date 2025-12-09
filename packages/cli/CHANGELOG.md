@@ -1,5 +1,44 @@
 # @prosopo/cli
 
+## 3.5.17
+### Patch Changes
+
+- Updated dependencies [c6faa77]
+  - @prosopo/provider@3.14.6
+
+## 3.5.16
+### Patch Changes
+
+- a31ae35: Release bump
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+  - @prosopo/provider@3.14.5
+  - @prosopo/env@3.2.33
+  - @prosopo/api-express-router@3.0.45
+
+## 3.5.15
+### Patch Changes
+
+- 7a1f3a0: Remove used fns
+
+## 3.5.14
+### Patch Changes
+
+  - @prosopo/env@3.2.32
+  - @prosopo/provider@3.14.4
+  - @prosopo/api-express-router@3.0.44
+
+## 3.5.13
+### Patch Changes
+
+- Updated dependencies [ea5f1f8]
+  - @prosopo/provider@3.14.3
+
+## 3.5.12
+### Patch Changes
+
+- f4545dd: Exclude kerberos and change workflow to check for broken imports in provider image
+
 ## 3.5.11
 ### Patch Changes
 
