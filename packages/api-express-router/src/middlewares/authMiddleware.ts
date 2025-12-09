@@ -15,7 +15,7 @@
 import { hexToU8a } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
-import type { JWT } from "@prosopo/util-crypto";
+import { JWT } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = (

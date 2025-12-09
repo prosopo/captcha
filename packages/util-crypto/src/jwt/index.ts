@@ -6,3 +6,4 @@
  */
 
 export { jwtVerify } from "./jwtVerify.js";
+export type { JWT, JWTPayload, JWTVerifyResult } from "../types.js";
