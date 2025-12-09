@@ -1,9 +1,9 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { stringToU8a, u8aToHex, u8aToU8a } from "@polkadot/util";
+import { stringToU8a, u8aToHex, u8aToString, u8aToU8a } from "@polkadot/util";
 import { sign } from "@scure/sr25519";
-import { base64URLEncode } from "../base64/bs64.js";
+import { base64URLDecode, base64URLEncode } from "../base64/bs64.js";
 import type { JWT, JWTHeader, JWTPayload, Keypair } from "../types.js";
 
 /**
@@ -56,13 +56,11 @@ export function sr25519jwtParts(jwt: JWT) {
 		throw new Error("Invalid JWT format, parts cannot be empty");
 	}
 
-	const header: JWTHeader = JSON.parse(
-		Buffer.from(parts[0], "base64url").toString(),
-	);
+	const header: JWTHeader = JSON.parse(u8aToString(base64URLDecode(parts[0])));
 	const payload: JWTPayload = JSON.parse(
-		Buffer.from(parts[1], "base64url").toString(),
+		u8aToString(base64URLDecode(parts[1])),
 	);
-	const signature = Buffer.from(parts[2], "base64url").toString("hex");
+	const signature = u8aToHex(base64URLDecode(parts[2]));
 
 	return {
 		header,
