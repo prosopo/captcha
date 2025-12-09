@@ -37,16 +37,10 @@
 			"path": "../util/tsconfig.cjs.json"
 		},
 		{
-			"path": "../util-crypto/tsconfig.cjs.json"
-		},
-		{
 			"path": "../user-access-policy/tsconfig.cjs.json"
 		},
 		{
 			"path": "../api-express-router/tsconfig.cjs.json"
-		},
-		{
-			"path": "../types-database/tsconfig.cjs.json"
 		},
 		{
 			"path": "../../dev/workspace/tsconfig.cjs.json"

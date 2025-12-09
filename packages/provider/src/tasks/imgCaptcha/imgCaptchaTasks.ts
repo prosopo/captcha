@@ -36,7 +36,6 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	PendingCaptchaRequest,
 	UserCommitment,
@@ -52,19 +51,18 @@ import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
-	config: ProsopoConfigOutput;
-
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 	) {
-		super(db, pair, logger);
+		super(db, pair, config, logger);
 		this.config = config;
 	}
 
@@ -94,7 +92,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -161,7 +159,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			currentTime,
 			getCompositeIpAddress(ipAddress),
 			threshold,
-			frictionlessTokenId,
+			sessionId,
 		);
 		return {
 			captchas,
@@ -283,10 +281,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSignature: userTimestampSignature,
 				userSubmitted: true,
 				serverChecked: false,
-				requestedAtTimestamp: timestamp,
+				requestedAtTimestamp: new Date(timestamp),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
-				frictionlessTokenId: pendingRecord.frictionlessTokenId,
+				sessionId: pendingRecord.sessionId,
 				ja4,
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
@@ -486,6 +484,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
+		disallowWebView?: boolean,
+		contextAwareEnabled = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -519,7 +519,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// Check if solution was completed recently
 		const currentTime = Date.now();
-		const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
+		const timeSinceCompletion =
+			currentTime - solution.requestedAtTimestamp.getTime();
 
 		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {
@@ -569,18 +570,38 @@ export class ImgCaptchaManager extends CaptchaManager {
 		const isApproved = solution.result.status === CaptchaStatus.approved;
 
 		let score: number | undefined;
-		if (solution.frictionlessTokenId) {
-			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-				solution.frictionlessTokenId,
+		if (solution.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				solution.sessionId,
 			);
-			if (tokenRecord) {
-				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+			if (sessionRecord) {
+				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 				this.logger.info(() => ({
 					data: {
-						tscoreComponents: tokenRecord?.scoreComponents,
+						scoreComponents: sessionRecord?.scoreComponents,
 						score: score,
 					},
 				}));
+
+				if (
+					disallowWebView === true &&
+					(sessionRecord.scoreComponents.webView || 0) > 0
+				) {
+					this.logger.info(() => ({
+						msg: "Disallowing webview access - user not verified",
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
+				if (
+					contextAwareEnabled &&
+					sessionRecord.reason ===
+						FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
+				) {
+					this.logger.info(() => ({
+						msg: "Context aware validation failed",
+					}));
+					//return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
 			}
 		}
 

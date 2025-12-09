@@ -1,5 +1,31 @@
 # @prosopo/vite-plugin-watch-workspace
 
+## 2.6.30
+### Patch Changes
+
+- 7d5eb3f: bump
+
+## 2.6.29
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
+## 2.6.28
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+
+## 2.6.27
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+
+## 2.6.26
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+
 ## 2.6.25
 ### Patch Changes
 

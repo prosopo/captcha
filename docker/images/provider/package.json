@@ -1,9 +1,9 @@
 {
 	"name": "@prosopo/provider-docker",
-	"version": "3.4.6",
+	"version": "3.5.17",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"type": "module",
 	"main": "dist/index.js",
@@ -16,9 +16,11 @@
 		}
 	},
 	"dependencies": {
-		"@prosopo/cli": "3.0.2",
-		"@prosopo/config": "3.1.0",
-		"@prosopo/locale": "3.0.1"
+		"@prosopo/cli": "3.4.12",
+		"@prosopo/locale": "3.1.20"
+	},
+	"devDependencies": {
+		"@prosopo/config": "3.1.20"
 	},
 	"scripts": {
 		"docker-tag": "node -e \"const pkg=require('./package.json'); const base=pkg.name.replace('@','').replace('-docker',''); const tag=pkg.version + (process.env.NODE_ENV && process.env.NODE_ENV !== 'production' ? '-' + process.env.NODE_ENV : ''); console.log(base + ':' + tag)\"",

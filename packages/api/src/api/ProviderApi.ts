@@ -40,6 +40,7 @@ import {
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
+	ToggleMaintenanceModeBody,
 	UpdateDetectorKeyBody,
 	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
@@ -155,6 +156,7 @@ export default class ProviderApi
 		nonce: number,
 		userTimestampSignature: string,
 		timeout?: number,
+		salt?: string,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -171,6 +173,7 @@ export default class ProviderApi
 					[ApiParams.timestamp]: userTimestampSignature,
 				},
 			},
+			...(salt && { [ApiParams.salt]: salt }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
@@ -182,11 +185,13 @@ export default class ProviderApi
 
 	public getFrictionlessCaptcha(
 		token: string,
+		headHash: string,
 		dapp: string,
 		user: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body = {
 			[ApiParams.token]: token,
+			[ApiParams.headHash]: headHash,
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
 		};
@@ -296,6 +301,24 @@ export default class ProviderApi
 				headers: {
 					"Prosopo-Site-Key": this.account,
 					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public toggleMaintenanceMode(
+		enabled: boolean,
+		timestamp: string,
+		signature: string,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.ToggleMaintenanceMode,
+			ToggleMaintenanceModeBody.parse({ enabled }),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					timestamp,
+					signature,
 				},
 			},
 		);

@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type IPComparisonResponse,
-	type IPConnectionType,
-	type IPInfoResult,
-	IpApiService,
+import type {
+	IPComparisonResponse,
+	IPConnectionType,
+	IPInfoResult,
 } from "@prosopo/types";
 import { getDistance } from "geolib";
 import { getIPInfo } from "./ipInfo.js";

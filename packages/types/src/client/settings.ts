@@ -20,6 +20,7 @@ export const domainsDefault: string[] = [];
 export const frictionlessThresholdDefault = 0.5;
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
+export const contextAwareThresholdDefault = 0.7;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -92,7 +93,39 @@ export const IPValidationRulesSchema = object({
 		.default(requireAllConditionsDefault),
 	// overrides are now lightweight, not recursive
 	countryOverrides: z.record(string(), IPValidationSchema).optional(),
+	forceConsistentIp: boolean().optional().default(false),
 });
+
+// Context type enum for filtering entropy samples
+export enum ContextType {
+	Default = "default",
+	Webview = "webview",
+}
+
+// Zod schema for context type
+export const ContextTypeSchema = z.nativeEnum(ContextType);
+
+// Individual context configuration
+export const ContextConfigSchema = z.object({
+	type: ContextTypeSchema,
+	threshold: number().optional().default(contextAwareThresholdDefault),
+});
+
+export type IContextConfig = z.infer<typeof ContextConfigSchema>;
+
+const ContextsSchema = z.record(
+	z.enum([ContextType.Default, ContextType.Webview]),
+	ContextConfigSchema,
+);
+
+export type IContexts = z.infer<typeof ContextsSchema>;
+
+const ContextAwareSchema = object({
+	enabled: boolean().optional().default(false),
+	contexts: ContextsSchema,
+});
+
+export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
@@ -105,6 +138,8 @@ export const ClientSettingsSchema = object({
 	powDifficulty: number().optional().default(powDifficultyDefault),
 	imageThreshold: number().optional().default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
+	disallowWebView: boolean().optional().default(false).optional(),
+	contextAware: ContextAwareSchema.optional(),
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;

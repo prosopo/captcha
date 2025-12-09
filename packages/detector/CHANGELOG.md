@@ -1,5 +1,140 @@
 # @prosopo/detector
 
+## 3.3.24
+### Patch Changes
+
+- c6faa77: Fix
+
+## 3.3.23
+### Patch Changes
+
+- caf53e2: Async user creation
+
+## 3.3.22
+### Patch Changes
+
+- ea5f1f8: Fix detectors
+
+## 3.3.21
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+
+## 3.3.20
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+
+## 3.3.19
+### Patch Changes
+
+- 5ad6f48: Fix detect webview iphones
+- e01227b: add turbo
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+
+## 3.3.18
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/types@3.6.4
+
+## 3.3.17
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/types@3.6.3
+
+## 3.3.16
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/types@3.6.2
+
+## 3.3.15
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/types@3.6.1
+
+## 3.3.14
+### Patch Changes
+
+- aa8216a: bump
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/config@3.1.22
+
+## 3.3.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+
+## 3.3.12
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 3.3.11
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 3.3.10
+### Patch Changes
+
+- e5c259d: .
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 3.3.9
+### Patch Changes
+
+- 3a027ef: Release cycle
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
+## 3.3.8
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+
+## 3.3.7
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+
+## 3.3.6
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+
 ## 3.3.5
 ### Patch Changes
 

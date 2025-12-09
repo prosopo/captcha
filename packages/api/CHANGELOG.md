@@ -1,5 +1,123 @@
 # @prosopo/api
 
+## 3.1.40
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+
+## 3.1.39
+### Patch Changes
+
+- 345b25b: pow coord
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+
+## 3.1.38
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+
+## 3.1.37
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/types@3.6.4
+
+## 3.1.36
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/types@3.6.3
+
+## 3.1.35
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/types@3.6.2
+
+## 3.1.34
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/types@3.6.1
+
+## 3.1.33
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/config@3.1.22
+
+## 3.1.32
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+
+## 3.1.31
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 3.1.30
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 3.1.29
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 3.1.28
+### Patch Changes
+
+- c9d8fdf: feat/access-policy-group
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
+## 3.1.27
+### Patch Changes
+
+- 5d11a81: Adding maintenance mode
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+
+## 3.1.26
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+
+## 3.1.25
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+
 ## 3.1.24
 ### Patch Changes
 

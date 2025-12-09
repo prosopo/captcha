@@ -34,6 +34,7 @@ import {
 	PENALTY_ACCESS_RULE_DEFAULT,
 	PENALTY_OLD_TIMESTAMP_DEFAULT,
 	PENALTY_UNVERIFIED_HOST_DEFAULT,
+	PENALTY_WEBVIEW_DEFAULT,
 } from "./frictionless.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
@@ -117,7 +118,6 @@ export type PolkadotSecretJSON = zInfer<typeof PolkadotSecretJSONSpec>;
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
 	object({
 		database: DatabaseConfigSchema.optional(),
-		devOnlyWatchEvents: boolean().optional(),
 	}),
 );
 
@@ -289,12 +289,16 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			PENALTY_OLD_TIMESTAMP: PENALTY_OLD_TIMESTAMP_DEFAULT,
 			PENALTY_ACCESS_RULE: PENALTY_ACCESS_RULE_DEFAULT,
 			PENALTY_UNVERIFIED_HOST: PENALTY_UNVERIFIED_HOST_DEFAULT,
+			PENALTY_WEBVIEW: PENALTY_WEBVIEW_DEFAULT,
 		}),
 		scheduledTasks: object({
 			captchaScheduler: object({
 				schedule: string().optional(),
 			}).optional(),
 			clientListScheduler: object({
+				schedule: string().optional(),
+			}).optional(),
+			clientEntropyScheduler: object({
 				schedule: string().optional(),
 			}).optional(),
 		}).optional(),

@@ -34,7 +34,7 @@ export type HardcodedProvider = z.infer<typeof HardcodedProviderSchema>;
 
 type hostedProviders = Record<string, unknown>;
 
-const convertHostedProvider = (
+export const convertHostedProvider = (
 	provider: hostedProviders,
 ): HardcodedProvider[] => {
 	const providers = Object.values(provider).map((p) =>
@@ -43,26 +43,21 @@ const convertHostedProvider = (
 	return providers.sort((a, b) => a.url.localeCompare(b.url));
 };
 
+export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
+	if (environment === "production") {
+		return "https://provider-list.prosopo.io/";
+	}
+	if (environment === "staging") {
+		return "https://provider-list.prosopo.io/staging.json";
+	}
+	throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
+		context: { environment },
+	});
+};
+
 export const loadBalancer = async (
 	environment: EnvironmentTypes,
 ): Promise<HardcodedProvider[]> => {
-	if (environment === "production") {
-		const providers: hostedProviders = await fetch(
-			"https://provider-list.prosopo.io/",
-			{
-				method: "GET",
-				mode: "cors",
-			},
-		).then((res) => res.json());
-		return convertHostedProvider(providers);
-	}
-	if (environment === "staging") {
-		const providers: hostedProviders = await fetch(
-			"https://provider-list.prosopo.io/staging.json",
-			{ method: "GET", mode: "cors" },
-		).then((res) => res.json());
-		return convertHostedProvider(providers);
-	}
 	if (environment === "development") {
 		return [
 			{
@@ -75,7 +70,12 @@ export const loadBalancer = async (
 		];
 	}
 
-	throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
-		context: { environment },
-	});
+	const providers: hostedProviders = await fetch(
+		getLoadBalancerUrl(environment),
+		{
+			method: "GET",
+			mode: "cors",
+		},
+	).then((res) => res.json());
+	return convertHostedProvider(providers);
 };

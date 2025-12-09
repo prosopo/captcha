@@ -22,7 +22,6 @@ import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkIfTaskIsRunning,
-	deepValidateIpAddress,
 	getIPAddress,
 	validateIpAddress,
 } from "../../util.js";
@@ -39,9 +38,10 @@ describe("checkIfTaskIsRunning", () => {
 	it("should return false if the task is running and completed", async () => {
 		const taskName = ScheduledTaskNames.StoreCommitmentsExternal;
 		const db = {
-			getLastScheduledTaskStatus: vi
-				.fn()
-				.mockResolvedValue({ _id: "123" } as Pick<ScheduledTaskRecord, "_id">),
+			getLastScheduledTaskStatus: vi.fn().mockResolvedValue({
+				_id: "123",
+				datetime: new Date(),
+			} as Pick<ScheduledTaskRecord, "_id" | "datetime">),
 			getScheduledTaskStatus: vi.fn().mockResolvedValue({
 				_id: "123",
 				status: "Completed",
@@ -55,8 +55,8 @@ describe("checkIfTaskIsRunning", () => {
 		const db = {
 			getLastScheduledTaskStatus: vi.fn().mockResolvedValue({
 				_id: "123",
-				datetime: new Date().getTime(),
-			} as Pick<ScheduledTaskRecord, "_id">),
+				datetime: new Date(),
+			} as Pick<ScheduledTaskRecord, "_id" | "datetime">),
 			getScheduledTaskStatus: vi.fn().mockResolvedValue(null),
 		} as unknown as IProviderDatabase;
 		const result = await checkIfTaskIsRunning(taskName, db);

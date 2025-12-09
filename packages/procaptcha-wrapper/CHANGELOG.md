@@ -1,5 +1,127 @@
 # @prosopo/procaptcha-wrapper
 
+## 2.6.45
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+
+## 2.6.44
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+
+## 2.6.43
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/locale@3.1.27
+
+## 2.6.42
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/locale@3.1.26
+  - @prosopo/types@3.6.4
+
+## 2.6.41
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/locale@3.1.25
+  - @prosopo/types@3.6.3
+
+## 2.6.40
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+
+## 2.6.39
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+
+## 2.6.38
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
+## 2.6.37
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+
+## 2.6.36
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 2.6.35
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 2.6.34
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 2.6.33
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
+## 2.6.32
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+
+## 2.6.31
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+
+## 2.6.30
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+
 ## 2.6.29
 ### Patch Changes
 

@@ -17,6 +17,7 @@ import { ProsopoEnvError } from "@prosopo/common";
 import { getRandomActiveProvider } from "@prosopo/load-balancer";
 import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
+	Account,
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
 	RandomProvider,
@@ -55,23 +56,29 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 ): Promise<BotDetectionFunctionResult> => {
 	const ext = new (await ExtensionLoader(config.web2))();
-	const userAccount = await ext.getAccount(config);
 
 	const detect = await DetectorLoader();
-	const botScore = (await detect(
+	const detectionResult = (await detect(
 		config.defaultEnvironment,
 		getRandomActiveProvider,
 		container,
 		restartFn,
-		userAccount.account.address,
-	)) as { token: string; provider?: RandomProvider };
+		() => ext.getAccount(config),
+	)) as {
+		token: string;
+		provider?: RandomProvider;
+		encryptHeadHash: string;
+		userAccount: Account;
+	};
+
+	const userAccount = detectionResult.userAccount;
 
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
 	// Get random active provider with timeout
-	const provider = botScore.provider;
+	const provider = detectionResult.provider;
 
 	if (!provider) {
 		throw new Error("Provider Selection Failed");
@@ -85,7 +92,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// Get frictionless captcha with timeout
 	const captcha = await withTimeout(
 		providerApi.getFrictionlessCaptcha(
-			botScore.token,
+			detectionResult.token,
+			detectionResult.encryptHeadHash,
 			config.account.address,
 			userAccount.account.address,
 		),

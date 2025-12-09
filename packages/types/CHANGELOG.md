@@ -1,5 +1,139 @@
 # @prosopo/types
 
+## 3.7.2
+### Patch Changes
+
+- 141e462: Capture correct event
+
+## 3.7.1
+### Patch Changes
+
+- 345b25b: pow coord
+
+## 3.7.0
+### Minor Changes
+
+- ce70a2b: Add context-aware entropy calculation for WebView and default contexts
+  
+  - Added ContextType enum to distinguish between WebView and default browser contexts
+  - Implemented context-specific entropy calculation and storage
+  - Created clientContextEntropy collection with automatic timestamp management
+  - Removed legacy clientEntropy table in favor of context-specific approach
+  - Added helper functions for context determination and threshold retrieval
+  - Included comprehensive unit tests for context validation logic
+
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- f6b5094: Allow different context to override default
+- Updated dependencies [e01227b]
+  - @prosopo/locale@3.1.27
+
+## 3.6.4
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/locale@3.1.26
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
+## 3.6.3
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/locale@3.1.25
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
+## 3.6.2
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/locale@3.1.24
+  - @prosopo/util@3.2.2
+
+## 3.6.1
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 3.6.0
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- 15ae7cf: Change slider defaults
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/util@3.2.0
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.5.11
+### Patch Changes
+
+- 8f1773a: Tweak config
+
+## 3.5.10
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+
+## 3.5.9
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- 7101036: Force consistent IPs logic
+- Updated dependencies [005ce66]
+  - @prosopo/util@3.1.7
+
+## 3.5.8
+### Patch Changes
+
+- e5c259d: .
+
+## 3.5.7
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+  - @prosopo/util@3.1.6
+  - @prosopo/util-crypto@13.5.23
+
+## 3.5.6
+### Patch Changes
+
+- 5d11a81: Adding maintenance mode
+
+## 3.5.5
+### Patch Changes
+
+- 494c5a8: Updated payload
+
+## 3.5.4
+### Patch Changes
+
+- 08ff50f: Hot fix country code
+
 ## 3.5.3
 ### Patch Changes
 

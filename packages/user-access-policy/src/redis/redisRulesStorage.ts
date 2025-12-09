@@ -14,30 +14,34 @@
 
 import type { Logger } from "@prosopo/common";
 import type { RedisConnection } from "@prosopo/redis-client";
-import type { AccessRulesStorage } from "#policy/accessRules.js";
+import type {
+	AccessRulesReader,
+	AccessRulesStorage,
+	AccessRulesWriter,
+} from "#policy/rulesStorage.js";
 import {
-	createRedisRulesReader,
-	getDummyRedisRulesReader,
-} from "#policy/redis/redisRulesReader.js";
-import {
-	createRedisRulesWriter,
-	getDummyRedisRulesWriter,
-} from "#policy/redis/redisRulesWriter.js";
+	DummyRedisRulesReader,
+	RedisRulesReader,
+} from "./reader/redisRulesReader.js";
+import { DummyRedisRulesWriter, RedisRulesWriter } from "./redisRulesWriter.js";
 
 export const createRedisAccessRulesStorage = (
 	connection: RedisConnection,
 	logger: Logger,
 ): AccessRulesStorage => {
-	const storage: AccessRulesStorage = {
-		...getDummyRedisRulesReader(logger),
-		...getDummyRedisRulesWriter(logger),
-	};
+	const storage: AccessRulesStorage = composeStorage(
+		new DummyRedisRulesReader(logger),
+		new DummyRedisRulesWriter(logger),
+	);
 
 	connection.getClient().then((client) => {
-		Object.assign(storage, {
-			...createRedisRulesReader(client, logger),
-			...createRedisRulesWriter(client),
-		});
+		const realStorage = composeStorage(
+			new RedisRulesReader(client, logger),
+			new RedisRulesWriter(client, logger),
+		);
+
+		// use assigning instead of var overwriting to keep the object reference
+		Object.assign(storage, realStorage);
 
 		logger.info(() => ({
 			msg: "RedisAccessRules storage got a ready Redis client",
@@ -46,3 +50,19 @@ export const createRedisAccessRulesStorage = (
 
 	return storage;
 };
+
+const composeStorage = (
+	reader: AccessRulesReader,
+	writer: AccessRulesWriter,
+): AccessRulesStorage => ({
+	// reader
+	fetchRules: reader.fetchRules.bind(reader),
+	getMissingRuleIds: reader.getMissingRuleIds.bind(reader),
+	findRules: reader.findRules.bind(reader),
+	findRuleIds: reader.findRuleIds.bind(reader),
+	fetchAllRuleIds: reader.fetchAllRuleIds.bind(reader),
+	// writer
+	insertRules: writer.insertRules.bind(writer),
+	deleteRules: writer.deleteRules.bind(writer),
+	deleteAllRules: writer.deleteAllRules.bind(writer),
+});

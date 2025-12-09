@@ -1,5 +1,104 @@
 # @prosopo/svelte-procaptcha-wrapper
 
+## 1.1.43
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.45
+
+## 1.1.42
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.44
+
+## 1.1.41
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.43
+
+## 1.1.40
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/procaptcha-wrapper@2.6.42
+
+## 1.1.39
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/procaptcha-wrapper@2.6.41
+
+## 1.1.38
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/procaptcha-wrapper@2.6.40
+
+## 1.1.37
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/procaptcha-wrapper@2.6.39
+
+## 1.1.36
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/procaptcha-wrapper@2.6.38
+  - @prosopo/config@3.1.22
+
+## 1.1.35
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.37
+
+## 1.1.34
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.36
+
+## 1.1.33
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.35
+
+## 1.1.32
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.34
+
+## 1.1.31
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+  - @prosopo/procaptcha-wrapper@2.6.33
+
+## 1.1.30
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.32
+
+## 1.1.29
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.31
+
+## 1.1.28
+### Patch Changes
+
+  - @prosopo/procaptcha-wrapper@2.6.30
+
 ## 1.1.27
 ### Patch Changes
 

@@ -1,5 +1,163 @@
 # @prosopo/account
 
+## 2.7.46
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/keyring@2.8.43
+
+## 2.7.45
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/keyring@2.8.42
+
+## 2.7.44
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/common@3.1.27
+  - @prosopo/keyring@2.8.41
+
+## 2.7.43
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/fingerprint@2.6.27
+  - @prosopo/keyring@2.8.40
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
+## 2.7.42
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/fingerprint@2.6.26
+  - @prosopo/keyring@2.8.39
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
+## 2.7.41
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/fingerprint@2.6.25
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+
+## 2.7.40
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/fingerprint@2.6.24
+  - @prosopo/keyring@2.8.37
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 2.7.39
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/fingerprint@2.6.23
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
+## 2.7.38
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/keyring@2.8.35
+
+## 2.7.37
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/keyring@2.8.34
+
+## 2.7.36
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+  - @prosopo/keyring@2.8.33
+
+## 2.7.35
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/keyring@2.8.32
+
+## 2.7.34
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/keyring@2.8.31
+  - @prosopo/fingerprint@2.6.22
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+  - @prosopo/util-crypto@13.5.23
+
+## 2.7.33
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/keyring@2.8.30
+
+## 2.7.32
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/keyring@2.8.29
+
+## 2.7.31
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/keyring@2.8.28
+
 ## 2.7.30
 ### Patch Changes
 

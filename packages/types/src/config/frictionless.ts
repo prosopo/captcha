@@ -16,6 +16,7 @@ import { number, object } from "zod";
 export const PENALTY_OLD_TIMESTAMP_DEFAULT = 0.2;
 export const PENALTY_ACCESS_RULE_DEFAULT = 0.5;
 export const PENALTY_UNVERIFIED_HOST_DEFAULT = 0.2;
+export const PENALTY_WEBVIEW_DEFAULT = 0.1;
 export const FrictionlessPenalties = object({
 	PENALTY_OLD_TIMESTAMP: number()
 		.positive()
@@ -29,4 +30,8 @@ export const FrictionlessPenalties = object({
 		.positive()
 		.optional()
 		.default(PENALTY_UNVERIFIED_HOST_DEFAULT),
+	PENALTY_WEBVIEW: number()
+		.positive()
+		.optional()
+		.default(PENALTY_WEBVIEW_DEFAULT),
 });

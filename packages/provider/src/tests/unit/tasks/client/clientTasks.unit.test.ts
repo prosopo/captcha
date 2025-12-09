@@ -13,10 +13,12 @@
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/common";
 import {
+	ContextType,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
+	Tier,
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
@@ -111,7 +113,6 @@ describe("ClientTaskManager", () => {
 		};
 
 		config = {
-			devOnlyWatchEvents: true,
 			mongoEventsUri: "mongodb://localhost:27017/events",
 			mongoCaptchaUri: "mongodb://localhost:27017/captchas",
 		} as ProsopoConfigOutput;
@@ -146,7 +147,7 @@ describe("ClientTaskManager", () => {
 						_id,
 						processName: taskName,
 						status,
-						datetime: collections.schedulers.time,
+						datetime: new Date(collections.schedulers.time),
 					});
 					collections.schedulers.nextID += 1;
 					collections.schedulers.time += 1;
@@ -163,7 +164,7 @@ describe("ClientTaskManager", () => {
 					const task = collections.schedulers.records[taskID];
 					task.status = status;
 					task.result = result;
-					task.updated = collections.schedulers.time;
+					task.updated = new Date(collections.schedulers.time);
 					collections.schedulers.time += 1;
 				},
 			),
@@ -181,6 +182,42 @@ describe("ClientTaskManager", () => {
 					);
 				},
 			),
+			getAllClientRecords: vi.fn().mockResolvedValue([
+				{
+					account: "mockClientRecord1",
+					tier: Tier.Professional,
+					settings: {
+						contextAware: {
+							enabled: true,
+							contexts: {
+								[ContextType.Default]: {
+									type: ContextType.Default,
+									threshold: 0.7,
+								},
+							},
+						},
+					},
+				},
+				{
+					account: "mockClientRecord2",
+					tier: Tier.Professional,
+					settings: {
+						contextAware: {
+							enabled: true,
+							contexts: {
+								[ContextType.Webview]: {
+									type: ContextType.Webview,
+									threshold: 0.7,
+								},
+							},
+						},
+					},
+				},
+			]),
+			sampleContextEntropy: vi.fn().mockResolvedValue(
+				Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
+			),
+			setClientContextEntropy: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -258,8 +295,8 @@ describe("ClientTaskManager", () => {
 			{
 				id: "commitment1",
 				// Image commitments were stored at time 1
-				lastUpdatedTimestamp: 1,
-				storedAtTimestamp: 1,
+				lastUpdatedTimestamp: new Date(1),
+				storedAtTimestamp: new Date(1),
 			},
 		];
 
@@ -270,8 +307,8 @@ describe("ClientTaskManager", () => {
 			{
 				challenge: "1234567___userAccount___dappAccount",
 				// PoW commitments were stored at time 3
-				lastUpdatedTimestamp: 3,
-				storedAtTimestamp: 1,
+				lastUpdatedTimestamp: new Date(3),
+				storedAtTimestamp: new Date(1),
 			},
 		];
 
@@ -284,7 +321,7 @@ describe("ClientTaskManager", () => {
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
-			updated: 1,
+			updated: new Date(1),
 		};
 
 		// Put the mock last scheduled task in the collection
@@ -368,7 +405,7 @@ describe("ClientTaskManager", () => {
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
-			updated: 1,
+			updated: new Date(1),
 		};
 
 		// Put the mock last scheduled task in the collection
@@ -672,6 +709,25 @@ describe("ClientTaskManager", () => {
 		it("should allow global star * pattern", () => {
 			expect(clientTaskManager.domainPatternMatcher("anything.com", "*")).toBe(
 				true,
+			);
+		});
+	});
+	describe("Context awareness", () => {
+		it("Should calculate the client context and save to the database", async () => {
+			await clientTaskManager.calculateClientEntropy();
+
+			expect(providerDB.getAllClientRecords).toHaveBeenCalled();
+			expect(providerDB.sampleContextEntropy).toHaveBeenCalled();
+			// Should be called for both Default and Webview contexts for each client
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
+				"mockClientRecord1",
+				ContextType.Default,
+				"11111111",
+			);
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
+				"mockClientRecord2",
+				ContextType.Webview,
+				"11111111",
 			);
 		});
 	});

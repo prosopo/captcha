@@ -1,12 +1,12 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "3.0.26",
+	"version": "3.0.42",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -29,23 +29,23 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"@prosopo/common": "3.1.20",
-		"@prosopo/types": "3.5.3",
-		"@prosopo/util": "3.1.5",
-		"@prosopo/util-crypto": "13.5.22",
-		"@prosopo/workspace": "3.1.13",
-		"@prosopo/config": "3.1.20",
-		"bcrypt": "5.1.1",
+		"@prosopo/common": "3.1.27",
+		"@prosopo/types": "3.7.2",
+		"@prosopo/util": "3.2.4",
+		"@prosopo/util-crypto": "13.5.28",
+		"@prosopo/workspace": "3.1.19",
+		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
 		"sharp": "0.33.5",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.2.1",
 		"@types/bcrypt": "5.0.2",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "3.0.9",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
@@ -53,8 +53,8 @@
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"repository": {
 		"type": "git",

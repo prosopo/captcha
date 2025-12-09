@@ -1,5 +1,184 @@
 # @prosopo/server
 
+## 2.9.51
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/api@3.1.40
+  - @prosopo/keyring@2.8.43
+  - @prosopo/load-balancer@2.8.16
+
+## 2.9.50
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/api@3.1.39
+  - @prosopo/keyring@2.8.42
+  - @prosopo/load-balancer@2.8.15
+
+## 2.9.49
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/api@3.1.38
+  - @prosopo/common@3.1.27
+  - @prosopo/keyring@2.8.41
+  - @prosopo/load-balancer@2.8.14
+
+## 2.9.48
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/api@3.1.37
+  - @prosopo/common@3.1.26
+  - @prosopo/keyring@2.8.40
+  - @prosopo/load-balancer@2.8.13
+  - @prosopo/types@3.6.4
+  - @prosopo/util@3.2.4
+
+## 2.9.47
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/api@3.1.36
+  - @prosopo/common@3.1.25
+  - @prosopo/keyring@2.8.39
+  - @prosopo/load-balancer@2.8.12
+  - @prosopo/types@3.6.3
+  - @prosopo/util@3.2.3
+
+## 2.9.46
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/load-balancer@2.8.11
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+  - @prosopo/api@3.1.35
+
+## 2.9.45
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/api@3.1.34
+  - @prosopo/common@3.1.23
+  - @prosopo/keyring@2.8.37
+  - @prosopo/load-balancer@2.8.10
+  - @prosopo/types@3.6.1
+  - @prosopo/util@3.2.1
+
+## 2.9.44
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/util@3.2.0
+  - @prosopo/load-balancer@2.8.9
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/api@3.1.33
+  - @prosopo/config@3.1.22
+
+## 2.9.43
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/api@3.1.32
+  - @prosopo/keyring@2.8.35
+  - @prosopo/load-balancer@2.8.8
+
+## 2.9.42
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/api@3.1.31
+  - @prosopo/keyring@2.8.34
+  - @prosopo/load-balancer@2.8.7
+
+## 2.9.41
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [b58046d]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/load-balancer@2.8.6
+  - @prosopo/util@3.1.7
+  - @prosopo/api@3.1.30
+  - @prosopo/keyring@2.8.33
+
+## 2.9.40
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/api@3.1.29
+  - @prosopo/keyring@2.8.32
+  - @prosopo/load-balancer@2.8.5
+
+## 2.9.39
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/api@3.1.28
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/keyring@2.8.31
+  - @prosopo/load-balancer@2.8.4
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+
+## 2.9.38
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/api@3.1.27
+  - @prosopo/keyring@2.8.30
+  - @prosopo/load-balancer@2.8.3
+
+## 2.9.37
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/api@3.1.26
+  - @prosopo/keyring@2.8.29
+  - @prosopo/load-balancer@2.8.2
+
+## 2.9.36
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/api@3.1.25
+  - @prosopo/keyring@2.8.28
+  - @prosopo/load-balancer@2.8.1
+
 ## 2.9.35
 ### Patch Changes
 

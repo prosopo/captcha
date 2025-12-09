@@ -14,7 +14,6 @@
 
 import { builtinModules } from "node:module";
 import path from "node:path";
-import replace from "@rollup/plugin-replace";
 import { type UserConfig, defineConfig } from "vite";
 import { default as noBundlePlugin } from "vite-plugin-no-bundle";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -25,7 +24,7 @@ import VitePluginCopy from "./vite-plugin-copy.js";
 export default async function (
 	name: string,
 	tsConfigPath: string,
-	entry?: string,
+	entry?: string | Record<string, string>,
 ): Promise<UserConfig> {
 	console.info(`ViteCommonJSConfig: ${name}`);
 	const projectExternal = await getExternalsFromReferences(tsConfigPath, [
@@ -40,9 +39,25 @@ export default async function (
 		ssr: { external: allExternal },
 		plugins: [
 			// @ts-ignore
-			replace({
-				"import.meta.url": "module", // Replaces ESM checks with CommonJS equivalent
-			}),
+			{
+				name: "string-replace-import.meta.url",
+				generateBundle(_, bundle) {
+					for (const fileName in bundle) {
+						const chunk = bundle[fileName];
+						if (
+							chunk &&
+							chunk.type === "chunk" &&
+							"code" in chunk &&
+							chunk.code
+						) {
+							chunk.code = chunk.code.replace(
+								/import\.meta\.url/g,
+								"require('url').pathToFileURL(__filename).href",
+							);
+						}
+					}
+				},
+			},
 			// @ts-ignore
 			noBundlePlugin({
 				root: "src",
@@ -59,7 +74,7 @@ export default async function (
 		build: {
 			emptyOutDir: false,
 			ssr: true,
-			target: "node18",
+			target: "node24",
 			outDir: "dist/cjs",
 			lib: {
 				name,
@@ -73,7 +88,8 @@ export default async function (
 		},
 		esbuild: {
 			jsx: "automatic",
-			jsxImportSource: "@emotion/react",
+			// Use standard React JSX for library packages
+			// Frontend apps using ViteFrontendConfig will override to Emotion
 			jsxDev: process.env.NODE_ENV === "development",
 		},
 	});

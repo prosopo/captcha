@@ -20,6 +20,12 @@
 		},
 		{
 			"path": "../../packages/dotenv"
+		},
+		{
+			"path": "../../packages/locale"
+		},
+		{
+			"path": "../../packages/types"
 		}
 	]
 }

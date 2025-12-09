@@ -1,5 +1,44 @@
 # @prosopo/util-crypto
 
+## 13.5.28
+### Patch Changes
+
+- 7d5eb3f: bump
+
+## 13.5.27
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
+## 13.5.26
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
+## 13.5.25
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
+## 13.5.24
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/config@3.1.22
+
+## 13.5.23
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
 ## 13.5.22
 ### Patch Changes
 

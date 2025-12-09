@@ -44,16 +44,10 @@
 			"path": "../util"
 		},
 		{
-			"path": "../util-crypto"
-		},
-		{
 			"path": "../user-access-policy"
 		},
 		{
 			"path": "../api-express-router"
-		},
-		{
-			"path": "../types-database"
 		},
 		{
 			"path": "../../dev/workspace"

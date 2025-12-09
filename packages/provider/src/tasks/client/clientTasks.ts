@@ -16,25 +16,24 @@ import { createPrivateKey } from "node:crypto";
 import { type Logger, ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import {
+	type ContextType,
 	type IUserSettings,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
-	type Tier,
+	Tier,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	PoWCaptchaStored,
 	SessionRecord,
-	StoredSession,
 	UserCommitment,
 } from "@prosopo/types-database";
-import { parseUrl } from "@prosopo/util";
-import type { OptionalId } from "mongodb";
+import { majorityAverage, parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
 
+const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
@@ -163,50 +162,11 @@ export class ClientTaskManager {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
-					// get corresponding frictionless scores
-					const frictionlessTokenRecords =
-						await this.providerDB.getFrictionlessTokenRecordsByTokenIds(
-							filteredBatch.map((record) => record.tokenId),
-						);
-					this.logger.info(() => ({
-						msg: `Frictionless token records: ${frictionlessTokenRecords.length}`,
-					}));
-					// attach scores to session records
-					const filteredBatchWithScores = filteredBatch.map((record) => {
-						const tokenRecord = frictionlessTokenRecords.find(
-							(tokenRecord) =>
-								tokenRecord._id?.toString() === record.tokenId.toString(),
-						);
-						if (!tokenRecord) {
-							this.logger.error(() => ({
-								msg: "No token record found",
-								data: { tokenId: record.tokenId },
-							}));
-							return {
-								...record,
-								score: 0,
-								scoreComponents: {
-									baseScore: 0,
-								},
-								threshold: 0,
-							} as StoredSession;
-						}
-						const { _id, token, ...tokenRecordWithoutId } = tokenRecord;
-						return {
-							...record,
-							...tokenRecordWithoutId,
-						} as StoredSession;
-					});
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatchWithScores, [], []);
+						await captchaDB.saveCaptchas(filteredBatch, [], []);
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
-						);
-						await this.providerDB.markFrictionlessTokenRecordsStored(
-							filteredBatch
-								.map((record) => record.tokenId)
-								.filter((id): id is OptionalId<FrictionlessTokenId> => !!id),
 						);
 					}
 					processedSessionRecords += filteredBatch.length;
@@ -269,9 +229,16 @@ export class ClientTaskManager {
 
 			// Get updated client records within a ten minute window of the last completed task
 			const tenMinuteWindow = 10 * 60 * 1000;
-			const updatedAtTimestamp = lastTask?.updated
-				? lastTask.updated - tenMinuteWindow || 0
-				: 0;
+
+			// Handle non-existent or invalid last updated times (were previously numbers). Delete this code after a few runs.
+			const updatedAtTimestamp = (() => {
+				const raw = lastTask?.updated;
+				if (!raw) return 0;
+				const ts =
+					raw instanceof Date ? raw.getTime() : Date.parse(String(raw));
+				if (Number.isNaN(ts)) return 0;
+				return Math.max(ts - tenMinuteWindow, 0);
+			})();
 
 			this.logger.info(() => ({
 				msg: `Getting updated client records since ${new Date(updatedAtTimestamp).toDateString()}`,
@@ -301,6 +268,90 @@ export class ClientTaskManager {
 			this.logger.error(() => ({
 				err: getClientListError,
 				msg: "Error getting client list",
+			}));
+			await this.providerDB.updateScheduledTaskStatus(
+				taskID,
+				ScheduledTaskStatus.Failed,
+				{ error: String(e) },
+			);
+		}
+	}
+
+	/**
+	 * @description Calculate client entropy scores and update in db
+	 * @returns Promise<void>
+	 */
+	async calculateClientEntropy(): Promise<void> {
+		const taskID = await this.providerDB.createScheduledTaskStatus(
+			ScheduledTaskNames.SetClientEntropy,
+			ScheduledTaskStatus.Running,
+		);
+
+		try {
+			let clients = await this.providerDB.getAllClientRecords();
+
+			clients = clients.filter((client) => client.tier !== Tier.Free);
+
+			this.logger.info(() => ({
+				msg: `Calculating entropies for ${clients.length} clients`,
+			}));
+
+			for (const client of clients) {
+				// Calculate context-specific entropy if client has context awareness enabled
+				if (client.settings?.contextAware?.enabled) {
+					// Get context types from client settings
+					const contextTypes = Object.keys(
+						client.settings.contextAware.contexts ?? {},
+					) as ContextType[];
+
+					for (const contextType of contextTypes) {
+						const contextSamples = await this.providerDB.sampleContextEntropy(
+							SAMPLE_SIZE,
+							client.account,
+							contextType,
+						);
+
+						if (contextSamples.length < SAMPLE_SIZE) {
+							this.logger.info(() => ({
+								msg: `Skipping ${contextType} entropy calculation for client ${client.account} due to insufficient samples (${contextSamples.length}/${SAMPLE_SIZE})`,
+							}));
+							continue;
+						}
+
+						const contextAvgEntropy = majorityAverage(contextSamples);
+
+						this.logger.info(() => ({
+							msg: `Calculated ${contextType} entropy for client ${client.account}: ${contextAvgEntropy}`,
+						}));
+
+						await this.providerDB.setClientContextEntropy(
+							client.account,
+							contextType,
+							contextAvgEntropy,
+						);
+					}
+				}
+			}
+			await this.providerDB.updateScheduledTaskStatus(
+				taskID,
+				ScheduledTaskStatus.Completed,
+				{
+					data: {
+						clientRecords: clients.length,
+					},
+				},
+			);
+		} catch (e: unknown) {
+			const calculateClientEntropiesError = new ProsopoApiError(
+				"DATABASE.UNKNOWN",
+				{
+					context: { error: e },
+					logger: this.logger,
+				},
+			);
+			this.logger.error(() => ({
+				err: calculateClientEntropiesError,
+				msg: "Error calculating client entropy",
 			}));
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -409,7 +460,7 @@ export class ClientTaskManager {
 		return (
 			!lastUpdatedTimestamp ||
 			!storedAtTimestamp ||
-			lastUpdatedTimestamp > storedAtTimestamp
+			lastUpdatedTimestamp.getTime() > storedAtTimestamp.getTime()
 		);
 	}
 

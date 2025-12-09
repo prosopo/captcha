@@ -1,5 +1,183 @@
 # @prosopo/datasets
 
+## 3.0.53
+### Patch Changes
+
+  - @prosopo/types-database@4.1.3
+
+## 3.0.52
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/types-database@4.1.2
+
+## 3.0.51
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types-database@4.1.1
+  - @prosopo/types@3.7.1
+
+## 3.0.50
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/types-database@4.1.0
+  - @prosopo/common@3.1.27
+
+## 3.0.49
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/types@3.6.4
+  - @prosopo/types-database@4.0.6
+  - @prosopo/util@3.2.4
+  - @prosopo/util-crypto@13.5.28
+
+## 3.0.48
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+  - @prosopo/util@3.2.3
+  - @prosopo/util-crypto@13.5.27
+
+## 3.0.47
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/types-database@4.0.4
+  - @prosopo/util-crypto@13.5.26
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+  - @prosopo/util@3.2.2
+
+## 3.0.46
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/types@3.6.1
+  - @prosopo/types-database@4.0.3
+  - @prosopo/util@3.2.1
+  - @prosopo/util-crypto@13.5.25
+
+## 3.0.45
+### Patch Changes
+
+- Updated dependencies [0a9887c]
+  - @prosopo/types-database@4.0.2
+
+## 3.0.44
+### Patch Changes
+
+- Updated dependencies [3e5d80a]
+  - @prosopo/types-database@4.0.1
+
+## 3.0.43
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [8f22479]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/types@3.6.0
+  - @prosopo/types-database@4.0.0
+  - @prosopo/util@3.2.0
+  - @prosopo/util-crypto@13.5.24
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.0.42
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/types-database@3.3.13
+
+## 3.0.41
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/types@3.5.10
+
+## 3.0.40
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types-database@3.3.11
+  - @prosopo/types@3.5.9
+  - @prosopo/util@3.1.7
+
+## 3.0.39
+### Patch Changes
+
+- Updated dependencies [b10a65f]
+- Updated dependencies [e5c259d]
+- Updated dependencies [6420187]
+  - @prosopo/types-database@3.3.10
+  - @prosopo/types@3.5.8
+
+## 3.0.38
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+- Updated dependencies [3a027ef]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/types-database@3.3.9
+  - @prosopo/types@3.5.7
+  - @prosopo/util@3.1.6
+  - @prosopo/util-crypto@13.5.23
+
+## 3.0.37
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/types-database@3.3.8
+
+## 3.0.36
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types-database@3.3.7
+  - @prosopo/types@3.5.5
+
+## 3.0.35
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/types@3.5.4
+
 ## 3.0.34
 ### Patch Changes
 

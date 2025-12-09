@@ -1,5 +1,131 @@
 # @prosopo/load-balancer
 
+## 2.8.16
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+
+## 2.8.15
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+
+## 2.8.14
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/common@3.1.27
+
+## 2.8.13
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/types@3.6.4
+
+## 2.8.12
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/types@3.6.3
+
+## 2.8.11
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+
+## 2.8.10
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/types@3.6.1
+
+## 2.8.9
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/types@3.6.0
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+
+## 2.8.6
+### Patch Changes
+
+- 005ce66: Split load balancer into URL fn and getter fn for private repo
+- b58046d: Export fn
+  
+   #Please enter a summary for your changes.
+- Updated dependencies [43907e8]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+
+## 2.8.4
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/types@3.5.7
+
+## 2.8.3
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+
+## 2.8.1
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+
 ## 2.8.0
 ### Minor Changes
 

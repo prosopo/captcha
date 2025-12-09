@@ -14,7 +14,13 @@
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
-import { CaptchaType, type ProsopoConfigOutput, Tier } from "@prosopo/types";
+import {
+	CaptchaType,
+	ContextType,
+	type ProsopoConfigOutput,
+	Tier,
+	contextAwareThresholdDefault,
+} from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
@@ -58,6 +64,16 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
 				powDifficulty: 0.5,
+				disallowWebView: false,
+				contextAware: {
+					enabled: false,
+					contexts: {
+						default: {
+							type: ContextType.Default,
+							threshold: contextAwareThresholdDefault,
+						},
+					},
+				},
 			},
 		};
 		const db = getMockDb();
@@ -84,6 +100,16 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				frictionlessThreshold: 0.5,
 				imageThreshold: 0.5,
 				powDifficulty: 0.5,
+				disallowWebView: false,
+				contextAware: {
+					enabled: false,
+					contexts: {
+						default: {
+							type: ContextType.Default,
+							threshold: contextAwareThresholdDefault,
+						},
+					},
+				},
 			},
 		};
 		const db = getMockDb();

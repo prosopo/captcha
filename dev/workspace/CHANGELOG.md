@@ -1,5 +1,44 @@
 # @prosopo/workspace
 
+## 3.1.19
+### Patch Changes
+
+- 7d5eb3f: bump
+
+## 3.1.18
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+
+## 3.1.17
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+
+## 3.1.16
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+
+## 3.1.15
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/config@3.1.22
+
+## 3.1.14
+### Patch Changes
+
+- Updated dependencies [b8185a4]
+  - @prosopo/config@3.1.21
+
 ## 3.1.13
 ### Patch Changes
 
