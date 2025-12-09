@@ -19,10 +19,13 @@ import util from "node:util";
 import type { ProjectReference } from "typescript";
 
 const exec = util.promisify(child_process.exec);
-// find a tScOnFiG.json file
-const tsConfigRegex = /\/[A-Za-z.]*\.json$/;
 const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/;
 const depsRegex = /\s+(@*[\w\-/.]+)@/;
+
+const getTsconfigDir = (tsConfigPath: string): string =>
+	".json" === path.extname(tsConfigPath)
+		? path.dirname(tsConfigPath)
+		: tsConfigPath;
 
 async function getPackageDir(packageName: string): Promise<string> {
 	let pkg = packageName;
@@ -53,7 +56,7 @@ function getReferenceTsConfigPath(
 ) {
 	// remove tsconfig.*.json from the path and get the path to the new directory via the reference path
 	let refTSConfigPath = path.resolve(
-		initialTsConfigPath.replace(tsConfigRegex, ""),
+		getTsconfigDir(initialTsConfigPath),
 		reference.path,
 	);
 	if (!refTSConfigPath.endsWith(".json")) {
@@ -134,7 +137,7 @@ export async function getExternalsFromReferences(
 	const promises: Promise<string>[] = [];
 	for (const refTsConfigPath of tsConfigPaths) {
 		const packageJsonPath = path.resolve(
-			refTsConfigPath.replace(tsConfigRegex, ""),
+			getTsconfigDir(refTsConfigPath),
 			"package.json",
 		);
 		promises.push(
