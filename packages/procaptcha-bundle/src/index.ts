@@ -174,14 +174,32 @@ function findProcaptchaContainers(): Element[] {
 	);
 	containers.push(...invisibleContainers);
 
-	// Strategy 2: Look for elements with specific IDs
+	// Strategy 2: Look for React wrapper containers (divs with children that have procaptcha-related attributes)
+	const reactWrapperContainers = Array.from(
+		document.querySelectorAll("div"),
+	).filter((div) => {
+		// Look for divs that contain child elements with procaptcha indicators
+		const hasInvisibleChild = div.querySelector('[data-size="invisible"]');
+		const hasProcaptchaChild = div.querySelector(
+			'.procaptcha, [class*="procaptcha"]',
+		);
+		return hasInvisibleChild || hasProcaptchaChild;
+	});
+
+	for (const container of reactWrapperContainers) {
+		if (!containers.includes(container)) {
+			containers.push(container);
+		}
+	}
+
+	// Strategy 3: Look for elements with specific IDs
 	const idContainers = Array.from(
 		document.querySelectorAll(
 			'#procaptcha-container, [id$="-procaptcha-container"]',
 		),
 	);
 
-	// Strategy 3: Look for elements with class 'p-procaptcha'
+	// Strategy 4: Look for elements with class 'p-procaptcha'
 	const classContainers = Array.from(
 		document.getElementsByClassName("p-procaptcha"),
 	);
@@ -191,6 +209,21 @@ function findProcaptchaContainers(): Element[] {
 		if (!containers.includes(container)) {
 			containers.push(container);
 		}
+	}
+
+	// Strategy 5: Look for any div that contains a procaptcha widget (as fallback)
+	if (containers.length === 0) {
+		const widgetContainers = Array.from(
+			document.querySelectorAll("div"),
+		).filter((div) => {
+			// Check if div contains any element that looks like a procaptcha widget
+			const containsProcaptcha =
+				div.innerHTML.includes("procaptcha") ||
+				div.querySelector("[data-sitekey]") ||
+				div.querySelector(".procaptcha");
+			return containsProcaptcha;
+		});
+		containers.push(...widgetContainers);
 	}
 
 	return containers;

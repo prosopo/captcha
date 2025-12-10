@@ -1,17 +1,3 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-import { ProsopoEnvError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
 import { z } from "zod";
 
@@ -44,31 +30,31 @@ export const convertHostedProvider = (
 };
 
 export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
-	if (environment === "production") {
-		return "https://provider-list.prosopo.io/";
-	}
-	if (environment === "staging") {
-		return "https://provider-list.prosopo.io/staging.json";
-	}
-	throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
-		context: { environment },
-	});
+	//if (environment === "production") {
+	return "https://provider-list.prosopo.io/";
+	// }
+	// if (environment === "staging") {
+	// 	return "https://provider-list.prosopo.io/staging.json";
+	// }
+	// throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
+	// 	context: { environment },
+	// });
 };
 
 export const loadBalancer = async (
 	environment: EnvironmentTypes,
 ): Promise<HardcodedProvider[]> => {
-	if (environment === "development") {
-		return [
-			{
-				address: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
-				url: "http://localhost:9229",
-				datasetId:
-					"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
-				weight: 1,
-			},
-		];
-	}
+	// if (environment === "development") {
+	// 	return [
+	// 		{
+	// 			address: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
+	// 			url: "http://localhost:9229",
+	// 			datasetId:
+	// 				"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d110da217fd3ef25",
+	// 			weight: 1,
+	// 		},
+	// 	];
+	// }
 
 	const providers: hostedProviders = await fetch(
 		getLoadBalancerUrl(environment),

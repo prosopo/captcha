@@ -180,6 +180,7 @@ export function setUserCallbacks(
 
 const handleOnHuman = (token: ProcaptchaToken, element?: Element) => {
 	removeProcaptchaResponse();
+	console.log({ element });
 	if (element) {
 		const form = getParentForm(element);
 
