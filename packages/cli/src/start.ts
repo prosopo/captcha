@@ -95,6 +95,14 @@ async function startApi(
 	// Put this first so that no middleware runs on it
 	apiApp.use(publicRouter(env));
 
+	// Rate limiting
+	const configRateLimits = env.config.rateLimits;
+	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
+	for (const [path, limit] of Object.entries(rateLimits)) {
+		const enumPath = path as CombinedApiPaths;
+		apiApp.use(enumPath, rateLimit(limit));
+	}
+
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
 	apiApp.use(ignoreMiddleware());
@@ -114,14 +122,6 @@ async function startApi(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
-
-	// Blocking middleware will run on any routes defined after this point
-	apiApp.use(blockMiddleware(env));
-
-	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
-	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
-	apiApp.use(prosopoRouter(env));
-
 	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 	for (const userAccessRuleRoute in userAccessRuleRoutes) {
 		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
@@ -143,13 +143,12 @@ async function startApi(
 		),
 	);
 
-	// Rate limiting
-	const configRateLimits = env.config.rateLimits;
-	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
-	for (const [path, limit] of Object.entries(rateLimits)) {
-		const enumPath = path as CombinedApiPaths;
-		apiApp.use(enumPath, rateLimit(limit));
-	}
+	// Blocking middleware will run on any routes defined after this point
+	apiApp.use(blockMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
+	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(prosopoRouter(env));
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(() => ({
