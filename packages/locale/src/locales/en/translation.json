@@ -114,6 +114,8 @@
 		"PARSE_ERROR": "Error parsing request",
 		"NO_CONTENT_TYPE_HEADER": "No content-type header. Assumed JSON encoded body but failed to parse.",
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
+		"FAILED_IP_VALIDATION": "IP validation failed",
+		"ACCESS_POLICY_BLOCK": "Access blocked by policy",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed"
 	},

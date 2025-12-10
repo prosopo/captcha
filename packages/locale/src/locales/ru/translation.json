@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Отсутствуют параметры запроса",
 		"MISSING_AUTHORIZATION_HEADER": "Отсутствует заголовок авторизации",
 		"TIMESTAMP_TOO_OLD": "Слишком старый временной штамп",
+"FAILED_IP_VALIDATION": "IP validation failed",
+"ACCESS_POLICY_BLOCK": "Access blocked by policy",
 		"FORBIDDEN": "Запрещено",
 		"PROVIDER_VERIFY_FAILED": "Ошибка проверки провайдера",
 		"UNAUTHORIZED": "Не авторизован",

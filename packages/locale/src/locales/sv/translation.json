@@ -17,6 +17,8 @@
 		"MISSING_QUERY_PARAMETERS": "Saknade frågeparametrar",
 		"MISSING_AUTHORIZATION_HEADER": "Saknad auktoriseringsrubrik",
 		"TIMESTAMP_TOO_OLD": "Tidsstämpel för gammal",
+"FAILED_IP_VALIDATION": "IP validation failed",
+"ACCESS_POLICY_BLOCK": "Access blocked by policy",
 		"FORBIDDEN": "Förbjuden",
 		"PROVIDER_VERIFY_FAILED": "Leverantörsverifiering misslyckades",
 		"UNAUTHORIZED": "Obehörig",
