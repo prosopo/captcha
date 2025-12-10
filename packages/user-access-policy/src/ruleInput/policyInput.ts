@@ -21,30 +21,30 @@ import {
 	type PolicyScope,
 } from "#policy/rule.js";
 
-export const accessPolicyInput = z
-	.object({
-		type: z.nativeEnum(AccessPolicyType),
-		captchaType: CaptchaTypeSchema.optional(),
-		description: z.coerce.string().optional(),
-		// Redis stores values as strings, so coerce is needed to parse properly
-		solvedImagesCount: z.coerce.number().optional(),
-		// the percentage of image panels that must be solved per image CAPTCHA
-		imageThreshold: z.coerce.number().optional(),
-		// the Proof-of-Work difficulty level
-		powDifficulty: z.coerce.number().optional(),
-		// the number of unsolved image CAPTCHA challenges to serve
-		unsolvedImagesCount: z.coerce.number().optional(),
-		// used to increase the user's score
-		frictionlessScore: z.coerce.number().optional(),
-	} satisfies AllKeys<AccessPolicy>)
-	.transform((policy) => {
-		// Block policies should not have captchaType or solvedImagesCount
-		if (policy.type === AccessPolicyType.Block) {
-			const { captchaType, solvedImagesCount, ...blockPolicy } = policy;
-			return blockPolicy;
-		}
-		return policy;
-	}) satisfies ZodType<AccessPolicy>;
+export const accessPolicyInput = z.object({
+	type: z.nativeEnum(AccessPolicyType),
+	captchaType: CaptchaTypeSchema.optional(),
+	description: z.coerce.string().optional(),
+	// Redis stores values as strings, so coerce is needed to parse properly
+	solvedImagesCount: z.coerce.number().optional(),
+	// the percentage of image panels that must be solved per image CAPTCHA
+	imageThreshold: z.coerce.number().optional(),
+	// the Proof-of-Work difficulty level
+	powDifficulty: z.coerce.number().optional(),
+	// the number of unsolved image CAPTCHA challenges to serve
+	unsolvedImagesCount: z.coerce.number().optional(),
+	// used to increase the user's score
+	frictionlessScore: z.coerce.number().optional(),
+} satisfies AllKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
+
+// Sanitize block policies by removing captchaType and solvedImagesCount
+export const sanitizeAccessPolicy = (policy: AccessPolicy): AccessPolicy => {
+	if (policy.type === AccessPolicyType.Block) {
+		const { captchaType, solvedImagesCount, ...blockPolicy } = policy;
+		return blockPolicy;
+	}
+	return policy;
+};
 
 export const policyScopeInput = z.object({
 	clientId: z.coerce.string().optional(),

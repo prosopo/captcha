@@ -15,9 +15,9 @@
 import { CaptchaType } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { AccessPolicyType } from "#policy/rule.js";
-import { accessPolicyInput } from "#policy/ruleInput/policyInput.js";
+import { sanitizeAccessPolicy } from "#policy/ruleInput/policyInput.js";
 
-describe("accessPolicyInput", () => {
+describe("sanitizeAccessPolicy", () => {
 	describe("block policies", () => {
 		it("should remove captchaType from block policies", () => {
 			const input = {
@@ -26,7 +26,7 @@ describe("accessPolicyInput", () => {
 				description: "test block policy",
 			};
 
-			const result = accessPolicyInput.parse(input);
+			const result = sanitizeAccessPolicy(input);
 
 			expect(result).toEqual({
 				type: AccessPolicyType.Block,
@@ -42,7 +42,7 @@ describe("accessPolicyInput", () => {
 				description: "test block policy",
 			};
 
-			const result = accessPolicyInput.parse(input);
+			const result = sanitizeAccessPolicy(input);
 
 			expect(result).toEqual({
 				type: AccessPolicyType.Block,
@@ -59,7 +59,7 @@ describe("accessPolicyInput", () => {
 				description: "test block policy",
 			};
 
-			const result = accessPolicyInput.parse(input);
+			const result = sanitizeAccessPolicy(input);
 
 			expect(result).toEqual({
 				type: AccessPolicyType.Block,
@@ -81,7 +81,7 @@ describe("accessPolicyInput", () => {
 				frictionlessScore: 100,
 			};
 
-			const result = accessPolicyInput.parse(input);
+			const result = sanitizeAccessPolicy(input);
 
 			expect(result).toEqual({
 				type: AccessPolicyType.Block,
@@ -104,7 +104,7 @@ describe("accessPolicyInput", () => {
 				description: "test restrict policy",
 			};
 
-			const result = accessPolicyInput.parse(input);
+			const result = sanitizeAccessPolicy(input);
 
 			expect(result).toEqual({
 				type: AccessPolicyType.Restrict,
@@ -120,7 +120,7 @@ describe("accessPolicyInput", () => {
 				description: "test restrict policy",
 			};
 
-			const result = accessPolicyInput.parse(input);
+			const result = sanitizeAccessPolicy(input);
 
 			expect(result).toEqual({
 				type: AccessPolicyType.Restrict,
@@ -137,7 +137,7 @@ describe("accessPolicyInput", () => {
 				description: "test restrict policy",
 			};
 
-			const result = accessPolicyInput.parse(input);
+			const result = sanitizeAccessPolicy(input);
 
 			expect(result).toEqual({
 				type: AccessPolicyType.Restrict,
