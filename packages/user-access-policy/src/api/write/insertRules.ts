@@ -160,6 +160,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 							...ruleBase,
 							...policyScope,
 						},
+						expiresUnixTimestamp: group.expiresUnixTimestamp,
 					});
 				}
 			} else {

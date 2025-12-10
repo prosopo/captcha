@@ -164,7 +164,7 @@ describe("redisAccessRulesStorage", () => {
 				await accessRulesWriter.insertRules([
 					{
 						rule: accessRule,
-						expiresUnixTimestamp: expirationTimestamp,
+						expiresUnixTimestamp: expirationTimestampInSeconds,
 					},
 				]);
 				const ruleKey = getAccessRuleRedisKey(accessRule);
