@@ -238,9 +238,9 @@ describe("redisAccessRulesStorage", () => {
 				expect(indexRecordsCount).toBe(0);
 			});
 
-			test("deletes all rules when there is 1 million of rules", async () => {
+			test("deletes all rules when there is 10 million rules", async () => {
 				// given
-				const rulesCount = 1_000_000;
+				const rulesCount = 10_000_000;
 
 				const accessRules: AccessRule[] = Array.from(
 					{ length: rulesCount },
