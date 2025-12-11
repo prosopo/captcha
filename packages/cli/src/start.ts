@@ -130,7 +130,10 @@ async function startApi(
 
 	if (!isTestEnv) {
 		const configRateLimits = env.config.rateLimits;
-		const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
+		const rateLimits = {
+			...configRateLimits,
+			...getExpressApiRuleRateLimits(),
+		};
 		const adminPaths = Object.values(AdminApiPaths);
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
