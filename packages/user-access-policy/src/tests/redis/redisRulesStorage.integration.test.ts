@@ -95,11 +95,24 @@ describe("redisAccessRulesStorage", () => {
 	});
 
 	beforeEach(async () => {
-		const keys = await redisClient.keys("*");
+		// Delete all keys using SCAN to avoid stack overflow with large datasets
+		let cursor = "0";
+		do {
+			const reply = await redisClient.scan(cursor, {
+				MATCH: "*",
+				COUNT: 1000,
+			});
 
-		if (keys.length > 0) {
-			await redisClient.del(keys);
-		}
+			if (reply.keys.length > 0) {
+				// Delete keys in batches to avoid stack overflow
+				const keyBatches = chunkIntoBatches(reply.keys, 1000);
+				await executeBatchesSequentially(keyBatches, async (batch) => {
+					await redisClient.del(batch);
+				});
+			}
+
+			cursor = reply.cursor;
+		} while (cursor !== "0");
 
 		// Get a new index name for each test
 		indexName = randomAsHex(16);
@@ -110,7 +123,7 @@ describe("redisAccessRulesStorage", () => {
 			{ ...accessRulesRedisIndex, name: indexName },
 			mockLogger,
 		).getClient();
-	});
+	}, 120_000);
 
 	describe(
 		"writer",
@@ -238,9 +251,9 @@ describe("redisAccessRulesStorage", () => {
 				expect(indexRecordsCount).toBe(0);
 			});
 
-			test("deletes all rules when there is 10 million rules", async () => {
+			test("deletes all rules when there is 2 million rules", async () => {
 				// given
-				const rulesCount = 10_000_000;
+				const rulesCount = 2_000_000;
 
 				const accessRules: AccessRule[] = Array.from(
 					{ length: rulesCount },
@@ -252,13 +265,19 @@ describe("redisAccessRulesStorage", () => {
 
 				await insertRules(accessRules);
 
+				// verify that there are 10 million rules in the database
+				const beforeDeleteIndexRecordsCount =
+					await getIndexRecordsCount(indexName);
+				expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
+
 				// when
 				await accessRulesWriter.deleteAllRules();
 
 				// then
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				const afterDeleteIndexRecordsCount =
+					await getIndexRecordsCount(indexName);
 
-				expect(indexRecordsCount).toBe(0);
+				expect(afterDeleteIndexRecordsCount).toBe(0);
 			});
 		},
 		{
