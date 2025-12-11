@@ -14,7 +14,6 @@
 
 import { builtinModules } from "node:module";
 import path from "node:path";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { wasm } from "@rollup/plugin-wasm";
 import type { Drop } from "esbuild";
 import css from "rollup-plugin-import-css";
@@ -91,7 +90,7 @@ export default async function (
 
 	return {
 		ssr: {
-			noExternal: internal,
+			noExternal: true,
 			external: allExternal,
 		},
 		optimizeDeps: {
@@ -104,7 +103,7 @@ export default async function (
 		},
 		esbuild: {
 			platform: "node",
-			target: "node18",
+			target: "node24",
 			// drop,
 			legalComments: "none",
 		},
@@ -113,7 +112,7 @@ export default async function (
 			outDir,
 			minify: isProduction,
 			ssr: true,
-			target: "node18",
+			target: "node24",
 			lib: {
 				entry: entriesAbsolute,
 				name: bundleName,
@@ -128,7 +127,8 @@ export default async function (
 				output: {
 					entryFileNames: `${bundleName}.[name].bundle.js`,
 				},
-				plugins: [css(), wasm(), nodeResolve()],
+				// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+				plugins: [css() as any, wasm() as any],
 			},
 		},
 		plugins: [

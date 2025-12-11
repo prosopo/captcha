@@ -49,6 +49,11 @@ const getLRules = () => {
 	}
 };
 
+const getHost = (): string | undefined => {
+	const importMeta = import.meta as { env?: { VITE_CADDY_DOMAIN: string } };
+	return process.env.CADDY_DOMAIN || importMeta.env?.VITE_CADDY_DOMAIN;
+};
+
 export default function getConfig(
 	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
 	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
@@ -57,6 +62,7 @@ export default function getConfig(
 ): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
 		logLevel: parseLogLevel(process.env.PROSOPO_LOG_LEVEL, "info"),
+		host: getHost(),
 		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
 			? EnvironmentTypesSchema.parse(process.env.PROSOPO_DEFAULT_ENVIRONMENT)
 			: EnvironmentTypesSchema.enum.development,
@@ -96,6 +102,7 @@ export default function getConfig(
 		penalties: FrictionlessPenalties.parse({
 			PENALTY_OLD_TIMESTAMP: process.env.PENALTY_OLD_TIMESTAMP,
 			PENALTY_ACCESS_RULE: process.env.PENALTY_ACCESS_RULE,
+			PENALTY_UNVERIFIED_HOST: process.env.PENALTY_UNVERIFIED_HOST,
 		}),
 		mongoEventsUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		mongoCaptchaUri: process.env.PROSOPO_MONGO_CAPTCHA_URI || "",
@@ -115,12 +122,19 @@ export default function getConfig(
 			clientListScheduler: {
 				schedule: process.env.CLIENT_LIST_SCHEDULE,
 			},
+			clientEntropyScheduler: {
+				schedule: process.env.CLIENT_ENTROPY_SCHEDULE,
+			},
 		},
 		lRules: getLRules(),
 		authAccount: {
 			address: getAddress(admin),
 			password: getPassword(admin),
 			secret: getSecret(admin),
+		},
+		ipApi: {
+			apiKey: process.env.PROSOPO_IPAPI_KEY,
+			baseUrl: process.env.PROSOPO_IPAPI_URL,
 		},
 	} as ProsopoConfigInput);
 }

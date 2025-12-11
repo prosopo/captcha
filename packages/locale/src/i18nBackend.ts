@@ -25,7 +25,9 @@ const loadPath =
 		"",
 	);
 
-export function initializeI18n() {
+export function initializeI18n(
+	i18nLoadedCallback?: (value: typeof i18n) => void,
+) {
 	if (!i18n.isInitialized && isServerSide()) {
 		const lngDetector = new MiddlewareLanguageDetector(null, {
 			order: ["header", "query", "cookie"],
@@ -42,7 +44,7 @@ export function initializeI18n() {
 				},
 			});
 		i18n.on("loaded", () => {
-			console.log("i18n backend loaded");
+			i18nLoadedCallback?.(i18n);
 		});
 	}
 	return i18n;

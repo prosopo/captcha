@@ -63,6 +63,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_REMOVE_DETECTOR_KEY_WINDOW,
 			limit: process.env.PROSOPO_REMOVE_DETECTOR_KEY_LIMIT,
 		},
+		[AdminApiPaths.ToggleMaintenanceMode]: {
+			windowMs: process.env.PROSOPO_TOGGLE_MAINTENANCE_MODE_WINDOW,
+			limit: process.env.PROSOPO_TOGGLE_MAINTENANCE_MODE_LIMIT,
+		},
 		[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 			windowMs: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_WINDOW,
 			limit: process.env.PROSOPO_GET_FR_CAPTCHA_CHALLENGE_LIMIT,

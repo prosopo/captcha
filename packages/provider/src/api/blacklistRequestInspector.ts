@@ -11,15 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import type { Logger } from "@prosopo/common";
-import { ApiPrefix, type IPAddress } from "@prosopo/types";
+import { ApiPrefix } from "@prosopo/types";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
-	ScopeMatch,
-	userScopeInputSchema,
+	FilterScopeMatch,
+	type UserScope,
+	type UserScopeRecord,
+	userScopeInput,
 } from "@prosopo/user-access-policy";
-import { getIPAddress, uniqueSubsets } from "@prosopo/util";
+import { uniqueSubsets } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 
 export const getRequestUserScope = (
@@ -27,60 +30,74 @@ export const getRequestUserScope = (
 	ja4?: string,
 	ip?: string,
 	user?: string,
-) => {
-	const ipAddress = getIPAddress(ip || "");
+	headHash?: string,
+	coords?: string,
+): Pick<
+	UserScopeRecord,
+	"userId" | "ja4Hash" | "userAgent" | "ip" | "headHash" | "coords"
+> => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
 		: undefined;
+
 	return {
 		...(user && { userId: user }),
 		...(ja4 && { ja4Hash: ja4 }),
 		...(userAgent && { userAgent: userAgent }),
-		...(ipAddress && { ipAddress: ipAddress.bigInt() }),
+		...(ip && { ip }),
+		...(headHash && { headHash }),
+		...(coords && { coords }),
 	};
+};
+
+const getPrioritisedUserScopes = (userScope: {
+	[key: string]: bigint | string;
+}): Record<string, bigint | string | undefined>[] => {
+	const userScopeKeys = Object.keys(userScope);
+	return uniqueSubsets(userScopeKeys).map((subset: string[]) =>
+		subset.reduce(
+			(acc, key) => {
+				acc[key] = userScope[key];
+				return acc;
+			},
+			{} as Record<string, bigint | string | undefined>,
+		),
+	);
 };
 
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
-	userScope: {
-		[key: string]: bigint | string;
-	},
+	userScope: UserScope | UserScopeRecord,
 	clientId?: string,
 ) => {
-	const userScopeKeys = Object.keys(userScope).filter(
-		(key) => userScope[key] !== undefined,
-	);
-
-	const prioritisedUserScopes = uniqueSubsets(userScopeKeys).map(
-		(subset: string[]) =>
-			subset.reduce(
-				(acc, key) => {
-					acc[key] = userScope[key];
-					return acc;
-				},
-				{} as Record<string, bigint | string | undefined>,
-			),
-	);
-
+	const prioritisedUserScopes = getPrioritisedUserScopes(userScope);
 	const policyPromises = [];
-	for (const clientOrUndefined of [clientId, undefined]) {
+	// Search first by clientId, if it exists, then by undefined clientId. Otherwise, just search by undefined clientId.
+	const clientLoop = clientId ? [clientId, undefined] : [undefined];
+	for (const clientOrUndefined of clientLoop) {
 		for (const scope of prioritisedUserScopes) {
-			policyPromises.push(
-				userAccessRulesStorage.findRules({
-					...(clientOrUndefined && {
-						policyScope: {
-							clientId: clientOrUndefined,
-						},
-						policyScopeMatch: ScopeMatch.Exact,
-					}),
-					userScope: userScopeInputSchema.parse(scope),
+			if (Object.values(scope).every((value) => value === undefined)) {
+				continue;
+			}
 
-					userScopeMatch: ScopeMatch.Exact,
+			const parsedUserScope = userScopeInput.parse(scope);
+
+			const filter = {
+				...(clientOrUndefined && {
+					policyScope: {
+						clientId: clientOrUndefined,
+					},
 				}),
-			);
+				policyScopeMatch: FilterScopeMatch.Exact,
+
+				userScope: parsedUserScope,
+
+				userScopeMatch: FilterScopeMatch.Exact,
+			};
+
+			policyPromises.push(userAccessRulesStorage.findRules(filter, true, true));
 		}
 	}
-	// TODO maybe change this to Promise.race for speed.
 	return (await Promise.all(policyPromises)).flat();
 };
 
@@ -96,8 +113,6 @@ export class BlacklistRequestInspector {
 		next: NextFunction,
 	): Promise<void> {
 		const rawIp = request.ip || "";
-
-		console.log(`Raw IP: ${rawIp}`);
 
 		request.logger.debug(() => ({
 			data: { ja4: request.ja4 },

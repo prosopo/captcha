@@ -12,6 +12,10 @@ on:
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -21,6 +25,7 @@ env:
   GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
   CARGO_TERM_COLOR: always
   NODE_OPTIONS: "--max-old-space-size=4096"
+  NODE_ENV: "test"
 
 defaults:
   run:
@@ -50,17 +55,22 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       - name: env
         run: |
+          # Copy the .env.production from the dev script to the cli folder and root folder
           cp ./dev/scripts/env.production ./packages/cli/.env.production
           cp ./dev/scripts/env.production ./.env.production
-          # copy the development PROVIDER_MNEMONIC from ./dev/scripts/env.development to .env.production
-          echo $(grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development) > .env.production
+          
+          # Append the development PROVIDER_MNEMONIC from env.development to the .env.production file
+          grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
 
-      # build all the packages in the workspace to prepare assets for the next cli bundle command
-      - name: Build packages
-        run: |
-          NODE_ENV="production" npm run build:all
+      - run: NODE_ENV="production" npx turbo run @prosopo/cli#build
+      - run: NODE_ENV="production" npx turbo run @prosopo/cli#bundle
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -86,16 +96,44 @@ jobs:
       # Generate a mnemonic for the provider image
       - name: Generate mnemonic and add to env file
         run: |
-          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" node dev/scripts/dist/scripts/generateMnemonic.js --env
+          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" npx tsx dev/scripts/src/scripts/generateMnemonic.ts --env
 
       # Check that the version command works when running the bundle in the provider image
       - name: Check provider bundle runs
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-            CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
-            sleep 20s
-            docker logs "$CONTAINER" >& provider.log
-            cat provider.log
-            grep -oE "\"version\":\".*\"" provider.log || exit 1
-
+          # Run container and capture exit code
+          CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
+          
+          # Wait for container to complete
+          sleep 20s
+          
+          # Get container exit code
+          EXIT_CODE="$(docker wait "$CONTAINER" || echo "timeout")"
+          
+          # Capture logs
+          docker logs "$CONTAINER" > provider.log 2>&1
+          cat provider.log
+          
+          # Check if container exited successfully
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Container failed with exit code: $EXIT_CODE"
+            echo "Checking for common errors..."
+            
+            if grep -q "Could not resolve" provider.log; then
+              echo "ERROR: Missing dependency detected in bundle"
+              exit 1
+            else
+              echo "ERROR: Container failed for unknown reason"
+              exit 1
+            fi
+          fi
+          
+          # Verify version output is present
+          if ! grep -qE "\"version\":\".*\"" provider.log; then
+            echo "ERROR: Version command did not produce expected output"
+            exit 1
+          fi
+          
+          echo "Provider bundle test passed successfully"

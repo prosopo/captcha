@@ -149,12 +149,15 @@ export default async function (
 				"chrome60",
 				"edge18",
 				"firefox60",
-				"node22",
+				"node24",
 				"safari11",
 			],
 			drop,
 			pure,
 			legalComments: "none",
+			jsx: "automatic",
+			jsxImportSource: "@emotion/react",
+			jsxDev: process.env.NODE_ENV === "development",
 		},
 		define,
 
@@ -197,8 +200,10 @@ export default async function (
 					nodePolyfills({
 						include: ["crypto"],
 					}),
-					css(),
-					wasm(),
+					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+					css() as any,
+					// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+					wasm() as any,
 					// @ts-ignore
 					nodeResolve({
 						browser: true,
@@ -206,7 +211,28 @@ export default async function (
 						rootDir: path.resolve(dir, "../../"),
 						dedupe: ["react", "react-dom"],
 						modulesOnly: true,
-					}),
+						// biome-ignore lint/suspicious/noExplicitAny: has to be any to represent object prototype
+					}) as any,
+					// String replacement plugin for fingerprinting code
+					{
+						name: "string-replace-fingerprint",
+						generateBundle(_, bundle) {
+							for (const fileName in bundle) {
+								const chunk = bundle[fileName];
+								if (
+									chunk &&
+									chunk.type === "chunk" &&
+									"code" in chunk &&
+									chunk.code
+								) {
+									chunk.code = chunk.code.replace(
+										/var request = new XMLHttpRequest\(\);\s*request\.open\("get", "https:\/\/m1\.openfpcdn\.io\/fingerprintjs\/v"\.concat\(version, "\/npm-monitoring"\), true\);\s*request\.send\(\);/g,
+										"",
+									);
+								}
+							}
+						},
+					},
 					visualizer({
 						open: true,
 						template: "treemap", //'list',

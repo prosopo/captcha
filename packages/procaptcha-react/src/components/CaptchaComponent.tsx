@@ -24,10 +24,10 @@ import { CaptchaWidget } from "./CaptchaWidget.js";
 export interface CaptchaComponentProps {
 	challenge: CaptchaResponseBody;
 	index: number;
-	solutions: string[][];
+	solutions: [string, number, number][][];
 	onSubmit: () => void;
 	onCancel: () => void;
-	onClick: (hash: string) => void;
+	onClick: (hash: string, x?: number, y?: number) => void;
 	onNext: () => void;
 	onReload: () => void;
 	themeColor: "light" | "dark";
@@ -158,10 +158,9 @@ const CaptchaComponent = ({
 								// expand to full height / width of parent
 								width: "100%",
 								height: "100%",
-								// display children in flex, spreading them evenly and wrapping when row length exceeded
+								// display children in flex, spreading them evenly
 								display: "flex",
 								flexDirection: "row",
-								flexWrap: "wrap",
 								justifyContent: "space-between",
 								gap: "10px",
 							}}

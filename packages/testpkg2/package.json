@@ -1,17 +1,26 @@
 {
 	"name": "@prosopo/testpkg2",
-	"version": "1.0.3",
+	"version": "1.0.30",
 	"description": "Test package for testing deploys, releases, etc",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",
@@ -23,5 +32,10 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"sideEffects": false
+	"sideEffects": false,
+	"devDependencies": {
+		"@prosopo/config": "3.2.1",
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0"
+	}
 }

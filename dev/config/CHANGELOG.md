@@ -1,5 +1,167 @@
 # @prosopo/config
 
+## 3.2.1
+### Patch Changes
+
+- 55fa825: Reinstate npm ls
+
+## 3.2.0
+### Minor Changes
+
+- 30a2102: Remove problematic getDependencies step
+
+## 3.1.27
+### Patch Changes
+
+- e01227b: add turbo
+
+## 3.1.26
+### Patch Changes
+
+- 7d5eb3f: bump
+
+## 3.1.25
+### Patch Changes
+
+- 93d92a7: correcting jsx import source
+
+## 3.1.24
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+
+## 3.1.23
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+
+## 3.1.22
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- df79c03: More dep fixes
+- b6e98b2: Run npm audit
+
+## 3.1.21
+### Patch Changes
+
+- b8185a4: feat/uap-rules-syncer
+
+## 3.1.20
+### Patch Changes
+
+- 1e3a838: making webpack stuff external in vite config
+
+## 3.1.19
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+
+## 3.1.18
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+
+## 3.1.17
+### Patch Changes
+
+- 618703f: Release 3.4.2
+
+## 3.1.16
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+
+## 3.1.15
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+
+## 3.1.14
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+
+## 3.1.13
+### Patch Changes
+
+- 008d112: Release 3.3.0
+
+## 3.1.12
+### Patch Changes
+
+- 0824221: Release 3.2.4
+
+## 3.1.11
+### Patch Changes
+
+- 1a23649: Release 3.2.3
+
+## 3.1.10
+### Patch Changes
+
+- 657a827: Release 3.2.2
+
+## 3.1.9
+### Patch Changes
+
+- 4440947: fix type-only tsc compilation
+- 7bdaca6: Release 3.2.1
+- 809b984: make vite set esbuild jsx config based on env
+- 809b984: set jsx config for esbuild from vite configs to avoid jsxDEV import bug
+
+## 3.1.8
+### Patch Changes
+
+- 6fe8570: Release 3.2.0
+
+## 3.1.7
+### Patch Changes
+
+- f304be9: Release 3.1.13
+
+## 3.1.6
+### Patch Changes
+
+- 9eed772: Release 3.1.12
+
+## 3.1.5
+### Patch Changes
+
+- 30e7d4d: Fixing coverage report and more damn linting
+
+## 3.1.4
+### Patch Changes
+
+- 44ffda2: Dropping monitoring calls
+- a49b538: Extra tests
+
+## 3.1.3
+### Patch Changes
+
+- 828066d: remove empty test npm scripts, add missing npm test scripts
+- 91bbe87: configure typecheck before bundle for vue packages
+- 3ef4fd2: remove cjs config
+- 91bbe87: make typecheck script always recompile
+- 346e092: NODE_ENV default to "development"
+- 5d36e05: remove tsc --force
+
+## 3.1.2
+### Patch Changes
+
+- eb71691: configure typecheck before bundle for vue packages
+- eb71691: make typecheck script always recompile
+
+## 3.1.1
+### Patch Changes
+
+- 3573f0b: fix npm scripts bundle command
+- 3573f0b: build using vite, typecheck using tsc
+- 3573f0b: standardise all vite based npm scripts for bundling
+- 2d0dd8a: Integration tests for UAPs
+
 ## 3.1.0
 ### Minor Changes
 

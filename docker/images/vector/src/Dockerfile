@@ -11,8 +11,8 @@ RUN apt-get update \
     && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
     && chmod a+r /etc/apt/keyrings/docker.asc \
     && echo \
-"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-$(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
     gettext \
@@ -26,22 +26,6 @@ $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.
 
 COPY vector.toml /etc/vector/vector.toml
 
-# script for substituting env vars into the vector config
-RUN cat <<EOF > /main.sh
-#! /bin/bash
+ENV VECTOR_LOG_FORMAT=json
 
-# ensure variables are set and no errors
-set -eux
-
-# substitute the env vars into the template toml config for vector
-envsubst < /etc/vector/vector.toml > /etc/vector/vector-filled.toml
-
-cat /etc/vector/vector-filled.toml
-
-# start vector
-vector --config /etc/vector/vector-filled.toml
-EOF
-
-RUN chmod +x /main.sh
-
-ENTRYPOINT ["/main.sh"]
+ENTRYPOINT ["vector", "--config", "/etc/vector/vector.toml"]

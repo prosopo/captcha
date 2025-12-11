@@ -1,4 +1,7 @@
 {
 	"$schema": "../../../../node_modules/ng-packagr/ng-package.schema.json",
-	"allowedNonPeerDependencies": ["@prosopo/procaptcha-wrapper"]
+	"allowedNonPeerDependencies": [
+		"@prosopo/procaptcha-wrapper",
+		"@prosopo/config"
+	]
 }

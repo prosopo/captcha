@@ -1,7 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { blake2b } from "@noble/hashes/blake2b";
-import { getRootDir, getTestResultsDir } from "@prosopo/config";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +14,8 @@ import { getRootDir, getTestResultsDir } from "@prosopo/config";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchasContainerSchema, DataSchema } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
+import { hexHash } from "@prosopo/util-crypto";
+import { getRootDir, getTestResultsDir } from "@prosopo/workspace";
 import sharp from "sharp";
 import { afterAll, beforeAll, describe, test } from "vitest";
 import { Flatten } from "../commands/flatten.js";
@@ -315,7 +314,7 @@ describe("dataset commands", () => {
 				);
 			}
 			// hash should be the hash of the image content
-			const hash = u8aToHex(blake2b(content));
+			const hash = hexHash(content);
 			if (item.hash !== hash) {
 				throw new Error(`expected ${hash} hash but found ${item.hash}`);
 			}

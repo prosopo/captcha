@@ -14,6 +14,9 @@
 		},
 		{
 			"path": "../../packages/util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../config/tsconfig.cjs.json"
 		}
 	]
 }

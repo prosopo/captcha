@@ -1,30 +1,35 @@
 {
 	"name": "@prosopo/api-route",
-	"version": "2.6.7",
+	"version": "2.6.35",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build"
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/common": "3.0.2",
+		"@prosopo/common": "3.1.27",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.1.0"
+		"@prosopo/config": "3.2.1",
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

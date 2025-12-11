@@ -13,10 +13,12 @@
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/common";
 import {
+	ContextType,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
+	Tier,
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
@@ -111,7 +113,6 @@ describe("ClientTaskManager", () => {
 		};
 
 		config = {
-			devOnlyWatchEvents: true,
 			mongoEventsUri: "mongodb://localhost:27017/events",
 			mongoCaptchaUri: "mongodb://localhost:27017/captchas",
 		} as ProsopoConfigOutput;
@@ -146,7 +147,7 @@ describe("ClientTaskManager", () => {
 						_id,
 						processName: taskName,
 						status,
-						datetime: collections.schedulers.time,
+						datetime: new Date(collections.schedulers.time),
 					});
 					collections.schedulers.nextID += 1;
 					collections.schedulers.time += 1;
@@ -163,7 +164,7 @@ describe("ClientTaskManager", () => {
 					const task = collections.schedulers.records[taskID];
 					task.status = status;
 					task.result = result;
-					task.updated = collections.schedulers.time;
+					task.updated = new Date(collections.schedulers.time);
 					collections.schedulers.time += 1;
 				},
 			),
@@ -181,6 +182,42 @@ describe("ClientTaskManager", () => {
 					);
 				},
 			),
+			getAllClientRecords: vi.fn().mockResolvedValue([
+				{
+					account: "mockClientRecord1",
+					tier: Tier.Professional,
+					settings: {
+						contextAware: {
+							enabled: true,
+							contexts: {
+								[ContextType.Default]: {
+									type: ContextType.Default,
+									threshold: 0.7,
+								},
+							},
+						},
+					},
+				},
+				{
+					account: "mockClientRecord2",
+					tier: Tier.Professional,
+					settings: {
+						contextAware: {
+							enabled: true,
+							contexts: {
+								[ContextType.Webview]: {
+									type: ContextType.Webview,
+									threshold: 0.7,
+								},
+							},
+						},
+					},
+				},
+			]),
+			sampleContextEntropy: vi.fn().mockResolvedValue(
+				Array(100).fill("11111111"), // Return 100 samples to meet SAMPLE_SIZE requirement
+			),
+			setClientContextEntropy: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -258,8 +295,8 @@ describe("ClientTaskManager", () => {
 			{
 				id: "commitment1",
 				// Image commitments were stored at time 1
-				lastUpdatedTimestamp: 1,
-				storedAtTimestamp: 1,
+				lastUpdatedTimestamp: new Date(1),
+				storedAtTimestamp: new Date(1),
 			},
 		];
 
@@ -270,8 +307,8 @@ describe("ClientTaskManager", () => {
 			{
 				challenge: "1234567___userAccount___dappAccount",
 				// PoW commitments were stored at time 3
-				lastUpdatedTimestamp: 3,
-				storedAtTimestamp: 1,
+				lastUpdatedTimestamp: new Date(3),
+				storedAtTimestamp: new Date(1),
 			},
 		];
 
@@ -284,7 +321,7 @@ describe("ClientTaskManager", () => {
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
-			updated: 1,
+			updated: new Date(1),
 		};
 
 		// Put the mock last scheduled task in the collection
@@ -368,7 +405,7 @@ describe("ClientTaskManager", () => {
 			status: ScheduledTaskStatus.Completed,
 			processName: ScheduledTaskNames.StoreCommitmentsExternal,
 			// Last task ran at time 1
-			updated: 1,
+			updated: new Date(1),
 		};
 
 		// Put the mock last scheduled task in the collection
@@ -408,22 +445,22 @@ describe("ClientTaskManager", () => {
 		);
 	});
 
-	describe("isSubdomainOrExactMatch", () => {
+	describe("domainPatternMatcher", () => {
 		it("should match exact domains", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"https://example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"http://example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"https://example.com/",
 				),
@@ -432,25 +469,25 @@ describe("ClientTaskManager", () => {
 
 		it("should match subdomains", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.example.com",
 					"example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"a.b.example.com",
 					"example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"dev.test.example.com",
 					"test.example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"0.0.0.0",
 					"http://0.0.0.0:9230",
 				),
@@ -459,16 +496,16 @@ describe("ClientTaskManager", () => {
 
 		it("should not match different domains", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch("example.com", "example.org"),
+				clientTaskManager.domainPatternMatcher("example.com", "example.org"),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.example.com",
 					"testexample.com",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"malicious-example.com",
 				),
@@ -478,36 +515,33 @@ describe("ClientTaskManager", () => {
 		it("should handle localhost specially", () => {
 			// Valid localhost cases
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch("localhost", "localhost"),
+				clientTaskManager.domainPatternMatcher("localhost", "localhost"),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"localhost:3000",
-					"localhost",
-				),
+				clientTaskManager.domainPatternMatcher("localhost:3000", "localhost"),
 			).toBe(true);
 
 			// Invalid localhost cases
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"localhost.test.com",
 					"localhost",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"malicious.com/localhost",
 					"localhost",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"evil.com?localhost",
 					"localhost",
 				),
 			).toBe(false);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"localhost.malicious.com",
 					"localhost",
 				),
@@ -515,41 +549,35 @@ describe("ClientTaskManager", () => {
 		});
 
 		it("should handle edge cases", () => {
-			expect(clientTaskManager.isSubdomainOrExactMatch("", "example.com")).toBe(
+			expect(clientTaskManager.domainPatternMatcher("", "example.com")).toBe(
 				false,
 			);
-			expect(clientTaskManager.isSubdomainOrExactMatch("example.com", "")).toBe(
+			expect(clientTaskManager.domainPatternMatcher("example.com", "")).toBe(
 				false,
 			);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"example.com.",
-					"example.com",
-				),
+				clientTaskManager.domainPatternMatcher("example.com.", "example.com"),
 			).toBe(true); // trailing dot
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"example.com",
-					"example.com.",
-				),
+				clientTaskManager.domainPatternMatcher("example.com", "example.com."),
 			).toBe(true); // trailing dot
 		});
 
 		it("should handle URLs with paths and protocols", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.example.com",
 					"https://example.com/path",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"https://example.com:3000",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"example.com",
 					"example.com:3000",
 				),
@@ -558,75 +586,72 @@ describe("ClientTaskManager", () => {
 
 		it("should handle exotic domain names", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
-					"⭐⭐⭐⭐.com",
-					"⭐⭐⭐⭐.com",
-				),
+				clientTaskManager.domainPatternMatcher("⭐⭐⭐⭐.com", "⭐⭐⭐⭐.com"),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.⭐⭐⭐⭐.com",
 					"⭐⭐⭐⭐.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"漢字漢字漢字.com",
 					"漢字漢字漢字.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"test.漢字漢字漢字.com",
 					"漢字漢字漢字.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"🦄.⭐.漢字.test.com",
 					"test.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					`${"a".repeat(63)}.example.com`,
 					"example.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"xn--h28h.com", // 🌟.com in punycode
 					"xn--h28h.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"café.漢字.⭐.example.com",
 					"example.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"123-456.⭐-漢字.com",
 					"⭐-漢字.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"🦄.xn--h28h.café.123-456.⭐.漢字.test.com",
 					"test.com",
 				),
 			).toBe(true);
 
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"..⭐⭐⭐⭐..com",
 					"⭐⭐⭐⭐.com",
 				),
@@ -635,17 +660,75 @@ describe("ClientTaskManager", () => {
 
 		it("should handle URLs that are preceedded with www", () => {
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"https://www.example.com",
 					"example.com",
 				),
 			).toBe(true);
 			expect(
-				clientTaskManager.isSubdomainOrExactMatch(
+				clientTaskManager.domainPatternMatcher(
 					"www.example.com",
 					"example.com",
 				),
 			).toBe(true);
+		});
+
+		it("should support subdomain wildcard patterns", () => {
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"a.b.example.com",
+					"*.example.com",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("example.com", "*.example.com"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"dev.test.example.com",
+					"*.test.example.com",
+				),
+			).toBe(true);
+		});
+
+		it("should support simple glob patterns with * anywhere", () => {
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"fooexamplebar.com",
+					"*example*",
+				),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("example.net", "*example*"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("mysite.org", "*example*"),
+			).toBe(false);
+		});
+
+		it("should allow global star * pattern", () => {
+			expect(clientTaskManager.domainPatternMatcher("anything.com", "*")).toBe(
+				true,
+			);
+		});
+	});
+	describe("Context awareness", () => {
+		it("Should calculate the client context and save to the database", async () => {
+			await clientTaskManager.calculateClientEntropy();
+
+			expect(providerDB.getAllClientRecords).toHaveBeenCalled();
+			expect(providerDB.sampleContextEntropy).toHaveBeenCalled();
+			// Should be called for both Default and Webview contexts for each client
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
+				"mockClientRecord1",
+				ContextType.Default,
+				"11111111",
+			);
+			expect(providerDB.setClientContextEntropy).toHaveBeenCalledWith(
+				"mockClientRecord2",
+				ContextType.Webview,
+				"11111111",
+			);
 		});
 	});
 });

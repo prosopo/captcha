@@ -12,20 +12,119 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IUserData, IUserSettings, Timestamp } from "@prosopo/types";
-import type mongoose from "mongoose";
+import {
+	ContextType,
+	type IUserData,
+	type IUserSettings,
+	type Timestamp,
+	abuseScoreThresholdDefault,
+	abuseScoreThresholdExceedActionDefault,
+	cityChangeActionDefault,
+	contextAwareThresholdDefault,
+	countryChangeActionDefault,
+	distanceExceedActionDefault,
+	distanceThresholdKmDefault,
+	ispChangeActionDefault,
+	requireAllConditionsDefault,
+} from "@prosopo/types";
+import mongoose from "mongoose";
 import { Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import type { ClientRecord, Tables } from "./provider.js";
 
 export type UserDataRecord = mongoose.Document & IUserData;
 
+export const IPValidationRulesSchema = new Schema({
+	actions: {
+		countryChangeAction: {
+			type: Schema.Types.Mixed,
+			default: () => countryChangeActionDefault,
+		},
+		cityChangeAction: {
+			type: Schema.Types.Mixed,
+			default: () => cityChangeActionDefault,
+		},
+		ispChangeAction: {
+			type: Schema.Types.Mixed,
+			default: () => ispChangeActionDefault,
+		},
+		distanceExceedAction: {
+			type: Schema.Types.Mixed,
+			default: () => distanceExceedActionDefault,
+		},
+		abuseScoreExceedAction: {
+			type: Schema.Types.Mixed,
+			default: () => abuseScoreThresholdExceedActionDefault,
+		},
+	},
+
+	distanceThresholdKm: {
+		type: Number,
+		min: 0,
+		default: distanceThresholdKmDefault,
+	},
+
+	abuseScoreThreshold: {
+		type: Number,
+		min: 0,
+		default: abuseScoreThresholdDefault,
+	},
+
+	requireAllConditions: {
+		type: Boolean,
+		default: requireAllConditionsDefault,
+	},
+
+	forceConsistentIp: {
+		type: Boolean,
+		default: false,
+	},
+
+	countryOverrides: {
+		type: Map,
+		of: new Schema({
+			actions: {
+				countryChangeAction: { type: Schema.Types.Mixed },
+				cityChangeAction: { type: Schema.Types.Mixed },
+				ispChangeAction: { type: Schema.Types.Mixed },
+				distanceExceedAction: { type: Schema.Types.Mixed },
+				abuseScoreExceedAction: { type: Schema.Types.Mixed },
+			},
+			distanceThresholdKm: { type: Number, min: 0 },
+			abuseScoreThreshold: { type: Number, min: 0 },
+			requireAllConditions: { type: Boolean },
+		}),
+		default: undefined,
+	},
+});
+
 export const UserSettingsSchema = new Schema({
 	captchaType: String,
 	frictionlessThreshold: Number,
 	powDifficulty: Number,
 	imageThreshold: Number,
+	ipValidationRules: IPValidationRulesSchema,
 	domains: [String],
+	disallowWebView: {
+		type: Boolean,
+		default: false,
+	},
+	contextAware: {
+		enabled: { type: Boolean, default: false },
+		contexts: {
+			type: mongoose.Schema.Types.Mixed,
+			default: {
+				[ContextType.Default]: {
+					type: ContextType.Default,
+					threshold: contextAwareThresholdDefault,
+				},
+				[ContextType.Webview]: {
+					type: ContextType.Webview,
+					threshold: contextAwareThresholdDefault,
+				},
+			},
+		},
+	},
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
@@ -34,14 +133,14 @@ export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
 	account: String,
 	url: String,
 	mnemonic: String,
-	createdAt: Number,
+	createdAt: Date,
 	activated: Boolean,
 	tier: String,
 	settings: {
 		type: UserSettingsSchema,
 		required: false,
 	},
-	updatedAtTimestamp: Number,
+	updatedAtTimestamp: Date,
 });
 
 type User = {
@@ -101,6 +200,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 				powDifficulty: Number,
 				captchaType: String,
 				frictionlessThreshold: Number,
+				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,
 			updatedAt: Number,

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import {
 	AdminApiPaths,
 	ApiParams,
@@ -34,37 +35,24 @@ import {
 	PublicApiPaths,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
+	RemoveDetectorKeyBodySpec,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitPowCaptchaSolutionBody,
 	type Tier,
+	ToggleMaintenanceModeBody,
 	UpdateDetectorKeyBody,
 	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
 } from "@prosopo/types";
-import {
-	type DeleteRulesEndpointSchemaInput,
-	type InsertManyRulesEndpointInputSchema,
-	accessRuleApiPaths,
-} from "@prosopo/user-access-policy";
-import HttpClientBase from "./HttpClientBase.js";
+import { ApiClient } from "./apiClient.js";
 
 export default class ProviderApi
-	extends HttpClientBase
+	extends ApiClient
 	implements ProviderApiInterface
 {
-	private account: string;
-
-	constructor(providerUrl: string, account: string) {
-		const providerUrlWithProtocol = !providerUrl.startsWith("http")
-			? `https://${providerUrl}`
-			: providerUrl;
-		super(providerUrlWithProtocol);
-		this.account = account;
-	}
-
 	public getCaptchaChallenge(
 		userAccount: string,
 		randomProvider: RandomProvider,
@@ -168,6 +156,7 @@ export default class ProviderApi
 		nonce: number,
 		userTimestampSignature: string,
 		timeout?: number,
+		salt?: string,
 	): Promise<PowCaptchaSolutionResponse> {
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
@@ -184,6 +173,7 @@ export default class ProviderApi
 					[ApiParams.timestamp]: userTimestampSignature,
 				},
 			},
+			...(salt && { [ApiParams.salt]: salt }),
 		});
 		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
 			headers: {
@@ -195,11 +185,13 @@ export default class ProviderApi
 
 	public getFrictionlessCaptcha(
 		token: string,
+		headHash: string,
 		dapp: string,
 		user: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body = {
 			[ApiParams.token]: token,
+			[ApiParams.headHash]: headHash,
 			[ApiParams.dapp]: dapp,
 			[ApiParams.user]: user,
 		};
@@ -267,23 +259,20 @@ export default class ProviderApi
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse> {
 		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
 		return this.post(AdminApiPaths.SiteKeyRegister, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			},
 		});
 	}
 
 	public updateDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<UpdateDetectorKeyResponse> {
 		return this.post(
 			AdminApiPaths.UpdateDetectorKey,
@@ -291,8 +280,7 @@ export default class ProviderApi
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
-					timestamp,
-					signature,
+					Authorization: `Bearer ${jwt}`,
 				},
 			},
 		);
@@ -300,12 +288,32 @@ export default class ProviderApi
 
 	public removeDetectorKey(
 		detectorKey: string,
+		jwt: string,
+		expirationInSeconds?: number,
+	): Promise<ApiResponse> {
+		return this.post(
+			AdminApiPaths.RemoveDetectorKey,
+			RemoveDetectorKeyBodySpec.parse({
+				detectorKey,
+				expirationInSeconds,
+			}),
+			{
+				headers: {
+					"Prosopo-Site-Key": this.account,
+					Authorization: `Bearer ${jwt}`,
+				},
+			},
+		);
+	}
+
+	public toggleMaintenanceMode(
+		enabled: boolean,
 		timestamp: string,
 		signature: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.RemoveDetectorKey,
-			UpdateDetectorKeyBody.parse({ detectorKey }),
+			AdminApiPaths.ToggleMaintenanceMode,
+			ToggleMaintenanceModeBody.parse({ enabled }),
 			{
 				headers: {
 					"Prosopo-Site-Key": this.account,
@@ -314,33 +322,5 @@ export default class ProviderApi
 				},
 			},
 		);
-	}
-
-	public insertUserAccessPolicies(
-		rules: InsertManyRulesEndpointInputSchema,
-		timestamp: string,
-		signature: string,
-	): Promise<ApiResponse> {
-		return this.post(accessRuleApiPaths.INSERT_MANY, rules, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
-			},
-		});
-	}
-
-	public deleteUserAccessPolicies(
-		rules: DeleteRulesEndpointSchemaInput,
-		timestamp: string,
-		signature: string,
-	): Promise<ApiResponse> {
-		return this.post(accessRuleApiPaths.DELETE_MANY, rules, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				timestamp,
-				signature,
-			},
-		});
 	}
 }

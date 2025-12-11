@@ -35,6 +35,7 @@ class CaptchaComponentProvider {
 				config={captchaProps.config}
 				callbacks={captchaProps.callbacks}
 				i18n={captchaProps.i18n}
+				container={captchaProps.container}
 			/>
 		);
 	}

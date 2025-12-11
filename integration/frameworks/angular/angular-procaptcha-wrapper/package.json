@@ -1,35 +1,31 @@
 {
 	"name": "@prosopo/angular-procaptcha-wrapper",
-	"version": "1.1.4",
+	"version": "1.1.43",
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"main": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
 	"typings": "dist/index.d.ts",
 	"module": "dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"default": "./dist/fesm2022/prosopo-angular-procaptcha-wrapper.mjs"
-		}
-	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "del-cli ./dist",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "ng-packagr -p ng-package.json",
 		"dev": "npm run build -- --watch"
 	},
 	"dependencies": {
-		"@prosopo/procaptcha-wrapper": "2.6.6"
+		"@prosopo/procaptcha-wrapper": "2.6.45"
 	},
 	"peerDependencies": {
-		"@angular/core": "^19.2.0"
+		"@angular/core": "^20.3.9"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.2.1",
+		"@angular/compiler-cli": "20.3.9",
+		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
-		"ng-packagr": "19.2.0"
+		"ng-packagr": "^20.3.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

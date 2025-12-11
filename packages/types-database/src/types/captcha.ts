@@ -16,10 +16,8 @@ import type { PoWCaptcha } from "@prosopo/types";
 import { type RootFilterQuery, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
-	FrictionlessTokenRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
-	type ScoreComponents,
 	type SessionRecord,
 	SessionRecordSchema,
 	type UserCommitment,
@@ -27,39 +25,20 @@ import {
 	UserCommitmentRecordSchema,
 } from "./provider.js";
 
-export type StoredSession = Pick<
-	SessionRecord,
-	"_id" | "sessionId" | "createdAt" | "captchaType" | "deleted" | "tokenId"
-> & {
-	score: number;
-	scoreComponents: ScoreComponents;
-	threshold: number;
-};
+// StoredSession is now the same as SessionRecord since we merged the schemas
+export type StoredSession = SessionRecord;
 
-export const StoredSessionRecordSchema: Schema = new Schema({
-	sessionId: SessionRecordSchema.obj.sessionId,
-	createdAt: SessionRecordSchema.obj.createdAt,
-	captchaType: SessionRecordSchema.obj.captchaType,
-	tokenId: SessionRecordSchema.obj.tokenId,
-	deleted: SessionRecordSchema.obj.deleted,
-	score: FrictionlessTokenRecordSchema.obj.score,
-	scoreComponents: FrictionlessTokenRecordSchema.obj.scoreComponents,
-	threshold: FrictionlessTokenRecordSchema.obj.threshold,
-});
+export const StoredSessionRecordSchema: Schema = SessionRecordSchema;
 
 export const StoredUserCommitmentRecordSchema: Schema = new Schema({
 	...UserCommitmentRecordSchema.obj,
 });
-StoredUserCommitmentRecordSchema.index({ frictionlessTokenId: 1 });
+StoredUserCommitmentRecordSchema.index({ sessionId: 1 });
 
 export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
 	...PoWCaptchaRecordSchema.obj,
 });
-StoredPoWCaptchaRecordSchema.index({ frictionlessTokenId: 1 });
-
-// Redefine the index for sessionId to make it non-unique (there were collisions)
-StoredSessionRecordSchema.index({ sessionId: 1 });
-StoredSessionRecordSchema.index({ tokenId: 1 });
+StoredPoWCaptchaRecordSchema.index({ sessionId: 1 });
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(

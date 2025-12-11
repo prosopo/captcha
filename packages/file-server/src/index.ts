@@ -15,7 +15,6 @@ import stream from "node:stream";
 import { isMain } from "@prosopo/util";
 import dotenv from "dotenv";
 import express, { type Request, type Response } from "express";
-import fetch from "node-fetch";
 import sharp from "sharp";
 
 const parseArray = (value: string) => {

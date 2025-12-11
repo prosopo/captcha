@@ -21,7 +21,6 @@ import {
 import {
 	type Callbacks,
 	CaptchaType,
-	type ProcaptchaCallbacks,
 	type ProcaptchaRenderOptions,
 } from "@prosopo/types";
 import {
@@ -85,6 +84,7 @@ class WidgetFactory {
 			"light" === renderOptions.theme ? lightTheme : darkTheme;
 
 		let widgetInteractiveArea: HTMLElement;
+		let widgetContainer: HTMLElement;
 
 		// Don't create the widget skeleton if the mode is invisible
 		if (invisible) {
@@ -92,12 +92,15 @@ class WidgetFactory {
 			const newDiv = document.createElement("div");
 			container.appendChild(newDiv);
 			widgetInteractiveArea = newDiv as HTMLElement;
+			widgetContainer = newDiv;
 		} else {
-			widgetInteractiveArea = createWidgetSkeleton(
+			const widgetResult = createWidgetSkeleton(
 				container,
 				widgetTheme,
 				"prosopo-procaptcha",
 			);
+			widgetInteractiveArea = widgetResult.widgetInteractiveArea;
+			widgetContainer = widgetResult.webComponent;
 		}
 
 		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
@@ -117,6 +120,7 @@ class WidgetFactory {
 			isWeb2,
 			this.i18n,
 			invisible,
+			widgetContainer,
 		);
 
 		return captchaRoot;

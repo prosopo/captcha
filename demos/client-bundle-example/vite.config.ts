@@ -141,7 +141,7 @@ export default defineConfig(({ command, mode }) => {
 				transformMixedEsModules: true,
 			},
 			outDir: "dist",
-			emptyOutDir: true,
+			emptyOutDir: false,
 			rollupOptions: {
 				input: {
 					index: path.resolve(__dirname, "src/index.html"),
@@ -196,6 +196,7 @@ export default defineConfig(({ command, mode }) => {
 					console.log("Copying additional files from src to dist...");
 					// Only copy assets and other non-HTML files since HTML files are processed by Vite
 					const srcAssetsDir = path.resolve(__dirname, "src/assets");
+
 					const destAssetsDir = path.resolve(__dirname, "dist/assets");
 					if (fs.existsSync(srcAssetsDir)) {
 						copyDirContents(srcAssetsDir, destAssetsDir);

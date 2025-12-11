@@ -14,7 +14,11 @@
 
 import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
-import { generateMnemonic, getPair } from "@prosopo/keyring";
+import {
+	generateMnemonic,
+	getDefaultProviders,
+	getPair,
+} from "@prosopo/keyring";
 import {
 	ApiParams,
 	type CaptchaRequestBodyType,
@@ -24,7 +28,8 @@ import {
 	CaptchaType,
 	ClientApiPaths,
 } from "@prosopo/types";
-import fetch from "node-fetch";
+import { at, embedData } from "@prosopo/util";
+import { randomAsHex } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { dummyUserAccount } from "./mocks/solvedTestCaptchas.js";
 import { registerSiteKey } from "./registerSitekey.js";
@@ -36,11 +41,11 @@ const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 describe("Image Captcha Integration Tests", () => {
 	let dappAccount: string;
 	let mnemonic: string;
-
+	const adminPair = at(getDefaultProviders(), 0).pair;
 	beforeEach(async () => {
 		// Create a new site key to avoid conflicts with other tests
 		[mnemonic, dappAccount] = await generateMnemonic();
-		await registerSiteKey(dappAccount, CaptchaType.image);
+		await registerSiteKey(dappAccount, CaptchaType.image, adminPair);
 	});
 
 	describe("GetImageCaptchaChallenge", () => {
@@ -149,7 +154,9 @@ describe("Image Captcha Integration Tests", () => {
 		it("should return an error if the captcha type is set to pow", async () => {
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-			await registerSiteKey(dappAccount, CaptchaType.pow);
+			const adminPair = at(getDefaultProviders(), 0).pair;
+
+			await registerSiteKey(dappAccount, CaptchaType.pow, adminPair);
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
@@ -175,7 +182,8 @@ describe("Image Captcha Integration Tests", () => {
 		it("should return a translated error if the captcha type is set to pow and the language is set to es", async () => {
 			const origin = "http://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-			await registerSiteKey(dappAccount, CaptchaType.pow);
+			const adminPair = at(getDefaultProviders(), 0).pair;
+			await registerSiteKey(dappAccount, CaptchaType.pow, adminPair);
 			const body: CaptchaRequestBodyType = {
 				[ApiParams.dapp]: dappAccount,
 				[ApiParams.user]: userAccount,
@@ -203,7 +211,8 @@ describe("Image Captcha Integration Tests", () => {
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
 		const origin = "http://localhost";
 		const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-		await registerSiteKey(dappAccount, CaptchaType.frictionless);
+		const adminPair = at(getDefaultProviders(), 0).pair;
+		await registerSiteKey(dappAccount, CaptchaType.frictionless, adminPair);
 		const body: CaptchaRequestBodyType = {
 			[ApiParams.dapp]: dappAccount,
 			[ApiParams.user]: userAccount,
@@ -230,8 +239,8 @@ describe("Image Captcha Integration Tests", () => {
 	describe("SubmitImageCaptchaSolution", () => {
 		it("should verify a correctly completed image captcha as true", async () => {
 			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
-
-			await registerSiteKey(pair.address, CaptchaType.image);
+			const adminPair = at(getDefaultProviders(), 0).pair;
+			await registerSiteKey(pair.address, CaptchaType.image, adminPair);
 
 			const userAccount = dummyUserAccount.address;
 			const origin = "http://localhost";
@@ -257,12 +266,17 @@ describe("Image Captcha Integration Tests", () => {
 			const data = (await response.json()) as CaptchaResponseBody;
 
 			const solvedCaptchas = datasetWithSolutionHashes.captchas.map(
-				(captcha) => ({
+				(captcha, index) => ({
 					captchaContentId: captcha.captchaContentId,
 					solution: captcha.solution
 						? captcha.solution.map((s) => s.toString())
 						: captcha.solution,
-					salt: captcha.salt,
+					salt: embedData(randomAsHex(), [
+						1 + index,
+						2 + index,
+						3 + index,
+						4 + index,
+					]),
 				}),
 			);
 

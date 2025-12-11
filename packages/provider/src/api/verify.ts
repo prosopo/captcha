@@ -26,9 +26,11 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { validateAddress } from "@prosopo/util-crypto";
 import express, { type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
+import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -38,6 +40,9 @@ import { Tasks } from "../tasks/tasks.js";
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
+	const userAccessRulesStorage: AccessRulesStorage = env
+		.getDb()
+		.getUserAccessRulesStorage();
 
 	/**
 	 * Verifies a dapp's solution as being approved or not
@@ -54,6 +59,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
 
+			// If in maintenance mode, always return verified before any checks
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for image captcha verification",
+				}));
+				const verificationResponse: ImageVerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
+
 			// We can be helpful and provide a more detailed error message when there are missing fields
 			let parsed: VerifySolutionBodyTypeOutput;
 			try {
@@ -69,7 +86,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			// We don't want to expose any other errors to the client except for specific situations
-			const { dappSignature, token, ip } = parsed;
+			const { dappSignature, token, ip, maxVerifiedTime } = parsed;
 			try {
 				// This can error if the token is invalid
 				const { user, dapp, timestamp, commitmentId } =
@@ -102,8 +119,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						user,
 						dapp,
 						commitmentId,
-						parsed.maxVerifiedTime,
+						env,
+						maxVerifiedTime,
 						ip,
+						clientRecord.settings.disallowWebView,
+						clientRecord.settings.contextAware?.enabled,
 					);
 
 				req.logger.debug(() => ({ data: { response } }));
@@ -140,6 +160,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
 			const tasks = new Tasks(env, req.logger);
+
+			// If in maintenance mode, always return verified before any checks
+			if (getMaintenanceMode()) {
+				req.logger.info(() => ({
+					msg: "Maintenance mode active - returning verified for PoW captcha verification",
+				}));
+				const verificationResponse: VerificationResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(verificationResponse);
+			}
 
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
 
@@ -199,7 +231,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						dapp,
 						challenge,
 						verifiedTimeout,
+						env,
 						ip,
+						userAccessRulesStorage,
 					);
 
 				const verificationResponse: VerificationResponse =

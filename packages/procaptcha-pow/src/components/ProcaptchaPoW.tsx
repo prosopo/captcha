@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaCallbacks, ProcaptchaProps } from "@prosopo/types";
+import type { ProcaptchaProps } from "@prosopo/types";
 import { type LazyExoticComponent, Suspense, lazy } from "react";
 import type { ReactElement } from "react";
 

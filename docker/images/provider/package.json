@@ -1,15 +1,31 @@
 {
 	"name": "@prosopo/provider-docker",
-	"version": "3.0.8",
+	"version": "3.5.18",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
+	},
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"dependencies": {
+		"@prosopo/cli": "3.4.12",
+		"@prosopo/locale": "3.1.20"
+	},
+	"devDependencies": {
+		"@prosopo/config": "3.1.20"
 	},
 	"scripts": {
-		"docker-tag": "echo $(node -p \"require('./package.json').name.replace('@','').replace('-docker','')\"):$(node -p \"require('./package.json').version\")",
-		"build": "npm run clean && cp -r src dist && docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
-		"clean": "del-cli dist",
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"publish:docker": "docker push $(npm run --silent docker-tag)"
+		"docker-tag": "node -e \"const pkg=require('./package.json'); const base=pkg.name.replace('@','').replace('-docker',''); const tag=pkg.version + (process.env.NODE_ENV && process.env.NODE_ENV !== 'production' ? '-' + process.env.NODE_ENV : ''); console.log(base + ':' + tag)\"",
+		"build": "npm run clean && cp -r src dist && NODE_ENV=$NODE_ENV docker buildx build --progress=plain --tag $(npm run --silent docker-tag) --platform linux/amd64 -f ./dist/Dockerfile ../../../",
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"publish:docker": "docker push $(NODE_ENV=$NODE_ENV npm run --silent docker-tag)"
 	}
 }

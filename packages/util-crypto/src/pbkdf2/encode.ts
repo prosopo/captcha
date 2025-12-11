@@ -4,7 +4,7 @@
 import { pbkdf2 as pbkdf2Js } from "@noble/hashes/pbkdf2";
 import { sha512 } from "@noble/hashes/sha512";
 
-import { hasBigInt, u8aToU8a } from "@polkadot/util";
+import { u8aToU8a } from "@polkadot/util";
 
 import { randomAsU8a } from "../random/asU8a.js";
 

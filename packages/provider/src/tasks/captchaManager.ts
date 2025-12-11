@@ -14,54 +14,97 @@
 
 import { type Logger, getLogger } from "@prosopo/common";
 import type { TranslationKey } from "@prosopo/locale";
-import type { KeyringPair } from "@prosopo/types";
-import { ApiParams, CaptchaType, Tier } from "@prosopo/types";
+import {
+	ApiParams,
+	CaptchaType,
+	type KeyringPair,
+	type ProsopoConfigOutput,
+	Tier,
+} from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	IUserDataSlim,
 	Session,
 } from "@prosopo/types-database";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import type {
+	AccessPolicy,
+	AccessRulesStorage,
+	UserScope,
+	UserScopeRecord,
+} from "@prosopo/user-access-policy";
 import { getPrioritisedAccessRule } from "../api/blacklistRequestInspector.js";
 
 export class CaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
+	config: ProsopoConfigOutput;
 	logger: Logger;
 
-	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
+	constructor(
+		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
+	) {
 		this.pair = pair;
 		this.db = db;
+		this.config = config;
 		this.logger = logger || getLogger("info", import.meta.url);
 	}
 
-	async getFrictionlessTokenIdFromSession(sessionRecord: Session) {
-		const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-			sessionRecord.tokenId,
-		);
-		return tokenRecord ? (tokenRecord._id as FrictionlessTokenId) : undefined;
+	async validateSessionIP(
+		sessionRecord: Session,
+		currentIP: string,
+		env: ProviderEnvironment,
+	): Promise<{ valid: boolean; reason?: TranslationKey }> {
+		// Session record now contains IP address directly
+		// No validation needed as the session already has all required info
+		return { valid: true };
 	}
 
 	async isValidRequest(
 		clientSettings: ClientRecord | IUserDataSlim,
-		captchaType: CaptchaType,
+		requestedCaptchaType: CaptchaType,
+		env: ProviderEnvironment,
 		sessionId?: string,
+		userAccessPolicy?: AccessPolicy,
+		currentIP?: string,
 	): Promise<{
 		valid: boolean;
 		reason?: TranslationKey;
-		frictionlessTokenId?: FrictionlessTokenId;
+		sessionId?: string;
 		type: CaptchaType;
+		powDifficulty?: number;
+		solvedImagesCount?: number;
 	}> {
 		this.logger.debug(() => ({
 			msg: "Validating request",
 			data: {
-				captchaType,
+				captchaType: requestedCaptchaType,
 				sessionId,
 			},
 		}));
 
+		// User Access Policies override default behaviour
+		if (
+			userAccessPolicy &&
+			userAccessPolicy.captchaType !== requestedCaptchaType
+		) {
+			this.logger.warn(() => ({
+				msg: "Invalid captcha type for user access policy",
+				data: {
+					account: clientSettings.account,
+					captchaType: userAccessPolicy.captchaType,
+				},
+			}));
+			return {
+				valid: false,
+				reason: "API.INCORRECT_CAPTCHA_TYPE",
+				type: requestedCaptchaType,
+			};
+		}
 		// Session ID
 
 		// If the client has a sessionId then they are requesting a frictionless captcha.
@@ -79,15 +122,52 @@ export class CaptchaManager {
 					return {
 						valid: false,
 						reason: "CAPTCHA.NO_SESSION_FOUND",
-						type: captchaType,
+						type: requestedCaptchaType,
 					};
 				}
-				const frictionlessTokenId =
-					await this.getFrictionlessTokenIdFromSession(sessionRecord);
+
+				// Validate IP address if currentIP is provided
+				if (currentIP) {
+					const ipValidation = await this.validateSessionIP(
+						sessionRecord,
+						currentIP,
+						env,
+					);
+					if (!ipValidation.valid) {
+						return {
+							valid: false,
+							reason: ipValidation.reason,
+							type: requestedCaptchaType,
+						};
+					}
+				}
+
+				// Check the captcha type of the session is the same as the requested captcha type
+				if (sessionRecord.captchaType !== requestedCaptchaType) {
+					this.logger.warn(() => ({
+						msg: "Invalid frictionless request",
+						data: {
+							account: clientSettings.account,
+							sessionId: sessionId,
+						},
+					}));
+					return {
+						valid: false,
+						reason: "CAPTCHA.NO_SESSION_FOUND",
+						type: requestedCaptchaType,
+					};
+				}
+
 				return {
 					valid: true,
-					frictionlessTokenId,
-					type: captchaType,
+					sessionId: sessionRecord.sessionId,
+					type: requestedCaptchaType,
+					...(sessionRecord.powDifficulty && {
+						powDifficulty: sessionRecord.powDifficulty,
+					}),
+					...(sessionRecord.solvedImagesCount && {
+						solvedImagesCount: sessionRecord.solvedImagesCount,
+					}),
 				};
 			}
 
@@ -104,7 +184,7 @@ export class CaptchaManager {
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",
-				type: captchaType,
+				type: requestedCaptchaType,
 			};
 		}
 
@@ -114,22 +194,23 @@ export class CaptchaManager {
 		// - If `captchaType` is `image` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `image`
 		// - If `captchaType` is `pow` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `pow`
 		// - If `captchaType` is `frictionless` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `frictionless`
-		if (clientSettings?.settings?.captchaType !== captchaType) {
+		if (clientSettings?.settings?.captchaType !== requestedCaptchaType) {
 			this.logger.warn(() => ({
-				msg: `Invalid ${captchaType} request`,
+				msg: `Invalid ${requestedCaptchaType} request`,
 				data: {
 					account: clientSettings.account,
-					requestedCaptchaType: captchaType,
+					requestedCaptchaType: requestedCaptchaType,
 					settingsCaptchaType: clientSettings?.settings?.captchaType,
 				},
 			}));
 			return {
 				valid: false,
 				reason: "API.INCORRECT_CAPTCHA_TYPE",
-				type: captchaType,
+				type: requestedCaptchaType,
 			};
 		}
-		return { valid: true, type: captchaType };
+
+		return { valid: true, type: requestedCaptchaType };
 	}
 
 	getVerificationResponse(
@@ -152,9 +233,7 @@ export class CaptchaManager {
 	async getPrioritisedAccessPolicies(
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
-		userScope: {
-			[key: string]: bigint | string;
-		},
+		userScope: UserScope | UserScopeRecord,
 	) {
 		return getPrioritisedAccessRule(
 			userAccessRulesStorage,

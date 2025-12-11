@@ -1,58 +1,59 @@
 {
 	"name": "@prosopo/flux",
-	"version": "2.6.9",
+	"version": "2.6.38",
 	"description": "Tools for managing Flux deployment",
 	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
 	"bin": {
 		"flux": "dist/index.js"
 	},
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
-		"test": "echo \"No test specified\"",
-		"clean": "tsc --build --clean",
-		"build": "tsc --build --verbose",
-		"build:cjs": "npx vite --config vite.cjs.config.ts build",
+		"build": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.esm.config.ts --mode $NODE_ENV",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"typecheck": "tsc --project tsconfig.types.json",
 		"cli": "node dist/index.js"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@noble/curves": "1.6.0",
-		"@polkadot/util": "12.6.2",
-		"@polkadot/util-crypto": "12.6.2",
-		"@prosopo/common": "3.0.2",
-		"@prosopo/config": "3.1.0",
-		"@prosopo/dotenv": "3.0.4",
-		"@prosopo/util": "3.0.2",
-		"@typegoose/auto-increment": "4.13.0",
-		"axios": "1.10.0",
-		"esbuild": "0.25.6",
-		"express": "4.21.2",
+		"@noble/curves": "1.9.2",
+		"@polkadot/util": "13.5.7",
+		"@polkadot/util-crypto": "13.5.7",
+		"@prosopo/common": "3.1.27",
+		"@prosopo/dotenv": "3.0.32",
+		"@prosopo/util": "3.2.4",
 		"openpgp": "5.11.3",
 		"qs": "6.13.0",
 		"socket.io-client": "4.7.5",
 		"varuint-bitcoin": "1.1.2",
-		"webpack-dev-server": "5.2.2",
 		"yargs": "17.7.2",
 		"zod": "3.23.8"
 	},
-	"overrides": {
-		"@polkadot/keyring": "12.6.2"
-	},
 	"devDependencies": {
+		"@prosopo/config": "3.2.1",
+		"@types/node": "22.10.2",
 		"@types/qs": "6.9.18",
-		"@vitest/coverage-v8": "3.0.9",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	}
 }

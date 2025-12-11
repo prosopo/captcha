@@ -41,6 +41,14 @@ export default defineConfig(async ({ command, mode }) => {
 		mode,
 	);
 	return defineConfig({
+		ssr: {
+			external: [
+				...(backendConfig.ssr?.external
+					? (backendConfig.ssr.external as string[])
+					: []),
+				"kerberos",
+			] as string[],
+		},
 		define: {
 			...backendConfig.define,
 			...(process.env.PROSOPO_MONGO_EVENTS_URI && {
@@ -51,6 +59,21 @@ export default defineConfig(async ({ command, mode }) => {
 			...(process.env._DEV_ONLY_WATCH_EVENTS && {
 				"process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
 					process.env._DEV_ONLY_WATCH_EVENTS,
+				),
+			}),
+			...(process.env.PROSOPO_ENTROPY && {
+				"process.env.PROSOPO_ENTROPY": JSON.stringify(
+					process.env.PROSOPO_ENTROPY,
+				),
+			}),
+			...(process.env.PROSOPO_IPAPI_URL && {
+				"process.env.PROSOPO_IPAPI_URL": JSON.stringify(
+					process.env.PROSOPO_IPAPI_URL,
+				),
+			}),
+			...(process.env.PROSOPO_IPAPI_KEY && {
+				"process.env.PROSOPO_IPAPI_KEY": JSON.stringify(
+					process.env.PROSOPO_IPAPI_KEY,
 				),
 			}),
 		},
