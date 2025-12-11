@@ -22,7 +22,6 @@ import {
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import Chainable = Cypress.Chainable;
-import { u8aToHex } from "@polkadot/util";
 import { getPair } from "@prosopo/keyring";
 import type { SolutionRecord } from "@prosopo/types-database";
 
@@ -254,11 +253,10 @@ function registerSiteKey(
 		"log",
 		`Registering site key  ${siteKey} for captcha type: ${captchaType || baseCaptchaType}`,
 	);
-	const timestamp = new Date().getTime();
 
 	return cy.then(() => {
 		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
-		const signature = u8aToHex(pair.sign(timestamp.toString()));
+		const jwt = pair.jwtIssue();
 		const adminSiteKeyURL = `http://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
 		const settings: IUserSettings = {
@@ -267,6 +265,7 @@ function registerSiteKey(
 			frictionlessThreshold: 0.5,
 			powDifficulty: 2,
 			imageThreshold: 0.8,
+			disallowWebView: false,
 		};
 
 		// Use cy.request() to ensure Cypress correctly queues the request
@@ -275,8 +274,7 @@ function registerSiteKey(
 			url: adminSiteKeyURL,
 			headers: {
 				"Content-Type": "application/json",
-				signature: signature,
-				timestamp: timestamp.toString(),
+				Authorization: `Bearer ${jwt}`,
 			},
 			body: {
 				siteKey: siteKey,

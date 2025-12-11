@@ -14,4 +14,3 @@
 export * from "./setup/index.js";
 export * from "./util/index.js";
 export * from "./cli/index.js";
-export * from "./contract/index.js";

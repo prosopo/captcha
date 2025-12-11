@@ -458,7 +458,7 @@ describe("ImgCaptchaManager", () => {
 			userSignature: "",
 			userSubmitted: true,
 			serverChecked: false,
-			requestedAtTimestamp: 0,
+			requestedAtTimestamp: new Date(0),
 			ipAddress: {
 				lower: getIPAddress("1.1.1.1").bigInt(),
 				upper: 0n,
@@ -466,7 +466,7 @@ describe("ImgCaptchaManager", () => {
 			},
 			headers: { a: "1", b: "2", c: "3" },
 			ja4: "ja4",
-			lastUpdatedTimestamp: Date.now(),
+			lastUpdatedTimestamp: new Date(),
 		};
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
 		(db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
@@ -508,7 +508,7 @@ describe("ImgCaptchaManager", () => {
 				userSignature: "",
 				userSubmitted: true,
 				serverChecked: false,
-				requestedAtTimestamp: 0,
+				requestedAtTimestamp: new Date(0),
 				ipAddress: {
 					lower: getIPAddress("1.1.1.1").bigInt(),
 					upper: 0n,
@@ -516,7 +516,7 @@ describe("ImgCaptchaManager", () => {
 				},
 				headers: { a: "1", b: "2", c: "3" },
 				ja4: "ja4",
-				lastUpdatedTimestamp: Date.now(),
+				lastUpdatedTimestamp: new Date(),
 			},
 		];
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix

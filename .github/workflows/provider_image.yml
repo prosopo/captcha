@@ -12,6 +12,10 @@ on:
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -51,6 +55,11 @@ jobs:
         with:
           npm_ci_args: '--include=dev'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
       - name: env
         run: |
           # Copy the .env.production from the dev script to the cli folder and root folder
@@ -60,8 +69,8 @@ jobs:
           # Append the development PROVIDER_MNEMONIC from env.development to the .env.production file
           grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
 
-      - run: NODE_ENV="production" npx nx run @prosopo/cli:build --nxBail
-      - run: NODE_ENV="production" npx nx run @prosopo/cli:bundle --nxBail
+      - run: NODE_ENV="production" npx turbo run @prosopo/cli#build
+      - run: NODE_ENV="production" npx turbo run @prosopo/cli#bundle
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -94,9 +103,37 @@ jobs:
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-            CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
-            sleep 20s
-            docker logs "$CONTAINER" >& provider.log
-            cat provider.log
-            grep -oE "\"version\":\".*\"" provider.log || exit 1
-
+          # Run container and capture exit code
+          CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
+          
+          # Wait for container to complete
+          sleep 20s
+          
+          # Get container exit code
+          EXIT_CODE="$(docker wait "$CONTAINER" || echo "timeout")"
+          
+          # Capture logs
+          docker logs "$CONTAINER" > provider.log 2>&1
+          cat provider.log
+          
+          # Check if container exited successfully
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Container failed with exit code: $EXIT_CODE"
+            echo "Checking for common errors..."
+            
+            if grep -q "Could not resolve" provider.log; then
+              echo "ERROR: Missing dependency detected in bundle"
+              exit 1
+            else
+              echo "ERROR: Container failed for unknown reason"
+              exit 1
+            fi
+          fi
+          
+          # Verify version output is present
+          if ! grep -qE "\"version\":\".*\"" provider.log; then
+            echo "ERROR: Version command did not produce expected output"
+            exit 1
+          fi
+          
+          echo "Provider bundle test passed successfully"

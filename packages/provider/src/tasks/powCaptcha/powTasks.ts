@@ -15,7 +15,7 @@
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
+import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
 	ApiParams,
 	type CaptchaResult,
@@ -31,21 +31,95 @@ import type {
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { at, verifyRecency } from "@prosopo/util";
-import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
+import {
+	type AccessPolicy,
+	AccessPolicyType,
+	type AccessRulesStorage,
+} from "@prosopo/user-access-policy";
+import { at, extractData, verifyRecency } from "@prosopo/util";
+import { getRequestUserScope } from "../../api/blacklistRequestInspector.js";
+import {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+
+/**
+ * Finds a hard block policy from access policies.
+ * A hard block is a Block policy without a captchaType specified.
+ * Policies with captchaType are for captcha type selection, not hard blocking.
+ */
+const findHardBlockPolicy = (
+	accessPolicies: AccessPolicy[],
+): AccessPolicy | undefined => {
+	return accessPolicies.find(
+		(policy) => policy.type === AccessPolicyType.Block && !policy.captchaType,
+	);
+};
 
 const DEFAULT_POW_DIFFICULTY = 4;
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 
-	constructor(db: IProviderDatabase, pair: KeyringPair, logger?: Logger) {
-		super(db, pair, logger);
+	constructor(
+		db: IProviderDatabase,
+		pair: KeyringPair,
+		config: ProsopoConfigOutput,
+		logger?: Logger,
+	) {
+		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
+	}
+
+	/**
+	 * Checks if a user should be hard blocked based on access policies
+	 * Only checks for Block policies without captchaType
+	 *
+	 * @returns The blocking policy if user should be blocked, undefined otherwise
+	 */
+	private async checkForHardBlock(
+		userAccessRulesStorage: AccessRulesStorage,
+		challengeRecord: PoWCaptchaRecord,
+		userAccount: string,
+		headers: RequestHeaders,
+		coords?: [number, number][][],
+	): Promise<AccessPolicy | undefined> {
+		// Get headHash from session record if available
+		let headHash: string | undefined;
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			headHash = sessionRecord?.decryptedHeadHash;
+		}
+
+		// Serialize coords to string for querying
+		const coordsString = coords ? JSON.stringify(coords) : undefined;
+
+		const ipAddressRecord = getIpAddressFromComposite(
+			challengeRecord.ipAddress,
+		);
+
+		const userScope = getRequestUserScope(
+			headers,
+			challengeRecord.ja4,
+			ipAddressRecord.address,
+			userAccount,
+			headHash,
+			coordsString,
+		);
+
+		const accessPolicies = await this.getPrioritisedAccessPolicies(
+			userAccessRulesStorage,
+			challengeRecord.dappAccount,
+			userScope,
+		);
+
+		return findHardBlockPolicy(accessPolicies);
 	}
 
 	/**
@@ -90,6 +164,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} userTimestampSignature
 	 * @param ipAddress
 	 * @param headers
+	 * @param salt
 	 */
 	async verifyPowCaptchaSolution(
 		challenge: PoWChallengeId,
@@ -99,6 +174,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		userTimestampSignature: string,
 		ipAddress: IPAddress,
 		headers: RequestHeaders,
+		salt?: string,
 	): Promise<boolean> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -132,8 +208,26 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		const difficulty = challengeRecord.difficulty;
 
+		// Extract coordinates from salt if provided
+		let coords: [number, number][][] | undefined;
+		if (salt) {
+			try {
+				const extractedData = extractData(salt);
+				// Convert extracted data to coordinate pairs
+				if (extractedData.length >= 2) {
+					coords = [[[extractedData[0], extractedData[1]] as [number, number]]];
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to extract coordinates from salt",
+					error,
+					salt,
+				}));
+			}
+		}
+
 		if (!verifyRecency(challenge, timeout)) {
-			await this.db.updatePowCaptchaRecord(
+			await this.db.updatePowCaptchaRecordResult(
 				challenge,
 				{
 					status: CaptchaStatus.disapproved,
@@ -142,6 +236,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				false, //serverchecked
 				true, // usersubmitted
 				userTimestampSignature,
+				coords,
 			);
 			return false;
 		}
@@ -156,12 +251,13 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.updatePowCaptchaRecord(
+		await this.db.updatePowCaptchaRecordResult(
 			challenge,
 			result,
 			false,
 			true,
 			userTimestampSignature,
+			coords,
 		);
 		return correct;
 	}
@@ -173,7 +269,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param {string} dappAccount - the dapp that is requesting the captcha
 	 * @param {string} challenge - the starting string for the PoW challenge
 	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
-	 * @param ip
+	 * @param env - provider environment
+	 * @param ip - optional IP address for validation
+	 * @param userAccessRulesStorage - storage for querying user access policies
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -181,6 +279,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		timeout: number,
 		env: ProviderEnvironment,
 		ip?: string,
+		userAccessRulesStorage?: AccessRulesStorage,
 	): Promise<{ verified: boolean; score?: number }> {
 		const notVerifiedResponse = { verified: false };
 
@@ -193,46 +292,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			}));
 
 			return notVerifiedResponse;
-		}
-
-		if (ip) {
-			const challengeIpAddress = getIpAddressFromComposite(
-				challengeRecord.ipAddress,
-			);
-
-			if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
-				this.logger.warn(() => ({
-					msg: "No IP API Service found",
-					data: { dappAccount, challenge },
-				}));
-				throw new ProsopoEnvError("API.UNKNOWN");
-			}
-
-			// Get client settings for IP validation rules
-			const clientRecord = await this.db.getClientRecord(dappAccount);
-			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
-
-			const ipValidation = await deepValidateIpAddress(
-				ip,
-				challengeIpAddress,
-				this.logger,
-				env.config.ipApi.apiKey,
-				env.config.ipApi.baseUrl,
-				ipValidationRules,
-			);
-
-			if (!ipValidation.isValid) {
-				this.logger.error(() => ({
-					msg: "IP validation failed for PoW captcha",
-					data: {
-						ip,
-						challengeIp: challengeIpAddress.address,
-						error: ipValidation.errorMessage,
-						distanceKm: ipValidation.distanceKm,
-					},
-				}));
-				return notVerifiedResponse;
-			}
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
@@ -258,26 +317,97 @@ export class PowCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		const recent = verifyRecency(challenge, timeout);
-
+		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution has already been checked by the server. Moving this code around could result in solutions being
+		// re-usable.
 		await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+		// -- END WARNING --
 
+		const recent = verifyRecency(challenge, timeout);
 		if (!recent) {
 			return notVerifiedResponse;
 		}
 
-		let score: number | undefined;
-		if (challengeRecord.frictionlessTokenId) {
-			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-				challengeRecord.frictionlessTokenId,
+		// Check user access policies for hard blocks
+		if (userAccessRulesStorage) {
+			try {
+				const blockPolicy = await this.checkForHardBlock(
+					userAccessRulesStorage,
+					challengeRecord,
+					challengeRecord.userAccount,
+					challengeRecord.headers,
+					challengeRecord.coords,
+				);
+
+				if (blockPolicy) {
+					this.logger.info(() => ({
+						msg: "User blocked by access policy in server PoW verification",
+						data: {
+							challenge,
+							userAccount: challengeRecord.userAccount,
+							dappAccount,
+							policy: blockPolicy,
+						},
+					}));
+					return notVerifiedResponse;
+				}
+			} catch (error) {
+				this.logger.warn(() => ({
+					msg: "Failed to check user access policies in server PoW verification",
+					error,
+				}));
+			}
+		}
+
+		if (ip) {
+			const challengeIpAddress = getIpAddressFromComposite(
+				challengeRecord.ipAddress,
 			);
-			if (tokenRecord) {
-				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dappAccount);
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			await this.db.updatePowCaptchaRecord(challengeRecord.challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+
+			const ipValidation = await deepValidateIpAddress(
+				ip,
+				challengeIpAddress,
+				this.logger,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
+				ipValidationRules,
+			);
+
+			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for PoW captcha",
+					data: {
+						ip,
+						challengeIp: challengeIpAddress.address,
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm,
+					},
+				}));
+				return notVerifiedResponse;
+			}
+		}
+
+		let score: number | undefined;
+		if (challengeRecord.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			if (sessionRecord) {
+				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 				this.logger.info(() => ({
 					data: {
-						tscoreComponents: { ...(tokenRecord?.scoreComponents || {}) },
+						scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
 						score,
 					},
 				}));

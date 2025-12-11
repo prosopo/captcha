@@ -1,0 +1,117 @@
+name: create_release_pr
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BRANCH_PROTECTION_DISABLED: 'true'
+  NODE_ENV: "production"
+
+jobs:
+  create-pr:
+    name: Create Release PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get token for gh app
+        id: app_token
+        uses: peter-murray/workflow-application-token-action@v3
+        with:
+          application_id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Setup npm registry
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: Git config
+        run: |
+          git config user.name "prosoponator[bot]"
+          git config user.email "dev@prosopo.io"
+
+      - run: npm ci --ignore-scripts --include=dev
+
+      - name: Detect changesets
+        id: detect
+        run: |
+          if find .changeset -name "*.md" ! -name "README.md" | grep -q . ; then
+            echo "Found changesets"
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changesets found"
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Exit if no changesets
+        if: steps.detect.outputs.has_changesets == 'false'
+        run: |
+          echo "No changesets found, nothing to release"
+          exit 0
+
+      - name: Version bump
+        if: steps.detect.outputs.has_changesets == 'true'
+        run: |
+          npm i -g @changesets/cli
+          npx @changesets/cli version --verbose
+          
+          npm i --ignore-scripts --include=dev
+          
+          # Set the version of root and docker/images/provider to match @prosopo/cli
+          root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+          echo "root_version=$root_version" >> $GITHUB_ENV
+          echo "Setting versions to $root_version"
+          
+          npm pkg set version="$root_version"
+          cd docker/images/provider
+          npm pkg set version="$root_version"
+          cd -
+          
+          git add -u .
+
+      - run: npm ci --ignore-scripts --include=dev
+
+      - name: Build packages
+        run: |
+          echo "Building all packages"
+          npm run build:all
+
+      - name: lint-fix
+        run: |
+          npm run lint-fix
+          git add -u .
+
+      - name: Create release branch and PR
+        if: steps.detect.outputs.has_changesets == 'true'
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          branch_name="release/${{ env.root_version }}"
+          
+          git checkout -b "$branch_name"
+          git commit -m "chore: version bump v${{ env.root_version }}"
+          git push --set-upstream origin "$branch_name"
+          
+          gh pr create \
+            --title "Release v${{ env.root_version }}" \
+            --body "Automated release PR for version ${{ env.root_version }}" \
+            --base main \
+            --head "$branch_name"
+

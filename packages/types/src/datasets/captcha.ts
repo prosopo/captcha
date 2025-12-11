@@ -225,7 +225,7 @@ export const CaptchaSolutionSchema = object({
 	captchaId: string(),
 	captchaContentId: string(),
 	solution: string().array(),
-	salt: string().min(34),
+	salt: string(),
 });
 
 export const CaptchaSolutionArraySchema = array(CaptchaSolutionSchema);

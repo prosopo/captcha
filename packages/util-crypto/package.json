@@ -1,13 +1,13 @@
 {
 	"name": "@prosopo/util-crypto",
-	"version": "13.5.13",
+	"version": "13.5.28",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -30,24 +30,24 @@
 	"dependencies": {
 		"@noble/curves": "1.9.2",
 		"@noble/hashes": "1.8.0",
-		"@polkadot/util": "12.6.2",
-		"@polkadot/x-randomvalues": "12.6.2",
-		"@prosopo/config": "3.1.11",
+		"@polkadot/util": "13.5.7",
+		"@polkadot/x-randomvalues": "13.5.7",
 		"@scure/base": "^1.1.7",
 		"@scure/sr25519": "0.2.0",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
+		"@prosopo/config": "3.2.1",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "3.0.9",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	},
 	"repository": {
 		"type": "git",

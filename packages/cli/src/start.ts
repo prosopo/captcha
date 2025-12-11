@@ -34,20 +34,24 @@ import {
 	prosopoVerifyRouter,
 	publicRouter,
 	robotsMiddleware,
+	setClientEntropy,
 	storeCaptchasExternally,
 } from "@prosopo/provider";
 import { blockMiddleware, ja4Middleware } from "@prosopo/provider";
 import {
+	AdminApiPaths,
 	ClientApiPaths,
 	type CombinedApiPaths,
 	type KeyringPair,
 } from "@prosopo/types";
 import {
-	createApiRuleRoutesProvider,
+	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
-} from "@prosopo/user-access-policy";
+} from "@prosopo/user-access-policy/api";
+import type { JWT } from "@prosopo/util-crypto";
 import cors from "cors";
 import express from "express";
+import type { Request } from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
@@ -57,6 +61,32 @@ const getClientApiPathsExcludingVerify = () => {
 		(path) => path.indexOf("verify") === -1,
 	);
 	return paths as ClientApiPaths[];
+};
+
+// Extract authenticated user address from JWT for rate limiting
+const getUserFromJWT = (req: Request): string | undefined => {
+	try {
+		const authHeader = req.headers.Authorization || req.headers.authorization;
+		if (!authHeader || typeof authHeader !== "string") {
+			return undefined;
+		}
+		const jwt = authHeader.replace("Bearer ", "") as JWT;
+		if (!jwt) {
+			return undefined;
+		}
+		// We don't need to verify the signature here, just extract the subject
+		// The actual verification happens in authMiddleware
+		const parts = jwt.split(".");
+		if (parts.length !== 3 || !parts[1]) {
+			return undefined;
+		}
+		const payload = JSON.parse(
+			Buffer.from(parts[1], "base64url").toString("utf-8"),
+		);
+		return payload.sub as string | undefined;
+	} catch (e) {
+		return undefined;
+	}
 };
 
 async function startApi(
@@ -72,8 +102,9 @@ async function startApi(
 	const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
 		parseLogLevel(env.config.logLevel),
 	);
-	const apiRuleRoutesProvider = createApiRuleRoutesProvider(
+	const apiRuleRoutesProvider = new AccessRuleApiRoutes(
 		env.getDb().getUserAccessRulesStorage(),
+		env.logger,
 	);
 	const apiAdminRoutesProvider = createApiAdminRoutesProvider(env);
 
@@ -91,7 +122,40 @@ async function startApi(
 	apiApp.use(express.json({ limit: "50mb" }));
 
 	// Put this first so that no middleware runs on it
-	apiApp.use(publicRouter());
+	apiApp.use(publicRouter(env));
+
+	// Rate limiting
+	// In test environments, disable rate limiting to allow parallel tests
+	const isTestEnv = process.env.NODE_ENV === "test";
+
+	if (!isTestEnv) {
+		const configRateLimits = env.config.rateLimits;
+		const rateLimits = {
+			...configRateLimits,
+			...getExpressApiRuleRateLimits(),
+		};
+		const adminPaths = Object.values(AdminApiPaths);
+		for (const [path, limit] of Object.entries(rateLimits)) {
+			const enumPath = path as CombinedApiPaths;
+			// For admin paths, key by authenticated user instead of IP
+			// This prevents tests (and legitimate users) from interfering with each other
+			if (adminPaths.includes(enumPath as AdminApiPaths)) {
+				apiApp.use(
+					enumPath,
+					rateLimit({
+						...limit,
+						keyGenerator: (req) => {
+							const user = getUserFromJWT(req);
+							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
+							return user || req.ip || "unknown";
+						},
+					}),
+				);
+			} else {
+				apiApp.use(enumPath, rateLimit(limit));
+			}
+		}
+	}
 
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
@@ -100,32 +164,21 @@ async function startApi(
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 
+	// Run Header check middleware on all client routes
+	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
+
 	// Specify verify router before the blocking middlewares
 	apiApp.use(prosopoVerifyRouter(env));
 
-	// Blocking middleware will run on any routes defined after this point
-	apiApp.use(blockMiddleware(env));
-
-	// Header check middleware will run on any client routes excluding verify
-	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
-
-	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
-	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
-	apiApp.use(prosopoRouter(env));
-
-	// Admin routes
+	//  Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
 	apiApp.use(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
-
 	const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
-	for (const userAccessRuleRoute of userAccessRuleRoutes) {
-		apiApp.use(
-			userAccessRuleRoute.path,
-			authMiddleware(env.pair, env.authAccount),
-		);
+	for (const userAccessRuleRoute in userAccessRuleRoutes) {
+		apiApp.use(userAccessRuleRoute, authMiddleware(env.pair, env.authAccount));
 	}
 	apiApp.use(
 		apiExpressRouterFactory.createRouter(
@@ -144,13 +197,12 @@ async function startApi(
 		),
 	);
 
-	// Rate limiting
-	const configRateLimits = env.config.rateLimits;
-	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
-	for (const [path, limit] of Object.entries(rateLimits)) {
-		const enumPath = path as CombinedApiPaths;
-		apiApp.use(enumPath, rateLimit(limit));
-	}
+	// Blocking middleware will run on any routes defined after this point
+	apiApp.use(blockMiddleware(env));
+
+	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
+	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
+	apiApp.use(prosopoRouter(env));
 
 	return apiApp.listen(apiPort, () => {
 		env.logger.info(() => ({
@@ -218,6 +270,20 @@ export async function start(
 					context: { failedFuncName: getClientList.name },
 				}));
 			});
+		}
+
+		const cronClientEntropySetter =
+			env.config.scheduledTasks?.clientEntropyScheduler?.schedule;
+		if (cronClientEntropySetter) {
+			setClientEntropy(env.pair, cronClientEntropySetter, env.config).catch(
+				(err) => {
+					env.logger.error(() => ({
+						msg: "Failed to start client entropy scheduler",
+						err,
+						context: { failedFuncName: setClientEntropy.name },
+					}));
+				},
+			);
 		}
 	}
 

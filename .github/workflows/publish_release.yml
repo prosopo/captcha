@@ -1,0 +1,142 @@
+name: publish_release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_ENV: "production"
+
+jobs:
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get token for gh app
+        id: app_token
+        uses: peter-murray/workflow-application-token-action@v3
+        with:
+          application_id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', inputs.version) || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Setup npm registry
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Get version from tag or input
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            version=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Version: $version"
+
+      - run: npm ci --ignore-scripts --include=dev
+
+      - name: Build packages
+        run: |
+          echo "Building all packages in production mode"
+          NODE_ENV=production npm run build:all
+          NODE_ENV=production npm run build:all:cjs
+
+      - name: Bundle the production provider CLI
+        run: |
+          echo "Bundling provider CLI"
+          NODE_ENV="production" npm run -w @prosopo/cli bundle
+
+      - name: Verify production build
+        run: |
+          echo "Verifying production builds..."
+          if grep -r "@emotion/react/jsx-runtime" integration/frameworks/react/react-procaptcha-wrapper/dist/ 2>/dev/null; then
+            echo "❌ ERROR: Dev build detected in react-procaptcha-wrapper - found @emotion/react/jsx-runtime"
+            exit 1
+          fi
+          if grep -r "@emotion/vue/jsx-runtime" integration/frameworks/vue/vue-procaptcha-wrapper/dist/ 2>/dev/null; then
+            echo "❌ ERROR: Dev build detected in vue-procaptcha-wrapper - found @emotion/vue/jsx-runtime"
+            exit 1
+          fi
+          echo "✅ Build verification passed"
+
+      - name: Publish to npm
+        run: |
+          echo "Publishing all packages to npm"
+          npm --workspaces publish --access=public || true
+
+      - name: Publish production image to Docker Hub
+        run: |
+          echo "Publishing production provider image to Docker Hub"
+          cd docker/images/provider
+          NODE_ENV="production" npm run build
+          NODE_ENV="production" npm run publish:docker
+          cd -
+
+      - name: Bundle the staging provider CLI
+        run: |
+          echo "Bundling provider CLI"
+          NODE_ENV="staging" npm run -w @prosopo/cli bundle
+
+      - name: Publish production image to Docker Hub
+        run: |
+          echo "Publishing staging provider image to Docker Hub"
+          cd docker/images/provider
+          NODE_ENV="staging" npm run build
+          NODE_ENV="staging" npm run publish:docker
+          cd -
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "Release v${{ steps.version.outputs.version }}" \
+            --generate-notes
+
+      - name: Send success notification
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"Release v${{ steps.version.outputs.version }} published successfully\"}" \
+            "${{ secrets.SLACKBOT_DEVOPS }}"
+
+      - name: Send failure notification
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"Release v${{ steps.version.outputs.version }} failed to publish\"}" \
+            "${{ secrets.SLACKBOT_DEVOPS }}"

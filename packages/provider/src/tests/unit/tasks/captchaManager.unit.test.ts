@@ -13,17 +13,18 @@
 // limitations under the License.
 
 import { type Logger, getLogger } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
-import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
 import {
-	type ClientRecord,
-	type FrictionlessToken,
-	type IProviderDatabase,
-	IpAddressType,
-	type Session,
+	ContextType,
+	type KeyringPair,
+	contextAwareThresholdDefault,
+} from "@prosopo/types";
+import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
+import type {
+	ClientRecord,
+	IProviderDatabase,
+	Session,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { ObjectId } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 
@@ -35,6 +36,16 @@ const defaultUserSettings: IUserSettings = {
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
+	disallowWebView: false,
+	contextAware: {
+		enabled: false,
+		contexts: {
+			default: {
+				type: ContextType.Default,
+				threshold: contextAwareThresholdDefault,
+			},
+		},
+	},
 };
 
 describe("CaptchaManager", () => {
@@ -47,7 +58,6 @@ describe("CaptchaManager", () => {
 	beforeEach(() => {
 		db = {
 			checkAndRemoveSession: vi.fn(),
-			getFrictionlessTokenRecordByTokenId: vi.fn(),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -66,8 +76,6 @@ describe("CaptchaManager", () => {
 		} as unknown as Logger;
 		logger = mockLogger;
 
-		captchaManager = new CaptchaManager(db, pair, logger);
-
 		mockEnv = {
 			config: {
 				ipApi: {
@@ -76,6 +84,8 @@ describe("CaptchaManager", () => {
 				},
 			},
 		} as unknown as ProviderEnvironment;
+
+		captchaManager = new CaptchaManager(db, pair, mockEnv.config, logger);
 
 		vi.clearAllMocks();
 	});
@@ -120,18 +130,9 @@ describe("CaptchaManager", () => {
 		it("should validate a request for an pow captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type pow", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
-				tokenId: "tokenId" as unknown as ObjectId,
+				sessionId: "sessionId",
 				captchaType: CaptchaType.pow,
-			} as Pick<Session, "tokenId" | "captchaType">);
-
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-				ipAddress: {
-					lower: 2130706433n, // 127.0.0.1 as bigint
-					type: IpAddressType.v4,
-				},
-			} as Partial<FrictionlessToken>);
+			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -152,24 +153,15 @@ describe("CaptchaManager", () => {
 			expect(result).toEqual({
 				valid: true,
 				type: CaptchaType.pow,
-				frictionlessTokenId: "frictionlessTokenId",
+				sessionId: "sessionId",
 			});
 		});
 		it("should validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type image", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
-				tokenId: "tokenId" as unknown as ObjectId,
+				sessionId: "sessionId",
 				captchaType: CaptchaType.image,
-			} as Pick<Session, "tokenId" | "captchaType">);
-
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-				ipAddress: {
-					lower: 2130706433n, // 127.0.0.1 as bigint
-					type: IpAddressType.v4,
-				},
-			} as Partial<FrictionlessToken>);
+			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -190,21 +182,16 @@ describe("CaptchaManager", () => {
 			expect(result).toEqual({
 				valid: true,
 				type: CaptchaType.image,
-				frictionlessTokenId: "frictionlessTokenId",
+				sessionId: "sessionId",
 			});
 		});
 
 		it("should not validate a request for an image captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type pow", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
-				tokenId: "tokenId" as unknown as ObjectId,
+				sessionId: "sessionId",
 				captchaType: CaptchaType.pow,
-			} as Pick<Session, "tokenId" | "captchaType">);
-
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-			});
+			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -230,14 +217,9 @@ describe("CaptchaManager", () => {
 		it("should not validate a request for a pow captcha when the client settings are set to frictionless and a session ID is passed and found with captcha type image", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
-				tokenId: "tokenId" as unknown as ObjectId,
+				sessionId: "sessionId",
 				captchaType: CaptchaType.image,
-			} as Pick<Session, "tokenId">);
-
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-			});
+			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -264,11 +246,6 @@ describe("CaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
 
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-			});
-
 			const sessionId = "sessionId";
 
 			const result = await captchaManager.isValidRequest(
@@ -294,11 +271,6 @@ describe("CaptchaManager", () => {
 		it("should not validate a request for a pow captcha when the client settings are set to frictionless and a session ID is passed but not found", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue(undefined);
-
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-			});
 
 			const sessionId = "sessionId";
 
@@ -449,15 +421,9 @@ describe("CaptchaManager", () => {
 		it("should validate a request when no IP is stored on frictionless token", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
-				tokenId: "tokenId" as unknown as ObjectId,
+				sessionId: "sessionId",
 				captchaType: CaptchaType.image,
-			} as Pick<Session, "tokenId" | "captchaType">);
-
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-				// No ipAddress field
-			});
+			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -478,25 +444,16 @@ describe("CaptchaManager", () => {
 			expect(result).toEqual({
 				valid: true,
 				type: CaptchaType.image,
-				frictionlessTokenId: "frictionlessTokenId",
+				sessionId: "sessionId",
 			});
 		});
 
 		it("should validate a request when no currentIP is provided even with IP stored on token", async () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
-				tokenId: "tokenId" as unknown as ObjectId,
+				sessionId: "sessionId",
 				captchaType: CaptchaType.image,
-			} as Pick<Session, "tokenId" | "captchaType">);
-
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.getFrictionlessTokenRecordByTokenId as any).mockResolvedValue({
-				_id: "frictionlessTokenId",
-				ipAddress: {
-					lower: 2130706433n, // 127.0.0.1 as bigint
-					type: IpAddressType.v4,
-				},
-			} as Partial<FrictionlessToken>);
+			} as Pick<Session, "sessionId" | "captchaType">);
 
 			const result = await captchaManager.isValidRequest(
 				{
@@ -517,7 +474,7 @@ describe("CaptchaManager", () => {
 			expect(result).toEqual({
 				valid: true,
 				type: CaptchaType.image,
-				frictionlessTokenId: "frictionlessTokenId",
+				sessionId: "sessionId",
 			});
 		});
 	});

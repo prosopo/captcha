@@ -74,14 +74,14 @@ export class MongoDatabase implements IDatabase {
 	 * @description Connect to the database and set the various tables
 	 */
 	async connect(): Promise<void> {
-		this.logger.info(() => ({
+		this.logger.debug(() => ({
 			data: { mongoUrl: this.safeURL },
 			msg: "Connecting to database",
 		}));
 		try {
 			// Already connected
 			if (this.connected) {
-				this.logger.info(() => ({
+				this.logger.debug(() => ({
 					data: { mongoUrl: this.safeURL },
 					msg: "Database connection already open",
 				}));
@@ -90,7 +90,7 @@ export class MongoDatabase implements IDatabase {
 
 			// If a connection is in progress, await it
 			if (this.connecting) {
-				this.logger.info(() => ({
+				this.logger.debug(() => ({
 					data: { mongoUrl: this.safeURL },
 					msg: "Database connection in progress, waiting for it to finish",
 				}));
@@ -105,7 +105,7 @@ export class MongoDatabase implements IDatabase {
 				});
 
 				const onConnected = () => {
-					this.logger.info(() => ({
+					this.logger.debug(() => ({
 						data: { mongoUrl: this.safeURL },
 						msg: "Database connection opened",
 					}));
@@ -132,7 +132,7 @@ export class MongoDatabase implements IDatabase {
 				// Optional: handle other events
 				connection.on("disconnected", () => {
 					this.connected = false;
-					this.logger.info(() => ({
+					this.logger.debug(() => ({
 						data: { mongoUrl: this.safeURL },
 						msg: "Database disconnected",
 					}));
@@ -140,7 +140,7 @@ export class MongoDatabase implements IDatabase {
 
 				connection.on("reconnected", () => {
 					this.connected = true;
-					this.logger.info(() => ({
+					this.logger.debug(() => ({
 						data: { mongoUrl: this.safeURL },
 						msg: "Database reconnected",
 					}));
@@ -148,7 +148,7 @@ export class MongoDatabase implements IDatabase {
 
 				connection.on("close", () => {
 					this.connected = false;
-					this.logger.info(() => ({
+					this.logger.debug(() => ({
 						data: { mongoUrl: this.safeURL },
 						msg: "Database connection closed",
 					}));
@@ -156,7 +156,7 @@ export class MongoDatabase implements IDatabase {
 
 				connection.on("fullsetup", () => {
 					this.connected = true;
-					this.logger.info(() => ({
+					this.logger.debug(() => ({
 						data: { mongoUrl: this.safeURL },
 						msg: "Database connection is fully setup",
 					}));

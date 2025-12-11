@@ -1,5 +1,335 @@
 # @prosopo/types-database
 
+## 4.1.4
+### Patch Changes
+
+- Updated dependencies [378a896]
+- Updated dependencies [90fddd8]
+  - @prosopo/user-access-policy@3.5.37
+
+## 4.1.3
+### Patch Changes
+
+- Updated dependencies [7c475dc]
+  - @prosopo/user-access-policy@3.5.36
+
+## 4.1.2
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/user-access-policy@3.5.35
+
+## 4.1.1
+### Patch Changes
+
+- 345b25b: pow coord
+- Updated dependencies [345b25b]
+  - @prosopo/types@3.7.1
+  - @prosopo/user-access-policy@3.5.34
+
+## 4.1.0
+### Minor Changes
+
+- ce70a2b: Add context-aware entropy calculation for WebView and default contexts
+  
+  - Added ContextType enum to distinguish between WebView and default browser contexts
+  - Implemented context-specific entropy calculation and storage
+  - Created clientContextEntropy collection with automatic timestamp management
+  - Removed legacy clientEntropy table in favor of context-specific approach
+  - Added helper functions for context determination and threshold retrieval
+  - Included comprehensive unit tests for context validation logic
+
+### Patch Changes
+
+- c2b940f: Properly save context type settings
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+- Updated dependencies [e01227b]
+  - @prosopo/types@3.7.0
+  - @prosopo/locale@3.1.27
+  - @prosopo/common@3.1.27
+  - @prosopo/user-access-policy@3.5.33
+
+## 4.0.6
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/locale@3.1.26
+  - @prosopo/types@3.6.4
+  - @prosopo/user-access-policy@3.5.32
+
+## 4.0.5
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/locale@3.1.25
+  - @prosopo/types@3.6.3
+  - @prosopo/user-access-policy@3.5.31
+
+## 4.0.4
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/user-access-policy@3.5.30
+  - @prosopo/common@3.1.24
+  - @prosopo/locale@3.1.24
+  - @prosopo/types@3.6.2
+
+## 4.0.3
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/locale@3.1.23
+  - @prosopo/types@3.6.1
+  - @prosopo/user-access-policy@3.5.29
+
+## 4.0.2
+### Patch Changes
+
+- 0a9887c: Remove unique from token index
+
+## 4.0.1
+### Patch Changes
+
+- 3e5d80a: add reason field
+
+## 4.0.0
+### Major Changes
+
+- 8f22479: Update settings schema
+
+### Minor Changes
+
+- bb5f41c: Context awareness
+
+### Patch Changes
+
+- 55a64c6: stop refresh image to pow
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- 55a64c6: Persist sessions for user ip combinations
+- Updated dependencies [8ce9205]
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [b6e98b2]
+  - @prosopo/user-access-policy@3.5.28
+  - @prosopo/types@3.6.0
+  - @prosopo/common@3.1.22
+  - @prosopo/locale@3.1.22
+  - @prosopo/config@3.1.22
+
+## 3.3.13
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/user-access-policy@3.5.27
+
+## 3.3.12
+### Patch Changes
+
+- cb8ab85: head entropy for bot detection
+- Updated dependencies [cb8ab85]
+  - @prosopo/types@3.5.10
+  - @prosopo/user-access-policy@3.5.26
+
+## 3.3.11
+### Patch Changes
+
+- 43907e8: Convert timestamp fields from numbers to Date objects throughout codebase
+- b4639ec: Merge frictionless tokens into sessions
+- 7101036: Force consistent IPs logic
+- Updated dependencies [43907e8]
+- Updated dependencies [005ce66]
+- Updated dependencies [7101036]
+  - @prosopo/types@3.5.9
+  - @prosopo/user-access-policy@3.5.25
+
+## 3.3.10
+### Patch Changes
+
+- b10a65f: Allow saving webview
+- 6420187: Save iframe
+- Updated dependencies [e5c259d]
+  - @prosopo/types@3.5.8
+  - @prosopo/user-access-policy@3.5.24
+
+## 3.3.9
+### Patch Changes
+
+- 3a027ef: Fix session storer
+- 3a027ef: Release cycle
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+  - @prosopo/user-access-policy@3.5.23
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/locale@3.1.21
+  - @prosopo/types@3.5.7
+
+## 3.3.8
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/user-access-policy@3.5.22
+
+## 3.3.7
+### Patch Changes
+
+- 494c5a8: Updated payload
+- Updated dependencies [494c5a8]
+  - @prosopo/types@3.5.5
+  - @prosopo/user-access-policy@3.5.21
+
+## 3.3.6
+### Patch Changes
+
+- 08ff50f: IP Validation Schema update
+- Updated dependencies [08ff50f]
+  - @prosopo/types@3.5.4
+  - @prosopo/user-access-policy@3.5.20
+
+## 3.3.5
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/locale@3.1.20
+  - @prosopo/types@3.5.3
+  - @prosopo/user-access-policy@3.5.19
+
+## 3.3.4
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/user-access-policy@3.5.18
+  - @prosopo/locale@3.1.19
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 3.3.3
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/user-access-policy@3.5.17
+  - @prosopo/common@3.1.18
+  - @prosopo/locale@3.1.18
+  - @prosopo/config@3.1.18
+
+## 3.3.2
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/user-access-policy@3.5.16
+  - @prosopo/common@3.1.17
+  - @prosopo/locale@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
+## 3.3.1
+### Patch Changes
+
+- b6794f8: Timestamp decay fn
+- 11303d9: Release 3.4.0
+- bac2d91: Fix mongoose composite ip getting
+- 18cb28b: Release 3.4.1
+- Updated dependencies [11303d9]
+- Updated dependencies [11303d9]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/user-access-policy@3.5.15
+  - @prosopo/common@3.1.16
+  - @prosopo/locale@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
+## 3.3.0
+### Minor Changes
+
+- 6768f14: Update salt
+
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/user-access-policy@3.5.14
+  - @prosopo/common@3.1.15
+  - @prosopo/locale@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
+## 3.2.2
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/user-access-policy@3.5.13
+  - @prosopo/common@3.1.14
+  - @prosopo/locale@3.1.14
+  - @prosopo/config@3.1.14
+
+## 3.2.1
+### Patch Changes
+
+- 5137f01: Update pow record at verify
+- 0555cd8: Fix type
+- 008d112: Release 3.3.0
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types@3.2.1
+  - @prosopo/user-access-policy@3.5.12
+  - @prosopo/common@3.1.13
+  - @prosopo/locale@3.1.13
+  - @prosopo/config@3.1.13
+
+## 3.2.0
+### Minor Changes
+
+- cf48565: Store additional details. Remove duplicate indexes.
+- 260de39: Fix indexes so that stuff properly expires
+
+### Patch Changes
+
+- d644c04: Make schema public
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [0824221]
+  - @prosopo/types@3.2.0
+  - @prosopo/user-access-policy@3.5.11
+  - @prosopo/common@3.1.12
+  - @prosopo/locale@3.1.12
+  - @prosopo/config@3.1.12
+
 ## 3.1.5
 ### Patch Changes
 

@@ -24,7 +24,6 @@ import {
 	CaptchaType,
 	ClientApiPaths,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
-	type GetPowCaptchaChallengeRequestBodyTypeOutput,
 	type KeyringPair,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
@@ -65,6 +64,7 @@ describe("IP Validation Integration Tests", () => {
 					[ApiParams.dapp]: siteKey,
 					[ApiParams.token]: randomAsHex(16),
 					[ApiParams.user]: userId,
+					[ApiParams.headHash]: randomAsHex(16),
 				};
 
 			const responseFrictionless = await fetch(getFrictionlessCaptchaUrl, {

@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type IPComparisonResponse,
-	type IPConnectionType,
-	type IPInfoResult,
-	IpApiService,
+import type {
+	IPComparisonResponse,
+	IPConnectionType,
+	IPInfoResult,
 } from "@prosopo/types";
 import { getDistance } from "geolib";
 import { getIPInfo } from "./ipInfo.js";
@@ -31,6 +30,8 @@ import { getIPInfo } from "./ipInfo.js";
  *
  * @param ip1 - First IP address to compare
  * @param ip2 - Second IP address to compare
+ * @param apiKey
+ * @param apiUrl
  * @returns Promise resolving to comparison results or error details
  */
 export async function compareIPs(
@@ -173,6 +174,7 @@ export async function compareIPs(
 					connectionType: ip1ConnectionType,
 					isVpnOrProxy: ip1IsVpnOrProxy,
 					country: ip1Info.country,
+					countryCode: ip1Info.countryCode,
 					city: ip1Info.city,
 					coordinates: ip1Coordinates,
 				},
@@ -181,6 +183,7 @@ export async function compareIPs(
 					connectionType: ip2ConnectionType,
 					isVpnOrProxy: ip2IsVpnOrProxy,
 					country: ip2Info.country,
+					countryCode: ip2Info.countryCode,
 					city: ip2Info.city,
 					coordinates: ip2Coordinates,
 				},

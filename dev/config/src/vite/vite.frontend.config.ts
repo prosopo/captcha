@@ -149,7 +149,7 @@ export default async function (
 				"chrome60",
 				"edge18",
 				"firefox60",
-				"node22",
+				"node24",
 				"safari11",
 			],
 			drop,

@@ -36,34 +36,33 @@ import {
 } from "@prosopo/types";
 import type {
 	ClientRecord,
-	FrictionlessTokenId,
 	IProviderDatabase,
 	PendingCaptchaRequest,
 	UserCommitment,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { at } from "@prosopo/util";
+import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
+import { constructPairList, containsIdenticalPairs } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
 export class ImgCaptchaManager extends CaptchaManager {
-	config: ProsopoConfigOutput;
-
 	constructor(
 		db: IProviderDatabase,
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 	) {
-		super(db, pair, logger);
+		super(db, pair, config, logger);
 		this.config = config;
 	}
 
@@ -93,7 +92,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipAddress: IPAddress,
 		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
 		threshold: number,
-		frictionlessTokenId?: FrictionlessTokenId,
+		sessionId?: string,
 	): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -160,7 +159,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			currentTime,
 			getCompositeIpAddress(ipAddress),
 			threshold,
-			frictionlessTokenId,
+			sessionId,
 		);
 		return {
 			captchas,
@@ -181,7 +180,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 * @param providerRequestHashSignature
 	 * @param ipAddress
 	 * @param headers
-	 * @param threshold the percentage of captchas that must be correct to return true
+	 * @param ja4
 	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
 	 */
 	async dappUserSolution(
@@ -255,6 +254,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
+			const flat = receivedCaptchas.map((c) => extractData(c.salt));
+			const pairs = flat.map((list) => constructPairList(list));
+
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
 
@@ -279,10 +281,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				userSignature: userTimestampSignature,
 				userSubmitted: true,
 				serverChecked: false,
-				requestedAtTimestamp: timestamp,
+				requestedAtTimestamp: new Date(timestamp),
 				ipAddress: getCompositeIpAddress(ipAddress),
 				headers,
-				frictionlessTokenId: pendingRecord.frictionlessTokenId,
+				sessionId: pendingRecord.sessionId,
 				ja4,
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
@@ -303,6 +305,22 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
+			if (containsIdenticalPairs(pairs)) {
+				await this.db.disapproveDappUserCommitment(
+					commitmentId,
+					"CAPTCHA.INVALID_SOLUTION",
+					pairs,
+				);
+				response = {
+					captchas: captchaIds.map((id) => ({
+						captchaId: id,
+						proof: [[]],
+					})),
+					verified: false,
+				};
+				return response;
+			}
+
 			if (
 				compareCaptchaSolutions(
 					receivedCaptchas,
@@ -318,11 +336,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				await this.db.approveDappUserCommitment(commitmentId);
+				await this.db.approveDappUserCommitment(commitmentId, pairs);
 			} else {
 				await this.db.disapproveDappUserCommitment(
 					commitmentId,
 					"CAPTCHA.INVALID_SOLUTION",
+					pairs,
 				);
 				response = {
 					captchas: captchaIds.map((id) => ({
@@ -465,6 +484,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		env: ProviderEnvironment,
 		maxVerifiedTime?: number,
 		ip?: string,
+		disallowWebView?: boolean,
+		contextAwareEnabled = false,
 	): Promise<ImageVerificationResponse> {
 		const solution = await (commitmentId
 			? this.getDappUserCommitmentById(commitmentId)
@@ -478,46 +499,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return { status: "API.USER_NOT_VERIFIED_NO_SOLUTION", verified: false };
 		}
 
-		if (!env.config.ipApi.apiKey || !env.config.ipApi.baseUrl) {
-			this.logger.warn(() => ({
-				msg: "No IP API key or URL found",
-				data: { user, dapp },
-			}));
-			throw new ProsopoEnvError("API.UNKNOWN");
-		}
-
-		const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
-
-		// Get client settings for IP validation rules
-		const clientRecord = await this.db.getClientRecord(dapp);
-		const ipValidationRules = clientRecord?.settings?.ipValidationRules;
-
-		const ipValidation = await deepValidateIpAddress(
-			ip,
-			solutionIpAddress,
-			this.logger,
-			env.config.ipApi.apiKey,
-			env.config.ipApi.baseUrl,
-			ipValidationRules,
-		);
-		if (!ipValidation.isValid) {
-			this.logger.error(() => ({
-				msg: "IP validation failed for image captcha",
-				data: {
-					ip,
-					solutionIp: solutionIpAddress.address,
-					error: ipValidation.errorMessage,
-					distanceKm: ipValidation.distanceKm,
-				},
-			}));
-			return { status: "API.USER_NOT_VERIFIED", verified: false };
-		}
-
+		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution has already been checked by the server. Moving this code around could result in solutions being
+		// re-usable.
 		if (solution.serverChecked) {
 			return { status: "API.USER_ALREADY_VERIFIED", verified: false };
 		}
-		// Mark solution as checked
+
 		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		// -- END WARNING --
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
@@ -527,37 +518,90 @@ export class ImgCaptchaManager extends CaptchaManager {
 		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
 
 		// Check if solution was completed recently
-		if (maxVerifiedTime) {
-			const currentTime = Date.now();
-			const timeSinceCompletion = currentTime - solution.requestedAtTimestamp;
+		const currentTime = Date.now();
+		const timeSinceCompletion =
+			currentTime - solution.requestedAtTimestamp.getTime();
 
-			// A solution exists but has timed out
-			if (timeSinceCompletion > maxVerifiedTime) {
-				this.logger.debug(() => ({
-					msg: "Not verified - timed out",
+		// A solution exists but has timed out
+		if (timeSinceCompletion > maxVerifiedTime) {
+			this.logger.debug(() => ({
+				msg: "Not verified - timed out",
+			}));
+			return {
+				status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
+				verified: false,
+			};
+		}
+
+		if (ip) {
+			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dapp);
+
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			await this.db.updateDappUserCommitment(solution.id, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+
+			const ipValidation = await deepValidateIpAddress(
+				ip,
+				solutionIpAddress,
+				this.logger,
+				env.config.ipApi.apiKey,
+				env.config.ipApi.baseUrl,
+				ipValidationRules,
+			);
+
+			if (!ipValidation.isValid) {
+				this.logger.error(() => ({
+					msg: "IP validation failed for image captcha",
+					data: {
+						ip,
+						solutionIp: solutionIpAddress.address,
+						error: ipValidation.errorMessage,
+						distanceKm: ipValidation.distanceKm,
+					},
 				}));
-				return {
-					status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
-					verified: false,
-				};
+				return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 		}
 
 		const isApproved = solution.result.status === CaptchaStatus.approved;
 
 		let score: number | undefined;
-		if (solution.frictionlessTokenId) {
-			const tokenRecord = await this.db.getFrictionlessTokenRecordByTokenId(
-				solution.frictionlessTokenId,
+		if (solution.sessionId) {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				solution.sessionId,
 			);
-			if (tokenRecord) {
-				score = computeFrictionlessScore(tokenRecord?.scoreComponents);
+			if (sessionRecord) {
+				score = computeFrictionlessScore(sessionRecord?.scoreComponents);
 				this.logger.info(() => ({
 					data: {
-						tscoreComponents: tokenRecord?.scoreComponents,
+						scoreComponents: sessionRecord?.scoreComponents,
 						score: score,
 					},
 				}));
+
+				if (
+					disallowWebView === true &&
+					(sessionRecord.scoreComponents.webView || 0) > 0
+				) {
+					this.logger.info(() => ({
+						msg: "Disallowing webview access - user not verified",
+					}));
+					return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
+				if (
+					contextAwareEnabled &&
+					sessionRecord.reason ===
+						FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
+				) {
+					this.logger.info(() => ({
+						msg: "Context aware validation failed",
+					}));
+					//return { status: "API.USER_NOT_VERIFIED", verified: false };
+				}
 			}
 		}
 

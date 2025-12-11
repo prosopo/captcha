@@ -1,5 +1,307 @@
 # @prosopo/types-env
 
+## 2.7.58
+### Patch Changes
+
+  - @prosopo/types-database@4.1.4
+
+## 2.7.57
+### Patch Changes
+
+  - @prosopo/types-database@4.1.3
+
+## 2.7.56
+### Patch Changes
+
+- Updated dependencies [141e462]
+  - @prosopo/types@3.7.2
+  - @prosopo/keyring@2.8.43
+  - @prosopo/types-database@4.1.2
+
+## 2.7.55
+### Patch Changes
+
+- Updated dependencies [345b25b]
+  - @prosopo/types-database@4.1.1
+  - @prosopo/types@3.7.1
+  - @prosopo/keyring@2.8.42
+
+## 2.7.54
+### Patch Changes
+
+- Updated dependencies [ce70a2b]
+- Updated dependencies [c2b940f]
+- Updated dependencies [f6b5094]
+  - @prosopo/types@3.7.0
+  - @prosopo/types-database@4.1.0
+  - @prosopo/common@3.1.27
+  - @prosopo/keyring@2.8.41
+
+## 2.7.53
+### Patch Changes
+
+- 7d5eb3f: bump
+- Updated dependencies [7d5eb3f]
+  - @prosopo/common@3.1.26
+  - @prosopo/keyring@2.8.40
+  - @prosopo/types@3.6.4
+  - @prosopo/types-database@4.0.6
+
+## 2.7.52
+### Patch Changes
+
+- 93d92a7: little bump for publish all
+- Updated dependencies [93d92a7]
+  - @prosopo/common@3.1.25
+  - @prosopo/keyring@2.8.39
+  - @prosopo/types@3.6.3
+  - @prosopo/types-database@4.0.5
+
+## 2.7.51
+### Patch Changes
+
+- 8ee8434: bump node engines to 24 and npm version to 11
+- cfee479: make @prosopo/config a dev dep
+- Updated dependencies [8ee8434]
+- Updated dependencies [cfee479]
+  - @prosopo/types-database@4.0.4
+  - @prosopo/keyring@2.8.38
+  - @prosopo/common@3.1.24
+  - @prosopo/types@3.6.2
+
+## 2.7.50
+### Patch Changes
+
+- e926831: mega mini bump for all to trigger publish all
+- Updated dependencies [e926831]
+  - @prosopo/config@3.1.23
+  - @prosopo/common@3.1.23
+  - @prosopo/keyring@2.8.37
+  - @prosopo/types@3.6.1
+  - @prosopo/types-database@4.0.3
+
+## 2.7.49
+### Patch Changes
+
+- Updated dependencies [0a9887c]
+  - @prosopo/types-database@4.0.2
+
+## 2.7.48
+### Patch Changes
+
+- Updated dependencies [3e5d80a]
+  - @prosopo/types-database@4.0.1
+
+## 2.7.47
+### Patch Changes
+
+- 8ce9205: Change engine requirements
+- b6e98b2: Run npm audit
+- Updated dependencies [15ae7cf]
+- Updated dependencies [bb5f41c]
+- Updated dependencies [55a64c6]
+- Updated dependencies [8ce9205]
+- Updated dependencies [df79c03]
+- Updated dependencies [8f22479]
+- Updated dependencies [b6e98b2]
+- Updated dependencies [55a64c6]
+  - @prosopo/types@3.6.0
+  - @prosopo/types-database@4.0.0
+  - @prosopo/keyring@2.8.36
+  - @prosopo/common@3.1.22
+  - @prosopo/config@3.1.22
+
+## 2.7.46
+### Patch Changes
+
+- Updated dependencies [8f1773a]
+  - @prosopo/types@3.5.11
+  - @prosopo/keyring@2.8.35
+  - @prosopo/types-database@3.3.13
+
+## 2.7.45
+### Patch Changes
+
+- Updated dependencies [cb8ab85]
+  - @prosopo/types-database@3.3.12
+  - @prosopo/types@3.5.10
+  - @prosopo/keyring@2.8.34
+
+## 2.7.44
+### Patch Changes
+
+- Updated dependencies [43907e8]
+- Updated dependencies [b4639ec]
+- Updated dependencies [7101036]
+  - @prosopo/types-database@3.3.11
+  - @prosopo/types@3.5.9
+  - @prosopo/keyring@2.8.33
+
+## 2.7.43
+### Patch Changes
+
+- Updated dependencies [b10a65f]
+- Updated dependencies [e5c259d]
+- Updated dependencies [6420187]
+  - @prosopo/types-database@3.3.10
+  - @prosopo/types@3.5.8
+  - @prosopo/keyring@2.8.32
+
+## 2.7.42
+### Patch Changes
+
+- Updated dependencies [c9d8fdf]
+- Updated dependencies [b8185a4]
+- Updated dependencies [3a027ef]
+- Updated dependencies [3a027ef]
+  - @prosopo/common@3.1.21
+  - @prosopo/config@3.1.21
+  - @prosopo/types-database@3.3.9
+  - @prosopo/keyring@2.8.31
+  - @prosopo/types@3.5.7
+
+## 2.7.41
+### Patch Changes
+
+- Updated dependencies [5d11a81]
+  - @prosopo/types@3.5.6
+  - @prosopo/keyring@2.8.30
+  - @prosopo/types-database@3.3.8
+
+## 2.7.40
+### Patch Changes
+
+- Updated dependencies [494c5a8]
+  - @prosopo/types-database@3.3.7
+  - @prosopo/types@3.5.5
+  - @prosopo/keyring@2.8.29
+
+## 2.7.39
+### Patch Changes
+
+- Updated dependencies [08ff50f]
+- Updated dependencies [08ff50f]
+  - @prosopo/types-database@3.3.6
+  - @prosopo/types@3.5.4
+  - @prosopo/keyring@2.8.28
+
+## 2.7.38
+### Patch Changes
+
+- Updated dependencies [1e3a838]
+  - @prosopo/config@3.1.20
+  - @prosopo/common@3.1.20
+  - @prosopo/keyring@2.8.27
+  - @prosopo/types@3.5.3
+  - @prosopo/types-database@3.3.5
+
+## 2.7.37
+### Patch Changes
+
+- 5659b24: Release 3.4.4
+- Updated dependencies [f912439]
+- Updated dependencies [5659b24]
+  - @prosopo/common@3.1.19
+  - @prosopo/types-database@3.3.4
+  - @prosopo/keyring@2.8.26
+  - @prosopo/types@3.5.2
+  - @prosopo/config@3.1.19
+
+## 2.7.36
+### Patch Changes
+
+- 50c4120: Release 3.4.3
+- Updated dependencies [52cd544]
+- Updated dependencies [b117ba3]
+- Updated dependencies [50c4120]
+  - @prosopo/types@3.5.1
+  - @prosopo/types-database@3.3.3
+  - @prosopo/keyring@2.8.25
+  - @prosopo/common@3.1.18
+  - @prosopo/config@3.1.18
+
+## 2.7.35
+### Patch Changes
+
+- 618703f: Release 3.4.2
+- Updated dependencies [618703f]
+- Updated dependencies [e20ad6b]
+  - @prosopo/types-database@3.3.2
+  - @prosopo/keyring@2.8.24
+  - @prosopo/common@3.1.17
+  - @prosopo/types@3.5.0
+  - @prosopo/config@3.1.17
+
+## 2.7.34
+### Patch Changes
+
+- 11303d9: Release 3.4.0
+- 18cb28b: Release 3.4.1
+- Updated dependencies [b6794f8]
+- Updated dependencies [11303d9]
+- Updated dependencies [bac2d91]
+- Updated dependencies [18cb28b]
+- Updated dependencies [11303d9]
+  - @prosopo/types-database@3.3.1
+  - @prosopo/keyring@2.8.23
+  - @prosopo/common@3.1.16
+  - @prosopo/types@3.4.1
+  - @prosopo/config@3.1.16
+
+## 2.7.33
+### Patch Changes
+
+- f3f7aec: Release 3.4.0
+- Updated dependencies [f3f7aec]
+- Updated dependencies [6768f14]
+  - @prosopo/types-database@3.3.0
+  - @prosopo/keyring@2.8.22
+  - @prosopo/common@3.1.15
+  - @prosopo/types@3.4.0
+  - @prosopo/config@3.1.15
+
+## 2.7.32
+### Patch Changes
+
+- Release 3.3.1
+- 0824221: Release 3.2.4
+- Updated dependencies [97edf3f]
+- Updated dependencies
+- Updated dependencies [0824221]
+  - @prosopo/types@3.3.0
+  - @prosopo/types-database@3.2.2
+  - @prosopo/keyring@2.8.21
+  - @prosopo/common@3.1.14
+  - @prosopo/config@3.1.14
+
+## 2.7.31
+### Patch Changes
+
+- 008d112: Release 3.3.0
+- Updated dependencies [5137f01]
+- Updated dependencies [0555cd8]
+- Updated dependencies [509be28]
+- Updated dependencies [008d112]
+  - @prosopo/types-database@3.2.1
+  - @prosopo/types@3.2.1
+  - @prosopo/keyring@2.8.20
+  - @prosopo/common@3.1.13
+  - @prosopo/config@3.1.13
+
+## 2.7.30
+### Patch Changes
+
+- 0824221: Release 3.2.4
+- Updated dependencies [cf48565]
+- Updated dependencies [d644c04]
+- Updated dependencies [0824221]
+- Updated dependencies [260de39]
+  - @prosopo/types-database@3.2.0
+  - @prosopo/types@3.2.0
+  - @prosopo/keyring@2.8.19
+  - @prosopo/common@3.1.12
+  - @prosopo/config@3.1.12
+
 ## 2.7.29
 ### Patch Changes
 

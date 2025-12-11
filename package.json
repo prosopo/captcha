@@ -1,6 +1,7 @@
 {
 	"name": "@prosopo/captcha",
-	"version": "3.2.4",
+	"packageManager": "npm@11.0.0",
+	"version": "3.5.18",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -9,11 +10,13 @@
 	},
 	"scripts": {
 		"hostid": "dig +short ${HOSTNAME}.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
-		"build:all": "nx run-many --target=build --nxBail",
-		"build:cjs:all": "nx run-many --target=build:cjs --nxBail",
-		"bundle:all": "nx run-many --target=bundle --nxBail",
+		"build:all": "turbo run build",
+		"build:all:tsc": "turbo run build:tsc",
+		"build:all:cjs": "turbo run build:cjs",
+		"bundle:all": "turbo run bundle",
 		"clean:nx": "nx reset",
-		"clean:all": "nx run-many --target=clean --nxBail",
+		"clean:turbo": "rm -rf .turbo",
+		"clean:all": "turbo run clean",
 		"clean-npm:node-modules": "del-cli --verbose '**/node_modules'",
 		"clean-npm:package-lock": "del-cli --verbose 'package-lock.json'",
 		"clean:npm": "run-p clean-npm:*",
@@ -34,8 +37,9 @@
 		"start:all:pow": "npx concurrently \"npm run start:server\" \"npm run start:provider\" \"npm run start:demo:pow\" \"npm run start:bundle\" --kill-others",
 		"serve:bundle": "npm -w @prosopo/procaptcha-bundle run serve",
 		"populate-data": "npm -w @prosopo/provider run populate-data",
-		"test:all": "NX_PARALLEL=1 nx run-many --target=test --nxBail",
-		"lint:license": "nx run @prosopo/lint:start -- license --pkg $(pwd)",
+		"test:all": "turbo run test --concurrency=1",
+		"typecheck": "turbo run typecheck",
+		"lint:license": "npm run -w @prosopo/lint start -- license --pkg $(pwd)",
 		"lint-fix:license": "npm run --silent lint:license -- --fix",
 		"lint:js": "biome check .",
 		"lint-fix:js": "npm run --silent lint:js -- --fix --unsafe",
@@ -43,13 +47,13 @@
 		"lint-fix": "run-s lint-fix:*",
 		"lint-changed:js": "npm run --silent lint:js -- --changed",
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
-		"lint:engines": "nx run @prosopo/lint:start -- engines --pkg $(pwd)/package.json",
-		"lint:refs": "nx run @prosopo/lint:start -- refs --pkg $(pwd)/package.json",
-		"lint:testCheck": "nx run @prosopo/lint:start -- testCheck --pkg $(pwd)/package.json",
-		"lint:workflowNames": "nx run @prosopo/lint:start -- workflowNames --root $(pwd)",
-		"lint:tsconfigIncludes": "nx run @prosopo/lint:start -- tsconfigIncludes --pkg $(pwd)/package.json",
+		"lint:engines": "npm run -w @prosopo/lint start -- engines --pkg $(pwd)/package.json",
+		"lint:refs": "npm run -w @prosopo/lint start -- refs --pkg $(pwd)/package.json --ignore @redis/client @angular/common",
+		"lint:testCheck": "npm run -w @prosopo/lint start -- testCheck --pkg $(pwd)/package.json",
+		"lint:workflowNames": "npm run -w @prosopo/lint start -- workflowNames --root $(pwd)",
+		"lint:tsconfigIncludes": "npm run -w @prosopo/lint start -- tsconfigIncludes --pkg $(pwd)/package.json",
 		"lint-fix:tsconfigIncludes": "npm run --silent lint:tsconfigIncludes -- --fix",
-		"lint:json": "nx run @prosopo/lint:start -- json --pkg $(pwd)/package.json",
+		"lint:json": "npm run -w @prosopo/lint start -- json --pkg $(pwd)/package.json",
 		"depcheck": "npx --workspaces depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",
 		"audit:fix": "npm audit fix --force",
 		"deps:status": "npm-check-updates --deep",
@@ -57,12 +61,15 @@
 		"prepare": "husky",
 		"changesets:empty": "npx @changesets/cli add --empty",
 		"changesets:add": "npx @changesets/cli add",
-		"changesets": "npx @changesets/cli status --verbose"
+		"changesets": "npx @changesets/cli status --verbose",
+		"publish:dry-run": "npm --workspaces publish --dry-run",
+		"publish": "npm --workspaces publish --access=public",
+		"bnb": "NODE_ENV=development npm run build:all && NODE_ENV=development npm run bundle:all"
 	},
 	"private": true,
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"workspaces": [
 		"dev/*",
@@ -72,36 +79,19 @@
 		"integration/frameworks/*/*"
 	],
 	"devDependencies": {
-		"@angular-devkit/core": "~19.2.0",
 		"@biomejs/biome": "1.9.1",
-		"@changesets/cli": "2.29.5",
-		"@nx/angular": "21.2.2",
-		"@nx/js": "21.1.2",
-		"@nx/vue": "21.1.2",
-		"@prosopo/dotenv": "3.0.12",
-		"@prosopo/load-balancer": "2.7.0",
-		"@swc-node/register": "1.10.10",
-		"@swc/core": "1.11.29",
-		"@taplo/cli": "0.7.0",
+		"@changesets/cli": "2.29.7",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "3.0.9",
-		"commitizen": "4.3.1",
 		"concurrently": "9.0.1",
-		"cz-conventional-changelog": "3.3.0",
 		"del-cli": "6.0.0",
 		"depcheck": "1.4.7",
-		"htmlhint": "1.1.4",
 		"husky": "9.1.7",
-		"markdownlint-cli": "0.45.0",
-		"node-stdlib-browser": "1.2.1",
-		"npm-check-updates": "17.1.1",
 		"npm-run-all": "4.1.5",
 		"nx": "21.1.2",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
-		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"turbo": "2.6.1",
+		"typescript": "5.6.2"
 	},
 	"overrides": {
 		"@types/express-serve-static-core": "4.19.6"
@@ -143,11 +133,5 @@
 		"prosopo-procaptcha",
 		"web3-captcha"
 	],
-	"license": "Apache-2.0",
-	"config": {
-		"commitizen": {
-			"path": "./node_modules/cz-conventional-changelog"
-		}
-	},
-	"nx": {}
+	"license": "Apache-2.0"
 }

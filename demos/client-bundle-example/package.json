@@ -11,8 +11,8 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": "20",
-		"npm": "10.8.2"
+		"node": "^24",
+		"npm": "^11"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
@@ -23,21 +23,24 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV"
 	},
-	"version": "2.9.14",
-	"dependencies": {
-		"@prosopo/config": "3.1.11"
-	},
+	"version": "2.10.11",
 	"devDependencies": {
-		"@prosopo/dotenv": "3.0.16",
+		"@emotion/cache": "11.11.0",
+		"@prosopo/config": "3.2.1",
+		"@prosopo/dotenv": "3.0.32",
+		"@prosopo/locale": "3.1.27",
+		"@prosopo/types": "3.7.2",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "3.0.9",
+		"@vitest/coverage-v8": "3.2.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
+		"react": "18.3.1",
+		"react-dom": "18.3.1",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "6.3.5",
-		"vitest": "3.0.9"
+		"vite": "6.4.1",
+		"vitest": "3.2.4"
 	}
 }
