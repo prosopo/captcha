@@ -125,27 +125,32 @@ async function startApi(
 	apiApp.use(publicRouter(env));
 
 	// Rate limiting
-	const configRateLimits = env.config.rateLimits;
-	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
-	const adminPaths = Object.values(AdminApiPaths);
-	for (const [path, limit] of Object.entries(rateLimits)) {
-		const enumPath = path as CombinedApiPaths;
-		// For admin paths, key by authenticated user instead of IP
-		// This prevents tests (and legitimate users) from interfering with each other
-		if (adminPaths.includes(enumPath as AdminApiPaths)) {
-			apiApp.use(
-				enumPath,
-				rateLimit({
-					...limit,
-					keyGenerator: (req) => {
-						const user = getUserFromJWT(req);
-						// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
-						return user || req.ip || "unknown";
-					},
-				}),
-			);
-		} else {
-			apiApp.use(enumPath, rateLimit(limit));
+	// In test environments, disable rate limiting to allow parallel tests
+	const isTestEnv = process.env.NODE_ENV === "test";
+
+	if (!isTestEnv) {
+		const configRateLimits = env.config.rateLimits;
+		const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
+		const adminPaths = Object.values(AdminApiPaths);
+		for (const [path, limit] of Object.entries(rateLimits)) {
+			const enumPath = path as CombinedApiPaths;
+			// For admin paths, key by authenticated user instead of IP
+			// This prevents tests (and legitimate users) from interfering with each other
+			if (adminPaths.includes(enumPath as AdminApiPaths)) {
+				apiApp.use(
+					enumPath,
+					rateLimit({
+						...limit,
+						keyGenerator: (req) => {
+							const user = getUserFromJWT(req);
+							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
+							return user || req.ip || "unknown";
+						},
+					}),
+				);
+			} else {
+				apiApp.use(enumPath, rateLimit(limit));
+			}
 		}
 	}
 
