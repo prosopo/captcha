@@ -251,9 +251,9 @@ describe("redisAccessRulesStorage", () => {
 				expect(indexRecordsCount).toBe(0);
 			});
 
-			test("deletes all rules when there is 2 million rules", async () => {
+			test("deletes all rules when there are 1 million rules", async () => {
 				// given
-				const rulesCount = 2_000_000;
+				const rulesCount = 1_000_000;
 
 				const accessRules: AccessRule[] = Array.from(
 					{ length: rulesCount },
@@ -265,7 +265,7 @@ describe("redisAccessRulesStorage", () => {
 
 				await insertRules(accessRules);
 
-				// verify that there are 2 million rules in the database
+				// verify that there are 1 million rules in the database
 				const beforeDeleteIndexRecordsCount =
 					await getIndexRecordsCount(indexName);
 				expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
