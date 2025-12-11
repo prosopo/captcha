@@ -265,7 +265,7 @@ describe("redisAccessRulesStorage", () => {
 
 				await insertRules(accessRules);
 
-				// verify that there are 10 million rules in the database
+				// verify that there are 2 million rules in the database
 				const beforeDeleteIndexRecordsCount =
 					await getIndexRecordsCount(indexName);
 				expect(beforeDeleteIndexRecordsCount).toBe(rulesCount);
