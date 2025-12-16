@@ -142,6 +142,9 @@ export default async function (
 			include: ["node_modules"],
 			force: true,
 		},
+		worker: {
+			format: "es",
+		},
 		esbuild: {
 			platform: "browser",
 			target: [

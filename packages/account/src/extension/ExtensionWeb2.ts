@@ -22,6 +22,7 @@ import type { Account, ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { u8aToHex, version } from "@prosopo/util";
 import { hexHash } from "@prosopo/util-crypto";
 import type { KeypairType } from "@prosopo/util-crypto";
+import { getCryptoWorkerManager } from "../workers/CryptoWorkerManager.js";
 import { Extension } from "./Extension.js";
 
 const SignerLoader = async () =>
@@ -92,8 +93,23 @@ export class ExtensionWeb2 extends Extension {
 		const entropy = hexHash(browserEntropy, 128).slice(2);
 
 		const u8Entropy = stringToU8a(entropy);
-		const entropyToMnemonic = await EntropyToMnemonicLoader();
-		const mnemonic = entropyToMnemonic(u8Entropy);
+
+		let mnemonic: string;
+
+		// Try to use Web Worker for entropy-to-mnemonic conversion to avoid blocking
+		try {
+			const workerManager = getCryptoWorkerManager();
+			mnemonic = await workerManager.entropyToMnemonic(u8Entropy);
+		} catch (workerError) {
+			// Fallback to main thread if Web Worker fails
+			console.warn(
+				"Web Worker failed, falling back to main thread:",
+				workerError,
+			);
+			const entropyToMnemonic = await EntropyToMnemonicLoader();
+			mnemonic = entropyToMnemonic(u8Entropy);
+		}
+
 		const type: KeypairType = "sr25519";
 		const keyring = new Keyring({
 			type,
