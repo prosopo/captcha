@@ -31,8 +31,6 @@ interface CryptoWorkerResponse {
  * Manages Web Worker for cryptographic operations to prevent blocking the main thread
  */
 export class CryptoWorkerManager {
-	// We update the type of 'worker' to use the constructor's type
-	// to ensure type safety, though 'Worker' is sufficient here.
 	private worker: Worker | null = null;
 	private isInitializing = false;
 
@@ -47,18 +45,16 @@ export class CryptoWorkerManager {
 		this.isInitializing = true;
 
 		try {
-			// 1. Instantiate the worker using the Vite-provided constructor.
-			// This handles the bundling and inlining to avoid CORS/import errors.
 			this.worker = new CryptoWorkerConstructor({ type: "module" });
 
-			// 2. Add an IMMEDIATE global error handler for initialization failures (e.g., failed parsing)
+			// Add an IMMEDIATE global error handler for initialization failures (e.g., failed parsing)
 			this.worker.onerror = (errorEvent: ErrorEvent) => {
 				// Terminate the failed worker and mark for re-initialization
 				this.cleanup();
 				// The specific runTask/testWorker promise will reject via their local handleError
 			};
 
-			// 3. Test if worker is working
+			// Test if worker is working
 			await this.testWorker();
 		} catch (error) {
 			this.cleanup(); // Clean up if instantiation itself fails
