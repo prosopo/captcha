@@ -101,11 +101,6 @@ export class ExtensionWeb2 extends Extension {
 			const workerManager = getCryptoWorkerManager();
 			mnemonic = await workerManager.entropyToMnemonic(u8Entropy);
 		} catch (workerError) {
-			// Fallback to main thread if Web Worker fails
-			console.warn(
-				"Web Worker failed, falling back to main thread:",
-				workerError,
-			);
 			const entropyToMnemonic = await EntropyToMnemonicLoader();
 			mnemonic = entropyToMnemonic(u8Entropy);
 		}
