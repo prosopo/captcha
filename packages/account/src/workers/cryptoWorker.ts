@@ -39,9 +39,6 @@ self.addEventListener(
 		try {
 			let result: string;
 
-			// Log to confirm the worker is running and processing the task
-			console.log(`Crypto Worker received task: ${task} (Task ID: ${taskId})`);
-
 			switch (task) {
 				case "test":
 					// Respond to test message to confirm worker is ready
@@ -60,7 +57,6 @@ self.addEventListener(
 			const response: CryptoWorkerResponse = { taskId, result };
 			self.postMessage(response);
 		} catch (error) {
-			console.error(`Crypto Worker failed for task ${task}:`, error);
 			const response: CryptoWorkerResponse = {
 				taskId,
 				error: error instanceof Error ? error.message : "Unknown error",
