@@ -81,7 +81,11 @@ export default defineConfig(async ({ command, mode }) => {
 
 	return {
 		...frontendConfig,
+		worker: {
+			format: "es",
+		},
 		build: {
+			assetsDir: "",
 			...frontendConfig.build,
 			rollupOptions: {
 				...frontendConfig.build?.rollupOptions,
