@@ -14,7 +14,7 @@
 
 import { stringToU8a } from "@polkadot/util";
 import type { ProcaptchaClientConfigOutput } from "@prosopo/types";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ExtensionWeb2 } from "./ExtensionWeb2.js";
 
 // Mock dependencies
@@ -95,6 +95,7 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(getFingerprint).mockResolvedValue(mockFingerprint);
 			vi.mocked(hexHash).mockReturnValue(mockHash);
 			vi.mocked(entropyToMnemonic).mockReturnValue(mockMnemonic);
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 			vi.mocked(u8aToHex).mockReturnValue("0x010203");
 
@@ -140,6 +141,7 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(getFingerprint).mockResolvedValue("fingerprint");
 			vi.mocked(hexHash).mockReturnValue("0xhash");
 			vi.mocked(entropyToMnemonic).mockReturnValue("mnemonic");
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 
 			const result = await extensionWeb2.getAccount(mockConfig);
@@ -171,6 +173,7 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(getFingerprint).mockResolvedValue("fingerprint");
 			vi.mocked(hexHash).mockReturnValue("0xhash");
 			vi.mocked(entropyToMnemonic).mockReturnValue("mnemonic");
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 
 			const result = await extensionWeb2.getAccount(mockConfig);
@@ -205,6 +208,7 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(getFingerprint).mockResolvedValue("fingerprint");
 			vi.mocked(hexHash).mockReturnValue("0xhash");
 			vi.mocked(entropyToMnemonic).mockReturnValue("mnemonic");
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 			vi.mocked(u8aToHex).mockReturnValue("0x0102030405");
 
@@ -215,7 +219,7 @@ describe("ExtensionWeb2", () => {
 				type: "bytes" as const,
 			};
 
-			const signResult = await result.extension.signer.signRaw!(payload);
+			const signResult = await result.extension.signer.signRaw?.(payload);
 
 			// Verify signRaw returns correct structure
 			expect(signResult).toHaveProperty("id", 1);
@@ -250,6 +254,7 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(getFingerprint).mockResolvedValue("fingerprint");
 			vi.mocked(hexHash).mockReturnValue("0xhash");
 			vi.mocked(entropyToMnemonic).mockReturnValue("mnemonic");
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 			vi.mocked(u8aToHex).mockReturnValue("0x0102030405");
 
@@ -267,8 +272,8 @@ describe("ExtensionWeb2", () => {
 				type: "bytes" as const,
 			};
 
-			const signResult1 = await result.extension.signer.signRaw!(payload1);
-			const signResult2 = await result.extension.signer.signRaw!(payload2);
+			const signResult1 = await result.extension.signer.signRaw?.(payload1);
+			const signResult2 = await result.extension.signer.signRaw?.(payload2);
 
 			// Both should have id=1 (as noted in comment, id doesn't increment)
 			expect(signResult1.id).toBe(1);
@@ -298,6 +303,7 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(getFingerprint).mockResolvedValue("fingerprint");
 			vi.mocked(hexHash).mockReturnValue("0xhash");
 			vi.mocked(entropyToMnemonic).mockReturnValue("mnemonic");
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 
 			await extensionWeb2.getAccount(mockConfig);
@@ -331,6 +337,7 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(getFingerprint).mockResolvedValue(mockFingerprint);
 			vi.mocked(hexHash).mockReturnValue(mockHashWithPrefix);
 			vi.mocked(entropyToMnemonic).mockReturnValue(mockMnemonic);
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 
 			await extensionWeb2.getAccount(mockConfig);
@@ -354,4 +361,3 @@ describe("ExtensionWeb2", () => {
 		});
 	});
 });
-

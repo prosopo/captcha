@@ -42,18 +42,18 @@ export class ExtensionWeb3 extends Extension {
 			throw new ProsopoError("WIDGET.NO_EXTENSION_FOUND");
 		}
 
-	// search through all extensions for the one that has the account
-	for (const extension of extensions) {
-		const accounts = await extension.accounts.get();
-		// Handle case where extension returns undefined or null
-		if (!accounts) {
-			continue;
+		// search through all extensions for the one that has the account
+		for (const extension of extensions) {
+			const accounts = await extension.accounts.get();
+			// Handle case where extension returns undefined or null
+			if (!accounts) {
+				continue;
+			}
+			const account = accounts.find((account) => account.address === address);
+			if (account) {
+				return { account, extension };
+			}
 		}
-		const account = accounts.find((account) => account.address === address);
-		if (account) {
-			return { account, extension };
-		}
-	}
 
 		throw new ProsopoError("WIDGET.ACCOUNT_NOT_FOUND", {
 			context: { error: `No account found matching ${address}` },
