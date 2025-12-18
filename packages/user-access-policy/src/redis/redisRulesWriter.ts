@@ -102,6 +102,15 @@ export class RedisRulesWriter implements AccessRulesWriter {
 			queries.hSet(ruleKey, ruleValue);
 
 			if (expiresUnixTimestamp) {
+				// Redis expireAt expects seconds. Validate that timestamp is in seconds, not milliseconds.
+				// Unix timestamps in milliseconds (since 1970) are > 10 billion
+				// Unix timestamps in seconds won't reach 10 billion until year 2286
+				const MILLISECOND_THRESHOLD = 10_000_000_000;
+				if (expiresUnixTimestamp > MILLISECOND_THRESHOLD) {
+					throw new Error(
+						`Invalid expiry timestamp: ${expiresUnixTimestamp}. Timestamp must be in seconds, not milliseconds.`,
+					);
+				}
 				queries.expireAt(ruleKey, expiresUnixTimestamp);
 			}
 
