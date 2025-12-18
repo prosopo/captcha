@@ -339,12 +339,15 @@ describe("ProviderApi", () => {
 
 	describe("submitPowCaptchaSolution", () => {
 		test("constructs request body correctly without optional parameters", async () => {
+			// PoWChallengeId format: timestamp___user___dapp___randomValue (4 parts separated by ___)
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "challenge123",
+				challenge: "1704067200000___user123___dapp456___random",
 				difficulty: 5,
 				timestamp: "2024-01-01T00:00:00Z",
 				signature: {
-					provider: "provider-sig",
+					provider: {
+						challenge: "provider-challenge-sig",
+					},
 				},
 			};
 			const userAccount = "user123";
@@ -364,15 +367,17 @@ describe("ProviderApi", () => {
 			const body = (result as { body: unknown }).body as Record<string, unknown>;
 			expect(body[ApiParams.challenge]).toBe(challenge.challenge);
 			expect(body[ApiParams.difficulty]).toBe(challenge.difficulty);
-			expect(body[ApiParams.timestamp]).toBe(challenge.timestamp);
+			// Note: timestamp is not part of SubmitPowCaptchaSolutionBody schema, so it gets stripped
+			expect(body[ApiParams.timestamp]).toBeUndefined();
 			expect(body[ApiParams.user]).toBe(userAccount);
 			expect(body[ApiParams.dapp]).toBe(dappAccount);
 			expect(body[ApiParams.nonce]).toBe(nonce);
-			expect(body[ApiParams.verifiedTimeout]).toBeUndefined();
+			// verifiedTimeout has a default value when not provided (DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT = 120000)
+			expect(body[ApiParams.verifiedTimeout]).toBe(120000);
 			expect(body[ApiParams.salt]).toBeUndefined();
 
 			const signature = body[ApiParams.signature] as Record<string, unknown>;
-			expect(signature[ApiParams.provider]).toBe(challenge.signature.provider);
+			expect(signature[ApiParams.provider]).toMatchObject(challenge.signature.provider);
 			expect(signature[ApiParams.user]).toMatchObject({
 				[ApiParams.timestamp]: userTimestampSignature,
 			});
@@ -380,11 +385,13 @@ describe("ProviderApi", () => {
 
 		test("constructs request body correctly with timeout", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "challenge123",
+				challenge: "1704067200000___user___dapp___random",
 				difficulty: 5,
 				timestamp: "2024-01-01T00:00:00Z",
 				signature: {
-					provider: "provider-sig",
+					provider: {
+						challenge: "provider-challenge-sig",
+					},
 				},
 			};
 			const timeout = 3600;
@@ -404,11 +411,13 @@ describe("ProviderApi", () => {
 
 		test("constructs request body correctly with salt", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "challenge123",
+				challenge: "1704067200000___user___dapp___random",
 				difficulty: 5,
 				timestamp: "2024-01-01T00:00:00Z",
 				signature: {
-					provider: "provider-sig",
+					provider: {
+						challenge: "provider-challenge-sig",
+					},
 				},
 			};
 			const salt = "salt123";
@@ -429,11 +438,13 @@ describe("ProviderApi", () => {
 
 		test("converts user and dapp to strings", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "challenge123",
+				challenge: "1704067200000___123___456___random",
 				difficulty: 5,
 				timestamp: "2024-01-01T00:00:00Z",
 				signature: {
-					provider: "provider-sig",
+					provider: {
+						challenge: "provider-challenge-sig",
+					},
 				},
 			};
 
@@ -452,11 +463,13 @@ describe("ProviderApi", () => {
 
 		test("sets correct headers", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "challenge123",
+				challenge: "1704067200000___user123___dapp___random",
 				difficulty: 5,
 				timestamp: "2024-01-01T00:00:00Z",
 				signature: {
-					provider: "provider-sig",
+					provider: {
+						challenge: "provider-challenge-sig",
+					},
 				},
 			};
 
@@ -477,11 +490,13 @@ describe("ProviderApi", () => {
 
 		test("type checking - returns PowCaptchaSolutionResponse", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "challenge123",
+				challenge: "1704067200000___user___dapp___random",
 				difficulty: 5,
 				timestamp: "2024-01-01T00:00:00Z",
 				signature: {
-					provider: "provider-sig",
+					provider: {
+						challenge: "provider-challenge-sig",
+					},
 				},
 			};
 

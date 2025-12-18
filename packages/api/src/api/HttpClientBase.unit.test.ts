@@ -422,11 +422,16 @@ describe("HttpClientBase", () => {
 			expect(console.error).toHaveBeenCalledWith("API request error:", error);
 		});
 
-		test("type checking - returns Promise<never>", () => {
-			const error = new Error("Test error");
+	test("type checking - returns Promise<never>", () => {
+		const error = new Error("Test error");
+		const result = client.testErrorHandler(error);
 
-			expectTypeOf(client.testErrorHandler(error)).toMatchTypeOf<Promise<never>>();
-		});
+		// Type check the return value
+		expectTypeOf(result).toMatchTypeOf<Promise<never>>();
+
+		// Handle the rejection to avoid unhandled promise rejection
+		result.catch(() => {});
+	});
 	});
 });
 
