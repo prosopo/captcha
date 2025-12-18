@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { hammingDistance } from "../hammingDistance.js";
+import { hammingDistance } from "./hammingDistance.js";
 
 describe("hammingDistance", () => {
 	it("returns 0 for identical hashes", () => {
