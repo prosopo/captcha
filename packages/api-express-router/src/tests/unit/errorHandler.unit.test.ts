@@ -187,4 +187,119 @@ describe("handleErrors", async () => {
 		});
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
+
+	it("should handle ProsopoEnvError directly", async () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new ProsopoEnvError("CONTRACT.INVALID_METHOD", {
+			i18n,
+		});
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
+		);
+		// ProsopoEnvError may have different default codes depending on the error key
+		expect(mockResponse.status).toHaveBeenCalled();
+		expect(mockResponse.end).toHaveBeenCalled();
+	});
+
+	it("should set correct content-type header", () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new ProsopoApiError("API.UNKNOWN", {
+			context: { code: 500 },
+			i18n,
+		});
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
+		);
+	});
+
+	it("should set statusMessage from unwrapped error", () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+			statusMessage: "",
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new ProsopoApiError("API.UNKNOWN", {
+			context: { code: 500 },
+			i18n,
+		});
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.statusMessage).toBeTruthy();
+	});
+
+	it("should handle error with custom context", () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new ProsopoApiError("API.UNKNOWN", {
+			context: {
+				code: 418,
+				customField: "custom value",
+			},
+			i18n,
+		});
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.status).toHaveBeenCalledWith(418);
+		expect(mockResponse.end).toHaveBeenCalled();
+	});
+
+	it("should call response.end() after sending error", () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new ProsopoApiError("API.UNKNOWN", { i18n });
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.end).toHaveBeenCalledTimes(1);
+	});
 });
