@@ -34,7 +34,7 @@ describe("table", () => {
 	let consoleTableSpy: ReturnType<typeof vi.spyOn>;
 
 	beforeEach(() => {
-		consoleTableSpy = vi.spyOn(console, "table").mockImplementation(() => {});
+		consoleTableSpy = vi.spyOn(console, "table").mockImplementation(() => { });
 	});
 
 	afterEach(() => {

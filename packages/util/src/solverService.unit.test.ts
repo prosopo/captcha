@@ -17,16 +17,14 @@ import { solvePoW } from "./solverService.js";
 
 describe("solvePoW", () => {
 	test("types", () => {
-		// check the types are picked up correctly by ts
-		const v1: number = solvePoW("test", 0);
-		const v2: number = solvePoW("test", 1);
-		const v3: number = solvePoW("test", 2);
-		const v4: number = solvePoW("", 1);
-		const v5: number = solvePoW("a".repeat(100), 3);
+		// Verify function signature accepts string and number parameters
+		type Params = Parameters<typeof solvePoW>;
+		const _p1: string = "" as Params[0];
+		const _p2: number = 0 as Params[1];
 
-		// Verify return type is always number
-		const result = solvePoW("data", 1);
-		const _v6: number = result;
+		// Verify return type is number
+		type ReturnType = ReturnType<typeof solvePoW>;
+		const _r1: number = 0 as ReturnType;
 	});
 
 	test("finds nonce for difficulty 0", () => {

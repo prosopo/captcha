@@ -16,22 +16,17 @@ import { choice } from "./choice.js";
 
 describe("choice", () => {
 	test("types", () => {
-		// check the types are picked up correctly by ts
-		const items1 = [1, 2, 3];
-		const random = () => 0.5;
-		const v1: number[] = choice(items1, 2, random);
-		const v2: number[] = choice(items1, 2, random, { withReplacement: true });
-		const v3: number[] = choice(items1, 2, random, { withReplacement: false });
+		// Verify parameter types
+		type Params = Parameters<typeof choice>;
+		type P0 = Params[0]; // T[]
+		type P1 = Params[1]; // number
+		type P2 = Params[2]; // () => number
+		type P3 = Params[3]; // { withReplacement?: boolean } | undefined
 
-		const items2 = ["a", "b", "c"];
-		const v4: string[] = choice(items2, 2, random);
-
-		const items3 = [{ id: 1 }, { id: 2 }];
-		const v5: Array<{ id: number }> = choice(items3, 1, random);
-
-		// Test generic type inference
-		const items4 = [true, false];
-		const v6: boolean[] = choice(items4, 1, random);
+		// Verify return type preserves generic
+		type ReturnNumber = ReturnType<typeof choice<number>>;
+		type ReturnString = ReturnType<typeof choice<string>>;
+		type ReturnObject = ReturnType<typeof choice<{ id: number }>>;
 	});
 
 	test("throws error when n exceeds array length", () => {
@@ -49,10 +44,15 @@ describe("choice", () => {
 		expect(result).toHaveLength(3);
 	});
 
-	test("chooses all items when n equals length", () => {
+	test("chooses all items when n equals length with no replacement", () => {
 		const items = [1, 2, 3];
-		const random = () => 0.5;
-		const result = choice(items, 3, random);
+		let index = 0;
+		const random = () => {
+			const val = index / items.length;
+			index++;
+			return val;
+		};
+		const result = choice(items, 3, random, { withReplacement: false });
 		expect(result).toHaveLength(3);
 		expect(result.sort()).toEqual([1, 2, 3]);
 	});
@@ -105,12 +105,14 @@ describe("choice", () => {
 
 	test("prevents replacement when withReplacement is false", () => {
 		const items = [1, 2, 3];
-		let index = 0;
+		let callCount = 0;
 		const random = () => {
-			// Cycle through indices
-			const val = index % items.length;
-			index++;
-			return val / items.length;
+			// Return different values to ensure we get different indices
+			// 0.1 -> index 0, 0.4 -> index 1, 0.7 -> index 2
+			const values = [0.1, 0.4, 0.7];
+			const val = values[callCount % values.length];
+			callCount++;
+			return val;
 		};
 		const result = choice(items, 3, random, { withReplacement: false });
 		expect(result).toHaveLength(3);

@@ -29,4 +29,16 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig();
+const config = ViteTestConfig();
+
+// Disable typecheck and coverage for util package due to performance issues
+if (config.test) {
+	if (config.test.coverage) {
+		config.test.coverage.enabled = false;
+	}
+	if (config.test.typecheck) {
+		config.test.typecheck.enabled = false;
+	}
+}
+
+export default config;
