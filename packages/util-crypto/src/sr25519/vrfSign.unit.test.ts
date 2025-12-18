@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
-import { sr25519VrfSign } from "./vrfSign.js";
 import type { Keypair } from "../types.js";
+import { sr25519VrfSign } from "./vrfSign.js";
 
 // Mock @scure/sr25519 vrf
 vi.mock("@scure/sr25519", () => ({
@@ -216,9 +216,7 @@ describe("sr25519VrfSign types", (): void => {
 	});
 
 	it("accepts Partial<Keypair> parameter", (): void => {
-		expectTypeOf(sr25519VrfSign)
-			.parameter(1)
-			.toEqualTypeOf<Partial<Keypair>>();
+		expectTypeOf(sr25519VrfSign).parameter(1).toEqualTypeOf<Partial<Keypair>>();
 	});
 
 	it("accepts optional context parameter", (): void => {

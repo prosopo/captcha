@@ -4,8 +4,8 @@
 import { describe, expect, it } from "vitest";
 import { naclEncrypt } from "../nacl/index.js";
 import { scryptEncode, scryptToU8a } from "../scrypt/index.js";
-import { jsonDecryptData } from "./decryptData.js";
 import { ENCODING } from "./constants.js";
+import { jsonDecryptData } from "./decryptData.js";
 
 describe("jsonDecryptData", (): void => {
 	it("decrypts data with scrypt and nacl", (): void => {
@@ -29,9 +29,7 @@ describe("jsonDecryptData", (): void => {
 	});
 
 	it("throws error when no encrypted data", (): void => {
-		expect(() => jsonDecryptData(null, "test123")).toThrow(
-			/No encrypted data/,
-		);
+		expect(() => jsonDecryptData(null, "test123")).toThrow(/No encrypted data/);
 		expect(() => jsonDecryptData(undefined, "test123")).toThrow(
 			/No encrypted data/,
 		);
@@ -81,4 +79,3 @@ describe("jsonDecryptData", (): void => {
 		expect(decrypted).toEqual(originalData);
 	});
 });
-

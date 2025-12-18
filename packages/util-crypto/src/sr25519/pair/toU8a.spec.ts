@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, expectTypeOf, it } from "vitest";
-import type { Keypair } from "../../types.js";
 import { randomAsU8a } from "../../random/asU8a.js";
+import type { Keypair } from "../../types.js";
 import { sr25519FromSeed } from "./fromSeed.js";
 import { sr25519PairFromU8a } from "./fromU8a.js";
 import { sr25519KeypairToU8a } from "./toU8a.js";
@@ -77,4 +77,3 @@ describe("sr25519KeypairToU8a types", (): void => {
 		expectTypeOf(sr25519KeypairToU8a).parameter(0).toMatchTypeOf<Keypair>();
 	});
 });
-

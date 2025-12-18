@@ -3,11 +3,7 @@
 
 import { isHex, u8aToHex } from "@polkadot/util";
 import { describe, expect, it } from "vitest";
-import {
-	createAsHex,
-	createBitHasher,
-	createDualHasher,
-} from "./helpers.js";
+import { createAsHex, createBitHasher, createDualHasher } from "./helpers.js";
 
 describe("createAsHex", (): void => {
 	it("wraps a function to return hex string", (): void => {
@@ -30,11 +26,7 @@ describe("createAsHex", (): void => {
 	});
 
 	it("works with multiple parameters", (): void => {
-		const fn = (
-			a: string,
-			b: number,
-			c: boolean,
-		): Uint8Array => {
+		const fn = (a: string, b: number, c: boolean): Uint8Array => {
 			return new Uint8Array([b, c ? 1 : 0]);
 		};
 		const hexFn = createAsHex(fn);
@@ -161,4 +153,3 @@ describe("createDualHasher", (): void => {
 		expect(result[0]).toBeGreaterThan(0);
 	});
 });
-

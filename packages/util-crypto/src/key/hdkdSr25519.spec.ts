@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, expectTypeOf, it } from "vitest";
-import type { Keypair } from "../types.js";
 import { randomAsU8a } from "../random/asU8a.js";
 import { sr25519FromSeed } from "../sr25519/pair/fromSeed.js";
+import type { Keypair } from "../types.js";
 import { DeriveJunction } from "./DeriveJunction.js";
 import { keyHdkdSr25519 } from "./hdkdSr25519.js";
 
@@ -91,4 +91,3 @@ describe("keyHdkdSr25519 types", (): void => {
 		expectTypeOf(keyHdkdSr25519).parameter(1).toMatchTypeOf<DeriveJunction>();
 	});
 });
-

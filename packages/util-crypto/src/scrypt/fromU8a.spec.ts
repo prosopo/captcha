@@ -3,10 +3,10 @@
 
 import { bnToU8a, u8aConcat } from "@polkadot/util";
 import { describe, expect, expectTypeOf, it } from "vitest";
-import type { ScryptParams } from "./types.js";
 import { BN_LE_32_OPTS } from "../bn.js";
 import { DEFAULT_PARAMS } from "./defaults.js";
 import { scryptFromU8a } from "./fromU8a.js";
+import type { ScryptParams } from "./types.js";
 
 describe("scryptFromU8a", (): void => {
 	it("extracts scrypt params and salt from Uint8Array", (): void => {
@@ -123,4 +123,3 @@ describe("scryptFromU8a types", (): void => {
 		expectTypeOf(scryptFromU8a).parameter(0).toEqualTypeOf<Uint8Array>();
 	});
 });
-

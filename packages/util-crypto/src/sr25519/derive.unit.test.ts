@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
-import { createDeriveFn } from "./derive.js";
 import type { Keypair } from "../types.js";
+import { createDeriveFn } from "./derive.js";
 
 // Mock @scure/sr25519 getPublicKey
 vi.mock("@scure/sr25519", () => ({
@@ -116,9 +116,7 @@ describe("createDeriveFn", (): void => {
 		);
 
 		// Valid 32-byte chain code should not throw
-		expect(() =>
-			deriveFn(keypair, new Uint8Array(32)),
-		).not.toThrow();
+		expect(() => deriveFn(keypair, new Uint8Array(32))).not.toThrow();
 	});
 
 	it("passes full secret key to derive function", (): void => {
@@ -194,10 +192,8 @@ describe("createDeriveFn types", (): void => {
 	});
 
 	it("returns a function", (): void => {
-		const mockDerive = (
-			pair: Uint8Array,
-			cc: Uint8Array,
-		): Uint8Array => new Uint8Array(32);
+		const mockDerive = (pair: Uint8Array, cc: Uint8Array): Uint8Array =>
+			new Uint8Array(32);
 
 		const deriveFn = createDeriveFn(mockDerive);
 		expectTypeOf(deriveFn).toBeFunction();
@@ -205,10 +201,8 @@ describe("createDeriveFn types", (): void => {
 	});
 
 	it("derives function accepts Keypair and Uint8Array", (): void => {
-		const mockDerive = (
-			pair: Uint8Array,
-			cc: Uint8Array,
-		): Uint8Array => new Uint8Array(32);
+		const mockDerive = (pair: Uint8Array, cc: Uint8Array): Uint8Array =>
+			new Uint8Array(32);
 
 		const deriveFn = createDeriveFn(mockDerive);
 		expectTypeOf(deriveFn).parameter(0).toEqualTypeOf<Keypair>();

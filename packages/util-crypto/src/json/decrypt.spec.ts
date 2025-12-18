@@ -63,8 +63,7 @@ describe("jsonDecrypt", (): void => {
 		// Convert to hex format
 		const hexEncrypted = {
 			...encrypted,
-			encoded: `0x${Buffer.from(encrypted.encoded, "base64")
-				.toString("hex")}`,
+			encoded: `0x${Buffer.from(encrypted.encoded, "base64").toString("hex")}`,
 		};
 
 		const decrypted = jsonDecrypt(hexEncrypted);
@@ -98,9 +97,8 @@ describe("jsonDecrypt types", (): void => {
 			encoded: string;
 			encoding: unknown;
 		}>();
-		expectTypeOf(jsonDecrypt).parameter(1).toEqualTypeOf<
-			string | null | undefined
-		>();
+		expectTypeOf(jsonDecrypt)
+			.parameter(1)
+			.toEqualTypeOf<string | null | undefined>();
 	});
 });
-

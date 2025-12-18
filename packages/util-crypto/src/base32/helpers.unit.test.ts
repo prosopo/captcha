@@ -99,7 +99,7 @@ describe("createValidate", (): void => {
 	it("throws error for undefined character", (): void => {
 		const validate = createValidate(mockConfig);
 		// Create string with undefined by accessing out of bounds
-		const invalidStr = "abc" + String.fromCharCode(0);
+		const invalidStr = `abc${String.fromCharCode(0)}`;
 		// This should validate the characters normally
 		expect(() => validate(invalidStr)).toThrow(/Invalid base32 character/);
 	});

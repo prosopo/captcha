@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, expectTypeOf, it } from "vitest";
-import type { ScryptParams } from "./types.js";
 import { DEFAULT_PARAMS } from "./defaults.js";
 import { scryptFromU8a } from "./fromU8a.js";
 import { scryptToU8a } from "./toU8a.js";
+import type { ScryptParams } from "./types.js";
 
 describe("scryptToU8a", (): void => {
 	it("converts salt and params to Uint8Array", (): void => {
@@ -82,4 +82,3 @@ describe("scryptToU8a types", (): void => {
 		expectTypeOf(scryptToU8a).parameter(1).toMatchTypeOf<ScryptParams>();
 	});
 });
-

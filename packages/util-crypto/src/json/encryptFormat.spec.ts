@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from "vitest";
-import { jsonEncryptFormat } from "./encryptFormat.js";
 import { ENCODING, ENCODING_NONE, ENCODING_VERSION } from "./constants.js";
+import { jsonEncryptFormat } from "./encryptFormat.js";
 
 describe("jsonEncryptFormat", (): void => {
 	it("formats encrypted data", (): void => {
@@ -64,4 +64,3 @@ describe("jsonEncryptFormat", (): void => {
 		expect(result.encoding.content).toEqual(contentType);
 	});
 });
-

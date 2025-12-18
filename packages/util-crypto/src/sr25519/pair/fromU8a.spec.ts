@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, expectTypeOf, it } from "vitest";
-import type { Keypair } from "../../types.js";
 import { randomAsU8a } from "../../random/asU8a.js";
+import type { Keypair } from "../../types.js";
 import { sr25519FromSeed } from "./fromSeed.js";
-import { sr25519KeypairToU8a } from "./toU8a.js";
 import { sr25519PairFromU8a } from "./fromU8a.js";
+import { sr25519KeypairToU8a } from "./toU8a.js";
 
 describe("sr25519PairFromU8a", (): void => {
 	it("creates keypair from 96-byte Uint8Array", (): void => {
@@ -86,9 +86,9 @@ describe("sr25519PairFromU8a types", (): void => {
 		const seed = randomAsU8a();
 		const pair = sr25519FromSeed(seed);
 		const full = sr25519KeypairToU8a(pair);
-		expectTypeOf(sr25519PairFromU8a).parameter(0).toEqualTypeOf<
-			string | Uint8Array
-		>();
+		expectTypeOf(sr25519PairFromU8a)
+			.parameter(0)
+			.toEqualTypeOf<string | Uint8Array>();
 	});
 
 	it("result has correct Keypair structure", (): void => {
@@ -100,4 +100,3 @@ describe("sr25519PairFromU8a types", (): void => {
 		expectTypeOf(result.secretKey).toEqualTypeOf<Uint8Array>();
 	});
 });
-

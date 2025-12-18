@@ -84,4 +84,3 @@ describe("secp256k1DeriveHard types", (): void => {
 		expectTypeOf(secp256k1DeriveHard).parameter(1).toEqualTypeOf<Uint8Array>();
 	});
 });
-

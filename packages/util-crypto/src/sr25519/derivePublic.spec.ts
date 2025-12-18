@@ -3,8 +3,8 @@
 
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { randomAsU8a } from "../random/asU8a.js";
-import { sr25519FromSeed } from "./pair/fromSeed.js";
 import { sr25519DerivePublic } from "./derivePublic.js";
+import { sr25519FromSeed } from "./pair/fromSeed.js";
 
 describe("sr25519DerivePublic", (): void => {
 	it("derives public key from public key and chain code", (): void => {
@@ -60,9 +60,9 @@ describe("sr25519DerivePublic", (): void => {
 		const pair = sr25519FromSeed(seed);
 		const invalidChainCode = new Uint8Array(31); // Wrong length
 
-		expect(() =>
-			sr25519DerivePublic(pair.publicKey, invalidChainCode),
-		).toThrow(/Invalid chainCode/);
+		expect(() => sr25519DerivePublic(pair.publicKey, invalidChainCode)).toThrow(
+			/Invalid chainCode/,
+		);
 	});
 
 	it("throws error for invalid public key length", (): void => {
@@ -89,10 +89,9 @@ describe("sr25519DerivePublic types", (): void => {
 		const seed = randomAsU8a();
 		const pair = sr25519FromSeed(seed);
 		const chainCode = new Uint8Array(32);
-		expectTypeOf(sr25519DerivePublic).parameter(0).toEqualTypeOf<
-			string | Uint8Array
-		>();
+		expectTypeOf(sr25519DerivePublic)
+			.parameter(0)
+			.toEqualTypeOf<string | Uint8Array>();
 		expectTypeOf(sr25519DerivePublic).parameter(1).toEqualTypeOf<Uint8Array>();
 	});
 });
-

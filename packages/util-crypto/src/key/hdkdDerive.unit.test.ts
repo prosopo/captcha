@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
-import { createSeedDeriveFn } from "./hdkdDerive.js";
 import type { Keypair } from "../types.js";
 import type { DeriveJunction } from "./DeriveJunction.js";
+import { createSeedDeriveFn } from "./hdkdDerive.js";
 
 describe("createSeedDeriveFn", (): void => {
 	it("returns a derivation function", (): void => {
@@ -176,10 +176,8 @@ describe("createSeedDeriveFn types", (): void => {
 			publicKey: new Uint8Array(32),
 			secretKey: new Uint8Array(64),
 		});
-		const mockDerive = (
-			seed: Uint8Array,
-			chainCode: Uint8Array,
-		): Uint8Array => new Uint8Array(32);
+		const mockDerive = (seed: Uint8Array, chainCode: Uint8Array): Uint8Array =>
+			new Uint8Array(32);
 
 		const deriveFn = createSeedDeriveFn(mockFromSeed, mockDerive);
 		expectTypeOf(deriveFn).toBeFunction();
@@ -191,10 +189,8 @@ describe("createSeedDeriveFn types", (): void => {
 			publicKey: new Uint8Array(32),
 			secretKey: new Uint8Array(64),
 		});
-		const mockDerive = (
-			seed: Uint8Array,
-			chainCode: Uint8Array,
-		): Uint8Array => new Uint8Array(32);
+		const mockDerive = (seed: Uint8Array, chainCode: Uint8Array): Uint8Array =>
+			new Uint8Array(32);
 
 		const deriveFn = createSeedDeriveFn(mockFromSeed, mockDerive);
 		expectTypeOf(deriveFn).parameter(0).toEqualTypeOf<Keypair>();

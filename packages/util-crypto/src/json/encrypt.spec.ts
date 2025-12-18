@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, expectTypeOf, it } from "vitest";
-import type { EncryptedJson } from "./types.js";
 import { jsonEncrypt } from "./encrypt.js";
+import type { EncryptedJson } from "./types.js";
 
 describe("jsonEncrypt", (): void => {
 	it("encrypts data with passphrase", (): void => {
@@ -89,9 +89,9 @@ describe("jsonEncrypt types", (): void => {
 	it("accepts correct parameter types", (): void => {
 		expectTypeOf(jsonEncrypt).parameter(0).toEqualTypeOf<Uint8Array>();
 		expectTypeOf(jsonEncrypt).parameter(1).toEqualTypeOf<string[]>();
-		expectTypeOf(jsonEncrypt).parameter(2).toEqualTypeOf<
-			string | null | undefined
-		>();
+		expectTypeOf(jsonEncrypt)
+			.parameter(2)
+			.toEqualTypeOf<string | null | undefined>();
 	});
 
 	it("has correct EncryptedJson structure", (): void => {
@@ -105,4 +105,3 @@ describe("jsonEncrypt types", (): void => {
 		}>();
 	});
 });
-

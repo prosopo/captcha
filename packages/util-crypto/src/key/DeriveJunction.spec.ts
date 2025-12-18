@@ -175,16 +175,16 @@ describe("DeriveJunction types", (): void => {
 
 	it("soft accepts various input types", (): void => {
 		const junction = new DeriveJunction();
-		expectTypeOf(junction.soft).parameter(0).toEqualTypeOf<
-			number | string | bigint | BN | Uint8Array
-		>();
+		expectTypeOf(junction.soft)
+			.parameter(0)
+			.toEqualTypeOf<number | string | bigint | BN | Uint8Array>();
 	});
 
 	it("hard accepts various input types", (): void => {
 		const junction = new DeriveJunction();
-		expectTypeOf(junction.hard).parameter(0).toEqualTypeOf<
-			number | string | bigint | BN | Uint8Array
-		>();
+		expectTypeOf(junction.hard)
+			.parameter(0)
+			.toEqualTypeOf<number | string | bigint | BN | Uint8Array>();
 	});
 
 	it("methods return DeriveJunction for chaining", (): void => {
@@ -195,4 +195,3 @@ describe("DeriveJunction types", (): void => {
 		expectTypeOf(junction.soften()).toEqualTypeOf<DeriveJunction>();
 	});
 });
-

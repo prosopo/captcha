@@ -14,7 +14,7 @@
 
 import { isHex } from "@polkadot/util";
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { hexHash, hexHashArray, HEX_HASH_BIT_LENGTH } from "./hash.js";
+import { HEX_HASH_BIT_LENGTH, hexHash, hexHashArray } from "./hash.js";
 
 describe("hexHash", (): void => {
 	it("returns a hex string", (): void => {
@@ -132,9 +132,9 @@ describe("hash types", (): void => {
 
 	it("hexHash accepts string or Uint8Array", (): void => {
 		expectTypeOf(hexHash).parameter(0).toEqualTypeOf<string | Uint8Array>();
-		expectTypeOf(hexHash).parameter(1).toEqualTypeOf<
-			256 | 512 | 64 | 128 | 384 | undefined
-		>();
+		expectTypeOf(hexHash)
+			.parameter(1)
+			.toEqualTypeOf<256 | 512 | 64 | 128 | 384 | undefined>();
 	});
 
 	it("hexHashArray returns string", (): void => {
@@ -147,4 +147,3 @@ describe("hash types", (): void => {
 		expectTypeOf(hexHashArray).parameter(0).toEqualTypeOf<unknown[]>();
 	});
 });
-
