@@ -161,7 +161,6 @@ export default class ProviderApi
 		const body = SubmitPowCaptchaSolutionBody.parse({
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.difficulty]: challenge.difficulty,
-			[ApiParams.timestamp]: challenge.timestamp,
 			[ApiParams.user]: userAccount.toString(),
 			[ApiParams.dapp]: dappAccount.toString(),
 			[ApiParams.nonce]: nonce,
