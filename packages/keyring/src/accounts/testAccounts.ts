@@ -26,7 +26,6 @@ export function getDefaultSiteKeys(): ISite[] {
 		CaptchaType.image,
 		CaptchaType.pow,
 		CaptchaType.frictionless,
-		CaptchaType.invisible,
 	];
 	const sites: ISite[] = [];
 	for (const captchaType of captchaTypes) {

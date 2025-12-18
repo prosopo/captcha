@@ -108,7 +108,11 @@ export const ContextTypeSchema = z.nativeEnum(ContextType);
 // Individual context configuration
 export const ContextConfigSchema = z.object({
 	type: ContextTypeSchema,
-	threshold: number().optional().default(contextAwareThresholdDefault),
+	threshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(contextAwareThresholdDefault),
 });
 
 export type IContextConfig = z.infer<typeof ContextConfigSchema>;
@@ -133,10 +137,22 @@ export const ClientSettingsSchema = object({
 		.optional()
 		.default([...domainsDefault]),
 	frictionlessThreshold: number()
+		.min(0)
+		.max(1)
 		.optional()
 		.default(frictionlessThresholdDefault),
-	powDifficulty: number().optional().default(powDifficultyDefault),
-	imageThreshold: number().optional().default(imageThresholdDefault),
+	powDifficulty: number()
+		.int()
+		.positive()
+		.min(1)
+		.max(10)
+		.optional()
+		.default(powDifficultyDefault),
+	imageThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(imageThresholdDefault),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	disallowWebView: boolean().optional().default(false).optional(),
 	contextAware: ContextAwareSchema.optional(),
