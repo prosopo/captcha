@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, expectTypeOf, it } from "vitest";
-import type { Keypair, KeypairType } from "../types.js";
 import { randomAsU8a } from "../random/asU8a.js";
 import { sr25519FromSeed } from "../sr25519/pair/fromSeed.js";
+import type { Keypair, KeypairType } from "../types.js";
 import { DeriveJunction } from "./DeriveJunction.js";
 import { keyFromPath } from "./fromPath.js";
 
@@ -56,9 +56,8 @@ describe("keyFromPath", (): void => {
 		const pair = sr25519FromSeed(seed);
 		const path: DeriveJunction[] = [DeriveJunction.from("0")];
 
-		expect(() => keyFromPath(pair, path, "" as any)).toThrow(
-			/Invalid type/,
-		);
+		// biome-ignore lint/suspicious/noExplicitAny: Testing invalid type error
+		expect(() => keyFromPath(pair, path, "" as any)).toThrow(/Invalid type/);
 	});
 
 	it("throws error for unsupported type (ecdsa)", (): void => {
@@ -132,4 +131,3 @@ describe("keyFromPath types", (): void => {
 		expectTypeOf(result.secretKey).toEqualTypeOf<Uint8Array>();
 	});
 });
-
