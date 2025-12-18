@@ -31,17 +31,29 @@ describe("HttpError", () => {
 	});
 
 	test("creates error with different status codes", () => {
-		const error500 = new HttpError(500, "Internal Server Error", "https://example.com/api");
+		const error500 = new HttpError(
+			500,
+			"Internal Server Error",
+			"https://example.com/api",
+		);
 		expect(error500.status).toBe(500);
 		expect(error500.statusText).toBe("Internal Server Error");
 
-		const error401 = new HttpError(401, "Unauthorized", "https://example.com/api");
+		const error401 = new HttpError(
+			401,
+			"Unauthorized",
+			"https://example.com/api",
+		);
 		expect(error401.status).toBe(401);
 		expect(error401.statusText).toBe("Unauthorized");
 	});
 
 	test("error message format is correct", () => {
-		const error = new HttpError(403, "Forbidden", "https://api.example.com/v1/users");
+		const error = new HttpError(
+			403,
+			"Forbidden",
+			"https://api.example.com/v1/users",
+		);
 		expect(error.message).toContain("403");
 		expect(error.message).toContain("Forbidden");
 		expect(error.message).toContain("https://api.example.com/v1/users");
@@ -64,4 +76,3 @@ describe("HttpError", () => {
 		expectTypeOf(error).toMatchTypeOf<HttpError>();
 	});
 });
-

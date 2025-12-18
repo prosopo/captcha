@@ -16,10 +16,10 @@ import {
 	AdminApiPaths,
 	ApiParams,
 	type ApiResponse,
-	ClientApiPaths,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionResponse,
+	ClientApiPaths,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type IUserSettings,
@@ -36,7 +36,15 @@ import {
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 } from "@prosopo/types";
-import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	expectTypeOf,
+	test,
+	vi,
+} from "vitest";
 import ProviderApi from "./ProviderApi.js";
 
 // Mock the parent class methods
@@ -47,7 +55,11 @@ vi.mock("./apiClient.js", () => {
 			constructor(baseUrl: string, account: string) {
 				this.account = account;
 			}
-			protected async post<T>(input: string, body: unknown, init?: RequestInit): Promise<T> {
+			protected async post<T>(
+				input: string,
+				body: unknown,
+				init?: RequestInit,
+			): Promise<T> {
 				return { input, body, init } as T;
 			}
 			protected async fetch<T>(input: string, init?: RequestInit): Promise<T> {
@@ -82,9 +94,15 @@ describe("ProviderApi", () => {
 
 			const result = await api.getCaptchaChallenge(userAccount, randomProvider);
 
-			expect(result).toHaveProperty("input", ClientApiPaths.GetImageCaptchaChallenge);
+			expect(result).toHaveProperty(
+				"input",
+				ClientApiPaths.GetImageCaptchaChallenge,
+			);
 			expect(result).toHaveProperty("body");
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.dapp]).toBe(account);
 			expect(body[ApiParams.user]).toBe(userAccount);
 			expect(body[ApiParams.datasetId]).toBe("dataset-123");
@@ -101,9 +119,16 @@ describe("ProviderApi", () => {
 				},
 			};
 
-			const result = await api.getCaptchaChallenge(userAccount, randomProvider, sessionId);
+			const result = await api.getCaptchaChallenge(
+				userAccount,
+				randomProvider,
+				sessionId,
+			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.sessionId]).toBe(sessionId);
 		});
 
@@ -161,8 +186,14 @@ describe("ProviderApi", () => {
 				userTimestampSignature,
 			);
 
-			expect(result).toHaveProperty("input", ClientApiPaths.SubmitImageCaptchaSolution);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			expect(result).toHaveProperty(
+				"input",
+				ClientApiPaths.SubmitImageCaptchaSolution,
+			);
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.user]).toBe(userAccount);
 			expect(body[ApiParams.dapp]).toBe(account);
 			expect(body[ApiParams.captchas]).toEqual(captchas);
@@ -219,8 +250,14 @@ describe("ProviderApi", () => {
 
 			const result = await api.verifyDappUser(token, signature, userAccount);
 
-			expect(result).toHaveProperty("input", ClientApiPaths.VerifyImageCaptchaSolutionDapp);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			expect(result).toHaveProperty(
+				"input",
+				ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+			);
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.token]).toBe(token);
 			expect(body[ApiParams.dappSignature]).toBe(signature);
 			expect(body[ApiParams.ip]).toBeUndefined();
@@ -233,9 +270,17 @@ describe("ProviderApi", () => {
 			const userAccount = "user123";
 			const maxVerifiedTime = 3600;
 
-			const result = await api.verifyDappUser(token, signature, userAccount, maxVerifiedTime);
+			const result = await api.verifyDappUser(
+				token,
+				signature,
+				userAccount,
+				maxVerifiedTime,
+			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.maxVerifiedTime]).toBe(maxVerifiedTime);
 		});
 
@@ -245,9 +290,18 @@ describe("ProviderApi", () => {
 			const userAccount = "user123";
 			const ip = "192.168.1.1";
 
-			const result = await api.verifyDappUser(token, signature, userAccount, undefined, ip);
+			const result = await api.verifyDappUser(
+				token,
+				signature,
+				userAccount,
+				undefined,
+				ip,
+			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.ip]).toBe(ip);
 		});
 
@@ -258,9 +312,18 @@ describe("ProviderApi", () => {
 			const maxVerifiedTime = 3600;
 			const ip = "192.168.1.1";
 
-			const result = await api.verifyDappUser(token, signature, userAccount, maxVerifiedTime, ip);
+			const result = await api.verifyDappUser(
+				token,
+				signature,
+				userAccount,
+				maxVerifiedTime,
+				ip,
+			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.maxVerifiedTime]).toBe(maxVerifiedTime);
 			expect(body[ApiParams.ip]).toBe(ip);
 		});
@@ -291,8 +354,14 @@ describe("ProviderApi", () => {
 
 			const result = await api.getPowCaptchaChallenge(user, dapp);
 
-			expect(result).toHaveProperty("input", ClientApiPaths.GetPowCaptchaChallenge);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			expect(result).toHaveProperty(
+				"input",
+				ClientApiPaths.GetPowCaptchaChallenge,
+			);
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.user]).toBe(user);
 			expect(body[ApiParams.dapp]).toBe(dapp);
 			expect(body[ApiParams.sessionId]).toBeUndefined();
@@ -305,7 +374,10 @@ describe("ProviderApi", () => {
 
 			const result = await api.getPowCaptchaChallenge(user, dapp, sessionId);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.sessionId]).toBe(sessionId);
 		});
 
@@ -313,9 +385,15 @@ describe("ProviderApi", () => {
 			const user = 123;
 			const dapp = 456;
 
-			const result = await api.getPowCaptchaChallenge(user.toString(), dapp.toString());
+			const result = await api.getPowCaptchaChallenge(
+				user.toString(),
+				dapp.toString(),
+			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.user]).toBe("123");
 			expect(body[ApiParams.dapp]).toBe("456");
 		});
@@ -363,8 +441,14 @@ describe("ProviderApi", () => {
 				userTimestampSignature,
 			);
 
-			expect(result).toHaveProperty("input", ClientApiPaths.SubmitPowCaptchaSolution);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			expect(result).toHaveProperty(
+				"input",
+				ClientApiPaths.SubmitPowCaptchaSolution,
+			);
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.challenge]).toBe(challenge.challenge);
 			expect(body[ApiParams.difficulty]).toBe(challenge.difficulty);
 			// Note: timestamp is not part of SubmitPowCaptchaSolutionBody schema, so it gets stripped
@@ -377,7 +461,9 @@ describe("ProviderApi", () => {
 			expect(body[ApiParams.salt]).toBeUndefined();
 
 			const signature = body[ApiParams.signature] as Record<string, unknown>;
-			expect(signature[ApiParams.provider]).toMatchObject(challenge.signature.provider);
+			expect(signature[ApiParams.provider]).toMatchObject(
+				challenge.signature.provider,
+			);
 			expect(signature[ApiParams.user]).toMatchObject({
 				[ApiParams.timestamp]: userTimestampSignature,
 			});
@@ -405,7 +491,10 @@ describe("ProviderApi", () => {
 				timeout,
 			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.verifiedTimeout]).toBe(timeout);
 		});
 
@@ -432,7 +521,10 @@ describe("ProviderApi", () => {
 				salt,
 			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.salt]).toBe(salt);
 		});
 
@@ -456,7 +548,10 @@ describe("ProviderApi", () => {
 				"sig",
 			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.user]).toBe("123");
 			expect(body[ApiParams.dapp]).toBe("456");
 		});
@@ -519,10 +614,21 @@ describe("ProviderApi", () => {
 			const dapp = "dapp456";
 			const user = "user789";
 
-			const result = await api.getFrictionlessCaptcha(token, headHash, dapp, user);
+			const result = await api.getFrictionlessCaptcha(
+				token,
+				headHash,
+				dapp,
+				user,
+			);
 
-			expect(result).toHaveProperty("input", ClientApiPaths.GetFrictionlessCaptchaChallenge);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			expect(result).toHaveProperty(
+				"input",
+				ClientApiPaths.GetFrictionlessCaptchaChallenge,
+			);
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.token]).toBe(token);
 			expect(body[ApiParams.headHash]).toBe(headHash);
 			expect(body[ApiParams.dapp]).toBe(dapp);
@@ -530,7 +636,12 @@ describe("ProviderApi", () => {
 		});
 
 		test("sets correct headers", async () => {
-			const result = await api.getFrictionlessCaptcha("token", "hash", "dapp", "user123");
+			const result = await api.getFrictionlessCaptcha(
+				"token",
+				"hash",
+				"dapp",
+				"user123",
+			);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
@@ -540,9 +651,16 @@ describe("ProviderApi", () => {
 		});
 
 		test("type checking - returns GetFrictionlessCaptchaResponse", async () => {
-			const result = await api.getFrictionlessCaptcha("token", "hash", "dapp", "user");
+			const result = await api.getFrictionlessCaptcha(
+				"token",
+				"hash",
+				"dapp",
+				"user",
+			);
 
-			expectTypeOf(result).toMatchTypeOf<Promise<GetFrictionlessCaptchaResponse>>();
+			expectTypeOf(result).toMatchTypeOf<
+				Promise<GetFrictionlessCaptchaResponse>
+			>();
 		});
 	});
 
@@ -556,7 +674,10 @@ describe("ProviderApi", () => {
 			const result = await api.submitUserEvents(events, string);
 
 			expect(result).toHaveProperty("input", ClientApiPaths.SubmitUserEvents);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body.events).toEqual(events);
 			expect(body.string).toBe(string);
 		});
@@ -582,7 +703,9 @@ describe("ProviderApi", () => {
 
 			const result = await api.submitUserEvents(events, "string");
 
-			expectTypeOf(result).toMatchTypeOf<Promise<UpdateProviderClientsResponse>>();
+			expectTypeOf(result).toMatchTypeOf<
+				Promise<UpdateProviderClientsResponse>
+			>();
 		});
 	});
 
@@ -639,10 +762,21 @@ describe("ProviderApi", () => {
 			const recencyLimit = 3600;
 			const user = "user123";
 
-			const result = await api.submitPowCaptchaVerify(token, signatureHex, recencyLimit, user);
+			const result = await api.submitPowCaptchaVerify(
+				token,
+				signatureHex,
+				recencyLimit,
+				user,
+			);
 
-			expect(result).toHaveProperty("input", ClientApiPaths.VerifyPowCaptchaSolution);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			expect(result).toHaveProperty(
+				"input",
+				ClientApiPaths.VerifyPowCaptchaSolution,
+			);
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.token]).toBe(token);
 			expect(body[ApiParams.dappSignature]).toBe(signatureHex);
 			expect(body[ApiParams.verifiedTimeout]).toBe(recencyLimit);
@@ -664,12 +798,20 @@ describe("ProviderApi", () => {
 				ip,
 			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body[ApiParams.ip]).toBe(ip);
 		});
 
 		test("sets correct headers", async () => {
-			const result = await api.submitPowCaptchaVerify("token", "sig", 3600, "user123");
+			const result = await api.submitPowCaptchaVerify(
+				"token",
+				"sig",
+				3600,
+				"user123",
+			);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
@@ -679,7 +821,12 @@ describe("ProviderApi", () => {
 		});
 
 		test("type checking - returns VerificationResponse", async () => {
-			const result = await api.submitPowCaptchaVerify("token", "sig", 3600, "user");
+			const result = await api.submitPowCaptchaVerify(
+				"token",
+				"sig",
+				3600,
+				"user",
+			);
 
 			expectTypeOf(result).toMatchTypeOf<Promise<VerificationResponse>>();
 		});
@@ -695,10 +842,19 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.registerSiteKey(siteKey, tier, settings, timestamp, signature);
+			const result = await api.registerSiteKey(
+				siteKey,
+				tier,
+				settings,
+				timestamp,
+				signature,
+			);
 
 			expect(result).toHaveProperty("input", AdminApiPaths.SiteKeyRegister);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body.siteKey).toBe(siteKey);
 			expect(body.tier).toBe(tier);
 			expect(body.settings).toEqual(settings);
@@ -709,7 +865,13 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.registerSiteKey("site-key", "free", settings, timestamp, signature);
+			const result = await api.registerSiteKey(
+				"site-key",
+				"free",
+				settings,
+				timestamp,
+				signature,
+			);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
@@ -739,10 +901,17 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.updateDetectorKey(detectorKey, timestamp, signature);
+			const result = await api.updateDetectorKey(
+				detectorKey,
+				timestamp,
+				signature,
+			);
 
 			expect(result).toHaveProperty("input", AdminApiPaths.UpdateDetectorKey);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body.detectorKey).toBe(detectorKey);
 		});
 
@@ -750,7 +919,11 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.updateDetectorKey("detector-key", timestamp, signature);
+			const result = await api.updateDetectorKey(
+				"detector-key",
+				timestamp,
+				signature,
+			);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
@@ -761,7 +934,11 @@ describe("ProviderApi", () => {
 		});
 
 		test("type checking - returns UpdateDetectorKeyResponse", async () => {
-			const result = await api.updateDetectorKey("detector-key", "timestamp", "signature");
+			const result = await api.updateDetectorKey(
+				"detector-key",
+				"timestamp",
+				"signature",
+			);
 
 			expectTypeOf(result).toMatchTypeOf<Promise<UpdateDetectorKeyResponse>>();
 		});
@@ -773,10 +950,17 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.removeDetectorKey(detectorKey, timestamp, signature);
+			const result = await api.removeDetectorKey(
+				detectorKey,
+				timestamp,
+				signature,
+			);
 
 			expect(result).toHaveProperty("input", AdminApiPaths.RemoveDetectorKey);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body.detectorKey).toBe(detectorKey);
 			expect(body.expirationInSeconds).toBeUndefined();
 		});
@@ -794,7 +978,10 @@ describe("ProviderApi", () => {
 				expirationInSeconds,
 			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body.expirationInSeconds).toBe(expirationInSeconds);
 		});
 
@@ -802,7 +989,11 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.removeDetectorKey("detector-key", timestamp, signature);
+			const result = await api.removeDetectorKey(
+				"detector-key",
+				timestamp,
+				signature,
+			);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
@@ -813,7 +1004,11 @@ describe("ProviderApi", () => {
 		});
 
 		test("type checking - returns ApiResponse", async () => {
-			const result = await api.removeDetectorKey("detector-key", "timestamp", "signature");
+			const result = await api.removeDetectorKey(
+				"detector-key",
+				"timestamp",
+				"signature",
+			);
 
 			expectTypeOf(result).toMatchTypeOf<Promise<ApiResponse>>();
 		});
@@ -825,10 +1020,20 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.toggleMaintenanceMode(enabled, timestamp, signature);
+			const result = await api.toggleMaintenanceMode(
+				enabled,
+				timestamp,
+				signature,
+			);
 
-			expect(result).toHaveProperty("input", AdminApiPaths.ToggleMaintenanceMode);
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			expect(result).toHaveProperty(
+				"input",
+				AdminApiPaths.ToggleMaintenanceMode,
+			);
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body.enabled).toBe(true);
 		});
 
@@ -837,9 +1042,16 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.toggleMaintenanceMode(enabled, timestamp, signature);
+			const result = await api.toggleMaintenanceMode(
+				enabled,
+				timestamp,
+				signature,
+			);
 
-			const body = (result as { body: unknown }).body as Record<string, unknown>;
+			const body = (result as { body: unknown }).body as Record<
+				string,
+				unknown
+			>;
 			expect(body.enabled).toBe(false);
 		});
 
@@ -847,7 +1059,11 @@ describe("ProviderApi", () => {
 			const timestamp = "2024-01-01T00:00:00Z";
 			const signature = "sig123";
 
-			const result = await api.toggleMaintenanceMode(true, timestamp, signature);
+			const result = await api.toggleMaintenanceMode(
+				true,
+				timestamp,
+				signature,
+			);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
@@ -858,10 +1074,13 @@ describe("ProviderApi", () => {
 		});
 
 		test("type checking - returns ApiResponse", async () => {
-			const result = await api.toggleMaintenanceMode(true, "timestamp", "signature");
+			const result = await api.toggleMaintenanceMode(
+				true,
+				"timestamp",
+				"signature",
+			);
 
 			expectTypeOf(result).toMatchTypeOf<Promise<ApiResponse>>();
 		});
 	});
 });
-

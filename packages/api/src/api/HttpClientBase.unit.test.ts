@@ -12,7 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	expectTypeOf,
+	test,
+	vi,
+} from "vitest";
 import HttpClientBase from "./HttpClientBase.js";
 import { HttpError } from "./HttpError.js";
 
@@ -21,7 +29,10 @@ global.fetch = vi.fn();
 
 // Test subclass to expose protected methods
 class TestHttpClientBase extends HttpClientBase {
-	public async testFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+	public async testFetch<T>(
+		input: RequestInfo,
+		init?: RequestInit,
+	): Promise<T> {
 		return this.fetch<T>(input, init);
 	}
 
@@ -93,13 +104,19 @@ describe("HttpClientBase", () => {
 
 			const result = await client.testFetch("/test");
 
-			expect(mockFetch).toHaveBeenCalledWith(`${baseURL}${prefix}/test`, undefined);
+			expect(mockFetch).toHaveBeenCalledWith(
+				`${baseURL}${prefix}/test`,
+				undefined,
+			);
 			expect(result).toEqual(mockResponse);
 		});
 
 		test("handles successful response with custom init", async () => {
 			const mockResponse = { success: true };
-			const init = { method: "GET", headers: { Authorization: "Bearer token" } };
+			const init = {
+				method: "GET",
+				headers: { Authorization: "Bearer token" },
+			};
 			vi.mocked(global.fetch).mockResolvedValueOnce({
 				ok: true,
 				json: async () => mockResponse,
@@ -113,7 +130,10 @@ describe("HttpClientBase", () => {
 
 			const result = await client.testFetch("/endpoint", init);
 
-			expect(global.fetch).toHaveBeenCalledWith(`${baseURL}${prefix}/endpoint`, init);
+			expect(global.fetch).toHaveBeenCalledWith(
+				`${baseURL}${prefix}/endpoint`,
+				init,
+			);
 			expect(result).toEqual(mockResponse);
 		});
 
@@ -205,7 +225,9 @@ describe("HttpClientBase", () => {
 				type: "basic" as ResponseType,
 			} as unknown as Response);
 
-			const result = await client.testFetch<{ id: number; name: string }>("/test");
+			const result = await client.testFetch<{ id: number; name: string }>(
+				"/test",
+			);
 
 			expectTypeOf(result).toMatchTypeOf<{ id: number; name: string }>();
 			expectTypeOf(result.id).toMatchTypeOf<number>();
@@ -304,7 +326,9 @@ describe("HttpClientBase", () => {
 				type: "basic" as ResponseType,
 			} as unknown as Response);
 
-			await expect(client.testPost("/test", requestBody)).rejects.toThrow(HttpError);
+			await expect(client.testPost("/test", requestBody)).rejects.toThrow(
+				HttpError,
+			);
 		});
 
 		test("handles JSON parsing error", async () => {
@@ -322,7 +346,9 @@ describe("HttpClientBase", () => {
 				type: "basic" as ResponseType,
 			} as unknown as Response);
 
-			await expect(client.testPost("/test", requestBody)).rejects.toThrow("Invalid JSON");
+			await expect(client.testPost("/test", requestBody)).rejects.toThrow(
+				"Invalid JSON",
+			);
 			expect(console.error).toHaveBeenCalled();
 		});
 
@@ -340,10 +366,10 @@ describe("HttpClientBase", () => {
 				type: "basic" as ResponseType,
 			} as unknown as Response);
 
-			const result = await client.testPost<{ output: string; count: number }, typeof requestBody>(
-				"/test",
-				requestBody,
-			);
+			const result = await client.testPost<
+				{ output: string; count: number },
+				typeof requestBody
+			>("/test", requestBody);
 
 			expectTypeOf(result).toMatchTypeOf<{ output: string; count: number }>();
 			expectTypeOf(result.output).toMatchTypeOf<string>();
@@ -384,7 +410,9 @@ describe("HttpClientBase", () => {
 				type: "basic" as ResponseType,
 			} as unknown as Response;
 
-			await expect(client.testResponseHandler(response)).rejects.toThrow("Invalid JSON");
+			await expect(client.testResponseHandler(response)).rejects.toThrow(
+				"Invalid JSON",
+			);
 			expect(console.error).toHaveBeenCalled();
 		});
 
@@ -401,7 +429,10 @@ describe("HttpClientBase", () => {
 				type: "basic" as ResponseType,
 			} as unknown as Response;
 
-			const result = await client.testResponseHandler<{ id: number; name: string }>(response);
+			const result = await client.testResponseHandler<{
+				id: number;
+				name: string;
+			}>(response);
 
 			expectTypeOf(result).toMatchTypeOf<{ id: number; name: string }>();
 		});
@@ -418,20 +449,21 @@ describe("HttpClientBase", () => {
 		test("rejects with generic Error", async () => {
 			const error = new Error("Network error");
 
-			await expect(client.testErrorHandler(error)).rejects.toThrow("Network error");
+			await expect(client.testErrorHandler(error)).rejects.toThrow(
+				"Network error",
+			);
 			expect(console.error).toHaveBeenCalledWith("API request error:", error);
 		});
 
-	test("type checking - returns Promise<never>", () => {
-		const error = new Error("Test error");
-		const result = client.testErrorHandler(error);
+		test("type checking - returns Promise<never>", () => {
+			const error = new Error("Test error");
+			const result = client.testErrorHandler(error);
 
-		// Type check the return value
-		expectTypeOf(result).toMatchTypeOf<Promise<never>>();
+			// Type check the return value
+			expectTypeOf(result).toMatchTypeOf<Promise<never>>();
 
-		// Handle the rejection to avoid unhandled promise rejection
-		result.catch(() => {});
-	});
+			// Handle the rejection to avoid unhandled promise rejection
+			result.catch(() => {});
+		});
 	});
 });
-
