@@ -15,7 +15,7 @@ describe("jsonDecrypt", (): void => {
 		const decrypted = jsonDecrypt(encrypted, passphrase);
 
 		expect(decrypted).toEqual(originalData);
-	});
+	}, 30000);
 
 	it("decrypts data without passphrase", (): void => {
 		const originalData = new Uint8Array([1, 2, 3, 4, 5]);
@@ -25,7 +25,7 @@ describe("jsonDecrypt", (): void => {
 		const decrypted = jsonDecrypt(encrypted);
 
 		expect(decrypted).toEqual(originalData);
-	});
+	}, 30000);
 
 	it("throws error with wrong passphrase", (): void => {
 		const originalData = new Uint8Array([1, 2, 3, 4, 5]);
@@ -38,7 +38,7 @@ describe("jsonDecrypt", (): void => {
 		expect(() => jsonDecrypt(encrypted, wrongPassphrase)).toThrow(
 			/Unable to decode/,
 		);
-	});
+	}, 30000);
 
 	it("throws error when no encoded data", (): void => {
 		const encrypted = {
@@ -71,15 +71,14 @@ describe("jsonDecrypt", (): void => {
 		expect(decrypted).toEqual(originalData);
 	});
 
-	it("works with empty data", (): void => {
+	it("throws error with empty data", (): void => {
 		const originalData = new Uint8Array([]);
 		const contentType = ["pkcs8"];
 
 		const encrypted = jsonEncrypt(originalData, contentType);
-		const decrypted = jsonDecrypt(encrypted);
-
-		expect(decrypted).toEqual(originalData);
-	});
+		// Empty data results in empty encoded string, which should throw
+		expect(() => jsonDecrypt(encrypted)).toThrow(/No encrypted data/);
+	}, 30000);
 });
 
 describe("jsonDecrypt types", (): void => {

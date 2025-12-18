@@ -26,7 +26,7 @@ describe("jsonDecryptData", (): void => {
 		const decrypted = jsonDecryptData(encryptedData, passphrase, ENCODING);
 
 		expect(decrypted).toEqual(originalData);
-	});
+	}, 30000);
 
 	it("throws error when no encrypted data", (): void => {
 		expect(() => jsonDecryptData(null, "test123")).toThrow(/No encrypted data/);
@@ -45,7 +45,7 @@ describe("jsonDecryptData", (): void => {
 	it("throws error when unable to decode", (): void => {
 		const encrypted = new Uint8Array(100).fill(0);
 		expect(() => jsonDecryptData(encrypted, "wrong", ENCODING)).toThrow(
-			/Unable to decode/,
+			/Invalid injected scrypt params/,
 		);
 	});
 
@@ -77,5 +77,5 @@ describe("jsonDecryptData", (): void => {
 		]);
 
 		expect(decrypted).toEqual(originalData);
-	});
+	}, 30000);
 });

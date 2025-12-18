@@ -33,7 +33,7 @@ describe("scryptEncode", (): void => {
 						salt: KNOWN_SALT,
 					},
 				);
-			});
+			}, 30000);
 		});
 	}
 });

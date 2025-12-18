@@ -118,10 +118,14 @@ describe("createDualHasher", (): void => {
 
 	it("works with Uint8Array input", (): void => {
 		const jsHash256 = (u8a: Uint8Array): Uint8Array => {
-			return u8a.slice(0, 32);
+			const result = new Uint8Array(32);
+			result.set(u8a.slice(0, 32));
+			return result;
 		};
 		const jsHash512 = (u8a: Uint8Array): Uint8Array => {
-			return u8a.slice(0, 64);
+			const result = new Uint8Array(64);
+			result.set(u8a.slice(0, 64));
+			return result;
 		};
 
 		const hasher = createDualHasher(

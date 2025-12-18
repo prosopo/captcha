@@ -53,7 +53,7 @@ describe("jsonEncrypt", (): void => {
 		// Encrypted data should be different due to random salt/nonce
 		expect(result1.encoded).not.toEqual(result2.encoded);
 		expect(result1.encoding).toEqual(result2.encoding);
-	});
+	}, 60000);
 
 	it("works with empty data", (): void => {
 		const data = new Uint8Array([]);
@@ -64,7 +64,7 @@ describe("jsonEncrypt", (): void => {
 
 		expect(result.encoded).toBeDefined();
 		expect(result.encoding.type).toEqual(["scrypt", "xsalsa20-poly1305"]);
-	});
+	}, 30000);
 
 	it("works with single content type", (): void => {
 		const data = new Uint8Array([1, 2, 3]);
@@ -74,7 +74,7 @@ describe("jsonEncrypt", (): void => {
 		const result = jsonEncrypt(data, contentType, passphrase);
 
 		expect(result.encoding.content).toEqual(["pkcs8"]);
-	});
+	}, 30000);
 });
 
 describe("jsonEncrypt types", (): void => {

@@ -126,9 +126,9 @@ describe("DeriveJunction", (): void => {
 			expect(junction.chainCode).toHaveLength(32);
 		});
 
-		it("is immutable", (): void => {
+		it("changes when junction is modified", (): void => {
 			const junction = new DeriveJunction().soft(0);
-			const original = junction.chainCode;
+			const original = new Uint8Array(junction.chainCode); // Create a copy
 			junction.soft(1);
 			// Chain code should be different after changing
 			expect(junction.chainCode).not.toEqual(original);
