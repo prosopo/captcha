@@ -261,6 +261,214 @@ describe("ApiExpressRouterFactory", () => {
 
 			expect(router).toBeDefined();
 		});
+
+		it("should handle routes with special characters", () => {
+			const mockEndpoint: ApiEndpoint<z.ZodType> = {
+				getRequestArgsSchema: () => z.object({ id: z.string() }),
+				processRequest: async () => ({
+					status: "success",
+					data: {},
+				}),
+			};
+
+			const mockRoutes: ApiRoutes = {
+				"/api/v1/users/:id": mockEndpoint,
+				"/api/v1/users/:id/profile": mockEndpoint,
+			};
+
+			const mockAdapter: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const factory = new ApiExpressRouterFactory();
+			const router = factory.createRouter(
+				{ getRoutes: () => mockRoutes },
+				mockAdapter,
+			);
+
+			expect(router).toBeDefined();
+		});
+
+		it("should handle many routes", () => {
+			const mockEndpoint: ApiEndpoint<z.ZodType> = {
+				getRequestArgsSchema: () => z.object({ test: z.string() }),
+				processRequest: async () => ({
+					status: "success",
+					data: {},
+				}),
+			};
+
+			const mockRoutes: ApiRoutes = {};
+			// Create 100 routes
+			for (let i = 0; i < 100; i++) {
+				mockRoutes[`/route${i}`] = mockEndpoint;
+			}
+
+			const mockAdapter: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const factory = new ApiExpressRouterFactory();
+			const router = factory.createRouter(
+				{ getRoutes: () => mockRoutes },
+				mockAdapter,
+			);
+
+			expect(router).toBeDefined();
+		});
+	});
+
+	describe("edge cases", () => {
+		it("should handle routes with undefined schema", () => {
+			const mockEndpoint: ApiEndpoint<undefined> = {
+				getRequestArgsSchema: () => undefined,
+				processRequest: async () => ({
+					status: "success",
+					data: { result: "no schema" },
+				}),
+			};
+
+			const mockRoutes: ApiRoutes = {
+				"/no-schema": mockEndpoint,
+			};
+
+			const mockAdapter: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const factory = new ApiExpressRouterFactory();
+			const router = factory.createRouter(
+				{ getRoutes: () => mockRoutes },
+				mockAdapter,
+			);
+
+			expect(router).toBeDefined();
+		});
+
+		it("should handle routes with complex schemas", () => {
+			const complexSchema = z.object({
+				user: z.object({
+					name: z.string(),
+					email: z.string().email(),
+					age: z.number().min(0).max(120),
+					tags: z.array(z.string()),
+				}),
+				metadata: z.record(z.string(), z.unknown()),
+			});
+
+			const mockEndpoint: ApiEndpoint<typeof complexSchema> = {
+				getRequestArgsSchema: () => complexSchema,
+				processRequest: async () => ({
+					status: "success",
+					data: {},
+				}),
+			};
+
+			const mockRoutes: ApiRoutes = {
+				"/complex": mockEndpoint,
+			};
+
+			const mockAdapter: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const factory = new ApiExpressRouterFactory();
+			const router = factory.createRouter(
+				{ getRoutes: () => mockRoutes },
+				mockAdapter,
+			);
+
+			expect(router).toBeDefined();
+		});
+
+		it("should handle routes with same endpoint but different paths", () => {
+			const sharedEndpoint: ApiEndpoint<z.ZodType> = {
+				getRequestArgsSchema: () => z.object({ id: z.string() }),
+				processRequest: async () => ({
+					status: "success",
+					data: {},
+				}),
+			};
+
+			const mockRoutes: ApiRoutes = {
+				"/path1": sharedEndpoint,
+				"/path2": sharedEndpoint,
+				"/path3": sharedEndpoint,
+			};
+
+			const mockAdapter: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const factory = new ApiExpressRouterFactory();
+			const router = factory.createRouter(
+				{ getRoutes: () => mockRoutes },
+				mockAdapter,
+			);
+
+			expect(router).toBeDefined();
+		});
+
+		it("should create router with different adapter implementations", () => {
+			const mockRoutes: ApiRoutes = {
+				"/test": {
+					getRequestArgsSchema: () => undefined,
+					processRequest: async () => ({
+						status: "success",
+						data: {},
+					}),
+				},
+			};
+
+			const mockRoutesProvider: ApiRoutesProvider = {
+				getRoutes: () => mockRoutes,
+			};
+
+			const adapter1: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const adapter2: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const factory = new ApiExpressRouterFactory();
+			const router1 = factory.createRouter(mockRoutesProvider, adapter1);
+			const router2 = factory.createRouter(mockRoutesProvider, adapter2);
+
+			expect(router1).toBeDefined();
+			expect(router2).toBeDefined();
+		});
+
+		it("should handle async endpoint processing", () => {
+			const asyncEndpoint: ApiEndpoint<undefined> = {
+				getRequestArgsSchema: () => undefined,
+				processRequest: async () => {
+					// Simulate async operation
+					await new Promise((resolve) => setTimeout(resolve, 10));
+					return {
+						status: "success",
+						data: { async: true },
+					};
+				},
+			};
+
+			const mockRoutes: ApiRoutes = {
+				"/async": asyncEndpoint,
+			};
+
+			const mockAdapter: ApiExpressEndpointAdapter = {
+				handleRequest: vi.fn().mockResolvedValue(undefined),
+			};
+
+			const factory = new ApiExpressRouterFactory();
+			const router = factory.createRouter(
+				{ getRoutes: () => mockRoutes },
+				mockAdapter,
+			);
+
+			expect(router).toBeDefined();
+		});
 	});
 });
 
