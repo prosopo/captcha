@@ -34,7 +34,9 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
-		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts",
+		"lint": "echo 'No lint tasks configured for this package'",
+		"lint-fix": "echo 'No lint-fix tasks configured for this package'"
 	},
 	"repository": {
 		"type": "git",
