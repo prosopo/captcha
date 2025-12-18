@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { consoleTableWithWrapping } from "./table.js";
 
 describe("table", () => {
@@ -22,7 +22,7 @@ describe("table", () => {
 		) => infer R
 			? R
 			: never;
-		const _v1: void = undefined as unknown as ReturnType;
+		const _v1: undefined = undefined as unknown as ReturnType;
 
 		// Verify parameter types
 		type Params = Parameters<typeof consoleTableWithWrapping>;
@@ -70,7 +70,7 @@ describe("table", () => {
 		expect(Array.isArray(callArg)).toBe(true);
 		if (callArg) {
 			const firstRow = callArg[0];
-			if (firstRow && firstRow.description) {
+			if (firstRow?.description) {
 				expect(callArg.length).toBeGreaterThan(1);
 				expect(firstRow.description.length).toBeLessThanOrEqual(90);
 			}
@@ -125,13 +125,13 @@ describe("table", () => {
 		expect(callArg).toBeDefined();
 		if (callArg) {
 			expect(callArg.length).toBeGreaterThan(1);
-			callArg.forEach((row: { [key: string]: string }) => {
-				Object.values(row).forEach((value) => {
+			for (const row of callArg) {
+				for (const value of Object.values(row)) {
 					if (value && typeof value === "string") {
 						expect(value.length).toBeLessThanOrEqual(90);
 					}
-				});
-			});
+				}
+			}
 		}
 	});
 
@@ -151,7 +151,7 @@ describe("table", () => {
 		expect(callArg).toBeDefined();
 		if (callArg && callArg.length > 0) {
 			const firstRow = callArg[0];
-			if (firstRow && firstRow.name) {
+			if (firstRow?.name) {
 				expect(firstRow.name.length).toBeLessThanOrEqual(50);
 			}
 		}
@@ -173,7 +173,7 @@ describe("table", () => {
 		expect(callArg).toBeDefined();
 		if (callArg) {
 			const firstRow = callArg[0];
-			if (firstRow && firstRow.name) {
+			if (firstRow?.name) {
 				expect(firstRow.name.length).toBe(90);
 			}
 		}
@@ -197,10 +197,10 @@ describe("table", () => {
 			expect(callArg.length).toBe(2);
 			const firstRow = callArg[0];
 			const secondRow = callArg[1];
-			if (firstRow && firstRow.name) {
+			if (firstRow?.name) {
 				expect(firstRow.name.length).toBe(90);
 			}
-			if (secondRow && secondRow.name) {
+			if (secondRow?.name) {
 				expect(secondRow.name.length).toBe(1);
 			}
 		}
@@ -234,12 +234,11 @@ describe("table", () => {
 			| undefined;
 		expect(callArg).toBeDefined();
 		if (callArg) {
-			callArg.forEach((row: { [key: string]: string }) => {
+			for (const row of callArg) {
 				expect(row).toHaveProperty("col1");
 				expect(row).toHaveProperty("col2");
 				expect(row).toHaveProperty("col3");
-			});
+			}
 		}
 	});
 });
-

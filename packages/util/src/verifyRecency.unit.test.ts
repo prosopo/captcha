@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { verifyRecency } from "./verifyRecency.js";
 
 describe("verifyRecency", () => {
@@ -19,7 +19,10 @@ describe("verifyRecency", () => {
 		// check the types are picked up correctly by ts
 		const v1: boolean = verifyRecency("1234567890___data", 10000);
 		const v2: boolean = verifyRecency("1234567890___data", 0);
-		const v3: boolean = verifyRecency("1234567890___data", Number.MAX_SAFE_INTEGER);
+		const v3: boolean = verifyRecency(
+			"1234567890___data",
+			Number.MAX_SAFE_INTEGER,
+		);
 
 		// Verify return type is always boolean
 		const result = verifyRecency("1234567890___data", 10000);
@@ -148,4 +151,3 @@ describe("verifyRecency", () => {
 		expect(verifyRecency(challenge, maxVerifiedTime)).toBe(false);
 	});
 });
-

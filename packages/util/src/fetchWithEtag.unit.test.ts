@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { fetchWithETag } from "./fetchWithEtag.js";
 
 describe("fetchWithETag", () => {
@@ -166,9 +166,9 @@ describe("fetchWithETag", () => {
 
 		vi.mocked(fetch).mockResolvedValue(mockResponse as unknown as Response);
 
-		await expect(
-			fetchWithETag("https://example.com", null),
-		).rejects.toThrow("HTTP error! status: 404");
+		await expect(fetchWithETag("https://example.com", null)).rejects.toThrow(
+			"HTTP error! status: 404",
+		);
 	});
 
 	test("throws error when response is 500", async () => {
@@ -180,18 +180,18 @@ describe("fetchWithETag", () => {
 
 		vi.mocked(fetch).mockResolvedValue(mockResponse as unknown as Response);
 
-		await expect(
-			fetchWithETag("https://example.com", null),
-		).rejects.toThrow("HTTP error! status: 500");
+		await expect(fetchWithETag("https://example.com", null)).rejects.toThrow(
+			"HTTP error! status: 500",
+		);
 	});
 
 	test("handles fetch network errors", async () => {
 		const networkError = new Error("Network error");
 		vi.mocked(fetch).mockRejectedValue(networkError);
 
-		await expect(
-			fetchWithETag("https://example.com", null),
-		).rejects.toThrow("Fetch error: Error: Network error");
+		await expect(fetchWithETag("https://example.com", null)).rejects.toThrow(
+			"Fetch error: Error: Network error",
+		);
 	});
 
 	test("handles multiple quote types in etag", async () => {
@@ -212,4 +212,3 @@ describe("fetchWithETag", () => {
 		expect(result.etag).toBe("etag-with-quotes-inside");
 	});
 });
-

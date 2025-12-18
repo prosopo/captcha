@@ -68,7 +68,7 @@ describe("checks", () => {
 
 		test("returns false for functions", () => {
 			expect(isArray(() => {})).toBe(false);
-			expect(isArray(function () {})).toBe(false);
+			expect(isArray(() => {})).toBe(false);
 		});
 	});
 
@@ -84,7 +84,7 @@ describe("checks", () => {
 		test("returns true for class instances", () => {
 			expect(isObject(new Date())).toBe(true);
 			expect(isObject(new Error())).toBe(true);
-			expect(isObject(new RegExp("test"))).toBe(true);
+			expect(isObject(/test/)).toBe(true);
 			expect(isObject(new Map())).toBe(true);
 			expect(isObject(new Set())).toBe(true);
 		});
@@ -111,8 +111,7 @@ describe("checks", () => {
 		test("returns false for functions", () => {
 			// Note: Functions are instanceof Object in JavaScript, so current implementation returns true
 			expect(isObject(() => {})).toBe(true);
-			expect(isObject(function () {})).toBe(true);
+			expect(isObject(() => {})).toBe(true);
 		});
 	});
 });
-

@@ -1,3 +1,4 @@
+import { sha256 } from "@noble/hashes/sha256";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 // limitations under the License.
 import { describe, expect, test } from "vitest";
 import { solvePoW } from "./solverService.js";
-import { sha256 } from "@noble/hashes/sha256";
 
 describe("solvePoW", () => {
 	test("types", () => {
@@ -144,4 +144,3 @@ describe("solvePoW", () => {
 		expect(typeof nonce3).toBe("number");
 	});
 });
-

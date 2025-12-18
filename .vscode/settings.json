@@ -12,5 +12,6 @@
 		"editor.formatOnSave": true,
 		"editor.defaultFormatter": "vscode.json-language-features"
 	},
-	"nxConsole.generateAiAgentRules": true
+	"nxConsole.generateAiAgentRules": true,
+	"postman.settings.dotenv-detection-notification-visibility": false
 }

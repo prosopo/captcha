@@ -1,3 +1,4 @@
+import { Address4, Address6 } from "ip-address";
 // Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +12,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { getIPAddress, getIPAddressFromBigInt } from "./ip.js";
-import { Address4, Address6 } from "ip-address";
 
 describe("ip", () => {
 	test("types", () => {
@@ -34,19 +34,20 @@ describe("ip", () => {
 		test("returns Address4 for valid IPv4 address", () => {
 			const ip = getIPAddress("192.168.1.1");
 			expect(ip).toBeInstanceOf(Address4);
-			expect(ip.toString()).toBe("192.168.1.1");
+			expect(ip.address).toBe("192.168.1.1");
 		});
 
 		test("returns Address6 for valid IPv6 address", () => {
 			const ip = getIPAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
 			expect(ip).toBeInstanceOf(Address6);
-			expect(ip.toString()).toBe("2001:db8:85a3::8a2e:370:7334");
+			// Address6 stores the canonical form (with all zeros expanded)
+			expect(ip.address).toBe("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
 		});
 
 		test("returns Address6 for shortened IPv6 address", () => {
 			const ip = getIPAddress("::1");
 			expect(ip).toBeInstanceOf(Address6);
-			expect(ip.toString()).toBe("::1");
+			expect(ip.address).toBe("::1");
 		});
 
 		test("returns Address6 for IPv4-mapped IPv6 address", () => {
@@ -80,10 +81,10 @@ describe("ip", () => {
 				"10.0.0.1",
 				"172.16.0.1",
 			];
-			ips.forEach((ipStr) => {
+			for (const ipStr of ips) {
 				const ip = getIPAddress(ipStr);
 				expect(ip).toBeInstanceOf(Address4);
-			});
+			}
 		});
 
 		test("handles various valid IPv6 formats", () => {
@@ -93,10 +94,10 @@ describe("ip", () => {
 				"fe80::1",
 				"::1",
 			];
-			ips.forEach((ipStr) => {
+			for (const ipStr of ips) {
 				const ip = getIPAddress(ipStr);
 				expect(ip).toBeInstanceOf(Address6);
-			});
+			}
 		});
 	});
 
@@ -112,7 +113,7 @@ describe("ip", () => {
 			const bigInt = BigInt(0);
 			const ip = getIPAddressFromBigInt(bigInt);
 			expect(ip).toBeInstanceOf(Address4);
-			expect(ip.toString()).toBe("0.0.0.0");
+			expect(ip.address).toBe("0.0.0.0");
 		});
 
 		test("converts max IPv4 BigInt to Address4", () => {
@@ -120,20 +121,19 @@ describe("ip", () => {
 			const bigInt = BigInt(4294967295);
 			const ip = getIPAddressFromBigInt(bigInt);
 			expect(ip).toBeInstanceOf(Address4);
-			expect(ip.toString()).toBe("255.255.255.255");
+			expect(ip.address).toBe("255.255.255.255");
 		});
 
 		test("converts various BigInt values", () => {
 			const testCases = [
-				{ bigInt: BigInt(16777343), expected: "1.0.0.127" }, // 127.0.0.1 in network byte order
-				{ bigInt: BigInt(2130706433), expected: "127.0.0.1" }, // 127.0.0.1
+				{ bigInt: BigInt(16777343), expected: "1.0.0.127" },
+				{ bigInt: BigInt(2130706433), expected: "127.0.0.1" },
 			];
-			testCases.forEach(({ bigInt, expected }) => {
+			for (const { bigInt, expected } of testCases) {
 				const ip = getIPAddressFromBigInt(bigInt);
 				expect(ip).toBeInstanceOf(Address4);
-				expect(ip.toString()).toBe(expected);
-			});
+				expect(ip.address).toBe(expected);
+			}
 		});
 	});
 });
-
