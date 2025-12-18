@@ -14,7 +14,7 @@
 
 import type { ProviderEnvironment } from "@prosopo/env";
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi, expectTypeOf } from "vitest";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { requestLoggerMiddleware } from "../../middlewares/requestLoggerMiddleware.js";
 
 describe("requestLoggerMiddleware", () => {
@@ -211,4 +211,3 @@ describe("requestLoggerMiddleware", () => {
 		expect(typeof mockRequest.requestId).toBe("string");
 	});
 });
-

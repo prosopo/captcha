@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import { hexToU8a, isHex } from "@polkadot/util";
-import {
-	type Logger,
-	ProsopoApiError,
-	getLogger,
-} from "@prosopo/common";
+import { type Logger, ProsopoApiError, getLogger } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
-import { describe, expect, it, vi, expectTypeOf, beforeEach } from "vitest";
-import { authMiddleware, verifySignature } from "../../../middlewares/authMiddleware.js";
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
+import {
+	authMiddleware,
+	verifySignature,
+} from "../../../middlewares/authMiddleware.js";
 
 const loggerOuter = getLogger("info", import.meta.url);
 
@@ -391,4 +390,3 @@ describe("authMiddleware - additional tests", () => {
 		});
 	});
 });
-

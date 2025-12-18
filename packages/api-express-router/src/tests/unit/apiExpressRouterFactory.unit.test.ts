@@ -16,11 +16,10 @@ import type { ApiRoutes, ApiRoutesProvider } from "@prosopo/api-route";
 import type { ApiEndpoint } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/common";
 import type { NextFunction, Request, Response, Router } from "express";
-import { describe, expect, it, vi, expectTypeOf } from "vitest";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { z } from "zod";
 import { ApiExpressRouterFactory } from "../../apiExpressRouterFactory.js";
 import type { ApiExpressEndpointAdapter } from "../../endpointAdapter/apiExpressEndpointAdapter.js";
-import { handleErrors } from "../../errorHandler.js";
 
 describe("ApiExpressRouterFactory", () => {
 	describe("createRouter", () => {
@@ -157,10 +156,12 @@ describe("ApiExpressRouterFactory", () => {
 			};
 
 			const factory = new ApiExpressRouterFactory();
-			
+
 			// Type test: verify createRouter accepts ApiExpressEndpointAdapter
-			expectTypeOf(factory.createRouter).parameter(1).toMatchTypeOf<ApiExpressEndpointAdapter>();
-			
+			expectTypeOf(factory.createRouter)
+				.parameter(1)
+				.toMatchTypeOf<ApiExpressEndpointAdapter>();
+
 			const router = factory.createRouter(mockRoutesProvider, mockAdapter);
 			expect(router).toBeDefined();
 		});
@@ -471,4 +472,3 @@ describe("ApiExpressRouterFactory", () => {
 		});
 	});
 });
-

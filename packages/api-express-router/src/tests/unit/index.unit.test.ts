@@ -21,7 +21,6 @@ import { z } from "zod";
 import {
 	apiExpressRouterFactory,
 	createApiExpressDefaultEndpointAdapter,
-	type ApiExpressEndpointAdapter,
 } from "../../index.js";
 
 describe("index exports", () => {

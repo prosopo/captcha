@@ -60,7 +60,9 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 				err: error,
 			}));
 
-			response.status(this.errorStatusCode).send("An internal server error occurred.");
+			response
+				.status(this.errorStatusCode)
+				.send("An internal server error occurred.");
 		}
 	}
 }
