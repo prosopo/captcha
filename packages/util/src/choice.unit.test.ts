@@ -78,9 +78,9 @@ describe("choice", () => {
 		const random = () => 0.5;
 		const result = choice(stringItems, 2, random);
 		expect(result).toHaveLength(2);
-		result.forEach((item) => {
+		for (const item of result) {
 			expect(stringItems).toContain(item);
-		});
+		}
 	});
 
 	test("works with objects", () => {

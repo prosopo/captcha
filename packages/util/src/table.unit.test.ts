@@ -18,7 +18,8 @@ describe("table", () => {
 	test("types", () => {
 		// Verify return type is void
 		type ReturnType = typeof consoleTableWithWrapping extends (
-			...args: any[]
+			data: { [key: string]: string }[],
+			maxColWidth?: number,
 		) => infer R
 			? R
 			: never;
