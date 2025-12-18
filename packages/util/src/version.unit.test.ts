@@ -36,7 +36,7 @@ describe("version", () => {
 		});
 
 		test("returns 'dev' when PROSOPO_PACKAGE_VERSION is not set", async () => {
-			delete process.env.PROSOPO_PACKAGE_VERSION;
+			process.env.PROSOPO_PACKAGE_VERSION = undefined;
 			vi.resetModules();
 			const { version } = await import("./version.js");
 			expect(version).toBe("dev");

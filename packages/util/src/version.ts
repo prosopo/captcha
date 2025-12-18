@@ -11,4 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export const version = process.env.PROSOPO_PACKAGE_VERSION || "dev";
+const envVersion = process.env.PROSOPO_PACKAGE_VERSION;
+export const version =
+	envVersion && envVersion !== "undefined" ? envVersion : "dev";
