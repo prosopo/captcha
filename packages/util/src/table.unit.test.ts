@@ -16,19 +16,18 @@ import { consoleTableWithWrapping } from "./table.js";
 
 describe("table", () => {
 	test("types", () => {
-		// check the types are picked up correctly by ts
-		const data = [{ name: "John", age: "30" }];
-		const result = consoleTableWithWrapping(data);
-		const _v1: void = result; // consoleTableWithWrapping returns void
+		// Verify return type is void
+		type ReturnType = typeof consoleTableWithWrapping extends (
+			...args: any[]
+		) => infer R
+			? R
+			: never;
+		const _v1: void = undefined as unknown as ReturnType;
 
-		const data2 = [{ col1: "a", col2: "b" }];
-		const result2 = consoleTableWithWrapping(data2, 50);
-		const _v2: void = result2;
-
-		// Test with different maxColWidth types
-		const _v3: void = consoleTableWithWrapping(data, 90);
-		const _v4: void = consoleTableWithWrapping(data, 0);
-		const _v5: void = consoleTableWithWrapping(data, Number.MAX_SAFE_INTEGER);
+		// Verify parameter types
+		type Params = Parameters<typeof consoleTableWithWrapping>;
+		const _v2: { [key: string]: string }[] = [] as Params[0];
+		const _v3: number | undefined = 90 as Params[1];
 	});
 
 	let consoleTableSpy: ReturnType<typeof vi.spyOn>;

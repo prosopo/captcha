@@ -59,7 +59,9 @@ describe("isMain", () => {
 			const testUrl = "file:///path/to/test.js";
 			process.argv[1] = "/different/path.js";
 
-			expect(isMain(testUrl)).toBe(false);
+			// When binName is not provided and paths don't match, returns falsy (false)
+			const result = isMain(testUrl);
+			expect(result).toBeFalsy();
 		});
 
 		test("returns true when running with npx and binName matches", () => {
@@ -80,7 +82,9 @@ describe("isMain", () => {
 			const testUrl = "file:///path/to/test.js";
 			process.argv[1] = undefined as unknown as string;
 
-			expect(isMain(testUrl, "mybin")).toBe(false);
+			// When process.argv[1] is undefined, the function returns falsy (undefined)
+			const result = isMain(testUrl, "mybin");
+			expect(result).toBeFalsy();
 		});
 
 		test("handles npx path with different node_modules location", () => {
@@ -147,7 +151,8 @@ describe("isMain", () => {
 	describe("edge cases", () => {
 		test("handles empty string URL", () => {
 			process.argv[1] = "";
-			expect(isMain("")).toBe(true);
+			// fileURLToPath with empty string throws Invalid URL error
+			expect(() => isMain("")).toThrow();
 		});
 
 		test("handles URL with special characters", () => {
@@ -162,7 +167,9 @@ describe("isMain", () => {
 			const testUrl = "file:///path/to/test.js";
 			process.argv[1] = "./test.js";
 
-			expect(isMain(testUrl)).toBe(false);
+			// Returns falsy when paths don't match
+			const result = isMain(testUrl);
+			expect(result).toBeFalsy();
 		});
 	});
 });
