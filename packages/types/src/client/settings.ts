@@ -109,8 +109,8 @@ export const ContextTypeSchema = z.nativeEnum(ContextType);
 export const ContextConfigSchema = z.object({
 	type: ContextTypeSchema,
 	threshold: number()
-		.min(0)
-		.max(1)
+		.min(Number((contextAwareThresholdDefault - 0.2).toFixed(2)))
+		.max(Number((contextAwareThresholdDefault + 0.2).toFixed(2)))
 		.optional()
 		.default(contextAwareThresholdDefault),
 });
@@ -133,9 +133,7 @@ export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
 export const ClientSettingsSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
-	domains: array(string())
-		.optional()
-		.default([...domainsDefault]),
+	domains: array(string()).min(1),
 	frictionlessThreshold: number()
 		.min(0)
 		.max(1)
