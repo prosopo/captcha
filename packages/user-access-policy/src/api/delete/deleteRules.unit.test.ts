@@ -113,10 +113,7 @@ describe("DeleteRulesEndpoint", () => {
 				.mockResolvedValueOnce(["id2"]),
 			fetchAllRuleIds: vi.fn(),
 			insertRules: vi.fn(),
-			deleteRules: vi
-				.fn()
-				.mockResolvedValueOnce(undefined)
-				.mockResolvedValueOnce(undefined),
+			deleteRules: vi.fn().mockResolvedValue(undefined),
 			deleteAllRules: vi.fn(),
 		};
 
@@ -132,7 +129,9 @@ describe("DeleteRulesEndpoint", () => {
 
 		expect(response.status).toBe(ApiEndpointResponseStatus.SUCCESS);
 		expect(response.data?.deleted_count).toBe(2);
-		expect(mockStorage.deleteRules).toHaveBeenCalledTimes(2);
+		// After deduplication fix, deleteRules is called once with all unique IDs
+		expect(mockStorage.deleteRules).toHaveBeenCalledTimes(1);
+		expect(mockStorage.deleteRules).toHaveBeenCalledWith(["id1", "id2"]);
 	});
 
 	it("should validate request schema correctly", () => {
