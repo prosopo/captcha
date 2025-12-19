@@ -22,14 +22,13 @@ process.env.NODE_ENV = "test";
 const envFile = `.env.${process.env.NODE_ENV || "development"}`;
 let envPath = envFile;
 if (fs.existsSync(envFile)) {
-    envPath = path.resolve(envFile);
+	envPath = path.resolve(envFile);
 } else if (fs.existsSync(`../../${envFile}`)) {
-    envPath = path.resolve(`../../${envFile}`);
+	envPath = path.resolve(`../../${envFile}`);
 } else {
-    throw new Error(`No ${envFile} file found`);
+	throw new Error(`No ${envFile} file found`);
 }
 
 dotenv.config({ path: envPath });
 
 export default ViteTestConfig();
-

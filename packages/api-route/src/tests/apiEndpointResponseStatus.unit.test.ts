@@ -61,7 +61,6 @@ describe("ApiEndpointResponseStatus", () => {
 		});
 	});
 
-
 	describe("usage in switch statements", () => {
 		it("should work in switch statements", () => {
 			const handleStatus = (status: ApiEndpointResponseStatus): string => {
@@ -100,9 +99,9 @@ describe("ApiEndpointResponseStatus", () => {
 			];
 
 			for (const status of statuses) {
-				expect(
-					Object.values(ApiEndpointResponseStatus).includes(status),
-				).toBe(true);
+				expect(Object.values(ApiEndpointResponseStatus).includes(status)).toBe(
+					true,
+				);
 			}
 		});
 	});

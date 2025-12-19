@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import type { Logger } from "@prosopo/common";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { z } from "zod";
 import type { ApiEndpoint } from "../endpoint/apiEndpoint.js";
 import type { ApiEndpointResponse } from "../endpoint/apiEndpointResponse.js";
@@ -766,9 +766,9 @@ describe("ApiEndpoint", () => {
 			expectTypeOf(endpoint.processRequest).parameter(0).toMatchTypeOf<{
 				value: string;
 			}>();
-			expectTypeOf(endpoint.processRequest).returns.resolves.toMatchTypeOf<
-				ApiEndpointResponse
-			>();
+			expectTypeOf(
+				endpoint.processRequest,
+			).returns.resolves.toMatchTypeOf<ApiEndpointResponse>();
 		});
 
 		it("should type processRequest with undefined schema correctly", () => {
@@ -784,9 +784,9 @@ describe("ApiEndpoint", () => {
 
 			const endpoint = new NoSchemaEndpoint();
 
-			expectTypeOf(endpoint.processRequest).returns.resolves.toMatchTypeOf<
-				ApiEndpointResponse
-			>();
+			expectTypeOf(
+				endpoint.processRequest,
+			).returns.resolves.toMatchTypeOf<ApiEndpointResponse>();
 			expectTypeOf(endpoint.getRequestArgsSchema).returns.toBeUndefined();
 		});
 	});

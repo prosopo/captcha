@@ -71,7 +71,10 @@ describe("ApiEndpointResponse", () => {
 				},
 			};
 
-			expect(response.data).toHaveProperty("level1.level2.level3.value", "deep");
+			expect(response.data).toHaveProperty(
+				"level1.level2.level3.value",
+				"deep",
+			);
 		});
 	});
 
@@ -105,7 +108,10 @@ describe("ApiEndpointResponse", () => {
 
 			expect(response.status).toBe(ApiEndpointResponseStatus.FAIL);
 			expect(response.error).toBe("Validation failed");
-			expect(response.data).toEqual({ field: "email", reason: "invalid format" });
+			expect(response.data).toEqual({
+				field: "email",
+				reason: "invalid format",
+			});
 		});
 
 		it("should create response with different error messages", () => {
@@ -146,7 +152,10 @@ describe("ApiEndpointResponse", () => {
 			};
 
 			expect(response.status).toBe(ApiEndpointResponseStatus.PROCESSING);
-			expect(response.data).toEqual({ taskId: "task-123", estimatedTime: 5000 });
+			expect(response.data).toEqual({
+				taskId: "task-123",
+				estimatedTime: 5000,
+			});
 		});
 
 		it("should create response with PROCESSING status and progress info", () => {
@@ -292,7 +301,10 @@ describe("ApiEndpointResponse", () => {
 			const processingResult = handleResponse({
 				status: ApiEndpointResponseStatus.PROCESSING,
 			});
-			expect(processingResult).toEqual({ handled: false, message: "Processing" });
+			expect(processingResult).toEqual({
+				handled: false,
+				message: "Processing",
+			});
 		});
 	});
 
@@ -359,7 +371,9 @@ describe("ApiEndpointResponse", () => {
 			};
 
 			expect(response.data).toHaveProperty("items");
-			expect(Array.isArray((response.data as any).items)).toBe(true);
+			expect(
+				Array.isArray((response.data as Record<string, unknown>).items),
+			).toBe(true);
 		});
 
 		it("should support numeric values in data", () => {
@@ -368,8 +382,9 @@ describe("ApiEndpointResponse", () => {
 				data: { count: 42, percentage: 85.5 },
 			};
 
-			expect((response.data as any).count).toBe(42);
-			expect((response.data as any).percentage).toBe(85.5);
+			const data = response.data as Record<string, unknown>;
+			expect(data.count).toBe(42);
+			expect(data.percentage).toBe(85.5);
 		});
 
 		it("should support boolean values in data", () => {
@@ -378,8 +393,9 @@ describe("ApiEndpointResponse", () => {
 				data: { success: true, verified: false },
 			};
 
-			expect((response.data as any).success).toBe(true);
-			expect((response.data as any).verified).toBe(false);
+			const data = response.data as Record<string, unknown>;
+			expect(data.success).toBe(true);
+			expect(data.verified).toBe(false);
 		});
 
 		it("should support null values in data", () => {
@@ -388,8 +404,9 @@ describe("ApiEndpointResponse", () => {
 				data: { value: null, optional: null },
 			};
 
-			expect((response.data as any).value).toBeNull();
-			expect((response.data as any).optional).toBeNull();
+			const data = response.data as Record<string, unknown>;
+			expect(data.value).toBeNull();
+			expect(data.optional).toBeNull();
 		});
 	});
 
