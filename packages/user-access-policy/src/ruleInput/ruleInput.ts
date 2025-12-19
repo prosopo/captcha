@@ -39,9 +39,13 @@ const ruleGroupInput = z
 		ruleGroupId: z.coerce.string().optional(),
 	} satisfies AllKeys<RuleGroupInput>)
 	.transform((ruleGroupInput: RuleGroupInput) => {
-		const { ruleGroupId, groupId, ...ruleGroup } = ruleGroupInput;
+		// Explicitly check and prioritize groupId over ruleGroupId
+		const groupId = ruleGroupInput.groupId;
+		const ruleGroupId = ruleGroupInput.ruleGroupId;
+		
+		const { ruleGroupId: _, groupId: __, ...ruleGroup } = ruleGroupInput;
 
-		// Prioritize groupId over ruleGroupId
+		// Prioritize groupId over ruleGroupId - if both are provided, use groupId
 		if ("string" === typeof groupId) {
 			ruleGroup.groupId = groupId;
 		} else if ("string" === typeof ruleGroupId) {
