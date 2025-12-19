@@ -66,25 +66,24 @@ describe("ProsopoError classes", () => {
 			expect(error.context?.action).toBe("test");
 		});
 
-		it("should create error with translation key in context", () => {
-			const error = new ProsopoError("TEST.ERROR", {
+		it("should create error with translation key when passing Error instance", () => {
+			const baseError = new Error("Original error");
+			const error = new ProsopoError(baseError, {
 				translationKey: "TEST.TRANSLATION",
 			});
 
 			expect(error.translationKey).toBe("TEST.TRANSLATION");
 		});
 
-		it("should use custom name when provided", () => {
-			const error = new ProsopoError("TEST.ERROR", {
+		it("should log custom name when provided", () => {
+			new ProsopoError("TEST.ERROR", {
 				name: "CustomError",
 			});
 
-			// The name property comes from the constructor, not the options
 			expect(consoleErrorSpy).toHaveBeenCalled();
-			const errorParams =
-				consoleErrorSpy.mock.calls[0][0] &&
-				JSON.parse(consoleErrorSpy.mock.calls[0][0]);
-			expect(errorParams?.errorType).toBe("CustomError");
+			const logOutput = consoleErrorSpy.mock.calls[0][0];
+			const parsed = JSON.parse(logOutput);
+			expect(parsed.data.errorType).toBe("CustomError");
 		});
 
 		it("should use provided logger", () => {
@@ -211,12 +210,14 @@ describe("ProsopoError classes", () => {
 		});
 
 		it("should preserve translation key from nested ProsopoBaseError", () => {
-			const innerError = new ProsopoError("INNER.ERROR", {
+			const baseError = new Error("Inner error");
+			const innerError = new ProsopoError(baseError, {
 				translationKey: "INNER.TRANSLATION",
 				silent: true,
 			});
 			const apiError = new ProsopoApiError(innerError, {
 				context: { code: 400 },
+				silent: true,
 			});
 
 			expect(apiError.context?.translationKey).toBe("INNER.TRANSLATION");
@@ -307,8 +308,10 @@ describe("unwrapError", () => {
 		expect(unwrapped.jsonError.key).toBe("API.INVALID_BODY");
 	});
 
-	it("should use API.UNKNOWN as default key", () => {
-		const error = new ProsopoError("SOME.ERROR", { silent: true });
+	it("should use API.UNKNOWN as default key when no translation key is set", () => {
+		// Create an error without a translationKey by passing an Error instance without translationKey option
+		const baseError = new Error("Some error");
+		const error = new ProsopoError(baseError, { silent: true });
 
 		const unwrapped = unwrapError(error, mockI18n);
 
