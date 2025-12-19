@@ -29,19 +29,6 @@ vi.mock("mongodb-memory-server", () => {
 	};
 });
 
-vi.mock("./mongo.js", () => {
-	return {
-		MongoDatabase: vi.fn().mockImplementation(() => ({
-			connect: vi.fn().mockResolvedValue(undefined),
-			close: vi.fn().mockResolvedValue(undefined),
-			url: "",
-			dbname: "testdb",
-			logger: { debug: vi.fn(), error: vi.fn() },
-			connected: false,
-		})),
-	};
-});
-
 describe("MongoMemoryDatabase", () => {
 	let db: MongoMemoryDatabase;
 	const mockLogger = {
@@ -115,6 +102,8 @@ describe("MongoMemoryDatabase", () => {
 				mockServer,
 			);
 
+			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
+
 			await db.connect();
 			await db.connect();
 
@@ -133,11 +122,16 @@ describe("MongoMemoryDatabase", () => {
 				mockServer,
 			);
 
+			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
+			const superCloseSpy = vi.spyOn(MongoDatabase.prototype, "close").mockResolvedValue(undefined);
+
 			await db.connect();
 			await db.close();
 
-			expect(MongoDatabase.prototype.close).toHaveBeenCalled();
+			expect(superCloseSpy).toHaveBeenCalled();
 			expect(mockServer.stop).toHaveBeenCalled();
+
+			superCloseSpy.mockRestore();
 		});
 
 		it("should handle close when MongoMemoryServer is undefined", async () => {

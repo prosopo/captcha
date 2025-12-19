@@ -130,17 +130,11 @@ describe("MongoDatabase", () => {
 
 		it("should wait for existing connection attempt if in progress", async () => {
 			db = new MongoDatabase("mongodb://localhost:27017");
-			let resolveFirst: () => void;
-			const firstPromise = new Promise<void>((resolve) => {
-				resolveFirst = resolve;
-			});
+			let openCallback: () => void;
 			(mockConnection.once as ReturnType<typeof vi.fn>).mockImplementation(
 				(event: string, callback: () => void) => {
 					if (event === "open") {
-						setTimeout(() => {
-							callback();
-							resolveFirst();
-						}, 10);
+						openCallback = callback;
 					}
 				},
 			);
@@ -148,6 +142,14 @@ describe("MongoDatabase", () => {
 			const connect1 = db.connect();
 			const connect2 = db.connect();
 			expect(connect1).toBe(connect2);
+			
+			// Simulate connection opening
+			setTimeout(() => {
+				if (openCallback!) {
+					openCallback();
+				}
+			}, 10);
+			
 			await connect1;
 			await connect2;
 		});

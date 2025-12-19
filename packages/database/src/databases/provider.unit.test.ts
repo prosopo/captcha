@@ -36,19 +36,7 @@ import {
 } from "@prosopo/types";
 import type { Hash, ScheduledTaskStatus } from "@prosopo/types";
 
-vi.mock("../base/mongo.js", () => {
-	return {
-		MongoDatabase: vi.fn().mockImplementation(() => ({
-			connect: vi.fn().mockResolvedValue(undefined),
-			close: vi.fn().mockResolvedValue(undefined),
-			url: "mongodb://localhost:27017",
-			dbname: "testdb",
-			logger: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() },
-			connected: true,
-			connection: undefined,
-		})),
-	};
-});
+// Don't mock MongoDatabase - use actual class and spy on methods
 
 vi.mock("@prosopo/redis-client", () => ({
 	connectToRedis: vi.fn(() => ({} as any)),
@@ -109,16 +97,6 @@ describe("ProviderDatabase", () => {
 			}),
 		} as any;
 
-		(MongoDatabase as any).mockImplementation(() => ({
-			connect: vi.fn().mockResolvedValue(undefined),
-			close: vi.fn().mockResolvedValue(undefined),
-			url: "mongodb://localhost:27017",
-			dbname: "testdb",
-			logger: mockLogger,
-			connected: true,
-			connection: mockConnection,
-		}));
-
 		db = new ProviderDatabase({
 			mongo: {
 				url: "mongodb://localhost:27017",
@@ -126,6 +104,11 @@ describe("ProviderDatabase", () => {
 			},
 			logger: mockLogger,
 		});
+		db.tables = mockModels as any;
+		db.connection = mockConnection;
+		db.connected = true;
+		vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
+		vi.spyOn(MongoDatabase.prototype, "close").mockResolvedValue(undefined);
 	});
 
 	afterEach(async () => {

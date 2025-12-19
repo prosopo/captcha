@@ -23,17 +23,14 @@ import type {
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
 
-vi.mock("../base/mongo.js", () => {
+vi.mock("../base/mongo.js", async () => {
+	const actual = await vi.importActual("../base/mongo.js");
 	return {
-		MongoDatabase: vi.fn().mockImplementation(() => ({
-			connect: vi.fn().mockResolvedValue(undefined),
-			close: vi.fn().mockResolvedValue(undefined),
-			url: "mongodb://localhost:27017",
-			dbname: "testdb",
-			logger: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() },
-			connected: false,
-			connection: undefined,
-		})),
+		...actual,
+		MongoDatabase: class extends (actual as any).MongoDatabase {
+			connect = vi.fn().mockResolvedValue(undefined);
+			close = vi.fn().mockResolvedValue(undefined);
+		},
 	};
 });
 
@@ -96,17 +93,14 @@ describe("CaptchaDatabase", () => {
 			}),
 		} as any;
 
-		(MongoDatabase as any).mockImplementation(() => ({
-			connect: vi.fn().mockResolvedValue(undefined),
-			close: vi.fn().mockResolvedValue(undefined),
-			url: "mongodb://localhost:27017",
-			dbname: "testdb",
-			logger: mockLogger,
-			connected: true,
-			connection: mockConnection,
-		}));
-
 		db = new CaptchaDatabase("mongodb://localhost:27017", "testdb", undefined, mockLogger);
+		db.connection = mockConnection;
+		db.connected = true;
+		db.tables = {
+			session: mockSessionModel,
+			commitment: mockCommitmentModel,
+			powcaptcha: mockPowCaptchaModel,
+		} as any;
 	});
 
 	afterEach(async () => {
@@ -134,30 +128,25 @@ describe("CaptchaDatabase", () => {
 
 	describe("connect", () => {
 		it("should call super connect and load tables", async () => {
+			const connectSpy = vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
 			await db.connect();
-			expect(MongoDatabase.prototype.connect).toHaveBeenCalled();
+			expect(connectSpy).toHaveBeenCalled();
 			expect(mockConnection.model).toHaveBeenCalledTimes(3);
 			expect(db.tables.session).toBe(mockSessionModel);
 			expect(db.tables.commitment).toBe(mockCommitmentModel);
 			expect(db.tables.powcaptcha).toBe(mockPowCaptchaModel);
+			connectSpy.mockRestore();
 		});
 
 		it("should not load tables if connection is undefined", async () => {
-			(MongoDatabase as any).mockImplementationOnce(() => ({
-				connect: vi.fn().mockResolvedValue(undefined),
-				close: vi.fn().mockResolvedValue(undefined),
-				url: "mongodb://localhost:27017",
-				dbname: "testdb",
-				logger: mockLogger,
-				connected: true,
-				connection: undefined,
-			}));
 			const testDb = new CaptchaDatabase(
 				"mongodb://localhost:27017",
 				"testdb",
 				undefined,
 				mockLogger,
 			);
+			testDb.connection = undefined;
+			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
 			await testDb.connect();
 			expect(testDb.tables).toEqual({});
 		});
@@ -414,8 +403,11 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should close connection after saving", async () => {
+			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
+			const closeSpy = vi.spyOn(MongoDatabase.prototype, "close").mockResolvedValue(undefined);
 			await db.saveCaptchas([], [], []);
-			expect(MongoDatabase.prototype.close).toHaveBeenCalled();
+			expect(closeSpy).toHaveBeenCalled();
+			closeSpy.mockRestore();
 		});
 	});
 
@@ -471,8 +463,11 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should close connection after getting captchas", async () => {
+			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
+			const closeSpy = vi.spyOn(MongoDatabase.prototype, "close").mockResolvedValue(undefined);
 			await db.getCaptchas();
-			expect(MongoDatabase.prototype.close).toHaveBeenCalled();
+			expect(closeSpy).toHaveBeenCalled();
+			closeSpy.mockRestore();
 		});
 
 		it("should close connection even when error occurs", async () => {
@@ -483,13 +478,16 @@ describe("CaptchaDatabase", () => {
 				}),
 			});
 
+			vi.spyOn(MongoDatabase.prototype, "connect").mockResolvedValue(undefined);
+			const closeSpy = vi.spyOn(MongoDatabase.prototype, "close").mockResolvedValue(undefined);
 			try {
 				await db.getCaptchas();
 			} catch {
 				// Expected error
 			}
 
-			expect(MongoDatabase.prototype.close).toHaveBeenCalled();
+			expect(closeSpy).toHaveBeenCalled();
+			closeSpy.mockRestore();
 		});
 	});
 });
