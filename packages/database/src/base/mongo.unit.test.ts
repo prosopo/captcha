@@ -61,7 +61,7 @@ describe("MongoDatabase", () => {
 	describe("constructor", () => {
 		it("should initialize with default URL when no URL provided", () => {
 			db = new MongoDatabase("");
-			expect(db.url).toBe("mongodb://127.0.0.1:27017/");
+			expect(db.url).toBe("mongodb://127.0.0.1:27017");
 			expect(db.dbname).toBe("");
 			expect(db.connected).toBe(false);
 		});
@@ -69,7 +69,7 @@ describe("MongoDatabase", () => {
 		it("should initialize with provided URL", () => {
 			const url = "mongodb://localhost:27017";
 			db = new MongoDatabase(url);
-			expect(db.url).toBe(`${url}/`);
+			expect(db.url).toBe(url);
 			expect(db.connected).toBe(false);
 		});
 
@@ -361,7 +361,7 @@ describe("MongoDatabase", () => {
 		it("should return the internal URL", () => {
 			const url = "mongodb://localhost:27017/test";
 			db = new MongoDatabase(url);
-			expect(db.url).toBe(`${url}/`);
+			expect(db.url).toBe(url);
 		});
 	});
 });
