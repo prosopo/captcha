@@ -41,37 +41,36 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	async processRequest(
 		args: AccessRulesFilterInput[],
 	): Promise<ApiEndpointResponse> {
-		let deletedCount = 0;
+		const allRuleIds: string[] = [];
 
 		for (const rulesFilterInput of args) {
 			const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
 
 			await executeBatchesSequentially(ruleFilters, async (ruleFilter) => {
 				const ruleIds = await this.accessRulesStorage.findRuleIds(ruleFilter);
-
-				// Set() automatically removes duplicates
-				const uniqueRuleIds = [...new Set(ruleIds)];
-
-				if (uniqueRuleIds.length > 0) {
-					await this.accessRulesStorage.deleteRules(uniqueRuleIds);
-
-					deletedCount += uniqueRuleIds.length;
-
-					this.logger.info(() => ({
-						msg: "Endpoint deleted rules",
-						data: {
-							rulesFilterInput,
-							uniqueRuleIds,
-						},
-					}));
-				}
+				allRuleIds.push(...ruleIds);
 			});
+		}
+
+		// Deduplicate across all filters
+		const uniqueRuleIds = [...new Set(allRuleIds)];
+
+		if (uniqueRuleIds.length > 0) {
+			await this.accessRulesStorage.deleteRules(uniqueRuleIds);
+
+			this.logger.info(() => ({
+				msg: "Endpoint deleted rules",
+				data: {
+					args,
+					uniqueRuleIds,
+				},
+			}));
 		}
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
 			data: {
-				deleted_count: deletedCount,
+				deleted_count: uniqueRuleIds.length,
 			},
 		};
 	}

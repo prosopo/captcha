@@ -41,7 +41,9 @@ const userAttributesInput = z
 		// this line creates a new "userAttributes", without userAgent
 		const { userAgent, ...userScope } = userAttributesInput;
 
-		if ("string" === typeof userAgent) {
+		// Only hash userAgent if userAgentHash is not already provided
+		// userScope already contains userAgentHash from the input if it was provided
+		if ("string" === typeof userAgent && !userScope.userAgentHash) {
 			userScope.userAgentHash = hashUserAgent(userAgent);
 		}
 
@@ -66,15 +68,26 @@ const userIpInput = z
 		ipMask: z.string().optional(),
 	} satisfies AllKeys<UserIpInput>)
 	.transform((userIpInput: UserIpInput): UserIp => {
+		// Check if numeric IP mask values are already provided (prioritize them)
+		const existingNumericIpMaskMin = userIpInput.numericIpMaskMin;
+		const existingNumericIpMaskMax = userIpInput.numericIpMaskMax;
+		const hasNumericIpMask =
+			existingNumericIpMaskMin !== undefined &&
+			existingNumericIpMaskMax !== undefined;
+		
 		// this line creates a new "userScope", without ip and ipMask
 		const { ip, ipMask, ...numericUserIp } = userIpInput;
 
-		if ("string" === typeof ip) {
+		// Only convert ip to numericIp if numericIp is not already provided
+		if ("string" === typeof ip && numericUserIp.numericIp === undefined) {
 			numericUserIp.numericIp = getIPAddress(ip).bigInt();
 		}
 
-		// Assuming ipMask is already validated to be a string in CIDR format
-		if ("string" === typeof ipMask) {
+		// Prioritize existing numeric IP mask values over converting ipMask
+		if (hasNumericIpMask) {
+			numericUserIp.numericIpMaskMin = existingNumericIpMaskMin;
+			numericUserIp.numericIpMaskMax = existingNumericIpMaskMax;
+		} else if ("string" === typeof ipMask) {
 			// Create an Address4 object from the CIDR string.
 			// Address4 automatically understands CIDR notation and represents the entire network range.
 			const ipObject = new Address4(ipMask);

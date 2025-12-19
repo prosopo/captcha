@@ -112,9 +112,7 @@ describe("DeleteRuleGroupsEndpoint", () => {
 			findRuleIds: vi
 				.fn()
 				.mockResolvedValueOnce(["id1"])
-				.mockResolvedValueOnce(["id2"])
-				.mockResolvedValueOnce(["id3"])
-				.mockResolvedValueOnce(["id4"]),
+				.mockResolvedValueOnce(["id2"]),
 			fetchAllRuleIds: vi.fn(),
 			insertRules: vi.fn(),
 			deleteRules: vi.fn().mockResolvedValue(undefined),
@@ -134,14 +132,9 @@ describe("DeleteRuleGroupsEndpoint", () => {
 		]);
 
 		expect(response.status).toBe(ApiEndpointResponseStatus.SUCCESS);
-		expect(response.data?.deleted_count).toBe(4);
+		expect(response.data?.deleted_count).toBe(2);
 		expect(mockStorage.deleteRules).toHaveBeenCalledTimes(1);
-		expect(mockStorage.deleteRules).toHaveBeenCalledWith([
-			"id1",
-			"id2",
-			"id3",
-			"id4",
-		]);
+		expect(mockStorage.deleteRules).toHaveBeenCalledWith(["id1", "id2"]);
 	});
 
 	it("should use exact policy scope match when finding rules", async () => {

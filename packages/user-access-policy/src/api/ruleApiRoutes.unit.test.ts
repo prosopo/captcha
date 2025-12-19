@@ -138,7 +138,7 @@ describe("getExpressApiRuleRateLimits", () => {
 		Object.keys(cleanEnv)
 			.filter((key) => key.startsWith("PROSOPO_USER_ACCESS_POLICY_RULE_"))
 			.forEach((key) => delete cleanEnv[key]);
-		
+
 		process.env = {
 			...cleanEnv,
 			PROSOPO_USER_ACCESS_POLICY_RULE_INSERT_MANY_LIMIT: "15",

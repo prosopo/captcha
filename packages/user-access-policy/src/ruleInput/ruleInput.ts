@@ -39,9 +39,12 @@ const ruleGroupInput = z
 		ruleGroupId: z.coerce.string().optional(),
 	} satisfies AllKeys<RuleGroupInput>)
 	.transform((ruleGroupInput: RuleGroupInput) => {
-		const { ruleGroupId, ...ruleGroup } = ruleGroupInput;
+		const { ruleGroupId, groupId, ...ruleGroup } = ruleGroupInput;
 
-		if ("string" === typeof ruleGroupId) {
+		// Prioritize groupId over ruleGroupId
+		if ("string" === typeof groupId) {
+			ruleGroup.groupId = groupId;
+		} else if ("string" === typeof ruleGroupId) {
 			ruleGroup.groupId = ruleGroupId;
 		}
 
@@ -86,10 +89,16 @@ export const getAccessRuleFiltersFromInput = (
 ): AccessRulesFilter[] => {
 	const { policyScopes, policyScope, ...filterBase } = filterInput;
 
-	const allPolicyScopes = policyScopes || [];
+	const allPolicyScopes: PolicyScope[] = [];
 
+	// Add policyScope first if provided
 	if (policyScope) {
 		allPolicyScopes.push(policyScope);
+	}
+
+	// Then add policyScopes if provided
+	if (policyScopes) {
+		allPolicyScopes.push(...policyScopes);
 	}
 
 	if (allPolicyScopes.length > 0) {

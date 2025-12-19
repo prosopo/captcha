@@ -16,12 +16,14 @@ import { CaptchaType } from "@prosopo/types";
 import { describe, expectTypeOf, test } from "vitest";
 import type {
 	AccessPolicy,
-	AccessPolicyType,
 	AccessRule,
 	PolicyScope,
 	UserAttributes,
 	UserIp,
 	UserScope,
+} from "#policy/rule.js";
+import {
+	AccessPolicyType,
 } from "#policy/rule.js";
 import type {
 	AccessRuleRecord,
@@ -36,6 +38,8 @@ import type {
 	AccessRulesReader,
 	AccessRulesStorage,
 	AccessRulesWriter,
+} from "#policy/rulesStorage.js";
+import {
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
 import type {

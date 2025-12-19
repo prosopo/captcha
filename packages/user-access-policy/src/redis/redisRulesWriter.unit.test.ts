@@ -226,7 +226,7 @@ describe("RedisRulesWriter", () => {
 				exec: vi.fn().mockResolvedValue([]),
 			};
 			mockClient.multi = vi.fn().mockReturnValue(multiMock);
-			
+
 			// Mock scan to return keys in first call, then indicate completion
 			mockClient.scan = vi
 				.fn()

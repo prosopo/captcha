@@ -21,7 +21,7 @@ import { loggerMockedInstance } from "../testLogger.js";
 describe("createRedisAccessRulesStorage", () => {
 	it("should create storage with dummy reader and writer initially", () => {
 		const mockConnection = {
-			getClient: vi.fn().mockReturnValue(new Promise(() => {})),
+			getClient: vi.fn().mockReturnValue(new Promise(() => { })),
 		} as unknown as RedisConnection;
 
 		const storage = createRedisAccessRulesStorage(
@@ -75,7 +75,7 @@ describe("createRedisAccessRulesStorage", () => {
 
 	it("should have reader methods bound correctly", () => {
 		const mockConnection = {
-			getClient: vi.fn().mockReturnValue(new Promise(() => {})),
+			getClient: vi.fn().mockReturnValue(new Promise(() => { })),
 		} as unknown as RedisConnection;
 
 		const storage = createRedisAccessRulesStorage(
@@ -93,7 +93,7 @@ describe("createRedisAccessRulesStorage", () => {
 
 	it("should have writer methods bound correctly", () => {
 		const mockConnection = {
-			getClient: vi.fn().mockReturnValue(new Promise(() => {})),
+			getClient: vi.fn().mockReturnValue(new Promise(() => { })),
 		} as unknown as RedisConnection;
 
 		const storage = createRedisAccessRulesStorage(
@@ -108,7 +108,7 @@ describe("createRedisAccessRulesStorage", () => {
 	});
 
 	it("should request Redis client when created", () => {
-		const getClientMock = vi.fn().mockReturnValue(new Promise(() => {}));
+		const getClientMock = vi.fn().mockReturnValue(new Promise(() => { }));
 		const mockConnection = {
 			getClient: getClientMock,
 		} as unknown as RedisConnection;
