@@ -86,9 +86,9 @@ describe("AccessRuleApiRoutes", () => {
 		const apiRoutes = routes.getRoutes();
 
 		// All endpoints should be created with the logger
-		Object.values(apiRoutes).forEach((endpoint) => {
+		for (const endpoint of Object.values(apiRoutes)) {
 			expect(endpoint).toBeDefined();
-		});
+		}
 	});
 });
 
@@ -106,10 +106,10 @@ describe("getExpressApiRuleRateLimits", () => {
 		const rateLimits = getExpressApiRuleRateLimits();
 
 		// Check all endpoints have default values
-		Object.values(rateLimits).forEach((limit) => {
+		for (const limit of Object.values(rateLimits)) {
 			expect(limit.limit).toBe(5);
 			expect(limit.windowMs).toBe(10000);
-		});
+		}
 
 		process.env = originalEnv;
 	});
@@ -135,9 +135,11 @@ describe("getExpressApiRuleRateLimits", () => {
 		const originalEnv = process.env;
 		// Clean up any existing env vars first
 		const cleanEnv = { ...originalEnv };
-		Object.keys(cleanEnv)
-			.filter((key) => key.startsWith("PROSOPO_USER_ACCESS_POLICY_RULE_"))
-			.forEach((key) => delete cleanEnv[key]);
+		for (const key of Object.keys(cleanEnv).filter((key) =>
+			key.startsWith("PROSOPO_USER_ACCESS_POLICY_RULE_"),
+		)) {
+			delete cleanEnv[key];
+		}
 
 		process.env = {
 			...cleanEnv,
@@ -194,11 +196,11 @@ describe("getExpressApiRuleRateLimits", () => {
 		const rateLimits = getExpressApiRuleRateLimits();
 		const apiPaths = Object.values(accessRuleApiPaths);
 
-		apiPaths.forEach((path) => {
+		for (const path of apiPaths) {
 			expect(rateLimits[path]).toBeDefined();
 			expect(rateLimits[path].limit).toBeTypeOf("number");
 			expect(rateLimits[path].windowMs).toBeTypeOf("number");
-		});
+		}
 	});
 });
 

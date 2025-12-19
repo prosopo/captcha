@@ -154,10 +154,7 @@ describe("FindRuleIdsEndpoint", () => {
 		const endpoint = new FindRuleIdsEndpoint(mockStorage, mockLogger);
 		const response = await endpoint.processRequest([
 			{
-				policyScopes: [
-					{ clientId: "client1" },
-					{ clientId: "client2" },
-				],
+				policyScopes: [{ clientId: "client1" }, { clientId: "client2" }],
 			},
 		]);
 
@@ -190,4 +187,3 @@ describe("FindRuleIdsEndpoint", () => {
 		expect(infoSpy).toHaveBeenCalled();
 	});
 });
-

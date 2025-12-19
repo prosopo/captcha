@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel, getLogger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { aggregateRedisKeys } from "#policy/redis/reader/redisAggregate.js";
 import { loggerMockedInstance } from "../../testLogger.js";
 
@@ -32,14 +31,12 @@ describe("aggregateRedisKeys", () => {
 	});
 
 	it("should return keys from single batch", async () => {
-		(mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>)
-			.mockResolvedValueOnce({
-				results: [
-					{ __key: "key1" },
-					{ __key: "key2" },
-				],
-				cursor: 0,
-			});
+		(
+			mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>
+		).mockResolvedValueOnce({
+			results: [{ __key: "key1" }, { __key: "key2" }],
+			cursor: 0,
+		});
 
 		const keys = await aggregateRedisKeys(mockClient, "*", mockLogger);
 
@@ -47,17 +44,19 @@ describe("aggregateRedisKeys", () => {
 	});
 
 	it("should handle multiple batches with cursor", async () => {
-		(mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>)
-			.mockResolvedValueOnce({
-				results: [{ __key: "key1" }],
-				cursor: 123,
-			});
+		(
+			mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>
+		).mockResolvedValueOnce({
+			results: [{ __key: "key1" }],
+			cursor: 123,
+		});
 
-		(mockClient.ft.cursorRead as ReturnType<typeof vi.fn>)
-			.mockResolvedValueOnce({
-				results: [{ __key: "key2" }],
-				cursor: 0,
-			});
+		(
+			mockClient.ft.cursorRead as ReturnType<typeof vi.fn>
+		).mockResolvedValueOnce({
+			results: [{ __key: "key2" }],
+			cursor: 0,
+		});
 
 		const keys = await aggregateRedisKeys(mockClient, "*", mockLogger);
 
@@ -72,11 +71,12 @@ describe("aggregateRedisKeys", () => {
 	it("should call batch handler when provided", async () => {
 		const batchHandler = vi.fn().mockResolvedValue(undefined);
 
-		(mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>)
-			.mockResolvedValueOnce({
-				results: [{ __key: "key1" }],
-				cursor: 0,
-			});
+		(
+			mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>
+		).mockResolvedValueOnce({
+			results: [{ __key: "key1" }],
+			cursor: 0,
+		});
 
 		await aggregateRedisKeys(mockClient, "*", mockLogger, batchHandler);
 
@@ -84,11 +84,12 @@ describe("aggregateRedisKeys", () => {
 	});
 
 	it("should handle empty results", async () => {
-		(mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>)
-			.mockResolvedValueOnce({
-				results: [],
-				cursor: 0,
-			});
+		(
+			mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>
+		).mockResolvedValueOnce({
+			results: [],
+			cursor: 0,
+		});
 
 		const keys = await aggregateRedisKeys(mockClient, "*", mockLogger);
 
@@ -96,11 +97,12 @@ describe("aggregateRedisKeys", () => {
 	});
 
 	it("should use correct query dialect and options", async () => {
-		(mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>)
-			.mockResolvedValueOnce({
-				results: [],
-				cursor: 0,
-			});
+		(
+			mockClient.ft.aggregateWithCursor as ReturnType<typeof vi.fn>
+		).mockResolvedValueOnce({
+			results: [],
+			cursor: 0,
+		});
 
 		await aggregateRedisKeys(mockClient, "test-query", mockLogger);
 
@@ -115,4 +117,3 @@ describe("aggregateRedisKeys", () => {
 		);
 	});
 });
-

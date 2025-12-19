@@ -77,4 +77,3 @@ describe("DummyRedisRulesReader", () => {
 		expect(infoSpy).toHaveBeenCalled();
 	});
 });
-

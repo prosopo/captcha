@@ -183,4 +183,3 @@ describe("DeleteRulesEndpoint", () => {
 		expect(infoSpy).toHaveBeenCalled();
 	});
 });
-

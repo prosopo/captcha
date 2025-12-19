@@ -16,7 +16,7 @@ import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { describe, expect, it, vi } from "vitest";
 import { RehashRulesEndpoint } from "#policy/api/write/rehashRules.js";
-import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
+import { AccessPolicyType } from "#policy/rule.js";
 import type {
 	AccessRuleEntry,
 	AccessRulesStorage,
@@ -184,4 +184,3 @@ describe("RehashRulesEndpoint", () => {
 		expect(infoSpy).toHaveBeenCalledTimes(4); // batch, fetched, deleted, inserted
 	});
 });
-

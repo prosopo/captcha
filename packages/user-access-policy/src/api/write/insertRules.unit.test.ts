@@ -14,7 +14,7 @@
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import { LogLevel, getLogger } from "@prosopo/common";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InsertRulesEndpoint } from "#policy/api/write/insertRules.js";
 import { AccessPolicyType } from "#policy/rule.js";
 import type { AccessRulesWriter } from "#policy/rulesStorage.js";
@@ -82,10 +82,7 @@ describe("InsertRulesEndpoint", () => {
 				accessPolicy: {
 					type: AccessPolicyType.Block,
 				},
-				policyScopes: [
-					{ clientId: "client1" },
-					{ clientId: "client2" },
-				],
+				policyScopes: [{ clientId: "client1" }, { clientId: "client2" }],
 				userScopes: [
 					{
 						numericIp: BigInt(100),
@@ -253,4 +250,3 @@ describe("InsertRulesEndpoint", () => {
 		expect(debugSpy).toHaveBeenCalled();
 	});
 });
-

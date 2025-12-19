@@ -13,13 +13,13 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
+import { AccessPolicyType } from "#policy/rule.js";
 import {
 	accessRuleInput,
 	accessRulesFilterInput,
 	getAccessRuleFiltersFromInput,
 	ruleEntryInput,
 } from "#policy/ruleInput/ruleInput.js";
-import { AccessPolicyType } from "#policy/rule.js";
 import { FilterScopeMatch } from "#policy/rulesStorage.js";
 
 describe("accessRuleInput", () => {
@@ -137,10 +137,7 @@ describe("accessRulesFilterInput", () => {
 
 	it("should parse filter with multiple policy scopes", () => {
 		const result = accessRulesFilterInput.parse({
-			policyScopes: [
-				{ clientId: "client1" },
-				{ clientId: "client2" },
-			],
+			policyScopes: [{ clientId: "client1" }, { clientId: "client2" }],
 		});
 
 		expect(result.policyScopes).toHaveLength(2);
@@ -170,10 +167,7 @@ describe("getAccessRuleFiltersFromInput", () => {
 
 	it("should return single filter when only policyScopes is provided", () => {
 		const filters = getAccessRuleFiltersFromInput({
-			policyScopes: [
-				{ clientId: "client1" },
-				{ clientId: "client2" },
-			],
+			policyScopes: [{ clientId: "client1" }, { clientId: "client2" }],
 		});
 
 		expect(filters).toHaveLength(2);
@@ -186,9 +180,7 @@ describe("getAccessRuleFiltersFromInput", () => {
 			policyScope: {
 				clientId: "client1",
 			},
-			policyScopes: [
-				{ clientId: "client2" },
-			],
+			policyScopes: [{ clientId: "client2" }],
 		});
 
 		expect(filters).toHaveLength(2);
@@ -226,4 +218,3 @@ describe("getAccessRuleFiltersFromInput", () => {
 		expect(filters[0].userScopeMatch).toBe(FilterScopeMatch.Greedy);
 	});
 });
-

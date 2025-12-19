@@ -22,9 +22,14 @@ import type {
 	UserIp,
 	UserScope,
 } from "#policy/rule.js";
-import {
-	AccessPolicyType,
-} from "#policy/rule.js";
+import { AccessPolicyType } from "#policy/rule.js";
+import type {
+	AccessRuleInput,
+	AccessRulesFilterInput,
+	UserAttributesInput,
+	UserIpInput,
+	UserScopeInput,
+} from "#policy/ruleInput/ruleInput.js";
 import type {
 	AccessRuleRecord,
 	UserAttributesRecord,
@@ -39,16 +44,7 @@ import type {
 	AccessRulesStorage,
 	AccessRulesWriter,
 } from "#policy/rulesStorage.js";
-import {
-	FilterScopeMatch,
-} from "#policy/rulesStorage.js";
-import type {
-	AccessRuleInput,
-	AccessRulesFilterInput,
-	UserAttributesInput,
-	UserIpInput,
-	UserScopeInput,
-} from "#policy/ruleInput/ruleInput.js";
+import { FilterScopeMatch } from "#policy/rulesStorage.js";
 
 describe("Type definitions", () => {
 	describe("AccessPolicyType enum", () => {
@@ -561,4 +557,3 @@ describe("Type definitions", () => {
 		});
 	});
 });
-

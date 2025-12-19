@@ -30,9 +30,7 @@ describe("userScopeInput", () => {
 			ip: "127.0.0.1",
 		});
 
-		expect(result.numericIp).toBe(
-			new Address4("127.0.0.1").bigInt(),
-		);
+		expect(result.numericIp).toBe(new Address4("127.0.0.1").bigInt());
 	});
 
 	it("should parse valid user scope with IP mask", () => {
@@ -134,4 +132,3 @@ describe("userScopeInput", () => {
 		expect(result.userAgentHash).toBe("directhash");
 	});
 });
-

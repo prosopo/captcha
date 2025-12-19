@@ -100,4 +100,3 @@ describe("DeleteAllRulesEndpoint", () => {
 		expect(infoSpy).toHaveBeenCalled();
 	});
 });
-

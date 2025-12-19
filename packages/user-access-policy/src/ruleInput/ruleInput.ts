@@ -42,7 +42,7 @@ const ruleGroupInput = z
 		// Explicitly check and prioritize groupId over ruleGroupId
 		const groupId = ruleGroupInput.groupId;
 		const ruleGroupId = ruleGroupInput.ruleGroupId;
-		
+
 		const { ruleGroupId: _, groupId: __, ...ruleGroup } = ruleGroupInput;
 
 		// Prioritize groupId over ruleGroupId - if both are provided, use groupId

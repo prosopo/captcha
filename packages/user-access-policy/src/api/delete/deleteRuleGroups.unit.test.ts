@@ -224,4 +224,3 @@ describe("DeleteRuleGroupsEndpoint", () => {
 		expect(infoSpy).toHaveBeenCalled();
 	});
 });
-

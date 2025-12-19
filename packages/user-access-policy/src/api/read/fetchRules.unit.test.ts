@@ -16,7 +16,7 @@ import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import { LogLevel, getLogger } from "@prosopo/common";
 import { describe, expect, it, vi } from "vitest";
 import { FetchRulesEndpoint } from "#policy/api/read/fetchRules.js";
-import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
+import { AccessPolicyType } from "#policy/rule.js";
 import type {
 	AccessRuleEntry,
 	AccessRulesStorage,
@@ -134,4 +134,3 @@ describe("FetchRulesEndpoint", () => {
 		expect(debugSpy).toHaveBeenCalled();
 	});
 });
-

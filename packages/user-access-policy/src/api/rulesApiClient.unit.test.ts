@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { AccessRulesApiClient } from "#policy/api/rulesApiClient.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { accessRuleApiPaths } from "#policy/api/ruleApiRoutes.js";
+import { AccessRulesApiClient } from "#policy/api/rulesApiClient.js";
 import { AccessPolicyType } from "#policy/rule.js";
 
 describe("AccessRulesApiClient", () => {
@@ -58,11 +58,7 @@ describe("AccessRulesApiClient", () => {
 			};
 			vi.spyOn(client, "post").mockResolvedValue(mockResponse);
 
-			const result = await client.deleteMany(
-				[],
-				mockTimestamp,
-				mockSignature,
-			);
+			const result = await client.deleteMany([], mockTimestamp, mockSignature);
 
 			expect(result).toEqual(mockResponse);
 		});
@@ -256,11 +252,7 @@ describe("AccessRulesApiClient", () => {
 				data: { invalidField: "invalid" },
 			});
 
-			const result = await client.findIds(
-				[],
-				mockTimestamp,
-				mockSignature,
-			);
+			const result = await client.findIds([], mockTimestamp, mockSignature);
 
 			expect(result.data).toBeUndefined();
 		});
@@ -341,11 +333,7 @@ describe("AccessRulesApiClient", () => {
 			};
 			vi.spyOn(client, "post").mockResolvedValue(mockResponse);
 
-			const result = await client.insertMany(
-				[],
-				mockTimestamp,
-				mockSignature,
-			);
+			const result = await client.insertMany([], mockTimestamp, mockSignature);
 
 			expect(result).toEqual(mockResponse);
 		});

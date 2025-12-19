@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { RedisClientType } from "redis";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	RedisRulesWriter,
 	getRedisRuleValue,
@@ -354,8 +354,8 @@ describe("getRedisRuleValue", () => {
 		const result = getRedisRuleValue(rule);
 
 		// All values should be strings
-		Object.values(result).forEach((value) => {
+		for (const value of Object.values(result)) {
 			expect(typeof value).toBe("string");
-		});
+		}
 	});
 });

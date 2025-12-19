@@ -15,13 +15,13 @@
 import { LogLevel, getLogger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import {
 	fetchRedisHashRecords,
 	getMissingRedisKeys,
 	parseRedisRecords,
 } from "#policy/redis/redisClient.js";
 import { loggerMockedInstance } from "../testLogger.js";
-import { z } from "zod";
 
 describe("getMissingRedisKeys", () => {
 	it("should return empty array when all keys exist", async () => {
@@ -88,14 +88,12 @@ describe("getMissingRedisKeys", () => {
 
 describe("fetchRedisHashRecords", () => {
 	it("should fetch records and expirations successfully", async () => {
-		const mockRecords = [
-			{ field1: "value1" },
-			{ field2: "value2" },
-		];
+		const mockRecords = [{ field1: "value1" }, { field2: "value2" }];
 		const mockExpirations = [1234567890, -1];
 
 		const mockClient = {
-			multi: vi.fn()
+			multi: vi
+				.fn()
 				.mockReturnValueOnce({
 					hGetAll: vi.fn().mockReturnThis(),
 					exec: vi.fn().mockResolvedValue(mockRecords),
@@ -121,7 +119,8 @@ describe("fetchRedisHashRecords", () => {
 		const mockExpirations = [-1];
 
 		const mockClient = {
-			multi: vi.fn()
+			multi: vi
+				.fn()
 				.mockReturnValueOnce({
 					hGetAll: vi.fn().mockReturnThis(),
 					exec: vi.fn().mockResolvedValue(mockRecords),
@@ -146,7 +145,8 @@ describe("fetchRedisHashRecords", () => {
 		const mockExpirations = [1234567890, "invalid"];
 
 		const mockClient = {
-			multi: vi.fn()
+			multi: vi
+				.fn()
 				.mockReturnValueOnce({
 					hGetAll: vi.fn().mockReturnThis(),
 					exec: vi.fn().mockResolvedValue(mockRecords),
@@ -160,7 +160,11 @@ describe("fetchRedisHashRecords", () => {
 		const logger = getLogger(LogLevel.enum.info, "test");
 		const errorSpy = vi.spyOn(logger, "error");
 
-		const result = await fetchRedisHashRecords(mockClient, ["key1", "key2"], logger);
+		const result = await fetchRedisHashRecords(
+			mockClient,
+			["key1", "key2"],
+			logger,
+		);
 
 		expect(result.expirations).toHaveLength(2);
 		expect(result.expirations[0]).toBe(1234567890);
@@ -170,7 +174,8 @@ describe("fetchRedisHashRecords", () => {
 
 	it("should handle empty keys array", async () => {
 		const mockClient = {
-			multi: vi.fn()
+			multi: vi
+				.fn()
 				.mockReturnValueOnce({
 					hGetAll: vi.fn().mockReturnThis(),
 					exec: vi.fn().mockResolvedValue([]),
@@ -251,9 +256,7 @@ describe("parseRedisRecords", () => {
 	});
 
 	it("should handle records with extra fields", () => {
-		const records = [
-			{ id: "1", value: 100, extra: "ignored" },
-		];
+		const records = [{ id: "1", value: 100, extra: "ignored" }];
 
 		const result = parseRedisRecords(records, testSchema, loggerMockedInstance);
 

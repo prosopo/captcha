@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import type { RedisClientType } from "redis";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RedisRulesReader } from "#policy/redis/reader/redisRulesReader.js";
-import { AccessPolicyType } from "#policy/rule.js";
 import { FilterScopeMatch } from "#policy/rulesStorage.js";
 import { loggerMockedInstance } from "../../testLogger.js";
 
@@ -44,11 +43,7 @@ describe("RedisRulesReader", () => {
 			};
 			mockClient.multi = vi.fn().mockReturnValue(multiMock);
 
-			const result = await reader.getMissingRuleIds([
-				"key1",
-				"key2",
-				"key3",
-			]);
+			const result = await reader.getMissingRuleIds(["key1", "key2", "key3"]);
 
 			expect(result).toEqual([]);
 			expect(multiMock.exists).toHaveBeenCalledTimes(3);
@@ -61,11 +56,7 @@ describe("RedisRulesReader", () => {
 			};
 			mockClient.multi = vi.fn().mockReturnValue(multiMock);
 
-			const result = await reader.getMissingRuleIds([
-				"key1",
-				"key2",
-				"key3",
-			]);
+			const result = await reader.getMissingRuleIds(["key1", "key2", "key3"]);
 
 			expect(result).toEqual(["key2"]);
 		});
@@ -85,9 +76,7 @@ describe("RedisRulesReader", () => {
 
 	describe("fetchRules", () => {
 		it("should fetch rule entries for given IDs", async () => {
-			const mockRules = [
-				{ type: "block", clientId: "client1" },
-			];
+			const mockRules = [{ type: "block", clientId: "client1" }];
 			const mockExpirations = [1234567890];
 
 			const rulesPipeMock = {

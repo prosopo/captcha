@@ -74,7 +74,7 @@ const userIpInput = z
 		const hasNumericIpMask =
 			existingNumericIpMaskMin !== undefined &&
 			existingNumericIpMaskMax !== undefined;
-		
+
 		// this line creates a new "userScope", without ip and ipMask
 		const { ip, ipMask, ...numericUserIp } = userIpInput;
 

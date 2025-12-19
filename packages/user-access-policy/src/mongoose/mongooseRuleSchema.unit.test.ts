@@ -14,7 +14,6 @@
 
 import { describe, expect, it } from "vitest";
 import { accessRuleMongooseSchema } from "#policy/mongoose/mongooseRuleSchema.js";
-import type { AccessRuleRecord } from "#policy/ruleRecord.js";
 
 describe("accessRuleMongooseSchema", () => {
 	it("should define all access policy fields", () => {
@@ -75,12 +74,12 @@ describe("accessRuleMongooseSchema", () => {
 			"ruleGroupId",
 		];
 
-		optionalFields.forEach((field) => {
+		for (const field of optionalFields) {
 			const fieldSchema = accessRuleMongooseSchema[
 				field as keyof typeof accessRuleMongooseSchema
 			] as { required?: boolean };
 			expect(fieldSchema.required).toBe(false);
-		});
+		}
 	});
 
 	it("should have correct field types", () => {
@@ -104,4 +103,3 @@ describe("accessRuleMongooseSchema", () => {
 		expect(accessRuleMongooseSchema.ruleGroupId?.type).toBe(String);
 	});
 });
-

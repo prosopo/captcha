@@ -81,15 +81,15 @@ describe("getUserScopeRecordFromAccessRuleRecord", () => {
 
 describe("userScopeRecordFields", () => {
 	it("should include all user attributes record fields", () => {
-		userAttributesRecordFields.forEach((field) => {
+		for (const field of userAttributesRecordFields) {
 			expect(userScopeRecordFields).toContain(field);
-		});
+		}
 	});
 
 	it("should include all user IP record fields", () => {
-		userIpRecordFields.forEach((field) => {
+		for (const field of userIpRecordFields) {
 			expect(userScopeRecordFields).toContain(field);
-		});
+		}
 	});
 
 	it("should have correct field names", () => {
@@ -104,4 +104,3 @@ describe("userScopeRecordFields", () => {
 		expect(userIpRecordFields).toContain("ipMask");
 	});
 });
-

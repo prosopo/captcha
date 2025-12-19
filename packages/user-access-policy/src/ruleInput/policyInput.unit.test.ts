@@ -14,11 +14,11 @@
 
 import { CaptchaType } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
+import { AccessPolicyType } from "#policy/rule.js";
 import {
 	accessPolicyInput,
 	policyScopeInput,
 } from "#policy/ruleInput/policyInput.js";
-import { AccessPolicyType } from "#policy/rule.js";
 
 describe("accessPolicyInput", () => {
 	it("should parse valid access policy", () => {
@@ -113,4 +113,3 @@ describe("policyScopeInput", () => {
 		expect(result.clientId).toBe("123");
 	});
 });
-

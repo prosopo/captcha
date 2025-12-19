@@ -35,7 +35,12 @@ describe("GetMissingIdsEndpoint", () => {
 		};
 
 		const endpoint = new GetMissingIdsEndpoint(mockStorage, mockLogger);
-		const response = await endpoint.processRequest(["id1", "id2", "id3", "id4"]);
+		const response = await endpoint.processRequest([
+			"id1",
+			"id2",
+			"id3",
+			"id4",
+		]);
 
 		expect(response.status).toBe(ApiEndpointResponseStatus.SUCCESS);
 		expect(response.data?.ids).toEqual(["id2", "id4"]);
@@ -109,4 +114,3 @@ describe("GetMissingIdsEndpoint", () => {
 		expect(debugSpy).toHaveBeenCalled();
 	});
 });
-
