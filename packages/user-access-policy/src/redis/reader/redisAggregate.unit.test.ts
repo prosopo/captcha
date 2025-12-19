@@ -16,7 +16,7 @@ import { LogLevel, getLogger } from "@prosopo/common";
 import type { RedisClientType } from "redis";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { aggregateRedisKeys } from "#policy/redis/reader/redisAggregate.js";
-import { loggerMockedInstance } from "../../../testLogger.js";
+import { loggerMockedInstance } from "../../testLogger.js";
 
 describe("aggregateRedisKeys", () => {
 	const mockLogger = loggerMockedInstance;
