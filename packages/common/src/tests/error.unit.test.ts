@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import type { TFunction } from "i18next";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 import {
-	ProsopoError,
-	ProsopoEnvError,
-	ProsopoContractError,
-	ProsopoTxQueueError,
-	ProsopoDBError,
-	ProsopoCliError,
-	ProsopoDatasetError,
 	ProsopoApiError,
-	unwrapError,
+	ProsopoCliError,
+	ProsopoContractError,
+	ProsopoDBError,
+	ProsopoDatasetError,
+	ProsopoEnvError,
+	ProsopoError,
+	ProsopoTxQueueError,
 	isZodError,
+	unwrapError,
 } from "./src/error.js";
 import { getLogger } from "./src/logger.js";
 
@@ -66,25 +66,25 @@ describe("ProsopoError classes", () => {
 			expect(error.context?.action).toBe("test");
 		});
 
-	it("should create error with translation key when passing Error instance", () => {
-		const baseError = new Error("Original error");
-		const error = new ProsopoError(baseError, {
-			translationKey: "TEST.TRANSLATION",
+		it("should create error with translation key when passing Error instance", () => {
+			const baseError = new Error("Original error");
+			const error = new ProsopoError(baseError, {
+				translationKey: "TEST.TRANSLATION",
+			});
+
+			expect(error.translationKey).toBe("TEST.TRANSLATION");
 		});
 
-		expect(error.translationKey).toBe("TEST.TRANSLATION");
-	});
+		it("should log custom name when provided", () => {
+			new ProsopoError("TEST.ERROR", {
+				name: "CustomError",
+			});
 
-	it("should log custom name when provided", () => {
-		new ProsopoError("TEST.ERROR", {
-			name: "CustomError",
+			expect(consoleErrorSpy).toHaveBeenCalled();
+			const logOutput = consoleErrorSpy.mock.calls[0][0];
+			const parsed = JSON.parse(logOutput);
+			expect(parsed.data.errorType).toBe("CustomError");
 		});
-
-		expect(consoleErrorSpy).toHaveBeenCalled();
-		const logOutput = consoleErrorSpy.mock.calls[0][0];
-		const parsed = JSON.parse(logOutput);
-		expect(parsed.data.errorType).toBe("CustomError");
-	});
 
 		it("should use provided logger", () => {
 			const mockLogger = getLogger("info", "test");
@@ -209,19 +209,19 @@ describe("ProsopoError classes", () => {
 			expect(error.context?.code).toBe(404);
 		});
 
-	it("should preserve translation key from nested ProsopoBaseError", () => {
-		const baseError = new Error("Inner error");
-		const innerError = new ProsopoError(baseError, {
-			translationKey: "INNER.TRANSLATION",
-			silent: true,
-		});
-		const apiError = new ProsopoApiError(innerError, {
-			context: { code: 400 },
-			silent: true,
-		});
+		it("should preserve translation key from nested ProsopoBaseError", () => {
+			const baseError = new Error("Inner error");
+			const innerError = new ProsopoError(baseError, {
+				translationKey: "INNER.TRANSLATION",
+				silent: true,
+			});
+			const apiError = new ProsopoApiError(innerError, {
+				context: { code: 400 },
+				silent: true,
+			});
 
-		expect(apiError.context?.translationKey).toBe("INNER.TRANSLATION");
-	});
+			expect(apiError.context?.translationKey).toBe("INNER.TRANSLATION");
+		});
 	});
 });
 

@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	stringifyBigInts,
-	NativeLogger,
-	parseLogLevel,
-	getLogger,
-	InfoLevel,
 	DebugLevel,
-	TraceLevel,
-	WarnLevel,
 	ErrorLevel,
 	FatalLevel,
 	FormatJson,
+	InfoLevel,
+	NativeLogger,
+	TraceLevel,
+	WarnLevel,
+	getLogger,
+	parseLogLevel,
+	stringifyBigInts,
 } from "../logger.js";
 
 describe("stringifyBigInts", () => {
