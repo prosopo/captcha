@@ -58,6 +58,7 @@ export type ApiJsonError = {
 	message: string;
 	key?: string;
 	code: number;
+	data?: Record<string, unknown>;
 };
 
 export const ApiPrefix = "/v1/prosopo" as const;
