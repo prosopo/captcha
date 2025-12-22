@@ -18,7 +18,6 @@ enum CaptchaType {
 	image = "image",
 	pow = "pow",
 	frictionless = "frictionless",
-	invisible = "invisible",
 }
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);

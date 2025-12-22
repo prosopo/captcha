@@ -214,6 +214,8 @@ export const unwrapError = (
 		jsonError.key =
 			contextTranslationKey || err.translationKey || "API.UNKNOWN";
 		jsonError.message = i18n.t(err.message);
+		jsonError.data = err.context.data as Record<string, unknown> | undefined;
+
 		const contextCode =
 			typeof err.context.code === "number" ? err.context.code : undefined;
 		code = contextCode ?? jsonError.code;
