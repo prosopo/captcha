@@ -14,6 +14,14 @@
 import { sha256 } from "@noble/hashes/sha256";
 
 export const solvePoW = (data: string, difficulty: number): number => {
+	// fixme
+	console.log("SOLVING POW55", {
+		data,
+		difficulty,
+	});
+	// fixme
+	return 1;
+
 	let nonce = 0;
 	const prefix = "0".repeat(difficulty);
 
