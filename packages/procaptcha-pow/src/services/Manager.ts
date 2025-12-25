@@ -232,7 +232,10 @@ export const Manager = (
 						},
 					});
 				} else {
-					const solution = solvePoW(challenge.challenge, challenge.difficulty);
+					const solution = await solvePoW(
+						challenge.challenge,
+						challenge.difficulty,
+					);
 
 					// Create salt with encoded coordinates if coordinates are provided
 					let salt: string | undefined;
