@@ -197,7 +197,7 @@ describe("PoW Integration Tests", () => {
 			const challenge = challengeBody.challenge;
 			const difficulty = challengeBody.difficulty;
 			const signature = challengeBody.signature;
-			const nonce = solvePoW(challenge, difficulty);
+			const nonce = await solvePoW(challenge, difficulty);
 
 			const verifiedTimeout = 120000;
 			const submitBody: SubmitPowCaptchaSolutionBodyType = {
