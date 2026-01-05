@@ -53,7 +53,10 @@ vi.mock("@prosopo/locale", async () => {
 	const actual = await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
 	return {
 		...actual,
-		useTranslation: vi.fn(),
+		useTranslation: () => ({
+			t: (key: string) => key,
+			ready: true,
+		}),
 		loadI18next: vi.fn().mockResolvedValue({
 			language: "en",
 			changeLanguage: vi.fn().mockResolvedValue(undefined),
