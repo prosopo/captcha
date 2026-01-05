@@ -25,9 +25,22 @@ describe("provider bundle", () => {
 		// build bundle
 		await execPromise(`cd ${rootDir} && NODE_ENV=production npm run bundle`);
 
+		// Set minimum required environment variables for config validation
+		const mnemonic = "test test test test test test test test test test test junk";
+		const envVars = [
+			"CADDY_DOMAIN=localhost",
+			"PROSOPO_IPAPI_KEY=test",
+			"PROSOPO_IPAPI_URL=https://test.com",
+			`PROSOPO_PROVIDER_MNEMONIC="${mnemonic}"`,
+			"PROSOPO_DATABASE_HOST=localhost",
+			"PROSOPO_PROVIDER_ADDRESS=5GrwvaEF5zXb26Fz9rcQpDWS57CERrH4kYWwymqL8",
+			"PROSOPO_ADMIN_ADDRESS=5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			`PROSOPO_ADMIN_MNEMONIC="${mnemonic}"`,
+		].join(" ");
+
 		// run bundle and get version
 		const { stdout: runOut, stderr: runErr } = await execPromise(
-			`cd ${rootDir} && node dist/bundle/provider.cli.bundle.js version`,
+			`cd ${rootDir} && ${envVars} node dist/bundle/provider.cli.bundle.js version`,
 		);
 		assert(/{"version":"\d+\.\d+\.\d+"}/.test(runOut));
 	}, 120000);
