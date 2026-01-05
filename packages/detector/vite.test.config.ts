@@ -29,4 +29,14 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig();
+export default function () {
+	const config = ViteTestConfig();
+	config.test = config.test || {};
+	config.test.environment = "jsdom";
+	config.test.globals = true;
+	config.test.setupFiles = config.test.setupFiles || [];
+	if (!config.test.setupFiles.includes("./src/tests/setup.ts")) {
+		config.test.setupFiles.push("./src/tests/setup.ts");
+	}
+	return config;
+}

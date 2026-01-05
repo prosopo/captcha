@@ -19,6 +19,6 @@ export default function () {
 	return ViteEsmConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
-		"src/index.js",
+		"src/index.ts",
 	);
 }
