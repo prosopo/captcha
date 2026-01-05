@@ -1593,13 +1593,11 @@ export class ProviderDatabase
 	 */
 	async flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void> {
 		try {
-			await this.tables?.usersolution
-				?.updateMany(
-					{ captchaId: { $in: captchaIds } },
-					{ $set: { processed: true } },
-					{ upsert: false },
-				)
-				.lean();
+			await this.tables?.usersolution?.updateMany(
+				{ captchaId: { $in: captchaIds } },
+				{ $set: { processed: true } },
+				{ upsert: false },
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SOLUTION_FLAG_FAILED", {
 				context: { error: err, captchaIds },
@@ -1614,13 +1612,11 @@ export class ProviderDatabase
 	async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
 		try {
 			const distinctCommitmentIds = [...new Set(commitmentIds)];
-			await this.tables?.commitment
-				?.updateMany(
-					{ id: { $in: distinctCommitmentIds } },
-					{ $set: { processed: true } },
-					{ upsert: false },
-				)
-				.lean();
+			await this.tables?.commitment?.updateMany(
+				{ id: { $in: distinctCommitmentIds } },
+				{ $set: { processed: true } },
+				{ upsert: false },
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.COMMITMENT_FLAG_FAILED", {
 				context: { error: err, commitmentIds },

@@ -1570,9 +1570,9 @@ describe("ProviderDatabase", () => {
 		it("should flag solutions as processed", async () => {
 			const captchaIds: Hash[] = ["captcha1", "captcha2"];
 
-			mockModels.usersolution.updateMany = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue({ matchedCount: 2 }),
-			});
+			mockModels.usersolution.updateMany = vi
+				.fn()
+				.mockResolvedValue({ matchedCount: 2 });
 
 			await db.flagProcessedDappUserSolutions(captchaIds);
 
@@ -1588,7 +1588,7 @@ describe("ProviderDatabase", () => {
 			const error = new Error("Flagging failed");
 			mockModels.usersolution.updateMany = vi
 				.fn()
-				.mockReturnValue({ lean: vi.fn().mockRejectedValue(error) });
+				.mockRejectedValue(error);
 
 			await expect(
 				db.flagProcessedDappUserSolutions(captchaIds),
@@ -1600,9 +1600,9 @@ describe("ProviderDatabase", () => {
 		it("should flag commitments as processed", async () => {
 			const commitmentIds: Hash[] = ["commit1", "commit2"];
 
-			mockModels.commitment.updateMany = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue({ matchedCount: 2 }),
-			});
+			mockModels.commitment.updateMany = vi
+				.fn()
+				.mockResolvedValue({ matchedCount: 2 });
 
 			await db.flagProcessedDappUserCommitments(commitmentIds);
 
@@ -1614,7 +1614,7 @@ describe("ProviderDatabase", () => {
 			const error = new Error("Flagging failed");
 			mockModels.commitment.updateMany = vi
 				.fn()
-				.mockReturnValue({ lean: vi.fn().mockRejectedValue(error) });
+				.mockRejectedValue(error);
 
 			await expect(
 				db.flagProcessedDappUserCommitments(commitmentIds),
