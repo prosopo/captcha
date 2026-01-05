@@ -41,7 +41,7 @@ describe("UTIL FUNCTIONS", () => {
 		expect(result).toEqual(mockData);
 	});
 
-	test("downloadImage throws ProsopoDatasetError when response is not ok", async () => {
+	test("downloadImage throws ProsopoEnvError when response is not ok", async () => {
 		const mockResponse = {
 			ok: false,
 			status: 404,
@@ -51,7 +51,7 @@ describe("UTIL FUNCTIONS", () => {
 
 		await expect(
 			downloadImage("https://example.com/image.jpg"),
-		).rejects.toThrow(ProsopoDatasetError);
+		).rejects.toThrow(ProsopoEnvError);
 	});
 
 	test("downloadImage throws ProsopoEnvError when fetch fails", async () => {

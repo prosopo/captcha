@@ -273,6 +273,8 @@ describe("DATASET FUNCTIONS", async () => {
 	});
 
 	test("addSolutionHashesToDataset handles already hashed solutions", () => {
+		const item1Hash = "0xf50c63a914dac984e8e0ad16673f0c7224422d439ec19342d89ea985bc439040";
+		const item2Hash = "0xb22ba232374e4970ff72533bd84a0f4a86a31323518448a7820d08639bdec2f5";
 		const datasetRaw: DatasetRaw = {
 			format: CaptchaTypes.SelectAll,
 			captchas: [
@@ -281,15 +283,15 @@ describe("DATASET FUNCTIONS", async () => {
 						{
 							type: CaptchaItemTypes.Text,
 							data: "item1",
-							hash: "0xhash1",
+							hash: item1Hash,
 						},
 						{
 							type: CaptchaItemTypes.Text,
 							data: "item2",
-							hash: "0xhash2",
+							hash: item2Hash,
 						},
 					],
-					solution: ["0xhash1", "0xhash2"] as string[],
+					solution: [item1Hash, item2Hash] as string[],
 					target: "test",
 					salt: "0x01",
 				},
@@ -298,7 +300,7 @@ describe("DATASET FUNCTIONS", async () => {
 
 		const result = addSolutionHashesToDataset(datasetRaw);
 
-		expect(result.captchas[0]?.solution).to.deep.equal(["0xhash1", "0xhash2"]);
+		expect(result.captchas[0]?.solution).to.deep.equal([item1Hash, item2Hash]);
 	});
 
 	test("buildCaptchaTree builds tree with correct configuration", async () => {
