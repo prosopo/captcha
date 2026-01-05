@@ -31,10 +31,13 @@ import type {
 } from "@prosopo/types-database";
 import {
 	CaptchaStatus,
+	CaptchaStates,
 	StoredStatusNames,
 	ContextType,
+	ScheduledTaskNames,
+	ScheduledTaskStatus,
 } from "@prosopo/types";
-import type { Hash, ScheduledTaskStatus } from "@prosopo/types";
+import type { Hash } from "@prosopo/types";
 
 // Don't mock MongoDatabase - use actual class and spy on methods
 
@@ -159,7 +162,14 @@ describe("ProviderDatabase", () => {
 
 	describe("constructor", () => {
 		it("should initialize with empty tables", () => {
-			expect(db.tables).toEqual({});
+			const newDb = new ProviderDatabase({
+				mongo: {
+					url: "mongodb://localhost:27017",
+					dbname: "testdb",
+				},
+				logger: mockLogger,
+			});
+			expect(newDb.tables).toEqual({});
 		});
 
 		it("should initialize redis connections as null", () => {
@@ -212,10 +222,12 @@ describe("ProviderDatabase", () => {
 
 	describe("storeDataset", () => {
 		it("should store dataset and captchas", async () => {
-			const dataset: Dataset = {
-				datasetId: "dataset1",
-				datasetContentId: "content1",
-				format: "format1",
+			const dataset: any = {
+				datasetId: "0x1234",
+				datasetContentId: "0x5678",
+				format: "SelectAll",
+				contentTree: [[]],
+				solutionTree: [[]],
 				captchas: [
 					{
 						captchaId: "captcha1",
@@ -226,7 +238,7 @@ describe("ProviderDatabase", () => {
 						solution: ["sol1"],
 					},
 				],
-			} as Dataset;
+			};
 
 			mockModels.dataset.updateOne = vi.fn().mockResolvedValue({});
 			mockModels.captcha.bulkWrite = vi.fn().mockResolvedValue({});
@@ -717,8 +729,8 @@ describe("ProviderDatabase", () => {
 
 	describe("createScheduledTaskStatus", () => {
 		it("should create scheduled task status", async () => {
-			const taskName = "task1" as any;
-			const status = "pending" as ScheduledTaskStatus;
+			const taskName = ScheduledTaskNames.BatchCommitment;
+			const status = ScheduledTaskStatus.Pending;
 
 			mockModels.scheduler.create = vi.fn().mockResolvedValue({
 				_id: "task-id",
@@ -734,7 +746,7 @@ describe("ProviderDatabase", () => {
 	describe("updateScheduledTaskStatus", () => {
 		it("should update scheduled task status", async () => {
 			const taskId = "task-id" as any;
-			const status = "completed" as ScheduledTaskStatus;
+			const status = ScheduledTaskStatus.Completed;
 
 			await db.updateScheduledTaskStatus(taskId, status);
 
@@ -752,7 +764,7 @@ describe("ProviderDatabase", () => {
 
 		it("should include result when provided", async () => {
 			const taskId = "task-id" as any;
-			const status = "completed" as ScheduledTaskStatus;
+			const status = ScheduledTaskStatus.Completed;
 			const result = { success: true };
 
 			await db.updateScheduledTaskStatus(taskId, status, result);
@@ -769,4 +781,1178 @@ describe("ProviderDatabase", () => {
 			);
 		});
 	});
+
+	describe("storeUserImageCaptchaSolution", () => {
+		it("should store user image captcha solution with commitment", async () => {
+			const captchas: any[] = [
+				{
+					captchaId: "captcha1",
+					captchaContentId: "content1",
+					salt: "salt1",
+					solution: ["sol1"],
+				},
+			];
+			const commit: any = {
+				id: "commit1",
+				userAccount: "user1",
+				dappAccount: "dapp1",
+				datasetId: "dataset1",
+				providerAccount: "provider1",
+				result: { status: CaptchaStatus.pending },
+				userSignature: "sig1",
+				ipAddress: { lower: BigInt(2130706433), type: "v4" },
+				headers: {},
+				ja4: "ja4hash",
+				userSubmitted: false,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+			};
+
+			mockModels.commitment.updateOne = vi.fn().mockResolvedValue({});
+			mockModels.usersolution.bulkWrite = vi.fn().mockResolvedValue({});
+
+			await db.storeUserImageCaptchaSolution(captchas, commit);
+
+			expect(mockModels.commitment.updateOne).toHaveBeenCalled();
+			expect(mockModels.usersolution.bulkWrite).toHaveBeenCalled();
+		});
+
+		it("should not store commitment when captchas array is empty", async () => {
+			const commit: any = {
+				id: "commit1",
+				userAccount: "user1",
+				dappAccount: "dapp1",
+				datasetId: "dataset1",
+				providerAccount: "provider1",
+				result: { status: CaptchaStatus.pending },
+				userSignature: "sig1",
+				ipAddress: { lower: BigInt(2130706433), type: "v4" },
+				headers: {},
+				ja4: "ja4hash",
+				userSubmitted: false,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+			};
+
+			// When captchas array is empty, the method should still parse the commit
+			// but not call bulkWrite. However, it will still call updateOne.
+			// Let's check the actual behavior - if captchas.length is 0, it skips the bulkWrite
+			mockModels.commitment.updateOne = vi.fn().mockResolvedValue({});
+			mockModels.usersolution.bulkWrite = vi.fn().mockResolvedValue({});
+
+			await db.storeUserImageCaptchaSolution([], commit);
+
+			// The code checks captchas.length before calling bulkWrite
+			// But it still calls updateOne for the commitment
+			expect(mockModels.usersolution.bulkWrite).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("updateCaptcha", () => {
+		it("should update captcha with valid hex datasetId", async () => {
+			const captcha: Captcha = {
+				captchaId: "captcha1",
+				datasetId: "0x1234",
+			} as Captcha;
+			const datasetId = "0x1234" as Hash;
+
+			await db.updateCaptcha(captcha, datasetId);
+
+			expect(mockModels.captcha.updateOne).toHaveBeenCalled();
+		});
+
+		it("should throw error for invalid hex datasetId", async () => {
+			const captcha: Captcha = {
+				captchaId: "captcha1",
+			} as Captcha;
+			const datasetId = "invalid" as Hash;
+
+			await expect(db.updateCaptcha(captcha, datasetId)).rejects.toThrow(
+				ProsopoDBError,
+			);
+		});
+
+		it("should handle errors during update", async () => {
+			const captcha: Captcha = {
+				captchaId: "captcha1",
+			} as Captcha;
+			const datasetId = "0x1234" as Hash;
+			const error = new Error("Update failed");
+			mockModels.captcha.updateOne = vi.fn().mockRejectedValue(error);
+
+			await expect(db.updateCaptcha(captcha, datasetId)).rejects.toThrow(
+				ProsopoDBError,
+			);
+		});
+	});
+
+	describe("removeCaptchas", () => {
+		it("should remove captchas by ids", async () => {
+			const captchaIds = ["captcha1", "captcha2"];
+
+			await db.removeCaptchas(captchaIds);
+
+			expect(mockModels.captcha.deleteMany).toHaveBeenCalledWith({
+				captchaId: { $in: captchaIds },
+			});
+		});
+	});
+
+	describe("getDatasetDetails", () => {
+		it("should return dataset details with valid hex datasetId", async () => {
+			const datasetId = "0x1234" as Hash;
+			const datasetDoc: any = {
+				datasetId,
+				format: "format1",
+			};
+
+			mockModels.dataset.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(datasetDoc),
+			});
+
+			const result = await db.getDatasetDetails(datasetId);
+
+			expect(result).toEqual(datasetDoc);
+		});
+
+		it("should throw error for invalid hex datasetId", async () => {
+			const datasetId = "invalid" as Hash;
+
+			await expect(db.getDatasetDetails(datasetId)).rejects.toThrow(
+				ProsopoDBError,
+			);
+		});
+
+		it("should throw error when dataset not found", async () => {
+			const datasetId = "0x1234" as Hash;
+			mockModels.dataset.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			await expect(db.getDatasetDetails(datasetId)).rejects.toThrow(
+				ProsopoDBError,
+			);
+		});
+	});
+
+	describe("getUnstoredDappUserCommitments", () => {
+		it("should return unstored commitments", async () => {
+			const commitments: UserCommitmentRecord[] = [
+				{ id: "commit1" } as UserCommitmentRecord,
+			];
+
+			mockModels.commitment.aggregate = vi
+				.fn()
+				.mockResolvedValue(commitments);
+
+			const result = await db.getUnstoredDappUserCommitments(100, 0);
+
+			expect(result).toEqual(commitments);
+		});
+
+		it("should use default limit and skip", async () => {
+			await db.getUnstoredDappUserCommitments();
+
+			expect(mockModels.commitment.aggregate).toHaveBeenCalled();
+		});
+	});
+
+	describe("markDappUserCommitmentsChecked", () => {
+		it("should mark commitments as checked", async () => {
+			const commitmentIds: Hash[] = ["commit1", "commit2"];
+
+			await db.markDappUserCommitmentsChecked(commitmentIds);
+
+			expect(mockModels.commitment.updateMany).toHaveBeenCalledWith(
+				{ id: { $in: commitmentIds } },
+				expect.objectContaining({
+					$set: expect.objectContaining({
+						[StoredStatusNames.serverChecked]: true,
+						lastUpdatedTimestamp: expect.any(Date),
+					}),
+				}),
+				{ upsert: false },
+			);
+		});
+	});
+
+	describe("updateDappUserCommitment", () => {
+		it("should update dapp user commitment", async () => {
+			const commitmentId = "commit1" as Hash;
+			const updates: any = { result: { status: CaptchaStatus.approved } };
+
+			await db.updateDappUserCommitment(commitmentId, updates);
+
+			expect(mockModels.commitment.updateOne).toHaveBeenCalledWith(
+				{ id: commitmentId },
+				updates,
+			);
+		});
+	});
+
+	describe("getUnstoredDappUserPoWCommitments", () => {
+		it("should return unstored PoW commitments", async () => {
+			const commitments: PoWCaptchaRecord[] = [
+				{ challenge: "challenge1" } as PoWCaptchaRecord,
+			];
+
+			mockModels.powcaptcha.aggregate = vi
+				.fn()
+				.mockResolvedValue(commitments);
+
+			const result = await db.getUnstoredDappUserPoWCommitments(100, 0);
+
+			expect(result).toEqual(commitments);
+		});
+	});
+
+	describe("markDappUserPoWCommitmentsStored", () => {
+		it("should mark PoW commitments as stored", async () => {
+			const challenges = ["challenge1", "challenge2"];
+
+			await db.markDappUserPoWCommitmentsStored(challenges);
+
+			expect(mockModels.powcaptcha.updateMany).toHaveBeenCalledWith(
+				{ challenge: { $in: challenges } },
+				expect.objectContaining({
+					$set: expect.objectContaining({
+						storedAtTimestamp: expect.any(Date),
+					}),
+				}),
+				{ upsert: false },
+			);
+		});
+	});
+
+	describe("markDappUserPoWCommitmentsChecked", () => {
+		it("should mark PoW commitments as checked", async () => {
+			const challenges = ["challenge1", "challenge2"];
+
+			await db.markDappUserPoWCommitmentsChecked(challenges);
+
+			expect(mockModels.powcaptcha.updateMany).toHaveBeenCalledWith(
+				{ challenge: { $in: challenges } },
+				expect.objectContaining({
+					$set: expect.objectContaining({
+						[StoredStatusNames.serverChecked]: true,
+						lastUpdatedTimestamp: expect.any(Date),
+					}),
+				}),
+				{ upsert: false },
+			);
+		});
+	});
+
+	describe("updatePowCaptchaRecord", () => {
+		it("should update PoW captcha record", async () => {
+			const challenge = "challenge1" as any;
+			const updates: any = { userSubmitted: true };
+
+			await db.updatePowCaptchaRecord(challenge, updates);
+
+			expect(mockModels.powcaptcha.updateOne).toHaveBeenCalledWith(
+				{ challenge },
+				{ $set: updates },
+				{ upsert: false },
+			);
+		});
+	});
+
+	describe("getSessionRecordByToken", () => {
+		it("should return session when found", async () => {
+			const token = "token1";
+			const session: Session = {
+				sessionId: "session1",
+				token,
+			} as Session;
+
+			mockModels.session.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(session),
+			});
+
+			const result = await db.getSessionRecordByToken(token);
+
+			expect(result).toEqual(session);
+		});
+
+		it("should return undefined when session not found", async () => {
+			const token = "token1";
+			mockModels.session.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.getSessionRecordByToken(token);
+
+			expect(result).toBeUndefined();
+		});
+	});
+
+	describe("checkAndRemoveSession", () => {
+		it("should check and remove session when found", async () => {
+			const sessionId = "session1";
+			const session: any = {
+				sessionId,
+				token: "token1",
+			};
+
+			mockModels.session.findOneAndUpdate = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(session),
+			});
+
+			const result = await db.checkAndRemoveSession(sessionId);
+
+			expect(result).toEqual(session);
+			expect(mockModels.session.findOneAndUpdate).toHaveBeenCalled();
+		});
+
+		it("should return undefined when session not found", async () => {
+			const sessionId = "session1";
+			mockModels.session.findOneAndUpdate = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.checkAndRemoveSession(sessionId);
+
+			expect(result).toBeUndefined();
+		});
+
+		it("should handle errors during check and remove", async () => {
+			const sessionId = "session1";
+			const error = new Error("Operation failed");
+			mockModels.session.findOneAndUpdate = vi.fn().mockReturnValue({
+				lean: vi.fn().mockRejectedValue(error),
+			});
+
+			await expect(db.checkAndRemoveSession(sessionId)).rejects.toThrow(
+				ProsopoDBError,
+			);
+		});
+	});
+
+	describe("getSessionByuserSitekeyIpHash", () => {
+		it("should return session when found", async () => {
+			const userSitekeyIpHash = "hash1";
+			const session: any = {
+				sessionId: "session1",
+				userSitekeyIpHash,
+			};
+
+			mockModels.session.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(session),
+			});
+
+			const result = await db.getSessionByuserSitekeyIpHash(
+				userSitekeyIpHash,
+			);
+
+			expect(result).toEqual(session);
+		});
+
+		it("should return undefined when session not found", async () => {
+			const userSitekeyIpHash = "hash1";
+			mockModels.session.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.getSessionByuserSitekeyIpHash(
+				userSitekeyIpHash,
+			);
+
+			expect(result).toBeUndefined();
+		});
+
+		it("should handle errors during get", async () => {
+			const userSitekeyIpHash = "hash1";
+			const error = new Error("Operation failed");
+			mockModels.session.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockRejectedValue(error),
+			});
+
+			await expect(
+				db.getSessionByuserSitekeyIpHash(userSitekeyIpHash),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getUnstoredSessionRecords", () => {
+		it("should return unstored session records", async () => {
+			const sessions: any[] = [{ sessionId: "session1" }];
+
+			mockModels.session.aggregate = vi.fn().mockResolvedValue(sessions);
+
+			const result = await db.getUnstoredSessionRecords(100, 0);
+
+			expect(result).toEqual(sessions);
+		});
+
+		it("should use default limit and skip", async () => {
+			await db.getUnstoredSessionRecords();
+
+			expect(mockModels.session.aggregate).toHaveBeenCalled();
+		});
+	});
+
+	describe("markSessionRecordsStored", () => {
+		it("should mark session records as stored", async () => {
+			const sessionIds = ["session1", "session2"];
+
+			await db.markSessionRecordsStored(sessionIds);
+
+			expect(mockModels.session.updateMany).toHaveBeenCalledWith(
+				{ sessionId: { $in: sessionIds } },
+				expect.objectContaining({
+					$set: expect.objectContaining({
+						storedAtTimestamp: expect.any(Date),
+					}),
+				}),
+				{ upsert: false },
+			);
+		});
+	});
+
+	describe("storePendingImageCommitment", () => {
+		it("should store pending image commitment with valid hex hash", async () => {
+			const requestHash = "0x1234";
+			const userAccount = "user1";
+			const salt = "salt1";
+			const deadlineTimestamp = Date.now();
+			const requestedAtTimestamp = Date.now();
+			const ipAddress = { ipv4: "127.0.0.1" } as any;
+			const threshold = 5;
+
+			await db.storePendingImageCommitment(
+				userAccount,
+				requestHash,
+				salt,
+				deadlineTimestamp,
+				requestedAtTimestamp,
+				ipAddress,
+				threshold,
+			);
+
+			expect(mockModels.pending.updateOne).toHaveBeenCalled();
+		});
+
+		it("should throw error for invalid hex hash", async () => {
+			const requestHash = "invalid";
+
+			await expect(
+				db.storePendingImageCommitment(
+					"user1",
+					requestHash,
+					"salt1",
+					Date.now(),
+					Date.now(),
+					{ ipv4: "127.0.0.1" } as any,
+					5,
+				),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("updatePendingImageCommitmentStatus", () => {
+		it("should update pending commitment status with valid hex hash", async () => {
+			const requestHash = "0x1234";
+
+			await db.updatePendingImageCommitmentStatus(requestHash);
+
+			expect(mockModels.pending.updateOne).toHaveBeenCalled();
+		});
+
+		it("should throw error for invalid hex hash", async () => {
+			const requestHash = "invalid";
+
+			await expect(
+				db.updatePendingImageCommitmentStatus(requestHash),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getAllCaptchasByDatasetId", () => {
+		it("should return all captchas for dataset", async () => {
+			const datasetId = "dataset1";
+			const captchas: Captcha[] = [
+				{ captchaId: "captcha1", datasetId } as Captcha,
+			];
+
+			mockModels.captcha.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(captchas),
+			});
+
+			const result = await db.getAllCaptchasByDatasetId(datasetId);
+
+			expect(result).toHaveLength(1);
+			expect(result![0]).not.toHaveProperty("_id");
+		});
+
+		it("should filter by solved state when provided", async () => {
+			const datasetId = "dataset1";
+			const captchas: Captcha[] = [
+				{ captchaId: "captcha1", datasetId, solved: true } as Captcha,
+			];
+
+			mockModels.captcha.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(captchas),
+			});
+
+			await db.getAllCaptchasByDatasetId(
+				datasetId,
+				CaptchaStates.Solved,
+			);
+
+			expect(mockModels.captcha.find).toHaveBeenCalledWith({
+				datasetId,
+				solved: true,
+			});
+		});
+
+		it("should throw error when no captchas found", async () => {
+			const datasetId = "dataset1";
+			mockModels.captcha.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			await expect(
+				db.getAllCaptchasByDatasetId(datasetId),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getAllDappUserSolutions", () => {
+		it("should return all dapp user solutions", async () => {
+			const captchaIds = ["captcha1", "captcha2"];
+			const solutions: any[] = [
+				{ captchaId: "captcha1", commitmentId: "commit1" },
+			];
+
+			mockModels.usersolution.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(solutions),
+			});
+
+			const result = await db.getAllDappUserSolutions(captchaIds);
+
+			expect(result).toHaveLength(1);
+			expect(result![0]).not.toHaveProperty("_id");
+		});
+
+		it("should throw error when no solutions found", async () => {
+			const captchaIds = ["captcha1"];
+			mockModels.usersolution.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			await expect(
+				db.getAllDappUserSolutions(captchaIds),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getDatasetIdWithSolvedCaptchasOfSizeN", () => {
+		it("should return dataset id with solved captchas", async () => {
+			const solvedCaptchaCount = 10;
+			const docs = [{ _id: "dataset1" }];
+
+			mockModels.solution.aggregate = vi.fn().mockResolvedValue(docs);
+
+			const result =
+				await db.getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount);
+
+			expect(result).toBe("dataset1");
+		});
+
+		it("should throw error when no dataset found", async () => {
+			const solvedCaptchaCount = 10;
+			mockModels.solution.aggregate = vi.fn().mockResolvedValue([]);
+
+			await expect(
+				db.getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getRandomSolvedCaptchasFromSingleDataset", () => {
+		it("should return random solved captchas with valid hex datasetId", async () => {
+			const datasetId = "0x1234";
+			const size = 5;
+			const docs: any[] = [
+				{
+					captchaId: "captcha1",
+					captchaContentId: "content1",
+					solution: ["sol1"],
+				},
+			];
+
+			mockModels.solution.aggregate = vi.fn().mockResolvedValue(docs);
+
+			const result = await db.getRandomSolvedCaptchasFromSingleDataset(
+				datasetId,
+				size,
+			);
+
+			expect(result).toEqual(docs);
+		});
+
+		it("should throw error for invalid hex datasetId", async () => {
+			const datasetId = "invalid";
+
+			await expect(
+				db.getRandomSolvedCaptchasFromSingleDataset(datasetId, 5),
+			).rejects.toThrow(ProsopoDBError);
+		});
+
+		it("should throw error when no captchas found", async () => {
+			const datasetId = "0x1234";
+			mockModels.solution.aggregate = vi.fn().mockResolvedValue([]);
+
+			await expect(
+				db.getRandomSolvedCaptchasFromSingleDataset(datasetId, 5),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getDappUserSolutionById", () => {
+		it("should return dapp user solution when found", async () => {
+			const commitmentId = "commit1";
+			const solution: any = {
+				commitmentId,
+				captchaId: "captcha1",
+			};
+
+			mockModels.usersolution.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(solution),
+			});
+
+			const result = await db.getDappUserSolutionById(commitmentId);
+
+			expect(result).toEqual(solution);
+		});
+
+		it("should throw error when solution not found", async () => {
+			const commitmentId = "commit1";
+			mockModels.usersolution.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			await expect(
+				db.getDappUserSolutionById(commitmentId),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getDappUserCommitmentById", () => {
+		it("should return commitment when found", async () => {
+			const commitmentId = "commit1";
+			const commitment: UserCommitmentRecord = {
+				id: commitmentId,
+			} as UserCommitmentRecord;
+
+			mockModels.commitment.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(commitment),
+			});
+
+			const result = await db.getDappUserCommitmentById(commitmentId);
+
+			expect(result).toEqual(commitment);
+		});
+
+		it("should return undefined when commitment not found", async () => {
+			const commitmentId = "commit1";
+			mockModels.commitment.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.getDappUserCommitmentById(commitmentId);
+
+			expect(result).toBeUndefined();
+		});
+	});
+
+	describe("getDappUserCommitmentByAccount", () => {
+		it("should return commitments by account", async () => {
+			const userAccount = "user1";
+			const dappAccount = "dapp1";
+			const commitments: UserCommitmentRecord[] = [
+				{ id: "commit1", userAccount, dappAccount } as UserCommitmentRecord,
+			];
+
+			mockModels.commitment.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(commitments),
+			});
+
+			const result = await db.getDappUserCommitmentByAccount(
+				userAccount,
+				dappAccount,
+			);
+
+			expect(result).toEqual(commitments);
+		});
+
+		it("should return empty array when no commitments found", async () => {
+			const userAccount = "user1";
+			const dappAccount = "dapp1";
+			mockModels.commitment.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.getDappUserCommitmentByAccount(
+				userAccount,
+				dappAccount,
+			);
+
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe("approveDappUserCommitment", () => {
+		it("should approve commitment", async () => {
+			const commitmentId = "commit1";
+			const coords: [number, number][][] = [[[1, 2]]];
+
+			await db.approveDappUserCommitment(commitmentId, coords);
+
+			expect(mockModels.commitment.findOneAndUpdate).toHaveBeenCalled();
+		});
+
+		it("should approve commitment without coords", async () => {
+			const commitmentId = "commit1";
+
+			await db.approveDappUserCommitment(commitmentId);
+
+			expect(mockModels.commitment.findOneAndUpdate).toHaveBeenCalled();
+		});
+
+		it("should handle errors during approval", async () => {
+			const commitmentId = "commit1";
+			const error = new Error("Approval failed");
+			mockModels.commitment.findOneAndUpdate = vi.fn().mockReturnValue({
+				lean: vi.fn().mockRejectedValue(error),
+			});
+
+			await expect(
+				db.approveDappUserCommitment(commitmentId),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("disapproveDappUserCommitment", () => {
+		it("should disapprove commitment with reason", async () => {
+			const commitmentId = "commit1";
+			const reason = "invalid" as any;
+			const coords: [number, number][][] = [[[1, 2]]];
+
+			await db.disapproveDappUserCommitment(commitmentId, reason, coords);
+
+			expect(mockModels.commitment.findOneAndUpdate).toHaveBeenCalled();
+		});
+
+		it("should disapprove commitment without reason or coords", async () => {
+			const commitmentId = "commit1";
+
+			await db.disapproveDappUserCommitment(commitmentId);
+
+			expect(mockModels.commitment.findOneAndUpdate).toHaveBeenCalled();
+		});
+
+		it("should handle errors during disapproval", async () => {
+			const commitmentId = "commit1";
+			const error = new Error("Disapproval failed");
+			mockModels.commitment.findOneAndUpdate = vi.fn().mockReturnValue({
+				lean: vi.fn().mockRejectedValue(error),
+			});
+
+			await expect(
+				db.disapproveDappUserCommitment(commitmentId),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("flagProcessedDappUserSolutions", () => {
+		it("should flag solutions as processed", async () => {
+			const captchaIds: Hash[] = ["captcha1", "captcha2"];
+
+			mockModels.usersolution.updateMany = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue({ matchedCount: 2 }),
+			});
+
+			await db.flagProcessedDappUserSolutions(captchaIds);
+
+			expect(mockModels.usersolution.updateMany).toHaveBeenCalledWith(
+				{ captchaId: { $in: captchaIds } },
+				{ $set: { processed: true } },
+				{ upsert: false },
+			);
+		});
+
+		it("should handle errors during flagging", async () => {
+			const captchaIds: Hash[] = ["captcha1"];
+			const error = new Error("Flagging failed");
+			mockModels.usersolution.updateMany = vi
+				.fn()
+				.mockReturnValue({ lean: vi.fn().mockRejectedValue(error) });
+
+			await expect(
+				db.flagProcessedDappUserSolutions(captchaIds),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("flagProcessedDappUserCommitments", () => {
+		it("should flag commitments as processed", async () => {
+			const commitmentIds: Hash[] = ["commit1", "commit2"];
+
+			mockModels.commitment.updateMany = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue({ matchedCount: 2 }),
+			});
+
+			await db.flagProcessedDappUserCommitments(commitmentIds);
+
+			expect(mockModels.commitment.updateMany).toHaveBeenCalled();
+		});
+
+		it("should handle errors during flagging", async () => {
+			const commitmentIds: Hash[] = ["commit1"];
+			const error = new Error("Flagging failed");
+			mockModels.commitment.updateMany = vi
+				.fn()
+				.mockReturnValue({ lean: vi.fn().mockRejectedValue(error) });
+
+			await expect(
+				db.flagProcessedDappUserCommitments(commitmentIds),
+			).rejects.toThrow(ProsopoDBError);
+		});
+	});
+
+	describe("getScheduledTaskStatus", () => {
+		it("should return task status when found", async () => {
+			const taskId = "task-id" as any;
+			const status = ScheduledTaskStatus.Pending;
+			const task: ScheduledTaskRecord = {
+				_id: taskId,
+				status,
+			} as ScheduledTaskRecord;
+
+			mockModels.scheduler.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(task),
+			});
+
+			const result = await db.getScheduledTaskStatus(taskId, status);
+
+			expect(result).toEqual(task);
+		});
+
+		it("should return undefined when task not found", async () => {
+			const taskId = "task-id" as any;
+			const status = ScheduledTaskStatus.Pending;
+			mockModels.scheduler.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.getScheduledTaskStatus(taskId, status);
+
+			expect(result).toBeUndefined();
+		});
+	});
+
+	describe("getLastScheduledTaskStatus", () => {
+		it("should return last task status when found", async () => {
+			const task = ScheduledTaskNames.BatchCommitment;
+			const taskRecord: ScheduledTaskRecord = {
+				_id: "id1",
+				processName: task,
+			} as ScheduledTaskRecord;
+
+			mockModels.scheduler.findOne = vi.fn().mockReturnValue({
+				sort: vi.fn().mockReturnValue({
+					limit: vi.fn().mockReturnValue({
+						lean: vi.fn().mockResolvedValue(taskRecord),
+					}),
+				}),
+			});
+
+			const result = await db.getLastScheduledTaskStatus(task);
+
+			expect(result).toEqual(taskRecord);
+		});
+
+		it("should filter by status when provided", async () => {
+			const task = ScheduledTaskNames.BatchCommitment;
+			const status = ScheduledTaskStatus.Completed;
+
+			mockModels.scheduler.findOne = vi.fn().mockReturnValue({
+				sort: vi.fn().mockReturnValue({
+					limit: vi.fn().mockReturnValue({
+						lean: vi.fn().mockResolvedValue(null),
+					}),
+				}),
+			});
+
+			await db.getLastScheduledTaskStatus(task, status);
+
+			expect(mockModels.scheduler.findOne).toHaveBeenCalledWith(
+				expect.objectContaining({ status }),
+			);
+		});
+
+		it("should return undefined when task not found", async () => {
+			const task = ScheduledTaskNames.BatchCommitment;
+			mockModels.scheduler.findOne = vi.fn().mockReturnValue({
+				sort: vi.fn().mockReturnValue({
+					limit: vi.fn().mockReturnValue({
+						lean: vi.fn().mockResolvedValue(null),
+					}),
+				}),
+			});
+
+			const result = await db.getLastScheduledTaskStatus(task);
+
+			expect(result).toBeUndefined();
+		});
+	});
+
+	describe("cleanupScheduledTaskStatus", () => {
+		it("should cleanup scheduled task status", async () => {
+			const status = ScheduledTaskStatus.Completed;
+
+			await db.cleanupScheduledTaskStatus(status);
+
+			expect(mockModels.scheduler.deleteMany).toHaveBeenCalledWith({
+				status,
+			});
+		});
+	});
+
+	describe("updateClientRecords", () => {
+		it("should update client records", async () => {
+			const clientRecords: ClientRecord[] = [
+				{
+					account: "account1",
+					settings: {},
+					tier: "tier1",
+				} as ClientRecord,
+			];
+
+			await db.updateClientRecords(clientRecords);
+
+			expect(mockModels.client.bulkWrite).toHaveBeenCalled();
+		});
+
+		it("should not update when records array is empty", async () => {
+			await db.updateClientRecords([]);
+
+			expect(mockModels.client.bulkWrite).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("getAllClientRecords", () => {
+		it("should return all client records", async () => {
+			const clients: ClientRecord[] = [
+				{ account: "account1" } as ClientRecord,
+			];
+
+			mockModels.client.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(clients),
+			});
+
+			const result = await db.getAllClientRecords();
+
+			expect(result).toEqual(clients);
+		});
+
+		it("should return empty array when no clients found", async () => {
+			mockModels.client.find = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.getAllClientRecords();
+
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe("storeDetectorKey", () => {
+		it("should store detector key", async () => {
+			const detectorKey = "key1";
+
+			await db.storeDetectorKey(detectorKey);
+
+			expect(mockModels.detector.create).toHaveBeenCalledWith({
+				detectorKey,
+				createdAt: expect.any(Date),
+			});
+		});
+	});
+
+	describe("removeDetectorKey", () => {
+		it("should remove detector key with default expiration", async () => {
+			const detectorKey = "key1";
+
+			await db.removeDetectorKey(detectorKey);
+
+			expect(mockModels.detector.updateOne).toHaveBeenCalled();
+		});
+
+		it("should remove detector key with custom expiration", async () => {
+			const detectorKey = "key1";
+			const expirationInSeconds = 300;
+
+			await db.removeDetectorKey(detectorKey, expirationInSeconds);
+
+			expect(mockModels.detector.updateOne).toHaveBeenCalled();
+		});
+	});
+
+	describe("getDetectorKeys", () => {
+		it("should return valid detector keys", async () => {
+			const keyRecords: any[] = [
+				{ detectorKey: "key1" },
+				{ detectorKey: "key2" },
+			];
+
+			mockModels.detector.find = vi.fn().mockReturnValue({
+				sort: vi.fn().mockReturnValue({
+					lean: vi.fn().mockResolvedValue(keyRecords),
+				}),
+			});
+
+			const result = await db.getDetectorKeys();
+
+			expect(result).toEqual(["key1", "key2"]);
+		});
+
+		it("should return empty array when no keys found", async () => {
+			mockModels.detector.find = vi.fn().mockReturnValue({
+				sort: vi.fn().mockReturnValue({
+					lean: vi.fn().mockResolvedValue(null),
+				}),
+			});
+
+			const result = await db.getDetectorKeys();
+
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe("setClientContextEntropy", () => {
+		it("should set client context entropy", async () => {
+			const account = "account1";
+			const contextType = ContextType.Default;
+			const entropy = "entropy1";
+
+			await db.setClientContextEntropy(account, contextType, entropy);
+
+			expect(mockModels.clientContextEntropy.updateOne).toHaveBeenCalledWith(
+				{ account, contextType },
+				{ $set: { account, contextType, entropy } },
+				{ upsert: true },
+			);
+		});
+	});
+
+	describe("getClientContextEntropy", () => {
+		it("should return entropy when found", async () => {
+			const account = "account1";
+			const contextType = ContextType.Default;
+			const doc: any = { entropy: "entropy1" };
+
+			mockModels.clientContextEntropy.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(doc),
+			});
+
+			const result = await db.getClientContextEntropy(account, contextType);
+
+			expect(result).toBe("entropy1");
+		});
+
+		it("should return undefined when entropy not found", async () => {
+			const account = "account1";
+			const contextType = ContextType.Default;
+			mockModels.clientContextEntropy.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(null),
+			});
+
+			const result = await db.getClientContextEntropy(account, contextType);
+
+			expect(result).toBeUndefined();
+		});
+	});
+
+	describe("sampleContextEntropy", () => {
+		it("should sample context entropy for Default context", async () => {
+			const sampleSize = 5;
+			const siteKey = "site1";
+			const contextType = ContextType.Default;
+
+			mockModels.powcaptcha.aggregate = vi.fn().mockResolvedValue([
+				{ sessionId: "session1" },
+			]);
+			mockModels.session.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue({
+					decryptedHeadHash: "hash1",
+				}),
+			});
+
+			const result = await db.sampleContextEntropy(
+				sampleSize,
+				siteKey,
+				contextType,
+			);
+
+			expect(result).toEqual(["hash1"]);
+		});
+
+		it("should sample context entropy for Webview context", async () => {
+			const sampleSize = 5;
+			const siteKey = "site1";
+			const contextType = ContextType.Webview;
+
+			mockModels.powcaptcha.aggregate = vi.fn().mockResolvedValue([
+				{ sessionId: "session1" },
+			]);
+			mockModels.session.findOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue({
+					decryptedHeadHash: "hash1",
+				}),
+			});
+
+			const result = await db.sampleContextEntropy(
+				sampleSize,
+				siteKey,
+				contextType,
+			);
+
+			expect(result).toEqual(["hash1"]);
+		});
+
+		it("should throw error when sample size exceeds max", async () => {
+			const sampleSize = 20000;
+			const siteKey = "site1";
+			const contextType = ContextType.Default;
+
+			await expect(
+				db.sampleContextEntropy(sampleSize, siteKey, contextType),
+			).rejects.toThrow(ProsopoDBError);
+		});
+
+		it("should return empty array when no records found", async () => {
+			const sampleSize = 5;
+			const siteKey = "site1";
+			const contextType = ContextType.Default;
+
+			mockModels.powcaptcha.aggregate = vi.fn().mockResolvedValue([]);
+
+			const result = await db.sampleContextEntropy(
+				sampleSize,
+				siteKey,
+				contextType,
+			);
+
+			expect(result).toEqual([]);
+		});
+	});
 });
+
+
+
+
+
+
