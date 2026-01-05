@@ -65,3 +65,8 @@ describe("version command", () => {
 		expect(typeof result.data.version).toBe("string");
 	});
 });
+
+
+
+
+
