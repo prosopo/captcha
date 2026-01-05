@@ -16,9 +16,9 @@ import { ViteTestConfig } from "@prosopo/config";
 import vue from "@vitejs/plugin-vue";
 
 export default function () {
-	const config = ViteTestConfig();
-	config.plugins = [...(config.plugins || []), vue()];
-	config.test = config.test || {};
-	config.test.environment = "jsdom";
-	return config;
+    const config = ViteTestConfig();
+    config.plugins = [...(config.plugins || []), vue()];
+    config.test = config.test || {};
+    config.test.environment = "jsdom";
+    return config;
 }
