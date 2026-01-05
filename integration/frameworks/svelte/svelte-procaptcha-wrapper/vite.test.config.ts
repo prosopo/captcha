@@ -22,26 +22,26 @@ process.env.NODE_ENV = "test";
 const baseConfig = ViteTestConfig(path.resolve("./tsconfig.json"));
 
 export default defineConfig({
-	...baseConfig,
-	resolve: {
-		...baseConfig.resolve,
-		conditions: ["browser", "import", "module", "default"],
-	},
-	build: {
-		...baseConfig.build,
-		ssr: false,
-	},
-	plugins: [
-		...(baseConfig.plugins || []),
-		svelte({
-			hot: !process.env.VITEST,
-			compilerOptions: {
-				dev: process.env.NODE_ENV !== "production",
-			},
-		}),
-	],
-	test: {
-		...baseConfig.test,
-		environment: "jsdom",
-	},
+    ...baseConfig,
+    resolve: {
+        ...baseConfig.resolve,
+        conditions: ["browser", "import", "module", "default"],
+    },
+    build: {
+        ...baseConfig.build,
+        ssr: false,
+    },
+    plugins: [
+        ...(baseConfig.plugins || []),
+        svelte({
+            hot: !process.env.VITEST,
+            compilerOptions: {
+                dev: process.env.NODE_ENV !== "production",
+            },
+        }),
+    ],
+    test: {
+        ...baseConfig.test,
+        environment: "jsdom",
+    },
 });
