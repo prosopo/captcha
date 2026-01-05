@@ -304,7 +304,7 @@ describe("collector", () => {
 
             const addEventListenerSpy = vi
                 .spyOn(innerForm, "addEventListener")
-                .mockImplementation(() => {});
+                .mockImplementation(() => { });
 
             startCollector(
                 setMouseEvents,
