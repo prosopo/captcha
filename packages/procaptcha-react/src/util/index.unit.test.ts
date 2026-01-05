@@ -101,7 +101,10 @@ describe("addDataAttr", () => {
 
 	it("should handle special characters in values", () => {
 		const result = addDataAttr({
-			general: { "test-key": "value with spaces", "another": "value-with-dashes" },
+			general: {
+				"test-key": "value with spaces",
+				another: "value-with-dashes",
+			},
 		});
 		expect(result).toEqual({
 			"data-test-key": "value with spaces",
@@ -119,4 +122,3 @@ describe("addDataAttr", () => {
 		});
 	});
 });
-

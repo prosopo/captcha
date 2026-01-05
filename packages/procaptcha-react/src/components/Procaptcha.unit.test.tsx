@@ -13,13 +13,22 @@
 // limitations under the License.
 
 import type { Ti18n } from "@prosopo/locale";
-import type { ProcaptchaCallbacks, ProcaptchaClientConfigInput } from "@prosopo/types";
+import type {
+	ProcaptchaCallbacks,
+	ProcaptchaClientConfigInput,
+} from "@prosopo/types";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import Procaptcha from "./Procaptcha.js";
 
 vi.mock("./ProcaptchaWidget.js", () => ({
-	default: ({ config, callbacks }: { config: ProcaptchaClientConfigInput; callbacks: ProcaptchaCallbacks }) => (
+	default: ({
+		config,
+		callbacks,
+	}: {
+		config: ProcaptchaClientConfigInput;
+		callbacks: ProcaptchaCallbacks;
+	}) => (
 		<div data-testid="procaptcha-widget">
 			<div>Config: {JSON.stringify(config)}</div>
 			<div>Callbacks: {Object.keys(callbacks).join(",")}</div>
@@ -39,10 +48,11 @@ describe("Procaptcha", () => {
 		mode: "visible",
 	});
 
-	const createMockI18n = (): Ti18n => ({
-		language: "en",
-		changeLanguage: vi.fn().mockResolvedValue(undefined),
-	} as unknown as Ti18n);
+	const createMockI18n = (): Ti18n =>
+		({
+			language: "en",
+			changeLanguage: vi.fn().mockResolvedValue(undefined),
+		}) as unknown as Ti18n;
 
 	it("should render ProcaptchaWidget wrapped in Suspense", async () => {
 		const config = createMockConfig();
@@ -51,13 +61,7 @@ describe("Procaptcha", () => {
 			onError: vi.fn(),
 		};
 		const i18n = createMockI18n();
-		render(
-			<Procaptcha
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
-		);
+		render(<Procaptcha config={config} callbacks={callbacks} i18n={i18n} />);
 		await waitFor(() => {
 			expect(screen.getByTestId("procaptcha-widget")).toBeDefined();
 		});
@@ -69,13 +73,7 @@ describe("Procaptcha", () => {
 			onHuman: vi.fn(),
 		};
 		const i18n = createMockI18n();
-		render(
-			<Procaptcha
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
-		);
+		render(<Procaptcha config={config} callbacks={callbacks} i18n={i18n} />);
 		await waitFor(() => {
 			const widget = screen.getByTestId("procaptcha-widget");
 			expect(widget.textContent).toContain("TestDapp");
@@ -90,13 +88,7 @@ describe("Procaptcha", () => {
 			onExpired: vi.fn(),
 		};
 		const i18n = createMockI18n();
-		render(
-			<Procaptcha
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
-		);
+		render(<Procaptcha config={config} callbacks={callbacks} i18n={i18n} />);
 		await waitFor(() => {
 			const widget = screen.getByTestId("procaptcha-widget");
 			expect(widget.textContent).toContain("onHuman");
@@ -111,13 +103,7 @@ describe("Procaptcha", () => {
 			onHuman: vi.fn(),
 		};
 		const i18n = createMockI18n();
-		render(
-			<Procaptcha
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
-		);
+		render(<Procaptcha config={config} callbacks={callbacks} i18n={i18n} />);
 		await waitFor(() => {
 			expect(screen.getByTestId("procaptcha-widget")).toBeDefined();
 		});
@@ -151,17 +137,13 @@ describe("Procaptcha", () => {
 			onHuman: vi.fn(),
 		};
 		const i18n = createMockI18n();
-		render(
-			<Procaptcha
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
-		);
+		render(<Procaptcha config={config} callbacks={callbacks} i18n={i18n} />);
 		// Should eventually render the widget after lazy loading
-		await waitFor(() => {
-			expect(screen.getByTestId("procaptcha-widget")).toBeDefined();
-		}, { timeout: 3000 });
+		await waitFor(
+			() => {
+				expect(screen.getByTestId("procaptcha-widget")).toBeDefined();
+			},
+			{ timeout: 3000 },
+		);
 	});
 });
-

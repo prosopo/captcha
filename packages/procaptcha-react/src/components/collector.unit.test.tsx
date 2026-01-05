@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Account, StoredEvents } from "@prosopo/types";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import type { Account } from "@prosopo/types";
+import { render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Collector from "./collector.js";
 
 const mockStartCollector = vi.fn();
@@ -23,7 +23,6 @@ vi.mock("@prosopo/procaptcha", () => ({
 }));
 
 describe("Collector", () => {
-
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
@@ -183,4 +182,3 @@ describe("Collector", () => {
 		expect(onProcessData2).toHaveBeenCalled();
 	});
 });
-

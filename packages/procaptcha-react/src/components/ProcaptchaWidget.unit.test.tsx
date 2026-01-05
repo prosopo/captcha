@@ -20,7 +20,7 @@ import type {
 } from "@prosopo/types";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProcaptchaWidget from "./ProcaptchaWidget.js";
 
 const mockManager = {
@@ -50,7 +50,8 @@ const mockUseTranslation = vi.fn(() => ({
 }));
 
 vi.mock("@prosopo/locale", async () => {
-	const actual = await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
+	const actual =
+		await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
 	return {
 		...actual,
 		useTranslation: () => ({
@@ -67,10 +68,7 @@ vi.mock("@prosopo/locale", async () => {
 vi.mock("@prosopo/procaptcha-common", () => ({
 	useProcaptcha: () => mockUseProcaptcha(),
 	Checkbox: ({ onChange, checked, labelText, error, loading }: any) => (
-		<div
-			data-testid="checkbox"
-			onClick={() => onChange({ isTrusted: true })}
-		>
+		<div data-testid="checkbox" onClick={() => onChange({ isTrusted: true })}>
 			<input
 				type="checkbox"
 				checked={checked}
@@ -107,7 +105,6 @@ vi.mock("./Modal.js", () => ({
 }));
 
 describe("ProcaptchaWidget", () => {
-
 	const createMockConfig = (): ProcaptchaClientConfigInput => ({
 		account: {
 			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
@@ -119,10 +116,11 @@ describe("ProcaptchaWidget", () => {
 		mode: "visible",
 	});
 
-	const createMockI18n = (): Ti18n => ({
-		language: "en",
-		changeLanguage: vi.fn().mockResolvedValue(undefined),
-	} as unknown as Ti18n);
+	const createMockI18n = (): Ti18n =>
+		({
+			language: "en",
+			changeLanguage: vi.fn().mockResolvedValue(undefined),
+		}) as unknown as Ti18n;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -150,11 +148,7 @@ describe("ProcaptchaWidget", () => {
 		};
 		const i18n = createMockI18n();
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		expect(screen.getByTestId("checkbox")).toBeDefined();
 	});
@@ -166,11 +160,7 @@ describe("ProcaptchaWidget", () => {
 		};
 		const i18n = createMockI18n();
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		expect(screen.queryByTestId("checkbox")).toBeNull();
 	});
@@ -183,11 +173,7 @@ describe("ProcaptchaWidget", () => {
 		const i18n = createMockI18n();
 		const user = userEvent.setup();
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		const checkbox = screen.getByTestId("checkbox");
 		await user.click(checkbox);
@@ -215,11 +201,7 @@ describe("ProcaptchaWidget", () => {
 		]);
 		const user = userEvent.setup();
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		const checkbox = screen.getByTestId("checkbox");
 		// Click multiple times rapidly
@@ -265,11 +247,7 @@ describe("ProcaptchaWidget", () => {
 			vi.fn(),
 		]);
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		const modal = screen.getByTestId("modal");
 		expect(modal.getAttribute("data-show")).toBe("true");
@@ -294,11 +272,7 @@ describe("ProcaptchaWidget", () => {
 			updateState,
 		]);
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		const event = new Event("procaptcha:execute");
 		document.dispatchEvent(event);
@@ -325,11 +299,7 @@ describe("ProcaptchaWidget", () => {
 			vi.fn(),
 		]);
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		const event = new Event("procaptcha:execute");
 		document.dispatchEvent(event);
@@ -371,9 +341,12 @@ describe("ProcaptchaWidget", () => {
 			/>,
 		);
 		vi.advanceTimersByTime(3000);
-		await waitFor(() => {
-			expect(frictionlessState.restart).toHaveBeenCalled();
-		}, { timeout: 5000 });
+		await waitFor(
+			() => {
+				expect(frictionlessState.restart).toHaveBeenCalled();
+			},
+			{ timeout: 5000 },
+		);
 		vi.useRealTimers();
 	}, 15000);
 
@@ -388,15 +361,14 @@ describe("ProcaptchaWidget", () => {
 			changeLanguage,
 		} as unknown as Ti18n;
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
-		await waitFor(() => {
-			expect(changeLanguage).toHaveBeenCalledWith("fr");
-		}, { timeout: 5000 });
+		await waitFor(
+			() => {
+				expect(changeLanguage).toHaveBeenCalledWith("fr");
+			},
+			{ timeout: 5000 },
+		);
 	}, 15000);
 
 	it("should load i18next when i18n is not provided", async () => {
@@ -413,10 +385,13 @@ describe("ProcaptchaWidget", () => {
 		);
 		// The component will call loadI18next asynchronously
 		// We verify the component renders without error
-		await waitFor(() => {
-			// Component should render successfully
-			expect(document.body).toBeDefined();
-		}, { timeout: 5000 });
+		await waitFor(
+			() => {
+				// Component should render successfully
+				expect(document.body).toBeDefined();
+			},
+			{ timeout: 5000 },
+		);
 	}, 15000);
 
 	it("should apply light theme", () => {
@@ -426,11 +401,7 @@ describe("ProcaptchaWidget", () => {
 		};
 		const i18n = createMockI18n();
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		expect(screen.getByTestId("checkbox")).toBeDefined();
 	});
@@ -442,13 +413,8 @@ describe("ProcaptchaWidget", () => {
 		};
 		const i18n = createMockI18n();
 		render(
-			<ProcaptchaWidget
-				config={config}
-				callbacks={callbacks}
-				i18n={i18n}
-			/>,
+			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		expect(screen.getByTestId("checkbox")).toBeDefined();
 	});
 });
-

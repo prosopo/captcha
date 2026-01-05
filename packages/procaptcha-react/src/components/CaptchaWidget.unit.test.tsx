@@ -15,7 +15,6 @@
 import { ProsopoDatasetError } from "@prosopo/common";
 import type { Captcha } from "@prosopo/types";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { CaptchaWidget } from "./CaptchaWidget.js";
 
@@ -319,4 +318,3 @@ describe("CaptchaWidget", () => {
 		}).toThrow(ProsopoDatasetError);
 	});
 });
-

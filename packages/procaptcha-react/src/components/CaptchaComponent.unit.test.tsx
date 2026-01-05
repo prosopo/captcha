@@ -14,12 +14,12 @@
 
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import CaptchaComponent from "./CaptchaComponent.js";
 
 vi.mock("@prosopo/locale", async () => {
-	const actual = await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
+	const actual =
+		await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
 	return {
 		...actual,
 		useTranslation: () => ({
@@ -322,4 +322,3 @@ describe("CaptchaComponent", () => {
 		expect(checkIcons.length).toBeGreaterThan(0);
 	});
 });
-
