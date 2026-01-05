@@ -401,7 +401,7 @@ describe("ApiRoutesProvider", () => {
 			const TestSchema = z.object({ value: z.string() });
 
 			class DynamicEndpoint implements ApiEndpoint<typeof TestSchema> {
-				constructor(private name: string) {}
+				constructor(private name: string) { }
 
 				async processRequest(): Promise<ApiEndpointResponse> {
 					return {
