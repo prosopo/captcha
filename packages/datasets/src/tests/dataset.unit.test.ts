@@ -22,8 +22,16 @@ import {
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { beforeAll, describe, expect, test } from "vitest";
-import { computeItemHash, matchItemsToSolutions } from "../index.js";
+import {
+	addSolutionHashesToDataset,
+	buildCaptchaTree,
+	buildDataset,
+	computeItemHash,
+	hashDatasetItems,
+	matchItemsToSolutions,
+} from "../index.js";
 import { validateDatasetContent } from "../index.js";
+import type { DatasetRaw } from "@prosopo/types";
 
 describe("DATASET FUNCTIONS", async () => {
 	let MOCK_ITEMS: Item[];
@@ -161,5 +169,322 @@ describe("DATASET FUNCTIONS", async () => {
 			.map(() => at(DATASET.captchas, 0));
 		const validated = await validateDatasetContent(DATASET);
 		expect(validated).to.be.true;
+	});
+
+	test("hashDatasetItems hashes all items in dataset captchas", async () => {
+		const datasetRaw: DatasetRaw = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "test1",
+							hash: "",
+						},
+						{
+							type: CaptchaItemTypes.Text,
+							data: "test2",
+							hash: "",
+						},
+					],
+					target: "test",
+					salt: "0x01",
+				},
+			],
+		};
+
+		const captchaPromises = await hashDatasetItems(datasetRaw);
+		const captchas = await Promise.all(captchaPromises);
+
+		expect(captchas).to.have.length(1);
+		expect(captchas[0]?.items).to.have.length(2);
+		expect(captchas[0]?.items[0]?.hash).to.be.a("string");
+		expect(captchas[0]?.items[0]?.hash).to.not.equal("");
+		expect(captchas[0]?.items[1]?.hash).to.be.a("string");
+		expect(captchas[0]?.items[1]?.hash).to.not.equal("");
+	});
+
+	test("hashDatasetItems handles empty captchas array", async () => {
+		const datasetRaw: DatasetRaw = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [],
+		};
+
+		const captchaPromises = await hashDatasetItems(datasetRaw);
+		const captchas = await Promise.all(captchaPromises);
+
+		expect(captchas).to.have.length(0);
+	});
+
+	test("addSolutionHashesToDataset converts numeric solutions to hashes", () => {
+		const datasetRaw: DatasetRaw = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item2",
+							hash: "0xhash2",
+						},
+					],
+					solution: [0, 1] as number[],
+					target: "test",
+					salt: "0x01",
+				},
+			],
+		};
+
+		const result = addSolutionHashesToDataset(datasetRaw);
+
+		expect(result.captchas[0]?.solution).to.deep.equal(["0xhash1", "0xhash2"]);
+		expect(result.captchas[0]?.items).to.deep.equal(datasetRaw.captchas[0]?.items);
+	});
+
+	test("addSolutionHashesToDataset handles captchas without solutions", () => {
+		const datasetRaw: DatasetRaw = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					target: "test",
+					salt: "0x01",
+				},
+			],
+		};
+
+		const result = addSolutionHashesToDataset(datasetRaw);
+
+		expect(result.captchas[0]?.solution).to.be.undefined;
+	});
+
+	test("addSolutionHashesToDataset handles already hashed solutions", () => {
+		const datasetRaw: DatasetRaw = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item2",
+							hash: "0xhash2",
+						},
+					],
+					solution: ["0xhash1", "0xhash2"] as string[],
+					target: "test",
+					salt: "0x01",
+				},
+			],
+		};
+
+		const result = addSolutionHashesToDataset(datasetRaw);
+
+		expect(result.captchas[0]?.solution).to.deep.equal(["0xhash1", "0xhash2"]);
+	});
+
+	test("buildCaptchaTree builds tree with correct configuration", async () => {
+		const dataset: Dataset = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					captchaId: "0x01",
+					captchaContentId: "0x01",
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					target: "test",
+					salt: "0x01",
+					solution: [],
+				},
+			],
+		};
+
+		const tree = await buildCaptchaTree(dataset, false, false, false);
+
+		expect(tree.root).to.not.be.undefined;
+		expect(tree.leaves).to.have.length(1);
+		expect(tree.layers).to.have.length.greaterThan(0);
+	});
+
+	test("buildCaptchaTree includes solution when includeSolution is true", async () => {
+		const dataset: Dataset = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					captchaId: "0x01",
+					captchaContentId: "0x01",
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					target: "test",
+					salt: "0x01",
+					solution: ["0xhash1"],
+				},
+			],
+		};
+
+		const treeWithSolution = await buildCaptchaTree(dataset, true, false, false);
+		const treeWithoutSolution = await buildCaptchaTree(dataset, false, false, false);
+
+		expect(treeWithSolution.root?.hash).to.not.equal(
+			treeWithoutSolution.root?.hash,
+		);
+	});
+
+	test("buildCaptchaTree includes salt when includeSalt is true", async () => {
+		const dataset: Dataset = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					captchaId: "0x01",
+					captchaContentId: "0x01",
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					target: "test",
+					salt: "0x01",
+					solution: [],
+				},
+			],
+		};
+
+		const treeWithSalt = await buildCaptchaTree(dataset, false, true, false);
+		const treeWithoutSalt = await buildCaptchaTree(dataset, false, false, false);
+
+		expect(treeWithSalt.root?.hash).to.not.equal(treeWithoutSalt.root?.hash);
+	});
+
+	test("buildCaptchaTree sorts item hashes when sortItemHashes is true", async () => {
+		const dataset: Dataset = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					captchaId: "0x01",
+					captchaContentId: "0x01",
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item2",
+							hash: "0xhash2",
+						},
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					target: "test",
+					salt: "0x01",
+					solution: [],
+				},
+			],
+		};
+
+		const treeSorted = await buildCaptchaTree(dataset, false, false, true);
+		const treeUnsorted = await buildCaptchaTree(dataset, false, false, false);
+
+		expect(treeSorted.root?.hash).to.not.equal(treeUnsorted.root?.hash);
+	});
+
+	test("buildDataset creates complete dataset with trees and IDs", async () => {
+		const datasetRaw: DatasetRaw = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					solution: [0] as number[],
+					target: "test",
+					salt: "0x01",
+				},
+			],
+		};
+
+		const result = await buildDataset(datasetRaw);
+
+		expect(result.captchas[0]?.captchaId).to.be.a("string");
+		expect(result.captchas[0]?.captchaContentId).to.be.a("string");
+		expect(result.captchas[0]?.datasetId).to.be.a("string");
+		expect(result.captchas[0]?.datasetContentId).to.be.a("string");
+		expect(result.datasetId).to.be.a("string");
+		expect(result.datasetContentId).to.be.a("string");
+		expect(result.solutionTree).to.be.an("array");
+		expect(result.contentTree).to.be.an("array");
+		expect(result.captchas[0]?.datasetId).to.equal(result.datasetId);
+		expect(result.captchas[0]?.datasetContentId).to.equal(result.datasetContentId);
+	});
+
+	test("buildDataset handles multiple captchas", async () => {
+		const datasetRaw: DatasetRaw = {
+			format: CaptchaTypes.SelectAll,
+			captchas: [
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item1",
+							hash: "0xhash1",
+						},
+					],
+					solution: [0] as number[],
+					target: "test1",
+					salt: "0x01",
+				},
+				{
+					items: [
+						{
+							type: CaptchaItemTypes.Text,
+							data: "item2",
+							hash: "0xhash2",
+						},
+					],
+					solution: [0] as number[],
+					target: "test2",
+					salt: "0x02",
+				},
+			],
+		};
+
+		const result = await buildDataset(datasetRaw);
+
+		expect(result.captchas).to.have.length(2);
+		expect(result.captchas[0]?.captchaId).to.not.equal(
+			result.captchas[1]?.captchaId,
+		);
+		expect(result.captchas[0]?.datasetId).to.equal(result.captchas[1]?.datasetId);
 	});
 });
