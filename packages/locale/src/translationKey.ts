@@ -33,6 +33,12 @@ function getLeafFieldPath(obj: Node): string[] {
 		}
 		const children = getLeafFieldPath(value);
 
+		if (children.length === 0) {
+			// Leaf node - value is a string, so return just the key
+			return arr.concat([key]);
+		}
+
+		// Non-leaf node - prepend key to each child path
 		return arr.concat(
 			children.map((child) => {
 				return `${key}.${child}`;

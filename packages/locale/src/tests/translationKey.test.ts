@@ -20,9 +20,6 @@ import { TranslationKeysSchema } from "../translationKey.js";
 
 describe("translationKey", () => {
 	describe("TranslationKeysSchema", () => {
-		// NOTE: There appears to be a bug in getLeafFieldPath - it returns an empty array
-		// because it doesn't handle leaf nodes (strings) correctly. This means the schema
-		// is currently empty and rejects all keys. This should be fixed in the code.
 		test("should not validate top-level keys (only leaf paths)", () => {
 			// getLeafFieldPath only returns leaf paths, not top-level keys
 			const topLevelKeys = Object.keys(translationEn);
@@ -31,10 +28,7 @@ describe("translationKey", () => {
 			}
 		});
 
-		test("currently rejects all keys due to getLeafFieldPath bug", () => {
-			// This test documents the current buggy behavior
-			// The function getLeafFieldPath returns empty array because it doesn't
-			// handle leaf nodes (string values) correctly
+		test("should validate nested keys with dot notation", () => {
 			const testKeys = [
 				"ACCOUNT.NO_POLKADOT_EXTENSION",
 				"WIDGET.SELECT_ALL",
@@ -44,13 +38,14 @@ describe("translationKey", () => {
 
 			for (const key of testKeys) {
 				const result = TranslationKeysSchema.safeParse(key);
-				// Currently all keys are rejected due to bug
-				expect(result.success).toBe(false);
+				expect(result.success).toBe(true);
+				if (result.success) {
+					expect(result.data).toBe(key);
+				}
 			}
 		});
 
-		test("currently rejects deeply nested keys due to getLeafFieldPath bug", () => {
-			// This test documents the current buggy behavior
+		test("should validate deeply nested keys", () => {
 			const deepKeys = [
 				"TARGET.bird",
 				"TARGET.car",
@@ -60,8 +55,7 @@ describe("translationKey", () => {
 
 			for (const key of deepKeys) {
 				const result = TranslationKeysSchema.safeParse(key);
-				// Currently all keys are rejected due to bug
-				expect(result.success).toBe(false);
+				expect(result.success).toBe(true);
 			}
 		});
 
@@ -91,13 +85,13 @@ describe("translationKey", () => {
 			expect(TranslationKeysSchema.safeParse([]).success).toBe(false);
 		});
 
-		test("currently rejects all keys including valid ones due to bug", () => {
-			// This test documents the current buggy behavior
-			// When getLeafFieldPath is fixed, this test should be updated
+		test("should parse valid keys correctly", () => {
 			const validKey = "GENERAL.JSON_LOAD_FAILED";
 			const result = TranslationKeysSchema.safeParse(validKey);
-			// Currently rejects due to empty schema from getLeafFieldPath bug
-			expect(result.success).toBe(false);
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data).toBe(validKey);
+			}
 		});
 	});
 });
