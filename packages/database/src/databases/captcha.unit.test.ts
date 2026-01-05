@@ -32,22 +32,35 @@ vi.mock("../base/mongo.js", async () => {
 		MongoDatabase: class extends actual.MongoDatabase {
 			connected = false;
 			connection = undefined as Connection | undefined;
+			private _preserveTables = false;
+			setPreserveTables(value: boolean) {
+				this._preserveTables = value;
+			}
 			override async connect(): Promise<void> {
 				this.connected = true;
-				this.connection = {
-					model: vi.fn().mockReturnValue({
-						bulkWrite: vi.fn(),
-						find: vi.fn().mockReturnValue({
-							limit: vi.fn().mockReturnValue({
-								lean: vi.fn(),
+				if (!this._preserveTables) {
+					this.connection = {
+						model: vi.fn().mockReturnValue({
+							bulkWrite: vi.fn().mockResolvedValue({
+								insertedCount: 0,
+								matchedCount: 0,
+								modifiedCount: 0,
+								deletedCount: 0,
+								upsertedCount: 0,
+								upsertedIds: {},
 							}),
+							find: vi.fn().mockReturnValue({
+								limit: vi.fn().mockReturnValue({
+									lean: vi.fn().mockResolvedValue([]),
+								}),
+							}),
+							collection: {
+								dropIndexes: vi.fn().mockResolvedValue(undefined),
+							},
+							ensureIndexes: vi.fn().mockResolvedValue(undefined),
 						}),
-						collection: {
-							dropIndexes: vi.fn().mockResolvedValue(undefined),
-						},
-						ensureIndexes: vi.fn().mockResolvedValue(undefined),
-					}),
-				} as unknown as Connection;
+					} as unknown as Connection;
+				}
 			}
 			override async close(): Promise<void> {
 				this.connected = false;
@@ -175,7 +188,6 @@ describe("CaptchaDatabase", () => {
 
 	describe("saveCaptchas", () => {
 		it("should save session events", async () => {
-			await db.connect();
 			const sessionEvents: StoredSession[] = [
 				{
 					sessionId: "session1",
@@ -191,6 +203,8 @@ describe("CaptchaDatabase", () => {
 				upsertedCount: 0,
 				upsertedIds: {},
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: {
 					...mockModel,
@@ -205,7 +219,6 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should save image captcha events", async () => {
-			await db.connect();
 			const imageEvents: UserCommitmentRecord[] = [
 				{
 					id: "commit1",
@@ -222,6 +235,8 @@ describe("CaptchaDatabase", () => {
 				upsertedCount: 1,
 				upsertedIds: {},
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: mockModel,
@@ -236,7 +251,6 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should save PoW captcha events", async () => {
-			await db.connect();
 			const powEvents: PoWCaptchaRecord[] = [
 				{
 					challenge: "challenge1",
@@ -255,6 +269,8 @@ describe("CaptchaDatabase", () => {
 				upsertedCount: 1,
 				upsertedIds: {},
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: {
@@ -269,7 +285,6 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should remove _id field from documents before saving", async () => {
-			await db.connect();
 			const sessionEvents: StoredSession[] = [
 				{
 					_id: "id1",
@@ -286,6 +301,8 @@ describe("CaptchaDatabase", () => {
 				upsertedCount: 0,
 				upsertedIds: {},
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: {
 					...mockModel,
@@ -301,9 +318,10 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should close connection after saving", async () => {
-			await db.connect();
 			const mockClose = vi.fn();
 			db.close = mockClose;
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: mockModel,
@@ -317,29 +335,36 @@ describe("CaptchaDatabase", () => {
 
 	describe("getCaptchas", () => {
 		it("should return user commitment and PoW captcha records", async () => {
-			await db.connect();
 			const mockCommitmentResults = [
 				{ id: "commit1" },
 			] as UserCommitmentRecord[];
 			const mockPowResults = [
 				{ challenge: "challenge1" },
 			] as PoWCaptchaRecord[];
-			const mockLean = vi
+			const mockCommitmentLean = vi
 				.fn()
-				.mockReturnValueOnce(mockCommitmentResults)
-				.mockReturnValueOnce(mockPowResults);
-			const mockLimit = vi.fn().mockReturnValue({ lean: mockLean });
-			const mockFind = vi.fn().mockReturnValue({ limit: mockLimit });
+				.mockResolvedValue(mockCommitmentResults);
+			const mockPowLean = vi.fn().mockResolvedValue(mockPowResults);
+			const mockCommitmentLimit = vi
+				.fn()
+				.mockReturnValue({ lean: mockCommitmentLean });
+			const mockPowLimit = vi.fn().mockReturnValue({ lean: mockPowLean });
+			const mockCommitmentFind = vi
+				.fn()
+				.mockReturnValue({ limit: mockCommitmentLimit });
+			const mockPowFind = vi.fn().mockReturnValue({ limit: mockPowLimit });
 
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: {
 					...mockModel,
-					find: mockFind,
+					find: mockPowFind,
 				},
 				commitment: {
 					...mockModel,
-					find: mockFind,
+					find: mockCommitmentFind,
 				},
 			} as typeof db.tables;
 
@@ -349,11 +374,11 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should use default limit of 100", async () => {
-			await db.connect();
-			const mockLimit = vi
-				.fn()
-				.mockReturnValue({ lean: vi.fn().mockResolvedValue([]) });
+			const mockLean = vi.fn().mockResolvedValue([]);
+			const mockLimit = vi.fn().mockReturnValue({ lean: mockLean });
 			const mockFind = vi.fn().mockReturnValue({ limit: mockLimit });
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: {
@@ -371,12 +396,12 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should use provided filter", async () => {
-			await db.connect();
 			const filter = { id: "test" };
-			const mockLimit = vi
-				.fn()
-				.mockReturnValue({ lean: vi.fn().mockResolvedValue([]) });
+			const mockLean = vi.fn().mockResolvedValue([]);
+			const mockLimit = vi.fn().mockReturnValue({ lean: mockLean });
 			const mockFind = vi.fn().mockReturnValue({ limit: mockLimit });
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: {
@@ -394,13 +419,12 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should throw error on query failure", async () => {
-			await db.connect();
 			const error = new Error("Query failed");
-			const mockFind = vi.fn().mockReturnValue({
-				limit: vi.fn().mockReturnValue({
-					lean: vi.fn().mockRejectedValue(error),
-				}),
-			});
+			const mockLean = vi.fn().mockRejectedValue(error);
+			const mockLimit = vi.fn().mockReturnValue({ lean: mockLean });
+			const mockFind = vi.fn().mockReturnValue({ limit: mockLimit });
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: {
@@ -417,14 +441,13 @@ describe("CaptchaDatabase", () => {
 		});
 
 		it("should close connection after query", async () => {
-			await db.connect();
 			const mockClose = vi.fn();
 			db.close = mockClose;
-			const mockFind = vi.fn().mockReturnValue({
-				limit: vi.fn().mockReturnValue({
-					lean: vi.fn().mockResolvedValue([]),
-				}),
-			});
+			const mockLean = vi.fn().mockResolvedValue([]);
+			const mockLimit = vi.fn().mockReturnValue({ lean: mockLean });
+			const mockFind = vi.fn().mockReturnValue({ limit: mockLimit });
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				session: mockModel,
 				powcaptcha: {

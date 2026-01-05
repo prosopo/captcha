@@ -28,15 +28,21 @@ vi.mock("../base/mongo.js", async () => {
 		MongoDatabase: class extends actual.MongoDatabase {
 			connected = false;
 			connection = undefined as Connection | undefined;
+			private _preserveTables = false;
+			setPreserveTables(value: boolean) {
+				this._preserveTables = value;
+			}
 			override async connect(): Promise<void> {
 				this.connected = true;
-				this.connection = {
-					model: vi.fn().mockReturnValue({
-						find: vi.fn().mockReturnValue({
-							lean: vi.fn(),
+				if (!this._preserveTables) {
+					this.connection = {
+						model: vi.fn().mockReturnValue({
+							find: vi.fn().mockReturnValue({
+								lean: vi.fn(),
+							}),
 						}),
-					}),
-				} as unknown as Connection;
+					} as unknown as Connection;
+				}
 			}
 			override async close(): Promise<void> {
 				this.connected = false;
@@ -107,7 +113,6 @@ describe("ClientDatabase", () => {
 
 	describe("getUpdatedClients", () => {
 		it("should return client records updated after timestamp", async () => {
-			await db.connect();
 			const timestamp = 1000;
 			const mockRecords = [
 				{
@@ -123,6 +128,8 @@ describe("ClientDatabase", () => {
 			const mockFind = vi.fn().mockReturnValue({
 				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,
@@ -138,11 +145,13 @@ describe("ClientDatabase", () => {
 		});
 
 		it("should filter by updatedAt timestamp", async () => {
-			await db.connect();
 			const timestamp = 1000;
+			const mockLean = vi.fn().mockResolvedValue([]);
 			const mockFind = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue([]),
+				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,
@@ -157,11 +166,13 @@ describe("ClientDatabase", () => {
 		});
 
 		it("should include records with missing updatedAt", async () => {
-			await db.connect();
 			const timestamp = 1000;
+			const mockLean = vi.fn().mockResolvedValue([]);
 			const mockFind = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue([]),
+				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,
@@ -175,11 +186,13 @@ describe("ClientDatabase", () => {
 		});
 
 		it("should filter by active user status", async () => {
-			await db.connect();
 			const timestamp = 1000;
+			const mockLean = vi.fn().mockResolvedValue([]);
 			const mockFind = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue([]),
+				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,
@@ -188,16 +201,18 @@ describe("ClientDatabase", () => {
 			} as typeof db.tables;
 
 			await db.getUpdatedClients(timestamp);
-			const filter = mockFind.mock.calls[0][1];
+			const filter = mockFind.mock.calls[0][0];
 			expect(filter["users.status"]).toBe("active");
 		});
 
 		it("should project only required fields", async () => {
-			await db.connect();
 			const timestamp = 1000;
+			const mockLean = vi.fn().mockResolvedValue([]);
 			const mockFind = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue([]),
+				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,
@@ -206,17 +221,19 @@ describe("ClientDatabase", () => {
 			} as typeof db.tables;
 
 			await db.getUpdatedClients(timestamp);
-			const projection = mockFind.mock.calls[0][2];
+			const projection = mockFind.mock.calls[0][1];
 			expect(projection["sites.siteKey"]).toBe(1);
 			expect(projection["sites.settings"]).toBe(1);
 			expect(projection["sites.tier"]).toBe(1);
 		});
 
 		it("should return empty array when no records found", async () => {
-			await db.connect();
+			const mockLean = vi.fn().mockResolvedValue([]);
 			const mockFind = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue([]),
+				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,
@@ -229,12 +246,14 @@ describe("ClientDatabase", () => {
 		});
 
 		it("should close connection after query", async () => {
-			await db.connect();
 			const mockClose = vi.fn();
 			db.close = mockClose;
+			const mockLean = vi.fn().mockResolvedValue([]);
 			const mockFind = vi.fn().mockReturnValue({
-				lean: vi.fn().mockResolvedValue([]),
+				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,
@@ -247,7 +266,6 @@ describe("ClientDatabase", () => {
 		});
 
 		it("should transform records correctly", async () => {
-			await db.connect();
 			const mockRecords = [
 				{
 					sites: {
@@ -270,6 +288,8 @@ describe("ClientDatabase", () => {
 			const mockFind = vi.fn().mockReturnValue({
 				lean: mockLean,
 			});
+			// @ts-expect-error - accessing private method for testing
+			db.setPreserveTables(true);
 			db.tables = {
 				accounts: {
 					...mockModel,

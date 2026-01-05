@@ -243,14 +243,31 @@ describe("ProviderDatabase", () => {
 	describe("ensureIndexes", () => {
 		it("should ensure indexes when connected", async () => {
 			await db.connect();
-			db.tables = {
-				captcha: mockModel,
-				dataset: mockModel,
-				solution: mockModel,
-			} as typeof db.tables;
+			const mockModelWithCollection = {
+				...mockModel,
+				collection: {
+					dropIndexes: vi.fn().mockResolvedValue(undefined),
+				},
+				ensureIndexes: vi.fn().mockResolvedValue(undefined),
+			};
+			const allTables = {
+				captcha: mockModelWithCollection,
+				powcaptcha: mockModelWithCollection,
+				dataset: mockModelWithCollection,
+				solution: mockModelWithCollection,
+				commitment: mockModelWithCollection,
+				usersolution: mockModelWithCollection,
+				pending: mockModelWithCollection,
+				scheduler: mockModelWithCollection,
+				client: mockModelWithCollection,
+				session: mockModelWithCollection,
+				detector: mockModelWithCollection,
+				clientContextEntropy: mockModelWithCollection,
+			};
+			db.tables = allTables as typeof db.tables;
 			await db.ensureIndexes();
-			expect(mockModel.collection.dropIndexes).toHaveBeenCalled();
-			expect(mockModel.ensureIndexes).toHaveBeenCalled();
+			expect(mockModelWithCollection.collection.dropIndexes).toHaveBeenCalled();
+			expect(mockModelWithCollection.ensureIndexes).toHaveBeenCalled();
 		});
 
 		it("should skip index creation when not connected", async () => {
@@ -261,11 +278,31 @@ describe("ProviderDatabase", () => {
 
 		it("should only ensure indexes once", async () => {
 			await db.connect();
-			db.tables = { captcha: mockModel } as typeof db.tables;
+			const mockModelWithCollection = {
+				...mockModel,
+				collection: {
+					dropIndexes: vi.fn().mockResolvedValue(undefined),
+				},
+				ensureIndexes: vi.fn().mockResolvedValue(undefined),
+			};
+			db.tables = {
+				captcha: mockModelWithCollection,
+				dataset: mockModelWithCollection,
+				solution: mockModelWithCollection,
+				commitment: mockModelWithCollection,
+				usersolution: mockModelWithCollection,
+				pending: mockModelWithCollection,
+				scheduler: mockModelWithCollection,
+				client: mockModelWithCollection,
+				session: mockModelWithCollection,
+				detector: mockModelWithCollection,
+				clientContextEntropy: mockModelWithCollection,
+				powcaptcha: mockModelWithCollection,
+			} as typeof db.tables;
 			await db.ensureIndexes();
 			vi.clearAllMocks();
 			await db.ensureIndexes();
-			expect(mockModel.ensureIndexes).not.toHaveBeenCalled();
+			expect(mockModelWithCollection.ensureIndexes).not.toHaveBeenCalled();
 		});
 	});
 
@@ -273,9 +310,9 @@ describe("ProviderDatabase", () => {
 		it("should store dataset and captchas", async () => {
 			await db.connect();
 			const dataset = {
-				datasetId: "0x123",
-				datasetContentId: "0x456",
-				format: "format1",
+				datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				datasetContentId: "0x4567890abcdef1234567890abcdef1234567890",
+				format: "SelectAll",
 				contentTree: [],
 				solutionTree: [],
 				captchas: [
@@ -283,8 +320,8 @@ describe("ProviderDatabase", () => {
 						captchaId: "cap1",
 						captchaContentId: "capc1",
 						items: [],
-						target: [],
-						salt: "salt1",
+						target: "target1",
+						salt: "1234567890123456789012345678901234",
 						solution: ["sol1"],
 					},
 				],
@@ -314,9 +351,9 @@ describe("ProviderDatabase", () => {
 		it("should handle datasets without solutions", async () => {
 			await db.connect();
 			const dataset = {
-				datasetId: "0x123",
-				datasetContentId: "0x456",
-				format: "format1",
+				datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				datasetContentId: "0x4567890abcdef1234567890abcdef1234567890",
+				format: "SelectAll",
 				contentTree: [],
 				solutionTree: [],
 				captchas: [
@@ -324,8 +361,8 @@ describe("ProviderDatabase", () => {
 						captchaId: "cap1",
 						captchaContentId: "capc1",
 						items: [],
-						target: [],
-						salt: "salt1",
+						target: "target1",
+						salt: "1234567890123456789012345678901234",
 					},
 				],
 			};
@@ -353,9 +390,9 @@ describe("ProviderDatabase", () => {
 		it("should throw error on failure", async () => {
 			await db.connect();
 			const dataset = {
-				datasetId: "0x123",
-				datasetContentId: "0x456",
-				format: "format1",
+				datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				datasetContentId: "0x4567890abcdef1234567890abcdef1234567890",
+				format: "SelectAll",
 				contentTree: [],
 				solutionTree: [],
 				captchas: [],
@@ -390,7 +427,9 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			const result = await db.getSolutions("0x123");
+			const result = await db.getSolutions(
+				"0x1234567890abcdef1234567890abcdef12345678",
+			);
 			expect(result).toEqual(solutions);
 		});
 
@@ -406,7 +445,9 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			const result = await db.getSolutions("0x123");
+			const result = await db.getSolutions(
+				"0x1234567890abcdef1234567890abcdef12345678",
+			);
 			expect(result).toEqual([]);
 		});
 	});
@@ -453,9 +494,9 @@ describe("ProviderDatabase", () => {
 		it("should return dataset with captchas and solutions", async () => {
 			await db.connect();
 			const datasetDoc = {
-				datasetId: "0x123",
-				datasetContentId: "0x456",
-				format: "format1",
+				datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				datasetContentId: "0x4567890abcdef1234567890abcdef1234567890",
+				format: "SelectAll",
 				contentTree: [],
 				solutionTree: [],
 			};
@@ -464,45 +505,48 @@ describe("ProviderDatabase", () => {
 					captchaId: "cap1",
 					captchaContentId: "capc1",
 					items: [],
-					target: [],
-					salt: "salt1",
+					target: "target1",
+					salt: "1234567890123456789012345678901234",
 					solved: true,
 				},
 			] as Captcha[];
 			const solutions = [
-				{ captchaId: "cap1", solution: ["sol1"] },
+				{
+					captchaId: "cap1",
+					solution: ["sol1"],
+					datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				},
 			] as SolutionRecord[];
-			const mockFindOne = vi
-				.fn()
-				.mockReturnValueOnce({
-					lean: vi.fn().mockResolvedValue(datasetDoc),
-				})
-				.mockReturnValueOnce({
-					lean: vi.fn().mockResolvedValue(captchas),
-				})
-				.mockReturnValueOnce({
-					lean: vi.fn().mockResolvedValue(solutions),
-				});
-			const mockFind = vi.fn().mockReturnValue({
+			const mockDatasetFindOne = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(datasetDoc),
+			});
+			const mockCaptchaFind = vi.fn().mockReturnValue({
 				lean: vi.fn().mockResolvedValue(captchas),
+			});
+			const mockSolutionFind = vi.fn().mockReturnValue({
+				lean: vi.fn().mockResolvedValue(solutions),
 			});
 			db.tables = {
 				dataset: {
 					...mockModel,
-					findOne: mockFindOne,
+					findOne: mockDatasetFindOne,
 				},
 				captcha: {
 					...mockModel,
-					find: mockFind,
+					find: mockCaptchaFind,
 				},
 				solution: {
 					...mockModel,
-					find: mockFind,
+					find: mockSolutionFind,
 				},
 			} as typeof db.tables;
 
-			const result = await db.getDataset("0x123");
-			expect(result.datasetId).toBe("0x123");
+			const result = await db.getDataset(
+				"0x1234567890abcdef1234567890abcdef12345678",
+			);
+			expect(result.datasetId).toBe(
+				"0x1234567890abcdef1234567890abcdef12345678",
+			);
 			expect(result.captchas).toHaveLength(1);
 			expect(result.captchas[0].solution).toEqual(["sol1"]);
 		});
@@ -521,14 +565,21 @@ describe("ProviderDatabase", () => {
 				solution: mockModel,
 			} as typeof db.tables;
 
-			await expect(db.getDataset("0x123")).rejects.toThrow(ProsopoDBError);
+			await expect(
+				db.getDataset("0x1234567890abcdef1234567890abcdef12345678"),
+			).rejects.toThrow(ProsopoDBError);
 		});
 	});
 
 	describe("getRandomCaptcha", () => {
 		it("should return random captchas", async () => {
 			await db.connect();
-			const captchas = [{ captchaId: "cap1", datasetId: "0x123" }] as Captcha[];
+			const captchas = [
+				{
+					captchaId: "cap1",
+					datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				},
+			] as Captcha[];
 			const mockAggregate = vi.fn().mockResolvedValue(captchas);
 			db.tables = {
 				captcha: {
@@ -537,7 +588,11 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			const result = await db.getRandomCaptcha(true, "0x123", 1);
+			const result = await db.getRandomCaptcha(
+				true,
+				"0x1234567890abcdef1234567890abcdef12345678",
+				1,
+			);
 			expect(result).toEqual(captchas);
 		});
 
@@ -551,7 +606,12 @@ describe("ProviderDatabase", () => {
 
 		it("should use default size of 1", async () => {
 			await db.connect();
-			const mockAggregate = vi.fn().mockResolvedValue([]);
+			const mockAggregate = vi.fn().mockResolvedValue([
+				{
+					captchaId: "cap1",
+					datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				},
+			]);
 			db.tables = {
 				captcha: {
 					...mockModel,
@@ -559,7 +619,10 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			await db.getRandomCaptcha(true, "0x123");
+			await db.getRandomCaptcha(
+				true,
+				"0x1234567890abcdef1234567890abcdef12345678",
+			);
 			const pipeline = mockAggregate.mock.calls[0][0];
 			const sampleStage = pipeline.find((stage: unknown) =>
 				Object.hasOwn(stage as object, "$sample"),
@@ -577,9 +640,13 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			await expect(db.getRandomCaptcha(true, "0x123", 1)).rejects.toThrow(
-				ProsopoDBError,
-			);
+			await expect(
+				db.getRandomCaptcha(
+					true,
+					"0x1234567890abcdef1234567890abcdef12345678",
+					1,
+				),
+			).rejects.toThrow(ProsopoDBError);
 		});
 	});
 
@@ -635,7 +702,10 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			await db.updateCaptcha(captcha, "0x123");
+			await db.updateCaptcha(
+				captcha,
+				"0x1234567890abcdef1234567890abcdef12345678",
+			);
 			expect(mockUpdateOne).toHaveBeenCalled();
 		});
 
@@ -682,7 +752,9 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			const result = await db.getDatasetDetails("0x123");
+			const result = await db.getDatasetDetails(
+				"0x1234567890abcdef1234567890abcdef12345678",
+			);
 			expect(result).toEqual(dataset);
 		});
 
@@ -706,9 +778,9 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			await expect(db.getDatasetDetails("0x123")).rejects.toThrow(
-				ProsopoDBError,
-			);
+			await expect(
+				db.getDatasetDetails("0x1234567890abcdef1234567890abcdef12345678"),
+			).rejects.toThrow(ProsopoDBError);
 		});
 	});
 
@@ -874,7 +946,7 @@ describe("ProviderDatabase", () => {
 					{
 						captchaId: "cap1",
 						captchaContentId: "capc1",
-						salt: "salt1",
+						salt: "1234567890123456789012345678901234",
 						solution: ["sol1"],
 					},
 				],
@@ -882,6 +954,21 @@ describe("ProviderDatabase", () => {
 					id: "commit1",
 					userAccount: "user1",
 					dappAccount: "dapp1",
+					datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+					providerAccount: "provider1",
+					result: { status: CaptchaStatus.pending },
+					userSignature: "sig1",
+					ipAddress: {
+						ipv4: "127.0.0.1",
+						type: "v4",
+						upper: 2130706433n,
+						lower: 2130706433n,
+					},
+					headers: {},
+					ja4: "ja4hash",
+					userSubmitted: false,
+					serverChecked: false,
+					requestedAtTimestamp: new Date(),
 				},
 			);
 			expect(mockUpdateOne).toHaveBeenCalled();
@@ -907,6 +994,21 @@ describe("ProviderDatabase", () => {
 				id: "commit1",
 				userAccount: "user1",
 				dappAccount: "dapp1",
+				datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+				providerAccount: "provider1",
+				result: { status: CaptchaStatus.pending },
+				userSignature: "sig1",
+				ipAddress: {
+					ipv4: "127.0.0.1",
+					type: "v4",
+					upper: 2130706433n,
+					lower: 2130706433n,
+				},
+				headers: {},
+				ja4: "ja4hash",
+				userSubmitted: false,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
 			});
 			expect(mockUpdateOne).not.toHaveBeenCalled();
 			expect(mockBulkWrite).not.toHaveBeenCalled();
@@ -1286,7 +1388,12 @@ describe("ProviderDatabase", () => {
 		it("should return all captchas for dataset", async () => {
 			await db.connect();
 			const captchas = [
-				{ _id: "id1", captchaId: "cap1", datasetId: "0x123", solved: false },
+				{
+					_id: "id1",
+					captchaId: "cap1",
+					datasetId: "0x1234567890abcdef1234567890abcdef12345678",
+					solved: false,
+				},
 			] as (Captcha & { _id: unknown })[];
 			const mockFind = vi.fn().mockReturnValue({
 				lean: vi.fn().mockResolvedValue(captchas),
@@ -1315,7 +1422,10 @@ describe("ProviderDatabase", () => {
 				},
 			} as typeof db.tables;
 
-			await db.getAllCaptchasByDatasetId("0x123", CaptchaStates.Solved);
+			await db.getAllCaptchasByDatasetId(
+				"0x1234567890abcdef1234567890abcdef12345678",
+				CaptchaStates.Solved,
+			);
 			const filter = mockFind.mock.calls[0][0];
 			expect(filter.solved).toBe(true);
 		});
@@ -1411,7 +1521,7 @@ describe("ProviderDatabase", () => {
 
 			const result = await db.createScheduledTaskStatus(
 				"BatchCommitment",
-				"completed",
+				"Completed",
 			);
 			expect(result).toBe("task1");
 		});
