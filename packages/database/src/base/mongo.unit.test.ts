@@ -142,14 +142,14 @@ describe("MongoDatabase", () => {
 			const connect1 = db.connect();
 			const connect2 = db.connect();
 			expect(connect1).toBe(connect2);
-			
+
 			// Simulate connection opening
 			setTimeout(() => {
 				if (openCallback!) {
 					openCallback();
 				}
 			}, 10);
-			
+
 			await connect1;
 			await connect2;
 		});
@@ -365,3 +365,8 @@ describe("MongoDatabase", () => {
 		});
 	});
 });
+
+
+
+
+
