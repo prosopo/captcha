@@ -112,7 +112,7 @@ describe("updateEnvFiles", () => {
 		expect(fs.readFileSync).toHaveBeenCalled();
 		expect(fs.writeFileSync).toHaveBeenCalled();
 		const writtenContent = vi.mocked(fs.writeFileSync).mock
-			.calls[0][1] as string;
+			.calls[0]?.[1] as string;
 		expect(writtenContent).toContain("PROSOPO_SITE_KEY=new_value");
 		expect(writtenContent).toContain("OTHER_VAR=other");
 	});
@@ -129,7 +129,7 @@ describe("updateEnvFiles", () => {
 		await updateEnvFiles(["VAR1", "VAR2"], "new_value", mockLogger);
 
 		const writtenContent = vi.mocked(fs.writeFileSync).mock
-			.calls[0][1] as string;
+			.calls[0]?.[1] as string;
 		expect(writtenContent).toContain("VAR1=new_value");
 		expect(writtenContent).toContain("VAR2=new_value");
 	});
@@ -184,9 +184,9 @@ describe("updateDemoHTMLFiles", () => {
 		} as any;
 		vi.mocked(fs.readFileSync).mockReturnValue(mockBuffer);
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
-		vi.mocked(path.resolve).mockImplementation((...args) => {
+		vi.mocked(path.resolve).mockImplementation((...args: string[]) => {
 			if (args.length === 1) {
-				return args[0];
+				return args[0]!;
 			}
 			return args.join("/");
 		});
@@ -202,7 +202,7 @@ describe("updateDemoHTMLFiles", () => {
 
 		expect(fs.writeFileSync).toHaveBeenCalled();
 		const writtenContent = vi.mocked(fs.writeFileSync).mock
-			.calls[0][1] as string;
+			.calls[0]?.[1] as string;
 		expect(writtenContent).toContain(
 			"new_key_123456789012345678901234567890123456",
 		);
@@ -219,9 +219,9 @@ describe("updateDemoHTMLFiles", () => {
 		} as any;
 		vi.mocked(fs.readFileSync).mockReturnValue(mockBuffer);
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
-		vi.mocked(path.resolve).mockImplementation((...args) => {
+		vi.mocked(path.resolve).mockImplementation((...args: string[]) => {
 			if (args.length === 1) {
-				return args[0];
+				return args[0]!;
 			}
 			return args.join("/");
 		});
@@ -237,7 +237,7 @@ describe("updateDemoHTMLFiles", () => {
 
 		expect(fs.writeFileSync).toHaveBeenCalled();
 		const writtenContent = vi.mocked(fs.writeFileSync).mock
-			.calls[0][1] as string;
+			.calls[0]?.[1] as string;
 		expect(writtenContent).toContain(
 			"new_key_123456789012345678901234567890123456",
 		);
@@ -269,9 +269,9 @@ describe("updateDemoHTMLFiles", () => {
 		} as any;
 		vi.mocked(fs.readFileSync).mockReturnValue(mockBuffer);
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
-		vi.mocked(path.resolve).mockImplementation((...args) => {
+		vi.mocked(path.resolve).mockImplementation((...args: string[]) => {
 			if (args.length === 1) {
-				return args[0];
+				return args[0]!;
 			}
 			return args.join("/");
 		});
