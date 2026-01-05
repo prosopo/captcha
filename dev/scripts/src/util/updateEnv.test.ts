@@ -184,7 +184,7 @@ describe("updateDemoHTMLFiles", () => {
 		} as any;
 		vi.mocked(fs.readFileSync).mockReturnValue(mockBuffer);
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
-		vi.mocked(path.resolve).mockImplementation((...args: string[]) => {
+		vi.mocked(path.resolve).mockImplementation((...args: string[]): string => {
 			if (args.length === 1) {
 				return args[0]!;
 			}
@@ -219,7 +219,7 @@ describe("updateDemoHTMLFiles", () => {
 		} as any;
 		vi.mocked(fs.readFileSync).mockReturnValue(mockBuffer);
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
-		vi.mocked(path.resolve).mockImplementation((...args: string[]) => {
+		vi.mocked(path.resolve).mockImplementation((...args: string[]): string => {
 			if (args.length === 1) {
 				return args[0]!;
 			}
@@ -269,7 +269,7 @@ describe("updateDemoHTMLFiles", () => {
 		} as any;
 		vi.mocked(fs.readFileSync).mockReturnValue(mockBuffer);
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
-		vi.mocked(path.resolve).mockImplementation((...args: string[]) => {
+		vi.mocked(path.resolve).mockImplementation((...args: string[]): string => {
 			if (args.length === 1) {
 				return args[0]!;
 			}
