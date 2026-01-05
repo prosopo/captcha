@@ -54,6 +54,49 @@ describe("ApiClient", () => {
 			expect(baseURL).toBe("https://api.example.com:8080");
 		});
 
+		test("handles baseUrl with trailing slash", () => {
+			const client = new ApiClient("api.example.com/", "account123");
+			const baseURL = (client as unknown as { baseURL: string }).baseURL;
+			expect(baseURL).toBe("https://api.example.com/");
+		});
+
+		test("handles baseUrl with query parameters", () => {
+			const client = new ApiClient("api.example.com?key=value", "account123");
+			const baseURL = (client as unknown as { baseURL: string }).baseURL;
+			expect(baseURL).toBe("https://api.example.com?key=value");
+		});
+
+		test("handles empty account string", () => {
+			const client = new ApiClient("https://api.example.com", "");
+			const storedAccount = (client as unknown as { account: string }).account;
+			expect(storedAccount).toBe("");
+		});
+
+		test("handles baseUrl with special characters", () => {
+			const client = new ApiClient(
+				"api.example.com/path-with-dashes_underscores",
+				"account123",
+			);
+			const baseURL = (client as unknown as { baseURL: string }).baseURL;
+			expect(baseURL).toBe(
+				"https://api.example.com/path-with-dashes_underscores",
+			);
+		});
+
+		test("handles baseUrl starting with HTTP uppercase - case sensitive check adds https prefix", () => {
+			// The code checks for lowercase "http", so uppercase "HTTP" doesn't match
+			const client = new ApiClient("HTTP://api.example.com", "account123");
+			const baseURL = (client as unknown as { baseURL: string }).baseURL;
+			expect(baseURL).toBe("https://HTTP://api.example.com");
+		});
+
+		test("handles baseUrl starting with HTTPS uppercase - case sensitive check adds https prefix", () => {
+			// The code checks for lowercase "http", so uppercase "HTTPS" doesn't match
+			const client = new ApiClient("HTTPS://api.example.com", "account123");
+			const baseURL = (client as unknown as { baseURL: string }).baseURL;
+			expect(baseURL).toBe("https://HTTPS://api.example.com");
+		});
+
 		test("type checking - account is string", () => {
 			const client = new ApiClient("https://api.example.com", "account123");
 			const account = (client as unknown as { account: string }).account;
