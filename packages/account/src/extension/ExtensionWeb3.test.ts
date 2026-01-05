@@ -432,6 +432,49 @@ describe("ExtensionWeb3", () => {
 			expect(result.account).toEqual(mockAccount);
 			expect(result.extension).toEqual(mockExtension2);
 		});
+
+		it("should handle web3Enable throwing an error", async () => {
+			const { web3Enable } = await import("@polkadot/extension-dapp");
+			const { cryptoWaitReady } = await import("@polkadot/util-crypto");
+
+			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			vi.mocked(web3Enable).mockRejectedValue(new Error("Extension error"));
+
+			await expect(extensionWeb3.getAccount(mockConfig)).rejects.toThrow(
+				"Extension error",
+			);
+		});
+
+		it("should handle cryptoWaitReady throwing an error", async () => {
+			const { cryptoWaitReady } = await import("@polkadot/util-crypto");
+
+			vi.mocked(cryptoWaitReady).mockRejectedValue(new Error("Crypto error"));
+
+			await expect(extensionWeb3.getAccount(mockConfig)).rejects.toThrow(
+				"Crypto error",
+			);
+		});
+
+		it("should handle extension.accounts.get throwing an error", async () => {
+			const { web3Enable } = await import("@polkadot/extension-dapp");
+			const { cryptoWaitReady } = await import("@polkadot/util-crypto");
+
+			const mockExtension = {
+				name: "polkadot-js",
+				version: "1.0.0",
+				accounts: {
+					get: vi.fn().mockRejectedValue(new Error("Accounts error")),
+				},
+			};
+
+			vi.mocked(cryptoWaitReady).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
+			vi.mocked(web3Enable).mockResolvedValue([mockExtension] as any);
+
+			await expect(extensionWeb3.getAccount(mockConfig)).rejects.toThrow(
+				"Accounts error",
+			);
+		});
 	});
 
 	describe("extends Extension", () => {
