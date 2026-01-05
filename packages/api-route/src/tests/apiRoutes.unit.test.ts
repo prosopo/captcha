@@ -109,6 +109,71 @@ describe("ApiRoutes", () => {
 			const routes: ApiRoutes = {};
 			expect(Object.keys(routes)).toHaveLength(0);
 		});
+
+		it("should support routes with special characters in keys", () => {
+			const TestSchema = z.object({ value: z.string() });
+
+			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
+				async processRequest(): Promise<ApiEndpointResponse> {
+					return { status: ApiEndpointResponseStatus.SUCCESS };
+				}
+
+				getRequestArgsSchema(): typeof TestSchema {
+					return TestSchema;
+				}
+			}
+
+			const routes: ApiRoutes = {
+				"/api/v1/users/:id": new TestEndpoint(),
+				"/api/v2/posts/*": new TestEndpoint(),
+				"/api/search?q=test": new TestEndpoint(),
+			};
+
+			expect(routes["/api/v1/users/:id"]).toBeInstanceOf(TestEndpoint);
+			expect(routes["/api/v2/posts/*"]).toBeInstanceOf(TestEndpoint);
+			expect(routes["/api/search?q=test"]).toBeInstanceOf(TestEndpoint);
+		});
+
+		it("should support routes with empty string keys", () => {
+			const TestSchema = z.object({ value: z.string() });
+
+			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
+				async processRequest(): Promise<ApiEndpointResponse> {
+					return { status: ApiEndpointResponseStatus.SUCCESS };
+				}
+
+				getRequestArgsSchema(): typeof TestSchema {
+					return TestSchema;
+				}
+			}
+
+			const routes: ApiRoutes = {
+				"": new TestEndpoint(),
+			};
+
+			expect(routes[""]).toBeInstanceOf(TestEndpoint);
+		});
+
+		it("should support routes with very long keys", () => {
+			const TestSchema = z.object({ value: z.string() });
+
+			class TestEndpoint implements ApiEndpoint<typeof TestSchema> {
+				async processRequest(): Promise<ApiEndpointResponse> {
+					return { status: ApiEndpointResponseStatus.SUCCESS };
+				}
+
+				getRequestArgsSchema(): typeof TestSchema {
+					return TestSchema;
+				}
+			}
+
+			const longKey = `/${"a".repeat(1000)}`;
+			const routes: ApiRoutes = {
+				[longKey]: new TestEndpoint(),
+			};
+
+			expect(routes[longKey]).toBeInstanceOf(TestEndpoint);
+		});
 	});
 
 	describe("endpoint execution", () => {
@@ -458,6 +523,48 @@ describe("ApiRouteLimit", () => {
 		});
 	});
 
+	describe("edge cases", () => {
+		it("should support zero limit value", () => {
+			const limit: ApiRouteLimit = {
+				windowMs: 60000,
+				limit: 0,
+			};
+
+			expect(limit.limit).toBe(0);
+			expect(limit.windowMs).toBe(60000);
+		});
+
+		it("should support zero windowMs value", () => {
+			const limit: ApiRouteLimit = {
+				windowMs: 0,
+				limit: 100,
+			};
+
+			expect(limit.windowMs).toBe(0);
+			expect(limit.limit).toBe(100);
+		});
+
+		it("should support very large numbers", () => {
+			const limit: ApiRouteLimit = {
+				windowMs: Number.MAX_SAFE_INTEGER,
+				limit: Number.MAX_SAFE_INTEGER,
+			};
+
+			expect(limit.windowMs).toBe(Number.MAX_SAFE_INTEGER);
+			expect(limit.limit).toBe(Number.MAX_SAFE_INTEGER);
+		});
+
+		it("should support floating point numbers", () => {
+			const limit: ApiRouteLimit = {
+				windowMs: 1234.56,
+				limit: 99.99,
+			};
+
+			expect(limit.windowMs).toBe(1234.56);
+			expect(limit.limit).toBe(99.99);
+		});
+	});
+
 	describe("usage scenarios", () => {
 		it("should be usable in rate limiting logic", () => {
 			const limit: ApiRouteLimit = {
@@ -604,6 +711,44 @@ describe("ApiRouteLimits", () => {
 			expect(keys).toHaveLength(2);
 			expect(keys).toContain(RouteName.ROUTE_A);
 			expect(keys).toContain(RouteName.ROUTE_B);
+		});
+	});
+
+	describe("edge cases", () => {
+		it("should support empty ApiRouteLimits record", () => {
+			enum RouteName {
+				ROUTE_A = "ROUTE_A",
+			}
+
+			const limits: ApiRouteLimits<RouteName> = {} as ApiRouteLimits<RouteName>;
+
+			expect(Object.keys(limits)).toHaveLength(0);
+		});
+
+		it("should support single entry ApiRouteLimits", () => {
+			enum RouteName {
+				SINGLE_ROUTE = "SINGLE_ROUTE",
+			}
+
+			const limits: ApiRouteLimits<RouteName> = {
+				[RouteName.SINGLE_ROUTE]: { windowMs: 60000, limit: 100 },
+			};
+
+			expect(Object.keys(limits)).toHaveLength(1);
+			expect(limits[RouteName.SINGLE_ROUTE].limit).toBe(100);
+		});
+
+		it("should support ApiRouteLimits with zero values", () => {
+			enum RouteName {
+				ZERO_LIMIT = "ZERO_LIMIT",
+			}
+
+			const limits: ApiRouteLimits<RouteName> = {
+				[RouteName.ZERO_LIMIT]: { windowMs: 0, limit: 0 },
+			};
+
+			expect(limits[RouteName.ZERO_LIMIT].windowMs).toBe(0);
+			expect(limits[RouteName.ZERO_LIMIT].limit).toBe(0);
 		});
 	});
 });
