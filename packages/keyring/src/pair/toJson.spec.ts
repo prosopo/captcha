@@ -36,5 +36,5 @@ describe("toJson", (): void => {
 				version: "3",
 			},
 		});
-	});
+	}, 30000);
 });

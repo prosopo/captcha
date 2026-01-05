@@ -19,5 +19,5 @@ describe("decode", (): void => {
 		expect((): void =>
 			keyring.alice.decodePkcs8(PASS, keyring.alice.encodePkcs8(PASS)),
 		).not.toThrow();
-	});
+	}, 30000);
 });

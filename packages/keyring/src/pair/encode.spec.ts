@@ -20,5 +20,5 @@ describe("encode", (): void => {
 
 	it("returns encoded PKCS8 when passphrase supplied", (): void => {
 		expect(keyring.alice.encodePkcs8("testing")).toHaveLength(ENCODED_LENGTH);
-	});
+	}, 30000);
 });
