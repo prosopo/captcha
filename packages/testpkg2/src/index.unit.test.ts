@@ -16,8 +16,8 @@ import { describe, expect, test } from "vitest";
 import * as testpkg2 from "./index.js";
 
 describe("@prosopo/testpkg2", () => {
-	test("package can be imported", () => {
-		expect(testpkg2).toBeDefined();
-		expect(typeof testpkg2).toBe("object");
-	});
+    test("package can be imported", () => {
+        expect(testpkg2).toBeDefined();
+        expect(typeof testpkg2).toBe("object");
+    });
 });
