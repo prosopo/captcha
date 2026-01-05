@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createWidgetSkeleton } from "./createWidget.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { darkTheme, lightTheme } from "../theme.js";
+import * as createWebComponentModule from "./createWebComponent.js";
+import { createWidgetSkeleton } from "./createWidget.js";
 
 describe("webComponent/createWidget", () => {
 	let container: HTMLElement;
@@ -30,33 +31,21 @@ describe("webComponent/createWidget", () => {
 
 	describe("createWidgetSkeleton", () => {
 		it("should create widget skeleton with light theme", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
 			expect(result.widgetInteractiveArea).toBeInstanceOf(HTMLElement);
 			expect(result.webComponent).toBeInstanceOf(HTMLElement);
 		});
 
 		it("should create widget skeleton with dark theme", () => {
-			const result = createWidgetSkeleton(
-				container,
-				darkTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, darkTheme, "test-widget");
 
 			expect(result.widgetInteractiveArea).toBeInstanceOf(HTMLElement);
 			expect(result.webComponent).toBeInstanceOf(HTMLElement);
 		});
 
 		it("should attach web component to container", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
 			expect(container.firstElementChild).toBe(result.webComponent);
 		});
@@ -76,15 +65,9 @@ describe("webComponent/createWidget", () => {
 		});
 
 		it("should find interactive area in shadow DOM", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
-			expect(result.widgetInteractiveArea.className).toBe(
-				"checkbox__content",
-			);
+			expect(result.widgetInteractiveArea.className).toBe("checkbox__content");
 		});
 
 		it("should throw error if interactive area not found", () => {
@@ -100,22 +83,14 @@ describe("webComponent/createWidget", () => {
 		});
 
 		it("should return widget interactive area as HTMLElement", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
 			expect(result.widgetInteractiveArea).toBeInstanceOf(HTMLElement);
 			expect(result.widgetInteractiveArea).not.toBeNull();
 		});
 
 		it("should return web component as HTMLElement", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
 			expect(result.webComponent).toBeInstanceOf(HTMLElement);
 			expect(result.webComponent.tagName.toLowerCase()).toBe("test-widget");
@@ -139,11 +114,7 @@ describe("webComponent/createWidget", () => {
 		});
 
 		it("should create widget with skeleton structure", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
 			const shadowRoot = result.webComponent.shadowRoot;
 			expect(shadowRoot).toBeInstanceOf(ShadowRoot);
@@ -153,11 +124,7 @@ describe("webComponent/createWidget", () => {
 		});
 
 		it("should include checkbox in widget", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
 			const shadowRoot = result.webComponent.shadowRoot;
 			const checkbox = shadowRoot?.querySelector(".checkbox");
@@ -165,11 +132,7 @@ describe("webComponent/createWidget", () => {
 		});
 
 		it("should include logo in widget", () => {
-			const result = createWidgetSkeleton(
-				container,
-				lightTheme,
-				"test-widget",
-			);
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
 
 			const shadowRoot = result.webComponent.shadowRoot;
 			const logo = shadowRoot?.querySelector(".logo");
@@ -203,22 +166,34 @@ describe("webComponent/createWidget", () => {
 			document.body.appendChild(container1);
 			document.body.appendChild(container2);
 
-			const result1 = createWidgetSkeleton(
-				container1,
-				lightTheme,
-				"widget-1",
-			);
-			const result2 = createWidgetSkeleton(
-				container2,
-				darkTheme,
-				"widget-2",
-			);
+			const result1 = createWidgetSkeleton(container1, lightTheme, "widget-1");
+			const result2 = createWidgetSkeleton(container2, darkTheme, "widget-2");
 
 			expect(result1.webComponent).not.toBe(result2.webComponent);
 			expect(result1.widgetInteractiveArea).not.toBe(
 				result2.widgetInteractiveArea,
 			);
 		});
+
+		it("should use webComponent as root when shadowRoot is null", () => {
+			const webComponentWithoutShadow = document.createElement(
+				"test-widget",
+			) as HTMLElement & { shadowRoot: null };
+			Object.defineProperty(webComponentWithoutShadow, "shadowRoot", {
+				get: () => null,
+				configurable: true,
+			});
+
+			vi.spyOn(createWebComponentModule, "createWebComponent").mockReturnValue(
+				webComponentWithoutShadow,
+			);
+
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
+
+			const widget = result.webComponent.querySelector(".widget");
+			expect(widget).toBeInstanceOf(HTMLElement);
+
+			vi.restoreAllMocks();
+		});
 	});
 });
-

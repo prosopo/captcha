@@ -13,8 +13,6 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createWidgetSkeletonElement } from "./skeleton.js";
-import { darkTheme, lightTheme } from "../theme.js";
 import {
 	WIDGET_BORDER_RADIUS,
 	WIDGET_INNER_HEIGHT,
@@ -23,6 +21,8 @@ import {
 	WIDGET_OUTER_HEIGHT,
 	WIDGET_PADDING,
 } from "../constants.js";
+import { darkTheme, lightTheme } from "../theme.js";
+import { createWidgetSkeletonElement } from "./skeleton.js";
 
 describe("elements/skeleton", () => {
 	let originalEnv: string | undefined;
@@ -193,6 +193,24 @@ describe("elements/skeleton", () => {
 			const logos = skeleton.querySelectorAll(".logo");
 			expect(logos.length).toBe(1);
 		});
+
+		it("should handle undefined NODE_ENV", () => {
+			const originalEnv = process.env.NODE_ENV;
+			process.env.NODE_ENV = undefined;
+			const skeleton = createWidgetSkeletonElement(lightTheme);
+
+			expect(skeleton).toBeInstanceOf(HTMLElement);
+			process.env.NODE_ENV = originalEnv;
+		});
+
+		it("should handle empty string NODE_ENV", () => {
+			const originalEnv = process.env.NODE_ENV;
+			process.env.NODE_ENV = "";
+			const skeleton = createWidgetSkeletonElement(lightTheme);
+
+			const dimensions = skeleton.querySelector(".widget__dimensions");
+			expect(dimensions?.getAttribute("data-cy")).toBe("captcha-checkbox");
+			process.env.NODE_ENV = originalEnv;
+		});
 	});
 });
-
