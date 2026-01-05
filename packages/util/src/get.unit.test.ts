@@ -44,4 +44,54 @@ describe("get", () => {
 	test("get correct field number", () => {
 		expect(get({ 1: 1 }, 1)).to.equal(1);
 	});
+
+	test("returns undefined when required is false and field is missing", () => {
+		expect(get({ a: 1 }, "b", false)).toBe(undefined);
+		expect(get({ a: 1 }, 2, false)).toBe(undefined);
+	});
+
+	test("returns undefined when required is false and field value is undefined", () => {
+		expect(get({ a: undefined }, "a", false)).toBe(undefined);
+	});
+
+	test("throws error with descriptive message", () => {
+		try {
+			get({ a: 1 }, "b");
+			expect.fail("Should have thrown");
+		} catch (error) {
+			expect(error).toBeInstanceOf(Error);
+			const err = error as Error;
+			expect(err.message).toContain("b");
+			expect(err.message).toContain("Object has no property");
+		}
+	});
+
+	test("works with symbol keys", () => {
+		const sym = Symbol("test");
+		const obj = { [sym]: "value" };
+		expect(get(obj, sym)).toBe("value");
+		expect(() => get(obj, Symbol("other"))).to.throw();
+	});
+
+	test("works with different value types", () => {
+		const obj = {
+			string: "value",
+			number: 123,
+			boolean: true,
+			null: null,
+			array: [1, 2, 3],
+			object: { nested: "value" },
+		};
+		expect(get(obj, "string")).toBe("value");
+		expect(get(obj, "number")).toBe(123);
+		expect(get(obj, "boolean")).toBe(true);
+		expect(get(obj, "null")).toBe(null);
+		expect(get(obj, "array")).toEqual([1, 2, 3]);
+		expect(get(obj, "object")).toEqual({ nested: "value" });
+	});
+
+	test("works with nested objects", () => {
+		const obj = { a: { b: { c: "value" } } };
+		expect(get(obj, "a")).toEqual({ b: { c: "value" } });
+	});
 });
