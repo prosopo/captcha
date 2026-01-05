@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import {
@@ -38,9 +37,9 @@ describe("fsWalk", () => {
 		const fileIndices = paths
 			.map((p, i) => (p.endsWith(".png") ? i : -1))
 			.filter((i) => i !== -1);
-		fileIndices.forEach((fileIndex) => {
+		for (const fileIndex of fileIndices) {
 			expect(fileIndex).toBeLessThan(rootIndex);
-		});
+		}
 	});
 
 	test("handles non-existent path", () => {
@@ -252,4 +251,3 @@ describe("captchasEqFs", () => {
 		expect(typeof result).toBe("boolean");
 	});
 });
-

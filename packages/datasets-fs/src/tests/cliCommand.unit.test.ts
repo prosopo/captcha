@@ -1,4 +1,3 @@
-import { ProsopoError } from "@prosopo/common";
 import { describe, expect, test, vi } from "vitest";
 import * as z from "zod";
 import { CliCommand } from "../cli/cliCommand.js";
@@ -137,4 +136,3 @@ describe("CliCommand", () => {
 		expect(typeof description).toBe("string");
 	});
 });
-

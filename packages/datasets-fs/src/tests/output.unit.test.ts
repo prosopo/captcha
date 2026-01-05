@@ -100,9 +100,9 @@ describe("OutputCliCommand", () => {
 		fs.mkdirSync(testOutputDir, { recursive: true });
 		const existingFile = path.join(testOutputDir, "existing.json");
 		fs.writeFileSync(existingFile, "{}");
-		await expect(
-			command._check({ output: existingFile }),
-		).rejects.toThrow(ProsopoEnvError);
+		await expect(command._check({ output: existingFile })).rejects.toThrow(
+			ProsopoEnvError,
+		);
 	});
 
 	test("_run deletes output when overwrite is true and output exists", async () => {
@@ -167,8 +167,7 @@ describe("OutputCliCommand", () => {
 	test("types", () => {
 		const command = new TestOutputCommand();
 		// Type check: getOptions should return object with string keys
-		const options: ReturnType<typeof command.getOptions> =
-			command.getOptions();
+		const options: ReturnType<typeof command.getOptions> = command.getOptions();
 		expect(typeof options).toBe("object");
 		// Type check: outputExists should return boolean
 		const exists: ReturnType<typeof command.outputExists> =
@@ -183,4 +182,3 @@ describe("OutputCliCommand", () => {
 		expect(args.overwrite).toBe(true);
 	});
 });
-

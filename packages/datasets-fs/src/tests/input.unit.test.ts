@@ -1,7 +1,6 @@
-import fs from "node:fs";
 import path from "node:path";
 import { ProsopoDatasetError, ProsopoError } from "@prosopo/common";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import { InputArgsSchema, InputCliCommand } from "../utils/input.js";
 
 // Concrete implementation for testing
@@ -29,9 +28,7 @@ describe("InputCliCommand", () => {
 	test("_check passes when input file exists", async () => {
 		const command = new TestInputCommand();
 		const testFile = path.join(__dirname, "data", "flat", "data.json");
-		await expect(
-			command._check({ input: testFile }),
-		).resolves.not.toThrow();
+		await expect(command._check({ input: testFile })).resolves.not.toThrow();
 	});
 
 	test("_check throws ProsopoDatasetError when input file does not exist", async () => {
@@ -85,8 +82,7 @@ describe("InputCliCommand", () => {
 	test("types", () => {
 		const command = new TestInputCommand();
 		// Type check: getOptions should return object with string keys
-		const options: ReturnType<typeof command.getOptions> =
-			command.getOptions();
+		const options: ReturnType<typeof command.getOptions> = command.getOptions();
 		expect(typeof options).toBe("object");
 		// Type check: _check should accept InputArgs
 		const args: Parameters<typeof command._check>[0] = {
@@ -95,4 +91,3 @@ describe("InputCliCommand", () => {
 		expect(args.input).toBe("test");
 	});
 });
-

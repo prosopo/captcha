@@ -172,4 +172,3 @@ describe("Cli", () => {
 		expect(Array.isArray(args)).toBe(true);
 	});
 });
-

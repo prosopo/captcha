@@ -1,11 +1,10 @@
-import { ProsopoError } from "@prosopo/common";
 import { describe, expect, test } from "vitest";
+import { InputCliCommand } from "../utils/input.js";
 import {
 	InputOutputArgsSchema,
 	InputOutputCliCommand,
 } from "../utils/inputOutput.js";
-import { InputArgsSchema, InputCliCommand } from "../utils/input.js";
-import { OutputArgsSchema, OutputCliCommand } from "../utils/output.js";
+import { OutputCliCommand } from "../utils/output.js";
 
 // Concrete implementation for testing
 class TestInputOutputCommand extends InputOutputCliCommand<
@@ -50,8 +49,7 @@ describe("InputOutputCliCommand", () => {
 	test("types", () => {
 		const command = new TestInputOutputCommand();
 		// Type check: getOptions should return object with string keys
-		const options: ReturnType<typeof command.getOptions> =
-			command.getOptions();
+		const options: ReturnType<typeof command.getOptions> = command.getOptions();
 		expect(typeof options).toBe("object");
 		// Type check: getArgSchema should return InputOutputArgsSchema
 		const schema: ReturnType<typeof command.getArgSchema> =
@@ -59,4 +57,3 @@ describe("InputOutputCliCommand", () => {
 		expect(schema).toBeDefined();
 	});
 });
-

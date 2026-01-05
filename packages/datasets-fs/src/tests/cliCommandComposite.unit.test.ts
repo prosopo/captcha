@@ -169,8 +169,7 @@ describe("CliCommandComposite", () => {
 	test("types", () => {
 		const command = new TestCompositeCommand();
 		// Type check: getOptions should return object with string keys
-		const options: ReturnType<typeof command.getOptions> =
-			command.getOptions();
+		const options: ReturnType<typeof command.getOptions> = command.getOptions();
 		expect(typeof options).toBe("object");
 		// Type check: getCommands should return array of CliCommandAny
 		const commands: ReturnType<typeof command.getCommands> =
@@ -178,4 +177,3 @@ describe("CliCommandComposite", () => {
 		expect(Array.isArray(commands)).toBe(true);
 	});
 });
-
