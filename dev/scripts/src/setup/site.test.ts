@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { registerSiteKey } from "./site.js";
 import { Tasks } from "@prosopo/provider";
-import {
-	CaptchaType,
-	ClientSettingsSchema,
-	Tier,
-} from "@prosopo/types";
+import { CaptchaType, Tier } from "@prosopo/types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { registerSiteKey } from "./site.js";
 
 vi.mock("@prosopo/provider");
 
@@ -127,4 +123,3 @@ describe("registerSiteKey", () => {
 		);
 	});
 });
-

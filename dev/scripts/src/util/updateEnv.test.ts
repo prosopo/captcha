@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import {
-	findEnvFiles,
-	updateEnvFiles,
-	updateDemoHTMLFiles,
-} from "./updateEnv.js";
 import fs from "node:fs";
 import path from "node:path";
-import fg from "fast-glob";
-import dotenv from "dotenv";
 import { getEnv } from "@prosopo/dotenv";
 import { at } from "@prosopo/util";
+import dotenv from "dotenv";
+import fg from "fast-glob";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	findEnvFiles,
+	updateDemoHTMLFiles,
+	updateEnvFiles,
+} from "./updateEnv.js";
 
 vi.mock("node:fs");
 vi.mock("node:path");
@@ -46,9 +46,7 @@ describe("findEnvFiles", () => {
 	});
 
 	it("should find env files in default location", async () => {
-		vi.mocked(fg).mockResolvedValue([
-			"../../packages/test/.env.development",
-		]);
+		vi.mocked(fg).mockResolvedValue(["../../packages/test/.env.development"]);
 
 		const result = await findEnvFiles(mockLogger);
 
@@ -109,15 +107,12 @@ describe("updateEnvFiles", () => {
 		});
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
 
-		await updateEnvFiles(
-			["PROSOPO_SITE_KEY"],
-			"new_value",
-			mockLogger,
-		);
+		await updateEnvFiles(["PROSOPO_SITE_KEY"], "new_value", mockLogger);
 
 		expect(fs.readFileSync).toHaveBeenCalled();
 		expect(fs.writeFileSync).toHaveBeenCalled();
-		const writtenContent = vi.mocked(fs.writeFileSync).mock.calls[0][1] as string;
+		const writtenContent = vi.mocked(fs.writeFileSync).mock
+			.calls[0][1] as string;
 		expect(writtenContent).toContain("PROSOPO_SITE_KEY=new_value");
 		expect(writtenContent).toContain("OTHER_VAR=other");
 	});
@@ -131,13 +126,10 @@ describe("updateEnvFiles", () => {
 		});
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
 
-		await updateEnvFiles(
-			["VAR1", "VAR2"],
-			"new_value",
-			mockLogger,
-		);
+		await updateEnvFiles(["VAR1", "VAR2"], "new_value", mockLogger);
 
-		const writtenContent = vi.mocked(fs.writeFileSync).mock.calls[0][1] as string;
+		const writtenContent = vi.mocked(fs.writeFileSync).mock
+			.calls[0][1] as string;
 		expect(writtenContent).toContain("VAR1=new_value");
 		expect(writtenContent).toContain("VAR2=new_value");
 	});
@@ -150,11 +142,7 @@ describe("updateEnvFiles", () => {
 		});
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
 
-		await updateEnvFiles(
-			["PROSOPO_SITE_KEY"],
-			"new_value",
-			mockLogger,
-		);
+		await updateEnvFiles(["PROSOPO_SITE_KEY"], "new_value", mockLogger);
 
 		expect(fs.writeFileSync).not.toHaveBeenCalled();
 	});
@@ -166,12 +154,7 @@ describe("updateEnvFiles", () => {
 		});
 		vi.mocked(fs.writeFileSync).mockImplementation(() => {});
 
-		await updateEnvFiles(
-			["VAR"],
-			"new_value",
-			mockLogger,
-			"/custom/path",
-		);
+		await updateEnvFiles(["VAR"], "new_value", mockLogger, "/custom/path");
 
 		expect(fg).toHaveBeenCalledWith(
 			"/custom/path/**/.env.development",
@@ -194,7 +177,8 @@ describe("updateDemoHTMLFiles", () => {
 	});
 
 	it.skip("should update HTML file with matching site key", async () => {
-		const htmlContent = '<div data-sitekey="old_key_123456789012345678901234567890123456"></div>';
+		const htmlContent =
+			'<div data-sitekey="old_key_123456789012345678901234567890123456"></div>';
 		const mockBuffer = {
 			toString: () => htmlContent,
 		} as any;
@@ -217,13 +201,19 @@ describe("updateDemoHTMLFiles", () => {
 		);
 
 		expect(fs.writeFileSync).toHaveBeenCalled();
-		const writtenContent = vi.mocked(fs.writeFileSync).mock.calls[0][1] as string;
-		expect(writtenContent).toContain("new_key_123456789012345678901234567890123456");
-		expect(writtenContent).not.toContain("old_key_123456789012345678901234567890123456");
+		const writtenContent = vi.mocked(fs.writeFileSync).mock
+			.calls[0][1] as string;
+		expect(writtenContent).toContain(
+			"new_key_123456789012345678901234567890123456",
+		);
+		expect(writtenContent).not.toContain(
+			"old_key_123456789012345678901234567890123456",
+		);
 	});
 
 	it.skip("should update HTML file with siteKey pattern", async () => {
-		const htmlContent = "const config = { siteKey: 'old_key_123456789012345678901234567890123456' };";
+		const htmlContent =
+			"const config = { siteKey: 'old_key_123456789012345678901234567890123456' };";
 		const mockBuffer = {
 			toString: () => htmlContent,
 		} as any;
@@ -246,8 +236,11 @@ describe("updateDemoHTMLFiles", () => {
 		);
 
 		expect(fs.writeFileSync).toHaveBeenCalled();
-		const writtenContent = vi.mocked(fs.writeFileSync).mock.calls[0][1] as string;
-		expect(writtenContent).toContain("new_key_123456789012345678901234567890123456");
+		const writtenContent = vi.mocked(fs.writeFileSync).mock
+			.calls[0][1] as string;
+		expect(writtenContent).toContain(
+			"new_key_123456789012345678901234567890123456",
+		);
 	});
 
 	it("should not write file if no matches found", async () => {
@@ -269,7 +262,8 @@ describe("updateDemoHTMLFiles", () => {
 	});
 
 	it.skip("should try multiple matchers until one matches", async () => {
-		const htmlContent = "siteKey: 'old_key_123456789012345678901234567890123456'";
+		const htmlContent =
+			"siteKey: 'old_key_123456789012345678901234567890123456'";
 		const mockBuffer = {
 			toString: () => htmlContent,
 		} as any;
@@ -294,4 +288,3 @@ describe("updateDemoHTMLFiles", () => {
 		expect(fs.writeFileSync).toHaveBeenCalled();
 	});
 });
-

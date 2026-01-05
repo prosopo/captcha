@@ -77,4 +77,3 @@ describe("extractReferrersFromLogs", () => {
 		expect(result.split("           ").length).toBeGreaterThan(1);
 	});
 });
-

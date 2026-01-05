@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import setVersion from "./setVersion.js";
-import fs from "node:fs";
-import path from "node:path";
-import { parse, stringify } from "@iarna/toml";
-import { getRootDir } from "@prosopo/workspace";
 
 vi.mock("node:fs");
 vi.mock("node:path");
@@ -54,19 +50,27 @@ describe("parseVersion", () => {
 	});
 
 	it("should throw error for invalid format - too few parts", () => {
-		expect(() => parseVersion("1.2")).toThrow("Version must be in the format of x.y.z");
+		expect(() => parseVersion("1.2")).toThrow(
+			"Version must be in the format of x.y.z",
+		);
 	});
 
 	it("should throw error for invalid format - too many parts", () => {
-		expect(() => parseVersion("1.2.3.4")).toThrow("Version must be in the format of x.y.z");
+		expect(() => parseVersion("1.2.3.4")).toThrow(
+			"Version must be in the format of x.y.z",
+		);
 	});
 
 	it("should throw error for non-numeric parts", () => {
-		expect(() => parseVersion("a.b.c")).toThrow("Version must be in the format of x.y.z");
+		expect(() => parseVersion("a.b.c")).toThrow(
+			"Version must be in the format of x.y.z",
+		);
 	});
 
 	it("should throw error for empty string", () => {
-		expect(() => parseVersion("")).toThrow("Version must be in the format of x.y.z");
+		expect(() => parseVersion("")).toThrow(
+			"Version must be in the format of x.y.z",
+		);
 	});
 
 	it("should handle large version numbers", () => {
@@ -88,4 +92,3 @@ describe("setVersion", () => {
 	// Note: Full setVersion tests are skipped due to filesystem complexity
 	// The parseVersion function is tested above, which covers the core logic
 });
-

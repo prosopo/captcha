@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { updateEnvFile } from "./setup.js";
-import fse from "fs-extra";
 import { getEnvFile } from "@prosopo/dotenv";
 import { getRootDir } from "@prosopo/workspace";
+import fse from "fs-extra";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { updateEnvFile } from "./setup.js";
 
 vi.mock("fs-extra");
 vi.mock("@prosopo/dotenv");
@@ -75,7 +75,7 @@ describe("updateEnvFile", () => {
 	});
 
 	it("should handle env variables with quotes", async () => {
-		const envContent = "MNEMONIC=\"old mnemonic\"";
+		const envContent = 'MNEMONIC="old mnemonic"';
 		vi.mocked(fse.readFile).mockResolvedValue(envContent);
 		vi.mocked(fse.writeFile).mockResolvedValue(undefined);
 
@@ -102,4 +102,3 @@ describe("updateEnvFile", () => {
 		expect(writtenContent).toContain("VAR3=value3");
 	});
 });
-
