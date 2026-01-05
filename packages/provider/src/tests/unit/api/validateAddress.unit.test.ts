@@ -71,7 +71,7 @@ describe("validateAddr", () => {
 		expect(() => validateAddr("invalid")).toThrow(ProsopoApiError);
 		try {
 			validateAddr("invalid");
-		} catch (err) {
+		} catch (err: unknown) {
 			expect(err).toBeInstanceOf(ProsopoApiError);
 			if (err instanceof ProsopoApiError) {
 				expect(err.translationKey).toBe("CONTRACT.INVALID_ADDRESS");
@@ -87,7 +87,7 @@ describe("validateAddr", () => {
 		).toThrow(ProsopoApiError);
 		try {
 			validateAddr("invalid", "API.INVALID_SITE_KEY");
-		} catch (err) {
+		} catch (err: unknown) {
 			expect(err).toBeInstanceOf(ProsopoApiError);
 			if (err instanceof ProsopoApiError) {
 				expect(err.translationKey).toBe("API.INVALID_SITE_KEY");
@@ -111,7 +111,7 @@ describe("validateAddr", () => {
 
 		try {
 			validateAddr("invalid", "CONTRACT.INVALID_ADDRESS", mockLogger);
-		} catch (err) {
+		} catch (err: unknown) {
 			expect(err).toBeInstanceOf(ProsopoApiError);
 			if (err instanceof ProsopoApiError) {
 				expect(err.logger).toBe(mockLogger);
@@ -124,7 +124,7 @@ describe("validateAddr", () => {
 
 		try {
 			validateAddr("test-address");
-		} catch (err) {
+		} catch (err: unknown) {
 			expect(err).toBeInstanceOf(ProsopoApiError);
 			if (err instanceof ProsopoApiError) {
 				expect(err.context?.siteKey).toBe("test-address");
