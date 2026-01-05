@@ -201,7 +201,7 @@ describe("ExtensionWeb2", () => {
 			if (!result.extension) {
 				throw new Error("Extension should be defined");
 			}
-			const unsubscribe = result.extension.accounts.subscribe(() => {});
+			const unsubscribe = result.extension.accounts.subscribe(() => { });
 
 			// Verify accounts.subscribe returns an unsubscribe function
 			expect(typeof unsubscribe).toBe("function");
