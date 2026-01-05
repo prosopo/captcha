@@ -82,14 +82,15 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 		loading?: boolean;
 	}) => (
 		<div data-testid="checkbox" onClick={() => onChange({ isTrusted: true })}>
-			<input
-				type="checkbox"
-				checked={checked}
-				onChange={() => {}}
-				data-testid="checkbox-input"
-				id="mock-checkbox"
-			/>
-			<label htmlFor="mock-checkbox">{labelText}</label>
+			<label>
+				<input
+					type="checkbox"
+					checked={checked}
+					onChange={() => {}}
+					data-testid="checkbox-input"
+				/>
+				{labelText}
+			</label>
 			{error && <div data-testid="error">{error}</div>}
 			{loading && <div data-testid="loading">Loading...</div>}
 		</div>
