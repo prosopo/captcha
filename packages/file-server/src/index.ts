@@ -17,7 +17,7 @@ import dotenv from "dotenv";
 import express, { type Request, type Response } from "express";
 import sharp from "sharp";
 
-const parseArray = (value: string) => {
+export const parseArray = (value: string) => {
 	try {
 		return JSON.parse(value);
 	} catch (error) {
@@ -25,7 +25,7 @@ const parseArray = (value: string) => {
 	}
 };
 
-const toInt = (value: string | number | undefined) => {
+export const toInt = (value: string | number | undefined) => {
 	if (typeof value === "number") {
 		return value;
 	}
@@ -35,7 +35,7 @@ const toInt = (value: string | number | undefined) => {
 	return Number.parseInt(value);
 };
 
-const getEnv = () => {
+export const getEnv = () => {
 	const path = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : ".env";
 	dotenv.config({ path });
 	return {
@@ -47,7 +47,7 @@ const getEnv = () => {
 	};
 };
 
-const main = async () => {
+export const main = async () => {
 	const env = getEnv();
 
 	const app = express();
