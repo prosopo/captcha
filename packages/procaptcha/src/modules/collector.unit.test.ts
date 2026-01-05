@@ -296,6 +296,8 @@ describe("collector", () => {
             const outerForm = document.createElement("form");
             const innerDiv = document.createElement("div");
             const innerForm = document.createElement("form");
+            const innerElement = document.createElement("div");
+            innerForm.appendChild(innerElement);
             innerDiv.appendChild(innerForm);
             outerForm.appendChild(innerDiv);
             document.body.appendChild(outerForm);
@@ -308,7 +310,7 @@ describe("collector", () => {
                 setMouseEvents,
                 setTouchEvents,
                 setKeyboardEvents,
-                innerDiv,
+                innerElement,
             );
 
             expect(addEventListenerSpy).toHaveBeenCalled();
