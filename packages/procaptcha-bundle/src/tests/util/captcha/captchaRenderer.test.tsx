@@ -60,8 +60,11 @@ describe("CaptchaRenderer", () => {
 	let mockI18n: Ti18n;
 
 	beforeEach(() => {
-		dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+		dom = new JSDOM("<!DOCTYPE html><html><body></body></html>", {
+			url: "http://localhost",
+		});
 		global.document = dom.window.document;
+		global.window = dom.window as unknown as Window & typeof globalThis;
 		container = document.createElement("div");
 		widgetContainer = document.createElement("div");
 		mockComponentProvider = {
@@ -80,6 +83,8 @@ describe("CaptchaRenderer", () => {
 		vi.clearAllMocks();
 		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
 		(global as any).document = undefined;
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
+		(global as any).window = undefined;
 	});
 
 	it("should create React root and render captcha component", async () => {

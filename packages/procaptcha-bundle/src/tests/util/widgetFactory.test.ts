@@ -27,9 +27,13 @@ vi.mock("@prosopo/widget-skeleton", () => ({
 	darkTheme: {},
 }));
 
-vi.mock("@prosopo/locale", () => ({
-	loadI18next: vi.fn(() => Promise.resolve({})),
-}));
+vi.mock("@prosopo/locale", async () => {
+	const actual = await vi.importActual("@prosopo/locale");
+	return {
+		...actual,
+		loadI18next: vi.fn(() => Promise.resolve({})),
+	};
+});
 
 vi.mock("../../util/captcha/captchaRenderer.js", () => ({
 	CaptchaRenderer: vi.fn().mockImplementation(() => ({

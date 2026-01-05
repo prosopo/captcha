@@ -67,28 +67,28 @@ describe("index.ts exports", () => {
 	});
 
 	describe("ready", () => {
-		it("should execute callback immediately when document is ready", () => {
+		it("should execute callback immediately when document is ready", async () => {
 			Object.defineProperty(document, "readyState", {
 				writable: true,
 				value: "complete",
 			});
 
 			const callback = vi.fn();
-			const { default: ready } = require("../index.js");
+			const { default: ready } = await import("../index.js");
 
 			ready(callback);
 
 			expect(callback).toHaveBeenCalled();
 		});
 
-		it("should add DOMContentLoaded listener when document is loading", () => {
+		it("should add DOMContentLoaded listener when document is loading", async () => {
 			Object.defineProperty(document, "readyState", {
 				writable: true,
 				value: "loading",
 			});
 
 			const callback = vi.fn();
-			const { default: ready } = require("../index.js");
+			const { default: ready } = await import("../index.js");
 
 			ready(callback);
 
@@ -159,8 +159,8 @@ describe("index.ts exports", () => {
 	});
 
 	describe("execute", () => {
-		it("should dispatch procaptcha:execute event when containers are found", () => {
-			const { execute } = require("../index.js");
+		it("should dispatch procaptcha:execute event when containers are found", async () => {
+			const { execute } = await import("../index.js");
 
 			const container = document.createElement("div");
 			container.id = "procaptcha-container";
@@ -179,8 +179,8 @@ describe("index.ts exports", () => {
 			expect(typeof event.detail.timestamp).toBe("number");
 		});
 
-		it("should log error when no containers are found", () => {
-			const { execute } = require("../index.js");
+		it("should log error when no containers are found", async () => {
+			const { execute } = await import("../index.js");
 			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 			execute();
@@ -192,8 +192,8 @@ describe("index.ts exports", () => {
 			consoleSpy.mockRestore();
 		});
 
-		it("should find containers by data-size attribute", () => {
-			const { execute } = require("../index.js");
+		it("should find containers by data-size attribute", async () => {
+			const { execute } = await import("../index.js");
 
 			const container = document.createElement("div");
 			container.setAttribute("data-size", "invisible");
@@ -207,8 +207,8 @@ describe("index.ts exports", () => {
 			expect(eventListener).toHaveBeenCalled();
 		});
 
-		it("should find containers by id pattern", () => {
-			const { execute } = require("../index.js");
+		it("should find containers by id pattern", async () => {
+			const { execute } = await import("../index.js");
 
 			const container = document.createElement("div");
 			container.id = "test-procaptcha-container";
@@ -222,8 +222,8 @@ describe("index.ts exports", () => {
 			expect(eventListener).toHaveBeenCalled();
 		});
 
-		it("should find containers by class name", () => {
-			const { execute } = require("../index.js");
+		it("should find containers by class name", async () => {
+			const { execute } = await import("../index.js");
 
 			const container = document.createElement("div");
 			container.className = "p-procaptcha";
