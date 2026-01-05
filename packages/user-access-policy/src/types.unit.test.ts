@@ -14,6 +14,8 @@
 
 import { CaptchaType } from "@prosopo/types";
 import { describe, expectTypeOf, test } from "vitest";
+import type { getAccessRuleRedisKey } from "#policy/redis/redisRuleIndex.js";
+import type { getRedisRuleValue } from "#policy/redis/redisRulesWriter.js";
 import type {
 	AccessPolicy,
 	AccessRule,
@@ -30,7 +32,7 @@ import type {
 	UserIpInput,
 	UserScopeInput,
 } from "#policy/ruleInput/ruleInput.js";
-import { getAccessRuleFiltersFromInput } from "#policy/ruleInput/ruleInput.js";
+import type { getAccessRuleFiltersFromInput } from "#policy/ruleInput/ruleInput.js";
 import type {
 	AccessRuleRecord,
 	UserAttributesRecord,
@@ -38,7 +40,7 @@ import type {
 	UserScopeRecord,
 	UserScopeRecordField,
 } from "#policy/ruleRecord.js";
-import { getUserScopeRecordFromAccessRuleRecord } from "#policy/ruleRecord.js";
+import type { getUserScopeRecordFromAccessRuleRecord } from "#policy/ruleRecord.js";
 import type {
 	AccessRuleEntry,
 	AccessRulesFilter,
@@ -47,9 +49,7 @@ import type {
 	AccessRulesWriter,
 } from "#policy/rulesStorage.js";
 import { FilterScopeMatch } from "#policy/rulesStorage.js";
-import { getAccessRuleRedisKey } from "#policy/redis/redisRuleIndex.js";
-import { getRedisRuleValue } from "#policy/redis/redisRulesWriter.js";
-import { makeAccessRuleHash } from "#policy/transformRule.js";
+import type { makeAccessRuleHash } from "#policy/transformRule.js";
 
 describe("Type definitions", () => {
 	describe("AccessPolicyType enum", () => {
@@ -564,43 +564,63 @@ describe("Type definitions", () => {
 
 	describe("Function parameter and return types", () => {
 		test("getAccessRuleFiltersFromInput parameter type", () => {
-			expectTypeOf<Parameters<typeof getAccessRuleFiltersFromInput>[0]>().toMatchTypeOf<AccessRulesFilterInput>();
+			expectTypeOf<
+				Parameters<typeof getAccessRuleFiltersFromInput>[0]
+			>().toMatchTypeOf<AccessRulesFilterInput>();
 		});
 
 		test("getAccessRuleFiltersFromInput return type", () => {
-			expectTypeOf<ReturnType<typeof getAccessRuleFiltersFromInput>>().toMatchTypeOf<AccessRulesFilter[]>();
+			expectTypeOf<
+				ReturnType<typeof getAccessRuleFiltersFromInput>
+			>().toMatchTypeOf<AccessRulesFilter[]>();
 		});
 
 		test("getRedisRuleValue parameter type", () => {
-			expectTypeOf<Parameters<typeof getRedisRuleValue>[0]>().toMatchTypeOf<AccessRule>();
+			expectTypeOf<
+				Parameters<typeof getRedisRuleValue>[0]
+			>().toMatchTypeOf<AccessRule>();
 		});
 
 		test("getRedisRuleValue return type", () => {
-			expectTypeOf<ReturnType<typeof getRedisRuleValue>>().toMatchTypeOf<Record<string, string>>();
+			expectTypeOf<ReturnType<typeof getRedisRuleValue>>().toMatchTypeOf<
+				Record<string, string>
+			>();
 		});
 
 		test("getAccessRuleRedisKey parameter type", () => {
-			expectTypeOf<Parameters<typeof getAccessRuleRedisKey>[0]>().toMatchTypeOf<AccessRule>();
+			expectTypeOf<
+				Parameters<typeof getAccessRuleRedisKey>[0]
+			>().toMatchTypeOf<AccessRule>();
 		});
 
 		test("getAccessRuleRedisKey return type", () => {
-			expectTypeOf<ReturnType<typeof getAccessRuleRedisKey>>().toMatchTypeOf<string>();
+			expectTypeOf<
+				ReturnType<typeof getAccessRuleRedisKey>
+			>().toMatchTypeOf<string>();
 		});
 
 		test("makeAccessRuleHash parameter type", () => {
-			expectTypeOf<Parameters<typeof makeAccessRuleHash>[0]>().toMatchTypeOf<AccessRule>();
+			expectTypeOf<
+				Parameters<typeof makeAccessRuleHash>[0]
+			>().toMatchTypeOf<AccessRule>();
 		});
 
 		test("makeAccessRuleHash return type", () => {
-			expectTypeOf<ReturnType<typeof makeAccessRuleHash>>().toMatchTypeOf<string>();
+			expectTypeOf<
+				ReturnType<typeof makeAccessRuleHash>
+			>().toMatchTypeOf<string>();
 		});
 
 		test("getUserScopeRecordFromAccessRuleRecord parameter type", () => {
-			expectTypeOf<Parameters<typeof getUserScopeRecordFromAccessRuleRecord>[0]>().toMatchTypeOf<AccessRuleRecord>();
+			expectTypeOf<
+				Parameters<typeof getUserScopeRecordFromAccessRuleRecord>[0]
+			>().toMatchTypeOf<AccessRuleRecord>();
 		});
 
 		test("getUserScopeRecordFromAccessRuleRecord return type", () => {
-			expectTypeOf<ReturnType<typeof getUserScopeRecordFromAccessRuleRecord>>().toMatchTypeOf<UserScopeRecord>();
+			expectTypeOf<
+				ReturnType<typeof getUserScopeRecordFromAccessRuleRecord>
+			>().toMatchTypeOf<UserScopeRecord>();
 		});
 	});
 });

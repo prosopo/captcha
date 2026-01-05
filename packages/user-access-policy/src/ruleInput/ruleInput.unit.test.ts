@@ -254,11 +254,11 @@ describe("getAccessRuleFiltersFromInput", () => {
 		});
 
 		expect(filters).toHaveLength(3);
-		filters.forEach((filter) => {
+		for (const filter of filters) {
 			expect(filter.userScope?.numericIp).toBe(BigInt(100));
 			expect(filter.groupId).toBe("group1");
 			expect(filter.policyScopeMatch).toBe(FilterScopeMatch.Greedy);
 			expect(filter.userScopeMatch).toBe(FilterScopeMatch.Greedy);
-		});
+		}
 	});
 });
