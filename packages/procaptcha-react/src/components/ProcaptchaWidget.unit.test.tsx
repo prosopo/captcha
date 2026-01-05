@@ -103,10 +103,10 @@ describe("ProcaptchaWidget", () => {
 	let mockUseTranslationFn: ReturnType<typeof vi.fn>;
 	let mockLoadI18next: ReturnType<typeof vi.fn>;
 
-	beforeAll(async () => {
-		const { useTranslation, loadI18next } = await import("@prosopo/locale");
-		mockUseTranslationFn = vi.mocked(useTranslation);
-		mockLoadI18next = vi.mocked(loadI18next);
+	beforeEach(async () => {
+		const mod = await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
+		mockUseTranslationFn = vi.mocked(mod.useTranslation);
+		mockLoadI18next = vi.mocked(mod.loadI18next);
 	});
 
 	const createMockConfig = (): ProcaptchaClientConfigInput => ({
