@@ -13,12 +13,12 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { WIDGET_CHECKBOX_SPINNER_CSS_CLASS } from "../constants.js";
+import { darkTheme, lightTheme } from "../theme.js";
 import {
 	createCheckboxElement,
 	getCheckboxInteractiveArea,
 } from "./checkbox.js";
-import { darkTheme, lightTheme } from "../theme.js";
-import { WIDGET_CHECKBOX_SPINNER_CSS_CLASS } from "../constants.js";
 
 describe("elements/checkbox", () => {
 	beforeEach(() => {
@@ -57,9 +57,7 @@ describe("elements/checkbox", () => {
 		it("should contain loading spinner with correct class", () => {
 			const checkbox = createCheckboxElement(lightTheme);
 
-			expect(checkbox.innerHTML).toContain(
-				WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
-			);
+			expect(checkbox.innerHTML).toContain(WIDGET_CHECKBOX_SPINNER_CSS_CLASS);
 		});
 
 		it("should contain styles in innerHTML", () => {
@@ -160,7 +158,7 @@ describe("elements/checkbox", () => {
 		it("should return null when shadow root exists but element not found", () => {
 			const container = document.createElement("div");
 			const shadowRoot = container.attachShadow({ mode: "open" });
-			shadowRoot.innerHTML = `<div>No checkbox content here</div>`;
+			shadowRoot.innerHTML = "<div>No checkbox content here</div>";
 
 			const result = getCheckboxInteractiveArea(container);
 
@@ -178,4 +176,3 @@ describe("elements/checkbox", () => {
 		});
 	});
 });
-

@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createLogoElement } from "./logo.js";
-import { darkTheme, lightTheme } from "../theme.js";
 import { WIDGET_URL, WIDGET_URL_TEXT } from "../constants.js";
+import { darkTheme, lightTheme } from "../theme.js";
+import { createLogoElement } from "./logo.js";
 
 describe("elements/logo", () => {
 	beforeEach(() => {
@@ -85,21 +85,15 @@ describe("elements/logo", () => {
 		it("should apply light theme logoFill color", () => {
 			const logo = createLogoElement(lightTheme);
 
-			expect(logo.innerHTML).toContain(
-				`fill: ${lightTheme.palette.logoFill}`,
-			);
-			expect(logo.innerHTML).toContain(
-				`color: ${lightTheme.palette.logoFill}`,
-			);
+			expect(logo.innerHTML).toContain(`fill: ${lightTheme.palette.logoFill}`);
+			expect(logo.innerHTML).toContain(`color: ${lightTheme.palette.logoFill}`);
 		});
 
 		it("should apply dark theme logoFill color", () => {
 			const logo = createLogoElement(darkTheme);
 
 			expect(logo.innerHTML).toContain(`fill: ${darkTheme.palette.logoFill}`);
-			expect(logo.innerHTML).toContain(
-				`color: ${darkTheme.palette.logoFill}`,
-			);
+			expect(logo.innerHTML).toContain(`color: ${darkTheme.palette.logoFill}`);
 		});
 
 		it("should contain Prosopo text", () => {
@@ -125,9 +119,7 @@ describe("elements/logo", () => {
 		it("should have SVG with aria-label", () => {
 			const logo = createLogoElement(lightTheme);
 
-			expect(logo.innerHTML).toContain(
-				'aria-label="Prosopo Logo With Text"',
-			);
+			expect(logo.innerHTML).toContain('aria-label="Prosopo Logo With Text"');
 		});
 
 		it("should have correct SVG dimensions in CSS", () => {
@@ -157,4 +149,3 @@ describe("elements/logo", () => {
 		});
 	});
 });
-

@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createWebComponent } from "./createWebComponent.js";
 import { WIDGET_MAX_WIDTH } from "../constants.js";
+import { createWebComponent } from "./createWebComponent.js";
 
 describe("webComponent/createWebComponent", () => {
 	beforeEach(() => {
@@ -128,4 +128,3 @@ describe("webComponent/createWebComponent", () => {
 		});
 	});
 });
-
