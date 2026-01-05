@@ -187,4 +187,139 @@ describe("handleErrors", async () => {
 		});
 		expect(mockResponse.end).toHaveBeenCalled();
 	});
+
+	it("should handle ProsopoApiError with different status codes", async () => {
+		const codes = [400, 401, 403, 404, 500, 503];
+
+		for (const code of codes) {
+			const mockRequest = { i18n } as unknown as Request;
+			const mockResponse = {
+				writeHead: vi.fn().mockReturnThis(),
+				set: vi.fn().mockReturnThis(),
+				status: vi.fn().mockReturnThis(),
+				send: vi.fn(),
+				end: vi.fn(),
+			} as unknown as Response;
+			const mockNext = vi.fn() as unknown as NextFunction;
+
+			const error = new ProsopoApiError("API.UNKNOWN", {
+				context: { code },
+				i18n,
+			});
+
+			handleErrors(error, mockRequest, mockResponse, mockNext);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(code);
+			expect(mockResponse.set).toHaveBeenCalledWith(
+				"content-type",
+				"application/json",
+			);
+			expect(mockResponse.end).toHaveBeenCalled();
+		}
+	});
+
+	it("should set statusMessage on response", async () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			statusMessage: "",
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
+			context: { code: 400 },
+			i18n,
+		});
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.statusMessage).toBeDefined();
+		expect(typeof mockResponse.statusMessage).toBe("string");
+	});
+
+	it("should handle ZodError with multiple issues", () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const zodError1 = {
+			code: "custom" as const,
+			message: "Invalid input 1",
+			path: ["field1"],
+		};
+		const zodError2 = {
+			code: "custom" as const,
+			message: "Invalid input 2",
+			path: ["field2"],
+		};
+		const error = new ZodError([zodError1, zodError2]);
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
+		);
+		expect(mockResponse.status).toHaveBeenCalledWith(400);
+		expect(mockResponse.send).toHaveBeenCalledWith({
+			error: {
+				code: 400,
+				key: "API.INVALID_BODY",
+				message: [zodError1, zodError2],
+			},
+		});
+		expect(mockResponse.end).toHaveBeenCalled();
+	});
+
+	it("should always call response.end()", async () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new ProsopoApiError("API.UNKNOWN", {
+			context: { code: 500 },
+			i18n,
+		});
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.end).toHaveBeenCalledTimes(1);
+	});
+
+	it("should always set content-type header", async () => {
+		const mockRequest = { i18n } as unknown as Request;
+		const mockResponse = {
+			writeHead: vi.fn().mockReturnThis(),
+			set: vi.fn().mockReturnThis(),
+			status: vi.fn().mockReturnThis(),
+			send: vi.fn(),
+			end: vi.fn(),
+		} as unknown as Response;
+		const mockNext = vi.fn() as unknown as NextFunction;
+
+		const error = new SyntaxError("Test error");
+
+		handleErrors(error, mockRequest, mockResponse, mockNext);
+
+		expect(mockResponse.set).toHaveBeenCalledWith(
+			"content-type",
+			"application/json",
+		);
+	});
 });
