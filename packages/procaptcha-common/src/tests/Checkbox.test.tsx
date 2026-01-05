@@ -15,35 +15,37 @@
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the widget-skeleton theme
-const lightTheme = {
-	palette: {
-		mode: "light" as const,
-		primary: {
-			main: "#487DFA",
-			contrastText: "#fff",
+// Mock the widget-skeleton theme - must be hoisted
+vi.mock("@prosopo/widget-skeleton", () => {
+	const lightTheme = {
+		palette: {
+			mode: "light" as const,
+			primary: {
+				main: "#487DFA",
+				contrastText: "#fff",
+			},
+			background: {
+				default: "#fff",
+				contrastText: "#000",
+			},
+			border: "#bdbdbd",
+			error: {
+				main: "#f44336",
+			},
+			grey: {
+				500: "#9e9e9e",
+				700: "#616161",
+			},
 		},
-		background: {
-			default: "#fff",
-			contrastText: "#000",
-		},
-		border: "#bdbdbd",
-		error: {
-			main: "#f44336",
-		},
-		grey: {
-			500: "#9e9e9e",
-			700: "#616161",
-		},
-	},
-};
+	};
+	return {
+		lightTheme,
+		darkTheme: lightTheme,
+		WIDGET_CHECKBOX_SPINNER_CSS_CLASS: "widget-checkbox-spinner",
+	};
+});
 
-vi.mock("@prosopo/widget-skeleton", () => ({
-	lightTheme,
-	darkTheme: lightTheme,
-	WIDGET_CHECKBOX_SPINNER_CSS_CLASS: "widget-checkbox-spinner",
-}));
-
+import { lightTheme } from "@prosopo/widget-skeleton";
 import { Checkbox } from "../reactComponents/Checkbox.js";
 
 describe("reactComponents/Checkbox", () => {

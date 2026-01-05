@@ -15,33 +15,34 @@
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the widget-skeleton theme
-const lightTheme = {
-	palette: {
-		mode: "light" as const,
-		primary: {
-			main: "#487DFA",
-			contrastText: "#fff",
+// Mock the widget-skeleton theme - must be hoisted
+vi.mock("@prosopo/widget-skeleton", () => {
+	const lightTheme = {
+		palette: {
+			mode: "light" as const,
+			primary: {
+				main: "#487DFA",
+				contrastText: "#fff",
+			},
+			background: {
+				default: "#fff",
+				contrastText: "#000",
+			},
+			border: "#bdbdbd",
+			error: {
+				main: "#f44336",
+			},
+			grey: {
+				500: "#9e9e9e",
+				700: "#616161",
+			},
 		},
-		background: {
-			default: "#fff",
-			contrastText: "#000",
-		},
-		border: "#bdbdbd",
-		error: {
-			main: "#f44336",
-		},
-		grey: {
-			500: "#9e9e9e",
-			700: "#616161",
-		},
-	},
-};
-
-vi.mock("@prosopo/widget-skeleton", () => ({
-	lightTheme,
-	darkTheme: lightTheme,
-}));
+	};
+	return {
+		lightTheme,
+		darkTheme: lightTheme,
+	};
+});
 
 import { ReloadButton } from "../reactComponents/Reload.js";
 
