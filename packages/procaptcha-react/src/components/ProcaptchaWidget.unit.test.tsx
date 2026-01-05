@@ -408,8 +408,9 @@ describe("ProcaptchaWidget", () => {
 				i18n={undefined}
 			/>,
 		);
-		await waitFor(() => {
-			const { loadI18next } = vi.mocked(await import("@prosopo/locale"));
+		await waitFor(async () => {
+			const mod = await import("@prosopo/locale");
+			const { loadI18next } = vi.mocked(mod);
 			expect(loadI18next).toHaveBeenCalled();
 		}, { timeout: 2000 });
 	});
