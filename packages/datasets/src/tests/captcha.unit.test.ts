@@ -27,7 +27,12 @@ import {
 import type { SolutionRecord } from "@prosopo/types-database";
 import { at, get } from "@prosopo/util";
 import { beforeAll, describe, expect, test } from "vitest";
-import { NO_SOLUTION_VALUE, getSolutionValueToHash } from "../captcha/index.js";
+import {
+	NO_SOLUTION_VALUE,
+	captchaSort,
+	getSolutionValueToHash,
+	parseCaptchaAssets,
+} from "../captcha/index.js";
 import {
 	compareCaptchaSolutions,
 	computeCaptchaHash,
@@ -476,5 +481,69 @@ describe("CAPTCHA FUNCTIONS", async () => {
 		expect(getSolutionValueToHash(undefinedSolution)).to.deep.equal([
 			NO_SOLUTION_VALUE,
 		]);
+	});
+
+	test("captchaSort sorts captchas by captchaId", () => {
+		const captcha1 = { captchaId: "0xaaa" };
+		const captcha2 = { captchaId: "0xbbb" };
+		const captcha3 = { captchaId: "0xccc" };
+
+		expect(captchaSort(captcha1, captcha2)).to.be.lessThan(0);
+		expect(captchaSort(captcha2, captcha1)).to.be.greaterThan(0);
+		expect(captchaSort(captcha1, captcha1)).to.equal(0);
+
+		const unsorted = [captcha3, captcha1, captcha2];
+		unsorted.sort(captchaSort);
+		expect(unsorted).to.deep.equal([captcha1, captcha2, captcha3]);
+	});
+
+	test("parseCaptchaAssets resolves asset URL when assetsResolver is provided", () => {
+		const mockResolver = {
+			resolveAsset: (url: string) => ({
+				getURL: () => `resolved-${url}`,
+			}),
+		};
+
+		const item = {
+			type: CaptchaItemTypes.Text,
+			data: "original-url",
+			hash: "0x123",
+		};
+
+		const result = parseCaptchaAssets(item, mockResolver);
+		expect(result.data).to.equal("resolved-original-url");
+		expect(result.type).to.equal(item.type);
+		expect(result.hash).to.equal(item.hash);
+	});
+
+	test("parseCaptchaAssets returns original data when assetsResolver is undefined", () => {
+		const item = {
+			type: CaptchaItemTypes.Text,
+			data: "original-url",
+			hash: "0x123",
+		};
+
+		const result = parseCaptchaAssets(item, undefined);
+		expect(result.data).to.equal("original-url");
+		expect(result.type).to.equal(item.type);
+		expect(result.hash).to.equal(item.hash);
+	});
+
+	test("parseCaptchaAssets handles image type items", () => {
+		const mockResolver = {
+			resolveAsset: (url: string) => ({
+				getURL: () => `resolved-${url}`,
+			}),
+		};
+
+		const item = {
+			type: CaptchaItemTypes.Image,
+			data: "image-url",
+			hash: "0x456",
+		};
+
+		const result = parseCaptchaAssets(item, mockResolver);
+		expect(result.data).to.equal("resolved-image-url");
+		expect(result.type).to.equal(item.type);
 	});
 });
