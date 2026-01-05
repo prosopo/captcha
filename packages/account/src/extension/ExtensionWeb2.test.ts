@@ -71,12 +71,18 @@ describe("ExtensionWeb2", () => {
 
 	describe("getAccount", () => {
 		it("should return an account with extension", async () => {
-			const { getFingerprint } = await import("@prosopo/fingerprint");
-			const { Keyring } = await import("@prosopo/keyring");
-			const { hexHash, entropyToMnemonic } = await import(
-				"@prosopo/util-crypto"
-			);
-			const { u8aToHex } = await import("@prosopo/util");
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
+			const { u8aToHex } =
+				await vi.importMock<typeof import("@prosopo/util")>("@prosopo/util");
 
 			const mockFingerprint = "mock-fingerprint";
 			const mockHash = "0xmockhash123";
@@ -122,11 +128,16 @@ describe("ExtensionWeb2", () => {
 		});
 
 		it("should create extension with functional accounts.get", async () => {
-			const { getFingerprint } = await import("@prosopo/fingerprint");
-			const { Keyring } = await import("@prosopo/keyring");
-			const { hexHash, entropyToMnemonic } = await import(
-				"@prosopo/util-crypto"
-			);
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
 
 			const mockAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 			const mockKeypair = {
@@ -145,20 +156,29 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 
 			const result = await extensionWeb2.getAccount(mockConfig);
+			expect(result.extension).toBeDefined();
+			if (!result.extension) {
+				throw new Error("Extension should be defined");
+			}
 			const accounts = await result.extension.accounts.get();
 
 			// Verify accounts.get returns the single account
 			expect(accounts).toHaveLength(1);
-			expect(accounts[0].address).toBe(mockAddress);
-			expect(accounts[0].name).toBe(mockAddress);
+			expect(accounts[0]?.address).toBe(mockAddress);
+			expect(accounts[0]?.name).toBe(mockAddress);
 		});
 
 		it("should create extension with functional accounts.subscribe", async () => {
-			const { getFingerprint } = await import("@prosopo/fingerprint");
-			const { Keyring } = await import("@prosopo/keyring");
-			const { hexHash, entropyToMnemonic } = await import(
-				"@prosopo/util-crypto"
-			);
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
 
 			const mockAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 			const mockKeypair = {
@@ -177,6 +197,10 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
 
 			const result = await extensionWeb2.getAccount(mockConfig);
+			expect(result.extension).toBeDefined();
+			if (!result.extension) {
+				throw new Error("Extension should be defined");
+			}
 			const unsubscribe = result.extension.accounts.subscribe(() => {});
 
 			// Verify accounts.subscribe returns an unsubscribe function
@@ -187,12 +211,18 @@ describe("ExtensionWeb2", () => {
 		});
 
 		it("should create signer with functional signRaw", async () => {
-			const { getFingerprint } = await import("@prosopo/fingerprint");
-			const { Keyring } = await import("@prosopo/keyring");
-			const { hexHash, entropyToMnemonic } = await import(
-				"@prosopo/util-crypto"
-			);
-			const { u8aToHex } = await import("@prosopo/util");
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
+			const { u8aToHex } =
+				await vi.importMock<typeof import("@prosopo/util")>("@prosopo/util");
 
 			const mockAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 			const mockSignature = new Uint8Array([1, 2, 3, 4, 5]);
@@ -213,6 +243,10 @@ describe("ExtensionWeb2", () => {
 			vi.mocked(u8aToHex).mockReturnValue("0x0102030405");
 
 			const result = await extensionWeb2.getAccount(mockConfig);
+			expect(result.extension).toBeDefined();
+			if (!result.extension) {
+				throw new Error("Extension should be defined");
+			}
 			const payload = {
 				address: mockAddress,
 				data: "0xdata",
@@ -222,6 +256,10 @@ describe("ExtensionWeb2", () => {
 			const signResult = await result.extension.signer.signRaw?.(payload);
 
 			// Verify signRaw returns correct structure
+			expect(signResult).toBeDefined();
+			if (!signResult) {
+				throw new Error("Sign result should be defined");
+			}
 			expect(signResult).toHaveProperty("id", 1);
 			expect(signResult).toHaveProperty("signature", "0x0102030405");
 
@@ -233,12 +271,18 @@ describe("ExtensionWeb2", () => {
 		});
 
 		it("should sign different payloads with same signature for same data", async () => {
-			const { getFingerprint } = await import("@prosopo/fingerprint");
-			const { Keyring } = await import("@prosopo/keyring");
-			const { hexHash, entropyToMnemonic } = await import(
-				"@prosopo/util-crypto"
-			);
-			const { u8aToHex } = await import("@prosopo/util");
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
+			const { u8aToHex } =
+				await vi.importMock<typeof import("@prosopo/util")>("@prosopo/util");
 
 			const mockAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 			const mockSignature = new Uint8Array([1, 2, 3, 4, 5]);
@@ -272,10 +316,19 @@ describe("ExtensionWeb2", () => {
 				type: "bytes" as const,
 			};
 
+			expect(result.extension).toBeDefined();
+			if (!result.extension) {
+				throw new Error("Extension should be defined");
+			}
 			const signResult1 = await result.extension.signer.signRaw?.(payload1);
 			const signResult2 = await result.extension.signer.signRaw?.(payload2);
 
 			// Both should have id=1 (as noted in comment, id doesn't increment)
+			expect(signResult1).toBeDefined();
+			expect(signResult2).toBeDefined();
+			if (!signResult1 || !signResult2) {
+				throw new Error("Sign results should be defined");
+			}
 			expect(signResult1.id).toBe(1);
 			expect(signResult2.id).toBe(1);
 
@@ -284,11 +337,16 @@ describe("ExtensionWeb2", () => {
 		});
 
 		it("should use sr25519 keypair type", async () => {
-			const { getFingerprint } = await import("@prosopo/fingerprint");
-			const { Keyring } = await import("@prosopo/keyring");
-			const { hexHash, entropyToMnemonic } = await import(
-				"@prosopo/util-crypto"
-			);
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
 
 			const mockAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 			const mockKeypair = {
@@ -313,11 +371,16 @@ describe("ExtensionWeb2", () => {
 		});
 
 		it("should process entropy correctly", async () => {
-			const { getFingerprint } = await import("@prosopo/fingerprint");
-			const { Keyring } = await import("@prosopo/keyring");
-			const { hexHash, entropyToMnemonic } = await import(
-				"@prosopo/util-crypto"
-			);
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
 
 			const mockFingerprint = "test-fingerprint";
 			const mockHashWithPrefix = "0xabcd1234";
@@ -345,6 +408,48 @@ describe("ExtensionWeb2", () => {
 			// Verify entropy was converted to U8a correctly (after removing 0x prefix)
 			expect(entropyToMnemonic).toHaveBeenCalledWith(
 				stringToU8a(mockHashWithoutPrefix),
+			);
+		});
+
+		it("should handle hash without 0x prefix correctly", async () => {
+			const { getFingerprint } = await vi.importMock<
+				typeof import("@prosopo/fingerprint")
+			>("@prosopo/fingerprint");
+			const { Keyring } =
+				await vi.importMock<typeof import("@prosopo/keyring")>(
+					"@prosopo/keyring",
+				);
+			const { hexHash, entropyToMnemonic } = await vi.importMock<
+				typeof import("@prosopo/util-crypto")
+			>("@prosopo/util-crypto");
+
+			const mockFingerprint = "test-fingerprint";
+			// hexHash returns value without 0x, code will try to slice(2) which removes first 2 chars
+			const mockHashWithoutPrefix = "abcd1234";
+			const expectedAfterSlice = "cd1234";
+			const mockMnemonic = "test mnemonic";
+
+			const mockAddress = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+			const mockKeypair = {
+				address: mockAddress,
+				sign: vi.fn().mockReturnValue(new Uint8Array([1, 2, 3])),
+			};
+
+			const mockKeyring = {
+				addFromMnemonic: vi.fn().mockReturnValue(mockKeypair),
+			};
+
+			vi.mocked(getFingerprint).mockResolvedValue(mockFingerprint);
+			vi.mocked(hexHash).mockReturnValue(mockHashWithoutPrefix);
+			vi.mocked(entropyToMnemonic).mockReturnValue(mockMnemonic);
+			// biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
+			vi.mocked(Keyring).mockReturnValue(mockKeyring as any);
+
+			await extensionWeb2.getAccount(mockConfig);
+
+			// Verify entropy was converted correctly (code slices 2 chars regardless of 0x)
+			expect(entropyToMnemonic).toHaveBeenCalledWith(
+				stringToU8a(expectedAfterSlice),
 			);
 		});
 	});
