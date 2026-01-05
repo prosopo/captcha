@@ -532,6 +532,114 @@ describe("ApiEndpointResponse", () => {
 		});
 	});
 
+	describe("edge cases", () => {
+		it("should support empty error string", () => {
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.FAIL,
+				error: "",
+			};
+
+			expect(response.error).toBe("");
+			expect(response.error).toHaveLength(0);
+		});
+
+		it("should support very long error strings", () => {
+			const longError = "a".repeat(10000);
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.FAIL,
+				error: longError,
+			};
+
+			expect(response.error).toBe(longError);
+			expect(response.error).toHaveLength(10000);
+		});
+
+		it("should support very large data objects", () => {
+			const largeData: Record<string, unknown> = {};
+			for (let i = 0; i < 1000; i++) {
+				largeData[`key${i}`] = `value${i}`;
+			}
+
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.SUCCESS,
+				data: largeData,
+			};
+
+			expect(
+				Object.keys(response.data as Record<string, unknown>),
+			).toHaveLength(1000);
+		});
+
+		it("should support data with empty object", () => {
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.SUCCESS,
+				data: {},
+			};
+
+			expect(response.data).toEqual({});
+			expect(
+				Object.keys(response.data as Record<string, unknown>),
+			).toHaveLength(0);
+		});
+
+		it("should support data with null values", () => {
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.SUCCESS,
+				data: {
+					nullValue: null,
+					undefinedValue: undefined,
+					emptyString: "",
+					zero: 0,
+					falseValue: false,
+				},
+			};
+
+			const data = response.data as Record<string, unknown>;
+			expect(data.nullValue).toBeNull();
+			expect(data.emptyString).toBe("");
+			expect(data.zero).toBe(0);
+			expect(data.falseValue).toBe(false);
+		});
+
+		it("should support response with both data and error", () => {
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.FAIL,
+				data: { context: "additional info" },
+				error: "Error occurred",
+			};
+
+			expect(response.status).toBe(ApiEndpointResponseStatus.FAIL);
+			expect(response.error).toBe("Error occurred");
+			expect(response.data).toEqual({ context: "additional info" });
+		});
+
+		it("should support response with unicode characters in error", () => {
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.FAIL,
+				error: "Error: 错误 🚀 émoji",
+			};
+
+			expect(response.error).toBe("Error: 错误 🚀 émoji");
+		});
+
+		it("should support response with unicode characters in data", () => {
+			const response: ApiEndpointResponse = {
+				status: ApiEndpointResponseStatus.SUCCESS,
+				data: {
+					message: "Hello 世界 🌍",
+					emoji: "🚀",
+					unicode: "émoji",
+				},
+			};
+
+			expect(response.data).toEqual({
+				message: "Hello 世界 🌍",
+				emoji: "🚀",
+				unicode: "émoji",
+			});
+		});
+	});
+
 	describe("type safety", () => {
 		// Minimal type test for structure
 		it("should type response properties correctly", () => {
