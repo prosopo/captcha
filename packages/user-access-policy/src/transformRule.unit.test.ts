@@ -80,6 +80,78 @@ describe("makeAccessRuleHash", () => {
 
 		expect(hash1).toEqual(hash2);
 	});
+
+	it("should handle empty rule with only type", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+		};
+
+		const hash = makeAccessRuleHash(rule);
+
+		expect(hash).toBeTypeOf("string");
+		expect(hash.length).toBe(32);
+	});
+
+	it("should handle rule with all optional properties", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.frictionless,
+			description: "test description",
+			solvedImagesCount: 5,
+			imageThreshold: 0.8,
+			powDifficulty: 10,
+			unsolvedImagesCount: 3,
+			frictionlessScore: 0.9,
+			clientId: "client123",
+			userId: "user456",
+			ja4Hash: "ja4hash123",
+			headersHash: "headershash456",
+			userAgentHash: "useragenthash789",
+			headHash: "headhash012",
+			coords: "[[[100,200]]]",
+			numericIp: 2130706432n,
+			numericIpMaskMin: 2130706432n,
+			numericIpMaskMax: 2130710527n,
+			groupId: "group789",
+		};
+
+		const hash = makeAccessRuleHash(rule);
+
+		expect(hash).toBeTypeOf("string");
+		expect(hash.length).toBe(32);
+	});
+
+	it("should produce different hashes for different rules", () => {
+		const rule1: AccessRule = {
+			type: AccessPolicyType.Block,
+			description: "rule1",
+		};
+		const rule2: AccessRule = {
+			type: AccessPolicyType.Block,
+			description: "rule2",
+		};
+
+		const hash1 = makeAccessRuleHash(rule1);
+		const hash2 = makeAccessRuleHash(rule2);
+
+		expect(hash1).not.toEqual(hash2);
+	});
+
+	it("should handle numeric values correctly in hash", () => {
+		const rule1: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			solvedImagesCount: 5,
+		};
+		const rule2: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			solvedImagesCount: 10,
+		};
+
+		const hash1 = makeAccessRuleHash(rule1);
+		const hash2 = makeAccessRuleHash(rule2);
+
+		expect(hash1).not.toEqual(hash2);
+	});
 });
 
 describe("transformRule", () => {
@@ -170,6 +242,117 @@ describe("transformRule", () => {
 			} as unknown as AccessRule),
 		).toThrow();
 	});
+
+	it("should transform rule with only groupId", () => {
+		const accessRule: AccessRule = {
+			type: AccessPolicyType.Block,
+			groupId: "test-group",
+		};
+
+		const record = transformAccessRuleIntoRecord(accessRule);
+
+		expect(record.ruleGroupId).toBe("test-group");
+		expect(record.type).toBe(AccessPolicyType.Block);
+	});
+
+	it("should transform rule with only numericIp", () => {
+		const accessRule: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIp: 2130706432n,
+		};
+
+		const record = transformAccessRuleIntoRecord(accessRule);
+
+		expect(record.ip).toBe("127.0.0.0");
+		expect(record.type).toBe(AccessPolicyType.Block);
+	});
+
+	it("should transform rule with only userAgentHash", () => {
+		const accessRule: AccessRule = {
+			type: AccessPolicyType.Block,
+			userAgentHash: "test-hash",
+		};
+
+		const record = transformAccessRuleIntoRecord(accessRule);
+
+		expect(record.userAgent).toBe("test-hash");
+		expect(record.type).toBe(AccessPolicyType.Block);
+	});
+
+	it("should transform rule with ipMask range", () => {
+		const accessRule: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIpMaskMin: 2130706432n,
+			numericIpMaskMax: 2130710527n,
+		};
+
+		const record = transformAccessRuleIntoRecord(accessRule);
+
+		expect(record.ipMask).toBe("127.0.0.0/20");
+		expect(record.type).toBe(AccessPolicyType.Block);
+	});
+
+	it("should not include undefined fields in record", () => {
+		const accessRule: AccessRule = {
+			type: AccessPolicyType.Block,
+		};
+
+		const record = transformAccessRuleIntoRecord(accessRule);
+
+		expect(record.ruleGroupId).toBeUndefined();
+		expect(record.ip).toBeUndefined();
+		expect(record.ipMask).toBeUndefined();
+		expect(record.userAgent).toBeUndefined();
+	});
+
+	it("should transform record with only ruleGroupId", () => {
+		const ruleRecord: AccessRuleRecord = {
+			type: AccessPolicyType.Block,
+			ruleGroupId: "test-group",
+		};
+
+		const rule = transformAccessRuleRecordIntoRule(ruleRecord);
+
+		expect(rule.groupId).toBe("test-group");
+		expect(rule.type).toBe(AccessPolicyType.Block);
+	});
+
+	it("should transform record with only ip", () => {
+		const ruleRecord: AccessRuleRecord = {
+			type: AccessPolicyType.Block,
+			ip: "127.0.0.0",
+		};
+
+		const rule = transformAccessRuleRecordIntoRule(ruleRecord);
+
+		expect(rule.numericIp).toBe(2130706432n);
+		expect(rule.type).toBe(AccessPolicyType.Block);
+	});
+
+	it("should transform record with only userAgent", () => {
+		const ruleRecord: AccessRuleRecord = {
+			type: AccessPolicyType.Block,
+			userAgent: "test-agent",
+		};
+
+		const rule = transformAccessRuleRecordIntoRule(ruleRecord);
+
+		expect(rule.userAgentHash).toBeDefined();
+		expect(rule.type).toBe(AccessPolicyType.Block);
+	});
+
+	it("should transform record with ipMask", () => {
+		const ruleRecord: AccessRuleRecord = {
+			type: AccessPolicyType.Block,
+			ipMask: "127.0.0.0/20",
+		};
+
+		const rule = transformAccessRuleRecordIntoRule(ruleRecord);
+
+		expect(rule.numericIpMaskMin).toBeDefined();
+		expect(rule.numericIpMaskMax).toBeDefined();
+		expect(rule.type).toBe(AccessPolicyType.Block);
+	});
 });
 
 describe("getCidrFromNumericIpRange", () => {
@@ -250,5 +433,32 @@ describe("getCidrFromNumericIpRange", () => {
 		);
 
 		expect(cird).toEqual(cirdExample.cidr);
+	});
+
+	it("should return undefined for invalid IP range", () => {
+		const startIp = new Address4("192.168.1.10").bigInt();
+		const endIp = new Address4("192.168.1.5").bigInt();
+
+		const cidr = getCidrFromNumericIpRange(startIp, endIp);
+
+		expect(cidr).toBeUndefined();
+	});
+
+	it("should handle single IP address range", () => {
+		const ip = new Address4("192.168.1.1").bigInt();
+
+		const cidr = getCidrFromNumericIpRange(ip, ip);
+
+		expect(cidr).toBe("192.168.1.1/32");
+	});
+
+	it("should handle non-CIDR aligned ranges", () => {
+		const startIp = new Address4("192.168.1.5").bigInt();
+		const endIp = new Address4("192.168.1.10").bigInt();
+
+		const cidr = getCidrFromNumericIpRange(startIp, endIp);
+
+		expect(cidr).toBeDefined();
+		expect(cidr).toBeTypeOf("string");
 	});
 });
