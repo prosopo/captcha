@@ -278,7 +278,7 @@ describe("state/builder", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
-			const mockTimeout = setTimeout(() => {}, 1000);
+			const mockTimeout = setTimeout(() => { }, 1000);
 			updateFn({ timeout: mockTimeout });
 
 			expect(timeoutRef.current).toBe(mockTimeout);
@@ -304,7 +304,7 @@ describe("state/builder", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
 			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
 
-			const mockTimeout = setTimeout(() => {}, 1000);
+			const mockTimeout = setTimeout(() => { }, 1000);
 			updateFn({ successfullChallengeTimeout: mockTimeout });
 
 			// This test will fail if the bug exists - successfullChallengeTimeout should be set to the correct value
