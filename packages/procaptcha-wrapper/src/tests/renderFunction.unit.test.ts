@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadRenderFunction, type RendererFunction } from "../render/renderFunction.js";
+import {
+	type RendererFunction,
+	loadRenderFunction,
+} from "../render/renderFunction.js";
 
 describe("renderFunction", () => {
 	beforeEach(() => {
@@ -21,14 +24,14 @@ describe("renderFunction", () => {
 		document.head.innerHTML = "";
 		// Reset window.procaptcha
 		// biome-ignore lint/suspicious/noExplicitAny: Test setup
-		delete (window as any).procaptcha;
+		(window as any).procaptcha = undefined;
 	});
 
 	afterEach(() => {
 		// Clean up
 		document.head.innerHTML = "";
 		// biome-ignore lint/suspicious/noExplicitAny: Test cleanup
-		delete (window as any).procaptcha;
+		(window as any).procaptcha = undefined;
 		vi.restoreAllMocks();
 	});
 
@@ -96,6 +99,7 @@ describe("renderFunction", () => {
 				if (tagName === "script") {
 					setTimeout(() => {
 						if (element.onerror) {
+							// biome-ignore lint/suspicious/noExplicitAny: Testing error handling with string
 							element.onerror("Network error" as any);
 						}
 					}, 0);
@@ -211,6 +215,7 @@ describe("renderFunction", () => {
 				if (tagName === "script") {
 					setTimeout(() => {
 						if (element.onerror) {
+							// biome-ignore lint/suspicious/noExplicitAny: Testing error handling with string
 							element.onerror("String error" as any);
 						}
 					}, 0);
@@ -247,4 +252,3 @@ describe("renderFunction", () => {
 		});
 	});
 });
-

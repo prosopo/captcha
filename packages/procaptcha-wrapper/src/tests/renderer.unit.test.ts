@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { RendererFunction } from "../render/renderFunction.js";
 import { createRenderer } from "../render/renderer.js";
 
@@ -30,9 +30,9 @@ describe("renderer", () => {
 		});
 
 		it("should call loadRenderFunction only once and cache the result", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			const settings = {
 				scriptUrl: "https://example.com/script.js",
@@ -71,9 +71,9 @@ describe("renderer", () => {
 		});
 
 		it("should clone options object before passing to render function", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			const settings = {
 				scriptUrl: "https://example.com/script.js",
@@ -115,9 +115,9 @@ describe("renderer", () => {
 		});
 
 		it("should pass element and options to render function", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			const settings = {
 				scriptUrl: "https://example.com/script.js",
@@ -196,9 +196,9 @@ describe("renderer", () => {
 		});
 
 		it("should handle all ProcaptchaRenderOptions properties", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			const settings = {
 				scriptUrl: "https://example.com/script.js",
@@ -251,9 +251,9 @@ describe("renderer", () => {
 		});
 
 		it("should handle function callbacks in options", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			const settings = {
 				scriptUrl: "https://example.com/script.js",
@@ -299,4 +299,3 @@ describe("renderer", () => {
 		});
 	});
 });
-

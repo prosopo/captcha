@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { RendererFunction } from "../render/renderFunction.js";
 import { renderProcaptcha } from "../index.js";
+import type { RendererFunction } from "../render/renderFunction.js";
 
 describe("index", () => {
 	beforeEach(() => {
@@ -23,14 +23,14 @@ describe("index", () => {
 		// Reset window.procaptcha - must be set before renderProcaptcha is called
 		// because the renderer caches the render function
 		// biome-ignore lint/suspicious/noExplicitAny: Test setup
-		delete (window as any).procaptcha;
+		(window as any).procaptcha = undefined;
 	});
 
 	afterEach(() => {
 		// Clean up
 		document.head.innerHTML = "";
 		// biome-ignore lint/suspicious/noExplicitAny: Test cleanup
-		delete (window as any).procaptcha;
+		(window as any).procaptcha = undefined;
 	});
 
 	describe("renderProcaptcha", () => {
@@ -39,9 +39,9 @@ describe("index", () => {
 		});
 
 		it("should render procaptcha with valid element and options", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).procaptcha = { render: mockRenderFunction };
@@ -68,9 +68,9 @@ describe("index", () => {
 		});
 
 		it("should handle different element types", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).procaptcha = { render: mockRenderFunction };
@@ -104,9 +104,9 @@ describe("index", () => {
 		});
 
 		it("should handle minimal options with only siteKey", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).procaptcha = { render: mockRenderFunction };
@@ -136,9 +136,9 @@ describe("index", () => {
 		});
 
 		it("should handle options with all optional properties", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).procaptcha = { render: mockRenderFunction };
@@ -187,7 +187,7 @@ describe("index", () => {
 		it("should handle script loading errors", async () => {
 			// Clear any cached render function by ensuring window.procaptcha is not set
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
-			delete (window as any).procaptcha;
+			(window as any).procaptcha = undefined;
 
 			const originalCreateElement = document.createElement.bind(document);
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
@@ -195,6 +195,7 @@ describe("index", () => {
 				if (tagName === "script") {
 					setTimeout(() => {
 						if (element.onerror) {
+							// biome-ignore lint/suspicious/noExplicitAny: Testing error handling with string
 							element.onerror("Script load failed" as any);
 						}
 					}, 0);
@@ -213,7 +214,7 @@ describe("index", () => {
 		it("should handle missing render function error", async () => {
 			// Clear any cached render function by ensuring window.procaptcha is not set
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
-			delete (window as any).procaptcha;
+			(window as any).procaptcha = undefined;
 
 			const originalCreateElement = document.createElement.bind(document);
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
@@ -237,9 +238,9 @@ describe("index", () => {
 		});
 
 		it("should clone options to prevent modification of original", async () => {
-			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
-				undefined,
-			);
+			const mockRenderFunction: RendererFunction = vi
+				.fn()
+				.mockResolvedValue(undefined);
 
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).procaptcha = { render: mockRenderFunction };
@@ -269,4 +270,3 @@ describe("index", () => {
 		});
 	});
 });
-
