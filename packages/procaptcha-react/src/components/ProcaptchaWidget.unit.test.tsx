@@ -87,17 +87,35 @@ vi.mock("@prosopo/procaptcha", () => ({
 }));
 
 vi.mock("./CaptchaComponent.js", () => ({
-	default: ({ challenge, onSubmit, onCancel }: any) => (
+	default: ({
+		challenge,
+		onSubmit,
+		onCancel,
+	}: {
+		challenge: unknown;
+		onSubmit: () => void;
+		onCancel: () => void;
+	}) => (
 		<div data-testid="captcha-component">
 			<div>Challenge: {challenge ? "present" : "null"}</div>
-			<button onClick={onSubmit}>Submit</button>
-			<button onClick={onCancel}>Cancel</button>
+			<button type="button" onClick={onSubmit}>
+				Submit
+			</button>
+			<button type="button" onClick={onCancel}>
+				Cancel
+			</button>
 		</div>
 	),
 }));
 
 vi.mock("./Modal.js", () => ({
-	default: ({ show, children }: any) => (
+	default: ({
+		show,
+		children,
+	}: {
+		show: boolean;
+		children: React.ReactNode;
+	}) => (
 		<div data-testid="modal" data-show={show}>
 			{children}
 		</div>
