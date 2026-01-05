@@ -22,7 +22,11 @@ export class HttpClientBase {
 
 	protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 		try {
-			const response = await fetch(this.baseURL + input, init);
+			const url =
+				typeof input === "string"
+					? this.baseURL + input
+					: this.baseURL + new URL(input.url).pathname;
+			const response = await fetch(url, init);
 			if (
 				!response.ok &&
 				// Only throw an error if the response is not JSON and not a 400 error
@@ -47,7 +51,11 @@ export class HttpClientBase {
 			...(init?.headers || {}),
 		};
 		try {
-			const response = await fetch(this.baseURL + input, {
+			const url =
+				typeof input === "string"
+					? this.baseURL + input
+					: this.baseURL + new URL(input.url).pathname;
+			const response = await fetch(url, {
 				method: "POST",
 				body: JSON.stringify(body),
 				...init,

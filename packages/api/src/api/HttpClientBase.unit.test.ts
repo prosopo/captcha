@@ -165,18 +165,18 @@ describe("HttpClientBase", () => {
 			expect(result).toEqual(mockResponse);
 		});
 
-		test("handles RequestInfo as Request object - converts to string representation", async () => {
-			// Note: The current implementation concatenates baseURL with Request object,
-			// which results in "[object Request]" string. This may be a bug.
+		test("handles RequestInfo as Request object - extracts pathname correctly", async () => {
 			const mockResponse = { data: "test" };
-			const request = new Request(`${baseURL}${prefix}/test`, {
+			const requestPath = "/test";
+			// Create Request with a full URL to test pathname extraction
+			const request = new Request(`https://example.com${requestPath}`, {
 				method: "GET",
 			});
 			vi.mocked(global.fetch).mockResolvedValueOnce({
 				ok: true,
 				json: async () => mockResponse,
 				headers: new Headers({ "content-type": "application/json" }),
-				url: `${baseURL}${prefix}/test`,
+				url: `${baseURL}${prefix}${requestPath}`,
 				status: 200,
 				statusText: "OK",
 				redirected: false,
@@ -185,9 +185,10 @@ describe("HttpClientBase", () => {
 
 			const result = await client.testFetch(request);
 
-			// The Request object gets converted to "[object Request]" when concatenated
+			// The Request object's pathname is extracted and combined with baseURL
+			const expectedPathname = new URL(request.url).pathname;
 			expect(global.fetch).toHaveBeenCalledWith(
-				`${baseURL}${prefix}[object Request]`,
+				`${baseURL}${prefix}${expectedPathname}`,
 				undefined,
 			);
 			expect(result).toEqual(mockResponse);
