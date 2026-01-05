@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RendererFunction } from "../render/renderFunction.js";
 import { renderProcaptcha } from "../index.js";
 
@@ -20,8 +20,16 @@ describe("index", () => {
 	beforeEach(() => {
 		// Clear document head
 		document.head.innerHTML = "";
-		// Reset window.procaptcha
+		// Reset window.procaptcha - must be set before renderProcaptcha is called
+		// because the renderer caches the render function
 		// biome-ignore lint/suspicious/noExplicitAny: Test setup
+		delete (window as any).procaptcha;
+	});
+
+	afterEach(() => {
+		// Clean up
+		document.head.innerHTML = "";
+		// biome-ignore lint/suspicious/noExplicitAny: Test cleanup
 		delete (window as any).procaptcha;
 	});
 
@@ -85,7 +93,10 @@ describe("index", () => {
 			const sectionElement = document.createElement("section");
 			const options = { siteKey: "test-site-key" };
 
+			// Renderer caches the render function, so all calls use the same cached function
+			// Wait for script to load on first call
 			await renderProcaptcha(divElement, options);
+			// Subsequent calls use cached render function, no script loading needed
 			await renderProcaptcha(spanElement, options);
 			await renderProcaptcha(sectionElement, options);
 

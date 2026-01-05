@@ -24,17 +24,25 @@ if (fs.existsSync(envFile)) {
 	envPath = path.resolve(envFile);
 } else if (fs.existsSync(`../../${envFile}`)) {
 	envPath = path.resolve(`../../${envFile}`);
-} else {
-	throw new Error(`No ${envFile} file found`);
 }
 
-dotenv.config({ path: envPath });
+// Only load env file if it exists
+if (envPath && fs.existsSync(envPath)) {
+	dotenv.config({ path: envPath });
+}
 
 export default function () {
 	const config = ViteTestConfig();
 	config.test = config.test || {};
 	config.test.environment = "jsdom";
 	config.test.globals = true;
+	config.define = {
+		...config.define,
+		"import.meta.env.VITE_RENDER_SCRIPT_URL": JSON.stringify(
+			"https://example.com/script.js",
+		),
+		"import.meta.env.VITE_RENDER_SCRIPT_ID": JSON.stringify("test-script-id"),
+	};
 	return config;
 }
 

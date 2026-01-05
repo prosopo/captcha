@@ -33,24 +33,31 @@ describe("renderer", () => {
 			const mockRenderFunction: RendererFunction = vi.fn().mockResolvedValue(
 				undefined,
 			);
-			const loadRenderFunctionMock = vi.fn().mockResolvedValue(mockRenderFunction);
-
-			// Mock the loadRenderFunction import
-			vi.doMock("../render/renderFunction.js", () => ({
-				loadRenderFunction: loadRenderFunctionMock,
-			}));
 
 			const settings = {
 				scriptUrl: "https://example.com/script.js",
 				scriptId: "test-script-id",
 			};
 
-			// Re-import to get the mocked version
-			const { createRenderer: createRendererMocked } = await import(
-				"../render/renderer.js"
-			);
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
+			(window as any).procaptcha = { render: mockRenderFunction };
 
-			const renderer = createRendererMocked(settings);
+			const originalCreateElement = document.createElement.bind(document);
+			let scriptLoadCount = 0;
+			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
+				const element = originalCreateElement(tagName);
+				if (tagName === "script") {
+					scriptLoadCount++;
+					setTimeout(() => {
+						if (element.onload) {
+							element.onload({} as Event);
+						}
+					}, 0);
+				}
+				return element;
+			});
+
+			const renderer = createRenderer(settings);
 			const element = document.createElement("div");
 			const options = { siteKey: "test-key" };
 
@@ -59,8 +66,8 @@ describe("renderer", () => {
 			await renderer(element, options);
 			await renderer(element, options);
 
-			// loadRenderFunction should only be called once due to caching
-			expect(loadRenderFunctionMock).toHaveBeenCalledTimes(1);
+			// Script should only be loaded once due to caching in createRenderer
+			expect(scriptLoadCount).toBe(1);
 		});
 
 		it("should clone options object before passing to render function", async () => {
