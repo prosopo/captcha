@@ -37,4 +37,3 @@ export default function () {
 	config.test.globals = true;
 	return config;
 }
-

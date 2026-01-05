@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import type { ProcaptchaProps } from "@prosopo/types";
 import { ModeEnum } from "@prosopo/types";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProcaptchaWidget from "./ProcaptchaWidget.js";
 
 vi.mock("@prosopo/locale", async () => {
@@ -94,7 +94,10 @@ vi.mock("@prosopo/widget-skeleton", () => ({
 
 describe("ProcaptchaWidget", () => {
 	let mockProps: ProcaptchaProps;
-	let mockManager: { start: ReturnType<typeof vi.fn>; resetState: ReturnType<typeof vi.fn> };
+	let mockManager: {
+		start: ReturnType<typeof vi.fn>;
+		resetState: ReturnType<typeof vi.fn>;
+	};
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
@@ -186,10 +189,7 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should clean up event listener on unmount in invisible mode", () => {
-		const removeEventListenerSpy = vi.spyOn(
-			document,
-			"removeEventListener",
-		);
+		const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 		const propsInvisible = {
 			...mockProps,
 			config: {
@@ -198,9 +198,7 @@ describe("ProcaptchaWidget", () => {
 			},
 		};
 
-		const { unmount } = render(
-			<ProcaptchaWidget {...propsInvisible} />,
-		);
+		const { unmount } = render(<ProcaptchaWidget {...propsInvisible} />);
 
 		unmount();
 
@@ -262,9 +260,8 @@ describe("ProcaptchaWidget", () => {
 			},
 		} as React.TouchEvent;
 
-		const onChange = vi.mocked(
-			await import("@prosopo/procaptcha-common"),
-		).Checkbox.mock.calls[0]?.[0]?.onChange;
+		const onChange = vi.mocked(await import("@prosopo/procaptcha-common"))
+			.Checkbox.mock.calls[0]?.[0]?.onChange;
 		if (onChange) {
 			await onChange(touchEvent);
 		}
@@ -286,9 +283,8 @@ describe("ProcaptchaWidget", () => {
 			},
 		} as React.MouseEvent;
 
-		const onChange = vi.mocked(
-			await import("@prosopo/procaptcha-common"),
-		).Checkbox.mock.calls[0]?.[0]?.onChange;
+		const onChange = vi.mocked(await import("@prosopo/procaptcha-common"))
+			.Checkbox.mock.calls[0]?.[0]?.onChange;
 		if (onChange) {
 			await onChange(mouseEvent);
 		}
@@ -413,7 +409,7 @@ describe("ProcaptchaWidget", () => {
 
 		const { useProcaptcha } = await import("@prosopo/procaptcha-common");
 		const mockUpdateState = vi.fn();
-		let currentState = {
+		const currentState = {
 			isHuman: false,
 			index: 0,
 			solutions: [],
@@ -519,4 +515,3 @@ describe("ProcaptchaWidget", () => {
 		expect(checkbox.textContent).toBe("");
 	});
 });
-

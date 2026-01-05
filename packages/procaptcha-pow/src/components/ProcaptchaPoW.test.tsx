@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, waitFor } from "@testing-library/react";
 import type { ProcaptchaProps } from "@prosopo/types";
+import { render, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProcaptchaPow } from "./ProcaptchaPoW.js";
 
 vi.mock("./ProcaptchaWidget.js", () => ({
 	default: vi.fn((props: ProcaptchaProps) => (
-		<div data-testid="procaptcha-widget">
-			{JSON.stringify(props)}
-		</div>
+		<div data-testid="procaptcha-widget">{JSON.stringify(props)}</div>
 	)),
 }));
 
@@ -101,4 +99,3 @@ describe("ProcaptchaPoW", () => {
 		expect(widget.textContent).toContain("frictionlessState");
 	});
 });
-

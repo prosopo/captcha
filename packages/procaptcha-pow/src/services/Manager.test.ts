@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import type {
-	Account,
 	FrictionlessState,
 	ProcaptchaCallbacks,
 	ProcaptchaClientConfigInput,
 	ProcaptchaState,
-	ProcaptchaStateUpdateFn,
 } from "@prosopo/types";
 import { ApiParams } from "@prosopo/types";
-import { ProsopoEnvError } from "@prosopo/common";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Manager } from "./Manager.js";
 
 vi.mock("@prosopo/procaptcha-common", async () => {
@@ -144,6 +141,7 @@ describe("Manager", () => {
 		};
 
 		const { ProviderApi } = await import("@prosopo/api");
+		// biome-ignore lint/suspicious/noExplicitAny: Mock implementation requires any
 		vi.mocked(ProviderApi).mockImplementation(() => mockProviderApi as any);
 
 		const { getProcaptchaRandomActiveProvider } = await import(
@@ -200,35 +198,35 @@ describe("Manager", () => {
 			expect(mockCallbacks.onReset).toHaveBeenCalled();
 		});
 
-	it("should call frictionless restart if provided when onFailed is called", () => {
-		const mockRestart = vi.fn();
-		const frictionlessState: FrictionlessState = {
-			provider: {
+		it("should call frictionless restart if provided when onFailed is called", () => {
+			const mockRestart = vi.fn();
+			const frictionlessState: FrictionlessState = {
 				provider: {
-					url: "https://test-provider.com",
-					datasetId: "datasetId123",
+					provider: {
+						url: "https://test-provider.com",
+						datasetId: "datasetId123",
+					},
+					providerAccount: "providerAccount123",
 				},
-				providerAccount: "providerAccount123",
-			},
-			userAccount: {
-				account: { address: "user123" },
-			},
-			restart: mockRestart,
-		};
+				userAccount: {
+					account: { address: "user123" },
+				},
+				restart: mockRestart,
+			};
 
-		const manager = Manager(
-			mockConfig,
-			mockState,
-			mockOnStateUpdate,
-			mockCallbacks,
-			frictionlessState,
-		);
+			const manager = Manager(
+				mockConfig,
+				mockState,
+				mockOnStateUpdate,
+				mockCallbacks,
+				frictionlessState,
+			);
 
-		manager.resetState();
+			manager.resetState();
 
-		expect(mockCallbacks.onReset).toHaveBeenCalled();
-		expect(mockRestart).not.toHaveBeenCalled();
-	});
+			expect(mockCallbacks.onReset).toHaveBeenCalled();
+			expect(mockRestart).not.toHaveBeenCalled();
+		});
 
 		it("should clear timeout if set", () => {
 			const mockTimeout = setTimeout(() => {}, 1000);
@@ -306,6 +304,7 @@ describe("Manager", () => {
 					async getAccount() {
 						return { account: { address: "user123" } };
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -395,6 +394,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -437,6 +437,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -471,6 +472,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -507,6 +509,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -548,6 +551,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -602,6 +606,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -654,6 +659,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -687,10 +693,7 @@ describe("Manager", () => {
 			await manager.start(100, 200);
 
 			expect(randomAsHex).toHaveBeenCalled();
-			expect(embedData).toHaveBeenCalledWith(
-				expect.any(String),
-				[100, 200],
-			);
+			expect(embedData).toHaveBeenCalledWith(expect.any(String), [100, 200]);
 			expect(mockProviderApi.submitPowCaptchaSolution).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.any(String),
@@ -721,6 +724,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -782,6 +786,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -833,6 +838,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -857,6 +863,7 @@ describe("Manager", () => {
 					solutionTimeout: 60000,
 					verifiedTimeout: 5000,
 				},
+				// biome-ignore lint/suspicious/noExplicitAny: Partial config for testing
 			} as any;
 
 			const manager = Manager(
@@ -894,6 +901,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -951,6 +959,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -997,6 +1006,7 @@ describe("Manager", () => {
 							},
 						};
 					}
+					// biome-ignore lint/suspicious/noExplicitAny: Mock extension class requires any
 				} as any,
 			);
 
@@ -1024,4 +1034,3 @@ describe("Manager", () => {
 		});
 	});
 });
-
