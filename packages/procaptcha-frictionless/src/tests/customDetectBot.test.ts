@@ -74,4 +74,38 @@ describe("withTimeout", () => {
 
 		vi.useRealTimers();
 	});
+
+	it("should clear timeout when promise resolves", async () => {
+		vi.useFakeTimers();
+
+		const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
+		const promise = Promise.resolve("success");
+
+		const result = withTimeout(promise, 1000);
+
+		vi.advanceTimersByTime(500);
+		await result;
+
+		expect(clearTimeoutSpy).toHaveBeenCalled();
+
+		vi.useRealTimers();
+		clearTimeoutSpy.mockRestore();
+	});
+
+	it("should clear timeout when promise rejects", async () => {
+		vi.useFakeTimers();
+
+		const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
+		const promise = Promise.reject(new Error("test error"));
+
+		const result = withTimeout(promise, 1000);
+
+		vi.advanceTimersByTime(500);
+
+		await expect(result).rejects.toThrow("test error");
+		expect(clearTimeoutSpy).toHaveBeenCalled();
+
+		vi.useRealTimers();
+		clearTimeoutSpy.mockRestore();
+	});
 });
