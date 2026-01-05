@@ -358,4 +358,81 @@ describe("getRedisRuleValue", () => {
 			expect(typeof value).toBe("string");
 		}
 	});
+
+	it("should handle rule with all possible field types", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Restrict,
+			captchaType: "image",
+			description: "test description",
+			solvedImagesCount: 3,
+			imageThreshold: 0.75,
+			powDifficulty: 100000,
+			unsolvedImagesCount: 6,
+			frictionlessScore: 0.9,
+			clientId: "client1",
+			userId: "user1",
+			ja4Hash: "ja4hash",
+			headersHash: "headershash",
+			userAgentHash: "uahash",
+			headHash: "headhash",
+			coords: "[[[100,200]]]",
+			numericIp: BigInt("167772160"),
+			numericIpMaskMin: BigInt("167772160"),
+			numericIpMaskMax: BigInt("167772415"),
+			groupId: "group1",
+		};
+
+		const result = getRedisRuleValue(rule);
+
+		expect(result.type).toBe("restrict");
+		expect(result.captchaType).toBe("image");
+		expect(result.description).toBe("test description");
+		expect(result.solvedImagesCount).toBe("3");
+		expect(result.imageThreshold).toBe("0.75");
+		expect(result.powDifficulty).toBe("100000");
+		expect(result.unsolvedImagesCount).toBe("6");
+		expect(result.frictionlessScore).toBe("0.9");
+		expect(result.clientId).toBe("client1");
+		expect(result.userId).toBe("user1");
+		expect(result.ja4Hash).toBe("ja4hash");
+		expect(result.headersHash).toBe("headershash");
+		expect(result.userAgentHash).toBe("uahash");
+		expect(result.headHash).toBe("headhash");
+		expect(result.coords).toBe("[[[100,200]]]");
+		expect(result.numericIp).toBe("167772160");
+		expect(result.numericIpMaskMin).toBe("167772160");
+		expect(result.numericIpMaskMax).toBe("167772415");
+		expect(result.groupId).toBe("group1");
+
+		// All values should be strings
+		for (const value of Object.values(result)) {
+			expect(typeof value).toBe("string");
+		}
+	});
+
+	it("should handle zero and negative numbers", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			solvedImagesCount: 0,
+			imageThreshold: -0.5,
+			powDifficulty: -100,
+		};
+
+		const result = getRedisRuleValue(rule);
+
+		expect(result.solvedImagesCount).toBe("0");
+		expect(result.imageThreshold).toBe("-0.5");
+		expect(result.powDifficulty).toBe("-100");
+	});
+
+	it("should handle very large bigint values", () => {
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIp: BigInt("340282366920938463463374607431768211455"), // Max uint128
+		};
+
+		const result = getRedisRuleValue(rule);
+
+		expect(result.numericIp).toBe("340282366920938463463374607431768211455");
+	});
 });

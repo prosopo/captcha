@@ -217,4 +217,48 @@ describe("getAccessRuleFiltersFromInput", () => {
 		expect(filters[0].policyScopeMatch).toBe(FilterScopeMatch.Greedy);
 		expect(filters[0].userScopeMatch).toBe(FilterScopeMatch.Greedy);
 	});
+
+	it("should handle empty policyScopes array", () => {
+		const filters = getAccessRuleFiltersFromInput({
+			policyScopes: [],
+			groupId: "group1",
+		});
+
+		expect(filters).toHaveLength(1);
+		expect(filters[0].groupId).toBe("group1");
+		expect(filters[0].policyScope).toBeUndefined();
+	});
+
+	it("should handle empty filter input", () => {
+		const filters = getAccessRuleFiltersFromInput({});
+
+		expect(filters).toHaveLength(1);
+		expect(filters[0].policyScope).toBeUndefined();
+		expect(filters[0].userScope).toBeUndefined();
+		expect(filters[0].groupId).toBeUndefined();
+	});
+
+	it("should preserve filter properties when multiple policy scopes are provided", () => {
+		const filters = getAccessRuleFiltersFromInput({
+			policyScopes: [
+				{ clientId: "client1" },
+				{ clientId: "client2" },
+				{ clientId: "client3" },
+			],
+			userScope: {
+				numericIp: BigInt(100),
+			},
+			groupId: "group1",
+			policyScopeMatch: FilterScopeMatch.Greedy,
+			userScopeMatch: FilterScopeMatch.Greedy,
+		});
+
+		expect(filters).toHaveLength(3);
+		filters.forEach((filter) => {
+			expect(filter.userScope?.numericIp).toBe(BigInt(100));
+			expect(filter.groupId).toBe("group1");
+			expect(filter.policyScopeMatch).toBe(FilterScopeMatch.Greedy);
+			expect(filter.userScopeMatch).toBe(FilterScopeMatch.Greedy);
+		});
+	});
 });
