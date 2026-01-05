@@ -260,5 +260,125 @@ describe("state/builder", () => {
 
 			expect(setError).toHaveBeenCalledWith(errorObj);
 		});
+
+		it("should handle timeout state update", () => {
+			const timeoutRef: { current: NodeJS.Timeout | undefined } = {
+				current: undefined,
+			};
+
+			const useRef = vi.fn((defaultValue) => {
+				if (defaultValue === undefined && timeoutRef.current === undefined) {
+					return timeoutRef;
+				}
+				return { current: defaultValue };
+			});
+
+			const useState = vi.fn((defaultValue) => [defaultValue, vi.fn()]);
+
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
+			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
+
+			const mockTimeout = setTimeout(() => {}, 1000);
+			updateFn({ timeout: mockTimeout });
+
+			expect(timeoutRef.current).toBe(mockTimeout);
+		});
+
+		it("should handle successfullChallengeTimeout state update", () => {
+			const successfullChallengeTimeoutRef: {
+				current: NodeJS.Timeout | undefined;
+			} = { current: undefined };
+
+			const useRef = vi.fn((defaultValue) => {
+				if (
+					defaultValue === undefined &&
+					successfullChallengeTimeoutRef.current === undefined
+				) {
+					return successfullChallengeTimeoutRef;
+				}
+				return { current: defaultValue };
+			});
+
+			const useState = vi.fn((defaultValue) => [defaultValue, vi.fn()]);
+
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
+			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
+
+			const mockTimeout = setTimeout(() => {}, 1000);
+			updateFn({ successfullChallengeTimeout: mockTimeout });
+
+			// This test will fail if the bug exists - successfullChallengeTimeout should be set to the correct value
+			expect(successfullChallengeTimeoutRef.current).toBe(mockTimeout);
+		});
+
+		it("should handle multiple state properties being updated", () => {
+			const setIsHuman = vi.fn();
+			const setIndex = vi.fn();
+			const setDappAccount = vi.fn();
+			const setSessionId = vi.fn();
+
+			const useState = vi.fn((defaultValue) => {
+				if (defaultValue === false) {
+					return [false, setIsHuman];
+				}
+				if (defaultValue === 0) {
+					return [0, setIndex];
+				}
+				if (defaultValue === undefined) {
+					return [undefined, setDappAccount];
+				}
+				return [defaultValue, vi.fn()];
+			});
+
+			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
+
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
+			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
+
+			// Track sessionId setter separately since it also uses undefined
+			let sessionIdSetter: ReturnType<typeof vi.fn> | undefined;
+			const useStateForSessionId = vi.fn((defaultValue) => {
+				if (defaultValue === undefined && !sessionIdSetter) {
+					sessionIdSetter = vi.fn();
+					return [undefined, sessionIdSetter];
+				}
+				return useState(defaultValue);
+			});
+
+			const [, updateFn2] = useProcaptcha(
+				// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
+				useStateForSessionId as any,
+				// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
+				useRef as any,
+			);
+
+			updateFn({
+				isHuman: true,
+				index: 5,
+				dappAccount: "0x123",
+			});
+
+			updateFn2({
+				sessionId: "session-123",
+			});
+
+			// Verify setters were called with correct values
+			expect(setIsHuman).toHaveBeenCalledWith(true);
+			expect(setIndex).toHaveBeenCalledWith(5);
+			expect(setDappAccount).toHaveBeenCalledWith("0x123");
+			if (sessionIdSetter) {
+				expect(sessionIdSetter).toHaveBeenCalledWith("session-123");
+			}
+		});
+
+		it("should handle empty partial state update", () => {
+			const useState = vi.fn((defaultValue) => [defaultValue, vi.fn()]);
+			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
+
+			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
+			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
+
+			expect(() => updateFn({})).not.toThrow();
+		});
 	});
 });
