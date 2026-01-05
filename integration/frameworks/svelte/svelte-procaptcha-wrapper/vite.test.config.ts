@@ -13,9 +13,9 @@
 // limitations under the License.
 
 import path from "node:path";
-import { defineConfig } from "vitest/config";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { ViteTestConfig } from "@prosopo/config";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { defineConfig } from "vitest/config";
 
 process.env.NODE_ENV = "test";
 
@@ -45,4 +45,3 @@ export default defineConfig({
 		environment: "jsdom",
 	},
 });
-

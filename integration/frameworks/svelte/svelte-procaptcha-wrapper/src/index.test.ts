@@ -15,9 +15,9 @@
 import { describe, expect, it } from "vitest";
 import {
 	ProcaptchaComponent,
+	type ProcaptchaLanguages,
 	type ProcaptchaRenderOptions,
 	type ProcaptchaType,
-	type ProcaptchaLanguages,
 } from "./index.js";
 
 describe("index", () => {
@@ -70,4 +70,3 @@ describe("index", () => {
 		});
 	});
 });
-

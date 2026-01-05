@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, waitFor } from "@testing-library/svelte";
-import ProcaptchaComponent from "./procaptchaComponent.svelte";
 import type { ProcaptchaRenderOptions } from "@prosopo/procaptcha-wrapper";
 import { renderProcaptcha } from "@prosopo/procaptcha-wrapper";
+import { render, waitFor } from "@testing-library/svelte";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import ProcaptchaComponent from "./procaptchaComponent.svelte";
 
 // Mock renderProcaptcha
 vi.mock("@prosopo/procaptcha-wrapper", () => ({
@@ -230,4 +230,3 @@ describe("ProcaptchaComponent", () => {
 		expect(div?.getAttribute("data-another")).toBe("another-value");
 	});
 });
-
