@@ -18,9 +18,9 @@ import type {
 	ProcaptchaCallbacks,
 	ProcaptchaClientConfigInput,
 } from "@prosopo/types";
-import type React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProcaptchaWidget from "./ProcaptchaWidget.js";
 
