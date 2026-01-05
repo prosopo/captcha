@@ -92,4 +92,3 @@ describe("index", () => {
 		expect(typeof options.callback).toBe("string");
 	});
 });
-

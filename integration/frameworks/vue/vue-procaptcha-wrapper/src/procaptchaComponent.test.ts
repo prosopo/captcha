@@ -14,7 +14,7 @@
 
 import { renderProcaptcha } from "@prosopo/procaptcha-wrapper";
 import { mount } from "@vue/test-utils";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProcaptchaComponent from "./procaptchaComponent.vue";
 
 vi.mock("@prosopo/procaptcha-wrapper", () => ({
@@ -338,4 +338,3 @@ describe("ProcaptchaComponent", () => {
 		);
 	});
 });
-

@@ -22,4 +22,3 @@ export default function () {
 	config.test.environment = "jsdom";
 	return config;
 }
-
