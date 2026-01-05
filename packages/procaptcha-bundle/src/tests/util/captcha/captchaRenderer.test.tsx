@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { JSDOM } from "jsdom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CaptchaRenderer } from "../../../util/captcha/captchaRenderer.js";
-import { CaptchaComponentProvider } from "../../../util/captcha/captchaComponentProvider.js";
+import type { Ti18n } from "@prosopo/locale";
 import { CaptchaType } from "@prosopo/types";
 import type { Callbacks, ProcaptchaRenderOptions } from "@prosopo/types";
-import type { Ti18n } from "@prosopo/locale";
+import { JSDOM } from "jsdom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CaptchaComponentProvider } from "../../../util/captcha/captchaComponentProvider.js";
+import { CaptchaRenderer } from "../../../util/captcha/captchaRenderer.js";
 
 vi.mock("react-dom/client", () => ({
 	createRoot: vi.fn(() => ({
@@ -306,4 +306,3 @@ describe("CaptchaRenderer", () => {
 		expect(mockComponentProvider.getCaptchaComponent).toHaveBeenCalled();
 	});
 });
-

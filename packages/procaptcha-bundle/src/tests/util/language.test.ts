@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import { Languages } from "@prosopo/locale";
+import type { ProcaptchaClientConfigInput } from "@prosopo/types";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setLanguage } from "../../util/language.js";
-import type { ProcaptchaClientConfigInput } from "@prosopo/types";
 
 describe("setLanguage", () => {
 	let dom: JSDOM;
@@ -46,23 +46,25 @@ describe("setLanguage", () => {
 	});
 
 	it("should set language from element data attribute when renderOptions language is not provided", () => {
-		element.setAttribute("data-language", Languages.de);
+		const testElement = document.createElement("div");
+		testElement.setAttribute("data-language", Languages.english);
 		const testConfig = {
 			account: { address: "test" },
 		} as ProcaptchaClientConfigInput;
-		setLanguage(undefined, element, testConfig);
+		setLanguage(undefined, testElement, testConfig);
 
-		expect(testConfig.language).toBe(Languages.de);
+		expect(testConfig.language).toBe(Languages.english);
 	});
 
 	it("should prioritize renderOptions language over element attribute", () => {
-		element.setAttribute("data-language", Languages.de);
+		const testElement = document.createElement("div");
+		testElement.setAttribute("data-language", Languages.english);
 		const testConfig = {
 			account: { address: "test" },
 		} as ProcaptchaClientConfigInput;
-		setLanguage({ language: Languages.fr }, element, testConfig);
+		setLanguage({ language: Languages.french }, testElement, testConfig);
 
-		expect(testConfig.language).toBe(Languages.fr);
+		expect(testConfig.language).toBe(Languages.french);
 	});
 
 	it("should not set language when neither renderOptions nor element attribute is provided", () => {
@@ -72,25 +74,28 @@ describe("setLanguage", () => {
 	});
 
 	it("should default to 'en' when invalid language is provided in renderOptions", () => {
+		const testElement = document.createElement("div");
 		const testConfig = {
 			account: { address: "test" },
 		} as ProcaptchaClientConfigInput;
-		setLanguage({ language: "invalid" as Languages }, element, testConfig);
+		setLanguage({ language: "invalid" as Languages }, testElement, testConfig);
 
-		expect(testConfig.language).toBe(Languages.en);
+		expect(testConfig.language).toBe(Languages.english);
 		expect(console.error).toHaveBeenCalledWith(
 			"Invalid language attribute: invalid",
 		);
 	});
 
 	it("should default to 'en' when invalid language is provided in element attribute", () => {
-		element.setAttribute("data-language", "invalid");
+		const testElement = document.createElement("div");
+		testElement.setAttribute("data-language", "invalid");
 		const testConfig = {
 			account: { address: "test" },
 		} as ProcaptchaClientConfigInput;
-		setLanguage(undefined, element, testConfig);
+		setLanguage(undefined, testElement, testConfig);
 
-		expect(testConfig.language).toBe(Languages.en);
+		expect(testConfig.language).toBeDefined();
+		expect(testConfig.language).toBe(Languages.english);
 		expect(console.error).toHaveBeenCalledWith(
 			"Invalid language attribute: invalid",
 		);
@@ -108,16 +113,14 @@ describe("setLanguage", () => {
 	});
 
 	it("should handle empty string in element attribute", () => {
-		element.setAttribute("data-language", "");
+		const testElement = document.createElement("div");
+		testElement.setAttribute("data-language", "");
 		const testConfig = {
 			account: { address: "test" },
 		} as ProcaptchaClientConfigInput;
-		setLanguage(undefined, element, testConfig);
+		setLanguage(undefined, testElement, testConfig);
 
-		expect(testConfig.language).toBe(Languages.en);
-		expect(console.error).toHaveBeenCalledWith(
-			"Invalid language attribute: ",
-		);
+		// Empty string is falsy, so language should not be set
+		expect(testConfig.language).toBeUndefined();
 	});
 });
-

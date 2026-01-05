@@ -105,4 +105,3 @@ describe("WidgetThemeResolver", () => {
 		expect(theme).toBe("dark");
 	});
 });
-

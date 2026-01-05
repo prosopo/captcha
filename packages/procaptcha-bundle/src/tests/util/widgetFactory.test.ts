@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ProcaptchaRenderOptions } from "@prosopo/types";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WidgetFactory } from "../../util/widgetFactory.js";
 import { WidgetThemeResolver } from "../../util/widgetThemeResolver.js";
-import type { ProcaptchaRenderOptions } from "@prosopo/types";
 
 vi.mock("@prosopo/widget-skeleton", () => ({
 	createWidgetSkeleton: vi.fn(() => ({
@@ -201,9 +201,7 @@ describe("WidgetFactory", () => {
 		});
 
 		it("should create widget skeleton for visible mode", async () => {
-			const { createWidgetSkeleton } = await import(
-				"@prosopo/widget-skeleton"
-			);
+			const { createWidgetSkeleton } = await import("@prosopo/widget-skeleton");
 			const container = document.createElement("div");
 			const renderOptions: ProcaptchaRenderOptions = {
 				siteKey: "test-key",
@@ -215,9 +213,7 @@ describe("WidgetFactory", () => {
 		});
 
 		it("should not create widget skeleton for invisible mode", async () => {
-			const { createWidgetSkeleton } = await import(
-				"@prosopo/widget-skeleton"
-			);
+			const { createWidgetSkeleton } = await import("@prosopo/widget-skeleton");
 			const container = document.createElement("div");
 			const renderOptions: ProcaptchaRenderOptions = {
 				siteKey: "test-key",
@@ -251,4 +247,3 @@ describe("WidgetFactory", () => {
 		});
 	});
 });
-

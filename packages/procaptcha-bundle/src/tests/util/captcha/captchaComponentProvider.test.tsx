@@ -98,4 +98,3 @@ describe("CaptchaComponentProvider", () => {
 		expect(component).toBeDefined();
 	});
 });
-

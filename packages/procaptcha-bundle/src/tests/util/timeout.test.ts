@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ProcaptchaClientConfigOutput } from "@prosopo/types";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { setValidChallengeLength } from "../../util/timeout.js";
-import type { ProcaptchaClientConfigOutput } from "@prosopo/types";
 
 describe("setValidChallengeLength", () => {
 	let dom: JSDOM;
@@ -93,11 +93,7 @@ describe("setValidChallengeLength", () => {
 	});
 
 	it("should handle zero timeout", () => {
-		setValidChallengeLength(
-			{ "challenge-valid-length": "0" },
-			element,
-			config,
-		);
+		setValidChallengeLength({ "challenge-valid-length": "0" }, element, config);
 
 		expect(config.captchas.image.solutionTimeout).toBe(0);
 		expect(config.captchas.pow.solutionTimeout).toBe(0);
@@ -131,4 +127,3 @@ describe("setValidChallengeLength", () => {
 		);
 	});
 });
-

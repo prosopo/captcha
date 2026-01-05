@@ -78,7 +78,7 @@ describe("createConfig", () => {
 	});
 
 	it("should default to development environment when PROSOPO_DEFAULT_ENVIRONMENT is not set", () => {
-		delete process.env.PROSOPO_DEFAULT_ENVIRONMENT;
+		process.env.PROSOPO_DEFAULT_ENVIRONMENT = undefined;
 		const config = createConfig("test-key");
 
 		expect(config.defaultEnvironment).toBe("development");
@@ -166,4 +166,3 @@ describe("createConfig", () => {
 		expect(config.userAccountAddress).toBe("");
 	});
 });
-
