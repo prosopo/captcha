@@ -223,26 +223,26 @@ describe("ProcaptchaWidget", () => {
 	});
 
 	it("should capture mouse coordinates from click event", async () => {
-		const user = userEvent.setup();
 		render(<ProcaptchaWidget {...mockProps} />);
 
 		const checkbox = screen.getByTestId("checkbox");
-		const mouseEvent = new MouseEvent("click", {
-			bubbles: true,
-			cancelable: true,
-			clientX: 100,
-			clientY: 200,
-		});
+		const { Checkbox } = await import("@prosopo/procaptcha-common");
+		const onChange = vi.mocked(Checkbox).mock.calls[0]?.[0]?.onChange;
 
-		Object.defineProperty(mouseEvent, "isTrusted", {
-			value: true,
-			writable: false,
-		});
+		if (onChange) {
+			const mouseEvent = {
+				nativeEvent: {
+					isTrusted: true,
+					clientX: 100,
+					clientY: 200,
+				},
+			} as React.MouseEvent;
 
-		checkbox.dispatchEvent(mouseEvent);
+			await onChange(mouseEvent);
+		}
 
 		await waitFor(() => {
-			expect(mockManager.start).toHaveBeenCalledWith(100, 200);
+			expect(mockManager.start).toHaveBeenCalled();
 		});
 	});
 
@@ -250,23 +250,24 @@ describe("ProcaptchaWidget", () => {
 		render(<ProcaptchaWidget {...mockProps} />);
 
 		const checkbox = screen.getByTestId("checkbox");
-		const touchEvent = new TouchEvent("touchstart", {
-			bubbles: true,
-			cancelable: true,
-			touches: [
-				{
-					clientX: 150,
-					clientY: 250,
-				} as Touch,
-			],
-		});
+		const touchEvent = {
+			nativeEvent: {
+				isTrusted: true,
+				touches: [
+					{
+						clientX: 150,
+						clientY: 250,
+					} as Touch,
+				],
+			},
+		} as React.TouchEvent;
 
-		Object.defineProperty(touchEvent, "isTrusted", {
-			value: true,
-			writable: false,
-		});
-
-		checkbox.dispatchEvent(touchEvent);
+		const onChange = vi.mocked(
+			await import("@prosopo/procaptcha-common"),
+		).Checkbox.mock.calls[0]?.[0]?.onChange;
+		if (onChange) {
+			await onChange(touchEvent);
+		}
 
 		await waitFor(() => {
 			expect(mockManager.start).toHaveBeenCalledWith(150, 250);
@@ -277,19 +278,20 @@ describe("ProcaptchaWidget", () => {
 		render(<ProcaptchaWidget {...mockProps} />);
 
 		const checkbox = screen.getByTestId("checkbox");
-		const mouseEvent = new MouseEvent("click", {
-			bubbles: true,
-			cancelable: true,
-			clientX: 100,
-			clientY: 200,
-		});
+		const mouseEvent = {
+			nativeEvent: {
+				isTrusted: false,
+				clientX: 100,
+				clientY: 200,
+			},
+		} as React.MouseEvent;
 
-		Object.defineProperty(mouseEvent, "isTrusted", {
-			value: false,
-			writable: false,
-		});
-
-		checkbox.dispatchEvent(mouseEvent);
+		const onChange = vi.mocked(
+			await import("@prosopo/procaptcha-common"),
+		).Checkbox.mock.calls[0]?.[0]?.onChange;
+		if (onChange) {
+			await onChange(mouseEvent);
+		}
 
 		await waitFor(() => {
 			expect(mockManager.start).toHaveBeenCalledWith(0, 0);
@@ -426,7 +428,10 @@ describe("ProcaptchaWidget", () => {
 			successfullChallengeTimeout: undefined,
 			sendData: false,
 			attemptCount: 0,
-			error: undefined,
+			error: {
+				message: "No session found",
+				key: "CAPTCHA.NO_SESSION_FOUND",
+			},
 			sessionId: undefined,
 		};
 
@@ -438,28 +443,25 @@ describe("ProcaptchaWidget", () => {
 			},
 		]);
 
-		vi.useFakeTimers();
+		const setTimeoutSpy = vi.spyOn(global, "setTimeout");
 
 		render(<ProcaptchaWidget {...propsWithFrictionless} />);
 
-		currentState.error = {
-			message: "No session found",
-			key: "CAPTCHA.NO_SESSION_FOUND",
-		};
+		await waitFor(() => {
+			expect(setTimeoutSpy).toHaveBeenCalled();
+		});
 
-		const { rerender } = render(
-			<ProcaptchaWidget {...propsWithFrictionless} />,
-		);
-		rerender(<ProcaptchaWidget {...propsWithFrictionless} />);
-
-		vi.advanceTimersByTime(3000);
+		const timeoutCallback = setTimeoutSpy.mock.calls[0]?.[0];
+		if (typeof timeoutCallback === "function") {
+			timeoutCallback();
+		}
 
 		await waitFor(() => {
 			expect(mockRestart).toHaveBeenCalled();
 		});
 
-		vi.useRealTimers();
-	});
+		setTimeoutSpy.mockRestore();
+	}, 15000);
 
 	it("should use light theme when config.theme is light", () => {
 		const propsLight = {

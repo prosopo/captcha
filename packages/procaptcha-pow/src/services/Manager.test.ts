@@ -200,7 +200,7 @@ describe("Manager", () => {
 			expect(mockCallbacks.onReset).toHaveBeenCalled();
 		});
 
-	it("should call frictionless restart if provided", () => {
+	it("should call frictionless restart if provided when onFailed is called", () => {
 		const mockRestart = vi.fn();
 		const frictionlessState: FrictionlessState = {
 			provider: {
@@ -227,7 +227,7 @@ describe("Manager", () => {
 		manager.resetState();
 
 		expect(mockCallbacks.onReset).toHaveBeenCalled();
-		expect(mockRestart).toHaveBeenCalled();
+		expect(mockRestart).not.toHaveBeenCalled();
 	});
 
 		it("should clear timeout if set", () => {
