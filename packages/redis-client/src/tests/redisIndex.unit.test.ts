@@ -14,7 +14,7 @@
 
 import { SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
 	type RedisIndex,
 	createRedisIndex,
@@ -23,36 +23,28 @@ import {
 
 describe("createRedisIndex", () => {
 	let mockClient: RedisClientType;
-	let mockFtList: ReturnType<typeof vi.fn>;
-	let mockFtCreate: ReturnType<typeof vi.fn>;
-	let mockFtDropIndex: ReturnType<typeof vi.fn>;
-	let mockHGet: ReturnType<typeof vi.fn>;
-	let mockHSet: ReturnType<typeof vi.fn>;
-	let mockHDel: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockFtList = vi.fn();
-		mockFtCreate = vi.fn();
-		mockFtDropIndex = vi.fn();
-		mockHGet = vi.fn();
-		mockHSet = vi.fn();
-		mockHDel = vi.fn();
-
 		mockClient = {
 			ft: {
-				_LIST: mockFtList,
-				create: mockFtCreate,
-				dropIndex: mockFtDropIndex,
+				_LIST: vi.fn().mockResolvedValue([]),
+				create: vi.fn().mockResolvedValue("OK"),
+				dropIndex: vi.fn().mockResolvedValue("OK"),
+				info: vi.fn(),
 			},
-			hGet: mockHGet,
-			hSet: mockHSet,
-			hDel: mockHDel,
+			hGet: vi.fn().mockResolvedValue(null),
+			hSet: vi.fn().mockResolvedValue(1),
+			hDel: vi.fn().mockResolvedValue(1),
 		} as unknown as RedisClientType;
 	});
 
-	it("creates new index when index does not exist", async () => {
-		const index: RedisIndex = {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	test("types", async () => {
+		const mockIndex: RedisIndex = {
 			name: "test-index",
 			schema: {
 				field1: SCHEMA_FIELD_TYPE.TAG,
@@ -60,23 +52,42 @@ describe("createRedisIndex", () => {
 			options: {},
 		};
 
-		mockFtList.mockResolvedValue([]);
-		mockHSet.mockResolvedValue(1);
+		// Test return type is Promise<void>
+		const result: Promise<void> = createRedisIndex(mockClient, mockIndex);
+		await result;
 
-		await createRedisIndex(mockClient, index);
+		// Test parameter types
+		const clientParam: RedisClientType = mockClient;
+		const indexParam: RedisIndex = mockIndex;
 
-		expect(mockFtList).toHaveBeenCalled();
-		expect(mockFtCreate).toHaveBeenCalledWith(
-			index.name,
-			index.schema,
-			index.options,
+		// Type assertions
+		expect(result).toBeInstanceOf(Promise);
+		expect(typeof clientParam).toBe("object");
+		expect(typeof indexParam.name).toBe("string");
+	});
+
+	test("creates new index when index does not exist", async () => {
+		const mockIndex: RedisIndex = {
+			name: "test-index",
+			schema: {
+				field1: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(mockClient, mockIndex);
+
+		expect(mockClient.ft._LIST).toHaveBeenCalled();
+		expect(mockClient.ft.create).toHaveBeenCalledWith(
+			mockIndex.name,
+			mockIndex.schema,
+			mockIndex.options,
 		);
-		expect(mockHSet).toHaveBeenCalled();
-		expect(mockFtDropIndex).not.toHaveBeenCalled();
+		expect(mockClient.ft.dropIndex).not.toHaveBeenCalled();
 	});
 
-	it("skips creation when index exists with same hash", async () => {
-		const index: RedisIndex = {
+	test("saves index hash after creating new index", async () => {
+		const mockIndex: RedisIndex = {
 			name: "test-index",
 			schema: {
 				field1: SCHEMA_FIELD_TYPE.TAG,
@@ -84,21 +95,17 @@ describe("createRedisIndex", () => {
 			options: {},
 		};
 
-		const indexHash = "abc123";
-		mockFtList.mockResolvedValue([index.name]);
-		mockHGet.mockResolvedValue(indexHash);
+		await createRedisIndex(mockClient, mockIndex);
 
-		await createRedisIndex(mockClient, index);
-
-		expect(mockFtList).toHaveBeenCalled();
-		expect(mockHGet).toHaveBeenCalledWith("_index_hashes", index.name);
-		expect(mockFtCreate).not.toHaveBeenCalled();
-		expect(mockFtDropIndex).not.toHaveBeenCalled();
-		expect(mockHSet).not.toHaveBeenCalled();
+		expect(mockClient.hSet).toHaveBeenCalled();
+		const hSetCall = vi.mocked(mockClient.hSet).mock.calls[0];
+		expect(hSetCall?.[0]).toBe("_index_hashes");
+		expect(hSetCall?.[1]).toBe(mockIndex.name);
+		expect(typeof hSetCall?.[2]).toBe("string"); // hash string
 	});
 
-	it("re-creates index when index exists with different hash", async () => {
-		const index: RedisIndex = {
+	test("does not recreate index when hash matches existing index", async () => {
+		const mockIndex: RedisIndex = {
 			name: "test-index",
 			schema: {
 				field1: SCHEMA_FIELD_TYPE.TAG,
@@ -106,25 +113,34 @@ describe("createRedisIndex", () => {
 			options: {},
 		};
 
-		mockFtList.mockResolvedValue([index.name]);
-		mockHGet.mockResolvedValue("different-hash");
-		mockHSet.mockResolvedValue(1);
+		// First create the index
+		await createRedisIndex(mockClient, mockIndex);
+		const firstHash = vi.mocked(mockClient.hSet).mock.calls[0]?.[2] as string;
 
-		await createRedisIndex(mockClient, index);
+		// Reset mocks but keep the hash
+		vi.clearAllMocks();
+		vi.mocked(mockClient.ft._LIST).mockResolvedValue([mockIndex.name]);
+		vi.mocked(mockClient.hGet).mockResolvedValue(firstHash);
 
-		expect(mockFtList).toHaveBeenCalled();
-		expect(mockHGet).toHaveBeenCalledWith("_index_hashes", index.name);
-		expect(mockFtDropIndex).toHaveBeenCalledWith(index.name);
-		expect(mockFtCreate).toHaveBeenCalledWith(
-			index.name,
-			index.schema,
-			index.options,
+		// Try to create again with same definition
+		await createRedisIndex(mockClient, mockIndex);
+
+		// Should check for existing index
+		expect(mockClient.ft._LIST).toHaveBeenCalled();
+		// Should fetch existing hash
+		expect(mockClient.hGet).toHaveBeenCalledWith(
+			"_index_hashes",
+			mockIndex.name,
 		);
-		expect(mockHSet).toHaveBeenCalled();
+		// Should not drop or create
+		expect(mockClient.ft.dropIndex).not.toHaveBeenCalled();
+		expect(mockClient.ft.create).not.toHaveBeenCalled();
+		// Should not save hash again
+		expect(mockClient.hSet).not.toHaveBeenCalled();
 	});
 
-	it("re-creates index when existing hash is null", async () => {
-		const index: RedisIndex = {
+	test("recreates index when hash does not match", async () => {
+		const mockIndex: RedisIndex = {
 			name: "test-index",
 			schema: {
 				field1: SCHEMA_FIELD_TYPE.TAG,
@@ -132,67 +148,152 @@ describe("createRedisIndex", () => {
 			options: {},
 		};
 
-		mockFtList.mockResolvedValue([index.name]);
-		mockHGet.mockResolvedValue(null);
-		mockHSet.mockResolvedValue(1);
+		// First create the index
+		await createRedisIndex(mockClient, mockIndex);
 
-		await createRedisIndex(mockClient, index);
+		// Reset mocks
+		vi.clearAllMocks();
+		vi.mocked(mockClient.ft._LIST).mockResolvedValue([mockIndex.name]);
+		vi.mocked(mockClient.hGet).mockResolvedValue("different-hash");
 
-		expect(mockFtDropIndex).toHaveBeenCalledWith(index.name);
-		expect(mockFtCreate).toHaveBeenCalledWith(
-			index.name,
-			index.schema,
-			index.options,
+		// Modify the index
+		const modifiedIndex: RedisIndex = {
+			...mockIndex,
+			schema: {
+				...mockIndex.schema,
+				field2: SCHEMA_FIELD_TYPE.TAG,
+			},
+		};
+
+		// Try to create again with different definition
+		await createRedisIndex(mockClient, modifiedIndex);
+
+		// Should check for existing index
+		expect(mockClient.ft._LIST).toHaveBeenCalled();
+		// Should fetch existing hash
+		expect(mockClient.hGet).toHaveBeenCalledWith(
+			"_index_hashes",
+			mockIndex.name,
 		);
+		// Should drop existing index
+		expect(mockClient.ft.dropIndex).toHaveBeenCalledWith(mockIndex.name);
+		// Should create new index
+		expect(mockClient.ft.create).toHaveBeenCalledWith(
+			modifiedIndex.name,
+			modifiedIndex.schema,
+			modifiedIndex.options,
+		);
+		// Should save new hash
+		expect(mockClient.hSet).toHaveBeenCalled();
 	});
 
-	it("handles index with different schema fields", async () => {
-		const index: RedisIndex = {
+	test("recreates index when schema changes", async () => {
+		const mockIndex: RedisIndex = {
 			name: "test-index",
 			schema: {
 				field1: SCHEMA_FIELD_TYPE.TAG,
-				field2: SCHEMA_FIELD_TYPE.NUMERIC,
 			},
 			options: {},
 		};
 
-		mockFtList.mockResolvedValue([]);
-		mockHSet.mockResolvedValue(1);
+		await createRedisIndex(mockClient, mockIndex);
+		const firstHash = vi.mocked(mockClient.hSet).mock.calls[0]?.[2] as string;
 
-		await createRedisIndex(mockClient, index);
+		vi.clearAllMocks();
+		vi.mocked(mockClient.ft._LIST).mockResolvedValue([mockIndex.name]);
+		vi.mocked(mockClient.hGet).mockResolvedValue(firstHash);
 
-		expect(mockFtCreate).toHaveBeenCalledWith(
-			index.name,
-			index.schema,
-			index.options,
-		);
+		const modifiedIndex: RedisIndex = {
+			name: mockIndex.name,
+			schema: {
+				field1: SCHEMA_FIELD_TYPE.TAG,
+				field2: SCHEMA_FIELD_TYPE.TEXT,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(mockClient, modifiedIndex);
+
+		expect(mockClient.ft.dropIndex).toHaveBeenCalled();
+		expect(mockClient.ft.create).toHaveBeenCalled();
 	});
 
-	it("handles index with options", async () => {
-		const index: RedisIndex = {
+	test("recreates index when options change", async () => {
+		const mockIndex: RedisIndex = {
 			name: "test-index",
 			schema: {
 				field1: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(mockClient, mockIndex);
+		const firstHash = vi.mocked(mockClient.hSet).mock.calls[0]?.[2] as string;
+
+		vi.clearAllMocks();
+		vi.mocked(mockClient.ft._LIST).mockResolvedValue([mockIndex.name]);
+		vi.mocked(mockClient.hGet).mockResolvedValue(firstHash);
+
+		const modifiedIndex: RedisIndex = {
+			name: mockIndex.name,
+			schema: mockIndex.schema,
+			options: {
+				ON: "HASH" as const,
+			},
+		};
+
+		await createRedisIndex(mockClient, modifiedIndex);
+
+		expect(mockClient.ft.dropIndex).toHaveBeenCalled();
+		expect(mockClient.ft.create).toHaveBeenCalled();
+	});
+
+	test("handles missing hash gracefully when index exists", async () => {
+		const mockIndex: RedisIndex = {
+			name: "test-index",
+			schema: {
+				field1: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		vi.mocked(mockClient.ft._LIST).mockResolvedValue([mockIndex.name]);
+		vi.mocked(mockClient.hGet).mockResolvedValue(null); // No hash stored
+
+		await createRedisIndex(mockClient, mockIndex);
+
+		// Should recreate since hash doesn't match (null vs computed hash)
+		expect(mockClient.ft.dropIndex).toHaveBeenCalledWith(mockIndex.name);
+		expect(mockClient.ft.create).toHaveBeenCalled();
+	});
+
+	test("generates consistent hash for same index definition", async () => {
+		const mockIndex: RedisIndex = {
+			name: "test-index",
+			schema: {
+				field1: SCHEMA_FIELD_TYPE.TAG,
+				field2: SCHEMA_FIELD_TYPE.TEXT,
 			},
 			options: {
-				ON: "HASH",
+				ON: "HASH" as const,
 			},
 		};
 
-		mockFtList.mockResolvedValue([]);
-		mockHSet.mockResolvedValue(1);
+		await createRedisIndex(mockClient, mockIndex);
+		const hash1 = vi.mocked(mockClient.hSet).mock.calls[0]?.[2] as string;
 
-		await createRedisIndex(mockClient, index);
+		vi.clearAllMocks();
+		mockClient.ft._LIST = vi.fn().mockResolvedValue([]);
 
-		expect(mockFtCreate).toHaveBeenCalledWith(
-			index.name,
-			index.schema,
-			index.options,
-		);
+		await createRedisIndex(mockClient, mockIndex);
+		const hash2 = vi.mocked(mockClient.hSet).mock.calls[0]?.[2] as string;
+
+		// Same index definition should produce same hash
+		expect(hash1).toBe(hash2);
 	});
 
-	it("generates consistent hash for same index definition", async () => {
-		const index: RedisIndex = {
+	test("generates different hash for different index definitions", async () => {
+		const mockIndex1: RedisIndex = {
 			name: "test-index",
 			schema: {
 				field1: SCHEMA_FIELD_TYPE.TAG,
@@ -200,59 +301,116 @@ describe("createRedisIndex", () => {
 			options: {},
 		};
 
-		mockFtList.mockResolvedValue([index.name]);
-		mockHGet.mockResolvedValue("same-hash");
-		mockHSet.mockResolvedValue(1);
+		const mockIndex2: RedisIndex = {
+			name: "test-index",
+			schema: {
+				field1: SCHEMA_FIELD_TYPE.TEXT, // Different field type
+			},
+			options: {},
+		};
 
-		await createRedisIndex(mockClient, index);
-		await createRedisIndex(mockClient, index);
+		await createRedisIndex(mockClient, mockIndex1);
+		const hash1 = vi.mocked(mockClient.hSet).mock.calls[0]?.[2] as string;
 
-		expect(mockHGet).toHaveBeenCalledTimes(2);
-		expect(mockHGet).toHaveBeenNthCalledWith(1, "_index_hashes", index.name);
-		expect(mockHGet).toHaveBeenNthCalledWith(2, "_index_hashes", index.name);
-		expect(mockFtCreate).not.toHaveBeenCalled();
+		vi.clearAllMocks();
+		mockClient.ft._LIST = vi.fn().mockResolvedValue([]);
+
+		await createRedisIndex(mockClient, mockIndex2);
+		const hash2 = vi.mocked(mockClient.hSet).mock.calls[0]?.[2] as string;
+
+		// Different index definitions should produce different hashes
+		expect(hash1).not.toBe(hash2);
 	});
 });
 
 describe("deleteRedisIndex", () => {
 	let mockClient: RedisClientType;
-	let mockFtDropIndex: ReturnType<typeof vi.fn>;
-	let mockHDel: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockFtDropIndex = vi.fn();
-		mockHDel = vi.fn();
-
 		mockClient = {
 			ft: {
-				dropIndex: mockFtDropIndex,
+				_LIST: vi.fn(),
+				create: vi.fn(),
+				dropIndex: vi.fn().mockResolvedValue("OK"),
+				info: vi.fn(),
 			},
-			hDel: mockHDel,
+			hGet: vi.fn(),
+			hSet: vi.fn(),
+			hDel: vi.fn().mockResolvedValue(1),
 		} as unknown as RedisClientType;
 	});
 
-	it("deletes index and hash", async () => {
-		const indexName = "test-index";
-
-		mockFtDropIndex.mockResolvedValue("OK");
-		mockHDel.mockResolvedValue(1);
-
-		await deleteRedisIndex(mockClient, indexName);
-
-		expect(mockFtDropIndex).toHaveBeenCalledWith(indexName);
-		expect(mockHDel).toHaveBeenCalledWith("_index_hashes", indexName);
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
-	it("handles deletion of non-existent index", async () => {
-		const indexName = "non-existent-index";
+	test("types", async () => {
+		const indexName = "test-index";
 
-		mockFtDropIndex.mockResolvedValue("OK");
-		mockHDel.mockResolvedValue(0);
+		// Test return type is Promise<void>
+		const result: Promise<void> = deleteRedisIndex(mockClient, indexName);
+		await result;
+
+		// Test parameter types
+		const clientParam: RedisClientType = mockClient;
+		const indexNameParam: string = indexName;
+
+		// Type assertions
+		expect(result).toBeInstanceOf(Promise);
+		expect(typeof clientParam).toBe("object");
+		expect(typeof indexNameParam).toBe("string");
+	});
+
+	test("drops index from Redis", async () => {
+		const indexName = "test-index";
 
 		await deleteRedisIndex(mockClient, indexName);
 
-		expect(mockFtDropIndex).toHaveBeenCalledWith(indexName);
-		expect(mockHDel).toHaveBeenCalledWith("_index_hashes", indexName);
+		expect(mockClient.ft.dropIndex).toHaveBeenCalledWith(indexName);
+		expect(mockClient.ft.dropIndex).toHaveBeenCalledTimes(1);
+	});
+
+	test("deletes index hash after dropping index", async () => {
+		const indexName = "test-index";
+
+		await deleteRedisIndex(mockClient, indexName);
+
+		expect(mockClient.hDel).toHaveBeenCalledWith("_index_hashes", indexName);
+		expect(mockClient.hDel).toHaveBeenCalledTimes(1);
+	});
+
+	test("drops index before deleting hash", async () => {
+		const indexName = "test-index";
+		const callOrder: string[] = [];
+
+		vi.mocked(mockClient.ft.dropIndex).mockImplementation(async () => {
+			callOrder.push("dropIndex");
+			return "OK";
+		});
+		vi.mocked(mockClient.hDel).mockImplementation(async () => {
+			callOrder.push("hDel");
+			return 1;
+		});
+
+		await deleteRedisIndex(mockClient, indexName);
+
+		expect(callOrder[0]).toBe("dropIndex");
+		expect(callOrder[1]).toBe("hDel");
+	});
+
+	test("handles different index names", async () => {
+		const indexNames = ["index1", "index2", "test:index:3"];
+
+		for (const indexName of indexNames) {
+			vi.clearAllMocks();
+			await deleteRedisIndex(mockClient, indexName);
+
+			expect(mockClient.ft.dropIndex).toHaveBeenCalledWith(indexName);
+			expect(mockClient.hDel).toHaveBeenCalledWith(
+				"_index_hashes",
+				indexName,
+			);
+		}
 	});
 });
