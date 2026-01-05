@@ -185,6 +185,10 @@ describe("index", () => {
 		});
 
 		it("should handle script loading errors", async () => {
+			// Clear any cached render function by ensuring window.procaptcha is not set
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
+			delete (window as any).procaptcha;
+
 			const originalCreateElement = document.createElement.bind(document);
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
@@ -207,6 +211,10 @@ describe("index", () => {
 		});
 
 		it("should handle missing render function error", async () => {
+			// Clear any cached render function by ensuring window.procaptcha is not set
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
+			delete (window as any).procaptcha;
+
 			const originalCreateElement = document.createElement.bind(document);
 			vi.spyOn(document, "createElement").mockImplementation((tagName) => {
 				const element = originalCreateElement(tagName);
