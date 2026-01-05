@@ -241,4 +241,20 @@ describe("DATASETS MERKLE TREE", async () => {
 
 		expect(proof).to.deep.equal([["1"]]);
 	});
+
+	test("getRoot throws error when root is undefined", () => {
+		const tree = new CaptchaMerkleTree();
+
+		expect(() => tree.getRoot()).to.throw();
+	});
+
+	test("getRoot returns root when tree is built", () => {
+		const tree = new CaptchaMerkleTree();
+
+		tree.build(["1", "2", "3"]);
+		const root = tree.getRoot();
+
+		expect(root).to.not.be.undefined;
+		expect(root.hash).to.be.a("string");
+	});
 });
