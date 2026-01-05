@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { downloadImage } from "../captcha/util.js";
 
 describe("UTIL FUNCTIONS", () => {
@@ -49,18 +49,18 @@ describe("UTIL FUNCTIONS", () => {
 
 		global.fetch = vi.fn().mockResolvedValue(mockResponse);
 
-		await expect(downloadImage("https://example.com/image.jpg")).rejects.toThrow(
-			ProsopoDatasetError,
-		);
+		await expect(
+			downloadImage("https://example.com/image.jpg"),
+		).rejects.toThrow(ProsopoDatasetError);
 	});
 
 	test("downloadImage throws ProsopoEnvError when fetch fails", async () => {
 		const mockError = new Error("Network error");
 		global.fetch = vi.fn().mockRejectedValue(mockError);
 
-		await expect(downloadImage("https://example.com/image.jpg")).rejects.toThrow(
-			ProsopoEnvError,
-		);
+		await expect(
+			downloadImage("https://example.com/image.jpg"),
+		).rejects.toThrow(ProsopoEnvError);
 	});
 
 	test("downloadImage handles empty response", async () => {
@@ -93,4 +93,3 @@ describe("UTIL FUNCTIONS", () => {
 		expect(result.length).to.equal(1024 * 1024);
 	});
 });
-

@@ -20,6 +20,7 @@ import {
 	type Dataset,
 	type Item,
 } from "@prosopo/types";
+import type { DatasetRaw } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { beforeAll, describe, expect, test } from "vitest";
 import {
@@ -31,7 +32,6 @@ import {
 	matchItemsToSolutions,
 } from "../index.js";
 import { validateDatasetContent } from "../index.js";
-import type { DatasetRaw } from "@prosopo/types";
 
 describe("DATASET FUNCTIONS", async () => {
 	let MOCK_ITEMS: Item[];
@@ -244,7 +244,9 @@ describe("DATASET FUNCTIONS", async () => {
 		const result = addSolutionHashesToDataset(datasetRaw);
 
 		expect(result.captchas[0]?.solution).to.deep.equal(["0xhash1", "0xhash2"]);
-		expect(result.captchas[0]?.items).to.deep.equal(datasetRaw.captchas[0]?.items);
+		expect(result.captchas[0]?.items).to.deep.equal(
+			datasetRaw.captchas[0]?.items,
+		);
 	});
 
 	test("addSolutionHashesToDataset handles captchas without solutions", () => {
@@ -348,8 +350,18 @@ describe("DATASET FUNCTIONS", async () => {
 			],
 		};
 
-		const treeWithSolution = await buildCaptchaTree(dataset, true, false, false);
-		const treeWithoutSolution = await buildCaptchaTree(dataset, false, false, false);
+		const treeWithSolution = await buildCaptchaTree(
+			dataset,
+			true,
+			false,
+			false,
+		);
+		const treeWithoutSolution = await buildCaptchaTree(
+			dataset,
+			false,
+			false,
+			false,
+		);
 
 		expect(treeWithSolution.root?.hash).to.not.equal(
 			treeWithoutSolution.root?.hash,
@@ -378,7 +390,12 @@ describe("DATASET FUNCTIONS", async () => {
 		};
 
 		const treeWithSalt = await buildCaptchaTree(dataset, false, true, false);
-		const treeWithoutSalt = await buildCaptchaTree(dataset, false, false, false);
+		const treeWithoutSalt = await buildCaptchaTree(
+			dataset,
+			false,
+			false,
+			false,
+		);
 
 		expect(treeWithSalt.root?.hash).to.not.equal(treeWithoutSalt.root?.hash);
 	});
@@ -445,7 +462,9 @@ describe("DATASET FUNCTIONS", async () => {
 		expect(result.solutionTree).to.be.an("array");
 		expect(result.contentTree).to.be.an("array");
 		expect(result.captchas[0]?.datasetId).to.equal(result.datasetId);
-		expect(result.captchas[0]?.datasetContentId).to.equal(result.datasetContentId);
+		expect(result.captchas[0]?.datasetContentId).to.equal(
+			result.datasetContentId,
+		);
 	});
 
 	test("buildDataset handles multiple captchas", async () => {
@@ -485,6 +504,8 @@ describe("DATASET FUNCTIONS", async () => {
 		expect(result.captchas[0]?.captchaId).to.not.equal(
 			result.captchas[1]?.captchaId,
 		);
-		expect(result.captchas[0]?.datasetId).to.equal(result.captchas[1]?.datasetId);
+		expect(result.captchas[0]?.datasetId).to.equal(
+			result.captchas[1]?.datasetId,
+		);
 	});
 });
