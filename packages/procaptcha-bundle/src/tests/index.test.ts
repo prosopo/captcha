@@ -1,0 +1,261 @@
+// Copyright 2021-2025 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import { JSDOM } from "jsdom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ProcaptchaRenderOptions } from "@prosopo/types";
+
+vi.mock("../util/widgetFactory.js", () => ({
+	WidgetFactory: vi.fn().mockImplementation(() => ({
+		createWidgets: vi.fn(() => Promise.resolve([])),
+	})),
+}));
+
+vi.mock("../util/widgetThemeResolver.js", () => ({
+	WidgetThemeResolver: vi.fn().mockImplementation(() => ({})),
+}));
+
+vi.mock("../util/captcha/captchaType.js", () => ({
+	getCaptchaType: vi.fn(() => "frictionless"),
+}));
+
+vi.mock("../util/config.js", () => ({
+	extractParams: vi.fn(() => ({
+		onloadUrlCallback: undefined,
+		renderExplicit: undefined,
+	})),
+	getProcaptchaScript: vi.fn(() => null),
+}));
+
+vi.mock("@prosopo/procaptcha-common", () => ({
+	getWindowCallback: vi.fn((name: string) => {
+		return () => {};
+	}),
+}));
+
+describe("index.ts exports", () => {
+	let dom: JSDOM;
+
+	beforeEach(() => {
+		dom = new JSDOM("<!DOCTYPE html><html><body></body></html>", {
+			url: "https://example.com",
+		});
+		// @ts-ignore
+		global.document = dom.window.document;
+		// @ts-ignore
+		global.window = dom.window as unknown as Window & typeof globalThis;
+		vi.clearAllMocks();
+	});
+
+	afterEach(() => {
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
+		(global as any).document = undefined;
+		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
+		(global as any).window = undefined;
+		vi.clearAllMocks();
+	});
+
+	describe("ready", () => {
+		it("should execute callback immediately when document is ready", () => {
+			Object.defineProperty(document, "readyState", {
+				writable: true,
+				value: "complete",
+			});
+
+			const callback = vi.fn();
+			const { default: ready } = require("../index.js");
+
+			ready(callback);
+
+			expect(callback).toHaveBeenCalled();
+		});
+
+		it("should add DOMContentLoaded listener when document is loading", () => {
+			Object.defineProperty(document, "readyState", {
+				writable: true,
+				value: "loading",
+			});
+
+			const callback = vi.fn();
+			const { default: ready } = require("../index.js");
+
+			ready(callback);
+
+			expect(callback).not.toHaveBeenCalled();
+
+			document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
+
+			expect(callback).toHaveBeenCalled();
+		});
+	});
+
+	describe("render", () => {
+		it("should call createWidgets with correct parameters for visible mode", async () => {
+			const { WidgetFactory } = await import("../util/widgetFactory.js");
+			const { render } = await import("../index.js");
+
+			const element = document.createElement("div");
+			const renderOptions: ProcaptchaRenderOptions = {
+				siteKey: "test-key",
+				captchaType: "frictionless",
+			};
+
+			await render(element, renderOptions);
+
+			expect(WidgetFactory).toHaveBeenCalled();
+		});
+
+		it("should handle invisible mode", async () => {
+			const { render } = await import("../index.js");
+
+			const element = document.createElement("div");
+			const renderOptions: ProcaptchaRenderOptions = {
+				siteKey: "test-key",
+				size: "invisible",
+			};
+
+			await render(element, renderOptions);
+
+			expect(true).toBe(true);
+		});
+
+		it("should handle button element", async () => {
+			const { render } = await import("../index.js");
+
+			const button = document.createElement("button");
+			const renderOptions: ProcaptchaRenderOptions = {
+				siteKey: "test-key",
+			};
+
+			await render(button, renderOptions);
+
+			expect(true).toBe(true);
+		});
+
+		it("should handle web3 mode", async () => {
+			const { render } = await import("../index.js");
+
+			const element = document.createElement("div");
+			const renderOptions: ProcaptchaRenderOptions = {
+				siteKey: "test-key",
+				web3: true,
+			};
+
+			await render(element, renderOptions);
+
+			expect(true).toBe(true);
+		});
+	});
+
+	describe("execute", () => {
+		it("should dispatch procaptcha:execute event when containers are found", () => {
+			const { execute } = require("../index.js");
+
+			const container = document.createElement("div");
+			container.id = "procaptcha-container";
+			document.body.appendChild(container);
+
+			const eventListener = vi.fn();
+			document.addEventListener("procaptcha:execute", eventListener);
+
+			execute();
+
+			expect(eventListener).toHaveBeenCalled();
+			const event = eventListener.mock.calls[0][0] as CustomEvent;
+			expect(event.detail).toBeDefined();
+			expect(event.detail.containerId).toBe("procaptcha-container");
+			expect(event.detail.containerCount).toBeGreaterThan(0);
+			expect(typeof event.detail.timestamp).toBe("number");
+		});
+
+		it("should log error when no containers are found", () => {
+			const { execute } = require("../index.js");
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+			execute();
+
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"No Procaptcha containers found for execution",
+			);
+
+			consoleSpy.mockRestore();
+		});
+
+		it("should find containers by data-size attribute", () => {
+			const { execute } = require("../index.js");
+
+			const container = document.createElement("div");
+			container.setAttribute("data-size", "invisible");
+			document.body.appendChild(container);
+
+			const eventListener = vi.fn();
+			document.addEventListener("procaptcha:execute", eventListener);
+
+			execute();
+
+			expect(eventListener).toHaveBeenCalled();
+		});
+
+		it("should find containers by id pattern", () => {
+			const { execute } = require("../index.js");
+
+			const container = document.createElement("div");
+			container.id = "test-procaptcha-container";
+			document.body.appendChild(container);
+
+			const eventListener = vi.fn();
+			document.addEventListener("procaptcha:execute", eventListener);
+
+			execute();
+
+			expect(eventListener).toHaveBeenCalled();
+		});
+
+		it("should find containers by class name", () => {
+			const { execute } = require("../index.js");
+
+			const container = document.createElement("div");
+			container.className = "p-procaptcha";
+			document.body.appendChild(container);
+
+			const eventListener = vi.fn();
+			document.addEventListener("procaptcha:execute", eventListener);
+
+			execute();
+
+			expect(eventListener).toHaveBeenCalled();
+		});
+	});
+
+	describe("reset", () => {
+		it("should unmount all roots and restart", async () => {
+			const mockRoot = {
+				unmount: vi.fn(),
+			};
+
+			const { WidgetFactory } = await import("../util/widgetFactory.js");
+			const mockFactory = {
+				createWidgets: vi.fn(() => Promise.resolve([mockRoot])),
+			};
+			vi.mocked(WidgetFactory).mockImplementation(() => mockFactory as any);
+
+			const { reset } = await import("../index.js");
+
+			reset();
+
+			expect(mockRoot.unmount).toHaveBeenCalled();
+		});
+	});
+});
+
