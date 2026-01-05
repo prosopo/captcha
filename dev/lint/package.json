@@ -10,7 +10,8 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"start": "node dist/index.js"
+		"start": "node dist/index.js",
+		"test": "NODE_ENV=${NODE_ENV:-test}; vitest run --config ./vite.test.config.ts"
 	},
 	"author": "",
 	"license": "ISC",
