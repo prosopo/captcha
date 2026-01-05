@@ -15,4 +15,3 @@
 import { ViteTestConfig } from "@prosopo/config";
 
 export default ViteTestConfig("tsconfig.json");
-

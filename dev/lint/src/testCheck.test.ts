@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import fg from "fast-glob";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTestCheckCommand } from "./testCheck.js";
 
 vi.mock("node:fs");
@@ -81,9 +81,7 @@ describe("testCheck", () => {
 				.mockReturnValueOnce(JSON.stringify(packagePkgJson) as any);
 			vi.mocked(fg.globSync)
 				.mockReturnValueOnce(["/path/to/packages/test/package.json"])
-				.mockReturnValueOnce([
-					"/path/to/packages/test/src/file.test.ts",
-				]);
+				.mockReturnValueOnce(["/path/to/packages/test/src/file.test.ts"]);
 
 			await expect(
 				command.handler({ pkg: "/path/to/package.json" }),
@@ -144,9 +142,7 @@ describe("testCheck", () => {
 				.mockReturnValueOnce(JSON.stringify(packagePkgJson) as any);
 			vi.mocked(fg.globSync)
 				.mockReturnValueOnce(["/path/to/packages/test/package.json"])
-				.mockReturnValueOnce([
-					"/path/to/packages/test/src/file.test.ts",
-				]);
+				.mockReturnValueOnce(["/path/to/packages/test/src/file.test.ts"]);
 
 			await expect(
 				command.handler({ pkg: "/path/to/package.json" }),
@@ -182,4 +178,3 @@ describe("testCheck", () => {
 		});
 	});
 });
-

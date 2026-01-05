@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import fg from "fast-glob";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildLicenseCommand } from "./license.js";
 
 vi.mock("node:fs");
@@ -154,7 +154,8 @@ describe("license", () => {
 			});
 
 			expect(fs.writeFileSync).toHaveBeenCalled();
-			const writtenContent = vi.mocked(fs.writeFileSync).mock.calls[0]?.[1] as string;
+			const writtenContent = vi.mocked(fs.writeFileSync).mock
+				.calls[0]?.[1] as string;
 			expect(writtenContent).toContain(licenseHeader);
 			expect(writtenContent).toContain("const x = 1;");
 		});
@@ -237,10 +238,7 @@ describe("license", () => {
 			const command = buildLicenseCommand();
 			const fileContent = `${licenseHeader}\n\nconst x = 1;`;
 
-			vi.mocked(fg.sync).mockReturnValue([
-				"/path/to/file.ts",
-				"/path/to/dir",
-			]);
+			vi.mocked(fg.sync).mockReturnValue(["/path/to/file.ts", "/path/to/dir"]);
 			vi.mocked(fs.lstatSync)
 				.mockReturnValueOnce({ isFile: () => true } as any)
 				.mockReturnValueOnce({ isFile: () => false } as any);
@@ -257,4 +255,3 @@ describe("license", () => {
 		});
 	});
 });
-

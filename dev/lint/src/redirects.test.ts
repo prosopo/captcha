@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import fg from "fast-glob";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildRedirectsCommand, findTemplateFiles } from "./redirects.js";
 
 vi.mock("node:fs");
@@ -122,7 +122,8 @@ describe("redirects", () => {
 			await command.handler({ fix: true, pkg: "/path/to" });
 
 			expect(fs.writeFileSync).toHaveBeenCalled();
-			const writtenContent = vi.mocked(fs.writeFileSync).mock.calls[0]?.[1] as string;
+			const writtenContent = vi.mocked(fs.writeFileSync).mock
+				.calls[0]?.[1] as string;
 			expect(writtenContent).toContain("/path/");
 		});
 
@@ -211,4 +212,3 @@ describe("redirects", () => {
 		});
 	});
 });
-

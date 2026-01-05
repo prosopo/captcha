@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import fg from "fast-glob";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildWorkflowNamesCommand } from "./workflowNames.js";
 
 vi.mock("node:fs");
@@ -33,7 +33,9 @@ describe("workflowNames", () => {
 		it("should return command configuration with correct structure", () => {
 			const command = buildWorkflowNamesCommand();
 			expect(command.command).toBe("workflowNames");
-			expect(command.describe).toBe("Check the workflow names in the workspace");
+			expect(command.describe).toBe(
+				"Check the workflow names in the workspace",
+			);
 			expect(command.builder).toBeDefined();
 			expect(command.handler).toBeDefined();
 		});
@@ -74,9 +76,9 @@ describe("workflowNames", () => {
 			]);
 			vi.mocked(fs.readFileSync).mockReturnValue(workflowContent as any);
 
-			await expect(
-				command.handler({ root: "/path/to" }),
-			).rejects.toThrow("has name");
+			await expect(command.handler({ root: "/path/to" })).rejects.toThrow(
+				"has name",
+			);
 		});
 
 		it("should throw error when no name found in workflow", async () => {
@@ -88,9 +90,9 @@ describe("workflowNames", () => {
 			]);
 			vi.mocked(fs.readFileSync).mockReturnValue(workflowContent as any);
 
-			await expect(
-				command.handler({ root: "/path/to" }),
-			).rejects.toThrow("No name found in workflow file");
+			await expect(command.handler({ root: "/path/to" })).rejects.toThrow(
+				"No name found in workflow file",
+			);
 		});
 
 		it("should handle yaml extension", async () => {
@@ -142,4 +144,3 @@ describe("workflowNames", () => {
 		});
 	});
 });
-

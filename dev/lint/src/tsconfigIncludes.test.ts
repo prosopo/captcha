@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import fg from "fast-glob";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTsconfigIncludesCommand } from "./tsconfigIncludes.js";
 
 vi.mock("node:fs");
@@ -33,7 +33,9 @@ describe("tsconfigIncludes", () => {
 		it("should return command configuration with correct structure", () => {
 			const command = buildTsconfigIncludesCommand();
 			expect(command.command).toBe("tsconfigIncludes");
-			expect(command.describe).toBe("Check the tsconfig includes in the workspace");
+			expect(command.describe).toBe(
+				"Check the tsconfig includes in the workspace",
+			);
 			expect(command.builder).toBeDefined();
 			expect(command.handler).toBeDefined();
 		});
@@ -241,4 +243,3 @@ describe("tsconfigIncludes", () => {
 		});
 	});
 });
-

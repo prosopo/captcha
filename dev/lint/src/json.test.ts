@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import fg from "fast-glob";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildJsonCommand } from "./json.js";
 
 vi.mock("node:fs");
@@ -164,4 +164,3 @@ describe("json", () => {
 		});
 	});
 });
-

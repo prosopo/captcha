@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import fg from "fast-glob";
-import ts from "typescript";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildRefsCommand, getImportsFromTsFile } from "./refs.js";
 
 vi.mock("node:fs");
@@ -129,7 +128,10 @@ import { b } from '@prosopo/common';`;
 				.mockReturnValueOnce(JSON.stringify(tsconfigJson) as any);
 			vi.mocked(fg.globSync)
 				.mockReturnValueOnce(["/path/to/packages/test/package.json"])
-				.mockReturnValueOnce(["/path/to/package.json", "/path/to/packages/test/package.json"])
+				.mockReturnValueOnce([
+					"/path/to/package.json",
+					"/path/to/packages/test/package.json",
+				])
 				.mockReturnValueOnce(["/path/to/packages/test/tsconfig.json"])
 				.mockReturnValueOnce([]);
 
@@ -162,7 +164,10 @@ import { b } from '@prosopo/common';`;
 				.mockReturnValueOnce(JSON.stringify(tsconfigJson) as any);
 			vi.mocked(fg.globSync)
 				.mockReturnValueOnce(["/path/to/packages/test/package.json"])
-				.mockReturnValueOnce(["/path/to/package.json", "/path/to/packages/test/package.json"])
+				.mockReturnValueOnce([
+					"/path/to/package.json",
+					"/path/to/packages/test/package.json",
+				])
 				.mockReturnValueOnce(["/path/to/packages/test/tsconfig.json"])
 				.mockReturnValueOnce([]);
 
@@ -198,7 +203,10 @@ import { b } from '@prosopo/common';`;
 				.mockReturnValueOnce(JSON.stringify(tsconfigJson) as any);
 			vi.mocked(fg.globSync)
 				.mockReturnValueOnce(["/path/to/packages/test/package.json"])
-				.mockReturnValueOnce(["/path/to/package.json", "/path/to/packages/test/package.json"])
+				.mockReturnValueOnce([
+					"/path/to/package.json",
+					"/path/to/packages/test/package.json",
+				])
 				.mockReturnValueOnce(["/path/to/packages/test/tsconfig.json"])
 				.mockReturnValueOnce([]);
 
@@ -208,4 +216,3 @@ import { b } from '@prosopo/common';`;
 		});
 	});
 });
-
