@@ -790,4 +790,189 @@ describe("ApiEndpoint", () => {
 			expectTypeOf(endpoint.getRequestArgsSchema).returns.toBeUndefined();
 		});
 	});
+
+	describe("error handling", () => {
+		it("should handle endpoint that throws errors", async () => {
+			const Schema = z.object({ value: z.string() });
+
+			class ThrowingEndpoint implements ApiEndpoint<typeof Schema> {
+				async processRequest(
+					args: z.infer<typeof Schema>,
+				): Promise<ApiEndpointResponse> {
+					if (args.value === "throw") {
+						throw new Error("Test error");
+					}
+					return { status: ApiEndpointResponseStatus.SUCCESS };
+				}
+
+				getRequestArgsSchema(): typeof Schema {
+					return Schema;
+				}
+			}
+
+			const endpoint = new ThrowingEndpoint();
+
+			await expect(endpoint.processRequest({ value: "throw" })).rejects.toThrow(
+				"Test error",
+			);
+
+			const result = await endpoint.processRequest({ value: "ok" });
+			expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
+		});
+
+		it("should handle endpoint that returns error response instead of throwing", async () => {
+			const Schema = z.object({ value: z.string() });
+
+			class ErrorResponseEndpoint implements ApiEndpoint<typeof Schema> {
+				async processRequest(
+					args: z.infer<typeof Schema>,
+				): Promise<ApiEndpointResponse> {
+					if (args.value === "error") {
+						return {
+							status: ApiEndpointResponseStatus.FAIL,
+							error: "Validation failed",
+						};
+					}
+					return { status: ApiEndpointResponseStatus.SUCCESS };
+				}
+
+				getRequestArgsSchema(): typeof Schema {
+					return Schema;
+				}
+			}
+
+			const endpoint = new ErrorResponseEndpoint();
+
+			const errorResult = await endpoint.processRequest({ value: "error" });
+			expect(errorResult.status).toBe(ApiEndpointResponseStatus.FAIL);
+			expect(errorResult.error).toBe("Validation failed");
+
+			const successResult = await endpoint.processRequest({ value: "ok" });
+			expect(successResult.status).toBe(ApiEndpointResponseStatus.SUCCESS);
+		});
+	});
+
+	describe("complex schemas", () => {
+		it("should handle endpoint with deeply nested schema", async () => {
+			const Schema = z.object({
+				level1: z.object({
+					level2: z.object({
+						level3: z.object({
+							level4: z.object({
+								value: z.string(),
+							}),
+						}),
+					}),
+				}),
+			});
+
+			class DeepNestedEndpoint implements ApiEndpoint<typeof Schema> {
+				async processRequest(
+					args: z.infer<typeof Schema>,
+				): Promise<ApiEndpointResponse> {
+					return {
+						status: ApiEndpointResponseStatus.SUCCESS,
+						data: {
+							value: args.level1.level2.level3.level4.value,
+						},
+					};
+				}
+
+				getRequestArgsSchema(): typeof Schema {
+					return Schema;
+				}
+			}
+
+			const endpoint = new DeepNestedEndpoint();
+			const result = await endpoint.processRequest({
+				level1: {
+					level2: {
+						level3: {
+							level4: {
+								value: "deep",
+							},
+						},
+					},
+				},
+			});
+
+			expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
+			expect(result.data).toEqual({ value: "deep" });
+		});
+
+		it("should handle endpoint with tuple schema", async () => {
+			const Schema = z.object({
+				items: z.tuple([z.string(), z.number(), z.boolean()]),
+			});
+
+			class TupleEndpoint implements ApiEndpoint<typeof Schema> {
+				async processRequest(
+					args: z.infer<typeof Schema>,
+				): Promise<ApiEndpointResponse> {
+					return {
+						status: ApiEndpointResponseStatus.SUCCESS,
+						data: {
+							first: args.items[0],
+							second: args.items[1],
+							third: args.items[2],
+						},
+					};
+				}
+
+				getRequestArgsSchema(): typeof Schema {
+					return Schema;
+				}
+			}
+
+			const endpoint = new TupleEndpoint();
+			const result = await endpoint.processRequest({
+				items: ["test", 42, true],
+			});
+
+			expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
+			expect(result.data).toEqual({ first: "test", second: 42, third: true });
+		});
+
+		it("should handle endpoint with discriminated union schema", async () => {
+			const Schema = z.discriminatedUnion("type", [
+				z.object({ type: z.literal("user"), name: z.string() }),
+				z.object({ type: z.literal("admin"), role: z.string() }),
+			]);
+
+			class DiscriminatedUnionEndpoint implements ApiEndpoint<typeof Schema> {
+				async processRequest(
+					args: z.infer<typeof Schema>,
+				): Promise<ApiEndpointResponse> {
+					if (args.type === "user") {
+						return {
+							status: ApiEndpointResponseStatus.SUCCESS,
+							data: { name: args.name },
+						};
+					}
+					return {
+						status: ApiEndpointResponseStatus.SUCCESS,
+						data: { role: args.role },
+					};
+				}
+
+				getRequestArgsSchema(): typeof Schema {
+					return Schema;
+				}
+			}
+
+			const endpoint = new DiscriminatedUnionEndpoint();
+
+			const userResult = await endpoint.processRequest({
+				type: "user",
+				name: "John",
+			});
+			expect(userResult.data).toEqual({ name: "John" });
+
+			const adminResult = await endpoint.processRequest({
+				type: "admin",
+				role: "superuser",
+			});
+			expect(adminResult.data).toEqual({ role: "superuser" });
+		});
+	});
 });
