@@ -47,4 +47,3 @@ describe("FilterScopeMatch enum", () => {
 		expect(filter.userScopeMatch).toBe("greedy");
 	});
 });
-

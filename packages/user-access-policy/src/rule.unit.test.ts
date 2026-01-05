@@ -45,4 +45,3 @@ describe("AccessPolicyType enum", () => {
 		expect(policy.type).toBe("block");
 	});
 });
-
