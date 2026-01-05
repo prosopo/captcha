@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, test, vi, beforeEach } from "vitest";
 import type { i18n } from "i18next";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("loadI18next", () => {
 	beforeEach(() => {
@@ -136,4 +136,3 @@ describe("loadI18next", () => {
 		expect(mockInitializeI18n).toHaveBeenCalled();
 	});
 });
-

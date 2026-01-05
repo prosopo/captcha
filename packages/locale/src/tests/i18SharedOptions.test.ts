@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { i18nSharedOptions } from "../i18SharedOptions.js";
-import { Languages, LanguageSchema } from "../translations.js";
+import { LanguageSchema, Languages } from "../translations.js";
 
 describe("i18SharedOptions", () => {
 	const originalEnv = process.env.PROSOPO_LOG_LEVEL;
@@ -66,7 +66,7 @@ describe("i18SharedOptions", () => {
 	});
 
 	test("should set debug to false when PROSOPO_LOG_LEVEL is undefined", async () => {
-		delete process.env.PROSOPO_LOG_LEVEL;
+		process.env.PROSOPO_LOG_LEVEL = undefined;
 		vi.resetModules();
 		const { i18nSharedOptions: options } = await import(
 			"../i18SharedOptions.js"
@@ -74,4 +74,3 @@ describe("i18SharedOptions", () => {
 		expect(options.debug).toBe(false);
 	});
 });
-

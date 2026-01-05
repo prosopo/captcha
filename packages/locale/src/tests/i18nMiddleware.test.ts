@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import type { HandleOptions } from "i18next-http-middleware";
 import type { i18n } from "i18next";
+import type { HandleOptions } from "i18next-http-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("i18nMiddleware", () => {
 	beforeEach(() => {
@@ -28,9 +28,11 @@ describe("i18nMiddleware", () => {
 		} as unknown as i18n;
 
 		const mockLoadI18next = vi.fn().mockResolvedValue(mockI18n);
-		const mockHandle = vi.fn().mockReturnValue((req: any, res: any, next: any) => {
-			next();
-		});
+		const mockHandle = vi
+			.fn()
+			.mockReturnValue((req: unknown, res: unknown, next: () => void) => {
+				next();
+			});
 
 		vi.doMock("../loadI18next.js", () => ({
 			default: mockLoadI18next,
@@ -58,9 +60,11 @@ describe("i18nMiddleware", () => {
 		} as unknown as i18n;
 
 		const mockLoadI18next = vi.fn().mockResolvedValue(mockI18n);
-		const mockHandle = vi.fn().mockReturnValue((req: any, res: any, next: any) => {
-			next();
-		});
+		const mockHandle = vi
+			.fn()
+			.mockReturnValue((req: unknown, res: unknown, next: () => void) => {
+				next();
+			});
 
 		vi.doMock("../loadI18next.js", () => ({
 			default: mockLoadI18next,
@@ -99,4 +103,3 @@ describe("i18nMiddleware", () => {
 		expect(mockHandle).not.toHaveBeenCalled();
 	});
 });
-

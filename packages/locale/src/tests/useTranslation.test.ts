@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import type { UseTranslationOptions, UseTranslationResponse } from "react-i18next";
 import type { i18n } from "i18next";
+import type {
+	UseTranslationOptions,
+	UseTranslationResponse,
+} from "react-i18next";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useTranslation", () => {
 	beforeEach(() => {
@@ -34,12 +37,12 @@ describe("useTranslation", () => {
 			(
 				_ns: string,
 				_options?: UseTranslationOptions<"translation">,
-			): UseTranslationResponse<"translation", any> => {
+			): UseTranslationResponse<"translation", unknown> => {
 				return {
 					t: mockT,
 					i18n: mockI18n,
 					ready: true,
-				} as UseTranslationResponse<"translation", any>;
+				} as UseTranslationResponse<"translation", unknown>;
 			},
 		);
 
@@ -74,12 +77,12 @@ describe("useTranslation", () => {
 			(
 				_ns: string,
 				_options?: UseTranslationOptions<"translation">,
-			): UseTranslationResponse<"translation", any> => {
+			): UseTranslationResponse<"translation", unknown> => {
 				return {
 					t: mockT,
 					i18n: mockI18n,
 					ready: true,
-				} as UseTranslationResponse<"translation", any>;
+				} as UseTranslationResponse<"translation", unknown>;
 			},
 		);
 
@@ -92,7 +95,9 @@ describe("useTranslation", () => {
 		}));
 
 		const useTranslation = (await import("../useTranslation.js")).default;
-		const options: UseTranslationOptions<"translation"> = { keyPrefix: "WIDGET" };
+		const options: UseTranslationOptions<"translation"> = {
+			keyPrefix: "WIDGET",
+		};
 		const result = useTranslation(options);
 
 		expect(mockUseTranslationDefault).toHaveBeenCalledWith("translation", {
@@ -114,12 +119,12 @@ describe("useTranslation", () => {
 			(
 				_ns: string,
 				_options?: UseTranslationOptions<"translation">,
-			): UseTranslationResponse<"translation", any> => {
+			): UseTranslationResponse<"translation", unknown> => {
 				return {
 					t: mockT,
 					i18n: mockI18n,
 					ready: true,
-				} as UseTranslationResponse<"translation", any>;
+				} as UseTranslationResponse<"translation", unknown>;
 			},
 		);
 
@@ -140,4 +145,3 @@ describe("useTranslation", () => {
 		expect(result).toBeDefined();
 	});
 });
-

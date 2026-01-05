@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { describe, expect, test } from "vitest";
-import { Languages, LanguageSchema } from "../translations.js";
+import { LanguageSchema, Languages } from "../translations.js";
 
 describe("translations", () => {
 	describe("Languages", () => {
@@ -56,24 +56,24 @@ describe("translations", () => {
 			const values = Object.values(Languages);
 			const uniqueValues = new Set(values);
 			expect(values.length).toBe(uniqueValues.size);
-			values.forEach((value) => {
+			for (const value of values) {
 				expect(typeof value).toBe("string");
 				expect(value.length).toBeGreaterThan(0);
-			});
+			}
 		});
 
 		test("should have all keys as string properties", () => {
-			Object.keys(Languages).forEach((key) => {
+			for (const key of Object.keys(Languages)) {
 				expect(typeof Languages[key as keyof typeof Languages]).toBe("string");
-			});
+			}
 		});
 	});
 
 	describe("LanguageSchema", () => {
 		test("should validate all language codes from Languages", () => {
-			Object.values(Languages).forEach((lang) => {
+			for (const lang of Object.values(Languages)) {
 				expect(LanguageSchema.safeParse(lang).success).toBe(true);
-			});
+			}
 		});
 
 		test("should reject invalid language codes", () => {
@@ -99,4 +99,3 @@ describe("translations", () => {
 		});
 	});
 });
-

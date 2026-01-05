@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import { describe, expect, test } from "vitest";
+import translationEn from "../locales/en/translation.json" with {
+	type: "json",
+};
 import { TranslationKeysSchema } from "../translationKey.js";
-import translationEn from "../locales/en/translation.json" with { type: "json" };
 
 describe("translationKey", () => {
 	describe("TranslationKeysSchema", () => {
@@ -24,9 +26,9 @@ describe("translationKey", () => {
 		test("should not validate top-level keys (only leaf paths)", () => {
 			// getLeafFieldPath only returns leaf paths, not top-level keys
 			const topLevelKeys = Object.keys(translationEn);
-			topLevelKeys.forEach((key) => {
+			for (const key of topLevelKeys) {
 				expect(TranslationKeysSchema.safeParse(key).success).toBe(false);
-			});
+			}
 		});
 
 		test("currently rejects all keys due to getLeafFieldPath bug", () => {
@@ -40,11 +42,11 @@ describe("translationKey", () => {
 				"CONTRACT.INVALID_ADDRESS",
 			];
 
-			testKeys.forEach((key) => {
+			for (const key of testKeys) {
 				const result = TranslationKeysSchema.safeParse(key);
 				// Currently all keys are rejected due to bug
 				expect(result.success).toBe(false);
-			});
+			}
 		});
 
 		test("currently rejects deeply nested keys due to getLeafFieldPath bug", () => {
@@ -56,11 +58,11 @@ describe("translationKey", () => {
 				"TARGET.airplanes",
 			];
 
-			deepKeys.forEach((key) => {
+			for (const key of deepKeys) {
 				const result = TranslationKeysSchema.safeParse(key);
 				// Currently all keys are rejected due to bug
 				expect(result.success).toBe(false);
-			});
+			}
 		});
 
 		test("should reject invalid keys", () => {
@@ -73,9 +75,9 @@ describe("translationKey", () => {
 				"..",
 			];
 
-			invalidKeys.forEach((key) => {
+			for (const key of invalidKeys) {
 				expect(TranslationKeysSchema.safeParse(key).success).toBe(false);
-			});
+			}
 		});
 
 		test("should reject null and undefined", () => {
@@ -99,4 +101,3 @@ describe("translationKey", () => {
 		});
 	});
 });
-

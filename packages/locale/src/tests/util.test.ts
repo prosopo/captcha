@@ -85,12 +85,11 @@ describe("util", () => {
 				{ window: { document: { createElement: vi.fn() } } },
 			];
 
-			testCases.forEach((testCase) => {
+			for (const testCase of testCases) {
 				global.window = testCase.window as unknown as Window &
 					typeof globalThis;
 				expect(isServerSide()).toBe(!isClientSide());
-			});
+			}
 		});
 	});
 });
-
