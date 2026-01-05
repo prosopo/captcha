@@ -124,9 +124,9 @@ export const useProcaptcha = (
 				setDappAccount(nextState.dappAccount);
 			if (nextState.submission !== undefined)
 				setSubmission(nextState.submission);
-			if (nextState.timeout !== undefined) setTimeout(nextState.timeout);
-			if (nextState.successfullChallengeTimeout !== undefined)
-				setSuccessfullChallengeTimeout(nextState.timeout);
+		if (nextState.timeout !== undefined) setTimeout(nextState.timeout);
+		if (nextState.successfullChallengeTimeout !== undefined)
+			setSuccessfullChallengeTimeout(nextState.successfullChallengeTimeout);
 			if (nextState.sendData !== undefined) setSendData(nextState.sendData);
 			if (nextState.attemptCount !== undefined)
 				setAttemptCount(nextState.attemptCount);
