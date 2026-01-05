@@ -116,6 +116,7 @@ describe("ofLen", () => {
 			const err = error as Error;
 			expect(err.message).toContain("3");
 			expect(err.message).toContain("array length");
+			expect(err.message).toContain("less than or equal to expected");
 		}
 	});
 });

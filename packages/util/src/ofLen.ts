@@ -34281,7 +34281,9 @@ export function ofLen<T extends unknown[]>(
 	| Len255<T>
 	| Len256<T> {
 	if (arr.length <= len) {
-		throw new Error(`array length (${arr.length}) than expected (${len})`);
+		throw new Error(
+			`array length (${arr.length}) is less than or equal to expected (${len})`,
+		);
 	}
 	switch (len) {
 		case 0:
