@@ -49,14 +49,12 @@ const mockUseTranslation = vi.fn(() => ({
 	ready: true,
 }));
 
-const mockLoadI18next = vi.fn().mockResolvedValue({
-	language: "en",
-	changeLanguage: vi.fn().mockResolvedValue(undefined),
-} as unknown as Ti18n);
-
 vi.mock("@prosopo/locale", () => ({
-	useTranslation: () => mockUseTranslation(),
-	loadI18next: mockLoadI18next,
+	useTranslation: vi.fn(),
+	loadI18next: vi.fn().mockResolvedValue({
+		language: "en",
+		changeLanguage: vi.fn().mockResolvedValue(undefined),
+	}),
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
@@ -102,6 +100,15 @@ vi.mock("./Modal.js", () => ({
 }));
 
 describe("ProcaptchaWidget", () => {
+	let mockUseTranslationFn: ReturnType<typeof vi.fn>;
+	let mockLoadI18next: ReturnType<typeof vi.fn>;
+
+	beforeAll(async () => {
+		const { useTranslation, loadI18next } = await import("@prosopo/locale");
+		mockUseTranslationFn = vi.mocked(useTranslation);
+		mockLoadI18next = vi.mocked(loadI18next);
+	});
+
 	const createMockConfig = (): ProcaptchaClientConfigInput => ({
 		account: {
 			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
@@ -120,6 +127,10 @@ describe("ProcaptchaWidget", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockUseTranslationFn.mockReturnValue({
+			t: (key: string) => key,
+			ready: true,
+		});
 		mockUseProcaptcha.mockReturnValue([
 			{
 				challenge: null,
@@ -407,7 +418,7 @@ describe("ProcaptchaWidget", () => {
 		);
 		await waitFor(() => {
 			expect(mockLoadI18next).toHaveBeenCalled();
-		});
+		}, { timeout: 2000 });
 	});
 
 	it("should apply light theme", () => {

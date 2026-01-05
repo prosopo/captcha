@@ -17,12 +17,18 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import Collector from "./collector.js";
 
-const mockStartCollector = vi.fn();
 vi.mock("@prosopo/procaptcha", () => ({
-	startCollector: mockStartCollector,
+	startCollector: vi.fn(),
 }));
 
 describe("Collector", () => {
+	let mockStartCollector: ReturnType<typeof vi.fn>;
+
+	beforeAll(async () => {
+		const { startCollector } = await import("@prosopo/procaptcha");
+		mockStartCollector = vi.mocked(startCollector);
+	});
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});

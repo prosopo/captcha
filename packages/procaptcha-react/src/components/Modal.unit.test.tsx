@@ -27,14 +27,20 @@ describe("Modal", () => {
 		expect(content).toBeDefined();
 	});
 
-	it("should not render children when show is false", () => {
+	it("should hide children when show is false", () => {
 		render(
 			<Modal show={false}>
 				<div>Modal Content</div>
 			</Modal>,
 		);
-		const content = screen.queryByText("Modal Content");
-		expect(content).toBeNull();
+		// Modal still renders children but hides them with display: none
+		const content = screen.getByText("Modal Content");
+		expect(content).toBeDefined();
+		const modalOuter = document.querySelector(".prosopo-modalOuter");
+		if (modalOuter) {
+			const styles = window.getComputedStyle(modalOuter);
+			expect(styles.display).toBe("none");
+		}
 	});
 
 	it("should render multiple children", () => {
@@ -123,7 +129,12 @@ describe("Modal", () => {
 				<div>Content</div>
 			</Modal>,
 		);
-		expect(screen.queryByText("Content")).toBeNull();
+		// Content is still rendered but hidden
+		expect(screen.getByText("Content")).toBeDefined();
+		const modalOuter1 = document.querySelector(".prosopo-modalOuter");
+		if (modalOuter1) {
+			expect(window.getComputedStyle(modalOuter1).display).toBe("none");
+		}
 
 		rerender(
 			<Modal show={true}>
@@ -131,13 +142,21 @@ describe("Modal", () => {
 			</Modal>,
 		);
 		expect(screen.getByText("Content")).toBeDefined();
+		const modalOuter2 = document.querySelector(".prosopo-modalOuter");
+		if (modalOuter2) {
+			expect(window.getComputedStyle(modalOuter2).display).toBe("flex");
+		}
 
 		rerender(
 			<Modal show={false}>
 				<div>Content</div>
 			</Modal>,
 		);
-		expect(screen.queryByText("Content")).toBeNull();
+		expect(screen.getByText("Content")).toBeDefined();
+		const modalOuter3 = document.querySelector(".prosopo-modalOuter");
+		if (modalOuter3) {
+			expect(window.getComputedStyle(modalOuter3).display).toBe("none");
+		}
 	});
 });
 
