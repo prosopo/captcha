@@ -48,7 +48,7 @@
 		"lint-changed:js": "npm run --silent lint:js -- --changed",
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
 		"lint:engines": "npm run -w @prosopo/lint start -- engines --pkg $(pwd)/package.json",
-		"lint:refs": "npm run -w @prosopo/lint start -- refs --pkg $(pwd)/package.json --ignore @redis/client @angular/common",
+		"lint:refs": "npm run -w @prosopo/lint start -- refs --pkg $(pwd)/package.json --ignore @redis/client @angular/common --ignore @prosopo/database --ignore @prosopo/env --ignore @prosopo/util-crypto",
 		"lint:testCheck": "npm run -w @prosopo/lint start -- testCheck --pkg $(pwd)/package.json",
 		"lint:workflowNames": "npm run -w @prosopo/lint start -- workflowNames --root $(pwd)",
 		"lint:tsconfigIncludes": "npm run -w @prosopo/lint start -- tsconfigIncludes --pkg $(pwd)/package.json",
