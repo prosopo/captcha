@@ -141,4 +141,27 @@ describe("decodeAddress", (): void => {
 			/Decoding F3opIRbN5ZbjJNU511Kj2TLuzFcDq9BGduA9TgiECafpg29: Invalid base58 character "I" \(0x49\) at index 4/,
 		);
 	});
+
+	it("throws error when encoded address is null", (): void => {
+		expect(() => decodeAddress(null as unknown as string)).toThrow(
+			"Invalid empty address passed",
+		);
+	});
+
+	it("throws error when encoded address is undefined", (): void => {
+		expect(() => decodeAddress(undefined as unknown as string)).toThrow(
+			"Invalid empty address passed",
+		);
+	});
+
+	it("throws error when encoded address is empty string", (): void => {
+		expect(() => decodeAddress("")).toThrow("Invalid empty address passed");
+	});
+
+	it("throws error when ss58Format does not match", (): void => {
+		const addressWithFormat2 = "g4b";
+		expect(() => decodeAddress(addressWithFormat2, false, 0)).toThrow(
+			"Expected ss58Format 0, received 2",
+		);
+	});
 });
