@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createServer } from "node:http";
 import {
 	AdminApiPaths,
 	ApiParams,
@@ -37,7 +38,6 @@ import {
 	type VerificationResponse,
 } from "@prosopo/types";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { createServer } from "node:http";
 import ProviderApi from "./ProviderApi.js";
 
 describe("ProviderApi Integration Tests", () => {
@@ -66,9 +66,15 @@ describe("ProviderApi Integration Tests", () => {
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
-				} else if (method === "GET" && path === PublicApiPaths.GetProviderDetails) {
+				} else if (
+					method === "GET" &&
+					path === PublicApiPaths.GetProviderDetails
+				) {
 					const response: Provider = {
-						url: [104, 116, 116, 112, 115, 58, 47, 47, 112, 114, 111, 118, 105, 100, 101, 114, 46, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109],
+						url: [
+							104, 116, 116, 112, 115, 58, 47, 47, 112, 114, 111, 118, 105, 100,
+							101, 114, 46, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109,
+						],
 						datasetId: "datasetId123",
 					};
 					res.statusCode = 200;
@@ -169,13 +175,19 @@ describe("ProviderApi Integration Tests", () => {
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
-				} else if (method === "POST" && path === AdminApiPaths.SiteKeyRegister) {
+				} else if (
+					method === "POST" &&
+					path === AdminApiPaths.SiteKeyRegister
+				) {
 					const response = {
 						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
-				} else if (method === "POST" && path === AdminApiPaths.UpdateDetectorKey) {
+				} else if (
+					method === "POST" &&
+					path === AdminApiPaths.UpdateDetectorKey
+				) {
 					const response: UpdateDetectorKeyResponse = {
 						data: {
 							activeDetectorKeys: ["key1", "key2"],
@@ -184,7 +196,10 @@ describe("ProviderApi Integration Tests", () => {
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
-				} else if (method === "POST" && path === AdminApiPaths.RemoveDetectorKey) {
+				} else if (
+					method === "POST" &&
+					path === AdminApiPaths.RemoveDetectorKey
+				) {
 					const response = {
 						[ApiParams.status]: "success",
 					};
@@ -476,7 +491,10 @@ describe("ProviderApi Integration Tests", () => {
 
 	describe("updateDetectorKey", () => {
 		test("makes HTTP request and returns response", async () => {
-			const result = await api.updateDetectorKey("detector-key-123", "jwt-token");
+			const result = await api.updateDetectorKey(
+				"detector-key-123",
+				"jwt-token",
+			);
 
 			expect(result).toHaveProperty("data");
 			expect(result).toHaveProperty(ApiParams.status);
@@ -486,7 +504,10 @@ describe("ProviderApi Integration Tests", () => {
 
 	describe("removeDetectorKey", () => {
 		test("makes HTTP request and returns response without expirationInSeconds", async () => {
-			const result = await api.removeDetectorKey("detector-key-123", "jwt-token");
+			const result = await api.removeDetectorKey(
+				"detector-key-123",
+				"jwt-token",
+			);
 
 			expect(result).toHaveProperty(ApiParams.status);
 			expect(result[ApiParams.status]).toBe("success");
@@ -528,4 +549,3 @@ describe("ProviderApi Integration Tests", () => {
 		});
 	});
 });
-
