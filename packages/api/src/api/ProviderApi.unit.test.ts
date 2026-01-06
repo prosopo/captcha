@@ -19,6 +19,7 @@ import {
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionResponse,
+	CaptchaType,
 	ClientApiPaths,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaResponse,
@@ -31,7 +32,7 @@ import {
 	PublicApiPaths,
 	type RandomProvider,
 	type StoredEvents,
-	type Tier,
+	Tier,
 	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
@@ -565,12 +566,13 @@ describe("ProviderApi", () => {
 
 		test("converts user and dapp to strings", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "1704067200000___123___456___random",
-				difficulty: 5,
-				timestamp: "2024-01-01T00:00:00Z",
-				signature: {
-					provider: {
-						challenge: "provider-challenge-sig",
+				[ApiParams.challenge]: "1704067200000___123___456___random",
+				[ApiParams.difficulty]: 5,
+				[ApiParams.timestamp]: "2024-01-01T00:00:00Z",
+				[ApiParams.status]: "success",
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {
+						[ApiParams.challenge]: "provider-challenge-sig",
 					},
 				},
 			};
@@ -593,12 +595,13 @@ describe("ProviderApi", () => {
 
 		test("sets correct headers", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "1704067200000___user123___dapp___random",
-				difficulty: 5,
-				timestamp: "2024-01-01T00:00:00Z",
-				signature: {
-					provider: {
-						challenge: "provider-challenge-sig",
+				[ApiParams.challenge]: "1704067200000___user123___dapp___random",
+				[ApiParams.difficulty]: 5,
+				[ApiParams.timestamp]: "2024-01-01T00:00:00Z",
+				[ApiParams.status]: "success",
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {
+						[ApiParams.challenge]: "provider-challenge-sig",
 					},
 				},
 			};
@@ -873,9 +876,13 @@ describe("ProviderApi", () => {
 	describe("registerSiteKey", () => {
 		test("constructs request body correctly", async () => {
 			const siteKey = "site-key-123";
-			const tier: Tier = "free";
+			const tier = Tier.Free;
 			const settings: IUserSettings = {
-				enabled: true,
+				captchaType: CaptchaType.image,
+				domains: [],
+				frictionlessThreshold: 0.5,
+				powDifficulty: 5,
+				imageThreshold: 0.5,
 			};
 			const jwt = "jwt-token-123";
 
@@ -892,10 +899,16 @@ describe("ProviderApi", () => {
 		});
 
 		test("sets correct headers", async () => {
-			const settings: IUserSettings = { enabled: true };
+			const settings: IUserSettings = {
+				captchaType: CaptchaType.image,
+				domains: [],
+				frictionlessThreshold: 0.5,
+				powDifficulty: 5,
+				imageThreshold: 0.5,
+			};
 			const jwt = "jwt-token-123";
 
-			const result = await api.registerSiteKey("site-key", "free", settings, jwt);
+			const result = await api.registerSiteKey("site-key", Tier.Free, settings, jwt);
 
 			const init = (result as unknown as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
@@ -905,10 +918,16 @@ describe("ProviderApi", () => {
 		});
 
 		test("type checking - returns ApiResponse", async () => {
-			const settings: IUserSettings = { enabled: true };
+			const settings: IUserSettings = {
+				captchaType: CaptchaType.image,
+				domains: [],
+				frictionlessThreshold: 0.5,
+				powDifficulty: 5,
+				imageThreshold: 0.5,
+			};
 			const result = await api.registerSiteKey(
 				"site-key",
-				"free",
+				Tier.Free,
 				settings,
 				"jwt-token",
 			);
