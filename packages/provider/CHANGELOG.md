@@ -1,5 +1,19 @@
 # @prosopo/provider
 
+## 3.14.7
+### Patch Changes
+
+- 41f8a82: Export userscope fn
+- Updated dependencies [378a896]
+- Updated dependencies [90fddd8]
+  - @prosopo/user-access-policy@3.5.37
+  - @prosopo/database@3.6.5
+  - @prosopo/types-database@4.1.4
+  - @prosopo/env@3.2.34
+  - @prosopo/datasets@3.0.54
+  - @prosopo/types-env@2.7.58
+  - @prosopo/api-express-router@3.0.46
+
 ## 3.14.6
 ### Patch Changes
 
