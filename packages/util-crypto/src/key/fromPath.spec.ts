@@ -102,6 +102,16 @@ describe("keyFromPath", (): void => {
 		expect(derived1.publicKey).not.toEqual(derived2.publicKey);
 		expect(derived1.secretKey).not.toEqual(derived2.secretKey);
 	});
+
+	it("throws error for unsupported keypair type", (): void => {
+		const seed = randomAsU8a();
+		const pair = sr25519FromSeed(seed);
+		const path: DeriveJunction[] = [DeriveJunction.from("0")];
+
+		expect(() =>
+			keyFromPath(pair, path, "unsupported" as KeypairType),
+		).toThrow("Unsupported keypair type: unsupported");
+	});
 });
 
 describe("keyFromPath types", (): void => {
