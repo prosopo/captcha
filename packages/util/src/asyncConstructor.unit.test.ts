@@ -46,6 +46,53 @@ describe("asyncConstructor", () => {
 			async ctor() {}
 		}
 
-		const abc = await anew(Abc, true, 1, "abc", Promise.resolve("def"));
+		const abc = await anew(Abc);
+		expect(abc).toBeInstanceOf(Abc);
+	});
+
+	test("constructs async with constructor args but no ctor args", async () => {
+		class Abc {
+			value: number;
+
+			constructor(value: number) {
+				this.value = value;
+			}
+
+			async ctor() {}
+		}
+
+		const abc = await anew(Abc, 42);
+		expect(abc).toBeInstanceOf(Abc);
+		expect(abc.value).toBe(42);
+	});
+
+	test("handles async ctor that throws", async () => {
+		class Abc {
+			async ctor() {
+				throw new Error("Async ctor error");
+			}
+		}
+
+		await expect(anew(Abc)).rejects.toThrow("Async ctor error");
+	});
+
+	test("handles async ctor with same args as constructor", async () => {
+		class Abc {
+			a: number;
+			b: string;
+
+			constructor(a: number, b: Promise<string>) {
+				this.a = a;
+				this.b = "";
+			}
+
+			async ctor(a: number, b: Promise<string>) {
+				this.b = await b;
+			}
+		}
+
+		const abc = await anew(Abc, 1, Promise.resolve("test"));
+		expect(abc.a).toBe(1);
+		expect(abc.b).toBe("test");
 	});
 });
