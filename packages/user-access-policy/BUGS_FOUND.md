@@ -68,3 +68,11 @@
 
 **Root cause**: The function is exported from `policyInput.ts`, but the test file `policyInput.unit.test.ts` might not be importing it, or there's an export issue.
 
+## 7. `rulesApiClient.integration.test.ts` - Missing import
+
+**Location**: `src/api/rulesApiClient.integration.test.ts`, line 205
+
+**Issue**: The test uses `randomAsHex(16)` but the function is not imported.
+
+**Root cause**: Missing import statement for `randomAsHex` function. This will cause a runtime error when the test runs.
+
