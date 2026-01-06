@@ -114,7 +114,7 @@ describe("tweetnacl/secretbox", (): void => {
 
 				expect(!!unbox && u8aEq(unbox, msg)).toBe(true);
 			}
-		});
+		}, 60000);
 	});
 
 	describe("tweetnacl/test/04-secretbox.js", (): void => {

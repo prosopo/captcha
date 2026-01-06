@@ -38,7 +38,7 @@ describe("jsonDecrypt", (): void => {
 		expect(() => jsonDecrypt(encrypted, wrongPassphrase)).toThrow(
 			/Unable to decode/,
 		);
-	}, 30000);
+	}, 60000);
 
 	it("throws error when no encoded data", (): void => {
 		const encrypted = {

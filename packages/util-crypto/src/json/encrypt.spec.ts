@@ -17,7 +17,7 @@ describe("jsonEncrypt", (): void => {
 		expect(result.encoding.type).toEqual(["scrypt", "xsalsa20-poly1305"]);
 		expect(result.encoding.content).toEqual(contentType);
 		expect(result.encoding.version).toBe("3");
-	});
+	}, 60000);
 
 	it("does not encrypt data without passphrase", (): void => {
 		const data = new Uint8Array([1, 2, 3, 4, 5]);

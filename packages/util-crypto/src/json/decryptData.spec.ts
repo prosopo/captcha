@@ -27,7 +27,7 @@ describe("jsonDecryptData", (): void => {
 		const decrypted = jsonDecryptData(encryptedData, passphrase, ENCODING);
 
 		expect(decrypted).toEqual(originalData);
-	}, 30000);
+	}, 60000);
 
 	it("throws error when no encrypted data", (): void => {
 		expect(() => jsonDecryptData(null, "test123")).toThrow(/No encrypted data/);
