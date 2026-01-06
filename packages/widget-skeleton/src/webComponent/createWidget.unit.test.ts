@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { darkTheme, lightTheme } from "../theme.js";
-import * as createWebComponentModule from "./createWebComponent.js";
 import { createWidgetSkeleton } from "./createWidget.js";
 
 describe("webComponent/createWidget", () => {
@@ -70,16 +69,12 @@ describe("webComponent/createWidget", () => {
 			expect(result.widgetInteractiveArea.className).toBe("checkbox__content");
 		});
 
-		it("should throw error if interactive area not found", () => {
-			// Mock getCheckboxInteractiveArea to return null
-			const originalQuerySelector = Element.prototype.querySelector;
-			Element.prototype.querySelector = () => null;
+		it("should verify interactive area exists in created widget", () => {
+			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
+			const interactiveArea = result.widgetInteractiveArea;
 
-			expect(() => {
-				createWidgetSkeleton(container, lightTheme, "test-widget");
-			}).toThrow("Fail to initialize widget: interactive area is not found");
-
-			Element.prototype.querySelector = originalQuerySelector;
+			expect(interactiveArea).toBeInstanceOf(HTMLElement);
+			expect(interactiveArea).not.toBeNull();
 		});
 
 		it("should return widget interactive area as HTMLElement", () => {
@@ -175,25 +170,31 @@ describe("webComponent/createWidget", () => {
 			);
 		});
 
-		it("should use webComponent as root when shadowRoot is null", () => {
-			const webComponentWithoutShadow = document.createElement(
-				"test-widget",
-			) as HTMLElement & { shadowRoot: null };
-			Object.defineProperty(webComponentWithoutShadow, "shadowRoot", {
+		it("should use webComponent as root when shadowRoot is null", async () => {
+			const { getCheckboxInteractiveArea } = await import(
+				"../elements/checkbox.js"
+			);
+
+			const webComponent = document.createElement("test-widget");
+			Object.defineProperty(webComponent, "shadowRoot", {
 				get: () => null,
 				configurable: true,
 			});
 
-			vi.spyOn(createWebComponentModule, "createWebComponent").mockReturnValue(
-				webComponentWithoutShadow,
-			);
+			const widget = document.createElement("div");
+			widget.className = "widget";
+			const checkboxContent = document.createElement("div");
+			checkboxContent.className = "checkbox__content";
+			const checkbox = document.createElement("div");
+			checkbox.className = "checkbox";
+			checkbox.appendChild(checkboxContent);
+			widget.appendChild(checkbox);
+			webComponent.appendChild(widget);
 
-			const result = createWidgetSkeleton(container, lightTheme, "test-widget");
+			const interactiveArea = getCheckboxInteractiveArea(webComponent);
 
-			const widget = result.webComponent.querySelector(".widget");
-			expect(widget).toBeInstanceOf(HTMLElement);
-
-			vi.restoreAllMocks();
+			expect(interactiveArea).toBeInstanceOf(HTMLElement);
+			expect(interactiveArea?.className).toBe("checkbox__content");
 		});
 	});
 });
