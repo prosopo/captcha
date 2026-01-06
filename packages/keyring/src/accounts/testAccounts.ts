@@ -37,6 +37,7 @@ export function getDefaultSiteKeys(): ISite[] {
 			secret: secret,
 			settings: ClientSettingsSchema.parse({
 				captchaType: captchaType,
+				domains: ["localhost"],
 			}),
 		});
 	}
