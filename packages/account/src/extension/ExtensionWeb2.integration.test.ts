@@ -195,4 +195,3 @@ describe("ExtensionWeb2 Integration", () => {
 		});
 	});
 });
-
