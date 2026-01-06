@@ -3,7 +3,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { randomAsU8a } from "../random/asU8a.js";
-import { sr25519jwtIssue } from "./jwt.js";
+import { sr25519jwtIssue, sr25519jwtParts } from "./jwt.js";
 import { sr25519FromSeed } from "./pair/fromSeed.js";
 
 describe("jwtIssue", (): void => {
@@ -93,5 +93,48 @@ describe("jwtIssue", (): void => {
 		const payload = JSON.parse(atob(parts[1]));
 		const notBeforeResult = payload.nbf;
 		expect(notBefore).to.equal(notBeforeResult);
+	});
+});
+
+describe("sr25519jwtParts", (): void => {
+	it("splits a valid JWT into parts", (): void => {
+		const pair = sr25519FromSeed(randomAsU8a());
+		const jwt = sr25519jwtIssue(
+			{
+				publicKey: pair.publicKey,
+				secretKey: pair.secretKey,
+			},
+			{ expiresIn: 300 },
+		);
+
+		const parts = sr25519jwtParts(jwt);
+
+		expect(parts.header).toBeDefined();
+		expect(parts.header.alg).toBe("sr25519");
+		expect(parts.header.typ).toBe("JWT");
+		expect(parts.payload).toBeDefined();
+		expect(parts.payload.sub).toBeDefined();
+		expect(parts.signature).toBeDefined();
+	});
+
+	it("throws error when JWT has invalid number of parts", (): void => {
+		expect(() => sr25519jwtParts("invalid.jwt" as any)).toThrow(
+			"Invalid JWT format, expected 3 parts, found 2",
+		);
+		expect(() => sr25519jwtParts("one.two.three.four" as any)).toThrow(
+			"Invalid JWT format, expected 3 parts, found 4",
+		);
+	});
+
+	it("throws error when JWT parts are empty", (): void => {
+		expect(() => sr25519jwtParts(".." as any)).toThrow(
+			"Invalid JWT format, parts cannot be empty",
+		);
+		expect(() => sr25519jwtParts("header.." as any)).toThrow(
+			"Invalid JWT format, parts cannot be empty",
+		);
+		expect(() => sr25519jwtParts(".payload." as any)).toThrow(
+			"Invalid JWT format, parts cannot be empty",
+		);
 	});
 });
