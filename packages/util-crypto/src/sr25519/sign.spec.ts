@@ -23,4 +23,14 @@ describe("sign", (): void => {
 
 		expect(a).not.toEqual(b);
 	});
+
+	it("throws error when secretKey length is invalid", (): void => {
+		const pair = sr25519FromSeed(randomAsU8a());
+		expect(() =>
+			sr25519Sign(MESSAGE, { ...pair, secretKey: new Uint8Array(63) }),
+		).toThrow("Expected secretKey to be 64 bytes, found 63");
+		expect(() =>
+			sr25519Sign(MESSAGE, { ...pair, secretKey: new Uint8Array(65) }),
+		).toThrow("Expected secretKey to be 64 bytes, found 65");
+	});
 });

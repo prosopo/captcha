@@ -39,4 +39,13 @@ describe("secp256k1Compress", (): void => {
 			});
 		});
 	}
+
+	it("throws error when publicKey length is invalid", (): void => {
+		expect(() => secp256k1Compress(new Uint8Array(32))).toThrow(
+			"Invalid publicKey provided, received 32 bytes input",
+		);
+		expect(() => secp256k1Compress(new Uint8Array(34))).toThrow(
+			"Invalid publicKey provided, received 34 bytes input",
+		);
+	});
 });

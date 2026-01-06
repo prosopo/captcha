@@ -39,4 +39,13 @@ describe("sr25519PairFromSeed", (): void => {
 			expect(u8aToHex(pair.secretKey)).toEqual(secret);
 		});
 	});
+
+	it("throws error when seed length is invalid", (): void => {
+		expect(() => sr25519FromSeed(new Uint8Array(31))).toThrow(
+			"Expected a seed of 32 bytes, found 31",
+		);
+		expect(() => sr25519FromSeed(new Uint8Array(33))).toThrow(
+			"Expected a seed of 32 bytes, found 33",
+		);
+	});
 });

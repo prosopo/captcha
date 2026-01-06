@@ -67,4 +67,13 @@ describe("secp256k1PairFromSeed", (): void => {
 			});
 		});
 	}
+
+	it("throws error when seed length is invalid", (): void => {
+		expect(() => secp256k1PairFromSeed(new Uint8Array(31))).toThrow(
+			"Expected valid 32-byte private key as a seed",
+		);
+		expect(() => secp256k1PairFromSeed(new Uint8Array(33))).toThrow(
+			"Expected valid 32-byte private key as a seed",
+		);
+	});
 });
