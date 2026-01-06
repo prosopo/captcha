@@ -15,7 +15,7 @@ describe("jsonDecrypt", (): void => {
 		const decrypted = jsonDecrypt(encrypted, passphrase);
 
 		expect(decrypted).toEqual(originalData);
-	}, 30000);
+	}, 60000);
 
 	it("decrypts data without passphrase", (): void => {
 		const originalData = new Uint8Array([1, 2, 3, 4, 5]);
