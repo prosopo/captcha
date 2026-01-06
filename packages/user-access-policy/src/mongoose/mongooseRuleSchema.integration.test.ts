@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { AccessPolicyType } from "#policy/rule.js";
-import type { AccessRuleRecord } from "#policy/ruleRecord.js";
-import { MongoContainer, StartedMongoContainer } from "@testcontainers/mongodb";
+import {
+	MongoContainer,
+	type StartedMongoContainer,
+} from "@testcontainers/mongodb";
 import mongoose, { type Model } from "mongoose";
 import {
 	afterAll,
@@ -25,6 +26,8 @@ import {
 	test,
 } from "vitest";
 import { accessRuleMongooseSchema } from "#policy/mongoose/mongooseRuleSchema.js";
+import { AccessPolicyType } from "#policy/rule.js";
+import type { AccessRuleRecord } from "#policy/ruleRecord.js";
 
 describe("accessRuleMongooseSchema Integration Tests", () => {
 	let mongoContainer: StartedMongoContainer;
@@ -84,10 +87,11 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 
 		const retrieved = await AccessRuleModel.findById(saved._id);
 		expect(retrieved).toBeDefined();
-		expect(retrieved!.type).toBe(AccessPolicyType.Block);
-		expect(retrieved!.clientId).toBe("test-client");
-		expect(retrieved!.userId).toBe("test-user");
-		expect(retrieved!.ip).toBe("127.0.0.1");
+		if (!retrieved) return;
+		expect(retrieved.type).toBe(AccessPolicyType.Block);
+		expect(retrieved.clientId).toBe("test-client");
+		expect(retrieved.userId).toBe("test-user");
+		expect(retrieved.ip).toBe("127.0.0.1");
 	});
 
 	test("should save rule with only required type field", async () => {
@@ -161,12 +165,13 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 
 		const saved = await AccessRuleModel.create(ruleRecord);
 		const retrieved = await AccessRuleModel.findById(saved._id);
-
-		expect(retrieved!.solvedImagesCount).toBe(10);
-		expect(retrieved!.imageThreshold).toBe(0.75);
-		expect(retrieved!.powDifficulty).toBe(15);
-		expect(retrieved!.unsolvedImagesCount).toBe(5);
-		expect(retrieved!.frictionlessScore).toBe(0.85);
+		expect(retrieved).toBeDefined();
+		if (!retrieved) return;
+		expect(retrieved.solvedImagesCount).toBe(10);
+		expect(retrieved.imageThreshold).toBe(0.75);
+		expect(retrieved.powDifficulty).toBe(15);
+		expect(retrieved.unsolvedImagesCount).toBe(5);
+		expect(retrieved.frictionlessScore).toBe(0.85);
 	});
 
 	test("should handle optional fields as undefined", async () => {
@@ -176,11 +181,12 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 
 		const saved = await AccessRuleModel.create(ruleRecord);
 		const retrieved = await AccessRuleModel.findById(saved._id);
-
-		expect(retrieved!.captchaType).toBeUndefined();
-		expect(retrieved!.clientId).toBeUndefined();
-		expect(retrieved!.userId).toBeUndefined();
-		expect(retrieved!.ip).toBeUndefined();
+		expect(retrieved).toBeDefined();
+		if (!retrieved) return;
+		expect(retrieved.captchaType).toBeUndefined();
+		expect(retrieved.clientId).toBeUndefined();
+		expect(retrieved.userId).toBeUndefined();
+		expect(retrieved.ip).toBeUndefined();
 	});
 
 	test("should update existing rule", async () => {
@@ -194,7 +200,9 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 		await saved.save();
 
 		const updated = await AccessRuleModel.findById(saved._id);
-		expect(updated!.clientId).toBe("updated-client");
+		expect(updated).toBeDefined();
+		if (!updated) return;
+		expect(updated.clientId).toBe("updated-client");
 	});
 
 	test("should delete rule", async () => {
@@ -210,4 +218,3 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 		expect(deleted).toBeNull();
 	});
 });
-

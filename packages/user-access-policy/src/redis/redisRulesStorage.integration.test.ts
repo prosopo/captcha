@@ -18,8 +18,10 @@ import {
 	connectToRedis,
 	setupRedisIndex,
 } from "@prosopo/redis-client";
-import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
-import { randomAsHex } from "@prosopo/util-crypto";
+import {
+	RedisContainer,
+	type StartedRedisContainer,
+} from "@testcontainers/redis";
 import {
 	afterAll,
 	beforeAll,
@@ -28,17 +30,20 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
-import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import { accessRulesRedisIndex } from "#policy/redis/redisRuleIndex.js";
 import { createRedisAccessRulesStorage } from "#policy/redis/redisRulesStorage.js";
+import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
+import { accessRuleInput } from "#policy/ruleInput/ruleInput.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
 describe("createRedisAccessRulesStorage Integration Tests", () => {
 	let redisContainer: StartedRedisContainer;
 	let redisConnection: RedisConnection;
 	let accessRulesStorage: AccessRulesStorage;
-	const logger = getLogger(LogLevel.enum.info, "RedisRulesStorageIntegrationTest");
+	const logger = getLogger(
+		LogLevel.enum.info,
+		"RedisRulesStorageIntegrationTest",
+	);
 
 	beforeAll(async () => {
 		// Start Redis container using testcontainers
@@ -70,10 +75,7 @@ describe("createRedisAccessRulesStorage Integration Tests", () => {
 
 	beforeEach(async () => {
 		// Create fresh storage for each test to test initialization
-		accessRulesStorage = createRedisAccessRulesStorage(
-			redisConnection,
-			logger,
-		);
+		accessRulesStorage = createRedisAccessRulesStorage(redisConnection, logger);
 
 		// Wait for Redis client to be ready
 		await redisConnection.getClient();
@@ -119,7 +121,9 @@ describe("createRedisAccessRulesStorage Integration Tests", () => {
 				},
 			});
 			expect(foundRules.length).toBe(1);
-			expect(foundRules[0]!).toMatchObject({
+			const foundRule = foundRules[0];
+			expect(foundRule).toBeDefined();
+			expect(foundRule).toMatchObject({
 				type: AccessPolicyType.Block,
 				clientId: "test-client-init",
 			});
@@ -195,11 +199,15 @@ describe("createRedisAccessRulesStorage Integration Tests", () => {
 
 			const fetchedRules = await accessRulesStorage.fetchRules(insertedIds);
 			expect(fetchedRules.length).toBe(2);
-			expect(fetchedRules[0]!.rule).toMatchObject({
+			const fetchedRule1 = fetchedRules[0];
+			const fetchedRule2 = fetchedRules[1];
+			expect(fetchedRule1).toBeDefined();
+			expect(fetchedRule2).toBeDefined();
+			expect(fetchedRule1.rule).toMatchObject({
 				type: AccessPolicyType.Block,
 				clientId: "test-client-1",
 			});
-			expect(fetchedRules[1]!.rule).toMatchObject({
+			expect(fetchedRule2.rule).toMatchObject({
 				type: AccessPolicyType.Restrict,
 				clientId: "test-client-2",
 			});
@@ -283,9 +291,11 @@ describe("createRedisAccessRulesStorage Integration Tests", () => {
 
 			const insertedIds = await accessRulesStorage.insertRules([{ rule }]);
 			expect(insertedIds.length).toBe(1);
+			const insertedId = insertedIds[0];
+			expect(insertedId).toBeDefined();
 
 			const missingIds = await accessRulesStorage.getMissingRuleIds([
-				insertedIds[0]!,
+				insertedId,
 				"non-existent-id-1",
 				"non-existent-id-2",
 			]);

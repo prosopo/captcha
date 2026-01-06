@@ -12,24 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Server } from "node:http";
 import {
 	apiExpressRouterFactory,
 	createApiExpressDefaultEndpointAdapter,
 } from "@prosopo/api-express-router";
-import { LogLevel, getLogger, type Logger } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import {
 	type RedisConnection,
 	connectToRedis,
 	setupRedisIndex,
 } from "@prosopo/redis-client";
-import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
+import {
+	RedisContainer,
+	type StartedRedisContainer,
+} from "@testcontainers/redis";
 import express, {
 	type Express,
 	type Request,
 	type Response,
 	type NextFunction,
 } from "express";
-import type { Server } from "node:http";
 import {
 	afterAll,
 	beforeAll,
@@ -38,18 +41,18 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { AccessRuleApiRoutes, accessRuleApiPaths } from "#policy/api/ruleApiRoutes.js";
+import { AccessRuleApiRoutes } from "#policy/api/ruleApiRoutes.js";
 import { AccessRulesApiClient } from "#policy/api/rulesApiClient.js";
+import { accessRulesRedisIndex } from "#policy/redis/redisRuleIndex.js";
+import {
+	type AccessRulesStorage,
+	createRedisAccessRulesStorage,
+} from "#policy/redis/redisRulesStorage.js";
 import {
 	AccessPolicyType,
 	type AccessRule,
 	accessRuleInput,
 } from "#policy/rule.js";
-import { accessRulesRedisIndex } from "#policy/redis/redisRuleIndex.js";
-import {
-	createRedisAccessRulesStorage,
-	type AccessRulesStorage,
-} from "#policy/redis/redisRulesStorage.js";
 
 // Extend Express Request to include logger
 declare module "express-serve-static-core" {
@@ -442,4 +445,3 @@ describe("AccessRulesApiClient Integration Tests", () => {
 		});
 	});
 });
-

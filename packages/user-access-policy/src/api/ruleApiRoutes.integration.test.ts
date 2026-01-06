@@ -12,19 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Server } from "node:http";
 import {
 	apiExpressRouterFactory,
 	createApiExpressDefaultEndpointAdapter,
 } from "@prosopo/api-express-router";
-import { LogLevel, getLogger, type Logger } from "@prosopo/common";
+import { LogLevel, type Logger, getLogger } from "@prosopo/common";
 import {
 	type RedisConnection,
 	createTestRedisConnection,
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import { randomAsHex } from "@prosopo/util-crypto";
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
-import type { Server } from "node:http";
+import express, {
+	type Express,
+	type Request,
+	type Response,
+	type NextFunction,
+} from "express";
 import {
 	afterAll,
 	beforeAll,
@@ -33,17 +38,20 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { AccessRuleApiRoutes, accessRuleApiPaths } from "#policy/api/ruleApiRoutes.js";
+import {
+	AccessRuleApiRoutes,
+	accessRuleApiPaths,
+} from "#policy/api/ruleApiRoutes.js";
+import { accessRulesRedisIndex } from "#policy/redis/redisRuleIndex.js";
+import {
+	type AccessRulesStorage,
+	createRedisAccessRulesStorage,
+} from "#policy/redis/redisRulesStorage.js";
 import {
 	AccessPolicyType,
 	type AccessRule,
 	accessRuleInput,
 } from "#policy/rule.js";
-import { accessRulesRedisIndex } from "#policy/redis/redisRuleIndex.js";
-import {
-	createRedisAccessRulesStorage,
-	type AccessRulesStorage,
-} from "#policy/redis/redisRulesStorage.js";
 
 // Extend Express Request to include logger
 declare module "express-serve-static-core" {
@@ -344,16 +352,13 @@ describe("AccessRuleApiRoutes HTTP Integration Tests", () => {
 				},
 			];
 
-			const response = await fetch(
-				`${baseUrl}${accessRuleApiPaths.FIND_IDS}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(requestBody),
+			const response = await fetch(`${baseUrl}${accessRuleApiPaths.FIND_IDS}`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify(requestBody),
+			});
 
 			expect(response.status).toBe(200);
 			const data = await response.json();
@@ -371,9 +376,7 @@ describe("AccessRuleApiRoutes HTTP Integration Tests", () => {
 				clientId: "test-client-missing",
 			});
 
-			const insertedIds = await accessRulesStorage.insertRules([
-				{ rule },
-			]);
+			const insertedIds = await accessRulesStorage.insertRules([{ rule }]);
 
 			// Check for missing IDs
 			const requestBody = [
@@ -611,4 +614,3 @@ describe("AccessRuleApiRoutes HTTP Integration Tests", () => {
 		});
 	});
 });
-
