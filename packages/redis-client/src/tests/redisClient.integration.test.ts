@@ -53,7 +53,7 @@ describe("connectToRedis", () => {
 		};
 		connection = await createTestRedisConnection(mockLogger);
 		await connection.getClient();
-	}, 120000);
+	}, 300000);
 
 	afterAll(async () => {
 		await stopTestRedisContainer();
@@ -194,7 +194,7 @@ describe("setupRedisIndex", () => {
 
 	beforeAll(async () => {
 		await baseConnection.getClient();
-	}, 120000);
+	}, 300000);
 
 	beforeEach(() => {
 		vi.clearAllMocks();
