@@ -24,7 +24,7 @@ describe("util", () => {
 	describe("sleep", () => {
 		test("types", () => {
 			const result = sleep(100);
-			const _v1: Promise<void> = result;
+			const _v1: Promise<void> = result as Promise<void>;
 		});
 
 		test("resolves after specified milliseconds", async () => {

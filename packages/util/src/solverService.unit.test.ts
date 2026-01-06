@@ -23,8 +23,8 @@ describe("solvePoW", () => {
 		const _p2: number = 0 as Params[1];
 
 		// Verify return type is number
-		type ReturnType = ReturnType<typeof solvePoW>;
-		const _r1: number = 0 as ReturnType;
+		type SolvePoWReturnType = ReturnType<typeof solvePoW>;
+		const _r1: number = 0 as SolvePoWReturnType;
 	});
 
 	test("finds nonce for difficulty 0", () => {

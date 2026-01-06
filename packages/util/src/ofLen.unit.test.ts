@@ -19,28 +19,28 @@ describe("ofLen", () => {
 		// Test return types for various lengths
 		const arr1 = [1, 2, 3];
 		const v1 = ofLen(arr1, 0);
-		const _v1: typeof arr1 = v1;
+		const _v1: typeof arr1 = v1 as unknown as typeof arr1;
 
 		const arr2 = [1, 2, 3, 4, 5];
 		const v2 = ofLen(arr2, 1);
-		const _v2: typeof arr2 = v2;
+		const _v2: typeof arr2 = v2 as unknown as typeof arr2;
 
 		const arr3 = ["a", "b", "c", "d"];
 		const v3 = ofLen(arr3, 2);
-		const _v3: typeof arr3 = v3;
+		const _v3: typeof arr3 = v3 as unknown as typeof arr3;
 
 		const arr4 = [true, false, true, false];
 		const v4 = ofLen(arr4, 3);
-		const _v4: typeof arr4 = v4;
+		const _v4: typeof arr4 = v4 as unknown as typeof arr4;
 
 		// Test with larger arrays
 		const arr5 = Array.from({ length: 10 }, (_, i) => i);
 		const v5 = ofLen(arr5, 5);
-		const _v5: typeof arr5 = v5;
+		const _v5: typeof arr5 = v5 as unknown as typeof arr5;
 
 		const arr6 = Array.from({ length: 100 }, (_, i) => i);
 		const v6 = ofLen(arr6, 50);
-		const _v6: typeof arr6 = v6;
+		const _v6: typeof arr6 = v6 as unknown as typeof arr6;
 	});
 
 	test("returns array when length is greater than expected", () => {

@@ -23,7 +23,7 @@ describe("table", () => {
 		) => infer R
 			? R
 			: never;
-		const _v1: undefined = undefined as unknown as ReturnType;
+		const _v1: void = undefined as unknown as ReturnType;
 
 		// Verify parameter types
 		type Params = Parameters<typeof consoleTableWithWrapping>;
