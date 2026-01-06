@@ -23,10 +23,10 @@ if (fs.existsSync(envFile)) {
 	envPath = path.resolve(envFile);
 } else if (fs.existsSync(`../../${envFile}`)) {
 	envPath = path.resolve(`../../${envFile}`);
-} else {
-	throw new Error(`No ${envFile} file found`);
 }
 
-dotenv.config({ path: envPath });
+if (envPath && fs.existsSync(envPath)) {
+	dotenv.config({ path: envPath });
+}
 
 export default ViteTestConfig();
