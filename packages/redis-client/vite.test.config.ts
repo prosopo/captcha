@@ -31,7 +31,7 @@ dotenv.config({ path: envPath });
 
 const config = ViteTestConfig();
 if (config.test) {
-	config.test.testTimeout = 60000;
-	config.test.hookTimeout = 60000;
+	config.test.testTimeout = 120000;
+	config.test.hookTimeout = 120000;
 }
 export default config;

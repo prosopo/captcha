@@ -33,7 +33,7 @@ export const startTestRedisContainer = async (): Promise<StartedRedisContainer> 
 	if (containerPromise) {
 		return containerPromise;
 	}
-	containerPromise = new RedisContainer("redis/redis-stack:latest")
+	containerPromise = new RedisContainer("redis:7-alpine")
 		.withCommand(["--requirepass", "root"])
 		.start();
 	container = await containerPromise;
