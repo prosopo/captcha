@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { CaptchaType } from "@prosopo/types";
 import {
 	MongoDBContainer,
 	type StartedMongoDBContainer,
@@ -25,7 +26,6 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { CaptchaType } from "@prosopo/types";
 import { accessRuleMongooseSchema } from "#policy/mongoose/mongooseRuleSchema.js";
 import { AccessPolicyType } from "#policy/rule.js";
 import type { AccessRuleRecord } from "#policy/ruleRecord.js";

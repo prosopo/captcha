@@ -41,7 +41,7 @@ const userAttributesInput = z
 		// Preserve userAgentHash if it's already provided (prioritize it)
 		// Extract it before destructuring to ensure we have the original value
 		const userAgentHash = userAttributesInput.userAgentHash;
-		
+
 		// this line creates a new "userAttributes", without userAgent
 		const { userAgent, ...userScope } = userAttributesInput;
 

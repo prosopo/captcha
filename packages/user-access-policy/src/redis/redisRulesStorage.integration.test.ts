@@ -298,8 +298,12 @@ describe("createRedisAccessRulesStorage Integration Tests", () => {
 			const insertedId = insertedIds[0];
 			expect(insertedId).toBeDefined();
 
+			if (!insertedId) {
+				throw new Error("insertedId should be defined");
+			}
+
 			const missingIds = await accessRulesStorage.getMissingRuleIds([
-				insertedId!,
+				insertedId,
 				"non-existent-id-1",
 				"non-existent-id-2",
 			]);

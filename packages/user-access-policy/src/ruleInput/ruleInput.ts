@@ -46,7 +46,8 @@ const ruleGroupInput = z
 		// Prioritize groupId over ruleGroupId - if both are provided, use groupId
 		if ("string" === typeof groupId) {
 			return { groupId };
-		} else if ("string" === typeof ruleGroupId) {
+		}
+		if ("string" === typeof ruleGroupId) {
 			return { groupId: ruleGroupId };
 		}
 
@@ -77,7 +78,9 @@ export const accessRuleInput: ZodType<AccessRule> = z
 
 		const { ruleGroupId: _, groupId: __, ...rest } = input;
 
-		return finalGroupId !== undefined ? { ...rest, groupId: finalGroupId } : rest;
+		return finalGroupId !== undefined
+			? { ...rest, groupId: finalGroupId }
+			: rest;
 	});
 
 export const ruleEntryInput = z.object({

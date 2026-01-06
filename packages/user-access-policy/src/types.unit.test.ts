@@ -25,12 +25,12 @@ import type {
 	UserScope,
 } from "#policy/rule.js";
 import { AccessPolicyType } from "#policy/rule.js";
-import {
-	type AccessRuleInput,
-	type AccessRulesFilterInput,
-	type UserAttributesInput,
-	type UserIpInput,
-	type UserScopeInput,
+import type {
+	AccessRuleInput,
+	AccessRulesFilterInput,
+	UserAttributesInput,
+	UserIpInput,
+	UserScopeInput,
 	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/.export.js";
 import type {
@@ -39,6 +39,7 @@ import type {
 	UserIpRecord,
 	UserScopeRecord,
 	UserScopeRecordField,
+	getUserScopeRecordFromAccessRuleRecord,
 } from "#policy/ruleRecord.js";
 import {
 	type AccessRuleEntry,
@@ -48,14 +49,6 @@ import {
 	type AccessRulesWriter,
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
-import {
-	getUserScopeRecordFromAccessRuleRecord,
-	type AccessRuleRecord,
-	type UserAttributesRecord,
-	type UserIpRecord,
-	type UserScopeRecord,
-	type UserScopeRecordField,
-} from "#policy/ruleRecord.js";
 import type { makeAccessRuleHash } from "#policy/transformRule.js";
 
 describe("Type definitions", () => {

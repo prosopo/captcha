@@ -40,7 +40,8 @@ export class RedisRulesWriter implements AccessRulesWriter {
 
 		const keyBatches = await executeBatchesSequentially(
 			entryBatches,
-			async (entriesBatch: AccessRuleEntry[]) => this.insertRuleEntries(entriesBatch),
+			async (entriesBatch: AccessRuleEntry[]) =>
+				this.insertRuleEntries(entriesBatch),
 		);
 
 		return keyBatches.flatMap((ruleKey) =>
@@ -55,15 +56,18 @@ export class RedisRulesWriter implements AccessRulesWriter {
 
 		const keyBatches = chunkIntoBatches(ruleKeys, REDIS_BATCH_SIZE);
 
-		await executeBatchesSequentially(keyBatches, async (keysBatch: string[]) => {
-			const queries = this.client.multi();
+		await executeBatchesSequentially(
+			keyBatches,
+			async (keysBatch: string[]) => {
+				const queries = this.client.multi();
 
-			for (const ruleKey of keysBatch) {
-				queries.del(ruleKey);
-			}
+				for (const ruleKey of keysBatch) {
+					queries.del(ruleKey);
+				}
 
-			await queries.exec();
-		});
+				await queries.exec();
+			},
+		);
 	}
 
 	async deleteAllRules(): Promise<number> {

@@ -16,8 +16,8 @@ import type { Server } from "node:http";
 import {
 	LogLevel,
 	type Logger,
-	getLogger,
 	ProsopoApiError,
+	getLogger,
 	stringifyBigInts,
 	unwrapError,
 } from "@prosopo/common";
@@ -108,46 +108,46 @@ describe("AccessRuleApiRoutes HTTP Integration Tests", () => {
 		// Manually register routes
 		const routes = apiRuleRoutesProvider.getRoutes();
 		for (const [routePath, endpoint] of Object.entries(routes)) {
-			app.post(routePath, async (req: Request, res: Response, next: NextFunction) => {
-				try {
-					// Parse request body with endpoint schema
-					const schema = endpoint.getRequestArgsSchema();
-					let args: unknown;
+			app.post(
+				routePath,
+				async (req: Request, res: Response, next: NextFunction) => {
 					try {
-						args = schema ? schema.parse(req.body) : undefined;
-					} catch (parseError) {
-						return next(
-							new ProsopoApiError("API.PARSE_ERROR", {
-								context: { code: 400, error: parseError },
-							}),
-						);
-					}
+						// Parse request body with endpoint schema
+						const schema = endpoint.getRequestArgsSchema();
+						let args: unknown;
+						try {
+							args = schema ? schema.parse(req.body) : undefined;
+						} catch (parseError) {
+							return next(
+								new ProsopoApiError("API.PARSE_ERROR", {
+									context: { code: 400, error: parseError },
+								}),
+							);
+						}
 
-					// Process request
-					const response = await endpoint.processRequest(
-						args,
-						req.logger,
-					);
+						// Process request
+						const response = await endpoint.processRequest(args, req.logger);
 
-					// Stringify BigInts before sending JSON response
-					const responseObject = stringifyBigInts(response);
-					res.json(responseObject);
-				} catch (error) {
-					req.logger?.error(() => ({ err: error }));
-					if (error instanceof ProsopoApiError || error instanceof Error) {
-						const { code, statusMessage, jsonError } = unwrapError(
-							error,
-							undefined,
-						);
-						res.statusMessage = statusMessage || "Error";
-						res.status(code || 500);
-						res.set("content-type", "application/json");
-						res.json({ error: jsonError });
-					} else {
-						res.status(500).json({ error: "Internal server error" });
+						// Stringify BigInts before sending JSON response
+						const responseObject = stringifyBigInts(response);
+						res.json(responseObject);
+					} catch (error) {
+						req.logger?.error(() => ({ err: error }));
+						if (error instanceof ProsopoApiError || error instanceof Error) {
+							const { code, statusMessage, jsonError } = unwrapError(
+								error,
+								undefined,
+							);
+							res.statusMessage = statusMessage || "Error";
+							res.status(code || 500);
+							res.set("content-type", "application/json");
+							res.json({ error: jsonError });
+						} else {
+							res.status(500).json({ error: "Internal server error" });
+						}
 					}
-				}
-			});
+				},
+			);
 		}
 
 		// Start server

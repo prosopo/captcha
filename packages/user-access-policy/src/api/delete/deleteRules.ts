@@ -49,10 +49,13 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 		for (const rulesFilterInput of args) {
 			const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
 
-			await executeBatchesSequentially(ruleFilters, async (ruleFilter: AccessRulesFilter) => {
-				const ruleIds = await this.accessRulesStorage.findRuleIds(ruleFilter);
-				allRuleIds.push(...ruleIds);
-			});
+			await executeBatchesSequentially(
+				ruleFilters,
+				async (ruleFilter: AccessRulesFilter) => {
+					const ruleIds = await this.accessRulesStorage.findRuleIds(ruleFilter);
+					allRuleIds.push(...ruleIds);
+				},
+			);
 		}
 
 		// Deduplicate across all filters

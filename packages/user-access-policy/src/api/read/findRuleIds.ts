@@ -67,7 +67,8 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 
 				const ruleIds = await executeBatchesSequentially(
 					ruleFilters,
-					async (ruleFilter: AccessRulesFilter) => this.accessRulesStorage.findRuleIds(ruleFilter),
+					async (ruleFilter: AccessRulesFilter) =>
+						this.accessRulesStorage.findRuleIds(ruleFilter),
 				);
 
 				return ruleIds.flat();

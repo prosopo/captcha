@@ -55,7 +55,8 @@ export class RedisRulesReader implements AccessRulesReader {
 
 		const missingKeyBatches = await executeBatchesSequentially(
 			keyBatches,
-			async (keysBatch: string[]) => getMissingRedisKeys(this.client, keysBatch),
+			async (keysBatch: string[]) =>
+				getMissingRedisKeys(this.client, keysBatch),
 		);
 
 		return missingKeyBatches
