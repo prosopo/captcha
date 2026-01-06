@@ -26,6 +26,15 @@
 		},
 		{
 			"path": "../keyring"
+		},
+		{
+			"path": "../database"
+		},
+		{
+			"path": "../env"
+		},
+		{
+			"path": "../util-crypto"
 		}
 	]
 }
