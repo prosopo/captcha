@@ -56,7 +56,9 @@ describe("types", () => {
 			expectTypeOf(theme.palette.primary.contrastText).toBeString();
 			expectTypeOf(theme.palette.background.default).toBeString();
 			expectTypeOf(theme.palette.background.contrastText).toBeString();
-			expect(theme.palette.mode === "light" || theme.palette.mode === "dark").toBe(true);
+			expect(
+				theme.palette.mode === "light" || theme.palette.mode === "dark",
+			).toBe(true);
 		});
 
 		test("Theme should have correct spacing structure", () => {
