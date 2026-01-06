@@ -44,6 +44,15 @@ describe("mnemonicToLegacySeed", (): void => {
 					mnemonicToLegacySeed("foo bar baz", undefined, onlyJs),
 				).toThrow(/mnemonic specified/);
 			});
+
+			it("throws error when byteLength is invalid", (): void => {
+				expect(() =>
+					mnemonicToLegacySeed(MNEMONIC, undefined, onlyJs, 31 as 32),
+				).toThrow("Invalid seed length 31, expected 32 or 64");
+				expect(() =>
+					mnemonicToLegacySeed(MNEMONIC, undefined, onlyJs, 63 as 64),
+				).toThrow("Invalid seed length 63, expected 32 or 64");
+			});
 		});
 	}
 });
