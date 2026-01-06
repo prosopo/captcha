@@ -21,6 +21,40 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import type { ProsopoEnvironment } from "./env.js";
 import type { ProviderEnvironment as ProviderEnvironmentType } from "./provider.js";
 
+function createTestConfig(
+	mongoConnectionString: string,
+	redisConnectionString: string,
+) {
+	return ProsopoConfigSchema.parse({
+		defaultEnvironment: "development",
+		host: "http://localhost:9229",
+		account: {
+			secret:
+				"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
+		},
+		database: {
+			development: {
+				type: DatabaseTypes.enum.provider,
+				endpoint: mongoConnectionString,
+				dbname: "prosopo_test",
+			},
+		},
+		redisConnection: {
+			url: redisConnectionString,
+			password: "",
+			indexName: randomAsHex(16),
+		},
+		authAccount: {
+			secret:
+				"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
+		},
+		ipApi: {
+			baseUrl: "https://dummyUrl.com",
+			apiKey: "dummyKey",
+		},
+	});
+}
+
 describe("ProsopoEnvironment integration tests", () => {
 	let mongoContainer: StartedTestContainer;
 	let redisContainer: StartedTestContainer;
@@ -49,275 +83,205 @@ describe("ProsopoEnvironment integration tests", () => {
 		await redisContainer.stop();
 	});
 
-	test("Environment implements ProsopoEnvironment interface", async () => {
-		const config = ProsopoConfigSchema.parse({
-			defaultEnvironment: "development",
-			host: "http://localhost:9229",
-			account: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			database: {
-				development: {
-					type: DatabaseTypes.enum.provider,
-					endpoint: mongoConnectionString,
-					dbname: "prosopo_test",
-				},
-			},
-			redisConnection: {
-				url: redisConnectionString,
-				password: "",
-				indexName: randomAsHex(16),
-			},
-			authAccount: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			ipApi: {
-				baseUrl: "https://dummyUrl.com",
-				apiKey: "dummyKey",
-			},
+	describe("Environment", () => {
+		test("implements ProsopoEnvironment interface", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const env = new Environment(config);
+			const prosopoEnv = env as unknown as ProsopoEnvironment;
+
+			expect(prosopoEnv.config).toBeDefined();
+			expect(prosopoEnv.defaultEnvironment).toBe("development");
+			expect(prosopoEnv.logger).toBeDefined();
+			expect(prosopoEnv.keyring).toBeDefined();
+			expect(typeof prosopoEnv.getDb).toBe("function");
+			expect(typeof prosopoEnv.isReady).toBe("function");
+			expect(typeof prosopoEnv.importDatabase).toBe("function");
+
+			await env.isReady();
+
+			expect(prosopoEnv.db).toBeDefined();
+			const db = prosopoEnv.getDb();
+			expect(db).toBeDefined();
 		});
 
-		const env = new Environment(config);
+		test("isReady initializes database and sets ready state", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const env = new Environment(config);
 
-		const prosopoEnv = env as unknown as ProsopoEnvironment;
+			expect(env.db).toBeUndefined();
 
-		expect(prosopoEnv.config).toBeDefined();
-		expect(prosopoEnv.defaultEnvironment).toBe("development");
-		expect(prosopoEnv.logger).toBeDefined();
-		expect(prosopoEnv.keyring).toBeDefined();
-		expect(typeof prosopoEnv.getDb).toBe("function");
-		expect(typeof prosopoEnv.isReady).toBe("function");
-		expect(typeof prosopoEnv.importDatabase).toBe("function");
+			await env.isReady();
 
-		await env.isReady();
+			expect(env.db).toBeDefined();
+			const db = env.getDb();
+			expect(db).toBeDefined();
+			expect(db.connected).toBe(true);
+		});
 
-		expect(prosopoEnv.db).toBeDefined();
-		const db = prosopoEnv.getDb();
-		expect(db).toBeDefined();
+		test("isReady is idempotent", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const env = new Environment(config);
+
+			await env.isReady();
+			const db1 = env.getDb();
+
+			await env.isReady();
+			const db2 = env.getDb();
+
+			expect(db1).toBe(db2);
+		});
+
+		test("importDatabase connects to database", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const env = new Environment(config);
+
+			expect(env.db).toBeUndefined();
+
+			await env.importDatabase();
+
+			expect(env.db).toBeDefined();
+			const db = env.getDb();
+			expect(db).toBeDefined();
+			expect(db.connected).toBe(true);
+		});
+
+		test("getDb throws when database is not initialized", () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const env = new Environment(config);
+
+			expect(() => env.getDb()).toThrow();
+		});
+
+		test("has all required ProsopoEnvironment properties", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const env = new Environment(config);
+			await env.isReady();
+
+			const prosopoEnv = env as unknown as ProsopoEnvironment;
+
+			expect(prosopoEnv.config).toBeDefined();
+			expect(prosopoEnv.db).toBeDefined();
+			expect(prosopoEnv.defaultEnvironment).toBeDefined();
+			expect(prosopoEnv.logger).toBeDefined();
+			expect(prosopoEnv.keyring).toBeDefined();
+			expect(prosopoEnv.pair).toBeDefined();
+		});
+
+		test("optional properties can be undefined", () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const env = new Environment(config);
+
+			const prosopoEnv = env as unknown as ProsopoEnvironment;
+
+			expect(prosopoEnv.assetsResolver).toBeUndefined();
+		});
 	});
 
-	test("Environment isReady method initializes database", async () => {
-		const config = ProsopoConfigSchema.parse({
-			defaultEnvironment: "development",
-			host: "http://localhost:9229",
-			account: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			database: {
-				development: {
-					type: DatabaseTypes.enum.provider,
-					endpoint: mongoConnectionString,
-					dbname: "prosopo_test",
-				},
-			},
-			redisConnection: {
-				url: redisConnectionString,
-				password: "",
-				indexName: randomAsHex(16),
-			},
-			authAccount: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			ipApi: {
-				baseUrl: "https://dummyUrl.com",
-				apiKey: "dummyKey",
-			},
+	describe("ProviderEnvironment", () => {
+		test("implements ProviderEnvironment interface", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const providerEnv = new ProviderEnvironment(config);
+			const providerEnvType = providerEnv as unknown as ProviderEnvironmentType;
+
+			expect(providerEnvType.config).toBeDefined();
+			expect(providerEnvType.defaultEnvironment).toBe("development");
+			expect(providerEnvType.logger).toBeDefined();
+			expect(providerEnvType.keyring).toBeDefined();
+			expect(typeof providerEnvType.getDb).toBe("function");
+			expect(typeof providerEnvType.isReady).toBe("function");
+			expect(typeof providerEnvType.importDatabase).toBe("function");
+
+			await providerEnv.isReady();
+
+			expect(providerEnvType.db).toBeDefined();
+			const db = providerEnvType.getDb();
+			expect(db).toBeDefined();
 		});
 
-		const env = new Environment(config);
+		test("extends ProsopoEnvironment", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const providerEnv = new ProviderEnvironment(config);
+			const prosopoEnv = providerEnv as unknown as ProsopoEnvironment;
 
-		expect(env.db).toBeUndefined();
+			expect(prosopoEnv.config).toBeDefined();
+			expect(prosopoEnv.defaultEnvironment).toBe("development");
+			expect(prosopoEnv.logger).toBeDefined();
+			expect(prosopoEnv.keyring).toBeDefined();
+			expect(typeof prosopoEnv.getDb).toBe("function");
+			expect(typeof prosopoEnv.isReady).toBe("function");
+			expect(typeof prosopoEnv.importDatabase).toBe("function");
 
-		await env.isReady();
+			await providerEnv.isReady();
 
-		expect(env.db).toBeDefined();
-		const db = env.getDb();
-		expect(db).toBeDefined();
-		expect(db.connected).toBe(true);
-	});
-
-	test("Environment importDatabase method connects to database", async () => {
-		const config = ProsopoConfigSchema.parse({
-			defaultEnvironment: "development",
-			host: "http://localhost:9229",
-			account: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			database: {
-				development: {
-					type: DatabaseTypes.enum.provider,
-					endpoint: mongoConnectionString,
-					dbname: "prosopo_test",
-				},
-			},
-			redisConnection: {
-				url: redisConnectionString,
-				password: "",
-				indexName: randomAsHex(16),
-			},
-			authAccount: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			ipApi: {
-				baseUrl: "https://dummyUrl.com",
-				apiKey: "dummyKey",
-			},
+			expect(prosopoEnv.db).toBeDefined();
+			const db = prosopoEnv.getDb();
+			expect(db).toBeDefined();
 		});
 
-		const env = new Environment(config);
+		test("isReady initializes database", async () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const providerEnv = new ProviderEnvironment(config);
 
-		expect(env.db).toBeUndefined();
+			expect(providerEnv.db).toBeUndefined();
 
-		await env.importDatabase();
+			await providerEnv.isReady();
 
-		expect(env.db).toBeDefined();
-		const db = env.getDb();
-		expect(db).toBeDefined();
-	});
-
-	test("ProviderEnvironment implements ProviderEnvironment interface", async () => {
-		const config = ProsopoConfigSchema.parse({
-			defaultEnvironment: "development",
-			host: "http://localhost:9229",
-			account: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			database: {
-				development: {
-					type: DatabaseTypes.enum.provider,
-					endpoint: mongoConnectionString,
-					dbname: "prosopo_test",
-				},
-			},
-			redisConnection: {
-				url: redisConnectionString,
-				password: "",
-				indexName: randomAsHex(16),
-			},
-			authAccount: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			ipApi: {
-				baseUrl: "https://dummyUrl.com",
-				apiKey: "dummyKey",
-			},
+			expect(providerEnv.db).toBeDefined();
+			const db = providerEnv.getDb();
+			expect(db).toBeDefined();
+			expect(db.connected).toBe(true);
 		});
 
-		const providerEnv = new ProviderEnvironment(config);
+		test("has cleanup method", () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const providerEnv = new ProviderEnvironment(config);
 
-		const providerEnvType = providerEnv as unknown as ProviderEnvironmentType;
-
-		expect(providerEnvType.config).toBeDefined();
-		expect(providerEnvType.defaultEnvironment).toBe("development");
-		expect(providerEnvType.logger).toBeDefined();
-		expect(providerEnvType.keyring).toBeDefined();
-		expect(typeof providerEnvType.getDb).toBe("function");
-		expect(typeof providerEnvType.isReady).toBe("function");
-		expect(typeof providerEnvType.importDatabase).toBe("function");
-
-		await providerEnv.isReady();
-
-		expect(providerEnvType.db).toBeDefined();
-		const db = providerEnvType.getDb();
-		expect(db).toBeDefined();
-	});
-
-	test("ProviderEnvironment extends ProsopoEnvironment", async () => {
-		const config = ProsopoConfigSchema.parse({
-			defaultEnvironment: "development",
-			host: "http://localhost:9229",
-			account: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			database: {
-				development: {
-					type: DatabaseTypes.enum.provider,
-					endpoint: mongoConnectionString,
-					dbname: "prosopo_test",
-				},
-			},
-			redisConnection: {
-				url: redisConnectionString,
-				password: "",
-				indexName: randomAsHex(16),
-			},
-			authAccount: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			ipApi: {
-				baseUrl: "https://dummyUrl.com",
-				apiKey: "dummyKey",
-			},
+			expect(typeof providerEnv.cleanup).toBe("function");
 		});
 
-		const providerEnv = new ProviderEnvironment(config);
+		test("config is ProsopoConfigOutput type", () => {
+			const config = createTestConfig(
+				mongoConnectionString,
+				redisConnectionString,
+			);
+			const providerEnv = new ProviderEnvironment(config);
+			const providerEnvType = providerEnv as unknown as ProviderEnvironmentType;
 
-		const prosopoEnv = providerEnv as unknown as ProsopoEnvironment;
-
-		expect(prosopoEnv.config).toBeDefined();
-		expect(prosopoEnv.defaultEnvironment).toBe("development");
-		expect(prosopoEnv.logger).toBeDefined();
-		expect(prosopoEnv.keyring).toBeDefined();
-		expect(typeof prosopoEnv.getDb).toBe("function");
-		expect(typeof prosopoEnv.isReady).toBe("function");
-		expect(typeof prosopoEnv.importDatabase).toBe("function");
-
-		await providerEnv.isReady();
-
-		expect(prosopoEnv.db).toBeDefined();
-		const db = prosopoEnv.getDb();
-		expect(db).toBeDefined();
-	});
-
-	test("ProviderEnvironment isReady method initializes database", async () => {
-		const config = ProsopoConfigSchema.parse({
-			defaultEnvironment: "development",
-			host: "http://localhost:9229",
-			account: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			database: {
-				development: {
-					type: DatabaseTypes.enum.provider,
-					endpoint: mongoConnectionString,
-					dbname: "prosopo_test",
-				},
-			},
-			redisConnection: {
-				url: redisConnectionString,
-				password: "",
-				indexName: randomAsHex(16),
-			},
-			authAccount: {
-				secret:
-					"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant",
-			},
-			ipApi: {
-				baseUrl: "https://dummyUrl.com",
-				apiKey: "dummyKey",
-			},
+			expect(providerEnvType.config).toBeDefined();
+			expect(providerEnvType.config.defaultEnvironment).toBe("development");
 		});
-
-		const providerEnv = new ProviderEnvironment(config);
-
-		expect(providerEnv.db).toBeUndefined();
-
-		await providerEnv.isReady();
-
-		expect(providerEnv.db).toBeDefined();
-		const db = providerEnv.getDb();
-		expect(db).toBeDefined();
-		expect(db.connected).toBe(true);
 	});
 });
