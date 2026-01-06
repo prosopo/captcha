@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import http from "node:http";
+import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const PORT = Number(process.env.PORT) || 8080;
-
-const server = http.createServer(
-	(req: http.IncomingMessage, res: http.ServerResponse) => {
+export function createBlackholeServer(): Server {
+	return http.createServer((req: IncomingMessage, res: ServerResponse) => {
 		console.log(`Received request: ${req.method} ${req.url}`);
 		// Do nothing: simulate an unresponsive server
 		// Keep the socket open forever
@@ -31,21 +30,30 @@ const server = http.createServer(
 		req.socket.on("close", () => {
 			console.log(`Connection closed by client: ${req.method} ${req.url}`);
 		});
-	},
-);
+	});
+}
+
+export function getPort(): number {
+	return Number(process.env.PORT) || 8080;
+}
+
+export function createShutdownHandler(server: Server): () => void {
+	return () => {
+		console.log("\nShutting down http-blackhole server...");
+		server.close(() => {
+			console.log("Server closed. Exiting.");
+			process.exit(0);
+		});
+	};
+}
+
+const PORT = getPort();
+const server = createBlackholeServer();
 
 server.listen(PORT, () => {
 	console.log(`http-blackhole server is listening on port ${PORT}`);
 });
 
-// Graceful shutdown on Ctrl+C or kill
-const shutdown = () => {
-	console.log("\nShutting down http-blackhole server...");
-	server.close(() => {
-		console.log("Server closed. Exiting.");
-		process.exit(0);
-	});
-};
-
+const shutdown = createShutdownHandler(server);
 process.on("SIGINT", shutdown); // Ctrl+C
 process.on("SIGTERM", shutdown); // kill command or systemd
