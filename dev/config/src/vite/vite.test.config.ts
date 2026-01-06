@@ -101,6 +101,9 @@ export default function (tsConfigPath?: string) {
 					isolate: true,
 				},
 			},
+			sequence: {
+				shuffle: true,
+			},
 			testTimeout: 10000,
 		},
 		plugins: plugins,
