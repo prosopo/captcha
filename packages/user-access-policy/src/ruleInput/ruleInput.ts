@@ -64,17 +64,19 @@ export const accessRuleInput: ZodType<AccessRule> = z
 	.and(ruleGroupInput)
 	// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
 	.transform((ruleInput: AccessRuleInput): AccessRule => {
-		// Prioritize groupId over ruleGroupId - ruleGroupInput transform should have set groupId,
-		// but ensure ruleGroupId is removed and groupId is preserved
-		const { ruleGroupId, groupId, ...rest } = ruleInput;
-		if (groupId !== undefined) {
-			return { ...rest, groupId };
-		}
-		// If groupId is not set but ruleGroupId is, use ruleGroupId as groupId
-		if (ruleGroupId !== undefined) {
-			return { ...rest, groupId: ruleGroupId };
-		}
-		return rest;
+		// Prioritize groupId over ruleGroupId
+		// When using .and(), Zod merges objects but may preserve both groupId and ruleGroupId
+		// from the original input, so we need to explicitly prioritize groupId here
+		const finalGroupId =
+			typeof ruleInput.groupId === "string"
+				? ruleInput.groupId
+				: typeof ruleInput.ruleGroupId === "string"
+					? ruleInput.ruleGroupId
+					: undefined;
+		
+		const { ruleGroupId: _, groupId: __, ...rest } = ruleInput;
+		
+		return finalGroupId !== undefined ? { ...rest, groupId: finalGroupId } : rest;
 	});
 
 export const ruleEntryInput = z.object({
