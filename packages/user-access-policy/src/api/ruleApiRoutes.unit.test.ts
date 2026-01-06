@@ -107,8 +107,8 @@ describe("getExpressApiRuleRateLimits", () => {
 
 		// Check all endpoints have default values
 		for (const limit of Object.values(rateLimits)) {
-			expect(limit.limit).toBe(5);
-			expect(limit.windowMs).toBe(10000);
+			expect(limit?.limit).toBe(5);
+			expect(limit?.windowMs).toBe(10000);
 		}
 
 		process.env = originalEnv;

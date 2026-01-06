@@ -25,14 +25,14 @@ import type {
 	UserScope,
 } from "#policy/rule.js";
 import { AccessPolicyType } from "#policy/rule.js";
-import type {
-	AccessRuleInput,
-	AccessRulesFilterInput,
-	UserAttributesInput,
-	UserIpInput,
-	UserScopeInput,
-} from "#policy/ruleInput/ruleInput.js";
-import type { getAccessRuleFiltersFromInput } from "#policy/ruleInput/ruleInput.js";
+import {
+	type AccessRuleInput,
+	type AccessRulesFilterInput,
+	type UserAttributesInput,
+	type UserIpInput,
+	type UserScopeInput,
+	getAccessRuleFiltersFromInput,
+} from "#policy/ruleInput/.export.js";
 import type {
 	AccessRuleRecord,
 	UserAttributesRecord,
@@ -40,15 +40,22 @@ import type {
 	UserScopeRecord,
 	UserScopeRecordField,
 } from "#policy/ruleRecord.js";
-import type { getUserScopeRecordFromAccessRuleRecord } from "#policy/ruleRecord.js";
-import type {
-	AccessRuleEntry,
-	AccessRulesFilter,
-	AccessRulesReader,
-	AccessRulesStorage,
-	AccessRulesWriter,
+import {
+	type AccessRuleEntry,
+	type AccessRulesFilter,
+	type AccessRulesReader,
+	type AccessRulesStorage,
+	type AccessRulesWriter,
+	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
-import { FilterScopeMatch } from "#policy/rulesStorage.js";
+import {
+	getUserScopeRecordFromAccessRuleRecord,
+	type AccessRuleRecord,
+	type UserAttributesRecord,
+	type UserIpRecord,
+	type UserScopeRecord,
+	type UserScopeRecordField,
+} from "#policy/ruleRecord.js";
 import type { makeAccessRuleHash } from "#policy/transformRule.js";
 
 describe("Type definitions", () => {
@@ -199,7 +206,8 @@ describe("Type definitions", () => {
 				string | undefined
 			>();
 			// userAgentHash should not exist in UserAttributesRecord
-			expectTypeOf<TestRecord["userAgentHash"]>().toBeNever();
+			type UserAgentHashType = TestRecord["userAgentHash"];
+			expectTypeOf<UserAgentHashType>().toBeNever();
 		});
 
 		test("should have other UserAttributes properties", () => {

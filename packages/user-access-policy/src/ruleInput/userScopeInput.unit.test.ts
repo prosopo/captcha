@@ -59,8 +59,10 @@ describe("userScopeInput", () => {
 		});
 
 		expect(result.userAgentHash).toBeDefined();
-		expect(typeof result.userAgentHash).toBe("string");
-		expect(result.userAgentHash.length).toBe(64); // SHA256 hex length
+		if (result.userAgentHash) {
+			expect(typeof result.userAgentHash).toBe("string");
+			expect(result.userAgentHash.length).toBe(64); // SHA256 hex length
+		}
 	});
 
 	it("should parse user attributes", () => {

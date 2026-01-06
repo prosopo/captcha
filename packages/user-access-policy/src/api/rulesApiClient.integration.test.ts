@@ -14,10 +14,13 @@
 
 import type { Server } from "node:http";
 import {
-	apiExpressRouterFactory,
-	createApiExpressDefaultEndpointAdapter,
-} from "@prosopo/api-express-router";
-import { LogLevel, type Logger, getLogger } from "@prosopo/common";
+	LogLevel,
+	type Logger,
+	getLogger,
+	ProsopoApiError,
+	stringifyBigInts,
+	unwrapError,
+} from "@prosopo/common";
 import {
 	type RedisConnection,
 	connectToRedis,
@@ -127,16 +130,50 @@ describe("AccessRulesApiClient Integration Tests", () => {
 			mockLogger,
 		);
 
-		const apiEndpointAdapter = createApiExpressDefaultEndpointAdapter(
-			LogLevel.enum.info,
-		);
+		// Manually register routes
+		const routes = apiRuleRoutesProvider.getRoutes();
+		for (const [routePath, endpoint] of Object.entries(routes)) {
+			app.post(routePath, async (req: Request, res: Response, next: NextFunction) => {
+				try {
+					// Parse request body with endpoint schema
+					const schema = endpoint.getRequestArgsSchema();
+					let args: unknown;
+					try {
+						args = schema ? schema.parse(req.body) : undefined;
+					} catch (parseError) {
+						return next(
+							new ProsopoApiError("API.PARSE_ERROR", {
+								context: { code: 400, error: parseError },
+							}),
+						);
+					}
 
-		app.use(
-			apiExpressRouterFactory.createRouter(
-				apiRuleRoutesProvider,
-				apiEndpointAdapter,
-			),
-		);
+					// Process request
+					const response = await endpoint.processRequest(
+						args,
+						req.logger,
+					);
+
+					// Stringify BigInts before sending JSON response
+					const responseObject = stringifyBigInts(response);
+					res.json(responseObject);
+				} catch (error) {
+					req.logger?.error(() => ({ err: error }));
+					if (error instanceof ProsopoApiError || error instanceof Error) {
+						const { code, statusMessage, jsonError } = unwrapError(
+							error,
+							undefined,
+						);
+						res.statusMessage = statusMessage || "Error";
+						res.status(code || 500);
+						res.set("content-type", "application/json");
+						res.json({ error: jsonError });
+					} else {
+						res.status(500).json({ error: "Internal server error" });
+					}
+				}
+			});
+		}
 
 		// Start server
 		await new Promise<void>((resolve) => {
@@ -409,7 +446,7 @@ describe("AccessRulesApiClient Integration Tests", () => {
 						},
 						userScopes: [
 							{
-								numericIp: "900",
+								numericIp: BigInt(900),
 							},
 						],
 						policyScopes: [

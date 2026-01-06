@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import {
-	MongoContainer,
-	type StartedMongoContainer,
+	MongoDBContainer,
+	type StartedMongoDBContainer,
 } from "@testcontainers/mongodb";
 import mongoose, { type Model } from "mongoose";
 import {
@@ -25,17 +25,18 @@ import {
 	expect,
 	test,
 } from "vitest";
+import { CaptchaType } from "@prosopo/types";
 import { accessRuleMongooseSchema } from "#policy/mongoose/mongooseRuleSchema.js";
 import { AccessPolicyType } from "#policy/rule.js";
 import type { AccessRuleRecord } from "#policy/ruleRecord.js";
 
 describe("accessRuleMongooseSchema Integration Tests", () => {
-	let mongoContainer: StartedMongoContainer;
+	let mongoContainer: StartedMongoDBContainer;
 	let AccessRuleModel: Model<AccessRuleRecord>;
 	let connection: typeof mongoose;
 
 	beforeAll(async () => {
-		mongoContainer = await new MongoContainer("mongo:6.0.17").start();
+		mongoContainer = await new MongoDBContainer("mongo:6.0.17").start();
 
 		const connectionString = mongoContainer.getConnectionString();
 
@@ -63,7 +64,7 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 	test("should save and retrieve access rule with all fields", async () => {
 		const ruleRecord: AccessRuleRecord = {
 			type: AccessPolicyType.Block,
-			captchaType: "image",
+			captchaType: CaptchaType.image,
 			description: "Test rule",
 			solvedImagesCount: 5,
 			imageThreshold: 0.8,

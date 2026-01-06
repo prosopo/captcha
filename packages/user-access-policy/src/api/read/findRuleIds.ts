@@ -28,7 +28,10 @@ import {
 	accessRulesFilterInput,
 	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
-import type { AccessRulesStorage } from "#policy/rulesStorage.js";
+import type {
+	AccessRulesFilter,
+	AccessRulesStorage,
+} from "#policy/rulesStorage.js";
 
 type FindRulesSchema = ZodType<AccessRulesFilterInput[]>;
 
@@ -59,12 +62,12 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 	): Promise<RuleIdsEndpointResponse> {
 		const ruleIdBatches = await executeBatchesSequentially(
 			args,
-			async (rulesFilterInput) => {
+			async (rulesFilterInput: AccessRulesFilterInput) => {
 				const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
 
 				const ruleIds = await executeBatchesSequentially(
 					ruleFilters,
-					(ruleFilter) => this.accessRulesStorage.findRuleIds(ruleFilter),
+					async (ruleFilter: AccessRulesFilter) => this.accessRulesStorage.findRuleIds(ruleFilter),
 				);
 
 				return ruleIds.flat();

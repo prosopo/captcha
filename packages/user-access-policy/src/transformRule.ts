@@ -58,7 +58,8 @@ const accessRuleToRecordScheme = z
 		...userScopeSchema.shape,
 		groupId: z.coerce.string().optional(),
 	})
-	.transform((ruleInput: AccessRule): AccessRuleRecord => {
+	.transform((ruleInput: unknown): AccessRuleRecord => {
+		const inputRule = ruleInput as AccessRule;
 		// extract groupId
 		const {
 			groupId,
@@ -67,7 +68,7 @@ const accessRuleToRecordScheme = z
 			numericIpMaskMax,
 			userAgentHash,
 			...rule
-		} = ruleInput;
+		} = inputRule;
 
 		const record: AccessRuleRecord = rule;
 

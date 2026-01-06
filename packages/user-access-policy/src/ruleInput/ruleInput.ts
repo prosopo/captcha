@@ -38,21 +38,19 @@ const ruleGroupInput = z
 		groupId: z.coerce.string().optional(),
 		ruleGroupId: z.coerce.string().optional(),
 	} satisfies AllKeys<RuleGroupInput>)
-	.transform((ruleGroupInput: RuleGroupInput) => {
+	.transform((ruleGroupInput: RuleGroupInput): { groupId?: string } => {
 		// Explicitly check and prioritize groupId over ruleGroupId
 		const groupId = ruleGroupInput.groupId;
 		const ruleGroupId = ruleGroupInput.ruleGroupId;
 
-		const { ruleGroupId: _, groupId: __, ...ruleGroup } = ruleGroupInput;
-
 		// Prioritize groupId over ruleGroupId - if both are provided, use groupId
 		if ("string" === typeof groupId) {
-			ruleGroup.groupId = groupId;
+			return { groupId };
 		} else if ("string" === typeof ruleGroupId) {
-			ruleGroup.groupId = ruleGroupId;
+			return { groupId: ruleGroupId };
 		}
 
-		return ruleGroup;
+		return {};
 	});
 
 export const accessRuleInput: ZodType<AccessRule> = z
@@ -63,19 +61,22 @@ export const accessRuleInput: ZodType<AccessRule> = z
 	.and(userScopeInput)
 	.and(ruleGroupInput)
 	// transform is used for type safety only - plain "satisfies ZodType<x>" doesn't work after ".and()"
-	.transform((ruleInput: AccessRuleInput): AccessRule => {
+	.transform((ruleInput: unknown): AccessRule => {
+		// Type assertion needed because .and() makes the input type complex
+		const input = ruleInput as AccessRuleInput;
+
 		// Prioritize groupId over ruleGroupId
 		// When using .and(), Zod merges objects but may preserve both groupId and ruleGroupId
 		// from the original input, so we need to explicitly prioritize groupId here
 		const finalGroupId =
-			typeof ruleInput.groupId === "string"
-				? ruleInput.groupId
-				: typeof ruleInput.ruleGroupId === "string"
-					? ruleInput.ruleGroupId
+			typeof input.groupId === "string"
+				? input.groupId
+				: typeof input.ruleGroupId === "string"
+					? input.ruleGroupId
 					: undefined;
-		
-		const { ruleGroupId: _, groupId: __, ...rest } = ruleInput;
-		
+
+		const { ruleGroupId: _, groupId: __, ...rest } = input;
+
 		return finalGroupId !== undefined ? { ...rest, groupId: finalGroupId } : rest;
 	});
 

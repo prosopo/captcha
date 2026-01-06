@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
+import { AccessPolicyType } from "#policy/rule.js";
 import {
 	getUserScopeRecordFromAccessRuleRecord,
 	userAttributesRecordFields,
@@ -24,7 +25,7 @@ import type { AccessRuleRecord } from "#policy/ruleRecord.js";
 describe("getUserScopeRecordFromAccessRuleRecord", () => {
 	it("should extract user scope record with all fields", () => {
 		const ruleRecord: AccessRuleRecord = {
-			type: "block",
+			type: AccessPolicyType.Block,
 			clientId: "client1",
 			userId: "user1",
 			ja4Hash: "ja4hash",
@@ -50,7 +51,7 @@ describe("getUserScopeRecordFromAccessRuleRecord", () => {
 
 	it("should exclude undefined fields", () => {
 		const ruleRecord: AccessRuleRecord = {
-			type: "block",
+			type: AccessPolicyType.Block,
 			userId: "user1",
 		};
 
@@ -66,7 +67,7 @@ describe("getUserScopeRecordFromAccessRuleRecord", () => {
 
 	it("should exclude non-user-scope fields", () => {
 		const ruleRecord: AccessRuleRecord = {
-			type: "block",
+			type: AccessPolicyType.Block,
 			clientId: "client1",
 			userId: "user1",
 		};

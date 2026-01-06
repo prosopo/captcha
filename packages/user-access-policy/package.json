@@ -57,7 +57,6 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/api-express-router": "3.0.46",
 		"@prosopo/config": "3.2.1",
 		"@prosopo/util-crypto": "13.5.28",
 		"@testcontainers/mongodb": "11.7.0",

@@ -95,8 +95,8 @@ describe("InsertRulesEndpoint", () => {
 		const callArgs = mockWriter.insertRules as ReturnType<typeof vi.fn>;
 		const insertedRules = callArgs.mock.calls[0][0];
 		expect(insertedRules).toHaveLength(2);
-		expect(insertedRules[0].rule.clientId).toBe("client1");
-		expect(insertedRules[1].rule.clientId).toBe("client2");
+		expect(insertedRules[0]?.rule.clientId).toBe("client1");
+		expect(insertedRules[1]?.rule.clientId).toBe("client2");
 	});
 
 	it("should handle groupId correctly", async () => {
@@ -118,7 +118,7 @@ describe("InsertRulesEndpoint", () => {
 		expect(mockWriter.insertRules).toHaveBeenCalled();
 		const callArgs = mockWriter.insertRules as ReturnType<typeof vi.fn>;
 		const insertedRules = callArgs.mock.calls[0][0];
-		expect(insertedRules[0].rule.groupId).toBe("group1");
+		expect(insertedRules[0]?.rule.groupId).toBe("group1");
 	});
 
 	it("should handle expiration timestamp", async () => {
@@ -141,7 +141,7 @@ describe("InsertRulesEndpoint", () => {
 		expect(mockWriter.insertRules).toHaveBeenCalled();
 		const callArgs = mockWriter.insertRules as ReturnType<typeof vi.fn>;
 		const insertedRules = callArgs.mock.calls[0][0];
-		expect(insertedRules[0].expiresUnixTimestamp).toBe(expirationTimestamp);
+		expect(insertedRules[0]?.expiresUnixTimestamp).toBe(expirationTimestamp);
 	});
 
 	it("should return processing status after timeout", async () => {

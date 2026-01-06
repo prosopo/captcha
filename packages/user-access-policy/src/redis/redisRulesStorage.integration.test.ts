@@ -203,14 +203,18 @@ describe("createRedisAccessRulesStorage Integration Tests", () => {
 			const fetchedRule2 = fetchedRules[1];
 			expect(fetchedRule1).toBeDefined();
 			expect(fetchedRule2).toBeDefined();
-			expect(fetchedRule1.rule).toMatchObject({
-				type: AccessPolicyType.Block,
-				clientId: "test-client-1",
-			});
-			expect(fetchedRule2.rule).toMatchObject({
-				type: AccessPolicyType.Restrict,
-				clientId: "test-client-2",
-			});
+			if (fetchedRule1) {
+				expect(fetchedRule1.rule).toMatchObject({
+					type: AccessPolicyType.Block,
+					clientId: "test-client-1",
+				});
+			}
+			if (fetchedRule2) {
+				expect(fetchedRule2.rule).toMatchObject({
+					type: AccessPolicyType.Restrict,
+					clientId: "test-client-2",
+				});
+			}
 		});
 
 		test("should find rules by filter", async () => {
@@ -295,7 +299,7 @@ describe("createRedisAccessRulesStorage Integration Tests", () => {
 			expect(insertedId).toBeDefined();
 
 			const missingIds = await accessRulesStorage.getMissingRuleIds([
-				insertedId,
+				insertedId!,
 				"non-existent-id-1",
 				"non-existent-id-2",
 			]);

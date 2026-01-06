@@ -24,7 +24,10 @@ import {
 	accessRulesFilterInput,
 	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
-import type { AccessRulesStorage } from "#policy/rulesStorage.js";
+import type {
+	AccessRulesFilter,
+	AccessRulesStorage,
+} from "#policy/rulesStorage.js";
 
 type DeleteRulesSchema = ZodType<AccessRulesFilterInput[]>;
 
@@ -46,7 +49,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 		for (const rulesFilterInput of args) {
 			const ruleFilters = getAccessRuleFiltersFromInput(rulesFilterInput);
 
-			await executeBatchesSequentially(ruleFilters, async (ruleFilter) => {
+			await executeBatchesSequentially(ruleFilters, async (ruleFilter: AccessRulesFilter) => {
 				const ruleIds = await this.accessRulesStorage.findRuleIds(ruleFilter);
 				allRuleIds.push(...ruleIds);
 			});
