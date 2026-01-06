@@ -14,6 +14,10 @@
 
 export { accessRuleInput, type AccessRulesFilterInput } from "./ruleInput.js";
 
-export { accessPolicyInput, policyScopeInput } from "./policyInput.js";
+export {
+	accessPolicyInput,
+	policyScopeInput,
+	sanitizeAccessPolicy,
+} from "./policyInput.js";
 
 export { userScopeInput } from "./userScopeInput.js";

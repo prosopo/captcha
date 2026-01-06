@@ -7,6 +7,7 @@
 **Issue**: When both `groupId` and `ruleGroupId` are provided, the transform should prioritize `groupId`, but the test shows it's returning `ruleGroupId` instead.
 
 **Test failure**: `accessRuleInput > should prioritize groupId over ruleGroupId`
+
 - Expected: `'group1'`
 - Received: `'group2'`
 
@@ -19,6 +20,7 @@
 **Issue**: When both `policyScope` and `policyScopes` are provided, the function should return filters in the order: first the `policyScope`, then the `policyScopes`. However, the test shows the first filter has `client2` instead of `client1`.
 
 **Test failure**: `getAccessRuleFiltersFromInput > should combine policyScope and policyScopes`
+
 - Expected first filter: `client1`
 - Received first filter: `client2`
 
@@ -29,6 +31,7 @@
 **Location**: `src/api/delete/deleteRules.ts`
 
 **Issue**: Two test failures related to rule deletion:
+
 1. `should remove duplicate rule IDs before deleting` - Expected deleted_count: 2, Received: 4
 2. `should handle multiple filter inputs` - Expected `deleteRules` to be called 1 time, but got 2 times
 
@@ -41,6 +44,7 @@
 **Issue**: When both `ipMask` (string) and `numericIpMaskMin/Max` are provided, the code should prioritize the numeric values, but the test shows it's using the converted `ipMask` value instead.
 
 **Test failure**: `userScopeInput > should prioritize numeric IP mask over string IP mask`
+
 - Expected: `100n` (from numericIpMaskMin)
 - Received: `2130706432n` (from converted ipMask)
 
@@ -53,6 +57,7 @@
 **Issue**: When both `userAgent` and `userAgentHash` are provided, the code should prioritize `userAgentHash`, but the test shows it's hashing the `userAgent` instead.
 
 **Test failure**: `userScopeInput > should prioritize userAgentHash over userAgent`
+
 - Expected: `'directhash'`
 - Received: `'1066b48224bb188ceb955605f4fcff98893be...'` (hashed userAgent)
 
@@ -75,4 +80,3 @@
 **Issue**: The test uses `randomAsHex(16)` but the function is not imported.
 
 **Root cause**: Missing import statement for `randomAsHex` function. This will cause a runtime error when the test runs.
-
