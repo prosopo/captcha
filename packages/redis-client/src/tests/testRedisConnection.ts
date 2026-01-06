@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
-import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
+import {
+	RedisContainer,
+	type StartedRedisContainer,
+} from "@testcontainers/redis";
 import { type RedisConnection, connectToRedis } from "../redisClient.js";
 
 const mockLogger = new Proxy(
@@ -26,19 +29,20 @@ const mockLogger = new Proxy(
 let container: StartedRedisContainer | undefined;
 let containerPromise: Promise<StartedRedisContainer> | undefined;
 
-export const startTestRedisContainer = async (): Promise<StartedRedisContainer> => {
-	if (container) {
+export const startTestRedisContainer =
+	async (): Promise<StartedRedisContainer> => {
+		if (container) {
+			return container;
+		}
+		if (containerPromise) {
+			return containerPromise;
+		}
+		containerPromise = new RedisContainer("redis/redis-stack-server:latest")
+			.withCommand(["--requirepass", "root"])
+			.start();
+		container = await containerPromise;
 		return container;
-	}
-	if (containerPromise) {
-		return containerPromise;
-	}
-	containerPromise = new RedisContainer("redis/redis-stack-server:latest")
-		.withCommand(["--requirepass", "root"])
-		.start();
-	container = await containerPromise;
-	return container;
-};
+	};
 
 export const stopTestRedisContainer = async (): Promise<void> => {
 	if (container) {

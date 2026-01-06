@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger, LogLevel } from "@prosopo/common";
+import type { LogLevel, Logger } from "@prosopo/common";
 import { SCHEMA_FIELD_TYPE } from "@redis/search";
-import type { RedisClientType } from "redis";
-import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
-	type RedisConnection,
-	connectToRedis,
-	setupRedisIndex,
-} from "../redisClient.js";
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	test,
+	vi,
+} from "vitest";
+import { type RedisConnection, setupRedisIndex } from "../redisClient.js";
 import type { RedisIndex } from "../redisIndex.js";
 import {
 	createTestRedisConnection,
@@ -120,17 +123,21 @@ describe("connectToRedis", () => {
 		);
 		expect(connectionLog).toBeDefined();
 		const logData = connectionLog?.[0]?.();
-		expect(logData?.data && typeof logData.data === "object" && "awaitingTimeMs" in logData.data).toBe(true);
+		expect(
+			logData?.data &&
+				typeof logData.data === "object" &&
+				"awaitingTimeMs" in logData.data,
+		).toBe(true);
 	});
 
 	test("handles connection errors only when ready", async () => {
 		const client = await connection.getClient();
 		const error = new Error("Test error");
-		
+
 		client.emit("error", error);
-		
+
 		await new Promise((resolve) => setTimeout(resolve, 100));
-		
+
 		expect(mockLogger.error).toHaveBeenCalled();
 		const errorCall = vi.mocked(mockLogger.error).mock.calls[0]?.[0];
 		const errorData = errorCall?.();
@@ -179,6 +186,7 @@ describe("setupRedisIndex", () => {
 			setFormat: vi.fn(),
 		};
 		baseConnection = await createTestRedisConnection(mockLogger);
+		await baseConnection.getClient();
 		mockIndex = {
 			name: `test-index-${Date.now()}`,
 			schema: {
@@ -186,15 +194,11 @@ describe("setupRedisIndex", () => {
 			},
 			options: {},
 		};
-	});
+	}, 300000);
 
 	afterAll(async () => {
 		await stopTestRedisContainer();
 	});
-
-	beforeAll(async () => {
-		await baseConnection.getClient();
-	}, 300000);
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -202,11 +206,7 @@ describe("setupRedisIndex", () => {
 	});
 
 	test("returns connection with correct interface", () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		expect(connection).toHaveProperty("isReady");
 		expect(connection).toHaveProperty("getClient");
@@ -217,21 +217,13 @@ describe("setupRedisIndex", () => {
 	});
 
 	test("isReady returns false initially", () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		expect(connection.isReady()).toBe(false);
 	});
 
 	test("isReady returns true after index setup", async () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		expect(connection.isReady()).toBe(false);
 
@@ -241,11 +233,7 @@ describe("setupRedisIndex", () => {
 	}, 30000);
 
 	test("getClient returns the client from underlying connection", async () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		const client = await connection.getClient();
 		const baseClient = await baseConnection.getClient();
@@ -254,11 +242,7 @@ describe("setupRedisIndex", () => {
 	}, 30000);
 
 	test("creates index in Redis", async () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		await connection.getClient();
 
@@ -268,11 +252,7 @@ describe("setupRedisIndex", () => {
 	}, 30000);
 
 	test("logs index setup start", async () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		await connection.getClient();
 
@@ -283,15 +263,16 @@ describe("setupRedisIndex", () => {
 		);
 		expect(setupLog).toBeDefined();
 		const logData = setupLog?.[0]?.();
-		expect(logData?.data && typeof logData.data === "object" && "name" in logData.data && logData.data.name).toBe(mockIndex.name);
+		expect(
+			logData?.data &&
+				typeof logData.data === "object" &&
+				"name" in logData.data &&
+				logData.data.name,
+		).toBe(mockIndex.name);
 	}, 30000);
 
 	test("logs index setup completion with awaiting time", async () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		await connection.getClient();
 
@@ -301,16 +282,21 @@ describe("setupRedisIndex", () => {
 		);
 		expect(completionLog).toBeDefined();
 		const logData = completionLog?.[0]?.();
-		expect(logData?.data && typeof logData.data === "object" && "name" in logData.data && logData.data.name).toBe(mockIndex.name);
-		expect(logData?.data && typeof logData.data === "object" && "awaitingTimeMs" in logData.data).toBe(true);
+		expect(
+			logData?.data &&
+				typeof logData.data === "object" &&
+				"name" in logData.data &&
+				logData.data.name,
+		).toBe(mockIndex.name);
+		expect(
+			logData?.data &&
+				typeof logData.data === "object" &&
+				"awaitingTimeMs" in logData.data,
+		).toBe(true);
 	}, 30000);
 
 	test("getAwaitingTimeMs returns time difference when ready", async () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		await connection.getClient();
 
@@ -319,22 +305,14 @@ describe("setupRedisIndex", () => {
 	}, 30000);
 
 	test("getAwaitingTimeMs returns time since initialization when not ready", () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		const awaitingTime1 = connection.getAwaitingTimeMs();
 		expect(awaitingTime1).toBeGreaterThanOrEqual(0);
 	});
 
 	test("getClient can be called multiple times and returns same promise", async () => {
-		const connection = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		const promise1 = connection.getClient();
 		const promise2 = connection.getClient();
@@ -350,21 +328,13 @@ describe("setupRedisIndex", () => {
 	}, 30000);
 
 	test("does not recreate index when called again with same definition", async () => {
-		const connection1 = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection1 = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		await connection1.getClient();
 
 		vi.clearAllMocks();
 
-		const connection2 = setupRedisIndex(
-			baseConnection,
-			mockIndex,
-			mockLogger,
-		);
+		const connection2 = setupRedisIndex(baseConnection, mockIndex, mockLogger);
 
 		await connection2.getClient();
 
@@ -373,4 +343,3 @@ describe("setupRedisIndex", () => {
 		expect(indexNames.filter((name) => name === mockIndex.name).length).toBe(1);
 	}, 30000);
 });
-
