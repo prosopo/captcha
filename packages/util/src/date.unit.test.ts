@@ -106,4 +106,3 @@ describe("getUTCDate", () => {
 		expect(utcDate instanceof Date).toBe(true);
 	});
 });
-

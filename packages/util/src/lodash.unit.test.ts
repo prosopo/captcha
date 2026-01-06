@@ -109,8 +109,8 @@ describe("rng", () => {
 
 describe("setSeedGlobal", () => {
 	test("types", () => {
-		const _v1: void = setSeedGlobal(0);
-		const _v2: void = setSeedGlobal("seed");
+		const _v1: undefined = setSeedGlobal(0);
+		const _v2: undefined = setSeedGlobal("seed");
 	});
 
 	test("sets global random seed", () => {
