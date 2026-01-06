@@ -107,7 +107,15 @@ describe("jwtSignatureVerify", (): void => {
 
 		const result = jwtVerify(invalidJwt, publicKey);
 		expect(result.isValid).toBe(false);
-		expect(result.error).toBe("Invalid payload: 'exp' or 'iat' is not a number");
+		expect(result.error).toBe(
+			"Invalid payload: 'exp' or 'iat' is not a number",
+		);
 	});
 
+	it("throws error when JWT has empty parts", (): void => {
+		const invalidJwt = "header..signature" as JWT;
+		expect(() => jwtVerify(invalidJwt, new Uint8Array(32))).toThrow(
+			"Invalid JWT format (empty part)",
+		);
+	});
 });
