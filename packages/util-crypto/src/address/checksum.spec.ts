@@ -53,4 +53,18 @@ describe("checkAddressChecksum", (): void => {
 			),
 		).toEqual([true, 35, 2, 200]);
 	});
+
+	it("throws error when first byte is undefined", (): void => {
+		expect(() => checkAddressChecksum(new Uint8Array(0))).toThrow(
+			"Invalid address: first byte cannot be undefined",
+		);
+	});
+
+	it("throws error when second byte is undefined for 2-byte prefix", (): void => {
+		const decoded = new Uint8Array(1);
+		decoded[0] = 0b0100_0000;
+		expect(() => checkAddressChecksum(decoded)).toThrow(
+			"Invalid address: second byte cannot be undefined",
+		);
+	});
 });
