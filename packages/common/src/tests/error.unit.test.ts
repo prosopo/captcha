@@ -26,8 +26,8 @@ import {
 	ProsopoTxQueueError,
 	isZodError,
 	unwrapError,
-} from "./src/error.js";
-import { getLogger } from "./src/logger.js";
+} from "../error.js";
+import { getLogger } from "../logger.js";
 
 describe("ProsopoError classes", () => {
 	let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
@@ -81,9 +81,20 @@ describe("ProsopoError classes", () => {
 			});
 
 			expect(consoleErrorSpy).toHaveBeenCalled();
-			const logOutput = consoleErrorSpy.mock.calls[0][0];
-			const parsed = JSON.parse(logOutput);
+			const logOutput = consoleErrorSpy.mock.calls[0]?.[0];
+			expect(logOutput).toBeDefined();
+			const parsed = JSON.parse(logOutput as string);
 			expect(parsed.data.errorType).toBe("CustomError");
+		});
+
+		it("should use error class name when name option is not provided", () => {
+			new ProsopoError("TEST.ERROR");
+
+			expect(consoleErrorSpy).toHaveBeenCalled();
+			const logOutput = consoleErrorSpy.mock.calls[0]?.[0];
+			expect(logOutput).toBeDefined();
+			const parsed = JSON.parse(logOutput as string);
+			expect(parsed.data.errorType).toBe("ProsopoError");
 		});
 
 		it("should use provided logger", () => {
@@ -358,12 +369,81 @@ describe("unwrapError", () => {
 		});
 	});
 
+	it("should handle ZodError with string message that needs parsing", () => {
+		const zodError = new ZodError([
+			{
+				code: "invalid_type",
+				expected: "string",
+				received: "number",
+				path: ["field"],
+				message: "Expected string, received number",
+			},
+		]);
+		Object.defineProperty(zodError, "message", {
+			value: JSON.stringify({ errors: ["field is invalid"] }),
+			writable: true,
+		});
+
+		const unwrapped = unwrapError(zodError, mockI18n);
+
+		expect(unwrapped.code).toBe(400);
+		expect(unwrapped.jsonError.key).toBe("API.INVALID_BODY");
+		expect(unwrapped.jsonError.message).toEqual({
+			errors: ["field is invalid"],
+		});
+	});
+
+	it("should handle ZodError with string message when key is already set", () => {
+		const zodError = new ZodError([]);
+		Object.defineProperty(zodError, "message", {
+			value: JSON.stringify({ errors: ["test"] }),
+			writable: true,
+		});
+		const error = new ProsopoApiError("API.CUSTOM", {
+			context: { code: 400, error: zodError },
+			silent: true,
+		});
+
+		const unwrapped = unwrapError(error, mockI18n);
+
+		expect(unwrapped.code).toBe(400);
+		expect(unwrapped.jsonError.key).toBe("API.CUSTOM");
+	});
+
 	it("should default to code 400 for errors without code", () => {
 		const error = new Error("Basic error");
 
 		const unwrapped = unwrapError(error, mockI18n);
 
 		expect(unwrapped.code).toBe(400);
+	});
+
+	it("should handle error with context code", () => {
+		const error = new ProsopoError("TEST.ERROR", {
+			context: { code: 403 },
+			silent: true,
+		});
+
+		const unwrapped = unwrapError(error, mockI18n);
+
+		expect(unwrapped.code).toBe(403);
+		expect(unwrapped.jsonError.code).toBe(403);
+	});
+
+	it("should handle nested error with context code overriding outer code", () => {
+		const inner = new ProsopoError("INNER.ERROR", {
+			context: { code: 401 },
+			silent: true,
+		});
+		const outer = new ProsopoApiError("OUTER.ERROR", {
+			context: { code: 500, error: inner },
+			silent: true,
+		});
+
+		const unwrapped = unwrapError(outer, mockI18n);
+
+		expect(unwrapped.code).toBe(401);
+		expect(unwrapped.jsonError.code).toBe(401);
 	});
 });
 
