@@ -33,4 +33,11 @@ describe("sign", (): void => {
 			sr25519Sign(MESSAGE, { ...pair, secretKey: new Uint8Array(65) }),
 		).toThrow("Expected secretKey to be 64 bytes, found 65");
 	});
+
+	it("signs a string message", (): void => {
+		const pair = sr25519FromSeed(randomAsU8a());
+		const signature = sr25519Sign("hello world", pair);
+
+		expect(signature).toHaveLength(64);
+	});
 });

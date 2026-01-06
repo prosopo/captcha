@@ -65,6 +65,27 @@ describe("jwtIssue", (): void => {
 		const now = Math.floor(Date.now() / 1000);
 		expect(exp).toBeGreaterThanOrEqual(now + 600); // Ensure expiration is set correctly
 	});
+
+	it("uses default expiration time when expiresIn is not provided", (): void => {
+		const pair = sr25519FromSeed(randomAsU8a());
+
+		const jwt = sr25519jwtIssue({
+			publicKey: pair.publicKey,
+			secretKey: pair.secretKey,
+		});
+
+		expect(jwt).toBeDefined();
+		const parts = jwt.split(".");
+
+		if (!parts[1]) {
+			throw new Error("Invalid JWT format: Missing payload part");
+		}
+
+		const payload = JSON.parse(atob(parts[1]));
+		const exp = payload.exp;
+		const now = Math.floor(Date.now() / 1000);
+		expect(exp).toBeGreaterThanOrEqual(now + 300);
+	});
 	it("accepts a custom start time", (): void => {
 		const pair = sr25519FromSeed(randomAsU8a());
 		const notBefore = Math.floor((Date.now() + 24 * 60 * 60 * 1000) / 1000);
