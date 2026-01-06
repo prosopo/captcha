@@ -18,14 +18,12 @@ describe("version", () => {
 		vi.resetModules();
 	});
 
-	test("types", () => {
+	test("types", async () => {
 		// Verify version is a string
-		import("./version.js").then((mod) => {
-			const v: string = mod.version;
-			expect(typeof v).toBe("string");
-		});
+		const mod = await import("./version.js");
+		const v: string = mod.version;
+		expect(typeof v).toBe("string");
 	});
-
 	describe("version value", () => {
 		test("returns environment variable value when PROSOPO_PACKAGE_VERSION is set", async () => {
 			const testVersion = "1.2.3";
