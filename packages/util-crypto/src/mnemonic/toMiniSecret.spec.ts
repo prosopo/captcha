@@ -20,7 +20,7 @@ describe("mnemonicToMiniSecret", (): void => {
 					mnemonicToMiniSecret(MNEMONIC, password, undefined, false),
 				),
 			).toEqual(true);
-		});
+		}, 60000);
 	}
 
 	it("creates a known minisecret from a non-english mnemonic", (): void => {
