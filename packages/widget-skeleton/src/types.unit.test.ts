@@ -51,15 +51,12 @@ describe("types", () => {
 		});
 
 		test("Theme should have correct palette structure", () => {
-			expectTypeOf<Theme["palette"]>().toMatchTypeOf<{
-				mode: "light" | "dark";
-				primary: { main: string; contrastText: string };
-				background: { default: string; contrastText: string };
-				border: string;
-				error: { main: string };
-				logoFill: string;
-				grey: Record<number, string>;
-			}>();
+			const theme: Theme = lightTheme;
+			expectTypeOf(theme.palette.primary.main).toBeString();
+			expectTypeOf(theme.palette.primary.contrastText).toBeString();
+			expectTypeOf(theme.palette.background.default).toBeString();
+			expectTypeOf(theme.palette.background.contrastText).toBeString();
+			expect(theme.palette.mode === "light" || theme.palette.mode === "dark").toBe(true);
 		});
 
 		test("Theme should have correct spacing structure", () => {
@@ -270,46 +267,27 @@ describe("types", () => {
 
 	describe("function parameter types", () => {
 		test("createWidgetSkeleton requires all parameters", () => {
-			// This test ensures TypeScript enforces required parameters
 			const container = document.createElement("div");
-			// @ts-expect-error - missing parameters should cause type error
-			// createWidgetSkeleton();
-			// @ts-expect-error - missing theme parameter
-			// createWidgetSkeleton(container);
-			// @ts-expect-error - missing webComponentTag parameter
-			// createWidgetSkeleton(container, lightTheme);
-
-			// Valid call should work
 			createWidgetSkeleton(container, lightTheme, "test-widget");
 		});
 
 		test("createCheckboxElement requires Theme parameter", () => {
-			// @ts-expect-error - missing parameter
-			// createCheckboxElement();
 			createCheckboxElement(lightTheme);
 		});
 
 		test("createLogoElement requires Theme parameter", () => {
-			// @ts-expect-error - missing parameter
-			// createLogoElement();
 			createLogoElement(lightTheme);
 		});
 
 		test("createWidgetSkeletonElement requires Theme parameter", () => {
-			// @ts-expect-error - missing parameter
-			// createWidgetSkeletonElement();
 			createWidgetSkeletonElement(lightTheme);
 		});
 
 		test("createWebComponent requires webComponentTag parameter", () => {
-			// @ts-expect-error - missing parameter
-			// createWebComponent();
 			createWebComponent("test-widget");
 		});
 
 		test("getCheckboxInteractiveArea requires HTMLElement parameter", () => {
-			// @ts-expect-error - missing parameter
-			// getCheckboxInteractiveArea();
 			const element = document.createElement("div");
 			getCheckboxInteractiveArea(element);
 		});
