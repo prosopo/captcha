@@ -454,6 +454,37 @@ describe("HttpClientBase", () => {
 			expectTypeOf(result.output).toMatchTypeOf<string>();
 			expectTypeOf(result.count).toMatchTypeOf<number>();
 		});
+
+		test("handles RequestInfo as Request object - extracts pathname correctly", async () => {
+			const requestBody = { data: "test" };
+			const mockResponse = { success: true };
+			const requestPath = "/test";
+			const request = new Request(`https://example.com${requestPath}`, {
+				method: "POST",
+			});
+			vi.mocked(global.fetch).mockResolvedValueOnce({
+				ok: true,
+				json: async () => mockResponse,
+				headers: new Headers({ "content-type": "application/json" }),
+				url: `${baseURL}${prefix}${requestPath}`,
+				status: 200,
+				statusText: "OK",
+				redirected: false,
+				type: "basic" as ResponseType,
+			} as unknown as Response);
+
+			const result = await client.testPost(request, requestBody);
+
+			const expectedPathname = new URL(request.url).pathname;
+			expect(global.fetch).toHaveBeenCalledWith(
+				`${baseURL}${prefix}${expectedPathname}`,
+				expect.objectContaining({
+					method: "POST",
+					body: JSON.stringify(requestBody),
+				}),
+			);
+			expect(result).toEqual(mockResponse);
+		});
 	});
 
 	describe("responseHandler", () => {
