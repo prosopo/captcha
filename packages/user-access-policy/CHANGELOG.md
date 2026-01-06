@@ -1,5 +1,11 @@
 # @prosopo/user-access-policy
 
+## 3.5.37
+### Patch Changes
+
+- 378a896: Fix: Remove captchaType and solvedImagesCount from block access policies. Block policies should not store these fields as they are only relevant for restrict policies that present captcha challenges.
+- 90fddd8: Fix UAP expiry timestamp handling: missing propagation and unit conversion. Timestamps are now correctly propagated when policyScopes are present, and milliseconds are properly converted to seconds for Redis expireAt.
+
 ## 3.5.36
 ### Patch Changes
 

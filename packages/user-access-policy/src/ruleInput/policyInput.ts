@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,15 @@ export const accessPolicyInput = z.object({
 	// used to increase the user's score
 	frictionlessScore: z.coerce.number().optional(),
 } satisfies AllKeys<AccessPolicy>) satisfies ZodType<AccessPolicy>;
+
+// Sanitize block policies by removing captchaType and solvedImagesCount
+export const sanitizeAccessPolicy = (policy: AccessPolicy): AccessPolicy => {
+	if (policy.type === AccessPolicyType.Block) {
+		const { captchaType, solvedImagesCount, ...blockPolicy } = policy;
+		return blockPolicy;
+	}
+	return policy;
+};
 
 export const policyScopeInput = z.object({
 	clientId: z.coerce.string().optional(),
