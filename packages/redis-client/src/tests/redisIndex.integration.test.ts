@@ -20,7 +20,10 @@ import {
 	createRedisIndex,
 	deleteRedisIndex,
 } from "../redisIndex.js";
-import { createTestRedisConnection } from "./testRedisConnection.js";
+import {
+	createTestRedisConnection,
+	stopTestRedisContainer,
+} from "./testRedisConnection.js";
 
 const testIndexNames: string[] = [];
 const getTestIndexName = () => {
@@ -35,7 +38,8 @@ describe("redisIndex", () => {
 	let redisClient: RedisClientType;
 
 	beforeAll(async () => {
-		redisClient = await createTestRedisConnection().getClient();
+		const connection = await createTestRedisConnection();
+		redisClient = await connection.getClient();
 	});
 
 	afterAll(async () => {
@@ -44,6 +48,7 @@ describe("redisIndex", () => {
 		);
 
 		await Promise.all(deleteIndexPromises);
+		await stopTestRedisContainer();
 	});
 
 	test("creates new index", async () => {
@@ -149,5 +154,148 @@ describe("redisIndex", () => {
 
 		expect(indexNames).toContain(redisIndex.name);
 		expect(actualIndexInfo.index_definition.key_type).toBe("HASH");
+	});
+
+	test("saves index hash after creating new index", async () => {
+		const redisIndex: RedisIndex = {
+			name: getTestIndexName(),
+			schema: {
+				tagField: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(redisClient, redisIndex);
+
+		const hash = await redisClient.hGet("_index_hashes", redisIndex.name);
+		expect(hash).toBeTruthy();
+		expect(typeof hash).toBe("string");
+	});
+
+	test("generates consistent hash for same index definition", async () => {
+		const redisIndex: RedisIndex = {
+			name: getTestIndexName(),
+			schema: {
+				tagField: SCHEMA_FIELD_TYPE.TAG,
+				textField: SCHEMA_FIELD_TYPE.TEXT,
+			},
+			options: {
+				ON: "HASH" as const,
+			},
+		};
+
+		await createRedisIndex(redisClient, redisIndex);
+		const hash1 = await redisClient.hGet("_index_hashes", redisIndex.name);
+
+		await redisClient.ft.dropIndex(redisIndex.name);
+		await redisClient.hDel("_index_hashes", redisIndex.name);
+
+		await createRedisIndex(redisClient, redisIndex);
+		const hash2 = await redisClient.hGet("_index_hashes", redisIndex.name);
+
+		expect(hash1).toBe(hash2);
+	});
+
+	test("generates different hash for different index definitions", async () => {
+		const redisIndex1: RedisIndex = {
+			name: getTestIndexName(),
+			schema: {
+				tagField: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		const redisIndex2: RedisIndex = {
+			name: getTestIndexName(),
+			schema: {
+				tagField: SCHEMA_FIELD_TYPE.TEXT,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(redisClient, redisIndex1);
+		const hash1 = await redisClient.hGet("_index_hashes", redisIndex1.name);
+
+		await createRedisIndex(redisClient, redisIndex2);
+		const hash2 = await redisClient.hGet("_index_hashes", redisIndex2.name);
+
+		expect(hash1).not.toBe(hash2);
+	});
+
+	test("handles missing hash gracefully when index exists", async () => {
+		const redisIndex: RedisIndex = {
+			name: getTestIndexName(),
+			schema: {
+				tagField: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(redisClient, redisIndex);
+		await redisClient.hDel("_index_hashes", redisIndex.name);
+
+		await createRedisIndex(redisClient, redisIndex);
+
+		const indexNames = await redisClient.ft._LIST();
+		expect(indexNames).toContain(redisIndex.name);
+	});
+
+	test("deleteRedisIndex drops index from Redis", async () => {
+		const indexName = getTestIndexName();
+		const redisIndex: RedisIndex = {
+			name: indexName,
+			schema: {
+				tagField: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(redisClient, redisIndex);
+
+		await deleteRedisIndex(redisClient, indexName);
+
+		const indexNames = await redisClient.ft._LIST();
+		expect(indexNames).not.toContain(indexName);
+	});
+
+	test("deleteRedisIndex deletes index hash after dropping index", async () => {
+		const indexName = getTestIndexName();
+		const redisIndex: RedisIndex = {
+			name: indexName,
+			schema: {
+				tagField: SCHEMA_FIELD_TYPE.TAG,
+			},
+			options: {},
+		};
+
+		await createRedisIndex(redisClient, redisIndex);
+		await deleteRedisIndex(redisClient, indexName);
+
+		const hash = await redisClient.hGet("_index_hashes", indexName);
+		expect(hash).toBeNull();
+	});
+
+	test("deleteRedisIndex handles different index names", async () => {
+		const indexNames = [
+			getTestIndexName(),
+			getTestIndexName(),
+			getTestIndexName(),
+		];
+
+		for (const indexName of indexNames) {
+			const redisIndex: RedisIndex = {
+				name: indexName,
+				schema: {
+					tagField: SCHEMA_FIELD_TYPE.TAG,
+				},
+				options: {},
+			};
+
+			await createRedisIndex(redisClient, redisIndex);
+			await deleteRedisIndex(redisClient, indexName);
+
+			const existingIndexes = await redisClient.ft._LIST();
+			expect(existingIndexes).not.toContain(indexName);
+		}
 	});
 });

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/common";
+import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
 import { type RedisConnection, connectToRedis } from "../redisClient.js";
 
 const mockLogger = new Proxy(
@@ -22,10 +23,39 @@ const mockLogger = new Proxy(
 	},
 ) as unknown as Logger;
 
-export const createTestRedisConnection = (logger?: Logger): RedisConnection =>
-	connectToRedis({
-		// /docker/redis/redis-stack.docker-compose.yml
-		url: "redis://localhost:6379",
+let container: StartedRedisContainer | undefined;
+let containerPromise: Promise<StartedRedisContainer> | undefined;
+
+export const startTestRedisContainer = async (): Promise<StartedRedisContainer> => {
+	if (container) {
+		return container;
+	}
+	if (containerPromise) {
+		return containerPromise;
+	}
+	containerPromise = new RedisContainer("redis/redis-stack:latest")
+		.withCommand(["--requirepass", "root"])
+		.start();
+	container = await containerPromise;
+	return container;
+};
+
+export const stopTestRedisContainer = async (): Promise<void> => {
+	if (container) {
+		await container.stop();
+		container = undefined;
+		containerPromise = undefined;
+	}
+};
+
+export const createTestRedisConnection = async (
+	logger?: Logger,
+): Promise<RedisConnection> => {
+	const redisContainer = await startTestRedisContainer();
+	const connectionUrl = redisContainer.getConnectionUrl();
+	return connectToRedis({
+		url: connectionUrl,
 		password: "root",
 		logger: logger || mockLogger,
 	});
+};
