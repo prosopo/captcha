@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -269,7 +269,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 
 // Set an index on the captchaId field, ascending
 PoWCaptchaRecordSchema.index({ challenge: 1 });
-PoWCaptchaRecordSchema.index({ storedAtTimestamp: 1, lastUpdatedTimestamp: 1 });
+PoWCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
 PoWCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
@@ -314,7 +314,6 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 // Set an index on the commitment id field, descending
 UserCommitmentRecordSchema.index({ id: -1 });
 UserCommitmentRecordSchema.index({
-	storedAtTimestamp: 1,
 	lastUpdatedTimestamp: 1,
 });
 UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
