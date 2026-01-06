@@ -644,8 +644,9 @@ describe("NativeLogger", () => {
 
 			expect(consoleInfoSpy).toHaveBeenCalledOnce();
 			const calls = consoleInfoSpy.mock.calls[0];
-			expect(calls.length).toBeGreaterThanOrEqual(1);
-			if (calls.length === 2) {
+			expect(calls).toBeDefined();
+			expect(calls?.length).toBeGreaterThanOrEqual(1);
+			if (calls && calls.length === 2) {
 				expect(calls[0]).toBe("test message");
 				expect(calls[1]).toMatchObject({
 					scope: "test",
@@ -653,7 +654,7 @@ describe("NativeLogger", () => {
 					msg: "test message",
 					data: { key: "value" },
 				});
-			} else {
+			} else if (calls) {
 				const call = calls[0];
 				if (typeof call === "string") {
 					const parsed = JSON.parse(call);
@@ -680,13 +681,14 @@ describe("NativeLogger", () => {
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
 			const calls = consoleErrorSpy.mock.calls[0];
+			expect(calls).toBeDefined();
 			expect(calls).toHaveLength(2);
-			expect(calls[0]).toBe("test error");
-			expect(calls[1]).toMatchObject({
+			expect(calls?.[0]).toBe("test error");
+			expect(calls?.[1]).toMatchObject({
 				scope: "test",
 				level: "error",
 			});
-			expect(calls[1]).toHaveProperty("err", "test error");
+			expect(calls?.[1]).toHaveProperty("err", "test error");
 		});
 
 		it("should log without message or error in browser environment", async () => {
@@ -698,8 +700,9 @@ describe("NativeLogger", () => {
 
 			expect(consoleInfoSpy).toHaveBeenCalledOnce();
 			const calls = consoleInfoSpy.mock.calls[0];
+			expect(calls).toBeDefined();
 			expect(calls).toHaveLength(1);
-			expect(calls[0]).toMatchObject({
+			expect(calls?.[0]).toMatchObject({
 				scope: "test",
 				level: "info",
 				data: { key: "value" },
@@ -716,14 +719,15 @@ describe("NativeLogger", () => {
 
 			expect(consoleErrorSpy).toHaveBeenCalledOnce();
 			const calls = consoleErrorSpy.mock.calls[0];
+			expect(calls).toBeDefined();
 			expect(calls).toHaveLength(2);
-			expect(calls[0]).toBe("log message");
-			expect(calls[1]).toMatchObject({
+			expect(calls?.[0]).toBe("log message");
+			expect(calls?.[1]).toMatchObject({
 				scope: "test",
 				level: "error",
 				msg: "log message",
 			});
-			expect(calls[1]).toHaveProperty("err", "error message");
+			expect(calls?.[1]).toHaveProperty("err", "error message");
 		});
 	});
 });
