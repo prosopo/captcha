@@ -15,10 +15,10 @@
 import {
 	AdminApiPaths,
 	ApiParams,
-	type ApiResponse,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
 	type CaptchaSolutionResponse,
+	CaptchaType,
 	ClientApiPaths,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaResponse,
@@ -31,7 +31,7 @@ import {
 	PublicApiPaths,
 	type RandomProvider,
 	type StoredEvents,
-	type Tier,
+	Tier,
 	type UpdateDetectorKeyResponse,
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
@@ -62,15 +62,14 @@ describe("ProviderApi Integration Tests", () => {
 
 				if (method === "GET" && path === ClientApiPaths.GetProviderStatus) {
 					const response: ProviderRegistered = {
-						registered: true,
-						address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+						status: "Registered",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
 				} else if (method === "GET" && path === PublicApiPaths.GetProviderDetails) {
 					const response: Provider = {
-						address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-						url: "https://provider.example.com",
+						url: [104, 116, 116, 112, 115, 58, 47, 47, 112, 114, 111, 118, 105, 100, 101, 114, 46, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109],
+						datasetId: "datasetId123",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -79,11 +78,13 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.GetImageCaptchaChallenge
 				) {
 					const response: CaptchaResponseBody = {
-						captchas: [],
-						requestHash: "hash123",
-						signature: {
-							provider: {
-								requestHash: "provider-sig",
+						[ApiParams.captchas]: [],
+						[ApiParams.requestHash]: "hash123",
+						[ApiParams.timestamp]: "2024-01-01T00:00:00Z",
+						[ApiParams.status]: "success",
+						[ApiParams.signature]: {
+							[ApiParams.provider]: {
+								[ApiParams.requestHash]: "provider-sig",
 							},
 						},
 					};
@@ -94,7 +95,9 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.SubmitImageCaptchaSolution
 				) {
 					const response: CaptchaSolutionResponse = {
-						token: "token123" as ProcaptchaToken,
+						[ApiParams.captchas]: [],
+						[ApiParams.verified]: true,
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -103,7 +106,8 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.VerifyImageCaptchaSolutionDapp
 				) {
 					const response: ImageVerificationResponse = {
-						verified: true,
+						[ApiParams.verified]: true,
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -112,12 +116,13 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.GetPowCaptchaChallenge
 				) {
 					const response: GetPowCaptchaResponse = {
-						challenge: "1704067200000___user123___dapp456___random",
-						difficulty: 5,
-						timestamp: "2024-01-01T00:00:00Z",
-						signature: {
-							provider: {
-								challenge: "provider-challenge-sig",
+						[ApiParams.challenge]: "1704067200000___user123___dapp456___random",
+						[ApiParams.difficulty]: 5,
+						[ApiParams.timestamp]: "2024-01-01T00:00:00Z",
+						[ApiParams.status]: "success",
+						[ApiParams.signature]: {
+							[ApiParams.provider]: {
+								[ApiParams.challenge]: "provider-challenge-sig",
 							},
 						},
 					};
@@ -128,7 +133,8 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.SubmitPowCaptchaSolution
 				) {
 					const response: PowCaptchaSolutionResponse = {
-						token: "pow-token123" as ProcaptchaToken,
+						[ApiParams.verified]: true,
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -137,7 +143,9 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.GetFrictionlessCaptchaChallenge
 				) {
 					const response: GetFrictionlessCaptchaResponse = {
-						sessionId: "session-123",
+						[ApiParams.captchaType]: CaptchaType.pow,
+						[ApiParams.sessionId]: "session-123",
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -146,7 +154,8 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.SubmitUserEvents
 				) {
 					const response: UpdateProviderClientsResponse = {
-						success: true,
+						message: "Events submitted",
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -155,25 +164,29 @@ describe("ProviderApi Integration Tests", () => {
 					path === ClientApiPaths.VerifyPowCaptchaSolution
 				) {
 					const response: VerificationResponse = {
-						verified: true,
+						[ApiParams.verified]: true,
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
 				} else if (method === "POST" && path === AdminApiPaths.SiteKeyRegister) {
-					const response: ApiResponse = {
-						success: true,
+					const response = {
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
 				} else if (method === "POST" && path === AdminApiPaths.UpdateDetectorKey) {
 					const response: UpdateDetectorKeyResponse = {
-						success: true,
+						data: {
+							activeDetectorKeys: ["key1", "key2"],
+						},
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
 				} else if (method === "POST" && path === AdminApiPaths.RemoveDetectorKey) {
-					const response: ApiResponse = {
-						success: true,
+					const response = {
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -181,8 +194,8 @@ describe("ProviderApi Integration Tests", () => {
 					method === "POST" &&
 					path === AdminApiPaths.ToggleMaintenanceMode
 				) {
-					const response: ApiResponse = {
-						success: true,
+					const response = {
+						[ApiParams.status]: "success",
 					};
 					res.statusCode = 200;
 					res.end(JSON.stringify(response));
@@ -215,26 +228,28 @@ describe("ProviderApi Integration Tests", () => {
 		test("makes HTTP request and returns response", async () => {
 			const userAccount = "user123";
 			const randomProvider: RandomProvider = {
+				providerAccount: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 				provider: {
 					datasetId: "dataset-123",
-					address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					url: "https://provider.example.com",
 				},
 			};
 
 			const result = await api.getCaptchaChallenge(userAccount, randomProvider);
 
-			expect(result).toHaveProperty("captchas");
-			expect(result).toHaveProperty("requestHash");
-			expect(result.requestHash).toBe("hash123");
+			expect(result).toHaveProperty(ApiParams.captchas);
+			expect(result).toHaveProperty(ApiParams.requestHash);
+			expect(result[ApiParams.requestHash]).toBe("hash123");
 		});
 
 		test("includes sessionId when provided", async () => {
 			const userAccount = "user123";
 			const sessionId = "session-456";
 			const randomProvider: RandomProvider = {
+				providerAccount: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 				provider: {
 					datasetId: "dataset-123",
-					address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					url: "https://provider.example.com",
 				},
 			};
 
@@ -244,14 +259,19 @@ describe("ProviderApi Integration Tests", () => {
 				sessionId,
 			);
 
-			expect(result).toHaveProperty("requestHash");
+			expect(result).toHaveProperty(ApiParams.requestHash);
 		});
 	});
 
 	describe("submitCaptchaSolution", () => {
 		test("makes HTTP request and returns response", async () => {
 			const captchas: CaptchaSolution[] = [
-				{ index: 0, solution: [1, 2, 3] },
+				{
+					captchaId: "captcha-1",
+					captchaContentId: "content-1",
+					salt: "salt123456789012345678901234567890",
+					solution: ["1", "2", "3"],
+				},
 			];
 			const result = await api.submitCaptchaSolution(
 				captchas,
@@ -262,8 +282,8 @@ describe("ProviderApi Integration Tests", () => {
 				"user-sig",
 			);
 
-			expect(result).toHaveProperty("token");
-			expect(result.token).toBe("token123");
+			expect(result).toHaveProperty(ApiParams.verified);
+			expect(result[ApiParams.verified]).toBe(true);
 		});
 	});
 
@@ -294,9 +314,9 @@ describe("ProviderApi Integration Tests", () => {
 		test("makes HTTP request and returns response", async () => {
 			const result = await api.getPowCaptchaChallenge("user123", "dapp456");
 
-			expect(result).toHaveProperty("challenge");
-			expect(result).toHaveProperty("difficulty");
-			expect(result.difficulty).toBe(5);
+			expect(result).toHaveProperty(ApiParams.challenge);
+			expect(result).toHaveProperty(ApiParams.difficulty);
+			expect(result[ApiParams.difficulty]).toBe(5);
 		});
 
 		test("includes sessionId when provided", async () => {
@@ -306,19 +326,20 @@ describe("ProviderApi Integration Tests", () => {
 				"session789",
 			);
 
-			expect(result).toHaveProperty("challenge");
+			expect(result).toHaveProperty(ApiParams.challenge);
 		});
 	});
 
 	describe("submitPowCaptchaSolution", () => {
 		test("makes HTTP request and returns response", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "1704067200000___user123___dapp456___random",
-				difficulty: 5,
-				timestamp: "2024-01-01T00:00:00Z",
-				signature: {
-					provider: {
-						challenge: "provider-challenge-sig",
+				[ApiParams.challenge]: "1704067200000___user123___dapp456___random",
+				[ApiParams.difficulty]: 5,
+				[ApiParams.timestamp]: "2024-01-01T00:00:00Z",
+				[ApiParams.status]: "success",
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {
+						[ApiParams.challenge]: "provider-challenge-sig",
 					},
 				},
 			};
@@ -331,18 +352,19 @@ describe("ProviderApi Integration Tests", () => {
 				"user-sig",
 			);
 
-			expect(result).toHaveProperty("token");
-			expect(result.token).toBe("pow-token123");
+			expect(result).toHaveProperty(ApiParams.verified);
+			expect(result[ApiParams.verified]).toBe(true);
 		});
 
 		test("includes optional parameters", async () => {
 			const challenge: GetPowCaptchaResponse = {
-				challenge: "1704067200000___user___dapp___random",
-				difficulty: 5,
-				timestamp: "2024-01-01T00:00:00Z",
-				signature: {
-					provider: {
-						challenge: "provider-challenge-sig",
+				[ApiParams.challenge]: "1704067200000___user___dapp___random",
+				[ApiParams.difficulty]: 5,
+				[ApiParams.timestamp]: "2024-01-01T00:00:00Z",
+				[ApiParams.status]: "success",
+				[ApiParams.signature]: {
+					[ApiParams.provider]: {
+						[ApiParams.challenge]: "provider-challenge-sig",
 					},
 				},
 			};
@@ -357,7 +379,7 @@ describe("ProviderApi Integration Tests", () => {
 				"salt123",
 			);
 
-			expect(result).toHaveProperty("token");
+			expect(result).toHaveProperty(ApiParams.verified);
 		});
 	});
 
@@ -370,21 +392,21 @@ describe("ProviderApi Integration Tests", () => {
 				"user789",
 			);
 
-			expect(result).toHaveProperty("sessionId");
-			expect(result.sessionId).toBe("session-123");
+			expect(result).toHaveProperty(ApiParams.sessionId);
+			expect(result[ApiParams.sessionId]).toBe("session-123");
 		});
 	});
 
 	describe("submitUserEvents", () => {
 		test("makes HTTP request and returns response", async () => {
 			const events: StoredEvents = {
-				events: [{ type: "click", timestamp: "2024-01-01T00:00:00Z" }],
+				mouseEvents: [],
 			};
 
 			const result = await api.submitUserEvents(events, "event-string");
 
-			expect(result).toHaveProperty("success");
-			expect(result.success).toBe(true);
+			expect(result).toHaveProperty("message");
+			expect(result.message).toBe("Events submitted");
 		});
 	});
 
@@ -392,8 +414,8 @@ describe("ProviderApi Integration Tests", () => {
 		test("makes HTTP request and returns response", async () => {
 			const result = await api.getProviderStatus();
 
-			expect(result).toHaveProperty("registered");
-			expect(result.registered).toBe(true);
+			expect(result).toHaveProperty("status");
+			expect(result.status).toBe("Registered");
 		});
 	});
 
@@ -401,8 +423,8 @@ describe("ProviderApi Integration Tests", () => {
 		test("makes HTTP request and returns response", async () => {
 			const result = await api.getProviderDetails();
 
-			expect(result).toHaveProperty("address");
 			expect(result).toHaveProperty("url");
+			expect(result).toHaveProperty("datasetId");
 		});
 	});
 
@@ -435,16 +457,20 @@ describe("ProviderApi Integration Tests", () => {
 	describe("registerSiteKey", () => {
 		test("makes HTTP request and returns response", async () => {
 			const siteKey = "site-key-123";
-			const tier: Tier = "free";
+			const tier = Tier.Free;
 			const settings: IUserSettings = {
-				enabled: true,
+				captchaType: CaptchaType.image,
+				domains: [],
+				frictionlessThreshold: 0.5,
+				powDifficulty: 5,
+				imageThreshold: 0.5,
 			};
 			const jwt = "jwt-token-123";
 
 			const result = await api.registerSiteKey(siteKey, tier, settings, jwt);
 
-			expect(result).toHaveProperty("success");
-			expect(result.success).toBe(true);
+			expect(result).toHaveProperty(ApiParams.status);
+			expect(result[ApiParams.status]).toBe("success");
 		});
 	});
 
@@ -452,8 +478,9 @@ describe("ProviderApi Integration Tests", () => {
 		test("makes HTTP request and returns response", async () => {
 			const result = await api.updateDetectorKey("detector-key-123", "jwt-token");
 
-			expect(result).toHaveProperty("success");
-			expect(result.success).toBe(true);
+			expect(result).toHaveProperty("data");
+			expect(result).toHaveProperty(ApiParams.status);
+			expect(result.data.activeDetectorKeys).toEqual(["key1", "key2"]);
 		});
 	});
 
@@ -461,8 +488,8 @@ describe("ProviderApi Integration Tests", () => {
 		test("makes HTTP request and returns response without expirationInSeconds", async () => {
 			const result = await api.removeDetectorKey("detector-key-123", "jwt-token");
 
-			expect(result).toHaveProperty("success");
-			expect(result.success).toBe(true);
+			expect(result).toHaveProperty(ApiParams.status);
+			expect(result[ApiParams.status]).toBe("success");
 		});
 
 		test("makes HTTP request and returns response with expirationInSeconds", async () => {
@@ -472,8 +499,8 @@ describe("ProviderApi Integration Tests", () => {
 				3600,
 			);
 
-			expect(result).toHaveProperty("success");
-			expect(result.success).toBe(true);
+			expect(result).toHaveProperty(ApiParams.status);
+			expect(result[ApiParams.status]).toBe("success");
 		});
 	});
 
@@ -485,8 +512,8 @@ describe("ProviderApi Integration Tests", () => {
 				"sig123",
 			);
 
-			expect(result).toHaveProperty("success");
-			expect(result.success).toBe(true);
+			expect(result).toHaveProperty(ApiParams.status);
+			expect(result[ApiParams.status]).toBe("success");
 		});
 
 		test("makes HTTP request and returns response with enabled false", async () => {
@@ -496,8 +523,8 @@ describe("ProviderApi Integration Tests", () => {
 				"sig123",
 			);
 
-			expect(result).toHaveProperty("success");
-			expect(result.success).toBe(true);
+			expect(result).toHaveProperty(ApiParams.status);
+			expect(result[ApiParams.status]).toBe("success");
 		});
 	});
 });
