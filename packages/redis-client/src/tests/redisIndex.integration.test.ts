@@ -40,7 +40,7 @@ describe("redisIndex", () => {
 	beforeAll(async () => {
 		const connection = await createTestRedisConnection();
 		redisClient = await connection.getClient();
-	});
+	}, 60000);
 
 	afterAll(async () => {
 		const deleteIndexPromises = testIndexNames.map(

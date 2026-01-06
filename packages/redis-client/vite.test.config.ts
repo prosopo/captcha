@@ -29,4 +29,9 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig();
+const config = ViteTestConfig();
+if (config.test) {
+	config.test.testTimeout = 60000;
+	config.test.hookTimeout = 60000;
+}
+export default config;
