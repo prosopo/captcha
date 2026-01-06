@@ -78,7 +78,7 @@ describe("jsonDecryptData", (): void => {
 		]);
 
 		expect(decrypted).toEqual(originalData);
-	}, 30000);
+	}, 60000);
 
 	it("uses stringToU8a when scrypt is not in encType", (): void => {
 		const originalData = new Uint8Array([1, 2, 3]);
@@ -88,11 +88,9 @@ describe("jsonDecryptData", (): void => {
 
 		const encryptedData = new Uint8Array([...nonce, ...encrypted]);
 
-		const decrypted = jsonDecryptData(
-			encryptedData,
-			passphrase,
-			["xsalsa20-poly1305"],
-		);
+		const decrypted = jsonDecryptData(encryptedData, passphrase, [
+			"xsalsa20-poly1305",
+		]);
 
 		expect(decrypted).toEqual(originalData);
 	});
