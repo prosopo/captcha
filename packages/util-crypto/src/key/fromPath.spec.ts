@@ -108,9 +108,9 @@ describe("keyFromPath", (): void => {
 		const pair = sr25519FromSeed(seed);
 		const path: DeriveJunction[] = [DeriveJunction.from("0")];
 
-		expect(() =>
-			keyFromPath(pair, path, "unsupported" as KeypairType),
-		).toThrow("Unsupported keypair type: unsupported");
+		expect(() => keyFromPath(pair, path, "unsupported" as KeypairType)).toThrow(
+			"Unsupported keypair type: unsupported",
+		);
 	});
 });
 
