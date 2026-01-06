@@ -839,16 +839,9 @@ describe("ProviderApi", () => {
 			const settings: IUserSettings = {
 				enabled: true,
 			};
-			const timestamp = "2024-01-01T00:00:00Z";
-			const signature = "sig123";
+			const jwt = "jwt-token-123";
 
-			const result = await api.registerSiteKey(
-				siteKey,
-				tier,
-				settings,
-				timestamp,
-				signature,
-			);
+			const result = await api.registerSiteKey(siteKey, tier, settings, jwt);
 
 			expect(result).toHaveProperty("input", AdminApiPaths.SiteKeyRegister);
 			const body = (result as { body: unknown }).body as Record<
@@ -862,22 +855,14 @@ describe("ProviderApi", () => {
 
 		test("sets correct headers", async () => {
 			const settings: IUserSettings = { enabled: true };
-			const timestamp = "2024-01-01T00:00:00Z";
-			const signature = "sig123";
+			const jwt = "jwt-token-123";
 
-			const result = await api.registerSiteKey(
-				"site-key",
-				"free",
-				settings,
-				timestamp,
-				signature,
-			);
+			const result = await api.registerSiteKey("site-key", "free", settings, jwt);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
 				"Prosopo-Site-Key": account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			});
 		});
 
@@ -887,8 +872,7 @@ describe("ProviderApi", () => {
 				"site-key",
 				"free",
 				settings,
-				"timestamp",
-				"signature",
+				"jwt-token",
 			);
 
 			expectTypeOf(result).toMatchTypeOf<Promise<ApiResponse>>();
@@ -898,14 +882,9 @@ describe("ProviderApi", () => {
 	describe("updateDetectorKey", () => {
 		test("constructs request body correctly", async () => {
 			const detectorKey = "detector-key-123";
-			const timestamp = "2024-01-01T00:00:00Z";
-			const signature = "sig123";
+			const jwt = "jwt-token-123";
 
-			const result = await api.updateDetectorKey(
-				detectorKey,
-				timestamp,
-				signature,
-			);
+			const result = await api.updateDetectorKey(detectorKey, jwt);
 
 			expect(result).toHaveProperty("input", AdminApiPaths.UpdateDetectorKey);
 			const body = (result as { body: unknown }).body as Record<
@@ -916,29 +895,19 @@ describe("ProviderApi", () => {
 		});
 
 		test("sets correct headers", async () => {
-			const timestamp = "2024-01-01T00:00:00Z";
-			const signature = "sig123";
+			const jwt = "jwt-token-123";
 
-			const result = await api.updateDetectorKey(
-				"detector-key",
-				timestamp,
-				signature,
-			);
+			const result = await api.updateDetectorKey("detector-key", jwt);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
 				"Prosopo-Site-Key": account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			});
 		});
 
 		test("type checking - returns UpdateDetectorKeyResponse", async () => {
-			const result = await api.updateDetectorKey(
-				"detector-key",
-				"timestamp",
-				"signature",
-			);
+			const result = await api.updateDetectorKey("detector-key", "jwt-token");
 
 			expectTypeOf(result).toMatchTypeOf<Promise<UpdateDetectorKeyResponse>>();
 		});
@@ -947,14 +916,9 @@ describe("ProviderApi", () => {
 	describe("removeDetectorKey", () => {
 		test("constructs request body correctly without expirationInSeconds", async () => {
 			const detectorKey = "detector-key-123";
-			const timestamp = "2024-01-01T00:00:00Z";
-			const signature = "sig123";
+			const jwt = "jwt-token-123";
 
-			const result = await api.removeDetectorKey(
-				detectorKey,
-				timestamp,
-				signature,
-			);
+			const result = await api.removeDetectorKey(detectorKey, jwt);
 
 			expect(result).toHaveProperty("input", AdminApiPaths.RemoveDetectorKey);
 			const body = (result as { body: unknown }).body as Record<
@@ -967,14 +931,12 @@ describe("ProviderApi", () => {
 
 		test("constructs request body correctly with expirationInSeconds", async () => {
 			const detectorKey = "detector-key-123";
-			const timestamp = "2024-01-01T00:00:00Z";
-			const signature = "sig123";
+			const jwt = "jwt-token-123";
 			const expirationInSeconds = 3600;
 
 			const result = await api.removeDetectorKey(
 				detectorKey,
-				timestamp,
-				signature,
+				jwt,
 				expirationInSeconds,
 			);
 
@@ -986,29 +948,19 @@ describe("ProviderApi", () => {
 		});
 
 		test("sets correct headers", async () => {
-			const timestamp = "2024-01-01T00:00:00Z";
-			const signature = "sig123";
+			const jwt = "jwt-token-123";
 
-			const result = await api.removeDetectorKey(
-				"detector-key",
-				timestamp,
-				signature,
-			);
+			const result = await api.removeDetectorKey("detector-key", jwt);
 
 			const init = (result as { init: RequestInit }).init;
 			expect(init?.headers).toMatchObject({
 				"Prosopo-Site-Key": account,
-				timestamp,
-				signature,
+				Authorization: `Bearer ${jwt}`,
 			});
 		});
 
 		test("type checking - returns ApiResponse", async () => {
-			const result = await api.removeDetectorKey(
-				"detector-key",
-				"timestamp",
-				"signature",
-			);
+			const result = await api.removeDetectorKey("detector-key", "jwt-token");
 
 			expectTypeOf(result).toMatchTypeOf<Promise<ApiResponse>>();
 		});
