@@ -259,4 +259,8 @@ describe("keyExtractSuri", (): void => {
 			]),
 		);
 	});
+
+	// Note: Testing the "Unable to extract phrase" error is difficult because
+	// the regex RE_CAPTURE requires a phrase group to match. The error at line 30-32
+	// is a defensive check that's unlikely to be triggered in practice with normal input.
 });
