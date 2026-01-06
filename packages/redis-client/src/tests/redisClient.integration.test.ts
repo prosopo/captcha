@@ -51,17 +51,17 @@ describe("connectToRedis", () => {
 			getFormat: vi.fn(),
 			setFormat: vi.fn(),
 		};
-	});
+		connection = await createTestRedisConnection(mockLogger);
+		await connection.getClient();
+	}, 60000);
 
 	afterAll(async () => {
 		await stopTestRedisContainer();
 	});
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		vi.clearAllMocks();
-		connection = await createTestRedisConnection(mockLogger);
-		await connection.getClient();
-	}, 30000);
+	});
 
 	test("returns connection with correct interface", () => {
 		expect(connection).toHaveProperty("isReady");
@@ -192,11 +192,14 @@ describe("setupRedisIndex", () => {
 		await stopTestRedisContainer();
 	});
 
-	beforeEach(async () => {
+	beforeAll(async () => {
+		await baseConnection.getClient();
+	}, 60000);
+
+	beforeEach(() => {
 		vi.clearAllMocks();
 		mockIndex.name = `test-index-${Date.now()}`;
-		await baseConnection.getClient();
-	}, 30000);
+	});
 
 	test("returns connection with correct interface", () => {
 		const connection = setupRedisIndex(
