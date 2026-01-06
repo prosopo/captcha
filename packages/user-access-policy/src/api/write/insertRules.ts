@@ -28,6 +28,7 @@ import type {
 import {
 	accessPolicyInput,
 	policyScopeInput,
+	sanitizeAccessPolicy,
 } from "#policy/ruleInput/policyInput.js";
 import {
 	type UserScopeInput,
@@ -145,10 +146,12 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	): Promise<string[]> {
 		const ruleEntries: AccessRuleEntry[] = [];
 		const policyScopes = group.policyScopes || [];
+		// Sanitize the access policy to remove unnecessary fields from block policies
+		const sanitizedPolicy = sanitizeAccessPolicy(group.accessPolicy);
 
 		for (const userScope of group.userScopes) {
 			const ruleBase: AccessRule = {
-				...group.accessPolicy,
+				...sanitizedPolicy,
 				...userScope,
 				...(group.groupId ? { groupId: group.groupId } : {}),
 			};
@@ -160,6 +163,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 							...ruleBase,
 							...policyScope,
 						},
+						expiresUnixTimestamp: group.expiresUnixTimestamp,
 					});
 				}
 			} else {

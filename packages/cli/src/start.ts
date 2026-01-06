@@ -39,6 +39,7 @@ import {
 } from "@prosopo/provider";
 import { blockMiddleware, ja4Middleware } from "@prosopo/provider";
 import {
+	AdminApiPaths,
 	ClientApiPaths,
 	type CombinedApiPaths,
 	type KeyringPair,
@@ -47,8 +48,10 @@ import {
 	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
+import type { JWT } from "@prosopo/util-crypto";
 import cors from "cors";
 import express from "express";
+import type { Request } from "express";
 import rateLimit from "express-rate-limit";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
@@ -58,6 +61,32 @@ const getClientApiPathsExcludingVerify = () => {
 		(path) => path.indexOf("verify") === -1,
 	);
 	return paths as ClientApiPaths[];
+};
+
+// Extract authenticated user address from JWT for rate limiting
+const getUserFromJWT = (req: Request): string | undefined => {
+	try {
+		const authHeader = req.headers.Authorization || req.headers.authorization;
+		if (!authHeader || typeof authHeader !== "string") {
+			return undefined;
+		}
+		const jwt = authHeader.replace("Bearer ", "") as JWT;
+		if (!jwt) {
+			return undefined;
+		}
+		// We don't need to verify the signature here, just extract the subject
+		// The actual verification happens in authMiddleware
+		const parts = jwt.split(".");
+		if (parts.length !== 3 || !parts[1]) {
+			return undefined;
+		}
+		const payload = JSON.parse(
+			Buffer.from(parts[1], "base64url").toString("utf-8"),
+		);
+		return payload.sub as string | undefined;
+	} catch (e) {
+		return undefined;
+	}
 };
 
 async function startApi(
@@ -96,11 +125,36 @@ async function startApi(
 	apiApp.use(publicRouter(env));
 
 	// Rate limiting
-	const configRateLimits = env.config.rateLimits;
-	const rateLimits = { ...configRateLimits, ...getExpressApiRuleRateLimits() };
-	for (const [path, limit] of Object.entries(rateLimits)) {
-		const enumPath = path as CombinedApiPaths;
-		apiApp.use(enumPath, rateLimit(limit));
+	// In test environments, disable rate limiting to allow parallel tests
+	const isTestEnv = process.env.NODE_ENV === "test";
+
+	if (!isTestEnv) {
+		const configRateLimits = env.config.rateLimits;
+		const rateLimits = {
+			...configRateLimits,
+			...getExpressApiRuleRateLimits(),
+		};
+		const adminPaths = Object.values(AdminApiPaths);
+		for (const [path, limit] of Object.entries(rateLimits)) {
+			const enumPath = path as CombinedApiPaths;
+			// For admin paths, key by authenticated user instead of IP
+			// This prevents tests (and legitimate users) from interfering with each other
+			if (adminPaths.includes(enumPath as AdminApiPaths)) {
+				apiApp.use(
+					enumPath,
+					rateLimit({
+						...limit,
+						keyGenerator: (req) => {
+							const user = getUserFromJWT(req);
+							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
+							return user || req.ip || "unknown";
+						},
+					}),
+				);
+			} else {
+				apiApp.use(enumPath, rateLimit(limit));
+			}
+		}
 	}
 
 	const i18Middleware = await i18nMiddleware({});
