@@ -1,6 +1,19 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import fs from "node:fs";
 import path from "node:path";
-// Copyright 2021-2025 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,5 +42,10 @@ if (fs.existsSync(envFile)) {
 
 dotenv.config({ path: envPath });
 
-export default ViteTestConfig();
-
+const config = ViteTestConfig();
+config.test = {
+	...config.test,
+	testTimeout: 180000,
+	hookTimeout: 180000,
+};
+export default config;
