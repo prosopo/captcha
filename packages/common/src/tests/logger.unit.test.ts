@@ -615,4 +615,115 @@ describe("NativeLogger", () => {
 			expect(parsed.err).toBeUndefined();
 		});
 	});
+
+	describe("browser logging", () => {
+		let originalWindow: typeof globalThis.window | undefined;
+
+		beforeEach(async () => {
+			originalWindow = globalThis.window;
+			vi.stubGlobal("window", {
+				document: {},
+			});
+			await vi.importMock("../logger.js");
+		});
+
+		afterEach(async () => {
+			vi.unstubAllGlobals();
+			if (originalWindow !== undefined) {
+				globalThis.window = originalWindow;
+			}
+			await vi.resetModules();
+		});
+
+		it("should log with message in browser environment", async () => {
+			const { NativeLogger, InfoLevel } = await import("../logger.js");
+			const logger = new NativeLogger("test");
+			logger.setLogLevel(InfoLevel);
+
+			logger.info(() => ({ msg: "test message", data: { key: "value" } }));
+
+			expect(consoleInfoSpy).toHaveBeenCalledOnce();
+			const calls = consoleInfoSpy.mock.calls[0];
+			expect(calls.length).toBeGreaterThanOrEqual(1);
+			if (calls.length === 2) {
+				expect(calls[0]).toBe("test message");
+				expect(calls[1]).toMatchObject({
+					scope: "test",
+					level: "info",
+					msg: "test message",
+					data: { key: "value" },
+				});
+			} else {
+				const call = calls[0];
+				if (typeof call === "string") {
+					const parsed = JSON.parse(call);
+					expect(parsed.msg).toBe("test message");
+					expect(parsed.data).toEqual({ key: "value" });
+				} else {
+					expect(call).toMatchObject({
+						scope: "test",
+						level: "info",
+						msg: "test message",
+						data: { key: "value" },
+					});
+				}
+			}
+		});
+
+		it("should log with error message in browser environment", async () => {
+			const { NativeLogger, ErrorLevel } = await import("../logger.js");
+			const logger = new NativeLogger("test");
+			logger.setLogLevel(ErrorLevel);
+
+			const error = new Error("test error");
+			logger.error(() => ({ err: error }));
+
+			expect(consoleErrorSpy).toHaveBeenCalledOnce();
+			const calls = consoleErrorSpy.mock.calls[0];
+			expect(calls).toHaveLength(2);
+			expect(calls[0]).toBe("test error");
+			expect(calls[1]).toMatchObject({
+				scope: "test",
+				level: "error",
+			});
+			expect(calls[1]).toHaveProperty("err", "test error");
+		});
+
+		it("should log without message or error in browser environment", async () => {
+			const { NativeLogger, InfoLevel } = await import("../logger.js");
+			const logger = new NativeLogger("test");
+			logger.setLogLevel(InfoLevel);
+
+			logger.info(() => ({ data: { key: "value" } }));
+
+			expect(consoleInfoSpy).toHaveBeenCalledOnce();
+			const calls = consoleInfoSpy.mock.calls[0];
+			expect(calls).toHaveLength(1);
+			expect(calls[0]).toMatchObject({
+				scope: "test",
+				level: "info",
+				data: { key: "value" },
+			});
+		});
+
+		it("should log with both message and error in browser environment", async () => {
+			const { NativeLogger, ErrorLevel } = await import("../logger.js");
+			const logger = new NativeLogger("test");
+			logger.setLogLevel(ErrorLevel);
+
+			const error = new Error("error message");
+			logger.error(() => ({ msg: "log message", err: error }));
+
+			expect(consoleErrorSpy).toHaveBeenCalledOnce();
+			const calls = consoleErrorSpy.mock.calls[0];
+			expect(calls).toHaveLength(2);
+			expect(calls[0]).toBe("log message");
+			expect(calls[1]).toMatchObject({
+				scope: "test",
+				level: "error",
+				msg: "log message",
+			});
+			expect(calls[1]).toHaveProperty("err", "error message");
+		});
+	});
 });
