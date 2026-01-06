@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,17 +70,12 @@ export interface ProviderApiInterface {
 		siteKey: string,
 		tier: Tier,
 		settings: IUserSettings,
-		timestamp: string,
-		signature: string,
+		jwt: string,
 	): Promise<ApiResponse>;
-	updateDetectorKey(
-		detectorKey: string,
-		timestamp: string,
-		signature: string,
-	): Promise<ApiResponse>;
+	updateDetectorKey(detectorKey: string, jwt: string): Promise<ApiResponse>;
 	removeDetectorKey(
 		detectorKey: string,
-		timestamp: string,
-		signature: string,
+		jwt: string,
+		expirationInSeconds?: number,
 	): Promise<ApiResponse>;
 }
