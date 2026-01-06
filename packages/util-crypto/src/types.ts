@@ -31,3 +31,32 @@ export interface VerifyResult {
 	/** The extracted publicKey */
 	publicKey: Uint8Array;
 }
+
+export interface JWTVerifyResult extends VerifyResult {
+	payload?: JWTPayload;
+	/** Reason for failure, if any */
+	error?: string;
+}
+
+export type JWTHeader = {
+	/** The algorithm used to sign the JWT */
+	alg: KeypairType;
+	/** The type of the token, typically 'JWT' */
+	typ?: string;
+};
+
+export type JWTPayload = {
+	/** The subject of the JWT, typically the publicKey */
+	sub: string;
+	/** Issued at time, in seconds since epoch */
+	iat: number;
+	/** Expiration time, in seconds since epoch */
+	exp: number;
+	/** Not before time, in seconds since epoch */
+	nbf?: number;
+	/** Additional custom claims */
+	// biome-ignore lint/suspicious/noExplicitAny: Official API allows any additional claims
+	[key: string]: any;
+};
+
+export type JWT = string;

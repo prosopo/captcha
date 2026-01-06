@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import {
 	type ProsopoConfigOutput,
 	Tier,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { z } from "zod";
 import { SiteKeyRegisterCommandArgsSpec } from "./siteKeyRegister.js";
@@ -101,8 +100,7 @@ export default (
 					image_threshold,
 				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
 				const api = new ProviderApi(url as string, pair.address);
-				const timestamp = new Date().getTime().toString();
-				const signature = u8aToHex(authAccount.sign(timestamp));
+				const jwt = pair.jwtIssue();
 				await api.registerSiteKey(
 					sitekey as string,
 					argv.tier as Tier,
@@ -114,8 +112,7 @@ export default (
 						imageThreshold: image_threshold as number,
 						disallowWebView: false,
 					},
-					timestamp,
-					signature,
+					jwt,
 				);
 				logger.info(() => ({
 					data: { sitekey },
