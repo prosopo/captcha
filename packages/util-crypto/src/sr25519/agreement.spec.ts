@@ -31,4 +31,22 @@ describe("agreement", (): void => {
 			u8aToHex(sr25519Agreement(pairB.secretKey, pairA.publicKey)),
 		).toEqual(TEST);
 	});
+
+	it("throws error when publicKey length is invalid", (): void => {
+		expect(() =>
+			sr25519Agreement(pairA.secretKey, new Uint8Array(31)),
+		).toThrow("Invalid publicKey, received 31 bytes, expected 32");
+		expect(() =>
+			sr25519Agreement(pairA.secretKey, new Uint8Array(33)),
+		).toThrow("Invalid publicKey, received 33 bytes, expected 32");
+	});
+
+	it("throws error when secretKey length is invalid", (): void => {
+		expect(() =>
+			sr25519Agreement(new Uint8Array(63), pairA.publicKey),
+		).toThrow("Invalid secretKey, received 63 bytes, expected 64");
+		expect(() =>
+			sr25519Agreement(new Uint8Array(65), pairA.publicKey),
+		).toThrow("Invalid secretKey, received 65 bytes, expected 64");
+	});
 });
