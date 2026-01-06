@@ -81,7 +81,7 @@ describe("ProsopoEnvironment integration tests", () => {
 
 		const env = new Environment(config);
 
-		const prosopoEnv: ProsopoEnvironment = env;
+		const prosopoEnv = env as unknown as ProsopoEnvironment;
 
 		expect(prosopoEnv.config).toBeDefined();
 		expect(prosopoEnv.defaultEnvironment).toBe("development");
@@ -213,7 +213,7 @@ describe("ProsopoEnvironment integration tests", () => {
 
 		const providerEnv = new ProviderEnvironment(config);
 
-		const providerEnvType: ProviderEnvironmentType = providerEnv;
+		const providerEnvType = providerEnv as unknown as ProviderEnvironmentType;
 
 		expect(providerEnvType.config).toBeDefined();
 		expect(providerEnvType.defaultEnvironment).toBe("development");
@@ -262,7 +262,7 @@ describe("ProsopoEnvironment integration tests", () => {
 
 		const providerEnv = new ProviderEnvironment(config);
 
-		const prosopoEnv: ProsopoEnvironment = providerEnv;
+		const prosopoEnv = providerEnv as unknown as ProsopoEnvironment;
 
 		expect(prosopoEnv.config).toBeDefined();
 		expect(prosopoEnv.defaultEnvironment).toBe("development");
