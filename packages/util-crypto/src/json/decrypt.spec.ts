@@ -79,6 +79,24 @@ describe("jsonDecrypt", (): void => {
 		// Empty data results in empty encoded string, which should throw
 		expect(() => jsonDecrypt(encrypted)).toThrow(/No encrypted data/);
 	}, 30000);
+
+	it("handles encoding.type as single string", (): void => {
+		const originalData = new Uint8Array([1, 2, 3, 4, 5]);
+		const contentType = ["pkcs8", "sr25519"];
+		const passphrase = "test123";
+
+		const encrypted = jsonEncrypt(originalData, contentType, passphrase);
+		const encryptedWithSingleType = {
+			...encrypted,
+			encoding: {
+				...encrypted.encoding,
+				type: "scrypt" as any,
+			},
+		};
+
+		const decrypted = jsonDecrypt(encryptedWithSingleType, passphrase);
+		expect(decrypted).toEqual(originalData);
+	}, 30000);
 });
 
 describe("jsonDecrypt types", (): void => {

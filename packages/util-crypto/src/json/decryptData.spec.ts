@@ -1,6 +1,7 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import { stringToU8a, u8aFixLength } from "@polkadot/util";
 import { describe, expect, it } from "vitest";
 import { naclEncrypt } from "../nacl/index.js";
 import { scryptEncode, scryptToU8a } from "../scrypt/index.js";
@@ -78,4 +79,21 @@ describe("jsonDecryptData", (): void => {
 
 		expect(decrypted).toEqual(originalData);
 	}, 30000);
+
+	it("uses stringToU8a when scrypt is not in encType", (): void => {
+		const originalData = new Uint8Array([1, 2, 3]);
+		const passphrase = "test123";
+		const key = u8aFixLength(stringToU8a(passphrase), 256, true);
+		const { encrypted, nonce } = naclEncrypt(originalData, key.subarray(0, 32));
+
+		const encryptedData = new Uint8Array([...nonce, ...encrypted]);
+
+		const decrypted = jsonDecryptData(
+			encryptedData,
+			passphrase,
+			["xsalsa20-poly1305"],
+		);
+
+		expect(decrypted).toEqual(originalData);
+	});
 });
