@@ -110,7 +110,11 @@ describe("choice", () => {
 			// Return different values to ensure we get different indices
 			// 0.1 -> index 0, 0.4 -> index 1, 0.7 -> index 2
 			const values = [0.1, 0.4, 0.7];
-			const val = values[callCount % values.length]!;
+			const index = callCount % values.length;
+			const val = values[index];
+			if (val === undefined) {
+				throw new Error("Unexpected undefined value");
+			}
 			callCount++;
 			return val;
 		};
