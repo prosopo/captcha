@@ -23,6 +23,7 @@ import {
 	connectToRedis,
 	setupRedisIndex,
 } from "@prosopo/redis-client";
+import { randomAsHex } from "@prosopo/util-crypto";
 import {
 	RedisContainer,
 	type StartedRedisContainer,
