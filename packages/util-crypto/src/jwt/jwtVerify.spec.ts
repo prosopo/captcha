@@ -112,6 +112,28 @@ describe("jwtSignatureVerify", (): void => {
 		);
 	});
 
+	it("returns false when signature is missing", (): void => {
+		// Test case for missing signature (lines 31-38 in jwtVerify.ts)
+		const { publicKey, secretKey } = sr25519FromSeed(
+			new Uint8Array(32).fill(1),
+		);
+		const header = { alg: "sr25519", typ: "JWT" };
+		const payload = {
+			sub: u8aToHex(publicKey),
+			iat: Math.floor(Date.now() / 1000),
+			exp: Math.floor(Date.now() / 1000) + 300,
+		};
+		const signingInput = `${base64URLEncode(JSON.stringify(header))}.${base64URLEncode(JSON.stringify(payload))}`;
+		// Create JWT with empty signature part
+		const invalidJwt = `${signingInput}.` as JWT;
+
+		const result = jwtVerify(invalidJwt, publicKey);
+		expect(result.isValid).toBe(false);
+		expect(result.error).toBe("Missing signature");
+		expect(result.crypto).toBe("sr25519");
+		expect(result.isWrapped).toBe(false);
+	});
+
 	it("throws error when JWT has empty parts", (): void => {
 		const invalidJwt = "header..signature" as JWT;
 		expect(() => jwtVerify(invalidJwt, new Uint8Array(32))).toThrow(
