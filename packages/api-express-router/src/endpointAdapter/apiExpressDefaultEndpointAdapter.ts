@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiEndpoint } from "@prosopo/api-route";
+import type { ApiEndpoint } from "@prosopo/api-route";
 import {
 	type LogLevel,
 	ProsopoApiError,
