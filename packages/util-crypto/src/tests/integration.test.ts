@@ -15,33 +15,119 @@
 /**
  * Integration tests for @prosopo/util-crypto
  *
- * These tests verify crypto operations in realistic scenarios that may involve
- * external dependencies or complex interactions between multiple crypto functions.
- * Testcontainers are used to provide isolated environments for testing.
+ * These tests verify complex crypto workflows that combine multiple operations
+ * in realistic scenarios. While most crypto functions are pure, these tests
+ * ensure end-to-end functionality works correctly across the entire crypto pipeline.
  */
 
-import { describe, it } from "vitest";
-
-// Note: Most crypto operations in this package are pure functions that don't
-// require external services. Integration tests here focus on complex scenarios
-// or operations that might benefit from isolated testing environments.
+import { describe, expect, it } from "vitest";
+import { generateMnemonic, mnemonicToMiniSecret } from "../mnemonic/index.js";
+import { sr25519FromSeed, sr25519Sign, sr25519Verify } from "../sr25519/index.js";
+import { sr25519jwtIssue, jwtVerify } from "../jwt/index.js";
+import { hexHash } from "../hash.js";
+import { jsonEncrypt, jsonDecrypt } from "../json/index.js";
 
 describe("Crypto Integration Tests", () => {
-	it("should perform complex crypto operations in sequence", () => {
-		// Placeholder for integration tests that might involve:
-		// - Key generation, signing, and verification workflows
-		// - Complex key derivation scenarios
-		// - Cross-crypto-system interoperability
-		// - Performance testing under realistic loads
+	// Test complete key lifecycle from mnemonic to signing/verification
+	it("should complete full key lifecycle: mnemonic -> seed -> keypair -> sign/verify", () => {
+		// Generate a random mnemonic (integration test - combines random generation with mnemonic validation)
+		const mnemonic = generateMnemonic();
 
-		// For now, this is a placeholder. Most util-crypto functions are
-		// pure and well-tested by unit tests. Integration tests would be
-		// added here if complex multi-step crypto workflows need validation.
+		// Derive seed from mnemonic (tests mnemonic processing pipeline)
+		const seed = mnemonicToMiniSecret(mnemonic);
+
+		// Create keypair from seed (tests key derivation)
+		const { publicKey, secretKey } = sr25519FromSeed(seed);
+
+		// Test signing and verification workflow
+		const message = "test message for signing";
+		const signature = sr25519Sign(message, { publicKey, secretKey });
+		const isValid = sr25519Verify(message, signature, publicKey);
+
+		expect(isValid).toBe(true);
+
+		// Verify signature fails with wrong message
+		const isValidWrong = sr25519Verify("wrong message", signature, publicKey);
+		expect(isValidWrong).toBe(false);
 	});
 
-	// Future integration tests could include:
-	// - Full key lifecycle testing (generation -> derivation -> signing -> verification)
-	// - Mnemonic generation -> seed derivation -> keypair creation -> signing
-	// - JWT creation and validation workflows
-	// - Cross-algorithm compatibility testing
+	it("should complete JWT workflow: key generation -> JWT creation -> verification", () => {
+		// Generate keypair for JWT operations
+		const { publicKey, secretKey } = sr25519FromSeed(new Uint8Array(32).fill(1));
+
+		// Create JWT with expiration
+		const jwt = sr25519jwtIssue(
+			{ publicKey, secretKey },
+			{ expiresIn: 300, subject: "test-user" }
+		);
+
+		// Verify JWT
+		const result = jwtVerify(jwt, publicKey);
+
+		expect(result.isValid).toBe(true);
+		expect(result.crypto).toBe("sr25519");
+		expect(result.payload?.sub).toBe("test-user");
+		expect(result.payload?.exp).toBeGreaterThan(Date.now() / 1000);
+	});
+
+	it("should handle JSON encryption/decryption workflow with passphrase", () => {
+		// Test data for encryption
+		const originalData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+		const contentType = ["pkcs8", "sr25519"];
+		const passphrase = "test-passphrase-123";
+
+		// Encrypt data
+		const encrypted = jsonEncrypt(originalData, contentType, passphrase);
+
+		// Decrypt data
+		const decrypted = jsonDecrypt(encrypted, passphrase);
+
+		// Verify round-trip encryption/decryption
+		expect(decrypted).toEqual(originalData);
+		expect(encrypted.encoding.type).toEqual(["scrypt", "xsalsa20-poly1305"]);
+		expect(encrypted.encoding.content).toEqual(contentType);
+	});
+
+	it("should handle complex hash operations with different inputs", () => {
+		const testString = "integration test data";
+		const testArray = ["item1", "item2", "item3"];
+
+		// Test various hash operations and ensure consistency
+		const hash1 = hexHash(testString);
+		const hash2 = hexHash(testString);
+		const arrayHash = hexHash(testArray.join(""));
+
+		expect(hash1).toEqual(hash2); // Same input produces same hash
+		expect(hash1).not.toEqual(arrayHash); // Different inputs produce different hashes
+		expect(hash1).toHaveLength(66); // 256-bit hash with 0x prefix
+	});
+
+	it("should validate cross-crypto-system compatibility", () => {
+		// Test that different crypto systems can work together
+		// Generate data with one system, process with another
+
+		const testData = "cross-system compatibility test";
+
+		// Hash with our hash function
+		const hash = hexHash(testData);
+
+		// Use hash as seed for key generation
+		const seed = new Uint8Array(32);
+		for (let i = 0; i < 32; i++) {
+			seed[i] = parseInt(hash.slice(2 + i * 2, 2 + (i + 1) * 2), 16);
+		}
+
+		// Generate keypair and sign
+		const { publicKey, secretKey } = sr25519FromSeed(seed);
+		const signature = sr25519Sign(testData, { publicKey, secretKey });
+		const isValid = sr25519Verify(testData, signature, publicKey);
+
+		expect(isValid).toBe(true);
+	});
+
+	// Future testcontainers integration tests could be added here for:
+	// - Testing crypto operations with external databases (storing/retrieving encrypted data)
+	// - Testing JWT validation against external user stores
+	// - Testing crypto operations under load with containerized services
+	// - Testing key rotation and migration scenarios with external storage
 });
