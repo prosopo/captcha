@@ -28,6 +28,7 @@ import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
 	afterAll,
+	afterEach,
 	beforeAll,
 	beforeEach,
 	describe,
@@ -94,26 +95,28 @@ describe("redisAccessRulesStorage", () => {
 		).getClient();
 	});
 
-	beforeEach(async () => {
-		// Delete all keys using SCAN to avoid stack overflow with large datasets
-		try {
-			// Deletes the index AND all documents associated with it
-			// This is atomic and much faster than SCAN/DEL
-			await redisClient.ft.dropIndex(indexName, { DD: true });
-		} catch (e) {
-			// Ignore "Index not found" errors on the first run
+	// Move cleanup to afterEach
+	afterEach(async () => {
+		if (indexName) {
+			try {
+				// Drop index and all documents (DD) created by THIS specific test
+				await redisClient.ft.dropIndex(indexName, { DD: true });
+			} catch (e) {
+				console.error(`Failed to cleanup index ${indexName}`, e);
+			}
 		}
+	}, 120_000);
 
-		// Get a new index name for each test
+	beforeEach(async () => {
 		indexName = randomAsHex(16);
 
-		// setup a new index for each test
-		redisClient = await setupRedisIndex(
+		const result = setupRedisIndex(
 			redisConnection,
 			{ ...accessRulesRedisIndex, name: indexName },
 			mockLogger,
-		).getClient();
-	}, 120_000);
+		);
+		redisClient = await result.getClient();
+	});
 
 	describe(
 		"writer",
@@ -125,6 +128,7 @@ describe("redisAccessRulesStorage", () => {
 			});
 
 			test("inserts rule", async () => {
+				const testIndexName = indexName;
 				// given
 				const accessRule: AccessRule = {
 					type: AccessPolicyType.Block,
@@ -141,7 +145,7 @@ describe("redisAccessRulesStorage", () => {
 
 				// then
 				const insertedAccessRule = await redisClient.hGetAll(accessRuleKey);
-				const indexRecordsCount = await getIndexRecordsCount(indexName);
+				const indexRecordsCount = await getIndexRecordsCount(testIndexName);
 
 				expect(insertedAccessRule).toEqual(accessRule);
 				expect(indexRecordsCount).toEqual(1);
