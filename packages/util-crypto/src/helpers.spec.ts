@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest";
 import { createAsHex, createBitHasher, createDualHasher } from "./helpers.js";
 
 describe("createAsHex", (): void => {
+	// Test utility that wraps Uint8Array-returning functions to return hex strings
 	it("wraps a function to return hex string", (): void => {
+		// Test that createAsHex converts Uint8Array output to hex format
 		const fn = (input: string): Uint8Array => {
 			return new TextEncoder().encode(input);
 		};
@@ -17,6 +19,7 @@ describe("createAsHex", (): void => {
 	});
 
 	it("preserves function parameters", (): void => {
+		// Test that parameter forwarding works correctly with single number conversion
 		const fn = (a: string, b: number): Uint8Array => {
 			return new Uint8Array([b]);
 		};
@@ -26,6 +29,7 @@ describe("createAsHex", (): void => {
 	});
 
 	it("works with multiple parameters", (): void => {
+		// Test that multiple parameters are correctly forwarded and processed
 		const fn = (a: string, b: number, c: boolean): Uint8Array => {
 			return new Uint8Array([b, c ? 1 : 0]);
 		};
@@ -36,7 +40,9 @@ describe("createAsHex", (): void => {
 });
 
 describe("createBitHasher", (): void => {
+	// Test utility that creates hashers with fixed bit length parameters
 	it("creates a hasher with fixed bit length", (): void => {
+		// Test that createBitHasher pre-fills bitLength parameter for different hash sizes
 		const mockHasher = (
 			data: string | Uint8Array,
 			bitLength: 256 | 512,
@@ -54,6 +60,7 @@ describe("createBitHasher", (): void => {
 	});
 
 	it("passes onlyJs parameter when provided", (): void => {
+		// Test that optional onlyJs parameter is correctly forwarded to underlying hasher
 		let receivedOnlyJs: boolean | undefined;
 		const mockHasher = (
 			data: string | Uint8Array,
@@ -77,7 +84,10 @@ describe("createBitHasher", (): void => {
 });
 
 describe("createDualHasher", (): void => {
+	// Test utility that creates hashers supporting both JS and WASM implementations
 	it("creates a hasher that uses js implementation", (): void => {
+		// Test that createDualHasher provides access to different bit-length hashers
+		// and returns expected output sizes with correct content
 		const jsHash256 = (u8a: Uint8Array): Uint8Array => {
 			return new Uint8Array(32).fill(0x01);
 		};
@@ -100,6 +110,7 @@ describe("createDualHasher", (): void => {
 	});
 
 	it("defaults to 256 bit length", (): void => {
+		// Test that createDualHasher defaults to 256-bit output when no length specified
 		const jsHash256 = (u8a: Uint8Array): Uint8Array => {
 			return new Uint8Array(32);
 		};
@@ -117,6 +128,7 @@ describe("createDualHasher", (): void => {
 	});
 
 	it("works with Uint8Array input", (): void => {
+		// Test that binary input is correctly processed and copied to output
 		const jsHash256 = (u8a: Uint8Array): Uint8Array => {
 			const result = new Uint8Array(32);
 			result.set(u8a.slice(0, 32));
@@ -140,6 +152,7 @@ describe("createDualHasher", (): void => {
 	});
 
 	it("works with string input", (): void => {
+		// Test that string input is encoded to Uint8Array and processed correctly
 		const jsHash256 = (u8a: Uint8Array): Uint8Array => {
 			return new Uint8Array(32).fill(u8a.length);
 		};
