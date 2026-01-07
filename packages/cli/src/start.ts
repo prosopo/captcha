@@ -126,9 +126,11 @@ async function startApi(
 
 	// Rate limiting
 	// In test environments, disable rate limiting to allow parallel tests
-	const isTestEnv = process.env.NODE_ENV === "test";
+	const isTestOrDevelopmentEnv =
+		process.env.NODE_ENV === "test" ||
+		env.config.defaultEnvironment === "development";
 
-	if (!isTestEnv) {
+	if (!isTestOrDevelopmentEnv) {
 		const configRateLimits = env.config.rateLimits;
 		const rateLimits = {
 			...configRateLimits,
@@ -148,6 +150,22 @@ async function startApi(
 							const user = getUserFromJWT(req);
 							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
 							return user || req.ip || "unknown";
+						},
+					}),
+				);
+			} else if (
+				path === ClientApiPaths.VerifyImageCaptchaSolutionDapp ||
+				path === ClientApiPaths.VerifyPowCaptchaSolution
+			) {
+				// For verify, key on site key to prevent rate limiting API calls from lambdas
+				apiApp.use(
+					enumPath,
+					rateLimit({
+						...limit,
+						keyGenerator: (req) => {
+							const siteKey = req.headers["prosopo-site-key"] as string;
+							// Fall back to IP if no site key found (shouldn't happen for verify routes with headerCheckMiddleware)
+							return siteKey || req.ip || "unknown";
 						},
 					}),
 				);
