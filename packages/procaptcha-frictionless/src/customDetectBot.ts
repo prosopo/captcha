@@ -19,8 +19,11 @@ import { ExtensionLoader } from "@prosopo/procaptcha-common";
 import type {
 	Account,
 	BotDetectionFunction,
+	ClickEventPoint,
+	MouseMovementPoint,
 	ProcaptchaClientConfigOutput,
 	RandomProvider,
+	TouchEventPoint,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { DetectorLoader } from "./detectorLoader.js";
@@ -71,19 +74,19 @@ const customDetectBot: BotDetectionFunction = async (
 		mouseTracker?: {
 			start: () => void;
 			stop: () => void;
-			getData: () => Array<Record<string, unknown>>;
+			getData: () => MouseMovementPoint[];
 			clear: () => void;
 		};
 		touchTracker?: {
 			start: () => void;
 			stop: () => void;
-			getData: () => Array<Record<string, unknown>>;
+			getData: () => TouchEventPoint[];
 			clear: () => void;
 		};
 		clickTracker?: {
 			start: () => void;
 			stop: () => void;
-			getData: () => Array<Record<string, unknown>>;
+			getData: () => ClickEventPoint[];
 			clear: () => void;
 		};
 		hasTouchSupport?: string;
