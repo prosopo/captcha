@@ -80,18 +80,23 @@ describe("solvePoW", () => {
 		expect(hashHex.startsWith("000")).toBe(true);
 	});
 
-	test("returns different nonces for different data", () => {
-		const data1 = "test1";
-		const data2 = "test2";
-		const difficulty = 2;
+	test("returns known solutions", () => {
+		const inputs = ["abc", "def", "ghi"]
+		const diffs = [3, 4, 5]
+		const solutions = [13843, 81184, 310094]
 
-		const nonce1 = solvePoW(data1, difficulty);
-		const nonce2 = solvePoW(data2, difficulty);
+		for (let i = 0; i < inputs.length; i++) {
+			// for each precomputed input/output
+			const input = inputs[i] || ""
+			const diff = diffs[i] || 0
+			const sol = solutions[i]
 
-		// They might be the same by chance, but likely different
-		// At least verify both are valid
-		expect(typeof nonce1).toBe("number");
-		expect(typeof nonce2).toBe("number");
+			// do the pow
+			const ans = solvePoW(input, diff)
+
+			// compare answer to expected solution
+			expect(ans).toBe(sol)
+		}
 	});
 
 	test("returns consistent nonce for same data and difficulty", () => {

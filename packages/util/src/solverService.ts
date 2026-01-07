@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { sha256 } from "@noble/hashes/sha256";
+import { fileURLToPath } from "url";
 
 export const solvePoW = (data: string, difficulty: number): number => {
 	let nonce = 0;
@@ -33,3 +34,10 @@ const bufferToHex = (buffer: Uint8Array): string =>
 	Array.from(buffer)
 		.map((byte) => byte.toString(16).padStart(2, "0"))
 		.join("");
+
+
+
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
+	console.log('running')
+	console.log(solvePoW("ghi", 5))
+}
