@@ -66,7 +66,7 @@ export default (env: ProviderEnvironment) =>
 			dapp,
 			user,
 			behavioralData,
-			salt
+			salt,
 		} = parsed;
 
 		validateSiteKey(dapp);

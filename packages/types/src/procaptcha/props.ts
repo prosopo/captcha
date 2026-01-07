@@ -15,7 +15,6 @@
 import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
-import type { Account, Callbacks } from "./manager.js";
 import type {
 	BehavioralData,
 	ClickEventPoint,
@@ -23,6 +22,7 @@ import type {
 	PackedBehavioralData,
 	TouchEventPoint,
 } from "./behavioral.js";
+import type { Account, Callbacks } from "./manager.js";
 
 // Generic behavioral data collectors for analytics
 export type FrictionlessState = {

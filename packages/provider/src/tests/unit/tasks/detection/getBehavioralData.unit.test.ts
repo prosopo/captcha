@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Logger } from "@prosopo/common";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBehavioralData } from "../../../../tasks/detection/getBehavioralData.js";
-import type { Logger } from "@prosopo/common";
 
 // Mock the decodeBehavior module
 vi.mock("../../../../tasks/detection/decodeBehavior.js", () => ({
@@ -60,10 +60,11 @@ describe("getBehavioralData", () => {
 
 		expect(result).toEqual(mockResult);
 		expect(mockDecryptBehavioralData).toHaveBeenCalledTimes(1);
-		expect(mockDecryptBehavioralData).toHaveBeenCalledWith(encryptedData, "key1");
-		expect(mockLogger.info).toHaveBeenCalledWith(
-			expect.any(Function),
+		expect(mockDecryptBehavioralData).toHaveBeenCalledWith(
+			encryptedData,
+			"key1",
 		);
+		expect(mockLogger.info).toHaveBeenCalledWith(expect.any(Function));
 	});
 
 	it("should try second key if first fails", async () => {
@@ -142,7 +143,10 @@ describe("getBehavioralData", () => {
 
 		expect(result).toEqual(mockResult);
 		expect(mockDecryptBehavioralData).toHaveBeenCalledTimes(1);
-		expect(mockDecryptBehavioralData).toHaveBeenCalledWith(encryptedData, "key1");
+		expect(mockDecryptBehavioralData).toHaveBeenCalledWith(
+			encryptedData,
+			"key1",
+		);
 	});
 
 	it("should work without logger", async () => {

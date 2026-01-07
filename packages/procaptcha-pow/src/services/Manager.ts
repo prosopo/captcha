@@ -254,48 +254,48 @@ export const Manager = (
 						});
 					}
 
-				const userTimestampSignature = await signer.signRaw({
-					address: userAccount,
-					data: stringToHex(challenge[ApiParams.timestamp].toString()),
-					type: "bytes",
-				});
+					const userTimestampSignature = await signer.signRaw({
+						address: userAccount,
+						data: stringToHex(challenge[ApiParams.timestamp].toString()),
+						type: "bytes",
+					});
 
-				let encryptedBehavioralData: string | undefined;
+					let encryptedBehavioralData: string | undefined;
 
-				// Collect and encrypt behavioral data before submission
-				if (
-					frictionlessState?.encryptBehavioralData &&
-					(frictionlessState?.behaviorCollector1 ||
-						frictionlessState?.behaviorCollector2 ||
-						frictionlessState?.behaviorCollector3)
-				) {
-					try {
-						const behavioralData = {
-							collector1:
-								frictionlessState.behaviorCollector1?.getData() || [],
-							collector2:
-								frictionlessState.behaviorCollector2?.getData() || [],
-							collector3:
-								frictionlessState.behaviorCollector3?.getData() || [],
-							deviceCapability:
-								frictionlessState.deviceCapability || "unknown",
-						};
+					// Collect and encrypt behavioral data before submission
+					if (
+						frictionlessState?.encryptBehavioralData &&
+						(frictionlessState?.behaviorCollector1 ||
+							frictionlessState?.behaviorCollector2 ||
+							frictionlessState?.behaviorCollector3)
+					) {
+						try {
+							const behavioralData = {
+								collector1:
+									frictionlessState.behaviorCollector1?.getData() || [],
+								collector2:
+									frictionlessState.behaviorCollector2?.getData() || [],
+								collector3:
+									frictionlessState.behaviorCollector3?.getData() || [],
+								deviceCapability:
+									frictionlessState.deviceCapability || "unknown",
+							};
 
-						// Pack the behavioral data before stringifying
-						const dataToEncrypt = frictionlessState.packBehavioralData
-							? frictionlessState.packBehavioralData(behavioralData)
-							: behavioralData;
+							// Pack the behavioral data before stringifying
+							const dataToEncrypt = frictionlessState.packBehavioralData
+								? frictionlessState.packBehavioralData(behavioralData)
+								: behavioralData;
 
-						encryptedBehavioralData =
-							await frictionlessState.encryptBehavioralData(
-								JSON.stringify(dataToEncrypt),
-							);
-					} catch {
-						// Silently ignore behavioral data errors - captcha should still work
+							encryptedBehavioralData =
+								await frictionlessState.encryptBehavioralData(
+									JSON.stringify(dataToEncrypt),
+								);
+						} catch {
+							// Silently ignore behavioral data errors - captcha should still work
+						}
 					}
-				}
 
-				const verifiedSolution = await providerApi.submitPowCaptchaSolution(
+					const verifiedSolution = await providerApi.submitPowCaptchaSolution(
 						challenge,
 						getAccount().account.account.address,
 						getDappAccount(),
