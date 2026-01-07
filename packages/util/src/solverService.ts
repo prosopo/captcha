@@ -34,10 +34,3 @@ const bufferToHex = (buffer: Uint8Array): string =>
 	Array.from(buffer)
 		.map((byte) => byte.toString(16).padStart(2, "0"))
 		.join("");
-
-
-
-if (fileURLToPath(import.meta.url) === process.argv[1]) {
-	console.log('running')
-	console.log(solvePoW("ghi", 5))
-}
