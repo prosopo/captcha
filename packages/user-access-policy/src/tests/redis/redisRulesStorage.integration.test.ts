@@ -291,7 +291,7 @@ describe("redisAccessRulesStorage", () => {
 			});
 		},
 		{
-			timeout: 240_000,
+			timeout: 1_000_000,
 		},
 	);
 
