@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from "vitest";
-import { rng, seedLodash } from "../lodash.js";
+import { lodash, rng, seedLodash, setSeedGlobal } from "../lodash.js";
 
 describe("rng", () => {
 	test("generates random numbers using a seed", () => {
@@ -39,5 +39,25 @@ describe("seeded_lodash", () => {
 		expect(array).to.deep.equal([3, 4, 1, 5, 2]);
 		array = _.shuffle(array);
 		expect(array).to.deep.equal([3, 4, 5, 2, 1]);
+	});
+});
+
+describe("lodash", () => {
+	test("creates lodash instance", () => {
+		const _ = lodash();
+		expect(_).toBeDefined();
+		expect(typeof _.shuffle).toBe("function");
+	});
+});
+
+describe("setSeedGlobal", () => {
+	test("sets global random seed", () => {
+		const originalRandom = Math.random;
+		setSeedGlobal(123);
+		const first = Math.random();
+		setSeedGlobal(123);
+		const second = Math.random();
+		expect(first).toBe(second);
+		Math.random = originalRandom;
 	});
 });

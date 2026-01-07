@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from "vitest";
-import { embedData, extractData } from "../hex.js";
+import { embedData, extractData, hashToHex, u8aToHex } from "../hex.js";
 
 const hex =
 	"0x0101010101010101010101010101010101010101010101010101010101010101";
@@ -93,5 +93,43 @@ describe("extractData", () => {
 	test("it extracts data from the start and end of the string 4", () => {
 		const result = extractData(embedData(hex, [99999, 99999]));
 		expect(result).to.deep.equal([99999, 99999]);
+	});
+});
+
+describe("u8aToHex", () => {
+	test("converts Uint8Array to hex with prefix", () => {
+		const arr = new Uint8Array([0x68, 0x65, 0x6c, 0x6c, 0x6f]);
+		expect(u8aToHex(arr)).toBe("0x68656c6c6f");
+	});
+
+	test("converts Uint8Array to hex without prefix", () => {
+		const arr = new Uint8Array([0x68, 0x65, 0x6c, 0x6c, 0x6f]);
+		expect(u8aToHex(arr, -1, false)).toBe("68656c6c6f");
+	});
+
+	test("returns empty string for null", () => {
+		expect(u8aToHex(null)).toBe("0x");
+	});
+
+	test("returns empty string for empty array", () => {
+		expect(u8aToHex(new Uint8Array())).toBe("0x");
+	});
+
+	test("truncates with ellipsis when bitLength specified", () => {
+		const arr = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]);
+		const result = u8aToHex(arr, 16);
+		expect(result).toContain("…");
+	});
+});
+
+describe("hashToHex", () => {
+	test("converts array to hex", () => {
+		const arr = [0x68, 0x65, 0x6c, 0x6c, 0x6f];
+		expect(hashToHex(arr)).toBe("0x68656c6c6f");
+	});
+
+	test("returns string as-is", () => {
+		expect(hashToHex("0x1234")).toBe("0x1234");
+		expect(hashToHex("abc")).toBe("abc");
 	});
 });

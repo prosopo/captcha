@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it, test } from "vitest";
-import { flatten, unflatten } from "../util.js";
+import {
+	flatten,
+	getCurrentFileDirectory,
+	kebabCase,
+	sleep,
+	unflatten,
+} from "../util.js";
 
 describe("util", () => {
 	describe("flatten", () => {
@@ -52,6 +58,57 @@ describe("util", () => {
 			expect(unflatten(obj)).toEqual({
 				a: { b: { c: { d: { e: "1" }, f: "2" } } },
 			});
+		});
+	});
+
+	describe("sleep", () => {
+		it("sleeps for specified milliseconds", async () => {
+			const start = Date.now();
+			await sleep(50);
+			const end = Date.now();
+			expect(end - start).toBeGreaterThanOrEqual(45);
+		});
+	});
+
+	describe("getCurrentFileDirectory", () => {
+		it("extracts directory from file URL", () => {
+			const url = "file:///home/user/project/src/file.ts";
+			const dir = getCurrentFileDirectory(url);
+			expect(dir).toBe("/home/user/project/src");
+		});
+
+		it("handles URLs with query parameters", () => {
+			const url = "file:///home/user/project/src/file.ts?query=value";
+			const dir = getCurrentFileDirectory(url);
+			expect(dir).toBe("/home/user/project/src");
+		});
+	});
+
+	describe("kebabCase", () => {
+		it("converts camelCase to kebab-case", () => {
+			expect(kebabCase("camelCase")).toBe("camel-case");
+			expect(kebabCase("myVariableName")).toBe("my-variable-name");
+		});
+
+		it("converts PascalCase to kebab-case", () => {
+			expect(kebabCase("PascalCase")).toBe("pascal-case");
+			expect(kebabCase("MyClassName")).toBe("my-class-name");
+		});
+
+		it("handles consecutive capitals", () => {
+			expect(kebabCase("XMLHttpRequest")).toBe("xml-http-request");
+		});
+
+		it("handles already kebab-case strings", () => {
+			expect(kebabCase("already-kebab-case")).toBe("already-kebab-case");
+		});
+
+		it("handles single word", () => {
+			expect(kebabCase("word")).toBe("word");
+		});
+
+		it("handles empty string", () => {
+			expect(kebabCase("")).toBe("");
 		});
 	});
 });
