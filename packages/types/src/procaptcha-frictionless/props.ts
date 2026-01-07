@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { ProcaptchaClientConfigOutput } from "../config/config.js";
+import type {
+	ClickEventPoint,
+	MouseMovementPoint,
+	TouchEventPoint,
+} from "../procaptcha/behavioral.js";
 import type { Account } from "../procaptcha/manager.js";
 import type { ProcaptchaProps } from "../procaptcha/props.js";
 import type {
@@ -26,19 +31,19 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 	behaviorCollector1?: {
 		start: () => void;
 		stop: () => void;
-		getData: () => Array<Record<string, unknown>>;
+		getData: () => MouseMovementPoint[];
 		clear: () => void;
 	};
 	behaviorCollector2?: {
 		start: () => void;
 		stop: () => void;
-		getData: () => Array<Record<string, unknown>>;
+		getData: () => TouchEventPoint[];
 		clear: () => void;
 	};
 	behaviorCollector3?: {
 		start: () => void;
 		stop: () => void;
-		getData: () => Array<Record<string, unknown>>;
+		getData: () => ClickEventPoint[];
 		clear: () => void;
 	};
 	deviceCapability?: string;
