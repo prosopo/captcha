@@ -96,23 +96,13 @@ describe("redisAccessRulesStorage", () => {
 
 	beforeEach(async () => {
 		// Delete all keys using SCAN to avoid stack overflow with large datasets
-		let cursor = "0";
-		do {
-			const reply = await redisClient.scan(cursor, {
-				MATCH: "*",
-				COUNT: 1000,
-			});
-
-			if (reply.keys.length > 0) {
-				// Delete keys in batches to avoid stack overflow
-				const keyBatches = chunkIntoBatches(reply.keys, 1000);
-				await executeBatchesSequentially(keyBatches, async (batch) => {
-					await redisClient.del(batch);
-				});
-			}
-
-			cursor = reply.cursor;
-		} while (cursor !== "0");
+		try {
+			// Deletes the index AND all documents associated with it
+			// This is atomic and much faster than SCAN/DEL
+			await redisClient.ft.dropIndex(indexName, { DD: true });
+		} catch (e) {
+			// Ignore "Index not found" errors on the first run
+		}
 
 		// Get a new index name for each test
 		indexName = randomAsHex(16);
@@ -291,7 +281,7 @@ describe("redisAccessRulesStorage", () => {
 			});
 		},
 		{
-			timeout: 1_000_000,
+			timeout: 240_000,
 		},
 	);
 
