@@ -15,6 +15,9 @@ import path from "node:path";
 // limitations under the License.
 import { ViteTestConfig } from "@prosopo/config";
 import dotenv from "dotenv";
+
+// Setup testcontainers for integration tests
+process.env.DOCKER_HOST = process.env.DOCKER_HOST || "unix:///var/run/docker.sock";
 process.env.NODE_ENV = "test";
 // if .env.test exists at this level, use it, otherwise use the one at the root
 const envFile = `.env.${process.env.NODE_ENV || "development"}`;
