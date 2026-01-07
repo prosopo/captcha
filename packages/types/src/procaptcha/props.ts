@@ -16,6 +16,13 @@ import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type { Account, Callbacks } from "./manager.js";
+import type {
+	BehavioralData,
+	ClickEventPoint,
+	MouseMovementPoint,
+	PackedBehavioralData,
+	TouchEventPoint,
+} from "./behavioral.js";
 
 // Generic behavioral data collectors for analytics
 export type FrictionlessState = {
@@ -26,34 +33,24 @@ export type FrictionlessState = {
 	behaviorCollector1?: {
 		start: () => void;
 		stop: () => void;
-		getData: () => Array<Record<string, unknown>>;
+		getData: () => MouseMovementPoint[];
 		clear: () => void;
 	};
 	behaviorCollector2?: {
 		start: () => void;
 		stop: () => void;
-		getData: () => Array<Record<string, unknown>>;
+		getData: () => TouchEventPoint[];
 		clear: () => void;
 	};
 	behaviorCollector3?: {
 		start: () => void;
 		stop: () => void;
-		getData: () => Array<Record<string, unknown>>;
+		getData: () => ClickEventPoint[];
 		clear: () => void;
 	};
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
-	packBehavioralData?: (data: {
-		collector1: Array<Record<string, unknown>>;
-		collector2: Array<Record<string, unknown>>;
-		collector3: Array<Record<string, unknown>>;
-		deviceCapability: string;
-	}) => {
-		c1: unknown[];
-		c2: unknown[];
-		c3: unknown[];
-		d: string;
-	};
+	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 export * from "./api.js";
+export * from "./behavioral.js";
 export * from "./client.js";
 export * from "./collector.js";
 export * from "./manager.js";
