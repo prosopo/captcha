@@ -13,8 +13,22 @@
 // limitations under the License.
 
 import path from "node:path";
-import { ViteEsmConfig } from "@prosopo/config";
+import { ViteEsmConfig, VitePluginCopy } from "@prosopo/config";
+import { mergeConfig } from "vite";
 
-export default function () {
-	return ViteEsmConfig(path.basename("."), path.resolve("./tsconfig.json"));
+export default async function () {
+	const baseConfig = await ViteEsmConfig(
+		path.basename("."),
+		path.resolve("./tsconfig.json"),
+	);
+
+	return mergeConfig(baseConfig, {
+		plugins: [
+			VitePluginCopy({
+				srcDir: "src",
+				destDir: "dist",
+				include: ["**/detection/*.js"],
+			}),
+		],
+	});
 }

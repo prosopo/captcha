@@ -12,23 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import path from "node:path";
-import { ViteCommonJSConfig, VitePluginCopy } from "@prosopo/config";
-import { mergeConfig } from "vite";
-
-export default async function () {
-	const baseConfig = await ViteCommonJSConfig(
-		path.basename("."),
-		path.resolve("./tsconfig.json"),
-	);
-
-	return mergeConfig(baseConfig, {
-		plugins: [
-			VitePluginCopy({
-				srcDir: "src",
-				destDir: "dist/cjs",
-				include: ["**/detection/*.js"],
-			}),
-		],
-	});
+export interface BehavioralDataResult {
+	collector1: Array<Record<string, unknown>>;
+	collector2: Array<Record<string, unknown>>;
+	collector3: Array<Record<string, unknown>>;
+	deviceCapability: string;
+	timestamp: number;
 }
+
+export default function decryptBehavioralData(
+	encryptedData: string,
+	privateKeyString?: string,
+): Promise<BehavioralDataResult>;
