@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {
+	CaptchaStatus,
+	ScheduledTaskNames,
+	ScheduledTaskStatus,
+} from "@prosopo/types";
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { CaptchaStatus, ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type {
 	CompositeIpAddress,
 	MongooseCompositeIpAddress,
@@ -21,9 +25,9 @@ import type {
 import {
 	CompositeIpAddressSchema,
 	IpAddressType,
-	parseMongooseCompositeIpAddress,
 	ScheduledTaskSchema,
 	UserCommitmentSchema,
+	parseMongooseCompositeIpAddress,
 } from "../types/provider.js";
 
 describe("type tests", () => {
@@ -113,7 +117,7 @@ describe("type tests", () => {
 			// Testing that the schema rejects invalid IP address types
 			const invalidType = {
 				lower: BigInt("3232235777"),
-				type: "invalid" as any,
+				type: "invalid" as string,
 			};
 
 			const result = CompositeIpAddressSchema.safeParse(invalidType);
@@ -144,7 +148,9 @@ describe("type tests", () => {
 			const result = ScheduledTaskSchema.safeParse(validTask);
 			expect(result.success).toBe(true);
 			if (result.success) {
-				expect(result.data.processName).toBe(ScheduledTaskNames.BatchCommitment);
+				expect(result.data.processName).toBe(
+					ScheduledTaskNames.BatchCommitment,
+				);
 				expect(result.data.status).toBe(ScheduledTaskStatus.Pending);
 				expect(result.data.datetime).toBeInstanceOf(Date);
 			}
@@ -173,7 +179,7 @@ describe("type tests", () => {
 		it("should reject invalid process name", () => {
 			// Testing that the schema rejects invalid process names
 			const invalidProcessName = {
-				processName: "InvalidProcess" as any,
+				processName: "InvalidProcess" as string,
 				datetime: new Date(),
 				status: ScheduledTaskStatus.Pending,
 			};
@@ -187,7 +193,7 @@ describe("type tests", () => {
 			const invalidStatus = {
 				processName: ScheduledTaskNames.BatchCommitment,
 				datetime: new Date(),
-				status: "InvalidStatus" as any,
+				status: "InvalidStatus" as string,
 			};
 
 			const result = ScheduledTaskSchema.safeParse(invalidStatus);
@@ -214,7 +220,7 @@ describe("type tests", () => {
 				},
 				headers: {
 					"user-agent": "test-agent",
-					"accept": "application/json",
+					accept: "application/json",
 				},
 				ja4: "ja4hash123",
 				userSubmitted: true,
@@ -225,8 +231,12 @@ describe("type tests", () => {
 			const result = UserCommitmentSchema.safeParse(validCommitment);
 			expect(result.success).toBe(true);
 			if (result.success) {
-				expect(result.data.userAccount).toBe("5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty");
-				expect(result.data.dappAccount).toBe("5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty");
+				expect(result.data.userAccount).toBe(
+					"5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+				);
+				expect(result.data.dappAccount).toBe(
+					"5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+				);
 				expect(result.data.datasetId).toBe("dataset123");
 				expect(result.data.result.status).toBe(CaptchaStatus.approved);
 			}
@@ -261,7 +271,12 @@ describe("type tests", () => {
 				storedAtTimestamp: new Date(),
 				lastUpdatedTimestamp: new Date(),
 				sessionId: "session123",
-				coords: [[[1, 2], [3, 4]]],
+				coords: [
+					[
+						[1, 2],
+						[3, 4],
+					],
+				],
 				requestedAtTimestamp: new Date(),
 			};
 
@@ -273,7 +288,12 @@ describe("type tests", () => {
 			if (result.success) {
 				expect(result.data.providedIp).toBeDefined();
 				expect(result.data.sessionId).toBe("session123");
-				expect(result.data.coords).toEqual([[[1, 2], [3, 4]]]);
+				expect(result.data.coords).toEqual([
+					[
+						[1, 2],
+						[3, 4],
+					],
+				]);
 			}
 		});
 
