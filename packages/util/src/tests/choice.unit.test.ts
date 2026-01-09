@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ describe("choice", () => {
 
 		const result = choice(items, 4, mockRandom);
 		expect(result).toHaveLength(4);
-		expect(result.every(item => items.includes(item))).toBe(true);
+		expect(result.every((item) => items.includes(item))).toBe(true);
 		// With this mock, we expect duplicates since replacement is default
 	});
 
@@ -43,7 +43,7 @@ describe("choice", () => {
 
 		const result = choice(items, 3, mockRandom, { withReplacement: false });
 		expect(result).toHaveLength(3);
-		expect(result.every(item => items.includes(item))).toBe(true);
+		expect(result.every((item) => items.includes(item))).toBe(true);
 		// Should have unique items
 		expect(new Set(result).size).toBe(3);
 	});

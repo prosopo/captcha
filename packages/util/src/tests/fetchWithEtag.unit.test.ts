@@ -143,7 +143,7 @@ describe("fetchWithETag", () => {
 		mockFetch.mockResolvedValue(mockResponse);
 
 		await expect(fetchWithETag("https://example.com", null)).rejects.toThrow(
-			"HTTP error! status: 404"
+			"HTTP error! status: 404",
 		);
 	});
 
@@ -152,7 +152,7 @@ describe("fetchWithETag", () => {
 		mockFetch.mockRejectedValue(error);
 
 		await expect(fetchWithETag("https://example.com", null)).rejects.toThrow(
-			"Fetch error: Error: Network error"
+			"Fetch error: Error: Network error",
 		);
 	});
 

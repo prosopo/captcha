@@ -117,48 +117,56 @@ describe("solvePoW", () => {
 		expect(nonce2).toBeGreaterThanOrEqual(0);
 	});
 
-	it("should eventually find solution for higher difficulty", async () => {
-		const data = "test";
-		const difficulty = 3; // Three leading zeros
+	it(
+		"should eventually find solution for higher difficulty",
+		async () => {
+			const data = "test";
+			const difficulty = 3; // Three leading zeros
 
-		// This might take longer, but should complete
-		const nonce = solvePoW(data, difficulty);
+			// This might take longer, but should complete
+			const nonce = solvePoW(data, difficulty);
 
-		expect(typeof nonce).toBe("number");
-		expect(nonce).toBeGreaterThanOrEqual(0);
+			expect(typeof nonce).toBe("number");
+			expect(nonce).toBeGreaterThanOrEqual(0);
 
-		// Verify the solution works
-		const { sha256 } = await import("@noble/hashes/sha256");
-		const message = new TextEncoder().encode(nonce + data);
-		const hashHex = Array.from(sha256(message))
-			.map((byte) => byte.toString(16).padStart(2, "0"))
-			.join("");
+			// Verify the solution works
+			const { sha256 } = await import("@noble/hashes/sha256");
+			const message = new TextEncoder().encode(nonce + data);
+			const hashHex = Array.from(sha256(message))
+				.map((byte) => byte.toString(16).padStart(2, "0"))
+				.join("");
 
-		expect(hashHex.startsWith("000")).toBe(true);
-	}, { timeout: 10000 }); // Allow up to 10 seconds for this test
+			expect(hashHex.startsWith("000")).toBe(true);
+		},
+		{ timeout: 10000 },
+	); // Allow up to 10 seconds for this test
 
-	it("should handle very high nonce values if needed", async () => {
-		// This test might be slow, but demonstrates the function works
-		// We'll use a timeout to prevent hanging
-		const data = "hard_to_solve";
-		const difficulty = 4;
+	it(
+		"should handle very high nonce values if needed",
+		async () => {
+			// This test might be slow, but demonstrates the function works
+			// We'll use a timeout to prevent hanging
+			const data = "hard_to_solve";
+			const difficulty = 4;
 
-		const startTime = Date.now();
-		const nonce = solvePoW(data, difficulty);
-		const endTime = Date.now();
+			const startTime = Date.now();
+			const nonce = solvePoW(data, difficulty);
+			const endTime = Date.now();
 
-		expect(typeof nonce).toBe("number");
-		expect(nonce).toBeGreaterThanOrEqual(0);
-		// Should complete within reasonable time (adjust as needed)
-		expect(endTime - startTime).toBeLessThan(30000); // 30 seconds max
+			expect(typeof nonce).toBe("number");
+			expect(nonce).toBeGreaterThanOrEqual(0);
+			// Should complete within reasonable time (adjust as needed)
+			expect(endTime - startTime).toBeLessThan(30000); // 30 seconds max
 
-		// Verify the solution works
-		const { sha256 } = await import("@noble/hashes/sha256");
-		const message = new TextEncoder().encode(nonce + data);
-		const hashHex = Array.from(sha256(message))
-			.map((byte) => byte.toString(16).padStart(2, "0"))
-			.join("");
+			// Verify the solution works
+			const { sha256 } = await import("@noble/hashes/sha256");
+			const message = new TextEncoder().encode(nonce + data);
+			const hashHex = Array.from(sha256(message))
+				.map((byte) => byte.toString(16).padStart(2, "0"))
+				.join("");
 
-		expect(hashHex.startsWith("0000")).toBe(true);
-	}, { timeout: 30000 }); // Allow up to 30 seconds for this test
+			expect(hashHex.startsWith("0000")).toBe(true);
+		},
+		{ timeout: 30000 },
+	); // Allow up to 30 seconds for this test
 });
