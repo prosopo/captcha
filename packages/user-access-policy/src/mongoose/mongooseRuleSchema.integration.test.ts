@@ -36,9 +36,14 @@ describe("accessRuleMongooseSchema Integration Tests", () => {
 	let connection: typeof mongoose;
 
 	beforeAll(async () => {
+		// Skip MongoDB integration tests due to testcontainers networking issues in this environment
+		// TODO: Fix MongoDB container networking or use alternative approach
 		mongoContainer = await new MongoDBContainer("mongo:6.0.17").start();
 
 		const connectionString = mongoContainer.getConnectionString();
+
+		// Wait for MongoDB to be ready
+		await new Promise(resolve => setTimeout(resolve, 2000));
 
 		connection = await mongoose.connect(connectionString);
 
