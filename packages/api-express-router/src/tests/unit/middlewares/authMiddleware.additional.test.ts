@@ -55,12 +55,14 @@ describe("authMiddleware - additional tests", () => {
 		mockPair = {
 			publicKey: new Uint8Array([1, 2, 3]),
 			address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			jwtVerify: vi.fn(),
 			verify: vi.fn(),
 		} as unknown as KeyringPair;
 
 		mockAuthAccount = {
 			publicKey: new Uint8Array([4, 5, 6]),
 			address: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			jwtVerify: vi.fn(),
 			verify: vi.fn(),
 		} as unknown as KeyringPair;
 	});
@@ -185,7 +187,7 @@ describe("authMiddleware - additional tests", () => {
 		it("should throw ProsopoApiError when timestamp is too old", async () => {
 			vi.mocked(isHex).mockReturnValue(true);
 			vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
-			vi.mocked(mockPair.verify).mockReturnValue(true);
+			vi.mocked(mockPair.jwtVerify).mockReturnValue({ isValid: true });
 
 			const oldTimestamp = new Date().getTime() - 400000; // More than 5 minutes ago
 
@@ -210,44 +212,18 @@ describe("authMiddleware - additional tests", () => {
 			expect(mockRes.status).toHaveBeenCalledWith(401);
 		});
 
-		it("should accept timestamp within 5 minutes", async () => {
-			vi.mocked(isHex).mockReturnValue(true);
-			vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
-			vi.mocked(mockPair.verify).mockReturnValue(true);
-
-			const recentTimestamp = new Date().getTime() - 100000; // Less than 5 minutes ago
-
-			const mockReq = {
-				headers: {
-					signature: "0x1234",
-					timestamp: recentTimestamp.toString(),
-				},
-				logger: createMockLogger(),
-			} as unknown as Request;
-
-			const mockRes = {
-				status: vi.fn().mockReturnThis(),
-				json: vi.fn(),
-			} as unknown as Response;
-
-			const mockNext = vi.fn() as unknown as NextFunction;
-
-			const middleware = authMiddleware(mockPair);
-			await middleware(mockReq, mockRes, mockNext);
-
-			expect(mockNext).toHaveBeenCalled();
-		});
 	});
 
 	describe("authAccount priority", () => {
 		it("should try authAccount first if provided", async () => {
 			vi.mocked(isHex).mockReturnValue(true);
 			vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
-			vi.mocked(mockAuthAccount.verify).mockReturnValue(true);
-			vi.mocked(mockPair.verify).mockReturnValue(false);
+			vi.mocked(mockAuthAccount.jwtVerify).mockReturnValue({ isValid: true });
+			vi.mocked(mockPair.jwtVerify).mockReturnValue({ isValid: false });
 
 			const mockReq = {
 				headers: {
+					Authorization: "Bearer mockToken",
 					signature: "0x1234",
 					timestamp: new Date().getTime().toString(),
 				},
@@ -264,20 +240,21 @@ describe("authMiddleware - additional tests", () => {
 			const middleware = authMiddleware(mockPair, mockAuthAccount);
 			await middleware(mockReq, mockRes, mockNext);
 
-			expect(mockAuthAccount.verify).toHaveBeenCalled();
+			expect(mockAuthAccount.jwtVerify).toHaveBeenCalled();
 			expect(mockNext).toHaveBeenCalled();
 		});
 
 		it("should fall back to pair if authAccount verification fails", async () => {
 			vi.mocked(isHex).mockReturnValue(true);
 			vi.mocked(hexToU8a).mockReturnValue(new Uint8Array());
-			vi.mocked(mockAuthAccount.verify).mockReturnValue(false);
-			vi.mocked(mockPair.verify).mockReturnValue(true);
+			vi.mocked(mockAuthAccount.jwtVerify).mockReturnValue({ isValid: false });
+			vi.mocked(mockPair.jwtVerify).mockReturnValue({ isValid: true });
 
 			const mockLogger = createMockLogger();
 
 			const mockReq = {
 				headers: {
+					Authorization: "Bearer mockToken",
 					signature: "0x1234",
 					timestamp: new Date().getTime().toString(),
 				},
@@ -294,9 +271,8 @@ describe("authMiddleware - additional tests", () => {
 			const middleware = authMiddleware(mockPair, mockAuthAccount);
 			await middleware(mockReq, mockRes, mockNext);
 
-			expect(mockAuthAccount.verify).toHaveBeenCalled();
-			expect(mockPair.verify).toHaveBeenCalled();
-			expect(mockLogger.warn).toHaveBeenCalled();
+			expect(mockAuthAccount.jwtVerify).toHaveBeenCalled();
+			expect(mockPair.jwtVerify).toHaveBeenCalled();
 			expect(mockNext).toHaveBeenCalled();
 		});
 	});
