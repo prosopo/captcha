@@ -14,7 +14,7 @@
 
 import { SCHEMA_FIELD_TYPE } from "@redis/search";
 import type { RedisClientType } from "redis";
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import {
 	type RedisIndex,
 	createRedisIndex,
