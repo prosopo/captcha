@@ -354,7 +354,6 @@ describe("captcha schemas", () => {
 			const challengeId = `1234567890${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount${POW_SEPARATOR}extra`;
 			expect(() => PowChallengeIdSchema.parse(challengeId)).not.toThrow();
 		});
-
 	});
 
 	describe("enums", () => {

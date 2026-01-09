@@ -19,7 +19,11 @@ describe("enumMap", () => {
 	// Define a test enum using z.enum
 	const TestEnum = z.enum(["a", "b", "c"]);
 
-	const TestSchema = union([literal("value1"), literal("value2"), literal("value3")]);
+	const TestSchema = union([
+		literal("value1"),
+		literal("value2"),
+		literal("value3"),
+	]);
 
 	it("creates a schema that validates objects with enum keys", () => {
 		const schema = enumMap(TestEnum, TestSchema);
