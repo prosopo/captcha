@@ -123,4 +123,53 @@ describe("main integration", () => {
 		const content = await response.text();
 		expect(content).toBe("Not found");
 	});
+
+	it("should fallback to next remote when first remote returns 404", async () => {
+		// Start two mock remote servers - first returns 404, second returns content
+		const mockRemoteServer1 = await new Promise<ReturnType<ReturnType<typeof main>>>((resolve) => {
+			const app = express();
+			app.get("/test.txt", (req: any, res: any) => {
+				res.status(404).send("Not found on server 1");
+			});
+			const server = app.listen(0, () => resolve(server));
+		});
+
+		const mockRemoteServer2 = await new Promise<ReturnType<ReturnType<typeof main>>>((resolve) => {
+			const app = express();
+			app.get("/test.txt", (req: any, res: any) => {
+				res.send("Content from server 2");
+			});
+			const server = app.listen(0, () => resolve(server));
+		});
+
+		try {
+			const remoteAddress1 = mockRemoteServer1.address();
+			const remotePort1 = typeof remoteAddress1 === "string" ? remoteAddress1 : remoteAddress1?.port;
+
+			const remoteAddress2 = mockRemoteServer2.address();
+			const remotePort2 = typeof remoteAddress2 === "string" ? remoteAddress2 : remoteAddress2?.port;
+
+			process.env.PROSOPO_FILE_SERVER_PORT = "0";
+			process.env.PROSOPO_FILE_SERVER_PATHS = "[]";
+			process.env.PROSOPO_FILE_SERVER_REMOTES = JSON.stringify([`http://localhost:${remotePort1}`, `http://localhost:${remotePort2}`]);
+			process.env.PROSOPO_FILE_SERVER_RESIZE = undefined;
+			process.env.PROSOPO_LOG_LEVEL = undefined;
+			process.env.NODE_ENV = undefined;
+
+			server = await main();
+
+			const address = server.address();
+			const port = typeof address === "string" ? address : address?.port;
+
+			// Make HTTP request to the file server
+			const response = await fetch(`http://localhost:${port}/test.txt`);
+			expect(response.status).toBe(200);
+			const content = await response.text();
+			expect(content).toBe("Content from server 2");
+		} finally {
+			await new Promise((resolve) => mockRemoteServer1.close(resolve));
+			await new Promise((resolve) => mockRemoteServer2.close(resolve));
+		}
+	});
+
 });
