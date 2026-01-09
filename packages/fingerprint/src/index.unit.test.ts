@@ -34,6 +34,11 @@ describe("getFingerprint", () => {
 		vi.resetModules();
 	});
 
+	/**
+	 * Test the happy path: successful fingerprint generation
+	 * Verifies that getFingerprint returns the visitorId from the fingerprint library
+	 * and that both load() and get() methods are called as expected
+	 */
 	it("should return visitorId when fingerprint is successfully generated", async () => {
 		const expectedVisitorId = "test-visitor-id-12345";
 		mockGet.mockResolvedValue({
@@ -51,6 +56,11 @@ describe("getFingerprint", () => {
 		expect(mockGet).toHaveBeenCalled();
 	});
 
+	/**
+	 * Test that getFingerprint handles various visitorId formats correctly
+	 * This ensures the function works with different types of fingerprint strings
+	 * that the underlying library might return
+	 */
 	it("should handle different visitorId formats", async () => {
 		const testCases = [
 			"abc123def456",
@@ -76,6 +86,11 @@ describe("getFingerprint", () => {
 		}
 	});
 
+	/**
+	 * Test error handling when FingerprintJS library fails to load
+	 * This covers the case where browser environment doesn't support fingerprinting
+	 * or when the library encounters an initialization error
+	 */
 	it("should propagate error when FingerprintJS.load() fails", async () => {
 		const loadError = new Error("Failed to load FingerprintJS");
 		mockLoad.mockRejectedValueOnce(loadError);
@@ -89,6 +104,11 @@ describe("getFingerprint", () => {
 		expect(mockGet).not.toHaveBeenCalled();
 	});
 
+	/**
+	 * Test error handling when fingerprint generation fails after successful loading
+	 * This covers cases where the browser blocks fingerprinting or encounters
+	 * runtime errors during fingerprint calculation
+	 */
 	it("should propagate error when fp.get() fails", async () => {
 		const getError = new Error("Failed to get fingerprint");
 		mockGet.mockRejectedValueOnce(getError);
@@ -103,6 +123,11 @@ describe("getFingerprint", () => {
 		expect(mockGet).toHaveBeenCalled();
 	});
 
+	/**
+	 * Test edge case where fingerprint library returns an object without visitorId
+	 * This handles potential API changes in the underlying library or
+	 * cases where fingerprinting is blocked/disabled
+	 */
 	it("should handle result without visitorId property", async () => {
 		mockGet.mockResolvedValueOnce({
 			// Missing visitorId property
@@ -119,6 +144,11 @@ describe("getFingerprint", () => {
 		expect(mockGet).toHaveBeenCalled();
 	});
 
+	/**
+	 * Test edge case where fingerprint library returns an empty string
+	 * This ensures the function correctly handles and returns empty fingerprints
+	 * rather than treating them as missing values
+	 */
 	it("should handle empty string visitorId", async () => {
 		mockGet.mockResolvedValueOnce({
 			visitorId: "",
