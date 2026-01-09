@@ -27,13 +27,16 @@ import Modal from "./Modal.js";
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 const ProcaptchaWidget = (props: ProcaptchaProps) => {
-	const { t, ready: isTranslationReady } = useTranslation();
 	const config = ProcaptchaConfigSchema.parse(props.config);
 	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
 	const i18n = props.i18n;
 	const callbacks = props.callbacks || {};
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
+
+	// Use i18n from props if provided, otherwise use the hook
+	const { t, ready: isTranslationReady } = useTranslation();
+
 	const manager = Manager(
 		config,
 		state,
@@ -44,17 +47,18 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const theme = "light" === props.config.theme ? lightTheme : darkTheme;
 
 	useEffect(() => {
-		if (config.language) {
-			if (i18n) {
-				if (i18n.language !== config.language) {
-					i18n.changeLanguage(config.language).then((r) => r);
-				}
-			} else {
-				loadI18next(false).then((i18n) => {
-					if (i18n.language !== config.language)
-						i18n.changeLanguage(config.language).then((r) => r);
-				});
+		if (config.language && i18n) {
+			// Only change language if i18n instance is provided as prop
+			if (i18n.language !== config.language) {
+				i18n.changeLanguage(config.language).then((r) => r);
 			}
+		} else if (config.language && !i18n) {
+			// Load i18next if no i18n prop is provided
+			loadI18next(false).then((loadedI18n) => {
+				if (loadedI18n.language !== config.language) {
+					loadedI18n.changeLanguage(config.language).then((r) => r);
+				}
+			});
 		}
 	}, [i18n, config.language]);
 

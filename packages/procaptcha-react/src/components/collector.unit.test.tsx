@@ -121,7 +121,7 @@ describe("Collector", () => {
 		expect(Array.isArray(callArgs.keyboardEvents)).toBe(true);
 	});
 
-	it("should handle sendData being false", () => {
+	it("should not call onProcessData when sendData is false", () => {
 		const onProcessData = vi.fn();
 		const account: Account = {
 			account: {
@@ -136,9 +136,8 @@ describe("Collector", () => {
 				account={account}
 			/>,
 		);
-		// onProcessData should still be called regardless of sendData
-		// The sendData prop doesn't seem to be used in the component logic
-		expect(onProcessData).toHaveBeenCalled();
+		// onProcessData should not be called when sendData is false
+		expect(onProcessData).not.toHaveBeenCalled();
 	});
 
 	it("should update when account changes", () => {

@@ -24,6 +24,7 @@ import type React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProcaptchaWidget from "./ProcaptchaWidget.js";
 
+// Mock variables must be declared before vi.mock calls
 const mockManager = {
 	start: vi.fn(),
 	submit: vi.fn(),
@@ -45,18 +46,6 @@ const mockUseProcaptcha = vi.fn(() => [
 	vi.fn(),
 ]);
 
-const mockUseTranslation = vi.fn(() => ({
-	t: (key: string) => key,
-	ready: true,
-}));
-
-const mockLoadI18next = vi.fn();
-const mockChangeLanguage = vi.fn();
-const mockI18nInstance = {
-	language: "en",
-	changeLanguage: mockChangeLanguage.mockResolvedValue(undefined),
-};
-
 vi.mock("@prosopo/locale", async () => {
 	const actual =
 		await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
@@ -66,7 +55,10 @@ vi.mock("@prosopo/locale", async () => {
 			t: (key: string) => key,
 			ready: true,
 		}),
-		loadI18next: mockLoadI18next.mockResolvedValue(mockI18nInstance),
+		loadI18next: vi.fn().mockResolvedValue({
+			language: "en",
+			changeLanguage: vi.fn().mockResolvedValue(undefined),
+		}),
 	};
 });
 
@@ -413,8 +405,12 @@ describe("ProcaptchaWidget", () => {
 		const callbacks: ProcaptchaCallbacks = {
 			onHuman: vi.fn(),
 		};
-		mockLoadI18next.mockClear();
-		mockChangeLanguage.mockClear();
+		const mockChangeLanguage = vi.fn().mockResolvedValue(undefined);
+		vi.mocked(loadI18next).mockResolvedValue({
+			language: "en",
+			changeLanguage: mockChangeLanguage,
+		});
+		vi.mocked(loadI18next).mockClear();
 
 		render(
 			<ProcaptchaWidget
@@ -426,7 +422,7 @@ describe("ProcaptchaWidget", () => {
 
 		// Wait for loadI18next to be called
 		await waitFor(() => {
-			expect(mockLoadI18next).toHaveBeenCalledWith(false);
+			expect(vi.mocked(loadI18next)).toHaveBeenCalledWith(false);
 		});
 
 		// Wait for changeLanguage to be called on the loaded i18n instance
@@ -454,7 +450,7 @@ describe("ProcaptchaWidget", () => {
 		});
 
 		// loadI18next should not be called
-		expect(mockLoadI18next).not.toHaveBeenCalled();
+		expect(vi.mocked(loadI18next)).not.toHaveBeenCalled();
 	});
 
 	it("should apply light theme", () => {
