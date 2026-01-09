@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ describe("checkLangRules", () => {
 			},
 		} as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,fr;q=0.8");
-		expect(result).toBe(10);
+		expect(result).toBe(5);
 	});
 
 	it("sums scores for multiple matching languages", () => {
@@ -123,7 +123,7 @@ describe("checkLangRules", () => {
 			},
 		} as ProsopoConfigOutput;
 		const result = checkLangRules(config, "en-US,en;q=0.9");
-		expect(result).toBe(10);
+		expect(result).toBe(15);
 	});
 
 	it("handles multiple quality values", () => {

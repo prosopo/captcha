@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -92,6 +92,11 @@ describe("getBotScore", () => {
 			baseBotScore: 0.5,
 			timestamp: 1234567890,
 			providerSelectEntropy: 12345,
+			userId: undefined,
+			userAgent: undefined,
+			isWebView: false,
+			isIframe: false,
+			decryptedHeadHash: undefined,
 		});
 	});
 

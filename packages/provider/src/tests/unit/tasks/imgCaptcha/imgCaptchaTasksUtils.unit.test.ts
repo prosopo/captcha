@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 
 vi.mock("@prosopo/datasets", () => ({
-	CaptchaMerkleTree: vi.fn().mockImplementation(() => ({
-		build: vi.fn(),
-		root: { hash: "mockedRootHash" },
-	})),
+	CaptchaMerkleTree: vi.fn().mockImplementation(() => {
+		const mockTree = {
+			build: vi.fn(() => {
+				mockTree.root = { hash: "mockedRootHash" };
+			}),
+			root: { hash: "mockedRootHash" },
+			getRoot: vi.fn().mockReturnValue({ hash: "mockedRootHash" }),
+		};
+		return mockTree;
+	}),
 	computeCaptchaSolutionHash: vi.fn(),
 }));
 

@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ describe("headerCheckMiddleware", () => {
 			trace: vi.fn().mockImplementation(loggerOuter.trace.bind(loggerOuter)),
 			fatal: vi.fn().mockImplementation(loggerOuter.fatal.bind(loggerOuter)),
 			warn: vi.fn().mockImplementation(loggerOuter.warn.bind(loggerOuter)),
-			with: vi.fn().mockReturnThis(),
+			with: vi.fn(() => mockLogger),
 		} as unknown as Logger;
 
 		mockEnv = {} as ProviderEnvironment;
@@ -135,10 +135,10 @@ describe("headerCheckMiddleware", () => {
 		const middleware = headerCheckMiddleware(mockEnv);
 		await middleware(mockReq, mockRes, mockNext);
 
-		expect((mockReq as { user?: string }).user).toBe(
+		expect((mockReq as any).user).toBe(
 			"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 		);
-		expect((mockReq as { siteKey?: string }).siteKey).toBe(
+		expect((mockReq as any).siteKey).toBe(
 			"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
 		);
 		expect(mockNext).toHaveBeenCalled();

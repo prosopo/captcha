@@ -1,4 +1,4 @@
-// Copyright 2021-2025 Prosopo (UK) Ltd.
+// Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@ import { describe, expect, it, vi } from "vitest";
 import { blockMiddleware } from "../../../api/block.js";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
 
-vi.mock("../../../api/blacklistRequestInspector.js", () => ({
-	BlacklistRequestInspector: vi.fn(),
-}));
+vi.mock("../../../api/blacklistRequestInspector.js");
 
 describe("blockMiddleware", () => {
 	it("creates BlacklistRequestInspector with correct dependencies", () => {
@@ -37,9 +35,10 @@ describe("blockMiddleware", () => {
 		} as unknown as ProviderEnvironment;
 
 		const mockAbortRequestForBlockedUsers = vi.fn();
-		vi.mocked(BlacklistRequestInspector).mockImplementation(() => ({
+		const mockBlacklistRequestInspector = {
 			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
-		})) as unknown as typeof BlacklistRequestInspector;
+		};
+		vi.mocked(BlacklistRequestInspector).mockReturnValue(mockBlacklistRequestInspector as any);
 
 		const middleware = blockMiddleware(mockEnv);
 
@@ -65,9 +64,10 @@ describe("blockMiddleware", () => {
 		} as unknown as ProviderEnvironment;
 
 		const mockAbortRequestForBlockedUsers = vi.fn();
-		vi.mocked(BlacklistRequestInspector).mockImplementation(() => ({
+		const mockBlacklistRequestInspector = {
 			abortRequestForBlockedUsers: mockAbortRequestForBlockedUsers,
-		})) as unknown as typeof BlacklistRequestInspector;
+		};
+		vi.mocked(BlacklistRequestInspector).mockReturnValue(mockBlacklistRequestInspector as any);
 
 		const middleware = blockMiddleware(mockEnv);
 
