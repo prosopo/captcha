@@ -110,6 +110,9 @@ describe("Collector", () => {
 		expect(callArgs).toHaveProperty("mouseEvents");
 		expect(callArgs).toHaveProperty("touchEvents");
 		expect(callArgs).toHaveProperty("keyboardEvents");
+		expect(Array.isArray(callArgs.mouseEvents)).toBe(true);
+		expect(Array.isArray(callArgs.touchEvents)).toBe(true);
+		expect(Array.isArray(callArgs.keyboardEvents)).toBe(true);
 	});
 
 	it("should handle sendData being false", () => {

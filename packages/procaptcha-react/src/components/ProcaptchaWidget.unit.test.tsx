@@ -50,6 +50,13 @@ const mockUseTranslation = vi.fn(() => ({
 	ready: true,
 }));
 
+const mockLoadI18next = vi.fn();
+const mockChangeLanguage = vi.fn();
+const mockI18nInstance = {
+	language: "en",
+	changeLanguage: mockChangeLanguage.mockResolvedValue(undefined),
+};
+
 vi.mock("@prosopo/locale", async () => {
 	const actual =
 		await vi.importActual<typeof import("@prosopo/locale")>("@prosopo/locale");
@@ -59,10 +66,7 @@ vi.mock("@prosopo/locale", async () => {
 			t: (key: string) => key,
 			ready: true,
 		}),
-		loadI18next: vi.fn().mockResolvedValue({
-			language: "en",
-			changeLanguage: vi.fn().mockResolvedValue(undefined),
-		}),
+		loadI18next: mockLoadI18next.mockResolvedValue(mockI18nInstance),
 	};
 });
 
@@ -409,6 +413,9 @@ describe("ProcaptchaWidget", () => {
 		const callbacks: ProcaptchaCallbacks = {
 			onHuman: vi.fn(),
 		};
+		mockLoadI18next.mockClear();
+		mockChangeLanguage.mockClear();
+
 		render(
 			<ProcaptchaWidget
 				config={config}
@@ -416,16 +423,43 @@ describe("ProcaptchaWidget", () => {
 				i18n={undefined}
 			/>,
 		);
-		// The component will call loadI18next asynchronously
-		// We verify the component renders without error
-		await waitFor(
-			() => {
-				// Component should render successfully
-				expect(document.body).toBeDefined();
-			},
-			{ timeout: 5000 },
-		);
+
+		// Wait for loadI18next to be called
+		await waitFor(() => {
+			expect(mockLoadI18next).toHaveBeenCalledWith(false);
+		});
+
+		// Wait for changeLanguage to be called on the loaded i18n instance
+		await waitFor(() => {
+			expect(mockChangeLanguage).toHaveBeenCalledWith("de");
+		});
 	}, 15000);
+
+	it("should not load i18next when i18n is provided", async () => {
+		const config = { ...createMockConfig(), language: "fr" };
+		const callbacks: ProcaptchaCallbacks = {
+			onHuman: vi.fn(),
+		};
+		const i18n = createMockI18n();
+		mockLoadI18next.mockClear();
+		i18n.changeLanguage.mockClear();
+
+		render(
+			<ProcaptchaWidget
+				config={config}
+				callbacks={callbacks}
+				i18n={i18n}
+			/>,
+		);
+
+		// Wait for changeLanguage to be called on provided i18n
+		await waitFor(() => {
+			expect(i18n.changeLanguage).toHaveBeenCalledWith("fr");
+		});
+
+		// loadI18next should not be called
+		expect(mockLoadI18next).not.toHaveBeenCalled();
+	});
 
 	it("should apply light theme", () => {
 		const config = { ...createMockConfig(), theme: "light" as const };
@@ -449,5 +483,33 @@ describe("ProcaptchaWidget", () => {
 			<ProcaptchaWidget config={config} callbacks={callbacks} i18n={i18n} />,
 		);
 		expect(screen.getByTestId("checkbox")).toBeDefined();
+	});
+
+	it("should validate config using ProcaptchaConfigSchema", () => {
+		const invalidConfig = {
+			account: {
+				address: "invalid-address",
+			},
+			web2: true,
+			solutionThreshold: 80,
+			dappName: "TestDapp",
+			theme: "light",
+			mode: "visible",
+		};
+		const callbacks: ProcaptchaCallbacks = {
+			onHuman: vi.fn(),
+		};
+		const i18n = createMockI18n();
+
+		// Should throw an error due to invalid account address
+		expect(() => {
+			render(
+				<ProcaptchaWidget
+					config={invalidConfig as any}
+					callbacks={callbacks}
+					i18n={i18n}
+				/>,
+			);
+		}).toThrow();
 	});
 });
