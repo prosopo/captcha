@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, onUpdated, ref} from "vue";
+import {nextTick, onBeforeUnmount, onMounted, onUpdated, ref} from "vue";
 
 import {HTMLAttributes} from "vue"
 import {type ProcaptchaRenderOptions, renderProcaptcha} from "@prosopo/procaptcha-wrapper";
@@ -15,24 +15,52 @@ type AllHtmlAttributes = HTMLAttributes & {
 
 const properties = defineProps<ProcaptchaComponentProperties>();
 const wrapper = ref<HTMLElement | null>(null);
+let abortController: AbortController | null = null;
 
 // refuse unregistered properties.
 defineOptions({
   inheritAttrs: false
 });
 
-onMounted(() => {
-  render();
-});
-onUpdated(() => {
-  render();
+onMounted(async () => {
+  await render();
 });
 
-function render(): void {
+onUpdated(async () => {
+  await render();
+});
+
+onBeforeUnmount(() => {
+  // Cancel any ongoing render operation
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+  }
+});
+
+async function render(): Promise<void> {
+  // Cancel any previous render operation
+  if (abortController) {
+    abortController.abort();
+  }
+
+  // Create new abort controller for this render operation
+  abortController = new AbortController();
+
+  // Wait for next DOM update to ensure element is ready
+  await nextTick();
+
   const wrapperElement = wrapper.value;
 
-  if (wrapperElement instanceof HTMLElement) {
-    renderProcaptcha(wrapperElement, properties);
+  if (wrapperElement instanceof HTMLElement && !abortController.signal.aborted) {
+    try {
+      await renderProcaptcha(wrapperElement, properties);
+    } catch (error) {
+      // Only log if not aborted (aborted errors are expected during rapid updates)
+      if (!abortController.signal.aborted) {
+        console.error('Procaptcha render error:', error);
+      }
+    }
   }
 }
 </script>
