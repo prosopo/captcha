@@ -85,20 +85,19 @@ describe("bip39", (): void => {
 		);
 	});
 
-	it("throws error when unable to map entropy to mnemonic", (): void => {
-		// Create entropy that results in invalid word indices
-		// Use entropy that would produce binary that doesn't map to valid words
-		const invalidEntropy = new Uint8Array(16);
-		// Fill with values that would create binary indices beyond wordlist
-		invalidEntropy.fill(255);
-		// This might not throw the exact error, so let's test with a different approach
-		// Actually, all 255s might still be valid. Let's test the actual error condition
-		// by creating entropy that results in matched being null or mapped being too short
-		try {
-			entropyToMnemonic(invalidEntropy);
-		} catch (e) {
-			// The error might be different, but we're testing the code path
-			expect(e).toBeInstanceOf(Error);
+	it("handles edge cases in entropy to mnemonic conversion", (): void => {
+		// Test that valid entropy with default wordlist works (already covered above)
+		// The "Unable to map entropy to mnemonic" error is a defensive check
+		// that's difficult to trigger with normal inputs, so we focus on ensuring
+		// the function works correctly with valid inputs
+		const entropy = new Uint8Array(16);
+		for (let i = 0; i < 16; i++) {
+			entropy[i] = i;
 		}
+
+		expect(() => entropyToMnemonic(entropy)).not.toThrow();
+		const result = entropyToMnemonic(entropy);
+		expect(typeof result).toBe("string");
+		expect(result.split(" ").length).toBe(12); // 128-bit entropy -> 12 words
 	});
 });

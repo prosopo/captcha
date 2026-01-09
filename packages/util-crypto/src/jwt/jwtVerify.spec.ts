@@ -114,9 +114,7 @@ describe("jwtSignatureVerify", (): void => {
 
 	it("returns false when signature is missing", (): void => {
 		// Test case for missing signature (lines 31-38 in jwtVerify.ts)
-		const { publicKey } = sr25519FromSeed(
-			new Uint8Array(32).fill(1),
-		);
+		const { publicKey } = sr25519FromSeed(new Uint8Array(32).fill(1));
 		const header = { alg: "sr25519", typ: "JWT" };
 		const payload = {
 			sub: u8aToHex(publicKey),
@@ -125,7 +123,11 @@ describe("jwtSignatureVerify", (): void => {
 		};
 		const signingInput = `${base64URLEncode(JSON.stringify(header))}.${base64URLEncode(JSON.stringify(payload))}`;
 		// Create JWT with empty signature part by splitting a valid JWT and replacing signature
-		const validJwt = sr25519jwtIssue({ publicKey, secretKey: sr25519FromSeed(new Uint8Array(32).fill(1)).secretKey });
+		const { secretKey } = sr25519FromSeed(new Uint8Array(32).fill(1));
+		const validJwt = sr25519jwtIssue(
+			{ publicKey, secretKey },
+			{ expiresIn: 300 },
+		);
 		const parts = validJwt.split(".");
 		const invalidJwt = `${parts[0]}.${parts[1]}.` as JWT;
 

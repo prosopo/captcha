@@ -96,6 +96,11 @@ describe("createValidate", (): void => {
 		expect(validate("abcd==")).toBe(true);
 	});
 
+	// Note: Testing the undefined character check (lines 83-84 in helpers.ts)
+	// is difficult because the validation function first checks typeof === "string".
+	// The undefined check is a defensive measure for broken string implementations
+	// that is unlikely to be triggered in practice with normal JavaScript strings.
+
 	// Note: Testing undefined character access is difficult with normal strings
 	// as JavaScript strings don't allow undefined characters. This is a defensive
 	// check that's unlikely to be triggered in practice.

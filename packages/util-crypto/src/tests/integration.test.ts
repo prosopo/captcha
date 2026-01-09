@@ -21,11 +21,16 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { mnemonicGenerate, mnemonicToMiniSecret } from "../mnemonic/index.js";
-import { sr25519FromSeed, sr25519Sign, sr25519Verify, sr25519jwtIssue } from "../sr25519/index.js";
-import { jwtVerify } from "../jwt/index.js";
 import { hexHash } from "../hash.js";
-import { jsonEncrypt, jsonDecrypt } from "../json/index.js";
+import { jsonDecrypt, jsonEncrypt } from "../json/index.js";
+import { jwtVerify } from "../jwt/index.js";
+import { mnemonicGenerate, mnemonicToMiniSecret } from "../mnemonic/index.js";
+import {
+	sr25519FromSeed,
+	sr25519Sign,
+	sr25519Verify,
+	sr25519jwtIssue,
+} from "../sr25519/index.js";
 
 describe("Crypto Integration Tests", () => {
 	// Test complete key lifecycle from mnemonic to signing/verification
@@ -53,13 +58,15 @@ describe("Crypto Integration Tests", () => {
 
 	it("should complete JWT workflow: key generation -> JWT creation -> verification", () => {
 		// Generate keypair for JWT operations
-		const { publicKey, secretKey } = sr25519FromSeed(new Uint8Array(32).fill(1));
+		const { publicKey, secretKey } = sr25519FromSeed(
+			new Uint8Array(32).fill(1),
+		);
 
 		// Create JWT with expiration and custom claims
 		const jwt = sr25519jwtIssue(
 			{ publicKey, secretKey },
 			{ expiresIn: 300 },
-			{ userId: "test-user", role: "admin" }
+			{ userId: "test-user", role: "admin" },
 		);
 
 		// Verify JWT
@@ -116,7 +123,7 @@ describe("Crypto Integration Tests", () => {
 		// Use hash as seed for key generation
 		const seed = new Uint8Array(32);
 		for (let i = 0; i < 32; i++) {
-			seed[i] = parseInt(hash.slice(2 + i * 2, 2 + (i + 1) * 2), 16);
+			seed[i] = Number.parseInt(hash.slice(2 + i * 2, 2 + (i + 1) * 2), 16);
 		}
 
 		// Generate keypair and sign
