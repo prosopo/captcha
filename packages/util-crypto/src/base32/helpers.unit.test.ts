@@ -170,7 +170,7 @@ describe("createDecode", (): void => {
 			...mockConfig,
 			coder: mockCoder,
 		};
-		const decode = createDecode(config, mockValidate);
+		const decode = createDecode(config, mockValidate as any);
 
 		decode("babcd", true);
 
@@ -188,7 +188,7 @@ describe("createDecode", (): void => {
 			...mockConfig,
 			coder: mockCoder,
 		};
-		const decode = createDecode(config, mockValidate);
+		const decode = createDecode(config, mockValidate as any);
 
 		decode("babcd", false);
 

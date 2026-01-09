@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { randomAsU8a } from "../random/asU8a.js";
 import { sr25519jwtIssue, sr25519jwtParts } from "./jwt.js";
 import { sr25519FromSeed } from "./pair/fromSeed.js";
+import type { JWT } from "../types.js";
 
 describe("jwtIssue", (): void => {
 	beforeEach(() => {

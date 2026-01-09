@@ -87,9 +87,7 @@ describe("Type Relationships", () => {
 
 		// VerifyResult should not be assignable to JWTVerifyResult (missing payload)
 		// This tests that the extension relationship is one-way
-		expectTypeOf(verifyResult as Record<string, unknown>).not.toHaveProperty(
-			"payload",
-		);
+		expectTypeOf(verifyResult as unknown as Record<string, unknown>).not.toHaveProperty("payload");
 	});
 
 	it("JWT is a branded string type", () => {

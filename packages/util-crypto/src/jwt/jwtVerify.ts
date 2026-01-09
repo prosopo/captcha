@@ -13,7 +13,7 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 	}
 
 	const [headerPart, payloadPart, sigPart] = parts;
-	if (!headerPart || !payloadPart) {
+	if (!headerPart || !payloadPart || !sigPart) {
 		throw new Error("Invalid JWT format (empty part)");
 	}
 
@@ -26,7 +26,7 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 		throw new Error("Invalid JWT format (cannot parse header/payload JSON)");
 	}
 
-	const signature = base64URLDecode(sigPart);
+	const signature = base64URLDecode(sigPart!);
 	if (!signature || signature.length === 0) {
 		return {
 			isValid: false,

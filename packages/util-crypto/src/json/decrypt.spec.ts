@@ -4,6 +4,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { jsonDecrypt } from "./decrypt.js";
 import { jsonEncrypt } from "./encrypt.js";
+import type { EncryptedJsonEncoding } from "./types.js";
 
 describe("jsonDecrypt", (): void => {
 	it("decrypts data encrypted with passphrase", (): void => {
@@ -44,7 +45,7 @@ describe("jsonDecrypt", (): void => {
 		const encrypted = {
 			encoded: "",
 			encoding: {
-				type: ["scrypt", "xsalsa20-poly1305"],
+				type: ["scrypt", "xsalsa20-poly1305"] as EncryptedJsonEncoding[],
 				content: ["pkcs8"],
 				version: "3",
 			},
@@ -90,7 +91,7 @@ describe("jsonDecrypt", (): void => {
 			...encrypted,
 			encoding: {
 				...encrypted.encoding,
-				type: "scrypt",
+				type: "scrypt" as const,
 			},
 		};
 
