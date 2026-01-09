@@ -732,14 +732,14 @@ describe("NativeLogger", () => {
 			expect(calls).toBeDefined();
 			// In browser environment, it should call with 2 arguments: message and object
 			// In Node environment, it calls with 1 argument: JSON string
-			if (calls.length === 2) {
+			if (calls && calls.length === 2) {
 				expect(calls[0]).toBe("test error");
 				expect(calls[1]).toMatchObject({
 					scope: "test",
 					level: "error",
 				});
 				expect(calls[1]).toHaveProperty("err", "test error");
-			} else {
+			} else if (calls) {
 				// Node environment fallback - parse the JSON string
 				const parsed = JSON.parse(calls[0] as string);
 				expect(parsed.err).toBe("test error");
