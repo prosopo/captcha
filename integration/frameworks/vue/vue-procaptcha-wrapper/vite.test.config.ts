@@ -20,5 +20,21 @@ export default function () {
     config.plugins = [...(config.plugins || []), vue()];
     config.test = config.test || {};
     config.test.environment = "jsdom";
+
+    // Override coverage configuration for this integration package
+    config.test.coverage = {
+        enabled: true,
+        include: ["src/**/*.ts", "src/**/*.vue"],
+        exclude: [
+            "src/**/*.test.ts",
+            "src/**/*.test.vue",
+            "src/**/*.spec.ts",
+            "src/**/*.spec.vue",
+            "**/node_modules/**",
+            "**/dist/**"
+        ],
+        reporter: ["text", "html", "lcov"]
+    };
+
     return config;
 }
